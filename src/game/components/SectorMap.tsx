@@ -18,7 +18,12 @@ const PLANET_COLORS: Record<
 };
 
 // Scanner info levels - scanLevel is now 1-4 (scanner level)
-function getScannerInfo(loc: Location, scanLevel: number): string[] {
+// scanRange is the numeric value (3, 5, 8, 15+)
+function getScannerInfo(
+    loc: Location,
+    scanLevel: number,
+    scanRange: number,
+): string[] {
     const info: string[] = [];
     const completed = loc.mined || loc.bossDefeated || loc.signalResolved;
 
@@ -127,22 +132,29 @@ function getScannerInfo(loc: Location, scanLevel: number): string[] {
         }
     }
 
-    // Hidden rewards (high level scanner)
-    if (scanLevel >= 8) {
-        if (loc.type === "asteroid_belt" && loc.resources && !completed) {
-            const tier = loc.asteroidTier || 1;
-            if (tier === 4) info.push(`★ Древние артефакты!`);
-        }
-        if (loc.type === "storm" && !completed) {
-            info.push(`★ Редкие ресурсы!`);
-        }
-        if (loc.type === "ancient_boss" && !loc.bossDefeated) {
-            info.push(`★ Древний артефакт!`);
+    // Hidden rewards detection - chance based on scanRange
+    // Base requirement: scanRange >= 8 for hidden rewards
+    // Each point above 8 adds +5% detection chance
+    if (scanRange >= 8) {
+        const detectionChance = Math.min(100, 50 + (scanRange - 8) * 5);
+        const detected = Math.random() * 100 < detectionChance;
+
+        if (detected) {
+            if (loc.type === "asteroid_belt" && loc.resources && !completed) {
+                const tier = loc.asteroidTier || 1;
+                if (tier === 4) info.push(`★ Древние артефакты!`);
+            }
+            if (loc.type === "storm" && !completed) {
+                info.push(`★ Редкие ресурсы!`);
+            }
+            if (loc.type === "ancient_boss" && !loc.bossDefeated) {
+                info.push(`★ Древний артефакт!`);
+            }
         }
     }
 
-    // Quantum scanner (level 15+)
-    if (scanLevel >= 15) {
+    // Quantum scanner (scanRange 15+) - shows distress signal probabilities
+    if (scanRange >= 15) {
         if (loc.type === "distress_signal" && !loc.signalResolved) {
             info.push(`⚡ Засада (40%) / Выжившие (30%) / Груз (30%)`);
         }
@@ -161,6 +173,7 @@ export function SectorMap() {
     );
     const completedLocations = useGameStore((s) => s.completedLocations);
     const getScanLevel = useGameStore((s) => s.getScanLevel);
+    const getScanRange = useGameStore((s) => s.getScanRange);
 
     const [hoveredLocation, setHoveredLocation] = useState<{
         loc: Location;
@@ -168,6 +181,7 @@ export function SectorMap() {
         y: number;
     } | null>(null);
     const scanLevel = getScanLevel();
+    const scanRange = getScanRange();
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -420,20 +434,22 @@ export function SectorMap() {
                         top: `${hoveredLocation.y + 20}px`,
                     }}
                 >
-                    {getScannerInfo(hoveredLocation.loc, scanLevel).map(
-                        (line, i) => (
-                            <div
-                                key={i}
-                                className={
-                                    line.startsWith("★")
-                                        ? "text-[#ffb000]"
-                                        : "text-[#00ff41]"
-                                }
-                            >
-                                {line}
-                            </div>
-                        ),
-                    )}
+                    {getScannerInfo(
+                        hoveredLocation.loc,
+                        scanLevel,
+                        scanRange,
+                    ).map((line, i) => (
+                        <div
+                            key={i}
+                            className={
+                                line.startsWith("★")
+                                    ? "text-[#ffb000]"
+                                    : "text-[#00ff41]"
+                            }
+                        >
+                            {line}
+                        </div>
+                    ))}
                 </div>
             )}
         </div>

@@ -44,6 +44,16 @@ interface ModuleCardProps {
 function ModuleCard({ module, onClick }: ModuleCardProps) {
     // Get module tier name (МК-1, МК-2, etc.)
     const getModuleTier = () => {
+        // Special handling for scanner - determine level by scanRange
+        if (module.type === "scanner") {
+            const scanRange = module.scanRange || 0;
+            if (scanRange >= 15) return " (Квантовый)";
+            if (scanRange >= 8) return " (МК-3)";
+            if (scanRange >= 5) return " (МК-2)";
+            if (scanRange >= 3) return " (МК-1)";
+            return "";
+        }
+
         if (!module.level) return "";
         // Cap display at level 4 (ancient)
         const displayLevel = Math.min(module.level, 4);
@@ -381,12 +391,24 @@ function ModuleDetailedStats({
             {module.type === "scanner" &&
                 module.scanRange &&
                 module.scanRange > 0 && (
-                    <div>
-                        <span className="text-[#ffb000]">
-                            📡 Дальность сканирования:
-                        </span>{" "}
-                        {module.scanRange}
-                    </div>
+                    <>
+                        <div>
+                            <span className="text-[#ffb000]">★ Уровень:</span>{" "}
+                            {module.scanRange >= 15
+                                ? "Квантовый"
+                                : module.scanRange >= 8
+                                  ? "МК-3"
+                                  : module.scanRange >= 5
+                                    ? "МК-2"
+                                    : "МК-1"}
+                        </div>
+                        <div>
+                            <span className="text-[#ffb000]">
+                                📡 Дальность сканирования:
+                            </span>{" "}
+                            {module.scanRange}
+                        </div>
+                    </>
                 )}
             {module.type === "shield" &&
                 module.defense &&
@@ -413,8 +435,21 @@ function ModuleDetailedStats({
 }
 
 function ScannerDescription({ scanRange }: { scanRange?: number }) {
+    // Determine scanner level based on scanRange
+    const getScannerLevel = () => {
+        const range = scanRange || 0;
+        if (range >= 15) return "Квантовый сканер";
+        if (range >= 8) return "Сканер МК-3";
+        if (range >= 5) return "Сканер МК-2";
+        if (range >= 3) return "Сканер МК-1";
+        return "Сканер";
+    };
+
     return (
         <div className="mt-2 p-2 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] text-xs">
+            <div className="text-[#00d4ff] mb-1 font-bold">
+                {getScannerLevel()}
+            </div>
             <div className="text-[#00d4ff] mb-1">Функции сканера:</div>
             <ul className="text-[#888] space-y-1">
                 <li>• Показывает информацию о локациях при наведении</li>

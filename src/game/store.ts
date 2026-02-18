@@ -1295,6 +1295,7 @@ export const useGameStore = create<
         getFuelEfficiency: () => number;
         getDrillLevel: () => number;
         getScanLevel: () => number;
+        getScanRange: () => number;
         calculateFuelCost: (targetTier: number) => number;
         areEnginesFunctional: () => boolean;
         areFuelTanksFunctional: () => boolean;
@@ -1672,6 +1673,46 @@ export const useGameStore = create<
         if (maxRange >= 5) return 2; // Scanner MK-2
         if (maxRange >= 3) return 1; // Scanner MK-1
         return 0;
+    },
+
+    getScanRange: () => {
+        const state = get();
+        const scanners = state.ship.modules.filter(
+            (m) => m.type === "scanner" && !m.disabled && m.health > 0,
+        );
+        if (scanners.length === 0) return 0;
+        // Return the numeric scanRange value with all bonuses
+        let maxRange = Math.max(...scanners.map((s) => s.scanRange || 0));
+
+        // Apply quantum_scanner artifact bonus (+2 scan range)
+        const quantumScanner = state.artifacts.find(
+            (a) => a.effect.type === "scan_boost" && a.effect.active,
+        );
+        if (quantumScanner) {
+            maxRange += quantumScanner.effect.value || 2;
+        }
+
+        // Apply crystalline artifactBonus (+15% to artifact effects)
+        let artifactBonus = 0;
+        state.crew.forEach((c) => {
+            const race = RACES[c.race];
+            if (race?.specialTraits) {
+                const trait = race.specialTraits.find(
+                    (t) => t.id === "resonance" && t.effects.artifactBonus,
+                );
+                if (trait) {
+                    artifactBonus = Math.max(
+                        artifactBonus,
+                        trait.effects.artifactBonus as number,
+                    );
+                }
+            }
+        });
+        if (artifactBonus > 0 && quantumScanner) {
+            maxRange = Math.floor(maxRange * (1 + artifactBonus));
+        }
+
+        return maxRange;
     },
 
     calculateFuelCost: (targetTier: number) => {
@@ -3320,11 +3361,28 @@ export const useGameStore = create<
             case "enemy": {
                 // Check scanner level vs enemy threat level
                 const scannerLevel = get().getScanLevel();
+                const scannerRange = get().getScanRange();
                 const enemyTier = loc.threat || 1;
                 const needsScanner = scannerLevel < enemyTier;
 
                 if (needsScanner && !loc.signalRevealed) {
-                    set({ gameMode: "unknown_ship" });
+                    // Early warning system: chance to detect ambush with high scanRange
+                    // Base 10% + 3% per point of scanRange above 3
+                    const earlyWarningChance = Math.min(
+                        80,
+                        10 + (scannerRange - 3) * 3,
+                    );
+                    const detected = Math.random() * 100 < earlyWarningChance;
+
+                    if (detected && scannerRange > 3) {
+                        get().addLog(
+                            `📡 Сканер обнаружил засаду! Вы готовы к бою.`,
+                            "info",
+                        );
+                        get().startCombat(loc);
+                    } else {
+                        set({ gameMode: "unknown_ship" });
+                    }
                 } else {
                     get().startCombat(loc);
                 }
@@ -3338,10 +3396,27 @@ export const useGameStore = create<
                 }
                 // Bosses are tier 3, need scanner level 3+
                 const scannerLevel = get().getScanLevel();
+                const scannerRange = get().getScanRange();
                 const needsScanner = scannerLevel < 3;
 
                 if (needsScanner && !loc.signalRevealed) {
-                    set({ gameMode: "unknown_ship" });
+                    // Early warning for boss: chance to detect with high scanRange
+                    // Base 5% + 2% per point of scanRange above 8
+                    const earlyWarningChance = Math.min(
+                        60,
+                        5 + (scannerRange - 8) * 2,
+                    );
+                    const detected = Math.random() * 100 < earlyWarningChance;
+
+                    if (detected && scannerRange > 8) {
+                        get().addLog(
+                            `📡 Сканер обнаружил ДРЕВНЮЮ УГРОЗУ! Готовьтесь к бою.`,
+                            "warning",
+                        );
+                        get().startBossCombat(loc);
+                    } else {
+                        set({ gameMode: "unknown_ship" });
+                    }
                 } else {
                     get().startBossCombat(loc);
                 }
@@ -3399,12 +3474,30 @@ export const useGameStore = create<
                 // Check scanner for reveal chance (one-time check)
                 if (!loc.signalRevealChecked) {
                     const scanLevel = get().getScanLevel();
-                    // Reveal chances: LV1=15%, LV2=30%, LV3=50%, LV4=75%
+                    const scanRange = get().getScanRange();
+
+                    // Base reveal chances by scanner level: LV1=15%, LV2=30%, LV3=50%, LV4=75%
                     let revealChance = 0;
                     if (scanLevel >= 4) revealChance = 75;
                     else if (scanLevel >= 3) revealChance = 50;
                     else if (scanLevel >= 2) revealChance = 30;
                     else if (scanLevel >= 1) revealChance = 15;
+
+                    // Bonus from numeric scanRange: +2% per point above base requirement
+                    // Scanner MK-1 (base 3): +2% per point above 3
+                    // Scanner MK-2 (base 5): +2% per point above 5
+                    // Scanner MK-3 (base 8): +2% per point above 8
+                    // Quantum (base 15): +2% per point above 15
+                    let baseRequirement = 0;
+                    if (scanLevel >= 4) baseRequirement = 15;
+                    else if (scanLevel >= 3) baseRequirement = 8;
+                    else if (scanLevel >= 2) baseRequirement = 5;
+                    else if (scanLevel >= 1) baseRequirement = 3;
+
+                    if (scanRange > baseRequirement) {
+                        const rangeBonus = (scanRange - baseRequirement) * 2;
+                        revealChance = Math.min(95, revealChance + rangeBonus);
+                    }
 
                     const canReveal = Math.random() * 100 < revealChance;
 
