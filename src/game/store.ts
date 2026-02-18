@@ -1423,6 +1423,9 @@ export const useGameStore = create<
                 )
                 .reduce((sum, m) => sum + (m.capacity || 0), 0);
 
+            // Safeguard against NaN or undefined fuel
+            const currentFuel = state.ship.fuel || 0;
+
             return {
                 ship: {
                     ...state.ship,
@@ -1431,7 +1434,7 @@ export const useGameStore = create<
                     shields: Math.min(state.ship.shields, totalShields),
                     crewCapacity: totalOxygen,
                     maxFuel: totalFuelCapacity,
-                    fuel: Math.min(state.ship.fuel, totalFuelCapacity),
+                    fuel: Math.min(currentFuel, totalFuelCapacity),
                 },
             };
         });
@@ -1715,7 +1718,9 @@ export const useGameStore = create<
             });
         }
 
-        return Math.ceil(baseCost * modifier);
+        const result = Math.ceil(baseCost * modifier);
+        // Safeguard against NaN
+        return isNaN(result) ? 5 : result;
     },
 
     areEnginesFunctional: () => {
@@ -1732,8 +1737,9 @@ export const useGameStore = create<
 
     refuel: (amount: number, price: number) => {
         const state = get();
-        const maxFuel = state.ship.maxFuel;
-        const currentFuel = state.ship.fuel;
+        // Safeguard against NaN or undefined fuel
+        const maxFuel = state.ship.maxFuel || 0;
+        const currentFuel = state.ship.fuel || 0;
         const spaceAvailable = maxFuel - currentFuel;
         const actualAmount = Math.min(amount, spaceAvailable);
 
@@ -1749,7 +1755,7 @@ export const useGameStore = create<
 
         set((s) => ({
             credits: s.credits - price,
-            ship: { ...s.ship, fuel: s.ship.fuel + actualAmount },
+            ship: { ...s.ship, fuel: (s.ship.fuel || 0) + actualAmount },
         }));
         get().addLog(`Заправка: +${actualAmount} топлива за ${price}₢`, "info");
         playSound("success");
@@ -3150,7 +3156,12 @@ export const useGameStore = create<
         }
 
         // Consume fuel
-        set((s) => ({ ship: { ...s.ship, fuel: s.ship.fuel - fuelCost } }));
+        set((s) => ({
+            ship: {
+                ...s.ship,
+                fuel: Math.max(0, (s.ship.fuel || 0) - fuelCost),
+            },
+        }));
         get().addLog(`Расход топлива: -${fuelCost}`, "info");
 
         // Risk of module damage if pilot not in cockpit during inter-tier travel

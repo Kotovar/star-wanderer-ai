@@ -53,8 +53,10 @@ export function drawLegend(
     ctx.font = "13px Share Tech Mono";
     ctx.textAlign = "left";
 
+    // Safeguard against NaN or undefined fuel
+    const displayFuel = fuel !== undefined && !isNaN(fuel) ? fuel : 0;
     ctx.fillStyle = "#9933ff";
-    ctx.fillText(`⛽ Топливо: ${fuel}`, legendX, legendY + 16);
+    ctx.fillText(`⛽ Топливо: ${displayFuel}`, legendX, legendY + 16);
 
     ctx.fillStyle = "#00ff41";
     ctx.fillText(`Двигатель: Тир ${engineTier}`, legendX, legendY + 32);
@@ -86,7 +88,9 @@ export function drawSector(
         areEnginesFunctional() &&
         areFuelTanksFunctional();
     const fuelCost = calculateFuelCost();
-    const canAffordFuel = fuel >= fuelCost;
+    // Safeguard against NaN or undefined fuel
+    const safeFuel = fuel !== undefined && !isNaN(fuel) ? fuel : 0;
+    const canAffordFuel = safeFuel >= fuelCost;
 
     const angle = sector.mapAngle ?? 0;
     const radius = getSectorRadius(maxRadius, tier);
