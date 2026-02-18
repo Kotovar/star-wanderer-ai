@@ -56,8 +56,11 @@ function getScannerInfo(
     const canScanFully = scanLevel >= locTier;
 
     // Show name only if scanner level is sufficient
+    // Exception: don't show name for storms (name is shown in storm details)
     if (canScanFully || loc.type === "distress_signal") {
-        info.push(`📍 ${loc.name}`);
+        if (loc.type !== "storm") {
+            info.push(`📍 ${loc.name}`);
+        }
     } else {
         info.push(`❓ Неизвестный объект`);
         return info;
@@ -126,9 +129,26 @@ function getScannerInfo(
     if (loc.type === "planet") {
         if (loc.isEmpty) {
             info.push(`🏜️ Безлюдная`);
-        } else if (scanLevel >= 5) {
-            info.push(`👥 Население: ${loc.population || 0}k`);
-            if (loc.dominantRace) info.push(`🧬 Раса: ${loc.dominantRace}`);
+        } else {
+            // With scanner level 1+, show race info
+            if (scanLevel >= 1) {
+                if (loc.dominantRace) {
+                    // Convert race ID to readable name
+                    const raceNames: Record<string, string> = {
+                        human: "Люди",
+                        voidborn: "Рождённые Пустотой",
+                        synth: "Синтетики",
+                        insectoid: "Инсектоиды",
+                        energy: "Энергетические существа",
+                    };
+                    const raceName =
+                        raceNames[loc.dominantRace] || loc.dominantRace;
+                    info.push(`🧬 ${raceName}`);
+                }
+                if (scanLevel >= 5) {
+                    info.push(`👥 Население: ${loc.population || 0}k`);
+                }
+            }
         }
     }
 
