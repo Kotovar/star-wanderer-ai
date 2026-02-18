@@ -416,6 +416,9 @@ export interface GameState {
         fuel: number; // Current fuel
         maxFuel: number; // Max fuel capacity from all fuel tanks
         moduleMovedThisTurn?: boolean; // Track if a module was moved this turn
+        bonusPower?: number; // Temporary power bonus from planet effects
+        bonusShields?: number; // Temporary shield bonus from planet effects
+        bonusEvasion?: number; // Temporary evasion bonus from planet effects (as percentage)
     };
     crew: CrewMember[];
     galaxy: {
@@ -443,6 +446,20 @@ export interface GameState {
     battleResult: BattleResult | null; // Results of last battle
     gameOver: boolean; // Game over state
     gameOverReason: string | null; // Reason for game over
+    activeEffects: ActiveEffect[]; // Active planet specialization effects
+    planetCooldowns: Record<string, number>; // Track cooldowns per planet (planetId -> turnsRemaining)
+}
+
+export interface ActiveEffect {
+    id: string;
+    name: string;
+    description: string;
+    raceId: RaceId;
+    turnsRemaining: number;
+    effects: {
+        type: string;
+        value: number | string;
+    }[];
 }
 
 export interface ShopItem {
@@ -484,6 +501,7 @@ export interface Artifact {
     negativeEffect?: ArtifactNegativeEffect; // For cursed artifacts
     discovered: boolean; // Has been found
     researched: boolean; // Has been studied by scientist
+    hinted?: boolean; // Has been hinted at by synthetic archives
     requiresScientistLevel: number; // Level needed to research
     rarity: "rare" | "legendary" | "mythic" | "cursed"; // cursed = special category
     cursed?: boolean; // Is this a cursed artifact with negative effects
@@ -566,4 +584,24 @@ export interface BossAbility {
     trigger: "every_turn" | "low_health" | "on_damage";
     effect: string;
     value?: number;
+}
+
+export interface PlanetSpecialization {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    cost: number;
+    duration: number;
+    cooldown?: number;
+    requirements?: {
+        minLevel?: number;
+        requiredModule?: string;
+        requiredRace?: RaceId;
+    };
+    effects: {
+        type: string;
+        value: number | string;
+        description: string;
+    }[];
 }

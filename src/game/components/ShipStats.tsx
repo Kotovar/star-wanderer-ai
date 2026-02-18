@@ -110,6 +110,18 @@ export function ShipStats() {
                 </span>
             </div>
             <div className="flex justify-between mb-2 text-sm">
+                <span className="text-[#ffb000]">🎯 Уклонение:</span>
+                <span className="text-[#00ff41]">
+                    {(captain?.level || 1) + (ship.bonusEvasion || 0)}%
+                    {ship.bonusEvasion ? (
+                        <span className="text-[#9933ff]">
+                            {" "}
+                            (+{ship.bonusEvasion}% бонус)
+                        </span>
+                    ) : null}
+                </span>
+            </div>
+            <div className="flex justify-between mb-2 text-sm">
                 <span className="text-[#ffb000]">🔧 Броня:</span>
                 <span
                     className={

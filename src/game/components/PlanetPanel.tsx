@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGameStore } from "../store";
-import { RACES } from "../constants";
+import { RACES, PLANET_SPECIALIZATIONS } from "../constants";
 import { Button } from "@/components/ui/button";
+import { PlanetSpecializationPanel } from "./PlanetSpecializationPanel";
 
 export function PlanetPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
@@ -21,6 +22,12 @@ export function PlanetPanel() {
     const discoverRace = useGameStore((s) => s.discoverRace);
     const knownRaces = useGameStore((s) => s.knownRaces);
     const ship = useGameStore((s) => s.ship);
+
+    const [showSpecialization, setShowSpecialization] = useState(false);
+    const planetId = currentLocation?.id;
+    const isOnCooldown = useGameStore(
+        (s) => !!(planetId && s.planetCooldowns[planetId]),
+    );
 
     // Discover race when visiting (useEffect to avoid setState during render)
     const dominantRace = currentLocation?.dominantRace;
@@ -152,6 +159,21 @@ export function PlanetPanel() {
                         </div>
                     </div>
                 )}
+                {/* Planet Specialization Button */}
+                {race &&
+                    PLANET_SPECIALIZATIONS[currentLocation.dominantRace!] && (
+                        <Button
+                            onClick={() => setShowSpecialization(true)}
+                            disabled={isOnCooldown}
+                            className={`bg-transparent border-2 text-xs px-3 py-1.5 uppercase ${
+                                isOnCooldown
+                                    ? "border-[#444] text-[#444] cursor-not-allowed"
+                                    : "border-[#9933ff] text-[#9933ff] hover:bg-[#9933ff] hover:text-[#050810]"
+                            }`}
+                        >
+                            {isOnCooldown ? "⏱️ Использовано" : "🌟 Активность"}
+                        </Button>
+                    )}
             </div>
 
             <div className="text-sm">
@@ -340,6 +362,17 @@ export function PlanetPanel() {
                     ПОКИНУТЬ ПЛАНЕТУ
                 </Button>
             </div>
+
+            {/* Planet Specialization Modal */}
+            {showSpecialization && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[rgba(10,20,30,0.95)] border-2 border-[#9933ff] p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+                        <PlanetSpecializationPanel
+                            onClose={() => setShowSpecialization(false)}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

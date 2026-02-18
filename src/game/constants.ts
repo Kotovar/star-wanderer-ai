@@ -1561,3 +1561,164 @@ export const getRandomBossForTier = (tier: 1 | 2 | 3): AncientBoss | null => {
     if (eligibleBosses.length === 0) return null;
     return eligibleBosses[Math.floor(Math.random() * eligibleBosses.length)];
 };
+
+// ═══════════════════════════════════════════════════════════════
+// PLANET SPECIALIZATIONS - Unique activities per race
+// ═══════════════════════════════════════════════════════════════
+
+export interface PlanetSpecialization {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    cost: number; // Cost in credits
+    duration: number; // Turns required
+    cooldown?: number; // Cooldown in turns (optional)
+    requirements?: {
+        minLevel?: number; // Minimum crew level
+        requiredModule?: string; // Required ship module
+        requiredRace?: RaceId; // Only available for specific race
+    };
+    effects: {
+        type: string;
+        value: number | string;
+        description: string;
+    }[];
+}
+
+export const PLANET_SPECIALIZATIONS: Record<RaceId, PlanetSpecialization> = {
+    human: {
+        id: "human_academy",
+        name: "Космическая Академия",
+        description:
+            "Военная академия людей предлагает обучение для членов экипажа. Интенсивная программа повышает боевую эффективность.",
+        icon: "🎓",
+        cost: 500,
+        duration: 0, // Permanent
+        cooldown: 999, // Once per planet
+        requirements: {
+            minLevel: 1,
+            maxLevel: 3,
+        },
+        effects: [
+            {
+                type: "crew_level",
+                value: 1,
+                description: "+1 уровень выбранному члену экипажа",
+            },
+        ],
+    },
+    synthetic: {
+        id: "synthetic_archives",
+        name: "Архивы Данных",
+        description:
+            "Синтетики хранят знания древних цивилизаций. Можно получить ценную информацию о секторе.",
+        icon: "📚",
+        cost: 300,
+        duration: 0, // Instant effect
+        cooldown: 999,
+        effects: [
+            {
+                type: "sector_scan",
+                value: 1,
+                description:
+                    "Полное сканирование текущего сектора (все локации)",
+            },
+            {
+                type: "artifact_hints",
+                value: 3,
+                description: "3 подсказки о местонахождении артефактов",
+            },
+        ],
+    },
+    xenosymbiont: {
+        id: "xenosymbiont_lab",
+        name: "Биолаборатория",
+        description:
+            "Ксилориане — мастера биотехнологий. Улучшите здоровье и регенерацию экипажа.",
+        icon: "🧬",
+        cost: 400,
+        duration: 5,
+        cooldown: 999,
+        effects: [
+            {
+                type: "health_boost",
+                value: 20,
+                description:
+                    "+20 к максимальному здоровью всему экипажу (постоянно)",
+            },
+            {
+                type: "regen_boost",
+                value: 5,
+                description: "+5 к регенерации здоровья за ход",
+            },
+        ],
+    },
+    krylorian: {
+        id: "krylorian_dojo",
+        name: "Воинское Додзё",
+        description:
+            "Инсектоиды-крилориане — прирождённые воины. Обучение в додзё повышает боевые навыки.",
+        icon: "⚔️",
+        cost: 450,
+        duration: 5,
+        cooldown: 999,
+        effects: [
+            {
+                type: "combat_bonus",
+                value: 0.15,
+                description: "+15% к урону в бою (постоянно для экипажа)",
+            },
+            {
+                type: "evasion_bonus",
+                value: 0.1,
+                description: "+10% к уклонению от атак",
+            },
+        ],
+    },
+    voidborn: {
+        id: "voidborn_ritual",
+        name: "Мистический Ритуал",
+        description:
+            "Рождённые Пустотой проводят древние ритуалы для усиления артефактов и связи с космосом.",
+        icon: "🔮",
+        cost: 600,
+        duration: 5,
+        cooldown: 999,
+        effects: [
+            {
+                type: "artifact_boost",
+                value: 1,
+                description:
+                    "Усиление одного активного артефакта (+50% эффект)",
+            },
+            {
+                type: "fuel_efficiency",
+                value: 0.1,
+                description: "+10% к эффективности топлива",
+            },
+        ],
+    },
+    crystalline: {
+        id: "crystalline_resonator",
+        name: "Кристальный Резонатор",
+        description:
+            "Кристаллические существа могут настроить энергосистемы корабля на резонанс с кристаллами.",
+        icon: "💎",
+        cost: 550,
+        duration: 5,
+        cooldown: 999,
+        effects: [
+            {
+                type: "power_boost",
+                value: 10,
+                description: "+10 к максимальной энергии реактора",
+            },
+            {
+                type: "shield_boost",
+                value: 25,
+                description: "+25 к максимальным щитам",
+            },
+        ],
+    },
+};

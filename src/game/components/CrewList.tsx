@@ -123,6 +123,25 @@ export function CrewList() {
                                         className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${member.health < 30 ? "[&>div]:bg-[#ff0040]" : member.health < 60 ? "[&>div]:bg-[#ffb000]" : "[&>div]:bg-[#00ff41]"}`}
                                     />
                                 </div>
+                                <div className="text-[10px] text-[#00ff41]">
+                                    ❤ Регенерация: +
+                                    {5 +
+                                        (member.race === "xenosymbiont"
+                                            ? 5
+                                            : 0) +
+                                        (useGameStore
+                                            .getState()
+                                            .activeEffects.some((e) =>
+                                                e.effects.some(
+                                                    (ef) =>
+                                                        ef.type ===
+                                                        "health_regen",
+                                                ),
+                                            )
+                                            ? 5
+                                            : 0)}
+                                    /ход
+                                </div>
                                 {race?.hasHappiness && (
                                     <div>
                                         Настроение:
@@ -249,6 +268,15 @@ export function CrewList() {
                                             }
                                             className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${selectedCrew.health < 30 ? "[&>div]:bg-[#ff0040]" : selectedCrew.health < 60 ? "[&>div]:bg-[#ffb000]" : "[&>div]:bg-[#00ff41]"}`}
                                         />
+                                    </div>
+                                    <div className="text-[10px] text-[#00ff41]">
+                                        ❤ Регенерация: +
+                                        {5 +
+                                            (selectedCrew.race ===
+                                            "xenosymbiont"
+                                                ? 5
+                                                : 0)}
+                                        /ход
                                     </div>
                                     {race?.hasHappiness ? (
                                         <div>

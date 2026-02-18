@@ -34,6 +34,7 @@ import {
     determineSignalOutcome,
     RACES,
     getRandomRace,
+    PLANET_SPECIALIZATIONS,
 } from "./constants";
 
 // Initial ship modules
@@ -1231,6 +1232,8 @@ const initialState: GameState = {
     battleResult: null, // Results of last battle
     gameOver: false, // Game over state
     gameOverReason: null, // Reason for game over
+    activeEffects: [], // Active planet specialization effects
+    planetCooldowns: {}, // Track cooldowns per planet
 };
 
 // Helper function to get active assignment (combat or civilian based on context)
@@ -1381,6 +1384,13 @@ export const useGameStore = create<
         // Races
         discoverRace: (raceId: RaceId) => void;
 
+        // Planet Specializations
+        trainCrew: (crewMemberId: number) => void;
+        scanSector: () => void;
+        boostArtifact: (artifactId: string) => void;
+        activatePlanetEffect: (raceId: RaceId) => void;
+        removeExpiredEffects: () => void;
+
         // Game Over
         checkGameOver: () => void;
     }
@@ -1427,12 +1437,16 @@ export const useGameStore = create<
             // Safeguard against NaN or undefined fuel
             const currentFuel = state.ship.fuel || 0;
 
+            // Preserve bonus shields from planet effects
+            const bonusShields = state.ship.bonusShields || 0;
+            const maxShieldsWithBonus = totalShields + bonusShields;
+
             return {
                 ship: {
                     ...state.ship,
                     armor,
-                    maxShields: totalShields,
-                    shields: Math.min(state.ship.shields, totalShields),
+                    maxShields: maxShieldsWithBonus,
+                    shields: Math.min(state.ship.shields, maxShieldsWithBonus),
                     crewCapacity: totalOxygen,
                     maxFuel: totalFuelCapacity,
                     fuel: Math.min(currentFuel, totalFuelCapacity),
@@ -1468,6 +1482,10 @@ export const useGameStore = create<
         if (eternalReactor) {
             power += eternalReactor.effect.value || 5;
         }
+
+        // Planet effect bonus power
+        const bonusPower = state.ship.bonusPower || 0;
+        power += bonusPower;
 
         return power;
     },
@@ -1759,6 +1777,18 @@ export const useGameStore = create<
             });
         }
 
+        // Apply fuel efficiency bonus from planet effects (Mystic Ritual)
+        const fuelEfficiencyEffect = state.activeEffects.find((e) =>
+            e.effects.some((ef) => ef.type === "fuel_efficiency"),
+        );
+        if (fuelEfficiencyEffect) {
+            const fuelEffBonus =
+                (fuelEfficiencyEffect.effects.find(
+                    (ef) => ef.type === "fuel_efficiency",
+                )?.value as number) || 0;
+            modifier *= 1 - fuelEffBonus;
+        }
+
         const result = Math.ceil(baseCost * modifier);
         // Safeguard against NaN
         return isNaN(result) ? 5 : result;
@@ -1865,6 +1895,10 @@ export const useGameStore = create<
                 })),
             },
         }));
+
+        // Remove expired planet effects
+        get().removeExpiredEffects();
+
         get().updateShipStats();
 
         // Shield regen
@@ -6896,6 +6930,343 @@ export const useGameStore = create<
             }
             return {
                 knownRaces: [...state.knownRaces, raceId],
+            };
+        });
+    },
+
+    trainCrew: (crewMemberId: number) => {
+        const state = get();
+        const crewMember = state.crew.find((c) => c.id === crewMemberId);
+        if (!crewMember) return;
+
+        // Progressive pricing: level 1→2 = 500, 2→3 = 1500, max level 3
+        const currentLevel = crewMember.level || 1;
+        if (currentLevel >= 3) {
+            get().addLog(
+                "Максимальный уровень обучения в академии (ур.3)!",
+                "error",
+            );
+            return;
+        }
+
+        const cost = currentLevel === 1 ? 500 : 1500;
+        if (state.credits < cost) {
+            get().addLog(
+                `Недостаточно кредитов для обучения! Нужно ${cost}₢`,
+                "error",
+            );
+            return;
+        }
+
+        set((s) => ({
+            credits: s.credits - cost,
+            crew: s.crew.map((c) =>
+                c.id === crewMemberId
+                    ? { ...c, level: c.level + 1, exp: 0 }
+                    : c,
+            ),
+        }));
+
+        get().addLog(
+            `🎓 ${crewMember.name} повышен до уровня ${crewMember.level + 1}!`,
+            "success",
+        );
+        playSound("success");
+    },
+
+    scanSector: () => {
+        const state = get();
+        const cost = 300;
+
+        if (state.credits < cost) {
+            get().addLog("Недостаточно кредитов для сканирования!", "error");
+            return;
+        }
+
+        // Reveal all locations in current sector
+        set((s) => ({
+            credits: s.credits - cost,
+            currentSector: s.currentSector
+                ? {
+                      ...s.currentSector,
+                      locations: s.currentSector.locations.map((loc) => ({
+                          ...loc,
+                          signalRevealed: true,
+                      })),
+                  }
+                : null,
+        }));
+
+        get().addLog(
+            `📚 Архивы синтетиков: все локации в секторе отсканированы!`,
+            "info",
+        );
+
+        // Find 3 random artifacts and reveal their general location
+        const undiscoveredArtifacts = state.artifacts.filter(
+            (a) => !a.discovered && a.id !== "ai_core",
+        );
+        if (undiscoveredArtifacts.length > 0) {
+            const hintsCount = Math.min(3, undiscoveredArtifacts.length);
+            const hints = [];
+
+            for (let i = 0; i < hintsCount; i++) {
+                const artifact = undiscoveredArtifacts[i];
+                hints.push(`${artifact.name}`);
+
+                // Mark as hinted (not discovered, but player knows about it)
+                set((s) => ({
+                    artifacts: s.artifacts.map((a) =>
+                        a.id === artifact.id ? { ...a, hinted: true } : a,
+                    ),
+                }));
+            }
+
+            get().addLog(
+                `💡 Подсказки об артефактах: ${hints.join(", ")}`,
+                "info",
+            );
+        }
+
+        playSound("success");
+    },
+
+    boostArtifact: (artifactId: string) => {
+        const state = get();
+        const cost = 600;
+        const artifact = state.artifacts.find((a) => a.id === artifactId);
+
+        if (!artifact || !artifact.effect.active) {
+            get().addLog("Выберите активный артефакт!", "error");
+            return;
+        }
+
+        if (state.credits < cost) {
+            get().addLog("Недостаточно кредитов для усиления!", "error");
+            return;
+        }
+
+        // Boost artifact effect by 50%
+        set((s) => ({
+            credits: s.credits - cost,
+            artifacts: s.artifacts.map((a) =>
+                a.id === artifactId
+                    ? {
+                          ...a,
+                          boosted: true,
+                          effect: {
+                              ...a.effect,
+                              value: Math.floor((a.effect.value || 1) * 1.5),
+                          },
+                      }
+                    : a,
+            ),
+        }));
+
+        get().addLog(`🔮 ${artifact.name} усилен! Эффект: +50%`, "success");
+        playSound("success");
+    },
+
+    activatePlanetEffect: (raceId: RaceId, planetId?: string) => {
+        const state = get();
+        const spec = PLANET_SPECIALIZATIONS[raceId];
+        if (!spec) return;
+
+        const cost = spec.cost;
+        if (state.credits < cost) {
+            get().addLog(`Недостаточно кредитов для ${spec.name}!`, "error");
+            return;
+        }
+
+        // Apply effects based on race
+        switch (raceId) {
+            case "xenosymbiont":
+                // +20 max health, +5 regen for 5 turns
+                set((s) => ({
+                    credits: s.credits - cost,
+                    crew: s.crew.map((c) => ({
+                        ...c,
+                        maxHealth: c.maxHealth + 20,
+                        health: c.health + 20,
+                    })),
+                    activeEffects: [
+                        ...s.activeEffects,
+                        {
+                            id: `effect-${raceId}-${Date.now()}`,
+                            name: spec.name,
+                            description: spec.description,
+                            raceId,
+                            turnsRemaining: 5,
+                            effects: [{ type: "health_regen", value: 5 }],
+                        },
+                    ],
+                    planetCooldowns: planetId
+                        ? { ...s.planetCooldowns, [planetId]: 999 }
+                        : s.planetCooldowns,
+                }));
+                get().addLog(
+                    `🧬 ${spec.name}: +20 здоровья экипажу, +5 регенерации за ход (5 ходов)`,
+                    "success",
+                );
+                break;
+
+            case "krylorian":
+                // Combat bonuses for 5 turns
+                set((s) => ({
+                    credits: s.credits - cost,
+                    ship: {
+                        ...s.ship,
+                        bonusEvasion: (s.ship.bonusEvasion || 0) + 10,
+                    },
+                    activeEffects: [
+                        ...s.activeEffects,
+                        {
+                            id: `effect-${raceId}-${Date.now()}`,
+                            name: spec.name,
+                            description: spec.description,
+                            raceId,
+                            turnsRemaining: 5,
+                            effects: [
+                                { type: "combat_bonus", value: 0.15 },
+                                { type: "evasion_bonus", value: 0.1 },
+                            ],
+                        },
+                    ],
+                    planetCooldowns: planetId
+                        ? { ...s.planetCooldowns, [planetId]: 999 }
+                        : s.planetCooldowns,
+                }));
+                get().addLog(
+                    `⚔️ ${spec.name}: +15% урон, +10% уклонение (5 ходов)`,
+                    "success",
+                );
+                break;
+
+            case "crystalline":
+                // Apply power and shield boost for 5 turns
+                set((s) => ({
+                    credits: s.credits - cost,
+                    ship: {
+                        ...s.ship,
+                        maxShields: s.ship.maxShields + 25,
+                        shields: s.ship.shields + 25,
+                        bonusPower: (s.ship.bonusPower || 0) + 10,
+                        bonusShields: (s.ship.bonusShields || 0) + 25,
+                    },
+                    activeEffects: [
+                        ...s.activeEffects,
+                        {
+                            id: `effect-${raceId}-${Date.now()}`,
+                            name: spec.name,
+                            description: spec.description,
+                            raceId,
+                            turnsRemaining: 5,
+                            effects: [
+                                { type: "power_boost", value: 10 },
+                                { type: "shield_boost", value: 25 },
+                            ],
+                        },
+                    ],
+                    planetCooldowns: planetId
+                        ? { ...s.planetCooldowns, [planetId]: 999 }
+                        : s.planetCooldowns,
+                }));
+                get().addLog(
+                    `💎 ${spec.name}: +10 энергии, +25 щитов (5 ходов)`,
+                    "success",
+                );
+                break;
+
+            case "voidborn":
+                // Fuel efficiency bonus for 5 turns
+                set((s) => ({
+                    credits: s.credits - cost,
+                    activeEffects: [
+                        ...s.activeEffects,
+                        {
+                            id: `effect-${raceId}-${Date.now()}`,
+                            name: spec.name,
+                            description: spec.description,
+                            raceId,
+                            turnsRemaining: 5,
+                            effects: [{ type: "fuel_efficiency", value: 0.1 }],
+                        },
+                    ],
+                    planetCooldowns: planetId
+                        ? { ...s.planetCooldowns, [planetId]: 999 }
+                        : s.planetCooldowns,
+                }));
+                get().addLog(
+                    `🔮 ${spec.name}: +10% к эффективности топлива (5 ходов)`,
+                    "success",
+                );
+                break;
+        }
+
+        playSound("success");
+    },
+
+    removeExpiredEffects: () => {
+        set((s) => {
+            // Find effects that are expiring this turn
+            const expiringEffects = s.activeEffects.filter(
+                (e) => e.turnsRemaining === 1,
+            );
+
+            // Remove bonuses from expiring effects
+            let bonusPowerToRemove = 0;
+            let bonusShieldsToRemove = 0;
+            let bonusEvasionToRemove = 0;
+
+            expiringEffects.forEach((effect) => {
+                effect.effects.forEach((ef) => {
+                    if (ef.type === "power_boost") {
+                        bonusPowerToRemove += ef.value as number;
+                    }
+                    if (ef.type === "shield_boost") {
+                        bonusShieldsToRemove += ef.value as number;
+                    }
+                    if (ef.type === "evasion_bonus") {
+                        bonusEvasionToRemove += 10; // 10% per effect
+                    }
+                });
+            });
+
+            // Remove expired effects
+            const activeEffects = s.activeEffects
+                .map((effect) => ({
+                    ...effect,
+                    turnsRemaining: effect.turnsRemaining - 1,
+                }))
+                .filter((effect) => effect.turnsRemaining > 0);
+
+            // Log expired effects
+            expiringEffects.forEach((effect) => {
+                get().addLog(`⏱️ Эффект "${effect.name}" истёк`, "warning");
+            });
+
+            return {
+                activeEffects,
+                ship: {
+                    ...s.ship,
+                    bonusPower: Math.max(
+                        0,
+                        (s.ship.bonusPower || 0) - bonusPowerToRemove,
+                    ),
+                    bonusShields: Math.max(
+                        0,
+                        (s.ship.bonusShields || 0) - bonusShieldsToRemove,
+                    ),
+                    bonusEvasion: Math.max(
+                        0,
+                        (s.ship.bonusEvasion || 0) - bonusEvasionToRemove,
+                    ),
+                    maxShields: Math.max(
+                        0,
+                        s.ship.maxShields - bonusShieldsToRemove,
+                    ),
+                    shields: Math.max(0, s.ship.shields - bonusShieldsToRemove),
+                },
             };
         });
     },

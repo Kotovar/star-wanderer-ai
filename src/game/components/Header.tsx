@@ -3,13 +3,16 @@
 import { useState } from "react";
 import { useGameStore } from "../store";
 import { HelpPanel } from "./HelpPanel";
+import { ActiveEffectsPanel } from "./ActiveEffectsPanel";
 
 export function GameHeader() {
     const [showHelp, setShowHelp] = useState(false);
+    const [showEffects, setShowEffects] = useState(false);
     const turn = useGameStore((s) => s.turn);
     const credits = useGameStore((s) => s.credits);
     const currentSector = useGameStore((s) => s.currentSector);
     const artifacts = useGameStore((s) => s.artifacts);
+    const activeEffects = useGameStore((s) => s.activeEffects);
     const showArtifacts = useGameStore((s) => s.showArtifacts);
     const gameMode = useGameStore((s) => s.gameMode);
 
@@ -41,6 +44,21 @@ export function GameHeader() {
                         <span className="text-[#00d4ff] hidden md:inline">
                             СПРАВКА
                         </span>
+                    </button>
+                    <button
+                        onClick={() => setShowEffects(true)}
+                        className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer relative"
+                        title="Активные эффекты"
+                    >
+                        <span className="text-[#9933ff]">⚡</span>
+                        <span className="text-[#9933ff] hidden md:inline">
+                            ЭФФЕКТЫ
+                        </span>
+                        {activeEffects.length > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-[#9933ff] text-[#050810] text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                                {activeEffects.length}
+                            </span>
+                        )}
                     </button>
                     <button
                         onClick={handleArtifactsClick}
@@ -83,6 +101,15 @@ export function GameHeader() {
             </header>
 
             {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
+            {showEffects && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[rgba(10,20,30,0.95)] border-2 border-[#9933ff] p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+                        <ActiveEffectsPanel
+                            onClose={() => setShowEffects(false)}
+                        />
+                    </div>
+                </div>
+            )}
         </>
     );
 }
