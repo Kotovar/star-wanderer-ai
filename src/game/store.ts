@@ -2091,17 +2091,11 @@ export const useGameStore = create<
                             "info",
                         );
 
-                        // Give experience to all crew members (patrol mission)
-                        const crewExpReward = 20;
-                        set((s) => ({
-                            crew: s.crew.map((cr) => ({
-                                ...cr,
-                                exp: cr.exp + crewExpReward,
-                            })),
-                        }));
-                        get().addLog(
-                            `Экипаж получил опыт: +${crewExpReward} ед.`,
-                            "info",
+                        // Give experience to all crew members
+                        const expReward = CONTRACT_REWARDS.patrol.baseExp;
+                        giveCrewExperience(
+                            expReward,
+                            `Экипаж получил опыт: +${expReward} ед.`,
                         );
 
                         newActiveContracts = newActiveContracts.filter(
@@ -3605,17 +3599,11 @@ export const useGameStore = create<
                             "info",
                         );
 
-                        // Give experience to all crew members (diplomacy mission)
-                        const crewExpReward = 15;
-                        set((s) => ({
-                            crew: s.crew.map((c) => ({
-                                ...c,
-                                exp: c.exp + crewExpReward,
-                            })),
-                        }));
-                        get().addLog(
-                            `Экипаж получил опыт: +${crewExpReward} ед.`,
-                            "info",
+                        // Give experience to all crew members
+                        const expReward = CONTRACT_REWARDS.diplomacy.baseExp;
+                        giveCrewExperience(
+                            expReward,
+                            `Экипаж получил опыт: +${expReward} ед.`,
                         );
 
                         set((s) => ({
@@ -4136,15 +4124,12 @@ export const useGameStore = create<
                 "info",
             );
 
-            // Give experience to all crew members (rescue mission)
-            const crewExpReward = 25;
-            set((s) => ({
-                crew: s.crew.map((cr) => ({
-                    ...cr,
-                    exp: cr.exp + crewExpReward,
-                })),
-            }));
-            get().addLog(`Экипаж получил опыт: +${crewExpReward} ед.`, "info");
+            // Give experience to all crew members
+            const expReward = CONTRACT_REWARDS.rescue.baseExp;
+            giveCrewExperience(
+                expReward,
+                `Экипаж получил опыт: +${expReward} ед.`,
+            );
 
             set((s) => ({
                 completedContractIds: [
@@ -4821,17 +4806,11 @@ export const useGameStore = create<
                             "info",
                         );
 
-                        // Give experience to all crew members (mining mission - artifact found)
-                        const crewExpReward = 25;
-                        set((s) => ({
-                            crew: s.crew.map((cr) => ({
-                                ...cr,
-                                exp: cr.exp + crewExpReward,
-                            })),
-                        }));
-                        get().addLog(
-                            `Экипаж получил опыт: +${crewExpReward} ед.`,
-                            "info",
+                        // Give experience to all crew members
+                        const expReward = CONTRACT_REWARDS.mining.baseExp;
+                        giveCrewExperience(
+                            expReward,
+                            `Экипаж получил опыт: +${expReward} ед.`,
                         );
 
                         set((s) => ({
@@ -4881,17 +4860,14 @@ export const useGameStore = create<
                     "info",
                 );
 
-                // Give experience to all crew members (combat mission)
-                const crewExpReward = 15 + enemyThreat * 5;
-                set((s) => ({
-                    crew: s.crew.map((cr) => ({
-                        ...cr,
-                        exp: cr.exp + crewExpReward,
-                    })),
-                }));
-                get().addLog(
-                    `Экипаж получил опыт: +${crewExpReward} ед.`,
-                    "info",
+                // Give experience to all crew members
+                const rewardConfig = CONTRACT_REWARDS.combat;
+                const expReward =
+                    rewardConfig.baseExp +
+                    enemyThreat * (rewardConfig.threatBonus || 0);
+                giveCrewExperience(
+                    expReward,
+                    `Экипаж получил опыт: +${expReward} ед.`,
                 );
 
                 set((s) => ({
@@ -4913,17 +4889,14 @@ export const useGameStore = create<
                 set((s) => ({ credits: s.credits + c.reward }));
                 get().addLog(`Охота выполнена! +${c.reward}₢`, "info");
 
-                // Give experience to all crew members (bounty mission)
-                const crewExpReward = 20 + enemyThreat * 8;
-                set((s) => ({
-                    crew: s.crew.map((cr) => ({
-                        ...cr,
-                        exp: cr.exp + crewExpReward,
-                    })),
-                }));
-                get().addLog(
-                    `Экипаж получил опыт: +${crewExpReward} ед.`,
-                    "info",
+                // Give experience to all crew members
+                const rewardConfig = CONTRACT_REWARDS.bounty;
+                const expReward =
+                    rewardConfig.baseExp +
+                    enemyThreat * (rewardConfig.threatBonus || 0);
+                giveCrewExperience(
+                    expReward,
+                    `Экипаж получил опыт: +${expReward} ед.`,
                 );
 
                 set((s) => ({
@@ -6628,15 +6601,9 @@ export const useGameStore = create<
         }));
         get().addLog(`Контракт выполнен! +${contract.reward}₢`, "info");
 
-        // Give experience to all crew members (delivery mission)
-        const crewExpReward = 10;
-        set((s) => ({
-            crew: s.crew.map((c) => ({
-                ...c,
-                exp: c.exp + crewExpReward,
-            })),
-        }));
-        get().addLog(`Экипаж получил опыт: +${crewExpReward} ед.`, "info");
+        // Give experience to all crew members
+        const expReward = CONTRACT_REWARDS.delivery.baseExp;
+        giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
 
         playSound("success");
     },
@@ -6908,17 +6875,11 @@ export const useGameStore = create<
                     "info",
                 );
 
-                // Give experience to all crew members (research mission)
-                const crewExpReward = 20;
-                set((s) => ({
-                    crew: s.crew.map((cr) => ({
-                        ...cr,
-                        exp: cr.exp + crewExpReward,
-                    })),
-                }));
-                get().addLog(
-                    `Экипаж получил опыт: +${crewExpReward} ед.`,
-                    "info",
+                // Give experience to all crew members
+                const expReward = CONTRACT_REWARDS.research.baseExp;
+                giveCrewExperience(
+                    expReward,
+                    `Экипаж получил опыт: +${expReward} ед.`,
                 );
             }
         }
@@ -7839,23 +7800,14 @@ function handleSurvivorCapsuleDelivery(locationType: "station" | "planet") {
             },
         }));
 
-        // Give experience to all crew members (rescue mission)
-        const crewExpReward = 15;
-        useGameStore.setState((s) => ({
-            crew: s.crew.map((c) => ({
-                ...c,
-                exp: c.exp + crewExpReward,
-            })),
-        }));
-        useGameStore
-            .getState()
-            .addLog(
-                `🚀 Выжившие доставлены на ${locationType === "station" ? "станцию" : "планету"}! Награда: +${reward}₢`,
-                "info",
-            );
-        useGameStore
-            .getState()
-            .addLog(`Экипаж получил опыт: +${crewExpReward} ед.`, "info");
+        // Give experience to all crew members
+        const expReward = CONTRACT_REWARDS.rescueSurvivors.baseExp;
+        giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+
+        state.addLog(
+            `🚀 Выжившие доставлены на ${locationType === "station" ? "станцию" : "планету"}! Награда: +${reward}₢`,
+            "info",
+        );
     }
 }
 
@@ -7890,4 +7842,40 @@ function areAllModulesConnected(modules: Module[]): boolean {
         }
     }
     return visited.size === modules.length;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HELPER FUNCTIONS - Contract rewards & crew experience
+// ═══════════════════════════════════════════════════════════════
+
+// Contract reward configuration (experience points)
+const CONTRACT_REWARDS: Record<
+    string,
+    { baseExp: number; threatBonus?: number }
+> = {
+    delivery: { baseExp: 10 },
+    diplomacy: { baseExp: 15 },
+    patrol: { baseExp: 20 },
+    combat: { baseExp: 15, threatBonus: 5 },
+    bounty: { baseExp: 20, threatBonus: 8 },
+    mining: { baseExp: 25 },
+    research: { baseExp: 20 },
+    rescue: { baseExp: 25 },
+    rescueSurvivors: { baseExp: 15 }, // Survivor capsule delivery
+};
+
+// Give experience to all crew members
+function giveCrewExperience(expAmount: number, logMessage?: string) {
+    const state = useGameStore.getState();
+
+    useGameStore.setState((s) => ({
+        crew: s.crew.map((c) => ({
+            ...c,
+            exp: c.exp + expAmount,
+        })),
+    }));
+
+    if (logMessage) {
+        state.addLog(logMessage, "info");
+    }
 }
