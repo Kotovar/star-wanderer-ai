@@ -129,11 +129,11 @@ export function ContractsList() {
                     tasks: [
                         {
                             label: "Что сделать",
-                            value: `Исследовать ${contract.requiresAnomalies} аномалии в секторе`,
+                            value: `Исследовать ${contract.requiresAnomalies} аномалии`,
                         },
                         {
-                            label: "Целевой сектор",
-                            value: contract.sectorName || "Неизвестно",
+                            label: "Где выполнить",
+                            value: "В любом секторе",
                         },
                         {
                             label: "Прогресс",

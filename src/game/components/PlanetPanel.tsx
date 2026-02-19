@@ -50,6 +50,7 @@ export function PlanetPanel() {
         const hasScout = crew.some((c) => c.profession === "scout");
         const scoutedTimes = currentLocation.scoutedTimes || 0;
         const canScout = scoutedTimes < 3;
+        const lastScoutResult = currentLocation.lastScoutResult;
 
         return (
             <div className="flex flex-col gap-4">
@@ -75,6 +76,36 @@ export function PlanetPanel() {
                         </span>
                     )}
                 </div>
+
+                {/* Last scouting result */}
+                {lastScoutResult && (
+                    <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3 mt-2">
+                        <div className="text-[#ffb000] font-bold text-sm mb-1">
+                            Последняя разведка:
+                        </div>
+                        {lastScoutResult.type === "credits" && (
+                            <div className="text-[#00ff41] text-sm">
+                                💰 Найдены ресурсы: +{lastScoutResult.value}₢
+                            </div>
+                        )}
+                        {lastScoutResult.type === "tradeGood" && (
+                            <div className="text-[#00ff41] text-sm">
+                                📦 Найден груз: {lastScoutResult.itemName} (5т)
+                            </div>
+                        )}
+                        {lastScoutResult.type === "nothing" && (
+                            <div className="text-[#888] text-sm">
+                                ❌ Ничего не найдено
+                            </div>
+                        )}
+                        {lastScoutResult.type === "enemy" && (
+                            <div className="text-[#ff0040] text-sm">
+                                ⚔️ Засада! Враг с угрозой{" "}
+                                {lastScoutResult.enemyThreat}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {hasScout && canScout && (
                     <>
@@ -316,7 +347,7 @@ export function PlanetPanel() {
                                             {c.type === "combat" &&
                                                 `⚔ Уничтожить всех врагов в секторе ${c.sectorName}`}
                                             {c.type === "research" &&
-                                                `🔬 Исследовать ${c.requiresAnomalies} аномалии в секторе ${c.sectorName}`}
+                                                `🔬 Исследовать ${c.requiresAnomalies} аномалии`}
                                             {c.type === "bounty" &&
                                                 `🎯 Уничтожить врага (угроза ${c.targetThreat}) в секторе ${c.targetSectorName}`}
                                             {c.type === "diplomacy" &&

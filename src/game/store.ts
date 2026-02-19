@@ -359,10 +359,10 @@ const generateGalaxy = (): Sector[] => {
 
                 // Adjust location type chances based on tier
                 const stationChance =
-                    tier === 1 ? 0.18 : tier === 2 ? 0.13 : 0.07;
+                    tier === 1 ? 0.12 : tier === 2 ? 0.08 : 0.04; // Reduced stations per sector
                 const friendlyChance =
                     tier === 1 ? 0.08 : tier === 2 ? 0.06 : 0.04; // Reduced friendly ships
-                const planetChance = 0.2;
+                const planetChance = 0.35; // Increased planet chance for 2-3 planets per sector
                 const enemyChance =
                     tier === 1 ? 0.15 : tier === 2 ? 0.25 : 0.32; // Increased enemy ships
                 const asteroidChance = 0.1; // Asteroid belts
@@ -465,9 +465,10 @@ const generateGalaxy = (): Sector[] => {
                         PLANET_TYPES[
                             Math.floor(Math.random() * PLANET_TYPES.length)
                         ];
+                    // Increased empty planet chance: ~40% in tier 1, ~60% in tier 2, ~70% in tier 3
                     const isEmpty = isBlackhole
                         ? true
-                        : Math.random() < (tier === 1 ? 0.2 : 0.3 + tier * 0.1);
+                        : Math.random() < (tier === 1 ? 0.4 : 0.5 + tier * 0.1);
 
                     // Determine dominant race based on planet type and tier
                     let dominantRace: RaceId | undefined;
@@ -1087,21 +1088,13 @@ const generatePlanetContracts = (
         {
             type: "research" as const,
             gen: (): Contract | null => {
-                // Find a sector that has anomalies
-                const sectorsWithAnomalies = availableSectors.filter((s) =>
-                    s.locations.some((l) => l.type === "anomaly"),
-                );
-                if (sectorsWithAnomalies.length === 0) return null;
-                const tgt =
-                    sectorsWithAnomalies[
-                        Math.floor(Math.random() * sectorsWithAnomalies.length)
-                    ];
+                // Research contract - can be completed in any sector
                 return {
                     id: `c-${planetId}-${Date.now()}-${Math.random()}`,
                     type: "research",
                     desc: "🔬 Исследование аномалий",
-                    sectorId: tgt.id,
-                    sectorName: tgt.name,
+                    sectorId: undefined, // Can be completed in any sector
+                    sectorName: "любой",
                     sourcePlanetId: planetId,
                     sourceSectorName: sector.name,
                     requiresAnomalies: 2,
@@ -2741,9 +2734,17 @@ export const useGameStore = create<
             const newTurnsLeft = mission.turnsLeft - 1;
             if (newTurnsLeft <= 0) {
                 const scout = get().crew.find((c) => c.id === mission.scoutId);
+
+                // Declare result variables outside the if block
+                let resultType: "credits" | "tradeGood" | "nothing" | "enemy" =
+                    "nothing";
+                let resultValue: number | undefined;
+                let resultItemName: string | undefined;
+
                 if (scout) {
                     const outcome = Math.random();
                     get().gainExp(scout, 12);
+
                     if (outcome < 0.4) {
                         const reward = 20 + Math.floor(Math.random() * 30);
                         set((s) => ({ credits: s.credits + reward }));
@@ -2751,6 +2752,8 @@ export const useGameStore = create<
                             `Разведка: ${scout.name} нашёл ресурсы! +${reward}₢`,
                             "info",
                         );
+                        resultType = "credits";
+                        resultValue = reward;
                     } else if (outcome < 0.7) {
                         const goodId =
                             Object.keys(TRADE_GOODS)[
@@ -2772,11 +2775,14 @@ export const useGameStore = create<
                             `Разведка: ${scout.name} нашёл ${TRADE_GOODS[goodId].name}!`,
                             "info",
                         );
+                        resultType = "tradeGood";
+                        resultItemName = TRADE_GOODS[goodId].name;
                     } else {
                         get().addLog(
                             `Разведка: ${scout.name} ничего не нашёл`,
                             "info",
                         );
+                        resultType = "nothing";
                     }
                 }
 
@@ -2796,6 +2802,13 @@ export const useGameStore = create<
                                             ...loc,
                                             scoutedTimes: newScoutedTimes,
                                             explored: isFullyExplored,
+                                            lastScoutResult: scout
+                                                ? {
+                                                      type: resultType,
+                                                      value: resultValue,
+                                                      itemName: resultItemName,
+                                                  }
+                                                : undefined,
                                         }
                                       : loc,
                               ),
@@ -2807,6 +2820,13 @@ export const useGameStore = create<
                                   ...s.currentLocation,
                                   scoutedTimes: newScoutedTimes,
                                   explored: isFullyExplored,
+                                  lastScoutResult: scout
+                                      ? {
+                                            type: resultType,
+                                            value: resultValue,
+                                            itemName: resultItemName,
+                                        }
+                                      : undefined,
                               }
                             : s.currentLocation,
                 }));
@@ -3386,6 +3406,19 @@ export const useGameStore = create<
 
         set({ currentLocation: loc });
 
+        // Mark location as visited (for planet/station visit tracking)
+        if (loc.type === "planet" || loc.type === "station") {
+            const sector = state.currentSector;
+            if (sector) {
+                const locIndex = sector.locations.findIndex(
+                    (l) => l.id === loc.id,
+                );
+                if (locIndex !== -1) {
+                    sector.locations[locIndex].visited = true;
+                }
+            }
+        }
+
         // Warp coil gives instant travel - no turn passes
         if (warpCoil) {
             get().addLog(
@@ -3399,9 +3432,15 @@ export const useGameStore = create<
         switch (loc.type) {
             case "station":
                 set({ gameMode: "station" });
+                // Deliver survivor capsules for reward
+                handleSurvivorCapsuleDelivery("station");
                 break;
             case "planet":
                 set({ gameMode: "planet" });
+                // Deliver survivor capsules for reward (only on colonized planets)
+                if (!loc.isEmpty) {
+                    handleSurvivorCapsuleDelivery("planet");
+                }
                 // Complete diplomacy contracts (human quest - visit human planet)
                 if (loc.dominantRace === "human" && !loc.isEmpty) {
                     const diplomacyContract = get().activeContracts.find(
@@ -6488,10 +6527,9 @@ export const useGameStore = create<
             get().gainExp(s, expGain);
         });
 
-        // Check research contract
+        // Check research contract (can be completed in any sector)
         const researchContract = get().activeContracts.find(
-            (c) =>
-                c.type === "research" && c.sectorId === get().currentSector?.id,
+            (c) => c.type === "research",
         );
         if (researchContract) {
             set((s) => {
@@ -6693,15 +6731,29 @@ export const useGameStore = create<
                 break;
             }
             case "survivors": {
-                const reward = 20 + Math.floor(Math.random() * 30);
+                const reward = 50 + Math.floor(Math.random() * 50); // 50-100 credits
                 const hasCapacity = state.crew.length < get().getCrewCapacity();
 
+                // Add survivor capsule to cargo instead of immediate reward
                 set((s) => ({
-                    credits: s.credits + reward,
+                    ship: {
+                        ...s.ship,
+                        cargo: [
+                            ...s.ship.cargo,
+                            {
+                                item: "Капсула с выжившими",
+                                quantity: 1,
+                                rewardValue: reward, // Store reward value for later
+                            },
+                        ],
+                    },
                 }));
 
                 get().addLog("✓ Выжившие спасены!", "info");
-                get().addLog(`Благодарность: +${reward}₢`, "info");
+                get().addLog(
+                    `Капсула с выжившими добавлена в трюм. Награда: ${reward}₢ при доставке.`,
+                    "info",
+                );
 
                 if (hasCapacity && Math.random() < 0.3) {
                     // Sometimes a survivor joins the crew
@@ -6756,7 +6808,7 @@ export const useGameStore = create<
                 break;
             }
             case "abandoned_cargo": {
-                const creditsReward = 20 + Math.floor(Math.random() * 30);
+                const creditsReward = 50 + Math.floor(Math.random() * 50); // 50-100 credits
                 const goodId =
                     Object.keys(TRADE_GOODS)[
                         Math.floor(
@@ -6764,6 +6816,7 @@ export const useGameStore = create<
                         )
                     ];
                 const quantity = 5 + Math.floor(Math.random() * 10);
+                const goodName = TRADE_GOODS[goodId].name;
 
                 set((s) => ({
                     credits: s.credits + creditsReward,
@@ -6778,19 +6831,52 @@ export const useGameStore = create<
 
                 get().addLog("📦 Найден заброшенный груз!", "info");
                 get().addLog(`Кредиты: +${creditsReward}₢`, "info");
-                get().addLog(
-                    `${TRADE_GOODS[goodId].name}: +${quantity}`,
-                    "info",
-                );
+                get().addLog(`${goodName}: +${quantity}`, "info");
 
                 // Chance to find artifact
                 const artifact = get().tryFindArtifact();
+                let foundArtifact: string | undefined;
                 if (artifact) {
                     get().addLog(
                         `★ АРТЕФАКТ НАЙДЕН: ${artifact.name}!`,
                         "info",
                     );
+                    foundArtifact = artifact.name;
                 }
+
+                // Store loot details for display
+                const updatedLocation = {
+                    ...loc,
+                    signalType: outcome,
+                    signalResolved: true,
+                    signalLoot: {
+                        credits: creditsReward,
+                        tradeGood: { name: goodName, quantity },
+                        artifact: foundArtifact,
+                    },
+                };
+
+                set((s) => {
+                    const updatedSector = s.currentSector
+                        ? {
+                              ...s.currentSector,
+                              locations: s.currentSector.locations.map((l) =>
+                                  l.id === loc.id ? updatedLocation : l,
+                              ),
+                          }
+                        : null;
+
+                    return {
+                        currentLocation: updatedLocation,
+                        currentSector: updatedSector,
+                        galaxy: {
+                            ...s.galaxy,
+                            sectors: s.galaxy.sectors.map((sec) =>
+                                sec.id === sector.id ? updatedSector! : sec,
+                            ),
+                        },
+                    };
+                });
 
                 // Mark as completed but DON'T close the panel - let player see result
                 set((s) => ({
@@ -7379,6 +7465,37 @@ export const useGameStore = create<
         return true;
     },
 }));
+
+// Helper function to handle survivor capsule delivery
+function handleSurvivorCapsuleDelivery(locationType: "station" | "planet") {
+    const state = useGameStore.getState();
+    const survivorCapsuleIndex = state.ship.cargo.findIndex(
+        (c) => c.item === "Капсула с выжившими",
+    );
+
+    if (survivorCapsuleIndex !== -1) {
+        const capsule = state.ship.cargo[survivorCapsuleIndex];
+        const reward = capsule.rewardValue || 75;
+
+        // Remove capsule and give reward
+        useGameStore.setState((s) => ({
+            credits: s.credits + reward,
+            ship: {
+                ...s.ship,
+                cargo: s.ship.cargo.filter(
+                    (_, idx) => idx !== survivorCapsuleIndex,
+                ),
+            },
+        }));
+
+        useGameStore
+            .getState()
+            .addLog(
+                `🚀 Выжившие доставлены на ${locationType === "station" ? "станцию" : "планету"}! Награда: +${reward}₢`,
+                "info",
+            );
+    }
+}
 
 // Helper function for module connectivity
 function areAllModulesConnected(modules: Module[]): boolean {

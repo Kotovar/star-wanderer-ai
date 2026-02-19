@@ -97,7 +97,12 @@ export function DistressSignalPanel() {
                             <br />
                             <br />
                             <span className="text-[#00ff41]">
-                                Капсула с выжившими отбывает на станцию.
+                                Капсула с выжившими добавлена в трюм.
+                            </span>
+                            <br />
+                            <span className="text-[#ffb000]">
+                                Доставьте на станцию или колонию для получения
+                                награды.
                             </span>
                         </>
                     )}
@@ -108,6 +113,54 @@ export function DistressSignalPanel() {
                             <span className="text-[#00d4ff]">
                                 Пустой корабль дрейфует в космосе.
                             </span>
+                            {/* Show loot details */}
+                            {currentLocation.signalLoot && (
+                                <>
+                                    <br />
+                                    <br />
+                                    <div className="border-t border-[#00d4ff] pt-2 mt-2">
+                                        <span className="text-[#ffb000] font-bold">
+                                            Найдено:
+                                        </span>
+                                        {currentLocation.signalLoot.credits && (
+                                            <div className="text-[#00ff41] text-xs mt-1">
+                                                💰{" "}
+                                                {
+                                                    currentLocation.signalLoot
+                                                        .credits
+                                                }
+                                                ₢
+                                            </div>
+                                        )}
+                                        {currentLocation.signalLoot
+                                            .tradeGood && (
+                                            <div className="text-[#00d4ff] text-xs">
+                                                📦{" "}
+                                                {
+                                                    currentLocation.signalLoot
+                                                        .tradeGood.name
+                                                }{" "}
+                                                (
+                                                {
+                                                    currentLocation.signalLoot
+                                                        .tradeGood.quantity
+                                                }
+                                                т)
+                                            </div>
+                                        )}
+                                        {currentLocation.signalLoot
+                                            .artifact && (
+                                            <div className="text-[#ff00ff] text-xs">
+                                                ★{" "}
+                                                {
+                                                    currentLocation.signalLoot
+                                                        .artifact
+                                                }
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            )}
                         </>
                     )}
                 </div>

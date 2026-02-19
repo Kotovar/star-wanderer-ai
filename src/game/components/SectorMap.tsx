@@ -64,7 +64,7 @@ function getScannerInfo(
             return info;
         } else if (loc.type === "distress_signal") {
             info.push(`🆘 Сигнал бедствия`);
-            info.push(`🏷️ ${loc.name}`);
+            // Don't add name here - it will be added below with 📍
             return info;
         } else {
             // For other objects, show as unknown
@@ -347,17 +347,28 @@ export function SectorMap() {
             const isExploredEmptyPlanet =
                 loc.type === "planet" && loc.isEmpty && loc.explored;
 
+            // Check for visited colonized planet (opened planet panel at least once)
+            const isVisitedColonizedPlanet =
+                loc.type === "planet" && !loc.isEmpty && loc.visited;
+
+            // Check for visited station (opened station panel at least once)
+            const isVisitedStation = loc.type === "station" && loc.visited;
+
             const finalDisplayName = isUnknownShip
                 ? "❓ Неизвестный корабль"
                 : isExploredEmptyPlanet
-                  ? `${loc.name} (✓)`
-                  : displayName;
+                  ? `${loc.name} (исследовано)`
+                  : isVisitedColonizedPlanet || isVisitedStation
+                    ? `${loc.name} (посещено)`
+                    : displayName;
 
             ctx.font = "11px Share Tech Mono";
             ctx.textAlign = "center";
             ctx.fillStyle = completed
                 ? "#888"
-                : isExploredEmptyPlanet
+                : isExploredEmptyPlanet ||
+                    isVisitedColonizedPlanet ||
+                    isVisitedStation
                   ? "#00ff41"
                   : loc.type === "planet" && !loc.isEmpty
                     ? "#ffb000"

@@ -172,6 +172,13 @@ export interface Location {
     planetType?: string;
     isEmpty?: boolean;
     explored?: boolean; // Fully explored empty planet (after 3 scout missions)
+    visited?: boolean; // Player has visited this location (opened its panel)
+    lastScoutResult?: {
+        type: "credits" | "tradeGood" | "nothing" | "enemy";
+        value?: number; // For credits
+        itemName?: string; // For trade goods
+        enemyThreat?: number; // For enemy encounter
+    }; // Result of the last scouting mission
     contracts?: Contract[];
     scoutingAvailable?: boolean;
     scoutedTimes?: number;
@@ -203,6 +210,12 @@ export interface Location {
     signalResolved?: boolean;
     signalRevealed?: boolean; // Scanner successfully revealed the outcome
     signalRevealChecked?: boolean; // Already checked with scanner (one-time check)
+    signalLoot?: {
+        // Store loot details for display
+        credits?: number;
+        tradeGood?: { name: string; quantity: number };
+        artifact?: string;
+    };
     // Ancient boss fields
     bossId?: string;
     bossDefeated?: boolean;
@@ -294,6 +307,7 @@ export interface CargoItem {
     item: string;
     quantity: number;
     contractId?: string;
+    rewardValue?: number; // For special cargo like survivor capsules
 }
 
 export interface TradeGood {
