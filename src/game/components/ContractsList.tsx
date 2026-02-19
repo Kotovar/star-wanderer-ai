@@ -231,6 +231,24 @@ export function ContractsList() {
                         },
                     ],
                 };
+            case "diplomacy":
+                return {
+                    type: "Дипломатия",
+                    tasks: [
+                        {
+                            label: "Что сделать",
+                            value: `Посетить планету ${contract.targetPlanetName || "Неизвестно"} (${contract.targetPlanetType || "планета"})`,
+                        },
+                        {
+                            label: "Целевой сектор",
+                            value: contract.targetSectorName || "Неизвестно",
+                        },
+                        {
+                            label: "Где сдать",
+                            value: "Автоматически при посещении планеты",
+                        },
+                    ],
+                };
             default:
                 return {
                     type: "Задание",
