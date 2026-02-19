@@ -236,7 +236,7 @@ interface CrewManagementProps {
     crew: CrewMember[]; // eslint-disable-line no-unused-vars
     ship: ReturnType<typeof useGameStore.getState>["ship"];
     selectedCrew: CrewMember | null;
-    onSelectCrew: () => void;
+    onSelectCrew: (crew: CrewMember | null) => void;
     onMoveCrew: (_crewId: number, _moduleId: number) => void; // eslint-disable-line no-unused-vars
     assignCombatTask: (
         _crewId: number, // eslint-disable-line no-unused-vars
@@ -277,7 +277,7 @@ function CrewManagement({
                             module={currentModule}
                             adjacentModules={adjacentModules}
                             isSelected={isSelected}
-                            onSelect={() => onSelectCrew()}
+                            onSelect={() => onSelectCrew(isSelected ? null : c)}
                             onMove={onMoveCrew}
                             onAssignTask={(id, task) =>
                                 assignCombatTask(id, task, null)

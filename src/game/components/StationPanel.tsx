@@ -26,14 +26,12 @@ export {
     generateStationItems,
     getStationCrewCount,
     generateStationCrew,
-    ENGINE_PRICES,
 } from "./station/station-data";
 
 import {
     generateStationItems,
     getStationCrewCount,
     generateStationCrew,
-    ENGINE_PRICES,
 } from "./station/station-data";
 
 export function StationPanel() {
@@ -51,7 +49,6 @@ export function StationPanel() {
     const buyTradeGood = useGameStore((s) => s.buyTradeGood);
     const sellTradeGood = useGameStore((s) => s.sellTradeGood);
     const hireCrew = useGameStore((s) => s.hireCrew);
-    const upgradeEngine = useGameStore((s) => s.upgradeEngine);
     const refuel = useGameStore((s) => s.refuel);
     const getCrewCapacity = useGameStore((s) => s.getCrewCapacity);
     const crew = useGameStore((s) => s.crew);
@@ -108,12 +105,7 @@ export function StationPanel() {
     );
     const hasSpace = crew.length < getCrewCapacity();
 
-    const engineTier = ship.engineTier;
     const captainLevel = crew.find((c) => c.profession === "pilot")?.level ?? 1;
-    const canUpgradeEngine = engineTier < 3;
-    const nextEngineTier = (engineTier + 1) as 2 | 3;
-    const enginePrice = ENGINE_PRICES[nextEngineTier];
-    const meetsLevelRequirement = captainLevel >= nextEngineTier;
 
     const fuel = ship.fuel;
     const maxFuel = ship.maxFuel;
@@ -244,14 +236,7 @@ export function StationPanel() {
                         maxFuel={maxFuel}
                         fuelPricePerUnit={fuelPricePerUnit}
                         fullRefuelPrice={fullRefuelPrice}
-                        canUpgradeEngine={canUpgradeEngine}
-                        engineTier={engineTier}
-                        nextEngineTier={nextEngineTier}
-                        enginePrice={enginePrice}
-                        captainLevel={captainLevel}
-                        meetsLevelRequirement={meetsLevelRequirement}
                         refuel={refuel}
-                        upgradeEngine={(tier) => upgradeEngine(tier as 2 | 3)}
                         repairShip={repairShip}
                         healCrew={healCrew}
                         scrapModule={scrapModule}

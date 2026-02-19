@@ -1,4 +1,4 @@
-import type { Sector } from "../types";
+import type { Sector, Module } from "../types";
 
 // Tier colors
 export const TIER_COLORS = {
@@ -19,15 +19,25 @@ export const TIER_COLORS = {
     },
 };
 
+// Get engine level from modules
+export function getEngineLevel(modules: Module[]): number {
+    const engines = modules.filter(
+        (m) => m.type === "engine" && !m.disabled && m.health > 0,
+    );
+    if (engines.length === 0) return 1;
+    return Math.max(...engines.map((e) => e.level || 1));
+}
+
 // Check if player can access a tier
 export function canAccessTier(
     tier: number,
-    engineTier: number,
+    modules: Module[],
     captainLevel: number,
 ): boolean {
     if (tier === 1) return true;
-    if (tier === 2) return engineTier >= 2 && captainLevel >= 2;
-    if (tier === 3) return engineTier >= 3 && captainLevel >= 3;
+    const engineLevel = getEngineLevel(modules);
+    if (tier === 2) return engineLevel >= 2 && captainLevel >= 2;
+    if (tier === 3) return engineLevel >= 3 && captainLevel >= 3;
     return false;
 }
 
@@ -43,12 +53,13 @@ export function drawLegend(
     ctx: CanvasRenderingContext2D,
     width: number,
     height: number,
-    engineTier: number,
+    modules: Module[],
     captainLevel: number,
     fuel: number,
 ) {
     const legendX = 10;
     const legendY = 10;
+    const engineLevel = getEngineLevel(modules);
 
     ctx.font = "13px Share Tech Mono";
     ctx.textAlign = "left";
@@ -59,7 +70,7 @@ export function drawLegend(
     ctx.fillText(`⛽ Топливо: ${displayFuel}`, legendX, legendY + 16);
 
     ctx.fillStyle = "#00ff41";
-    ctx.fillText(`Двигатель: Тир ${engineTier}`, legendX, legendY + 32);
+    ctx.fillText(`Двигатель: Ур.${engineLevel}`, legendX, legendY + 32);
 
     ctx.fillStyle = "#888";
     ctx.fillText(`Капитан: Ур.${captainLevel}`, legendX, legendY + 48);
@@ -74,20 +85,20 @@ export function drawSector(
     centerX: number,
     centerY: number,
     maxRadius: number,
-    engineTier: number,
+    modules: Module[],
     captainLevel: number,
     fuel: number,
-    calculateFuelCost: () => number,
+    calculateFuelCost: (targetTier: number) => number,
     areEnginesFunctional: () => boolean,
     areFuelTanksFunctional: () => boolean,
     isCurrentSector: boolean,
 ) {
     const tier = sector.tier;
     const isAccessible =
-        canAccessTier(tier, engineTier, captainLevel) &&
+        canAccessTier(tier, modules, captainLevel) &&
         areEnginesFunctional() &&
         areFuelTanksFunctional();
-    const fuelCost = calculateFuelCost();
+    const fuelCost = calculateFuelCost(tier);
     // Safeguard against NaN or undefined fuel
     const safeFuel = fuel !== undefined && !isNaN(fuel) ? fuel : 0;
     const canAffordFuel = safeFuel >= fuelCost;
@@ -167,7 +178,7 @@ export function drawTierRings(
     centerX: number,
     centerY: number,
     maxRadius: number,
-    engineTier: number,
+    modules: Module[],
     captainLevel: number,
 ) {
     const tierRadii = [maxRadius * 0.5, maxRadius * 0.8, maxRadius * 1.1];
@@ -175,7 +186,7 @@ export function drawTierRings(
     tierRadii.forEach((radius, idx) => {
         const tier = (idx + 1) as 1 | 2 | 3;
         const colors = TIER_COLORS[tier];
-        const isAccessible = canAccessTier(tier, engineTier, captainLevel);
+        const isAccessible = canAccessTier(tier, modules, captainLevel);
 
         drawTierGlow(ctx, centerX, centerY, radius, colors, isAccessible);
         drawTierRing(ctx, centerX, centerY, radius, colors, isAccessible, tier);

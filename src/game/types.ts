@@ -426,7 +426,6 @@ export interface GameState {
         gridSize: number;
         cargo: CargoItem[];
         tradeGoods: TradeGood[];
-        engineTier: 1 | 2 | 3; // Engine upgrade level for accessing higher tier systems
         fuel: number; // Current fuel
         maxFuel: number; // Max fuel capacity from all fuel tanks
         moduleMovedThisTurn?: boolean; // Track if a module was moved this turn
@@ -490,6 +489,7 @@ export interface ShopItem {
     scanRange?: number;
     oxygen?: number;
     capacity?: number; // For cargo, fuel tanks
+    fuelEfficiency?: number; // For engine modules
     price: number;
     stock: number;
     effect?: {

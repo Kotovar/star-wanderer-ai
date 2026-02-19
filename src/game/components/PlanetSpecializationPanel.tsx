@@ -36,8 +36,9 @@ export function PlanetSpecializationPanel({
     if (!spec) return null;
 
     const planetCooldowns = useGameStore((s) => s.planetCooldowns);
-    const isOnCooldown =
-        currentLocation.id && planetCooldowns[currentLocation.id];
+    const isOnCooldown = !!(
+        currentLocation.id && planetCooldowns[currentLocation.id]
+    );
 
     // Calculate actual cost for human academy based on selected crew level
     const actualCost =

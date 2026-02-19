@@ -20,6 +20,13 @@ export function ShipStats() {
     const damage = getTotalDamage();
     const crewCapacity = getCrewCapacity();
 
+    // Get engine level from modules
+    const engines = ship.modules.filter(
+        (m) => m.type === "engine" && !m.disabled && m.health > 0,
+    );
+    const engineLevel =
+        engines.length > 0 ? Math.max(...engines.map((e) => e.level || 1)) : 1;
+
     return (
         <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4 mt-2.5">
             {/* Новые параметры в верхней части */}
@@ -31,7 +38,7 @@ export function ShipStats() {
             </div>
             <div className="flex justify-between mb-2 text-sm">
                 <span className="text-[#ffb000]">🔥 Двигатель:</span>
-                <span className="text-[#00ff41]">Тир {ship.engineTier}</span>
+                <span className="text-[#00ff41]">Ур.{engineLevel}</span>
             </div>
             <div className="flex justify-between mb-2 text-sm">
                 <span className="text-[#ffb000]">👤 Капитан:</span>

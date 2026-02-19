@@ -7,14 +7,7 @@ interface ServicesTabProps {
     maxFuel: number;
     fuelPricePerUnit: number;
     fullRefuelPrice: number;
-    canUpgradeEngine: boolean;
-    engineTier: number;
-    nextEngineTier: number;
-    enginePrice: number;
-    captainLevel: number;
-    meetsLevelRequirement: boolean;
     refuel: (amount: number, price: number) => void;
-    upgradeEngine: (tier: number) => void;
     repairShip: () => void;
     healCrew: () => void;
     scrapModule: (moduleId: number) => void;
@@ -35,14 +28,7 @@ export function ServicesTab({
     maxFuel,
     fuelPricePerUnit,
     fullRefuelPrice,
-    canUpgradeEngine,
-    engineTier,
-    nextEngineTier,
-    enginePrice,
-    captainLevel,
-    meetsLevelRequirement,
     refuel,
-    upgradeEngine,
     repairShip,
     healCrew,
     scrapModule,
@@ -62,17 +48,6 @@ export function ServicesTab({
                 credits={credits}
                 onRefuel={refuel}
             />
-
-            {engineTier === 3 && (
-                <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4">
-                    <div className="text-[#00ff41] font-bold mb-2">
-                        🚀 Двигатель: Тир 3 (МАКС)
-                    </div>
-                    <div className="text-sm text-[#00ff41]">
-                        Доступны все секторы галактики!
-                    </div>
-                </div>
-            )}
 
             <RepairSection credits={credits} onRepair={repairShip} />
             <HealSection credits={credits} onHeal={healCrew} />

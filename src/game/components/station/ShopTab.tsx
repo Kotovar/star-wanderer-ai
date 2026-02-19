@@ -132,7 +132,6 @@ export function ShopTab({
                         type: selectedItem.moduleType || "reactor",
                         name: selectedItem.name,
                         health: 100,
-                        maxHealth: 100,
                         power: selectedItem.power || 0,
                         consumption: selectedItem.consumption || 0,
                         defense: selectedItem.defense || 0,
@@ -142,6 +141,8 @@ export function ShopTab({
                         fuelEfficiency: selectedItem.fuelEfficiency || 0,
                         width: selectedItem.width || 1,
                         height: selectedItem.height || 1,
+                        x: 0,
+                        y: 0,
                         level: parseInt(
                             selectedItem.id.split("-")[1] || "1",
                             10,

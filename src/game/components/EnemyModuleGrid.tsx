@@ -6,7 +6,7 @@ import type { CombatState } from "../types";
 interface EnemyModuleGridProps {
     currentCombat: CombatState;
     isBoss: boolean;
-    onModuleClick: () => void;
+    onModuleClick: (moduleId: number) => void;
     hasGunner: boolean;
 }
 
@@ -110,7 +110,7 @@ export function EnemyModuleGrid({
                 y <= modY + cellSize
             ) {
                 if (mod.health > 0) {
-                    onModuleClick();
+                    onModuleClick(mod.id);
                 }
             }
         });

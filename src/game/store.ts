@@ -1200,7 +1200,6 @@ const initialState: GameState = {
         gridSize: 5,
         cargo: [],
         tradeGoods: [],
-        engineTier: 1, // Start with tier 1 engine
         fuel: STARTING_FUEL,
         maxFuel: STARTING_FUEL,
     },
@@ -1359,7 +1358,6 @@ export const useGameStore = create<
         healCrew: () => void;
         buyTradeGood: (goodId: string, quantity?: number) => void;
         sellTradeGood: (goodId: string, quantity?: number) => void;
-        upgradeEngine: (tier: 2 | 3) => void;
 
         // Crew
         hireCrew: (
@@ -1414,7 +1412,7 @@ export const useGameStore = create<
         trainCrew: (crewMemberId: number) => void;
         scanSector: () => void;
         boostArtifact: (artifactId: string) => void;
-        activatePlanetEffect: (raceId: RaceId) => void;
+        activatePlanetEffect: (raceId: RaceId, planetId?: string) => void;
         removeExpiredEffects: () => void;
 
         // Game Over
@@ -2379,7 +2377,7 @@ export const useGameStore = create<
                             }
 
                             // Check which crew members actually need healing
-                            const crewNeedingHealing = s.crew.filter(
+                            const crewNeedingHealing = get().crew.filter(
                                 (cr) =>
                                     cr.moduleId === c.moduleId &&
                                     cr.health < (cr.maxHealth || 100),
@@ -2438,7 +2436,7 @@ export const useGameStore = create<
                             }
 
                             // Check if any crew member actually needs morale boost
-                            const crewNeedingMorale = s.crew.filter(
+                            const crewNeedingMorale = get().crew.filter(
                                 (cr) =>
                                     cr.moduleId === c.moduleId &&
                                     cr.happiness < 100,
@@ -3277,11 +3275,17 @@ export const useGameStore = create<
         }
 
         // Check tier access requirements
-        const engineTier = state.ship.engineTier;
+        const engines = state.ship.modules.filter(
+            (m) => m.type === "engine" && !m.disabled && m.health > 0,
+        );
+        const engineLevel =
+            engines.length > 0
+                ? Math.max(...engines.map((e) => e.level || 1))
+                : 1;
         const captainLevel =
             state.crew.find((c) => c.profession === "pilot")?.level ?? 1;
 
-        if (sector.tier === 2 && (engineTier < 2 || captainLevel < 2)) {
+        if (sector.tier === 2 && (engineLevel < 2 || captainLevel < 2)) {
             get().addLog(
                 `Доступ к Тир 2 требует: Двигатель Ур.2 + Капитан Ур.2`,
                 "error",
@@ -3290,7 +3294,7 @@ export const useGameStore = create<
             return;
         }
 
-        if (sector.tier === 3 && (engineTier < 3 || captainLevel < 3)) {
+        if (sector.tier === 3 && (engineLevel < 3 || captainLevel < 3)) {
             get().addLog(
                 `Доступ к Тир 3 требует: Двигатель Ур.3 + Капитан Ур.3`,
                 "error",
@@ -4779,7 +4783,7 @@ export const useGameStore = create<
                 "cockpit";
         let pilotEvasionChance = 0;
 
-        if (pilotInCockpit) {
+        if (pilotInCockpit && pilot) {
             // Base evasion chance from pilot level: 5% per level
             pilotEvasionChance = (pilot.level || 1) * 0.05;
 
@@ -4787,7 +4791,11 @@ export const useGameStore = create<
             pilotEvasionChance += (state.ship.bonusEvasion || 0) / 100;
         }
 
-        if (pilotEvasionChance > 0 && Math.random() < pilotEvasionChance) {
+        if (
+            pilot &&
+            pilotEvasionChance > 0 &&
+            Math.random() < pilotEvasionChance
+        ) {
             get().addLog(`✈️ Пилот ${pilot.name} уклонился от атаки!`, "info");
             get().gainExp(pilot, 8); // Experience for successful evasion
             // Skip the rest of enemy attack
@@ -5995,47 +6003,6 @@ export const useGameStore = create<
         set((s) => ({ credits: s.credits + price }));
         get().addLog(
             `Продано: ${TRADE_GOODS[goodId].name} ${quantity}т за ${price}₢`,
-            "info",
-        );
-        playSound("success");
-    },
-
-    upgradeEngine: (tier) => {
-        const state = get();
-        const currentTier = state.ship.engineTier;
-
-        // Can only upgrade to next tier
-        if (tier !== currentTier + 1) {
-            get().addLog(
-                `Сначала улучшите до Тир ${currentTier + 1}!`,
-                "error",
-            );
-            return;
-        }
-
-        // Check captain level requirement
-        const captainLevel =
-            state.crew.find((c) => c.profession === "pilot")?.level ?? 1;
-        if (captainLevel < tier) {
-            get().addLog(`Требуется капитан уровня ${tier}!`, "error");
-            return;
-        }
-
-        // Calculate price
-        const price = tier === 2 ? 1500 : 3000;
-
-        if (state.credits < price) {
-            get().addLog(`Недостаточно кредитов! Нужно ${price}₢`, "error");
-            return;
-        }
-
-        set((s) => ({
-            credits: s.credits - price,
-            ship: { ...s.ship, engineTier: tier },
-        }));
-
-        get().addLog(
-            `Двигатель улучшен до Тир ${tier}! Доступны новые секторы!`,
             "info",
         );
         playSound("success");
