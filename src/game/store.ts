@@ -542,7 +542,7 @@ const generateGalaxy = (): Sector[] => {
                         name:
                             asteroidTier === 4
                                 ? `★ Древний астероидный пояс`
-                                : `Астероидный пояс ${asteroidTier}-го уровня`,
+                                : `Пояс астероидов ${asteroidTier}-го уровня`,
                         asteroidTier,
                         resources,
                         mined: false,
@@ -3809,7 +3809,7 @@ export const useGameStore = create<
         const loc = state.currentLocation;
 
         if (!loc || loc.type !== "asteroid_belt") {
-            get().addLog("Это не астероидный пояс!", "error");
+            get().addLog("Это не пояс астероидов!", "error");
             return;
         }
 
