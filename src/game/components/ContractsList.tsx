@@ -190,18 +190,26 @@ export function ContractsList() {
                             value: "Найти артефакт (исследовать аномалии или победить босса)",
                         },
                         {
+                            label: "Прогресс",
+                            value: contract.bossDefeated
+                                ? "✓ Босс побеждён, ждём доставки"
+                                : "⚠ Босс не найден",
+                        },
+                        {
                             label: "Где сдать",
                             value: "Автоматически при находке артефакта",
                         },
                     ],
                 };
             case "patrol":
+                const visitedCount = contract.visitedSectors?.length || 0;
+                const targetCount = contract.targetSectors?.length || 0;
                 return {
                     type: "Патрулирование",
                     tasks: [
                         {
                             label: "Что сделать",
-                            value: `Посетить сектора: ${contract.targetSectorNames || "Неизвестно"}`,
+                            value: `Посетить сектора: ${contract.targetSectorNames || "Неизвестно"} (${visitedCount}/${targetCount})`,
                         },
                         {
                             label: "Где сдать",

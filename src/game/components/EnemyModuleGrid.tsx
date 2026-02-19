@@ -132,6 +132,7 @@ interface ShipStatusCardProps {
     shields: number;
     maxShields: number;
     armor: number;
+    maxArmor?: number;
     damage: number;
     hasGunner?: boolean;
     isEnemy?: boolean;
@@ -144,6 +145,7 @@ export function ShipStatusCard({
     shields,
     maxShields,
     armor,
+    maxArmor,
     damage,
     hasGunner,
     isEnemy,
@@ -164,38 +166,44 @@ export function ShipStatusCard({
         : "[&>div]:bg-[#0080ff]";
     const armorColor =
         armor < 50 ? "[&>div]:bg-[#ff0040]" : "[&>div]:bg-[#00ff41]";
+    const maxArmorValue = maxArmor || armor || 1;
+    const showArmorBar = !isEnemy; // Only show armor bar for player ship
 
     return (
         <div className={`${bgColor} border border-${borderColor} p-4`}>
             <div className={`text-base font-bold mb-2 ${titleColor}`}>
                 {title}
             </div>
+            ⚔ Урон: {damage}{" "}
             <div className="my-2">
                 Щиты: {shields}/{maxShields}
                 <div className="h-2 mt-1 bg-[rgba(0,0,0,0.5)] relative">
                     <div
-                        className={`absolute top-0 left-0 h-full ${progressColor.replace("[&>div]:", "")}`}
+                        className={`absolute rounded-full top-0 left-0 h-full ${progressColor.replace("[&>div]:", "")}`}
                         style={{
                             width: `${(shields / Math.max(1, maxShields)) * 100}%`,
                         }}
                     />
                 </div>
             </div>
-            {armor !== undefined && (
+            {armor !== undefined && !isEnemy && (
                 <div className="my-2">
-                    Броня: {armor}%
-                    <div
-                        className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] relative ${armorColor}`}
-                    >
+                    Броня: {armor} ед.
+                    {showArmorBar && (
                         <div
-                            className={`absolute top-0 left-0 h-full ${armorColor.includes("#ff0040") ? "bg-[#ff0040]" : "bg-[#00ff41]"}`}
-                            style={{ width: `${armor}%` }}
-                        />
-                    </div>
+                            className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] relative ${armorColor}`}
+                        >
+                            <div
+                                className={`absolute rounded-full top-0 left-0 h-full ${armorColor.includes("#ff0040") ? "bg-[#ff0040]" : "bg-[#00ff41]"}`}
+                                style={{
+                                    width: `${Math.min(100, (armor / Math.max(1, maxArmorValue)) * 100)}%`,
+                                }}
+                            />
+                        </div>
+                    )}
                 </div>
             )}
             <div className={hasGunner ? "text-[#00ff41]" : "text-[#ffaa00]"}>
-                ⚔ Урон: {damage}{" "}
                 {!hasGunner && hasGunner !== undefined && "(-50%)"}
             </div>
             {children}

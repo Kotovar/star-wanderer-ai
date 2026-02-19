@@ -353,7 +353,7 @@ export function PlanetPanel() {
                                             {c.type === "diplomacy" &&
                                                 `🌍 Посетить планету ${c.targetPlanetName} (${c.targetPlanetType}) в секторе ${c.targetSectorName}`}
                                             {c.type === "patrol" &&
-                                                `🦠 Посетить сектора: ${c.targetSectorNames}`}
+                                                `🦠 Посетить сектора: ${c.targetSectorNames} (${c.visitedSectors?.length || 0}/${c.targetSectors?.length || 0})`}
                                             {c.type === "rescue" &&
                                                 `👁️ Войти в ${c.stormName || "шторм"} в секторе ${c.sectorName}`}
                                             {c.type === "mining" &&

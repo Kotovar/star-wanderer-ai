@@ -115,6 +115,10 @@ function ModuleStats({ module }: ModuleStatsProps) {
             {module.type === "shield" &&
                 module.defense &&
                 module.defense > 0 && <span>🛡 {module.defense}</span>}
+            {/* Defense for all modules (not just shield) */}
+            {module.type !== "shield" &&
+                module.defense &&
+                module.defense > 0 && <span>🛡 {module.defense}</span>}
             {(module.type === "lifesupport" || module.type === "habitat") &&
                 module.oxygen &&
                 module.oxygen > 0 && <span>💨 {module.oxygen} сущ.</span>}
@@ -426,6 +430,13 @@ function ModuleDetailedStats({
                         {module.oxygen} существ
                     </div>
                 )}
+            {/* Defense/Armor for all modules */}
+            {module.defense !== undefined && module.defense > 0 && (
+                <div>
+                    <span className="text-[#ffb000]">🛡 Защита:</span>{" "}
+                    {module.defense}
+                </div>
+            )}
             <div>
                 <span className="text-[#ffb000]">❤ Состояние:</span>{" "}
                 {module.health}%

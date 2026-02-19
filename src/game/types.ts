@@ -90,9 +90,10 @@ export interface Module {
     power?: number;
     consumption?: number;
     health: number;
+    maxHealth?: number; // Maximum health for this module
     level?: number;
     capacity?: number; // For cargo and fuel tanks
-    defense?: number;
+    defense?: number; // Armor/defense value (reduces incoming damage)
     oxygen?: number;
     scanRange?: number;
     fuelEfficiency?: number; // For engines - lower is better (fuel per tier)
@@ -287,6 +288,8 @@ export interface Contract {
     enemyType?: string;
     // For storm/rescue quests
     stormName?: string;
+    // For mining quests (crystalline)
+    bossDefeated?: boolean; // Track if boss has been defeated for artifact hunt
 }
 
 export type ContractType =
@@ -553,7 +556,8 @@ export type ArtifactType =
     | "auto_repair" // Auto repair but crew leaves
     | "critical_overload" // Massive crit but self damage
     | "dark_shield" // Strong shield but morale drain
-    | "void_engine"; // Free travel but crew suffering
+    | "void_engine" // Free travel but crew suffering
+    | "module_armor"; // Bonus armor to all modules
 
 export type ArtifactNegativeType =
     | "happiness_drain" // -X happiness per turn

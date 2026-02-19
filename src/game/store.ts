@@ -49,7 +49,9 @@ const initialModules: Module[] = [
         height: 1,
         power: 10,
         health: 100,
+        maxHealth: 100,
         level: 1,
+        defense: 1,
     },
     {
         id: 2,
@@ -61,7 +63,9 @@ const initialModules: Module[] = [
         height: 1,
         consumption: 1,
         health: 100,
+        maxHealth: 100,
         level: 1,
+        defense: 1,
     },
     {
         id: 3,
@@ -73,8 +77,10 @@ const initialModules: Module[] = [
         height: 1,
         consumption: 2,
         health: 100,
+        maxHealth: 100,
         oxygen: 5,
         level: 1,
+        defense: 1,
     },
     {
         id: 4,
@@ -87,7 +93,9 @@ const initialModules: Module[] = [
         consumption: 1,
         capacity: 50,
         health: 100,
+        maxHealth: 100,
         level: 1,
+        defense: 1,
     },
     {
         id: 5,
@@ -99,8 +107,10 @@ const initialModules: Module[] = [
         height: 1,
         consumption: 1,
         health: 100,
+        maxHealth: 100,
         level: 1,
         fuelEfficiency: 10,
+        defense: 1,
     },
     {
         id: 6,
@@ -111,8 +121,10 @@ const initialModules: Module[] = [
         width: 1,
         height: 1,
         health: 100,
+        maxHealth: 100,
         level: 1,
         capacity: 100,
+        defense: 1,
     },
 ];
 
@@ -1437,11 +1449,17 @@ export const useGameStore = create<
 
     updateShipStats: () => {
         set((state) => {
+            // Total hull health (sum of all module health)
             const totalHealth = state.ship.modules.reduce(
-                (sum, m) => sum + m.health,
+                (sum, m) => sum + (m.maxHealth || m.health),
                 0,
             );
-            const armor = Math.floor(totalHealth / state.ship.modules.length);
+            // Total defense (sum of all module defense values)
+            let totalDefense = state.ship.modules.reduce(
+                (sum, m) => sum + (m.defense || 0),
+                0,
+            );
+
             let totalShields = state.ship.modules
                 .filter((m) => m.type === "shield")
                 .reduce((sum, m) => sum + (m.defense || 0), 0);
@@ -1452,6 +1470,15 @@ export const useGameStore = create<
             );
             if (darkShield) {
                 totalShields += darkShield.effect.value || 50;
+            }
+
+            // Crystalline Armor artifact bonus (+X defense to all modules)
+            const crystallineArmor = state.artifacts.find(
+                (a) => a.effect.type === "module_armor" && a.effect.active,
+            );
+            if (crystallineArmor) {
+                const armorBonus = crystallineArmor.effect.value || 0;
+                totalDefense += state.ship.modules.length * armorBonus;
             }
 
             const totalOxygen = state.ship.modules
@@ -1473,7 +1500,7 @@ export const useGameStore = create<
             return {
                 ship: {
                     ...state.ship,
-                    armor,
+                    armor: totalDefense, // Use total defense as armor value
                     maxShields: maxShieldsWithBonus,
                     shields: Math.min(state.ship.shields, maxShieldsWithBonus),
                     crewCapacity: totalOxygen,
@@ -1552,19 +1579,25 @@ export const useGameStore = create<
 
     getTotalDamage: () => {
         const state = get();
-        const dmg = { total: 0, kinetic: 0, laser: 0, missile: 0 };
+        let dmg = { total: 0, kinetic: 0, laser: 0, missile: 0 };
         state.ship.modules.forEach((m) => {
             if (m.disabled) return;
             if (m.type === "weaponbay" && m.weapons) {
                 m.weapons.forEach((w) => {
                     if (w) {
-                        const wd = WEAPON_TYPES[w.type].damage;
-                        dmg.total += wd;
-                        dmg[w.type] += wd;
+                        const weaponType = WEAPON_TYPES[w.type];
+                        let weaponDamage = weaponType.damage;
+
+                        // Laser bonus: +20% damage to shields (calculated in combat)
+                        // For display, show base damage
+                        dmg.total += weaponDamage;
+                        dmg[w.type] += weaponDamage;
                     }
                 });
             }
         });
+
+        // Apply crew assignments
         if (state.crew.find((c) => c.assignment === "targeting"))
             dmg.total = Math.floor(dmg.total * 1.15);
         if (state.crew.find((c) => c.assignment === "overclock"))
@@ -2027,17 +2060,19 @@ export const useGameStore = create<
 
             if (get().traveling && get().traveling!.turnsLeft <= 0) {
                 const destinationSector = traveling.destination;
-                set({ currentSector: destinationSector, traveling: null });
-                get().addLog(`Прибытие в ${destinationSector.name}`, "info");
-                get().updateShipStats();
 
                 // Update patrol contracts (xenosymbiont quest - visit sectors)
-                const patrolContracts = get().activeContracts.filter(
+                const patrolContracts = state.activeContracts.filter(
                     (c) =>
                         c.type === "patrol" &&
                         c.isRaceQuest &&
                         c.targetSectors?.includes(destinationSector.id),
                 );
+
+                let newActiveContracts = state.activeContracts;
+                let contractCompleted = false;
+                let completedContractId = "";
+
                 patrolContracts.forEach((c) => {
                     const visitedSectors = [
                         ...new Set([
@@ -2049,27 +2084,20 @@ export const useGameStore = create<
 
                     if (visitedSectors.length >= targetSectors.length) {
                         // All sectors visited - complete contract
-                        set((s) => ({ credits: s.credits + (c.reward || 0) }));
+                        contractCompleted = true;
+                        completedContractId = c.id;
                         get().addLog(
                             `Сбор биообразцов завершён! +${c.reward}₢`,
                             "info",
                         );
-                        set((s) => ({
-                            completedContractIds: [
-                                ...s.completedContractIds,
-                                c.id,
-                            ],
-                            activeContracts: s.activeContracts.filter(
-                                (ac) => ac.id !== c.id,
-                            ),
-                        }));
+                        newActiveContracts = newActiveContracts.filter(
+                            (ac) => ac.id !== c.id,
+                        );
                     } else {
                         // Update progress
-                        set((s) => ({
-                            activeContracts: s.activeContracts.map((ac) =>
-                                ac.id === c.id ? { ...ac, visitedSectors } : ac,
-                            ),
-                        }));
+                        newActiveContracts = newActiveContracts.map((ac) =>
+                            ac.id === c.id ? { ...ac, visitedSectors } : ac,
+                        );
                         get().addLog(
                             `Биообразцы: ${visitedSectors.length}/${targetSectors.length} секторов`,
                             "info",
@@ -2077,6 +2105,22 @@ export const useGameStore = create<
                     }
                 });
 
+                set((s) => ({
+                    currentSector: destinationSector,
+                    traveling: null,
+                    credits: contractCompleted
+                        ? s.credits +
+                          (patrolContracts.find(
+                              (c) => c.id === completedContractId,
+                          )?.reward || 0)
+                        : s.credits,
+                    completedContractIds: contractCompleted
+                        ? [...s.completedContractIds, completedContractId]
+                        : s.completedContractIds,
+                    activeContracts: newActiveContracts,
+                }));
+                get().addLog(`Прибытие в ${destinationSector.name}`, "info");
+                get().updateShipStats();
                 set({ gameMode: "sector_map" });
                 return;
             }
@@ -3180,8 +3224,34 @@ export const useGameStore = create<
                     activeMods[Math.floor(Math.random() * activeMods.length)];
 
                 if (tgt) {
-                    const reducedDamage = eDmg; // No crystal armor calc for simplicity
-                    const wasDestroyed = tgt.health <= reducedDamage;
+                    // Apply shield and armor damage reduction
+                    let remainingDamage = eDmg;
+
+                    // Shields absorb first
+                    if (state.ship.shields > 0) {
+                        const shieldAbsorb = Math.min(
+                            state.ship.shields,
+                            remainingDamage,
+                        );
+                        set((s) => ({
+                            ship: {
+                                ...s.ship,
+                                shields: s.ship.shields - shieldAbsorb,
+                            },
+                        }));
+                        remainingDamage -= shieldAbsorb;
+                    }
+
+                    // Armor reduces remaining damage
+                    if (remainingDamage > 0) {
+                        const shipDefense = state.ship.armor || 0;
+                        remainingDamage = Math.max(
+                            1,
+                            remainingDamage - shipDefense,
+                        );
+                    }
+
+                    const wasDestroyed = tgt.health <= remainingDamage;
 
                     set((s) => ({
                         ship: {
@@ -3192,7 +3262,7 @@ export const useGameStore = create<
                                           ...m,
                                           health: Math.max(
                                               0,
-                                              m.health - reducedDamage,
+                                              m.health - remainingDamage,
                                           ),
                                       }
                                     : m,
@@ -3201,12 +3271,12 @@ export const useGameStore = create<
                     }));
 
                     get().addLog(
-                        `Враг по "${tgt.name}": -${reducedDamage}%`,
+                        `Враг по "${tgt.name}": -${remainingDamage}%`,
                         "warning",
                     );
 
                     // Damage crew in module
-                    const crewDamage = Math.floor(reducedDamage * 0.5);
+                    const crewDamage = Math.floor(remainingDamage * 0.5);
                     const crewInModule = state.crew.filter(
                         (c) => c.moduleId === tgt.id,
                     );
@@ -4084,6 +4154,9 @@ export const useGameStore = create<
         for (let i = 1; i < num; i++) {
             const types = ["weapon", "shield", "reactor"];
             const type = types[Math.floor(Math.random() * types.length)];
+            // Defense: 1-3 for normal enemies, 5-10 for bosses
+            const defenseValue =
+                type === "shield" ? Math.min(3, Math.ceil(threat / 2)) : 0;
             enemyMods.push({
                 id: i,
                 type,
@@ -4095,7 +4168,7 @@ export const useGameStore = create<
                           : "Реактор",
                 health: 100,
                 damage: type === "weapon" ? threat * 8 : 0,
-                defense: type === "shield" ? threat * 6 : 0,
+                defense: defenseValue,
             });
         }
 
@@ -4455,9 +4528,57 @@ export const useGameStore = create<
             return;
         }
 
+        // Calculate weapon-specific damage bonuses
+        let weaponDamageBonus = 0;
+        let armorPenetration = 0;
+        let missileIntercept = 0;
+
+        state.ship.modules.forEach((m) => {
+            if (m.type === "weaponbay" && m.weapons) {
+                m.weapons.forEach((w) => {
+                    if (w) {
+                        const weaponType = WEAPON_TYPES[w.type];
+                        if (weaponType.shieldBonus) {
+                            weaponDamageBonus +=
+                                (weaponType.shieldBonus - 1) *
+                                weaponType.damage;
+                        }
+                        if (weaponType.armorPenetration) {
+                            armorPenetration = Math.max(
+                                armorPenetration,
+                                weaponType.armorPenetration,
+                            );
+                        }
+                        if (weaponType.interceptChance) {
+                            missileIntercept = Math.max(
+                                missileIntercept,
+                                weaponType.interceptChance,
+                            );
+                        }
+                    }
+                });
+            }
+        });
+
         // Damage enemy
         if (state.currentCombat.enemy.shields > 0) {
-            const sDmg = Math.min(state.currentCombat.enemy.shields, pDmg);
+            let sDmg = Math.min(state.currentCombat.enemy.shields, pDmg);
+
+            // Laser bonus: +20% damage to shields
+            if (weaponDamageBonus > 0) {
+                sDmg = Math.floor(sDmg * (1 + weaponDamageBonus / pDmg));
+            }
+
+            // Missile intercept: 20% chance to be blocked by shields
+            if (missileIntercept > 0 && Math.random() < missileIntercept) {
+                const intercepted = Math.floor(sDmg * missileIntercept);
+                sDmg -= intercepted;
+                get().addLog(
+                    `🛡️ Ракета сбита щитами! -${intercepted} урона`,
+                    "info",
+                );
+            }
+
             set((s) => {
                 if (!s.currentCombat) return s;
                 return {
@@ -4473,6 +4594,15 @@ export const useGameStore = create<
             get().addLog(`Урон щитам врага: ${sDmg}`, "combat");
             const overflow = pDmg - sDmg;
             if (overflow > 0) {
+                // Kinetic bonus: ignore 50% of enemy module defense
+                let moduleDefense = tgtMod.defense || 0;
+                if (armorPenetration > 0) {
+                    moduleDefense = Math.floor(
+                        moduleDefense * (1 - armorPenetration),
+                    );
+                }
+                const finalDamage = Math.max(1, overflow - moduleDefense);
+
                 set((s) => {
                     if (!s.currentCombat) return s;
                     return {
@@ -4487,7 +4617,7 @@ export const useGameStore = create<
                                                   ...m,
                                                   health: Math.max(
                                                       0,
-                                                      m.health - overflow,
+                                                      m.health - finalDamage,
                                                   ),
                                               }
                                             : m,
@@ -4497,12 +4627,22 @@ export const useGameStore = create<
                     };
                 });
                 get().addLog(
-                    `Пробитие! Модуль "${tgtMod.name}": -${overflow}%`,
+                    `Пробитие! Модуль "${tgtMod.name}": -${finalDamage}%${armorPenetration > 0 ? ` (броня -${moduleDefense})` : ""}`,
                     "combat",
                 );
             }
         } else {
-            const dmg = Math.max(5, pDmg - (tgtMod.defense || 0));
+            // No shields - direct module damage
+            let moduleDefense = tgtMod.defense || 0;
+
+            // Kinetic bonus: ignore 50% of enemy module defense
+            if (armorPenetration > 0) {
+                moduleDefense = Math.floor(
+                    moduleDefense * (1 - armorPenetration),
+                );
+            }
+
+            const dmg = Math.max(5, pDmg - moduleDefense);
             set((s) => {
                 if (!s.currentCombat) return s;
                 return {
@@ -4625,6 +4765,32 @@ export const useGameStore = create<
                                 : a,
                         ),
                     }));
+
+                    // Complete mining contract when artifact is actually obtained
+                    const miningContract = get().activeContracts.find(
+                        (c) =>
+                            c.type === "mining" &&
+                            c.isRaceQuest &&
+                            c.bossDefeated,
+                    );
+                    if (miningContract) {
+                        set((s) => ({
+                            credits: s.credits + (miningContract.reward || 0),
+                        }));
+                        get().addLog(
+                            `Кристалл Древних найден! +${miningContract.reward}₢`,
+                            "info",
+                        );
+                        set((s) => ({
+                            completedContractIds: [
+                                ...s.completedContractIds,
+                                miningContract.id,
+                            ],
+                            activeContracts: s.activeContracts.filter(
+                                (ac) => ac.id !== miningContract.id,
+                            ),
+                        }));
+                    }
                 }
             }
 
@@ -4688,27 +4854,23 @@ export const useGameStore = create<
             });
 
             // Complete mining contracts (crystalline quest - find artifact)
+            // Mark boss as defeated, but don't complete yet - wait for artifact
             const miningContract = get().activeContracts.find(
                 (c) => c.type === "mining" && c.isRaceQuest,
             );
             if (miningContract && updatedCombat?.enemy.isBoss) {
-                // Bosses drop artifacts, completes crystalline quest
+                // Mark boss as defeated in contract
                 set((s) => ({
-                    credits: s.credits + (miningContract.reward || 0),
-                }));
-                get().addLog(
-                    `Кристалл найден! +${miningContract.reward}₢`,
-                    "info",
-                );
-                set((s) => ({
-                    completedContractIds: [
-                        ...s.completedContractIds,
-                        miningContract.id,
-                    ],
-                    activeContracts: s.activeContracts.filter(
-                        (ac) => ac.id !== miningContract.id,
+                    activeContracts: s.activeContracts.map((ac) =>
+                        ac.id === miningContract.id
+                            ? { ...ac, bossDefeated: true }
+                            : ac,
                     ),
                 }));
+                get().addLog(
+                    `Босс побеждён! Кристалл будет получен после исследования`,
+                    "info",
+                );
             }
 
             // Create battle result
@@ -5031,7 +5193,22 @@ export const useGameStore = create<
 
                 if (overflow > 0 && tgt) {
                     // ═══════════════════════════════════════════════════════════════
-                    // CRYSTALLINE ARMOR - Module damage reduction
+                    // MODULE DEFENSE (ARMOR) - Flat damage reduction
+                    // Each point of defense reduces damage by 1
+                    // ═══════════════════════════════════════════════════════════════
+                    const shipDefense = state.ship.armor || 0;
+                    let damageAfterArmor = Math.max(1, overflow - shipDefense);
+
+                    // Log armor reduction if applicable
+                    if (shipDefense > 0 && damageAfterArmor < overflow) {
+                        get().addLog(
+                            `🛡️ Броня: -${overflow - damageAfterArmor} урона`,
+                            "info",
+                        );
+                    }
+
+                    // ═══════════════════════════════════════════════════════════════
+                    // CRYSTALLINE ARMOR - Additional percentage damage reduction
                     // ═══════════════════════════════════════════════════════════════
                     let moduleDefense = 0;
                     const crystallineCrew = state.crew.filter(
@@ -5054,7 +5231,7 @@ export const useGameStore = create<
                     });
 
                     const reducedDamage = Math.floor(
-                        overflow * (1 - moduleDefense),
+                        damageAfterArmor * (1 - moduleDefense),
                     );
                     const wasDestroyed = tgt.health <= reducedDamage;
                     set((s) => ({
@@ -5074,9 +5251,9 @@ export const useGameStore = create<
                         },
                     }));
 
-                    if (moduleDefense > 0 && reducedDamage < overflow) {
+                    if (moduleDefense > 0 && reducedDamage < damageAfterArmor) {
                         get().addLog(
-                            `💎 Кристаллическая броня: -${overflow - reducedDamage} урона`,
+                            `💎 Кристаллическая броня: -${damageAfterArmor - reducedDamage} урона`,
                             "info",
                         );
                     }
@@ -5514,13 +5691,19 @@ export const useGameStore = create<
                 get().addLog(`Двигатель улучшен! Расход топлива: -10%`, "info");
             }
 
-            // Increment level
+            // Increment level and defense
             set((s) => ({
                 ship: {
                     ...s.ship,
                     modules: s.ship.modules.map((m) =>
                         m.id === tgt!.id
-                            ? { ...m, level: (m.level || 1) + 1 }
+                            ? {
+                                  ...m,
+                                  level: (m.level || 1) + 1,
+                                  defense: (m.defense || 1) + 1, // +1 defense per level
+                                  maxHealth: (m.maxHealth || 100) + 20, // +20 HP per level
+                                  health: (m.health || 100) + 20, // Heal on upgrade
+                              }
                             : m,
                     ),
                 },
@@ -5587,6 +5770,9 @@ export const useGameStore = create<
                 width: item.width || 1,
                 height: item.height || 1,
                 health: 100,
+                maxHealth: 100,
+                // Defense based on module level (1 defense per level, max 5 for rare tier 4)
+                defense: 1,
                 ...(item.moduleType === "reactor" && {
                     power: item.power || 10,
                     level: 1,

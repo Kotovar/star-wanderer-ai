@@ -67,6 +67,14 @@ export function CombatPanel() {
         0,
     );
 
+    // Player hull stats
+    const playerMaxHP = ship.modules.reduce(
+        (s, m) => s + (m.maxHealth || m.health),
+        0,
+    );
+    const playerHP = ship.modules.reduce((s, m) => s + m.health, 0);
+    const playerDefense = ship.armor; // Total defense from all modules
+
     return (
         <div className="flex flex-col gap-4">
             <div
@@ -92,26 +100,45 @@ export function CombatPanel() {
             )}
 
             <div className="grid grid-cols-2 gap-5 my-2">
-                <ShipStatusCard
-                    title="ВАШ КОРАБЛЬ"
-                    shields={ship.shields}
-                    maxShields={ship.maxShields}
-                    armor={ship.armor}
-                    damage={actualDamage}
-                    hasGunner={hasGunner}
-                >
+                <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4">
+                    <div className="text-base font-bold mb-2 text-[#00d4ff]">
+                        ВАШ КОРАБЛЬ
+                    </div>
+                    <div className="text-[#00ff41]">
+                        ⚔ Урон: {actualDamage} {!hasGunner && "(-50%)"}
+                    </div>
+                    <div className="my-2">
+                        Щиты: {ship.shields}/{ship.maxShields}
+                        <div className="h-2 rounded-full  mt-1 bg-[rgba(0,0,0,0.5)] relative">
+                            <div
+                                className="absolute rounded-full top-0 left-0 h-full bg-[#0080ff]"
+                                style={{
+                                    width: `${(ship.shields / Math.max(1, ship.maxShields)) * 100}%`,
+                                }}
+                            />
+                        </div>
+                    </div>
+                    <div className="my-2">
+                        Корпус: {playerHP}/{playerMaxHP}
+                        <Progress
+                            value={(playerHP / Math.max(1, playerMaxHP)) * 100}
+                            className="h-2 mt-1 bg-[rgba(0,0,0,0.5)] [&>div]:bg-[#00ff41]"
+                        />
+                    </div>
+
+                    <div>🛡 Защита: {playerDefense}</div>
                     {gunnerInWeaponBay && (
                         <div className="text-xs text-[#00ff41] mt-1">
                             🎯 Наводчик: {gunnerInWeaponBay.name}
                         </div>
                     )}
-                </ShipStatusCard>
+                </div>
 
                 <ShipStatusCard
                     title={currentCombat.enemy.name}
                     shields={currentCombat.enemy.shields}
                     maxShields={currentCombat.enemy.maxShields}
-                    armor={eHP}
+                    armor={eDef}
                     damage={eDmg}
                     isEnemy
                     isBoss={isBoss}

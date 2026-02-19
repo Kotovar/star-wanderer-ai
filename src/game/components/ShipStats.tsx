@@ -20,6 +20,15 @@ export function ShipStats() {
     const damage = getTotalDamage();
     const crewCapacity = getCrewCapacity();
 
+    // Calculate hull stats
+    const maxHull = ship.modules.reduce(
+        (s, m) => s + (m.maxHealth || m.health),
+        0,
+    );
+    const currentHull = ship.modules.reduce((s, m) => s + m.health, 0);
+    // Calculate defense from modules (each module has defense = level, or 1 by default)
+    const totalDefense = ship.modules.reduce((s, m) => s + (m.defense || 0), 0);
+
     // Get engine level from modules
     const engines = ship.modules.filter(
         (m) => m.type === "engine" && !m.disabled && m.health > 0,
@@ -111,9 +120,25 @@ export function ShipStats() {
                 )}
             </div>
             <div className="flex justify-between mb-2 text-sm">
-                <span className="text-[#ffb000]">🛡 Щиты:</span>
+                <span className="text-[#ffb000]">🔧 Корпус:</span>
+                <span className="text-[#00ff41]">
+                    {currentHull}/{maxHull}
+                </span>
+            </div>
+            <div className="flex justify-between mb-2 text-sm">
+                <span className="text-[#ffb000]">⚡️ Щиты:</span>
                 <span className="text-[#00d4ff]">
                     {ship.shields}/{ship.maxShields}
+                </span>
+            </div>
+            <div className="flex justify-between mb-2 text-sm">
+                <span className="text-[#ffb000]">🛡 Защита:</span>
+                <span
+                    className={
+                        totalDefense > 5 ? "text-[#00ff41]" : "text-[#ff0040]"
+                    }
+                >
+                    {totalDefense} ед.
                 </span>
             </div>
             <div className="flex justify-between mb-2 text-sm">
@@ -126,16 +151,6 @@ export function ShipStats() {
                             (+{ship.bonusEvasion}% бонус)
                         </span>
                     ) : null}
-                </span>
-            </div>
-            <div className="flex justify-between mb-2 text-sm">
-                <span className="text-[#ffb000]">🔧 Броня:</span>
-                <span
-                    className={
-                        ship.armor > 50 ? "text-[#00ff41]" : "text-[#ff0040]"
-                    }
-                >
-                    {ship.armor}%
                 </span>
             </div>
             <div className="flex justify-between text-sm">

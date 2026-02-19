@@ -45,9 +45,44 @@ function getScannerInfo(
     loc: Location,
     scanLevel: number,
     scanRange: number,
+    isRevealed: boolean = false,
 ): string[] {
     const info: string[] = [];
     const completed = loc.mined || loc.bossDefeated || loc.signalResolved;
+
+    // If location was revealed (e.g., approached without scanner), show full info
+    if (isRevealed) {
+        info.push(`📍 ${loc.name}`);
+
+        // Show type-specific info
+        if (loc.type === "enemy") {
+            info.push(`⚔️ Вражеский корабль`);
+            info.push(`Угроза: ${loc.threat || 1}`);
+        } else if (loc.type === "friendly_ship") {
+            info.push(`🤝 Дружеский корабль`);
+            if (loc.shipRace) {
+                const raceNames: Record<string, string> = {
+                    human: "Люди",
+                    synthetic: "Синтетики",
+                    xenosymbiont: "Ксеноморфы-симбионты",
+                    krylorian: "Крилорианцы",
+                    voidborn: "Порождённые Пустотой",
+                    crystalline: "Кристаллоиды",
+                };
+                info.push(`🧬 ${raceNames[loc.shipRace] || loc.shipRace}`);
+            }
+        } else if (loc.type === "ancient_boss") {
+            info.push(`⚠️ Древний корабль`);
+        } else if (loc.type === "storm") {
+            info.push(`🌪️ Космический шторм`);
+        } else if (loc.type === "anomaly") {
+            const type =
+                loc.anomalyType === "good" ? "✓ Благоприятная" : "⚠ Опасная";
+            info.push(`🔮 ${type}`);
+        }
+
+        return info;
+    }
 
     if (scanLevel <= 0) {
         // No scanner - show basic info for certain objects
@@ -492,6 +527,9 @@ export function SectorMap() {
                         hoveredLocation.loc,
                         scanLevel,
                         scanRange,
+                        hoveredLocation.loc.signalRevealed ||
+                            hoveredLocation.loc.visited ||
+                            false,
                     ).map((line, i) => (
                         <div
                             key={i}

@@ -12,6 +12,7 @@ export function GameOverPanel({ reason }: GameOverPanelProps) {
     const turn = useGameStore((s) => s.turn);
     const crew = useGameStore((s) => s.crew);
     const ship = useGameStore((s) => s.ship);
+    const restartGame = useGameStore((s) => s.restartGame);
 
     return (
         <div className="fixed inset-0 bg-[rgba(0,0,0,0.95)] z-50 flex items-center justify-center p-4">
@@ -52,7 +53,7 @@ export function GameOverPanel({ reason }: GameOverPanelProps) {
                                             : "text-[#00ff41]"
                                     }
                                 >
-                                    {ship.armor}%
+                                    {ship.armor} ед.
                                 </span>
                             </div>
                             <div className="flex justify-between">
@@ -103,7 +104,10 @@ export function GameOverPanel({ reason }: GameOverPanelProps) {
                     {/* Restart button */}
                     <div className="pt-4">
                         <Button
-                            onClick={() => window.location.reload()}
+                            onClick={() => {
+                                restartGame();
+                                window.location.href = "/";
+                            }}
                             className="w-full bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase tracking-wider text-lg py-6"
                         >
                             🔄 НАЧАТЬ ЗАНОВО
