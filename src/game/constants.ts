@@ -565,6 +565,7 @@ export const TRADE_GOODS: Record<string, { name: string; basePrice: number }> =
         medicine: { name: "Медикаменты", basePrice: 150 },
         electronics: { name: "Электроника", basePrice: 200 },
         minerals: { name: "Минералы", basePrice: 100 },
+        rare_minerals: { name: "Редкие минералы", basePrice: 500 },
     };
 
 // Extended crew traits with different rarities

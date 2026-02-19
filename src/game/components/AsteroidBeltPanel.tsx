@@ -22,6 +22,7 @@ function getMiningBonus(drillLevel: number, asteroidTier: number): number {
 export function AsteroidBeltPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
     const getDrillLevel = useGameStore((s) => s.getDrillLevel);
+    const getScanLevel = useGameStore((s) => s.getScanLevel);
     const mineAsteroid = useGameStore((s) => s.mineAsteroid);
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const log = useGameStore((s) => s.log);
@@ -30,6 +31,7 @@ export function AsteroidBeltPanel() {
         return null;
 
     const drillLevel = getDrillLevel();
+    const scanLevel = getScanLevel();
     const asteroidTier = currentLocation.asteroidTier || 1;
     const resources = currentLocation.resources || {
         minerals: 0,
@@ -118,10 +120,10 @@ export function AsteroidBeltPanel() {
             {isAncient && (
                 <div className="bg-[rgba(255,170,0,0.1)] p-3 mb-4 border border-[#ffb000]">
                     <p className="text-[#ffb000] font-bold">
-                        ⚠ ДРЕВНИЙ АСТЕРОИДНЫЙ ПОЯС
+                        ⚠ ДРЕВНИЙ ПОЯС АСТЕРОИДОВ
                     </p>
                     <p className="text-[#888] text-sm mt-1">
-                        Требуется Древний бур (уровень 4)
+                        Требуется Древний бур
                     </p>
                 </div>
             )}
@@ -130,12 +132,28 @@ export function AsteroidBeltPanel() {
                 <p className="text-[#ffb000] mb-2">
                     Плотное скопление астероидов с ценными ресурсами.
                 </p>
-                <p className="text-[#00ff41]">Обнаруженные ресурсы:</p>
-                <ul className="text-sm ml-4 mt-1">
-                    <li>📦 Минералы: ~{resources.minerals}</li>
-                    <li>💎 Редкие минералы: ~{resources.rare}</li>
-                    <li>₢ Ценные образцы: ~{resources.credits}₢</li>
-                </ul>
+                {scanLevel >= 2 ? (
+                    <>
+                        <p className="text-[#00ff41]">Обнаруженные ресурсы:</p>
+                        <ul className="text-sm ml-4 mt-1">
+                            <li>📦 Минералы: ~{resources.minerals}</li>
+                            <li>💎 Редкие минералы: ~{resources.rare}</li>
+                            <li>₢ Ценные образцы: ~{resources.credits}₢</li>
+                        </ul>
+                    </>
+                ) : (
+                    <>
+                        <p className="text-[#888]">Обнаруженные ресурсы:</p>
+                        <ul className="text-sm ml-4 mt-1 text-[#888]">
+                            <li>📦 Минералы: ???</li>
+                            <li>💎 Редкие минералы: ???</li>
+                            <li>₢ Ценные образцы: ???</li>
+                        </ul>
+                        <p className="text-[#ffb000] text-xs mt-2">
+                            ⚠ Требуется сканер уровня 2+ для точных данных
+                        </p>
+                    </>
+                )}
             </div>
 
             <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#00ff41]">
