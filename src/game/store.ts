@@ -2332,6 +2332,16 @@ export const useGameStore = create<
                                     (1 + crewRace.crewBonuses.repair),
                             );
                         }
+
+                        // Check if module actually needs repair
+                        if (currentModule.health >= 100) {
+                            get().addLog(
+                                `${c.name}: Модуль "${currentModule.name}" полностью цел (опыт не получен)`,
+                                "info",
+                            );
+                            break;
+                        }
+
                         set((s) => ({
                             ship: {
                                 ...s.ship,
