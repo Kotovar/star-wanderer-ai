@@ -136,10 +136,11 @@ function getScannerInfo(
                     // Convert race ID to readable name
                     const raceNames: Record<string, string> = {
                         human: "Люди",
-                        voidborn: "Рождённые Пустотой",
-                        synth: "Синтетики",
-                        insectoid: "Инсектоиды",
-                        energy: "Энергетические существа",
+                        synthetic: "Синтетики",
+                        xenosymbiont: "Ксеноморфы-симбионты",
+                        krylorian: "Крилорианцы",
+                        voidborn: "Порождённые Пустотой",
+                        crystalline: "Кристаллоиды",
                     };
                     const raceName =
                         raceNames[loc.dominantRace] || loc.dominantRace;

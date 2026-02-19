@@ -1276,6 +1276,39 @@ const playSound = (
     }
 };
 
+// LocalStorage helpers
+const STORAGE_KEY = "star-wanderer-save";
+
+const saveToLocalStorage = (state: GameState) => {
+    if (typeof window === "undefined") return;
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+        console.error("Failed to save game:", e);
+    }
+};
+
+const loadFromLocalStorage = (): GameState | null => {
+    if (typeof window === "undefined") return null;
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return null;
+        return JSON.parse(saved) as GameState;
+    } catch (e) {
+        console.error("Failed to load game:", e);
+        return null;
+    }
+};
+
+const clearLocalStorage = () => {
+    if (typeof window === "undefined") return;
+    try {
+        localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {
+        console.error("Failed to clear save:", e);
+    }
+};
+
 // Game store
 export const useGameStore = create<
     GameState & {
@@ -1393,6 +1426,11 @@ export const useGameStore = create<
 
         // Game Over
         checkGameOver: () => void;
+
+        // Game Management
+        restartGame: () => void;
+        saveGame: () => void;
+        loadGame: () => boolean;
     }
 >((set, get) => ({
     ...initialState,
@@ -3042,6 +3080,7 @@ export const useGameStore = create<
         }
 
         get().updateShipStats();
+        get().saveGame(); // Auto-save after each turn
     },
 
     skipTurn: () => {
@@ -7311,6 +7350,33 @@ export const useGameStore = create<
             get().addLog("ИГРА ОКОНЧЕНА: Корабль без экипажа", "error");
             return;
         }
+    },
+
+    restartGame: () => {
+        clearLocalStorage();
+        set({
+            ...initialState,
+            log: [],
+        });
+        get().addLog("Игра перезапущена", "info");
+        playSound("success");
+    },
+
+    saveGame: () => {
+        const state = get();
+        saveToLocalStorage(state);
+        get().addLog("Игра сохранена", "info");
+    },
+
+    loadGame: () => {
+        const saved = loadFromLocalStorage();
+        if (!saved) {
+            get().addLog("Нет сохранённой игры", "warning");
+            return false;
+        }
+        set({ ...saved });
+        get().addLog("Игра загружена", "info");
+        return true;
     },
 }));
 

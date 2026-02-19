@@ -4,10 +4,20 @@ import { useState } from "react";
 import { useGameStore } from "../store";
 import { HelpPanel } from "./HelpPanel";
 import { ActiveEffectsPanel } from "./ActiveEffectsPanel";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export function GameHeader() {
     const [showHelp, setShowHelp] = useState(false);
     const [showEffects, setShowEffects] = useState(false);
+    const [showRestartDialog, setShowRestartDialog] = useState(false);
     const turn = useGameStore((s) => s.turn);
     const credits = useGameStore((s) => s.credits);
     const currentSector = useGameStore((s) => s.currentSector);
@@ -15,9 +25,19 @@ export function GameHeader() {
     const activeEffects = useGameStore((s) => s.activeEffects);
     const showArtifacts = useGameStore((s) => s.showArtifacts);
     const gameMode = useGameStore((s) => s.gameMode);
+    const restartGame = useGameStore((s) => s.restartGame);
 
     const discoveredArtifacts = artifacts.filter((a) => a.discovered).length;
     const activeArtifacts = artifacts.filter((a) => a.effect.active).length;
+
+    const handleRestartClick = () => {
+        setShowRestartDialog(true);
+    };
+
+    const handleRestartConfirm = () => {
+        restartGame();
+        setShowRestartDialog(false);
+    };
 
     const handleArtifactsClick = () => {
         if (gameMode === "artifacts") {
@@ -97,6 +117,16 @@ export function GameHeader() {
                             {currentSector?.name || "СТАРТ"}
                         </span>
                     </div>
+                    <button
+                        onClick={handleRestartClick}
+                        className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#ff4444] hover:bg-[rgba(255,68,68,0.2)] transition-colors cursor-pointer"
+                        title="Начать заново"
+                    >
+                        <span className="text-[#ff4444]">🔄</span>
+                        <span className="text-[#ff4444] hidden md:inline">
+                            ЗАНОВО
+                        </span>
+                    </button>
                 </div>
             </header>
 
@@ -110,6 +140,38 @@ export function GameHeader() {
                     </div>
                 </div>
             )}
+
+            <Dialog
+                open={showRestartDialog}
+                onOpenChange={setShowRestartDialog}
+            >
+                <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ff4444] text-[#00ff41] max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-['Orbitron'] text-[#ff4444]">
+                            Начать заново?
+                        </DialogTitle>
+                        <DialogDescription className="text-[#00ff41] text-base mt-2">
+                            Вы уверены, что хотите начать игру заново? Весь
+                            прогресс будет потерян.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 mt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowRestartDialog(false)}
+                            className="border-[#00ff41] text-[#00ff41] hover:bg-[rgba(0,255,65,0.1)]"
+                        >
+                            Отмена
+                        </Button>
+                        <Button
+                            onClick={handleRestartConfirm}
+                            className="bg-[#ff4444] text-white hover:bg-[#ff6666] border-0"
+                        >
+                            Начать заново
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

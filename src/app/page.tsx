@@ -24,11 +24,16 @@ export default function Home() {
     const gameOver = useGameStore((s) => s.gameOver);
     const gameOverReason = useGameStore((s) => s.gameOverReason);
     const moduleMovedThisTurn = useGameStore((s) => s.ship.moduleMovedThisTurn);
+    const loadGame = useGameStore((s) => s.loadGame);
 
     useEffect(() => {
-        // Initialize ship stats on mount
-        updateShipStats();
-    }, [updateShipStats]);
+        // Try to load saved game on mount
+        const loaded = loadGame();
+        // Initialize ship stats on mount (only if no save was loaded)
+        if (!loaded) {
+            updateShipStats();
+        }
+    }, [loadGame, updateShipStats]);
 
     return (
         <div className="min-h-screen flex flex-col bg-[#050810] font-['Share_Tech_Mono'] text-[#00ff41]">
