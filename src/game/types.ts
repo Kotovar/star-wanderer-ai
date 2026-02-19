@@ -596,6 +596,7 @@ export interface PlanetSpecialization {
     cooldown?: number;
     requirements?: {
         minLevel?: number;
+        maxLevel?: number;
         requiredModule?: string;
         requiredRace?: RaceId;
     };

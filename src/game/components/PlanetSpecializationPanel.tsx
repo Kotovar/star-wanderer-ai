@@ -51,8 +51,17 @@ export function PlanetSpecializationPanel({
 
     const canAfford = credits >= actualCost;
 
+    // Check maxLevel requirement for human academy
+    const isMaxLevelReached =
+        spec.id === "human_academy" &&
+        selectedCrewId &&
+        spec.requirements?.maxLevel
+            ? (crew.find((c) => c.id === selectedCrewId)?.level || 1) >=
+              spec.requirements.maxLevel
+            : false;
+
     const handleConfirm = () => {
-        if (!canAfford || isOnCooldown) return;
+        if (!canAfford || isOnCooldown || isMaxLevelReached) return;
 
         const planetId = currentLocation.id;
         const raceId = currentLocation.dominantRace!;
@@ -259,6 +268,7 @@ export function PlanetSpecializationPanel({
                     disabled={
                         !canAfford ||
                         isOnCooldown ||
+                        isMaxLevelReached ||
                         (spec.id === "human_academy" && !selectedCrewId) ||
                         (spec.id === "voidborn_ritual" &&
                             artifacts.filter((a) => a.effect.active).length >
@@ -285,6 +295,11 @@ export function PlanetSpecializationPanel({
             {isOnCooldown && (
                 <div className="text-[#ff0040] text-xs text-center mt-2">
                     ⏱️ Уже использовано на этой планете
+                </div>
+            )}
+            {isMaxLevelReached && (
+                <div className="text-[#ff0040] text-xs text-center mt-2">
+                    ⚠ Достигнут максимальный уровень обучения
                 </div>
             )}
         </div>

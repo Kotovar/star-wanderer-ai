@@ -7008,7 +7008,7 @@ export const useGameStore = create<
 
         get().addLog(
             `🎓 ${crewMember.name} повышен до уровня ${crewMember.level + 1}!`,
-            "success",
+            "info",
         );
         playSound("success");
     },
@@ -7047,7 +7047,7 @@ export const useGameStore = create<
         );
         if (undiscoveredArtifacts.length > 0) {
             const hintsCount = Math.min(3, undiscoveredArtifacts.length);
-            const hints = [];
+            const hints: string[] = [];
 
             for (let i = 0; i < hintsCount; i++) {
                 const artifact = undiscoveredArtifacts[i];
@@ -7102,7 +7102,7 @@ export const useGameStore = create<
             ),
         }));
 
-        get().addLog(`🔮 ${artifact.name} усилен! Эффект: +50%`, "success");
+        get().addLog(`🔮 ${artifact.name} усилен! Эффект: +50%`, "info");
         playSound("success");
     },
 
@@ -7145,7 +7145,7 @@ export const useGameStore = create<
                 }));
                 get().addLog(
                     `🧬 ${spec.name}: +20 здоровья экипажу, +5 регенерации за ход (5 ходов)`,
-                    "success",
+                    "info",
                 );
                 break;
 
@@ -7177,7 +7177,7 @@ export const useGameStore = create<
                 }));
                 get().addLog(
                     `⚔️ ${spec.name}: +15% урон, +10% уклонение (5 ходов)`,
-                    "success",
+                    "info",
                 );
                 break;
 
@@ -7212,7 +7212,7 @@ export const useGameStore = create<
                 }));
                 get().addLog(
                     `💎 ${spec.name}: +10 энергии, +25 щитов (5 ходов)`,
-                    "success",
+                    "info",
                 );
                 break;
 
@@ -7237,7 +7237,7 @@ export const useGameStore = create<
                 }));
                 get().addLog(
                     `🔮 ${spec.name}: +10% к эффективности топлива (5 ходов)`,
-                    "success",
+                    "info",
                 );
                 break;
         }

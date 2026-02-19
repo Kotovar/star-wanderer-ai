@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useGameStore } from "../store";
-import { RACES, PLANET_SPECIALIZATIONS } from "../constants";
+import {
+    RACES,
+    PLANET_SPECIALIZATIONS,
+    PLANET_DESCRIPTIONS,
+} from "../constants";
 import { Button } from "@/components/ui/button";
 import { PlanetSpecializationPanel } from "./PlanetSpecializationPanel";
 
@@ -51,6 +55,10 @@ export function PlanetPanel() {
             <div className="flex flex-col gap-4">
                 <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
                     ▸ {currentLocation.name} - {currentLocation.planetType}
+                </div>
+                <div className="text-sm text-[#888] italic">
+                    {PLANET_DESCRIPTIONS[currentLocation.planetType || ""] ||
+                        "Описание недоступно"}
                 </div>
                 <div className="text-sm leading-relaxed">
                     Пустая планета. Нет населения и контрактов.
@@ -129,6 +137,12 @@ export function PlanetPanel() {
         <div className="flex flex-col gap-4">
             <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
                 ▸ {currentLocation.name} - {currentLocation.planetType}
+            </div>
+
+            {/* Planet type description */}
+            <div className="text-sm text-[#888] italic leading-relaxed">
+                {PLANET_DESCRIPTIONS[currentLocation.planetType || ""] ||
+                    "Описание недоступно"}
             </div>
 
             {/* Population and Race info */}

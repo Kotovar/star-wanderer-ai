@@ -4,6 +4,18 @@ import { useRef, useEffect, useState } from "react";
 import { useGameStore } from "../store";
 import { Location } from "../types";
 
+// Seeded random helper - returns deterministic value based on location ID
+const seededRandom = (loc: Location, seed: number = 0): number => {
+    const str = loc.id || "unknown";
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash = hash & hash;
+    }
+    const x = Math.sin(hash + seed) * 10000;
+    return x - Math.floor(x);
+};
+
 // Planet colors based on type (inspired by solar system)
 const PLANET_COLORS: Record<
     string,
@@ -15,6 +27,16 @@ const PLANET_COLORS: Record<
     Вулканическая: { base: "#8b4513", atmosphere: "#ff4500" }, // Io-like
     Океаническая: { base: "#1e90ff", atmosphere: "#87ceeb" }, // Earth-like blue
     "Газовый гигант": { base: "#9933ff", atmosphere: "#cc66ff" }, // Purple gas giant
+    Радиоактивная: { base: "#5a8f3a", atmosphere: "#7fff00" }, // Green radioactive glow
+    Тропическая: { base: "#228b22", atmosphere: "#90ee90" }, // Lush green tropical
+    Арктическая: { base: "#b0e0e6", atmosphere: "#f0f8ff" }, // Ice blue arctic
+    "Разрушенная войной": { base: "#4a4a4a", atmosphere: "#8b0000" }, // Dark grey with red haze
+    "Планета-кольцо": {
+        base: "#c9b896",
+        atmosphere: "#e8d5b5",
+        rings: "#d4c4a5",
+    }, // Saturn-like with rings
+    Приливная: { base: "#cd853f", atmosphere: "#ff6347" }, // Tidal heated orange
 };
 
 // Scanner info levels - scanLevel is now 1-4 (scanner level)
@@ -612,9 +634,13 @@ function drawPlanet(
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Add rings for some planets (like Saturn)
-    if (loc.planetType === "Ледяная" && !loc.isEmpty) {
-        ctx.strokeStyle = colors.atmosphere + "80";
+    // Add rings for ringed planets
+    if (
+        (loc.planetType === "Планета-кольцо" || loc.planetType === "Ледяная") &&
+        !loc.isEmpty
+    ) {
+        const ringColor = colors.rings || colors.atmosphere;
+        ctx.strokeStyle = ringColor + "80";
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.ellipse(
@@ -632,17 +658,106 @@ function drawPlanet(
     // Surface details
     ctx.strokeStyle = colors.base + "60";
     ctx.lineWidth = 1;
+
     if (loc.planetType === "Вулканическая") {
         // Lava spots
         ctx.fillStyle = "#ff4400";
         for (let i = 0; i < 3; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const dist = Math.random() * radius * 0.6;
+            const angle = seededRandom(loc, i) * Math.PI * 2;
+            const dist = seededRandom(loc, i + 10) * radius * 0.6;
             ctx.beginPath();
             ctx.arc(
                 x + Math.cos(angle) * dist,
                 y + Math.sin(angle) * dist,
                 2,
+                0,
+                Math.PI * 2,
+            );
+            ctx.fill();
+        }
+    }
+
+    if (loc.planetType === "Радиоактивная") {
+        // Radioactive glow spots
+        ctx.fillStyle = "#7fff00";
+        for (let i = 0; i < 5; i++) {
+            const angle = seededRandom(loc, i) * Math.PI * 2;
+            const dist = seededRandom(loc, i + 10) * radius * 0.7;
+            ctx.beginPath();
+            ctx.arc(
+                x + Math.cos(angle) * dist,
+                y + Math.sin(angle) * dist,
+                1.5,
+                0,
+                Math.PI * 2,
+            );
+            ctx.fill();
+        }
+    }
+
+    if (loc.planetType === "Тропическая") {
+        // Jungle patterns
+        ctx.fillStyle = "#006400";
+        for (let i = 0; i < 4; i++) {
+            const angle = seededRandom(loc, i) * Math.PI * 2;
+            const dist = seededRandom(loc, i + 10) * radius * 0.5;
+            ctx.beginPath();
+            ctx.arc(
+                x + Math.cos(angle) * dist,
+                y + Math.sin(angle) * dist,
+                3,
+                0,
+                Math.PI * 2,
+            );
+            ctx.fill();
+        }
+    }
+
+    if (loc.planetType === "Арктическая") {
+        // Ice cracks
+        ctx.strokeStyle = "#87ceeb";
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 3; i++) {
+            const angle = seededRandom(loc, i) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(
+                x + Math.cos(angle) * radius * 0.8,
+                y + Math.sin(angle) * radius * 0.8,
+            );
+            ctx.stroke();
+        }
+    }
+
+    if (loc.planetType === "Разрушенная войной") {
+        // Crater scars
+        ctx.fillStyle = "#2a2a2a";
+        for (let i = 0; i < 4; i++) {
+            const angle = seededRandom(loc, i) * Math.PI * 2;
+            const dist = seededRandom(loc, i + 10) * radius * 0.6;
+            ctx.beginPath();
+            ctx.arc(
+                x + Math.cos(angle) * dist,
+                y + Math.sin(angle) * dist,
+                2,
+                0,
+                Math.PI * 2,
+            );
+            ctx.fill();
+        }
+    }
+
+    if (loc.planetType === "Приливная") {
+        // Tidal volcanic vents
+        ctx.fillStyle = "#ff4500";
+        for (let i = 0; i < 4; i++) {
+            const angle = seededRandom(loc, i) * Math.PI * 2;
+            const dist = seededRandom(loc, i + 10) * radius * 0.5;
+            ctx.beginPath();
+            ctx.arc(
+                x + Math.cos(angle) * dist,
+                y + Math.sin(angle) * dist,
+                2.5,
                 0,
                 Math.PI * 2,
             );
