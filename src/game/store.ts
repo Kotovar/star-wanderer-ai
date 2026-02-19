@@ -1927,6 +1927,20 @@ export const useGameStore = create<
             },
         }));
 
+        // ═══════════════════════════════════════════════════════════════
+        // PASSIVE EXPERIENCE - All crew gain small exp every 5 turns on ship
+        // ═══════════════════════════════════════════════════════════════
+        const turn = state.turn;
+        if (turn % 5 === 0) {
+            state.crew.forEach((c) => {
+                get().gainExp(c, 2); // 2 exp every 5 turns
+            });
+            get().addLog(
+                `📋 Экипаж получил +2 опыта (службу на корабле)`,
+                "info",
+            );
+        }
+
         // Remove expired planet effects
         get().removeExpiredEffects();
 
@@ -2178,8 +2192,9 @@ export const useGameStore = create<
                         `☠️ ${c.name}: Модуль "${currentModule.name}" разрушен! -${moduleDamage} HP${medicWithFirstAid ? " (аптечки: -50% урона)" : ""}`,
                         medicWithFirstAid ? "warning" : "error",
                     );
-                } else if (moduleHealth < 100) {
-                    const moduleDamage = Math.floor(10 * firstAidReduction); // Light damage in damaged module
+                } else if (moduleHealth < 20) {
+                    // Critical damage (< 20%) - crew takes damage
+                    const moduleDamage = Math.floor(10 * firstAidReduction); // Damage in critically damaged module
                     set((s) => ({
                         crew: s.crew.map((cr) =>
                             cr.id === c.id
@@ -2194,10 +2209,11 @@ export const useGameStore = create<
                         ),
                     }));
                     get().addLog(
-                        `⚠️ ${c.name}: Модуль "${currentModule.name}" повреждён! -${moduleDamage} HP${medicWithFirstAid ? " (аптечки: -50% урона)" : ""}`,
+                        `⚠️ ${c.name}: Модуль "${currentModule.name}" критически повреждён (<20%)! -${moduleDamage} HP${medicWithFirstAid ? " (аптечки: -50% урона)" : ""}`,
                         "warning",
                     );
                 }
+                // Modules with health >= 20% are safe - no crew damage
             }
 
             // Apply racial health regen (human: +5 from adaptable trait)
@@ -2362,6 +2378,22 @@ export const useGameStore = create<
                                 );
                             }
 
+                            // Check which crew members actually need healing
+                            const crewNeedingHealing = s.crew.filter(
+                                (cr) =>
+                                    cr.moduleId === c.moduleId &&
+                                    cr.health < (cr.maxHealth || 100),
+                            );
+
+                            if (crewNeedingHealing.length === 0) {
+                                // Everyone is already at full health - no exp
+                                get().addLog(
+                                    `${c.name}: Все здоровы (опыт не получен)`,
+                                    "info",
+                                );
+                                break;
+                            }
+
                             set((s) => ({
                                 crew: s.crew.map((cr) =>
                                     cr.moduleId === c.moduleId
@@ -2375,7 +2407,7 @@ export const useGameStore = create<
                                         : cr,
                                 ),
                             }));
-                            const healedCount = crewInSameModule.length + 1; // Include self
+                            const healedCount = crewNeedingHealing.length;
                             get().addLog(
                                 `${c.name}: Лечение модуля +${healAmount} HP (${healedCount} существ)`,
                                 "info",
@@ -2405,6 +2437,22 @@ export const useGameStore = create<
                                 );
                             }
 
+                            // Check if any crew member actually needs morale boost
+                            const crewNeedingMorale = s.crew.filter(
+                                (cr) =>
+                                    cr.moduleId === c.moduleId &&
+                                    cr.happiness < 100,
+                            );
+
+                            if (crewNeedingMorale.length === 0) {
+                                // Everyone already has 100% morale - no exp
+                                get().addLog(
+                                    `${c.name}: Мораль максимальная (опыт не получен)`,
+                                    "info",
+                                );
+                                break;
+                            }
+
                             set((s) => ({
                                 crew: s.crew.map((cr) =>
                                     cr.moduleId === c.moduleId
@@ -2418,7 +2466,7 @@ export const useGameStore = create<
                                         : cr,
                                 ),
                             }));
-                            const boostedCount = crewInSameModule.length + 1; // Include self
+                            const boostedCount = crewNeedingMorale.length;
                             get().addLog(
                                 `${c.name}: Мораль модуля +${moraleAmount} (${boostedCount} существ)`,
                                 "info",
@@ -4720,6 +4768,31 @@ export const useGameStore = create<
                 (s, m) => s + (m.damage || 0),
                 0,
             ) || 0;
+
+        // ═══════════════════════════════════════════════════════════════
+        // PILOT EVASION - Chance to evade enemy attack
+        // ═══════════════════════════════════════════════════════════════
+        const pilot = state.crew.find((c) => c.profession === "pilot");
+        const pilotInCockpit =
+            pilot &&
+            state.ship.modules.find((m) => m.id === pilot.moduleId)?.type ===
+                "cockpit";
+        let pilotEvasionChance = 0;
+
+        if (pilotInCockpit) {
+            // Base evasion chance from pilot level: 5% per level
+            pilotEvasionChance = (pilot.level || 1) * 0.05;
+
+            // Add ship evasion bonus
+            pilotEvasionChance += (state.ship.bonusEvasion || 0) / 100;
+        }
+
+        if (pilotEvasionChance > 0 && Math.random() < pilotEvasionChance) {
+            get().addLog(`✈️ Пилот ${pilot.name} уклонился от атаки!`, "info");
+            get().gainExp(pilot, 8); // Experience for successful evasion
+            // Skip the rest of enemy attack
+            return;
+        }
 
         // ═══════════════════════════════════════════════════════════════
         // KRYLORIAN INTIMIDATION - Chance to evade enemy attack
