@@ -12,6 +12,7 @@ import { ContractsList } from "@/game/components/ContractsList";
 import { EventDisplay } from "@/game/components/EventPanels";
 import { GameOverPanel } from "@/game/components/GameOverPanel";
 import { useGameStore } from "@/game/store";
+import { RaceDiscoveryModal } from "@/game/components/RaceDiscoveryModal";
 import {
     Accordion,
     AccordionContent,
@@ -279,6 +280,8 @@ export default function Home() {
                     </div>
                 </div>
             </main>
+
+            <RaceDiscoveryModal />
         </div>
     );
 }
