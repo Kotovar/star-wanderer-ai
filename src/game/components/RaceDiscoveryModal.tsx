@@ -12,7 +12,7 @@ import { RaceId } from "../types";
 export function RaceDiscoveryModal() {
     // Get the list of known races from the store
     const knownRaces = useGameStore((s) => s.knownRaces);
-    console.log(knownRaces);
+
     // Local state to control the modal
     const [open, setOpen] = useState(false);
     const [raceId, setRaceId] = useState<RaceId | null>(null);
