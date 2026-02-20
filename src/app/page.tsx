@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/accordion";
 
 export default function Home() {
-    const updateShipStats = useGameStore((s) => s.updateShipStats);
     const gameOver = useGameStore((s) => s.gameOver);
     const gameOverReason = useGameStore((s) => s.gameOverReason);
     const moduleMovedThisTurn = useGameStore((s) => s.ship.moduleMovedThisTurn);
@@ -29,12 +28,9 @@ export default function Home() {
 
     useEffect(() => {
         // Try to load saved game on mount
-        const loaded = loadGame();
-        // Initialize ship stats on mount (only if no save was loaded)
-        if (!loaded) {
-            updateShipStats();
-        }
-    }, [loadGame, updateShipStats]);
+        // loadGame() will initialize ship stats if no save is found
+        loadGame();
+    }, [loadGame]);
 
     return (
         <div className="min-h-screen flex flex-col bg-[#050810] font-['Share_Tech_Mono'] text-[#00ff41]">

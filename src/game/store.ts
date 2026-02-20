@@ -7742,14 +7742,22 @@ export const useGameStore = create<
 
     restartGame: () => {
         clearLocalStorage();
-        // Set a flag in sessionStorage to indicate fresh restart
-        sessionStorage.setItem("star-wanderer-fresh-start", "true");
+        // Generate new galaxy and station data for fresh start
+        const newSectors = generateGalaxy();
+        const { prices, stock } = initializeStationData(newSectors);
         set({
             ...initialState,
+            currentSector: newSectors[0],
+            galaxy: { sectors: newSectors },
+            stationPrices: prices,
+            stationStock: stock,
             log: [],
         });
-        get().addLog("Игра перезапущена", "info");
+        get().addLog("Новая игра", "info");
         playSound("success");
+        // Auto-save after restart (without logging) so refresh loads the new game
+        const state = get();
+        saveToLocalStorage(state);
     },
 
     saveGame: () => {
@@ -7759,17 +7767,11 @@ export const useGameStore = create<
     },
 
     loadGame: () => {
-        // Check if this is a fresh restart (don't load save)
-        const freshStart = sessionStorage.getItem("star-wanderer-fresh-start");
-        if (freshStart === "true") {
-            sessionStorage.removeItem("star-wanderer-fresh-start");
-            get().addLog("Новая игра", "info");
-            return false;
-        }
-
         const saved = loadFromLocalStorage();
         if (!saved) {
             get().addLog("Нет сохранённой игры", "warning");
+            // Initialize ship stats for new game
+            get().updateShipStats();
             return false;
         }
         set({ ...saved });
