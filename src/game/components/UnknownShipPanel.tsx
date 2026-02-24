@@ -67,6 +67,12 @@ export function UnknownShipPanel() {
         return "Датчики не могут определить тип этого объекта.";
     };
 
+    const currentHull = ship.modules.reduce((s, m) => s + m.health, 0);
+    const maxHull = ship.modules.reduce(
+        (s, m) => s + (m.maxHealth || m.health),
+        0,
+    );
+
     return (
         <div className="bg-[rgba(50,50,50,0.3)] border-2 border-[#666] p-4">
             <div className="flex justify-between items-center mb-4">
@@ -95,7 +101,7 @@ export function UnknownShipPanel() {
 
             <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#00ff41]">
                 <p className="text-[#ffb000] mb-2">Ваши показатели:</p>
-                <div className="grid grid-cols-3 gap-2 text-sm">
+                <div className="grid grid-cols-4 gap-2 text-sm">
                     <div>
                         <span className="text-[#00d4ff]">🛡 Щиты:</span>
                         <span className="text-[#00ff41] ml-1">
@@ -103,9 +109,15 @@ export function UnknownShipPanel() {
                         </span>
                     </div>
                     <div>
-                        <span className="text-[#ffb000]">🔧 Броня:</span>
+                        <span className="text-[#ffb000]">🔧 Защита:</span>
                         <span className="text-[#00ff41] ml-1">
-                            {ship.armor}%
+                            {ship.armor}
+                        </span>
+                    </div>
+                    <div>
+                        <span className="text-[#ffb000]">🔧 Корпус:</span>
+                        <span className="text-[#00ff41] ml-1">
+                            {currentHull}/{maxHull}
                         </span>
                     </div>
                     <div>

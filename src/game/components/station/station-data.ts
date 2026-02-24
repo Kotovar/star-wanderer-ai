@@ -1,4 +1,10 @@
-import type { ShopItem, RaceId, CrewMember } from "../../types";
+import type {
+    ShopItem,
+    RaceId,
+    CrewMember,
+    Quality,
+    Profession,
+} from "../../types";
 import {
     // WEAPON_TYPES,
     // TRADE_GOODS,
@@ -805,13 +811,13 @@ export function generateStationCrew(
 ): Array<{
     member: Omit<CrewMember, "id">;
     price: number;
-    quality: "poor" | "average" | "good" | "excellent";
+    quality: Quality;
 }> {
     const count = getStationCrewCount(stationId);
     const crewList: Array<{
         member: Omit<CrewMember, "id">;
         price: number;
-        quality: "poor" | "average" | "good" | "excellent";
+        quality: Quality;
     }> = [];
 
     let seed = 0;
@@ -820,9 +826,14 @@ export function generateStationCrew(
         seed = seed & seed;
     }
 
-    const professions: Array<
-        "pilot" | "engineer" | "medic" | "scout" | "scientist" | "gunner"
-    > = ["pilot", "engineer", "medic", "scout", "scientist", "gunner"];
+    const professions: Profession[] = [
+        "pilot",
+        "engineer",
+        "medic",
+        "scout",
+        "scientist",
+        "gunner",
+    ];
 
     for (let i = 0; i < count; i++) {
         const rand1 = Math.abs(Math.sin(seed + i * 1000) * 10000) % 1;
@@ -842,7 +853,7 @@ export function generateStationCrew(
         }
 
         const qualityRoll = rand2;
-        let quality: "poor" | "average" | "good" | "excellent";
+        let quality: Quality;
         if (qualityRoll < 0.25) quality = "poor";
         else if (qualityRoll < 0.6) quality = "average";
         else if (qualityRoll < 0.85) quality = "good";

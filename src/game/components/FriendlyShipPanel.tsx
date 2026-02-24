@@ -11,7 +11,7 @@ import {
     getRandomRaceName,
 } from "../constants";
 import { Button } from "@/components/ui/button";
-import type { RaceId, Contract } from "../types";
+import type { RaceId, Contract, Profession, Quality } from "../types";
 
 export function FriendlyShipPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
@@ -32,9 +32,38 @@ export function FriendlyShipPanel() {
     const hiredCrewFromShips = useGameStore((s) => s.hiredCrewFromShips);
     const friendlyShipStock = useGameStore((s) => s.friendlyShipStock);
 
+    const seedRandom = (seed: number) => {
+        const x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
+    };
+
+    const shipId = currentLocation?.id ?? "";
+
+    let seed = 0;
+    for (let i = 0; i < shipId.length; i++) {
+        seed = (seed << 5) - seed + shipId.charCodeAt(i);
+        seed = seed & seed;
+    }
+
+    useEffect(() => {
+        if (!shipId || friendlyShipStock[shipId]) return;
+
+        const initialStock: Record<string, number> = {};
+        ["water", "food", "medicine"].forEach((gid, idx) => {
+            initialStock[gid] =
+                5 + Math.floor(seedRandom(seed + idx + 10) * 10);
+        });
+
+        useGameStore.setState((s) => ({
+            friendlyShipStock: {
+                ...s.friendlyShipStock,
+                [shipId]: initialStock,
+            },
+        }));
+    }, [friendlyShipStock, seed, shipId]);
+
     // Initialize or get stock for this friendly ship
     const getShipStock = (goodId: string): number => {
-        const shipId = currentLocation?.id;
         if (!shipId) return 0;
         const stock = friendlyShipStock[shipId];
         if (!stock) return 0;
@@ -52,21 +81,14 @@ export function FriendlyShipPanel() {
 
     // Memoize crew data to prevent regeneration on every render
     const crewData = useMemo(() => {
-        const seedRandom = (seed: number) => {
-            const x = Math.sin(seed) * 10000;
-            return x - Math.floor(x);
-        };
-
-        let seed = 0;
-        for (let i = 0; i < (currentLocation?.id || "").length; i++) {
-            seed =
-                (seed << 5) - seed + (currentLocation?.id || "").charCodeAt(i);
-            seed = seed & seed;
-        }
-
-        const professions: Array<
-            "pilot" | "engineer" | "medic" | "scout" | "scientist" | "gunner"
-        > = ["pilot", "engineer", "medic", "scout", "scientist", "gunner"];
+        const professions: Profession[] = [
+            "pilot",
+            "engineer",
+            "medic",
+            "scout",
+            "scientist",
+            "gunner",
+        ];
         const availableProfession =
             professions[
                 Math.floor(seedRandom(seed + 100) * professions.length)
@@ -96,7 +118,7 @@ export function FriendlyShipPanel() {
         );
 
         const qualityRoll = seedRandom(seed + 102);
-        let quality: "poor" | "average" | "good" | "excellent";
+        let quality: Quality;
         if (qualityRoll < 0.25) quality = "poor";
         else if (qualityRoll < 0.6) quality = "average";
         else if (qualityRoll < 0.85) quality = "good";
@@ -117,7 +139,7 @@ export function FriendlyShipPanel() {
             traits,
             crewPrice,
         };
-    }, [currentLocation?.id]);
+    }, [seed]);
 
     if (!currentLocation) return null;
 
@@ -146,37 +168,6 @@ export function FriendlyShipPanel() {
             ship.cargo.some((cargo) => cargo.contractId === c.id),
     );
 
-    // Generate trade goods with seeded random for consistency
-    const seedRandom = (seed: number) => {
-        const x = Math.sin(seed) * 10000;
-        return x - Math.floor(x);
-    };
-
-    let seed = 0;
-    for (let i = 0; i < (currentLocation.id || "").length; i++) {
-        seed = (seed << 5) - seed + currentLocation.id.charCodeAt(i);
-        seed = seed & seed;
-    }
-
-    const shipId = currentLocation.id;
-
-    // Initialize stock for this ship if not exists (useEffect to avoid setState during render)
-    useEffect(() => {
-        if (!friendlyShipStock[shipId]) {
-            const initialStock: Record<string, number> = {};
-            ["water", "food", "medicine"].forEach((gid, idx) => {
-                initialStock[gid] =
-                    5 + Math.floor(seedRandom(seed + idx + 10) * 10);
-            });
-            useGameStore.setState((s) => ({
-                friendlyShipStock: {
-                    ...s.friendlyShipStock,
-                    [shipId]: initialStock,
-                },
-            }));
-        }
-    }, [shipId, friendlyShipStock, seed]);
-
     const tradeGoods = ["water", "food", "medicine"].map((gid, idx) => ({
         id: gid,
         ...TRADE_GOODS[gid],
@@ -186,7 +177,7 @@ export function FriendlyShipPanel() {
         stock: getShipStock(gid),
     }));
 
-    const getQualityColor = (q: string) => {
+    const getQualityColor = (q: Quality) => {
         switch (q) {
             case "poor":
                 return "#888";
@@ -201,7 +192,7 @@ export function FriendlyShipPanel() {
         }
     };
 
-    const getQualityLabel = (q: string) => {
+    const getQualityLabel = (q: Quality) => {
         switch (q) {
             case "poor":
                 return "Низкое";
@@ -481,45 +472,51 @@ export function FriendlyShipPanel() {
                                                 playerGood.quantity < 1
                                             }
                                             onClick={() => {
-                                                if (playerGood) {
-                                                    playerGood.quantity -= 1;
-                                                    if (
-                                                        playerGood.quantity <= 0
-                                                    ) {
-                                                        ship.tradeGoods =
-                                                            ship.tradeGoods.filter(
+                                                useGameStore.setState((s) => {
+                                                    const newTradeGoods =
+                                                        s.ship.tradeGoods
+                                                            .map((tg) =>
+                                                                tg.item === g.id
+                                                                    ? {
+                                                                          ...tg,
+                                                                          quantity:
+                                                                              tg.quantity -
+                                                                              1,
+                                                                      }
+                                                                    : tg,
+                                                            )
+                                                            .filter(
                                                                 (tg) =>
-                                                                    tg.item !==
-                                                                    g.id,
+                                                                    tg.quantity >
+                                                                    0,
                                                             );
-                                                    }
-                                                    useGameStore.setState(
-                                                        (s) => ({
-                                                            friendlyShipStock: {
-                                                                ...s.friendlyShipStock,
-                                                                [shipId]: {
-                                                                    ...s
+
+                                                    return {
+                                                        friendlyShipStock: {
+                                                            ...s.friendlyShipStock,
+                                                            [shipId]: {
+                                                                ...s
+                                                                    .friendlyShipStock[
+                                                                    shipId
+                                                                ],
+                                                                [g.id]:
+                                                                    (s
                                                                         .friendlyShipStock[
                                                                         shipId
-                                                                    ],
-                                                                    [g.id]:
-                                                                        (s
-                                                                            .friendlyShipStock[
-                                                                            shipId
-                                                                        ]?.[
-                                                                            g.id
-                                                                        ] ||
-                                                                            0) +
-                                                                        1,
-                                                                },
+                                                                    ]?.[g.id] ||
+                                                                        0) + 1,
                                                             },
-                                                            credits:
-                                                                s.credits +
-                                                                sellPricePerUnit,
-                                                            ship: { ...s.ship },
-                                                        }),
-                                                    );
-                                                }
+                                                        },
+                                                        credits:
+                                                            s.credits +
+                                                            sellPricePerUnit,
+                                                        ship: {
+                                                            ...s.ship,
+                                                            tradeGoods:
+                                                                newTradeGoods,
+                                                        },
+                                                    };
+                                                });
                                             }}
                                             className="bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase text-[9px] px-1.5"
                                         >
@@ -531,45 +528,51 @@ export function FriendlyShipPanel() {
                                                 playerGood.quantity < 5
                                             }
                                             onClick={() => {
-                                                if (playerGood) {
-                                                    playerGood.quantity -= 5;
-                                                    if (
-                                                        playerGood.quantity <= 0
-                                                    ) {
-                                                        ship.tradeGoods =
-                                                            ship.tradeGoods.filter(
+                                                useGameStore.setState((s) => {
+                                                    const newTradeGoods =
+                                                        s.ship.tradeGoods
+                                                            .map((tg) =>
+                                                                tg.item === g.id
+                                                                    ? {
+                                                                          ...tg,
+                                                                          quantity:
+                                                                              tg.quantity -
+                                                                              5,
+                                                                      }
+                                                                    : tg,
+                                                            )
+                                                            .filter(
                                                                 (tg) =>
-                                                                    tg.item !==
-                                                                    g.id,
+                                                                    tg.quantity >
+                                                                    0,
                                                             );
-                                                    }
-                                                    useGameStore.setState(
-                                                        (s) => ({
-                                                            friendlyShipStock: {
-                                                                ...s.friendlyShipStock,
-                                                                [shipId]: {
-                                                                    ...s
+
+                                                    return {
+                                                        friendlyShipStock: {
+                                                            ...s.friendlyShipStock,
+                                                            [shipId]: {
+                                                                ...s
+                                                                    .friendlyShipStock[
+                                                                    shipId
+                                                                ],
+                                                                [g.id]:
+                                                                    (s
                                                                         .friendlyShipStock[
                                                                         shipId
-                                                                    ],
-                                                                    [g.id]:
-                                                                        (s
-                                                                            .friendlyShipStock[
-                                                                            shipId
-                                                                        ]?.[
-                                                                            g.id
-                                                                        ] ||
-                                                                            0) +
-                                                                        5,
-                                                                },
+                                                                    ]?.[g.id] ||
+                                                                        0) + 5,
                                                             },
-                                                            credits:
-                                                                s.credits +
-                                                                g.price * 0.6,
-                                                            ship: { ...s.ship },
-                                                        }),
-                                                    );
-                                                }
+                                                        },
+                                                        credits:
+                                                            s.credits +
+                                                            g.price * 0.6,
+                                                        ship: {
+                                                            ...s.ship,
+                                                            tradeGoods:
+                                                                newTradeGoods,
+                                                        },
+                                                    };
+                                                });
                                             }}
                                             className="bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase text-[9px] px-1.5"
                                         >
@@ -581,45 +584,51 @@ export function FriendlyShipPanel() {
                                                 playerGood.quantity < 15
                                             }
                                             onClick={() => {
-                                                if (playerGood) {
-                                                    playerGood.quantity -= 15;
-                                                    if (
-                                                        playerGood.quantity <= 0
-                                                    ) {
-                                                        ship.tradeGoods =
-                                                            ship.tradeGoods.filter(
+                                                useGameStore.setState((s) => {
+                                                    const newTradeGoods =
+                                                        s.ship.tradeGoods
+                                                            .map((tg) =>
+                                                                tg.item === g.id
+                                                                    ? {
+                                                                          ...tg,
+                                                                          quantity:
+                                                                              tg.quantity -
+                                                                              15,
+                                                                      }
+                                                                    : tg,
+                                                            )
+                                                            .filter(
                                                                 (tg) =>
-                                                                    tg.item !==
-                                                                    g.id,
+                                                                    tg.quantity >
+                                                                    0,
                                                             );
-                                                    }
-                                                    useGameStore.setState(
-                                                        (s) => ({
-                                                            friendlyShipStock: {
-                                                                ...s.friendlyShipStock,
-                                                                [shipId]: {
-                                                                    ...s
+
+                                                    return {
+                                                        friendlyShipStock: {
+                                                            ...s.friendlyShipStock,
+                                                            [shipId]: {
+                                                                ...s
+                                                                    .friendlyShipStock[
+                                                                    shipId
+                                                                ],
+                                                                [g.id]:
+                                                                    (s
                                                                         .friendlyShipStock[
                                                                         shipId
-                                                                    ],
-                                                                    [g.id]:
-                                                                        (s
-                                                                            .friendlyShipStock[
-                                                                            shipId
-                                                                        ]?.[
-                                                                            g.id
-                                                                        ] ||
-                                                                            0) +
-                                                                        15,
-                                                                },
+                                                                    ]?.[g.id] ||
+                                                                        0) + 15,
                                                             },
-                                                            credits:
-                                                                s.credits +
-                                                                g.price * 1.8,
-                                                            ship: { ...s.ship },
-                                                        }),
-                                                    );
-                                                }
+                                                        },
+                                                        credits:
+                                                            s.credits +
+                                                            g.price * 1.8,
+                                                        ship: {
+                                                            ...s.ship,
+                                                            tradeGoods:
+                                                                newTradeGoods,
+                                                        },
+                                                    };
+                                                });
                                             }}
                                             className="bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase text-[9px] px-1.5"
                                         >

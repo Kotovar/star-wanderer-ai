@@ -3,20 +3,20 @@
 import { useState, useEffect, useMemo } from "react";
 import { useGameStore } from "../store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RACES, getRandomRace } from "../constants";
-import type { RaceId, Contract, Module, ShopItem, CrewMember } from "../types";
+import { RACES } from "../constants";
+import type { RaceId, Contract, ShopItem, CrewMember } from "../types";
 import { ShopTab } from "./station/ShopTab";
 import { TradeTab } from "./station/TradeTab";
 import { CrewTab } from "./station/CrewTab";
 import { ServicesTab } from "./station/ServicesTab";
 import { ModuleUpgradeModal } from "./station/ModuleUpgradeModal";
 import { Button } from "@/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+// import {
+//     Dialog,
+//     DialogContent,
+//     DialogHeader,
+//     DialogTitle,
+// } from "@/components/ui/dialog";
 
 // Re-export these from the original file - they contain complex logic
 export {
@@ -30,7 +30,7 @@ export {
 
 import {
     generateStationItems,
-    getStationCrewCount,
+    // getStationCrewCount,
     generateStationCrew,
 } from "./station/station-data";
 
@@ -93,19 +93,17 @@ export function StationPanel() {
     );
 
     // Get hired crew names for this station
-    const hiredCrewNames = hiredCrew[stationId] || [];
+    const availableCrew = useMemo(() => {
+        const hiredCrewNames = hiredCrew[stationId] || [];
 
-    const availableCrew = useMemo(
-        () =>
-            generateStationCrew(
-                stationId,
-                currentLocation?.dominantRace,
-            ).filter((c) => !hiredCrewNames.includes(c.member.name)),
-        [stationId, currentLocation?.dominantRace, hiredCrewNames],
-    );
+        return generateStationCrew(
+            stationId,
+            currentLocation?.dominantRace,
+        ).filter((c) => !hiredCrewNames.includes(c.member.name));
+    }, [currentLocation?.dominantRace, hiredCrew, stationId]);
     const hasSpace = crew.length < getCrewCapacity();
 
-    const captainLevel = crew.find((c) => c.profession === "pilot")?.level ?? 1;
+    // const captainLevel = crew.find((c) => c.profession === "pilot")?.level ?? 1;
 
     const fuel = ship.fuel;
     const maxFuel = ship.maxFuel;
@@ -339,7 +337,7 @@ function DeliveryContracts({
                                 {c.desc}
                             </div>
                             <div className="text-[11px] mt-1 text-[#00ff41]">
-                                📦 Груз "{c.cargo}" (10т)
+                                📦 Груз &quot;{c.cargo}&quot; (10т)
                             </div>
                             <div className="text-[#ffb000] text-xs mt-1">
                                 💰 {c.reward}₢

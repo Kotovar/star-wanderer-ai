@@ -166,6 +166,8 @@ export interface CrewTrait {
     type: "positive" | "negative" | "neutral";
 }
 
+export type Quality = "poor" | "average" | "good" | "excellent";
+
 export interface Location {
     id: string;
     type:
