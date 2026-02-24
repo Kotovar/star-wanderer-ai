@@ -179,6 +179,7 @@ export interface Location {
         | "distress_signal"
         | "ancient_boss";
     name: string;
+    dominantRace: RaceId; // Dominant race on this planet/station
     stationType?: string;
     stationId?: string;
     planetType?: string;
@@ -232,7 +233,7 @@ export interface Location {
     bossId?: string;
     bossDefeated?: boolean;
     // Race fields
-    dominantRace?: RaceId; // Dominant race on this planet/station
+
     population?: number; // Population in thousands
 }
 

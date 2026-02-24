@@ -16,12 +16,13 @@ export function PlanetSpecializationPanel({
     const credits = useGameStore((s) => s.credits);
     const crew = useGameStore((s) => s.crew);
     const artifacts = useGameStore((s) => s.artifacts);
-    const ship = useGameStore((s) => s.ship);
+    // const ship = useGameStore((s) => s.ship);
 
     const trainCrew = useGameStore((s) => s.trainCrew);
     const scanSector = useGameStore((s) => s.scanSector);
     const boostArtifact = useGameStore((s) => s.boostArtifact);
     const activatePlanetEffect = useGameStore((s) => s.activatePlanetEffect);
+    const planetCooldowns = useGameStore((s) => s.planetCooldowns);
 
     const [selectedCrewId, setSelectedCrewId] = useState<number | null>(null);
     const [selectedArtifactId, setSelectedArtifactId] = useState<string | null>(
@@ -35,7 +36,6 @@ export function PlanetSpecializationPanel({
 
     if (!spec) return null;
 
-    const planetCooldowns = useGameStore((s) => s.planetCooldowns);
     const isOnCooldown = !!(
         currentLocation.id && planetCooldowns[currentLocation.id]
     );
@@ -65,7 +65,7 @@ export function PlanetSpecializationPanel({
         if (!canAfford || isOnCooldown || isMaxLevelReached) return;
 
         const planetId = currentLocation.id;
-        const raceId = currentLocation.dominantRace!;
+        const raceId = currentLocation.dominantRace;
 
         // Set cooldown first using Zustand's set directly
         useGameStore.setState((s) => ({

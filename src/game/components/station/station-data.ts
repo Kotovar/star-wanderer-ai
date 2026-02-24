@@ -1,7 +1,7 @@
 import type { ShopItem, RaceId, CrewMember } from "../../types";
 import {
-    WEAPON_TYPES,
-    TRADE_GOODS,
+    // WEAPON_TYPES,
+    // TRADE_GOODS,
     generateCrewTraits,
     CREW_BASE_PRICES,
     RACES,

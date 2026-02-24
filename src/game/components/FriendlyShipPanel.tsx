@@ -46,7 +46,9 @@ export function FriendlyShipPanel() {
     const currentCargo =
         ship.cargo.reduce((s, c) => s + c.quantity, 0) +
         ship.tradeGoods.reduce((s, g) => s + g.quantity, 0);
-    const availSpace = cargoModule ? cargoModule.capacity! - currentCargo : 0;
+    const availSpace = cargoModule?.capacity
+        ? cargoModule.capacity - currentCargo
+        : 0;
 
     // Memoize crew data to prevent regeneration on every render
     const crewData = useMemo(() => {
@@ -173,7 +175,7 @@ export function FriendlyShipPanel() {
                 },
             }));
         }
-    }, [shipId, friendlyShipStock]);
+    }, [shipId, friendlyShipStock, seed]);
 
     const tradeGoods = ["water", "food", "medicine"].map((gid, idx) => ({
         id: gid,
@@ -296,7 +298,7 @@ export function FriendlyShipPanel() {
                     <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mt-5">
                         Торговля
                     </div>
-                    <div className="flex flex-col gap-2.5 max-h-[400px] overflow-y-auto pr-1 pb-2">
+                    <div className="flex flex-col gap-2.5 max-h-100 overflow-y-auto pr-1 pb-2">
                         {tradeGoods.map((g) => {
                             const playerGood = ship.tradeGoods.find(
                                 (tg) => tg.item === g.id,
@@ -789,7 +791,7 @@ export function FriendlyShipPanel() {
                                         {c.desc}
                                     </div>
                                     <div className="text-[11px] mt-1 text-[#00ff41]">
-                                        📦 Груз "{c.cargo}" (10т)
+                                        📦 Груз &quot;{c.cargo}&quot; (10т)
                                     </div>
                                     <div className="text-[#ffb000] text-xs mt-1">
                                         💰 {c.reward}₢

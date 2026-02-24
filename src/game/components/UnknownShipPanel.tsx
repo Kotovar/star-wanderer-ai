@@ -16,9 +16,6 @@ export function UnknownShipPanel() {
     if (!currentLocation) return null;
 
     const isShip = ["enemy", "friendly_ship"].includes(currentLocation.type);
-    const isAnomaly = currentLocation.type === "anomaly";
-    const isBoss = currentLocation.type === "ancient_boss";
-    const isStorm = currentLocation.type === "storm";
     const scanLevel = getScanLevel();
     const hasScanner = scanLevel > 0;
 

@@ -25,9 +25,10 @@ export function RaceDiscoveryModal() {
         if (knownRaces.length > prevLength) {
             // A new race was discovered
             const newRaceId = knownRaces[knownRaces.length - 1];
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-            setRaceId(newRaceId);
-            setOpen(true);
+            queueMicrotask(() => {
+                setRaceId(newRaceId);
+                setOpen(true);
+            });
         }
         prevLengthRef.current = knownRaces.length;
     }, [knownRaces]);

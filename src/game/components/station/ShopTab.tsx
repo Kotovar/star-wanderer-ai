@@ -60,7 +60,7 @@ export function ShopTab({
 
     return (
         <>
-            <div className="flex flex-col gap-2.5 max-h-[350px] overflow-y-auto pr-1 pb-2">
+            <div className="flex flex-col gap-2.5 max-h-87.5 overflow-y-auto pr-1 pb-2">
                 {filteredItems.map((item) => {
                     const stockLeft =
                         inv[item.id] !== undefined
@@ -128,7 +128,7 @@ export function ShopTab({
             {selectedItem && selectedItem.type === "module" && (
                 <ModuleDetailDialog
                     module={{
-                        id: Date.now(),
+                        id: new Date().getTime(),
                         type: selectedItem.moduleType || "reactor",
                         name: selectedItem.name,
                         health: 100,
@@ -218,7 +218,6 @@ function ShopItemCard({
                     soldOut={soldOut}
                     noWB={noWB}
                     alreadyOwned={alreadyOwned}
-                    isUnique={isUnique}
                 />
                 <ItemDescription item={item} />
             </div>
@@ -239,14 +238,12 @@ function ItemPriceAndStock({
     soldOut,
     noWB,
     alreadyOwned,
-    isUnique,
 }: {
     price: number;
     stockLeft: number;
     soldOut: boolean;
     noWB: boolean;
     alreadyOwned: boolean;
-    isUnique: boolean;
 }) {
     return (
         <div className="text-[#ffb000] mt-1 text-xs">

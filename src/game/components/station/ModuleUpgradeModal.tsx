@@ -88,13 +88,13 @@ function ModuleSelectionList({
     if (eligibleModules.length === 0) {
         return (
             <div className="text-[#ff0040] p-3 border border-[#ff0040]">
-                Нет модулей типа "{targetType}" для улучшения!
+                Нет модулей типа &quot;{targetType}&quot; для улучшения!
             </div>
         );
     }
 
     return (
-        <div className="max-h-[250px] overflow-y-auto space-y-2">
+        <div className="max-h-62.5 overflow-y-auto space-y-2">
             {eligibleModules.map((module) => {
                 const isMaxLevel = (module.level || 1) >= 3;
 

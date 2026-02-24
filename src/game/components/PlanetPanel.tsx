@@ -206,7 +206,7 @@ export function PlanetPanel() {
                 )}
                 {/* Planet Specialization Button */}
                 {race &&
-                    PLANET_SPECIALIZATIONS[currentLocation.dominantRace!] && (
+                    PLANET_SPECIALIZATIONS[currentLocation.dominantRace] && (
                         <Button
                             onClick={() => setShowSpecialization(true)}
                             disabled={isOnCooldown}
@@ -248,7 +248,7 @@ export function PlanetPanel() {
                                         {c.desc}
                                     </div>
                                     <div className="text-[11px] mt-1 text-[#00ff41]">
-                                        📦 Груз "{c.cargo}" (10т)
+                                        📦 Груз &quot;{c.cargo}&quot; (10т)
                                     </div>
                                     <div className="text-[#ffb000] text-xs mt-1">
                                         💰 {c.reward}₢

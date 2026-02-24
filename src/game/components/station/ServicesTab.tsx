@@ -51,11 +51,7 @@ export function ServicesTab({
 
             <RepairSection credits={credits} onRepair={repairShip} />
             <HealSection credits={credits} onHeal={healCrew} />
-            <ScrapModuleSection
-                ship={ship}
-                credits={credits}
-                onScrap={scrapModule}
-            />
+            <ScrapModuleSection ship={ship} onScrap={scrapModule} />
         </div>
     );
 }
@@ -202,11 +198,9 @@ function HealSection({
 
 function ScrapModuleSection({
     ship,
-    credits,
     onScrap,
 }: {
     ship: ServicesTabProps["ship"];
-    credits: number;
     onScrap: (moduleId: number) => void;
 }) {
     // Essential modules that must have at least 1
