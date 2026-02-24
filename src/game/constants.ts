@@ -6,6 +6,8 @@ import type {
     AncientBoss,
     Race,
     RaceId,
+    Weapon,
+    WeaponDetails,
 } from "./types";
 
 // ═══════════════════════════════════════════════════════════════
@@ -552,7 +554,7 @@ export const MODULE_TYPES: Record<
     ai_core: { color: "#00ffff33", borderColor: "#00ffff" },
 };
 
-export const WEAPON_TYPES = {
+export const WEAPON_TYPES: Record<Weapon["type"], WeaponDetails> = {
     kinetic: {
         name: "Кинетическое",
         damage: 15,
@@ -831,7 +833,7 @@ export const PROFESSION_NAMES: Record<Profession, string> = {
     medic: "Медик",
     scout: "Разведчик",
     scientist: "Учёный",
-    gunner: "Канонир",
+    gunner: "Стрелок",
 };
 
 export const PROFESSION_DESCRIPTIONS: Record<Profession, string> = {
@@ -998,7 +1000,7 @@ export const generateCrewTraits = (
                 name: trait.name,
                 desc: trait.desc,
                 effect: trait.effect,
-                type: "positive" as const,
+                type: "positive",
             });
             priceModifier *= trait.priceMod;
         }

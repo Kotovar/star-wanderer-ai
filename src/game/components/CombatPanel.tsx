@@ -91,7 +91,7 @@ export function CombatPanel() {
             )}
             {hasWeaponBay && !hasGunner && (
                 <div className="bg-[rgba(255,170,0,0.1)] border border-[#ffaa00] p-2 text-sm text-[#ffaa00]">
-                    ⚠️ Нет канонира! Урон -50%, цель выбирается случайно.
+                    ⚠️ Нет стрелка! Урон -50%, цель выбирается случайно.
                 </div>
             )}
 
@@ -260,18 +260,18 @@ function CombatActions({
 }
 
 interface CrewManagementProps {
-    crew: CrewMember[]; // eslint-disable-line no-unused-vars
+    crew: CrewMember[];
     ship: ReturnType<typeof useGameStore.getState>["ship"];
     selectedCrew: CrewMember | null;
     onSelectCrew: (crew: CrewMember | null) => void;
-    onMoveCrew: (_crewId: number, _moduleId: number) => void; // eslint-disable-line no-unused-vars
+    onMoveCrew: (_crewId: number, _moduleId: number) => void;
     assignCombatTask: (
-        _crewId: number, // eslint-disable-line no-unused-vars
-        _task: string, // eslint-disable-line no-unused-vars
-        _effect: string | null, // eslint-disable-line no-unused-vars
+        _crewId: number,
+        _task: string,
+        _effect: string | null,
     ) => void;
     getAdjacentModules: (
-        _moduleId: number, // eslint-disable-line no-unused-vars
+        _moduleId: number,
     ) => ReturnType<typeof useGameStore.getState>["ship"]["modules"];
 }
 

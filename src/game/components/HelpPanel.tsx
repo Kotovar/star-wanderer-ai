@@ -93,7 +93,7 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                                     Оружейная палуба
                                 </span>
                                 <p className="text-[#888]">
-                                    Атака врагов (нужен канонир)
+                                    Атака врагов (нужен стрелок)
                                 </p>
                             </div>
                             <div className="p-2 bg-[rgba(0,128,255,0.1)] border border-[#0080ff]">
@@ -200,7 +200,7 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                             </div>
                             <div className="p-2 bg-[rgba(255,0,64,0.2)] border border-[#ff0040]">
                                 <span className="text-[#ff0040] font-bold">
-                                    Канонир
+                                    Стрелок
                                 </span>
                                 <span className="text-[#888] ml-2">
                                     — Выбор цели в бою, +урон от оружия
@@ -370,10 +370,10 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                         </h3>
                         <ul className="text-[#888] text-xs space-y-1 list-disc list-inside">
                             <li>
-                                Без канонира урон -50%, цель выбирается случайно
+                                Без стрелка урон -50%, цель выбирается случайно
                             </li>
                             <li>
-                                Канонир в оружейной палубе позволяет выбирать
+                                Стрелок в оружейной палубе позволяет выбирать
                                 цель
                             </li>
                             <li>При 0% брони — поражение</li>

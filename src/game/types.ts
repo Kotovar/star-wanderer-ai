@@ -121,6 +121,17 @@ export interface Weapon {
     type: "kinetic" | "laser" | "missile";
 }
 
+export interface WeaponDetails {
+    name: string;
+    damage: number;
+    color: string;
+    icon: string;
+    description: string;
+    armorPenetration?: number;
+    shieldBonus?: number;
+    interceptChance?: number;
+}
+
 export interface CrewMember {
     id: number;
     name: string;
@@ -151,7 +162,7 @@ export type Profession =
 export interface CrewTrait {
     name: string;
     desc: string;
-    effect: Record<string, number>;
+    effect: Partial<Record<string, number>>;
     type: "positive" | "negative" | "neutral";
 }
 

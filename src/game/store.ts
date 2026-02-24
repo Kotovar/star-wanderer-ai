@@ -6,7 +6,7 @@ import type {
     Contract,
     Module,
     CrewMember,
-    CombatState,
+    // CombatState,
     ScoutingMission,
     ShopItem,
     Artifact,
@@ -15,17 +15,17 @@ import type {
     BattleResult,
 } from "./types";
 import {
-    SECTOR_NAMES,
+    // SECTOR_NAMES,
     PLANET_TYPES,
     STATION_TYPES,
     ENEMY_TYPES,
     TRADE_GOODS,
     WEAPON_TYPES,
     CREW_TRAITS,
-    generateCrewTraits,
+    // generateCrewTraits,
     getRandomName,
-    getRandomRaceName,
-    PROFESSION_NAMES,
+    // getRandomRaceName,
+    // PROFESSION_NAMES,
     ANCIENT_ARTIFACTS,
     ANCIENT_BOSSES,
     getBossById,
@@ -4516,7 +4516,7 @@ export const useGameStore = create<
             pDmg = Math.floor(pDmg * 1.15);
         } else {
             pDmg = Math.floor(pDmg * 0.5); // 50% damage penalty without gunner
-            get().addLog(`⚠ Нет канонира в оружейной! Урон -50%`, "warning");
+            get().addLog(`⚠ Нет стрелка в оружейной! Урон -50%`, "warning");
         }
 
         // Apply critical_matrix artifact bonus (25% crit chance for double damage)

@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState, MouseEvent } from "react";
 import { useGameStore } from "../store";
 import { MODULE_TYPES, WEAPON_TYPES, RACES } from "../constants";
-import type { Module, CrewMember } from "../types";
+import type { Module, CrewMember, Weapon } from "../types";
 
 const CELL_SIZE = 100;
 
@@ -27,9 +27,9 @@ export function ShipGrid() {
     // SVG dimensions
     const svgSize = gridSize * CELL_SIZE;
 
-    const handleMouseDown = (e, module) => {
+    const handleMouseDown = (e: MouseEvent<SVGGElement>, module: Module) => {
         // Получаем <svg> из текущего <g>
-        const svg = (e.currentTarget as SVGGraphicsElement).ownerSVGElement;
+        const svg = e.currentTarget.ownerSVGElement;
         if (!svg) return;
         const rect = svg.getBoundingClientRect();
         const scaleX = svgSize / rect.width;
@@ -116,7 +116,7 @@ export function ShipGrid() {
                 width={gridSize * CELL_SIZE}
                 height={gridSize * CELL_SIZE}
                 viewBox={`0 0 ${gridSize * CELL_SIZE} ${gridSize * CELL_SIZE}`}
-                className={`w-full h-auto select-none max-h-[400px] md:max-h-none ${
+                className={`w-full h-auto select-none max-h-100 md:max-h-none ${
                     isCombatMode
                         ? "cursor-not-allowed"
                         : "cursor-grab active:cursor-grabbing"
@@ -277,7 +277,7 @@ function ModuleRenderer({
             {module.health < 30 && <DamageOverlay x={x} y={y} w={w} h={h} />}
 
             {crewInModule.length > 0 && (
-                <CrewIcons crew={crewInModule} x={x} y={y} w={w} h={h} />
+                <CrewIcons crew={crewInModule} x={x} y={y} w={w} />
             )}
         </g>
     );
@@ -290,14 +290,14 @@ function WeaponsRenderer({
     w,
     h,
 }: {
-    weapons: Array<{ type: string } | null>;
+    weapons: (Weapon | null)[];
     x: number;
     y: number;
     w: number;
     h: number;
 }) {
     const iconY = y + h / 2 + 10;
-    const spacing = w / (weapons.length + 1);
+    const spacing = w / ((weapons?.length ?? 0) + 1);
 
     return (
         <>
@@ -445,13 +445,11 @@ function CrewIcons({
     x,
     y,
     w,
-    h,
 }: {
     crew: CrewMember[];
     x: number;
     y: number;
     w: number;
-    h: number;
 }) {
     const iconSize = 18;
     const startX = x + w - (crew.length * (iconSize + 4) + 4);

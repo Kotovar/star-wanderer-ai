@@ -11,16 +11,16 @@ import { CREW_ACTIONS, PROFESSION_NAMES } from "../constants";
 import type { CrewMember, Module } from "../types";
 
 interface CrewMemberCardProps {
-    crewMember: CrewMember; // eslint-disable-line no-unused-vars
+    crewMember: CrewMember;
     module: Module | undefined;
     adjacentModules: Module[];
     isSelected: boolean;
     onSelect: (crewMember: CrewMember | null) => void;
-    onMove: (_crewMemberId: number, _moduleId: number) => void; // eslint-disable-line no-unused-vars
+    onMove: (_crewMemberId: number, _moduleId: number) => void;
     onAssignTask: (
-        _crewMemberId: number, // eslint-disable-line no-unused-vars
-        _task: string, // eslint-disable-line no-unused-vars
-        _effect: string | null, // eslint-disable-line no-unused-vars
+        _crewMemberId: number,
+        _task: string,
+        _effect: string | null,
     ) => void;
     isCombat?: boolean;
 }
@@ -108,9 +108,9 @@ export function CrewMemberCard({
 }
 
 interface MovementRowProps {
-    crewMember: CrewMember; // eslint-disable-line no-unused-vars
+    crewMember: CrewMember;
     adjacentModules: Module[];
-    onMove: (_crewMemberId: number, _moduleId: number) => void; // eslint-disable-line no-unused-vars
+    onMove: (_crewMemberId: number, _moduleId: number) => void;
     onSelect: (crewMember: CrewMember | null) => void;
 }
 
@@ -156,9 +156,9 @@ interface TaskRowProps {
     crewMember: CrewMember;
     actions: Array<{ value: string; label: string; effect: unknown }>;
     onAssignTask: (
-        _crewMemberId: number, // eslint-disable-line no-unused-vars
-        _task: string, // eslint-disable-line no-unused-vars
-        _effect: string | null, // eslint-disable-line no-unused-vars
+        _crewMemberId: number,
+        _task: string,
+        _effect: string | null,
     ) => void;
     currentAssignment: string | null;
     isCombat?: boolean;

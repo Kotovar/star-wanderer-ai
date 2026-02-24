@@ -33,10 +33,12 @@ export function TradeTab({
     const currentCargo =
         ship.cargo.reduce((s, c) => s + c.quantity, 0) +
         ship.tradeGoods.reduce((s, g) => s + g.quantity, 0);
-    const availSpace = cargoModule ? cargoModule.capacity! - currentCargo : 0;
+    const availSpace = cargoModule?.capacity
+        ? cargoModule.capacity - currentCargo
+        : 0;
 
     return (
-        <div className="flex flex-col gap-2.5 max-h-[400px] overflow-y-auto pr-1 pb-2">
+        <div className="flex flex-col gap-2.5 max-h-100 overflow-y-auto pr-1 pb-2">
             {stationId &&
                 Object.keys(TRADE_GOODS).map((goodId) => {
                     const good = { id: goodId, ...TRADE_GOODS[goodId] };
@@ -165,7 +167,6 @@ function TradeButtons({
         <div className="flex flex-wrap gap-1">
             <BuyButton
                 quantity={1}
-                price={prices.buy}
                 disabled={
                     availSpace < 1 ||
                     credits < Math.floor(prices.buy / 5) ||
@@ -175,13 +176,11 @@ function TradeButtons({
             />
             <BuyButton
                 quantity={5}
-                price={prices.buy}
                 disabled={availSpace < 5 || credits < prices.buy || stock < 5}
                 onBuy={() => onBuy(goodId, 5)}
             />
             <BuyButton
                 quantity={15}
-                price={prices.buy}
                 disabled={
                     availSpace < 15 ||
                     credits < Math.floor(prices.buy * 3) ||
@@ -210,12 +209,10 @@ function TradeButtons({
 
 function BuyButton({
     quantity,
-    price,
     disabled,
     onBuy,
 }: {
     quantity: number;
-    price: number;
     disabled: boolean;
     onBuy: () => void;
 }) {

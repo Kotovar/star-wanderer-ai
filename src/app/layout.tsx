@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import type { ReactNode } from "react";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -14,47 +15,39 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "Z.ai Code Scaffold - AI-Powered Development",
-    description:
-        "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
+    title: "Star Wanderer",
+    description: `The project was created and implemented at approximately 99% completion as an experiment to evaluate the capabilities of
+        generative AI models in game system development. Models used: Claude, GLM- 5, Qwen-Coder, DeepSeek`,
     keywords: [
-        "Z.ai",
+        "AI development",
+        "GLM- 5",
+        "Claude",
+        "Qwen-Coder",
+        "DeepSeek",
         "Next.js",
         "TypeScript",
         "Tailwind CSS",
-        "shadcn/ui",
-        "AI development",
         "React",
     ],
-    authors: [{ name: "Z.ai Team" }],
-    icons: {
-        icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
-    },
+    authors: [{ name: "AI models" }, { name: "kotovar" }],
     openGraph: {
-        title: "Z.ai Code Scaffold",
+        title: "Star Wanderer",
         description: "AI-powered development with modern React stack",
-        url: "https://chat.z.ai",
-        siteName: "Z.ai",
         type: "website",
-    },
-    twitter: {
-        card: "summary_large_image",
-        title: "Z.ai Code Scaffold",
-        description: "AI-powered development with modern React stack",
     },
 };
 
 export default function RootLayout({
     children,
 }: Readonly<{
-    children: React.ReactNode;
+    children: ReactNode;
 }>) {
     return (
-        <html lang="en" suppressHydrationWarning className="dark">
+        <html lang="en">
             <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+                className={`${geistSans.variable} ${geistMono.variable} antialiased`}
             >
-                {children}
+                <main>{children}</main>
                 <Toaster />
             </body>
         </html>
