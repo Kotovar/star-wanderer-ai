@@ -22,6 +22,12 @@ interface ShopTabProps {
     ship: {
         modules: Module[];
     };
+    stationConfig?: {
+        weaponBays?: string[];
+        weapons?: string;
+        hasShieldGenerator?: boolean;
+        modules: string[];
+    };
     buyItem: (item: ShopItem, moduleId?: number) => void;
     onUpgradeClick: (item: ShopItem) => void;
 }
@@ -33,6 +39,7 @@ export function ShopTab({
     credits,
     weaponBays,
     ship,
+    stationConfig,
     buyItem,
     onUpgradeClick,
 }: ShopTabProps) {
@@ -41,6 +48,9 @@ export function ShopTab({
     const [selectedUpgrade, setSelectedUpgrade] = useState<ShopItem | null>(
         null,
     );
+
+    // Check if this is a military station (has weapon bays available)
+    const isMilitaryStation = stationConfig?.weaponBays !== undefined;
 
     // Get owned module types for filtering upgrades
     const ownedModuleTypes = useMemo(() => {
@@ -68,8 +78,13 @@ export function ShopTab({
                             ? Math.max(0, item.stock - inv[item.id])
                             : item.stock;
                     const soldOut = stockLeft === 0;
+
+                    // Check weapon bay requirement
+                    // On military stations, weapons are available (station has weapon bays)
                     const noWB = Boolean(
-                        item.requiresWeaponBay && weaponBays === 0,
+                        item.requiresWeaponBay &&
+                        weaponBays === 0 &&
+                        !isMilitaryStation,
                     );
 
                     const hasScanner = ship.modules.some(
@@ -320,9 +335,6 @@ function ItemDescription({ item }: { item: ShopItem }) {
             {item.type === "module" &&
                 item.moduleType === "scanner" &&
                 item.scanRange && <span>📡 Дальность: {item.scanRange}</span>}
-            {item.type === "module" &&
-                item.moduleType === "habitat" &&
-                item.oxygen && <span>🏠 Кислород: {item.oxygen}</span>}
             {item.type === "module" && item.moduleType === "lifesupport" && (
                 <span>💚 Жизнеобеспечение — поддержка экипажа</span>
             )}

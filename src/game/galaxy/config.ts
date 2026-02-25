@@ -1,4 +1,4 @@
-import type { GalaxyTier, StormType } from "../types";
+import type { GalaxyTier, StationConfig, StormType } from "../types";
 
 // ============================================================================
 // Константы конфигурации галактики
@@ -65,10 +65,37 @@ export const EMPTY_PLANET_CHANCE = {
 
 /** Шанс появления звезды по типам */
 export const STAR_CHANCES = {
-    blackHoleTier3: 0.15,
+    blackHoleTier1: 0.01, // 1% для tier 1 (редко)
+    blackHoleTier2: 0.1, // 10% для tier 2
+    blackHoleTier3: 0.15, // 15% для tier 3
     tripleStarTier2: 0.2,
     doubleStarBase: 0.3,
     doubleStarTierBonus: 0.1,
+};
+
+/** Конфигурация типов станций */
+export const STATION_CONFIG: Record<string, StationConfig> = {
+    Торговая: {
+        cargoBonus: 1.5,
+        priceDiscount: 0.85,
+        modules: ["cargo", "reactor", "fueltank"],
+    },
+    Военная: {
+        hasShieldGenerator: true,
+        weapons: "all",
+        modules: ["weaponbay", "shield", "reactor"],
+    },
+    Исследовательская: {
+        hasScientist: true,
+        scannerAvailable: true,
+        modules: ["scanner", "reactor", "lifesupport"],
+    },
+    Добывающая: {
+        drillAvailable: true,
+        mineralDiscount: 0.5,
+        rareMineralDiscount: 0.5,
+        modules: ["drill", "cargo", "fueltank"],
+    },
 };
 
 /** Минимальное количество объектов для обеспечения */

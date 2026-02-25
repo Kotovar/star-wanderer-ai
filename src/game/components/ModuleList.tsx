@@ -120,7 +120,7 @@ function ModuleStats({ module }: ModuleStatsProps) {
             {module.type !== "shield" &&
                 module.defense &&
                 module.defense > 0 && <span>🛡 {module.defense}</span>}
-            {(module.type === "lifesupport" || module.type === "habitat") &&
+            {module.type === "lifesupport" &&
                 module.oxygen &&
                 module.oxygen > 0 && <span>💨 {module.oxygen} сущ.</span>}
             <span>❤ {module.health}%</span>
@@ -339,11 +339,6 @@ function ModuleDetailedStats({
                     💚 Жизнеобеспечение — поддержка жизни экипажа
                 </div>
             )}
-            {module.type === "habitat" && (
-                <div className="text-[#888] text-xs">
-                    🏠 Жилой модуль — дополнительные места для экипажа
-                </div>
-            )}
             {module.type === "medical" && (
                 <div className="text-[#888] text-xs">
                     🏥 Медотсек — лечение и восстановление экипажа
@@ -426,7 +421,7 @@ function ModuleDetailedStats({
                         {module.defense}
                     </div>
                 )}
-            {(module.type === "lifesupport" || module.type === "habitat") &&
+            {module.type === "lifesupport" &&
                 module.oxygen &&
                 module.oxygen > 0 && (
                     <div>

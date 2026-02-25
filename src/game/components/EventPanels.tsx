@@ -25,6 +25,7 @@ export function EventDisplay() {
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const showAssignments = useGameStore((s) => s.showAssignments);
     const skipTurn = useGameStore((s) => s.skipTurn);
+    const currentSector = useGameStore((s) => s.currentSector);
 
     // Traveling state
     if (traveling) {
@@ -73,7 +74,7 @@ export function EventDisplay() {
                     <div className="text-sm text-center">
                         Позиция:{" "}
                         <span className="text-[#ffb000]">
-                            {useGameStore.getState().currentSector?.name}
+                            {currentSector?.name}
                         </span>
                     </div>
                     <div className="mt-4">
@@ -109,11 +110,10 @@ export function EventDisplay() {
             return (
                 <div className="flex flex-col gap-4">
                     <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mb-4">
-                        ▸ {useGameStore.getState().currentSector?.name}
+                        ▸ {currentSector?.name}
                     </div>
                     <div className="text-sm text-center">
-                        Уровень угрозы:{" "}
-                        {useGameStore.getState().currentSector?.danger}
+                        Уровень угрозы: {currentSector?.danger}
                     </div>
                     <div className="mt-4">
                         <SectorMap />

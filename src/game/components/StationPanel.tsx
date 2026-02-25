@@ -70,10 +70,16 @@ export function StationPanel() {
     const weaponBays = ship.modules.filter(
         (m) => m.type === "weaponbay",
     ).length;
+    const stationConfig = currentLocation?.stationConfig;
 
     const stationItems = useMemo(
-        () => generateStationItems(stationId, sectorTier),
-        [stationId, sectorTier],
+        () =>
+            generateStationItems(
+                stationId,
+                sectorTier,
+                currentLocation?.stationType,
+            ),
+        [stationId, sectorTier, currentLocation?.stationType],
     );
 
     const dominantRace = currentLocation?.dominantRace;
@@ -172,6 +178,7 @@ export function StationPanel() {
                         credits={credits}
                         weaponBays={weaponBays}
                         ship={ship}
+                        stationConfig={stationConfig}
                         buyItem={buyItem}
                         onUpgradeClick={(item) => {
                             setPendingUpgrade(item);

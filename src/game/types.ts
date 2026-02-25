@@ -112,7 +112,6 @@ export type ModuleType =
     | "shield"
     | "medical"
     | "scanner"
-    | "habitat"
     | "engine"
     | "fueltank"
     | "drill"
@@ -171,6 +170,19 @@ export interface CrewTrait {
 
 export type Quality = "poor" | "average" | "good" | "excellent";
 
+export type StationConfig = {
+    cargoBonus?: number; // Множитель груза на станции (1.5 = +50%)
+    priceDiscount?: number; // Множитель цен (0.85 = -15%)
+    mineralDiscount?: number; // Скидка на минералы
+    rareMineralDiscount?: number; // Скидка на редкие минералы
+    hasScientist?: boolean; // Учёный в найме
+    scannerAvailable?: boolean; // Сканер в продаже
+    drillAvailable?: boolean; // Бур в продаже
+    hasShieldGenerator?: boolean; // Генератор щита
+    weapons?: string; // Доступное оружие
+    modules: ModuleType[]; // Базовые модули в продаже
+};
+
 export interface Location {
     id: string;
     type:
@@ -186,6 +198,7 @@ export interface Location {
     name: string;
     dominantRace?: RaceId; // Dominant race on this planet/station
     stationType?: StationName;
+    stationConfig?: StationConfig;
     stationId?: string;
     planetType?: string;
     isEmpty?: boolean;
@@ -599,6 +612,7 @@ export type ArtifactType =
     | "auto_repair" // Auto repair but crew leaves
     | "critical_overload" // Massive crit but self damage
     | "dark_shield" // Strong shield but morale drain
+    | "ai_control" // Ship can operate without crew
     | "void_engine" // Free travel but crew suffering
     | "module_armor"; // Bonus armor to all modules
 

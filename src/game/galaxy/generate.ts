@@ -13,6 +13,7 @@ import {
     STAR_CHANCES,
     STORM_NAMES,
     STORM_TYPES_LIST,
+    STATION_CONFIG,
 } from "./config";
 import { SHIP_TYPES, STATION_TYPES } from "./consts";
 
@@ -21,12 +22,12 @@ import { SHIP_TYPES, STATION_TYPES } from "./consts";
  */
 export const generateStar = (tier: GalaxyTier): Sector["star"] => {
     const starRoll = Math.random();
-    const blackHoleChance = tier === 3 ? STAR_CHANCES.blackHoleTier3 : 0;
+    const blackHoleChance = STAR_CHANCES[`blackHoleTier${tier}`];
     const tripleStarChance = tier === 2 ? STAR_CHANCES.tripleStarTier2 : 0;
     const doubleStarChance =
         STAR_CHANCES.doubleStarBase + tier * STAR_CHANCES.doubleStarTierBonus;
 
-    if (tier === 3 && starRoll < blackHoleChance) {
+    if (starRoll < blackHoleChance) {
         return { type: "blackhole", name: "Чёрная дыра" };
     }
     if (tier === 2 && starRoll < tripleStarChance) {
@@ -48,15 +49,17 @@ export const generateStation = (
     const stationType =
         STATION_TYPES[Math.floor(Math.random() * STATION_TYPES.length)];
     const dominantRace = getRandomRace([]);
+    const stationConfig = STATION_CONFIG[stationType];
 
     return {
         id: `${sectorIdx}-${locIdx}`,
         stationId: `station-${sectorIdx}-${locIdx}`,
         type: "station",
         name: `Станция ${String.fromCharCode(65 + (locIdx % 26))}`,
-        population: 50 + Math.floor(Math.random() * 200),
         stationType,
+        stationConfig,
         dominantRace,
+        population: 50 + Math.floor(Math.random() * 200),
     };
 };
 

@@ -47,11 +47,26 @@ const initializeStationData = (
             if (loc.type === "station" && loc.stationId) {
                 prices[loc.stationId] = {};
                 stock[loc.stationId] = {};
+
+                // Get station config for discounts
+                const stationConfig = loc.stationConfig;
+                const mineralDiscount = stationConfig?.mineralDiscount ?? 1;
+                const rareMineralDiscount =
+                    stationConfig?.rareMineralDiscount ?? 1;
+
                 for (const goodId in TRADE_GOODS) {
                     const good = TRADE_GOODS[goodId];
                     const priceVar = 0.7 + Math.random() * 0.6;
                     const sellPrice = Math.floor(good.basePrice * priceVar);
-                    const buyPrice = Math.floor(sellPrice * 1.6);
+
+                    // Apply discounts for mining stations
+                    let buyPrice = Math.floor(sellPrice * 1.6);
+                    if (goodId === "minerals") {
+                        buyPrice = Math.floor(buyPrice * mineralDiscount);
+                    } else if (goodId === "rare_minerals") {
+                        buyPrice = Math.floor(buyPrice * rareMineralDiscount);
+                    }
+
                     prices[loc.stationId][goodId] = {
                         buy: buyPrice,
                         sell: sellPrice,
@@ -354,7 +369,7 @@ export const useGameStore = create<
             }
 
             const totalOxygen = state.ship.modules
-                .filter((m) => m.type === "lifesupport" || m.type === "habitat")
+                .filter((m) => m.type === "lifesupport")
                 .reduce((sum, m) => sum + (m.oxygen || 0), 0);
             const totalFuelCapacity = state.ship.modules
                 .filter(
@@ -549,9 +564,7 @@ export const useGameStore = create<
     getCrewCapacity: () => {
         const state = get();
         const lifesupport = state.ship.modules.filter(
-            (m) =>
-                (m.type === "lifesupport" || m.type === "habitat") &&
-                !m.disabled,
+            (m) => m.type === "lifesupport" && !m.disabled,
         );
         return lifesupport.reduce((sum, m) => sum + (m.oxygen || 0), 0);
     },
@@ -2221,6 +2234,12 @@ export const useGameStore = create<
         const sector = state.galaxy.sectors.find((s) => s.id === sectorId);
         if (!sector) return;
 
+        // Если уже в этом секторе - просто открываем карту сектора
+        if (sectorId === state.currentSector?.id) {
+            set({ gameMode: "sector_map" });
+            return;
+        }
+
         // Check if engines or fuel tanks are damaged
         const enginesWorking = get().areEnginesFunctional();
         const tanksWorking = get().areFuelTanksFunctional();
@@ -2235,7 +2254,7 @@ export const useGameStore = create<
             return;
         }
 
-        // Check tier access requirements
+        // Check tier access requirements (only when traveling to new sector)
         const engines = state.ship.modules.filter(
             (m) => m.type === "engine" && !m.disabled && m.health > 0,
         );
@@ -2261,11 +2280,6 @@ export const useGameStore = create<
                 "error",
             );
             playSound("error");
-            return;
-        }
-
-        if (sectorId === state.currentSector?.id) {
-            set({ gameMode: "sector_map" });
             return;
         }
 
@@ -2734,7 +2748,7 @@ export const useGameStore = create<
             damagedModules[randomIdx] = {
                 ...damagedModules[randomIdx],
                 health: Math.max(
-                    10,
+                    1,
                     damagedModules[randomIdx].health - baseModuleDamage,
                 ),
             };
@@ -2743,7 +2757,7 @@ export const useGameStore = create<
         // Apply damage to crew
         const damagedCrew = state.crew.map((c) => ({
             ...c,
-            health: Math.max(10, c.health - baseCrewDamage),
+            health: Math.max(1, c.health - baseCrewDamage),
             happiness: Math.max(0, c.happiness - 15),
         }));
 
@@ -3206,9 +3220,6 @@ export const useGameStore = create<
                     break;
                 case "scanner":
                     priority = 15;
-                    break;
-                case "habitat":
-                    priority = 10;
                     break;
                 case "drill":
                     priority = 5;
@@ -3975,9 +3986,6 @@ export const useGameStore = create<
                     case "scanner":
                         priority = 15;
                         break; // Low
-                    case "habitat":
-                        priority = 10;
-                        break; // Low
                     case "drill":
                         priority = 5;
                         break; // Lowest
@@ -4737,12 +4745,10 @@ export const useGameStore = create<
                     oxygen: item.oxygen || 5,
                     consumption: item.consumption || 2,
                 }),
-                ...(item.moduleType === "habitat" && {
-                    oxygen: item.oxygen || 5,
-                    consumption: item.consumption || 1,
-                }),
                 ...(item.moduleType === "weaponbay" && {
-                    weapons: Array(item.width || 1).fill(null),
+                    weapons: Array((item.width || 1) * (item.height || 1)).fill(
+                        null,
+                    ),
                     consumption: item.consumption || 2,
                 }),
                 ...(item.moduleType === "cockpit" && { consumption: 1 }),
@@ -6616,7 +6622,11 @@ export const useGameStore = create<
         const hasAICoreModule = state.ship.modules.some(
             (m) => m.type === "ai_core" && m.health > 0,
         );
-        const canShipOperateWithoutCrew = hasAICoreArtifact || hasAICoreModule;
+        const hasAINeuralLink = state.artifacts.some(
+            (a) => a.effect.type === "ai_control" && a.effect.active,
+        );
+        const canShipOperateWithoutCrew =
+            hasAICoreArtifact || hasAICoreModule || hasAINeuralLink;
 
         // Check for hull destroyed (0% armor)
         if (state.ship.armor <= 0) {

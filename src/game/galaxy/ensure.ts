@@ -1,6 +1,6 @@
 import { getRandomRace, PLANET_TYPES } from "../constants";
 import { GalaxyTier, Sector } from "../types";
-import { ANOMALY_COLORS, MIN_REQUIREMENTS } from "./config";
+import { ANOMALY_COLORS, MIN_REQUIREMENTS, STATION_CONFIG } from "./config";
 import { STATION_TYPES } from "./consts";
 
 /**
@@ -73,13 +73,16 @@ export const ensureStation = (sector: Sector): void => {
 
     if (stationCount >= MIN_REQUIREMENTS.stations) return;
 
+    const stationType =
+        STATION_TYPES[Math.floor(Math.random() * STATION_TYPES.length)];
+
     sector.locations.push({
         id: `${sector.id}-extra-station`,
         stationId: `station-${sector.id}-extra`,
         type: "station",
         name: `Станция ${String.fromCharCode(65 + (sector.locations.length % 26))}`,
-        stationType:
-            STATION_TYPES[Math.floor(Math.random() * STATION_TYPES.length)],
+        stationType,
+        stationConfig: STATION_CONFIG[stationType],
         dominantRace: getRandomRace([]),
         population: 50 + Math.floor(Math.random() * 200),
     });
@@ -87,6 +90,8 @@ export const ensureStation = (sector: Sector): void => {
 
 /**
  * Обеспечивает наличие минимального количества чёрных дыр
+ * Ищет сектора без чёрных дыр, предпочитая tier 3
+ * Гарантирует максимум 1 чёрная дыра на сектор
  */
 export const ensureBlackHoles = (sectors: Sector[]): void => {
     const blackHoles = sectors.filter((s) => s.star?.type === "blackhole");
@@ -94,6 +99,7 @@ export const ensureBlackHoles = (sectors: Sector[]): void => {
 
     if (missing <= 0) return;
 
+    // Сначала пробуем tier 3 сектора без чёрных дыр
     const tier3Sectors = sectors.filter(
         (s) => s.tier === 3 && s.star?.type !== "blackhole",
     );

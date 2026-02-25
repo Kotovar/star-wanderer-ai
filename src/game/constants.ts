@@ -548,7 +548,6 @@ export const MODULE_TYPES: Record<
     shield: { color: "#0080ff33", borderColor: "#0080ff" },
     medical: { color: "#00ffaa33", borderColor: "#00ffaa" },
     scanner: { color: "#ffff0033", borderColor: "#ffff00" },
-    habitat: { color: "#88ff0033", borderColor: "#88ff00" },
     engine: { color: "#ff660033", borderColor: "#ff6600" },
     fueltank: { color: "#9933ff33", borderColor: "#9933ff" },
     drill: { color: "#8b451333", borderColor: "#cd853f" },
@@ -1066,7 +1065,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     // RARE artifacts (Tier 1-2 anomalies, easier to find)
     {
         id: "eternal_reactor_core",
-        name: "Вечный Ядер",
+        name: "Вечное Ядро",
         description:
             "Древний реактор, работающий без топлива. Генерирует бесплатную энергию.",
         effect: { type: "free_power", value: 5, active: false },
@@ -1134,7 +1133,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         id: "warp_coil",
         name: "Варп-Катушка",
         description:
-            "Мгновенное перемещение между локациями в секторе без траты хода.",
+            "Мгновенное перемещение между локациями в секторе без трат хода.",
         effect: { type: "sector_teleport", value: 1, active: false },
         discovered: false,
         researched: false,
@@ -1181,6 +1180,17 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         description:
             "Увеличивает шанс нахождения артефактов в аномалиях и штормах в 3 раза.",
         effect: { type: "artifact_finder", value: 3, active: false },
+        discovered: false,
+        researched: false,
+        requiresScientistLevel: 4,
+        rarity: "mythic",
+    },
+    {
+        id: "ai_neural_link",
+        name: "ИИ Нейросеть",
+        description:
+            "Искусственный интеллект управляет кораблём. Корабль может работать без экипажа.",
+        effect: { type: "ai_control", value: 1, active: false },
         discovered: false,
         researched: false,
         requiresScientistLevel: 4,
@@ -1244,7 +1254,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "black_box",
         name: "📦 Чёрный Ящик",
-        description: "+50% ко всем кредитным наградам. Но что-то ломается.",
+        description: "+50% ко всем наградам в кредитах. Но что-то ломается.",
         effect: { type: "credit_booster", value: 0.5, active: false },
         negativeEffect: {
             type: "module_damage",

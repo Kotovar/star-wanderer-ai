@@ -4,6 +4,7 @@ import type {
     CrewMember,
     Quality,
     Profession,
+    StationName,
 } from "../../types";
 import {
     // WEAPON_TYPES,
@@ -172,18 +173,6 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             stock: 1,
         },
         {
-            id: "habitat-2",
-            name: "Жизнеобеспечение",
-            type: "module",
-            moduleType: "lifesupport",
-            width: 1,
-            height: 1,
-            oxygen: 8,
-            consumption: 1,
-            price: 700,
-            stock: 1,
-        },
-        {
             id: "shield-2",
             name: "Щитовой генератор",
             type: "module",
@@ -202,7 +191,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             moduleType: "weaponbay",
             width: 2,
             height: 1,
-            consumption: 4,
+            consumption: 3,
             price: 800,
             stock: 1,
         },
@@ -290,15 +279,15 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             stock: 1,
         },
         {
-            id: "habitat-3",
-            name: "Жизнеобеспечение",
+            id: "shield-3",
+            name: "Щитовой генератор",
             type: "module",
-            moduleType: "lifesupport",
+            moduleType: "shield",
             width: 1,
             height: 1,
-            oxygen: 12,
-            consumption: 2,
-            price: 1000,
+            defense: 50,
+            consumption: 5,
+            price: 1400,
             stock: 1,
         },
         {
@@ -344,8 +333,8 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             type: "module",
             moduleType: "drill",
             width: 1,
-            height: 1,
-            consumption: 1,
+            height: 2,
+            consumption: 2, // Эффективнее чем 2 бура T3 (6 cons)
             price: 3000,
             stock: 1,
         },
@@ -366,10 +355,10 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             name: "Древний щит",
             type: "module",
             moduleType: "shield",
-            width: 1,
+            width: 2,
             height: 1,
             defense: 80,
-            consumption: 6,
+            consumption: 5, // Выгоднее чем 2 щита T2 (8 cons за 70 def)
             price: 5000,
             stock: 1,
         },
@@ -378,9 +367,9 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             name: "Квантовый склад",
             type: "module",
             moduleType: "cargo",
-            width: 1,
+            width: 2,
             height: 1,
-            capacity: 200,
+            capacity: 250, // Больше чем 2 грузовых T3 (200 cap за 4 cons)
             consumption: 3,
             price: 3500,
             stock: 1,
@@ -395,6 +384,29 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             scanRange: 15,
             consumption: 4,
             price: 3000,
+            stock: 1,
+        },
+        {
+            id: "fueltank-ancient",
+            name: "Древний топливный бак",
+            type: "module",
+            moduleType: "fueltank",
+            width: 1,
+            height: 1,
+            capacity: 260, // Синхронизировано с upgrade-3 (+80 от T3)
+            price: 4000,
+            stock: 1,
+        },
+        {
+            id: "lifesupport-ancient",
+            name: "Древнее жизнеобеспечение",
+            type: "module",
+            moduleType: "lifesupport",
+            width: 1,
+            height: 1,
+            oxygen: 20, // Синхронизировано с upgrade-3 (+8 от T3)
+            consumption: 5,
+            price: 4000,
             stock: 1,
         },
         {
@@ -415,7 +427,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             moduleType: "weaponbay",
             width: 2,
             height: 2,
-            consumption: 6,
+            consumption: 5, // Выгоднее чем 4 палубы 1x1 (8 cons)
             price: 5000,
             stock: 1,
         },
@@ -426,16 +438,15 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             moduleType: "ai_core",
             width: 2,
             height: 2,
-            power: 50,
-            consumption: 25,
-            price: 10000,
+            consumption: 20,
+            price: 8000,
             stock: 1,
         },
     ],
 };
 
-// Upgrades - always available but tier-gated
-// Prices are higher than buying new modules to encourage expansion over upgrades
+// Upgrades - всегда доступны, но ограничены по тиру
+// Улучшения должны соответствовать разнице между модулями разных тиров
 export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
     1: [
         {
@@ -444,7 +455,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "reactor",
             price: 800,
-            effect: { power: 5 },
+            effect: { power: 5 }, // T1(10) → T2(15) = +5 ✓
             stock: 2,
             moduleType: "reactor",
         },
@@ -454,7 +465,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "cargo",
             price: 600,
-            effect: { capacity: 20 },
+            effect: { capacity: 20 }, // T1(40) → T2(60) = +20 ✓
             stock: 2,
             moduleType: "cargo",
         },
@@ -464,7 +475,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "fueltank",
             price: 700,
-            effect: { capacity: 30 },
+            effect: { capacity: 40 }, // T1(80) → T2(120) = +40
             stock: 2,
             moduleType: "fueltank",
         },
@@ -474,7 +485,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "shield",
             price: 900,
-            effect: { defense: 10 },
+            effect: { defense: 15 }, // T1(20) → T2(35) = +15
             stock: 2,
             moduleType: "shield",
         },
@@ -484,7 +495,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "scanner",
             price: 700,
-            effect: { scanRange: 2 },
+            effect: { scanRange: 2 }, // T1(3) → T2(5) = +2 ✓
             stock: 2,
             moduleType: "scanner",
         },
@@ -494,7 +505,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "lifesupport",
             price: 800,
-            effect: { oxygen: 3 },
+            effect: { oxygen: 3 }, // T1(5) → T2(8) = +3 ✓
             stock: 2,
             moduleType: "lifesupport",
         },
@@ -514,7 +525,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "drill",
             price: 800,
-            effect: { level: 1 },
+            effect: { level: 1 }, // T1 → T2 = +1 уровень ✓
             stock: 2,
             moduleType: "drill",
         },
@@ -536,7 +547,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "reactor",
             price: 1400,
-            effect: { power: 8 },
+            effect: { power: 5 }, // T2(15) → T3(20) = +5
             stock: 1,
             moduleType: "reactor",
         },
@@ -546,7 +557,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "cargo",
             price: 1100,
-            effect: { capacity: 35 },
+            effect: { capacity: 40 }, // T2(60) → T3(100) = +40
             stock: 1,
             moduleType: "cargo",
         },
@@ -556,7 +567,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "fueltank",
             price: 1200,
-            effect: { capacity: 50 },
+            effect: { capacity: 60 }, // T2(120) → T3(180) = +60
             stock: 1,
             moduleType: "fueltank",
         },
@@ -566,7 +577,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "shield",
             price: 1800,
-            effect: { defense: 15 },
+            effect: { defense: 15 }, // T2(35) → T3(50) ≈ +15 (T3 нет, берём среднее)
             stock: 1,
             moduleType: "shield",
         },
@@ -576,7 +587,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "scanner",
             price: 1400,
-            effect: { scanRange: 3 },
+            effect: { scanRange: 3 }, // T2(5) → T3(8) = +3 ✓
             stock: 1,
             moduleType: "scanner",
         },
@@ -586,7 +597,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "lifesupport",
             price: 1600,
-            effect: { oxygen: 5 },
+            effect: { oxygen: 4 }, // T2(8) → T3(12) = +4
             stock: 1,
             moduleType: "lifesupport",
         },
@@ -606,7 +617,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "drill",
             price: 1600,
-            effect: { level: 1 },
+            effect: { level: 1 }, // T2 → T3 = +1 уровень ✓
             stock: 1,
             moduleType: "drill",
         },
@@ -628,7 +639,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "reactor",
             price: 2400,
-            effect: { power: 12 },
+            effect: { power: 10 }, // T3(20) → T4(30) = +10
             stock: 1,
             moduleType: "reactor",
         },
@@ -638,7 +649,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "cargo",
             price: 1800,
-            effect: { capacity: 50 },
+            effect: { capacity: 150 }, // T3(100) → T4(250) = +150
             stock: 1,
             moduleType: "cargo",
         },
@@ -648,7 +659,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "fueltank",
             price: 2000,
-            effect: { capacity: 80 },
+            effect: { capacity: 80 }, // T3(180) → T4(260) ≈ +80
             stock: 1,
             moduleType: "fueltank",
         },
@@ -658,7 +669,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "shield",
             price: 3600,
-            effect: { defense: 20 },
+            effect: { defense: 30 }, // T3(50) → T4(80) = +30
             stock: 1,
             moduleType: "shield",
         },
@@ -668,7 +679,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "scanner",
             price: 2800,
-            effect: { scanRange: 4 },
+            effect: { scanRange: 7 }, // T3(8) → T4(15) = +7
             stock: 1,
             moduleType: "scanner",
         },
@@ -678,7 +689,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "lifesupport",
             price: 3200,
-            effect: { oxygen: 8 },
+            effect: { oxygen: 8 }, // T3(12) → T4(20) = +8 ✓
             stock: 1,
             moduleType: "lifesupport",
         },
@@ -698,7 +709,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "drill",
             price: 3200,
-            effect: { level: 1 },
+            effect: { level: 1 }, // T3 → T4 = +1 уровень ✓
             stock: 1,
             moduleType: "drill",
         },
@@ -759,6 +770,7 @@ export const ENGINE_PRICES = {
 export function generateStationItems(
     stationId: string,
     sectorTier: number,
+    stationType?: StationName,
 ): ShopItem[] {
     let hash = 0;
     for (let i = 0; i < stationId.length; i++) {
@@ -767,7 +779,6 @@ export function generateStationItems(
     }
 
     const items: ShopItem[] = [];
-    // const items: PartialModuleShopItem[] = [];
 
     let availableLevels: number[];
     if (sectorTier === 1) {
@@ -788,6 +799,25 @@ export function generateStationItems(
     availableLevels.forEach((level) => {
         modulePool = modulePool.concat(MODULES_BY_LEVEL[level] || []);
     });
+
+    // Military stations always have weapon bays available
+    const isMilitaryStation = stationType === "Военная";
+    if (isMilitaryStation) {
+        // Add weapon bays to the pool if not already present
+        const hasWeaponBay = modulePool.some(
+            (m) => m.moduleType === "weaponbay",
+        );
+        if (!hasWeaponBay) {
+            const weaponBay1x1 = MODULES_BY_LEVEL[1]?.find(
+                (m) => m.moduleType === "weaponbay" && m.width === 1,
+            );
+            const weaponBay1x2 = MODULES_BY_LEVEL[2]?.find(
+                (m) => m.moduleType === "weaponbay" && m.width === 2,
+            );
+            if (weaponBay1x1) modulePool.push(weaponBay1x1);
+            if (weaponBay1x2) modulePool.push(weaponBay1x2);
+        }
+    }
 
     const shuffled = [...modulePool].sort(() => {
         hash = (hash * 1103515245 + 12345) & 0x7fffffff;
@@ -812,14 +842,22 @@ export function generateStationItems(
         }
     }
 
-    const numWeapons = 1 + (Math.abs(hash >> 4) % 2);
-    const shuffledWeapons = [...WEAPONS].sort(() => {
-        hash = (hash * 1103515245 + 12345) & 0x7fffffff;
-        return (hash % 3) - 1;
-    });
-    for (let i = 0; i < numWeapons; i++) {
-        const weapon = shuffledWeapons[i];
-        items.push({ ...weapon, id: `${weapon.id}-${stationId}` });
+    // Weapons - military stations get all weapons, others get 1-2 random
+    if (isMilitaryStation) {
+        // All weapon types available on military stations
+        WEAPONS.forEach((weapon) => {
+            items.push({ ...weapon, id: `${weapon.id}-${stationId}` });
+        });
+    } else {
+        const numWeapons = 1 + (Math.abs(hash >> 4) % 2);
+        const shuffledWeapons = [...WEAPONS].sort(() => {
+            hash = (hash * 1103515245 + 12345) & 0x7fffffff;
+            return (hash % 3) - 1;
+        });
+        for (let i = 0; i < numWeapons; i++) {
+            const weapon = shuffledWeapons[i];
+            items.push({ ...weapon, id: `${weapon.id}-${stationId}` });
+        }
     }
 
     return items;
