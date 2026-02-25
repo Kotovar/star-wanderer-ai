@@ -145,7 +145,10 @@ export function GameHeader() {
                 open={showRestartDialog}
                 onOpenChange={setShowRestartDialog}
             >
-                <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ff4444] text-[#00ff41] max-w-md">
+                <DialogContent
+                    className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ff4444] text-[#00ff41] max-w-md"
+                    aria-describedby="dialog-desc"
+                >
                     <DialogHeader>
                         <DialogTitle className="text-xl font-['Orbitron'] text-[#ff4444]">
                             Начать заново?

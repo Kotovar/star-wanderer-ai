@@ -181,7 +181,7 @@ export interface Location {
         | "distress_signal"
         | "ancient_boss";
     name: string;
-    dominantRace: RaceId; // Dominant race on this planet/station
+    dominantRace?: RaceId; // Dominant race on this planet/station
     stationType?: string;
     stationId?: string;
     planetType?: string;
@@ -496,8 +496,8 @@ export interface ShopItem {
     id: string;
     name: string;
     type: "upgrade" | "module" | "weapon";
+    moduleType: ModuleType;
     targetType?: ModuleType;
-    moduleType?: ModuleType;
     width?: number;
     height?: number;
     power?: number;

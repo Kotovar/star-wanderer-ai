@@ -196,23 +196,23 @@ const CELL_PADDING = 0.15; // Padding inside each cell (to avoid edges and overl
 const CENTER_EXCLUSION_RADIUS = 0.8; // Exclude cells within this radius from center (in cells)
 
 // Helper function: Check if two modules are adjacent (touching sides)
-const areModulesAdjacent = (m1: Module, m2: Module): boolean => {
-    // Check if m1 is to the left/right of m2
-    if (m1.x + m1.width === m2.x || m2.x + m2.width === m1.x) {
-        // Check vertical overlap
-        if (m1.y < m2.y + m2.height && m1.y + m1.height > m2.y) {
-            return true;
-        }
-    }
-    // Check if m1 is above/below m2
-    if (m1.y + m1.height === m2.y || m2.y + m2.height === m1.y) {
-        // Check horizontal overlap
-        if (m1.x < m2.x + m2.width && m1.x + m1.width > m2.x) {
-            return true;
-        }
-    }
-    return false;
-};
+// const areModulesAdjacent = (m1: Module, m2: Module): boolean => {
+//     // Check if m1 is to the left/right of m2
+//     if (m1.x + m1.width === m2.x || m2.x + m2.width === m1.x) {
+//         // Check vertical overlap
+//         if (m1.y < m2.y + m2.height && m1.y + m1.height > m2.y) {
+//             return true;
+//         }
+//     }
+//     // Check if m1 is above/below m2
+//     if (m1.y + m1.height === m2.y || m2.y + m2.height === m1.y) {
+//         // Check horizontal overlap
+//         if (m1.x < m2.x + m2.width && m1.x + m1.width > m2.x) {
+//             return true;
+//         }
+//     }
+//     return false;
+// };
 
 // Generate grid-based positions for locations in a sector
 const assignGridPositions = (
@@ -467,6 +467,7 @@ const generateGalaxy = (): Sector[] => {
                         hasTrader: selectedType.hasTrader,
                         hasCrew: selectedType.hasCrew,
                         hasQuest: selectedType.hasQuest,
+                        dominantRace: shipRace,
                         shipRace,
                     });
                 } else if (
@@ -483,7 +484,7 @@ const generateGalaxy = (): Sector[] => {
                         : Math.random() < (tier === 1 ? 0.4 : 0.5 + tier * 0.1);
 
                     // Determine dominant race based on planet type and tier
-                    let dominantRace: RaceId | undefined;
+                    let dominantRace: RaceId = "human";
                     let population: number | undefined;
 
                     if (!isEmpty) {
@@ -555,9 +556,9 @@ const generateGalaxy = (): Sector[] => {
                             asteroidTier === 4
                                 ? `★ Древний астероидный пояс`
                                 : `Пояс астероидов ${asteroidTier}-го уровня`,
+                        mined: false,
                         asteroidTier,
                         resources,
-                        mined: false,
                     });
                 } else if (
                     locType <
@@ -645,7 +646,7 @@ const generateGalaxy = (): Sector[] => {
                     }
                 } else {
                     // Anomaly
-                    const anomalyRoll = Math.random();
+                    // const anomalyRoll = Math.random();
                     let anomalyTier =
                         tier === 1
                             ? 1
@@ -1262,9 +1263,7 @@ const playSound = (
     };
     const freq = freqMap[type] || 800;
     try {
-        const ctx = new (
-            window.AudioContext || (window as any).webkitAudioContext
-        )();
+        const ctx = new window.AudioContext();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
@@ -1450,10 +1449,10 @@ export const useGameStore = create<
     updateShipStats: () => {
         set((state) => {
             // Total hull health (sum of all module health)
-            const totalHealth = state.ship.modules.reduce(
-                (sum, m) => sum + (m.maxHealth || m.health),
-                0,
-            );
+            // const totalHealth = state.ship.modules.reduce(
+            //     (sum, m) => sum + (m.maxHealth || m.health),
+            //     0,
+            // );
             // Total defense (sum of all module defense values)
             let totalDefense = state.ship.modules.reduce(
                 (sum, m) => sum + (m.defense || 0),
@@ -1579,14 +1578,14 @@ export const useGameStore = create<
 
     getTotalDamage: () => {
         const state = get();
-        let dmg = { total: 0, kinetic: 0, laser: 0, missile: 0 };
+        const dmg = { total: 0, kinetic: 0, laser: 0, missile: 0 };
         state.ship.modules.forEach((m) => {
             if (m.disabled) return;
             if (m.type === "weaponbay" && m.weapons) {
                 m.weapons.forEach((w) => {
                     if (w) {
                         const weaponType = WEAPON_TYPES[w.type];
-                        let weaponDamage = weaponType.damage;
+                        const weaponDamage = weaponType.damage;
 
                         // Laser bonus: +20% damage to shields (calculated in combat)
                         // For display, show base damage
@@ -1801,7 +1800,7 @@ export const useGameStore = create<
         const distance = Math.abs(targetTier - currentTier);
 
         // Base fuel cost per tier distance
-        let baseCost =
+        const baseCost =
             distance === 0 ? 5 : distance * get().getFuelEfficiency();
 
         // Apply race fuel efficiency bonuses (voidborn: +20% fuel efficiency = -20% consumption)
@@ -1898,7 +1897,7 @@ export const useGameStore = create<
         if (!crewMember) return;
 
         // Apply racial exp bonuses (human: +15% quick_learner)
-        const race = RACES[crewMember.race];
+        // const race = RACES[crewMember.race];
         let expMultiplier = 1;
 
         // Human racial bonus: +15% exp
@@ -2021,117 +2020,118 @@ export const useGameStore = create<
 
         // Traveling
         const traveling = get().traveling;
-        if (traveling) {
-            set((s) => ({
-                traveling: s.traveling
-                    ? { ...s.traveling, turnsLeft: s.traveling.turnsLeft - 1 }
-                    : null,
-            }));
-            get().addLog(
-                `Путешествие в ${traveling.destination.name}: ${get().traveling?.turnsLeft} ходов`,
-                "info",
+        if (!traveling) return;
+
+        const nextTurnsLeft = traveling.turnsLeft - 1;
+
+        set((s) => ({
+            traveling: s.traveling
+                ? { ...s.traveling, turnsLeft: nextTurnsLeft }
+                : null,
+        }));
+        get().addLog(
+            `Путешествие в ${traveling.destination.name}: ${get().traveling?.turnsLeft} ходов`,
+            "info",
+        );
+
+        if (Math.random() < 0.3) {
+            const events = ["Аномалия", "Астероиды", "Тревога", "Сигнал"];
+            const event = events[Math.floor(Math.random() * events.length)];
+            get().addLog(event, "warning");
+            if (event === "Астероиды") {
+                set((s) => ({
+                    ship: {
+                        ...s.ship,
+                        modules: s.ship.modules.map((m) =>
+                            m.id ===
+                            s.ship.modules[
+                                Math.floor(
+                                    Math.random() * s.ship.modules.length,
+                                )
+                            ].id
+                                ? {
+                                      ...m,
+                                      health: Math.max(10, m.health - 5),
+                                  }
+                                : m,
+                        ),
+                    },
+                }));
+            }
+        }
+
+        if (nextTurnsLeft <= 0) {
+            const destinationSector = traveling.destination;
+
+            // Update patrol contracts (xenosymbiont quest - visit sectors)
+            const patrolContracts = state.activeContracts.filter(
+                (c) =>
+                    c.type === "patrol" &&
+                    c.isRaceQuest &&
+                    c.targetSectors?.includes(destinationSector.id),
             );
 
-            if (Math.random() < 0.3) {
-                const events = ["Аномалия", "Астероиды", "Тревога", "Сигнал"];
-                const event = events[Math.floor(Math.random() * events.length)];
-                get().addLog(event, "warning");
-                if (event === "Астероиды") {
-                    set((s) => ({
-                        ship: {
-                            ...s.ship,
-                            modules: s.ship.modules.map((m) =>
-                                m.id ===
-                                s.ship.modules[
-                                    Math.floor(
-                                        Math.random() * s.ship.modules.length,
-                                    )
-                                ].id
-                                    ? {
-                                          ...m,
-                                          health: Math.max(10, m.health - 5),
-                                      }
-                                    : m,
-                            ),
-                        },
-                    }));
+            let newActiveContracts = state.activeContracts;
+            let contractCompleted = false;
+            let completedContractId = "";
+
+            patrolContracts.forEach((c) => {
+                const visitedSectors = [
+                    ...new Set([
+                        ...(c.visitedSectors || []),
+                        destinationSector.id,
+                    ]),
+                ];
+                const targetSectors = c.targetSectors || [];
+
+                if (visitedSectors.length >= targetSectors.length) {
+                    // All sectors visited - complete contract
+                    contractCompleted = true;
+                    completedContractId = c.id;
+                    get().addLog(
+                        `Сбор биообразцов завершён! +${c.reward}₢`,
+                        "info",
+                    );
+
+                    // Give experience to all crew members
+                    const expReward = CONTRACT_REWARDS.patrol.baseExp;
+                    giveCrewExperience(
+                        expReward,
+                        `Экипаж получил опыт: +${expReward} ед.`,
+                    );
+
+                    newActiveContracts = newActiveContracts.filter(
+                        (ac) => ac.id !== c.id,
+                    );
+                } else {
+                    // Update progress
+                    newActiveContracts = newActiveContracts.map((ac) =>
+                        ac.id === c.id ? { ...ac, visitedSectors } : ac,
+                    );
+                    get().addLog(
+                        `Биообразцы: ${visitedSectors.length}/${targetSectors.length} секторов`,
+                        "info",
+                    );
                 }
-            }
+            });
 
-            if (get().traveling && get().traveling!.turnsLeft <= 0) {
-                const destinationSector = traveling.destination;
-
-                // Update patrol contracts (xenosymbiont quest - visit sectors)
-                const patrolContracts = state.activeContracts.filter(
-                    (c) =>
-                        c.type === "patrol" &&
-                        c.isRaceQuest &&
-                        c.targetSectors?.includes(destinationSector.id),
-                );
-
-                let newActiveContracts = state.activeContracts;
-                let contractCompleted = false;
-                let completedContractId = "";
-
-                patrolContracts.forEach((c) => {
-                    const visitedSectors = [
-                        ...new Set([
-                            ...(c.visitedSectors || []),
-                            destinationSector.id,
-                        ]),
-                    ];
-                    const targetSectors = c.targetSectors || [];
-
-                    if (visitedSectors.length >= targetSectors.length) {
-                        // All sectors visited - complete contract
-                        contractCompleted = true;
-                        completedContractId = c.id;
-                        get().addLog(
-                            `Сбор биообразцов завершён! +${c.reward}₢`,
-                            "info",
-                        );
-
-                        // Give experience to all crew members
-                        const expReward = CONTRACT_REWARDS.patrol.baseExp;
-                        giveCrewExperience(
-                            expReward,
-                            `Экипаж получил опыт: +${expReward} ед.`,
-                        );
-
-                        newActiveContracts = newActiveContracts.filter(
-                            (ac) => ac.id !== c.id,
-                        );
-                    } else {
-                        // Update progress
-                        newActiveContracts = newActiveContracts.map((ac) =>
-                            ac.id === c.id ? { ...ac, visitedSectors } : ac,
-                        );
-                        get().addLog(
-                            `Биообразцы: ${visitedSectors.length}/${targetSectors.length} секторов`,
-                            "info",
-                        );
-                    }
-                });
-
-                set((s) => ({
-                    currentSector: destinationSector,
-                    traveling: null,
-                    credits: contractCompleted
-                        ? s.credits +
-                          (patrolContracts.find(
-                              (c) => c.id === completedContractId,
-                          )?.reward || 0)
-                        : s.credits,
-                    completedContractIds: contractCompleted
-                        ? [...s.completedContractIds, completedContractId]
-                        : s.completedContractIds,
-                    activeContracts: newActiveContracts,
-                }));
-                get().addLog(`Прибытие в ${destinationSector.name}`, "info");
-                get().updateShipStats();
-                set({ gameMode: "sector_map" });
-                return;
-            }
+            set((s) => ({
+                currentSector: destinationSector,
+                traveling: null,
+                credits: contractCompleted
+                    ? s.credits +
+                      (patrolContracts.find((c) => c.id === completedContractId)
+                          ?.reward || 0)
+                    : s.credits,
+                completedContractIds: contractCompleted
+                    ? [...s.completedContractIds, completedContractId]
+                    : s.completedContractIds,
+                activeContracts: newActiveContracts,
+            }));
+            get().addLog(`Прибытие в ${destinationSector.name}`, "info");
+            get().updateShipStats();
+            set({ gameMode: "sector_map" });
+            return;
         }
 
         // Random events (only when not in combat)
@@ -2349,9 +2349,9 @@ export const useGameStore = create<
             }
 
             if (c.assignment) {
-                const currentModule = get().ship.modules.find(
-                    (m) => m.id === c.moduleId,
-                );
+                // const currentModule = get().ship.modules.find(
+                //     (m) => m.id === c.moduleId,
+                // );
                 const crewInSameModule = get().crew.filter(
                     (cr) => cr.moduleId === c.moduleId,
                 );
@@ -3259,7 +3259,7 @@ export const useGameStore = create<
                         );
                     }
 
-                    const wasDestroyed = tgt.health <= remainingDamage;
+                    // const wasDestroyed = tgt.health <= remainingDamage;
 
                     set((s) => ({
                         ship: {
@@ -3945,7 +3945,7 @@ export const useGameStore = create<
             // Regular drill bonus: 20% per level above
             efficiencyBonus = 1 + (drillLevel - asteroidTier) * 0.2;
         }
-        const bonusPercent = Math.round((efficiencyBonus - 1) * 100);
+        // const bonusPercent = Math.round((efficiencyBonus - 1) * 100);
 
         const mineralsGained = Math.floor(resources.minerals * efficiencyBonus);
         const rareGained = Math.floor(resources.rare * efficiencyBonus);
@@ -4377,7 +4377,7 @@ export const useGameStore = create<
                     ship: {
                         ...s.ship,
                         modules: s.ship.modules.map((m) =>
-                            m.id === tgt!.id
+                            m.id === tgt.id
                                 ? {
                                       ...m,
                                       health: Math.max(
@@ -4418,13 +4418,13 @@ export const useGameStore = create<
         // Damage crew in targeted module
         if (tgt) {
             const crewInModule = state.crew.filter(
-                (c) => c.moduleId === tgt!.id,
+                (c) => c.moduleId === tgt.id,
             );
             if (crewInModule.length > 0) {
                 const crewDamage = 15;
                 set((s) => ({
                     crew: s.crew.map((c) =>
-                        c.moduleId === tgt!.id
+                        c.moduleId === tgt.id
                             ? {
                                   ...c,
                                   health: Math.max(0, c.health - crewDamage),
@@ -4535,7 +4535,7 @@ export const useGameStore = create<
 
         // Determine target - if no gunner, can't select target, random module
         let tgtMod = state.currentCombat.enemy.modules.find(
-            (m) => m.id === state.currentCombat!.enemy.selectedModule,
+            (m) => m.id === state?.currentCombat?.enemy.selectedModule,
         );
 
         if (!hasGunner) {
@@ -4636,7 +4636,7 @@ export const useGameStore = create<
                                 ...s.currentCombat.enemy,
                                 modules: s.currentCombat.enemy.modules.map(
                                     (m) =>
-                                        m.id === tgtMod!.id
+                                        m.id === tgtMod.id
                                             ? {
                                                   ...m,
                                                   health: Math.max(
@@ -4675,7 +4675,7 @@ export const useGameStore = create<
                         enemy: {
                             ...s.currentCombat.enemy,
                             modules: s.currentCombat.enemy.modules.map((m) =>
-                                m.id === tgtMod!.id
+                                m.id === tgtMod.id
                                     ? {
                                           ...m,
                                           health: Math.max(0, m.health - dmg),
@@ -4961,12 +4961,13 @@ export const useGameStore = create<
                 get().gainExp(c, 5);
             });
 
+            const { currentLocation } = get();
             // Mark location as completed
-            if (get().currentLocation) {
+            if (currentLocation) {
                 set((s) => ({
                     completedLocations: [
                         ...s.completedLocations,
-                        get().currentLocation!.id,
+                        currentLocation.id,
                     ],
                 }));
             }
@@ -4993,7 +4994,7 @@ export const useGameStore = create<
         }
 
         // Enemy attack
-        let eDmg =
+        const eDmg =
             updatedCombat?.enemy.modules.reduce(
                 (s, m) => s + (m.damage || 0),
                 0,
@@ -5251,7 +5252,10 @@ export const useGameStore = create<
                     // Each point of defense reduces damage by 1
                     // ═══════════════════════════════════════════════════════════════
                     const shipDefense = state.ship.armor || 0;
-                    let damageAfterArmor = Math.max(1, overflow - shipDefense);
+                    const damageAfterArmor = Math.max(
+                        1,
+                        overflow - shipDefense,
+                    );
 
                     // Log armor reduction if applicable
                     if (shipDefense > 0 && damageAfterArmor < overflow) {
@@ -5292,7 +5296,7 @@ export const useGameStore = create<
                         ship: {
                             ...s.ship,
                             modules: s.ship.modules.map((m) =>
-                                m.id === tgt!.id
+                                m.id === tgt.id
                                     ? {
                                           ...m,
                                           health: Math.max(
@@ -5688,33 +5692,32 @@ export const useGameStore = create<
             }
 
             // Apply upgrades
-            if (item.effect?.power) {
+            const power = item.effect?.power;
+            if (power) {
                 set((s) => ({
                     ship: {
                         ...s.ship,
                         modules: s.ship.modules.map((m) =>
-                            m.id === tgt!.id
+                            m.id === tgt.id
                                 ? {
                                       ...m,
-                                      power:
-                                          (m.power || 0) + item.effect!.power!,
+                                      power: (m.power || 0) + power,
                                   }
                                 : m,
                         ),
                     },
                 }));
             }
-            if (item.effect?.capacity) {
+            const capacity = item.effect?.capacity;
+            if (capacity) {
                 set((s) => ({
                     ship: {
                         ...s.ship,
                         modules: s.ship.modules.map((m) =>
-                            m.id === tgt!.id
+                            m.id === tgt.id
                                 ? {
                                       ...m,
-                                      capacity:
-                                          (m.capacity || 0) +
-                                          item.effect!.capacity!,
+                                      capacity: (m.capacity || 0) + capacity,
                                   }
                                 : m,
                         ),
@@ -5728,7 +5731,7 @@ export const useGameStore = create<
                     ship: {
                         ...s.ship,
                         modules: s.ship.modules.map((m) =>
-                            m.id === tgt!.id
+                            m.id === tgt.id
                                 ? {
                                       ...m,
                                       fuelEfficiency: Math.max(
@@ -5750,7 +5753,7 @@ export const useGameStore = create<
                 ship: {
                     ...s.ship,
                     modules: s.ship.modules.map((m) =>
-                        m.id === tgt!.id
+                        m.id === tgt.id
                             ? {
                                   ...m,
                                   level: (m.level || 1) + 1,
@@ -5773,7 +5776,7 @@ export const useGameStore = create<
 
             // Re-read the module to get updated values
             const updatedModule = get().ship.modules.find(
-                (m) => m.id === tgt!.id,
+                (m) => m.id === tgt.id,
             );
             get().addLog(
                 `Модуль "${updatedModule?.name}" улучшен до LV${updatedModule?.level}`,
@@ -5817,7 +5820,7 @@ export const useGameStore = create<
             // Build module with only relevant properties
             const newMod: Module = {
                 id: state.ship.modules.length + 1,
-                type: item.moduleType!,
+                type: item.moduleType,
                 name: item.name,
                 x: 0,
                 y: 0,
@@ -6026,8 +6029,8 @@ export const useGameStore = create<
             for (const bay of wbays) {
                 if (bay.weapons) {
                     for (let i = 0; i < bay.weapons.length; i++) {
-                        if (!bay.weapons[i]) {
-                            bay.weapons[i] = { type: item.weaponType! };
+                        if (!bay.weapons[i] && item.weaponType) {
+                            bay.weapons[i] = { type: item.weaponType };
                             set((s) => ({
                                 credits: s.credits - item.price,
                                 stationInventory: {
@@ -6040,7 +6043,7 @@ export const useGameStore = create<
                             }));
                             installed = true;
                             get().addLog(
-                                `Установлено ${WEAPON_TYPES[item.weaponType!].name}`,
+                                `Установлено ${WEAPON_TYPES[item.weaponType].name}`,
                                 "info",
                             );
                             break;
@@ -6098,13 +6101,13 @@ export const useGameStore = create<
         const stationId = state.currentLocation?.stationId;
         if (!stationId) return;
 
-        const prices = state.stationPrices[stationId];
-        const stock = state.stationStock[stationId];
-        if (!prices || !stock) return;
+        const pricesFromStation = state.stationPrices[stationId];
+        const stockFromStation = state.stationStock[stationId];
+        if (!pricesFromStation || !stockFromStation) return;
 
-        const pricePer5 = prices[goodId].buy;
+        const pricePer5 = pricesFromStation[goodId].buy;
         const price = Math.floor(pricePer5 * (quantity / 5));
-        const available = stock[goodId] || 0;
+        const available = stockFromStation[goodId] || 0;
 
         if (available < quantity) {
             get().addLog("Недостаточно товара на станции!", "error");
@@ -6126,12 +6129,15 @@ export const useGameStore = create<
         const currentCargo =
             state.ship.cargo.reduce((s, c) => s + c.quantity, 0) +
             state.ship.tradeGoods.reduce((s, g) => s + g.quantity, 0);
-        if (currentCargo + quantity > cargoModule.capacity!) {
+        if (
+            cargoModule.capacity &&
+            currentCargo + quantity > cargoModule.capacity
+        ) {
             get().addLog("Недостаточно места!", "error");
             return;
         }
 
-        const existing = state.ship.tradeGoods.find((g) => g.item === goodId);
+        // const existing = state.ship.tradeGoods.find((g) => g.item === goodId);
 
         // Update trade goods with proper state management
         set((s) => {
@@ -6186,8 +6192,8 @@ export const useGameStore = create<
         const stationId = state.currentLocation?.stationId;
         if (!stationId) return;
 
-        const prices = state.stationPrices[stationId];
-        if (!prices) return;
+        const pricesFromTrade = state.stationPrices[stationId];
+        if (!pricesFromTrade) return;
 
         const playerGood = state.ship.tradeGoods.find((g) => g.item === goodId);
         if (!playerGood || playerGood.quantity < quantity) {
@@ -6195,7 +6201,7 @@ export const useGameStore = create<
             return;
         }
 
-        const pricePer5 = prices[goodId].sell;
+        const pricePer5 = pricesFromTrade[goodId].sell;
         let price = Math.floor(pricePer5 * (quantity / 5));
 
         // Apply sellPenalty from crew traits (e.g., "Жадный" -30% sell price)
@@ -6548,6 +6554,7 @@ export const useGameStore = create<
             return;
         }
         if (contract.type === "delivery" && contract.cargo) {
+            const cargoName = contract.cargo;
             const cargoMod = get().ship.modules.find((m) => m.type === "cargo");
             if (!cargoMod) {
                 get().addLog("Нет грузового отсека!", "error");
@@ -6556,7 +6563,7 @@ export const useGameStore = create<
             const cur =
                 get().ship.cargo.reduce((s, c) => s + c.quantity, 0) +
                 get().ship.tradeGoods.reduce((s, g) => s + g.quantity, 0);
-            if (cur + 10 > cargoMod.capacity!) {
+            if (cargoMod.capacity && cur + 10 > cargoMod.capacity) {
                 get().addLog("Недостаточно места!", "error");
                 return;
             }
@@ -6566,7 +6573,7 @@ export const useGameStore = create<
                     cargo: [
                         ...s.ship.cargo,
                         {
-                            item: contract.cargo!,
+                            item: cargoName,
                             quantity: 10,
                             contractId: contract.id,
                         },
@@ -7006,7 +7013,9 @@ export const useGameStore = create<
                 galaxy: {
                     ...s.galaxy,
                     sectors: s.galaxy.sectors.map((sec) =>
-                        sec.id === sector.id ? updatedSector! : sec,
+                        sec.id === sector.id && updatedSector
+                            ? updatedSector
+                            : sec,
                     ),
                 },
             };
@@ -7147,7 +7156,7 @@ export const useGameStore = create<
                 }
 
                 // Store loot details for display
-                const updatedLocation = {
+                const updatedLocationForDisplay = {
                     ...loc,
                     signalType: outcome,
                     signalResolved: true,
@@ -7163,18 +7172,22 @@ export const useGameStore = create<
                         ? {
                               ...s.currentSector,
                               locations: s.currentSector.locations.map((l) =>
-                                  l.id === loc.id ? updatedLocation : l,
+                                  l.id === loc.id
+                                      ? updatedLocationForDisplay
+                                      : l,
                               ),
                           }
                         : null;
 
                     return {
-                        currentLocation: updatedLocation,
+                        currentLocation: updatedLocationForDisplay,
                         currentSector: updatedSector,
                         galaxy: {
                             ...s.galaxy,
                             sectors: s.galaxy.sectors.map((sec) =>
-                                sec.id === sector.id ? updatedSector! : sec,
+                                sec.id === sector.id && updatedSector
+                                    ? updatedSector
+                                    : sec,
                             ),
                         },
                     };
@@ -7744,13 +7757,14 @@ export const useGameStore = create<
         clearLocalStorage();
         // Generate new galaxy and station data for fresh start
         const newSectors = generateGalaxy();
-        const { prices, stock } = initializeStationData(newSectors);
+        const { prices: restartPrices, stock: restartStock } =
+            initializeStationData(newSectors);
         set({
             ...initialState,
             currentSector: newSectors[0],
             galaxy: { sectors: newSectors },
-            stationPrices: prices,
-            stationStock: stock,
+            stationPrices: restartPrices,
+            stationStock: restartStock,
             log: [],
         });
         get().addLog("Новая игра", "info");
@@ -7821,7 +7835,7 @@ function areAllModulesConnected(modules: Module[]): boolean {
     visited.add(modules[0].id);
 
     while (queue.length > 0) {
-        const currentId = queue.shift()!;
+        const currentId = queue.shift();
         const current = modules.find((m) => m.id === currentId);
         if (!current) continue;
 
