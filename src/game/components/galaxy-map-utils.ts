@@ -1,4 +1,4 @@
-import type { Sector, Module } from "../types";
+import type { Sector, Module, StarType } from "../types";
 
 // Tier colors
 export const TIER_COLORS = {
@@ -246,7 +246,7 @@ export function drawStar(
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
-    star: { type?: string } | undefined,
+    star: { type?: StarType } | undefined,
     isActive: boolean,
     isAccessible: boolean,
 ) {

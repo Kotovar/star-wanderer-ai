@@ -185,7 +185,7 @@ export interface Location {
         | "ancient_boss";
     name: string;
     dominantRace?: RaceId; // Dominant race on this planet/station
-    stationType?: string;
+    stationType?: StationName;
     stationId?: string;
     planetType?: string;
     isEmpty?: boolean;
@@ -216,11 +216,11 @@ export interface Location {
     distanceRatio?: number; // Distance from center (0-1)
     angle?: number; // Angle position (0-2π) - deterministic based on id
     // Asteroid belt fields
-    asteroidTier?: 1 | 2 | 3 | 4; // Higher = better resources, needs better drill (4 = ancient, requires ancient drill)
+    asteroidTier?: AsteroidTier; // Higher = better resources, needs better drill (4 = ancient, requires ancient drill)
     resources?: { minerals: number; rare: number; credits: number };
     mined?: boolean;
     // Storm fields
-    stormType?: "radiation" | "ionic" | "plasma";
+    stormType?: StormType;
     stormIntensity?: number; // 1-3, affects damage and loot quality
     stormLoot?: { credits: number; moduleDamage: number; shieldBurn: number };
     // Distress signal fields
@@ -242,16 +242,42 @@ export interface Location {
     population?: number; // Population in thousands
 }
 
+export type StarType = "single" | "double" | "triple" | "blackhole";
+export type GalaxyTier = 1 | 2 | 3;
+export type AsteroidTier = 1 | 2 | 3 | 4;
+export type StarName =
+    | "Одиночная звезда"
+    | "Двойная звезда"
+    | "Тройная звезда"
+    | "Чёрная дыра";
+export type StormType = "radiation" | "ionic" | "plasma";
+export type LocationType =
+    | "station"
+    | "friendly_ship"
+    | "planet"
+    | "enemy"
+    | "asteroid_belt"
+    | "storm"
+    | "distress_signal"
+    | "boss"
+    | "anomaly";
+
+export type StationName =
+    | "Торговая"
+    | "Военная"
+    | "Исследовательская"
+    | "Добывающая";
+
 export interface Sector {
     id: number;
     name: string;
     danger: number;
     distance: number;
-    tier: 1 | 2 | 3; // System tier (1=center, 2=middle, 3=outer)
+    tier: GalaxyTier; // System tier (1=center, 2=middle, 3=outer)
     locations: Location[];
-    star?: {
-        type: "single" | "double" | "triple" | "blackhole";
-        name: string;
+    star: {
+        type: StarType;
+        name: StarName;
     };
     mapX?: number;
     mapY?: number;

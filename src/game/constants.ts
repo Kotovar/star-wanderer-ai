@@ -8,6 +8,7 @@ import type {
     Weapon,
     WeaponDetails,
     PartialModuleType,
+    GalaxyTier,
 } from "./types";
 
 // ═══════════════════════════════════════════════════════════════
@@ -940,12 +941,7 @@ export const PLANET_DESCRIPTIONS: Record<string, string> = {
     Приливная:
         "Мир с мощной приливной активностью. Геотермальная энергия доступна, но поверхность нестабильна.",
 };
-export const STATION_TYPES = [
-    "Торговая",
-    "Военная",
-    "Исследовательская",
-    "Добывающая",
-];
+
 export const ENEMY_TYPES = ["Пираты", "Рейдеры", "Наёмники", "Мародёры"];
 
 // Generate crew traits based on quality level
@@ -1671,7 +1667,7 @@ export const getBossById = (id: string): AncientBoss | undefined => {
 };
 
 // Get random boss for tier (used in sector generation)
-export const getRandomBossForTier = (tier: 1 | 2 | 3): AncientBoss | null => {
+export const getRandomBossForTier = (tier: GalaxyTier): AncientBoss | null => {
     const eligibleBosses = ANCIENT_BOSSES.filter((b) => b.tier <= tier);
     if (eligibleBosses.length === 0) return null;
     return eligibleBosses[Math.floor(Math.random() * eligibleBosses.length)];

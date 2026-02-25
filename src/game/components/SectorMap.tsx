@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { useGameStore } from "../store";
-import { Location } from "../types";
+import { Location, StarType, StormType } from "../types";
 
 // Seeded random helper - returns deterministic value based on location ID
 const seededRandom = (loc: Location, seed: number = 0): number => {
@@ -129,7 +129,7 @@ function getScannerInfo(
             info.push(`🌪️ Космический шторм`);
         } else {
             // Level 2+ scanner: detailed storm info
-            const stormNames: Record<string, string> = {
+            const stormNames: Record<StormType, string> = {
                 radiation: "Радиационное облако",
                 ionic: "Ионный шторм",
                 plasma: "Плазменный шторм",
@@ -553,7 +553,7 @@ function drawStar(
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
-    star: { type: string; name: string } | undefined,
+    star: { type: StarType; name: string } | undefined,
 ) {
     if (!star) return;
 
