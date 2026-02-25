@@ -1,5 +1,4 @@
 import type {
-    ModuleType,
     Profession,
     CrewTrait,
     Artifact,
@@ -8,6 +7,7 @@ import type {
     RaceId,
     Weapon,
     WeaponDetails,
+    PartialModuleType,
 } from "./types";
 
 // ═══════════════════════════════════════════════════════════════
@@ -536,7 +536,7 @@ export const getRandomRaceName = (
 // ═══════════════════════════════════════════════════════════════
 
 export const MODULE_TYPES: Record<
-    ModuleType,
+    PartialModuleType,
     { color: string; borderColor: string }
 > = {
     reactor: { color: "#ffb00033", borderColor: "#ffb000" },

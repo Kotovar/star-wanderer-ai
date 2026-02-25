@@ -108,6 +108,7 @@ export type ModuleType =
     | "lifesupport"
     | "cargo"
     | "weaponbay"
+    | "weaponShed"
     | "shield"
     | "medical"
     | "scanner"
@@ -116,6 +117,8 @@ export type ModuleType =
     | "fueltank"
     | "drill"
     | "ai_core";
+
+export type PartialModuleType = Exclude<ModuleType, "weaponShed">;
 
 export interface Weapon {
     type: "kinetic" | "laser" | "missile";

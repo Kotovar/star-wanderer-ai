@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useGameStore } from "../store";
 import { WEAPON_TYPES } from "../constants";
-import type { Module } from "../types";
+import type { Module, Weapon } from "../types";
 import {
     Dialog,
     DialogContent,
@@ -140,7 +140,7 @@ function FuelStats() {
 }
 
 interface WeaponsListProps {
-    weapons: Array<{ type: string } | null>;
+    weapons: (Weapon | null)[];
 }
 
 function WeaponsList({ weapons }: WeaponsListProps) {
@@ -479,11 +479,7 @@ function ScannerDescription({ scanRange }: { scanRange?: number }) {
     );
 }
 
-function WeaponsDetail({
-    weapons,
-}: {
-    weapons: Array<{ type: string } | null>;
-}) {
+function WeaponsDetail({ weapons }: { weapons: (Weapon | null)[] }) {
     return (
         <div className="pt-4 border-t border-[#00ff41]">
             <div className="text-[#ffb000] mb-2">Слоты оружия:</div>

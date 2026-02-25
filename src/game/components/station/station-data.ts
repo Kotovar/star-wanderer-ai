@@ -446,6 +446,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 800,
             effect: { power: 5 },
             stock: 2,
+            moduleType: "reactor",
         },
         {
             id: "cargo-upgrade-1",
@@ -455,6 +456,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 600,
             effect: { capacity: 20 },
             stock: 2,
+            moduleType: "cargo",
         },
         {
             id: "fueltank-upgrade-1",
@@ -464,6 +466,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 700,
             effect: { capacity: 30 },
             stock: 2,
+            moduleType: "fueltank",
         },
         {
             id: "shield-upgrade-1",
@@ -473,6 +476,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 900,
             effect: { defense: 10 },
             stock: 2,
+            moduleType: "shield",
         },
         {
             id: "scanner-upgrade-1",
@@ -482,6 +486,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 700,
             effect: { scanRange: 2 },
             stock: 2,
+            moduleType: "scanner",
         },
         {
             id: "lifesupport-upgrade-1",
@@ -491,6 +496,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 800,
             effect: { oxygen: 3 },
             stock: 2,
+            moduleType: "lifesupport",
         },
         {
             id: "engine-upgrade-1",
@@ -500,6 +506,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 1000,
             effect: { fuelEfficiency: -2 },
             stock: 2,
+            moduleType: "engine",
         },
         {
             id: "drill-upgrade-1",
@@ -509,6 +516,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 800,
             effect: { level: 1 },
             stock: 2,
+            moduleType: "drill",
         },
         {
             id: "medical-upgrade-1",
@@ -518,6 +526,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 900,
             effect: { healing: 4 },
             stock: 2,
+            moduleType: "medical",
         },
     ],
     2: [
@@ -529,6 +538,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 1400,
             effect: { power: 8 },
             stock: 1,
+            moduleType: "reactor",
         },
         {
             id: "cargo-upgrade-2",
@@ -538,6 +548,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 1100,
             effect: { capacity: 35 },
             stock: 1,
+            moduleType: "cargo",
         },
         {
             id: "fueltank-upgrade-2",
@@ -547,6 +558,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 1200,
             effect: { capacity: 50 },
             stock: 1,
+            moduleType: "fueltank",
         },
         {
             id: "shield-upgrade-2",
@@ -556,6 +568,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 1800,
             effect: { defense: 15 },
             stock: 1,
+            moduleType: "shield",
         },
         {
             id: "scanner-upgrade-2",
@@ -565,6 +578,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 1400,
             effect: { scanRange: 3 },
             stock: 1,
+            moduleType: "scanner",
         },
         {
             id: "lifesupport-upgrade-2",
@@ -574,6 +588,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 1600,
             effect: { oxygen: 5 },
             stock: 1,
+            moduleType: "lifesupport",
         },
         {
             id: "engine-upgrade-2",
@@ -583,6 +598,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 2000,
             effect: { fuelEfficiency: -3 },
             stock: 1,
+            moduleType: "engine",
         },
         {
             id: "drill-upgrade-2",
@@ -592,6 +608,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 1600,
             effect: { level: 1 },
             stock: 1,
+            moduleType: "drill",
         },
         {
             id: "medical-upgrade-2",
@@ -601,6 +618,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 1800,
             effect: { healing: 6 },
             stock: 1,
+            moduleType: "medical",
         },
     ],
     3: [
@@ -612,6 +630,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 2400,
             effect: { power: 12 },
             stock: 1,
+            moduleType: "reactor",
         },
         {
             id: "cargo-upgrade-3",
@@ -621,6 +640,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 1800,
             effect: { capacity: 50 },
             stock: 1,
+            moduleType: "cargo",
         },
         {
             id: "fueltank-upgrade-3",
@@ -630,6 +650,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 2000,
             effect: { capacity: 80 },
             stock: 1,
+            moduleType: "fueltank",
         },
         {
             id: "shield-upgrade-3",
@@ -639,6 +660,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 3600,
             effect: { defense: 20 },
             stock: 1,
+            moduleType: "shield",
         },
         {
             id: "scanner-upgrade-3",
@@ -648,6 +670,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 2800,
             effect: { scanRange: 4 },
             stock: 1,
+            moduleType: "scanner",
         },
         {
             id: "lifesupport-upgrade-3",
@@ -657,6 +680,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 3200,
             effect: { oxygen: 8 },
             stock: 1,
+            moduleType: "lifesupport",
         },
         {
             id: "engine-upgrade-3",
@@ -666,6 +690,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 4000,
             effect: { fuelEfficiency: -4 },
             stock: 1,
+            moduleType: "engine",
         },
         {
             id: "drill-upgrade-3",
@@ -675,6 +700,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 3200,
             effect: { level: 1 },
             stock: 1,
+            moduleType: "drill",
         },
         {
             id: "medical-upgrade-3",
@@ -684,6 +710,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             price: 3600,
             effect: { healing: 8 },
             stock: 1,
+            moduleType: "medical",
         },
     ],
 };
@@ -698,6 +725,7 @@ export const WEAPONS: ShopItem[] = [
         price: 200,
         stock: 3,
         requiresWeaponBay: true,
+        moduleType: "weaponShed",
     },
     {
         id: "weapon-laser",
@@ -707,6 +735,7 @@ export const WEAPONS: ShopItem[] = [
         price: 300,
         stock: 2,
         requiresWeaponBay: true,
+        moduleType: "weaponShed",
     },
     {
         id: "weapon-missile",
@@ -716,6 +745,7 @@ export const WEAPONS: ShopItem[] = [
         price: 400,
         stock: 1,
         requiresWeaponBay: true,
+        moduleType: "weaponShed",
     },
 ];
 
@@ -737,6 +767,7 @@ export function generateStationItems(
     }
 
     const items: ShopItem[] = [];
+    // const items: PartialModuleShopItem[] = [];
 
     let availableLevels: number[];
     if (sectorTier === 1) {

@@ -206,6 +206,7 @@ export function PlanetPanel() {
                 )}
                 {/* Planet Specialization Button */}
                 {race &&
+                    currentLocation.dominantRace &&
                     PLANET_SPECIALIZATIONS[currentLocation.dominantRace] && (
                         <Button
                             onClick={() => setShowSpecialization(true)}

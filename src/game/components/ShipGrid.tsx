@@ -212,6 +212,11 @@ function ModuleRenderer({
     tempPos,
 }: ModuleRendererProps) {
     // Use tempPos when dragging, otherwise use module's original position
+    //
+    if (module.type === "weaponShed") {
+        return;
+    }
+
     const posX = isDragging && tempPos ? tempPos.x : module.x;
     const posY = isDragging && tempPos ? tempPos.y : module.y;
     const x = posX * cellSize;

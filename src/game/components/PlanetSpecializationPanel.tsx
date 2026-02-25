@@ -67,6 +67,8 @@ export function PlanetSpecializationPanel({
         const planetId = currentLocation.id;
         const raceId = currentLocation.dominantRace;
 
+        if (!raceId) return;
+
         // Set cooldown first using Zustand's set directly
         useGameStore.setState((s) => ({
             planetCooldowns: { ...s.planetCooldowns, [planetId]: 999 },
