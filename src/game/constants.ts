@@ -827,6 +827,25 @@ export const CREW_TRAITS = {
     ],
 };
 
+// Helper functions for mutation traits
+export const getMutationTraitName = (type: string): string => {
+    const names: Record<string, string> = {
+        nightmares: "Мутация: Кошмары",
+        paranoid: "Мутация: Паранойя",
+        unstable: "Мутация: Нестабильность",
+    };
+    return names[type] || "Мутация";
+};
+
+export const getMutationTraitDesc = (type: string): string => {
+    const descs: Record<string, string> = {
+        nightmares: "-10 счастья каждый ход",
+        paranoid: "-15 морали, +10% уклонение",
+        unstable: "Случайные перепады настроения",
+    };
+    return descs[type] || "Неизвестная мутация";
+};
+
 export const PROFESSION_NAMES: Record<Profession, string> = {
     pilot: "Пилот",
     engineer: "Инженер",
@@ -1242,8 +1261,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         effect: { type: "undying_crew", value: 1, active: false },
         negativeEffect: {
             type: "crew_mutation",
-            value: 15,
-            description: "15% шанс мутации каждого члена экипажа каждый ход",
+            value: 1,
+            description: "1% шанс мутации каждого члена экипажа каждый ход",
         },
         discovered: false,
         researched: false,
@@ -1258,8 +1277,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         effect: { type: "credit_booster", value: 0.5, active: false },
         negativeEffect: {
             type: "module_damage",
-            value: 10,
-            description: "Случайный модуль теряет 10% здоровья каждый ход",
+            value: 5,
+            description: "Случайный модуль теряет 5% здоровья каждый ход",
         },
         discovered: false,
         researched: false,
@@ -1270,12 +1289,12 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "parasitic_nanites",
         name: "🔧 Паразитические Наниты",
-        description: "Все модули автоматически чинятся на 5% за ход.",
-        effect: { type: "auto_repair", value: 5, active: false },
+        description: "Все модули автоматически чинятся на 3% за ход.",
+        effect: { type: "auto_repair", value: 3, active: false },
         negativeEffect: {
             type: "crew_desertion",
-            value: 5,
-            description: "5% шанс что член экипажа покинет корабль каждый ход",
+            value: 1,
+            description: "1% шанс что член экипажа покинет корабль каждый ход",
         },
         discovered: false,
         researched: false,
@@ -1290,9 +1309,9 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         effect: { type: "critical_overload", value: 0.75, active: false },
         negativeEffect: {
             type: "self_damage",
-            value: 15,
+            value: 75,
             description:
-                "Случайный модуль получает 15% урона после каждого боя",
+                "Случайный модуль получает 75% урона после каждого боя",
         },
         discovered: false,
         researched: false,
@@ -1323,8 +1342,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         effect: { type: "void_engine", value: 1, active: false },
         negativeEffect: {
             type: "health_drain",
-            value: 5,
-            description: "-5 здоровья всего экипажа каждый перелёт",
+            value: 10,
+            description: "-10 здоровья всего экипажа каждый перелёт",
         },
         discovered: false,
         researched: false,
@@ -1387,17 +1406,30 @@ export const DISTRESS_SIGNAL_OUTCOMES = {
 };
 
 // Determine distress signal outcome
-export const determineSignalOutcome = ():
-    | "pirate_ambush"
-    | "survivors"
-    | "abandoned_cargo" => {
+export const determineSignalOutcome = (
+    ambushChanceModifier: number = 0,
+): "pirate_ambush" | "survivors" | "abandoned_cargo" => {
     const roll = Math.random();
     let cumulative = 0;
 
-    for (const [type, data] of Object.entries(DISTRESS_SIGNAL_OUTCOMES)) {
-        cumulative += data.chance;
+    // Eye of Singularity increases ambush chance by 50%
+    const ambushChance = 0.35 + ambushChanceModifier;
+    const survivorsChance = 0.3 - ambushChanceModifier / 2;
+    const cargoChance = 0.35 - ambushChanceModifier / 2;
+
+    const outcomes = [
+        { type: "pirate_ambush", chance: ambushChance },
+        { type: "survivors", chance: survivorsChance },
+        { type: "abandoned_cargo", chance: cargoChance },
+    ];
+
+    for (const outcome of outcomes) {
+        cumulative += outcome.chance;
         if (roll < cumulative)
-            return type as "pirate_ambush" | "survivors" | "abandoned_cargo";
+            return outcome.type as
+                | "pirate_ambush"
+                | "survivors"
+                | "abandoned_cargo";
     }
 
     return "abandoned_cargo";

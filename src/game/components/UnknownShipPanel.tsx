@@ -12,12 +12,19 @@ export function UnknownShipPanel() {
     const startCombat = useGameStore((s) => s.startCombat);
     const startBossCombat = useGameStore((s) => s.startBossCombat);
     const getScanLevel = useGameStore((s) => s.getScanLevel);
+    const artifacts = useGameStore((s) => s.artifacts);
 
     if (!currentLocation) return null;
 
     const isShip = ["enemy", "friendly_ship"].includes(currentLocation.type);
     const scanLevel = getScanLevel();
     const hasScanner = scanLevel > 0;
+
+    // Eye of Singularity - reveals all enemies like scanner level 3
+    const hasAllSeeing = artifacts.some(
+        (a) => a.effect.type === "all_seeing" && a.effect.active,
+    );
+    const effectiveScanner = hasScanner || hasAllSeeing;
 
     const handleApproach = () => {
         // Mark location as revealed on sector map
@@ -58,12 +65,34 @@ export function UnknownShipPanel() {
         }
     };
 
-    // Get appropriate title and description - always the same for unknown objects
+    // Get appropriate title and description
     const getTitle = () => {
+        if (effectiveScanner) {
+            // Eye of Singularity reveals the true identity
+            return currentLocation.name;
+        }
         return "❓ Неизвестный объект";
     };
 
     const getDescription = () => {
+        if (effectiveScanner) {
+            // Show actual type info
+            if (currentLocation.type === "enemy") {
+                return `⚔️ Вражеский корабль (угроза ${currentLocation.threat || 1})`;
+            } else if (currentLocation.type === "friendly_ship") {
+                return `🤝 Дружеский корабль`;
+            } else if (currentLocation.type === "ancient_boss") {
+                return `⚠️ Древний корабль`;
+            } else if (currentLocation.type === "anomaly") {
+                const type =
+                    currentLocation.anomalyType === "good"
+                        ? "✓ Благоприятная"
+                        : "⚠ Опасная";
+                return `🔮 ${type}`;
+            } else if (currentLocation.type === "storm") {
+                return `🌪️ Космический шторм`;
+            }
+        }
         return "Датчики не могут определить тип этого объекта.";
     };
 
@@ -83,9 +112,11 @@ export function UnknownShipPanel() {
 
             <div className="bg-[rgba(0,0,0,0.4)] p-3 mb-4 border border-[#666]">
                 <p className="text-[#888] mb-2">{getDescription()}</p>
-                <p className="text-[#ffb000]">
-                    Требуется сканер для получения информации.
-                </p>
+                {!effectiveScanner && (
+                    <p className="text-[#ffb000]">
+                        Требуется сканер для получения информации.
+                    </p>
+                )}
             </div>
 
             <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#ff4444]">

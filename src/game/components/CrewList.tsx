@@ -446,9 +446,9 @@ export function CrewList() {
                                                 </span>
                                                 <br />
                                                 {selectedCrew.traits.map(
-                                                    (t) => (
+                                                    (t, idx) => (
                                                         <div
-                                                            key={t.name}
+                                                            key={`${selectedCrew.id}-trait-${idx}-${t.type}`}
                                                             className={
                                                                 t.type ===
                                                                 "negative"

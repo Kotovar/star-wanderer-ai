@@ -24,6 +24,8 @@ import {
     determineSignalOutcome,
     RACES,
     PLANET_SPECIALIZATIONS,
+    getMutationTraitName,
+    getMutationTraitDesc,
 } from "./constants";
 import { initialModules, STARTING_FUEL } from "./modules";
 import { initialCrew } from "./crew";
@@ -519,7 +521,7 @@ export const useGameStore = create<
         let traitDamageBonus = 0;
         state.crew.forEach((c) => {
             c.traits?.forEach((trait) => {
-                if (trait.effect.damageBonus) {
+                if (trait.effect?.damageBonus) {
                     traitDamageBonus = Math.max(
                         traitDamageBonus,
                         trait.effect.damageBonus as number,
@@ -601,17 +603,19 @@ export const useGameStore = create<
         const scanners = state.ship.modules.filter(
             (m) => m.type === "scanner" && !m.disabled && m.health > 0,
         );
+
+        // Apply all_seeing artifact (Eye of Singularity) - acts as scanner level 3
+        // This works even without a scanner module
+        const allSeeing = state.artifacts.find(
+            (a) => a.effect.type === "all_seeing" && a.effect.active,
+        );
+        if (allSeeing) {
+            return 3; // Eye of Singularity gives scanner level 3
+        }
+
         if (scanners.length === 0) return 0;
         // Return the scanner level (1-4) based on scanRange
         let maxRange = Math.max(...scanners.map((s) => s.scanRange || 0));
-
-        // Apply quantum_scanner artifact bonus (+2 scan range)
-        const quantumScanner = state.artifacts.find(
-            (a) => a.effect.type === "scan_boost" && a.effect.active,
-        );
-        if (quantumScanner) {
-            maxRange += quantumScanner.effect.value || 2;
-        }
 
         // Apply crystalline artifactBonus (+15% to artifact effects)
         let artifactBonus = 0;
@@ -719,7 +723,7 @@ export const useGameStore = create<
         const captain = state.crew.find((c) => c.profession === "pilot");
         if (captain?.traits) {
             captain.traits.forEach((t) => {
-                if (t.effect.fuelConsumption)
+                if (t.effect?.fuelConsumption)
                     modifier *= t.effect.fuelConsumption;
             });
         }
@@ -793,7 +797,7 @@ export const useGameStore = create<
 
         // Apply crew trait exp bonuses
         crewMember.traits?.forEach((trait) => {
-            if (trait.effect.expBonus) {
+            if (trait.effect?.expBonus) {
                 expMultiplier += trait.effect.expBonus;
             }
         });
@@ -904,6 +908,326 @@ export const useGameStore = create<
             );
         }
 
+        // ═══════════════════════════════════════════════════════════════
+        // CURSED ARTIFACTS - Negative effects
+        // ═══════════════════════════════════════════════════════════════
+        const cursedArtifacts = state.artifacts.filter(
+            (a) => a.cursed && a.effect.active,
+        );
+
+        cursedArtifacts.forEach((artifact) => {
+            // Process POSITIVE effects from cursed artifacts
+            const positiveType = artifact.effect?.type;
+            const positiveValue = artifact.effect?.value || 0;
+
+            // Auto-repair: repair modules by X% per turn
+            if (positiveType === "auto_repair" && positiveValue > 0) {
+                if (state.ship.modules.length > 0) {
+                    const needsRepair = state.ship.modules.some(
+                        (m) => m.health < (m.maxHealth || 100),
+                    );
+                    if (needsRepair) {
+                        set((s) => ({
+                            ship: {
+                                ...s.ship,
+                                modules: s.ship.modules.map((m) => ({
+                                    ...m,
+                                    health: Math.min(
+                                        m.maxHealth || 100,
+                                        m.health + positiveValue,
+                                    ),
+                                })),
+                            },
+                        }));
+                        get().addLog(
+                            `✨ ${artifact.name}: Модули отремонтированы на +${positiveValue}%`,
+                            "info",
+                        );
+                    }
+                }
+            }
+
+            // Process NEGATIVE effects
+            const negativeType = artifact.negativeEffect?.type;
+            const negativeValue = artifact.negativeEffect?.value || 0;
+
+            switch (negativeType) {
+                case "happiness_drain":
+                    // -X happiness to all crew per turn
+                    set((s) => ({
+                        crew: s.crew.map((c) => ({
+                            ...c,
+                            happiness: Math.max(0, c.happiness - negativeValue),
+                        })),
+                    }));
+                    if (negativeValue > 0) {
+                        get().addLog(
+                            `⚠️ ${artifact.name}: -${negativeValue} счастья экипажу`,
+                            "warning",
+                        );
+                    }
+                    break;
+
+                case "morale_drain":
+                    // -X morale to all crew per turn (same as happiness)
+                    set((s) => ({
+                        crew: s.crew.map((c) => ({
+                            ...c,
+                            happiness: Math.max(0, c.happiness - negativeValue),
+                        })),
+                    }));
+                    if (negativeValue > 0) {
+                        get().addLog(
+                            `⚠️ ${artifact.name}: -${negativeValue} морали экипажу`,
+                            "warning",
+                        );
+                    }
+                    break;
+
+                case "module_damage":
+                    // Random module loses X health per turn
+                    if (state.ship.modules.length > 0) {
+                        const randomModuleIdx = Math.floor(
+                            Math.random() * state.ship.modules.length,
+                        );
+                        const targetModule =
+                            state.ship.modules[randomModuleIdx];
+                        set((s) => ({
+                            ship: {
+                                ...s.ship,
+                                modules: s.ship.modules.map((m, i) =>
+                                    i === randomModuleIdx
+                                        ? {
+                                              ...m,
+                                              health: Math.max(
+                                                  1,
+                                                  m.health - negativeValue,
+                                              ),
+                                          }
+                                        : m,
+                                ),
+                            },
+                        }));
+                        get().addLog(
+                            `⚠️ ${artifact.name}: ${targetModule.name} повреждён на -${negativeValue}%`,
+                            "warning",
+                        );
+                    }
+                    break;
+
+                case "crew_desertion":
+                    // X% chance each crew member leaves per turn
+                    state.crew.forEach((crewMember) => {
+                        if (Math.random() * 100 < negativeValue) {
+                            set((s) => ({
+                                crew: s.crew.filter(
+                                    (c) => c.id !== crewMember.id,
+                                ),
+                            }));
+                            get().addLog(
+                                `⚠️ ${artifact.name}: ${crewMember.name} покинул корабль`,
+                                "warning",
+                            );
+                        }
+                    });
+                    break;
+
+                case "crew_mutation":
+                    // X% chance each crew member gets negative mutation trait
+                    state.crew.forEach((crewMember) => {
+                        if (Math.random() * 100 < negativeValue) {
+                            const mutationTraits = [
+                                "nightmares",
+                                "paranoid",
+                                "unstable",
+                            ];
+                            const newTrait =
+                                mutationTraits[
+                                    Math.floor(
+                                        Math.random() * mutationTraits.length,
+                                    )
+                                ];
+                            set((s) => ({
+                                crew: s.crew.map((c) =>
+                                    c.id === crewMember.id
+                                        ? {
+                                              ...c,
+                                              traits: [
+                                                  ...c.traits,
+                                                  {
+                                                      name: getMutationTraitName(
+                                                          newTrait,
+                                                      ),
+                                                      desc: getMutationTraitDesc(
+                                                          newTrait,
+                                                      ),
+                                                      type: newTrait, // Store mutation subtype
+                                                      rarity: "mutation",
+                                                  },
+                                              ],
+                                          }
+                                        : c,
+                                ),
+                            }));
+                            get().addLog(
+                                `⚠️ ${artifact.name}: ${crewMember.name} мутировал`,
+                                "warning",
+                            );
+                        }
+                    });
+                    break;
+
+                case "health_drain":
+                    // -X health to all crew per turn (for Void Drive artifact during travel)
+                    // Only applies if traveling (handled in travel logic)
+                    break;
+
+                case "self_damage":
+                    // Damage dealt after combat (handled in combat end)
+                    break;
+
+                case "ambush_chance":
+                    // Increased ambush chance (handled in distress signal logic)
+                    break;
+
+                case "abyss_power":
+                    // This is actually a positive effect (+energy), no negative handled here
+                    break;
+
+                case "all_seeing":
+                    // Positive effect (see all enemies), negative handled elsewhere
+                    break;
+
+                case "undying_crew":
+                    // Positive effect (crew can't die), negative handled elsewhere
+                    break;
+
+                case "credit_booster":
+                    // Positive effect (+credits), negative handled elsewhere
+                    break;
+
+                case "critical_overload":
+                    // Positive effect (crit damage), negative handled after combat
+                    break;
+
+                case "dark_shield":
+                    // Positive effect (+shields), negative handled above as morale_drain
+                    break;
+
+                case "void_engine":
+                    // Positive effect (free travel), negative handled during travel
+                    break;
+            }
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        // MUTATION TRAITS - Apply negative effects from mutations
+        // ═══════════════════════════════════════════════════════════════
+        state.crew.forEach((crewMember) => {
+            crewMember.traits
+                .filter((t) => t.rarity === "mutation")
+                .forEach((mutation) => {
+                    // Nightmares: -10 happiness per turn
+                    if (mutation.type === "nightmares") {
+                        set((s) => ({
+                            crew: s.crew.map((c) =>
+                                c.id === crewMember.id
+                                    ? {
+                                          ...c,
+                                          happiness: Math.max(
+                                              0,
+                                              c.happiness - 10,
+                                          ),
+                                      }
+                                    : c,
+                            ),
+                        }));
+                        get().addLog(
+                            `⚠️ ${crewMember.name}: Мутация Кошмары -10 счастья`,
+                            "warning",
+                        );
+                    }
+                    // Paranoid: -15 happiness (morale)
+                    if (mutation.type === "paranoid") {
+                        set((s) => ({
+                            crew: s.crew.map((c) =>
+                                c.id === crewMember.id
+                                    ? {
+                                          ...c,
+                                          happiness: Math.max(
+                                              0,
+                                              c.happiness - 15,
+                                          ),
+                                      }
+                                    : c,
+                            ),
+                        }));
+                        get().addLog(
+                            `⚠️ ${crewMember.name}: Мутация Паранойя -15 счастья`,
+                            "warning",
+                        );
+                    }
+                    // Unstable: Random happiness swings (-20 to +10)
+                    if (mutation.type === "unstable") {
+                        const randomChange =
+                            Math.floor(Math.random() * 31) - 20; // -20 to +10
+                        set((s) => ({
+                            crew: s.crew.map((c) =>
+                                c.id === crewMember.id
+                                    ? {
+                                          ...c,
+                                          happiness: Math.max(
+                                              0,
+                                              Math.min(
+                                                  100,
+                                                  c.happiness + randomChange,
+                                              ),
+                                          ),
+                                      }
+                                    : c,
+                            ),
+                        }));
+                        if (randomChange !== 0) {
+                            get().addLog(
+                                `⚠️ ${crewMember.name}: Мутация Нестабильность ${randomChange > 0 ? "+" : ""}${randomChange} счастья`,
+                                randomChange < 0 ? "warning" : "info",
+                            );
+                        }
+                    }
+                });
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        // CREW DESERTION - Remove crew with 0 happiness for 3+ turns
+        // ═══════════════════════════════════════════════════════════════
+        set((s) => {
+            const crewToKeep = s.crew.filter((c) => {
+                if (c.happiness <= 0) {
+                    const turnsAtZero = c.turnsAtZeroHappiness || 0;
+                    if (turnsAtZero >= 3) {
+                        get().addLog(
+                            `${c.name} покинул корабль из-за низкого настроения!`,
+                            "warning",
+                        );
+                        return false; // Remove crew member
+                    }
+                    // Increment turns at zero happiness
+                    return true; // Keep but will update
+                }
+                // Reset turnsAtZeroHappiness if happiness recovered
+                return true;
+            });
+
+            // Update turnsAtZeroHappiness for crew with 0 happiness
+            const updatedCrew = crewToKeep.map((c) => ({
+                ...c,
+                turnsAtZeroHappiness:
+                    c.happiness <= 0 ? (c.turnsAtZeroHappiness || 0) + 1 : 0,
+            }));
+
+            return { crew: updatedCrew };
+        });
+
         // Traveling
         const traveling = get().traveling;
         if (!traveling) return;
@@ -947,6 +1271,9 @@ export const useGameStore = create<
         }
 
         if (nextTurnsLeft <= 0) {
+            // Travel complete - no additional effects needed
+            // (Void Drive health drain already applied during travel initiation)
+
             const destinationSector = traveling.destination;
 
             // Update patrol contracts (xenosymbiont quest - visit sectors)
@@ -2288,8 +2615,12 @@ export const useGameStore = create<
         const pilotInCockpit = pilot && pilot.moduleId === cockpit.id;
 
         // Check for void_engine artifact (free fuel for inter-sector travel)
+        // Both regular void_engine and cursed void_drive artifacts
         const voidEngine = state.artifacts.find(
-            (a) => a.effect.type === "fuel_free" && a.effect.active,
+            (a) =>
+                (a.effect.type === "fuel_free" ||
+                    a.effect.type === "void_engine") &&
+                a.effect.active,
         );
 
         // Calculate fuel cost with penalty if pilot not in cockpit
@@ -2298,10 +2629,31 @@ export const useGameStore = create<
         // Apply void_engine artifact bonus (free inter-sector travel)
         if (voidEngine) {
             fuelCost = 0;
+            const artifactName = voidEngine.cursed
+                ? "Варп Бездны"
+                : "Вакуумный двигатель";
             get().addLog(
-                `⚡ Вакуумный двигатель! Бесплатный межсекторный перелёт!`,
+                `⚡ ${artifactName}! Бесплатный межсекторный перелёт!`,
                 "info",
             );
+
+            // Apply crew health drain for cursed void_engine (Void Drive)
+            if (
+                voidEngine.cursed &&
+                voidEngine.negativeEffect?.type === "health_drain"
+            ) {
+                const negativeValue = voidEngine.negativeEffect?.value || 5;
+                set((s) => ({
+                    crew: s.crew.map((c) => ({
+                        ...c,
+                        health: Math.max(1, c.health - negativeValue),
+                    })),
+                }));
+                get().addLog(
+                    `⚠️ ${artifactName}: Экипаж пострадал на -${negativeValue} здоровья`,
+                    "warning",
+                );
+            }
         } else if (!pilotInCockpit) {
             fuelCost = Math.floor(fuelCost * 1.5); // 50% more fuel
             get().addLog(`⚠ Пилот не в кабине! Расход топлива +50%`, "warning");
@@ -2323,7 +2675,11 @@ export const useGameStore = create<
                 fuel: Math.max(0, (s.ship.fuel || 0) - fuelCost),
             },
         }));
-        get().addLog(`Расход топлива: -${fuelCost}`, "info");
+        if (fuelCost > 0) {
+            get().addLog(`Расход топлива: -${fuelCost}`, "info");
+        } else {
+            get().addLog(`Расход топлива: Бесплатно`, "info");
+        }
 
         // Risk of module damage if pilot not in cockpit during inter-tier travel
         const distance = Math.abs(
@@ -2650,7 +3006,14 @@ export const useGameStore = create<
 
                     if (canReveal && !loc.signalType) {
                         // Determine outcome and reveal it
-                        const outcome = determineSignalOutcome();
+                        // Eye of Singularity increases ambush chance by 50%
+                        const allSeeing = state.artifacts.find(
+                            (a) =>
+                                a.effect.type === "all_seeing" &&
+                                a.effect.active,
+                        );
+                        const ambushModifier = allSeeing ? 0.5 : 0;
+                        const outcome = determineSignalOutcome(ambushModifier);
                         const updatedLocation = {
                             ...loc,
                             signalType: outcome,
@@ -3872,6 +4235,44 @@ export const useGameStore = create<
                 ship: { ...s.ship, shields: s.ship.maxShields },
                 gameMode: "battle_results",
             }));
+
+            // ═══════════════════════════════════════════════════════════════
+            // CURSED ARTIFACT - Critical Overload: Self damage after combat
+            // ═══════════════════════════════════════════════════════════════
+            const criticalOverload = state.artifacts.find(
+                (a) =>
+                    a.cursed &&
+                    a.effect.type === "critical_overload" &&
+                    a.effect.active,
+            );
+            if (criticalOverload && state.ship.modules.length > 0) {
+                const negativeValue =
+                    criticalOverload.negativeEffect?.value || 15;
+                const randomModuleIdx = Math.floor(
+                    Math.random() * state.ship.modules.length,
+                );
+                const targetModule = state.ship.modules[randomModuleIdx];
+                set((s) => ({
+                    ship: {
+                        ...s.ship,
+                        modules: s.ship.modules.map((m, i) =>
+                            i === randomModuleIdx
+                                ? {
+                                      ...m,
+                                      health: Math.max(
+                                          1,
+                                          m.health - negativeValue,
+                                      ),
+                                  }
+                                : m,
+                        ),
+                    },
+                }));
+                get().addLog(
+                    `⚠️ ${criticalOverload.name}: ${targetModule.name} повреждён на -${negativeValue}% после боя`,
+                    "warning",
+                );
+            }
 
             get().updateShipStats();
             return;
@@ -5889,7 +6290,13 @@ export const useGameStore = create<
         }
 
         // Use existing signalType if revealed by scanner, otherwise determine random outcome
-        const outcome = loc.signalType || determineSignalOutcome();
+        // Eye of Singularity increases ambush chance by 50%
+        const allSeeing = state.artifacts.find(
+            (a) => a.effect.type === "all_seeing" && a.effect.active,
+        );
+        const ambushModifier = allSeeing ? 0.5 : 0;
+        const outcome =
+            loc.signalType || determineSignalOutcome(ambushModifier);
 
         // Update both currentLocation AND the location in the sector
         const updatedLocation = {
@@ -6171,22 +6578,52 @@ export const useGameStore = create<
 
         if (!artifact || !artifact.researched) return;
 
+        // Check if artifact is cursed and player has scientist to deactivate
+        const newActive = !artifact.effect.active;
+        if (!newActive && artifact.cursed) {
+            // Deactivating cursed artifact - need scientist level 3+
+            const scientist = state.crew.find(
+                (c) => c.profession === "scientist" && c.level >= 3,
+            );
+            if (!scientist) {
+                get().addLog(
+                    "⚠️ Нельзя отключить проклятый артефакт без учёного 3+ уровня!",
+                    "error",
+                );
+                playSound("error");
+                return;
+            }
+            // Damage the scientist
+            const damage = 20;
+            set((s) => ({
+                crew: s.crew.map((c) =>
+                    c.id === scientist.id
+                        ? { ...c, health: Math.max(1, c.health - damage) }
+                        : c,
+                ),
+            }));
+            get().addLog(
+                `⚠️ ${scientist.name} пострадал от проклятия! -${damage} здоровья`,
+                "warning",
+            );
+        }
+
         set((s) => ({
             artifacts: s.artifacts.map((a) =>
                 a.id === artifactId
                     ? {
                           ...a,
-                          effect: { ...a.effect, active: !a.effect.active },
+                          effect: { ...a.effect, active: newActive },
                       }
                     : a,
             ),
         }));
 
-        const active = !artifact.effect.active;
         get().addLog(
-            `${artifact.name}: ${active ? "активирован" : "деактивирован"}`,
+            `${artifact.name}: ${newActive ? "активирован" : "деактивирован"}`,
             "info",
         );
+        get().updateShipStats();
     },
 
     tryFindArtifact: () => {

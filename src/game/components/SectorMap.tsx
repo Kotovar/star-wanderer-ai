@@ -46,9 +46,15 @@ function getScannerInfo(
     scanLevel: number,
     scanRange: number,
     isRevealed: boolean = false,
+    hasAllSeeing: boolean = false, // Eye of Singularity artifact
 ): string[] {
     const info: string[] = [];
     const completed = loc.mined || loc.bossDefeated || loc.signalResolved;
+
+    // Eye of Singularity acts as scanner level 3
+    const effectiveScanLevel = hasAllSeeing
+        ? Math.max(scanLevel, 3)
+        : scanLevel;
 
     // If location was revealed (e.g., approached without scanner), show full info
     if (isRevealed) {
@@ -84,28 +90,30 @@ function getScannerInfo(
         return info;
     }
 
-    if (scanLevel <= 0) {
-        // No scanner - show basic info for certain objects
-        if (loc.type === "station") {
-            info.push(`🛰️ Станция`);
-            return info;
-        } else if (loc.type === "planet") {
-            info.push(`🪐 Планета`);
-            info.push(`🏷️ ${loc.planetType}`);
-            return info;
-        } else if (loc.type === "asteroid_belt") {
-            info.push(`⛏️ Пояс астероидов`);
-            info.push(`🏷️ ${loc.name}`);
-            return info;
-        } else if (loc.type === "distress_signal") {
-            info.push(`🆘 Сигнал бедствия`);
-            // Don't add name here - it will be added below with 📍
-            return info;
-        } else {
-            // For other objects, show as unknown
-            info.push(`❓ Неизвестный объект`);
-            return info;
-        }
+    // Stations, planets, asteroid belts, and distress signals are always visible
+    if (loc.type === "station") {
+        info.push(`🛰️ Станция`);
+        info.push(`📍 ${loc.name}`);
+        return info;
+    } else if (loc.type === "planet") {
+        info.push(`🪐 Планета`);
+        info.push(`🏷️ ${loc.planetType || "Неизвестно"}`);
+        info.push(`📍 ${loc.name}`);
+        return info;
+    } else if (loc.type === "asteroid_belt") {
+        info.push(`⛏️ Пояс астероидов`);
+        info.push(`📍 ${loc.name}`);
+        return info;
+    } else if (loc.type === "distress_signal") {
+        info.push(`🆘 Сигнал бедствия`);
+        return info;
+    }
+
+    // For other objects, check scanner level
+    if (effectiveScanLevel <= 0) {
+        // No scanner - show as unknown
+        info.push(`❓ Неизвестный объект`);
+        return info;
     }
 
     // Get location tier to compare with scanner level
@@ -252,6 +260,7 @@ export function SectorMap() {
     const completedLocations = useGameStore((s) => s.completedLocations);
     const getScanLevel = useGameStore((s) => s.getScanLevel);
     const getScanRange = useGameStore((s) => s.getScanRange);
+    const artifacts = useGameStore((s) => s.artifacts);
 
     const [hoveredLocation, setHoveredLocation] = useState<{
         loc: Location;
@@ -260,6 +269,11 @@ export function SectorMap() {
     } | null>(null);
     const scanLevel = getScanLevel();
     const scanRange = getScanRange();
+
+    // Eye of Singularity artifact - reveals all enemies like scanner level 3
+    const hasAllSeeing = artifacts.some(
+        (a) => a.effect.type === "all_seeing" && a.effect.active,
+    );
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -314,7 +328,7 @@ export function SectorMap() {
             loc.y = y;
 
             const completed = completedLocations.includes(loc.id);
-            const hasScanner = scanLevel > 0;
+            const hasScanner = scanLevel > 0 || hasAllSeeing; // Eye of Singularity acts as scanner
             const isRevealed = loc.signalRevealed; // Location was approached and revealed
 
             if (loc.type === "station") {
@@ -530,6 +544,7 @@ export function SectorMap() {
                         hoveredLocation.loc.signalRevealed ||
                             hoveredLocation.loc.visited ||
                             false,
+                        hasAllSeeing,
                     ).map((line, i) => (
                         <div
                             key={i}
