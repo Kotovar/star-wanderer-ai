@@ -8,6 +8,7 @@ import { ModuleDetailDialog } from "../ModuleList";
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
@@ -593,17 +594,14 @@ function UpgradeDialog({
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent
-                className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ffb000] text-[#ffb000] max-w-md"
-                aria-describedby="upgrade-dialog-description"
-            >
+            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ffb000] text-[#ffb000] max-w-md">
                 <DialogHeader>
                     <DialogTitle className="text-[#ffb000] font-['Orbitron']">
                         ⬆ {item.name}
                     </DialogTitle>
-                    <div id="upgrade-dialog-description" className="sr-only">
+                    <DialogDescription className="sr-only">
                         Диалог улучшения модуля
-                    </div>
+                    </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4">

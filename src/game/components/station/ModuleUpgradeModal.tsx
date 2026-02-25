@@ -3,6 +3,7 @@
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
@@ -27,17 +28,14 @@ export function ModuleUpgradeModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent
-                className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ffb000] text-[#00ff41] max-w-md"
-                aria-describedby="upgrade-modal-description"
-            >
+            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ffb000] text-[#00ff41] max-w-md">
                 <DialogHeader>
                     <DialogTitle className="text-[#ffb000] font-['Orbitron']">
                         Выберите модуль для улучшения
                     </DialogTitle>
-                    <div id="upgrade-modal-description" className="sr-only">
+                    <DialogDescription className="sr-only">
                         Выбор модуля для улучшения
-                    </div>
+                    </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-3">

@@ -6,6 +6,7 @@ import type { Contract } from "../types";
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
@@ -286,14 +287,14 @@ export function ContractsList() {
                 open={!!selectedContract}
                 onOpenChange={() => setSelectedContract(null)}
             >
-                <DialogContent
-                    className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md"
-                    aria-describedby="dialog-desc"
-                >
+                <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md">
                     <DialogHeader>
                         <DialogTitle className="text-[#ffb000] font-['Orbitron']">
                             {selectedContract?.desc}
                         </DialogTitle>
+                        <DialogDescription className="sr-only">
+                            Детали контракта
+                        </DialogDescription>
                     </DialogHeader>
                     {selectedContract &&
                         (() => {

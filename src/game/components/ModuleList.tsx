@@ -7,6 +7,7 @@ import type { Module, Weapon } from "../types";
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
@@ -194,14 +195,14 @@ export function ModuleDetailDialog({
 
     return (
         <Dialog open={!!module} onOpenChange={onClose}>
-            <DialogContent
-                className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md"
-                aria-describedby="dialog-desc"
-            >
+            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md">
                 <DialogHeader>
                     <DialogTitle className="text-[#ffb000] font-['Orbitron']">
                         {module.name}
                     </DialogTitle>
+                    <DialogDescription className="sr-only">
+                        Информация о модуле корабля
+                    </DialogDescription>
                     {/* Module level and size */}
                     <div className="flex gap-4 text-xs mt-2">
                         {isValidLevel && (

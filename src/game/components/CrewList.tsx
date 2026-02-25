@@ -7,6 +7,7 @@ import type { CrewMember } from "../types";
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
@@ -166,17 +167,14 @@ export function CrewList() {
                 open={!!selectedCrew}
                 onOpenChange={() => setSelectedCrew(null)}
             >
-                <DialogContent
-                    className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md"
-                    aria-describedby="crew-dialog-description"
-                >
+                <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md">
                     <DialogHeader>
                         <DialogTitle className="text-[#ffb000] font-['Orbitron']">
                             ▸ {selectedCrew?.name}
                         </DialogTitle>
-                        <div id="crew-dialog-description" className="sr-only">
+                        <DialogDescription className="sr-only">
                             Информация о члене экипажа
-                        </div>
+                        </DialogDescription>
                     </DialogHeader>
                     {selectedCrew &&
                         (() => {

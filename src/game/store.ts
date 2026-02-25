@@ -6026,36 +6026,58 @@ export const useGameStore = create<
                 return;
             }
             let installed = false;
+            let targetBayId = -1;
+            let targetSlotIndex = -1;
+
             for (const bay of wbays) {
                 if (bay.weapons) {
                     for (let i = 0; i < bay.weapons.length; i++) {
                         if (!bay.weapons[i] && item.weaponType) {
-                            bay.weapons[i] = { type: item.weaponType };
-                            set((s) => ({
-                                credits: s.credits - item.price,
-                                stationInventory: {
-                                    ...s.stationInventory,
-                                    [stationId]: {
-                                        ...inv,
-                                        [item.id]: bought + 1,
-                                    },
-                                },
-                            }));
+                            targetBayId = bay.id;
+                            targetSlotIndex = i;
                             installed = true;
-                            get().addLog(
-                                `Установлено ${WEAPON_TYPES[item.weaponType].name}`,
-                                "info",
-                            );
                             break;
                         }
                     }
                 }
                 if (installed) break;
             }
+
             if (!installed) {
                 get().addLog("Нет слотов!", "error");
                 return;
             }
+            const weaponType = item.weaponType;
+            if (!weaponType) return;
+            set((s) => ({
+                ship: {
+                    ...s.ship,
+                    modules: s.ship.modules.map((m) =>
+                        m.id === targetBayId && m.weapons
+                            ? {
+                                  ...m,
+                                  weapons: m.weapons.map((w, i) =>
+                                      i === targetSlotIndex
+                                          ? { type: weaponType }
+                                          : w,
+                                  ),
+                              }
+                            : m,
+                    ),
+                },
+                credits: s.credits - item.price,
+                stationInventory: {
+                    ...s.stationInventory,
+                    [stationId]: {
+                        ...inv,
+                        [item.id]: bought + 1,
+                    },
+                },
+            }));
+            get().addLog(
+                `Установлено ${WEAPON_TYPES[weaponType].name}`,
+                "info",
+            );
         }
 
         playSound("success");

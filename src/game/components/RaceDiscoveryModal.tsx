@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
@@ -46,17 +47,14 @@ export function RaceDiscoveryModal() {
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogContent
-                className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ffb000] text-[#00ff41] max-w-md"
-                aria-describedby="race-discovery-description"
-            >
+            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ffb000] text-[#00ff41] max-w-md">
                 <DialogHeader>
                     <DialogTitle className="text-[#ffb000] font-['Orbitron']">
                         Открыта новая раса
                     </DialogTitle>
-                    <div id="race-discovery-description" className="sr-only">
+                    <DialogDescription className="sr-only">
                         Детали расы
-                    </div>
+                    </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-3 p-4">
