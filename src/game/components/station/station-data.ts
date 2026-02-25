@@ -985,6 +985,7 @@ export function generateStationCrew(
                 traits,
                 moduleId: 1,
                 movedThisTurn: false,
+                turnsAtZeroHappiness: 0,
             },
             price: finalPrice,
             quality,

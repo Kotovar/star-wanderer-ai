@@ -633,7 +633,7 @@ export const useGameStore = create<
                 }
             }
         });
-        if (artifactBonus > 0 && quantumScanner) {
+        if (artifactBonus > 0) {
             maxRange = Math.floor(maxRange * (1 + artifactBonus));
         }
 
@@ -1061,7 +1061,8 @@ export const useGameStore = create<
                                                       desc: getMutationTraitDesc(
                                                           newTrait,
                                                       ),
-                                                      type: newTrait, // Store mutation subtype
+                                                      effect: {}, // Mutation effects handled separately
+                                                      type: "negative",
                                                       rarity: "mutation",
                                                   },
                                               ],
@@ -1090,32 +1091,24 @@ export const useGameStore = create<
                     // Increased ambush chance (handled in distress signal logic)
                     break;
 
-                case "abyss_power":
-                    // This is actually a positive effect (+energy), no negative handled here
+                case "happiness_drain":
+                    // Handled above in cursed artifacts section
                     break;
 
-                case "all_seeing":
-                    // Positive effect (see all enemies), negative handled elsewhere
+                case "morale_drain":
+                    // Handled above in cursed artifacts section
                     break;
 
-                case "undying_crew":
-                    // Positive effect (crew can't die), negative handled elsewhere
+                case "module_damage":
+                    // Handled above in cursed artifacts section
                     break;
 
-                case "credit_booster":
-                    // Positive effect (+credits), negative handled elsewhere
+                case "crew_desertion":
+                    // Handled above in cursed artifacts section
                     break;
 
-                case "critical_overload":
-                    // Positive effect (crit damage), negative handled after combat
-                    break;
-
-                case "dark_shield":
-                    // Positive effect (+shields), negative handled above as morale_drain
-                    break;
-
-                case "void_engine":
-                    // Positive effect (free travel), negative handled during travel
+                case "crew_mutation":
+                    // Handled above in cursed artifacts section
                     break;
             }
         });
@@ -1124,77 +1117,73 @@ export const useGameStore = create<
         // MUTATION TRAITS - Apply negative effects from mutations
         // ═══════════════════════════════════════════════════════════════
         state.crew.forEach((crewMember) => {
-            crewMember.traits
-                .filter((t) => t.rarity === "mutation")
-                .forEach((mutation) => {
-                    // Nightmares: -10 happiness per turn
-                    if (mutation.type === "nightmares") {
-                        set((s) => ({
-                            crew: s.crew.map((c) =>
-                                c.id === crewMember.id
-                                    ? {
-                                          ...c,
-                                          happiness: Math.max(
-                                              0,
-                                              c.happiness - 10,
+            crewMember.traits.forEach((mutation) => {
+                // Check mutation subtype by name
+                const isNightmares = mutation.name.includes("Кошмары");
+                const isParanoid = mutation.name.includes("Паранойя");
+                const isUnstable = mutation.name.includes("Нестабильность");
+
+                // Nightmares: -10 happiness per turn
+                if (isNightmares) {
+                    set((s) => ({
+                        crew: s.crew.map((c) =>
+                            c.id === crewMember.id
+                                ? {
+                                      ...c,
+                                      happiness: Math.max(0, c.happiness - 10),
+                                  }
+                                : c,
+                        ),
+                    }));
+                    get().addLog(
+                        `⚠️ ${crewMember.name}: Мутация Кошмары -10 счастья`,
+                        "warning",
+                    );
+                }
+                // Paranoid: -15 happiness (morale)
+                if (isParanoid) {
+                    set((s) => ({
+                        crew: s.crew.map((c) =>
+                            c.id === crewMember.id
+                                ? {
+                                      ...c,
+                                      happiness: Math.max(0, c.happiness - 15),
+                                  }
+                                : c,
+                        ),
+                    }));
+                    get().addLog(
+                        `⚠️ ${crewMember.name}: Мутация Паранойя -15 счастья`,
+                        "warning",
+                    );
+                }
+                // Unstable: Random happiness swings (-20 to +10)
+                if (isUnstable) {
+                    const randomChange = Math.floor(Math.random() * 31) - 20; // -20 to +10
+                    set((s) => ({
+                        crew: s.crew.map((c) =>
+                            c.id === crewMember.id
+                                ? {
+                                      ...c,
+                                      happiness: Math.max(
+                                          0,
+                                          Math.min(
+                                              100,
+                                              c.happiness + randomChange,
                                           ),
-                                      }
-                                    : c,
-                            ),
-                        }));
+                                      ),
+                                  }
+                                : c,
+                        ),
+                    }));
+                    if (randomChange !== 0) {
                         get().addLog(
-                            `⚠️ ${crewMember.name}: Мутация Кошмары -10 счастья`,
-                            "warning",
+                            `⚠️ ${crewMember.name}: Мутация Нестабильность ${randomChange > 0 ? "+" : ""}${randomChange} счастья`,
+                            randomChange < 0 ? "warning" : "info",
                         );
                     }
-                    // Paranoid: -15 happiness (morale)
-                    if (mutation.type === "paranoid") {
-                        set((s) => ({
-                            crew: s.crew.map((c) =>
-                                c.id === crewMember.id
-                                    ? {
-                                          ...c,
-                                          happiness: Math.max(
-                                              0,
-                                              c.happiness - 15,
-                                          ),
-                                      }
-                                    : c,
-                            ),
-                        }));
-                        get().addLog(
-                            `⚠️ ${crewMember.name}: Мутация Паранойя -15 счастья`,
-                            "warning",
-                        );
-                    }
-                    // Unstable: Random happiness swings (-20 to +10)
-                    if (mutation.type === "unstable") {
-                        const randomChange =
-                            Math.floor(Math.random() * 31) - 20; // -20 to +10
-                        set((s) => ({
-                            crew: s.crew.map((c) =>
-                                c.id === crewMember.id
-                                    ? {
-                                          ...c,
-                                          happiness: Math.max(
-                                              0,
-                                              Math.min(
-                                                  100,
-                                                  c.happiness + randomChange,
-                                              ),
-                                          ),
-                                      }
-                                    : c,
-                            ),
-                        }));
-                        if (randomChange !== 0) {
-                            get().addLog(
-                                `⚠️ ${crewMember.name}: Мутация Нестабильность ${randomChange > 0 ? "+" : ""}${randomChange} счастья`,
-                                randomChange < 0 ? "warning" : "info",
-                            );
-                        }
-                    }
-                });
+                }
+            });
         });
 
         // ═══════════════════════════════════════════════════════════════
@@ -5651,6 +5640,7 @@ export const useGameStore = create<
             traits: crewData.traits || [],
             moduleId: crewData.moduleId || initialModuleId,
             movedThisTurn: false,
+            turnsAtZeroHappiness: 0,
         };
 
         // Track hired crew by station to prevent re-hiring
@@ -6411,6 +6401,7 @@ export const useGameStore = create<
                         traits: [],
                         moduleId: initialModuleId,
                         movedThisTurn: false,
+                        turnsAtZeroHappiness: 0,
                     };
                     set((s) => ({ crew: [...s.crew, newCrew] }));
                     get().addLog(

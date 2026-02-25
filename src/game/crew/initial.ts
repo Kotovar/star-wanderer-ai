@@ -19,6 +19,7 @@ export const initialCrew: CrewMember[] = [
         traits: [],
         moduleId: 2,
         movedThisTurn: false,
+        turnsAtZeroHappiness: 0,
     },
     {
         id: 2,
@@ -37,6 +38,7 @@ export const initialCrew: CrewMember[] = [
         traits: [],
         moduleId: 3,
         movedThisTurn: false,
+        turnsAtZeroHappiness: 0,
     },
     {
         id: 3,
@@ -55,5 +57,6 @@ export const initialCrew: CrewMember[] = [
         traits: [],
         moduleId: 3,
         movedThisTurn: false,
+        turnsAtZeroHappiness: 0,
     },
 ];

@@ -95,17 +95,60 @@ function getScannerInfo(
         info.push(`🛰️ Станция`);
         info.push(`📍 ${loc.name}`);
         return info;
-    } else if (loc.type === "planet") {
+    }
+    if (loc.type === "planet") {
         info.push(`🪐 Планета`);
         info.push(`🏷️ ${loc.planetType || "Неизвестно"}`);
         info.push(`📍 ${loc.name}`);
+        // Planet details
+        if (loc.isEmpty) {
+            info.push(`🏜️ Безлюдная`);
+        } else {
+            if (scanLevel >= 1 && loc.dominantRace) {
+                const raceNames: Record<string, string> = {
+                    human: "Люди",
+                    synthetic: "Синтетики",
+                    xenosymbiont: "Ксеноморфы-симбионты",
+                    krylorian: "Крилорианцы",
+                    voidborn: "Порождённые Пустотой",
+                    crystalline: "Кристаллоиды",
+                };
+                const raceName =
+                    raceNames[loc.dominantRace] || loc.dominantRace;
+                info.push(`🧬 ${raceName}`);
+                if (scanLevel >= 5) {
+                    info.push(`👥 Население: ${loc.population || 0}k`);
+                }
+            }
+        }
         return info;
-    } else if (loc.type === "asteroid_belt") {
+    }
+    if (loc.type === "asteroid_belt") {
         info.push(`⛏️ Пояс астероидов`);
         info.push(`📍 ${loc.name}`);
+        const tier = loc.asteroidTier || 1;
+        info.push(`⛏️ Уровень: ${tier}`);
+        if (scanLevel >= 5 && loc.resources && !completed) {
+            info.push(`📦 Минералы: ~${loc.resources.minerals}`);
+            if (loc.resources.rare > 0)
+                info.push(`💎 Редкие: ~${loc.resources.rare}`);
+            info.push(`₢ ~${loc.resources.credits}₢`);
+        }
+        // Hidden rewards for ancient asteroid belts
+        if (scanRange >= 8 && tier === 4 && !completed) {
+            const detectionChance = Math.min(100, 50 + (scanRange - 8) * 5);
+            if (Math.random() * 100 < detectionChance) {
+                info.push(`★ Древние артефакты!`);
+            }
+        }
         return info;
-    } else if (loc.type === "distress_signal") {
+    }
+    if (loc.type === "distress_signal") {
         info.push(`🆘 Сигнал бедствия`);
+        // Quantum scanner shows probabilities
+        if (scanRange >= 15 && !loc.signalResolved) {
+            info.push(`⚡ Засада (40%) / Выжившие (30%) / Груз (30%)`);
+        }
         return info;
     }
 
@@ -122,7 +165,7 @@ function getScannerInfo(
 
     // Show name only if scanner level is sufficient
     // Exception: don't show name for storms (name is shown in storm details)
-    if (canScanFully || loc.type === "distress_signal") {
+    if (canScanFully) {
         if (loc.type !== "storm") {
             info.push(`📍 ${loc.name}`);
         }
@@ -161,17 +204,12 @@ function getScannerInfo(
                 `💰 Добыча: x${loc.stormType === "radiation" ? 2 : loc.stormType === "ionic" ? 2.5 : 3}`,
             );
         }
-    }
-
-    // Asteroid info
-    if (loc.type === "asteroid_belt") {
-        const tier = loc.asteroidTier || 1;
-        info.push(`⛏️ Уровень: ${tier}`);
-        if (scanLevel >= 5 && loc.resources && !completed) {
-            info.push(`📦 Минералы: ~${loc.resources.minerals}`);
-            if (loc.resources.rare > 0)
-                info.push(`💎 Редкие: ~${loc.resources.rare}`);
-            info.push(`₢ ~${loc.resources.credits}₢`);
+        // Hidden rewards for storms
+        if (scanRange >= 8 && !completed) {
+            const detectionChance = Math.min(100, 50 + (scanRange - 8) * 5);
+            if (Math.random() * 100 < detectionChance) {
+                info.push(`★ Редкие ресурсы!`);
+            }
         }
     }
 
@@ -190,59 +228,11 @@ function getScannerInfo(
         info.push(`🔬 Учёный: LV${loc.requiresScientistLevel || 1}`);
     }
 
-    // Planet info
-    if (loc.type === "planet") {
-        if (loc.isEmpty) {
-            info.push(`🏜️ Безлюдная`);
-        } else {
-            // With scanner level 1+, show race info
-            if (scanLevel >= 1) {
-                if (loc.dominantRace) {
-                    // Convert race ID to readable name
-                    const raceNames: Record<string, string> = {
-                        human: "Люди",
-                        synthetic: "Синтетики",
-                        xenosymbiont: "Ксеноморфы-симбионты",
-                        krylorian: "Крилорианцы",
-                        voidborn: "Порождённые Пустотой",
-                        crystalline: "Кристаллоиды",
-                    };
-                    const raceName =
-                        raceNames[loc.dominantRace] || loc.dominantRace;
-                    info.push(`🧬 ${raceName}`);
-                }
-                if (scanLevel >= 5) {
-                    info.push(`👥 Население: ${loc.population || 0}k`);
-                }
-            }
-        }
-    }
-
-    // Hidden rewards detection - chance based on scanRange
-    // Base requirement: scanRange >= 8 for hidden rewards
-    // Each point above 8 adds +5% detection chance
-    if (scanRange >= 8) {
+    // Hidden rewards for ancient bosses
+    if (loc.type === "ancient_boss" && !loc.bossDefeated && scanRange >= 8) {
         const detectionChance = Math.min(100, 50 + (scanRange - 8) * 5);
-        const detected = Math.random() * 100 < detectionChance;
-
-        if (detected) {
-            if (loc.type === "asteroid_belt" && loc.resources && !completed) {
-                const tier = loc.asteroidTier || 1;
-                if (tier === 4) info.push(`★ Древние артефакты!`);
-            }
-            if (loc.type === "storm" && !completed) {
-                info.push(`★ Редкие ресурсы!`);
-            }
-            if (loc.type === "ancient_boss" && !loc.bossDefeated) {
-                info.push(`★ Древний артефакт!`);
-            }
-        }
-    }
-
-    // Quantum scanner (scanRange 15+) - shows distress signal probabilities
-    if (scanRange >= 15) {
-        if (loc.type === "distress_signal" && !loc.signalResolved) {
-            info.push(`⚡ Засада (40%) / Выжившие (30%) / Груз (30%)`);
+        if (Math.random() * 100 < detectionChance) {
+            info.push(`★ Древний артефакт!`);
         }
     }
 
@@ -430,7 +420,7 @@ export function SectorMap() {
                 ctx.fillText("(✓)", x, y + 40);
             }
         });
-    }, [currentSector, completedLocations, scanLevel]);
+    }, [completedLocations, currentSector, hasAllSeeing, scanLevel]);
 
     const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
         const canvas = canvasRef.current;
