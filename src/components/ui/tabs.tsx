@@ -5,7 +5,7 @@ import { Root, List, Trigger, Content } from "@radix-ui/react-tabs";
 
 import { cn } from "@/lib/utils";
 
-function Tabs({ className, ...props }: ComponentProps<typeof Root>) {
+export function Tabs({ className, ...props }: ComponentProps<typeof Root>) {
     return (
         <Root
             data-slot="tabs"
@@ -15,7 +15,7 @@ function Tabs({ className, ...props }: ComponentProps<typeof Root>) {
     );
 }
 
-function TabsList({ className, ...props }: ComponentProps<typeof List>) {
+export function TabsList({ className, ...props }: ComponentProps<typeof List>) {
     return (
         <List
             data-slot="tabs-list"
@@ -28,7 +28,10 @@ function TabsList({ className, ...props }: ComponentProps<typeof List>) {
     );
 }
 
-function TabsTrigger({ className, ...props }: ComponentProps<typeof Trigger>) {
+export function TabsTrigger({
+    className,
+    ...props
+}: ComponentProps<typeof Trigger>) {
     return (
         <Trigger
             data-slot="tabs-trigger"
@@ -41,7 +44,10 @@ function TabsTrigger({ className, ...props }: ComponentProps<typeof Trigger>) {
     );
 }
 
-function TabsContent({ className, ...props }: ComponentProps<typeof Content>) {
+export function TabsContent({
+    className,
+    ...props
+}: ComponentProps<typeof Content>) {
     return (
         <Content
             data-slot="tabs-content"
@@ -50,5 +56,3 @@ function TabsContent({ className, ...props }: ComponentProps<typeof Content>) {
         />
     );
 }
-
-export { Tabs, TabsList, TabsTrigger, TabsContent };
