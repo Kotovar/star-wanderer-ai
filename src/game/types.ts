@@ -614,9 +614,11 @@ export type ArtifactType =
     | "fuel_free"
     | "crew_immortal"
     | "crit_chance"
-    | "scan_boost"
     | "artifact_finder"
     | "damage_boost"
+    | "module_armor"
+    | "nanite_repair"
+    | "quantum_scan" // Quantum scanner - requires scanner module
     // Cursed positive effects
     | "abyss_power" // Big power boost but happiness drain
     | "all_seeing" // See all enemies but more ambushes
@@ -626,8 +628,7 @@ export type ArtifactType =
     | "critical_overload" // Massive crit but self damage
     | "dark_shield" // Strong shield but morale drain
     | "ai_control" // Ship can operate without crew
-    | "void_engine" // Free travel but crew suffering
-    | "module_armor"; // Bonus armor to all modules
+    | "void_engine"; // Free travel but crew suffering
 
 export type ArtifactNegativeType =
     | "happiness_drain" // -X happiness per turn

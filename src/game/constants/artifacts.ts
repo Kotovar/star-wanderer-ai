@@ -11,7 +11,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         name: "Вечное Ядро",
         description:
             "Древний реактор, работающий без топлива. Генерирует бесплатную энергию.",
-        effect: { type: "free_power", value: 5, active: false },
+        effect: { type: "free_power", value: 10, active: false },
         discovered: false,
         researched: false,
         requiresScientistLevel: 2,
@@ -21,8 +21,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         id: "nanite_hull",
         name: "Нанитовая Обшивка",
         description:
-            "Микроскопические роботы постоянно ремонтируют корпус корабля.",
-        effect: { type: "shield_regen", value: 10, active: false },
+            "Микроскопические роботы постоянно ремонтируют модули корабля (+5% здоровья каждый ход).",
+        effect: { type: "nanite_repair", value: 5, active: false },
         discovered: false,
         researched: false,
         requiresScientistLevel: 2,
@@ -32,8 +32,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         id: "quantum_scanner",
         name: "Квантовый Сканер",
         description:
-            "Сканер с квантовым процессором. Значительно увеличивает дальность обнаружения.",
-        effect: { type: "scan_boost", value: 2, active: false },
+            "Сканер с квантовым процессором. +5 к дальности сканирования и показывает скрытые объекты.",
+        effect: { type: "quantum_scan", value: 5, active: false },
         discovered: false,
         researched: false,
         requiresScientistLevel: 2,
@@ -42,8 +42,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "plasma_injector",
         name: "Плазменный Инжектор",
-        description: "Усиливает урон всего оружия корабля на 20%.",
-        effect: { type: "damage_boost", value: 0.2, active: false },
+        description: "Усиливает урон всего оружия корабля на 30%.",
+        effect: { type: "damage_boost", value: 0.3, active: false },
         discovered: false,
         researched: false,
         requiresScientistLevel: 2,
@@ -53,8 +53,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         id: "crystalline_armor",
         name: "Кристаллическая Броня",
         description:
-            "Древнее покрытие из кристаллов. +2 к защите каждого модуля корабля.",
-        effect: { type: "module_armor", value: 2, active: false },
+            "Древнее покрытие из кристаллов. +3 к защите каждого модуля корабля.",
+        effect: { type: "module_armor", value: 3, active: false },
         discovered: false,
         researched: false,
         requiresScientistLevel: 2,
@@ -66,8 +66,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         id: "mirror_shield",
         name: "Зеркальный Щит",
         description:
-            "20% шанс отразить атаку в случайный модуль врага без урона по кораблю.",
-        effect: { type: "damage_reflect", value: 0.2, active: false },
+            "30% шанс отразить атаку в случайный модуль врага без урона по кораблю.",
+        effect: { type: "damage_reflect", value: 0.3, active: false },
         discovered: false,
         researched: false,
         requiresScientistLevel: 3,
@@ -98,8 +98,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "critical_matrix",
         name: "Критическая Матрица",
-        description: "25% шанс нанести критический удар (двойной урон) в бою.",
-        effect: { type: "crit_chance", value: 0.25, active: false },
+        description: "35% шанс нанести критический удар (двойной урон) в бою.",
+        effect: { type: "crit_chance", value: 0.35, active: false },
         discovered: false,
         researched: false,
         requiresScientistLevel: 3,
@@ -149,8 +149,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "abyss_reactor",
         name: "⚛️ Реактор Бездны",
-        description: "+15⚡ энергии каждый ход. Но тьма пожирает души экипажа.",
-        effect: { type: "abyss_power", value: 15, active: false },
+        description: "+25⚡ энергии каждый ход. Но тьма пожирает души экипажа.",
+        effect: { type: "abyss_power", value: 25, active: false },
         negativeEffect: {
             type: "happiness_drain",
             value: 5,
@@ -198,8 +198,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "black_box",
         name: "📦 Чёрный Ящик",
-        description: "+50% ко всем наградам в кредитах. Но что-то ломается.",
-        effect: { type: "credit_booster", value: 0.5, active: false },
+        description: "+75% ко всем наградам в кредитах. Но что-то ломается.",
+        effect: { type: "credit_booster", value: 0.75, active: false },
         negativeEffect: {
             type: "module_damage",
             value: 5,
@@ -214,8 +214,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "parasitic_nanites",
         name: "🔧 Паразитические Наниты",
-        description: "Все модули автоматически чинятся на 3% за ход.",
-        effect: { type: "auto_repair", value: 3, active: false },
+        description: "Все модули автоматически чинятся на 8% за ход.",
+        effect: { type: "auto_repair", value: 8, active: false },
         negativeEffect: {
             type: "crew_desertion",
             value: 1,
@@ -230,8 +230,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "overload_matrix",
         name: "💥 Матрица Перегрузки",
-        description: "+75% критический урон в бою. Мощность сжигает системы.",
-        effect: { type: "critical_overload", value: 0.75, active: false },
+        description: "+100% критический урон в бою. Мощность сжигает системы.",
+        effect: { type: "critical_overload", value: 1.0, active: false },
         negativeEffect: {
             type: "self_damage",
             value: 75,
@@ -247,8 +247,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "dark_shield_generator",
         name: "🛡️ Тёмный Щит",
-        description: "+50 к максимальным щитам. Но экипаж чувствует холод.",
-        effect: { type: "dark_shield", value: 50, active: false },
+        description: "+100 к максимальным щитам. Но экипаж чувствует холод.",
+        effect: { type: "dark_shield", value: 100, active: false },
         negativeEffect: {
             type: "morale_drain",
             value: 3,

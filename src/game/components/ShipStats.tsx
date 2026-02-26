@@ -26,8 +26,8 @@ export function ShipStats() {
         0,
     );
     const currentHull = ship.modules.reduce((s, m) => s + m.health, 0);
-    // Calculate defense from modules (each module has defense = level, or 1 by default)
-    const totalDefense = ship.modules.reduce((s, m) => s + (m.defense || 0), 0);
+    // Use ship.armor which includes Crystal Armor artifact bonus
+    const totalDefense = ship.armor || 0;
 
     // Get engine level from modules
     const engines = ship.modules.filter(
