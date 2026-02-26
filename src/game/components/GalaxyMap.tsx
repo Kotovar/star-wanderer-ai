@@ -8,7 +8,7 @@ import {
     drawTierRings,
     canSeeTier4,
     getSectorRadius,
-} from "./galaxy-map-utils";
+} from "@/game/galaxy/galaxy-map-utils";
 
 // Generate stars once and reuse them
 function generateStars(

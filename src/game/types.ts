@@ -665,7 +665,7 @@ export interface AncientBoss {
     id: string;
     name: string;
     description: string;
-    tier: 1 | 2 | 3 | 4; // Minimum sector tier to spawn
+    tier: GalaxyTier; // Minimum sector tier to spawn
     modules: BossModule[];
     shields: number;
     regenRate: number; // HP regenerated per turn in combat

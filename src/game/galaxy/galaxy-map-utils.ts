@@ -1,7 +1,13 @@
-import type { Sector, Module, StarType } from "../types";
+import type { Sector, Module, StarType, GalaxyTier } from "@/game/types";
+
+type TierDetails = {
+    ring: string;
+    glow: string;
+    name: string;
+};
 
 // Tier colors
-export const TIER_COLORS = {
+export const TIER_COLORS: Record<GalaxyTier, TierDetails> = {
     1: {
         ring: "#00ff41",
         glow: "rgba(0, 255, 65, 0.15)",
@@ -82,9 +88,9 @@ export function canAccessTier(
 
 // Get radius for sector based on tier
 export function getSectorRadius(maxRadius: number, tier: number): number {
-    if (tier === 1) return maxRadius * 0.33;
-    if (tier === 2) return maxRadius * 0.6;
-    if (tier === 3) return maxRadius * 0.85;
+    if (tier === 1) return maxRadius * 0.38;
+    if (tier === 2) return maxRadius * 0.67;
+    if (tier === 3) return maxRadius * 0.87;
     if (tier === 4) return maxRadius * 1.1;
     return maxRadius * 0.9;
 }
@@ -190,25 +196,26 @@ function drawSectorText(
     canAffordFuel: boolean,
     fuelCost: number,
 ) {
-    ctx.font = `${isCurrent ? "bold " : ""}12px Share Tech Mono`;
+    if (sector.visited || isCurrent) {
+        ctx.font = "10px Share Tech Mono";
+        ctx.textAlign = "center";
+        ctx.fillStyle = isCurrent ? "#ffb000" : "#00ff41";
+        ctx.fillText("✓", x, y - 26);
+    }
+
+    ctx.font = `${isCurrent ? "bold " : ""}10px Share Tech Mono`;
     ctx.fillStyle = isAccessible
         ? isCurrent
             ? "#ffb000"
             : TIER_COLORS[sector.tier].ring
         : "#555";
     ctx.textAlign = "center";
-    ctx.fillText(sector.name, x, y - 20);
-
-    if (sector.visited || isCurrent) {
-        ctx.font = "10px Share Tech Mono";
-        ctx.fillStyle = isCurrent ? "#ffb000" : "#00ff41";
-        ctx.fillText("✓", x + 32, y - 22);
-    }
+    ctx.fillText(sector.name, x, y - 18);
 
     if (isAccessible && !isCurrent) {
-        ctx.font = "11px Share Tech Mono";
+        ctx.font = "8px Share Tech Mono";
         ctx.fillStyle = canAffordFuel ? "#9933ff" : "#ff0040";
-        ctx.fillText(`⛽${fuelCost}`, x, y - 6);
+        ctx.fillText(`⛽${fuelCost}`, x, y - 10);
     }
 }
 
@@ -225,17 +232,17 @@ export function drawTierRings(
         id?: string;
     }>,
 ) {
-    const tierRadii = [
+    const tierRadius = [
         maxRadius * 0.5,
-        maxRadius * 0.8,
+        maxRadius * 0.75,
         maxRadius * 0.95,
         maxRadius * 1.15,
     ];
 
     const canSeeT4 = canSeeTier4(modules, artifacts);
 
-    tierRadii.forEach((radius, idx) => {
-        const tier = (idx + 1) as 1 | 2 | 3 | 4;
+    tierRadius.forEach((radius, idx) => {
+        const tier = (idx + 1) as GalaxyTier;
         const colors = TIER_COLORS[tier];
         const isAccessible = canAccessTier(tier, modules, captainLevel);
 
@@ -252,7 +259,7 @@ function drawTierGlow(
     centerX: number,
     centerY: number,
     radius: number,
-    colors: (typeof TIER_COLORS)[1],
+    colors: TierDetails,
     isAccessible: boolean,
 ) {
     const glowGradient = ctx.createRadialGradient(
@@ -280,7 +287,7 @@ function drawTierRing(
     centerX: number,
     centerY: number,
     radius: number,
-    colors: (typeof TIER_COLORS)[1],
+    colors: TierDetails,
     isAccessible: boolean,
     tier: number,
 ) {
