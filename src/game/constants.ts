@@ -1141,8 +1141,9 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "mirror_shield",
         name: "Зеркальный Щит",
-        description: "Отражает 30% полученного урона обратно атакующему.",
-        effect: { type: "damage_reflect", value: 0.3, active: false },
+        description:
+            "20% шанс отразить атаку в случайный модуль врага без урона по кораблю.",
+        effect: { type: "damage_reflect", value: 0.2, active: false },
         discovered: false,
         researched: false,
         requiresScientistLevel: 3,

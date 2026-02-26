@@ -366,7 +366,7 @@ export const useGameStore = create<
                 (a) => a.effect.type === "module_armor" && a.effect.active,
             );
             if (crystallineArmor) {
-                const armorBonus = crystallineArmor.effect.value || 0;
+                const armorBonus = crystallineArmor.effect.value || 2;
                 totalDefense += state.ship.modules.length * armorBonus;
             }
 
@@ -4482,18 +4482,29 @@ export const useGameStore = create<
                 const overflow = eDmg - sDmg;
 
                 // ═══════════════════════════════════════════════════════════════
-                // MIRROR SHIELD - Reflect 30% of damage back to enemy
+                // MIRROR SHIELD - Chance to reflect attack to random enemy module
+                // When triggered, attack hits enemy module instead of player's ship
                 // ═══════════════════════════════════════════════════════════════
                 const mirrorShield = state.artifacts.find(
                     (a) =>
                         a.effect.type === "damage_reflect" && a.effect.active,
                 );
-                if (mirrorShield && overflow > 0) {
-                    const reflectPercent = mirrorShield.effect.value || 0.3;
-                    const reflectedDamage = Math.floor(
-                        overflow * reflectPercent,
+                let attackReflected = false;
+                if (
+                    mirrorShield &&
+                    updatedCombat &&
+                    Math.random() < (mirrorShield.effect.value ?? 0.2)
+                ) {
+                    // Reflect chance from artifact value
+                    const aliveModules = updatedCombat.enemy.modules.filter(
+                        (m) => m.health > 0,
                     );
-                    if (reflectedDamage > 0) {
+                    if (aliveModules.length > 0) {
+                        const randomTarget =
+                            aliveModules[
+                                Math.floor(Math.random() * aliveModules.length)
+                            ];
+                        const reflectedDamage = overflow > 0 ? overflow : eDmg;
                         set((s) => {
                             if (!s.currentCombat) return s;
                             return {
@@ -4501,23 +4512,34 @@ export const useGameStore = create<
                                     ...s.currentCombat,
                                     enemy: {
                                         ...s.currentCombat.enemy,
-                                        shields: Math.max(
-                                            0,
-                                            s.currentCombat.enemy.shields -
-                                                reflectedDamage,
-                                        ),
+                                        modules:
+                                            s.currentCombat.enemy.modules.map(
+                                                (m) =>
+                                                    m.id === randomTarget.id
+                                                        ? {
+                                                              ...m,
+                                                              health: Math.max(
+                                                                  0,
+                                                                  m.health -
+                                                                      reflectedDamage,
+                                                              ),
+                                                          }
+                                                        : m,
+                                            ),
                                     },
                                 },
                             };
                         });
                         get().addLog(
-                            `🛡️ Зеркальный щит! Отражено ${reflectedDamage} урона!`,
+                            `🛡️ ЗЕРКАЛЬНЫЙ ЩИТ! Атака отражена в "${randomTarget.name}"! -${reflectedDamage}%`,
                             "info",
                         );
+                        attackReflected = true;
                     }
                 }
 
-                if (overflow > 0 && tgt) {
+                // Only apply damage to player's modules if attack was NOT reflected
+                if (overflow > 0 && tgt && !attackReflected) {
                     // ═══════════════════════════════════════════════════════════════
                     // MODULE DEFENSE (ARMOR) - Flat damage reduction
                     // Each point of defense reduces damage by 1
@@ -4605,67 +4627,131 @@ export const useGameStore = create<
                 }
             } else if (tgt) {
                 // ═══════════════════════════════════════════════════════════════
-                // CRYSTALLINE ARMOR - Module damage reduction
+                // MIRROR SHIELD - Chance to reflect attack to random enemy module
+                // When triggered, attack hits enemy module instead of player's ship
                 // ═══════════════════════════════════════════════════════════════
-                let moduleDefense = 0;
-                const crystallineCrew = state.crew.filter(
-                    (c) => c.race === "crystalline",
+                const mirrorShield = state.artifacts.find(
+                    (a) =>
+                        a.effect.type === "damage_reflect" && a.effect.active,
                 );
-                crystallineCrew.forEach((c) => {
-                    const race = RACES[c.race];
-                    if (race?.specialTraits) {
-                        const armorTrait = race.specialTraits.find(
-                            (t) => t.id === "crystal_armor",
+                let attackReflected = false;
+                if (
+                    mirrorShield &&
+                    updatedCombat &&
+                    Math.random() < (mirrorShield.effect.value ?? 0.2)
+                ) {
+                    // Reflect chance from artifact value
+                    const aliveModules = updatedCombat.enemy.modules.filter(
+                        (m) => m.health > 0,
+                    );
+                    if (aliveModules.length > 0) {
+                        const randomTarget =
+                            aliveModules[
+                                Math.floor(Math.random() * aliveModules.length)
+                            ];
+                        set((s) => {
+                            if (!s.currentCombat) return s;
+                            return {
+                                currentCombat: {
+                                    ...s.currentCombat,
+                                    enemy: {
+                                        ...s.currentCombat.enemy,
+                                        modules:
+                                            s.currentCombat.enemy.modules.map(
+                                                (m) =>
+                                                    m.id === randomTarget.id
+                                                        ? {
+                                                              ...m,
+                                                              health: Math.max(
+                                                                  0,
+                                                                  m.health -
+                                                                      eDmg,
+                                                              ),
+                                                          }
+                                                        : m,
+                                            ),
+                                    },
+                                },
+                            };
+                        });
+                        get().addLog(
+                            `🛡️ ЗЕРКАЛЬНЫЙ ЩИТ! Атака отражена в "${randomTarget.name}"! -${eDmg}%`,
+                            "info",
                         );
-                        if (armorTrait && armorTrait.effects.moduleDefense) {
-                            moduleDefense += armorTrait.effects
-                                .moduleDefense as number;
-                        }
+                        attackReflected = true;
                     }
-                });
-
-                const reducedDamage = Math.floor(eDmg * (1 - moduleDefense));
-                const wasDestroyed = tgt.health <= reducedDamage;
-                set((s) => ({
-                    ship: {
-                        ...s.ship,
-                        modules: s.ship.modules.map((m) =>
-                            m.id === tgt.id
-                                ? {
-                                      ...m,
-                                      health: Math.max(
-                                          0,
-                                          m.health - reducedDamage,
-                                      ),
-                                  }
-                                : m,
-                        ),
-                    },
-                }));
-
-                if (moduleDefense > 0 && reducedDamage < eDmg) {
-                    get().addLog(
-                        `💎 Кристаллическая броня: -${eDmg - reducedDamage} урона`,
-                        "info",
-                    );
                 }
-                get().addLog(
-                    `Враг по "${tgt.name}": -${reducedDamage}%`,
-                    "warning",
-                );
 
-                // Damage crew in module
-                let crewDamage = Math.floor(reducedDamage * 0.5);
-                // Extra damage to crew in broken modules (health < 30)
-                if (tgt.health < 30) {
-                    crewDamage = Math.floor(crewDamage * 1.5);
-                    get().addLog(
-                        `⚠️ Модуль повреждён! Экипаж получает повышенный урон!`,
-                        "error",
+                // Only apply damage if attack was NOT reflected
+                if (!attackReflected) {
+                    // ═══════════════════════════════════════════════════════════════
+                    // CRYSTALLINE ARMOR - Module damage reduction
+                    // ═══════════════════════════════════════════════════════════════
+                    let moduleDefense = 0;
+                    const crystallineCrew = state.crew.filter(
+                        (c) => c.race === "crystalline",
                     );
-                }
-                damageCrewInModule(tgt.id, crewDamage, wasDestroyed);
-            }
+                    crystallineCrew.forEach((c) => {
+                        const race = RACES[c.race];
+                        if (race?.specialTraits) {
+                            const armorTrait = race.specialTraits.find(
+                                (t) => t.id === "crystal_armor",
+                            );
+                            if (
+                                armorTrait &&
+                                armorTrait.effects.moduleDefense
+                            ) {
+                                moduleDefense += armorTrait.effects
+                                    .moduleDefense as number;
+                            }
+                        }
+                    });
+
+                    const reducedDamage = Math.floor(
+                        eDmg * (1 - moduleDefense),
+                    );
+                    const wasDestroyed = tgt.health <= reducedDamage;
+                    set((s) => ({
+                        ship: {
+                            ...s.ship,
+                            modules: s.ship.modules.map((m) =>
+                                m.id === tgt.id
+                                    ? {
+                                          ...m,
+                                          health: Math.max(
+                                              0,
+                                              m.health - reducedDamage,
+                                          ),
+                                      }
+                                    : m,
+                            ),
+                        },
+                    }));
+
+                    if (moduleDefense > 0 && reducedDamage < eDmg) {
+                        get().addLog(
+                            `💎 Кристаллическая броня: -${eDmg - reducedDamage} урона`,
+                            "info",
+                        );
+                    }
+                    get().addLog(
+                        `Враг по "${tgt.name}": -${reducedDamage}%`,
+                        "warning",
+                    );
+
+                    // Damage crew in module
+                    let crewDamage = Math.floor(reducedDamage * 0.5);
+                    // Extra damage to crew in broken modules (health < 30)
+                    if (tgt.health < 30) {
+                        crewDamage = Math.floor(crewDamage * 1.5);
+                        get().addLog(
+                            `⚠️ Модуль повреждён! Экипаж получает повышенный урон!`,
+                            "error",
+                        );
+                    }
+                    damageCrewInModule(tgt.id, crewDamage, wasDestroyed);
+                } // end if !attackReflected
+            } // end else if (tgt)
 
             // Remove dead crew from ship
             const deadCrew = get().crew.filter((c) => c.health <= 0);
