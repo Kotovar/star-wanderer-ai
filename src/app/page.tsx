@@ -275,7 +275,7 @@ export default function Home() {
                     </div>
 
                     {/* Event Journal - at the bottom */}
-                    <div className="absolute bottom-0 left-0 right-0 z-10">
+                    <div className="absolute bottom-0 left-0 right-0 z-10 px-5">
                         <Accordion type="multiple" className="w-full">
                             <AccordionItem
                                 value="log"
@@ -284,8 +284,8 @@ export default function Home() {
                                 <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer truncate">
                                     ЖУРНАЛ СОБЫТИЙ
                                 </AccordionTrigger>
-                                <AccordionContent className="overflow-y-scroll">
-                                    <div className="max-h-50">
+                                <AccordionContent>
+                                    <div className="max-h-50 overflow-y-scroll">
                                         <GameLog />
                                     </div>
                                 </AccordionContent>
