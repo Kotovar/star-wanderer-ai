@@ -11,12 +11,6 @@ import { CrewTab } from "./station/CrewTab";
 import { ServicesTab } from "./station/ServicesTab";
 import { ModuleUpgradeModal } from "./station/ModuleUpgradeModal";
 import { Button } from "@/components/ui/button";
-// import {
-//     Dialog,
-//     DialogContent,
-//     DialogHeader,
-//     DialogTitle,
-// } from "@/components/ui/dialog";
 
 // Re-export these from the original file - they contain complex logic
 export {
@@ -30,7 +24,6 @@ export {
 
 import {
     generateStationItems,
-    // getStationCrewCount,
     generateStationCrew,
 } from "./station/station-data";
 

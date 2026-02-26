@@ -2,13 +2,21 @@
 
 import { useMemo, useEffect } from "react";
 import { useGameStore } from "@/game/store";
-import { TRADE_GOODS } from "@/game/constants";
+import { TRADE_GOODS } from "@/game/constants/goods";
 import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
-import type { RaceId, Contract, Profession, Quality } from "@/game/types";
+import type {
+    RaceId,
+    Contract,
+    Profession,
+    Quality,
+    Goods,
+} from "@/game/types";
 import { getRandomRaceName } from "@/game/races/utils";
 import { generateCrewTraits } from "@/game/crew/utils";
 import { PROFESSION_NAMES, CREW_BASE_PRICES } from "@/game/constants/crew";
+
+const INITIAL_STOCK: Goods[] = ["water", "food", "medicine"];
 
 export function FriendlyShipPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
@@ -46,7 +54,7 @@ export function FriendlyShipPanel() {
         if (!shipId || friendlyShipStock[shipId]) return;
 
         const initialStock: Record<string, number> = {};
-        ["water", "food", "medicine"].forEach((gid, idx) => {
+        INITIAL_STOCK.forEach((gid, idx) => {
             initialStock[gid] =
                 5 + Math.floor(seedRandom(seed + idx + 10) * 10);
         });
@@ -165,7 +173,7 @@ export function FriendlyShipPanel() {
             ship.cargo.some((cargo) => cargo.contractId === c.id),
     );
 
-    const tradeGoods = ["water", "food", "medicine"].map((gid, idx) => ({
+    const tradeGoods = INITIAL_STOCK.map((gid, idx) => ({
         id: gid,
         ...TRADE_GOODS[gid],
         price: Math.floor(

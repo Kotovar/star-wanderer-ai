@@ -5,3 +5,5 @@ export * from "./signals";
 export * from "./modules";
 export * from "./planets";
 export * from "./races";
+export * from "./goods";
+export * from "./weapons";

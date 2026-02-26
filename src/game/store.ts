@@ -13,6 +13,7 @@ import type {
     RaceId,
     BattleResult,
     CargoItem,
+    Goods,
 } from "@/game/types";
 import { TRADE_GOODS, WEAPON_TYPES } from "@/game/constants";
 import { initialModules, STARTING_FUEL } from "@/game/modules";
@@ -31,6 +32,7 @@ import { getRandomUndiscoveredArtifact } from "@/game/artifacts/utils";
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { getBossById } from "@/game/bosses/utils";
 import { determineSignalOutcome } from "@/game/signals/utils";
+import { typedKeys } from "@/lib/utils";
 
 // Initialize station prices and stock
 const initializeStationData = (
@@ -57,7 +59,7 @@ const initializeStationData = (
                 const rareMineralDiscount =
                     stationConfig?.rareMineralDiscount ?? 1;
 
-                for (const goodId in TRADE_GOODS) {
+                for (const goodId of typedKeys(TRADE_GOODS)) {
                     const good = TRADE_GOODS[goodId];
                     const priceVar = 0.7 + Math.random() * 0.6;
                     const sellPrice = Math.floor(good.basePrice * priceVar);
@@ -262,8 +264,8 @@ export const useGameStore = create<
         buyItem: (item: ShopItem, targetModuleId?: number) => void;
         repairShip: () => void;
         healCrew: () => void;
-        buyTradeGood: (goodId: string, quantity?: number) => void;
-        sellTradeGood: (goodId: string, quantity?: number) => void;
+        buyTradeGood: (goodId: Goods, quantity?: number) => void;
+        sellTradeGood: (goodId: Goods, quantity?: number) => void;
         installModuleFromCargo: (
             cargoIndex: number,
             x: number,
@@ -2109,13 +2111,9 @@ export const useGameStore = create<
                         resultType = "credits";
                         resultValue = reward;
                     } else if (outcome < 0.7) {
+                        const keys = typedKeys(TRADE_GOODS);
                         const goodId =
-                            Object.keys(TRADE_GOODS)[
-                                Math.floor(
-                                    Math.random() *
-                                        Object.keys(TRADE_GOODS).length,
-                                )
-                            ];
+                            keys[Math.floor(Math.random() * keys.length)];
                         set((s) => ({
                             ship: {
                                 ...s.ship,
@@ -3279,11 +3277,15 @@ export const useGameStore = create<
                 ...s.ship,
                 tradeGoods: [
                     ...s.ship.tradeGoods,
-                    { item: "minerals", quantity: mineralsGained, buyPrice: 0 },
+                    {
+                        item: "minerals" as const,
+                        quantity: mineralsGained,
+                        buyPrice: 0,
+                    },
                     ...(rareGained > 0
                         ? [
                               {
-                                  item: "rare_minerals",
+                                  item: "rare_minerals" as const,
                                   quantity: rareGained,
                                   buyPrice: 0,
                               },
@@ -6727,12 +6729,8 @@ export const useGameStore = create<
             }
             case "abandoned_cargo": {
                 const creditsReward = 50 + Math.floor(Math.random() * 50); // 50-100 credits
-                const goodId =
-                    Object.keys(TRADE_GOODS)[
-                        Math.floor(
-                            Math.random() * Object.keys(TRADE_GOODS).length,
-                        )
-                    ];
+                const keys = typedKeys(TRADE_GOODS);
+                const goodId = keys[Math.floor(Math.random() * keys.length)];
                 const quantity = 5 + Math.floor(Math.random() * 10);
                 const goodName = TRADE_GOODS[goodId].name;
 

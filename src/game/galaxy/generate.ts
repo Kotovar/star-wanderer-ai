@@ -1,5 +1,4 @@
 import { RACES } from "@/game/constants/races";
-import { ENEMY_TYPES } from "@/game/constants";
 import {
     GalaxyTier,
     Sector,
@@ -20,6 +19,8 @@ import { PLANET_TYPES } from "@/game/constants/planets";
 import { getRandomRace } from "@/game/races/utils";
 import { getRandomBossForTier } from "@/game/bosses/utils";
 import { ANCIENT_BOSSES } from "@/game/constants/bosses";
+
+const ENEMY_TYPES = ["Пираты", "Рейдеры", "Наёмники", "Мародёры"];
 
 /**
  * Генерирует звезду для сектора на основе уровня и случайности

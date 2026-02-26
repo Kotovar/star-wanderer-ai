@@ -2,6 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { TRADE_GOODS } from "../../constants";
+import { typedKeys } from "@/lib/utils";
+import type { Goods } from "@/game/types";
 
 interface TradeTabProps {
     stationId: string;
@@ -16,8 +18,8 @@ interface TradeTabProps {
         cargo: Array<{ quantity: number }>;
         modules: Array<{ type: string; capacity?: number }>;
     };
-    buyTradeGood: (goodId: string, quantity: number) => void;
-    sellTradeGood: (goodId: string, quantity: number) => void;
+    buyTradeGood: (goodId: Goods, quantity: number) => void;
+    sellTradeGood: (goodId: Goods, quantity: number) => void;
 }
 
 export function TradeTab({
@@ -37,10 +39,12 @@ export function TradeTab({
         ? cargoModule.capacity - currentCargo
         : 0;
 
+    const tradeGoodsKeys = typedKeys(TRADE_GOODS);
+
     return (
         <div className="flex flex-col gap-2.5 max-h-100 overflow-y-auto pr-1 pb-2">
             {stationId &&
-                Object.keys(TRADE_GOODS).map((goodId) => {
+                tradeGoodsKeys.map((goodId) => {
                     const good = { id: goodId, ...TRADE_GOODS[goodId] };
                     const prices = stationPrices[stationId]?.[goodId];
                     const stock = stationStock[stationId]?.[goodId] || 0;
@@ -69,14 +73,14 @@ export function TradeTab({
 }
 
 interface TradeGoodRowProps {
-    good: { id: string; name: string };
+    good: { id: Goods; name: string };
     prices: { buy: number; sell: number };
     stock: number;
     playerGood: { item: string; quantity: number } | undefined;
     credits: number;
     availSpace: number;
-    onBuy: (goodId: string, quantity: number) => void;
-    onSell: (goodId: string, quantity: number) => void;
+    onBuy: (goodId: Goods, quantity: number) => void;
+    onSell: (goodId: Goods, quantity: number) => void;
 }
 
 function TradeGoodRow({
@@ -154,14 +158,14 @@ function TradeButtons({
     onBuy,
     onSell,
 }: {
-    goodId: string;
+    goodId: Goods;
     prices: { buy: number; sell: number };
     stock: number;
     playerGood: { item: string; quantity: number } | undefined;
     credits: number;
     availSpace: number;
-    onBuy: (goodId: string, quantity: number) => void;
-    onSell: (goodId: string, quantity: number) => void;
+    onBuy: (goodId: Goods, quantity: number) => void;
+    onSell: (goodId: Goods, quantity: number) => void;
 }) {
     return (
         <div className="flex flex-wrap gap-1">

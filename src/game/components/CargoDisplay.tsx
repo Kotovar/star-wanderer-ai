@@ -1,7 +1,7 @@
 "use client";
 
 import { useGameStore } from "../store";
-import { TRADE_GOODS } from "../constants";
+import { TRADE_GOODS } from "../constants/goods";
 
 export function CargoDisplay() {
     const ship = useGameStore((s) => s.ship);

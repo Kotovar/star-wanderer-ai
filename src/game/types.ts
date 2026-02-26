@@ -383,8 +383,16 @@ export interface CargoItem {
     isModule?: boolean; // True if this cargo is a ship module
 }
 
+export type Goods =
+    | "water"
+    | "food"
+    | "medicine"
+    | "electronics"
+    | "minerals"
+    | "rare_minerals";
+
 export interface TradeGood {
-    item: string;
+    item: Goods;
     quantity: number;
     buyPrice: number;
 }
