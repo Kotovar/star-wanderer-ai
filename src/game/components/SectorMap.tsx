@@ -877,7 +877,7 @@ export function SectorMap() {
     };
 
     return (
-        <div ref={containerRef} className="w-full relative">
+        <div ref={containerRef} className="w-full h-full relative">
             {currentSector?.star?.type === "blackhole" && (
                 <div className="bg-[rgba(255,0,255,0.1)] border border-[#ff00ff] p-2 mb-2 text-center text-sm">
                     <span className="text-[#ff00ff] font-bold">

@@ -178,6 +178,8 @@ export default function Home() {
                     scrollbar-gutter: stable;
                 }
 
+                /* Event journal - no special positioning */
+
                 @media (max-width: 655px) {
                     .panel {
                         margin: 6px;
@@ -267,31 +269,28 @@ export default function Home() {
                 </div>
 
                 {/* Right Panel */}
-                <div className="panel flex-1 lg:flex-1 flex flex-col mt-4 lg:mt-0 min-w-0 lg:h-[calc(100vh-90px)] pl-3">
-                    <div className="flex-1 flex flex-col min-h-0">
-                        {/* Event Display (maps and other panels) */}
-                        <div className="flex-1 overflow-hidden min-h-0">
-                            <EventDisplay />
-                        </div>
+                <div className="panel flex-1 lg:flex-1 flex flex-col mt-4 lg:mt-0 min-w-0 lg:h-[calc(100vh-90px)] pl-3 relative">
+                    <div className="flex-1 overflow-hidden min-h-0 pb-14">
+                        <EventDisplay />
+                    </div>
 
-                        {/* Event Journal */}
-                        <div className="shrink-0">
-                            <Accordion type="multiple" className="h-full">
-                                <AccordionItem
-                                    value="log"
-                                    className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5 overflow-hidden h-full"
-                                >
-                                    <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer truncate">
-                                        ЖУРНАЛ СОБЫТИЙ
-                                    </AccordionTrigger>
-                                    <AccordionContent className="overflow-y-scroll">
-                                        <div className="max-h-50">
-                                            <GameLog />
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            </Accordion>
-                        </div>
+                    {/* Event Journal - at the bottom */}
+                    <div className="absolute bottom-0 left-0 right-0 z-10">
+                        <Accordion type="multiple" className="w-full">
+                            <AccordionItem
+                                value="log"
+                                className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5 overflow-hidden"
+                            >
+                                <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer truncate">
+                                    ЖУРНАЛ СОБЫТИЙ
+                                </AccordionTrigger>
+                                <AccordionContent className="overflow-y-scroll">
+                                    <div className="max-h-50">
+                                        <GameLog />
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
                     </div>
                 </div>
             </main>

@@ -361,7 +361,7 @@ export function GalaxyMap() {
     };
 
     return (
-        <div ref={containerRef} className="w-full relative">
+        <div ref={containerRef} className="w-full h-full relative">
             <canvas
                 ref={canvasRef}
                 className="border-2 border-[#00ff41] bg-[#050810] cursor-grab w-full h-full"
