@@ -1,8 +1,13 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { useGameStore } from "../store";
 import { Location, PlanetType, StarType, StormType } from "../types";
+
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 3;
+const ZOOM_SENSITIVITY = 0.001;
+const DRAG_THRESHOLD = 5;
 
 // Seeded random helper - returns deterministic value based on location ID
 const seededRandom = (loc: Location, seed: number = 0): number => {
@@ -257,6 +262,27 @@ export function SectorMap() {
         x: number;
         y: number;
     } | null>(null);
+
+    // Zoom and pan state
+    const [zoom, setZoom] = useState(1);
+    const [offset, setOffset] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const dragStartRef = useRef({ x: 0, y: 0 });
+    const offsetStartRef = useRef({ x: 0, y: 0 });
+    const hasMovedRef = useRef(false);
+    const animationFrameRef = useRef<number | null>(null);
+
+    // Cache stars to prevent flickering
+    const starsRef = useRef<Array<{
+        x: number;
+        y: number;
+        size: number;
+        brightness: number;
+    }> | null>(null);
+
+    // Off-screen canvas for static background (stars)
+    const bgCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
     const scanLevel = getScanLevel();
     const scanRange = getScanRange();
 
@@ -265,14 +291,11 @@ export function SectorMap() {
         (a) => a.effect.type === "all_seeing" && a.effect.active,
     );
 
-    useEffect(() => {
+    // Draw the canvas content
+    const drawCanvas = useCallback(() => {
         const canvas = canvasRef.current;
         const container = containerRef.current;
         if (!canvas || !container || !currentSector) return;
-
-        const rect = container.getBoundingClientRect();
-        canvas.width = Math.max(rect.width, 500);
-        canvas.height = Math.max(rect.width * 0.65, 350);
 
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
@@ -281,23 +304,18 @@ export function SectorMap() {
         const height = canvas.height;
         const centerX = width / 2;
         const centerY = height / 2;
-        const maxRadius = Math.min(width, height) * 0.45;
+        const baseMaxRadius = Math.min(width, height) * 0.45;
 
-        // Clear with space background
-        ctx.fillStyle = "#050810";
-        ctx.fillRect(0, 0, width, height);
-
-        // Draw distant stars
-        for (let i = 0; i < 150; i++) {
-            const x = Math.random() * width;
-            const y = Math.random() * height;
-            const size = Math.random() * 1.5;
-            const brightness = Math.random();
-            ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + brightness * 0.7})`;
-            ctx.beginPath();
-            ctx.arc(x, y, size, 0, Math.PI * 2);
-            ctx.fill();
+        // Draw cached background (stars) - no transform
+        if (bgCanvasRef.current) {
+            ctx.drawImage(bgCanvasRef.current, 0, 0);
         }
+
+        // Apply transform for zoom and pan
+        ctx.save();
+        ctx.translate(centerX + offset.x, centerY + offset.y);
+        ctx.scale(zoom, zoom);
+        ctx.translate(-centerX, -centerY);
 
         // Draw central star
         const star = currentSector.star;
@@ -309,7 +327,7 @@ export function SectorMap() {
         locations.forEach((loc) => {
             // Use pre-computed distanceRatio and angle from location data
             const distanceRatio = loc.distanceRatio ?? 0.5;
-            const distance = maxRadius * distanceRatio;
+            const distance = baseMaxRadius * distanceRatio;
             const angle = loc.angle ?? 0;
 
             const x = centerX + Math.cos(angle) * distance;
@@ -420,9 +438,215 @@ export function SectorMap() {
                 ctx.fillText("(✓)", x, y + 40);
             }
         });
-    }, [completedLocations, currentSector, hasAllSeeing, scanLevel]);
+
+        ctx.restore();
+    }, [
+        currentSector,
+        completedLocations,
+        hasAllSeeing,
+        scanLevel,
+        zoom,
+        offset,
+    ]);
+
+    // Initialize canvas and background
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const container = containerRef.current;
+        if (!canvas || !container || !currentSector) return;
+
+        const rect = container.getBoundingClientRect();
+        const newWidth = Math.max(rect.width, 500);
+        const newHeight = Math.max(rect.width * 0.65, 350);
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        // Regenerate background only if canvas size changed
+        if (canvas.width !== newWidth || canvas.height !== newHeight) {
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+
+            // Create off-screen background canvas
+            const bgCanvas = document.createElement("canvas");
+            bgCanvas.width = newWidth;
+            bgCanvas.height = newHeight;
+            const bgCtx = bgCanvas.getContext("2d");
+
+            if (bgCtx) {
+                // Clear with space background
+                bgCtx.fillStyle = "#050810";
+                bgCtx.fillRect(0, 0, newWidth, newHeight);
+
+                // Generate and draw stars once
+                const stars: Array<{
+                    x: number;
+                    y: number;
+                    size: number;
+                    brightness: number;
+                }> = [];
+                for (let i = 0; i < 150; i++) {
+                    stars.push({
+                        x: Math.random() * newWidth,
+                        y: Math.random() * newHeight,
+                        size: Math.random() * 1.5,
+                        brightness: Math.random(),
+                    });
+                }
+                starsRef.current = stars;
+
+                stars.forEach((star) => {
+                    bgCtx.fillStyle = `rgba(255, 255, 255, ${0.3 + star.brightness * 0.7})`;
+                    bgCtx.beginPath();
+                    bgCtx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    bgCtx.fill();
+                });
+            }
+
+            bgCanvasRef.current = bgCanvas;
+        }
+
+        // Initial draw
+        drawCanvas();
+    }, [currentSector, drawCanvas]);
+
+    // Handle wheel zoom
+    const handleWheel = useCallback(
+        (e: React.WheelEvent<HTMLCanvasElement>) => {
+            const delta = -e.deltaY * ZOOM_SENSITIVITY;
+            const newZoom = Math.min(
+                MAX_ZOOM,
+                Math.max(MIN_ZOOM, zoom * (1 + delta)),
+            );
+            setZoom(newZoom);
+        },
+        [zoom],
+    );
+
+    // Handle mouse down for dragging
+    const handleMouseDown = useCallback(
+        (e: React.MouseEvent<HTMLCanvasElement>) => {
+            setIsDragging(true);
+            hasMovedRef.current = false;
+            dragStartRef.current = { x: e.clientX, y: e.clientY };
+            offsetStartRef.current = { ...offset };
+        },
+        [offset],
+    );
+
+    // Handle mouse move for dragging and tooltip
+    const handleMouseMove = useCallback(
+        (e: React.MouseEvent<HTMLCanvasElement>) => {
+            // Handle dragging with requestAnimationFrame for smooth rendering
+            if (isDragging) {
+                const dx = e.clientX - dragStartRef.current.x;
+                const dy = e.clientY - dragStartRef.current.y;
+
+                // Check if moved enough to be considered a drag
+                if (
+                    !hasMovedRef.current &&
+                    Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD
+                ) {
+                    hasMovedRef.current = true;
+                }
+
+                const newOffset = {
+                    x: offsetStartRef.current.x + dx,
+                    y: offsetStartRef.current.y + dy,
+                };
+
+                // Cancel previous animation frame
+                if (animationFrameRef.current) {
+                    cancelAnimationFrame(animationFrameRef.current);
+                }
+
+                // Use requestAnimationFrame for smooth dragging
+                animationFrameRef.current = requestAnimationFrame(() => {
+                    setOffset(newOffset);
+                    animationFrameRef.current = null;
+                });
+            }
+
+            // Handle tooltip
+            const canvas = canvasRef.current;
+            if (!canvas || !currentSector) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mouseX = (e.clientX - rect.left) * scaleX;
+            const mouseY = (e.clientY - rect.top) * scaleY;
+
+            // Account for zoom and pan
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const worldMouseX = (mouseX - centerX - offset.x) / zoom + centerX;
+            const worldMouseY = (mouseY - centerY - offset.y) / zoom + centerY;
+
+            let found = false;
+            currentSector.locations.forEach((loc) => {
+                if (loc.x === undefined || loc.y === undefined) return;
+                const dist = Math.sqrt(
+                    (worldMouseX - loc.x) ** 2 + (worldMouseY - loc.y) ** 2,
+                );
+                const hitboxSize = 25 / zoom;
+                if (dist < hitboxSize) {
+                    // Convert canvas coordinates to screen coordinates for tooltip
+                    const screenX = e.clientX - rect.left;
+                    const screenY = e.clientY - rect.top;
+                    setHoveredLocation({ loc, x: screenX, y: screenY });
+                    found = true;
+                }
+            });
+
+            if (!found) {
+                setHoveredLocation(null);
+            }
+        },
+        [isDragging, zoom, offset, currentSector],
+    );
+
+    // Handle mouse up to stop dragging
+    const handleMouseUp = useCallback(() => {
+        setIsDragging(false);
+        if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+            animationFrameRef.current = null;
+        }
+    }, []);
+
+    // Handle mouse leave to stop dragging
+    const handleMouseLeave = useCallback(() => {
+        setIsDragging(false);
+        if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+            animationFrameRef.current = null;
+        }
+    }, []);
+
+    // Zoom in/out buttons
+    const handleZoomIn = useCallback(() => {
+        setZoom((z) => Math.min(MAX_ZOOM, z * 1.3));
+    }, []);
+
+    const handleZoomOut = useCallback(() => {
+        setZoom((z) => Math.max(MIN_ZOOM, z / 1.3));
+    }, []);
+
+    // Reset zoom and pan
+    const handleReset = useCallback(() => {
+        setZoom(1);
+        setOffset({ x: 0, y: 0 });
+    }, []);
+
+    // Redraw canvas when zoom or offset changes
+    useEffect(() => {
+        drawCanvas();
+    }, [drawCanvas, zoom, offset]);
 
     const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+        // Don't click if we were dragging (moved mouse)
+        if (hasMovedRef.current) return;
+
         const canvas = canvasRef.current;
         if (!canvas || !currentSector) return;
         const rect = canvas.getBoundingClientRect();
@@ -431,11 +655,17 @@ export function SectorMap() {
         const clickX = (e.clientX - rect.left) * scaleX;
         const clickY = (e.clientY - rect.top) * scaleY;
 
-        // Check if clicked on central star (black hole)
+        // Account for zoom and pan - transform click coordinates to world coordinates
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
+
+        // Inverse transform: screen -> world
+        const worldClickX = (clickX - centerX - offset.x) / zoom + centerX;
+        const worldClickY = (clickY - centerY - offset.y) / zoom + centerY;
+
+        // Check if clicked on central star (black hole)
         const distFromCenter = Math.sqrt(
-            (clickX - centerX) ** 2 + (clickY - centerY) ** 2,
+            (worldClickX - centerX) ** 2 + (worldClickY - centerY) ** 2,
         );
 
         if (currentSector.star?.type === "blackhole" && distFromCenter < 40) {
@@ -446,41 +676,14 @@ export function SectorMap() {
         currentSector.locations.forEach((loc, idx) => {
             if (loc.x === undefined || loc.y === undefined) return;
             const dist = Math.sqrt(
-                (clickX - loc.x) ** 2 + (clickY - loc.y) ** 2,
+                (worldClickX - loc.x) ** 2 + (worldClickY - loc.y) ** 2,
             );
-            if (dist < 25) {
+            // Hitbox size scales with zoom for consistent feel
+            const hitboxSize = 25 / zoom;
+            if (dist < hitboxSize) {
                 selectLocation(idx);
             }
         });
-    };
-
-    const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-        const canvas = canvasRef.current;
-        if (!canvas || !currentSector) return;
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const mouseX = (e.clientX - rect.left) * scaleX;
-        const mouseY = (e.clientY - rect.top) * scaleY;
-
-        let found = false;
-        currentSector.locations.forEach((loc) => {
-            if (loc.x === undefined || loc.y === undefined) return;
-            const dist = Math.sqrt(
-                (mouseX - loc.x) ** 2 + (mouseY - loc.y) ** 2,
-            );
-            if (dist < 25) {
-                // Convert canvas coordinates to screen coordinates for tooltip
-                const screenX = e.clientX - rect.left;
-                const screenY = e.clientY - rect.top;
-                setHoveredLocation({ loc, x: screenX, y: screenY });
-                found = true;
-            }
-        });
-
-        if (!found) {
-            setHoveredLocation(null);
-        }
     };
 
     return (
@@ -512,11 +715,48 @@ export function SectorMap() {
 
             <canvas
                 ref={canvasRef}
-                className="border-2 border-[#00ff41] bg-[#050810] cursor-pointer w-full h-auto"
+                className="border-2 border-[#00ff41] bg-[#050810] cursor-grab w-full h-auto"
+                style={{ cursor: isDragging ? "grabbing" : "grab" }}
                 onClick={handleClick}
+                onWheel={handleWheel}
+                onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
-                onMouseLeave={() => setHoveredLocation(null)}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={() => {
+                    handleMouseLeave();
+                    setHoveredLocation(null);
+                }}
             />
+
+            {/* Zoom controls */}
+            <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+                <button
+                    onClick={handleZoomIn}
+                    className="w-10 h-10 bg-[#050810] border-2 border-[#00ff41] text-[#00ff41] text-xl font-bold hover:bg-[#0a1a20] transition-colors flex items-center justify-center cursor-pointer"
+                    title="Приблизить"
+                >
+                    +
+                </button>
+                <button
+                    onClick={handleZoomOut}
+                    className="w-10 h-10 bg-[#050810] border-2 border-[#00ff41] text-[#00ff41] text-xl font-bold hover:bg-[#0a1a20] transition-colors flex items-center justify-center cursor-pointer"
+                    title="Отдалить"
+                >
+                    −
+                </button>
+                <button
+                    onClick={handleReset}
+                    className="w-10 h-10 bg-[#050810] border-2 border-[#00ff41] text-[#00ff41] text-xs font-bold hover:bg-[#0a1a20] transition-colors flex items-center justify-center cursor-pointer"
+                    title="Сбросить вид"
+                >
+                    RST
+                </button>
+            </div>
+
+            {/* Zoom level indicator */}
+            <div className="absolute bottom-4 left-4 bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-3 py-1 text-xs text-[#00ff41] select-none pointer-events-none">
+                🔍 {(zoom * 100).toFixed(0)}%
+            </div>
 
             {/* Tooltip */}
             {hoveredLocation && (
