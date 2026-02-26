@@ -45,15 +45,27 @@ export function GameOverPanel({ reason }: GameOverPanelProps) {
                         </div>
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-[#888]">Броня:</span>
+                                <span className="text-[#888]">Корпус:</span>
                                 <span
                                     className={
-                                        ship.armor <= 0
+                                        ship.modules.reduce(
+                                            (sum, m) => sum + m.health,
+                                            0,
+                                        ) <= 0
                                             ? "text-[#ff0040] font-bold"
                                             : "text-[#00ff41]"
                                     }
                                 >
-                                    {ship.armor} ед.
+                                    {ship.modules.reduce(
+                                        (sum, m) => sum + m.health,
+                                        0,
+                                    )}
+                                    /
+                                    {ship.modules.reduce(
+                                        (sum, m) => sum + m.maxHealth,
+                                        0,
+                                    )}{" "}
+                                    ед.
                                 </span>
                             </div>
                             <div className="flex justify-between">

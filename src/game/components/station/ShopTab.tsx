@@ -148,6 +148,7 @@ export function ShopTab({
                         type: selectedItem.moduleType || "reactor",
                         name: selectedItem.name,
                         health: 100,
+                        maxHealth: 100,
                         power: selectedItem.power || 0,
                         consumption: selectedItem.consumption || 0,
                         defense: selectedItem.defense || 0,

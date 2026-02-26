@@ -7204,24 +7204,25 @@ export const useGameStore = create<
         const state = get();
         if (state.gameOver) return; // Already game over
 
-        const hasAICoreArtifact = state.artifacts.some(
-            (a) => a.id === "ai_core" && !a.cursed,
+        // Check for AI artifacts/modules that allow ship to operate without crew
+        const hasAIArtifact = state.artifacts.some(
+            (a) => a.id === "ai_neural_link" && !a.cursed && a.effect.active,
         );
-        const hasAICoreModule = state.ship.modules.some(
+        const hasAIModule = state.ship.modules.some(
             (m) => m.type === "ai_core" && m.health > 0,
         );
-        const hasAINeuralLink = state.artifacts.some(
-            (a) => a.effect.type === "ai_control" && a.effect.active,
-        );
-        const canShipOperateWithoutCrew =
-            hasAICoreArtifact || hasAICoreModule || hasAINeuralLink;
+        const canShipOperateWithoutCrew = hasAIArtifact || hasAIModule;
 
-        // Check for hull destroyed (0% armor)
-        if (state.ship.armor <= 0) {
+        // Check for hull destroyed (all modules have 0 health)
+        const totalHullHealth = state.ship.modules.reduce(
+            (sum, m) => sum + m.health,
+            0,
+        );
+        if (totalHullHealth <= 0) {
             set({
                 gameOver: true,
                 gameOverReason:
-                    "💥 Корпус корабля разрушен! Броня упала до 0%. Корабль не может продолжать полёт.",
+                    "💥 Корпус корабля разрушен! Все модули уничтожены. Корабль не может продолжать полёт.",
             });
             get().addLog("ИГРА ОКОНЧЕНА: Корпус разрушен", "error");
             return;
@@ -7232,7 +7233,7 @@ export const useGameStore = create<
             let reason =
                 "☠️ Весь экипаж погиб! Корабль не может функционировать без экипажа.";
 
-            if (!hasAICoreArtifact && !hasAICoreModule) {
+            if (!hasAIArtifact && !hasAIModule) {
                 reason +=
                     " Нет ИИ Ядра (артефакта или модуля) для управления без экипажа.";
             }

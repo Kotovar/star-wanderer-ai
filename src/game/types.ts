@@ -92,7 +92,7 @@ export interface Module {
     power?: number;
     consumption?: number;
     health: number;
-    maxHealth?: number; // Maximum health for this module
+    maxHealth: number; // Maximum health for this module
     level?: number;
     capacity?: number; // For cargo and fuel tanks
     defense?: number; // Armor/defense value (reduces incoming damage)
