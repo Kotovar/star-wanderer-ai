@@ -285,9 +285,15 @@ export function CrewList() {
                                             <span className="text-[#ffb000]">
                                                 Настроение:{" "}
                                             </span>
-                                            {selectedCrew.happiness}/100
+                                            {selectedCrew.happiness}/
+                                            {selectedCrew.maxHappiness || 100}
                                             <Progress
-                                                value={selectedCrew.happiness}
+                                                value={
+                                                    (selectedCrew.happiness /
+                                                        (selectedCrew.maxHappiness ||
+                                                            100)) *
+                                                    100
+                                                }
                                                 className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${selectedCrew.happiness < 30 ? "[&>div]:bg-[#ff0040]" : selectedCrew.happiness < 60 ? "[&>div]:bg-[#ffb000]" : "[&>div]:bg-[#00ff41]"}`}
                                             />
                                         </div>
@@ -346,102 +352,158 @@ export function CrewList() {
                                         )}
                                     </div>
 
-                                    {race?.crewBonuses &&
-                                        Object.keys(race.crewBonuses).length >
-                                            0 && (
-                                            <div>
-                                                <span className="text-[#ffb000]">
-                                                    Расовые бонусы:
-                                                </span>
-                                                <div className="flex flex-wrap gap-1 mt-1">
-                                                    {race.crewBonuses
-                                                        .happiness && (
-                                                        <span className="text-xs bg-[#00ff4120] text-[#00ff41] px-1 rounded">
-                                                            😊 +
-                                                            {
-                                                                race.crewBonuses
-                                                                    .happiness
-                                                            }
-                                                            %
-                                                        </span>
-                                                    )}
-                                                    {race.crewBonuses
-                                                        .repair && (
-                                                        <span className="text-xs bg-[#ffb00020] text-[#ffb000] px-1 rounded">
-                                                            🔧 +
-                                                            {Math.round(
-                                                                race.crewBonuses
-                                                                    .repair *
-                                                                    100,
-                                                            )}
-                                                            % ремонт
-                                                        </span>
-                                                    )}
-                                                    {race.crewBonuses
-                                                        .science && (
-                                                        <span className="text-xs bg-[#00d4ff20] text-[#00d4ff] px-1 rounded">
-                                                            🔬 +
-                                                            {Math.round(
-                                                                race.crewBonuses
-                                                                    .science *
-                                                                    100,
-                                                            )}
-                                                            % наука
-                                                        </span>
-                                                    )}
-                                                    {race.crewBonuses
-                                                        .combat && (
-                                                        <span className="text-xs bg-[#ff004020] text-[#ff0040] px-1 rounded">
-                                                            ⚔️ +
-                                                            {Math.round(
-                                                                race.crewBonuses
-                                                                    .combat *
-                                                                    100,
-                                                            )}
-                                                            % бой
-                                                        </span>
-                                                    )}
-                                                    {race.crewBonuses
-                                                        .energy && (
-                                                        <span className="text-xs bg-[#9933ff20] text-[#9933ff] px-1 rounded">
-                                                            ⚡ -
-                                                            {Math.round(
-                                                                Math.abs(
+                                    {race && (
+                                        <div>
+                                            <span className="text-[#ffb000]">
+                                                Расовые бонусы:
+                                            </span>
+                                            {/* crewBonuses */}
+                                            {race.crewBonuses &&
+                                                Object.keys(race.crewBonuses)
+                                                    .length > 0 && (
+                                                    <div className="flex flex-wrap gap-1 mt-1">
+                                                        {race.crewBonuses
+                                                            .happiness && (
+                                                            <span className="text-xs bg-[#00ff4120] text-[#00ff41] px-1 rounded">
+                                                                😊 +
+                                                                {
                                                                     race
                                                                         .crewBonuses
-                                                                        .energy,
-                                                                ) * 100,
-                                                            )}
-                                                            % расход энергии
-                                                        </span>
-                                                    )}
-                                                    {race.crewBonuses
-                                                        .adaptation && (
-                                                        <span className="text-xs bg-[#00ff4120] text-[#00ff41] px-1 rounded">
-                                                            🌍 +
-                                                            {Math.round(
-                                                                race.crewBonuses
-                                                                    .adaptation *
-                                                                    100,
-                                                            )}
-                                                            % адаптация
-                                                        </span>
-                                                    )}
-                                                    {race.crewBonuses
-                                                        .fuelEfficiency && (
-                                                        <span className="text-xs bg-[#9933ff20] text-[#9933ff] px-1 rounded">
-                                                            ⛽ -
-                                                            {Math.round(
-                                                                race.crewBonuses
-                                                                    .fuelEfficiency *
-                                                                    100,
-                                                            )}
-                                                            % расход топлива
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
+                                                                        .happiness
+                                                                }
+                                                                % настроение
+                                                            </span>
+                                                        )}
+                                                        {race.crewBonuses
+                                                            .repair && (
+                                                            <span className="text-xs bg-[#ffb00020] text-[#ffb000] px-1 rounded">
+                                                                🔧 +
+                                                                {Math.round(
+                                                                    race
+                                                                        .crewBonuses
+                                                                        .repair *
+                                                                        100,
+                                                                )}
+                                                                % ремонт
+                                                            </span>
+                                                        )}
+                                                        {race.crewBonuses
+                                                            .science && (
+                                                            <span className="text-xs bg-[#00d4ff20] text-[#00d4ff] px-1 rounded">
+                                                                🔬 +
+                                                                {Math.round(
+                                                                    race
+                                                                        .crewBonuses
+                                                                        .science *
+                                                                        100,
+                                                                )}
+                                                                % наука
+                                                            </span>
+                                                        )}
+                                                        {race.crewBonuses
+                                                            .combat && (
+                                                            <span className="text-xs bg-[#ff004020] text-[#ff0040] px-1 rounded">
+                                                                ⚔️ +
+                                                                {Math.round(
+                                                                    race
+                                                                        .crewBonuses
+                                                                        .combat *
+                                                                        100,
+                                                                )}
+                                                                % бой
+                                                            </span>
+                                                        )}
+                                                        {race.crewBonuses
+                                                            .health && (
+                                                            <span className="text-xs bg-[#00ff4120] text-[#00ff41] px-1 rounded">
+                                                                ❤️ +
+                                                                {
+                                                                    race
+                                                                        .crewBonuses
+                                                                        .health
+                                                                }
+                                                                HP/ход
+                                                            </span>
+                                                        )}
+                                                        {race.crewBonuses
+                                                            .energy && (
+                                                            <span className="text-xs bg-[#9933ff20] text-[#9933ff] px-1 rounded">
+                                                                ⚡ -
+                                                                {Math.round(
+                                                                    Math.abs(
+                                                                        race
+                                                                            .crewBonuses
+                                                                            .energy,
+                                                                    ) * 100,
+                                                                )}
+                                                                % расход энергии
+                                                            </span>
+                                                        )}
+                                                        {race.crewBonuses
+                                                            .adaptation && (
+                                                            <span className="text-xs bg-[#00ff4120] text-[#00ff41] px-1 rounded">
+                                                                🌍 +
+                                                                {Math.round(
+                                                                    race
+                                                                        .crewBonuses
+                                                                        .adaptation *
+                                                                        100,
+                                                                )}
+                                                                % адаптация
+                                                            </span>
+                                                        )}
+                                                        {race.crewBonuses
+                                                            .fuelEfficiency && (
+                                                            <span className="text-xs bg-[#9933ff20] text-[#9933ff] px-1 rounded">
+                                                                ⛽ -
+                                                                {Math.round(
+                                                                    race
+                                                                        .crewBonuses
+                                                                        .fuelEfficiency *
+                                                                        100,
+                                                                )}
+                                                                % расход топлива
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            {/* specialTraits */}
+                                            {race.specialTraits &&
+                                                race.specialTraits.length >
+                                                    0 && (
+                                                    <div className="mt-1.5 space-y-1">
+                                                        {race.specialTraits.map(
+                                                            (trait) => (
+                                                                <div
+                                                                    key={
+                                                                        trait.id
+                                                                    }
+                                                                    className={`text-[10px] ${
+                                                                        trait.type ===
+                                                                        "positive"
+                                                                            ? "text-[#00ff41]"
+                                                                            : trait.type ===
+                                                                                "negative"
+                                                                              ? "text-[#ff4444]"
+                                                                              : "text-[#888]"
+                                                                    }`}
+                                                                >
+                                                                    <span className="font-bold">
+                                                                        {
+                                                                            trait.name
+                                                                        }
+                                                                    </span>
+                                                                    :{" "}
+                                                                    {
+                                                                        trait.description
+                                                                    }
+                                                                </div>
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                )}
+                                        </div>
+                                    )}
                                     {selectedCrew.traits &&
                                         selectedCrew.traits.length > 0 && (
                                             <div>

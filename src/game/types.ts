@@ -146,6 +146,7 @@ export interface CrewMember {
     health: number;
     maxHealth: number; // Maximum health (modified by race bonuses)
     happiness: number;
+    maxHappiness: number; // Maximum happiness (modified by traits, e.g., Legend +50)
     turnsAtZeroHappiness: number; // Turns spent at 0 happiness (for desertion)
     assignment: string | null; // Civilian assignment
     assignmentEffect: string | null; // Civilian assignment effect

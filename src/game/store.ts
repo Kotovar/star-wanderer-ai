@@ -1749,7 +1749,7 @@ export const useGameStore = create<
                             const crewNeedingMorale = get().crew.filter(
                                 (cr) =>
                                     cr.moduleId === c.moduleId &&
-                                    cr.happiness < 100,
+                                    cr.happiness < (cr.maxHappiness || 100),
                             );
 
                             if (crewNeedingMorale.length === 0) {
@@ -1767,7 +1767,7 @@ export const useGameStore = create<
                                         ? {
                                               ...cr,
                                               happiness: Math.min(
-                                                  100,
+                                                  cr.maxHappiness || 100,
                                                   cr.happiness + moraleAmount,
                                               ),
                                           }
@@ -2075,6 +2075,41 @@ export const useGameStore = create<
                     }
                 });
             }
+        });
+
+        // Apply moduleMorale trait effects (Харизматичный, Лидер)
+        // These crew members give +moduleMorale happiness to all crew in same module
+        get().crew.forEach((c) => {
+            c.traits?.forEach((trait) => {
+                if (trait.effect.moduleMorale) {
+                    const moraleBonus = trait.effect.moduleMorale as number;
+                    const crewInSameModule = get().crew.filter(
+                        (cr) =>
+                            cr.moduleId === c.moduleId &&
+                            cr.id !== c.id &&
+                            cr.happiness < (cr.maxHappiness || 100),
+                    );
+                    if (crewInSameModule.length > 0) {
+                        set((s) => ({
+                            crew: s.crew.map((cr) =>
+                                cr.moduleId === c.moduleId && cr.id !== c.id
+                                    ? {
+                                          ...cr,
+                                          happiness: Math.min(
+                                              cr.maxHappiness || 100,
+                                              cr.happiness + moraleBonus,
+                                          ),
+                                      }
+                                    : cr,
+                            ),
+                        }));
+                        get().addLog(
+                            `★ ${c.name} (${trait.name}): +${moraleBonus} настроения модулю`,
+                            "info",
+                        );
+                    }
+                }
+            });
         });
 
         // Remove unhappy crew
@@ -3550,6 +3585,43 @@ export const useGameStore = create<
         } else {
             get().addLog(`Бой с ${enemy.name}!`, "combat");
         }
+
+        // Apply combatStartMoraleDrain trait (Пессимист: -20 морали в первый ход боя модулю)
+        const crewWithPessimist = get().crew.filter((c) =>
+            c.traits?.some((t) => t.effect.combatStartMoraleDrain),
+        );
+        crewWithPessimist.forEach((c) => {
+            const trait = c.traits.find((t) => t.effect.combatStartMoraleDrain);
+            if (trait) {
+                const moraleDrain = trait.effect
+                    .combatStartMoraleDrain as number;
+                const crewInSameModule = get().crew.filter(
+                    (cr) =>
+                        cr.moduleId === c.moduleId &&
+                        cr.id !== c.id &&
+                        cr.happiness > 0,
+                );
+                if (crewInSameModule.length > 0) {
+                    set((s) => ({
+                        crew: s.crew.map((cr) =>
+                            cr.moduleId === c.moduleId && cr.id !== c.id
+                                ? {
+                                      ...cr,
+                                      happiness: Math.max(
+                                          0,
+                                          cr.happiness - moraleDrain,
+                                      ),
+                                  }
+                                : cr,
+                        ),
+                    }));
+                    get().addLog(
+                        `⚠️ ${c.name} (${trait.name}): -${moraleDrain} морали модулю в начале боя`,
+                        "warning",
+                    );
+                }
+            }
+        });
     },
 
     startBossCombat: (bossLocation) => {
@@ -4089,11 +4161,33 @@ export const useGameStore = create<
                 );
             }
 
+            // Apply lootBonus trait (Удачливый: +5% credits)
+            let lootBonus = 0;
+            get().crew.forEach((c) => {
+                c.traits?.forEach((trait) => {
+                    if (trait.effect.lootBonus) {
+                        lootBonus += trait.effect.lootBonus as number;
+                    }
+                });
+            });
+            if (lootBonus > 0) {
+                creditsAmount = Math.floor(creditsAmount * (1 + lootBonus));
+            }
+
             set((s) => ({ credits: s.credits + creditsAmount }));
 
             if (blackBox && creditsAmount > loot.credits) {
                 get().addLog(
                     `📦 Чёрный Ящик: +${creditsAmount - loot.credits}₢ бонус`,
+                    "info",
+                );
+            }
+            if (lootBonus > 0) {
+                const luckyCrew = get().crew.filter((c) =>
+                    c.traits?.some((t) => t.effect.lootBonus),
+                );
+                get().addLog(
+                    `★ Удачливый экипаж: +${Math.round(lootBonus * 100)}% к награде (${luckyCrew.map((c) => c.name).join(", ")})`,
                     "info",
                 );
             }
@@ -4915,6 +5009,36 @@ export const useGameStore = create<
                     );
                 }
                 damageCrewInModule(tgt.id, crewDamage, wasDestroyed);
+
+                // Apply combatMoraleDrain trait (Трус: -10 морали в бою при получении урона)
+                const crewInDamagedModule = get().crew.filter(
+                    (c) => c.moduleId === tgt.id,
+                );
+                crewInDamagedModule.forEach((c) => {
+                    c.traits?.forEach((trait) => {
+                        if (trait.effect.combatMoraleDrain) {
+                            const moraleDrain = trait.effect
+                                .combatMoraleDrain as number;
+                            set((s) => ({
+                                crew: s.crew.map((cr) =>
+                                    cr.id === c.id
+                                        ? {
+                                              ...cr,
+                                              happiness: Math.max(
+                                                  0,
+                                                  cr.happiness - moraleDrain,
+                                              ),
+                                          }
+                                        : cr,
+                                ),
+                            }));
+                            get().addLog(
+                                `⚠️ ${c.name} (${trait.name}): -${moraleDrain} морали от урона`,
+                                "warning",
+                            );
+                        }
+                    });
+                });
             }
 
             // Remove dead crew from ship
@@ -5630,7 +5754,7 @@ export const useGameStore = create<
             crew: s.crew.map((c) => ({
                 ...c,
                 health: c.maxHealth || 100,
-                happiness: Math.min(100, c.happiness + 20),
+                happiness: Math.min(c.maxHappiness || 100, c.happiness + 20),
             })),
         }));
         get().addLog("Экипаж вылечен", "info");
@@ -5805,23 +5929,21 @@ export const useGameStore = create<
         const pricePer5 = pricesFromTrade[goodId].sell;
         let price = Math.floor(pricePer5 * (quantity / 5));
 
-        // Apply sellPenalty from crew traits (e.g., "Жадный" -30% sell price)
-        let sellPenalty = 0;
+        // Apply sellPricePenalty from crew traits (Жадный: -1₢ за каждого юнита)
+        let greedyCrewCount = 0;
         state.crew.forEach((c) => {
             c.traits?.forEach((trait) => {
-                if (trait.effect.sellPenalty) {
-                    sellPenalty = Math.max(
-                        sellPenalty,
-                        trait.effect.sellPenalty,
-                    );
+                if (trait.effect.sellPricePenalty) {
+                    greedyCrewCount++;
                 }
             });
         });
 
-        if (sellPenalty > 0) {
-            price = Math.floor(price * (1 - sellPenalty));
+        if (greedyCrewCount > 0) {
+            const penalty = greedyCrewCount; // -1 credit per greedy crew member
+            price = Math.max(0, price - penalty);
             get().addLog(
-                `⚠️ Жадный экипаж: -${Math.round(sellPenalty * 100)}% к цене продажи`,
+                `⚠️ Жадный экипаж (${greedyCrewCount} сущ.): -${penalty}₢ к цене продажи`,
                 "warning",
             );
         }
@@ -5917,6 +6039,7 @@ export const useGameStore = create<
 
         // Apply trait effects to maxHealth
         const traits = crewData.traits || [];
+        let maxHappinessBonus = 0;
         traits.forEach((trait) => {
             if (trait.effect.healthPenalty) {
                 // Negative trait: reduce maxHealth by percentage
@@ -5929,6 +6052,10 @@ export const useGameStore = create<
                 baseMaxHealth = Math.floor(
                     baseMaxHealth * (1 + trait.effect.healthBonus),
                 );
+            }
+            // Legend trait: +50 max happiness
+            if (trait.effect.maxHappinessBonus) {
+                maxHappinessBonus += trait.effect.maxHappinessBonus as number;
             }
         });
 
@@ -5943,6 +6070,7 @@ export const useGameStore = create<
             health: baseMaxHealth,
             maxHealth: baseMaxHealth,
             happiness: 80,
+            maxHappiness: 100 + maxHappinessBonus, // Default 100, +50 for Legend
             assignment: null,
             assignmentEffect: null,
             combatAssignment: null,
@@ -6704,6 +6832,7 @@ export const useGameStore = create<
                         health: 100,
                         maxHealth: 100,
                         happiness: 100,
+                        maxHappiness: 100,
                         assignment: null,
                         assignmentEffect: null,
                         combatAssignment: null,

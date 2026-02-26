@@ -988,6 +988,7 @@ export function generateStationCrew(
                 health: baseMaxHealth,
                 maxHealth: baseMaxHealth,
                 happiness: 80,
+                maxHappiness: 100,
                 assignment: null,
                 assignmentEffect: null,
                 combatAssignment: null,
