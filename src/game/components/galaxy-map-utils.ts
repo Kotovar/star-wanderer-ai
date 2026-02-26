@@ -17,6 +17,11 @@ export const TIER_COLORS = {
         glow: "rgba(255, 0, 64, 0.15)",
         name: "Тир 3 - Опасный",
     },
+    4: {
+        ring: "#ff00ff",
+        glow: "rgba(255, 0, 255, 0.15)",
+        name: "Тир 4 - Граница Галактики",
+    },
 };
 
 // Get engine level from modules
@@ -26,6 +31,36 @@ export function getEngineLevel(modules: Module[]): number {
     );
     if (engines.length === 0) return 1;
     return Math.max(...engines.map((e) => e.level || 1));
+}
+
+// Get scanner level from modules
+export function getScannerLevel(modules: Module[]): number {
+    const scanners = modules.filter(
+        (m) => m.type === "scanner" && !m.disabled && m.health > 0,
+    );
+    if (scanners.length === 0) return 0;
+    return Math.max(...scanners.map((s) => s.level || 1));
+}
+
+// Check if player can see tier 4 sectors (scanner level 4 or special artifact)
+export function canSeeTier4(
+    modules: Module[],
+    artifacts: Array<{
+        effect?: { type?: string; active?: boolean };
+        id?: string;
+    }>,
+): boolean {
+    // Check for scanner level 4
+    const scannerLevel = getScannerLevel(modules);
+    if (scannerLevel >= 4) return true;
+
+    // Check for all-seeing eye artifact
+    const hasAllSeeingEye = artifacts.some(
+        (a) => a.effect?.type === "all_seeing" && a.effect?.active,
+    );
+    if (hasAllSeeingEye) return true;
+
+    return false;
 }
 
 // Check if player can access a tier
@@ -38,6 +73,10 @@ export function canAccessTier(
     const engineLevel = getEngineLevel(modules);
     if (tier === 2) return engineLevel >= 2 && captainLevel >= 2;
     if (tier === 3) return engineLevel >= 3 && captainLevel >= 3;
+    if (tier === 4) {
+        // Tier 4 requires captain level 4 and engine level 4
+        return engineLevel >= 4 && captainLevel >= 4;
+    }
     return false;
 }
 
@@ -45,6 +84,8 @@ export function canAccessTier(
 export function getSectorRadius(maxRadius: number, tier: number): number {
     if (tier === 1) return maxRadius * 0.33;
     if (tier === 2) return maxRadius * 0.6;
+    if (tier === 3) return maxRadius * 0.85;
+    if (tier === 4) return maxRadius * 1.1;
     return maxRadius * 0.9;
 }
 
@@ -56,10 +97,16 @@ export function drawLegend(
     modules: Module[],
     captainLevel: number,
     fuel: number,
+    artifacts: Array<{
+        effect?: { type?: string; active?: boolean };
+        id?: string;
+    }>,
 ) {
     const legendX = 10;
     const legendY = 10;
     const engineLevel = getEngineLevel(modules);
+    const canSeeT4 = canSeeTier4(modules, artifacts);
+    const canAccessT4 = engineLevel >= 4 && captainLevel >= 4;
 
     ctx.font = "13px Share Tech Mono";
     ctx.textAlign = "left";
@@ -76,6 +123,12 @@ export function drawLegend(
     ctx.fillText(`Капитан: Ур.${captainLevel}`, legendX, legendY + 48);
     ctx.fillText("Тир 2: Двиг.Ур2 + Кап.Ур2", legendX, legendY + 68);
     ctx.fillText("Тир 3: Двиг.Ур3 + Кап.Ур3", legendX, legendY + 84);
+    ctx.fillStyle = canAccessT4 ? "#ff00ff" : "#555";
+    ctx.fillText(
+        `Тир 4: Двиг.Ур4 + Кап.Ур4 ${canSeeT4 ? "(виден)" : ""}`,
+        legendX,
+        legendY + 100,
+    );
 }
 
 // Draw a sector on the galaxy map
@@ -180,13 +233,27 @@ export function drawTierRings(
     maxRadius: number,
     modules: Module[],
     captainLevel: number,
+    artifacts: Array<{
+        effect?: { type?: string; active?: boolean };
+        id?: string;
+    }>,
 ) {
-    const tierRadii = [maxRadius * 0.5, maxRadius * 0.8, maxRadius * 1.1];
+    const tierRadii = [
+        maxRadius * 0.5,
+        maxRadius * 0.8,
+        maxRadius * 0.95,
+        maxRadius * 1.15,
+    ];
+
+    const canSeeT4 = canSeeTier4(modules, artifacts);
 
     tierRadii.forEach((radius, idx) => {
-        const tier = (idx + 1) as 1 | 2 | 3;
+        const tier = (idx + 1) as 1 | 2 | 3 | 4;
         const colors = TIER_COLORS[tier];
         const isAccessible = canAccessTier(tier, modules, captainLevel);
+
+        // Tier 4 ring is only visible when scanner level 4 or all-seeing artifact
+        if (tier === 4 && !canSeeT4) return;
 
         drawTierGlow(ctx, centerX, centerY, radius, colors, isAccessible);
         drawTierRing(ctx, centerX, centerY, radius, colors, isAccessible, tier);

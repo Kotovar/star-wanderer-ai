@@ -12,8 +12,10 @@ export const generatePlanetContracts = (
     const contracts: Contract[] = [];
     const numContracts = Math.floor(Math.random() * 2) + 1;
 
-    // Only other sectors for targets
-    const availableSectors = allSectors.filter((s) => s.id !== sector.id);
+    // Only other sectors for targets (exclude tier 4 sectors)
+    const availableSectors = allSectors.filter(
+        (s) => s.id !== sector.id && s.tier < 4,
+    );
 
     if (availableSectors.length === 0) return contracts;
 
@@ -24,15 +26,17 @@ export const generatePlanetContracts = (
     const raceQuests: Record<RaceId, () => Contract | null> = {
         human: () => {
             // Humans: Diplomatic mission - deliver a message to another human planet
-            const humanPlanets = allSectors.flatMap((s) =>
-                s.locations.filter(
-                    (l) =>
-                        l.type === "planet" &&
-                        !l.isEmpty &&
-                        l.dominantRace === "human" &&
-                        l.id !== planetId,
-                ),
-            );
+            const humanPlanets = allSectors
+                .filter((s) => s.tier < 4)
+                .flatMap((s) =>
+                    s.locations.filter(
+                        (l) =>
+                            l.type === "planet" &&
+                            !l.isEmpty &&
+                            l.dominantRace === "human" &&
+                            l.id !== planetId,
+                    ),
+                );
             if (humanPlanets.length === 0) return null;
             const target =
                 humanPlanets[Math.floor(Math.random() * humanPlanets.length)];
@@ -137,7 +141,7 @@ export const generatePlanetContracts = (
 
         voidborn: () => {
             // Voidborn: Void exploration - enter a storm to collect void energy
-            const stormSectors = allSectors.filter((s) =>
+            const stormSectors = availableSectors.filter((s) =>
                 s.locations.some((l) => l.type === "storm"),
             );
             if (stormSectors.length === 0) return null;

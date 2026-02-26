@@ -11,6 +11,7 @@ interface ServicesTabProps {
     repairShip: () => void;
     healCrew: () => void;
     scrapModule: (moduleId: number) => void;
+    installModuleFromCargo: (cargoIndex: number, x: number, y: number) => void;
     credits: number;
     ship: {
         modules: Array<{
@@ -19,7 +20,19 @@ interface ServicesTabProps {
             type: string;
             level?: number;
             disabled?: boolean;
+            x: number;
+            y: number;
+            width?: number;
+            height?: number;
         }>;
+        cargo: Array<{
+            item: string;
+            quantity: number;
+            isModule?: boolean;
+            moduleType?: string;
+            moduleLevel?: number;
+        }>;
+        gridSize: number;
     };
 }
 
@@ -32,6 +45,7 @@ export function ServicesTab({
     repairShip,
     healCrew,
     scrapModule,
+    installModuleFromCargo,
     credits,
     ship,
 }: ServicesTabProps) {
@@ -52,6 +66,10 @@ export function ServicesTab({
             <RepairSection credits={credits} onRepair={repairShip} />
             <HealSection credits={credits} onHeal={healCrew} />
             <ScrapModuleSection ship={ship} onScrap={scrapModule} />
+            <InstallModuleSection
+                ship={ship}
+                onInstall={installModuleFromCargo}
+            />
         </div>
     );
 }
@@ -262,6 +280,121 @@ function ScrapModuleSection({
                     </div>
                 ))}
             </div>
+        </div>
+    );
+}
+
+function InstallModuleSection({
+    ship,
+    onInstall,
+}: {
+    ship: ServicesTabProps["ship"];
+    onInstall: (cargoIndex: number, x: number, y: number) => void;
+}) {
+    const moduleCargo = ship.cargo.filter((c) => c.isModule && c.moduleType);
+
+    // Find a valid position for a module on the ship grid
+    const findValidPosition = (
+        width: number,
+        height: number,
+    ): { x: number; y: number } | null => {
+        const gridSize = ship.gridSize || 5;
+
+        for (let y = 0; y < gridSize; y++) {
+            for (let x = 0; x < gridSize; x++) {
+                // Check if module fits within grid bounds
+                if (x + width > gridSize || y + height > gridSize) continue;
+
+                // Check if position is occupied by existing module
+                const isOccupied = ship.modules.some((m) => {
+                    if (m.disabled) return false;
+                    const mWidth = m.width || 2;
+                    const mHeight = m.height || 2;
+                    return (
+                        x < m.x + mWidth &&
+                        x + width > m.x &&
+                        y < m.y + mHeight &&
+                        y + height > m.y
+                    );
+                });
+
+                if (!isOccupied) {
+                    return { x, y };
+                }
+            }
+        }
+
+        return null;
+    };
+
+    return (
+        <div className="bg-[rgba(255,0,255,0.05)] border border-[#ff00ff] p-4">
+            <div className="text-[#ff00ff] font-bold mb-2">
+                🔧 Установка модулей
+            </div>
+            <div className="text-sm text-[#888] mb-3">
+                Установите модули из трюма на корабль
+            </div>
+            {moduleCargo.length > 0 ? (
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {moduleCargo.map((item, idx) => {
+                        const cargoIndex = ship.cargo.indexOf(item);
+                        const validPosition = findValidPosition(2, 2);
+                        const canInstall = validPosition !== null;
+
+                        return (
+                            <div
+                                key={idx}
+                                className={`flex justify-between items-center bg-[rgba(0,0,0,0.3)] border p-2 ${
+                                    canInstall
+                                        ? "border-[#00ff41]"
+                                        : "border-[#888]"
+                                }`}
+                            >
+                                <div className="text-xs">
+                                    <div
+                                        className={
+                                            canInstall
+                                                ? "text-[#00ff41]"
+                                                : "text-[#888]"
+                                        }
+                                    >
+                                        {item.item} (Ур.{item.moduleLevel || 4})
+                                    </div>
+                                    <div className="text-[#888]">
+                                        Размер: 2x2 |{" "}
+                                        {validPosition
+                                            ? `Позиция: (${validPosition.x}, ${validPosition.y})`
+                                            : "Нет места"}
+                                    </div>
+                                </div>
+                                <Button
+                                    disabled={!canInstall}
+                                    onClick={() =>
+                                        validPosition &&
+                                        onInstall(
+                                            cargoIndex,
+                                            validPosition.x,
+                                            validPosition.y,
+                                        )
+                                    }
+                                    className={`bg-transparent border-2 uppercase text-xs ${
+                                        canInstall
+                                            ? "border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
+                                            : "border-[#888] text-[#888] cursor-not-allowed"
+                                    }`}
+                                >
+                                    УСТАНОВИТЬ
+                                </Button>
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                <div className="text-sm text-[#888] italic">
+                    В трюме нет модулей для установки.
+                </div>
+            )}
         </div>
     );
 }

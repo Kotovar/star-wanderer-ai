@@ -12,6 +12,7 @@ import type {
     EnemyModule,
     RaceId,
     BattleResult,
+    CargoItem,
 } from "@/game/types";
 import { TRADE_GOODS, WEAPON_TYPES } from "@/game/constants";
 import { initialModules, STARTING_FUEL } from "@/game/modules";
@@ -128,6 +129,8 @@ const initialState: GameState = {
     battleResult: null, // Results of last battle
     gameOver: false, // Game over state
     gameOverReason: null, // Reason for game over
+    gameVictory: false, // Victory state (reached tier 4)
+    gameVictoryReason: null, // Reason for victory
     activeEffects: [], // Active planet specialization effects
     planetCooldowns: {}, // Track cooldowns per planet
 };
@@ -261,6 +264,11 @@ export const useGameStore = create<
         healCrew: () => void;
         buyTradeGood: (goodId: string, quantity?: number) => void;
         sellTradeGood: (goodId: string, quantity?: number) => void;
+        installModuleFromCargo: (
+            cargoIndex: number,
+            x: number,
+            y: number,
+        ) => void;
 
         // Crew
         hireCrew: (
@@ -320,6 +328,9 @@ export const useGameStore = create<
 
         // Game Over
         checkGameOver: () => void;
+
+        // Victory
+        triggerVictory: () => void;
 
         // Game Management
         restartGame: () => void;
@@ -2632,6 +2643,28 @@ export const useGameStore = create<
             return;
         }
 
+        // Check tier 4 access - VICTORY CONDITION
+        if (sector.tier === 4) {
+            const hasTier4Engine = state.ship.modules.some(
+                (m) =>
+                    m.type === "engine" &&
+                    !m.disabled &&
+                    m.health > 0 &&
+                    (m.level || 1) >= 4,
+            );
+            if (engineLevel < 4 || captainLevel < 4 || !hasTier4Engine) {
+                get().addLog(
+                    `Доступ к Тир 4 требует: Двигатель Ур.4 + Капитан Ур.4`,
+                    "error",
+                );
+                playSound("error");
+                return;
+            }
+            // VICTORY! Player reached the edge of the galaxy
+            get().triggerVictory();
+            return;
+        }
+
         // Check if pilot is in cockpit for bonuses
         const pilot = state.crew.find((c) => c.profession === "pilot");
         const pilotInCockpit = pilot && pilot.moduleId === cockpit.id;
@@ -4116,6 +4149,54 @@ export const useGameStore = create<
                 }
             }
 
+            // Check for module drop from boss
+            if (updatedCombat.enemy.isBoss && loot.guaranteedModuleDrop) {
+                const alreadyHasTier4Engine = state.ship.modules.some(
+                    (m) =>
+                        m.type === "engine" &&
+                        !m.disabled &&
+                        m.health > 0 &&
+                        (m.level || 1) >= 4,
+                );
+
+                if (!alreadyHasTier4Engine) {
+                    // Add tier 4 engine module to cargo hold (takes 0 space)
+                    const moduleName = "★ Двигатель Ур.4";
+
+                    const newCargoItem: CargoItem = {
+                        item: moduleName,
+                        quantity: 1,
+                        moduleType: "engine",
+                        moduleLevel: 4,
+                        isModule: true,
+                    };
+
+                    set((s) => ({
+                        ship: {
+                            ...s.ship,
+                            cargo: [...s.ship.cargo, newCargoItem],
+                        },
+                    }));
+
+                    get().addLog(
+                        `🎁 Награда за босса: Получен модуль "${moduleName}"!`,
+                        "info",
+                    );
+                    get().addLog(
+                        `📦 Модуль помещён в трюм. Посетите станцию для установки.`,
+                        "info",
+                    );
+                } else {
+                    // Give credits instead if already has the module
+                    const bonusCredits = 5000;
+                    set((s) => ({ credits: s.credits + bonusCredits }));
+                    get().addLog(
+                        `🎁 Награда за босса: +${bonusCredits}₢ (двигатель Ур.4 уже есть)`,
+                        "info",
+                    );
+                }
+            }
+
             // Mark boss as defeated in location
             if (updatedCombat.enemy.isBoss && get().currentLocation) {
                 set((s) => ({
@@ -5552,6 +5633,66 @@ export const useGameStore = create<
         }));
         get().addLog("Экипаж вылечен", "info");
         playSound("success");
+    },
+
+    installModuleFromCargo: (cargoIndex, x, y) => {
+        const state = get();
+        const cargoItem = state.ship.cargo[cargoIndex];
+
+        if (!cargoItem || !cargoItem.isModule || !cargoItem.moduleType) {
+            get().addLog("Ошибка: это не модуль!", "error");
+            return;
+        }
+
+        // Check if position is occupied
+        const isOccupied = state.ship.modules.some(
+            (m) =>
+                !m.disabled &&
+                m.health > 0 &&
+                Math.abs(m.x - x) < (m.width || 2) &&
+                Math.abs(m.y - y) < (m.height || 2),
+        );
+
+        if (isOccupied) {
+            get().addLog("Место занято другим модулем!", "error");
+            return;
+        }
+
+        // Create the module with level from cargo item
+        const moduleLevel = cargoItem.moduleLevel || 4;
+        const newModule = {
+            id: Date.now(),
+            type: cargoItem.moduleType,
+            name: cargoItem.item,
+            level: moduleLevel,
+            health: 100,
+            maxHealth: 100,
+            power: moduleLevel * 5,
+            defense: moduleLevel * 3,
+            x: x,
+            y: y,
+            width: 2,
+            height: 2,
+            color: "#ff00ff33",
+            borderColor: "#ff00ff",
+            description: `Двигатель уровня ${moduleLevel} - позволяет достичь Тир 4`,
+        };
+
+        // Remove from cargo and add to modules
+        set((s) => ({
+            ship: {
+                ...s.ship,
+                cargo: s.ship.cargo.filter((_, idx) => idx !== cargoIndex),
+                modules: [...s.ship.modules, newModule],
+            },
+        }));
+
+        get().addLog(
+            `✅ Модуль "${cargoItem.item}" установлен на позицию (${x}, ${y})!`,
+            "info",
+        );
+        playSound("success");
+        get().updateShipStats();
     },
 
     buyTradeGood: (goodId, quantity = 5) => {
@@ -7255,6 +7396,39 @@ export const useGameStore = create<
             get().addLog("ИГРА ОКОНЧЕНА: Корабль без экипажа", "error");
             return;
         }
+    },
+
+    triggerVictory: () => {
+        const state = get();
+        if (state.gameVictory) return; // Already won
+
+        const turn = state.turn;
+        const captainLevel =
+            state.crew.find((c) => c.profession === "pilot")?.level ?? 1;
+        const discoveredArtifacts = state.artifacts.filter(
+            (a) => a.discovered,
+        ).length;
+        const sectorsExplored = state.galaxy.sectors.filter(
+            (s) => s.visited,
+        ).length;
+
+        set({
+            gameVictory: true,
+            gameVictoryReason: `🎉 Поздравляем! Вы достигли границы галактики!
+
+📊 ИТОГИ ИГРЫ:
+• Ходов сделано: ${turn}
+• Уровень капитана: ${captainLevel}
+• Найдено артефактов: ${discoveredArtifacts}
+• Исследовано секторов: ${sectorsExplored}
+
+Вы одни из первых, кто достиг Тир 4 - границы известной галактики.
+Квантовый двигатель привёл вас сюда, к краю космоса.
+Что ждёт за этой гранью? Это уже другая история...`,
+        });
+
+        get().addLog("🎉 ПОБЕДА! Граница галактики достигнута!", "info");
+        playSound("success");
     },
 
     restartGame: () => {

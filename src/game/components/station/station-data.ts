@@ -323,8 +323,20 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
     ],
     4: [
         {
+            id: "engine-quantum",
+            name: "★ Двигатель Ур.4",
+            type: "module",
+            moduleType: "engine",
+            width: 2,
+            height: 2,
+            power: 0,
+            consumption: 0,
+            price: 10000,
+            stock: 1,
+        },
+        {
             id: "drill-ancient",
-            name: "Древний бур",
+            name: "★ Древний бур",
             type: "module",
             moduleType: "drill",
             width: 1,
@@ -335,7 +347,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
         },
         {
             id: "reactor-fusion",
-            name: "Термоядерный реактор",
+            name: "★ Термоядерный реактор",
             type: "module",
             moduleType: "reactor",
             width: 1,
@@ -347,7 +359,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
         },
         {
             id: "shield-ancient",
-            name: "Древний щит",
+            name: "★ Древний щит",
             type: "module",
             moduleType: "shield",
             width: 2,
@@ -359,7 +371,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
         },
         {
             id: "cargo-quantum",
-            name: "Квантовый склад",
+            name: "★ Квантовый склад",
             type: "module",
             moduleType: "cargo",
             width: 2,
@@ -371,7 +383,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
         },
         {
             id: "scanner-quantum",
-            name: "Квантовый сканер",
+            name: "★ Квантовый сканер",
             type: "module",
             moduleType: "scanner",
             width: 1,
@@ -383,7 +395,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
         },
         {
             id: "fueltank-ancient",
-            name: "Древний топливный бак",
+            name: "★ Древний топливный бак",
             type: "module",
             moduleType: "fueltank",
             width: 1,
@@ -394,7 +406,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
         },
         {
             id: "lifesupport-ancient",
-            name: "Древнее жизнеобеспечение",
+            name: "★ Древнее жизнеобеспечение",
             type: "module",
             moduleType: "lifesupport",
             width: 1,
@@ -406,7 +418,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
         },
         {
             id: "medical-ancient",
-            name: "Медотсек",
+            name: "★ Медотсек",
             type: "module",
             moduleType: "medical",
             width: 1,
@@ -417,7 +429,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
         },
         {
             id: "weaponbay-ancient",
-            name: "Оружейная палуба",
+            name: "★ Оружейная палуба",
             type: "module",
             moduleType: "weaponbay",
             width: 2,
@@ -428,7 +440,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
         },
         {
             id: "ai-core",
-            name: "ИИ Ядро",
+            name: "★ ИИ Ядро",
             type: "module",
             moduleType: "ai_core",
             width: 2,
@@ -781,7 +793,8 @@ export function generateStationItems(
     } else if (sectorTier === 2) {
         availableLevels = [2, 3];
     } else {
-        availableLevels = [3];
+        // Tier 3+ stations can have tier 4 modules (rare)
+        availableLevels = [3, 4];
     }
 
     const tierUpgrades = UPGRADES_BY_TIER[sectorTier] || UPGRADES_BY_TIER[1];
@@ -824,9 +837,11 @@ export function generateStationItems(
         items.push({ ...baseItem, id: `${baseItem.id}-${stationId}` });
     }
 
-    if (sectorTier === 3) {
+    // Additional chance for tier 4 modules at tier 3+ stations
+    if (sectorTier >= 3) {
         const uniqueChance = Math.abs(hash % 100);
-        if (uniqueChance < 15) {
+        if (uniqueChance < 25) {
+            // 25% chance for additional tier 4 module
             const uniqueModules = MODULES_BY_LEVEL[4];
             const uniqueModule =
                 uniqueModules[Math.abs(hash >> 8) % uniqueModules.length];

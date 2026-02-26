@@ -11,9 +11,10 @@ export const TIER_CONFIG: Array<{
     baseDanger: number;
     radiusRatio: number;
 }> = [
-    { tier: 1, count: 8, baseDanger: 1, radiusRatio: 0.3 },
-    { tier: 2, count: 8, baseDanger: 3, radiusRatio: 0.6 },
-    { tier: 3, count: 10, baseDanger: 5, radiusRatio: 0.9 },
+    { tier: 1, count: 12, baseDanger: 1, radiusRatio: 0.25 },
+    { tier: 2, count: 12, baseDanger: 3, radiusRatio: 0.5 },
+    { tier: 3, count: 15, baseDanger: 5, radiusRatio: 0.75 },
+    { tier: 4, count: 3, baseDanger: 8, radiusRatio: 1.0 },
 ];
 
 /** Количество локаций по уровням */
@@ -21,6 +22,7 @@ export const LOCATION_COUNT = {
     tier1: { min: 6, max: 8 },
     tier2: { min: 8, max: 11 },
     tier3: { min: 8, max: 12 },
+    tier4: { min: 5, max: 7 },
     blackHole: { min: 5, max: 7 },
 };
 
@@ -47,6 +49,13 @@ export const LOCATION_CHANCES = {
         storm: 0.13,
         boss: 0.06,
     },
+    tier4: {
+        station: 0.02,
+        friendlyShip: 0.02,
+        enemyShip: 0.4,
+        storm: 0.15,
+        boss: 0.1,
+    },
 };
 
 /** Вероятности типов локаций (общие) */
@@ -61,6 +70,7 @@ export const EMPTY_PLANET_CHANCE = {
     tier1: 0.4,
     tier2: 0.6,
     tier3: 0.7,
+    tier4: 0.1,
 };
 
 /** Шанс появления звезды по типам */
@@ -68,6 +78,7 @@ export const STAR_CHANCES = {
     blackHoleTier1: 0.01, // 1% для tier 1 (редко)
     blackHoleTier2: 0.1, // 10% для tier 2
     blackHoleTier3: 0.15, // 15% для tier 3
+    blackHoleTier4: 0.01, // 1% для tier 4
     tripleStarTier2: 0.2,
     doubleStarBase: 0.3,
     doubleStarTierBonus: 0.1,

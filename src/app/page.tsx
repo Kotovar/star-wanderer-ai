@@ -11,6 +11,7 @@ import { GameLog } from "@/game/components/GameLog";
 import { ContractsList } from "@/game/components/ContractsList";
 import { EventDisplay } from "@/game/components/EventPanels";
 import { GameOverPanel } from "@/game/components/GameOverPanel";
+import { VictoryPanel } from "@/game/components/VictoryPanel";
 import { useGameStore } from "@/game/store";
 import { RaceDiscoveryModal } from "@/game/components/RaceDiscoveryModal";
 import {
@@ -23,6 +24,8 @@ import {
 export default function Home() {
     const gameOver = useGameStore((s) => s.gameOver);
     const gameOverReason = useGameStore((s) => s.gameOverReason);
+    const gameVictory = useGameStore((s) => s.gameVictory);
+    const gameVictoryReason = useGameStore((s) => s.gameVictoryReason);
     const moduleMovedThisTurn = useGameStore((s) => s.ship.moduleMovedThisTurn);
     const loadGame = useGameStore((s) => s.loadGame);
 
@@ -47,6 +50,11 @@ export default function Home() {
             {/* Game Over Panel */}
             {gameOver && gameOverReason && (
                 <GameOverPanel reason={gameOverReason} />
+            )}
+
+            {/* Victory Panel */}
+            {gameVictory && gameVictoryReason && (
+                <VictoryPanel reason={gameVictoryReason} />
             )}
 
             <style jsx global>{`

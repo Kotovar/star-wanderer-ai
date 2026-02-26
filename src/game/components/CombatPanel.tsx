@@ -40,6 +40,9 @@ export function CombatPanel() {
     const pDmg = getTotalDamage();
     const actualDamage = hasGunner ? pDmg.total : Math.floor(pDmg.total * 0.5);
     const isBoss = currentCombat?.enemy.isBoss || false;
+    const captain = crew.find((c) => c.profession === "pilot");
+    const captainLevel = captain?.level || 1;
+    const evasionChance = captainLevel; // 5% per level = level in percentage
 
     const getAdjacentModules = (moduleId: number) => {
         return ship.modules.filter(
@@ -127,6 +130,9 @@ export function CombatPanel() {
                     </div>
 
                     <div>🛡 Защита: {playerDefense}</div>
+                    <div className="text-xs text-[#00ff41] mt-1">
+                        🎯 Уклонение: {evasionChance}%
+                    </div>
                     {gunnerInWeaponBay && (
                         <div className="text-xs text-[#00ff41] mt-1">
                             🎯 Наводчик: {gunnerInWeaponBay.name}

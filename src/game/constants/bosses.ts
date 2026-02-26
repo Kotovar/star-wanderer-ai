@@ -190,6 +190,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
             value: 25,
         },
         guaranteedArtifactRarity: "mythic",
+        guaranteedModuleDrop: "quantum_engine",
     },
 
     // Special Black Hole Boss - The Eternal
@@ -265,5 +266,6 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
             value: 20,
         },
         guaranteedArtifactRarity: "cursed",
+        guaranteedModuleDrop: "quantum_engine",
     },
 ];

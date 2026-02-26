@@ -2,7 +2,12 @@
 
 import { useRef, useEffect } from "react";
 import { useGameStore } from "../store";
-import { drawLegend, drawSector, drawTierRings } from "./galaxy-map-utils";
+import {
+    drawLegend,
+    drawSector,
+    drawTierRings,
+    canSeeTier4,
+} from "./galaxy-map-utils";
 
 // Generate stars once and reuse them
 function generateStars(
@@ -54,6 +59,7 @@ export function GalaxyMap() {
     const currentSector = useGameStore((s) => s.currentSector);
     const selectSector = useGameStore((s) => s.selectSector);
     const modules = useGameStore((s) => s.ship.modules);
+    const artifacts = useGameStore((s) => s.artifacts);
     const captainLevel = useGameStore(
         (s) => s.crew.find((c) => c.profession === "pilot")?.level ?? 1,
     );
@@ -141,7 +147,15 @@ export function GalaxyMap() {
         }
 
         // Draw dynamic elements
-        drawTierRings(ctx, centerX, centerY, maxRadius, modules, captainLevel);
+        drawTierRings(
+            ctx,
+            centerX,
+            centerY,
+            maxRadius,
+            modules,
+            captainLevel,
+            artifacts,
+        );
         drawCenterMarker(ctx, centerX, centerY);
         drawSectors(
             ctx,
@@ -156,12 +170,14 @@ export function GalaxyMap() {
             areEnginesFunctional,
             areFuelTanksFunctional,
             currentSector,
+            artifacts,
         );
-        drawLegend(ctx, width, height, modules, captainLevel, fuel);
+        drawLegend(ctx, width, height, modules, captainLevel, fuel, artifacts);
     }, [
         sectors,
         currentSector,
         modules,
+        artifacts,
         captainLevel,
         fuel,
         calculateFuelCost,
@@ -225,8 +241,14 @@ function drawSectors(
     areEnginesFunctional: () => boolean,
     areFuelTanksFunctional: () => boolean,
     currentSector: ReturnType<typeof useGameStore.getState>["currentSector"],
+    artifacts: ReturnType<typeof useGameStore.getState>["artifacts"],
 ) {
+    const canSeeT4 = canSeeTier4(modules, artifacts);
+
     sectors.forEach((sector) => {
+        // Hide tier 4 sectors until scanner level 4 or all-seeing artifact
+        if (sector.tier === 4 && !canSeeT4) return;
+
         drawSector(
             ctx,
             sector,

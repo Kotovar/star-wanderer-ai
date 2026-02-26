@@ -254,17 +254,20 @@ export const generateAnomaly = (
     isBlackHole: boolean,
 ): Location => {
     let anomalyTier = tier;
-    let anomalyColor = ANOMALY_COLORS[tier];
+    let anomalyColor = ANOMALY_COLORS[tier] || ANOMALY_COLORS[3];
 
     if (tier === 2) {
         anomalyTier = Math.random() < 0.6 ? 1 : 2;
     } else if (tier === 3) {
         anomalyTier = Math.random() < 0.3 ? 2 : 3;
+    } else if (tier === 4) {
+        anomalyTier = 4;
+        anomalyColor = "#ff00ff"; // Special color for tier 4
     }
 
     if (isBlackHole) {
-        anomalyTier = Math.min(3, anomalyTier + 1) as GalaxyTier;
-        anomalyColor = ANOMALY_COLORS[3];
+        anomalyTier = Math.min(4, anomalyTier + 1) as GalaxyTier;
+        anomalyColor = "#ff00ff";
     }
 
     return {

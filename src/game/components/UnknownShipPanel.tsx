@@ -13,6 +13,9 @@ export function UnknownShipPanel() {
     const startBossCombat = useGameStore((s) => s.startBossCombat);
     const getScanLevel = useGameStore((s) => s.getScanLevel);
     const artifacts = useGameStore((s) => s.artifacts);
+    const captain = useGameStore((s) =>
+        s.crew.find((c) => c.profession === "pilot"),
+    );
 
     if (!currentLocation) return null;
 
@@ -158,6 +161,17 @@ export function UnknownShipPanel() {
                             {crew.length}
                         </span>
                     </div>
+                </div>
+                <div className="mt-2 text-sm">
+                    <span className="text-[#00ff41]">🎯 Уклонение:</span>
+                    {(captain?.level || 1) + (ship.bonusEvasion || 0)}%
+                    {ship.bonusEvasion ? (
+                        <span className="text-[#9933ff]">
+                            {" "}
+                            (+{ship.bonusEvasion}% бонус)
+                        </span>
+                    ) : null}
+                    {/*<span className="text-[#00ff41] ml-1">{captainLevel}%</span>*/}
                 </div>
             </div>
 

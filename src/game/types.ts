@@ -267,7 +267,7 @@ export type SignalDetails = {
     chance: number;
 };
 export type StarType = "single" | "double" | "triple" | "blackhole";
-export type GalaxyTier = 1 | 2 | 3;
+export type GalaxyTier = 1 | 2 | 3 | 4;
 export type AsteroidTier = 1 | 2 | 3 | 4;
 export type StarName =
     | "Одиночная звезда"
@@ -378,6 +378,9 @@ export interface CargoItem {
     quantity: number;
     contractId?: string;
     rewardValue?: number; // For special cargo like survivor capsules
+    moduleType?: ModuleType; // For module items (e.g., "engine")
+    moduleLevel?: number; // Module level (e.g., 4 for tier 4 engine)
+    isModule?: boolean; // True if this cargo is a ship module
 }
 
 export interface TradeGood {
@@ -385,6 +388,12 @@ export interface TradeGood {
     quantity: number;
     buyPrice: number;
 }
+
+export type Loot = {
+    credits: number;
+    guaranteedArtifact?: string;
+    guaranteedModuleDrop?: boolean;
+};
 
 export interface CombatState {
     enemy: {
@@ -401,10 +410,7 @@ export interface CombatState {
         // For bounty contracts
         threat?: number;
     };
-    loot: {
-        credits: number;
-        guaranteedArtifact?: string; // Bosses guarantee artifact
-    };
+    loot: Loot;
     // Ambush - enemy attacks first (when no scanner and approaching unknown enemy ship)
     isAmbush?: boolean;
     ambushAttackDone?: boolean; // Track if ambush attack was already executed
@@ -530,6 +536,8 @@ export interface GameState {
     battleResult: BattleResult | null; // Results of last battle
     gameOver: boolean; // Game over state
     gameOverReason: string | null; // Reason for game over
+    gameVictory: boolean; // Victory state (reached tier 4)
+    gameVictoryReason: string | null; // Reason for victory
     activeEffects: ActiveEffect[]; // Active planet specialization effects
     planetCooldowns: Record<string, number>; // Track cooldowns per planet (planetId -> turnsRemaining)
 }
@@ -649,12 +657,13 @@ export interface AncientBoss {
     id: string;
     name: string;
     description: string;
-    tier: 1 | 2 | 3; // Minimum sector tier to spawn
+    tier: 1 | 2 | 3 | 4; // Minimum sector tier to spawn
     modules: BossModule[];
     shields: number;
     regenRate: number; // HP regenerated per turn in combat
     specialAbility: BossAbility;
     guaranteedArtifactRarity: ArtifactRarity;
+    guaranteedModuleDrop?: string; // Module type dropped when defeated (e.g., "quantum_engine")
 }
 
 export interface BossModule {
