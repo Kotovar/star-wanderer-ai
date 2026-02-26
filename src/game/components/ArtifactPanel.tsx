@@ -2,6 +2,12 @@
 
 import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion";
 import type { Artifact } from "../types";
 
 const RARITY_COLORS: Record<
@@ -64,7 +70,7 @@ function ArtifactCard({
 
     return (
         <div
-            className={`border-2 p-3 ${artifact.discovered ? "" : "opacity-40"}`}
+            className={`border-2 p-3 cursor-pointer ${artifact.discovered ? "" : "opacity-40"}`}
             style={{
                 borderColor: colors.border,
                 backgroundColor: artifact.effect.active
@@ -175,7 +181,6 @@ export function ArtifactPanel() {
     const artifacts = useGameStore((s) => s.artifacts);
     const researchArtifact = useGameStore((s) => s.researchArtifact);
     const toggleArtifact = useGameStore((s) => s.toggleArtifact);
-    const closeArtifactsPanel = useGameStore((s) => s.closeArtifactsPanel);
     const crew = useGameStore((s) => s.crew);
 
     const scientists = crew.filter((c) => c.profession === "scientist");
@@ -196,86 +201,134 @@ export function ArtifactPanel() {
     const cursedArtifacts = artifacts.filter((a) => a.cursed);
 
     return (
-        <div className="flex flex-col gap-4">
-            <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                ▸ АРТЕФАКТЫ ДРЕВНИХ
-            </div>
-
-            <div className="text-sm text-[#888]">
-                Обнаружено:{" "}
-                <span className="text-[#00ff41]">{discoveredCount}</span> /{" "}
-                {artifacts.length}
-                {" | "}
-                Изучено:{" "}
-                <span className="text-[#ffb000]">{researchedCount}</span>
-                {" | "}
-                Активно: <span className="text-[#00d4ff]">{activeCount}</span>
-                {cursedActive > 0 && (
-                    <span className="text-[#ff0040]">
-                        {" "}
-                        ({cursedActive} проклятых)
-                    </span>
-                )}
-            </div>
-
-            <div className="text-xs text-[#888] mb-2">
-                Учёные на борту:{" "}
-                {scientists.length > 0 ? `Ур. ${maxScientistLevel}` : "нет"}
-            </div>
-
-            {/* Regular artifacts */}
-            {regularArtifacts.length > 0 && (
-                <div className="grid gap-3 max-h-60 overflow-y-auto pr-2">
-                    {regularArtifacts.map((artifact) => (
-                        <ArtifactCard
-                            key={artifact.id}
-                            artifact={artifact}
-                            onResearch={() => researchArtifact(artifact.id)}
-                            onToggle={() => toggleArtifact(artifact.id)}
-                        />
-                    ))}
+        <div className="flex flex-col h-full overflow-hidden gap-2">
+            {/* Header */}
+            <div className="shrink-0">
+                <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
+                    ▸ АРТЕФАКТЫ ДРЕВНИХ
                 </div>
-            )}
 
-            {/* Cursed artifacts section */}
-            {cursedArtifacts.length > 0 && (
-                <>
-                    <div className="font-['Orbitron'] font-bold text-sm text-[#ff0040] mt-2 border-t border-[#ff004044] pt-3">
-                        ⚠️ ПРОКЛЯТЫЕ АРТЕФАКТЫ
-                    </div>
-                    <div className="text-xs text-[#ff6666] bg-[rgba(255,0,64,0.1)] p-2 border-l-2 border-[#ff0040]">
-                        Сила этих артефактов сопровождается ценой. Каждый ход
-                        активный проклятый артефакт оказывает негативное
-                        воздействие на корабль или экипаж.
-                    </div>
-                    <div className="grid gap-3 max-h-60 overflow-y-auto pr-2">
-                        {cursedArtifacts.map((artifact) => (
-                            <ArtifactCard
-                                key={artifact.id}
-                                artifact={artifact}
-                                onResearch={() => researchArtifact(artifact.id)}
-                                onToggle={() => toggleArtifact(artifact.id)}
-                            />
-                        ))}
-                    </div>
-                </>
-            )}
+                <div className="text-sm text-[#888]">
+                    Обнаружено:{" "}
+                    <span className="text-[#00ff41]">{discoveredCount}</span> /{" "}
+                    {artifacts.length}
+                    {" | "}
+                    Изучено:{" "}
+                    <span className="text-[#ffb000]">{researchedCount}</span>
+                    {" | "}
+                    Активно:{" "}
+                    <span className="text-[#00d4ff]">{activeCount}</span>
+                    {cursedActive > 0 && (
+                        <span className="text-[#ff0040]">
+                            {" "}
+                            ({cursedActive} проклятых)
+                        </span>
+                    )}
+                </div>
 
-            <div className="bg-[rgba(255,176,0,0.1)] border border-[#ffb000] p-3 text-xs mt-2">
-                <span className="text-[#ffb000]">★ Совет: </span>
-                <span className="text-[#888]">
-                    Обычные артефакты можно найти в аномалиях и штормах.
-                    Проклятые артефакты встречаются реже, но их эффекты очень
-                    мощные — и опасные.
-                </span>
+                <div className="text-xs text-[#888]">
+                    Учёные на борту:{" "}
+                    {scientists.length > 0 ? `Ур. ${maxScientistLevel}` : "нет"}
+                </div>
             </div>
 
-            <Button
-                onClick={closeArtifactsPanel}
-                className="bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider mt-5"
+            {/* Accordion sections */}
+            <Accordion
+                type="multiple"
+                defaultValue={["regular", "cursed"]}
+                className="w-full flex-1 overflow-hidden"
             >
-                ЗАКРЫТЬ
-            </Button>
+                {/* Regular artifacts section */}
+                {regularArtifacts.length > 0 && (
+                    <AccordionItem value="regular" className="border-[#00d4ff]">
+                        <AccordionTrigger className="text-[#00d4ff] hover:text-[#00ff41] cursor-pointer">
+                            <span className="flex items-center gap-2 ">
+                                ★ ОБЫЧНЫЕ АРТЕФАКТЫ
+                                <span className="text-xs text-[#888]">
+                                    (
+                                    {discoveredCount -
+                                        cursedArtifacts.filter(
+                                            (a) => a.discovered,
+                                        ).length}
+                                    /{regularArtifacts.length})
+                                </span>
+                            </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="overflow-hidden">
+                            <div className="max-h-64 overflow-y-auto pr-2 grid gap-3 pt-2">
+                                {regularArtifacts.map((artifact) => (
+                                    <ArtifactCard
+                                        key={artifact.id}
+                                        artifact={artifact}
+                                        onResearch={() =>
+                                            researchArtifact(artifact.id)
+                                        }
+                                        onToggle={() =>
+                                            toggleArtifact(artifact.id)
+                                        }
+                                    />
+                                ))}
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                )}
+
+                {/* Cursed artifacts section */}
+                {cursedArtifacts.length > 0 && (
+                    <AccordionItem value="cursed" className="border-[#ff0040]">
+                        <AccordionTrigger className="text-[#ff0040] hover:text-[#ff6666] cursor-pointer">
+                            <span className="flex items-center gap-2">
+                                ⚠️ ПРОКЛЯТЫЕ АРТЕФАКТЫ
+                                <span className="text-xs text-[#888]">
+                                    (
+                                    {
+                                        cursedArtifacts.filter(
+                                            (a) => a.discovered,
+                                        ).length
+                                    }
+                                    /{cursedArtifacts.length})
+                                </span>
+                            </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="overflow-hidden">
+                            <div className="max-h-64 overflow-y-auto pr-2 space-y-3 pt-2 pb-4">
+                                <div className="text-xs text-[#ff6666] bg-[rgba(255,0,64,0.1)] p-2 border-l-2 border-[#ff0040]">
+                                    Сила этих артефактов сопровождается ценой.
+                                    Каждый ход активный проклятый артефакт
+                                    оказывает негативное воздействие на корабль
+                                    или экипаж.
+                                </div>
+                                <div className="grid gap-3">
+                                    {cursedArtifacts.map((artifact) => (
+                                        <ArtifactCard
+                                            key={artifact.id}
+                                            artifact={artifact}
+                                            onResearch={() =>
+                                                researchArtifact(artifact.id)
+                                            }
+                                            onToggle={() =>
+                                                toggleArtifact(artifact.id)
+                                            }
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                )}
+            </Accordion>
+
+            {/* Footer - Advice */}
+            <div className="shrink-0 mt-auto">
+                <div className="bg-[rgba(255,176,0,0.1)] border border-[#ffb000] p-3 text-xs">
+                    <span className="text-[#ffb000]">★ Совет: </span>
+                    <span className="text-[#888]">
+                        Обычные артефакты можно найти в аномалиях и штормах.
+                        Проклятые артефакты встречаются реже, но их эффекты
+                        очень мощные — и опасные.
+                    </span>
+                </div>
+            </div>
         </div>
     );
 }
