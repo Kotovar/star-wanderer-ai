@@ -268,7 +268,7 @@ export default function Home() {
 
                 {/* Right Panel */}
                 <div className="panel flex-1 lg:flex-1 flex flex-col mt-4 lg:mt-0 min-w-0 lg:h-[calc(100vh-90px)] pl-3">
-                    <div className="flex-1 flex flex-col gap-2 min-h-0">
+                    <div className="flex-1 flex flex-col min-h-0">
                         {/* Event Display (maps and other panels) */}
                         <div className="flex-1 overflow-hidden min-h-0">
                             <EventDisplay />
