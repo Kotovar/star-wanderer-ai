@@ -89,11 +89,9 @@ export function getSectorRadius(maxRadius: number, tier: number): number {
     return maxRadius * 0.9;
 }
 
-// Draw legend on galaxy map
-export function drawLegend(
+// Draw static legend (fuel, engine, captain info) - drawn BEFORE transform
+export function drawStaticLegend(
     ctx: CanvasRenderingContext2D,
-    width: number,
-    height: number,
     modules: Module[],
     captainLevel: number,
     fuel: number,
