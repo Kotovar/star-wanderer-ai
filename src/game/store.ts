@@ -93,6 +93,7 @@ const initialState: GameState = {
     currentSector: sectors[0], // Start in first tier 1 sector
     currentLocation: null,
     gameMode: "galaxy_map",
+    previousGameMode: null,
     traveling: null,
     ship: {
         armor: 0,
@@ -244,6 +245,7 @@ export const useGameStore = create<
         showGalaxyMap: () => void;
         showSectorMap: () => void;
         showAssignments: () => void;
+        closeArtifactsPanel: () => void;
 
         // Combat
         startCombat: (enemy: Location, isAmbush?: boolean) => void;
@@ -3436,6 +3438,11 @@ export const useGameStore = create<
     showGalaxyMap: () => set({ gameMode: "galaxy_map" }),
     showSectorMap: () => set({ gameMode: "sector_map" }),
     showAssignments: () => set({ gameMode: "assignments" }),
+    closeArtifactsPanel: () =>
+        set((state) => ({
+            gameMode: state.previousGameMode || "galaxy_map",
+            previousGameMode: null,
+        })),
 
     startCombat: (enemy, isAmbush = false) => {
         playSound("combat");
@@ -6844,7 +6851,10 @@ export const useGameStore = create<
     },
 
     showArtifacts: () => {
-        set({ gameMode: "artifacts" });
+        set((state) => ({
+            previousGameMode: state.gameMode,
+            gameMode: "artifacts",
+        }));
     },
 
     discoverRace: (raceId: RaceId) => {

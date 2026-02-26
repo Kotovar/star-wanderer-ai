@@ -486,6 +486,7 @@ export interface GameState {
     currentSector: Sector | null;
     currentLocation: Location | null;
     gameMode: GameMode;
+    previousGameMode: GameMode | null; // Track previous game mode for modal-like panels
     traveling: TravelingState | null;
     ship: {
         armor: number;

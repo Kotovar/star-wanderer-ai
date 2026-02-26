@@ -41,8 +41,8 @@ export function GameHeader() {
 
     const handleArtifactsClick = () => {
         if (gameMode === "artifacts") {
-            // If artifacts panel is open, close it by going to sector map
-            useGameStore.getState().showSectorMap();
+            // If artifacts panel is open, close it and return to previous mode
+            useGameStore.getState().closeArtifactsPanel();
         } else {
             showArtifacts();
         }
