@@ -537,6 +537,7 @@ export function SectorMap() {
     // Handle wheel zoom
     const handleWheel = useCallback(
         (e: React.WheelEvent<HTMLCanvasElement>) => {
+            e.stopPropagation();
             const delta = -e.deltaY * ZOOM_SENSITIVITY;
             const newZoom = Math.min(
                 MAX_ZOOM,
@@ -904,7 +905,7 @@ export function SectorMap() {
 
             <canvas
                 ref={canvasRef}
-                className="border-2 border-[#00ff41] bg-[#050810] cursor-grab w-full h-auto"
+                className="border-2 border-[#00ff41] bg-[#050810] cursor-grab w-full h-full"
                 style={{ cursor: isDragging ? "grabbing" : "grab" }}
                 onClick={handleClick}
                 onWheel={handleWheel}

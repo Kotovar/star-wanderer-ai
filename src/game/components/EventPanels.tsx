@@ -67,23 +67,11 @@ export function EventDisplay() {
     switch (gameMode) {
         case "galaxy_map":
             return (
-                <div className="flex flex-col gap-4">
-                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mb-4">
+                <div className="flex flex-col gap-2 h-full">
+                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mb-2">
                         ▸ КАРТА ГАЛАКТИКИ
                     </div>
-                    <div className="text-sm text-center">
-                        Позиция:{" "}
-                        <span className="text-[#ffb000]">
-                            {currentSector?.name}
-                        </span>
-                    </div>
-                    <div className="mt-4">
-                        <GalaxyMap />
-                        <div className="mt-2.5 text-[11px] text-center text-[#00ff41]">
-                            Кликните на сектор
-                        </div>
-                    </div>
-                    <div className="flex gap-2.5 flex-wrap mt-5">
+                    <div className="flex gap-2.5 flex-wrap">
                         <Button
                             onClick={showSectorMap}
                             className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
@@ -103,25 +91,29 @@ export function EventDisplay() {
                             ПРОПУСТИТЬ ХОД
                         </Button>
                     </div>
+                    <div className="text-sm text-center">
+                        Позиция:{" "}
+                        <span className="text-[#ffb000]">
+                            {currentSector?.name}
+                        </span>
+                    </div>
+                    <div className="flex-1 min-h-0">
+                        <GalaxyMap />
+                        <div className="text-[11px] text-center text-[#00ff41] mt-2">
+                            {" "}
+                            Кликните на сектор{" "}
+                        </div>
+                    </div>
                 </div>
             );
 
         case "sector_map":
             return (
-                <div className="flex flex-col gap-4">
-                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mb-4">
+                <div className="flex flex-col gap-2 h-full">
+                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mb-2">
                         ▸ {currentSector?.name}
                     </div>
-                    <div className="text-sm text-center">
-                        Уровень угрозы: {currentSector?.danger}
-                    </div>
-                    <div className="mt-4">
-                        <SectorMap />
-                        <div className="mt-2.5 text-[11px] text-center text-[#00ff41]">
-                            Кликните по объекту
-                        </div>
-                    </div>
-                    <div className="flex gap-2.5 flex-wrap mt-4">
+                    <div className="flex gap-2.5 flex-wrap">
                         <Button
                             onClick={showGalaxyMap}
                             className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
@@ -140,6 +132,15 @@ export function EventDisplay() {
                         >
                             ПРОПУСТИТЬ ХОД
                         </Button>
+                    </div>
+                    <div className="text-sm text-center">
+                        Уровень угрозы: {currentSector?.danger}
+                    </div>
+                    <div className="flex-1 min-h-0">
+                        <SectorMap />
+                        <div className="text-[11px] text-center text-[#00ff41] mt-2">
+                            Кликните по объекту
+                        </div>
                     </div>
                 </div>
             );

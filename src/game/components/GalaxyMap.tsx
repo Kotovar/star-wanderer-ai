@@ -242,9 +242,7 @@ export function GalaxyMap() {
     // Handle wheel zoom
     const handleWheel = useCallback(
         (e: React.WheelEvent<HTMLCanvasElement>) => {
-            // Note: preventDefault doesn't work in passive listeners, but we don't need it here
-            // since we're only handling zoom, not preventing browser scroll
-
+            e.stopPropagation();
             const delta = -e.deltaY * ZOOM_SENSITIVITY;
             const newZoom = Math.min(
                 MAX_ZOOM,
@@ -363,7 +361,7 @@ export function GalaxyMap() {
     };
 
     return (
-        <div ref={containerRef} className="w-full h-full flex-1 relative">
+        <div ref={containerRef} className="w-full relative">
             <canvas
                 ref={canvasRef}
                 className="border-2 border-[#00ff41] bg-[#050810] cursor-grab w-full h-full"
