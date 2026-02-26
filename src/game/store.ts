@@ -99,7 +99,7 @@ const initialState: GameState = {
     previousGameMode: null,
     traveling: null,
     ship: {
-        armor: 0,
+        armor: initialModules.length,
         shields: 0,
         maxShields: 0,
         crewCapacity: 5,
