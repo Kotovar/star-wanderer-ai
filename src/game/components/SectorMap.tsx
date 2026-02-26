@@ -808,6 +808,62 @@ export function SectorMap() {
         }
     }, [isDragging]);
 
+    // Touch handlers for mobile
+    const handleTouchStart = useCallback(
+        (e: React.TouchEvent<HTMLCanvasElement>) => {
+            const touch = e.touches[0];
+            setIsDragging(true);
+            hasMovedRef.current = false;
+            dragStartRef.current = { x: touch.clientX, y: touch.clientY };
+            offsetStartRef.current = { ...offsetRef.current };
+        },
+        [],
+    );
+
+    const handleTouchMove = useCallback(
+        (e: React.TouchEvent<HTMLCanvasElement>) => {
+            if (!isDragging) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            const dx = touch.clientX - dragStartRef.current.x;
+            const dy = touch.clientY - dragStartRef.current.y;
+
+            if (
+                !hasMovedRef.current &&
+                Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD
+            ) {
+                hasMovedRef.current = true;
+            }
+
+            const newOffset = {
+                x: offsetStartRef.current.x + dx,
+                y: offsetStartRef.current.y + dy,
+            };
+            offsetRef.current = newOffset;
+
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+
+            animationFrameRef.current = requestAnimationFrame(() => {
+                drawCanvas();
+            });
+        },
+        [isDragging, drawCanvas],
+    );
+
+    const handleTouchEnd = useCallback(() => {
+        if (isDragging) {
+            setOffset({ ...offsetRef.current });
+        }
+        setIsDragging(false);
+        if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+            animationFrameRef.current = null;
+        }
+    }, [isDragging]);
+
     // Zoom in/out buttons
     const handleZoomIn = useCallback(() => {
         setZoom((z) => Math.min(MAX_ZOOM, z * 1.3));
@@ -905,7 +961,7 @@ export function SectorMap() {
 
             <canvas
                 ref={canvasRef}
-                className="border-2 border-[#00ff41] bg-[#050810] cursor-grab w-full h-full"
+                className="border-2 border-[#00ff41] bg-[#050810] cursor-grab w-full h-full touch-none"
                 style={{ cursor: isDragging ? "grabbing" : "grab" }}
                 onClick={handleClick}
                 onWheel={handleWheel}
@@ -916,6 +972,9 @@ export function SectorMap() {
                     handleMouseLeave();
                     setHoveredLocation(null);
                 }}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
             />
 
             {/* Zoom controls */}

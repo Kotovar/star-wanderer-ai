@@ -99,7 +99,7 @@ export function EventDisplay() {
                     </div>
                     <div className="flex-1 min-h-0 relative">
                         <GalaxyMap />
-                        <div className="absolute  inset-x-0 text-[11px] text-center text-[#00ff41] pointer-events-none">
+                        <div className="absolute bottom-16 lg:bottom-16 inset-x-0 text-[11px] text-center text-[#00ff41] pointer-events-none">
                             Кликните на сектор
                         </div>
                     </div>
@@ -137,7 +137,7 @@ export function EventDisplay() {
                     </div>
                     <div className="flex-1 min-h-0 relative">
                         <SectorMap />
-                        <div className="absolute  inset-x-0 text-[11px] text-center text-[#00ff41] pointer-events-none">
+                        <div className="absolute bottom-16 lg:bottom-16 inset-x-0 text-[11px] text-center text-[#00ff41] pointer-events-none">
                             Кликните по объекту
                         </div>
                     </div>

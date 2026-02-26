@@ -299,6 +299,46 @@ export function GalaxyMap() {
         setIsDragging(false);
     }, []);
 
+    // Touch handlers for mobile
+    const handleTouchStart = useCallback(
+        (e: React.TouchEvent<HTMLCanvasElement>) => {
+            const touch = e.touches[0];
+            setIsDragging(true);
+            hasMovedRef.current = false;
+            dragStartRef.current = { x: touch.clientX, y: touch.clientY };
+            offsetStartRef.current = { ...offset };
+        },
+        [offset],
+    );
+
+    const handleTouchMove = useCallback(
+        (e: React.TouchEvent<HTMLCanvasElement>) => {
+            if (!isDragging) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            const dx = touch.clientX - dragStartRef.current.x;
+            const dy = touch.clientY - dragStartRef.current.y;
+
+            if (
+                !hasMovedRef.current &&
+                Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD
+            ) {
+                hasMovedRef.current = true;
+            }
+
+            setOffset({
+                x: offsetStartRef.current.x + dx,
+                y: offsetStartRef.current.y + dy,
+            });
+        },
+        [isDragging],
+    );
+
+    const handleTouchEnd = useCallback(() => {
+        setIsDragging(false);
+    }, []);
+
     // Zoom in/out buttons
     const handleZoomIn = useCallback(() => {
         setZoom((z) => Math.min(MAX_ZOOM, z * 1.3));
@@ -364,7 +404,7 @@ export function GalaxyMap() {
         <div ref={containerRef} className="w-full h-full relative">
             <canvas
                 ref={canvasRef}
-                className="border-2 border-[#00ff41] bg-[#050810] cursor-grab w-full h-full"
+                className="border-2 border-[#00ff41] bg-[#050810] cursor-grab w-full h-full touch-none"
                 style={{ cursor: isDragging ? "grabbing" : "grab" }}
                 onClick={handleClick}
                 onWheel={handleWheel}
@@ -372,6 +412,9 @@ export function GalaxyMap() {
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseLeave}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
             />
 
             {/* Zoom controls */}

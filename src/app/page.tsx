@@ -269,7 +269,7 @@ export default function Home() {
                 </div>
 
                 {/* Right Panel */}
-                <div className="panel flex-1 lg:flex-1 flex flex-col mt-4 lg:mt-0 min-w-0 lg:h-[calc(100vh-90px)] pl-3 relative">
+                <div className="panel flex-1 lg:flex-1 flex flex-col mt-4 lg:mt-0 min-w-0 h-[calc(100vh-200px)] lg:h-[calc(100vh-90px)] pl-3 relative">
                     <div className="flex-1 overflow-hidden min-h-0 pb-14">
                         <EventDisplay />
                     </div>
