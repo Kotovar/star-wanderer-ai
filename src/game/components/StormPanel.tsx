@@ -136,7 +136,7 @@ export function StormPanel() {
                             <span
                                 className={`${ship.armor > 50 ? "text-[#00ff41]" : "text-[#ffb000]"} ml-1`}
                             >
-                                {ship.armor}%
+                                {ship.armor} ед.
                             </span>
                         </div>
                         <div>
@@ -202,7 +202,7 @@ export function StormPanel() {
                         <div>
                             <span className="text-[#ffb000]">🔧 Броня:</span>
                             <span className="text-[#00ff41] ml-1">
-                                {ship.armor}%
+                                {ship.armor} ед.
                             </span>
                         </div>
                         <div>
@@ -289,7 +289,7 @@ export function StormPanel() {
                     <div>
                         <span className="text-[#ffb000]">🔧 Броня:</span>
                         <span className="text-[#00ff41] ml-1">
-                            {ship.armor}%
+                            {ship.armor} ед.
                         </span>
                     </div>
                     <div>

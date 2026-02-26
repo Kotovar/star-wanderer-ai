@@ -269,19 +269,23 @@ export function SectorMap() {
     const [isDragging, setIsDragging] = useState(false);
     const dragStartRef = useRef({ x: 0, y: 0 });
     const offsetStartRef = useRef({ x: 0, y: 0 });
+    const offsetRef = useRef({ x: 0, y: 0 }); // Ref for smooth dragging without re-renders
     const hasMovedRef = useRef(false);
     const animationFrameRef = useRef<number | null>(null);
 
-    // Cache stars to prevent flickering
+    // Cache stars to prevent flickering (stored in normalized 0-1 coordinates)
     const starsRef = useRef<Array<{
-        x: number;
-        y: number;
+        nx: number; // normalized x (0-1)
+        ny: number; // normalized y (0-1)
         size: number;
         brightness: number;
     }> | null>(null);
 
     // Off-screen canvas for static background (stars)
     const bgCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+    // Store canvas size to detect actual resize
+    const canvasSizeRef = useRef({ width: 0, height: 0 });
 
     const scanLevel = getScanLevel();
     const scanRange = getScanRange();
@@ -311,9 +315,10 @@ export function SectorMap() {
             ctx.drawImage(bgCanvasRef.current, 0, 0);
         }
 
-        // Apply transform for zoom and pan
+        // Apply transform for zoom and pan (use ref during drag, state otherwise)
+        const currentOffset = isDragging ? offsetRef.current : offset;
         ctx.save();
-        ctx.translate(centerX + offset.x, centerY + offset.y);
+        ctx.translate(centerX + currentOffset.x, centerY + currentOffset.y);
         ctx.scale(zoom, zoom);
         ctx.translate(-centerX, -centerY);
 
@@ -447,6 +452,7 @@ export function SectorMap() {
         scanLevel,
         zoom,
         offset,
+        isDragging,
     ]);
 
     // Initialize canvas and background
@@ -456,16 +462,21 @@ export function SectorMap() {
         if (!canvas || !container || !currentSector) return;
 
         const rect = container.getBoundingClientRect();
-        const newWidth = Math.max(rect.width, 500);
-        const newHeight = Math.max(rect.width * 0.65, 350);
+        const newWidth = Math.round(Math.max(rect.width, 500));
+        const newHeight = Math.round(Math.max(rect.width * 0.65, 350));
 
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        // Regenerate background only if canvas size changed
-        if (canvas.width !== newWidth || canvas.height !== newHeight) {
+        // Regenerate background only if canvas size actually changed (not fractional)
+        const sizeChanged =
+            canvasSizeRef.current.width !== newWidth ||
+            canvasSizeRef.current.height !== newHeight;
+
+        if (sizeChanged) {
             canvas.width = newWidth;
             canvas.height = newHeight;
+            canvasSizeRef.current = { width: newWidth, height: newHeight };
 
             // Create off-screen background canvas
             const bgCanvas = document.createElement("canvas");
@@ -478,27 +489,40 @@ export function SectorMap() {
                 bgCtx.fillStyle = "#050810";
                 bgCtx.fillRect(0, 0, newWidth, newHeight);
 
-                // Generate and draw stars once
-                const stars: Array<{
-                    x: number;
-                    y: number;
-                    size: number;
-                    brightness: number;
-                }> = [];
-                for (let i = 0; i < 150; i++) {
-                    stars.push({
-                        x: Math.random() * newWidth,
-                        y: Math.random() * newHeight,
-                        size: Math.random() * 1.5,
-                        brightness: Math.random(),
-                    });
-                }
-                starsRef.current = stars;
+                // Generate stars once in normalized coordinates (0-1)
+                // Only generate if not already cached
+                if (!starsRef.current) {
+                    const stars: Array<{
+                        nx: number;
+                        ny: number;
+                        size: number;
+                        brightness: number;
+                    }> = [];
 
-                stars.forEach((star) => {
+                    // Simple hash function for pseudo-random but consistent values
+                    const hash = (n: number): number => {
+                        const h = Math.sin(n * 12.9898 + 78.233) * 43758.5453;
+                        return h - Math.floor(h);
+                    };
+
+                    for (let i = 0; i < 150; i++) {
+                        stars.push({
+                            nx: hash(i),
+                            ny: hash(i + 1000),
+                            size: 0.5 + hash(i + 2000) * 1.5,
+                            brightness: hash(i + 3000),
+                        });
+                    }
+                    starsRef.current = stars;
+                }
+
+                // Draw stars using normalized coordinates scaled to current canvas size
+                starsRef.current.forEach((star) => {
+                    const x = star.nx * newWidth;
+                    const y = star.ny * newHeight;
                     bgCtx.fillStyle = `rgba(255, 255, 255, ${0.3 + star.brightness * 0.7})`;
                     bgCtx.beginPath();
-                    bgCtx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    bgCtx.arc(x, y, star.size, 0, Math.PI * 2);
                     bgCtx.fill();
                 });
             }
@@ -537,7 +561,7 @@ export function SectorMap() {
     // Handle mouse move for dragging and tooltip
     const handleMouseMove = useCallback(
         (e: React.MouseEvent<HTMLCanvasElement>) => {
-            // Handle dragging with requestAnimationFrame for smooth rendering
+            // Handle dragging with direct canvas rendering (no React state updates)
             if (isDragging) {
                 const dx = e.clientX - dragStartRef.current.x;
                 const dy = e.clientY - dragStartRef.current.y;
@@ -554,15 +578,158 @@ export function SectorMap() {
                     x: offsetStartRef.current.x + dx,
                     y: offsetStartRef.current.y + dy,
                 };
+                offsetRef.current = newOffset;
 
                 // Cancel previous animation frame
                 if (animationFrameRef.current) {
                     cancelAnimationFrame(animationFrameRef.current);
                 }
 
-                // Use requestAnimationFrame for smooth dragging
+                // Direct canvas rendering without React state
                 animationFrameRef.current = requestAnimationFrame(() => {
-                    setOffset(newOffset);
+                    const canvas = canvasRef.current;
+                    const container = containerRef.current;
+                    if (!canvas || !container || !currentSector) return;
+
+                    const ctx = canvas.getContext("2d");
+                    if (!ctx) return;
+
+                    const width = canvas.width;
+                    const height = canvas.height;
+                    const centerX = width / 2;
+                    const centerY = height / 2;
+                    const baseMaxRadius = Math.min(width, height) * 0.45;
+
+                    // Draw cached background
+                    if (bgCanvasRef.current) {
+                        ctx.drawImage(bgCanvasRef.current, 0, 0);
+                    }
+
+                    // Apply transform using ref offset (no React state)
+                    ctx.save();
+                    ctx.translate(centerX + newOffset.x, centerY + newOffset.y);
+                    ctx.scale(zoom, zoom);
+                    ctx.translate(-centerX, -centerY);
+
+                    // Draw central star
+                    const star = currentSector.star;
+                    drawStar(ctx, centerX, centerY, star);
+
+                    // Draw locations
+                    currentSector.locations.forEach((loc) => {
+                        const distanceRatio = loc.distanceRatio ?? 0.5;
+                        const distance = baseMaxRadius * distanceRatio;
+                        const angle = loc.angle ?? 0;
+
+                        const x = centerX + Math.cos(angle) * distance;
+                        const y = centerY + Math.sin(angle) * distance;
+                        loc.x = x;
+                        loc.y = y;
+
+                        const completed = completedLocations.includes(loc.id);
+                        const hasScanner = scanLevel > 0 || hasAllSeeing;
+                        const isRevealed = loc.signalRevealed;
+
+                        if (loc.type === "station") {
+                            drawStation(ctx, x, y, completed);
+                        } else if (loc.type === "planet") {
+                            drawPlanet(ctx, x, y, loc, completed);
+                        } else if (loc.type === "enemy") {
+                            if (!hasScanner && !isRevealed) {
+                                drawUnknownShip(ctx, x, y, completed);
+                            } else {
+                                drawEnemy(ctx, x, y, loc, completed);
+                            }
+                        } else if (loc.type === "anomaly") {
+                            if (hasScanner || isRevealed) {
+                                drawAnomaly(ctx, x, y, loc, completed);
+                            } else {
+                                drawUnknown(ctx, x, y, completed);
+                            }
+                        } else if (loc.type === "friendly_ship") {
+                            if (!hasScanner && !isRevealed) {
+                                drawUnknownShip(ctx, x, y, completed);
+                            } else {
+                                drawFriendlyShip(ctx, x, y, completed);
+                            }
+                        } else if (loc.type === "asteroid_belt") {
+                            drawAsteroidBelt(ctx, x, y, loc, completed);
+                        } else if (loc.type === "storm") {
+                            if (hasScanner || isRevealed) {
+                                drawStorm(ctx, x, y, loc, completed);
+                            } else {
+                                drawUnknown(ctx, x, y, completed);
+                            }
+                        } else if (loc.type === "distress_signal") {
+                            drawDistressSignal(ctx, x, y, loc, completed);
+                        } else if (loc.type === "ancient_boss") {
+                            if (hasScanner || isRevealed) {
+                                drawAncientBoss(ctx, x, y, loc, completed);
+                            } else {
+                                drawUnknownShip(ctx, x, y, completed);
+                            }
+                        }
+
+                        // Draw labels
+                        const needsScanner = [
+                            "storm",
+                            "anomaly",
+                            "ancient_boss",
+                        ].includes(loc.type);
+                        const displayName =
+                            needsScanner &&
+                            !hasScanner &&
+                            !isRevealed &&
+                            !completed
+                                ? "❓ Неизвестный объект"
+                                : loc.name;
+
+                        const isUnknownShip =
+                            ["enemy", "friendly_ship"].includes(loc.type) &&
+                            !hasScanner &&
+                            !isRevealed &&
+                            !completed;
+
+                        const isExploredEmptyPlanet =
+                            loc.type === "planet" &&
+                            loc.isEmpty &&
+                            loc.explored;
+                        const isVisitedColonizedPlanet =
+                            loc.type === "planet" &&
+                            !loc.isEmpty &&
+                            loc.visited;
+                        const isVisitedStation =
+                            loc.type === "station" && loc.visited;
+
+                        const finalDisplayName = isUnknownShip
+                            ? "❓ Неизвестный корабль"
+                            : isExploredEmptyPlanet
+                              ? `${loc.name} (исследовано)`
+                              : isVisitedColonizedPlanet || isVisitedStation
+                                ? `${loc.name} (посещено)`
+                                : displayName;
+
+                        ctx.font = "11px Share Tech Mono";
+                        ctx.textAlign = "center";
+                        ctx.fillStyle = completed
+                            ? "#888"
+                            : isExploredEmptyPlanet ||
+                                isVisitedColonizedPlanet ||
+                                isVisitedStation
+                              ? "#00ff41"
+                              : loc.type === "planet" && !loc.isEmpty
+                                ? "#ffb000"
+                                : "#00ff41";
+                        ctx.fillText(finalDisplayName, x, y + 28);
+
+                        if (completed) {
+                            ctx.font = "9px Share Tech Mono";
+                            ctx.fillStyle = "#666";
+                            ctx.fillText("(✓)", x, y + 40);
+                        }
+                    });
+
+                    ctx.restore();
                     animationFrameRef.current = null;
                 });
             }
@@ -579,8 +746,11 @@ export function SectorMap() {
             // Account for zoom and pan
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const worldMouseX = (mouseX - centerX - offset.x) / zoom + centerX;
-            const worldMouseY = (mouseY - centerY - offset.y) / zoom + centerY;
+            const currentOffset = isDragging ? offsetRef.current : offset;
+            const worldMouseX =
+                (mouseX - centerX - currentOffset.x) / zoom + centerX;
+            const worldMouseY =
+                (mouseY - centerY - currentOffset.y) / zoom + centerY;
 
             let found = false;
             currentSector.locations.forEach((loc) => {
@@ -590,7 +760,6 @@ export function SectorMap() {
                 );
                 const hitboxSize = 25 / zoom;
                 if (dist < hitboxSize) {
-                    // Convert canvas coordinates to screen coordinates for tooltip
                     const screenX = e.clientX - rect.left;
                     const screenY = e.clientY - rect.top;
                     setHoveredLocation({ loc, x: screenX, y: screenY });
@@ -602,26 +771,41 @@ export function SectorMap() {
                 setHoveredLocation(null);
             }
         },
-        [isDragging, zoom, offset, currentSector],
+        [
+            isDragging,
+            zoom,
+            offset,
+            currentSector,
+            completedLocations,
+            scanLevel,
+            hasAllSeeing,
+        ],
     );
 
     // Handle mouse up to stop dragging
     const handleMouseUp = useCallback(() => {
+        if (isDragging) {
+            // Sync offset ref with React state when drag ends
+            setOffset({ ...offsetRef.current });
+        }
         setIsDragging(false);
         if (animationFrameRef.current) {
             cancelAnimationFrame(animationFrameRef.current);
             animationFrameRef.current = null;
         }
-    }, []);
+    }, [isDragging]);
 
     // Handle mouse leave to stop dragging
     const handleMouseLeave = useCallback(() => {
+        if (isDragging) {
+            setOffset({ ...offsetRef.current });
+        }
         setIsDragging(false);
         if (animationFrameRef.current) {
             cancelAnimationFrame(animationFrameRef.current);
             animationFrameRef.current = null;
         }
-    }, []);
+    }, [isDragging]);
 
     // Zoom in/out buttons
     const handleZoomIn = useCallback(() => {
@@ -659,9 +843,14 @@ export function SectorMap() {
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
 
+        // Use ref offset during drag, state otherwise
+        const currentOffset = isDragging ? offsetRef.current : offset;
+
         // Inverse transform: screen -> world
-        const worldClickX = (clickX - centerX - offset.x) / zoom + centerX;
-        const worldClickY = (clickY - centerY - offset.y) / zoom + centerY;
+        const worldClickX =
+            (clickX - centerX - currentOffset.x) / zoom + centerX;
+        const worldClickY =
+            (clickY - centerY - currentOffset.y) / zoom + centerY;
 
         // Check if clicked on central star (black hole)
         const distFromCenter = Math.sqrt(
@@ -1436,14 +1625,29 @@ function drawAsteroidBelt(
     ctx.arc(x, y, 18, 0, Math.PI * 2);
     ctx.fill();
 
-    // Draw multiple small asteroids
+    // Hash function for deterministic pseudo-random values
+    const hash = (n: number): number => {
+        const h = Math.sin(n * 12.9898 + 78.233) * 43758.5453;
+        return h - Math.floor(h);
+    };
+
+    // Use location ID to seed the hash for consistent asteroid positions
+    const locId = loc.id || "unknown";
+    let locHash = 0;
+    for (let i = 0; i < locId.length; i++) {
+        locHash = (locHash << 5) - locHash + locId.charCodeAt(i);
+        locHash = locHash & locHash;
+    }
+    locHash = Math.abs(locHash);
+
+    // Draw multiple small asteroids (deterministic positions and sizes)
     ctx.fillStyle = color;
     for (let i = 0; i < 6; i++) {
         const angle = (i / 6) * Math.PI * 2;
-        const dist = 6 + Math.random() * 4;
+        const dist = 6 + hash(locHash + i) * 4;
         const ax = x + Math.cos(angle) * dist;
         const ay = y + Math.sin(angle) * dist;
-        const size = 2 + Math.random() * 2;
+        const size = 2 + hash(locHash + i + 100) * 2;
 
         ctx.beginPath();
         ctx.moveTo(ax + size, ay);
