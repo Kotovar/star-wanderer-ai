@@ -189,7 +189,7 @@ export function GalaxyMap() {
         }
 
         // Draw static legend (fuel, engine, captain info) BEFORE transform
-        drawStaticLegend(ctx, modules, captainLevel, fuel, artifacts);
+        drawStaticLegend(ctx, modules, captainLevel, fuel);
 
         // Apply transform for zoom and pan
         ctx.save();

@@ -95,16 +95,10 @@ export function drawStaticLegend(
     modules: Module[],
     captainLevel: number,
     fuel: number,
-    artifacts: Array<{
-        effect?: { type?: string; active?: boolean };
-        id?: string;
-    }>,
 ) {
     const legendX = 10;
     const legendY = 10;
     const engineLevel = getEngineLevel(modules);
-    const canSeeT4 = canSeeTier4(modules, artifacts);
-    const canAccessT4 = engineLevel >= 4 && captainLevel >= 4;
 
     ctx.font = "13px Share Tech Mono";
     ctx.textAlign = "left";
@@ -119,14 +113,9 @@ export function drawStaticLegend(
 
     ctx.fillStyle = "#888";
     ctx.fillText(`Капитан: Ур.${captainLevel}`, legendX, legendY + 48);
-    ctx.fillText("Тир 2: Двиг.Ур2 + Кап.Ур2", legendX, legendY + 68);
-    ctx.fillText("Тир 3: Двиг.Ур3 + Кап.Ур3", legendX, legendY + 84);
-    ctx.fillStyle = canAccessT4 ? "#ff00ff" : "#555";
-    ctx.fillText(
-        `Тир 4: Двиг.Ур4 + Кап.Ур4 ${canSeeT4 ? "(виден)" : ""}`,
-        legendX,
-        legendY + 100,
-    );
+    ctx.fillText("Сектор 1: Двиг.Ур1 + Кап.Ур1", legendX, legendY + 68);
+    ctx.fillText("Сектор 2: Двиг.Ур2 + Кап.Ур2", legendX, legendY + 84);
+    ctx.fillText("Сектор 3: Двиг.Ур3 + Кап.Ур3", legendX, legendY + 100);
 }
 
 // Draw a sector on the galaxy map
