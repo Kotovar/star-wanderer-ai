@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useGameStore } from "../store";
-import { PROFESSION_NAMES, PROFESSION_DESCRIPTIONS, RACES } from "../constants";
-import type { CrewMember } from "../types";
+import { useGameStore } from "@/game/store";
+import { RACES } from "@/game/constants/races";
+import type { CrewMember } from "@/game/types";
 import {
     Dialog,
     DialogContent,
@@ -13,6 +13,10 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import {
+    PROFESSION_DESCRIPTIONS,
+    PROFESSION_NAMES,
+} from "@/game/constants/crew";
 
 export function CrewList() {
     const crew = useGameStore((s) => s.crew);

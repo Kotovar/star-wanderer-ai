@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useGameStore } from "../store";
-import { CREW_ACTIONS, PROFESSION_NAMES } from "../constants";
+
 import { Button } from "@/components/ui/button";
 import {
     Select,
@@ -11,6 +11,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { CREW_ACTIONS, PROFESSION_NAMES } from "@/game/constants/crew";
 
 export function AssignmentsPanel() {
     const crew = useGameStore((s) => s.crew);

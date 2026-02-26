@@ -12,24 +12,24 @@ import type {
     EnemyModule,
     RaceId,
     BattleResult,
-} from "./types";
+} from "@/game/types";
+import { TRADE_GOODS, WEAPON_TYPES } from "@/game/constants";
+import { initialModules, STARTING_FUEL } from "@/game/modules";
+import { initialCrew } from "@/game/crew";
+import { generateGalaxy } from "@/game/galaxy";
+import { RACES } from "@/game/constants/races";
+import { CREW_TRAITS } from "@/game/constants/crew";
+import { PLANET_SPECIALIZATIONS } from "@/game/constants/planets";
+import { getRandomName } from "@/game/crew/utils";
 import {
-    TRADE_GOODS,
-    WEAPON_TYPES,
-    CREW_TRAITS,
-    getRandomName,
-    ANCIENT_ARTIFACTS,
-    getBossById,
-    getRandomUndiscoveredArtifact,
-    determineSignalOutcome,
-    RACES,
-    PLANET_SPECIALIZATIONS,
-    getMutationTraitName,
     getMutationTraitDesc,
-} from "./constants";
-import { initialModules, STARTING_FUEL } from "./modules";
-import { initialCrew } from "./crew";
-import { generateGalaxy } from "./galaxy";
+    getMutationTraitName,
+} from "@/game/traits/utils";
+import { MUTATION_TRAITS } from "@/game/traits/consts";
+import { getRandomUndiscoveredArtifact } from "@/game/artifacts/utils";
+import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
+import { getBossById } from "@/game/bosses/utils";
+import { determineSignalOutcome } from "@/game/signals/utils";
 
 // Initialize station prices and stock
 const initializeStationData = (
@@ -1036,15 +1036,10 @@ export const useGameStore = create<
                     // X% chance each crew member gets negative mutation trait
                     state.crew.forEach((crewMember) => {
                         if (Math.random() * 100 < negativeValue) {
-                            const mutationTraits = [
-                                "nightmares",
-                                "paranoid",
-                                "unstable",
-                            ];
                             const newTrait =
-                                mutationTraits[
+                                MUTATION_TRAITS[
                                     Math.floor(
-                                        Math.random() * mutationTraits.length,
+                                        Math.random() * MUTATION_TRAITS.length,
                                     )
                                 ];
                             set((s) => ({

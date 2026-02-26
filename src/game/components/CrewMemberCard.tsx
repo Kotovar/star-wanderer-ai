@@ -7,8 +7,9 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { CREW_ACTIONS, PROFESSION_NAMES } from "../constants";
-import type { CrewMember, Module } from "../types";
+import { PROFESSION_NAMES } from "@/game/constants/crew";
+import type { CrewMember, Module } from "@/game/types";
+import { CREW_ACTIONS } from "@/game/constants/crew";
 
 interface CrewMemberCardProps {
     crewMember: CrewMember;

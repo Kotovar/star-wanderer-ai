@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useGameStore } from "../store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RACES } from "../constants";
+import { RACES } from "../constants/races";
 import type { RaceId, Contract, ShopItem, CrewMember } from "../types";
 import { ShopTab } from "./station/ShopTab";
 import { TradeTab } from "./station/TradeTab";

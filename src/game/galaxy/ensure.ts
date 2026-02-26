@@ -1,7 +1,8 @@
-import { getRandomRace, PLANET_TYPES } from "../constants";
-import { GalaxyTier, Sector } from "../types";
+import { PLANET_TYPES } from "@/game/constants/planets";
+import { GalaxyTier, Sector } from "@/game/types";
 import { ANOMALY_COLORS, MIN_REQUIREMENTS, STATION_CONFIG } from "./config";
 import { STATION_TYPES } from "./consts";
+import { getRandomRace } from "@/game/races";
 
 /**
  * Обеспечивает минимальное количество аномалий в секторе

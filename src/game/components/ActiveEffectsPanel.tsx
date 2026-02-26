@@ -1,7 +1,7 @@
 "use client";
 
 import { useGameStore } from "../store";
-import { RACES } from "../constants";
+import { RACES } from "../constants/races";
 import { Button } from "@/components/ui/button";
 
 interface ActiveEffectsPanelProps {

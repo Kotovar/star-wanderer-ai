@@ -1,12 +1,12 @@
+import { RACES } from "@/game/constants/races";
+import { ENEMY_TYPES } from "@/game/constants";
 import {
-    ANCIENT_BOSSES,
-    ENEMY_TYPES,
-    getRandomBossForTier,
-    getRandomRace,
-    PLANET_TYPES,
-    RACES,
-} from "../constants";
-import { GalaxyTier, Sector, Location, RaceId, AsteroidTier } from "../types";
+    GalaxyTier,
+    Sector,
+    Location,
+    RaceId,
+    AsteroidTier,
+} from "@/game/types";
 import {
     ANOMALY_COLORS,
     EMPTY_PLANET_CHANCE,
@@ -16,6 +16,10 @@ import {
     STATION_CONFIG,
 } from "./config";
 import { SHIP_TYPES, STATION_TYPES } from "./consts";
+import { PLANET_TYPES } from "@/game/constants/planets";
+import { getRandomRace } from "@/game/races/utils";
+import { getRandomBossForTier } from "@/game/bosses/utils";
+import { ANCIENT_BOSSES } from "@/game/constants/bosses";
 
 /**
  * Генерирует звезду для сектора на основе уровня и случайности

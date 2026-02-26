@@ -2,8 +2,10 @@
 
 import { useState, MouseEvent } from "react";
 import { useGameStore } from "../store";
-import { MODULE_TYPES, WEAPON_TYPES, RACES } from "../constants";
+import { WEAPON_TYPES } from "../constants";
+import { RACES } from "../constants/races";
 import type { Module, CrewMember, Weapon } from "../types";
+import { MODULE_TYPES } from "../constants/modules";
 
 const CELL_SIZE = 100;
 

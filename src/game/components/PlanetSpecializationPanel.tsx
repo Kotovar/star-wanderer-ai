@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useGameStore } from "../store";
-import { RACES, PLANET_SPECIALIZATIONS } from "../constants";
+import { useGameStore } from "@/game/store";
+import { PLANET_SPECIALIZATIONS } from "@/game/constants/planets";
+import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
 
 interface PlanetSpecializationPanelProps {
@@ -16,7 +17,6 @@ export function PlanetSpecializationPanel({
     const credits = useGameStore((s) => s.credits);
     const crew = useGameStore((s) => s.crew);
     const artifacts = useGameStore((s) => s.artifacts);
-    // const ship = useGameStore((s) => s.ship);
 
     const trainCrew = useGameStore((s) => s.trainCrew);
     const scanSector = useGameStore((s) => s.scanSector);

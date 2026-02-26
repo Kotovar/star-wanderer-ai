@@ -7,7 +7,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { useGameStore } from "../store";
-import { RACES } from "../constants";
+import { RACES } from "../constants/races";
 import { RaceId } from "../types";
 
 export function RaceDiscoveryModal() {

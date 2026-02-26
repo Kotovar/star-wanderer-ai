@@ -1,17 +1,14 @@
 "use client";
 
 import { useMemo, useEffect } from "react";
-import { useGameStore } from "../store";
-import {
-    TRADE_GOODS,
-    generateCrewTraits,
-    PROFESSION_NAMES,
-    CREW_BASE_PRICES,
-    RACES,
-    getRandomRaceName,
-} from "../constants";
+import { useGameStore } from "@/game/store";
+import { TRADE_GOODS } from "@/game/constants";
+import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
-import type { RaceId, Contract, Profession, Quality } from "../types";
+import type { RaceId, Contract, Profession, Quality } from "@/game/types";
+import { getRandomRaceName } from "@/game/races/utils";
+import { generateCrewTraits } from "@/game/crew/utils";
+import { PROFESSION_NAMES, CREW_BASE_PRICES } from "@/game/constants/crew";
 
 export function FriendlyShipPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);

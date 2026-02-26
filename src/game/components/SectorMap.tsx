@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { useGameStore } from "../store";
-import { Location, StarType, StormType } from "../types";
+import { Location, PlanetType, StarType, StormType } from "../types";
 
 // Seeded random helper - returns deterministic value based on location ID
 const seededRandom = (loc: Location, seed: number = 0): number => {
@@ -18,7 +18,7 @@ const seededRandom = (loc: Location, seed: number = 0): number => {
 
 // Planet colors based on type (inspired by solar system)
 const PLANET_COLORS: Record<
-    string,
+    PlanetType,
     { base: string; atmosphere: string; rings?: string }
 > = {
     Пустынная: { base: "#d4a574", atmosphere: "#e8c89e" }, // Mars-like
@@ -645,10 +645,13 @@ function drawPlanet(
     completed: boolean,
 ) {
     const radius = loc.isEmpty ? 8 : 12;
-    const colors = PLANET_COLORS[loc.planetType || ""] || {
-        base: "#888888",
-        atmosphere: "#aaaaaa",
-    };
+    const planetType = loc.planetType;
+    const colors = planetType
+        ? PLANET_COLORS[planetType]
+        : {
+              base: "#888888",
+              atmosphere: "#aaaaaa",
+          };
 
     if (completed) {
         ctx.globalAlpha = 0.4;

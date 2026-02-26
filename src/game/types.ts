@@ -36,9 +36,9 @@ export interface Race {
 
     // Environment preferences (affects happiness on different planets)
     environmentPreference: {
-        ideal: string[]; // Ideal planet types
-        acceptable: string[]; // Acceptable planet types
-        hostile: string[]; // Hostile planet types (happiness penalty)
+        ideal: PlanetType[]; // Ideal planet types
+        acceptable: PlanetType[]; // Acceptable planet types
+        hostile: PlanetType[]; // Hostile planet types (happiness penalty)
     };
 
     // Crew bonuses
@@ -69,11 +69,13 @@ export interface Race {
     icon: string; // Emoji or symbol
 }
 
+// CREW_TRAITS
+
 export interface RaceTrait {
     id: string;
     name: string;
     description: string;
-    type: "positive" | "negative" | "neutral";
+    type: CrewTraitType;
     effects: Record<string, number | string>;
 }
 
@@ -162,11 +164,14 @@ export type Profession =
     | "scientist"
     | "gunner";
 
+export type CrewTraitType = "positive" | "negative" | "neutral" | "mutation";
+export type MutationName = "nightmares" | "paranoid" | "unstable";
+
 export interface CrewTrait {
     name: string;
     desc: string;
     effect: Partial<Record<string, number>>;
-    type: "positive" | "negative" | "neutral";
+    type: CrewTraitType;
 }
 
 export type Quality = "poor" | "average" | "good" | "excellent";
@@ -201,7 +206,7 @@ export interface Location {
     stationType?: StationName;
     stationConfig?: StationConfig;
     stationId?: string;
-    planetType?: string;
+    planetType?: PlanetType;
     isEmpty?: boolean;
     explored?: boolean; // Fully explored empty planet (after 3 scout missions)
     visited?: boolean; // Player has visited this location (opened its panel)
@@ -238,7 +243,7 @@ export interface Location {
     stormIntensity?: number; // 1-3, affects damage and loot quality
     stormLoot?: { credits: number; moduleDamage: number; shieldBurn: number };
     // Distress signal fields
-    signalType?: "pirate_ambush" | "survivors" | "abandoned_cargo";
+    signalType?: SignalType;
     signalResolved?: boolean;
     signalRevealed?: boolean; // Scanner successfully revealed the outcome
     signalRevealChecked?: boolean; // Already checked with scanner (one-time check)
@@ -255,7 +260,12 @@ export interface Location {
 
     population?: number; // Population in thousands
 }
-
+export type SignalType = "pirate_ambush" | "survivors" | "abandoned_cargo";
+export type SignalDetails = {
+    name: string;
+    description: string;
+    chance: number;
+};
 export type StarType = "single" | "double" | "triple" | "blackhole";
 export type GalaxyTier = 1 | 2 | 3;
 export type AsteroidTier = 1 | 2 | 3 | 4;
@@ -566,6 +576,8 @@ export interface ShopItem {
     requiresWeaponBay?: boolean;
 }
 
+export type ArtifactRarity = "rare" | "legendary" | "mythic" | "cursed";
+
 // Ancient Artifacts - unique items with special effects
 export interface Artifact {
     id: string;
@@ -577,7 +589,7 @@ export interface Artifact {
     researched: boolean; // Has been studied by scientist
     hinted?: boolean; // Has been hinted at by synthetic archives
     requiresScientistLevel: number; // Level needed to research
-    rarity: "rare" | "legendary" | "mythic" | "cursed"; // cursed = special category
+    rarity: ArtifactRarity; // cursed = special category
     cursed?: boolean; // Is this a cursed artifact with negative effects
 }
 
@@ -640,7 +652,7 @@ export interface AncientBoss {
     shields: number;
     regenRate: number; // HP regenerated per turn in combat
     specialAbility: BossAbility;
-    guaranteedArtifactRarity: "rare" | "legendary" | "mythic" | "cursed";
+    guaranteedArtifactRarity: ArtifactRarity;
 }
 
 export interface BossModule {
@@ -662,19 +674,23 @@ export interface BossAbility {
     value?: number;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// PLANET SPECIALIZATIONS - Unique activities per race
+// ═══════════════════════════════════════════════════════════════
+
 export interface PlanetSpecialization {
     id: string;
     name: string;
     description: string;
     icon: string;
-    cost: number;
-    duration: number;
-    cooldown?: number;
+    cost: number; // Cost in credits
+    duration: number; // Turns required
+    cooldown?: number; // Cooldown in turns (optional)
     requirements?: {
-        minLevel?: number;
-        maxLevel?: number;
-        requiredModule?: string;
-        requiredRace?: RaceId;
+        minLevel?: number; // Minimum crew level
+        maxLevel?: number; // Maximum crew level
+        requiredModule?: string; // Required ship module
+        requiredRace?: RaceId; // Only available for specific race
     };
     effects: {
         type: string;
@@ -682,3 +698,17 @@ export interface PlanetSpecialization {
         description: string;
     }[];
 }
+
+export type PlanetType =
+    | "Пустынная"
+    | "Ледяная"
+    | "Лесная"
+    | "Вулканическая"
+    | "Океаническая"
+    | "Газовый гигант"
+    | "Радиоактивная"
+    | "Тропическая"
+    | "Арктическая"
+    | "Разрушенная войной"
+    | "Планета-кольцо"
+    | "Приливная";

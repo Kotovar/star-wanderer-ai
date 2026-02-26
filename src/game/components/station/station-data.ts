@@ -1,3 +1,4 @@
+import { getRandomRace, getRandomRaceName } from "@/game/races";
 import type {
     ShopItem,
     RaceId,
@@ -5,16 +6,10 @@ import type {
     Quality,
     Profession,
     StationName,
-} from "../../types";
-import {
-    // WEAPON_TYPES,
-    // TRADE_GOODS,
-    generateCrewTraits,
-    CREW_BASE_PRICES,
-    RACES,
-    getRandomRace,
-    getRandomRaceName,
-} from "../../constants";
+} from "@/game/types";
+import { CREW_BASE_PRICES } from "@/game/constants/crew";
+import { generateCrewTraits } from "@/game/crew/utils";
+import { RACES } from "@/game/constants/races";
 
 // Module pools by tier level
 // Tier 1: levels 1-2, Tier 2: levels 2-3, Tier 3: levels 3-4 (rare)
