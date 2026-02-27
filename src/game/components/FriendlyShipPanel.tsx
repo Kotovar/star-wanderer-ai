@@ -279,7 +279,7 @@ export function FriendlyShipPanel() {
     };
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 max-h-[70vh] overflow-y-auto pr-2">
             <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
                 ▸ {currentLocation.name}
             </div>

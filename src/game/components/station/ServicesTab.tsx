@@ -52,7 +52,7 @@ export function ServicesTab({
     const fuelNeeded = maxFuel - fuel;
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto pr-2">
             <RefuelSection
                 fuel={fuel}
                 maxFuel={maxFuel}

@@ -171,7 +171,7 @@ export function CrewList() {
                 open={!!selectedCrew}
                 onOpenChange={() => setSelectedCrew(null)}
             >
-                <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md">
+                <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-[#ffb000] font-['Orbitron']">
                             ▸ {selectedCrew?.name}

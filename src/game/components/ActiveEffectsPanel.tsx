@@ -14,8 +14,16 @@ export function ActiveEffectsPanel({ onClose }: ActiveEffectsPanelProps) {
     if (activeEffects.length === 0) {
         return (
             <div className="flex flex-col gap-4">
-                <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                    ▸ Активные эффекты
+                <div className="flex justify-between items-center">
+                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
+                        ▸ Активные эффекты
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="text-[#ff0040] hover:text-white text-2xl font-bold cursor-pointer px-2"
+                    >
+                        ✕
+                    </button>
                 </div>
                 <div className="text-sm text-[#888] text-center py-8">
                     Нет активных эффектов
@@ -32,8 +40,16 @@ export function ActiveEffectsPanel({ onClose }: ActiveEffectsPanelProps) {
 
     return (
         <div className="flex flex-col gap-4">
-            <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                ▸ Активные эффекты
+            <div className="flex justify-between items-center">
+                <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
+                    ▸ Активные эффекты
+                </div>
+                <button
+                    onClick={onClose}
+                    className="text-[#ff0040] hover:text-white text-2xl font-bold cursor-pointer px-2"
+                >
+                    ✕
+                </button>
             </div>
             <div className="text-xs text-[#888] mb-2">
                 Эффекты длятся 5 ходов и автоматически истекают

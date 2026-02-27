@@ -135,43 +135,54 @@ export function UnknownShipPanel() {
 
             <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#00ff41]">
                 <p className="text-[#ffb000] mb-2">Ваши показатели:</p>
-                <div className="grid grid-cols-4 gap-2 text-sm">
-                    <div>
-                        <span className="text-[#00d4ff]">🛡 Щиты:</span>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs md:text-sm">
+                    <div className="min-w-0">
+                        <span className="text-[#00d4ff] whitespace-nowrap">
+                            🛡 Щиты:
+                        </span>
                         <span className="text-[#00ff41] ml-1">
                             {ship.shields}/{ship.maxShields}
                         </span>
                     </div>
-                    <div>
-                        <span className="text-[#ffb000]">🔧 Защита:</span>
+                    <div className="min-w-0">
+                        <span className="text-[#ffb000] whitespace-nowrap">
+                            🔧 Защита:
+                        </span>
                         <span className="text-[#00ff41] ml-1">
                             {ship.armor}
                         </span>
                     </div>
-                    <div>
-                        <span className="text-[#ffb000]">🔧 Корпус:</span>
+                    <div className="min-w-0">
+                        <span className="text-[#ffb000] whitespace-nowrap">
+                            🔧 Корпус:
+                        </span>
                         <span className="text-[#00ff41] ml-1">
                             {currentHull}/{maxHull}
                         </span>
                     </div>
-                    <div>
-                        <span className="text-[#ff4444]">❤ Экипаж:</span>
+                    <div className="min-w-0">
+                        <span className="text-[#ff4444] whitespace-nowrap">
+                            ❤ Экипаж:
+                        </span>
                         <span className="text-[#00ff41] ml-1">
                             {crew.filter((c) => c.health > 50).length}/
                             {crew.length}
                         </span>
                     </div>
                 </div>
-                <div className="mt-2 text-sm">
-                    <span className="text-[#00ff41]">🎯 Уклонение:</span>
-                    {(captain?.level || 1) + (ship.bonusEvasion || 0)}%
-                    {ship.bonusEvasion ? (
-                        <span className="text-[#9933ff]">
-                            {" "}
-                            (+{ship.bonusEvasion}% бонус)
-                        </span>
-                    ) : null}
-                    {/*<span className="text-[#00ff41] ml-1">{captainLevel}%</span>*/}
+                <div className="mt-2 text-xs md:text-sm">
+                    <span className="text-[#00ff41] whitespace-nowrap">
+                        🎯 Уклонение:
+                    </span>
+                    <span className="text-[#00ff41] ml-1">
+                        {(captain?.level || 1) + (ship.bonusEvasion || 0)}%
+                        {ship.bonusEvasion ? (
+                            <span className="text-[#9933ff]">
+                                {" "}
+                                (+{ship.bonusEvasion}% бонус)
+                            </span>
+                        ) : null}
+                    </span>
                 </div>
             </div>
 
