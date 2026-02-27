@@ -516,17 +516,6 @@ export const useGameStore = create<
             if (race?.crewBonuses.combat) {
                 combatBonus = Math.max(combatBonus, race.crewBonuses.combat);
             }
-            // Apply special traits combat bonus (krylorian warrior_honor: +35% combat)
-            if (race?.specialTraits) {
-                race.specialTraits.forEach((trait) => {
-                    if (trait.effects.combatBonus) {
-                        combatBonus = Math.max(
-                            combatBonus,
-                            trait.effects.combatBonus as number,
-                        );
-                    }
-                });
-            }
         });
         if (combatBonus > 0) {
             dmg.total = Math.floor(dmg.total * (1 + combatBonus));
@@ -718,16 +707,6 @@ export const useGameStore = create<
                     fuelBonus,
                     race.crewBonuses.fuelEfficiency,
                 );
-            }
-            if (race?.specialTraits) {
-                race.specialTraits.forEach((trait) => {
-                    if (trait.effects.fuelBonus) {
-                        fuelBonus = Math.max(
-                            fuelBonus,
-                            trait.effects.fuelBonus as number,
-                        );
-                    }
-                });
             }
             if (fuelBonus > 0) {
                 modifier *= 1 - fuelBonus;
@@ -1514,17 +1493,9 @@ export const useGameStore = create<
                 // Modules with health >= 20% are safe - no crew damage
             }
 
-            // Apply racial health regen (human: +5 from adaptable trait)
+            // Apply racial health regen (human: +5 from crewBonuses)
             // Only when assigned to "heal" task
-            let healthRegen = 0;
-            // Get health regen from race special traits (e.g., human adaptable: +5)
-            if (crewRace?.specialTraits) {
-                crewRace.specialTraits.forEach((trait) => {
-                    if (trait.effects.healthRegen) {
-                        healthRegen += Number(trait.effects.healthRegen);
-                    }
-                });
-            }
+            let healthRegen = crewRace?.crewBonuses?.health || 0;
             // Get regen bonus from crew traits (e.g., "Непобедимый": +10%)
             let regenBonus = 0;
             c.traits?.forEach((trait) => {
@@ -6013,22 +5984,18 @@ export const useGameStore = create<
         const race = RACES[crewData.race || "human"];
         const healthBonus = race?.crewBonuses?.health || 0;
 
-        // Calculate special traits health bonuses/penalties
-        let specialHealthBonus = 0;
+        // Calculate special traits health penalties (e.g., voidborn -20%)
         let specialHealthPenalty = 0;
         if (race?.specialTraits) {
             race.specialTraits.forEach((trait) => {
-                if (trait.effects.healthBonus) {
-                    specialHealthBonus += Number(trait.effects.healthBonus);
-                }
                 if (trait.effects.healthPenalty) {
                     specialHealthPenalty += Number(trait.effects.healthPenalty);
                 }
             });
         }
 
-        // Apply absolute health bonuses (e.g., krylorian +15)
-        let baseMaxHealth = 100 + healthBonus + specialHealthBonus;
+        // Apply absolute health bonuses
+        let baseMaxHealth = 100 + healthBonus;
 
         // Apply percentage health penalties (e.g., voidborn -20%)
         if (specialHealthPenalty < 0) {
@@ -6543,16 +6510,6 @@ export const useGameStore = create<
                     scientistRace.crewBonuses.science,
                 );
             }
-            if (scientistRace?.specialTraits) {
-                scientistRace.specialTraits.forEach((trait) => {
-                    if (trait.effects.scienceBonus) {
-                        scienceBonus = Math.max(
-                            scienceBonus,
-                            Number(trait.effects.scienceBonus),
-                        );
-                    }
-                });
-            }
             if (scienceBonus > 0) {
                 expGain = Math.floor(expGain * (1 + scienceBonus));
             }
@@ -6631,16 +6588,6 @@ export const useGameStore = create<
                     raceScienceBonus,
                     scientistRace.crewBonuses.science,
                 );
-            }
-            if (scientistRace?.specialTraits) {
-                scientistRace.specialTraits.forEach((trait) => {
-                    if (trait.effects.scienceBonus) {
-                        raceScienceBonus = Math.max(
-                            raceScienceBonus,
-                            Number(trait.effects.scienceBonus),
-                        );
-                    }
-                });
             }
             scienceBonus = Math.max(scienceBonus, raceScienceBonus);
         });

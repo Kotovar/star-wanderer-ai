@@ -173,8 +173,8 @@ export const CREW_TRAITS: Record<
     mutation: [
         {
             name: "Мутация: Щупальца",
-            desc: "+20% урон, -30% скорость",
-            effect: { damageBonus: 0.2, speedPenalty: 0.3 },
+            desc: "+20% урон",
+            effect: { damageBonus: 0.2 },
             rarity: "mutation",
             priceMod: 1.0,
         },

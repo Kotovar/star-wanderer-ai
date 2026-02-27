@@ -36,14 +36,6 @@ export const RACES: Record<RaceId, Race> = {
         },
         specialTraits: [
             {
-                id: "adaptable",
-                name: "Универсальность",
-                description:
-                    "+10% к базовому настроению, +5 к регенерации здоровья",
-                type: "positive",
-                effects: { happiness: 10, healthRegen: 5 },
-            },
-            {
                 id: "quick_learner",
                 name: "Быстрый ученик",
                 description: "+15% к получаемому опыту",
@@ -105,13 +97,6 @@ export const RACES: Record<RaceId, Race> = {
                     "Не имеют счастья - иммунитет к моральным эффектам",
                 type: "neutral",
                 effects: { noHappiness: 1 },
-            },
-            {
-                id: "tireless",
-                name: "Неутомимость",
-                description: "Никогда не устают",
-                type: "positive",
-                effects: { noFatigue: 1 },
             },
             {
                 id: "ai_glitch",
@@ -224,26 +209,12 @@ export const RACES: Record<RaceId, Race> = {
         },
         specialTraits: [
             {
-                id: "warrior_honor",
-                name: "Воинская честь",
-                description: "+35% урон в бою, +15 к здоровью",
-                type: "positive",
-                effects: { combatBonus: 0.35, healthBonus: 15 },
-            },
-            {
                 id: "intimidation",
                 name: "Устрашение",
                 description:
                     "Враги чаще промахиваются (-10% шанс попадания по кораблю)",
                 type: "positive",
                 effects: { evasionBonus: 0.1 },
-            },
-            {
-                id: "cold_blooded",
-                name: "Хладнокровие",
-                description: "Медленнее на холодных планетах",
-                type: "negative",
-                effects: { coldPenalty: -0.2 },
             },
         ],
         relations: {
@@ -288,13 +259,6 @@ export const RACES: Record<RaceId, Race> = {
             happiness: -10, // Lower base happiness (don't care)
         },
         specialTraits: [
-            {
-                id: "void_child",
-                name: "Дитя Пустоты",
-                description: "+20% к эффективности топлива, не устаёт",
-                type: "positive",
-                effects: { fuelBonus: 0.2, noFatigue: 1 },
-            },
             {
                 id: "void_shield",
                 name: "Пустотная защита",
@@ -357,30 +321,16 @@ export const RACES: Record<RaceId, Race> = {
             ],
         },
         crewBonuses: {
-            science: 0.4, // +40% research speed (increased)
+            science: 0.2, // +40% research speed (increased)
             health: 5, // +5 health (crystalline durability)
         },
         specialTraits: [
-            {
-                id: "ancient_wisdom",
-                name: "Древняя мудрость",
-                description: "+40% к исследованиям и анализу аномалий",
-                type: "positive",
-                effects: { scienceBonus: 0.4 },
-            },
             {
                 id: "crystal_armor",
                 name: "Кристаллическая броня",
                 description: "+5% к защите модулей корабля",
                 type: "positive",
                 effects: { moduleDefense: 0.05 },
-            },
-            {
-                id: "slow_thought",
-                name: "Медленные мысли",
-                description: "-15% к скорости передвижения",
-                type: "negative",
-                effects: { speedPenalty: -0.15 },
             },
             {
                 id: "resonance",
