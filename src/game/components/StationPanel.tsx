@@ -56,7 +56,6 @@ export function StationPanel() {
         (s) => s.completeDeliveryContract,
     );
     const hiredCrew = useGameStore((s) => s.hiredCrew);
-
     const [activeTab, setActiveTab] = useState("shop");
     const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
     const [pendingUpgrade, setPendingUpgrade] = useState<ShopItem | null>(null);

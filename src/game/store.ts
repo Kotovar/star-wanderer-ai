@@ -14,6 +14,7 @@ import type {
     BattleResult,
     CargoItem,
     Goods,
+    ShipMergeTrait,
 } from "@/game/types";
 import { TRADE_GOODS, WEAPON_TYPES } from "@/game/constants";
 import { initialModules, STARTING_FUEL } from "@/game/modules";
@@ -109,6 +110,7 @@ const initialState: GameState = {
         tradeGoods: [],
         fuel: STARTING_FUEL,
         maxFuel: STARTING_FUEL,
+        mergeTraits: [], // Traits from xenosymbiont merging with ship
     },
     crew: initialCrew,
     galaxy: { sectors },
@@ -1992,49 +1994,88 @@ export const useGameStore = create<
                 }));
             }
 
-            // Apply racial negative effects: xenosymbiont humanHappinessPenalty, voidborn organicHappinessPenalty
-            // Reuse crewInSameModule from above (already filtered)
-
-            // Xenosymbiont: disturbing presence (-5 happiness to humans in same module)
-            if (c.race === "xenosymbiont") {
-                const humansInModule = crewInSameModule.filter(
-                    (cr) => cr.race === "human",
+            // Apply alienPresencePenalty trait (xenosymbiont: -5, voidborn: -10)
+            // Affects all organic races (not synthetic, not same race)
+            if (crewRace?.specialTraits) {
+                const penaltyTrait = crewRace.specialTraits.find(
+                    (t) => t.effects.alienPresencePenalty,
                 );
-                if (humansInModule.length > 0) {
-                    set((s) => ({
-                        crew: s.crew.map((cr) =>
-                            cr.moduleId === c.moduleId &&
-                            cr.race === "human" &&
-                            cr.id !== c.id
-                                ? {
-                                      ...cr,
-                                      happiness: Math.max(0, cr.happiness - 5),
-                                  }
-                                : cr,
-                        ),
-                    }));
+                if (penaltyTrait && penaltyTrait.effects.alienPresencePenalty) {
+                    const penalty = Math.abs(
+                        Number(penaltyTrait.effects.alienPresencePenalty),
+                    );
+                    // Affects organics in same module (not synthetic, not same race)
+                    const affectedCrew = crewInSameModule.filter(
+                        (cr) =>
+                            cr.race !== "synthetic" &&
+                            cr.race !== c.race &&
+                            cr.id !== c.id,
+                    );
+                    if (affectedCrew.length > 0) {
+                        set((s) => ({
+                            crew: s.crew.map((cr) =>
+                                cr.moduleId === c.moduleId &&
+                                cr.race !== "synthetic" &&
+                                cr.race !== c.race &&
+                                cr.id !== c.id
+                                    ? {
+                                          ...cr,
+                                          happiness: Math.max(
+                                              0,
+                                              cr.happiness - penalty,
+                                          ),
+                                      }
+                                    : cr,
+                            ),
+                        }));
+                        affectedCrew.forEach((cr) => {
+                            get().addLog(
+                                `😰 ${cr.name}: Беспокойство от ${crewRace.name} (-${penalty} ❤️)`,
+                                "warning",
+                            );
+                        });
+                    }
                 }
             }
 
-            // Voidborn: unnerving (-10 happiness to organics in same module)
-            if (c.race === "voidborn") {
-                const organicsInModule = crewInSameModule.filter(
-                    (cr) => cr.race !== "synthetic" && cr.race !== "voidborn",
+            // Apply canMerge trait (xenosymbiont symbiosis with ship)
+            // When xenosymbiont is assigned to a module, ship gains merge traits
+            if (crewRace?.specialTraits && currentModule) {
+                const canMergeTrait = crewRace.specialTraits.find(
+                    (t) => t.effects.canMerge,
                 );
-                if (organicsInModule.length > 0) {
-                    set((s) => ({
-                        crew: s.crew.map((cr) =>
-                            cr.moduleId === c.moduleId &&
-                            cr.race !== "synthetic" &&
-                            cr.race !== "voidborn" &&
-                            cr.id !== c.id
-                                ? {
-                                      ...cr,
-                                      happiness: Math.max(0, cr.happiness - 10),
-                                  }
-                                : cr,
-                        ),
-                    }));
+                if (canMergeTrait) {
+                    const mergeTraitId = `merge_${currentModule.id}`;
+                    const existingMergeTrait = get().ship.mergeTraits?.find(
+                        (t) => t.id === mergeTraitId,
+                    );
+
+                    if (!existingMergeTrait) {
+                        // Add merge trait for this module
+                        const mergeTrait: ShipMergeTrait = {
+                            id: mergeTraitId,
+                            name: `Симбиоз с "${currentModule.name}"`,
+                            description:
+                                "+10% эффективности, +5 HP к модулю от ксеноморфа",
+                            effects: {
+                                moduleEfficiency: 0.1,
+                                moduleHealthBonus: 5,
+                            },
+                        };
+                        set((s) => ({
+                            ship: {
+                                ...s.ship,
+                                mergeTraits: [
+                                    ...(s.ship.mergeTraits || []),
+                                    mergeTrait,
+                                ],
+                            },
+                        }));
+                        get().addLog(
+                            `🔗 ${c.name} (${crewRace.name}): Симбиоз с модулем "${currentModule.name}"!`,
+                            "info",
+                        );
+                    }
                 }
             }
 
@@ -4520,8 +4561,9 @@ export const useGameStore = create<
                     intimidationTrait &&
                     intimidationTrait.effects.evasionBonus
                 ) {
-                    evasionChance += intimidationTrait.effects
-                        .evasionBonus as number;
+                    evasionChance += Number(
+                        intimidationTrait.effects.evasionBonus,
+                    );
                 }
             }
         });

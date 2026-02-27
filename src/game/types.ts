@@ -79,6 +79,14 @@ export interface RaceTrait {
     effects: Record<string, number | string>;
 }
 
+// Ship merge traits (from xenosymbiont symbiosis)
+export interface ShipMergeTrait {
+    id: string;
+    name: string;
+    description: string;
+    effects: Record<string, number>;
+}
+
 // ═══════════════════════════════════════════════════════════════
 
 export interface Module {
@@ -518,6 +526,7 @@ export interface GameState {
         bonusPower?: number; // Temporary power bonus from planet effects
         bonusShields?: number; // Temporary shield bonus from planet effects
         bonusEvasion?: number; // Temporary evasion bonus from planet effects (as percentage)
+        mergeTraits?: ShipMergeTrait[]; // Traits from xenosymbiont merging with ship
     };
     crew: CrewMember[];
     galaxy: {

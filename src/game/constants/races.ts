@@ -160,9 +160,9 @@ export const RACES: Record<RaceId, Race> = {
             {
                 id: "disturbing_presence",
                 name: "Беспокоящее присутствие",
-                description: "Снижают счастье людей в экипаже",
+                description: "Снижают счастье органиков в экипаже на -5",
                 type: "negative",
-                effects: { humanHappinessPenalty: -5 },
+                effects: { alienPresencePenalty: -5 },
             },
         ],
         relations: {
@@ -270,9 +270,9 @@ export const RACES: Record<RaceId, Race> = {
             {
                 id: "unnerving",
                 name: "Беспокойство",
-                description: "Их присутствие тревожит органиков",
+                description: "Их присутствие тревожит органиков на -10",
                 type: "negative",
-                effects: { organicHappinessPenalty: -10 },
+                effects: { alienPresencePenalty: -10 },
             },
             {
                 id: "low_health",
@@ -321,7 +321,7 @@ export const RACES: Record<RaceId, Race> = {
             ],
         },
         crewBonuses: {
-            science: 0.2, // +40% research speed (increased)
+            science: 0.2, // +20% research speed (increased)
         },
         specialTraits: [
             {
