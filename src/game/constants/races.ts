@@ -322,7 +322,6 @@ export const RACES: Record<RaceId, Race> = {
         },
         crewBonuses: {
             science: 0.2, // +40% research speed (increased)
-            health: 5, // +5 health (crystalline durability)
         },
         specialTraits: [
             {
@@ -338,6 +337,13 @@ export const RACES: Record<RaceId, Race> = {
                 description: "Может усиливать артефакты Древних на 15%",
                 type: "positive",
                 effects: { artifactBonus: 0.15 },
+            },
+            {
+                id: "brittle_crystal",
+                name: "Хрупкость",
+                description: "-15% к максимальному здоровью",
+                type: "negative",
+                effects: { healthPenalty: -0.15 },
             },
         ],
         relations: {
