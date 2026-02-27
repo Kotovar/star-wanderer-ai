@@ -71,37 +71,39 @@ export function EventDisplay() {
                     <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mb-2">
                         ▸ КАРТА ГАЛАКТИКИ
                     </div>
-                    <div className="flex gap-2.5 flex-wrap shrink-0">
+                    <div className="grid grid-cols-2 gap-2 shrink-0">
                         <Button
                             onClick={showSectorMap}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
+                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-10"
                         >
                             ИССЛЕДОВАТЬ СЕКТОР
                         </Button>
-                        <Button
-                            onClick={showAssignments}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
-                        >
-                            ЭКИПАЖ
-                        </Button>
-                        <Button
-                            onClick={skipTurn}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
-                        >
-                            ПРОПУСТИТЬ ХОД
-                        </Button>
+                        <div className="grid grid-rows-2 gap-2">
+                            <Button
+                                onClick={showAssignments}
+                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-full"
+                            >
+                                ЭКИПАЖ
+                            </Button>
+                            <Button
+                                onClick={skipTurn}
+                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-full"
+                            >
+                                ПРОПУСТИТЬ ХОД
+                            </Button>
+                        </div>
                     </div>
-                    <div className="text-sm text-center shrink-0">
+                    <div className="text-sm text-center shrink-0 h-6 flex items-center justify-center">
                         Позиция:{" "}
                         <span className="text-[#ffb000]">
                             {currentSector?.name}
                         </span>
                     </div>
-                    <div className="flex-1 min-h-0 relative">
+                    <div className="h-80 md:h-auto md:flex-1 relative shrink-0">
                         <GalaxyMap />
-                        <div className="absolute bottom-16 lg:bottom-16 inset-x-0 text-[11px] text-center text-[#00ff41] pointer-events-none">
-                            Кликните на сектор
-                        </div>
+                    </div>
+                    <div className="text-[11px] text-center text-[#00ff41] py-2 shrink-0">
+                        Кликните на сектор
                     </div>
                 </div>
             );
@@ -112,34 +114,36 @@ export function EventDisplay() {
                     <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mb-2">
                         ▸ {currentSector?.name}
                     </div>
-                    <div className="flex gap-2.5 flex-wrap shrink-0">
+                    <div className="grid grid-cols-2 gap-2 shrink-0">
                         <Button
                             onClick={showGalaxyMap}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
+                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-10"
                         >
                             КАРТА
                         </Button>
-                        <Button
-                            onClick={showAssignments}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
-                        >
-                            ЭКИПАЖ
-                        </Button>
-                        <Button
-                            onClick={skipTurn}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
-                        >
-                            ПРОПУСТИТЬ ХОД
-                        </Button>
+                        <div className="grid grid-rows-2 gap-2">
+                            <Button
+                                onClick={showAssignments}
+                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-full"
+                            >
+                                ЭКИПАЖ
+                            </Button>
+                            <Button
+                                onClick={skipTurn}
+                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-full"
+                            >
+                                ПРОПУСТИТЬ ХОД
+                            </Button>
+                        </div>
                     </div>
-                    <div className="text-sm text-center shrink-0">
+                    <div className="text-sm text-center shrink-0 h-6 flex items-center justify-center">
                         Уровень угрозы: {currentSector?.danger}
                     </div>
-                    <div className="flex-1 min-h-0 relative">
+                    <div className="h-80 md:h-auto md:flex-1 relative shrink-0">
                         <SectorMap />
-                        <div className="absolute bottom-16 lg:bottom-16 inset-x-0 text-[11px] text-center text-[#00ff41] pointer-events-none">
-                            Кликните по объекту
-                        </div>
+                    </div>
+                    <div className="text-[11px] text-center text-[#00ff41] py-2 shrink-0">
+                        Кликните по объекту
                     </div>
                 </div>
             );
