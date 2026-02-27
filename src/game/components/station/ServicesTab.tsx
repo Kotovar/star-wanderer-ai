@@ -34,6 +34,11 @@ interface ServicesTabProps {
         }>;
         gridSize: number;
     };
+    crew: Array<{
+        id: number;
+        name: string;
+        moduleId: number;
+    }>;
 }
 
 export function ServicesTab({
@@ -48,11 +53,12 @@ export function ServicesTab({
     installModuleFromCargo,
     credits,
     ship,
+    crew,
 }: ServicesTabProps) {
     const fuelNeeded = maxFuel - fuel;
 
     return (
-        <div className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto pr-2">
+        <div className="flex flex-col gap-4 max-h-[55vh] overflow-y-auto pr-2">
             <RefuelSection
                 fuel={fuel}
                 maxFuel={maxFuel}
@@ -65,7 +71,7 @@ export function ServicesTab({
 
             <RepairSection credits={credits} onRepair={repairShip} />
             <HealSection credits={credits} onHeal={healCrew} />
-            <ScrapModuleSection ship={ship} onScrap={scrapModule} />
+            <ScrapModuleSection ship={ship} crew={crew} onScrap={scrapModule} />
             <InstallModuleSection
                 ship={ship}
                 onInstall={installModuleFromCargo}
@@ -216,9 +222,11 @@ function HealSection({
 
 function ScrapModuleSection({
     ship,
+    crew,
     onScrap,
 }: {
     ship: ServicesTabProps["ship"];
+    crew: ServicesTabProps["crew"];
     onScrap: (moduleId: number) => void;
 }) {
     // Essential modules that must have at least 1
@@ -238,11 +246,15 @@ function ScrapModuleSection({
         }
     });
 
-    // Get modules that can be scrapped (not the last essential one)
+    // Get modules that can be scrapped (not the last essential one, and no crew)
     const scrappableModules = ship.modules.filter((m) => {
         if (m.disabled ?? false) return false;
         if (!essentialTypes.includes(m.type)) return true;
-        return (moduleCounts[m.type] || 0) > 1;
+        if ((moduleCounts[m.type] || 0) <= 1) return false;
+        // Check if any crew member is in this module
+        const hasCrew = crew.some((c) => c.moduleId === m.id);
+        if (hasCrew) return false;
+        return true;
     });
 
     if (scrappableModules.length === 0) return null;

@@ -30,7 +30,7 @@ export function CrewTab({
     hireCrew,
 }: CrewTabProps) {
     return (
-        <div className="flex flex-col gap-2.5 max-h-100 overflow-y-auto pr-1 pb-2">
+        <div className="flex flex-col gap-2.5 max-h-[55vh] overflow-y-auto pr-1">
             {!hasSpace && (
                 <div className="text-[#ff0040] text-sm p-3 border border-[#ff0040] bg-[rgba(255,0,64,0.1)]">
                     ⚠ Нет места для экипажа. Постройте жилой модуль.

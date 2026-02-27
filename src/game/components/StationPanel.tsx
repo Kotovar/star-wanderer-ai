@@ -122,6 +122,13 @@ export function StationPanel() {
                 race={race}
             />
 
+            <Button
+                onClick={showSectorMap}
+                className="bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider w-fit"
+            >
+                ← ПОКИНУТЬ СТАНЦИЮ
+            </Button>
+
             {deliveryContracts.length > 0 && (
                 <DeliveryContracts
                     contracts={deliveryContracts}
@@ -161,11 +168,7 @@ export function StationPanel() {
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="shop" className="mt-4">
-                    <ShopCount
-                        stationItems={stationItems}
-                        inv={stationInventory[stationId] || {}}
-                    />
+                <TabsContent value="shop" className="mt-4 min-h-[50vh]">
                     <ShopTab
                         stationId={stationId}
                         stationItems={stationItems}
@@ -182,7 +185,7 @@ export function StationPanel() {
                     />
                 </TabsContent>
 
-                <TabsContent value="trade" className="mt-4">
+                <TabsContent value="trade" className="mt-4 min-h-[50vh]">
                     <TradeTab
                         stationId={stationId}
                         stationPrices={stationPrices}
@@ -194,7 +197,7 @@ export function StationPanel() {
                     />
                 </TabsContent>
 
-                <TabsContent value="crew" className="mt-4">
+                <TabsContent value="crew" className="mt-4 min-h-[50vh]">
                     <CrewTab
                         availableCrew={
                             availableCrew as Array<{
@@ -230,7 +233,7 @@ export function StationPanel() {
                     />
                 </TabsContent>
 
-                <TabsContent value="services" className="mt-4">
+                <TabsContent value="services" className="mt-4 pb-8">
                     <ServicesTab
                         fuel={fuel}
                         maxFuel={maxFuel}
@@ -247,16 +250,10 @@ export function StationPanel() {
                             cargo: ship.cargo,
                             gridSize: ship.gridSize,
                         }}
+                        crew={crew}
                     />
                 </TabsContent>
             </Tabs>
-
-            <Button
-                onClick={showSectorMap}
-                className="bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider"
-            >
-                ПОКИНУТЬ СТАНЦИЮ
-            </Button>
 
             <ModuleUpgradeModal
                 open={upgradeModalOpen}
@@ -360,27 +357,5 @@ function DeliveryContracts({
                 ))}
             </div>
         </>
-    );
-}
-
-function ShopCount({
-    stationItems,
-    inv,
-}: {
-    stationItems: ShopItem[];
-    inv: Record<string, number>;
-}) {
-    const availableCount = stationItems.filter((item) => {
-        const stockLeft =
-            inv[item.id] !== undefined
-                ? Math.max(0, item.stock - inv[item.id])
-                : item.stock;
-        return stockLeft > 0;
-    }).length;
-
-    return (
-        <div className="text-xs text-[#888] mb-3">
-            Доступно товаров: {availableCount}
-        </div>
     );
 }

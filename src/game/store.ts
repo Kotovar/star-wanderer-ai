@@ -2030,7 +2030,7 @@ export const useGameStore = create<
                         }));
                         affectedCrew.forEach((cr) => {
                             get().addLog(
-                                `😰 ${cr.name}: Беспокойство от ${crewRace.name} (-${penalty} ❤️)`,
+                                `😰 ${cr.name}: Беспокойство от ${crewRace.name} (-${penalty} 😞)`,
                                 "warning",
                             );
                         });
@@ -6397,6 +6397,16 @@ export const useGameStore = create<
         const state = get();
         const mod = state.ship.modules.find((m) => m.id === moduleId);
         if (!mod) return;
+
+        // Check if any crew member is in this module
+        const crewInModule = state.crew.filter((c) => c.moduleId === moduleId);
+        if (crewInModule.length > 0) {
+            get().addLog(
+                `Нельзя уничтожить модуль "${mod.name}" - в нём находится экипаж (${crewInModule.length} чел.)!`,
+                "error",
+            );
+            return;
+        }
 
         // Essential modules that must have at least 1
         const essentialTypes = [

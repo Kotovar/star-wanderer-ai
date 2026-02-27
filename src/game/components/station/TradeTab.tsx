@@ -42,7 +42,7 @@ export function TradeTab({
     const tradeGoodsKeys = typedKeys(TRADE_GOODS);
 
     return (
-        <div className="flex flex-col gap-2.5 max-h-100 overflow-y-auto pr-1 pb-2">
+        <div className="flex flex-col gap-2.5 max-h-[55vh] overflow-y-auto pr-1 ">
             {stationId &&
                 tradeGoodsKeys.map((goodId) => {
                     const good = { id: goodId, ...TRADE_GOODS[goodId] };
