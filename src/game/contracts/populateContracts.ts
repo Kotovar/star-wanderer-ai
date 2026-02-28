@@ -2,7 +2,7 @@ import type { Sector } from "../types";
 import { generatePlanetContracts } from "./generatePlanetContracts";
 
 /**
- * Генерирует контракты для планет
+ * Генерирует задачи для планет
  */
 export const populateContracts = (sectors: Sector[]): void => {
     sectors.forEach((sector) => {

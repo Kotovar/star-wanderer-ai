@@ -259,7 +259,7 @@ export default function Home() {
                             className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
                         >
                             <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
-                                АКТИВНЫЕ КОНТРАКТЫ
+                                АКТИВНЫЕ ЗАДАНИЯ
                             </AccordionTrigger>
                             <AccordionContent>
                                 <ContractsList />

@@ -39,7 +39,7 @@ export function CargoDisplay() {
                             className="bg-[rgba(0,0,0,0.3)] border border-[#ffb000] p-2 mb-1.5 text-xs"
                         >
                             📦 {c.item} x{c.quantity}т{" "}
-                            <span className="text-[#00d4ff]">[КОНТРАКТ]</span>
+                            <span className="text-[#00d4ff]">[Задание]</span>
                         </div>
                     ))}
                     {ship.tradeGoods.map((g, i) => (

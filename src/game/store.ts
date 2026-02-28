@@ -4338,7 +4338,7 @@ export const useGameStore = create<
             completedCombat.forEach((c) => {
                 set((s) => ({ credits: s.credits + c.reward }));
                 get().addLog(
-                    `Контракт "${c.desc}" выполнен! +${c.reward}₢`,
+                    `Задача "${c.desc}" выполнена! +${c.reward}₢`,
                     "info",
                 );
 
@@ -6369,7 +6369,7 @@ export const useGameStore = create<
                 { ...contract, acceptedAt: s.turn },
             ],
         }));
-        get().addLog(`Контракт принят: ${contract.desc}`, "info");
+        get().addLog(`Задача принята: ${contract.desc}`, "info");
         playSound("success");
     },
 
@@ -6387,7 +6387,7 @@ export const useGameStore = create<
             ),
             completedContractIds: [...s.completedContractIds, contractId],
         }));
-        get().addLog(`Контракт выполнен! +${contract.reward}₢`, "info");
+        get().addLog(`Задача выполнена! +${contract.reward}₢`, "info");
 
         // Give experience to all crew members
         const expReward = CONTRACT_REWARDS.delivery.baseExp;
@@ -6414,7 +6414,7 @@ export const useGameStore = create<
                 (c) => c.id !== contractId,
             ),
         }));
-        get().addLog(`Контракт отменён: ${contract.desc}`, "warning");
+        get().addLog(`Задача отменёна: ${contract.desc}`, "warning");
         playSound("error");
     },
 
@@ -6659,7 +6659,7 @@ export const useGameStore = create<
             );
             if (!updatedContract) {
                 get().addLog(
-                    `Контракт "${researchContract.desc}" выполнен! +${researchContract.reward}₢`,
+                    `Задача "${researchContract.desc}" выполнен! +${researchContract.reward}₢`,
                     "info",
                 );
 

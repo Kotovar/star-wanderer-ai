@@ -64,7 +64,7 @@ export function PlanetPanel() {
                         : "Описание недоступно"}
                 </div>
                 <div className="text-sm leading-relaxed">
-                    Пустая планета. Нет населения и контрактов.
+                    Пустая планета. Нет населения и заданий.
                     <br />
                     <br />
                     {canScout ? (
@@ -229,8 +229,8 @@ export function PlanetPanel() {
             <div className="text-sm">
                 Населённая планета.
                 {availableContracts.length > 0
-                    ? " Доступны контракты."
-                    : " Контрактов нет."}
+                    ? " Доступны задачи."
+                    : " Задач нет."}
             </div>
 
             {/* Delivery contracts completion */}
@@ -277,7 +277,7 @@ export function PlanetPanel() {
             {availableContracts.length > 0 && (
                 <>
                     <div className="font-['Orbitron'] font-bold text-base text-[#ffb000] mt-4">
-                        Доступные контракты
+                        Доступные задачи
                     </div>
                     <div className="flex flex-col gap-2 max-h-75 overflow-y-auto">
                         {availableContracts.map((c) => {
@@ -400,7 +400,7 @@ export function PlanetPanel() {
             {availableContracts.length === 0 &&
                 deliveryContracts.length === 0 && (
                     <div className="text-sm text-[#888] mt-4">
-                        Нет доступных контрактов.
+                        Нет доступных заданий.
                     </div>
                 )}
 

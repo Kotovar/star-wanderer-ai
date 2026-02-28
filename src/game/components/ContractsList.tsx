@@ -22,7 +22,7 @@ export function ContractsList() {
     if (activeContracts.length === 0) {
         return (
             <div className="text-xs text-[#888] p-2.5">
-                Нет активных контрактов
+                Нет активных заданий
             </div>
         );
     }
@@ -293,7 +293,7 @@ export function ContractsList() {
                             {selectedContract?.desc}
                         </DialogTitle>
                         <DialogDescription className="sr-only">
-                            Детали контракта
+                            Детали задания
                         </DialogDescription>
                     </DialogHeader>
                     {selectedContract &&
