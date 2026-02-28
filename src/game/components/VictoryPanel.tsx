@@ -77,9 +77,8 @@ export function VictoryPanel({ reason }: VictoryPanelProps) {
                                 <span className="text-[#888]">Модули:</span>
                                 <span className="text-[#00ff41]">
                                     {
-                                        ship.modules.filter(
-                                            (m) => m.health > 0,
-                                        ).length
+                                        ship.modules.filter((m) => m.health > 0)
+                                            .length
                                     }
                                     /{ship.modules.length}
                                 </span>

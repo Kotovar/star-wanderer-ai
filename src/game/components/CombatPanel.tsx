@@ -112,7 +112,7 @@ export function CombatPanel() {
                     </div>
                     <div className="my-2">
                         Щиты: {ship.shields}/{ship.maxShields}
-                        <div className="h-2 rounded-full  mt-1 bg-[rgba(0,0,0,0.5)] relative">
+                        <div className="h-2 rounded-full mt-1 bg-[rgba(0,0,0,0.5)] relative">
                             <div
                                 className="absolute rounded-full top-0 left-0 h-full bg-[#0080ff]"
                                 style={{

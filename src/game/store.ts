@@ -3921,30 +3921,6 @@ export const useGameStore = create<
         );
         const hasGunner = crewInWeaponBays.length > 0;
 
-        // Apply gunner bonus damage
-        let pDmg = get().getTotalDamage().total;
-        if (hasGunner) {
-            // Gunner gives +15% damage
-            pDmg = Math.floor(pDmg * 1.15);
-        } else {
-            pDmg = Math.floor(pDmg * 0.5); // 50% damage penalty without gunner
-            get().addLog(`⚠ Нет стрелка в оружейной! Урон -50%`, "warning");
-        }
-
-        // Apply critical_matrix artifact bonus (35% crit chance for double damage)
-        const criticalMatrix = state.artifacts.find(
-            (a) => a.effect.type === "crit_chance" && a.effect.active,
-        );
-        let isCrit = false;
-        if (criticalMatrix) {
-            const critChance = criticalMatrix.effect.value || 0.35;
-            isCrit = Math.random() < critChance;
-            if (isCrit) {
-                pDmg = Math.floor(pDmg * 2);
-                get().addLog(`💥 КРИТИЧЕСКИЙ УДАР! x2 урон!`, "combat");
-            }
-        }
-
         // Determine target - if no gunner, can't select target, random module
         let tgtMod = state.currentCombat.enemy.modules.find(
             (m) => m.id === state?.currentCombat?.enemy.selectedModule,
@@ -3964,58 +3940,155 @@ export const useGameStore = create<
             return;
         }
 
-        // Calculate weapon-specific damage bonuses
-        let weaponDamageBonus = 0;
-        let armorPenetration = 0;
-        let missileIntercept = 0;
+        // Count weapons by type and calculate base damage per weapon
+        const weaponCounts = { kinetic: 0, laser: 0, missile: 0 };
+        const baseWeaponDamage = get().getTotalDamage().total;
 
+        // Divide base damage among weapons (each weapon deals full base damage)
         state.ship.modules.forEach((m) => {
             if (m.type === "weaponbay" && m.weapons) {
                 m.weapons.forEach((w) => {
-                    if (w) {
-                        const weaponType = WEAPON_TYPES[w.type];
-                        if (weaponType.shieldBonus) {
-                            weaponDamageBonus +=
-                                (weaponType.shieldBonus - 1) *
-                                weaponType.damage;
-                        }
-                        if (weaponType.armorPenetration) {
-                            armorPenetration = Math.max(
-                                armorPenetration,
-                                weaponType.armorPenetration,
-                            );
-                        }
-                        if (weaponType.interceptChance) {
-                            missileIntercept = Math.max(
-                                missileIntercept,
-                                weaponType.interceptChance,
-                            );
-                        }
+                    if (w && WEAPON_TYPES[w.type]) {
+                        weaponCounts[w.type]++;
                     }
                 });
             }
         });
 
-        // Damage enemy
-        if (state.currentCombat.enemy.shields > 0) {
-            let sDmg = Math.min(state.currentCombat.enemy.shields, pDmg);
+        const totalWeapons =
+            weaponCounts.kinetic + weaponCounts.laser + weaponCounts.missile;
+        if (totalWeapons === 0) return;
 
-            // Laser bonus: +20% damage to shields
-            if (weaponDamageBonus > 0) {
-                sDmg = Math.floor(sDmg * (1 + weaponDamageBonus / pDmg));
+        // Base damage per weapon (each weapon deals full damage independently)
+        const damagePerWeapon = baseWeaponDamage;
+
+        // Apply gunner bonus to each weapon
+        const finalDamagePerWeapon = hasGunner
+            ? Math.floor(damagePerWeapon * 1.15)
+            : Math.floor(damagePerWeapon * 0.5);
+
+        // Apply critical_matrix artifact (35% crit chance for double damage)
+        const criticalMatrix = state.artifacts.find(
+            (a) => a.effect.type === "crit_chance" && a.effect.active,
+        );
+        let critMultiplier = 1;
+        if (
+            criticalMatrix &&
+            Math.random() < (criticalMatrix.effect.value || 0.35)
+        ) {
+            critMultiplier = 2;
+            get().addLog(`💥 КРИТИЧЕСКИЙ УДАР! x2 урон!`, "combat");
+        }
+
+        // Calculate damage by weapon type
+        let totalShieldDamage = 0;
+        let totalModuleDamage = 0;
+        const logs: string[] = [];
+
+        const enemyShields = state.currentCombat.enemy.shields;
+        let remainingShields = enemyShields;
+
+        // Process each weapon type independently
+        // 1. Lasers: +20% damage vs shields
+        if (weaponCounts.laser > 0) {
+            for (let i = 0; i < weaponCounts.laser; i++) {
+                const laserDmg = finalDamagePerWeapon * critMultiplier;
+                const shieldDmg = Math.floor(laserDmg * 1.2); // +20% vs shields
+                const actualShieldDmg = Math.min(remainingShields, shieldDmg);
+                const overflow = shieldDmg - actualShieldDmg;
+
+                remainingShields -= actualShieldDmg;
+                totalShieldDamage += actualShieldDmg;
+                totalModuleDamage += overflow;
+
+                if (enemyShields > 0) {
+                    logs.push(`Лазер: -${actualShieldDmg} щитам`);
+                    if (overflow > 0) logs.push(`(перелёт: ${overflow})`);
+                }
             }
+        }
 
-            // Missile intercept: 20% chance for missiles to be completely blocked by shields
-            const missileIntercepted =
-                missileIntercept > 0 && Math.random() < missileIntercept;
-            if (missileIntercepted) {
-                sDmg = 0;
-                pDmg = 0; // Set full damage to 0 so no overflow damage to modules
-                get().addLog(
-                    `🛡️ Ракета сбита щитами! Весь урон поглощён.`,
-                    "info",
+        // 2. Kinetic: -50% armor penetration (only affects module damage)
+        let kineticArmorPenetration = 0;
+        if (weaponCounts.kinetic > 0) {
+            kineticArmorPenetration = 0.5; // 50% armor ignore
+            for (let i = 0; i < weaponCounts.kinetic; i++) {
+                const kineticDmg = finalDamagePerWeapon * critMultiplier;
+                const shieldDmg = Math.min(remainingShields, kineticDmg);
+                const overflow = kineticDmg - shieldDmg;
+
+                remainingShields -= shieldDmg;
+                totalShieldDamage += shieldDmg;
+                // Kinetic overflow damage will be calculated with armor penetration
+                totalModuleDamage += overflow;
+
+                if (enemyShields > 0 && shieldDmg > 0) {
+                    logs.push(`Кинетика: -${shieldDmg} щитам`);
+                }
+            }
+        }
+
+        // 3. Missiles: 20% chance to be intercepted
+        let missileInterceptedCount = 0;
+        if (weaponCounts.missile > 0) {
+            for (let i = 0; i < weaponCounts.missile; i++) {
+                if (Math.random() < 0.2) {
+                    missileInterceptedCount++;
+                    continue; // Missile intercepted, no damage
+                }
+                const missileDmg = finalDamagePerWeapon * critMultiplier;
+                const shieldDmg = Math.min(remainingShields, missileDmg);
+                const overflow = missileDmg - shieldDmg;
+
+                remainingShields -= shieldDmg;
+                totalShieldDamage += shieldDmg;
+                totalModuleDamage += overflow;
+
+                if (enemyShields > 0 && shieldDmg > 0) {
+                    logs.push(`Ракета: -${shieldDmg} щитам`);
+                }
+            }
+        }
+
+        if (missileInterceptedCount > 0) {
+            logs.push(`🛡️ ${missileInterceptedCount} ракета(ы) сбита(ы)!`);
+        }
+
+        // Apply shield damage
+        if (totalShieldDamage > 0) {
+            set((s) => {
+                if (!s.currentCombat) return s;
+                return {
+                    currentCombat: {
+                        ...s.currentCombat,
+                        enemy: {
+                            ...s.currentCombat.enemy,
+                            shields: Math.max(
+                                0,
+                                enemyShields - totalShieldDamage,
+                            ),
+                        },
+                    },
+                };
+            });
+            get().addLog(`Урон щитам врага: ${totalShieldDamage}`, "combat");
+        }
+
+        // Apply module damage with armor penetration from kinetic weapons
+        if (totalModuleDamage > 0 || weaponCounts.kinetic > 0) {
+            let moduleDefense = tgtMod.defense || 0;
+
+            // Apply kinetic armor penetration to total module damage
+            if (weaponCounts.kinetic > 0 && kineticArmorPenetration > 0) {
+                moduleDefense = Math.floor(
+                    moduleDefense * (1 - kineticArmorPenetration),
+                );
+                logs.push(
+                    `🛡 Броня снижена на 50%: ${tgtMod.defense} → ${moduleDefense}`,
                 );
             }
+
+            const finalDamage = Math.max(1, totalModuleDamage - moduleDefense);
 
             set((s) => {
                 if (!s.currentCombat) return s;
@@ -4024,108 +4097,29 @@ export const useGameStore = create<
                         ...s.currentCombat,
                         enemy: {
                             ...s.currentCombat.enemy,
-                            shields: s.currentCombat.enemy.shields - sDmg,
+                            modules: s.currentCombat.enemy.modules.map((m) =>
+                                m.id === tgtMod.id
+                                    ? {
+                                          ...m,
+                                          health: Math.max(
+                                              0,
+                                              m.health - finalDamage,
+                                          ),
+                                      }
+                                    : m,
+                            ),
                         },
                     },
                 };
             });
-            if (!missileIntercepted) {
-                get().addLog(`Урон щитам врага: ${sDmg}`, "combat");
-            }
-            const overflow = pDmg - sDmg;
-            if (overflow > 0) {
-                // Kinetic bonus: ignore 50% of enemy module defense
-                let moduleDefense = tgtMod.defense || 0;
-                if (armorPenetration > 0) {
-                    moduleDefense = Math.floor(
-                        moduleDefense * (1 - armorPenetration),
-                    );
-                }
-                const finalDamage = Math.max(1, overflow - moduleDefense);
-
-                set((s) => {
-                    if (!s.currentCombat) return s;
-                    return {
-                        currentCombat: {
-                            ...s.currentCombat,
-                            enemy: {
-                                ...s.currentCombat.enemy,
-                                modules: s.currentCombat.enemy.modules.map(
-                                    (m) =>
-                                        m.id === tgtMod.id
-                                            ? {
-                                                  ...m,
-                                                  health: Math.max(
-                                                      0,
-                                                      m.health - finalDamage,
-                                                  ),
-                                              }
-                                            : m,
-                                ),
-                            },
-                        },
-                    };
-                });
-                get().addLog(
-                    `Пробитие! Модуль "${tgtMod.name}": -${finalDamage}%${armorPenetration > 0 ? ` (броня -${moduleDefense})` : ""}`,
-                    "combat",
-                );
-            }
-        } else {
-            // No shields - direct module damage
-            let moduleDefense = tgtMod.defense || 0;
-            let finalDmg = pDmg;
-
-            // Kinetic bonus: ignore 50% of enemy module defense
-            if (armorPenetration > 0) {
-                moduleDefense = Math.floor(
-                    moduleDefense * (1 - armorPenetration),
-                );
-            }
-
-            // Missile intercept: 20% chance for missiles to be completely blocked even without shields
-            // (representing point-defense systems, evasion, etc.)
-            const missileIntercepted =
-                missileIntercept > 0 && Math.random() < missileIntercept;
-            if (missileIntercepted) {
-                finalDmg = 0;
-                get().addLog(
-                    `🛡️ Ракета перехвачена! Урон по модулю предотвращён.`,
-                    "info",
-                );
-            }
-
-            const dmg = missileIntercepted
-                ? 0
-                : Math.max(5, finalDmg - moduleDefense);
-
-            if (!missileIntercepted) {
-                set((s) => {
-                    if (!s.currentCombat) return s;
-                    return {
-                        currentCombat: {
-                            ...s.currentCombat,
-                            enemy: {
-                                ...s.currentCombat.enemy,
-                                modules: s.currentCombat.enemy.modules.map(
-                                    (m) =>
-                                        m.id === tgtMod.id
-                                            ? {
-                                                  ...m,
-                                                  health: Math.max(
-                                                      0,
-                                                      m.health - dmg,
-                                                  ),
-                                              }
-                                            : m,
-                                ),
-                            },
-                        },
-                    };
-                });
-                get().addLog(`Модуль "${tgtMod.name}": -${dmg}%`, "combat");
-            }
+            get().addLog(
+                `Пробитие! Модуль "${tgtMod.name}": -${finalDamage}%${weaponCounts.kinetic > 0 ? ` (броня -${moduleDefense})` : ""}`,
+                "combat",
+            );
         }
+
+        // Log individual weapon hits
+        logs.forEach((log) => get().addLog(log, "combat"));
 
         // Check victory
         const updatedCombat = get().currentCombat;

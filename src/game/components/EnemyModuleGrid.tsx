@@ -177,7 +177,7 @@ export function ShipStatusCard({
             ⚔ Урон: {damage}{" "}
             <div className="my-2">
                 Щиты: {shields}/{maxShields}
-                <div className="h-2 mt-1 bg-[rgba(0,0,0,0.5)] relative">
+                <div className="h-2 rounded-full mt-1 bg-[rgba(0,0,0,0.5)] relative">
                     <div
                         className={`absolute rounded-full top-0 left-0 h-full ${progressColor.replace("[&>div]:", "")}`}
                         style={{
