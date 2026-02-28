@@ -1,7 +1,7 @@
 import type { Module } from "../types";
 
-// Starting fuel
-export const STARTING_FUEL = 100;
+// Starting fuel (matches initial fueltank capacity)
+export const STARTING_FUEL = 80;
 
 // Initial ship modules
 export const initialModules: Module[] = [
@@ -89,7 +89,7 @@ export const initialModules: Module[] = [
         health: 100,
         maxHealth: 100,
         level: 1,
-        capacity: 100,
+        capacity: STARTING_FUEL,
         defense: 1,
     },
 ];
