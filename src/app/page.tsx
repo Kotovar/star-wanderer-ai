@@ -173,7 +173,11 @@ export default function Home() {
                     min-width: 0;
                 }
 
-                /* Reserve space for scrollbar in accordion content */
+                /* Reserve space for scrollbar to prevent layout shift */
+                .panel {
+                    scrollbar-gutter: stable both-edges;
+                }
+
                 [data-slot="accordion-content"] {
                     scrollbar-gutter: stable;
                 }
@@ -202,11 +206,16 @@ export default function Home() {
                 <div className="panel flex-1 lg:w-95 flex flex-col gap-4 overflow-y-auto overflow-x-hidden min-w-0 lg:h-[calc(100vh-90px)]">
                     <Accordion
                         type="multiple"
-                        defaultValue={["ship", "crew", "modules"]}
+                        defaultValue={[
+                            "ship-grid",
+                            "ship-stats",
+                            "crew",
+                            "modules",
+                        ]}
                         className="w-full"
                     >
                         <AccordionItem
-                            value="ship"
+                            value="ship-grid"
                             className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5 mb-3 md:mb-4"
                         >
                             <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
@@ -214,6 +223,17 @@ export default function Home() {
                             </AccordionTrigger>
                             <AccordionContent>
                                 <ShipGrid />
+                            </AccordionContent>
+                        </AccordionItem>
+
+                        <AccordionItem
+                            value="ship-stats"
+                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5 mb-3 md:mb-4"
+                        >
+                            <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
+                                СОСТОЯНИЕ КОРАБЛЯ
+                            </AccordionTrigger>
+                            <AccordionContent>
                                 <ShipStats />
                             </AccordionContent>
                         </AccordionItem>
