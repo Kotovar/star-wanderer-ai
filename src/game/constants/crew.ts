@@ -148,6 +148,13 @@ export const CREW_TRAITS: Record<
             priceMod: 0.7,
         },
         {
+            name: "Плохой стрелок",
+            desc: "-10% точность оружия",
+            effect: { accuracyPenalty: 0.1 },
+            rarity: "rare",
+            priceMod: 0.65,
+        },
+        {
             name: "Пессимист",
             desc: "-20 морали в первый ход боя модулю",
             effect: { combatStartMoraleDrain: 20 },
@@ -253,6 +260,11 @@ export const COMBAT_ACTIONS: Record<
         { value: "", label: "ОЖИДАНИЕ", effect: null },
         { value: "repair", label: "Ремонт", effect: "+15% броня за ход" },
         {
+            value: "calibration",
+            label: "Калибровка",
+            effect: "+10% точность",
+        },
+        {
             value: "overclock",
             label: "Перегрузка",
             effect: "+25% урон, -10% броня",
@@ -301,8 +313,17 @@ export const CREW_ACTIONS: Record<
     ],
     engineer: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
-        { value: "power", label: "Разгон", effect: "+5⚡ генерация" },
         { value: "repair", label: "Ремонт", effect: "+15% броня за ход" },
+        {
+            value: "calibration",
+            label: "Калибровка",
+            effect: "+10% точность",
+        },
+        {
+            value: "overclock",
+            label: "Перегрузка",
+            effect: "+25% урон, -10% броня",
+        },
     ],
     medic: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },

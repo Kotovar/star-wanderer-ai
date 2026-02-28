@@ -1886,6 +1886,22 @@ export const useGameStore = create<
                         }
                         break;
                     }
+                    case "calibration": {
+                        // Engineer must be in weaponbay for calibration
+                        if (currentModule?.type !== "weaponbay") {
+                            get().addLog(
+                                `${c.name}: Калибровка неактивна - нужен в оружейной палубе!`,
+                                "warning",
+                            );
+                        } else {
+                            get().addLog(
+                                `${c.name}: Калибровка активна (+10% точность)`,
+                                "info",
+                            );
+                            get().gainExp(c, 8);
+                        }
+                        break;
+                    }
                     case "patrol": {
                         // Scout can patrol from anywhere
                         get().addLog(`${c.name}: Патрулирование`, "info");
@@ -3909,7 +3925,7 @@ export const useGameStore = create<
         const state = get();
         if (!state.currentCombat) return;
 
-        // Check if any crew is in a weapon bay for full accuracy
+        // Check if any crew is in a weapon bay for accuracy bonuses
         const weaponBays = state.ship.modules.filter(
             (m) => m.type === "weaponbay" && !m.disabled && m.health > 0,
         );
@@ -3917,10 +3933,16 @@ export const useGameStore = create<
             (c) =>
                 weaponBays.some((wb) => wb.id === c.moduleId) &&
                 (c.profession === "gunner" ||
+                    c.profession === "engineer" ||
                     (c.profession === "pilot" &&
                         getActiveAssignment(c, true) === "targeting")),
         );
-        const hasGunner = crewInWeaponBays.length > 0;
+        const hasGunner = crewInWeaponBays.some(
+            (c) => c.profession === "gunner",
+        );
+        const hasEngineer = crewInWeaponBays.some(
+            (c) => c.profession === "engineer",
+        );
 
         // Determine target - if no gunner, can't select target, random module
         let tgtMod = state.currentCombat.enemy.modules.find(
@@ -3981,7 +4003,11 @@ export const useGameStore = create<
         const hasMaintenance = state.crew.some(
             (c) => c.combatAssignment === "maintenance",
         );
+        const hasCalibration = state.crew.some(
+            (c) => c.combatAssignment === "calibration",
+        );
 
+        // Damage bonuses from assignments
         if (hasTargeting)
             finalDamagePerWeapon = Math.floor(finalDamagePerWeapon * 1.15);
         if (hasOverclock)
@@ -4002,18 +4028,75 @@ export const useGameStore = create<
             get().addLog(`💥 КРИТИЧЕСКИЙ УДАР! x2 урон!`, "combat");
         }
 
+        // Calculate accuracy modifier from crew assignments and traits
+        let accuracyModifier = 0;
+
+        // No gunner penalty: -20% accuracy (instead of -50% damage)
+        if (!hasGunner) accuracyModifier -= 0.2;
+
+        // Crew assignment modifiers
+        if (hasTargeting) accuracyModifier += 0.05; // +5% accuracy from targeting
+        if (hasRapidfire) accuracyModifier -= 0.05; // -5% accuracy from rapidfire
+        if (hasMaintenance) accuracyModifier += 0.05; // +5% accuracy from maintenance
+        if (hasCalibration && hasEngineer) accuracyModifier += 0.1; // +10% from engineer calibration
+
+        // AI Core module bonus: +5% accuracy per AI core module
+        const aiCoreModules = state.ship.modules.filter(
+            (m) => m.type === "ai_core" && !m.disabled && m.health > 0,
+        ).length;
+        if (aiCoreModules > 0) {
+            accuracyModifier += aiCoreModules * 0.05;
+            get().addLog(`🤖 ИИ Ядро: +${aiCoreModules * 5}% точность`, "info");
+        }
+
+        // Targeting Core artifact bonus: +15% accuracy
+        const targetingCore = state.artifacts.find(
+            (a) => a.effect.type === "accuracy_boost" && a.effect.active,
+        );
+        if (targetingCore) {
+            accuracyModifier += targetingCore.effect.value || 0.15;
+            get().addLog(`🎯 Ядро Прицеливания: +15% точность`, "info");
+        }
+
+        // Crew trait modifiers (accuracyPenalty from "Плохой стрелок")
+        state.crew.forEach((c) => {
+            c.traits?.forEach((trait) => {
+                if (trait.effect?.accuracyPenalty) {
+                    accuracyModifier -= Number(trait.effect.accuracyPenalty);
+                }
+            });
+        });
+
+        // Base accuracy by weapon type
+        const getWeaponAccuracy = (weaponType: string): number => {
+            const baseAccuracy: Record<string, number> = {
+                laser: 0.95, // 95% base accuracy
+                kinetic: 0.9, // 90% base accuracy
+                missile: 0.8, // 80% base accuracy (can be intercepted)
+            };
+            const base = baseAccuracy[weaponType] || 0.85;
+            // Apply accuracy modifier (clamped between 50% and 100%)
+            return Math.max(0.5, Math.min(1.0, base + accuracyModifier));
+        };
+
         // Calculate damage by weapon type
         let totalShieldDamage = 0;
         let totalModuleDamage = 0;
         const logs: string[] = [];
+        const missedShots = { laser: 0, kinetic: 0, missile: 0 };
 
         const enemyShields = state.currentCombat.enemy.shields;
         let remainingShields = enemyShields;
 
         // Process each weapon type independently
-        // 1. Lasers: +20% damage vs shields
+        // 1. Lasers: +20% damage vs shields, 95% base accuracy
         if (weaponCounts.laser > 0) {
+            const laserAccuracy = getWeaponAccuracy("laser");
             for (let i = 0; i < weaponCounts.laser; i++) {
+                if (Math.random() > laserAccuracy) {
+                    missedShots.laser++;
+                    continue; // Laser missed
+                }
                 const laserDmg = finalDamagePerWeapon * critMultiplier;
                 const shieldDmg = Math.floor(laserDmg * 1.2); // +20% vs shields
                 const actualShieldDmg = Math.min(remainingShields, shieldDmg);
@@ -4030,11 +4113,16 @@ export const useGameStore = create<
             }
         }
 
-        // 2. Kinetic: -50% armor penetration (only affects module damage)
+        // 2. Kinetic: -50% armor penetration, 90% base accuracy
         let kineticArmorPenetration = 0;
         if (weaponCounts.kinetic > 0) {
             kineticArmorPenetration = 0.5; // 50% armor ignore
+            const kineticAccuracy = getWeaponAccuracy("kinetic");
             for (let i = 0; i < weaponCounts.kinetic; i++) {
+                if (Math.random() > kineticAccuracy) {
+                    missedShots.kinetic++;
+                    continue; // Kinetic missed
+                }
                 const kineticDmg = finalDamagePerWeapon * critMultiplier;
                 const shieldDmg = Math.min(remainingShields, kineticDmg);
                 const overflow = kineticDmg - shieldDmg;
@@ -4050,22 +4138,23 @@ export const useGameStore = create<
             }
         }
 
-        // 3. Missiles: 20% base chance to be intercepted, modified by accuracy
-        let missileInterceptedCount = 0;
-
-        // Calculate accuracy modifier from crew assignments
-        let accuracyModifier = 0;
-        if (hasRapidfire) accuracyModifier -= 0.05; // -5% accuracy from rapidfire
-        if (hasMaintenance) accuracyModifier += 0.05; // +5% accuracy from maintenance
-
-        const baseInterceptChance = 0.2; // 20% base
-        const actualInterceptChance = Math.max(
-            0.05,
-            Math.min(0.5, baseInterceptChance - accuracyModifier),
-        );
-
+        // 3. Missiles: 80% base accuracy, can be intercepted
         if (weaponCounts.missile > 0) {
+            const missileAccuracy = getWeaponAccuracy("missile");
+            let missileInterceptedCount = 0;
+
             for (let i = 0; i < weaponCounts.missile; i++) {
+                // First check if missile hits (accuracy)
+                if (Math.random() > missileAccuracy) {
+                    missedShots.missile++;
+                    continue; // Missile missed
+                }
+                // Then check if missile is intercepted
+                const baseInterceptChance = 0.2; // 20% base
+                const actualInterceptChance = Math.max(
+                    0.05,
+                    Math.min(0.5, baseInterceptChance - accuracyModifier),
+                );
                 if (Math.random() < actualInterceptChance) {
                     missileInterceptedCount++;
                     continue; // Missile intercepted, no damage
@@ -4082,10 +4171,23 @@ export const useGameStore = create<
                     logs.push(`Ракета: -${shieldDmg} щитам`);
                 }
             }
+
+            if (missileInterceptedCount > 0) {
+                logs.push(`🛡️ ${missileInterceptedCount} ракета(ы) сбита(ы)!`);
+            }
         }
 
-        if (missileInterceptedCount > 0) {
-            logs.push(`🛡️ ${missileInterceptedCount} ракета(ы) сбита(ы)!`);
+        // Log missed shots
+        if (missedShots.laser > 0) {
+            logs.push(`❌ ${missedShots.laser} лазер(а) промахнул(ись)!`);
+        }
+        if (missedShots.kinetic > 0) {
+            logs.push(
+                `❌ ${missedShots.kinetic} кинетических снаряда промахнулось!`,
+            );
+        }
+        if (missedShots.missile > 0) {
+            logs.push(`❌ ${missedShots.missile} ракета(ы) промахнул(ись)!`);
         }
 
         // Apply shield damage

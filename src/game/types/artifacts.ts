@@ -50,7 +50,8 @@ export type ArtifactType =
     | "critical_overload" // Massive crit but self damage
     | "dark_shield" // Strong shield but morale drain
     | "ai_control" // Ship can operate without crew
-    | "void_engine"; // Free travel but crew suffering
+    | "void_engine" // Free travel but crew suffering
+    | "accuracy_boost"; // бонус к точности
 
 export type ArtifactNegativeType =
     | "happiness_drain" // -X happiness per turn

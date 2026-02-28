@@ -689,6 +689,32 @@ function WeaponDetailDialog({ weaponType, onClose }: WeaponDetailDialogProps) {
                         </div>
                     </div>
 
+                    {/* Accuracy */}
+                    <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 text-xs">
+                        <div className="text-[#ffb000] font-bold mb-2">
+                            🎯 Точность
+                        </div>
+                        {weaponType === "kinetic" && (
+                            <div className="text-[#00ff41]">
+                                90% базовая точность
+                            </div>
+                        )}
+                        {weaponType === "laser" && (
+                            <div className="text-[#00ff41]">
+                                95% базовая точность
+                            </div>
+                        )}
+                        {weaponType === "missile" && (
+                            <div className="text-[#00ff41]">
+                                80% базовая точность
+                            </div>
+                        )}
+                        <div className="text-[#888] mt-1">
+                            Может быть изменена задачами экипажа, особенностями
+                            и артефактами
+                        </div>
+                    </div>
+
                     {/* Special ability */}
                     <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 text-xs">
                         <div className="text-[#ffb000] font-bold mb-2">

@@ -105,6 +105,17 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         requiresScientistLevel: 3,
         rarity: "legendary",
     },
+    {
+        id: "targeting_core",
+        name: "Ядро Прицеливания",
+        description:
+            "+15% точность всего оружия. Позволяет стрелять эффективнее в любых условиях.",
+        effect: { type: "accuracy_boost", value: 0.15, active: false },
+        discovered: false,
+        researched: false,
+        requiresScientistLevel: 3,
+        rarity: "legendary",
+    },
 
     // MYTHIC artifacts (Tier 3 anomalies, black holes, extremely rare)
     {
