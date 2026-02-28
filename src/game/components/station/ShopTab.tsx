@@ -45,6 +45,7 @@ export function ShopTab({
     const [selectedUpgrade, setSelectedUpgrade] = useState<ShopItem | null>(
         null,
     );
+    const [selectedWeapon, setSelectedWeapon] = useState<ShopItem | null>(null);
 
     // Get owned module types for filtering upgrades
     const ownedModuleTypes = useMemo(() => {
@@ -122,7 +123,9 @@ export function ShopTab({
                             onViewDetails={() =>
                                 item.type === "upgrade"
                                     ? setSelectedUpgrade(item)
-                                    : setSelectedItem(item)
+                                    : item.type === "weapon"
+                                      ? setSelectedWeapon(item)
+                                      : setSelectedItem(item)
                             }
                             onBuy={() => {
                                 if (
@@ -182,6 +185,15 @@ export function ShopTab({
                     }}
                 />
             )}
+            {/* Weapon details dialog */}
+            {selectedWeapon &&
+                selectedWeapon.type === "weapon" &&
+                selectedWeapon.weaponType && (
+                    <WeaponDetailDialog
+                        weaponType={selectedWeapon.weaponType}
+                        onClose={() => setSelectedWeapon(null)}
+                    />
+                )}
         </>
     );
 }
@@ -626,6 +638,99 @@ function UpgradeDialog({
                             className="bg-transparent border-2 border-[#888] text-[#888] hover:bg-[#888] hover:text-[#050810] text-xs uppercase"
                         >
                             Отмена
+                        </Button>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+// Weapon detail dialog component
+interface WeaponDetailDialogProps {
+    weaponType: string;
+    onClose: () => void;
+}
+
+function WeaponDetailDialog({ weaponType, onClose }: WeaponDetailDialogProps) {
+    const weapon = WEAPON_TYPES[weaponType as keyof typeof WEAPON_TYPES];
+
+    if (!weapon) return null;
+
+    return (
+        <Dialog open={true} onOpenChange={onClose}>
+            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ffb000] text-[#ffb000] max-w-md">
+                <DialogHeader>
+                    <DialogTitle className="text-[#ffb000] font-['Orbitron'] flex items-center gap-2">
+                        <span
+                            style={{ color: weapon.color, fontSize: "1.5em" }}
+                        >
+                            {weapon.icon}
+                        </span>
+                        {weapon.name}
+                    </DialogTitle>
+                    <DialogDescription className="sr-only">
+                        Информация об оружии
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                    {/* Damage */}
+                    <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 text-xs">
+                        <div className="text-[#ffb000] font-bold mb-2">
+                            ⚔ Урон: {weapon.damage}
+                        </div>
+                        <div className="text-[#888]">
+                            Базовый урон оружия при попадании
+                        </div>
+                    </div>
+
+                    {/* Special ability */}
+                    <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 text-xs">
+                        <div className="text-[#ffb000] font-bold mb-2">
+                            ★ Особенность
+                        </div>
+                        <div className="text-[#00ff41]">
+                            {weapon.description}
+                        </div>
+                    </div>
+
+                    {/* Usage tips */}
+                    <div className="border-t border-[#ffb000] pt-3 text-xs">
+                        <div className="text-[#ffb000] font-bold mb-2">
+                            💡 Когда использовать:
+                        </div>
+                        {weaponType === "kinetic" && (
+                            <div className="text-[#888] space-y-1">
+                                <div>• Против бронированных целей</div>
+                                <div>• Когда у врага слабые щиты</div>
+                                <div>
+                                    • Для добивания врага с высокой защитой
+                                </div>
+                            </div>
+                        )}
+                        {weaponType === "laser" && (
+                            <div className="text-[#888] space-y-1">
+                                <div>• Против целей с мощными щитами</div>
+                                <div>• Для быстрого вывода щитов из строя</div>
+                                <div>• Когда нужна точность</div>
+                            </div>
+                        )}
+                        {weaponType === "missile" && (
+                            <div className="text-[#888] space-y-1">
+                                <div>• Для максимального урона по корпусу</div>
+                                <div>• Против слабощищенных целей</div>
+                                <div>• Когда важен каждый выстрел</div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                        <Button
+                            onClick={onClose}
+                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-xs uppercase flex-1"
+                        >
+                            Закрыть
                         </Button>
                     </div>
                 </div>
