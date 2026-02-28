@@ -1,13 +1,20 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
-import { useGameStore } from "../store";
-import { Location, PlanetType, StarType, StormType } from "../types";
+import { useGameStore } from "@/game/store";
+import {
+    Location,
+    LocationType,
+    PlanetType,
+    StarType,
+    StormType,
+} from "@/game/types";
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const ZOOM_SENSITIVITY = 0.001;
 const DRAG_THRESHOLD = 5;
+const NEEDS_SCANNER_LOCATIONS: LocationType[] = ["storm", "anomaly", "boss"];
 
 // Seeded random helper - returns deterministic value based on location ID
 const seededRandom = (loc: Location, seed: number = 0): number => {
@@ -82,7 +89,7 @@ function getScannerInfo(
                 };
                 info.push(`🧬 ${raceNames[loc.shipRace] || loc.shipRace}`);
             }
-        } else if (loc.type === "ancient_boss") {
+        } else if (loc.type === "boss") {
             info.push(`⚠️ Древний корабль`);
         } else if (loc.type === "storm") {
             info.push(`🌪️ Космический шторм`);
@@ -234,7 +241,7 @@ function getScannerInfo(
     }
 
     // Hidden rewards for ancient bosses
-    if (loc.type === "ancient_boss" && !loc.bossDefeated && scanRange >= 8) {
+    if (loc.type === "boss" && !loc.bossDefeated && scanRange >= 8) {
         const detectionChance = Math.min(100, 50 + (scanRange - 8) * 5);
         if (Math.random() * 100 < detectionChance) {
             info.push(`★ Древний артефакт!`);
@@ -379,7 +386,7 @@ export function SectorMap() {
             } else if (loc.type === "distress_signal") {
                 // Distress signals are always visible (SOS beacon)
                 drawDistressSignal(ctx, x, y, loc, completed);
-            } else if (loc.type === "ancient_boss") {
+            } else if (loc.type === "boss") {
                 if (hasScanner || isRevealed) {
                     drawAncientBoss(ctx, x, y, loc, completed);
                 } else {
@@ -390,9 +397,8 @@ export function SectorMap() {
             // Draw label below the location
             // Without scanner, certain locations show as "Unknown object"
             // Distress signals are always visible (SOS beacon broadcasts location)
-            const needsScanner = ["storm", "anomaly", "ancient_boss"].includes(
-                loc.type,
-            );
+
+            const needsScanner = NEEDS_SCANNER_LOCATIONS.includes(loc.type);
             const displayName =
                 needsScanner && !hasScanner && !isRevealed && !completed
                     ? "❓ Неизвестный объект"
@@ -663,7 +669,7 @@ export function SectorMap() {
                             }
                         } else if (loc.type === "distress_signal") {
                             drawDistressSignal(ctx, x, y, loc, completed);
-                        } else if (loc.type === "ancient_boss") {
+                        } else if (loc.type === "boss") {
                             if (hasScanner || isRevealed) {
                                 drawAncientBoss(ctx, x, y, loc, completed);
                             } else {
@@ -672,11 +678,9 @@ export function SectorMap() {
                         }
 
                         // Draw labels
-                        const needsScanner = [
-                            "storm",
-                            "anomaly",
-                            "ancient_boss",
-                        ].includes(loc.type);
+                        const needsScanner = NEEDS_SCANNER_LOCATIONS.includes(
+                            loc.type,
+                        );
                         const displayName =
                             needsScanner &&
                             !hasScanner &&

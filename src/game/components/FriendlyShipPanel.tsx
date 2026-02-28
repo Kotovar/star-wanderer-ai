@@ -5,16 +5,14 @@ import { useGameStore } from "@/game/store";
 import { TRADE_GOODS } from "@/game/constants/goods";
 import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
-import type {
-    RaceId,
-    Contract,
-    Profession,
-    Quality,
-    Goods,
-} from "@/game/types";
+import type { Quality } from "@/game/types";
 import { getRandomRaceName } from "@/game/races/utils";
 import { generateCrewTraits } from "@/game/crew/utils";
 import { PROFESSION_NAMES, CREW_BASE_PRICES } from "@/game/constants/crew";
+import { Goods } from "@/game/types/goods";
+import { Contract } from "@/game/types/contracts";
+import { Profession } from "@/game/types/crew";
+import { RaceId } from "../types/races";
 
 const INITIAL_STOCK: Goods[] = ["water", "food", "medicine"];
 

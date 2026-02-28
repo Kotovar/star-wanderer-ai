@@ -1,6 +1,6 @@
 "use client";
 
-import { useGameStore } from "../store";
+import { useGameStore } from "@/game/store";
 import { Button } from "@/components/ui/button";
 
 export function UnknownShipPanel() {
@@ -57,7 +57,7 @@ export function UnknownShipPanel() {
         if (currentLocation.type === "enemy") {
             // If no scanner, this is an ambush - enemy attacks first
             startCombat(currentLocation, !hasScanner);
-        } else if (currentLocation.type === "ancient_boss") {
+        } else if (currentLocation.type === "boss") {
             startBossCombat(currentLocation);
         } else if (currentLocation.type === "friendly_ship") {
             useGameStore.setState({ gameMode: "friendly_ship" });
@@ -84,7 +84,7 @@ export function UnknownShipPanel() {
                 return `⚔️ Вражеский корабль (угроза ${currentLocation.threat || 1})`;
             } else if (currentLocation.type === "friendly_ship") {
                 return `🤝 Дружеский корабль`;
-            } else if (currentLocation.type === "ancient_boss") {
+            } else if (currentLocation.type === "boss") {
                 return `⚠️ Древний корабль`;
             } else if (currentLocation.type === "anomaly") {
                 const type =

@@ -1,4 +1,4 @@
-import type { GalaxyTier, LocationType, Location } from "../types";
+import type { GalaxyTier, LocationType, Location } from "@/game/types";
 import { LOCATION_CHANCES, LOCATION_TYPE_CHANCES } from "./config";
 import {
     generateAnomaly,

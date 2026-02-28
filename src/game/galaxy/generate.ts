@@ -235,7 +235,7 @@ export const generateBossOrAnomaly = (
     if (boss) {
         return {
             id: `${sectorIdx}-${locIdx}`,
-            type: "ancient_boss",
+            type: "boss",
             name: boss.name,
             bossId: boss.id,
             bossDefeated: false,
@@ -291,7 +291,7 @@ export const addEternalBoss = (sector: Sector): void => {
 
     sector.locations.push({
         id: `${sector.id}-boss-eternal`,
-        type: "ancient_boss",
+        type: "boss",
         name: eternalBoss.name,
         bossId: eternalBoss.id,
         bossDefeated: false,

@@ -3007,7 +3007,7 @@ export const useGameStore = create<
                 }
                 break;
             }
-            case "ancient_boss": {
+            case "boss": {
                 // Check if already defeated
                 if (loc.bossDefeated) {
                     get().addLog(`${loc.name} уже уничтожен`, "info");
