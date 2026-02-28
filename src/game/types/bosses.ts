@@ -4,6 +4,10 @@
 
 import type { ArtifactRarity } from "./artifacts";
 import type { GalaxyTier } from "./locations/galaxy";
+export type BossModuleType =
+    | "ancient_core"
+    | "conversion_core"
+    | "quantum_engine";
 
 export interface AncientBoss {
     id: string;
@@ -15,7 +19,7 @@ export interface AncientBoss {
     regenRate: number; // HP regenerated per turn in combat
     specialAbility: BossAbility;
     guaranteedArtifactRarity: ArtifactRarity;
-    guaranteedModuleDrop?: "quantum_engine";
+    guaranteedModuleDrop?: BossModuleType;
 }
 
 export interface BossModule {

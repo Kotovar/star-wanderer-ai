@@ -59,6 +59,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
             value: 10,
         },
         guaranteedArtifactRarity: "rare",
+        guaranteedModuleDrop: "ancient_core",
     },
 
     // Tier 2 Boss - Harvester
@@ -124,6 +125,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
             value: 25,
         },
         guaranteedArtifactRarity: "legendary",
+        guaranteedModuleDrop: "conversion_core",
     },
 
     // Tier 3 Boss - Void Oracle

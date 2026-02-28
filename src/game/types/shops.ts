@@ -8,6 +8,7 @@ export interface ShopItem {
     price: number;
     stock: number;
     type: ShopItemType;
+    description: string;
     moduleType: ModuleType;
     targetType?: ModuleType;
     width?: number;

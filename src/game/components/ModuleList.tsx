@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useGameStore } from "../store";
-import { WEAPON_TYPES } from "../constants";
+import { MODULE_DESCRIPTIONS, WEAPON_TYPES } from "../constants";
 import type { Module, Weapon } from "../types";
 import {
     Dialog,
@@ -300,63 +300,13 @@ function ModuleDetailedStats({
     fuel,
     maxFuel,
 }: ModuleDetailedStatsProps) {
+    const description = MODULE_DESCRIPTIONS[module.type];
+
     return (
         <div className="space-y-2">
-            {/* Module purpose descriptions */}
-            {module.type === "cockpit" && (
-                <div className="text-[#888] text-xs">
-                    🎯 Кабина пилота — управление кораблём и навигация
-                </div>
-            )}
-            {module.type === "reactor" && (
-                <div className="text-[#888] text-xs">
-                    ⚡ Реактор — генерация энергии для всех систем корабля
-                </div>
-            )}
-            {module.type === "engine" && (
-                <div className="text-[#888] text-xs">
-                    🚀 Двигатель — перемещение между секторами галактики
-                </div>
-            )}
-            {module.type === "fueltank" && (
-                <div className="text-[#888] text-xs">
-                    ⛽ Топливный бак — хранение топлива для двигателей
-                </div>
-            )}
-            {module.type === "shield" && (
-                <div className="text-[#888] text-xs">
-                    🛡 Генератор щита — защита от вражеского огня
-                </div>
-            )}
-            {module.type === "weaponbay" && (
-                <div className="text-[#888] text-xs">
-                    ⚔ Оружейная палуба — размещение бортового оружия
-                </div>
-            )}
-            {module.type === "cargo" && (
-                <div className="text-[#888] text-xs">
-                    📦 Грузовой отсек — хранение товаров и ресурсов
-                </div>
-            )}
-            {module.type === "scanner" && (
-                <div className="text-[#888] text-xs">
-                    📡 Сканер — обнаружение объектов и аномалий
-                </div>
-            )}
-            {module.type === "lifesupport" && (
-                <div className="text-[#888] text-xs">
-                    💚 Жизнеобеспечение — поддержка жизни экипажа
-                </div>
-            )}
-            {module.type === "medical" && (
-                <div className="text-[#888] text-xs">
-                    🏥 Медотсек — лечение и восстановление экипажа
-                </div>
-            )}
-            {module.type === "drill" && (
-                <div className="text-[#888] text-xs">
-                    ⛏ Бур — добыча ресурсов из астероидов
-                </div>
+            {/* Module purpose description from shop data */}
+            {description && (
+                <div className="text-[#888] text-xs">{description}</div>
             )}
 
             {module.type === "reactor" && module.power && module.power > 0 && (

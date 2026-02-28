@@ -25,6 +25,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 1,
             price: 350,
             stock: 2,
+            description: "Добывает ресурсы из астероидов",
         },
         {
             id: "fueltank-1",
@@ -36,6 +37,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             price: 400,
             stock: 2,
             capacity: 80,
+            description: "Хранит топливо для прыжков между системами",
         },
         {
             id: "reactor-1",
@@ -48,6 +50,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 0,
             price: 450,
             stock: 2,
+            description: "Генерирует энергию для корабля",
         },
         {
             id: "cargo-1",
@@ -60,6 +63,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 1,
             price: 350,
             stock: 2,
+            description: "Хранит грузы и ресурсы",
         },
         {
             id: "shield-1",
@@ -72,6 +76,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 3,
             price: 500,
             stock: 2,
+            description: "Создаёт защитное поле вокруг корабля",
         },
         {
             id: "weaponbay-1",
@@ -83,6 +88,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 2,
             price: 500,
             stock: 1,
+            description: "Размещает оружие корабля",
         },
         {
             id: "scanner-1",
@@ -95,6 +101,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 1,
             price: 350,
             stock: 1,
+            description: "Обнаруживает объекты в космосе",
         },
         {
             id: "lifesupport-1",
@@ -107,6 +114,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 2,
             price: 400,
             stock: 2,
+            description: "Производит кислород для экипажа",
         },
         {
             id: "medical-1",
@@ -118,6 +126,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 2,
             price: 450,
             stock: 1,
+            description: "Лечит членов экипажа",
         },
     ],
     2: [
@@ -131,6 +140,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 2,
             price: 700,
             stock: 1,
+            description: "Улучшенный бур для добычи ресурсов",
         },
         {
             id: "fueltank-2",
@@ -142,6 +152,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             price: 650,
             stock: 1,
             capacity: 120,
+            description: "Увеличенная ёмкость для топлива",
         },
         {
             id: "reactor-2",
@@ -154,6 +165,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 0,
             price: 800,
             stock: 1,
+            description: "Усиленный реактор повышенной мощности",
         },
         {
             id: "cargo-2",
@@ -166,6 +178,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 1,
             price: 600,
             stock: 1,
+            description: "Расширенный грузовой отсек",
         },
         {
             id: "shield-2",
@@ -178,6 +191,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 4,
             price: 900,
             stock: 1,
+            description: "Усиленный генератор защитного поля",
         },
         {
             id: "weaponbay-2",
@@ -189,6 +203,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 3,
             price: 800,
             stock: 1,
+            description: "Двойная оружейная палуба",
         },
         {
             id: "scanner-2",
@@ -201,6 +216,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 2,
             price: 600,
             stock: 1,
+            description: "Дальнобойный сканер",
         },
         {
             id: "lifesupport-2",
@@ -213,6 +229,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 3,
             price: 650,
             stock: 1,
+            description: "Улучшенная система жизнеобеспечения",
         },
         {
             id: "medical-2",
@@ -224,6 +241,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 3,
             price: 800,
             stock: 1,
+            description: "Оборудованный медицинский отсек",
         },
     ],
     3: [
@@ -237,6 +255,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 3,
             price: 1200,
             stock: 1,
+            description: "Промышленный бур высокой эффективности",
         },
         {
             id: "fueltank-3",
@@ -248,6 +267,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             price: 1000,
             stock: 1,
             capacity: 180,
+            description: "Ёмкий топливный резервуар",
         },
         {
             id: "reactor-3",
@@ -260,6 +280,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 0,
             price: 1500,
             stock: 1,
+            description: "Мощный энергетический реактор",
         },
         {
             id: "cargo-3",
@@ -272,6 +293,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 2,
             price: 1100,
             stock: 1,
+            description: "Вместительный грузовой модуль",
         },
         {
             id: "shield-3",
@@ -284,6 +306,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 5,
             price: 1400,
             stock: 1,
+            description: "Усиленный щит последнего поколения",
         },
         {
             id: "scanner-3",
@@ -296,6 +319,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 3,
             price: 1000,
             stock: 1,
+            description: "Сканер дальнего действия",
         },
         {
             id: "lifesupport-3",
@@ -308,6 +332,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 4,
             price: 1000,
             stock: 1,
+            description: "Система жизнеобеспечения для больших экипажей",
         },
         {
             id: "medical-3",
@@ -319,6 +344,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 4,
             price: 1200,
             stock: 1,
+            description: "Полноценный медицинский блок",
         },
     ],
     4: [
@@ -333,6 +359,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 0,
             price: 10000,
             stock: 1,
+            description: "Квантовый двигатель без потребления топлива",
         },
         {
             id: "drill-ancient",
@@ -341,9 +368,10 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             moduleType: "drill",
             width: 1,
             height: 2,
-            consumption: 2, // Эффективнее чем 2 бура T3 (6 cons)
+            consumption: 2,
             price: 3000,
             stock: 1,
+            description: "Технология древних для эффективной добычи",
         },
         {
             id: "reactor-fusion",
@@ -356,6 +384,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 0,
             price: 4000,
             stock: 1,
+            description: "Реактор на холодном синтезе",
         },
         {
             id: "shield-ancient",
@@ -365,9 +394,10 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             width: 2,
             height: 1,
             defense: 80,
-            consumption: 5, // Выгоднее чем 2 щита T2 (8 cons за 70 def)
+            consumption: 5,
             price: 5000,
             stock: 1,
+            description: "Непревзойдённая защита древних",
         },
         {
             id: "cargo-quantum",
@@ -376,10 +406,11 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             moduleType: "cargo",
             width: 2,
             height: 1,
-            capacity: 250, // Больше чем 2 грузовых T3 (200 cap за 4 cons)
+            capacity: 250,
             consumption: 3,
             price: 3500,
             stock: 1,
+            description: "Квантовое хранение грузов",
         },
         {
             id: "scanner-quantum",
@@ -392,6 +423,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 4,
             price: 3000,
             stock: 1,
+            description: "Сканирование через квантовую запутанность",
         },
         {
             id: "fueltank-ancient",
@@ -400,9 +432,10 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             moduleType: "fueltank",
             width: 1,
             height: 1,
-            capacity: 260, // Синхронизировано с upgrade-3 (+80 от T3)
+            capacity: 260,
             price: 4000,
             stock: 1,
+            description: "Ёмкость из сплава древних",
         },
         {
             id: "lifesupport-ancient",
@@ -411,10 +444,11 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             moduleType: "lifesupport",
             width: 1,
             height: 1,
-            oxygen: 20, // Синхронизировано с upgrade-3 (+8 от T3)
+            oxygen: 20,
             consumption: 5,
             price: 4000,
             stock: 1,
+            description: "Система жизнеобеспечения по технологиям древних",
         },
         {
             id: "medical-ancient",
@@ -426,6 +460,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 5,
             price: 4000,
             stock: 1,
+            description: "Медицинские технологии древней цивилизации",
         },
         {
             id: "weaponbay-ancient",
@@ -434,9 +469,10 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             moduleType: "weaponbay",
             width: 2,
             height: 2,
-            consumption: 5, // Выгоднее чем 4 палубы 1x1 (8 cons)
+            consumption: 5,
             price: 5000,
             stock: 1,
+            description: "Платформа для оружия древних",
         },
         {
             id: "ai-core",
@@ -448,6 +484,46 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             consumption: 20,
             price: 8000,
             stock: 1,
+            description: "Искусственный интеллект корабля",
+        },
+        // Boss drops - уникальные модули с особыми эффектами
+        {
+            id: "ancient-core",
+            name: "★ Древнее Ядро",
+            type: "module",
+            moduleType: "reactor",
+            width: 1,
+            height: 1,
+            power: 25,
+            consumption: 0,
+            price: 6000,
+            stock: 1,
+            description: "Ядро древних с повышенной эффективностью",
+        },
+        {
+            id: "conversion-core",
+            name: "★ Ядро Конвертации",
+            type: "module",
+            moduleType: "reactor",
+            width: 2,
+            height: 1,
+            power: 40,
+            consumption: 0,
+            price: 9000,
+            stock: 1,
+            description: "Преобразует урон в энергию",
+        },
+        {
+            id: "quantum-engine",
+            name: "★ Квантовый Двигатель",
+            type: "module",
+            moduleType: "engine",
+            width: 2,
+            height: 2,
+            consumption: 0,
+            price: 12000,
+            stock: 1,
+            description: "Двигатель на квантовой тяге",
         },
     ],
 };
@@ -462,9 +538,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "reactor",
             price: 800,
-            effect: { power: 5 }, // T1(10) → T2(15) = +5 ✓
+            effect: { power: 5 },
             stock: 2,
             moduleType: "reactor",
+            description: "Увеличивает мощность реактора на 5 единиц",
         },
         {
             id: "cargo-upgrade-1",
@@ -472,9 +549,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "cargo",
             price: 600,
-            effect: { capacity: 20 }, // T1(40) → T2(60) = +20 ✓
+            effect: { capacity: 20 },
             stock: 2,
             moduleType: "cargo",
+            description: "Увеличивает вместимость груза на 20 единиц",
         },
         {
             id: "fueltank-upgrade-1",
@@ -482,9 +560,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "fueltank",
             price: 700,
-            effect: { capacity: 40 }, // T1(80) → T2(120) = +40
+            effect: { capacity: 40 },
             stock: 2,
             moduleType: "fueltank",
+            description: "Увеличивает ёмкость топливного бака на 40 единиц",
         },
         {
             id: "shield-upgrade-1",
@@ -492,9 +571,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "shield",
             price: 900,
-            effect: { defense: 15 }, // T1(20) → T2(35) = +15
+            effect: { defense: 15 },
             stock: 2,
             moduleType: "shield",
+            description: "Увеличивает защиту щита на 15 единиц",
         },
         {
             id: "scanner-upgrade-1",
@@ -502,9 +582,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "scanner",
             price: 700,
-            effect: { scanRange: 2 }, // T1(3) → T2(5) = +2 ✓
+            effect: { scanRange: 2 },
             stock: 2,
             moduleType: "scanner",
+            description: "Увеличивает радиус сканирования на 2 единицы",
         },
         {
             id: "lifesupport-upgrade-1",
@@ -512,9 +593,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "lifesupport",
             price: 800,
-            effect: { oxygen: 3 }, // T1(5) → T2(8) = +3 ✓
+            effect: { oxygen: 3 },
             stock: 2,
             moduleType: "lifesupport",
+            description: "Увеличивает производство кислорода на 3 единицы",
         },
         {
             id: "engine-upgrade-1",
@@ -525,6 +607,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             effect: { fuelEfficiency: -2 },
             stock: 2,
             moduleType: "engine",
+            description: "Снижает расход топлива на 2 единицы за прыжок",
         },
         {
             id: "drill-upgrade-1",
@@ -532,9 +615,11 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "drill",
             price: 800,
-            effect: { level: 1 }, // T1 → T2 = +1 уровень ✓
+            effect: { level: 1 },
             stock: 2,
             moduleType: "drill",
+            description:
+                "Повышает уровень бура для добычи более ценных ресурсов",
         },
         {
             id: "medical-upgrade-1",
@@ -545,6 +630,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             effect: { healing: 4 },
             stock: 2,
             moduleType: "medical",
+            description: "Увеличивает скорость лечения экипажа на 4 единицы",
         },
     ],
     2: [
@@ -554,9 +640,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "reactor",
             price: 1400,
-            effect: { power: 5 }, // T2(15) → T3(20) = +5
+            effect: { power: 5 },
             stock: 1,
             moduleType: "reactor",
+            description: "Увеличивает мощность реактора на 5 единиц",
         },
         {
             id: "cargo-upgrade-2",
@@ -564,9 +651,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "cargo",
             price: 1100,
-            effect: { capacity: 40 }, // T2(60) → T3(100) = +40
+            effect: { capacity: 40 },
             stock: 1,
             moduleType: "cargo",
+            description: "Увеличивает вместимость груза на 40 единиц",
         },
         {
             id: "fueltank-upgrade-2",
@@ -574,9 +662,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "fueltank",
             price: 1200,
-            effect: { capacity: 60 }, // T2(120) → T3(180) = +60
+            effect: { capacity: 60 },
             stock: 1,
             moduleType: "fueltank",
+            description: "Увеличивает ёмкость топливного бака на 60 единиц",
         },
         {
             id: "shield-upgrade-2",
@@ -584,9 +673,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "shield",
             price: 1800,
-            effect: { defense: 15 }, // T2(35) → T3(50) ≈ +15 (T3 нет, берём среднее)
+            effect: { defense: 15 },
             stock: 1,
             moduleType: "shield",
+            description: "Увеличивает защиту щита на 15 единиц",
         },
         {
             id: "scanner-upgrade-2",
@@ -594,9 +684,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "scanner",
             price: 1400,
-            effect: { scanRange: 3 }, // T2(5) → T3(8) = +3 ✓
+            effect: { scanRange: 3 },
             stock: 1,
             moduleType: "scanner",
+            description: "Увеличивает радиус сканирования на 3 единицы",
         },
         {
             id: "lifesupport-upgrade-2",
@@ -604,9 +695,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "lifesupport",
             price: 1600,
-            effect: { oxygen: 4 }, // T2(8) → T3(12) = +4
+            effect: { oxygen: 4 },
             stock: 1,
             moduleType: "lifesupport",
+            description: "Увеличивает производство кислорода на 4 единицы",
         },
         {
             id: "engine-upgrade-2",
@@ -617,6 +709,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             effect: { fuelEfficiency: -3 },
             stock: 1,
             moduleType: "engine",
+            description: "Снижает расход топлива на 3 единицы за прыжок",
         },
         {
             id: "drill-upgrade-2",
@@ -624,9 +717,11 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "drill",
             price: 1600,
-            effect: { level: 1 }, // T2 → T3 = +1 уровень ✓
+            effect: { level: 1 },
             stock: 1,
             moduleType: "drill",
+            description:
+                "Повышает уровень бура для добычи более ценных ресурсов",
         },
         {
             id: "medical-upgrade-2",
@@ -637,6 +732,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             effect: { healing: 6 },
             stock: 1,
             moduleType: "medical",
+            description: "Увеличивает скорость лечения экипажа на 6 единиц",
         },
     ],
     3: [
@@ -646,9 +742,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "reactor",
             price: 2400,
-            effect: { power: 10 }, // T3(20) → T4(30) = +10
+            effect: { power: 10 },
             stock: 1,
             moduleType: "reactor",
+            description: "Увеличивает мощность реактора на 10 единиц",
         },
         {
             id: "cargo-upgrade-3",
@@ -656,9 +753,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "cargo",
             price: 1800,
-            effect: { capacity: 150 }, // T3(100) → T4(250) = +150
+            effect: { capacity: 150 },
             stock: 1,
             moduleType: "cargo",
+            description: "Увеличивает вместимость груза на 150 единиц",
         },
         {
             id: "fueltank-upgrade-3",
@@ -666,9 +764,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "fueltank",
             price: 2000,
-            effect: { capacity: 80 }, // T3(180) → T4(260) ≈ +80
+            effect: { capacity: 80 },
             stock: 1,
             moduleType: "fueltank",
+            description: "Увеличивает ёмкость топливного бака на 80 единиц",
         },
         {
             id: "shield-upgrade-3",
@@ -676,9 +775,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "shield",
             price: 3600,
-            effect: { defense: 30 }, // T3(50) → T4(80) = +30
+            effect: { defense: 30 },
             stock: 1,
             moduleType: "shield",
+            description: "Увеличивает защиту щита на 30 единиц",
         },
         {
             id: "scanner-upgrade-3",
@@ -686,9 +786,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "scanner",
             price: 2800,
-            effect: { scanRange: 7 }, // T3(8) → T4(15) = +7
+            effect: { scanRange: 7 },
             stock: 1,
             moduleType: "scanner",
+            description: "Увеличивает радиус сканирования на 7 единиц",
         },
         {
             id: "lifesupport-upgrade-3",
@@ -696,9 +797,10 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "lifesupport",
             price: 3200,
-            effect: { oxygen: 8 }, // T3(12) → T4(20) = +8 ✓
+            effect: { oxygen: 8 },
             stock: 1,
             moduleType: "lifesupport",
+            description: "Увеличивает производство кислорода на 8 единиц",
         },
         {
             id: "engine-upgrade-3",
@@ -709,6 +811,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             effect: { fuelEfficiency: -4 },
             stock: 1,
             moduleType: "engine",
+            description: "Снижает расход топлива на 4 единицы за прыжок",
         },
         {
             id: "drill-upgrade-3",
@@ -716,9 +819,11 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             type: "upgrade",
             targetType: "drill",
             price: 3200,
-            effect: { level: 1 }, // T3 → T4 = +1 уровень ✓
+            effect: { level: 1 },
             stock: 1,
             moduleType: "drill",
+            description:
+                "Повышает уровень бура для добычи более ценных ресурсов",
         },
         {
             id: "medical-upgrade-3",
@@ -729,6 +834,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             effect: { healing: 8 },
             stock: 1,
             moduleType: "medical",
+            description: "Увеличивает скорость лечения экипажа на 8 единиц",
         },
     ],
 };
@@ -744,6 +850,7 @@ export const WEAPONS: ShopItem[] = [
         stock: 3,
         requiresWeaponBay: true,
         moduleType: "weaponShed",
+        description: "Стреляет снарядами на высокой скорости",
     },
     {
         id: "weapon-laser",
@@ -754,6 +861,7 @@ export const WEAPONS: ShopItem[] = [
         stock: 2,
         requiresWeaponBay: true,
         moduleType: "weaponShed",
+        description: "Точный луч энергии, эффективен против щитов",
     },
     {
         id: "weapon-missile",
@@ -764,6 +872,7 @@ export const WEAPONS: ShopItem[] = [
         stock: 1,
         requiresWeaponBay: true,
         moduleType: "weaponShed",
+        description: "Самонаводящиеся ракеты с высокой мощностью",
     },
 ];
 
