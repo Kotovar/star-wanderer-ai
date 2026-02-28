@@ -59,11 +59,14 @@ const initializeStationData = (
                 const mineralDiscount = stationConfig?.mineralDiscount ?? 1;
                 const rareMineralDiscount =
                     stationConfig?.rareMineralDiscount ?? 1;
+                const priceDiscount = stationConfig?.priceDiscount ?? 1;
 
                 for (const goodId of typedKeys(TRADE_GOODS)) {
                     const good = TRADE_GOODS[goodId];
                     const priceVar = 0.7 + Math.random() * 0.6;
-                    const sellPrice = Math.floor(good.basePrice * priceVar);
+                    const sellPrice = Math.floor(
+                        good.basePrice * priceVar * priceDiscount,
+                    );
 
                     // Apply discounts for mining stations
                     let buyPrice = Math.floor(sellPrice * 1.6);
@@ -5383,6 +5386,24 @@ export const useGameStore = create<
                 }));
             }
 
+            // Scanner upgrade: improve scanRange
+            const scanRange = item.effect?.scanRange;
+            if (scanRange) {
+                set((s) => ({
+                    ship: {
+                        ...s.ship,
+                        modules: s.ship.modules.map((m) =>
+                            m.id === tgt.id
+                                ? {
+                                      ...m,
+                                      scanRange: (m.scanRange || 0) + scanRange,
+                                  }
+                                : m,
+                        ),
+                    },
+                }));
+            }
+
             // Engine upgrade: improve fuel efficiency (reduce consumption)
             if (item.targetType === "engine") {
                 set((s) => ({
@@ -5475,6 +5496,10 @@ export const useGameStore = create<
                 else if (item.id.includes("drill-2")) drillLevel = 2;
             }
 
+            // Get station config for cargo bonus
+            const stationConfig = state.currentLocation?.stationConfig;
+            const cargoBonus = stationConfig?.cargoBonus ?? 1;
+
             // Build module with only relevant properties
             const newMod: Module = {
                 id: state.ship.modules.length + 1,
@@ -5502,7 +5527,7 @@ export const useGameStore = create<
                     consumption: item.consumption || 1,
                 }),
                 ...(item.moduleType === "cargo" && {
-                    capacity: item.capacity || 50,
+                    capacity: Math.floor((item.capacity || 50) * cargoBonus),
                     consumption: item.consumption || 1,
                     level: 1,
                 }),

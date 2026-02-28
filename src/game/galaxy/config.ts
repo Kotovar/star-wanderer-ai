@@ -89,23 +89,26 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
     Торговая: {
         cargoBonus: 1.5,
         priceDiscount: 0.85,
-        modules: ["cargo", "reactor", "fueltank"],
+        mineralDiscount: 0.9,
+        guaranteedWeapons: ["missile"],
+        guaranteedModules: ["cargo", "reactor", "fueltank"],
     },
     Военная: {
-        hasShieldGenerator: true,
-        weapons: "all",
-        modules: ["weaponbay", "shield", "reactor"],
+        priceDiscount: 0.9,
+        guaranteedWeapons: ["kinetic", "laser", "missile"],
+        guaranteedModules: ["weaponbay", "shield", "reactor", "weaponbay"],
     },
     Исследовательская: {
-        hasScientist: true,
-        scannerAvailable: true,
-        modules: ["scanner", "reactor", "lifesupport"],
+        priceDiscount: 0.9,
+        guaranteedProfessions: ["scientist"],
+        guaranteedWeapons: ["laser"],
+        guaranteedModules: ["scanner", "reactor", "lifesupport"],
     },
     Добывающая: {
-        drillAvailable: true,
         mineralDiscount: 0.5,
         rareMineralDiscount: 0.5,
-        modules: ["drill", "cargo", "fueltank"],
+        guaranteedWeapons: ["kinetic"],
+        guaranteedModules: ["drill", "cargo", "fueltank"],
     },
 };
 

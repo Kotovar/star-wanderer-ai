@@ -97,6 +97,32 @@ function getScannerInfo(
             const type =
                 loc.anomalyType === "good" ? "✓ Благоприятная" : "⚠ Опасная";
             info.push(`🔮 ${type}`);
+        } else if (loc.type === "planet") {
+            info.push(`🪐 Планета`);
+            info.push(`🏷️ ${loc.planetType || "Неизвестно"}`);
+            if (loc.isEmpty) {
+                info.push(`🏜️ Безлюдная`);
+            } else if (loc.dominantRace) {
+                const raceNames: Record<string, string> = {
+                    human: "Люди",
+                    synthetic: "Синтетики",
+                    xenosymbiont: "Ксеноморфы-симбионты",
+                    krylorian: "Крилорианцы",
+                    voidborn: "Порождённые Пустотой",
+                    crystalline: "Кристаллоиды",
+                };
+                const raceName =
+                    raceNames[loc.dominantRace] || loc.dominantRace;
+                info.push(`🧬 ${raceName}`);
+            }
+        } else if (loc.type === "station") {
+            info.push(`🛰️ Станция`);
+            if (loc.stationType) {
+                info.push(`🏷️ ${loc.stationType}`);
+            }
+        } else if (loc.type === "asteroid_belt") {
+            info.push(`⛏️ Пояс астероидов`);
+            info.push(`🏷️ Уровень: ${loc.asteroidTier || 1}`);
         }
 
         return info;
@@ -104,8 +130,11 @@ function getScannerInfo(
 
     // Stations, planets, asteroid belts, and distress signals are always visible
     if (loc.type === "station") {
-        info.push(`🛰️ Станция`);
         info.push(`📍 ${loc.name}`);
+        // Show station type with scanner level 2+
+        if (scanLevel >= 2 && loc.stationType) {
+            info.push(`🏷️ ${loc.stationType}`);
+        }
         return info;
     }
     if (loc.type === "planet") {
@@ -136,10 +165,7 @@ function getScannerInfo(
         return info;
     }
     if (loc.type === "asteroid_belt") {
-        info.push(`⛏️ Пояс астероидов`);
         info.push(`📍 ${loc.name}`);
-        const tier = loc.asteroidTier || 1;
-        info.push(`⛏️ Уровень: ${tier}`);
         if (scanLevel >= 5 && loc.resources && !completed) {
             info.push(`📦 Минералы: ~${loc.resources.minerals}`);
             if (loc.resources.rare > 0)
@@ -147,7 +173,7 @@ function getScannerInfo(
             info.push(`₢ ~${loc.resources.credits}₢`);
         }
         // Hidden rewards for ancient asteroid belts
-        if (scanRange >= 8 && tier === 4 && !completed) {
+        if (scanRange >= 8 && loc.asteroidTier === 4 && !completed) {
             const detectionChance = Math.min(100, 50 + (scanRange - 8) * 5);
             if (Math.random() * 100 < detectionChance) {
                 info.push(`★ Древние артефакты!`);
@@ -952,14 +978,7 @@ export function SectorMap() {
             {/* Scanner level indicator */}
             {scanLevel > 0 && (
                 <div className="absolute top-2 right-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-2 py-1 text-xs text-[#00ff41] z-10">
-                    📡 Сканер: LV
-                    {scanLevel <= 3
-                        ? 1
-                        : scanLevel <= 8
-                          ? 2
-                          : scanLevel <= 15
-                            ? 3
-                            : 4}
+                    📡 Сканер: LV{scanLevel}
                 </div>
             )}
 

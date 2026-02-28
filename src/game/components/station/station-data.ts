@@ -5,7 +5,7 @@ import type {
     CrewMember,
     Quality,
     Profession,
-    StationName,
+    StationConfig,
 } from "@/game/types";
 import { CREW_BASE_PRICES } from "@/game/constants/crew";
 import { generateCrewTraits } from "@/game/crew/utils";
@@ -63,7 +63,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
         },
         {
             id: "shield-1",
-            name: "Щитовой генератор",
+            name: "Генератор щита",
             type: "module",
             moduleType: "shield",
             width: 1,
@@ -169,7 +169,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
         },
         {
             id: "shield-2",
-            name: "Щитовой генератор",
+            name: "Генератор щита",
             type: "module",
             moduleType: "shield",
             width: 1,
@@ -275,7 +275,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
         },
         {
             id: "shield-3",
-            name: "Щитовой генератор",
+            name: "Генератор щита",
             type: "module",
             moduleType: "shield",
             width: 1,
@@ -777,7 +777,7 @@ export const ENGINE_PRICES = {
 export function generateStationItems(
     stationId: string,
     sectorTier: number,
-    stationType?: StationName,
+    stationConfig?: StationConfig,
 ): ShopItem[] {
     let hash = 0;
     for (let i = 0; i < stationId.length; i++) {
@@ -802,30 +802,40 @@ export function generateStationItems(
         items.push({ ...upgrade, id: `${upgrade.id}-${stationId}` });
     });
 
+    // Add guaranteed modules directly to items
+    const guaranteedModules = stationConfig?.guaranteedModules || [];
+    const guaranteedModuleIds = new Set<string>();
+    guaranteedModules.forEach((moduleType) => {
+        // Find modules of this type in available levels
+        for (const level of availableLevels) {
+            const levelModules = MODULES_BY_LEVEL[level] || [];
+            const moduleItem = levelModules.find(
+                (m) => m.moduleType === moduleType,
+            );
+            if (moduleItem) {
+                const itemId = `${moduleItem.id}-${stationId}`;
+                if (!guaranteedModuleIds.has(itemId)) {
+                    items.push({
+                        ...moduleItem,
+                        id: itemId,
+                    });
+                    guaranteedModuleIds.add(itemId);
+                }
+                break; // Only add one module per type
+            }
+        }
+    });
+
     const numModules = 4 + (Math.abs(hash) % 5);
     let modulePool: ShopItem[] = [];
     availableLevels.forEach((level) => {
         modulePool = modulePool.concat(MODULES_BY_LEVEL[level] || []);
     });
 
-    // Military stations always have weapon bays available
-    const isMilitaryStation = stationType === "Военная";
-    if (isMilitaryStation) {
-        // Add weapon bays to the pool if not already present
-        const hasWeaponBay = modulePool.some(
-            (m) => m.moduleType === "weaponbay",
-        );
-        if (!hasWeaponBay) {
-            const weaponBay1x1 = MODULES_BY_LEVEL[1]?.find(
-                (m) => m.moduleType === "weaponbay" && m.width === 1,
-            );
-            const weaponBay1x2 = MODULES_BY_LEVEL[2]?.find(
-                (m) => m.moduleType === "weaponbay" && m.width === 2,
-            );
-            if (weaponBay1x1) modulePool.push(weaponBay1x1);
-            if (weaponBay1x2) modulePool.push(weaponBay1x2);
-        }
-    }
+    // Remove guaranteed modules from the random pool to avoid duplicates
+    modulePool = modulePool.filter(
+        (m) => !guaranteedModules.includes(m.moduleType),
+    );
 
     const shuffled = [...modulePool].sort(() => {
         hash = (hash * 1103515245 + 12345) & 0x7fffffff;
@@ -834,7 +844,11 @@ export function generateStationItems(
 
     for (let i = 0; i < Math.min(numModules, shuffled.length); i++) {
         const baseItem = shuffled[i];
-        items.push({ ...baseItem, id: `${baseItem.id}-${stationId}` });
+        const itemId = `${baseItem.id}-${stationId}`;
+        // Skip if already added as guaranteed module
+        if (!guaranteedModuleIds.has(itemId)) {
+            items.push({ ...baseItem, id: itemId });
+        }
     }
 
     // Additional chance for tier 4 modules at tier 3+ stations
@@ -852,13 +866,19 @@ export function generateStationItems(
         }
     }
 
-    // Weapons - military stations get all weapons, others get 1-2 random
-    if (isMilitaryStation) {
-        // All weapon types available on military stations
-        WEAPONS.forEach((weapon) => {
-            items.push({ ...weapon, id: `${weapon.id}-${stationId}` });
+    // Weapons - use guaranteedWeapons from station config
+    const guaranteedWeapons = stationConfig?.guaranteedWeapons || [];
+
+    if (guaranteedWeapons.length > 0) {
+        // Add guaranteed weapons
+        guaranteedWeapons.forEach((weaponType) => {
+            const weapon = WEAPONS.find((w) => w.weaponType === weaponType);
+            if (weapon) {
+                items.push({ ...weapon, id: `${weapon.id}-${stationId}` });
+            }
         });
     } else {
+        // Random weapons for stations without guaranteed weapons
         const numWeapons = 1 + (Math.abs(hash >> 4) % 2);
         const shuffledWeapons = [...WEAPONS].sort(() => {
             hash = (hash * 1103515245 + 12345) & 0x7fffffff;
@@ -887,6 +907,7 @@ export function getStationCrewCount(stationId: string): number {
 export function generateStationCrew(
     stationId: string,
     stationRace?: RaceId,
+    stationConfig?: StationConfig,
 ): Array<{
     member: Omit<CrewMember, "id">;
     price: number;
@@ -914,13 +935,22 @@ export function generateStationCrew(
         "gunner",
     ];
 
+    // Get guaranteed professions from station config
+    const guaranteedProfessions = stationConfig?.guaranteedProfessions || [];
+
     for (let i = 0; i < count; i++) {
         const rand1 = Math.abs(Math.sin(seed + i * 1000) * 10000) % 1;
         const rand2 = Math.abs(Math.sin(seed + i * 2000) * 10000) % 1;
         const rand3 = Math.abs(Math.sin(seed + i * 3000) * 10000) % 1;
         const rand4 = Math.abs(Math.sin(seed + i * 4000) * 10000) % 1;
 
-        const profession = professions[Math.floor(rand1 * professions.length)];
+        // Use guaranteed profession if available and we haven't used all guaranteed professions yet
+        let profession: Profession;
+        if (i < guaranteedProfessions.length) {
+            profession = guaranteedProfessions[i];
+        } else {
+            profession = professions[Math.floor(rand1 * professions.length)];
+        }
 
         let raceId: RaceId;
         // 70% chance for dominant race, 30% for other races

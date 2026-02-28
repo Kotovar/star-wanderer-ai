@@ -72,9 +72,9 @@ export function StationPanel() {
             generateStationItems(
                 stationId,
                 sectorTier,
-                currentLocation?.stationType,
+                currentLocation?.stationConfig,
             ),
-        [stationId, sectorTier, currentLocation?.stationType],
+        [stationId, sectorTier, currentLocation?.stationConfig],
     );
 
     const dominantRace = currentLocation?.dominantRace;
@@ -100,8 +100,14 @@ export function StationPanel() {
         return generateStationCrew(
             stationId,
             currentLocation?.dominantRace,
+            currentLocation?.stationConfig,
         ).filter((c) => !hiredCrewNames.includes(c.member.name));
-    }, [currentLocation?.dominantRace, hiredCrew, stationId]);
+    }, [
+        currentLocation?.dominantRace,
+        hiredCrew,
+        stationId,
+        currentLocation?.stationConfig,
+    ]);
     const hasSpace = crew.length < getCrewCapacity();
 
     // const captainLevel = crew.find((c) => c.profession === "pilot")?.level ?? 1;

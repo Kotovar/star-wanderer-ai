@@ -23,10 +23,8 @@ interface ShopTabProps {
         modules: Module[];
     };
     stationConfig?: {
-        weaponBays?: string[];
-        weapons?: string;
-        hasShieldGenerator?: boolean;
-        modules: string[];
+        guaranteedWeapons?: string[];
+        guaranteedModules: string[];
     };
     buyItem: (item: ShopItem, moduleId?: number) => void;
     onUpgradeClick: (item: ShopItem) => void;
@@ -39,7 +37,6 @@ export function ShopTab({
     credits,
     weaponBays,
     ship,
-    stationConfig,
     buyItem,
     onUpgradeClick,
 }: ShopTabProps) {
@@ -48,9 +45,6 @@ export function ShopTab({
     const [selectedUpgrade, setSelectedUpgrade] = useState<ShopItem | null>(
         null,
     );
-
-    // Check if this is a military station (has weapon bays available)
-    const isMilitaryStation = stationConfig?.weaponBays !== undefined;
 
     // Get owned module types for filtering upgrades
     const ownedModuleTypes = useMemo(() => {
@@ -79,12 +73,9 @@ export function ShopTab({
                             : item.stock;
                     const soldOut = stockLeft === 0;
 
-                    // Check weapon bay requirement
-                    // On military stations, weapons are available (station has weapon bays)
+                    // Check weapon bay requirement - weapons require weapon bay on ALL stations
                     const noWB = Boolean(
-                        item.requiresWeaponBay &&
-                        weaponBays === 0 &&
-                        !isMilitaryStation,
+                        item.requiresWeaponBay && weaponBays === 0,
                     );
 
                     const hasScanner = ship.modules.some(
@@ -93,10 +84,13 @@ export function ShopTab({
                     const hasDrill = ship.modules.some(
                         (m) => m.type === "drill",
                     );
+                    // Only check alreadyOwned for regular modules, not upgrades
                     const isScanner =
+                        item.type === "module" &&
                         item.moduleType === "scanner" &&
                         !item.id.includes("quantum");
                     const isDrill =
+                        item.type === "module" &&
                         item.moduleType === "drill" &&
                         !item.id.includes("ancient");
                     const alreadyOwned =
@@ -111,6 +105,8 @@ export function ShopTab({
                         item.id.includes("fusion") ||
                         item.id.includes("quantum");
 
+                    const isUpgrade = item.type === "upgrade";
+
                     return (
                         <ShopItemCard
                             key={item.id}
@@ -122,6 +118,7 @@ export function ShopTab({
                             noWB={noWB}
                             alreadyOwned={alreadyOwned}
                             isUnique={isUnique}
+                            isUpgrade={isUpgrade}
                             onViewDetails={() =>
                                 item.type === "upgrade"
                                     ? setSelectedUpgrade(item)
@@ -198,6 +195,7 @@ interface ShopItemCardProps {
     noWB: boolean;
     alreadyOwned: boolean;
     isUnique: boolean;
+    isUpgrade: boolean;
     onViewDetails: () => void;
     onBuy: () => void;
 }
@@ -210,6 +208,7 @@ function ShopItemCard({
     noWB,
     alreadyOwned,
     isUnique,
+    isUpgrade,
     onViewDetails,
     onBuy,
 }: ShopItemCardProps) {
@@ -235,6 +234,7 @@ function ShopItemCard({
                     soldOut={soldOut}
                     noWB={noWB}
                     alreadyOwned={alreadyOwned}
+                    isUpgrade={isUpgrade}
                 />
                 <ItemDescription item={item} />
             </div>
@@ -243,6 +243,7 @@ function ShopItemCard({
                 soldOut={soldOut}
                 noWB={noWB}
                 isUnique={isUnique}
+                isUpgrade={isUpgrade}
                 onClick={onBuy}
             />
         </div>
@@ -255,19 +256,21 @@ function ItemPriceAndStock({
     soldOut,
     noWB,
     alreadyOwned,
+    isUpgrade,
 }: {
     price: number;
     stockLeft: number;
     soldOut: boolean;
     noWB: boolean;
     alreadyOwned: boolean;
+    isUpgrade: boolean;
 }) {
     return (
         <div className="text-[#ffb000] mt-1 text-xs">
             💰 {price}₢
             <span
                 className={`ml-4 ${
-                    soldOut || noWB || alreadyOwned
+                    soldOut || noWB || (alreadyOwned && !isUpgrade)
                         ? "text-[#ff0040]"
                         : "text-[#00ff41]"
                 }`}
@@ -276,7 +279,7 @@ function ItemPriceAndStock({
                     ? "ПРОДАНО"
                     : noWB
                       ? "НУЖНА ПАЛУБА"
-                      : alreadyOwned
+                      : alreadyOwned && !isUpgrade
                         ? "УЖЕ ЕСТЬ"
                         : `В наличии: ${stockLeft}`}
             </span>
@@ -377,12 +380,14 @@ function BuyButton({
     soldOut,
     noWB,
     isUnique,
+    isUpgrade,
     onClick,
 }: {
     disabled: boolean;
     soldOut: boolean;
     noWB: boolean;
     isUnique: boolean;
+    isUpgrade: boolean;
     onClick: () => void;
 }) {
     return (
@@ -395,7 +400,7 @@ function BuyButton({
                     : "border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
             }`}
         >
-            {soldOut ? "НЕТ" : noWB ? "--" : "КУПИТЬ"}
+            {soldOut ? "НЕТ" : noWB ? "--" : isUpgrade ? "УЛУЧШИТЬ" : "КУПИТЬ"}
         </Button>
     );
 }
