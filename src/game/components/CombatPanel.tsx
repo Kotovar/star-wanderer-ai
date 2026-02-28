@@ -142,8 +142,8 @@ export function CombatPanel() {
 
                 <ShipStatusCard
                     title={currentCombat.enemy.name}
-                    shields={currentCombat.enemy.shields}
-                    maxShields={currentCombat.enemy.maxShields}
+                    shields={currentCombat.enemy.shields || 0}
+                    maxShields={currentCombat.enemy.maxShields || 0}
                     armor={eDef}
                     damage={eDmg}
                     isEnemy

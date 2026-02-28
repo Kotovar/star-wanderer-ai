@@ -159,11 +159,11 @@ export function ShipStatusCard({
             : "rgba(255,0,64,0.05)"
         : "rgba(0,255,65,0.05)";
     const titleColor = isEnemy ? (isBoss ? "#ff00ff" : "#ff0040") : "#00d4ff";
-    const progressColor = isEnemy
+    const shieldBarColor = isEnemy
         ? isBoss
-            ? "[&>div]:bg-[#ff00ff]"
-            : "[&>div]:bg-[#ff0040]"
-        : "[&>div]:bg-[#0080ff]";
+            ? "bg-[#ff00ff]"
+            : "bg-[#ff0040]"
+        : "bg-[#0080ff]";
     const armorColor =
         armor < 50 ? "[&>div]:bg-[#ff0040]" : "[&>div]:bg-[#00ff41]";
     const maxArmorValue = maxArmor || armor || 1;
@@ -176,12 +176,12 @@ export function ShipStatusCard({
             </div>
             ⚔ Урон: {damage}{" "}
             <div className="my-2">
-                Щиты: {shields}/{maxShields}
+                Щиты: {Math.max(0, shields)}/{Math.max(1, maxShields)}
                 <div className="h-2 rounded-full mt-1 bg-[rgba(0,0,0,0.5)] relative">
                     <div
-                        className={`absolute rounded-full top-0 left-0 h-full ${progressColor.replace("[&>div]:", "")}`}
+                        className={`absolute rounded-full top-0 left-0 h-full ${shieldBarColor}`}
                         style={{
-                            width: `${(shields / Math.max(1, maxShields)) * 100}%`,
+                            width: `${Math.min(100, Math.max(0, (shields / Math.max(1, maxShields)) * 100))}%`,
                         }}
                     />
                 </div>

@@ -62,9 +62,6 @@ export function StationPanel() {
 
     const stationId = currentLocation?.stationId || "";
     const sectorTier = currentSector?.tier || 1;
-    const weaponBays = ship.modules.filter(
-        (m) => m.type === "weaponbay",
-    ).length;
     const stationConfig = currentLocation?.stationConfig;
 
     const stationItems = useMemo(
@@ -180,7 +177,6 @@ export function StationPanel() {
                         stationItems={stationItems}
                         stationInventory={stationInventory}
                         credits={credits}
-                        weaponBays={weaponBays}
                         ship={ship}
                         stationConfig={stationConfig}
                         buyItem={buyItem}

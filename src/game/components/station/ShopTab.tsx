@@ -18,7 +18,6 @@ interface ShopTabProps {
     stationItems: ShopItem[];
     stationInventory: Record<string, Record<string, number>>;
     credits: number;
-    weaponBays: number;
     ship: {
         modules: Module[];
     };
@@ -35,7 +34,6 @@ export function ShopTab({
     stationItems,
     stationInventory,
     credits,
-    weaponBays,
     ship,
     buyItem,
     onUpgradeClick,
@@ -74,9 +72,15 @@ export function ShopTab({
                             : item.stock;
                     const soldOut = stockLeft === 0;
 
-                    // Check weapon bay requirement - weapons require weapon bay on ALL stations
+                    // Check weapon bay requirement - weapons require weapon bay with free slots
+                    const hasFreeWeaponSlot = ship.modules.some(
+                        (m) =>
+                            m.type === "weaponbay" &&
+                            m.weapons &&
+                            m.weapons.some((w) => w === null),
+                    );
                     const noWB = Boolean(
-                        item.requiresWeaponBay && weaponBays === 0,
+                        item.requiresWeaponBay && !hasFreeWeaponSlot,
                     );
 
                     const hasScanner = ship.modules.some(
@@ -290,7 +294,7 @@ function ItemPriceAndStock({
                 {soldOut
                     ? "ПРОДАНО"
                     : noWB
-                      ? "НУЖНА ПАЛУБА"
+                      ? "НУЖНА ОРУЖЕЙНАЯ ПАЛУБА СО СВОБОДНЫМ РАЗЪЁМОМ"
                       : alreadyOwned && !isUpgrade
                         ? "УЖЕ ЕСТЬ"
                         : `В наличии: ${stockLeft}`}

@@ -193,7 +193,16 @@ function getScannerInfo(
     // For other objects, check scanner level
     if (effectiveScanLevel <= 0) {
         // No scanner - show as unknown
-        info.push(`❓ Неизвестный объект`);
+        // Ships (enemy, friendly, boss) show as "Unknown ship" because they use ship icon
+        if (
+            loc.type === "boss" ||
+            loc.type === "enemy" ||
+            loc.type === "friendly_ship"
+        ) {
+            info.push(`❓ Неизвестный корабль`);
+        } else {
+            info.push(`❓ Неизвестный объект`);
+        }
         return info;
     }
 
@@ -208,7 +217,17 @@ function getScannerInfo(
             info.push(`📍 ${loc.name}`);
         }
     } else {
-        info.push(`❓ Неизвестный объект`);
+        // Scanner level too low - show as unknown
+        // Ships (enemy, friendly, boss) show as "Unknown ship" because they use ship icon
+        if (
+            loc.type === "boss" ||
+            loc.type === "enemy" ||
+            loc.type === "friendly_ship"
+        ) {
+            info.push(`❓ Неизвестный корабль`);
+        } else {
+            info.push(`❓ Неизвестный объект`);
+        }
         return info;
     }
 
@@ -425,10 +444,16 @@ export function SectorMap() {
             // Distress signals are always visible (SOS beacon broadcasts location)
 
             const needsScanner = NEEDS_SCANNER_LOCATIONS.includes(loc.type);
-            const displayName =
-                needsScanner && !hasScanner && !isRevealed && !completed
-                    ? "❓ Неизвестный объект"
-                    : loc.name;
+
+            // Boss shows as "Unknown ship" (not "Unknown object") because it uses ship icon
+            const isUnknownBoss =
+                loc.type === "boss" && !hasScanner && !isRevealed && !completed;
+
+            const displayName = isUnknownBoss
+                ? "❓ Неизвестный корабль"
+                : needsScanner && !hasScanner && !isRevealed && !completed
+                  ? "❓ Неизвестный объект"
+                  : loc.name;
 
             // Also hide enemy/friendly ship names without scanner and not revealed
             const isUnknownShip =
