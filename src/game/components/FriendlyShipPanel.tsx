@@ -3,6 +3,7 @@
 import { useMemo, useEffect } from "react";
 import { useGameStore } from "@/game/store";
 import { TRADE_GOODS } from "@/game/constants/goods";
+import { DELIVERY_GOODS } from "@/game/constants/contracts";
 import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
 import type { Quality } from "@/game/types";
@@ -13,6 +14,7 @@ import { Goods } from "@/game/types/goods";
 import { Contract } from "@/game/types/contracts";
 import { Profession } from "@/game/types/crew";
 import { RaceId } from "../types/races";
+import { typedKeys } from "@/lib/utils";
 
 const INITIAL_STOCK: Goods[] = ["water", "food", "medicine"];
 
@@ -217,6 +219,14 @@ export function FriendlyShipPanel() {
         const currentSectorId = currentSector?.id;
         const galaxy = useGameStore.getState().galaxy;
 
+        // Randomly choose quest type
+        const questType =
+            Math.random() < 0.5
+                ? "delivery"
+                : Math.random() < 0.5
+                  ? "supply_run"
+                  : "scan_planet";
+
         // Find sectors that are NOT the current sector
         const otherSectors = galaxy.sectors.filter(
             (s) => s.id !== currentSectorId,
@@ -225,6 +235,89 @@ export function FriendlyShipPanel() {
 
         const targetSector =
             otherSectors[Math.floor(Math.random() * otherSectors.length)];
+
+        // Scan planet quest
+        if (questType === "scan_planet") {
+            const planetTypes = [
+                "Пустынная",
+                "Ледяная",
+                "Лесная",
+                "Вулканическая",
+                "Океаническая",
+                "Тропическая",
+                "Арктическая",
+            ];
+            const targetType =
+                planetTypes[Math.floor(Math.random() * planetTypes.length)];
+
+            // Find sectors with this planet type
+            const targetSectors = otherSectors.filter((s) =>
+                s.locations.some(
+                    (l) => l.type === "planet" && l.planetType === targetType,
+                ),
+            );
+            if (targetSectors.length === 0) return null;
+
+            const tgt =
+                targetSectors[Math.floor(Math.random() * targetSectors.length)];
+            const targetPlanet = tgt.locations.find(
+                (l) => l.type === "planet" && l.planetType === targetType,
+            );
+
+            return {
+                id: `ship-${currentLocation.id}-scan-${Date.now()}`,
+                type: "scan_planet" as const,
+                desc: `📡 Сканирование: ${targetType}`,
+                planetType: targetType,
+                targetSector: tgt.id,
+                targetSectorName: tgt.name,
+                targetPlanetId: targetPlanet?.id,
+                targetPlanetName: targetPlanet?.name,
+                sourcePlanetId: currentLocation.id,
+                sourceName: currentLocation.name,
+                sourceType: "ship" as const,
+                sourceSectorName: currentSector?.name,
+                requiresVisit: 1,
+                visited: 0,
+                requiresScanner: true,
+                reward: 400 + Math.floor(Math.random() * 200),
+            };
+        }
+
+        // Supply run quest - deliver goods TO the ship
+        if (questType === "supply_run") {
+            const goodsKeys = typedKeys(TRADE_GOODS);
+            const cargoKey =
+                goodsKeys[Math.floor(Math.random() * goodsKeys.length)];
+            const cargo = TRADE_GOODS[cargoKey];
+            const quantity = [10, 15, 20][Math.floor(Math.random() * 3)];
+
+            // Calculate reward based on station prices (not basePrice)
+            const stationBuyPrice = Math.floor(cargo.basePrice * 0.4);
+            const baseValue = stationBuyPrice * quantity;
+            const reward = Math.floor(baseValue * 1.3);
+
+            return {
+                id: `ship-${currentLocation.id}-supply-${Date.now()}`,
+                type: "supply_run" as const,
+                desc: `📦 Поставка: ${cargo.name} x${quantity}т`,
+                cargo: cargoKey,
+                quantity,
+                sourcePlanetId: currentLocation.id,
+                sourceName: currentLocation.name,
+                sourceType: "ship" as const,
+                sourceSectorName: currentSector?.name,
+                reward,
+            };
+        }
+
+        // Delivery quest (default) - uses DELIVERY_GOODS (special quest items)
+        const deliveryGoodsKeys = typedKeys(DELIVERY_GOODS);
+        const cargoKey =
+            deliveryGoodsKeys[
+                Math.floor(Math.random() * deliveryGoodsKeys.length)
+            ];
+        const cargo = DELIVERY_GOODS[cargoKey].name;
 
         // Pick a specific destination in the target sector
         const validDestinations = targetSector.locations.filter(
@@ -250,9 +343,9 @@ export function FriendlyShipPanel() {
         return {
             id: `ship-${currentLocation.id}-${Date.now()}`,
             type: "delivery" as const,
-            desc: "📦 Срочная доставка",
-            cargo: "Срочный груз",
-            reward: 400,
+            desc: `📦 Доставка: ${cargo}`,
+            cargo: cargoKey,
+            reward: 400 + Math.floor(Math.random() * 200),
             targetSector: targetSector.id,
             targetSectorName: targetSector.name,
             targetLocationId: dest.id,

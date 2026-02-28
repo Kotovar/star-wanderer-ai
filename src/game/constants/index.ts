@@ -7,3 +7,4 @@ export * from "./planets";
 export * from "./races";
 export * from "./goods";
 export * from "./weapons";
+export * from "./contracts";

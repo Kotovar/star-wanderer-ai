@@ -16,7 +16,7 @@ import type {
     Goods,
     ShipMergeTrait,
 } from "@/game/types";
-import { TRADE_GOODS, WEAPON_TYPES } from "@/game/constants";
+import { CONTRACT_REWARDS, TRADE_GOODS, WEAPON_TYPES } from "@/game/constants";
 import { initialModules, STARTING_FUEL } from "@/game/modules";
 import { initialCrew } from "@/game/crew";
 import { generateGalaxy } from "@/game/galaxy";
@@ -1304,9 +1304,54 @@ export const useGameStore = create<
                     c.targetSectors?.includes(destinationSector.id),
             );
 
+            // Update scan_planet contracts - check if we visited the target planet type
+            const scanContracts = state.activeContracts.filter(
+                (c) =>
+                    c.type === "scan_planet" &&
+                    c.targetSector === destinationSector.id,
+            );
+
             let newActiveContracts = state.activeContracts;
             let contractCompleted = false;
             let completedContractId = "";
+
+            // Process scan_planet contracts
+            scanContracts.forEach((c) => {
+                // Check if player has scanner
+                const hasScanner = state.ship.modules.some(
+                    (m) => m.type === "scanner" && !m.disabled && m.health > 0,
+                );
+                if (!hasScanner) {
+                    get().addLog(
+                        `📡 Сканирование: нужен сканер для выполнения контракта`,
+                        "warning",
+                    );
+                    return;
+                }
+
+                // Check if target planet type exists in this sector
+                const hasTargetPlanet = destinationSector.locations.some(
+                    (l) => l.type === "planet" && l.planetType === c.planetType,
+                );
+                if (!hasTargetPlanet) {
+                    get().addLog(
+                        `📡 Сканирование: планета типа "${c.planetType}" не найдена`,
+                        "warning",
+                    );
+                    return;
+                }
+
+                // Mark as visited
+                const updated = { ...c, visited: (c.visited || 0) + 1 };
+                newActiveContracts = newActiveContracts.map((ac) =>
+                    ac.id === c.id ? updated : ac,
+                );
+
+                get().addLog(
+                    `📡 Сканирование: ${c.planetType} отсканировано! Возвращайтесь на базу`,
+                    "info",
+                );
+            });
 
             patrolContracts.forEach((c) => {
                 const visitedSectors = [
@@ -3032,6 +3077,86 @@ export const useGameStore = create<
                         }));
                     }
                 }
+
+                // Complete scan_planet contracts - return to source planet after scanning
+                const scanComplete = get().activeContracts.filter(
+                    (c) =>
+                        c.type === "scan_planet" &&
+                        c.sourcePlanetId === loc.id &&
+                        c.visited &&
+                        c.visited >= 1,
+                );
+                scanComplete.forEach((c) => {
+                    set((s) => ({
+                        credits: s.credits + (c.reward || 0),
+                        completedContractIds: [...s.completedContractIds, c.id],
+                        activeContracts: s.activeContracts.filter(
+                            (ac) => ac.id !== c.id,
+                        ),
+                    }));
+                    get().addLog(
+                        `📡 Контракт выполнен: ${c.desc} +${c.reward}₢`,
+                        "info",
+                    );
+                    // Give experience to all crew members
+                    const expReward = CONTRACT_REWARDS.scan_planet.baseExp;
+                    giveCrewExperience(
+                        expReward,
+                        `Экипаж получил опыт: +${expReward} ед.`,
+                    );
+                });
+
+                // Complete supply_run contracts - deliver goods to source planet
+                const supplyComplete = get().activeContracts.filter(
+                    (c) =>
+                        c.type === "supply_run" &&
+                        c.sourcePlanetId === loc.id &&
+                        c.cargo,
+                );
+                supplyComplete.forEach((c) => {
+                    // Check if player has the required cargo
+                    const cargoOwned = state.ship.tradeGoods.find(
+                        (g) => g.item === c.cargo,
+                    );
+                    const requiredQty = c.quantity || 15;
+                    if (cargoOwned && cargoOwned.quantity >= requiredQty) {
+                        // Remove cargo and complete contract
+                        set((s) => ({
+                            credits: s.credits + (c.reward || 0),
+                            ship: {
+                                ...s.ship,
+                                tradeGoods: s.ship.tradeGoods
+                                    .map((g) =>
+                                        g.item === c.cargo
+                                            ? {
+                                                  ...g,
+                                                  quantity:
+                                                      g.quantity - requiredQty,
+                                              }
+                                            : g,
+                                    )
+                                    .filter((g) => g.quantity > 0),
+                            },
+                            completedContractIds: [
+                                ...s.completedContractIds,
+                                c.id,
+                            ],
+                            activeContracts: s.activeContracts.filter(
+                                (ac) => ac.id !== c.id,
+                            ),
+                        }));
+                        get().addLog(
+                            `📦 Контракт выполнен: ${c.desc} +${c.reward}₢`,
+                            "info",
+                        );
+                        // Give experience to all crew members
+                        const expReward = CONTRACT_REWARDS.supply_run.baseExp;
+                        giveCrewExperience(
+                            expReward,
+                            `Экипаж получил опыт: +${expReward} ед.`,
+                        );
+                    }
+                });
                 break;
             case "enemy": {
                 // Check scanner level vs enemy threat level
@@ -7969,22 +8094,6 @@ function areAllModulesConnected(modules: Module[]): boolean {
 // ═══════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS - Contract rewards & crew experience
 // ═══════════════════════════════════════════════════════════════
-
-// Contract reward configuration (experience points)
-const CONTRACT_REWARDS: Record<
-    string,
-    { baseExp: number; threatBonus?: number }
-> = {
-    delivery: { baseExp: 10 },
-    diplomacy: { baseExp: 15 },
-    patrol: { baseExp: 20 },
-    combat: { baseExp: 15, threatBonus: 5 },
-    bounty: { baseExp: 20, threatBonus: 8 },
-    mining: { baseExp: 25 },
-    research: { baseExp: 20 },
-    rescue: { baseExp: 25 },
-    rescueSurvivors: { baseExp: 15 }, // Survivor capsule delivery
-};
 
 // Give experience to all crew members
 function giveCrewExperience(expAmount: number, logMessage?: string) {

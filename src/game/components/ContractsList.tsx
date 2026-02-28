@@ -106,6 +106,24 @@ export function ContractsList() {
                         },
                     ],
                 };
+            case "supply_run":
+                return {
+                    type: "Поставка товаров",
+                    tasks: [
+                        {
+                            label: "Что сделать",
+                            value: `Купить и доставить ${contract.cargo} (${contract.quantity}т)`,
+                        },
+                        {
+                            label: "Где купить",
+                            value: "На любой торговой станции",
+                        },
+                        {
+                            label: "Где сдать",
+                            value: `${contract.sourceType === "planet" ? "Планета" : "Корабль"} "${contract.sourceName || contract.sourceSectorName}"`,
+                        },
+                    ],
+                };
             case "combat":
                 return {
                     type: "Боевое задание",
@@ -147,24 +165,6 @@ export function ContractsList() {
                         {
                             label: "Где сдать",
                             value: "Автоматически при выполнении",
-                        },
-                    ],
-                };
-            case "escort":
-                return {
-                    type: "Сопровождение",
-                    tasks: [
-                        {
-                            label: "Что сделать",
-                            value: "Сопроводить конвой до целевого сектора",
-                        },
-                        {
-                            label: "Куда сопроводить",
-                            value: contract.targetSectorName || "Неизвестно",
-                        },
-                        {
-                            label: "Где сдать",
-                            value: "Автоматически по прибытии",
                         },
                     ],
                 };

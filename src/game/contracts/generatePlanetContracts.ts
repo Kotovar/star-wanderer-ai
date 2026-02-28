@@ -1,4 +1,7 @@
-import type { Contract, RaceId, Sector } from "../types";
+import type { Contract, PlanetType, RaceId, Sector } from "@/game/types";
+import { TRADE_GOODS } from "@/game/constants/goods";
+import { typedKeys } from "@/lib/utils";
+import { DELIVERY_GOODS } from "../constants/contracts";
 
 // Generate planet contracts with race-specific quests
 export const generatePlanetContracts = (
@@ -191,21 +194,102 @@ export const generatePlanetContracts = (
     // ═══════════════════════════════════════════════════════════════
     const standardQuests = [
         {
+            type: "scan_planet" as const,
+            gen: (): Contract | null => {
+                // Scan planet - fly to a specific planet type with scanner, then return
+                const planetTypes = [
+                    "Пустынная",
+                    "Ледяная",
+                    "Лесная",
+                    "Вулканическая",
+                    "Океаническая",
+                    "Тропическая",
+                    "Арктическая",
+                ] satisfies PlanetType[];
+
+                const targetType =
+                    planetTypes[Math.floor(Math.random() * planetTypes.length)];
+
+                // Find sectors with this planet type
+                const targetSectors = availableSectors.filter((s) =>
+                    s.locations.some(
+                        (l) =>
+                            l.type === "planet" && l.planetType === targetType,
+                    ),
+                );
+                if (targetSectors.length === 0) return null;
+
+                const tgt =
+                    targetSectors[
+                        Math.floor(Math.random() * targetSectors.length)
+                    ];
+                const targetPlanet = tgt.locations.find(
+                    (l) => l.type === "planet" && l.planetType === targetType,
+                );
+
+                return {
+                    id: `c-${planetId}-scan-${Date.now()}-${Math.random()}`,
+                    type: "scan_planet",
+                    desc: `📡 Сканирование: ${targetType}`,
+                    planetType: targetType,
+                    targetSector: tgt.id,
+                    targetSectorName: tgt.name,
+                    targetPlanetId: targetPlanet?.id,
+                    targetPlanetName: targetPlanet?.name,
+                    sourcePlanetId: planetId,
+                    sourceSectorName: sector.name,
+                    sourceType: "planet",
+                    requiresVisit: 1,
+                    visited: 0,
+                    requiresScanner: true,
+                    reward: 400 + Math.floor(Math.random() * 200),
+                };
+            },
+        },
+        {
+            type: "supply_run" as const,
+            gen: (): Contract | null => {
+                // Supply run - deliver goods TO the source planet
+                const goodsKeys = typedKeys(TRADE_GOODS);
+                const cargoKey =
+                    goodsKeys[Math.floor(Math.random() * goodsKeys.length)];
+                const cargo = TRADE_GOODS[cargoKey];
+                const quantity = [10, 15, 20, 25][
+                    Math.floor(Math.random() * 4)
+                ];
+
+                // Calculate reward based on station prices (not basePrice)
+                // Station buy price = basePrice * 0.3-0.5 (what player gets when selling)
+                // We want to give player ~30% profit over what they'd get selling normally
+                const stationBuyPrice = Math.floor(cargo.basePrice * 0.4);
+                const baseValue = stationBuyPrice * quantity;
+                const reward = Math.floor(baseValue * 1.3);
+
+                return {
+                    id: `c-${planetId}-supply-${Date.now()}-${Math.random()}`,
+                    type: "supply_run",
+                    desc: `📦 Поставка: ${cargo.name} x${quantity}т`,
+                    cargo: cargoKey,
+                    quantity,
+                    sourcePlanetId: planetId,
+                    sourceSectorName: sector.name,
+                    sourceType: "planet",
+                    reward,
+                };
+            },
+        },
+        {
             type: "delivery" as const,
             gen: (): Contract | null => {
                 const tgtSector =
                     availableSectors[
                         Math.floor(Math.random() * availableSectors.length)
                     ];
-                const cargo = [
-                    "Вода",
-                    "Медикаменты",
-                    "Продукты",
-                    "Оборудование",
-                    "Семена",
-                    "Топливо",
-                    "Запчасти",
-                ][Math.floor(Math.random() * 7)];
+                // Use DELIVERY_GOODS keys for cargo (no duplicates)
+                const goodsKeys = typedKeys(DELIVERY_GOODS);
+                const cargoKey =
+                    goodsKeys[Math.floor(Math.random() * goodsKeys.length)];
+                const cargo = DELIVERY_GOODS[cargoKey].name;
 
                 // Pick a specific destination: inhabited planet, station, or friendly ship
                 const validDestinations = tgtSector.locations.filter(

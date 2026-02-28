@@ -5,6 +5,7 @@ export interface Contract {
     type: ContractType;
     desc: string;
     cargo?: string;
+    quantity?: number; // For supply_run contracts
     targetSector?: number;
     targetSectorName?: string;
     targetLocationId?: string; // Specific location to deliver to (planet, station, ship)
@@ -19,7 +20,7 @@ export interface Contract {
     targetPlanetId?: string;
     targetPlanetName?: string;
     targetPlanetType?: string;
-    planetType?: string;
+    planetType?: string; // For scan_planet contracts
     sectorId?: number;
     sectorName?: string;
     requiresVisit?: number;
@@ -53,15 +54,22 @@ export type ContractType =
     | "delivery"
     | "scan_planet"
     | "combat"
-    | "escort"
     | "rescue"
     | "mining"
     | "patrol"
-    | "data_courier"
     | "bounty"
     | "supply_run"
     | "diplomacy"
+    | "rescueSurvivors"
     | "research";
+
+// Special delivery goods (quest items - given to player, not trade goods)
+export type DeliveryGoods =
+    | "spares"
+    | "fuel"
+    | "construction_materials"
+    | "scientific_equipment"
+    | "diplomatic_cargo";
 
 export interface ScoutingMission {
     planetId: string;
