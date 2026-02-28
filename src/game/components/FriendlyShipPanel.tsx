@@ -350,7 +350,7 @@ export function FriendlyShipPanel() {
             targetSectorName: targetSector.name,
             targetLocationId: dest.id,
             targetLocationName: dest.name,
-            targetLocationType: destType as "planet" | "station" | "ship",
+            targetLocationType: destType,
             sourcePlanetId: currentLocation.id,
             sourceName: currentLocation.name,
             sourceType: "ship" as const,

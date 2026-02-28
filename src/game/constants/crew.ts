@@ -1,11 +1,11 @@
-import type { CrewTraitType, Profession } from "../types";
+import type { CrewTraitEffect, CrewTraitType, Profession } from "@/game/types";
 
 // Extended crew traits with different rarities
 
 type TraitDetails = {
     name: string;
     desc: string;
-    effect: Record<string, number>;
+    effect: CrewTraitEffect;
     rarity: string;
     priceMod: number;
 };

@@ -146,16 +146,6 @@ export function RacePanel() {
 
                             {/* Biology */}
                             <div className="text-xs text-gray-400">
-                                <div>
-                                    📏 Продолжительность жизни:{" "}
-                                    {race.biology.lifespan}
-                                </div>
-                                <div>
-                                    🍽️ Питание:{" "}
-                                    {race.biology.diet === "synthetic"
-                                        ? "Синтетическое"
-                                        : race.biology.diet}
-                                </div>
                                 {!race.hasHappiness && (
                                     <div className="text-[#ffaa00]">
                                         ⚠️ Не имеет счастья

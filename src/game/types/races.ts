@@ -13,12 +13,25 @@ export type RaceId =
     | "voidborn"
     | "crystalline";
 
+type RaceTraitEffects = {
+    expBonus?: number;
+    noHappiness?: number;
+    glitchChance?: number;
+    canMerge?: number;
+    alienPresencePenalty?: number;
+    evasionBonus?: number;
+    shieldRegen?: number;
+    healthPenalty?: number;
+    moduleDefense?: number;
+    artifactBonus?: number;
+};
+
 export interface RaceTrait {
     id: string;
     name: string;
     description: string;
     type: CrewTraitType;
-    effects: Record<string, number | string>;
+    effects: RaceTraitEffects;
 }
 
 export interface Race {
@@ -27,21 +40,6 @@ export interface Race {
     pluralName: string;
     adjective: string; // Adjective form for ship names (e.g., "Человеческий", "Крилорианский")
     description: string;
-    homeworld?: string;
-
-    // Biological characteristics
-    biology: {
-        lifespan: string;
-        diet:
-            | "omnivore"
-            | "herbivore"
-            | "carnivore"
-            | "synthetic"
-            | "energy"
-            | "mineral";
-        reproduction: string;
-        specialNeeds?: string;
-    };
 
     // Environment preferences (affects happiness on different planets)
     environmentPreference: {
@@ -76,4 +74,5 @@ export interface Race {
     // Visual
     color: string; // Theme color for UI
     icon: string; // Emoji or symbol
+    homeworld?: string;
 }

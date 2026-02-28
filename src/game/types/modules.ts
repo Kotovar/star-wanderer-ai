@@ -13,6 +13,7 @@ export type ModuleType =
     | "drill"
     | "ai_core";
 
+export type WeaponType = "kinetic" | "laser" | "missile";
 export type PartialModuleType = Exclude<ModuleType, "weaponShed">;
 
 export interface Module {
@@ -22,11 +23,11 @@ export interface Module {
     x: number;
     y: number;
     width: number;
+    health: number;
+    maxHealth: number; // Maximum health for this module
     height: number;
     power?: number;
     consumption?: number;
-    health: number;
-    maxHealth: number; // Maximum health for this module
     level?: number;
     capacity?: number; // For cargo and fuel tanks
     defense?: number; // Armor/defense value (reduces incoming damage)
@@ -37,8 +38,6 @@ export interface Module {
     weapons?: Weapon[];
     movedThisTurn?: boolean; // Whether the module has been moved this turn
 }
-
-export type WeaponType = "kinetic" | "laser" | "missile";
 
 export interface Weapon {
     type: WeaponType;

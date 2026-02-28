@@ -13,11 +13,6 @@ export const RACES: Record<RaceId, Race> = {
         description:
             "Универсальная раса, освоившая космос. Быстро обучаются и адаптируются.",
         homeworld: "Земля",
-        biology: {
-            lifespan: "80-120 лет",
-            diet: "omnivore",
-            reproduction: "Естественное, 9 месяцев",
-        },
         environmentPreference: {
             ideal: ["Лесная", "Океаническая", "Тропическая"],
             acceptable: ["Пустынная", "Арктическая", "Планета-кольцо"],
@@ -62,12 +57,6 @@ export const RACES: Record<RaceId, Race> = {
         description:
             "Искусственный разум, созданный древней цивилизацией или людьми. Не имеют эмоций, но обладают безупречной логикой.",
         homeworld: "Неизвестно",
-        biology: {
-            lifespan: "Неограниченно",
-            diet: "synthetic",
-            reproduction: "Производство",
-            specialNeeds: "Энергия для зарядки",
-        },
         environmentPreference: {
             ideal: ["Вулканическая", "Радиоактивная"],
             acceptable: [
@@ -125,12 +114,6 @@ export const RACES: Record<RaceId, Race> = {
         description:
             'Полуорганические существа, живущие в симбиозе с технологиями. Могут "сращиваться" с кораблём.',
         homeworld: "Неизвестная планета в Тире 3",
-        biology: {
-            lifespan: "200-500 лет",
-            diet: "energy",
-            reproduction: "Почкование",
-            specialNeeds: "Биоинтерфейс для сращивания",
-        },
         environmentPreference: {
             ideal: ["Океаническая", "Тропическая"],
             acceptable: ["Лесная", "Ледяная", "Планета-кольцо"],
@@ -185,12 +168,6 @@ export const RACES: Record<RaceId, Race> = {
         description:
             "Воинственная рептилоидная раса с сильным чувством чести. Превосходные бойцы.",
         homeworld: "Крилор Прайм",
-        biology: {
-            lifespan: "150-200 лет",
-            diet: "carnivore",
-            reproduction: "Откладывание яиц",
-            specialNeeds: "Тёплый климат",
-        },
         environmentPreference: {
             ideal: ["Пустынная", "Тропическая", "Приливная"],
             acceptable: ["Вулканическая", "Лесная", "Разрушенная войной"],
@@ -237,12 +214,6 @@ export const RACES: Record<RaceId, Race> = {
         description:
             "Существа, рождённые в глубинах космоса. Не нуждаются в атмосфере и комфорте.",
         homeworld: "Неизвестно",
-        biology: {
-            lifespan: "500-1000 лет",
-            diet: "energy",
-            reproduction: "Деление",
-            specialNeeds: "Космическое излучение",
-        },
         environmentPreference: {
             ideal: ["Газовый гигант", "Планета-кольцо", "Приливная"],
             acceptable: [
@@ -302,12 +273,6 @@ export const RACES: Record<RaceId, Race> = {
         description:
             "Разумные кристаллические существа. Медленно думают, но обладают огромной мудростью.",
         homeworld: "Геода Прайм",
-        biology: {
-            lifespan: "1000-5000 лет",
-            diet: "mineral",
-            reproduction: "Выращивание",
-            specialNeeds: "Минералы для роста",
-        },
         environmentPreference: {
             ideal: ["Ледяная", "Арктическая", "Планета-кольцо"],
             acceptable: ["Пустынная", "Газовый гигант", "Приливная"],

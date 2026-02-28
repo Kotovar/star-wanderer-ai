@@ -15,6 +15,8 @@ import type {
     CargoItem,
     Goods,
     ShipMergeTrait,
+    CrewMemberAssignment,
+    CrewMemberCombatAssignment,
 } from "@/game/types";
 import {
     CONTRACT_REWARDS,
@@ -290,13 +292,13 @@ export const useGameStore = create<
         fireCrewMember: (crewId: number) => void;
         assignCrewTask: (
             crewId: number,
-            task: string,
+            task: CrewMemberAssignment,
             effect: string | null,
         ) => void;
         assignCombatTask: (
             crewId: number,
-            task: string,
-            effect: string | null,
+            task: CrewMemberCombatAssignment,
+            effect: string,
         ) => void;
         moveCrewMember: (crewId: number, targetModuleId: number) => void;
         isModuleAdjacent: (moduleId1: number, moduleId2: number) => boolean;
@@ -2200,7 +2202,7 @@ export const useGameStore = create<
         get().crew.forEach((c) => {
             c.traits?.forEach((trait) => {
                 if (trait.effect.moduleMorale) {
-                    const moraleBonus = trait.effect.moduleMorale as number;
+                    const moraleBonus = trait.effect.moduleMorale;
                     const crewInSameModule = get().crew.filter(
                         (cr) =>
                             cr.moduleId === c.moduleId &&
@@ -4512,7 +4514,7 @@ export const useGameStore = create<
             get().crew.forEach((c) => {
                 c.traits?.forEach((trait) => {
                     if (trait.effect.lootBonus) {
-                        lootBonus += trait.effect.lootBonus as number;
+                        lootBonus += trait.effect.lootBonus;
                     }
                 });
             });
@@ -5370,8 +5372,7 @@ export const useGameStore = create<
                 crewInDamagedModule.forEach((c) => {
                     c.traits?.forEach((trait) => {
                         if (trait.effect.combatMoraleDrain) {
-                            const moraleDrain = trait.effect
-                                .combatMoraleDrain as number;
+                            const moraleDrain = trait.effect.combatMoraleDrain;
                             set((s) => ({
                                 crew: s.crew.map((cr) =>
                                     cr.id === c.id
@@ -6496,7 +6497,7 @@ export const useGameStore = create<
             }
             // Legend trait: +50 max happiness
             if (trait.effect.maxHappinessBonus) {
-                maxHappinessBonus += trait.effect.maxHappinessBonus as number;
+                maxHappinessBonus += trait.effect.maxHappinessBonus;
             }
         });
 

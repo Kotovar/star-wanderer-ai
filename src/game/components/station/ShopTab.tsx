@@ -303,7 +303,11 @@ function ItemPriceAndStock({
     );
 }
 
-function ItemDescription({ item }: { item: ShopItem }) {
+type ItemDescriptionProps = {
+    item: ShopItem;
+};
+
+function ItemDescription({ item }: ItemDescriptionProps) {
     // Get module level from ID (e.g., "reactor-2-station123" = level 2)
     const getModuleLevel = () => {
         if (item.type !== "module") return null;

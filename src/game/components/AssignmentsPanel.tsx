@@ -12,13 +12,17 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { CREW_ACTIONS, PROFESSION_NAMES } from "@/game/constants/crew";
+import { CrewMemberAssignment } from "@/game/types";
 
 export function AssignmentsPanel() {
     const crew = useGameStore((s) => s.crew);
     const assignCrewTask = useGameStore((s) => s.assignCrewTask);
     const showGalaxyMap = useGameStore((s) => s.showGalaxyMap);
     const [assignments, setAssignments] = useState<
-        Record<number, { task: string; effect: string | null }>
+        Record<
+            number,
+            { task: CrewMemberAssignment | "none"; effect: string | null }
+        >
     >({});
 
     const handleApply = () => {
@@ -45,10 +49,12 @@ export function AssignmentsPanel() {
                         { value: "", label: "ОЖИДАНИЕ", effect: null },
                     ];
                     // Convert empty string to 'none' for Select value
-                    const currentValue =
+                    const currentValue: string =
                         assignments[c.id]?.task || c.assignment || "none";
                     const displayValue =
-                        currentValue === "" ? "none" : currentValue;
+                        currentValue === "" || currentValue === null
+                            ? "none"
+                            : currentValue;
 
                     const profName =
                         PROFESSION_NAMES[c.profession] || c.profession;
@@ -70,7 +76,9 @@ export function AssignmentsPanel() {
                                     setAssignments((prev) => ({
                                         ...prev,
                                         [c.id]: {
-                                            task: value,
+                                            task: value as
+                                                | CrewMemberAssignment
+                                                | "none",
                                             effect: action?.effect || null,
                                         },
                                     }));

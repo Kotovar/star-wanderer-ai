@@ -21,16 +21,16 @@ export interface PlanetSpecialization {
     icon: string;
     cost: number; // Cost in credits
     duration: number; // Turns required
-    cooldown?: number; // Cooldown in turns (optional)
-    requirements?: {
-        minLevel?: number; // Minimum crew level
-        maxLevel?: number; // Maximum crew level
-        requiredModule?: string; // Required ship module
-        requiredRace?: RaceId; // Only available for specific race
-    };
+    // Cooldown in turns (optional)
     effects: {
         type: string;
         value: number | string;
         description: string;
     }[];
+    cooldown?: number;
+    requirements?: {
+        minLevel?: number; // Minimum crew level
+        maxLevel?: number; // Maximum crew level
+        requiredRace?: RaceId; // Only available for specific race
+    };
 }

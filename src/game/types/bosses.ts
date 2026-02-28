@@ -2,8 +2,8 @@
 // ANCIENT BOSSES - Relicts of lost civilization
 // ═══════════════════════════════════════════════════════════════
 
-import { ArtifactRarity } from "./artifacts";
-import { GalaxyTier } from "./locations/galaxy";
+import type { ArtifactRarity } from "./artifacts";
+import type { GalaxyTier } from "./locations/galaxy";
 
 export interface AncientBoss {
     id: string;
@@ -15,18 +15,18 @@ export interface AncientBoss {
     regenRate: number; // HP regenerated per turn in combat
     specialAbility: BossAbility;
     guaranteedArtifactRarity: ArtifactRarity;
-    guaranteedModuleDrop?: string; // Module type dropped when defeated (e.g., "quantum_engine")
+    guaranteedModuleDrop?: "quantum_engine";
 }
 
 export interface BossModule {
     type: string;
     name: string;
+    isAncient: boolean; // Module not available to player
+    description: string;
+    specialEffect?: string;
     health: number;
     damage?: number;
     defense?: number;
-    isAncient: boolean; // Module not available to player
-    specialEffect?: string;
-    description: string;
 }
 
 export interface BossAbility {

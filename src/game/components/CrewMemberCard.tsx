@@ -8,7 +8,12 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { PROFESSION_NAMES } from "@/game/constants/crew";
-import type { CrewMember, Module, Profession } from "@/game/types";
+import type {
+    CrewMember,
+    CrewMemberCombatAssignment,
+    Module,
+    Profession,
+} from "@/game/types";
 import { COMBAT_ACTIONS, CREW_ACTIONS } from "@/game/constants/crew";
 
 interface CrewMemberCardProps {
@@ -20,7 +25,7 @@ interface CrewMemberCardProps {
     onMove: (_crewMemberId: number, _moduleId: number) => void;
     onAssignTask: (
         _crewMemberId: number,
-        _task: string,
+        task: CrewMemberCombatAssignment,
         _effect: string | null,
     ) => void;
     isCombat?: boolean;
@@ -146,9 +151,9 @@ interface TaskRowProps {
     crewMember: CrewMember;
     actions: Array<{ value: string; label: string; effect: unknown }>;
     onAssignTask: (
-        _crewMemberId: number,
-        _task: string,
-        _effect: string | null,
+        crewMemberId: number,
+        task: CrewMemberCombatAssignment,
+        effect: string | null,
     ) => void;
     currentAssignment: string | null;
     isCombat?: boolean;
@@ -168,7 +173,10 @@ function TaskRow({
             </span>
             <div className="flex flex-wrap gap-1">
                 {actions.map((a) => {
-                    const itemValue = a.value === "" ? "none" : a.value;
+                    const itemValue =
+                        a.value === ""
+                            ? "none"
+                            : (a.value as CrewMemberCombatAssignment);
                     const currentTask = currentAssignment || "none";
                     const isActive = currentTask === itemValue;
 
@@ -181,7 +189,7 @@ function TaskRow({
                                             e.stopPropagation();
                                             const actualValue =
                                                 itemValue === "none"
-                                                    ? ""
+                                                    ? null
                                                     : itemValue;
                                             onAssignTask(
                                                 crewMember.id,

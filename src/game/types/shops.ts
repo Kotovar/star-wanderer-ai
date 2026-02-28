@@ -1,9 +1,13 @@
 import type { ModuleType, WeaponType } from "./modules";
 
+type ShopItemType = "upgrade" | "module" | "weapon";
+
 export interface ShopItem {
     id: string;
     name: string;
-    type: "upgrade" | "module" | "weapon";
+    price: number;
+    stock: number;
+    type: ShopItemType;
     moduleType: ModuleType;
     targetType?: ModuleType;
     width?: number;
@@ -15,8 +19,6 @@ export interface ShopItem {
     oxygen?: number;
     capacity?: number; // For cargo, fuel tanks
     fuelEfficiency?: number; // For engine modules
-    price: number;
-    stock: number;
     effect?: {
         power?: number;
         capacity?: number;

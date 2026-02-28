@@ -23,8 +23,8 @@ export interface ArtifactEffect {
 
 export interface ArtifactNegativeEffect {
     type: ArtifactNegativeType;
-    value?: number; // Effect magnitude
     description: string; // Human-readable description
+    value?: number; // Effect magnitude
 }
 
 export type ArtifactType =

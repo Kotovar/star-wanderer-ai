@@ -1,21 +1,23 @@
 import type { RaceId } from "./races";
 
+type ContactSourceType = "planet" | "station" | "ship";
+
 export interface Contract {
     id: string;
     type: ContractType;
     desc: string;
+    reward: number;
     cargo?: string;
     quantity?: number; // For supply_run contracts
     targetSector?: number;
     targetSectorName?: string;
     targetLocationId?: string; // Specific location to deliver to (planet, station, ship)
     targetLocationName?: string; // Name of target location
-    targetLocationType?: "planet" | "station" | "ship"; // Type of target location
+    targetLocationType?: ContactSourceType; // Type of target location
     sourcePlanetId?: string;
     sourceSectorName?: string;
     sourceName?: string; // Name of the source (planet or ship)
-    sourceType?: "planet" | "ship"; // Type of source
-    reward: number;
+    sourceType?: Exclude<ContactSourceType, "station">; // Type of source
     requiresScanner?: boolean;
     targetPlanetId?: string;
     targetPlanetName?: string;

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { EnemyModuleGrid, ShipStatusCard } from "./EnemyModuleGrid";
 import { CrewMemberCard } from "./CrewMemberCard";
-import type { CrewMember } from "../types";
+import type { CrewMember, CrewMemberCombatAssignment } from "../types";
 
 export function CombatPanel() {
     const currentCombat = useGameStore((s) => s.currentCombat);
@@ -275,9 +275,9 @@ interface CrewManagementProps {
     onSelectCrew: (crew: CrewMember | null) => void;
     onMoveCrew: (_crewId: number, _moduleId: number) => void;
     assignCombatTask: (
-        _crewId: number,
-        _task: string,
-        _effect: string | null,
+        crewId: number,
+        task: CrewMemberCombatAssignment,
+        effect: string,
     ) => void;
     getAdjacentModules: (
         _moduleId: number,
@@ -316,7 +316,7 @@ function CrewManagement({
                             onSelect={() => onSelectCrew(isSelected ? null : c)}
                             onMove={onMoveCrew}
                             onAssignTask={(id, task) =>
-                                assignCombatTask(id, task, null)
+                                assignCombatTask(id, task, "")
                             }
                             isCombat={true}
                         />
