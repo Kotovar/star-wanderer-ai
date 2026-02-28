@@ -8,8 +8,8 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { PROFESSION_NAMES } from "@/game/constants/crew";
-import type { CrewMember, Module } from "@/game/types";
-import { CREW_ACTIONS } from "@/game/constants/crew";
+import type { CrewMember, Module, Profession } from "@/game/types";
+import { COMBAT_ACTIONS, CREW_ACTIONS } from "@/game/constants/crew";
 
 interface CrewMemberCardProps {
     crewMember: CrewMember;
@@ -36,25 +36,14 @@ export function CrewMemberCard({
     onAssignTask,
     isCombat = false,
 }: CrewMemberCardProps) {
-    let actions = CREW_ACTIONS[crewMember.profession] || [
-        { value: "", label: "ОЖИДАНИЕ", effect: null },
-    ];
-
-    // Filter out combat-irrelevant tasks during battle
-    if (isCombat) {
-        const combatRelevantActions: Record<string, string[]> = {
-            pilot: ["", "evasion", "targeting"], // Navigation doesn't affect combat
-            engineer: ["", "repair", "overclock"], // Power doesn't affect combat directly
-            medic: ["", "heal", "firstaid"], // Morale is less relevant in combat
-            scout: ["", "patrol"],
-            scientist: ["", "research"],
-            gunner: ["", "targeting", "rapidfire"],
-        };
-        const relevantActions = combatRelevantActions[
-            crewMember.profession
-        ] || [""];
-        actions = actions.filter((a) => relevantActions.includes(a.value));
-    }
+    // Use combat actions during battle, civilian actions otherwise
+    const actions = isCombat
+        ? COMBAT_ACTIONS[crewMember.profession] || [
+              { value: "", label: "ОЖИДАНИЕ", effect: null },
+          ]
+        : CREW_ACTIONS[crewMember.profession] || [
+              { value: "", label: "ОЖИДАНИЕ", effect: null },
+          ];
 
     // Get current assignment based on combat state
     const currentAssignment = isCombat
@@ -227,8 +216,11 @@ function TaskRow({
     );
 }
 
-function getActionDescription(profession: string, actionValue: string): string {
-    const descriptions: Record<string, Record<string, string>> = {
+function getActionDescription(
+    profession: Profession,
+    actionValue: string,
+): string {
+    const descriptions: Record<Profession, Record<string, string>> = {
         pilot: {
             "": "Ожидание - бездействие",
             evasion: "Уклонение - +15 к щитам, -1 топливо",

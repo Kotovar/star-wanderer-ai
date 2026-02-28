@@ -506,14 +506,6 @@ export const useGameStore = create<
             }
         });
 
-        // Apply crew assignments
-        if (state.crew.find((c) => c.assignment === "targeting"))
-            dmg.total = Math.floor(dmg.total * 1.15);
-        if (state.crew.find((c) => c.assignment === "overclock"))
-            dmg.total = Math.floor(dmg.total * 1.25);
-        if (state.crew.find((c) => c.assignment === "rapidfire"))
-            dmg.total = Math.floor(dmg.total * 1.25);
-
         // Apply race combat bonuses (krylorian: +35% combat)
         let combatBonus = 0;
         state.crew.forEach((c) => {
@@ -3963,9 +3955,30 @@ export const useGameStore = create<
         const damagePerWeapon = baseWeaponDamage;
 
         // Apply gunner bonus to each weapon
-        const finalDamagePerWeapon = hasGunner
+        let finalDamagePerWeapon = hasGunner
             ? Math.floor(damagePerWeapon * 1.15)
             : Math.floor(damagePerWeapon * 0.5);
+
+        // Apply crew combat assignments (during battle)
+        const hasTargeting = state.crew.some(
+            (c) => c.combatAssignment === "targeting",
+        );
+        const hasOverclock = state.crew.some(
+            (c) => c.combatAssignment === "overclock",
+        );
+        const hasRapidfire = state.crew.some(
+            (c) => c.combatAssignment === "rapidfire",
+        );
+        const hasMaintenance = state.crew.some(
+            (c) => c.combatAssignment === "maintenance",
+        );
+
+        if (hasTargeting)
+            finalDamagePerWeapon = Math.floor(finalDamagePerWeapon * 1.15);
+        if (hasOverclock)
+            finalDamagePerWeapon = Math.floor(finalDamagePerWeapon * 1.25);
+        if (hasRapidfire)
+            finalDamagePerWeapon = Math.floor(finalDamagePerWeapon * 1.25);
 
         // Apply critical_matrix artifact (35% crit chance for double damage)
         const criticalMatrix = state.artifacts.find(
@@ -4028,11 +4041,23 @@ export const useGameStore = create<
             }
         }
 
-        // 3. Missiles: 20% chance to be intercepted
+        // 3. Missiles: 20% base chance to be intercepted, modified by accuracy
         let missileInterceptedCount = 0;
+
+        // Calculate accuracy modifier from crew assignments
+        let accuracyModifier = 0;
+        if (hasRapidfire) accuracyModifier -= 0.05; // -5% accuracy from rapidfire
+        if (hasMaintenance) accuracyModifier += 0.05; // +5% accuracy from maintenance
+
+        const baseInterceptChance = 0.2; // 20% base
+        const actualInterceptChance = Math.max(
+            0.05,
+            Math.min(0.5, baseInterceptChance - accuracyModifier),
+        );
+
         if (weaponCounts.missile > 0) {
             for (let i = 0; i < weaponCounts.missile; i++) {
-                if (Math.random() < 0.2) {
+                if (Math.random() < actualInterceptChance) {
                     missileInterceptedCount++;
                     continue; // Missile intercepted, no damage
                 }

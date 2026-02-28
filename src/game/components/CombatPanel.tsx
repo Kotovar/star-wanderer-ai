@@ -32,7 +32,9 @@ export function CombatPanel() {
         (c) =>
             weaponBays.some((wb) => wb.id === c.moduleId) &&
             (c.profession === "gunner" ||
-                (c.profession === "pilot" && c.assignment === "targeting")),
+                (c.profession === "pilot" &&
+                    (c.combatAssignment === "targeting" ||
+                        c.assignment === "targeting"))),
     );
     const hasGunner = !!gunnerInWeaponBay;
     const canAttack = hasWeaponBay;
@@ -56,12 +58,13 @@ export function CombatPanel() {
 
     if (!currentCombat) return null;
 
+    // Calculate enemy stats from ALIVE modules only (health > 0)
     const eDmg = currentCombat.enemy.modules.reduce(
-        (s, m) => s + (m.damage || 0),
+        (s, m) => s + (m.health > 0 ? m.damage || 0 : 0),
         0,
     );
     const eDef = currentCombat.enemy.modules.reduce(
-        (s, m) => s + (m.defense || 0),
+        (s, m) => s + (m.health > 0 ? m.defense || 0 : 0),
         0,
     );
     const eHP = currentCombat.enemy.modules.reduce((s, m) => s + m.health, 0);

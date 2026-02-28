@@ -235,6 +235,61 @@ export const PROFESSION_DESCRIPTIONS: Record<Profession, string> = {
     gunner: "Управляет огнём корабля. Может выбирать цели в бою, +15% урон.",
 };
 
+// Combat-only assignments (used during battle)
+export const COMBAT_ACTIONS: Record<
+    Profession,
+    { value: string; label: string; effect: string | null }[]
+> = {
+    pilot: [
+        { value: "", label: "ОЖИДАНИЕ", effect: null },
+        { value: "evasion", label: "Маневры", effect: "+15 щитов за ход" },
+        {
+            value: "targeting",
+            label: "Прицеливание",
+            effect: "Выбор цели, +15% урон",
+        },
+    ],
+    engineer: [
+        { value: "", label: "ОЖИДАНИЕ", effect: null },
+        { value: "repair", label: "Ремонт", effect: "+15% броня за ход" },
+        {
+            value: "overclock",
+            label: "Перегрузка",
+            effect: "+25% урон, -10% броня",
+        },
+    ],
+    medic: [
+        { value: "", label: "ОЖИДАНИЕ", effect: null },
+        { value: "heal", label: "Лечение", effect: "+20 здоровье" },
+        { value: "firstaid", label: "Медпаки", effect: "Защита при уроне" },
+    ],
+    scout: [
+        { value: "", label: "ОЖИДАНИЕ", effect: null },
+        { value: "patrol", label: "Патруль", effect: "+инфо о враге" },
+    ],
+    scientist: [
+        { value: "", label: "ОЖИДАНИЕ", effect: null },
+        {
+            value: "research",
+            label: "Исследование",
+            effect: "+данные аномалий",
+        },
+    ],
+    gunner: [
+        { value: "", label: "ОЖИДАНИЕ", effect: null },
+        {
+            value: "targeting",
+            label: "Прицеливание",
+            effect: "Выбор цели, +15% урон",
+        },
+        {
+            value: "rapidfire",
+            label: "Скорострельность",
+            effect: "+25% урон, -5% точность",
+        },
+    ],
+};
+
 export const CREW_ACTIONS: Record<
     Profession,
     { value: string; label: string; effect: string | null }[]
@@ -248,11 +303,6 @@ export const CREW_ACTIONS: Record<
         { value: "", label: "ОЖИДАНИЕ", effect: null },
         { value: "power", label: "Разгон", effect: "+5⚡ генерация" },
         { value: "repair", label: "Ремонт", effect: "+15% броня за ход" },
-        {
-            value: "overclock",
-            label: "Перегрузка",
-            effect: "+25% урон,-10% броня",
-        },
     ],
     medic: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
@@ -275,14 +325,9 @@ export const CREW_ACTIONS: Record<
     gunner: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
         {
-            value: "targeting",
-            label: "Прицеливание",
-            effect: "Выбор цели,+15% урон",
-        },
-        {
-            value: "rapidfire",
-            label: "Скорострельность",
-            effect: "+25% урон,-5% точность",
+            value: "maintenance",
+            label: "Обслуживание",
+            effect: "+5% точность",
         },
     ],
 };
