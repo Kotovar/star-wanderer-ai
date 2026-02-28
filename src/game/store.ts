@@ -872,6 +872,15 @@ export const useGameStore = create<
                         Number(shieldTrait.effects.shieldRegen),
                     );
                 }
+                // TECHNO-SYMBIOSIS - Xenosymbionts provide +2 shield regen when merged with ship
+                if (race.id === "xenosymbiont") {
+                    const symbiosisTrait = race.specialTraits.find(
+                        (t) => t.effects.canMerge,
+                    );
+                    if (symbiosisTrait) {
+                        shieldRegen += 2;
+                    }
+                }
             }
         });
 
@@ -1432,6 +1441,28 @@ export const useGameStore = create<
             );
 
             // ═══════════════════════════════════════════════════════════════
+            // AI GLITCH - Synthetic crew may malfunction (5% chance)
+            // ═══════════════════════════════════════════════════════════════
+            if (crewRace?.id === "synthetic") {
+                const glitchTrait = crewRace.specialTraits.find(
+                    (t) => t.effects.glitchChance,
+                );
+                if (glitchTrait && glitchTrait.effects.glitchChance) {
+                    const glitchChance = Number(
+                        glitchTrait.effects.glitchChance,
+                    );
+                    if (Math.random() < glitchChance) {
+                        get().addLog(
+                            `⚠️ ${c.name}: Сбой ИИ! Действие не выполнено`,
+                            "warning",
+                        );
+                        // Skip this crew member's action for this turn
+                        return;
+                    }
+                }
+            }
+
+            // ═══════════════════════════════════════════════════════════════
             // MODULE DAMAGE - Crew takes damage in damaged/destroyed modules
             // ═══════════════════════════════════════════════════════════════
             if (currentModule) {
@@ -1599,6 +1630,20 @@ export const useGameStore = create<
                                 repairAmount *
                                     (1 + crewRace.crewBonuses.repair),
                             );
+                        }
+
+                        // TECHNO-SYMBIOSIS - Xenosymbionts merge with ship modules (+10% repair)
+                        if (crewRace?.id === "xenosymbiont") {
+                            const symbiosisTrait = crewRace.specialTraits.find(
+                                (t) => t.effects.canMerge,
+                            );
+                            if (symbiosisTrait) {
+                                repairAmount = Math.floor(repairAmount * 1.1);
+                                get().addLog(
+                                    `🦠 ${c.name}: Техно-симбиоз с "${currentModule.name}" (+10% ремонт)`,
+                                    "info",
+                                );
+                            }
                         }
 
                         // Check if module actually needs repair
