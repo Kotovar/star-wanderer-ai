@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useGameStore } from "../store";
-import type { Contract } from "../types";
+import type { Contract, Goods } from "../types";
 import {
     Dialog,
     DialogContent,
@@ -11,6 +11,8 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { TRADE_GOODS } from "../constants/goods";
+import { DELIVERY_GOODS } from "../constants/contracts";
 
 export function ContractsList() {
     const activeContracts = useGameStore((s) => s.activeContracts);
@@ -71,12 +73,29 @@ export function ContractsList() {
 
         switch (contract.type) {
             case "delivery":
+                // Handle both key (new format) and name (old format)
+                let deliveryCargoName = "Груз";
+                if (contract.cargo) {
+                    // Try to look up by key first (new format: "construction_materials")
+                    const cargoByKey =
+                        DELIVERY_GOODS[
+                            contract.cargo as keyof typeof DELIVERY_GOODS
+                        ]?.name;
+                    if (cargoByKey) {
+                        deliveryCargoName = cargoByKey;
+                    } else {
+                        // Fallback: format the key (capitalize and replace underscores)
+                        deliveryCargoName =
+                            contract.cargo.charAt(0).toUpperCase() +
+                            contract.cargo.slice(1).replace(/_/g, " ");
+                    }
+                }
                 return {
                     type: "Доставка груза",
                     tasks: [
                         {
                             label: "Что сделать",
-                            value: `Доставить груз "${contract.cargo}" (10т) на ${getDestText()}`,
+                            value: `Доставить груз "${deliveryCargoName}" (10т) на ${getDestText()}`,
                         },
                         { label: "Куда доставить", value: getDestText() },
                         { label: "Где сдать", value: "На месте назначения" },
@@ -107,20 +126,24 @@ export function ContractsList() {
                     ],
                 };
             case "supply_run":
+                if (!contract.cargo) return;
+
+                const cargoName = TRADE_GOODS[contract.cargo as Goods]?.name;
+
                 return {
                     type: "Поставка товаров",
                     tasks: [
                         {
                             label: "Что сделать",
-                            value: `Купить и доставить ${contract.cargo} (${contract.quantity}т)`,
+                            value: `Найти и доставить ${cargoName} (${contract.quantity}т)`,
                         },
                         {
-                            label: "Где купить",
-                            value: "На любой торговой станции",
+                            label: "Где найти",
+                            value: "Купить на любой торговой станции или найти в другом месте",
                         },
                         {
                             label: "Где сдать",
-                            value: `${contract.sourceType === "planet" ? "Планета" : "Корабль"} "${contract.sourceName || contract.sourceSectorName}"`,
+                            value: `${contract.sourceType === "planet" ? "Планета" : "Корабль"} "${contract.sourceName}" (${contract.sourceSectorName})`,
                         },
                     ],
                 };
@@ -300,6 +323,14 @@ export function ContractsList() {
                         (() => {
                             const details =
                                 getContractDetails(selectedContract);
+
+                            if (!details) {
+                                return (
+                                    <span className="text-[#ffb000]">
+                                        Задание не найдено
+                                    </span>
+                                );
+                            }
                             return (
                                 <div className="space-y-4 text-sm">
                                     <div>

@@ -2,6 +2,7 @@
 
 import { useGameStore } from "../store";
 import { TRADE_GOODS } from "../constants/goods";
+import { DELIVERY_GOODS } from "../constants/contracts";
 
 export function CargoDisplay() {
     const ship = useGameStore((s) => s.ship);
@@ -33,15 +34,27 @@ export function CargoDisplay() {
                 <div className="text-[11px] text-[#888]">Трюм пуст</div>
             ) : (
                 <div>
-                    {ship.cargo.map((c, i) => (
-                        <div
-                            key={i}
-                            className="bg-[rgba(0,0,0,0.3)] border border-[#ffb000] p-2 mb-1.5 text-xs"
-                        >
-                            📦 {c.item} x{c.quantity}т{" "}
-                            <span className="text-[#00d4ff]">[Задание]</span>
-                        </div>
-                    ))}
+                    {ship.cargo.map((c, i) => {
+                        // Try to get cargo name from DELIVERY_GOODS first, then TRADE_GOODS
+                        const cargoName =
+                            DELIVERY_GOODS[
+                                c.item as keyof typeof DELIVERY_GOODS
+                            ]?.name ||
+                            TRADE_GOODS[c.item as keyof typeof TRADE_GOODS]
+                                ?.name ||
+                            c.item;
+                        return (
+                            <div
+                                key={i}
+                                className="bg-[rgba(0,0,0,0.3)] border border-[#ffb000] p-2 mb-1.5 text-xs"
+                            >
+                                📦 {cargoName} x{c.quantity}т{" "}
+                                <span className="text-[#00d4ff]">
+                                    [Задание]
+                                </span>
+                            </div>
+                        );
+                    })}
                     {ship.tradeGoods.map((g, i) => (
                         <div
                             key={i}

@@ -265,6 +265,12 @@ export const generatePlanetContracts = (
                 const baseValue = stationBuyPrice * quantity;
                 const reward = Math.floor(baseValue * 1.3);
 
+                // Find the actual planet name from the sector
+                const sourcePlanet = sector.locations.find(
+                    (l) => l.type === "planet" && l.id === planetId,
+                );
+                const sourcePlanetName = sourcePlanet?.name || sector.name;
+
                 return {
                     id: `c-${planetId}-supply-${Date.now()}-${Math.random()}`,
                     type: "supply_run",
@@ -272,6 +278,7 @@ export const generatePlanetContracts = (
                     cargo: cargoKey,
                     quantity,
                     sourcePlanetId: planetId,
+                    sourceName: sourcePlanetName,
                     sourceSectorName: sector.name,
                     sourceType: "planet",
                     reward,
@@ -285,11 +292,10 @@ export const generatePlanetContracts = (
                     availableSectors[
                         Math.floor(Math.random() * availableSectors.length)
                     ];
-                // Use DELIVERY_GOODS keys for cargo (no duplicates)
                 const goodsKeys = typedKeys(DELIVERY_GOODS);
                 const cargoKey =
                     goodsKeys[Math.floor(Math.random() * goodsKeys.length)];
-                const cargo = DELIVERY_GOODS[cargoKey].name;
+                const cargoName = DELIVERY_GOODS[cargoKey].name;
 
                 // Pick a specific destination: inhabited planet, station, or friendly ship
                 const validDestinations = tgtSector.locations.filter(
@@ -315,8 +321,8 @@ export const generatePlanetContracts = (
                 return {
                     id: `c-${planetId}-${Date.now()}-${Math.random()}`,
                     type: "delivery",
-                    desc: `📦 Доставка: ${cargo}`,
-                    cargo,
+                    desc: `📦 Доставка: ${cargoName}`,
+                    cargo: cargoKey, // Store the key, not the name
                     targetSector: tgtSector.id,
                     targetSectorName: tgtSector.name,
                     targetLocationId: dest.id,

@@ -16,7 +16,12 @@ import type {
     Goods,
     ShipMergeTrait,
 } from "@/game/types";
-import { CONTRACT_REWARDS, TRADE_GOODS, WEAPON_TYPES } from "@/game/constants";
+import {
+    CONTRACT_REWARDS,
+    TRADE_GOODS,
+    WEAPON_TYPES,
+    DELIVERY_GOODS,
+} from "@/game/constants";
 import { initialModules, STARTING_FUEL } from "@/game/modules";
 import { initialCrew } from "@/game/crew";
 import { generateGalaxy } from "@/game/galaxy";
@@ -3146,7 +3151,7 @@ export const useGameStore = create<
                             ),
                         }));
                         get().addLog(
-                            `📦 Контракт выполнен: ${c.desc} +${c.reward}₢`,
+                            `📦 Контракт выполнен: ${c.desc} (доставлено на ${c.sourceName}) +${c.reward}₢`,
                             "info",
                         );
                         // Give experience to all crew members
@@ -6720,7 +6725,8 @@ export const useGameStore = create<
             return;
         }
         if (contract.type === "delivery" && contract.cargo) {
-            const cargoName = contract.cargo;
+            const cargoKey = contract.cargo as keyof typeof DELIVERY_GOODS;
+            const cargoName = DELIVERY_GOODS[cargoKey]?.name || contract.cargo;
             const cargoMod = get().ship.modules.find((m) => m.type === "cargo");
             if (!cargoMod) {
                 get().addLog("Нет грузового отсека!", "error");
@@ -6739,14 +6745,14 @@ export const useGameStore = create<
                     cargo: [
                         ...s.ship.cargo,
                         {
-                            item: cargoName,
+                            item: cargoKey,
                             quantity: 10,
                             contractId: contract.id,
                         },
                     ],
                 },
             }));
-            get().addLog(`Загружен: ${contract.cargo} (10т)`, "info");
+            get().addLog(`Загружен: ${cargoName} (10т)`, "info");
         }
         set((s) => ({
             activeContracts: [
@@ -6755,6 +6761,15 @@ export const useGameStore = create<
             ],
         }));
         get().addLog(`Задача принята: ${contract.desc}`, "info");
+
+        // Special message for supply_run contracts
+        if (contract.type === "supply_run") {
+            get().addLog(
+                `📍 Доставить на: ${contract.sourceType === "planet" ? "Планета" : "Корабль"} "${contract.sourceName}" (${contract.sourceSectorName})`,
+                "warning",
+            );
+        }
+
         playSound("success");
     },
 

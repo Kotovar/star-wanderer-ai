@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useGameStore } from "../store";
+import { useGameStore } from "@/game/store";
 import {
     PLANET_SPECIALIZATIONS,
     PLANET_DESCRIPTIONS,
@@ -9,6 +9,10 @@ import {
 import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
 import { PlanetSpecializationPanel } from "./PlanetSpecializationPanel";
+import { DELIVERY_GOODS } from "@/game/constants/contracts";
+import type { DeliveryGoods } from "@/game/types/contracts";
+import { TRADE_GOODS } from "@/game/constants/goods";
+import type { Goods } from "@/game/types/goods";
 
 export function PlanetPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
@@ -348,7 +352,8 @@ export function PlanetPanel() {
                                         {/* What to do */}
                                         <div className="text-[#00ff41]">
                                             {c.type === "delivery" &&
-                                                `📦 Доставить "${c.cargo}" (10т) на ${getDestText(c)}`}
+                                                c.cargo &&
+                                                `📦 Доставить "${DELIVERY_GOODS[c.cargo as DeliveryGoods].name}" (10т) на ${getDestText(c)}`}
                                             {c.type === "combat" &&
                                                 `⚔ Уничтожить всех врагов в секторе ${c.sectorName}`}
                                             {c.type === "research" &&
@@ -363,6 +368,11 @@ export function PlanetPanel() {
                                                 `👁️ Войти в ${c.stormName || "шторм"} в секторе ${c.sectorName}`}
                                             {c.type === "mining" &&
                                                 `💎 Найти артефакт (исследовать аномалии или победить босса)`}
+                                            {c.type === "scan_planet" &&
+                                                `📡 Отсканировать планету типа "${c.planetType}" в секторе ${c.targetSectorName}`}
+                                            {c.type === "supply_run" &&
+                                                c.cargo &&
+                                                `📦 Найти и доставить ${TRADE_GOODS[c.cargo as Goods]?.name} (${c.quantity}т) на ${c.sourceName || c.sourceSectorName}`}
                                         </div>
 
                                         {/* Where to turn in */}
@@ -383,6 +393,10 @@ export function PlanetPanel() {
                                                 `✓ Автоматически после прохождения шторма`}
                                             {c.type === "mining" &&
                                                 `✓ Автоматически при находке артефакта`}
+                                            {c.type === "scan_planet" &&
+                                                `✓ Автоматически после сканирования`}
+                                            {c.type === "supply_run" &&
+                                                `✓ Автоматически после поставки`}
                                         </div>
 
                                         {/* Reward */}
