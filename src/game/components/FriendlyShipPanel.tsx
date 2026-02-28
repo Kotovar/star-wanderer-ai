@@ -74,13 +74,15 @@ export function FriendlyShipPanel() {
     };
 
     // Calculate available cargo space
-    const cargoModule = ship.modules.find((m) => m.type === "cargo");
+    const cargoModules = ship.modules.filter((m) => m.type === "cargo");
+    const totalCargoCapacity = cargoModules.reduce(
+        (sum, m) => sum + (m.capacity || 0),
+        0,
+    );
     const currentCargo =
         ship.cargo.reduce((s, c) => s + c.quantity, 0) +
         ship.tradeGoods.reduce((s, g) => s + g.quantity, 0);
-    const availSpace = cargoModule?.capacity
-        ? cargoModule.capacity - currentCargo
-        : 0;
+    const availSpace = totalCargoCapacity - currentCargo;
 
     // Memoize crew data to prevent regeneration on every render
     const crewData = useMemo(() => {

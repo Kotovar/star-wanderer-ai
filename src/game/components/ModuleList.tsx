@@ -123,7 +123,16 @@ function ModuleStats({ module }: ModuleStatsProps) {
             {module.type === "lifesupport" &&
                 module.oxygen &&
                 module.oxygen > 0 && <span>💨 {module.oxygen} сущ.</span>}
-            <span>❤ {module.health}%</span>
+            <span>
+                ❤{" "}
+                {Math.min(
+                    100,
+                    Math.round(
+                        (module.health / (module.maxHealth || 100)) * 100,
+                    ),
+                )}
+                %
+            </span>
             {module.disabled && <span className="text-[#ff0040]">⚠ ВЫКЛ</span>}
         </>
     );

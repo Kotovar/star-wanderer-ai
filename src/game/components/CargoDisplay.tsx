@@ -5,11 +5,17 @@ import { TRADE_GOODS } from "../constants/goods";
 
 export function CargoDisplay() {
     const ship = useGameStore((s) => s.ship);
-    const cargoModule = ship.modules.find((m) => m.type === "cargo");
+    const cargoModules = ship.modules.filter((m) => m.type === "cargo");
 
-    if (!cargoModule) {
+    if (cargoModules.length === 0) {
         return <div className="text-xs text-[#888]">Нет грузового отсека</div>;
     }
+
+    // Sum capacity from all cargo modules
+    const totalCapacity = cargoModules.reduce(
+        (sum, m) => sum + (m.capacity || 0),
+        0,
+    );
 
     const contractCargo = ship.cargo.reduce((sum, c) => sum + c.quantity, 0);
     const tradeCargo = ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0);
@@ -20,7 +26,7 @@ export function CargoDisplay() {
             <div className="mb-2.5 text-xs">
                 Вместимость:{" "}
                 <span className="text-[#ffb000]">
-                    {totalCargo}/{cargoModule.capacity}т
+                    {totalCargo}/{totalCapacity}т
                 </span>
             </div>
             {totalCargo === 0 ? (

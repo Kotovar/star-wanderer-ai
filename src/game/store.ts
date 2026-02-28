@@ -5404,8 +5404,27 @@ export const useGameStore = create<
                 }));
             }
 
-            // Engine upgrade: improve fuel efficiency (reduce consumption)
-            if (item.targetType === "engine") {
+            // Life support upgrade: improve oxygen
+            const oxygen = item.effect?.oxygen;
+            if (oxygen) {
+                set((s) => ({
+                    ship: {
+                        ...s.ship,
+                        modules: s.ship.modules.map((m) =>
+                            m.id === tgt.id
+                                ? {
+                                      ...m,
+                                      oxygen: (m.oxygen || 0) + oxygen,
+                                  }
+                                : m,
+                        ),
+                    },
+                }));
+            }
+
+            // Engine upgrade: improve fuel efficiency using effect value
+            const fuelEfficiency = item.effect?.fuelEfficiency;
+            if (fuelEfficiency !== undefined && item.targetType === "engine") {
                 set((s) => ({
                     ship: {
                         ...s.ship,
@@ -5414,17 +5433,15 @@ export const useGameStore = create<
                                 ? {
                                       ...m,
                                       fuelEfficiency: Math.max(
-                                          3,
-                                          Math.floor(
-                                              (m.fuelEfficiency || 10) * 0.9,
-                                          ),
+                                          1,
+                                          (m.fuelEfficiency || 10) +
+                                              fuelEfficiency,
                                       ),
                                   }
                                 : m,
                         ),
                     },
                 }));
-                get().addLog(`Двигатель улучшен! Расход топлива: -10%`, "info");
             }
 
             // Increment level and defense

@@ -426,138 +426,114 @@ function UpgradeDialog({
     const currentLevel = currentModule?.level || 1;
     const nextLevel = currentLevel + 1;
 
-    // Calculate upgrade stats
+    // Calculate upgrade stats using item.effect values
     const getUpgradeStats = () => {
-        const multiplier = nextLevel / currentLevel;
-
         switch (item.targetType) {
-            case "reactor":
+            case "reactor": {
+                const current = currentModule?.power || 10;
+                const upgrade = item.effect?.power || 5;
                 return (
                     <div className="text-xs">
                         <div>
                             ⚡ Энергия:{" "}
-                            <span className="text-[#00ff41]">
-                                {currentModule?.power || 10}
-                            </span>{" "}
-                            →{" "}
+                            <span className="text-[#00ff41]">{current}</span> →{" "}
                             <span className="text-[#ffb000]">
-                                {Math.floor(
-                                    (currentModule?.power || 10) * multiplier,
-                                )}
+                                {current + upgrade}
                             </span>
                         </div>
                     </div>
                 );
-            case "shield":
+            }
+            case "shield": {
+                const current = currentModule?.defense || 20;
+                const upgrade = item.effect?.defense || 10;
                 return (
                     <div className="text-xs">
                         <div>
                             🛡 Защита:{" "}
-                            <span className="text-[#00ff41]">
-                                {currentModule?.defense || 20}
-                            </span>{" "}
-                            →{" "}
+                            <span className="text-[#00ff41]">{current}</span> →{" "}
                             <span className="text-[#ffb000]">
-                                {Math.floor(
-                                    (currentModule?.defense || 20) * multiplier,
-                                )}
+                                {current + upgrade}
                             </span>
                         </div>
                     </div>
                 );
-            case "cargo":
+            }
+            case "cargo": {
+                const current = currentModule?.capacity || 40;
+                const upgrade = item.effect?.capacity || 30;
                 return (
                     <div className="text-xs">
                         <div>
                             📦 Вместимость:{" "}
-                            <span className="text-[#00ff41]">
-                                {currentModule?.capacity || 40}т
-                            </span>{" "}
-                            →{" "}
+                            <span className="text-[#00ff41]">{current}т</span> →{" "}
                             <span className="text-[#ffb000]">
-                                {Math.floor(
-                                    (currentModule?.capacity || 40) *
-                                        multiplier,
-                                )}
-                                т
+                                {current + upgrade}т
                             </span>
                         </div>
                     </div>
                 );
-            case "scanner":
+            }
+            case "scanner": {
+                const current = currentModule?.scanRange || 3;
+                const upgrade = item.effect?.scanRange || 2;
                 return (
                     <div className="text-xs">
                         <div>
                             📡 Дальность:{" "}
-                            <span className="text-[#00ff41]">
-                                {currentModule?.scanRange || 3}
-                            </span>{" "}
-                            →{" "}
+                            <span className="text-[#00ff41]">{current}</span> →{" "}
                             <span className="text-[#ffb000]">
-                                {Math.floor(
-                                    (currentModule?.scanRange || 3) *
-                                        multiplier,
-                                )}
+                                {current + upgrade}
                             </span>
                         </div>
                     </div>
                 );
-            case "lifesupport":
+            }
+            case "lifesupport": {
+                const current = currentModule?.oxygen || 5;
+                const upgrade = item.effect?.oxygen || 3;
                 return (
                     <div className="text-xs">
                         <div>
                             💚 Кислород:{" "}
-                            <span className="text-[#00ff41]">
-                                {currentModule?.oxygen || 5}
-                            </span>{" "}
-                            →{" "}
+                            <span className="text-[#00ff41]">{current}</span> →{" "}
                             <span className="text-[#ffb000]">
-                                {Math.floor(
-                                    (currentModule?.oxygen || 5) * multiplier,
-                                )}
+                                {current + upgrade}
                             </span>
                         </div>
                     </div>
                 );
-            case "engine":
+            }
+            case "engine": {
+                const current = currentModule?.fuelEfficiency || 10;
+                const upgrade = item.effect?.fuelEfficiency || -2;
                 return (
                     <div className="text-xs">
                         <div>
                             ⛽ Эффективность:{" "}
-                            <span className="text-[#00ff41]">
-                                {currentModule?.fuelEfficiency || 10}
-                            </span>{" "}
-                            →{" "}
+                            <span className="text-[#00ff41]">{current}</span> →{" "}
                             <span className="text-[#ffb000]">
-                                {Math.max(
-                                    1,
-                                    Math.floor(
-                                        (currentModule?.fuelEfficiency || 10) /
-                                            multiplier,
-                                    ),
-                                )}
+                                {Math.max(1, current + upgrade)}
                             </span>
                         </div>
                     </div>
                 );
-            case "fueltank":
+            }
+            case "fueltank": {
+                const current = currentModule?.capacity || 80;
+                const upgrade = item.effect?.capacity || 40;
                 return (
                     <div className="text-xs">
                         <div>
                             ⛽ Ёмкость:{" "}
-                            <span className="text-[#00ff41]">
-                                {currentModule?.capacity || 80}
-                            </span>{" "}
-                            →{" "}
+                            <span className="text-[#00ff41]">{current}</span> →{" "}
                             <span className="text-[#ffb000]">
-                                {Math.floor(
-                                    (currentModule?.capacity || 80) *
-                                        multiplier,
-                                )}
+                                {current + upgrade}
                             </span>
                         </div>
                     </div>
                 );
+            }
             case "drill":
                 return (
                     <div className="text-xs">

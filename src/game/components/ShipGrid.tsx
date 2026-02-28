@@ -355,7 +355,8 @@ function HealthBar({
     h: number;
 }) {
     const healthBarWidth = w - 20;
-    const healthWidth = (module.health / 100) * healthBarWidth;
+    const healthWidth =
+        (module.health / (module.maxHealth || 100)) * healthBarWidth;
 
     return (
         <>
