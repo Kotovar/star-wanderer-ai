@@ -987,7 +987,16 @@ export function generateStationCrew(
         const healthBonus = race?.crewBonuses?.health || 0;
         let baseMaxHealth = 100 + healthBonus;
 
-        // Apply trait effects to maxHealth
+        // Apply race special trait effects to maxHealth (e.g., crystalline: -15%, voidborn: -20%)
+        race?.specialTraits?.forEach((trait) => {
+            if (trait.effects.healthPenalty) {
+                baseMaxHealth = Math.floor(
+                    baseMaxHealth * (1 + Number(trait.effects.healthPenalty)),
+                );
+            }
+        });
+
+        // Apply crew trait effects to maxHealth
         traits.forEach((trait) => {
             if (trait.effect.healthPenalty) {
                 // Negative trait: reduce maxHealth by percentage
