@@ -4005,12 +4005,14 @@ export const useGameStore = create<
                 sDmg = Math.floor(sDmg * (1 + weaponDamageBonus / pDmg));
             }
 
-            // Missile intercept: 20% chance to be blocked by shields
-            if (missileIntercept > 0 && Math.random() < missileIntercept) {
-                const intercepted = Math.floor(sDmg * missileIntercept);
-                sDmg -= intercepted;
+            // Missile intercept: 20% chance for missiles to be completely blocked by shields
+            const missileIntercepted =
+                missileIntercept > 0 && Math.random() < missileIntercept;
+            if (missileIntercepted) {
+                sDmg = 0;
+                pDmg = 0; // Set full damage to 0 so no overflow damage to modules
                 get().addLog(
-                    `🛡️ Ракета сбита щитами! -${intercepted} урона`,
+                    `🛡️ Ракета сбита щитами! Весь урон поглощён.`,
                     "info",
                 );
             }
@@ -4027,7 +4029,9 @@ export const useGameStore = create<
                     },
                 };
             });
-            get().addLog(`Урон щитам врага: ${sDmg}`, "combat");
+            if (!missileIntercepted) {
+                get().addLog(`Урон щитам врага: ${sDmg}`, "combat");
+            }
             const overflow = pDmg - sDmg;
             if (overflow > 0) {
                 // Kinetic bonus: ignore 50% of enemy module defense
@@ -4070,6 +4074,7 @@ export const useGameStore = create<
         } else {
             // No shields - direct module damage
             let moduleDefense = tgtMod.defense || 0;
+            let finalDmg = pDmg;
 
             // Kinetic bonus: ignore 50% of enemy module defense
             if (armorPenetration > 0) {
@@ -4078,27 +4083,48 @@ export const useGameStore = create<
                 );
             }
 
-            const dmg = Math.max(5, pDmg - moduleDefense);
-            set((s) => {
-                if (!s.currentCombat) return s;
-                return {
-                    currentCombat: {
-                        ...s.currentCombat,
-                        enemy: {
-                            ...s.currentCombat.enemy,
-                            modules: s.currentCombat.enemy.modules.map((m) =>
-                                m.id === tgtMod.id
-                                    ? {
-                                          ...m,
-                                          health: Math.max(0, m.health - dmg),
-                                      }
-                                    : m,
-                            ),
+            // Missile intercept: 20% chance for missiles to be completely blocked even without shields
+            // (representing point-defense systems, evasion, etc.)
+            const missileIntercepted =
+                missileIntercept > 0 && Math.random() < missileIntercept;
+            if (missileIntercepted) {
+                finalDmg = 0;
+                get().addLog(
+                    `🛡️ Ракета перехвачена! Урон по модулю предотвращён.`,
+                    "info",
+                );
+            }
+
+            const dmg = missileIntercepted
+                ? 0
+                : Math.max(5, finalDmg - moduleDefense);
+
+            if (!missileIntercepted) {
+                set((s) => {
+                    if (!s.currentCombat) return s;
+                    return {
+                        currentCombat: {
+                            ...s.currentCombat,
+                            enemy: {
+                                ...s.currentCombat.enemy,
+                                modules: s.currentCombat.enemy.modules.map(
+                                    (m) =>
+                                        m.id === tgtMod.id
+                                            ? {
+                                                  ...m,
+                                                  health: Math.max(
+                                                      0,
+                                                      m.health - dmg,
+                                                  ),
+                                              }
+                                            : m,
+                                ),
+                            },
                         },
-                    },
-                };
-            });
-            get().addLog(`Модуль "${tgtMod.name}": -${dmg}%`, "combat");
+                    };
+                });
+                get().addLog(`Модуль "${tgtMod.name}": -${dmg}%`, "combat");
+            }
         }
 
         // Check victory
@@ -4745,10 +4771,6 @@ export const useGameStore = create<
             let reflectedTarget = null;
             let reflectedDamage = 0;
 
-            get().addLog(
-                `🔍 Поиск Зеркального Щита: ${mirrorShield ? "НАЙДЕН" : "НЕ НАЙДЕН"}`,
-                "info",
-            );
             if (mirrorShield) {
                 get().addLog(
                     `🛡️ Зеркальный Щит активен! Шанс отражения: ${(mirrorShield.effect.value ?? 0.3) * 100}%`,
