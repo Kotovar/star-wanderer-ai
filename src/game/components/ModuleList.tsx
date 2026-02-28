@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useGameStore } from "../store";
-import { MODULE_DESCRIPTIONS, WEAPON_TYPES } from "../constants";
+import { WEAPON_TYPES } from "../constants";
 import type { Module, Weapon } from "../types";
 import {
     Dialog,
@@ -12,6 +12,42 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { MODULES_BY_LEVEL } from "./station/station-data";
+
+// Получение описания модуля по типу и уровню из MODULES_BY_LEVEL
+function getModuleDescription(module: Module): string | undefined {
+    const moduleType = module.type;
+    const level = module.level || 1;
+
+    // Определяем уровень для сканера по scanRange
+    if (moduleType === "scanner") {
+        const scanRange = module.scanRange || 0;
+        if (scanRange >= 15) return findModuleDescription("scanner", 4);
+        if (scanRange >= 8) return findModuleDescription("scanner", 3);
+        if (scanRange >= 5) return findModuleDescription("scanner", 2);
+        return findModuleDescription("scanner", 1);
+    }
+
+    // Для особых модулей (уровень 4)
+    if (level >= 4 || moduleType === "ai_core") {
+        // Проверяем по имени для особых модулей
+        const name = module.name || "";
+        if (name.includes("Древний") || name.includes("★")) {
+            return findModuleDescription(moduleType, 4);
+        }
+    }
+
+    return findModuleDescription(moduleType, Math.min(level, 3));
+}
+
+function findModuleDescription(
+    moduleType: string,
+    level: number,
+): string | undefined {
+    const modules = MODULES_BY_LEVEL[level] || [];
+    const found = modules.find((m) => m.moduleType === moduleType);
+    return found?.description;
+}
 
 export function ModuleList() {
     const modules = useGameStore((s) => s.ship.modules);
@@ -202,6 +238,16 @@ export function ModuleDetailDialog({
     // Check if level is valid (not NaN)
     const isValidLevel = module.level && !isNaN(module.level);
 
+    // For station items (fueltank), use capacity instead of ship fuel
+    const displayFuel =
+        isStationItem && module.type === "fueltank"
+            ? module.capacity || 0
+            : fuel;
+    const displayMaxFuel =
+        isStationItem && module.type === "fueltank"
+            ? module.capacity || 0
+            : maxFuel;
+
     return (
         <Dialog open={!!module} onOpenChange={onClose}>
             <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md">
@@ -232,8 +278,8 @@ export function ModuleDetailDialog({
                 <div className="space-y-4">
                     <ModuleDetailedStats
                         module={module}
-                        fuel={fuel}
-                        maxFuel={maxFuel}
+                        fuel={displayFuel}
+                        maxFuel={displayMaxFuel}
                     />
 
                     {module.type === "scanner" && (
@@ -300,7 +346,7 @@ function ModuleDetailedStats({
     fuel,
     maxFuel,
 }: ModuleDetailedStatsProps) {
-    const description = MODULE_DESCRIPTIONS[module.type];
+    const description = getModuleDescription(module);
 
     return (
         <div className="space-y-2">

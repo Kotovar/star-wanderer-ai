@@ -1,4 +1,4 @@
-import type { ModuleType, PartialModuleType } from "../types";
+import type { PartialModuleType } from "../types";
 
 export const MODULE_TYPES: Record<
     PartialModuleType,
@@ -16,21 +16,4 @@ export const MODULE_TYPES: Record<
     fueltank: { color: "#9933ff33", borderColor: "#9933ff" },
     drill: { color: "#8b451333", borderColor: "#cd853f" },
     ai_core: { color: "#00ffff33", borderColor: "#00ffff" },
-};
-
-// Описания модулей из shop data
-export const MODULE_DESCRIPTIONS: Record<ModuleType, string> = {
-    drill: "Добывает ресурсы из астероидов",
-    fueltank: "Хранит топливо для прыжков между системами",
-    reactor: "Генерирует энергию для всех систем корабля",
-    cargo: "Хранит грузы и ресурсы",
-    shield: "Создаёт защитное поле вокруг корабля",
-    weaponbay: "Размещает оружие корабля",
-    scanner: "Обнаруживает объекты в космосе",
-    lifesupport: "Производит кислород для экипажа",
-    medical: "Лечит членов экипажа",
-    engine: "Перемещение между секторами галактики",
-    cockpit: "Управление кораблём и навигация",
-    ai_core: "Искусственный интеллект корабля",
-    weaponShed: "",
 };

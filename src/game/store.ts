@@ -5895,15 +5895,6 @@ export const useGameStore = create<
             }
 
             // Try to place module
-            // Determine drill level from item ID (supports station-specific IDs like drill-2-station-xyz)
-            let drillLevel = 1;
-            if (item.moduleType === "drill") {
-                if (item.id.includes("drill-ancient"))
-                    drillLevel = 4; // Unique ancient drill
-                else if (item.id.includes("drill-3")) drillLevel = 3;
-                else if (item.id.includes("drill-2")) drillLevel = 2;
-            }
-
             // Get station config for cargo bonus
             const stationConfig = state.currentLocation?.stationConfig;
             const cargoBonus = stationConfig?.cargoBonus ?? 1;
@@ -5921,27 +5912,40 @@ export const useGameStore = create<
                 maxHealth: 100,
                 // Defense based on module level (1 defense per level, max 5 for rare tier 4)
                 defense: 1,
+                // Determine level from item ID - check for specific patterns
+                level: (() => {
+                    // Check for unique tier 4 modules first
+                    if (
+                        item.id.includes("-ancient") ||
+                        item.id.includes("-quantum") ||
+                        item.id.includes("-fusion")
+                    )
+                        return 4;
+                    // Check for tier level in ID (e.g., "fueltank-3", "reactor-2")
+                    // Match pattern: moduleType-N where N is 2, 3, or 4
+                    const tierMatch = item.id.match(/-(\d)(?:-|$)/);
+                    if (tierMatch) {
+                        const tier = parseInt(tierMatch[1], 10);
+                        if (tier >= 2 && tier <= 4) return tier;
+                    }
+                    return 1;
+                })(),
                 ...(item.moduleType === "reactor" && {
                     power: item.power || 10,
-                    level: 1,
                 }),
                 ...(item.moduleType === "engine" && {
                     fuelEfficiency: 10,
-                    level: 1,
                     consumption: item.consumption || 1,
                 }),
                 ...(item.moduleType === "drill" && {
-                    level: drillLevel,
                     consumption: item.consumption || 1,
                 }),
                 ...(item.moduleType === "cargo" && {
                     capacity: Math.floor((item.capacity || 50) * cargoBonus),
                     consumption: item.consumption || 1,
-                    level: 1,
                 }),
                 ...(item.moduleType === "fueltank" && {
                     capacity: item.capacity || 100,
-                    level: 1,
                 }),
                 ...(item.moduleType === "shield" && {
                     defense: item.defense || 20,
