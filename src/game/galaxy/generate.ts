@@ -181,7 +181,7 @@ export const generateAsteroidBelt = (
         name:
             asteroidTier === 4
                 ? "★ Древний астероидный пояс"
-                : `Пояс астероидов ${asteroidTier}-го уровня`,
+                : `Пояс астероидов`,
         mined: false,
         asteroidTier,
         resources,

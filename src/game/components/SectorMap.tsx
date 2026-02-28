@@ -137,15 +137,35 @@ function getScannerInfo(
         }
         return info;
     }
+
+    // For other objects, check scanner level
+    if (effectiveScanLevel <= 0) {
+        // No scanner - show as unknown
+        // Ships (enemy, friendly, boss) show as "Unknown ship" because they use ship icon
+        if (
+            loc.type === "boss" ||
+            loc.type === "enemy" ||
+            loc.type === "friendly_ship"
+        ) {
+            info.push(`❓ Неизвестный корабль`);
+        } else if (loc.type === "planet") {
+            info.push(`🌏 Планета`);
+        } else if (loc.type === "asteroid_belt") {
+            info.push(`🪨 Пояс астероидов`);
+        } else {
+            info.push(`❓ Неизвестный объект`);
+        }
+        return info;
+    }
+
     if (loc.type === "planet") {
-        info.push(`🪐 Планета`);
-        info.push(`🏷️ ${loc.planetType || "Неизвестно"}`);
         info.push(`📍 ${loc.name}`);
+        info.push(`🏷️ ${loc.planetType || "Неизвестно"}`);
         // Planet details
         if (loc.isEmpty) {
             info.push(`🏜️ Безлюдная`);
         } else {
-            if (scanLevel >= 1 && loc.dominantRace) {
+            if (loc.dominantRace) {
                 const raceNames: Record<string, string> = {
                     human: "Люди",
                     synthetic: "Синтетики",
@@ -166,6 +186,8 @@ function getScannerInfo(
     }
     if (loc.type === "asteroid_belt") {
         info.push(`📍 ${loc.name}`);
+        // Always show asteroid tier with any scanner level
+        info.push(`🏷️ Уровень: ${loc.asteroidTier || 1}`);
         if (scanLevel >= 5 && loc.resources && !completed) {
             info.push(`📦 Минералы: ~${loc.resources.minerals}`);
             if (loc.resources.rare > 0)
@@ -190,45 +212,19 @@ function getScannerInfo(
         return info;
     }
 
-    // For other objects, check scanner level
-    if (effectiveScanLevel <= 0) {
-        // No scanner - show as unknown
-        // Ships (enemy, friendly, boss) show as "Unknown ship" because they use ship icon
-        if (
-            loc.type === "boss" ||
-            loc.type === "enemy" ||
-            loc.type === "friendly_ship"
-        ) {
-            info.push(`❓ Неизвестный корабль`);
-        } else {
-            info.push(`❓ Неизвестный объект`);
-        }
-        return info;
-    }
-
-    // Get location tier to compare with scanner level
+    // For other objects, check scanner level vs location tier
     const locTier = loc.threat || loc.anomalyTier || loc.stormIntensity || 1;
     const canScanFully = scanLevel >= locTier;
 
-    // Show name only if scanner level is sufficient
-    // Exception: don't show name for storms (name is shown in storm details)
-    if (canScanFully) {
-        if (loc.type !== "storm") {
-            info.push(`📍 ${loc.name}`);
-        }
-    } else {
+    if (!canScanFully) {
         // Scanner level too low - show as unknown
-        // Ships (enemy, friendly, boss) show as "Unknown ship" because they use ship icon
-        if (
-            loc.type === "boss" ||
-            loc.type === "enemy" ||
-            loc.type === "friendly_ship"
-        ) {
-            info.push(`❓ Неизвестный корабль`);
-        } else {
-            info.push(`❓ Неизвестный объект`);
-        }
+        info.push(`❓ Неизвестный объект`);
         return info;
+    }
+
+    // Show name for scanned objects (except storms)
+    if (loc.type !== "storm") {
+        info.push(`📍 ${loc.name}`);
     }
 
     // Storm info

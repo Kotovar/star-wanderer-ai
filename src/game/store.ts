@@ -3697,11 +3697,20 @@ export const useGameStore = create<
             };
         });
 
-        // Calculate enemy damage
+        // Calculate enemy damage (only from alive modules)
         const eDmg = combat.enemy.modules.reduce(
-            (s, m) => s + (m.damage || 0),
+            (s, m) => s + (m.health > 0 ? m.damage || 0 : 0),
             0,
         );
+
+        // Skip attack if enemy has no damage (all weapon modules destroyed)
+        if (eDmg <= 0) {
+            get().addLog(
+                `⚠️ Враг не может атаковать - все орудия уничтожены!`,
+                "info",
+            );
+            return;
+        }
 
         // Select target module (same AI as normal attack)
         const activeMods = state.ship.modules.filter((m) => m.health > 0);
@@ -4561,9 +4570,19 @@ export const useGameStore = create<
         // Enemy attack
         const eDmg =
             updatedCombat?.enemy.modules.reduce(
-                (s, m) => s + (m.damage || 0),
+                (s, m) => s + (m.health > 0 ? m.damage || 0 : 0),
                 0,
             ) || 0;
+
+        // Skip attack if enemy has no damage (all weapon modules destroyed)
+        if (eDmg <= 0) {
+            get().addLog(
+                `⚠️ Враг не может атаковать - все орудия уничтожены!`,
+                "info",
+            );
+            get().updateShipStats();
+            return;
+        }
 
         // ═══════════════════════════════════════════════════════════════
         // PILOT EVASION - Chance to evade enemy attack
