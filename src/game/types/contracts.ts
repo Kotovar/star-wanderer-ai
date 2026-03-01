@@ -1,6 +1,6 @@
 import type { RaceId } from "./races";
 
-type ContactSourceType = "planet" | "station" | "ship";
+export type ContactSourceType = "planet" | "station" | "ship";
 
 export interface Contract {
     id: string;

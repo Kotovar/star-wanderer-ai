@@ -1,5 +1,7 @@
 import { CREW_TRAITS, PROFESSION_NAMES } from "@/game/constants/crew";
-import type { CrewTrait, Profession } from "@/game/types";
+import { RACE_LAST_NAMES } from "@/game/constants/races";
+import type { CrewTrait, Profession, RaceId } from "@/game/types";
+import { useGameStore } from "@/game/store";
 
 // Generate crew traits based on quality level
 export const generateCrewTraits = (
@@ -83,24 +85,63 @@ export const generateCrewTraits = (
     return { traits, priceModifier };
 };
 
-export const getRandomName = (profession: Profession): string => {
-    const lastNames = [
-        "Смирнов",
-        "Иванов",
-        "Петров",
-        "Сидоров",
-        "Козлов",
-        "Новиков",
-        "Морозов",
-        "Волков",
-        "Соколов",
-        "Попов",
-        "Лебедев",
-        "Кузнецов",
-        "Козлова",
-        "Новикова",
-        "Морозова",
-    ];
+/**
+ * Генерирует случайное имя для члена экипажа.
+ *
+ * @param profession - Профессия члена экипажа
+ * @param race - Расовая принадлежность (по умолчанию human)
+ * @param seed - Опциональный seed для детерминированной генерации
+ * @returns Сгенерированное имя с фамилией
+ */
+export const getRandomName = (
+    profession: Profession,
+    race: RaceId = "human",
+    seed?: number,
+): string => {
+    const raceLastNames = RACE_LAST_NAMES[race];
     const profName = PROFESSION_NAMES[profession];
-    return `${profName} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+
+    let index: number;
+    if (seed !== undefined) {
+        // Детерминированная генерация на основе seed
+        let combinedSeed = seed;
+        for (let i = 0; i < race.length; i++) {
+            combinedSeed =
+                (combinedSeed << 5) - combinedSeed + race.charCodeAt(i);
+        }
+        for (let i = 0; i < profession.length; i++) {
+            combinedSeed =
+                (combinedSeed << 5) - combinedSeed + profession.charCodeAt(i);
+        }
+        const hash = Math.abs(Math.sin(combinedSeed) * 10000);
+        index = Math.floor(hash % raceLastNames.length);
+    } else {
+        index = Math.floor(Math.random() * raceLastNames.length);
+    }
+
+    return `${profName} ${raceLastNames[index]}`;
+};
+
+/**
+ * Начисляет опыт всему экипажу.
+ *
+ * Обновляет значение опыта для каждого члена экипажа и опционально
+ * добавляет запись в лог игры.
+ *
+ * @param expAmount - Количество опыта для начисления
+ * @param logMessage - Опциональное сообщение для лога
+ */
+export const giveCrewExperience = (expAmount: number, logMessage?: string) => {
+    const state = useGameStore.getState();
+
+    useGameStore.setState((s) => ({
+        crew: s.crew.map((c) => ({
+            ...c,
+            exp: c.exp + expAmount,
+        })),
+    }));
+
+    if (logMessage) {
+        state.addLog(logMessage, "info");
+    }
 };

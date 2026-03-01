@@ -8,3 +8,4 @@ export * from "./races";
 export * from "./goods";
 export * from "./weapons";
 export * from "./contracts";
+export * from "./localStorage";

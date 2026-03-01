@@ -1,4 +1,4 @@
-import { getRandomRace, getRandomRaceName } from "@/game/races";
+import { getRandomRace } from "@/game/races";
 import type {
     ShopItem,
     RaceId,
@@ -8,7 +8,7 @@ import type {
     StationConfig,
 } from "@/game/types";
 import { CREW_BASE_PRICES } from "@/game/constants/crew";
-import { generateCrewTraits } from "@/game/crew/utils";
+import { generateCrewTraits, getRandomName } from "@/game/crew/utils";
 import { RACES } from "@/game/constants/races";
 
 // Module pools by tier level
@@ -1089,7 +1089,7 @@ export function generateStationCrew(
         const level = 1 + Math.floor(rand3 * 3); // Level 1-3
         const levelMod = level > 1 ? 1 + (level - 1) * 0.2 : 1;
 
-        const name = getRandomRaceName(raceId, profession, seed + i);
+        const name = getRandomName(profession, raceId, seed + i);
 
         // Calculate maxHealth with race bonus and trait effects
         const race = RACES[raceId];

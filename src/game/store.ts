@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import type {
     GameState,
-    Sector,
     Location,
     Contract,
     Module,
@@ -24,201 +23,31 @@ import {
     WEAPON_TYPES,
     DELIVERY_GOODS,
 } from "@/game/constants";
-import { initialModules, STARTING_FUEL } from "@/game/modules";
-import { initialCrew } from "@/game/crew";
 import { generateGalaxy } from "@/game/galaxy";
 import { RACES } from "@/game/constants/races";
 import { CREW_TRAITS } from "@/game/constants/crew";
 import { PLANET_SPECIALIZATIONS } from "@/game/constants/planets";
-import { getRandomName } from "@/game/crew/utils";
+import { getRandomName, giveCrewExperience } from "@/game/crew/utils";
 import {
     getMutationTraitDesc,
     getMutationTraitName,
 } from "@/game/traits/utils";
 import { MUTATION_TRAITS } from "@/game/traits/consts";
 import { getRandomUndiscoveredArtifact } from "@/game/artifacts/utils";
-import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { getBossById } from "@/game/bosses/utils";
 import { determineSignalOutcome } from "@/game/signals/utils";
 import { typedKeys } from "@/lib/utils";
-
-// Initialize station prices and stock
-const initializeStationData = (
-    sectors: Sector[],
-): {
-    prices: Record<string, Record<string, { buy: number; sell: number }>>;
-    stock: Record<string, Record<string, number>>;
-} => {
-    const prices: Record<
-        string,
-        Record<string, { buy: number; sell: number }>
-    > = {};
-    const stock: Record<string, Record<string, number>> = {};
-
-    sectors.forEach((sector) => {
-        sector.locations.forEach((loc) => {
-            if (loc.type === "station" && loc.stationId) {
-                prices[loc.stationId] = {};
-                stock[loc.stationId] = {};
-
-                // Get station config for discounts
-                const stationConfig = loc.stationConfig;
-                const mineralDiscount = stationConfig?.mineralDiscount ?? 1;
-                const rareMineralDiscount =
-                    stationConfig?.rareMineralDiscount ?? 1;
-                const priceDiscount = stationConfig?.priceDiscount ?? 1;
-
-                for (const goodId of typedKeys(TRADE_GOODS)) {
-                    const good = TRADE_GOODS[goodId];
-                    const priceVar = 0.7 + Math.random() * 0.6;
-                    const sellPrice = Math.floor(
-                        good.basePrice * priceVar * priceDiscount,
-                    );
-
-                    // Apply discounts for mining stations
-                    let buyPrice = Math.floor(sellPrice * 1.6);
-                    if (goodId === "minerals") {
-                        buyPrice = Math.floor(buyPrice * mineralDiscount);
-                    } else if (goodId === "rare_minerals") {
-                        buyPrice = Math.floor(buyPrice * rareMineralDiscount);
-                    }
-
-                    prices[loc.stationId][goodId] = {
-                        buy: buyPrice,
-                        sell: sellPrice,
-                    };
-                    stock[loc.stationId][goodId] =
-                        20 + Math.floor(Math.random() * 30);
-                }
-            }
-        });
-    });
-
-    return { prices, stock };
-};
-
-const sectors = generateGalaxy();
-const { prices, stock } = initializeStationData(sectors);
-
-// Initial state
-const initialState: GameState = {
-    turn: 1,
-    credits: 1000,
-    currentSector: sectors[0], // Start in first tier 1 sector
-    currentLocation: null,
-    gameMode: "galaxy_map",
-    previousGameMode: null,
-    traveling: null,
-    ship: {
-        armor: initialModules.length,
-        shields: 0,
-        maxShields: 0,
-        crewCapacity: 5,
-        modules: initialModules,
-        gridSize: 5,
-        cargo: [],
-        tradeGoods: [],
-        fuel: STARTING_FUEL,
-        maxFuel: STARTING_FUEL,
-        mergeTraits: [], // Traits from xenosymbiont merging with ship
-    },
-    crew: initialCrew,
-    galaxy: { sectors },
-    activeContracts: [],
-    completedContractIds: [], // Track completed contracts to prevent retaking
-    shipQuestsTaken: [], // Track ships where quest was taken
-    completedLocations: [],
-    stationInventory: {},
-    stationPrices: prices,
-    stationStock: stock,
-    friendlyShipStock: {}, // Stock on friendly ships
-    currentCombat: null,
-    log: [],
-    randomEventCooldown: 0,
-    scoutingMissions: [],
-    hiredCrew: {},
-    hiredCrewFromShips: [], // Track friendly ships where crew was hired
-    artifacts: ANCIENT_ARTIFACTS.map((a) => ({ ...a })), // Clone artifacts for game state
-    knownRaces: ["human"], // Player starts knowing humans
-    battleResult: null, // Results of last battle
-    gameOver: false, // Game over state
-    gameOverReason: null, // Reason for game over
-    gameVictory: false, // Victory state (reached tier 4)
-    gameVictoryReason: null, // Reason for victory
-    activeEffects: [], // Active planet specialization effects
-    planetCooldowns: {}, // Track cooldowns per planet
-};
-
-// Helper function to get active assignment (combat or civilian based on context)
-const getActiveAssignment = (
-    crew: CrewMember,
-    isCombat: boolean,
-): string | null => {
-    return isCombat ? crew.combatAssignment : crew.assignment;
-};
-
-// Sound effects helper
-const playSound = (
-    type: "click" | "success" | "error" | "combat" | "travel",
-) => {
-    if (typeof window === "undefined") return;
-    const freqMap: Record<string, number> = {
-        click: 800,
-        success: 1200,
-        error: 400,
-        combat: 600,
-        travel: 1000,
-    };
-    const freq = freqMap[type] || 800;
-    try {
-        const ctx = new window.AudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.value = freq;
-        osc.type = "square";
-        gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.1);
-    } catch {
-        // Audio not available
-    }
-};
-
-// LocalStorage helpers
-const STORAGE_KEY = "star-wanderer-save";
-
-const saveToLocalStorage = (state: GameState) => {
-    if (typeof window === "undefined") return;
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (e) {
-        console.error("Failed to save game:", e);
-    }
-};
-
-const loadFromLocalStorage = (): GameState | null => {
-    if (typeof window === "undefined") return null;
-    try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (!saved) return null;
-        return JSON.parse(saved) as GameState;
-    } catch (e) {
-        console.error("Failed to load game:", e);
-        return null;
-    }
-};
-
-const clearLocalStorage = () => {
-    if (typeof window === "undefined") return;
-    try {
-        localStorage.removeItem(STORAGE_KEY);
-    } catch (e) {
-        console.error("Failed to clear save:", e);
-    }
-};
+import { initializeStationData } from "@/game/stations";
+import { initialState } from "./initial";
+import { getActiveAssignment } from "./crew";
+import { playSound } from "@/sounds";
+import {
+    clearLocalStorage,
+    loadFromLocalStorage,
+    saveToLocalStorage,
+} from "./saves/utils";
+import { handleSurvivorCapsuleDelivery } from "./contracts/handleSurvivorCapsuleDelivery";
+import { areAllModulesConnected } from "./modules";
 
 // Game store
 export const useGameStore = create<
@@ -6508,7 +6337,11 @@ export const useGameStore = create<
         const newCrew: CrewMember = {
             id: Date.now(),
             name:
-                crewData.name || getRandomName(crewData.profession || "pilot"),
+                crewData.name ||
+                getRandomName(
+                    crewData.profession || "pilot",
+                    crewData.race || "human",
+                ),
             race: crewData.race || "human",
             profession: crewData.profession || "pilot",
             level: crewData.level || 1,
@@ -7270,7 +7103,7 @@ export const useGameStore = create<
 
                     const newCrew: CrewMember = {
                         id: Date.now(),
-                        name: getRandomName(newProfession),
+                        name: getRandomName(newProfession, "human"),
                         race: "human",
                         profession: newProfession,
                         level: 1,
@@ -8044,89 +7877,3 @@ export const useGameStore = create<
         return true;
     },
 }));
-
-// Helper function to handle survivor capsule delivery
-function handleSurvivorCapsuleDelivery(locationType: "station" | "planet") {
-    const state = useGameStore.getState();
-    const survivorCapsuleIndex = state.ship.cargo.findIndex(
-        (c) => c.item === "Капсула с выжившими",
-    );
-
-    if (survivorCapsuleIndex !== -1) {
-        const capsule = state.ship.cargo[survivorCapsuleIndex];
-        const reward = capsule.rewardValue || 75;
-
-        // Remove capsule and give reward
-        useGameStore.setState((s) => ({
-            credits: s.credits + reward,
-            ship: {
-                ...s.ship,
-                cargo: s.ship.cargo.filter(
-                    (_, idx) => idx !== survivorCapsuleIndex,
-                ),
-            },
-        }));
-
-        // Give experience to all crew members
-        const expReward = CONTRACT_REWARDS.rescueSurvivors.baseExp;
-        giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
-
-        state.addLog(
-            `🚀 Выжившие доставлены на ${locationType === "station" ? "станцию" : "планету"}! Награда: +${reward}₢`,
-            "info",
-        );
-    }
-}
-
-// Helper function for module connectivity
-function areAllModulesConnected(modules: Module[]): boolean {
-    if (modules.length === 0) return true;
-    const visited = new Set<number>();
-    const queue = [modules[0].id];
-    visited.add(modules[0].id);
-
-    while (queue.length > 0) {
-        const currentId = queue.shift();
-        const current = modules.find((m) => m.id === currentId);
-        if (!current) continue;
-
-        for (const other of modules) {
-            if (visited.has(other.id)) continue;
-            const touchingH =
-                (current.x + current.width === other.x ||
-                    current.x === other.x + other.width) &&
-                current.y < other.y + other.height &&
-                current.y + current.height > other.y;
-            const touchingV =
-                (current.y + current.height === other.y ||
-                    current.y === other.y + other.height) &&
-                current.x < other.x + other.width &&
-                current.x + current.width > other.x;
-            if (touchingH || touchingV) {
-                visited.add(other.id);
-                queue.push(other.id);
-            }
-        }
-    }
-    return visited.size === modules.length;
-}
-
-// ═══════════════════════════════════════════════════════════════
-// HELPER FUNCTIONS - Contract rewards & crew experience
-// ═══════════════════════════════════════════════════════════════
-
-// Give experience to all crew members
-function giveCrewExperience(expAmount: number, logMessage?: string) {
-    const state = useGameStore.getState();
-
-    useGameStore.setState((s) => ({
-        crew: s.crew.map((c) => ({
-            ...c,
-            exp: c.exp + expAmount,
-        })),
-    }));
-
-    if (logMessage) {
-        state.addLog(logMessage, "info");
-    }
-}

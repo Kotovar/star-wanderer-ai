@@ -7,7 +7,7 @@ import { DELIVERY_GOODS } from "@/game/constants/contracts";
 import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
 import type { Quality } from "@/game/types";
-import { getRandomRaceName } from "@/game/races/utils";
+import { getRandomName } from "@/game/crew/utils";
 import { generateCrewTraits } from "@/game/crew/utils";
 import { PROFESSION_NAMES, CREW_BASE_PRICES } from "@/game/constants/crew";
 import { Goods } from "@/game/types/goods";
@@ -118,9 +118,9 @@ export function FriendlyShipPanel() {
                 Math.floor(seedRandom(seed + 103) * raceOptions.length)
             ];
         const crewRace = RACES[crewRaceId];
-        const crewName = getRandomRaceName(
-            crewRaceId,
+        const crewName = getRandomName(
             availableProfession,
+            crewRaceId,
             seed + 104,
         );
 

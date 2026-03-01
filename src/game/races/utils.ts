@@ -1,6 +1,5 @@
-import { PROFESSION_NAMES } from "@/game/constants/crew";
-import { RACE_LAST_NAMES, RACES } from "@/game/constants/races";
-import type { Profession, Race, RaceId } from "@/game/types";
+import { RACES } from "@/game/constants/races";
+import type { Race, RaceId } from "@/game/types";
 
 // Get race by ID
 export const getRaceById = (id: RaceId): Race | undefined => RACES[id];
@@ -38,38 +37,4 @@ export const getRandomRace = (
     }
 
     return available[0];
-};
-
-// Generate race-appropriate name
-export const getRandomRaceName = (
-    raceId: RaceId,
-    profession: Profession,
-    seed?: number,
-): string => {
-    const profName = PROFESSION_NAMES[profession];
-    const raceNames = RACE_LAST_NAMES[raceId];
-
-    let index: number;
-    if (seed !== undefined) {
-        // Deterministic selection based on seed
-        // Combine seed with raceId and profession for more uniqueness
-        let combinedSeed = seed;
-        for (let i = 0; i < raceId.length; i++) {
-            combinedSeed =
-                (combinedSeed << 5) - combinedSeed + raceId.charCodeAt(i);
-        }
-        for (let i = 0; i < profession.length; i++) {
-            combinedSeed =
-                (combinedSeed << 5) - combinedSeed + profession.charCodeAt(i);
-        }
-        const hash = Math.abs(Math.sin(combinedSeed) * 10000);
-        index = Math.floor(hash % raceNames.length);
-    } else {
-        // Fallback to random for backward compatibility
-        index = Math.floor(Math.random() * raceNames.length);
-    }
-
-    const lastName = raceNames[index];
-
-    return `${profName} ${lastName}`;
 };
