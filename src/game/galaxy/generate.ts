@@ -16,7 +16,7 @@ import {
 } from "./config";
 import { SHIP_TYPES, STATION_TYPES } from "./consts";
 import { PLANET_TYPES } from "@/game/constants/planets";
-import { getRandomRace } from "@/game/races/utils";
+import { getRandomRace, getDominantRaceForPlanet } from "@/game/races/utils";
 import { getRandomBossForTier } from "@/game/bosses/utils";
 import { ANCIENT_BOSSES } from "@/game/constants/bosses";
 
@@ -108,11 +108,11 @@ export const generatePlanet = (
         ? true
         : Math.random() < EMPTY_PLANET_CHANCE[`tier${tier}`];
 
-    let dominantRace: RaceId = "human";
+    let dominantRace: RaceId | undefined = undefined;
     let population: number | undefined;
 
     if (!isEmpty) {
-        dominantRace = getRandomRace([]);
+        dominantRace = getDominantRaceForPlanet(planetType);
         population = 100 + Math.floor(Math.random() * 900);
     }
 

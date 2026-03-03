@@ -2,7 +2,7 @@ import { PLANET_TYPES } from "@/game/constants/planets";
 import { GalaxyTier, Sector } from "@/game/types";
 import { ANOMALY_COLORS, MIN_REQUIREMENTS, STATION_CONFIG } from "./config";
 import { STATION_TYPES } from "./consts";
-import { getRandomRace } from "@/game/races";
+import { getRandomRace, getDominantRaceForPlanet } from "@/game/races/utils";
 
 /**
  * Обеспечивает минимальное количество аномалий в секторе
@@ -41,10 +41,11 @@ export const ensureColonizedPlanet = (sector: Sector): void => {
 
     if (emptyPlanetIdx >= 0) {
         const planet = sector.locations[emptyPlanetIdx];
+        const planetType = planet.planetType || "Лесная";
         sector.locations[emptyPlanetIdx] = {
             ...planet,
             isEmpty: false,
-            dominantRace: getRandomRace([]),
+            dominantRace: getDominantRaceForPlanet(planetType),
             population: 100 + Math.floor(Math.random() * 900),
             contracts: [],
         };
@@ -57,7 +58,7 @@ export const ensureColonizedPlanet = (sector: Sector): void => {
             name: `${String.fromCharCode(67 + (sector.locations.length % 26))}-${planetType.substring(0, 3)}`,
             planetType,
             isEmpty: false,
-            dominantRace: getRandomRace([]),
+            dominantRace: getDominantRaceForPlanet(planetType),
             population: 100 + Math.floor(Math.random() * 900),
             contracts: [],
         });
@@ -66,6 +67,7 @@ export const ensureColonizedPlanet = (sector: Sector): void => {
 
 /**
  * Обеспечивает наличие хотя бы одной станции
+ * Доминирующая раса на станции выбирается на основе рас планет в секторе
  */
 export const ensureStation = (sector: Sector): void => {
     const stationCount = sector.locations.filter(
@@ -77,6 +79,22 @@ export const ensureStation = (sector: Sector): void => {
     const stationType =
         STATION_TYPES[Math.floor(Math.random() * STATION_TYPES.length)];
 
+    // Выбираем доминирующую расу для станции на основе рас планет в секторе
+    const planets = sector.locations.filter(
+        (l) => l.type === "planet" && !l.isEmpty && l.dominantRace,
+    );
+
+    let stationRace;
+    if (planets.length > 0) {
+        // Берём случайную планету и используем её расу
+        const randomPlanet =
+            planets[Math.floor(Math.random() * planets.length)];
+        stationRace = randomPlanet.dominantRace;
+    } else {
+        // Если нет планет, выбираем случайную расу
+        stationRace = getRandomRace([]);
+    }
+
     sector.locations.push({
         id: `${sector.id}-extra-station`,
         stationId: `station-${sector.id}-extra`,
@@ -84,7 +102,7 @@ export const ensureStation = (sector: Sector): void => {
         name: `Станция ${String.fromCharCode(65 + (sector.locations.length % 26))}`,
         stationType,
         stationConfig: STATION_CONFIG[stationType],
-        dominantRace: getRandomRace([]),
+        dominantRace: stationRace,
         population: 50 + Math.floor(Math.random() * 200),
     });
 };

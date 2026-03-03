@@ -181,8 +181,8 @@ export const RACES: Record<RaceId, Race> = {
             ],
         },
         crewBonuses: {
-            combat: 0.35, // +35% combat efficiency (increased)
-            health: 15, // +15 health (tough)
+            combat: 0.35,
+            health: 15,
         },
         specialTraits: [
             {
