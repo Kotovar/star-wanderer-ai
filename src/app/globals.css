@@ -1,2 +1,518 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+
+/* ═══════════════════════════════════════════════════════════════
+   PLANET BACKGROUNDS - Unique visual styles for each planet type
+   ═══════════════════════════════════════════════════════════════ */
+
+.planet-bg-пустынная {
+    background: linear-gradient(
+        135deg,
+        #1a0f0a 0%,
+        #3d2310 25%,
+        #5c3a1a 50%,
+        #3d2310 75%,
+        #1a0f0a 100%
+    );
+    position: relative;
+    overflow: hidden;
+}
+.planet-bg-пустынная::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+        ellipse at center,
+        transparent 0%,
+        transparent 60%,
+        rgba(255, 140, 0, 0.1) 100%
+    );
+    animation: desert-heat 8s ease-in-out infinite;
+}
+@keyframes desert-heat {
+    0%,
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.1) rotate(5deg);
+        opacity: 0.8;
+    }
+}
+
+.planet-bg-ледяная {
+    background: linear-gradient(
+        135deg,
+        #0a1620 0%,
+        #1a3a5c 25%,
+        #2d5a87 50%,
+        #1a3a5c 75%,
+        #0a1620 100%
+    );
+    position: relative;
+    overflow: hidden;
+}
+.planet-bg-ледяная::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(
+            circle at 20% 30%,
+            rgba(255, 255, 255, 0.4) 0%,
+            transparent 2%
+        ),
+        radial-gradient(
+            circle at 80% 70%,
+            rgba(255, 255, 255, 0.3) 0%,
+            transparent 3%
+        ),
+        radial-gradient(
+            circle at 40% 80%,
+            rgba(255, 255, 255, 0.3) 0%,
+            transparent 2%
+        );
+    animation: ice-sparkle 6s ease-in-out infinite;
+}
+@keyframes ice-sparkle {
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.planet-bg-лесная {
+    background: linear-gradient(
+        135deg,
+        #0a1a0f 0%,
+        #1a4a2a 25%,
+        #2d6a3f 50%,
+        #1a4a2a 75%,
+        #0a1a0f 100%
+    );
+    position: relative;
+    overflow: hidden;
+}
+.planet-bg-лесная::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+        ellipse at center,
+        rgba(0, 255, 100, 0.15) 0%,
+        transparent 70%
+    );
+    animation: forest-breathe 10s ease-in-out infinite;
+}
+@keyframes forest-breathe {
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.planet-bg-вулканическая {
+    background: linear-gradient(
+        135deg,
+        #1a0a0a 0%,
+        #4a1a1a 25%,
+        #6a2a2a 50%,
+        #4a1a1a 75%,
+        #1a0a0a 100%
+    );
+    position: relative;
+    overflow: hidden;
+}
+.planet-bg-вулканическая::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(
+            circle at 30% 40%,
+            rgba(255, 100, 0, 0.6) 0%,
+            transparent 10%
+        ),
+        radial-gradient(
+            circle at 70% 60%,
+            rgba(255, 50, 0, 0.5) 0%,
+            transparent 8%
+        ),
+        radial-gradient(
+            circle at 50% 80%,
+            rgba(255, 80, 0, 0.4) 0%,
+            transparent 12%
+        );
+    animation: volcano-pulse 4s ease-in-out infinite;
+}
+@keyframes volcano-pulse {
+    0%,
+    100% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+}
+
+.planet-bg-океаническая {
+    background: linear-gradient(
+        135deg,
+        #0a1a2a 0%,
+        #1a4a6a 25%,
+        #2d7a9a 50%,
+        #1a4a6a 75%,
+        #0a1a2a 100%
+    );
+    position: relative;
+    overflow: hidden;
+}
+.planet-bg-океаническая::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 300%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(0, 150, 200, 0.1) 10%,
+        transparent 20%
+    );
+    animation: ocean-waves 12s linear infinite;
+}
+@keyframes ocean-waves {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(33%);
+    }
+}
+
+.planet-bg-газовый-гигант {
+    background: linear-gradient(
+        135deg,
+        #1a1020 0%,
+        #4a2a6a 25%,
+        #6a3a9a 50%,
+        #4a2a6a 75%,
+        #1a1020 100%
+    );
+    position: relative;
+    overflow: hidden;
+}
+.planet-bg-газовый-гигант::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        180deg,
+        transparent 0%,
+        rgba(150, 100, 200, 0.1) 15%,
+        transparent 30%,
+        rgba(100, 50, 150, 0.15) 45%,
+        transparent 60%
+    );
+    animation: gas-bands 20s linear infinite;
+}
+@keyframes gas-bands {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 0 100%;
+    }
+}
+
+.planet-bg-радиоактивная {
+    background: linear-gradient(
+        135deg,
+        #0a1a0a 0%,
+        #2a4a2a 25%,
+        #3a6a3a 50%,
+        #2a4a2a 75%,
+        #0a1a0a 100%
+    );
+    position: relative;
+    overflow: hidden;
+}
+.planet-bg-радиоактивная::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+        circle at 50% 50%,
+        rgba(100, 255, 100, 0.2) 0%,
+        transparent 50%
+    );
+    animation: radiation-glow 3s ease-in-out infinite;
+}
+@keyframes radiation-glow {
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.planet-bg-тропическая {
+    background: linear-gradient(
+        135deg,
+        #0a1a10 0%,
+        #1a5a3a 25%,
+        #2d8a5a 50%,
+        #1a5a3a 75%,
+        #0a1a10 100%
+    );
+    position: relative;
+    overflow: hidden;
+}
+.planet-bg-тропическая::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(
+            circle at 20% 20%,
+            rgba(0, 255, 150, 0.3) 0%,
+            transparent 15%
+        ),
+        radial-gradient(
+            circle at 80% 80%,
+            rgba(0, 200, 100, 0.3) 0%,
+            transparent 20%
+        );
+    animation: tropical-humidity 8s ease-in-out infinite;
+}
+@keyframes tropical-humidity {
+    0%,
+    100% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.9;
+        transform: scale(1.1);
+    }
+}
+
+.planet-bg-арктическая {
+    background: linear-gradient(
+        135deg,
+        #0a1018 0%,
+        #1a3a4a 25%,
+        #2d5a6a 50%,
+        #1a3a4a 75%,
+        #0a1018 100%
+    );
+    position: relative;
+    overflow: hidden;
+}
+.planet-bg-арктическая::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(
+            circle at 30% 30%,
+            rgba(255, 255, 255, 0.5) 0%,
+            transparent 3%
+        ),
+        radial-gradient(
+            circle at 70% 70%,
+            rgba(255, 255, 255, 0.4) 0%,
+            transparent 2%
+        ),
+        radial-gradient(
+            circle at 50% 50%,
+            rgba(200, 230, 255, 0.3) 0%,
+            transparent 25%
+        );
+    animation: arctic-ice 7s ease-in-out infinite;
+}
+@keyframes arctic-ice {
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.planet-bg-разрушенная-войной {
+    background: linear-gradient(
+        135deg,
+        #0a0a0a 0%,
+        #2a2020 25%,
+        #3a3025 50%,
+        #2a2020 75%,
+        #0a0a0a 100%
+    );
+    position: relative;
+    overflow: hidden;
+}
+.planet-bg-разрушенная-войной::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(
+            circle at 25% 35%,
+            rgba(255, 100, 50, 0.3) 0%,
+            transparent 8%
+        ),
+        radial-gradient(
+            circle at 75% 65%,
+            rgba(255, 80, 30, 0.25) 0%,
+            transparent 10%
+        ),
+        linear-gradient(
+            45deg,
+            transparent 48%,
+            rgba(50, 30, 30, 0.5) 49%,
+            rgba(50, 30, 30, 0.5) 51%,
+            transparent 52%
+        );
+    animation: war-scars 10s ease-in-out infinite;
+}
+@keyframes war-scars {
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.planet-bg-планета-кольцо {
+    background: linear-gradient(
+        135deg,
+        #0a0a1a 0%,
+        #1a2a4a 25%,
+        #2d4a7a 50%,
+        #1a2a4a 75%,
+        #0a0a1a 100%
+    );
+    position: relative;
+    overflow: hidden;
+}
+.planet-bg-планета-кольцо::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -50%;
+    width: 200%;
+    height: 20%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(150, 150, 200, 0.4) 20%,
+        rgba(200, 200, 255, 0.5) 50%,
+        rgba(150, 150, 200, 0.4) 80%,
+        transparent 100%
+    );
+    transform: translateY(-50%) rotate(-15deg);
+    animation: ring-rotate 30s linear infinite;
+}
+@keyframes ring-rotate {
+    0% {
+        transform: translateY(-50%) rotate(-15deg) scaleX(1);
+    }
+    50% {
+        transform: translateY(-50%) rotate(-15deg) scaleX(1.05);
+    }
+    100% {
+        transform: translateY(-50%) rotate(-15deg) scaleX(1);
+    }
+}
+
+.planet-bg-приливная {
+    background: linear-gradient(
+        135deg,
+        #0a1520 0%,
+        #1a3a5a 25%,
+        #2d5a8a 50%,
+        #1a3a5a 75%,
+        #0a1520 100%
+    );
+    position: relative;
+    overflow: hidden;
+}
+.planet-bg-приливная::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(
+            circle at 30% 40%,
+            rgba(100, 200, 255, 0.4) 0%,
+            transparent 12%
+        ),
+        radial-gradient(
+            circle at 70% 60%,
+            rgba(80, 180, 255, 0.35) 0%,
+            transparent 10%
+        ),
+        radial-gradient(
+            circle at 50% 80%,
+            rgba(120, 220, 255, 0.3) 0%,
+            transparent 15%
+        );
+    animation: tidal-bulge 6s ease-in-out infinite;
+}
+@keyframes tidal-bulge {
+    0%,
+    100% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.9;
+        transform: scale(1.08);
+    }
+}
