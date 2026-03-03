@@ -695,10 +695,27 @@ export const useGameStore = create<
             }
         });
 
+        // Apply crew_exp technology bonuses
+        const currentState = get();
+        const crewExpTechs = currentState.research.researchedTechs.filter(
+            (techId) => {
+                const tech = RESEARCH_TREE[techId];
+                return tech.bonuses.some((b) => b.type === "crew_exp");
+            },
+        );
+        crewExpTechs.forEach((techId) => {
+            const tech = RESEARCH_TREE[techId];
+            tech.bonuses.forEach((bonus) => {
+                if (bonus.type === "crew_exp") {
+                    expMultiplier += bonus.value;
+                }
+            });
+        });
+
         const finalAmount = Math.floor(amount * expMultiplier);
 
-        set((state) => ({
-            crew: state.crew.map((c) => {
+        set((s) => ({
+            crew: s.crew.map((c) => {
                 if (c.id !== crewMember.id) return c;
                 const newExp = (c.exp || 0) + finalAmount;
                 const expNeeded = (c.level || 1) * 100;
@@ -8380,11 +8397,13 @@ export const useGameStore = create<
             const completedTech = RESEARCH_TREE[completedTechId];
 
             // Apply technology bonuses
-            let healthBonusApplied = false;
             let powerBonusApplied = false;
             let shieldBonusApplied = false;
             let weaponDamageBonusApplied = false;
             let scanRangeBonusApplied = false;
+            let cargoCapacityBonusApplied = false;
+            let crewHealthBonusApplied = false;
+            let crewExpBonusApplied = false;
 
             completedTech.bonuses.forEach((bonus) => {
                 if (bonus.type === "module_health" && bonus.value > 0) {
@@ -8405,7 +8424,6 @@ export const useGameStore = create<
                             }),
                         },
                     }));
-                    healthBonusApplied = true;
                 }
 
                 if (bonus.type === "module_power" && bonus.value > 0) {
@@ -8477,25 +8495,69 @@ export const useGameStore = create<
                     }));
                     scanRangeBonusApplied = true;
                 }
+
+                if (bonus.type === "cargo_capacity" && bonus.value > 0) {
+                    // Apply cargo capacity bonus to all cargo modules
+                    set((s) => ({
+                        ship: {
+                            ...s.ship,
+                            modules: s.ship.modules.map((m) => {
+                                if (m.type === "cargo") {
+                                    return {
+                                        ...m,
+                                        capacity: Math.floor(
+                                            (m.capacity || 40) *
+                                                (1 + bonus.value),
+                                        ),
+                                    };
+                                }
+                                return m;
+                            }),
+                        },
+                    }));
+                    cargoCapacityBonusApplied = true;
+                }
+
+                if (bonus.type === "crew_health" && bonus.value > 0) {
+                    // Apply crew health bonus to all crew members
+                    set((s) => ({
+                        crew: s.crew.map((c) => {
+                            const newMaxHealth = Math.floor(
+                                (c.maxHealth || 100) * (1 + bonus.value),
+                            );
+                            return {
+                                ...c,
+                                maxHealth: newMaxHealth,
+                                health: Math.min(c.health, newMaxHealth),
+                            };
+                        }),
+                    }));
+                    crewHealthBonusApplied = true;
+                }
+
+                if (bonus.type === "crew_exp" && bonus.value > 0) {
+                    // Crew exp bonus - tracked via researchedTechs and applied in gainExp
+                    crewExpBonusApplied = true;
+                }
             });
 
             // Apply bonuses (for now just mark as researched, actual bonuses applied elsewhere)
-            set({
+            set((s) => ({
                 research: {
-                    ...state.research,
+                    ...s.research,
                     researchedTechs: [
-                        ...state.research.researchedTechs,
+                        ...s.research.researchedTechs,
                         completedTechId,
                     ],
                     discoveredTechs: [
                         ...new Set([
-                            ...state.research.discoveredTechs,
+                            ...s.research.discoveredTechs,
                             ...getAdjacentTechs(completedTechId),
                         ]),
                     ],
                     activeResearch: null,
                 },
-            });
+            }));
 
             get().addLog(
                 `✅ Исследование завершено: ${completedTech.name}`,
@@ -8505,11 +8567,6 @@ export const useGameStore = create<
                 `Получены бонусы: ${completedTech.bonuses.map((b) => b.description).join(", ")}`,
                 "info",
             );
-
-            if (healthBonusApplied) {
-                get().addLog(`🛡️ Здоровье модулей увеличено`, "info");
-                get().updateShipStats();
-            }
 
             if (powerBonusApplied) {
                 get().addLog(`⚡ Мощность реакторов увеличена`, "info");
@@ -8529,6 +8586,19 @@ export const useGameStore = create<
             if (scanRangeBonusApplied) {
                 get().addLog(`📡 Дальность сканирования увеличена`, "info");
                 get().updateShipStats();
+            }
+
+            if (cargoCapacityBonusApplied) {
+                get().addLog(`📦 Вместимость трюма увеличена`, "info");
+                get().updateShipStats();
+            }
+
+            if (crewHealthBonusApplied) {
+                get().addLog(`💉 Здоровье экипажа увеличено`, "info");
+            }
+
+            if (crewExpBonusApplied) {
+                get().addLog(`🎓 Опыт экипажа увеличен`, "info");
             }
 
             playSound("success");
