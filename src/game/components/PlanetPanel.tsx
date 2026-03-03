@@ -14,6 +14,7 @@ import type { DeliveryGoods } from "@/game/types/contracts";
 import { TRADE_GOODS } from "@/game/constants/goods";
 import type { Goods } from "@/game/types/goods";
 import { getPlanetBackgroundClass } from "@/game/constants/planetBackgrounds";
+import { PlanetVisual } from "./PlanetVisual";
 
 export function PlanetPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
@@ -203,7 +204,7 @@ export function PlanetPanel() {
                 </div>
 
                 {/* Population and Race info */}
-                <div className="flex items-center gap-3 text-sm">
+                <div className="flex items-center gap-3 text-sm relative z-20">
                     {race && (
                         <div
                             className="flex items-center gap-2 px-3 py-1.5 rounded border"
@@ -251,6 +252,9 @@ export function PlanetPanel() {
                             </Button>
                         )}
                 </div>
+
+                {/* Planet Visual */}
+                <PlanetVisual planetType={currentLocationPlanetType} />
 
                 <div className="text-sm">
                     Населённая планета.
