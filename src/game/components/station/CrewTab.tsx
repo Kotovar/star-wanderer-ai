@@ -69,7 +69,7 @@ export function CrewTab({
                 open={!!selectedCrew}
                 onOpenChange={() => setSelectedCrew(null)}
             >
-                <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md max-h-[90vh] overflow-y-auto">
+                <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md max-h-[90vh] overflow-y-auto w-[calc(100%-2rem)] md:w-auto">
                     <DialogHeader>
                         <DialogTitle className="text-[#ffb000] font-['Orbitron']">
                             ▸ {selectedCrew?.member.name}

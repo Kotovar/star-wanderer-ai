@@ -271,7 +271,7 @@ function ResearchContent({
 
             {/* Technology tree */}
             <div
-                className={`space-y-2 overflow-y-auto scrollbar-gutter-stable ${selectedTechnology ? "max-h-[20vh] md:max-h-[25vh]" : "max-h-[30vh] md:max-h-[35vh]"}`}
+                className={`space-y-2 overflow-y-auto scrollbar-gutter-stable min-h-[30vh] ${selectedTechnology ? "max-h-[20vh] md:max-h-[25vh]" : "max-h-[30vh] md:max-h-[35vh]"}`}
             >
                 {technologies.map((tech) => {
                     const isResearched = researchedTechs.includes(tech.id);
