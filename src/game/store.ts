@@ -779,6 +779,124 @@ export const useGameStore = create<
         // Process research
         get().processResearch();
 
+        // ═══════════════════════════════════════════════════════════════
+        // POWER MANAGEMENT - Disable modules if power deficit
+        // ═══════════════════════════════════════════════════════════════
+        const currentPower = get().getTotalPower();
+        const currentConsumption = get().getTotalConsumption();
+        const powerDeficit = currentConsumption - currentPower;
+
+        if (powerDeficit > 0) {
+            // Need to disable modules to balance power
+            const currentState = get();
+            const modulesByPriority = [
+                // Lowest priority (disable first)
+                { type: "cargo", name: "Грузовой отсек" },
+                { type: "fueltank", name: "Топливный бак" },
+                { type: "scanner", name: "Сканер" },
+                { type: "drill", name: "Бур" },
+                { type: "weaponbay", name: "Оружейная палуба" },
+                { type: "shield", name: "Генератор щита" },
+                { type: "engine", name: "Двигатель" },
+                // Highest priority (never disable)
+                // cockpit, lifesupport, reactor - essential modules
+            ];
+
+            let disabledCount = 0;
+            const updatedModules = [...currentState.ship.modules];
+
+            // Calculate current power after each disable
+            let deficit = powerDeficit;
+
+            for (const priority of modulesByPriority) {
+                if (deficit <= 0) break;
+
+                // Find enabled modules of this type
+                const enabledModules = updatedModules.filter(
+                    (m) =>
+                        m.type === priority.type && !m.disabled && m.health > 0,
+                );
+
+                for (const mod of enabledModules) {
+                    if (deficit <= 0) break;
+
+                    // Calculate power saved by disabling this module
+                    const powerSaved = mod.consumption || 0;
+                    if (powerSaved > 0) {
+                        // Disable the module
+                        const moduleIndex = updatedModules.findIndex(
+                            (m) => m.id === mod.id,
+                        );
+                        if (moduleIndex >= 0) {
+                            updatedModules[moduleIndex] = {
+                                ...mod,
+                                disabled: true,
+                            };
+                            deficit -= powerSaved;
+                            disabledCount++;
+                            get().addLog(
+                                `⚠️ ${priority.name} отключен (нехватка энергии)`,
+                                "warning",
+                            );
+                        }
+                    }
+                }
+            }
+
+            if (disabledCount > 0) {
+                set((s) => ({
+                    ship: {
+                        ...s.ship,
+                        modules: updatedModules,
+                    },
+                }));
+                get().updateShipStats();
+                get().addLog(
+                    `⚡ Отключено модулей: ${disabledCount}. Доступно энергии: ${get().getTotalPower() - get().getTotalConsumption()}`,
+                    "warning",
+                );
+            } else {
+                // Cannot disable more modules - critical power shortage
+                get().addLog(
+                    `⚡ КРИТИЧЕСКАЯ НЕХВАТКА ЭНЕРГИИ! Потребление: ${currentConsumption}, Генерация: ${currentPower}`,
+                    "error",
+                );
+            }
+        } else {
+            // Power surplus - re-enable disabled modules if possible
+            const currentState = get();
+            const disabledModules = currentState.ship.modules.filter(
+                (m) => m.disabled && m.health > 0,
+            );
+
+            if (disabledModules.length > 0) {
+                // Check if we have enough power to re-enable all disabled modules
+                const powerNeeded = disabledModules.reduce(
+                    (sum, m) => sum + (m.consumption || 0),
+                    0,
+                );
+
+                if (currentPower >= currentConsumption + powerNeeded) {
+                    // We have enough power to re-enable all modules
+                    set((s) => ({
+                        ship: {
+                            ...s.ship,
+                            modules: s.ship.modules.map((m) =>
+                                m.disabled && m.health > 0
+                                    ? { ...m, disabled: false }
+                                    : m,
+                            ),
+                        },
+                    }));
+                    get().updateShipStats();
+                    get().addLog(
+                        `⚡ Включено модулей: ${disabledModules.length}. Баланс: ${get().getTotalPower() - get().getTotalConsumption()}`,
+                        "info",
+                    );
+                }
+            }
+        }
+
         // Shield regen
         let shieldRegen = Math.floor(Math.random() * 6) + 5;
 
