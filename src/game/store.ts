@@ -395,6 +395,26 @@ export const useGameStore = create<
             );
         }
 
+        // Apply weapon damage technology bonuses
+        const weaponDamageTechs = state.research.researchedTechs.filter(
+            (techId) => {
+                const tech = RESEARCH_TREE[techId];
+                return tech.bonuses.some((b) => b.type === "weapon_damage");
+            },
+        );
+        let techDamageBonus = 0;
+        weaponDamageTechs.forEach((techId) => {
+            const tech = RESEARCH_TREE[techId];
+            tech.bonuses.forEach((bonus) => {
+                if (bonus.type === "weapon_damage") {
+                    techDamageBonus = Math.max(techDamageBonus, bonus.value);
+                }
+            });
+        });
+        if (techDamageBonus > 0) {
+            dmg.total = Math.floor(dmg.total * (1 + techDamageBonus));
+        }
+
         // Apply crystalline artifactBonus (+15% to artifact effects)
         let artifactBonus = 0;
         state.crew.forEach((c) => {
@@ -519,6 +539,29 @@ export const useGameStore = create<
         );
         if (quantumScanner && scanners.length > 0) {
             maxRange += quantumScanner.effect.value || 5;
+        }
+
+        // Apply scan range technology bonuses
+        const scanRangeTechs = state.research.researchedTechs.filter(
+            (techId) => {
+                const tech = RESEARCH_TREE[techId];
+                return tech.bonuses.some((b) => b.type === "scan_range");
+            },
+        );
+        let techScanRangeBonus = 0;
+        scanRangeTechs.forEach((techId) => {
+            const tech = RESEARCH_TREE[techId];
+            tech.bonuses.forEach((bonus) => {
+                if (bonus.type === "scan_range") {
+                    techScanRangeBonus = Math.max(
+                        techScanRangeBonus,
+                        bonus.value,
+                    );
+                }
+            });
+        });
+        if (techScanRangeBonus > 0) {
+            maxRange = Math.floor(maxRange * (1 + techScanRangeBonus));
         }
 
         // Apply crystalline artifactBonus (+15% to artifact effects)
@@ -8339,6 +8382,9 @@ export const useGameStore = create<
             // Apply technology bonuses
             let healthBonusApplied = false;
             let powerBonusApplied = false;
+            let shieldBonusApplied = false;
+            let weaponDamageBonusApplied = false;
+            let scanRangeBonusApplied = false;
 
             completedTech.bonuses.forEach((bonus) => {
                 if (bonus.type === "module_health" && bonus.value > 0) {
@@ -8382,6 +8428,55 @@ export const useGameStore = create<
                     }));
                     powerBonusApplied = true;
                 }
+
+                if (bonus.type === "shield_strength" && bonus.value > 0) {
+                    // Apply shield strength bonus to shield modules
+                    set((s) => ({
+                        ship: {
+                            ...s.ship,
+                            modules: s.ship.modules.map((m) => {
+                                if (m.type === "shield") {
+                                    return {
+                                        ...m,
+                                        defense: Math.floor(
+                                            (m.defense || 0) *
+                                                (1 + bonus.value),
+                                        ),
+                                    };
+                                }
+                                return m;
+                            }),
+                        },
+                    }));
+                    shieldBonusApplied = true;
+                }
+
+                if (bonus.type === "weapon_damage" && bonus.value > 0) {
+                    // Weapon damage bonus - tracked via researchedTechs
+                    weaponDamageBonusApplied = true;
+                }
+
+                if (bonus.type === "scan_range" && bonus.value > 0) {
+                    // Apply scan range bonus to scanner modules
+                    set((s) => ({
+                        ship: {
+                            ...s.ship,
+                            modules: s.ship.modules.map((m) => {
+                                if (m.type === "scanner") {
+                                    return {
+                                        ...m,
+                                        scanRange: Math.floor(
+                                            (m.scanRange || 0) *
+                                                (1 + bonus.value),
+                                        ),
+                                    };
+                                }
+                                return m;
+                            }),
+                        },
+                    }));
+                    scanRangeBonusApplied = true;
+                }
             });
 
             // Apply bonuses (for now just mark as researched, actual bonuses applied elsewhere)
@@ -8418,6 +8513,21 @@ export const useGameStore = create<
 
             if (powerBonusApplied) {
                 get().addLog(`⚡ Мощность реакторов увеличена`, "info");
+                get().updateShipStats();
+            }
+
+            if (shieldBonusApplied) {
+                get().addLog(`🔵 Защита щитов увеличена`, "info");
+                get().updateShipStats();
+            }
+
+            if (weaponDamageBonusApplied) {
+                get().addLog(`🔴 Урон оружия увеличен`, "info");
+                get().updateShipStats();
+            }
+
+            if (scanRangeBonusApplied) {
+                get().addLog(`📡 Дальность сканирования увеличена`, "info");
                 get().updateShipStats();
             }
 
