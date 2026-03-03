@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGameStore } from "../store";
 import { HelpPanel } from "./HelpPanel";
 import { ActiveEffectsPanel } from "./ActiveEffectsPanel";
+import { ResearchPanel } from "./ResearchPanel";
 import {
     Dialog,
     DialogContent,
@@ -18,12 +19,14 @@ export function GameHeader() {
     const [showHelp, setShowHelp] = useState(false);
     const [showEffects, setShowEffects] = useState(false);
     const [showRestartDialog, setShowRestartDialog] = useState(false);
+    const [showResearchModal, setShowResearchModal] = useState(false);
     const turn = useGameStore((s) => s.turn);
     const credits = useGameStore((s) => s.credits);
     const currentSector = useGameStore((s) => s.currentSector);
     const artifacts = useGameStore((s) => s.artifacts);
     const activeEffects = useGameStore((s) => s.activeEffects);
     const showArtifacts = useGameStore((s) => s.showArtifacts);
+    const showResearch = useGameStore((s) => s.showResearch);
     const gameMode = useGameStore((s) => s.gameMode);
     const restartGame = useGameStore((s) => s.restartGame);
 
@@ -41,12 +44,35 @@ export function GameHeader() {
 
     const handleArtifactsClick = () => {
         if (gameMode === "artifacts") {
-            // If artifacts panel is open, close it and return to previous mode
             useGameStore.getState().closeArtifactsPanel();
         } else {
             showArtifacts();
         }
     };
+
+    const handleResearchClick = () => {
+        // On mobile, open modal; on desktop, change gameMode
+        if (typeof window !== "undefined" && window.innerWidth < 1024) {
+            setShowResearchModal(true);
+        } else {
+            if (gameMode === "research") {
+                useGameStore.getState().showSectorMap();
+            } else {
+                showResearch();
+            }
+        }
+    };
+
+    // Close mobile modal when switching to desktop
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth >= 1024) {
+                setShowResearchModal(false);
+            }
+        };
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     return (
         <>
@@ -94,6 +120,16 @@ export function GameHeader() {
                                 ({activeArtifacts})
                             </span>
                         )}
+                    </button>
+                    <button
+                        onClick={handleResearchClick}
+                        className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
+                        title="Исследования"
+                    >
+                        <span className="text-[#9933ff]">🔬</span>
+                        <span className="text-[#9933ff] hidden lg:inline">
+                            НАУКА
+                        </span>
                     </button>
                     <div className="flex items-center gap-1 md:gap-2">
                         <span className="text-[#ffb000] hidden md:inline">
@@ -170,6 +206,26 @@ export function GameHeader() {
                             Начать заново
                         </Button>
                     </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Mobile research modal */}
+            <Dialog
+                open={showResearchModal}
+                onOpenChange={setShowResearchModal}
+            >
+                <DialogContent
+                    className="bg-[rgba(10,20,30,0.98)] border-2 border-[#9933ff] text-[#00ff41] max-w-[95vw] w-[95vw] md:hidden max-h-[90vh] overflow-y-auto"
+                    onPointerDownOutside={(e) => e.preventDefault()}
+                >
+                    <DialogHeader>
+                        <DialogTitle className="text-[#ffb000] font-['Orbitron'] text-lg">
+                            🔬 ИССЛЕДОВАНИЯ
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="mt-2">
+                        <ResearchPanel />
+                    </div>
                 </DialogContent>
             </Dialog>
         </>

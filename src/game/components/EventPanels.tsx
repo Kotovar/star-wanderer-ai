@@ -17,6 +17,7 @@ import { DistressSignalPanel } from "./DistressSignalPanel";
 import { ArtifactPanel } from "./ArtifactPanel";
 import { UnknownShipPanel } from "./UnknownShipPanel";
 import { BattleResultsPanel } from "./BattleResultsPanel";
+import { ResearchPanel } from "./ResearchPanel";
 
 export function EventDisplay() {
     const gameMode = useGameStore((s) => s.gameMode);
@@ -213,6 +214,20 @@ export function EventDisplay() {
 
         case "assignments":
             return <AssignmentsPanel />;
+
+        case "research":
+            return (
+                <>
+                    {/* Desktop: full panel */}
+                    <div className="hidden md:block">
+                        <ResearchPanel />
+                    </div>
+                    {/* Mobile: show button that triggers modal in ResearchPanel */}
+                    <div className="md:hidden p-4">
+                        <ResearchPanel />
+                    </div>
+                </>
+            );
 
         default:
             return null;

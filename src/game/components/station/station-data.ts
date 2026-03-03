@@ -128,6 +128,19 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             stock: 1,
             description: "Лечит членов экипажа",
         },
+        {
+            id: "lab-1",
+            name: "Научная лаборатория",
+            type: "module",
+            moduleType: "lab",
+            width: 2,
+            height: 2,
+            consumption: 3,
+            researchOutput: 5,
+            price: 800,
+            stock: 1,
+            description: "Проводит научные исследования технологий",
+        },
     ],
     2: [
         {
@@ -243,6 +256,20 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             stock: 1,
             description: "Оборудованный медицинский отсек",
         },
+        {
+            id: "lab-2",
+            name: "Научная лаборатория",
+            type: "module",
+            moduleType: "lab",
+            width: 2,
+            height: 2,
+            consumption: 8,
+            researchOutput: 8,
+            price: 1600,
+            stock: 1,
+            description:
+                "Проводит научные исследования технологий более эффективно",
+        },
     ],
     3: [
         {
@@ -345,6 +372,20 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             price: 1200,
             stock: 1,
             description: "Полноценный медицинский блок",
+        },
+        {
+            id: "lab-3",
+            name: "Научная лаборатория",
+            type: "module",
+            moduleType: "lab",
+            width: 2,
+            height: 2,
+            consumption: 14,
+            researchOutput: 12,
+            price: 3200,
+            stock: 1,
+            description:
+                "Проводит научные исследования технологий очень быстро",
         },
     ],
     4: [

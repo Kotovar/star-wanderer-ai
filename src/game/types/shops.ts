@@ -20,6 +20,7 @@ export interface ShopItem {
     oxygen?: number;
     capacity?: number; // For cargo, fuel tanks
     fuelEfficiency?: number; // For engine modules
+    researchOutput?: number; // For lab modules
     effect?: {
         power?: number;
         capacity?: number;

@@ -874,7 +874,6 @@ export function SectorMap() {
     const handleTouchMove = useCallback(
         (e: React.TouchEvent<HTMLCanvasElement>) => {
             if (!isDragging) return;
-            e.preventDefault();
 
             const touch = e.touches[0];
             const dx = touch.clientX - dragStartRef.current.x;
@@ -1006,7 +1005,10 @@ export function SectorMap() {
             <canvas
                 ref={canvasRef}
                 className="border-2 border-[#00ff41] bg-[#050810] cursor-grab w-full h-full touch-none"
-                style={{ cursor: isDragging ? "grabbing" : "grab" }}
+                style={{
+                    cursor: isDragging ? "grabbing" : "grab",
+                    touchAction: "none",
+                }}
                 onClick={handleClick}
                 onWheel={handleWheel}
                 onMouseDown={handleMouseDown}

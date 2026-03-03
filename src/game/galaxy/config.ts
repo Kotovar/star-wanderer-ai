@@ -102,7 +102,7 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
         priceDiscount: 0.9,
         guaranteedProfessions: ["scientist"],
         guaranteedWeapons: ["laser"],
-        guaranteedModules: ["scanner", "reactor", "lifesupport"],
+        guaranteedModules: ["scanner", "reactor", "lifesupport", "lab"],
     },
     Добывающая: {
         mineralDiscount: 0.5,

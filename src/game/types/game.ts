@@ -11,6 +11,7 @@ import type { LogEntry } from "./logs";
 import type { Module } from "./modules";
 import type { RaceId } from "./races";
 import type { ShipMergeTrait } from "./ships";
+import type { ResearchData } from "./research";
 
 export type GameMode =
     | "galaxy_map"
@@ -26,7 +27,8 @@ export type GameMode =
     | "distress_signal"
     | "artifacts"
     | "unknown_ship"
-    | "battle_results";
+    | "battle_results"
+    | "research";
 
 export interface GameState {
     turn: number;
@@ -83,4 +85,5 @@ export interface GameState {
     gameVictoryReason: string | null; // Reason for victory
     activeEffects: ActiveEffect[]; // Active planet specialization effects
     planetCooldowns: Record<string, number>; // Track cooldowns per planet (planetId -> turnsRemaining)
+    research: ResearchData; // Research system data
 }

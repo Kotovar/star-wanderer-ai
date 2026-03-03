@@ -48,6 +48,14 @@ import {
 } from "./saves/utils";
 import { handleSurvivorCapsuleDelivery } from "./contracts/handleSurvivorCapsuleDelivery";
 import { areAllModulesConnected } from "./modules";
+import {
+    getMiningResources,
+    getScoutResources,
+    getCombatLootResources,
+    getBossLootResources,
+    getAnomalyResources,
+} from "./research/utils";
+import { RESEARCH_RESOURCES } from "./constants/research";
 
 // Game store
 export const useGameStore = create<
@@ -70,6 +78,7 @@ export const useGameStore = create<
         getFuelCapacity: () => number;
         getFuelEfficiency: () => number;
         getDrillLevel: () => number;
+        getCargoCapacity: () => number;
         getScanLevel: () => number;
         getScanRange: () => number;
         calculateFuelCost: (targetTier: number) => number;
@@ -158,6 +167,7 @@ export const useGameStore = create<
         toggleArtifact: (artifactId: string) => void;
         tryFindArtifact: () => Artifact | null;
         showArtifacts: () => void;
+        showResearch: () => void;
 
         // Races
         discoverRace: (raceId: RaceId) => void;
@@ -174,6 +184,11 @@ export const useGameStore = create<
 
         // Victory
         triggerVictory: () => void;
+
+        // Research
+        startResearch: (techId: string) => void;
+        addResearchResource: (type: string, quantity: number) => void;
+        processResearch: () => void;
 
         // Game Management
         restartGame: () => void;
@@ -435,6 +450,14 @@ export const useGameStore = create<
         return Math.max(...drills.map((d) => d.level || 1));
     },
 
+    getCargoCapacity: () => {
+        const state = get();
+        const cargoModules = state.ship.modules.filter(
+            (m) => m.type === "cargo" && !m.disabled && m.health > 0,
+        );
+        return cargoModules.reduce((sum, m) => sum + (m.capacity || 40), 0);
+    },
+
     getScanLevel: () => {
         const state = get();
         const scanners = state.ship.modules.filter(
@@ -692,6 +715,9 @@ export const useGameStore = create<
         get().removeExpiredEffects();
 
         get().updateShipStats();
+
+        // Process research
+        get().processResearch();
 
         // Shield regen
         let shieldRegen = Math.floor(Math.random() * 6) + 5;
@@ -2120,6 +2146,39 @@ export const useGameStore = create<
                         );
                         resultType = "nothing";
                     }
+
+                    // Get research resources from scouting (25% chance)
+                    if (scout && Math.random() < 0.25) {
+                        const scoutResources = getScoutResources();
+                        if (scoutResources.length > 0) {
+                            set((s) => ({
+                                research: {
+                                    ...s.research,
+                                    resources: {
+                                        ...s.research.resources,
+                                        ...scoutResources.reduce(
+                                            (acc, res) => ({
+                                                ...acc,
+                                                [res.type]:
+                                                    (s.research.resources[
+                                                        res.type as keyof typeof s.research.resources
+                                                    ] || 0) + res.quantity,
+                                            }),
+                                            {},
+                                        ),
+                                    },
+                                },
+                            }));
+                            scoutResources.forEach((res) => {
+                                if (res.quantity > 0) {
+                                    get().addLog(
+                                        `🔬 Найдены исследовательские ресурсы: ${RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].icon} ${RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].name} x${res.quantity}`,
+                                        "info",
+                                    );
+                                }
+                            });
+                        }
+                    }
                 }
 
                 // Update scoutedTimes on the planet location
@@ -3334,30 +3393,95 @@ export const useGameStore = create<
         const rareGained = Math.floor(resources.rare * efficiencyBonus);
         const creditsGained = Math.floor(resources.credits * efficiencyBonus);
 
-        // Add to cargo/trade goods
+        // Get research resources from mining
+        const researchResources = getMiningResources(drillLevel);
+
+        // Calculate cargo space needed
+        const currentCargo = state.ship.tradeGoods.reduce(
+            (sum, tg) => sum + tg.quantity,
+            0,
+        );
+        const cargoCapacity = get().getCargoCapacity();
+        const cargoSpaceLeft = Math.max(0, cargoCapacity - currentCargo);
+
+        // Add to cargo/trade goods (limited by capacity)
+        let addedMinerals = mineralsGained;
+        let addedRare = rareGained;
+
+        // Check if we have space
+        const totalNeeded = mineralsGained + rareGained;
+        if (totalNeeded > cargoSpaceLeft) {
+            // Scale down proportionally
+            const scale = cargoSpaceLeft / totalNeeded;
+            addedMinerals = Math.floor(mineralsGained * scale);
+            addedRare = Math.floor(rareGained * scale);
+
+            if (cargoSpaceLeft === 0) {
+                get().addLog(
+                    "⚠️ Нет места в грузовом отсеке! Ресурсы потеряны.",
+                    "warning",
+                );
+            } else {
+                get().addLog(
+                    `⚠️ Недостаточно места! Получено: ${addedMinerals + addedRare} из ${totalNeeded}т`,
+                    "warning",
+                );
+            }
+        }
+
         set((s) => ({
             credits: s.credits + creditsGained,
             ship: {
                 ...s.ship,
                 tradeGoods: [
                     ...s.ship.tradeGoods,
-                    {
-                        item: "minerals" as const,
-                        quantity: mineralsGained,
-                        buyPrice: 0,
-                    },
-                    ...(rareGained > 0
+                    ...(addedMinerals > 0
+                        ? [
+                              {
+                                  item: "minerals" as const,
+                                  quantity: addedMinerals,
+                                  buyPrice: 0,
+                              },
+                          ]
+                        : []),
+                    ...(addedRare > 0
                         ? [
                               {
                                   item: "rare_minerals" as const,
-                                  quantity: rareGained,
+                                  quantity: addedRare,
                                   buyPrice: 0,
                               },
                           ]
                         : []),
                 ],
             },
+            research: {
+                ...s.research,
+                resources: {
+                    ...s.research.resources,
+                    ...researchResources.reduce(
+                        (acc, res) => ({
+                            ...acc,
+                            [res.type]:
+                                (s.research.resources[
+                                    res.type as keyof typeof s.research.resources
+                                ] || 0) + res.quantity,
+                        }),
+                        {},
+                    ),
+                },
+            },
         }));
+
+        // Log research resources gained
+        researchResources.forEach((res) => {
+            if (res.quantity > 0) {
+                get().addLog(
+                    `💎 Получены исследовательские ресурсы: ${RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].icon} ${RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].name} x${res.quantity}`,
+                    "info",
+                );
+            }
+        });
 
         // Mark as mined
         set((s) => ({
@@ -4583,6 +4707,45 @@ export const useGameStore = create<
                 artifactFound: artifactName,
             };
 
+            // Get research resources from combat
+            const enemyTier = updatedCombat.enemy.threat || 1;
+            let combatResources = getCombatLootResources(enemyTier);
+
+            // Boss bonus - additional resources
+            if (updatedCombat.enemy.isBoss) {
+                const bossResources = getBossLootResources(enemyTier);
+                combatResources = [...combatResources, ...bossResources];
+            }
+
+            if (combatResources.length > 0) {
+                set((s) => ({
+                    research: {
+                        ...s.research,
+                        resources: {
+                            ...s.research.resources,
+                            ...combatResources.reduce(
+                                (acc, res) => ({
+                                    ...acc,
+                                    [res.type]:
+                                        (s.research.resources[
+                                            res.type as keyof typeof s.research.resources
+                                        ] || 0) + res.quantity,
+                                }),
+                                {},
+                            ),
+                        },
+                    },
+                }));
+                combatResources.forEach((res) => {
+                    if (res.quantity > 0) {
+                        get().addLog(
+                            `🔧 Получены исследовательские ресурсы: ${RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].icon} ${RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].name} x${res.quantity}`,
+                            "info",
+                        );
+                    }
+                });
+            }
+
             // Give experience to crew who participated in combat
             const gunner = state.crew.find(
                 (c) =>
@@ -5776,6 +5939,10 @@ export const useGameStore = create<
                 ...(item.moduleType === "fueltank" && {
                     capacity: item.capacity || 100,
                 }),
+                ...(item.moduleType === "lab" && {
+                    consumption: item.consumption || 3,
+                    researchOutput: item.researchOutput || 5,
+                }),
                 ...(item.moduleType === "shield" && {
                     defense: item.defense || 20,
                     consumption: item.consumption || 3,
@@ -6831,6 +6998,37 @@ export const useGameStore = create<
             completedLocations: [...s.completedLocations, anomaly.id],
         }));
 
+        // Get research resources from anomaly
+        const anomalyResources = getAnomalyResources();
+        if (anomalyResources.length > 0) {
+            set((s) => ({
+                research: {
+                    ...s.research,
+                    resources: {
+                        ...s.research.resources,
+                        ...anomalyResources.reduce(
+                            (acc, res) => ({
+                                ...acc,
+                                [res.type]:
+                                    (s.research.resources[
+                                        res.type as keyof typeof s.research.resources
+                                    ] || 0) + res.quantity,
+                            }),
+                            {},
+                        ),
+                    },
+                },
+            }));
+            anomalyResources.forEach((res) => {
+                if (res.quantity > 0) {
+                    get().addLog(
+                        `🔬 Найдены исследовательские ресурсы: ${RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].icon} ${RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].name} x${res.quantity}`,
+                        "info",
+                    );
+                }
+            });
+        }
+
         // Apply science bonus for experience gain (crystalline: +35%)
         scientists.forEach((s) => {
             const scientistRace = RACES[s.race];
@@ -7404,6 +7602,13 @@ export const useGameStore = create<
         }));
     },
 
+    showResearch: () => {
+        set((state) => ({
+            previousGameMode: state.gameMode,
+            gameMode: "research",
+        }));
+    },
+
     discoverRace: (raceId: RaceId) => {
         set((state) => {
             if (state.knownRaces.includes(raceId)) return state;
@@ -7876,4 +8081,389 @@ export const useGameStore = create<
         get().addLog("Игра загружена", "info");
         return true;
     },
+
+    // ═══════════════════════════════════════════════════════════════
+    // RESEARCH SYSTEM
+    // ═══════════════════════════════════════════════════════════════
+
+    startResearch: (techId: string) => {
+        const state = get();
+        const tech = RESEARCH_TREE[techId];
+        if (!tech) return;
+
+        // Check if already researched
+        if (state.research.researchedTechs.includes(techId)) {
+            get().addLog("Технология уже изучена!", "warning");
+            return;
+        }
+
+        // Check if already researching - only 1 technology at a time
+        if (state.research.activeResearch) {
+            get().addLog(
+                `Уже идёт исследование: ${RESEARCH_TREE[state.research.activeResearch.techId].name}`,
+                "warning",
+            );
+            return;
+        }
+
+        // Check prerequisites
+        const researchedTechs = state.research.researchedTechs;
+        for (const prereq of tech.prerequisites) {
+            if (!researchedTechs.includes(prereq)) {
+                get().addLog(
+                    `Требуется технология: ${RESEARCH_TREE[prereq].name}`,
+                    "error",
+                );
+                return;
+            }
+        }
+
+        // Check resources (including trade goods for rare_minerals)
+        for (const [resourceType, required] of Object.entries(tech.resources)) {
+            let available =
+                state.research.resources[
+                    resourceType as keyof typeof state.research.resources
+                ] || 0;
+
+            // Also check trade goods for rare_minerals
+            if (resourceType === "rare_minerals") {
+                const tradeGood = state.ship.tradeGoods.find(
+                    (tg) => tg.item === "rare_minerals",
+                );
+                if (tradeGood) {
+                    available += tradeGood.quantity;
+                }
+            }
+
+            if (available < required) {
+                get().addLog(
+                    `Недостаточно ресурса: ${RESEARCH_RESOURCES[resourceType as keyof typeof RESEARCH_RESOURCES].name} (нужно: ${required}, есть: ${available})`,
+                    "error",
+                );
+                return;
+            }
+        }
+
+        // Check credits
+        if (state.credits < tech.credits) {
+            get().addLog("Недостаточно кредитов", "error");
+            return;
+        }
+
+        // Check lab and scientist
+        const hasLab = state.ship.modules.some(
+            (m) => m.type === "lab" && m.health > 0 && !m.disabled,
+        );
+        const hasScientist = state.crew.some(
+            (c) => c.profession === "scientist",
+        );
+
+        if (!hasLab || !hasScientist) {
+            get().addLog("Требуется лаборатория и учёный", "error");
+            return;
+        }
+
+        // Deduct resources and credits
+        const newResources = { ...state.research.resources };
+        const newTradeGoods = [...state.ship.tradeGoods];
+
+        for (const [resourceType, required] of Object.entries(tech.resources)) {
+            let remaining = required;
+
+            // First deduct from research resources
+            const currentResearchResource =
+                newResources[resourceType as keyof typeof newResources] || 0;
+            if (currentResearchResource > 0) {
+                const deductFromResearch = Math.min(
+                    currentResearchResource,
+                    remaining,
+                );
+                newResources[resourceType as keyof typeof newResources] =
+                    currentResearchResource - deductFromResearch;
+                remaining -= deductFromResearch;
+            }
+
+            // Then deduct from trade goods (for rare_minerals)
+            if (remaining > 0 && resourceType === "rare_minerals") {
+                const tradeGoodIdx = newTradeGoods.findIndex(
+                    (tg) => tg.item === "rare_minerals",
+                );
+                if (tradeGoodIdx >= 0) {
+                    const tradeGood = newTradeGoods[tradeGoodIdx];
+                    const deductFromTrade = Math.min(
+                        tradeGood.quantity,
+                        remaining,
+                    );
+                    newTradeGoods[tradeGoodIdx] = {
+                        ...tradeGood,
+                        quantity: tradeGood.quantity - deductFromTrade,
+                    };
+                    // Remove if quantity is 0
+                    if (newTradeGoods[tradeGoodIdx].quantity <= 0) {
+                        newTradeGoods.splice(tradeGoodIdx, 1);
+                    }
+                    remaining -= deductFromTrade;
+                }
+            }
+        }
+
+        // Calculate research output to determine turns remaining
+        const labs = state.ship.modules.filter(
+            (m) => m.type === "lab" && m.health > 0 && !m.disabled,
+        );
+        let researchOutput = labs.reduce(
+            (sum, m) => sum + (m.researchOutput || 0),
+            0,
+        );
+
+        // Add scientist bonus
+        const scientists = state.crew.filter(
+            (c) => c.profession === "scientist" && c.health > 0,
+        );
+        scientists.forEach((scientist) => {
+            // Base scientist bonus: 5 points per turn
+            researchOutput += 5;
+
+            // Assignment bonus - "research" gives +100% (2x multiplier)
+            if (scientist.assignment === "research") {
+                researchOutput = Math.floor(researchOutput * 2);
+            }
+
+            // Level bonus: +1 per level
+            researchOutput += scientist.level || 1;
+        });
+
+        // Calculate initial turns remaining (100 points needed)
+        const initialTurnsRemaining =
+            researchOutput > 0 ? Math.ceil(100 / researchOutput) : 999;
+
+        set({
+            credits: state.credits - tech.credits,
+            ship: {
+                ...state.ship,
+                tradeGoods: newTradeGoods,
+            },
+            research: {
+                ...state.research,
+                resources: newResources,
+                activeResearch: {
+                    techId,
+                    progress: 0,
+                    turnsRemaining: initialTurnsRemaining,
+                },
+            },
+        });
+
+        get().addLog(`🔬 Начато исследование: ${tech.name}`, "info");
+        playSound("success");
+    },
+
+    addResearchResource: (type: string, quantity: number) => {
+        set((state) => ({
+            research: {
+                ...state.research,
+                resources: {
+                    ...state.research.resources,
+                    [type]:
+                        (state.research.resources[
+                            type as keyof typeof state.research.resources
+                        ] || 0) + quantity,
+                },
+            },
+        }));
+    },
+
+    processResearch: () => {
+        const state = get();
+        if (!state.research.activeResearch) return;
+
+        const tech = RESEARCH_TREE[state.research.activeResearch.techId];
+        if (!tech) return;
+
+        // Calculate research output from lab modules
+        const labs = state.ship.modules.filter(
+            (m) => m.type === "lab" && m.health > 0 && !m.disabled,
+        );
+        let researchOutput = labs.reduce(
+            (sum, m) => sum + (m.researchOutput || 0),
+            0,
+        );
+
+        // Add scientist bonus
+        const scientists = state.crew.filter(
+            (c) => c.profession === "scientist" && c.health > 0,
+        );
+        scientists.forEach((scientist) => {
+            // Base scientist bonus: 5 points per turn
+            researchOutput += 5;
+
+            // Assignment bonus - "research" gives +100% (2x multiplier)
+            if (scientist.assignment === "research") {
+                researchOutput = Math.floor(researchOutput * 2);
+            }
+
+            // Level bonus: +1 per level
+            researchOutput += scientist.level || 1;
+        });
+
+        // Research speed bonus from technologies
+        const hasResearchSpeedTech = state.research.researchedTechs.some(
+            (techId) =>
+                RESEARCH_TREE[techId].bonuses.some(
+                    (b) => b.type === "research_speed",
+                ),
+        );
+        if (hasResearchSpeedTech) {
+            researchOutput = Math.floor(researchOutput * 1.2);
+        }
+
+        // Calculate progress (base: 100 points needed)
+        const progressGained = researchOutput;
+        const newProgress = Math.min(
+            100,
+            state.research.activeResearch.progress + progressGained,
+        );
+
+        // Calculate turns remaining based on actual progress
+        const progressNeeded = 100 - newProgress;
+        const turnsRemaining =
+            researchOutput > 0
+                ? Math.ceil(progressNeeded / researchOutput)
+                : 999;
+
+        if (newProgress >= 100) {
+            // Research complete!
+            const completedTechId = state.research.activeResearch.techId;
+            const completedTech = RESEARCH_TREE[completedTechId];
+
+            // Apply technology bonuses
+            let healthBonusApplied = false;
+            let powerBonusApplied = false;
+
+            completedTech.bonuses.forEach((bonus) => {
+                if (bonus.type === "module_health" && bonus.value > 0) {
+                    // Apply health bonus to all modules
+                    set((s) => ({
+                        ship: {
+                            ...s.ship,
+                            modules: s.ship.modules.map((m) => {
+                                const newMaxHealth = Math.floor(
+                                    (m.maxHealth || 100) * (1 + bonus.value),
+                                );
+                                // Set health to max (100% after upgrade)
+                                return {
+                                    ...m,
+                                    maxHealth: newMaxHealth,
+                                    health: newMaxHealth,
+                                };
+                            }),
+                        },
+                    }));
+                    healthBonusApplied = true;
+                }
+
+                if (bonus.type === "module_power" && bonus.value > 0) {
+                    // Apply power bonus to reactor modules
+                    set((s) => ({
+                        ship: {
+                            ...s.ship,
+                            modules: s.ship.modules.map((m) => {
+                                if (m.type === "reactor") {
+                                    return {
+                                        ...m,
+                                        power: Math.floor(
+                                            (m.power || 0) * (1 + bonus.value),
+                                        ),
+                                    };
+                                }
+                                return m;
+                            }),
+                        },
+                    }));
+                    powerBonusApplied = true;
+                }
+            });
+
+            // Apply bonuses (for now just mark as researched, actual bonuses applied elsewhere)
+            set({
+                research: {
+                    ...state.research,
+                    researchedTechs: [
+                        ...state.research.researchedTechs,
+                        completedTechId,
+                    ],
+                    discoveredTechs: [
+                        ...new Set([
+                            ...state.research.discoveredTechs,
+                            ...getAdjacentTechs(completedTechId),
+                        ]),
+                    ],
+                    activeResearch: null,
+                },
+            });
+
+            get().addLog(
+                `✅ Исследование завершено: ${completedTech.name}`,
+                "info",
+            );
+            get().addLog(
+                `Получены бонусы: ${completedTech.bonuses.map((b) => b.description).join(", ")}`,
+                "info",
+            );
+
+            if (healthBonusApplied) {
+                get().addLog(`🛡️ Здоровье модулей увеличено`, "info");
+                get().updateShipStats();
+            }
+
+            if (powerBonusApplied) {
+                get().addLog(`⚡ Мощность реакторов увеличена`, "info");
+                get().updateShipStats();
+            }
+
+            playSound("success");
+
+            // Discover adjacent technologies
+            const adjacent = getAdjacentTechs(completedTechId);
+            adjacent.forEach((techId) => {
+                if (!state.research.discoveredTechs.includes(techId)) {
+                    get().addLog(
+                        `📖 Открыта технология: ${RESEARCH_TREE[techId].name}`,
+                        "info",
+                    );
+                }
+            });
+        } else {
+            // Continue research
+            set({
+                research: {
+                    ...state.research,
+                    activeResearch: {
+                        ...state.research.activeResearch,
+                        progress: newProgress,
+                        turnsRemaining,
+                    },
+                },
+            });
+        }
+    },
 }));
+
+// Helper function to get adjacent technologies (for discovery)
+function getAdjacentTechs(techId: string): string[] {
+    const adjacent: string[] = [];
+    const tech = RESEARCH_TREE[techId];
+    if (!tech) return adjacent;
+
+    // Technologies that have this tech as prerequisite
+    Object.values(RESEARCH_TREE).forEach((t) => {
+        if (t.prerequisites.includes(techId)) {
+            adjacent.push(t.id);
+        }
+    });
+
+    return adjacent;
+}
+
+// Import research constants at the top
+import { RESEARCH_TREE } from "@/game/constants/research";

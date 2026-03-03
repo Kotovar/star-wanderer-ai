@@ -1,0 +1,717 @@
+/**
+ * Research resource types - rare items needed for research
+ */
+export type ResearchResourceType =
+    | "ancient_data" // Древние данные (с артефактов, аномалий)
+    | "rare_minerals" // Редкие минералы (с бурения, астероидов)
+    | "alien_biology" // Чужеродная биология (с существ, растений)
+    | "energy_samples" // Образцы энергии (с боссов, штормов)
+    | "quantum_crystals" // Квантовые кристаллы (редко с аномалий)
+    | "tech_salvage"; // Технологический лом (с вражеских кораблей)
+
+export interface ResearchResource {
+    id: ResearchResourceType;
+    name: string;
+    description: string;
+    icon: string;
+    color: string;
+    rarity: "common" | "uncommon" | "rare" | "legendary";
+}
+
+export const RESEARCH_RESOURCES: Record<
+    ResearchResourceType,
+    ResearchResource
+> = {
+    ancient_data: {
+        id: "ancient_data",
+        name: "Древние данные",
+        description: "Зашифрованная информация цивилизации Древних",
+        icon: "📊",
+        color: "#00d4ff",
+        rarity: "uncommon",
+    },
+    rare_minerals: {
+        id: "rare_minerals",
+        name: "Редкие минералы",
+        description: "Экзотические элементы с уникальными свойствами",
+        icon: "💎",
+        color: "#ff6b35",
+        rarity: "common",
+    },
+    alien_biology: {
+        id: "alien_biology",
+        name: "Чужеродная биология",
+        description: "Образцы инопланетной флоры и фауны",
+        icon: "🧬",
+        color: "#00ff41",
+        rarity: "uncommon",
+    },
+    energy_samples: {
+        id: "energy_samples",
+        name: "Образцы энергии",
+        description: "Концентрированные энергетические сигнатуры",
+        icon: "⚡",
+        color: "#ffb000",
+        rarity: "rare",
+    },
+    quantum_crystals: {
+        id: "quantum_crystals",
+        name: "Квантовые кристаллы",
+        description: "Кристаллы с квантовыми свойствами из аномалий",
+        icon: "💠",
+        color: "#9933ff",
+        rarity: "legendary",
+    },
+    tech_salvage: {
+        id: "tech_salvage",
+        name: "Технологический лом",
+        description: "Восстановленные компоненты вражеских технологий",
+        icon: "🔧",
+        color: "#ff00ff",
+        rarity: "common",
+    },
+};
+
+/**
+ * Research tier - technology level
+ */
+export type ResearchTier = 1 | 2 | 3 | 4;
+
+/**
+ * Research category - technology branch
+ */
+export type ResearchCategory =
+    | "ship_systems" // Системы корабля
+    | "weapons" // Оружие и боевые системы
+    | "science" // Наука и сканирование
+    | "engineering" // Инженерия и ремонт
+    | "biology" // Биология и экипаж
+    | "ancient_tech"; // Технологии Древних
+
+/**
+ * Research bonus type
+ */
+export type ResearchBonusType =
+    | "module_health" // +% к здоровью модулей
+    | "module_power" // +% к энергии модулей
+    | "shield_strength" // +% к щитам
+    | "weapon_damage" // +% к урону оружия
+    | "scan_range" // +% к дальности сканирования
+    | "research_speed" // +% к скорости исследований
+    | "cargo_capacity" // +% к грузовместимости
+    | "fuel_efficiency" // +% к эффективности топлива
+    | "crew_health" // +% к здоровью экипажа
+    | "crew_exp" // +% к опыту экипажа
+    | "new_module" // Открывает новый модуль
+    | "new_weapon" // Открывает новое оружие
+    | "special_ability"; // Уникальная способность
+
+export interface ResearchBonus {
+    type: ResearchBonusType;
+    value: number;
+    description: string;
+}
+
+/**
+ * Technology in the research tree
+ */
+export interface Technology {
+    id: string;
+    name: string;
+    description: string;
+    tier: ResearchTier;
+    category: ResearchCategory;
+
+    // Requirements
+    prerequisites: string[]; // IDs of technologies that must be researched first
+    resources: Partial<Record<ResearchResourceType, number>>; // Required resources
+    credits: number; // Credit cost
+    turns: number; // Turns to complete research
+
+    // Rewards
+    bonuses: ResearchBonus[];
+
+    // Meta
+    icon: string;
+    color: string;
+    discovered: boolean; // Whether player knows about this tech
+    researched: boolean; // Whether player has researched this tech
+    researchProgress: number; // 0-100, current progress
+}
+
+/**
+ * Research tree data
+ */
+export const RESEARCH_TREE: Record<string, Technology> = {
+    // ═══════════════════════════════════════════════════════════════
+    // TIER 1 - Basic Technologies
+    // ═══════════════════════════════════════════════════════════════
+
+    // Ship Systems
+    reinforced_hull: {
+        id: "reinforced_hull",
+        name: "Усиленный корпус",
+        description:
+            "Улучшенные сплавы повышают прочность всех модулей на 10%.",
+        tier: 1,
+        category: "ship_systems",
+        prerequisites: [],
+        resources: { rare_minerals: 5 },
+        credits: 200,
+        turns: 3,
+        bonuses: [
+            {
+                type: "module_health",
+                value: 0.1,
+                description: "+10% к здоровью модулей",
+            },
+        ],
+        icon: "🛡️",
+        color: "#00ff41",
+        discovered: true, // Starting tech
+        researched: false,
+        researchProgress: 0,
+    },
+
+    efficient_reactor: {
+        id: "efficient_reactor",
+        name: "Эффективный реактор",
+        description: "Оптимизация реактора даёт +15% к генерации энергии.",
+        tier: 1,
+        category: "ship_systems",
+        prerequisites: [],
+        resources: { rare_minerals: 3 },
+        credits: 150,
+        turns: 2,
+        bonuses: [
+            {
+                type: "module_power",
+                value: 0.15,
+                description: "+15% к энергии модулей",
+            },
+        ],
+        icon: "⚛️",
+        color: "#ffb000",
+        discovered: true,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    // Weapons
+    targeting_matrix: {
+        id: "targeting_matrix",
+        name: "Матрица прицеливания",
+        description:
+            "Улучшенные системы наведения увеличивают урон оружия на 10%.",
+        tier: 1,
+        category: "weapons",
+        prerequisites: [],
+        resources: { tech_salvage: 5 },
+        credits: 200,
+        turns: 3,
+        bonuses: [
+            {
+                type: "weapon_damage",
+                value: 0.1,
+                description: "+10% к урону оружия",
+            },
+        ],
+        icon: "🎯",
+        color: "#ff0040",
+        discovered: true,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    // Science
+    scanner_mk2: {
+        id: "scanner_mk2",
+        name: "Сканер МК-2",
+        description: "Удвоение дальности сканирования сектора.",
+        tier: 1,
+        category: "science",
+        prerequisites: [],
+        resources: { ancient_data: 3 },
+        credits: 250,
+        turns: 4,
+        bonuses: [
+            {
+                type: "scan_range",
+                value: 0.5,
+                description: "+50% к дальности сканирования",
+            },
+        ],
+        icon: "📡",
+        color: "#00d4ff",
+        discovered: true,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    // Engineering
+    automated_repair: {
+        id: "automated_repair",
+        name: "Автоматический ремонт",
+        description:
+            "Наниты-ремонтники восстанавливают 2% здоровья модулей каждый ход.",
+        tier: 1,
+        category: "engineering",
+        prerequisites: [],
+        resources: { tech_salvage: 3, rare_minerals: 3 },
+        credits: 300,
+        turns: 4,
+        bonuses: [
+            {
+                type: "special_ability",
+                value: 2,
+                description: "+2% ремонт модулей за ход",
+            },
+        ],
+        icon: "🔧",
+        color: "#00ffaa",
+        discovered: true,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    // Biology
+    medbay_upgrade: {
+        id: "medbay_upgrade",
+        name: "Улучшенный медотсек",
+        description:
+            "Медицинские технологии увеличивают здоровье экипажа на 15%.",
+        tier: 1,
+        category: "biology",
+        prerequisites: [],
+        resources: { alien_biology: 3 },
+        credits: 200,
+        turns: 3,
+        bonuses: [
+            {
+                type: "crew_health",
+                value: 0.15,
+                description: "+15% к здоровью экипажа",
+            },
+        ],
+        icon: "💉",
+        color: "#ff44ff",
+        discovered: true,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // TIER 2 - Advanced Technologies
+    // ═══════════════════════════════════════════════════════════════
+
+    shield_booster: {
+        id: "shield_booster",
+        name: "Усилитель щитов",
+        description: "Генераторы щитов новой конструкции дают +25% к защите.",
+        tier: 2,
+        category: "ship_systems",
+        prerequisites: ["reinforced_hull"],
+        resources: { rare_minerals: 8, energy_samples: 3 },
+        credits: 400,
+        turns: 5,
+        bonuses: [
+            {
+                type: "shield_strength",
+                value: 0.25,
+                description: "+25% к щитам",
+            },
+        ],
+        icon: "🛡️",
+        color: "#0080ff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    plasma_weapons: {
+        id: "plasma_weapons",
+        name: "Плазменное оружие",
+        description:
+            "Открывает доступ к плазменным орудиям, игнорирующим 25% брони.",
+        tier: 2,
+        category: "weapons",
+        prerequisites: ["targeting_matrix"],
+        resources: { energy_samples: 5, tech_salvage: 8 },
+        credits: 500,
+        turns: 6,
+        bonuses: [
+            {
+                type: "new_weapon",
+                value: 1,
+                description: "Открывает плазменное оружие",
+            },
+            {
+                type: "weapon_damage",
+                value: 0.15,
+                description: "+15% к урону оружия",
+            },
+        ],
+        icon: "🔥",
+        color: "#ff6600",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    quantum_scanner: {
+        id: "quantum_scanner",
+        name: "Квантовый сканер",
+        description:
+            "Квантовые сенсоры обнаруживают скрытые объекты и аномалии.",
+        tier: 2,
+        category: "science",
+        prerequisites: ["scanner_mk2"],
+        resources: { ancient_data: 8, quantum_crystals: 1 },
+        credits: 600,
+        turns: 7,
+        bonuses: [
+            {
+                type: "scan_range",
+                value: 1.0,
+                description: "+100% к дальности сканирования",
+            },
+            {
+                type: "special_ability",
+                value: 1,
+                description: "Обнаружение скрытых объектов",
+            },
+        ],
+        icon: "🌀",
+        color: "#9933ff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    cargo_expansion: {
+        id: "cargo_expansion",
+        name: "Расширение трюма",
+        description: "Технологии компактного хранения увеличивают трюм на 50%.",
+        tier: 2,
+        category: "engineering",
+        prerequisites: ["automated_repair"],
+        resources: { rare_minerals: 10, tech_salvage: 5 },
+        credits: 350,
+        turns: 5,
+        bonuses: [
+            {
+                type: "cargo_capacity",
+                value: 0.5,
+                description: "+50% к грузовместимости",
+            },
+        ],
+        icon: "📦",
+        color: "#ff0040",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    crew_training: {
+        id: "crew_training",
+        name: "Программа подготовки",
+        description:
+            "Улучшенное обучение даёт экипажу +25% к получаемому опыту.",
+        tier: 2,
+        category: "biology",
+        prerequisites: ["medbay_upgrade"],
+        resources: { alien_biology: 5, ancient_data: 3 },
+        credits: 400,
+        turns: 5,
+        bonuses: [
+            {
+                type: "crew_exp",
+                value: 0.25,
+                description: "+25% к опыту экипажа",
+            },
+        ],
+        icon: "🎓",
+        color: "#00ff41",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // TIER 3 - Elite Technologies
+    // ═══════════════════════════════════════════════════════════════
+
+    nanite_hull: {
+        id: "nanite_hull",
+        name: "Нанитовая обшивка",
+        description:
+            "Наниты в корпусе восстанавливают 5% здоровья всех модулей каждый ход.",
+        tier: 3,
+        category: "engineering",
+        prerequisites: ["automated_repair", "shield_booster"],
+        resources: {
+            quantum_crystals: 2,
+            rare_minerals: 15,
+            energy_samples: 8,
+        },
+        credits: 800,
+        turns: 10,
+        bonuses: [
+            {
+                type: "special_ability",
+                value: 5,
+                description: "+5% ремонт модулей за ход",
+            },
+        ],
+        icon: "🤖",
+        color: "#00ffff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    phase_shield: {
+        id: "phase_shield",
+        name: "Фазовый щит",
+        description:
+            "Щиты с фазовым сдвигом имеют 20% шанс полностью поглотить атаку.",
+        tier: 3,
+        category: "ship_systems",
+        prerequisites: ["shield_booster"],
+        resources: { quantum_crystals: 3, energy_samples: 10 },
+        credits: 900,
+        turns: 12,
+        bonuses: [
+            {
+                type: "shield_strength",
+                value: 0.5,
+                description: "+50% к щитам",
+            },
+            {
+                type: "special_ability",
+                value: 0.2,
+                description: "20% шанс поглотить атаку",
+            },
+        ],
+        icon: "✨",
+        color: "#aa55ff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    antimatter_weapons: {
+        id: "antimatter_weapons",
+        name: "Антивещественное оружие",
+        description: "Орудия на антиматерии наносят двойной урон по щитам.",
+        tier: 3,
+        category: "weapons",
+        prerequisites: ["plasma_weapons"],
+        resources: {
+            energy_samples: 15,
+            quantum_crystals: 2,
+            tech_salvage: 10,
+        },
+        credits: 1000,
+        turns: 14,
+        bonuses: [
+            {
+                type: "weapon_damage",
+                value: 0.25,
+                description: "+25% к урону оружия",
+            },
+            {
+                type: "new_weapon",
+                value: 2,
+                description: "Открывает антивещественное оружие",
+            },
+        ],
+        icon: "💥",
+        color: "#ff00ff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    deep_scan: {
+        id: "deep_scan",
+        name: "Глубокое сканирование",
+        description: "Сканирование сектора без затрат хода.",
+        tier: 3,
+        category: "science",
+        prerequisites: ["quantum_scanner"],
+        resources: { ancient_data: 15, quantum_crystals: 2 },
+        credits: 700,
+        turns: 8,
+        bonuses: [
+            {
+                type: "special_ability",
+                value: 1,
+                description: "Бесплатное сканирование сектора",
+            },
+        ],
+        icon: "🔮",
+        color: "#00d4ff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    genetic_enhancement: {
+        id: "genetic_enhancement",
+        name: "Генетическое улучшение",
+        description:
+            "Биологические улучшения увеличивают здоровье экипажа на 30%.",
+        tier: 3,
+        category: "biology",
+        prerequisites: ["crew_training"],
+        resources: { alien_biology: 15, quantum_crystals: 1 },
+        credits: 750,
+        turns: 10,
+        bonuses: [
+            {
+                type: "crew_health",
+                value: 0.3,
+                description: "+30% к здоровью экипажа",
+            },
+            {
+                type: "crew_exp",
+                value: 0.15,
+                description: "+15% к опыту экипажа",
+            },
+        ],
+        icon: "🧬",
+        color: "#00ff41",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // TIER 4 - Ancient Technologies (Endgame)
+    // ═══════════════════════════════════════════════════════════════
+
+    ancient_power: {
+        id: "ancient_power",
+        name: "Сила Древних",
+        description:
+            "Технологии Древних дают +50% ко всем характеристикам корабля.",
+        tier: 4,
+        category: "ancient_tech",
+        prerequisites: [
+            "nanite_hull",
+            "phase_shield",
+            "antimatter_weapons",
+            "deep_scan",
+            "genetic_enhancement",
+        ],
+        resources: {
+            quantum_crystals: 10,
+            ancient_data: 25,
+            energy_samples: 20,
+        },
+        credits: 2000,
+        turns: 20,
+        bonuses: [
+            {
+                type: "module_health",
+                value: 0.5,
+                description: "+50% к здоровью модулей",
+            },
+            { type: "module_power", value: 0.5, description: "+50% к энергии" },
+            {
+                type: "shield_strength",
+                value: 0.5,
+                description: "+50% к щитам",
+            },
+            { type: "weapon_damage", value: 0.5, description: "+50% к урону" },
+        ],
+        icon: "👁️",
+        color: "#ffd700",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    warp_drive: {
+        id: "warp_drive",
+        name: "Варп-двигатель",
+        description:
+            "Двигатель Древних позволяет перемещаться без затрат топлива.",
+        tier: 4,
+        category: "ancient_tech",
+        prerequisites: ["ancient_power"],
+        resources: {
+            quantum_crystals: 15,
+            energy_samples: 25,
+            ancient_data: 30,
+        },
+        credits: 3000,
+        turns: 25,
+        bonuses: [
+            {
+                type: "fuel_efficiency",
+                value: 1.0,
+                description: "Бесплатные перелёты",
+            },
+            {
+                type: "special_ability",
+                value: 1,
+                description: "Варп-перемещение между секторами",
+            },
+        ],
+        icon: "🚀",
+        color: "#ffffff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+};
+
+/**
+ * Get technologies by tier
+ */
+export function getTechnologiesByTier(tier: ResearchTier): Technology[] {
+    return Object.values(RESEARCH_TREE).filter((t) => t.tier === tier);
+}
+
+/**
+ * Get technologies by category
+ */
+export function getTechnologiesByCategory(
+    category: ResearchCategory,
+): Technology[] {
+    return Object.values(RESEARCH_TREE).filter((t) => t.category === category);
+}
+
+/**
+ * Check if technology can be researched
+ */
+export function canResearchTech(
+    techId: string,
+    researchedTechs: string[],
+): boolean {
+    const tech = RESEARCH_TREE[techId];
+    if (!tech) return false;
+    if (tech.researched) return false;
+
+    // Check prerequisites
+    for (const prereq of tech.prerequisites) {
+        if (!researchedTechs.includes(prereq)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Get available technologies to research
+ */
+export function getAvailableTechnologies(
+    researchedTechs: string[],
+): Technology[] {
+    return Object.values(RESEARCH_TREE).filter(
+        (tech) => !tech.researched && canResearchTech(tech.id, researchedTechs),
+    );
+}

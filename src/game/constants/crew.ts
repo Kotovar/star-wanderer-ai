@@ -340,7 +340,12 @@ export const CREW_ACTIONS: Record<
         {
             value: "research",
             label: "Исследование",
-            effect: "+данные аномалий",
+            effect: "+100% к науке",
+        },
+        {
+            value: "analyzing",
+            label: "Анализ аномалий",
+            effect: "+данные с аномалий",
         },
     ],
     gunner: [

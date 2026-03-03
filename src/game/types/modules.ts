@@ -11,7 +11,8 @@ export type ModuleType =
     | "engine"
     | "fueltank"
     | "drill"
-    | "ai_core";
+    | "ai_core"
+    | "lab"; // Science laboratory for research
 
 export type WeaponType = "kinetic" | "laser" | "missile";
 export type PartialModuleType = Exclude<ModuleType, "weaponShed">;
@@ -34,6 +35,7 @@ export interface Module {
     oxygen?: number;
     scanRange?: number;
     fuelEfficiency?: number; // For engines - lower is better (fuel per tier)
+    researchOutput?: number; // For lab - research points per turn
     disabled?: boolean;
     weapons?: Weapon[];
     movedThisTurn?: boolean; // Whether the module has been moved this turn

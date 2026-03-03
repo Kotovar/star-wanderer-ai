@@ -159,6 +159,11 @@ function ModuleStats({ module }: ModuleStatsProps) {
             {module.type === "lifesupport" &&
                 module.oxygen &&
                 module.oxygen > 0 && <span>💨 {module.oxygen} сущ.</span>}
+            {module.type === "lab" &&
+                module.researchOutput &&
+                module.researchOutput > 0 && (
+                    <span>🔬 {module.researchOutput} иссл./ход</span>
+                )}
             <span>
                 ❤{" "}
                 {Math.min(
@@ -418,6 +423,12 @@ function ModuleDetailedStats({
                         </div>
                     </>
                 )}
+            {module.type === "lab" && (
+                <div>
+                    <span className="text-[#ffb000]">🔬 Исследования:</span>{" "}
+                    {module.researchOutput || 5} очков/ход
+                </div>
+            )}
             {module.type === "shield" &&
                 module.defense &&
                 module.defense > 0 && (
@@ -443,7 +454,13 @@ function ModuleDetailedStats({
             )}
             <div>
                 <span className="text-[#ffb000]">❤ Состояние:</span>{" "}
-                {module.health}%
+                {Math.min(
+                    100,
+                    Math.round(
+                        (module.health / (module.maxHealth || 100)) * 100,
+                    ),
+                )}
+                %
             </div>
         </div>
     );

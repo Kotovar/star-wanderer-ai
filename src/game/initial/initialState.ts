@@ -9,7 +9,7 @@ import type { GameState } from "@/game/types/game";
 const INITIAL_TURN = 1;
 
 /** Начальное количество кредитов игрока */
-const INITIAL_CREDITS = 1000;
+const INITIAL_CREDITS = 100000;
 
 /**
  * Начальная вместимость экипажа.
@@ -87,4 +87,17 @@ export const initialState: GameState = {
     gameVictoryReason: null,
     activeEffects: [],
     planetCooldowns: {},
+    research: {
+        resources: {},
+        discoveredTechs: [
+            "reinforced_hull",
+            "efficient_reactor",
+            "targeting_matrix",
+            "scanner_mk2",
+            "automated_repair",
+            "medbay_upgrade",
+        ],
+        researchedTechs: [],
+        activeResearch: null,
+    },
 };

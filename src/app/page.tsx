@@ -28,12 +28,22 @@ export default function Home() {
     const gameVictoryReason = useGameStore((s) => s.gameVictoryReason);
     const moduleMovedThisTurn = useGameStore((s) => s.ship.moduleMovedThisTurn);
     const loadGame = useGameStore((s) => s.loadGame);
+    const gameMode = useGameStore((s) => s.gameMode);
 
     useEffect(() => {
-        // Try to load saved game on mount
-        // loadGame() will initialize ship stats if no save is found
         loadGame();
     }, [loadGame]);
+
+    // Close research panel on mobile when switching to desktop
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth >= 1024 && gameMode === "research") {
+                useGameStore.getState().showSectorMap();
+            }
+        };
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, [gameMode]);
 
     return (
         <div className="min-h-screen flex flex-col bg-[#050810] font-['Share_Tech_Mono'] text-[#00ff41]">
@@ -99,124 +109,27 @@ export default function Home() {
                 }
                 ::-webkit-scrollbar-thumb {
                     background: #00ff41;
-                    box-shadow: 0 0 10px #00ff41;
+                    border-radius: 4px;
                 }
+
                 ::-webkit-scrollbar-thumb:hover {
-                    background: #ffb000;
-                    box-shadow: 0 0 10px #ffb000;
+                    background: #00d4ff;
                 }
 
-                .panel {
-                    background: rgba(10, 20, 30, 0.9);
-                    border: 2px solid #00ff41;
-                    margin: 8px;
-                    padding: 16px;
-                    overflow-y: auto;
-                    overflow-x: hidden;
-                    box-shadow: inset 0 0 20px rgba(0, 255, 65, 0.1);
-                    max-height: 100vh;
-                    max-width: 100%;
-                    box-sizing: border-box;
-                }
-
-                @media (min-width: 1024px) {
-                    .panel {
-                        margin: 10px;
-                        padding: 20px;
-                    }
-                }
-
-                .section-title {
-                    font-family: "Orbitron", monospace;
-                    font-weight: 700;
-                    font-size: 16px;
-                    color: #ffb000;
-                    margin-bottom: 12px;
-                    padding-bottom: 6px;
-                    border-bottom: 1px solid #00ff41;
-                    text-shadow: 0 0 10px #ffb000;
-                    word-break: break-word;
-                }
-
-                @media (min-width: 1024px) {
-                    .section-title {
-                        font-size: 18px;
-                        margin-bottom: 15px;
-                        padding-bottom: 8px;
-                    }
-                }
-
-                /* Prevent horizontal overflow on mobile */
-                html,
-                body {
-                    overflow-x: hidden;
-                    max-width: 100%;
-                    width: 100%;
-                    position: relative;
-                    margin: 0;
-                    padding: 0;
-                    background-color: #050810;
-                    color: #00ff41;
-                }
-
-                * {
-                    box-sizing: border-box;
-                    min-width: 0;
-                }
-
-                /* Force containers to stay within viewport */
-                .panel,
-                main,
-                .accordion-content,
-                .accordion-item {
-                    max-width: 100vw;
-                    min-width: 0;
-                }
-
-                /* Reserve space for scrollbar to prevent layout shift */
-                .panel {
-                    scrollbar-gutter: stable both-edges;
-                }
-
-                [data-slot="accordion-content"] {
+                .scrollbar-gutter-stable {
                     scrollbar-gutter: stable;
-                }
-
-                /* Event journal - no special positioning */
-
-                @media (max-width: 655px) {
-                    .panel {
-                        margin: 6px;
-                        padding: 12px;
-                        border-width: 1px;
-                    }
-
-                    .accordion-trigger {
-                        padding: 10px 8px;
-                        font-size: 14px;
-                        min-width: 0;
-                    }
                 }
             `}</style>
 
             <GameHeader />
 
-            <main className="flex-1 flex flex-col lg:flex-row overflow-hidden max-w-full min-w-0">
+            <main className="flex-1 flex flex-col lg:flex-row overflow-hidden max-w-full min-w-0 px-2 lg:px-4 py-4 gap-4">
                 {/* Left Panel */}
-                <div className="panel flex-1 lg:w-95 flex flex-col gap-4 overflow-y-auto overflow-x-hidden min-w-0 lg:h-[calc(100vh-90px)]">
-                    <Accordion
-                        type="multiple"
-                        defaultValue={[
-                            "ship-grid",
-                            "ship-stats",
-                            "crew",
-                            "modules",
-                        ]}
-                        className="w-full"
-                    >
+                <div className="panel flex-1 lg:w-95 flex flex-col gap-4 overflow-y-auto min-w-0 lg:h-[calc(100vh-100px)] border-2 border-[#00ff41] bg-[rgba(0,255,65,0.02)] rounded-lg p-2 scrollbar-gutter-stable">
+                    <Accordion type="multiple" className="w-full">
                         <AccordionItem
-                            value="ship-grid"
-                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5 mb-3 md:mb-4"
+                            value="ship"
+                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
                         >
                             <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
                                 КОРАБЛЬ {moduleMovedThisTurn && "🔒"}
@@ -227,8 +140,8 @@ export default function Home() {
                         </AccordionItem>
 
                         <AccordionItem
-                            value="ship-stats"
-                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5 mb-3 md:mb-4"
+                            value="ship_stats"
+                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
                         >
                             <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
                                 СОСТОЯНИЕ КОРАБЛЯ
@@ -240,7 +153,7 @@ export default function Home() {
 
                         <AccordionItem
                             value="crew"
-                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5 mb-3 md:mb-4"
+                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
                         >
                             <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
                                 ЭКИПАЖ
@@ -252,7 +165,7 @@ export default function Home() {
 
                         <AccordionItem
                             value="modules"
-                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5 mb-3 md:mb-4"
+                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
                         >
                             <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
                                 МОДУЛИ
@@ -264,7 +177,7 @@ export default function Home() {
 
                         <AccordionItem
                             value="cargo"
-                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5 mb-3 md:mb-4"
+                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
                         >
                             <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
                                 ГРУЗОВОЙ ОТСЕК
@@ -289,13 +202,13 @@ export default function Home() {
                 </div>
 
                 {/* Right Panel */}
-                <div className="panel flex-1 lg:flex-1 flex flex-col mt-4 lg:mt-0 min-w-0 h-[calc(100vh-200px)] lg:h-[calc(100vh-90px)] pl-3 relative">
+                <div className="panel flex-1 lg:flex-1 flex flex-col min-w-0 h-[calc(100vh-200px)] lg:h-[calc(100vh-100px)] relative border-2 border-[#00ff41] bg-[rgba(0,255,65,0.02)] rounded-lg p-2">
                     <div className="flex-1 overflow-hidden min-h-0 pb-14">
                         <EventDisplay />
                     </div>
 
                     {/* Event Journal - at the bottom */}
-                    <div className="absolute bottom-0 left-0 right-0 z-10 px-5">
+                    <div className="absolute bottom-0 left-0 right-0 z-10 px-2 md:px-5 pb-2">
                         <Accordion type="multiple" className="w-full">
                             <AccordionItem
                                 value="log"
