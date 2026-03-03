@@ -14,6 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { MODULES_BY_LEVEL } from "./station/station-data";
 
+const SEARCH_INFO = "иссл./ход";
+
 // Получение описания модуля по типу и уровню из MODULES_BY_LEVEL
 function getModuleDescription(module: Module): string | undefined {
     const moduleType = module.type;
@@ -162,7 +164,9 @@ function ModuleStats({ module }: ModuleStatsProps) {
             {module.type === "lab" &&
                 module.researchOutput &&
                 module.researchOutput > 0 && (
-                    <span>🔬 {module.researchOutput} иссл./ход</span>
+                    <span>
+                        🔬 {module.researchOutput} {SEARCH_INFO}
+                    </span>
                 )}
             <span>
                 ❤{" "}
@@ -426,7 +430,7 @@ function ModuleDetailedStats({
             {module.type === "lab" && (
                 <div>
                     <span className="text-[#ffb000]">🔬 Исследования:</span>{" "}
-                    {module.researchOutput || 5} очков/ход
+                    {module.researchOutput || 5} {SEARCH_INFO}
                 </div>
             )}
             {module.type === "shield" &&

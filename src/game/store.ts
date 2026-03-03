@@ -48,6 +48,12 @@ import {
 } from "./saves/utils";
 import { handleSurvivorCapsuleDelivery } from "./contracts/handleSurvivorCapsuleDelivery";
 import { areAllModulesConnected } from "./modules";
+
+// ═══════════════════════════════════════════════════════════════
+// Power management constants
+// ═══════════════════════════════════════════════════════════════
+const EMERGENCY_SHUTDOWN_DAMAGE = 0.1; // 10% урона модулю, когда он аварийно выключен из-за отсутствия энергии
+
 import {
     getMiningResources,
     getScoutResources,
@@ -828,14 +834,20 @@ export const useGameStore = create<
                             (m) => m.id === mod.id,
                         );
                         if (moduleIndex >= 0) {
+                            // Apply 10% damage from emergency shutdown
+                            const damage = Math.floor(
+                                (mod.maxHealth || 100) *
+                                    EMERGENCY_SHUTDOWN_DAMAGE,
+                            );
                             updatedModules[moduleIndex] = {
                                 ...mod,
                                 disabled: true,
+                                health: Math.max(0, mod.health - damage),
                             };
                             deficit -= powerSaved;
                             disabledCount++;
                             get().addLog(
-                                `⚠️ ${priority.name} отключен (нехватка энергии)`,
+                                `⚠️ ${priority.name} отключен (нехватка энергии, -${damage}❤️)`,
                                 "warning",
                             );
                         }
