@@ -68,6 +68,9 @@ export function PlanetPanel() {
             >
                 {/* Content overlay for readability */}
                 <div className="relative z-10 bg-[rgba(5,8,16,0.85)] p-4 rounded border border-[#333]">
+                    {/* Planet Visual */}
+                    <PlanetVisual planetType={currentLocationPlanetType} />
+
                     <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
                         ▸ {currentLocation.name} -{" "}
                         {currentLocationPlanetType ?? ""}
