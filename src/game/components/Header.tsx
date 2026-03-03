@@ -215,7 +215,8 @@ export function GameHeader() {
                 onOpenChange={setShowResearchModal}
             >
                 <DialogContent
-                    className="bg-[rgba(10,20,30,0.98)] border-2 border-[#9933ff] text-[#00ff41] max-w-[95vw] w-[95vw] md:hidden max-h-[90vh] overflow-y-auto p-4"
+                    className="bg-[rgba(10,20,30,0.98)] border-2 border-[#9933ff] text-[#00ff41] max-w-[95vw] w-[95vw] md:hidden max-h-[90vh] overflow-y-auto p-4 scrollbar-gutter-stable"
+                    style={{ scrollbarGutter: "stable both-edges" }}
                     onPointerDownOutside={(e) => e.preventDefault()}
                 >
                     <DialogHeader>

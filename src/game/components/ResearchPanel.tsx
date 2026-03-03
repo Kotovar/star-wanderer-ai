@@ -98,7 +98,7 @@ function ResearchContent({
     const discoveredTechs = research?.discoveredTechs || [];
 
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 p-4">
             {/* Lab status */}
             <div
                 className={`p-2 md:p-3 border ${hasLab ? "border-[#00ff41] bg-[rgba(0,255,65,0.05)]" : "border-[#ff0040] bg-[rgba(255,0,64,0.05)]"}`}
@@ -372,10 +372,11 @@ function ResearchContent({
                             setSelectedTech(null);
                         }}
                         className="absolute top-1 right-2 text-[#ffb000] hover:text-[#00ff41] text-lg cursor-pointer"
+                        aria-label="Закрыть"
                     >
                         ✕
                     </button>
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2 pr-6">
                         <span className="text-2xl md:text-3xl">
                             {selectedTechnology.icon}
                         </span>
@@ -632,7 +633,7 @@ export function ResearchPanel() {
     };
 
     return (
-        <div className="h-full overflow-y-auto p-4">
+        <div className="h-full overflow-hidden">
             <ResearchContent {...researchProps} />
         </div>
     );
