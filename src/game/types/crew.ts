@@ -28,6 +28,8 @@ export type CrewMemberAssignment =
     | "calibration"
     | "patrol"
     | "research"
+    | "analyzing"
+    | "maintenance"
     | ""
     | null;
 
@@ -37,6 +39,13 @@ export type CrewMemberCombatAssignment =
     | "rapidfire"
     | "maintenance"
     | "calibration"
+    | "evasion"
+    | "repair"
+    | "heal"
+    | "firstaid"
+    | "patrol"
+    | "research"
+    | ""
     | null;
 
 export interface CrewMember {

@@ -156,7 +156,7 @@ function RefuelButton({
         <Button
             disabled={disabled}
             onClick={() => onRefuel(amount, price)}
-            className="bg-transparent border-2 border-[#9933ff] text-[#9933ff] hover:bg-[#9933ff] hover:text-[#050810] uppercase text-xs"
+            className="bg-transparent border-2 border-[#9933ff] text-[#9933ff] hover:bg-[#9933ff] hover:text-[#050810] uppercase text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
             {label || `+${amount} (${price}₢)`}
         </Button>
@@ -182,7 +182,7 @@ function RepairSection({
                 <Button
                     disabled={credits < 200}
                     onClick={onRepair}
-                    className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs"
+                    className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     РЕМОНТ
                 </Button>
@@ -211,7 +211,7 @@ function HealSection({
                 <Button
                     disabled={credits < 150}
                     onClick={onHeal}
-                    className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs"
+                    className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     ЛЕЧЕНИЕ
                 </Button>
@@ -285,7 +285,7 @@ function ScrapModuleSection({
                         </div>
                         <Button
                             onClick={() => onScrap(mod.id)}
-                            className="bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase text-xs"
+                            className="cursor-pointer bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase text-xs"
                         >
                             УТИЛИЗИРОВАТЬ
                         </Button>
@@ -390,7 +390,7 @@ function InstallModuleSection({
                                             validPosition.y,
                                         )
                                     }
-                                    className={`bg-transparent border-2 uppercase text-xs ${
+                                    className={`cursor-pointer bg-transparent border-2 uppercase text-xs ${
                                         canInstall
                                             ? "border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
                                             : "border-[#888] text-[#888] cursor-not-allowed"

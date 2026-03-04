@@ -91,3 +91,18 @@ export interface BattleResult {
     crewKilled: string[];
     artifactFound?: string;
 }
+
+// Storm results for showing after entering a storm
+export interface StormResult {
+    stormName: string;
+    stormType: string;
+    intensity: number;
+    shieldDamage: number;
+    moduleDamage: { name: string; damage: number }[];
+    moduleDamagePercent: number;
+    numModulesDamaged: number;
+    crewDamage: number;
+    creditsEarned: number;
+    rareLoot: boolean;
+    rareBonus?: number;
+}

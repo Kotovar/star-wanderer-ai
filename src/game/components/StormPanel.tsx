@@ -153,7 +153,7 @@ export function StormPanel() {
 
                 <Button
                     onClick={showSectorMap}
-                    className="w-full bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] font-bold"
+                    className="w-full bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] font-bold cursor-pointer"
                 >
                     ПОКИНУТЬ ШТОРМ
                 </Button>
@@ -218,13 +218,13 @@ export function StormPanel() {
                 <div className="flex gap-4">
                     <Button
                         onClick={enterStorm}
-                        className="flex-1 bg-[#ff4444] hover:bg-[#ff6666] text-white font-bold"
+                        className="flex-1 bg-[#ff4444] hover:bg-[#ff6666] text-white font-bold cursor-pointer"
                     >
                         ❓ ИССЛЕДОВАТЬ
                     </Button>
                     <Button
                         onClick={showSectorMap}
-                        className="bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)]"
+                        className="bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)] cursor-pointer"
                     >
                         ОТСТУПИТЬ
                     </Button>
@@ -305,13 +305,13 @@ export function StormPanel() {
             <div className="flex gap-4">
                 <Button
                     onClick={enterStorm}
-                    className="flex-1 bg-[#ff4444] hover:bg-[#ff6666] text-white font-bold"
+                    className="flex-1 bg-[#ff4444] hover:bg-[#ff6666] text-white font-bold cursor-pointer"
                 >
                     {info.icon} ВОЙТИ В ШТОРМ
                 </Button>
                 <Button
                     onClick={showSectorMap}
-                    className="bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)]"
+                    className="bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)] cursor-pointer"
                 >
                     ОТСТУПИТЬ
                 </Button>

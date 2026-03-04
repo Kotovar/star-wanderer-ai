@@ -141,7 +141,7 @@ function CrewCard({
                 <Button
                     disabled={!hasSpace || credits < crew.price}
                     onClick={() => onHire(crew.member, crew.price, locationId)}
-                    className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs ml-2"
+                    className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs ml-2"
                 >
                     НАНЯТЬ
                 </Button>
@@ -402,7 +402,7 @@ function CrewDetailDialog({
                         onHire(crew.member, crew.price, locationId);
                         onClose();
                     }}
-                    className={`bg-transparent border-2 uppercase text-xs flex-1 ${
+                    className={`cursor-pointer bg-transparent border-2 uppercase text-xs flex-1 ${
                         canHire
                             ? "border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
                             : "border-[#444] text-[#444] cursor-not-allowed"
@@ -412,7 +412,7 @@ function CrewDetailDialog({
                 </Button>
                 <Button
                     onClick={onClose}
-                    className="bg-transparent border-2 border-[#888] text-[#888] hover:bg-[#888] hover:text-[#050810] text-xs"
+                    className="cursor-pointer bg-transparent border-2 border-[#888] text-[#888] hover:bg-[#888] hover:text-[#050810] text-xs"
                 >
                     Закрыть
                 </Button>

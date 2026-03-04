@@ -161,7 +161,7 @@ export function PlanetPanel() {
                     <div className="flex gap-2.5 flex-wrap mt-5">
                         <Button
                             onClick={showSectorMap}
-                            className="bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider"
+                            className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider"
                         >
                             ПОКИНУТЬ ПЛАНЕТУ
                         </Button>
@@ -285,9 +285,17 @@ export function PlanetPanel() {
                                         <div className="text-[#00d4ff] font-bold">
                                             {c.desc}
                                         </div>
-                                        <div className="text-[11px] mt-1 text-[#00ff41]">
-                                            📦 Груз &quot;{c.cargo}&quot; (10т)
-                                        </div>
+                                        {c.cargo && (
+                                            <div className="text-[11px] mt-1 text-[#00ff41]">
+                                                📦 Груз &quot;
+                                                {
+                                                    DELIVERY_GOODS[
+                                                        c.cargo as DeliveryGoods
+                                                    ]?.name
+                                                }
+                                                &quot; ({c.quantity ?? 10}т)
+                                            </div>
+                                        )}
                                         <div className="text-[#ffb000] text-xs mt-1">
                                             💰 {c.reward}₢
                                         </div>
@@ -296,7 +304,7 @@ export function PlanetPanel() {
                                         onClick={() =>
                                             completeDeliveryContract(c.id)
                                         }
-                                        className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs"
+                                        className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs"
                                     >
                                         СДАТЬ
                                     </Button>
@@ -456,7 +464,7 @@ export function PlanetPanel() {
                 <div className="flex gap-2.5 flex-wrap mt-5">
                     <Button
                         onClick={showSectorMap}
-                        className="bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider"
+                        className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider"
                     >
                         ПОКИНУТЬ ПЛАНЕТУ
                     </Button>

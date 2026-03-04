@@ -1,4 +1,10 @@
-import type { CrewTraitEffect, CrewTraitType, Profession } from "@/game/types";
+import type {
+    CrewMemberAssignment,
+    CrewMemberCombatAssignment,
+    CrewTraitEffect,
+    CrewTraitType,
+    Profession,
+} from "@/game/types";
 
 // Extended crew traits with different rarities
 
@@ -245,7 +251,11 @@ export const PROFESSION_DESCRIPTIONS: Record<Profession, string> = {
 // Combat-only assignments (used during battle)
 export const COMBAT_ACTIONS: Record<
     Profession,
-    { value: string; label: string; effect: string | null }[]
+    {
+        value: NonNullable<CrewMemberCombatAssignment>;
+        label: string;
+        effect: string | null;
+    }[]
 > = {
     pilot: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
@@ -304,7 +314,11 @@ export const COMBAT_ACTIONS: Record<
 
 export const CREW_ACTIONS: Record<
     Profession,
-    { value: string; label: string; effect: string | null }[]
+    {
+        value: NonNullable<CrewMemberAssignment>;
+        label: string;
+        effect: string | null;
+    }[]
 > = {
     pilot: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },

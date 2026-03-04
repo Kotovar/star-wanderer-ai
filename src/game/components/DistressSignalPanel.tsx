@@ -304,14 +304,14 @@ export function DistressSignalPanel() {
                 onClick={() => {
                     respondToDistressSignal();
                 }}
-                className="bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider mt-5"
+                className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider mt-5"
             >
                 ОТКЛИКНУТЬСЯ
             </Button>
 
             <Button
                 onClick={showSectorMap}
-                className="bg-transparent border-2 border-[#666] text-[#666] hover:bg-[#666] hover:text-[#050810] uppercase tracking-wider"
+                className="cursor-pointer bg-transparent border-2 border-[#666] text-[#666] hover:bg-[#666] hover:text-[#050810] uppercase tracking-wider"
             >
                 ИГНОРИРОВАТЬ
             </Button>

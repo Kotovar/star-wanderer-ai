@@ -14,7 +14,7 @@ import type {
     Module,
     Profession,
 } from "@/game/types";
-import { COMBAT_ACTIONS, CREW_ACTIONS } from "@/game/constants/crew";
+import { COMBAT_ACTIONS } from "@/game/constants/crew";
 
 interface CrewMemberCardProps {
     crewMember: CrewMember;
@@ -42,13 +42,17 @@ export function CrewMemberCard({
     isCombat = false,
 }: CrewMemberCardProps) {
     // Use combat actions during battle, civilian actions otherwise
-    const actions = isCombat
-        ? COMBAT_ACTIONS[crewMember.profession] || [
-              { value: "", label: "ОЖИДАНИЕ", effect: null },
-          ]
-        : CREW_ACTIONS[crewMember.profession] || [
-              { value: "", label: "ОЖИДАНИЕ", effect: null },
-          ];
+    const actions = COMBAT_ACTIONS[crewMember.profession] || [
+        { value: "", label: "ОЖИДАНИЕ", effect: null },
+    ];
+
+    // const actions = isCombat
+    //     ? COMBAT_ACTIONS[crewMember.profession] || [
+    //           { value: "", label: "ОЖИДАНИЕ", effect: null },
+    //       ]
+    //     : CREW_ACTIONS[crewMember.profession] || [
+    //           { value: "", label: "ОЖИДАНИЕ", effect: null },
+    //       ];
 
     // Get current assignment based on combat state
     const currentAssignment = isCombat
@@ -64,11 +68,11 @@ export function CrewMemberCard({
             }`}
             onClick={() => onSelect(isSelected ? null : crewMember)}
         >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 cursor-pointer">
                 <span className="text-[#00d4ff] font-bold min-w-20">
                     {crewMember.name}
                 </span>
-                <span className="text-[#ffb000]">
+                <span className="text-[#ffb000] ">
                     {PROFESSION_NAMES[crewMember.profession]}
                 </span>
                 <span className="text-[#888] flex-1">
@@ -130,7 +134,7 @@ function MovementRow({
                                 onMove(crewMember.id, mod.id);
                                 onSelect(null);
                             }}
-                            className="bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-[9px] px-2 h-6 rounded-none"
+                            className="cursor-pointer bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-[9px] px-2 h-6 rounded-none"
                         >
                             {mod.name}
                         </Button>
@@ -149,7 +153,11 @@ function MovementRow({
 
 interface TaskRowProps {
     crewMember: CrewMember;
-    actions: Array<{ value: string; label: string; effect: unknown }>;
+    actions: Array<{
+        value: NonNullable<CrewMemberCombatAssignment>;
+        label: string;
+        effect: string | null;
+    }>;
     onAssignTask: (
         crewMemberId: number,
         task: CrewMemberCombatAssignment,
@@ -173,10 +181,7 @@ function TaskRow({
             </span>
             <div className="flex flex-wrap gap-1">
                 {actions.map((a) => {
-                    const itemValue =
-                        a.value === ""
-                            ? "none"
-                            : (a.value as CrewMemberCombatAssignment);
+                    const itemValue = a.value === "" ? "none" : a.value;
                     const currentTask = currentAssignment || "none";
                     const isActive = currentTask === itemValue;
 
@@ -197,7 +202,7 @@ function TaskRow({
                                                 null,
                                             );
                                         }}
-                                        className={`bg-transparent border text-[9px] px-2 h-6 rounded-none ${
+                                        className={`cursor-pointer bg-transparent border text-[9px] px-2 h-6 rounded-none ${
                                             isActive
                                                 ? "bg-[#ffb000] text-[#050810] border-[#ffb000]"
                                                 : "border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
@@ -226,7 +231,7 @@ function TaskRow({
 
 function getActionDescription(
     profession: Profession,
-    actionValue: string,
+    actionValue: NonNullable<CrewMemberCombatAssignment>,
 ): string {
     const descriptions: Record<Profession, Record<string, string>> = {
         pilot: {
@@ -240,6 +245,7 @@ function getActionDescription(
             power: "Энергия - +5 к генерации",
             repair: "Ремонт - +15% здоровья модулю",
             overclock: "Перегрузка - +25% урон, -10% брони",
+            calibration: "+10% точность",
         },
         medic: {
             "": "Ожидание - бездействие",
@@ -261,5 +267,5 @@ function getActionDescription(
             rapidfire: "Шквал - +25% урон, -5% точность",
         },
     };
-    return descriptions[profession]?.[actionValue] || "Нет описания";
+    return descriptions[profession]?.[actionValue] ?? "Нет описания";
 }

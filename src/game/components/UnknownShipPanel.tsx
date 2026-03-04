@@ -30,8 +30,12 @@ export function UnknownShipPanel() {
     const effectiveScanner = hasScanner || hasAllSeeing;
 
     const handleApproach = () => {
-        // Mark location as revealed on sector map
-        const revealedLocation = { ...currentLocation, signalRevealed: true };
+        // Mark location as revealed on sector map ONLY if we have scanner
+        // Without scanner, the object remains unknown even after approaching
+        const revealedLocation = {
+            ...currentLocation,
+            signalRevealed: effectiveScanner, // Only reveal if we have scanner or All-Seeing Eye
+        };
 
         // Update the location in the current sector
         if (currentSector) {
@@ -189,13 +193,13 @@ export function UnknownShipPanel() {
             <div className="flex gap-4">
                 <Button
                     onClick={handleApproach}
-                    className="flex-1 bg-[#ff4444] hover:bg-[#ff6666] text-white font-bold"
+                    className="flex-1 bg-[#ff4444] hover:bg-[#ff6666] text-white font-bold cursor-pointer"
                 >
                     ❓ ПРИБЛИЗИТЬСЯ
                 </Button>
                 <Button
                     onClick={showSectorMap}
-                    className="bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)]"
+                    className="bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)] cursor-pointer"
                 >
                     ОТСТУПИТЬ
                 </Button>

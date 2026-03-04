@@ -3809,15 +3809,18 @@ export const useGameStore = create<
         // Apply module damage to random modules
         const damagedModules = [...state.ship.modules];
         const numModulesToDamage = Math.floor(Math.random() * 2) + 1;
+        const modulesDamagedList: { name: string; damage: number }[] = [];
         for (let i = 0; i < numModulesToDamage; i++) {
             const randomIdx = Math.floor(Math.random() * damagedModules.length);
+            const damage = Math.floor(moduleDamage);
             damagedModules[randomIdx] = {
                 ...damagedModules[randomIdx],
-                health: Math.max(
-                    10,
-                    damagedModules[randomIdx].health - Math.floor(moduleDamage),
-                ),
+                health: Math.max(10, damagedModules[randomIdx].health - damage),
             };
+            modulesDamagedList.push({
+                name: damagedModules[randomIdx].name,
+                damage: damage,
+            });
         }
 
         // Apply crew damage
@@ -3833,41 +3836,38 @@ export const useGameStore = create<
         );
         const rareLootChance = 0.1 * intensity * lootMultiplier;
         const rareLoot = Math.random() < rareLootChance;
+        let rareBonus = 0;
+        if (rareLoot) {
+            rareBonus = Math.floor(100 + Math.random() * 150) * intensity;
+        }
 
         // Apply changes
         set((s) => ({
             ship: { ...s.ship, shields: newShields, modules: damagedModules },
             crew: damagedCrew,
-            credits: s.credits + baseLoot,
+            credits: s.credits + baseLoot + rareBonus,
+            stormResult: {
+                stormName: loc.name,
+                stormType,
+                intensity,
+                shieldDamage: Math.floor(shieldDamage),
+                moduleDamage: modulesDamagedList,
+                moduleDamagePercent: Math.floor(moduleDamage),
+                numModulesDamaged: numModulesToDamage,
+                crewDamage: Math.floor(crewDamage),
+                creditsEarned: baseLoot + rareBonus,
+                rareLoot,
+                rareBonus: rareLoot ? rareBonus : undefined,
+            },
+            gameMode: "storm_results",
         }));
 
-        // Log the event
         playSound("combat");
-        get().addLog(`Щиты: -${Math.floor(shieldDamage)}`, "error");
-        get().addLog(
-            `Модули повреждены: -${Math.floor(moduleDamage)}% x${numModulesToDamage}`,
-            "error",
-        );
-        if (crewDamage > 0)
-            get().addLog(
-                `Экипаж: -${Math.floor(crewDamage)} здоровья`,
-                "error",
-            );
-        get().addLog(`Добыча: +${baseLoot}₢`, "info");
-        if (rareLoot) {
-            const rareBonus = Math.floor(100 + Math.random() * 150) * intensity;
-            set((s) => ({ credits: s.credits + rareBonus }));
-            get().addLog(`★ РЕДКАЯ НАХОДКА! +${rareBonus}₢`, "info");
-        }
 
         // Give scientist experience for studying the storm
         const scientist = state.crew.find((c) => c.profession === "scientist");
         if (scientist) {
             get().gainExp(scientist, 25 * intensity);
-            get().addLog(
-                `${scientist.name} собрал данные о шторме! +${25 * intensity} опыта`,
-                "info",
-            );
         }
 
         // Complete rescue contracts (voidborn quest - survive storm in target sector)

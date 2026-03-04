@@ -414,7 +414,7 @@ function BuyButton({
         <Button
             disabled={disabled}
             onClick={onClick}
-            className={`bg-transparent border-2 text-xs uppercase ${
+            className={`bg-transparent border-2 text-xs uppercase cursor-pointer ${
                 isUnique
                     ? "border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
                     : "border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
@@ -633,7 +633,7 @@ function UpgradeDialog({
                         <Button
                             disabled={!canAfford}
                             onClick={onUpgrade}
-                            className={`bg-transparent border-2 text-xs uppercase flex-1 ${
+                            className={`bg-transparent border-2 text-xs uppercase flex-1 cursor-pointer ${
                                 canAfford
                                     ? "border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
                                     : "border-[#444] text-[#444] cursor-not-allowed"
@@ -643,7 +643,7 @@ function UpgradeDialog({
                         </Button>
                         <Button
                             onClick={onClose}
-                            className="bg-transparent border-2 border-[#888] text-[#888] hover:bg-[#888] hover:text-[#050810] text-xs uppercase"
+                            className="cursor-pointer bg-transparent border-2 border-[#888] text-[#888] hover:bg-[#888] hover:text-[#050810] text-xs uppercase"
                         >
                             Отмена
                         </Button>

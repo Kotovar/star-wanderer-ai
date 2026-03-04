@@ -247,20 +247,20 @@ function CombatActions({
             <Button
                 disabled={!canAttack}
                 onClick={onAttack}
-                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+                className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
             >
                 {hasGunner ? "АТАКОВАТЬ" : "АТАКОВАТЬ (случайная цель)"}
             </Button>
             <Button
                 onClick={() => useGameStore.getState().skipTurn()}
-                className="bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
+                className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
             >
                 ПРОПУСТИТЬ ХОД
             </Button>
             <Button
                 variant="destructive"
                 onClick={onRetreat}
-                className="bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
+                className="cursor-pointer bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
             >
                 ОТСТУПИТЬ
             </Button>

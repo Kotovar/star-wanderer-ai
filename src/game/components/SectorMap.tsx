@@ -313,6 +313,8 @@ export function SectorMap() {
 
     // Zoom and pan state
     const [zoom, setZoom] = useState(1);
+    const [targetZoom, setTargetZoom] = useState<number | null>(null);
+    const zoomAnimationRef = useRef<number | null>(null);
     const [offset, setOffset] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
     const dragStartRef = useRef({ x: 0, y: 0 });
@@ -596,7 +598,7 @@ export function SectorMap() {
                 MAX_ZOOM,
                 Math.max(MIN_ZOOM, zoom * (1 + delta)),
             );
-            setZoom(newZoom);
+            setTargetZoom(newZoom);
         },
         [zoom],
     );
@@ -914,18 +916,53 @@ export function SectorMap() {
         }
     }, [isDragging]);
 
+    // Zoom animation effect
+    useEffect(() => {
+        if (targetZoom === null) return;
+
+        const animateZoom = () => {
+            setZoom((prevZoom) => {
+                const diff = targetZoom - prevZoom;
+                const step = diff * 0.15; // Smooth easing
+
+                if (Math.abs(diff) < 0.001) {
+                    setZoom(targetZoom);
+                    setTargetZoom(null);
+                    return targetZoom;
+                }
+
+                return prevZoom + step;
+            });
+            zoomAnimationRef.current = requestAnimationFrame(animateZoom);
+        };
+
+        zoomAnimationRef.current = requestAnimationFrame(animateZoom);
+
+        return () => {
+            if (zoomAnimationRef.current) {
+                cancelAnimationFrame(zoomAnimationRef.current);
+            }
+        };
+    }, [targetZoom]);
+
     // Zoom in/out buttons
     const handleZoomIn = useCallback(() => {
-        setZoom((z) => Math.min(MAX_ZOOM, z * 1.3));
-    }, []);
+        setTargetZoom((prev) => {
+            const currentZoom = prev !== null ? prev : zoom;
+            return Math.min(MAX_ZOOM, currentZoom * 1.3);
+        });
+    }, [zoom]);
 
     const handleZoomOut = useCallback(() => {
-        setZoom((z) => Math.max(MIN_ZOOM, z / 1.3));
-    }, []);
+        setTargetZoom((prev) => {
+            const currentZoom = prev !== null ? prev : zoom;
+            return Math.max(MIN_ZOOM, currentZoom / 1.3);
+        });
+    }, [zoom]);
 
     // Reset zoom and pan
     const handleReset = useCallback(() => {
-        setZoom(1);
+        setTargetZoom(1);
         setOffset({ x: 0, y: 0 });
     }, []);
 

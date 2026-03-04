@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useGameStore } from "../store";
 import { GalaxyMap } from "./GalaxyMap";
 import { SectorMap } from "./SectorMap";
@@ -17,6 +18,7 @@ import { DistressSignalPanel } from "./DistressSignalPanel";
 import { ArtifactPanel } from "./ArtifactPanel";
 import { UnknownShipPanel } from "./UnknownShipPanel";
 import { BattleResultsPanel } from "./BattleResultsPanel";
+import { StormResultsPanel } from "./StormResultsPanel";
 import { ResearchPanel } from "./ResearchPanel";
 
 const LABELS = {
@@ -35,6 +37,14 @@ export function EventDisplay() {
     const showAssignments = useGameStore((s) => s.showAssignments);
     const skipTurn = useGameStore((s) => s.skipTurn);
     const currentSector = useGameStore((s) => s.currentSector);
+
+    const [isSkipping, setIsSkipping] = useState(false);
+
+    const handleSkipTurn = () => {
+        setIsSkipping(true);
+        skipTurn();
+        setTimeout(() => setIsSkipping(false), 600);
+    };
 
     // Traveling state
     if (traveling) {
@@ -57,14 +67,19 @@ export function EventDisplay() {
                 </div>
                 <div className="flex gap-2.5 flex-wrap mt-5">
                     <Button
-                        onClick={skipTurn}
-                        className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
+                        onClick={handleSkipTurn}
+                        disabled={isSkipping}
+                        className={`bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${
+                            isSkipping
+                                ? "scale-95 bg-[#00ff41] text-[#050810]"
+                                : ""
+                        }`}
                     >
-                        {LABELS.next}
+                        {isSkipping ? "⏱️ ПРОПУСКАЕМ..." : LABELS.next}
                     </Button>
                     <Button
                         onClick={showAssignments}
-                        className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
+                        className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                     >
                         {LABELS.crew}
                     </Button>
@@ -83,21 +98,27 @@ export function EventDisplay() {
                     <div className="grid grid-cols-2 gap-2 shrink-0">
                         <Button
                             onClick={showSectorMap}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs"
+                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                         >
                             {LABELS.mapSector}
                         </Button>
                         <div className="grid grid-rows-2 gap-2">
                             <Button
                                 onClick={showAssignments}
-                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs"
+                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                             >
                                 {LABELS.crew}
                             </Button>
                             <Button
-                                onClick={skipTurn}
-                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs"
+                                onClick={handleSkipTurn}
+                                disabled={isSkipping}
+                                className={`bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${
+                                    isSkipping
+                                        ? "scale-95 bg-[#00ff41] text-[#050810]"
+                                        : ""
+                                }`}
                             >
+                                {isSkipping ? "⏱️ " : ""}
                                 {LABELS.skip}
                             </Button>
                         </div>
@@ -126,21 +147,27 @@ export function EventDisplay() {
                     <div className="grid grid-cols-2 gap-2 shrink-0">
                         <Button
                             onClick={showGalaxyMap}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs"
+                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                         >
                             {LABELS.mapGalaxy}
                         </Button>
                         <div className="grid grid-rows-2 gap-2">
                             <Button
                                 onClick={showAssignments}
-                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs"
+                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                             >
                                 {LABELS.crew}
                             </Button>
                             <Button
-                                onClick={skipTurn}
-                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs"
+                                onClick={handleSkipTurn}
+                                disabled={isSkipping}
+                                className={`bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                    isSkipping
+                                        ? "scale-95 bg-[#00ff41] text-[#050810]"
+                                        : ""
+                                }`}
                             >
+                                {isSkipping ? "⏱️ " : ""}
                                 {LABELS.skip}
                             </Button>
                         </div>
@@ -219,6 +246,9 @@ export function EventDisplay() {
 
         case "battle_results":
             return <BattleResultsPanel />;
+
+        case "storm_results":
+            return <StormResultsPanel />;
 
         case "assignments":
             return <AssignmentsPanel />;

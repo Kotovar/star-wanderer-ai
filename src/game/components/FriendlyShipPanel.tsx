@@ -467,7 +467,7 @@ export function FriendlyShipPanel() {
                                                     ship: { ...s.ship },
                                                 }));
                                             }}
-                                            className="bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] px-1.5"
+                                            className=" bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] px-1.5"
                                         >
                                             +1
                                         </Button>
@@ -870,7 +870,7 @@ export function FriendlyShipPanel() {
                                     currentLocation.id,
                                 )
                             }
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs"
+                            className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs"
                         >
                             НАНЯТЬ
                         </Button>
@@ -898,7 +898,8 @@ export function FriendlyShipPanel() {
                                         {c.desc}
                                     </div>
                                     <div className="text-[11px] mt-1 text-[#00ff41]">
-                                        📦 Груз &quot;{c.cargo}&quot; (10т)
+                                        📦 Груз &quot;{c.cargo}&quot; (
+                                        {c.quantity ?? 10}т)
                                     </div>
                                     <div className="text-[#ffb000] text-xs mt-1">
                                         💰 {c.reward}₢
@@ -908,7 +909,7 @@ export function FriendlyShipPanel() {
                                     onClick={() =>
                                         completeDeliveryContract(c.id)
                                     }
-                                    className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs"
+                                    className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs"
                                 >
                                     СДАТЬ
                                 </Button>
@@ -937,7 +938,7 @@ export function FriendlyShipPanel() {
                     </div>
                     <Button
                         onClick={handleAcceptQuest}
-                        className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
+                        className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
                     >
                         ПРИНЯТЬ
                     </Button>
@@ -954,7 +955,7 @@ export function FriendlyShipPanel() {
             <div className="flex gap-2.5 flex-wrap mt-5">
                 <Button
                     onClick={showSectorMap}
-                    className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
+                    className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
                 >
                     ПОКИНУТЬ
                 </Button>

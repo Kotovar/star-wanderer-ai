@@ -133,7 +133,7 @@ export function StationPanel() {
 
             <Button
                 onClick={showSectorMap}
-                className="bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider w-fit"
+                className="bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider w-fit cursor-pointer"
             >
                 ← ПОКИНУТЬ СТАНЦИЮ
             </Button>
@@ -330,6 +330,16 @@ function DeliveryContracts({
     contracts: Contract[];
     onComplete: (id: string) => void;
 }) {
+    const [completingId, setCompletingId] = useState<string | null>(null);
+
+    const handleComplete = (id: string) => {
+        setCompletingId(id);
+        setTimeout(() => {
+            onComplete(id);
+            setCompletingId(null);
+        }, 300);
+    };
+
     return (
         <>
             <div className="font-['Orbitron'] font-bold text-base text-[#00ff41] mt-4">
@@ -342,7 +352,11 @@ function DeliveryContracts({
                 {contracts.map((c) => (
                     <div
                         key={c.id}
-                        className="flex justify-between items-center bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3"
+                        className={`flex justify-between items-center bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3 transition-all duration-300 ${
+                            completingId === c.id
+                                ? "opacity-0 scale-95"
+                                : "opacity-100 scale-100"
+                        }`}
                     >
                         <div className="flex-1">
                             <div className="text-[#00d4ff] font-bold">
@@ -356,8 +370,9 @@ function DeliveryContracts({
                             </div>
                         </div>
                         <Button
-                            onClick={() => onComplete(c.id)}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs"
+                            onClick={() => handleComplete(c.id)}
+                            disabled={completingId !== null}
+                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             СДАТЬ
                         </Button>

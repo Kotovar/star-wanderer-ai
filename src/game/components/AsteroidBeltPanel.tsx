@@ -183,13 +183,13 @@ export function AsteroidBeltPanel() {
                 <div className="flex gap-4">
                     <Button
                         onClick={mineAsteroid}
-                        className={`flex-1 font-bold ${isAncient ? "bg-[#ffb000] hover:bg-[#ffc000] text-black" : "bg-[#cd853f] hover:bg-[#daa520] text-black"}`}
+                        className={`cursor-pointer flex-1 font-bold ${isAncient ? "bg-[#ffb000] hover:bg-[#ffc000] text-black" : "bg-[#cd853f] hover:bg-[#daa520] text-black"}`}
                     >
                         ⛏️ НАЧАТЬ ДОБЫЧУ
                     </Button>
                     <Button
                         onClick={showSectorMap}
-                        className="bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)]"
+                        className="cursor-pointer bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)]"
                     >
                         УЙТИ
                     </Button>
@@ -201,7 +201,7 @@ export function AsteroidBeltPanel() {
                     </p>
                     <Button
                         onClick={showSectorMap}
-                        className="bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)]"
+                        className="cursor-pointer bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)]"
                     >
                         УЙТИ
                     </Button>

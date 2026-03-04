@@ -81,6 +81,7 @@ export const initialState: GameState = {
     artifacts: ANCIENT_ARTIFACTS.map((a) => ({ ...a })),
     knownRaces: [INITIAL_KNOWN_RACE],
     battleResult: null,
+    stormResult: null,
     gameOver: false,
     gameOverReason: null,
     gameVictory: false,

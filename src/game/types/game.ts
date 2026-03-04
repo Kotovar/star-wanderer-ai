@@ -1,7 +1,12 @@
 import type { Artifact } from "./artifacts";
 import type { CargoItem } from "./cargo";
 import type { CombatState } from "./combat";
-import type { BattleResult, Contract, ScoutingMission } from "./contracts";
+import type {
+    BattleResult,
+    Contract,
+    ScoutingMission,
+    StormResult,
+} from "./contracts";
 import type { CrewMember } from "./crew";
 import type { ActiveEffect } from "./effects";
 import type { TradeGood } from "./goods";
@@ -28,6 +33,7 @@ export type GameMode =
     | "artifacts"
     | "unknown_ship"
     | "battle_results"
+    | "storm_results"
     | "research";
 
 export interface GameState {
@@ -79,6 +85,7 @@ export interface GameState {
     artifacts: Artifact[]; // Ancient artifacts discovered by player
     knownRaces: RaceId[]; // Races discovered by player
     battleResult: BattleResult | null; // Results of last battle
+    stormResult: StormResult | null; // Results of last storm entry
     gameOver: boolean; // Game over state
     gameOverReason: string | null; // Reason for game over
     gameVictory: boolean; // Victory state (reached tier 4)
