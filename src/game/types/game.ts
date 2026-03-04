@@ -2,9 +2,13 @@ import type { Artifact } from "./artifacts";
 import type { CargoItem } from "./cargo";
 import type { CombatState } from "./combat";
 import type { BattleResult, Contract, StormResult } from "./contracts";
-import type { CrewMember } from "./crew";
+import type {
+    CrewMember,
+    CrewMemberAssignment,
+    CrewMemberCombatAssignment,
+} from "./crew";
 import type { ActiveEffect } from "./effects";
-import type { TradeGood } from "./goods";
+import type { Goods, TradeGood } from "./goods";
 import type { Sector, TravelingState } from "./locations/sectors";
 import type { Location } from "./locations/locations";
 import type { LogEntry } from "./logs";
@@ -12,6 +16,7 @@ import type { Module } from "./modules";
 import type { RaceId } from "./races";
 import type { ShipMergeTrait } from "./ships";
 import type { ResearchData } from "./research";
+import type { ShopItem } from "./shops";
 
 export type GameMode =
     | "galaxy_map"
@@ -88,3 +93,165 @@ export interface GameState {
     planetCooldowns: Record<string, number>; // Track cooldowns per planet (planetId -> turnsRemaining)
     research: ResearchData; // Research system data
 }
+
+export interface GameActions {
+    addLog: (message: string, type?: LogEntry["type"]) => void;
+    updateShipStats: () => void;
+    getTotalPower: () => number;
+    getTotalConsumption: () => number;
+    getTotalDamage: () => {
+        total: number;
+        kinetic: number;
+        laser: number;
+        missile: number;
+    };
+    getCrewCapacity: () => number;
+    getFuelCapacity: () => number;
+    getFuelEfficiency: () => number;
+    getDrillLevel: () => number;
+    getCargoCapacity: () => number;
+    getScanLevel: () => number;
+    getScanRange: () => number;
+    calculateFuelCost: (targetTier: number) => number;
+    areEnginesFunctional: () => boolean;
+    areFuelTanksFunctional: () => boolean;
+    refuel: (amount: number, price: number) => void;
+    gainExp: (crewMember: CrewMember | undefined, amount: number) => void;
+}
+
+export interface GameActionsClick {
+    nextTurn: () => void;
+    skipTurn: () => void;
+    selectSector: (sectorId: number) => void;
+    selectLocation: (locationIdx: number) => void;
+    travelThroughBlackHole: () => void;
+    mineAsteroid: () => void;
+    enterStorm: () => void;
+}
+
+export interface GameModeChanges {
+    showGalaxyMap: () => void;
+    showSectorMap: () => void;
+    showAssignments: () => void;
+    closeArtifactsPanel: () => void;
+}
+
+export interface GameCombat {
+    startCombat: (enemy: Location, isAmbush?: boolean) => void;
+    startBossCombat: (bossLocation: Location) => void;
+    selectEnemyModule: (moduleId: number) => void;
+    attackEnemy: () => void;
+    executeAmbushAttack: () => void; // Execute enemy attack for ambush (first strike)
+    retreat: () => void;
+}
+
+export interface GameStationAndPlanets {
+    buyItem: (item: ShopItem, targetModuleId?: number) => void;
+    repairShip: () => void;
+    healCrew: () => void;
+    buyTradeGood: (goodId: Goods, quantity?: number) => void;
+    sellTradeGood: (goodId: Goods, quantity?: number) => void;
+    installModuleFromCargo: (cargoIndex: number, x: number, y: number) => void;
+}
+
+export interface GameCrew {
+    hireCrew: (
+        crewData: Partial<CrewMember> & { price: number },
+        locationId?: string,
+    ) => void;
+    fireCrewMember: (crewId: number) => void;
+    assignCrewTask: (
+        crewId: number,
+        task: CrewMemberAssignment,
+        effect: string | null,
+    ) => void;
+    assignCombatTask: (
+        crewId: number,
+        task: CrewMemberCombatAssignment,
+        effect: string,
+    ) => void;
+    moveCrewMember: (crewId: number, targetModuleId: number) => void;
+    isModuleAdjacent: (moduleId1: number, moduleId2: number) => boolean;
+    getCrewInModule: (moduleId: number) => CrewMember[];
+}
+
+export interface GameContracts {
+    acceptContract: (contract: Contract) => void;
+    completeDeliveryContract: (contractId: string) => void;
+    cancelContract: (contractId: string) => void;
+}
+
+export interface GameModule {
+    toggleModule: (moduleId: number) => void;
+    scrapModule: (moduleId: number) => void;
+    moveModule: (moduleId: number, x: number, y: number) => void;
+    canPlaceModule: (module: Module, x: number, y: number) => boolean;
+}
+
+export interface GameAnomaly {
+    handleAnomaly: (anomaly: Location) => void;
+}
+
+export interface GameScouting {
+    sendScoutingMission: (planetId: string) => void;
+}
+
+export interface GameDistressSignal {
+    respondToDistressSignal: () => void;
+}
+
+export interface GameArtifacts {
+    researchArtifact: (artifactId: string) => void;
+    toggleArtifact: (artifactId: string) => void;
+    tryFindArtifact: () => Artifact | null;
+    showArtifacts: () => void;
+    showResearch: () => void;
+}
+
+export interface GameRaces {
+    discoverRace: (raceId: RaceId) => void;
+}
+
+export interface GamePlanetSpecializations {
+    trainCrew: (crewMemberId: number) => void;
+    scanSector: () => void;
+    boostArtifact: (artifactId: string) => void;
+    activatePlanetEffect: (raceId: RaceId, planetId?: string) => void;
+    removeExpiredEffects: () => void;
+}
+
+export interface GameFinish {
+    checkGameOver: () => void;
+    triggerVictory: () => void;
+}
+
+export interface GameResearch {
+    startResearch: (techId: string) => void;
+    addResearchResource: (type: string, quantity: number) => void;
+    processResearch: () => void;
+}
+
+export interface GameManagement {
+    restartGame: () => void;
+    saveGame: () => void;
+    loadGame: () => boolean;
+}
+
+export type GameStore = GameState &
+    GameActions &
+    GameActionsClick &
+    GameModeChanges &
+    GameCombat &
+    GameStationAndPlanets &
+    GameCrew &
+    GameContracts &
+    GameModule &
+    GameAnomaly &
+    GameScouting &
+    GameDistressSignal &
+    GameArtifacts &
+    GameRaces &
+    GamePlanetSpecializations &
+    GameFinish &
+    GameResearch &
+    GameManagement;

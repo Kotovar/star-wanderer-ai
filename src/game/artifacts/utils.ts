@@ -1,5 +1,10 @@
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
-import type { ActiveEffect, ArtefatType, Artifact } from "@/game/types";
+import type {
+    ActiveEffect,
+    ArtefatType,
+    Artifact,
+    GameState,
+} from "@/game/types";
 
 // Get artifact by ID
 export const getArtifactById = (id: string): Artifact | undefined => {
@@ -63,4 +68,35 @@ export const getEffectDescription = (
         default:
             return `${effect.type}: ${effect.value}`;
     }
+};
+
+// Helper function to get artifact effect value with active boost bonus
+export const getArtifactEffectValue = (
+    artifact: Artifact | undefined,
+    state: GameState,
+) => {
+    if (!artifact) return 0;
+
+    let value = artifact.effect.value ?? 0;
+
+    // Check if this artifact is boosted by voidborn ritual
+    const boostEffect = state.activeEffects.find(
+        (e) =>
+            e.effects.some((ef) => ef.type === "artifact_boost") &&
+            e.targetArtifactId === artifact.id,
+    );
+
+    if (boostEffect) {
+        const boostValue =
+            (boostEffect.effects.find((ef) => ef.type === "artifact_boost")
+                ?.value as number) ?? 0.5;
+        // For percentage values (< 1), don't use floor - keep decimal precision
+        // For integer values (>= 1), use floor for clean numbers
+        value =
+            value < 1
+                ? value * (1 + boostValue)
+                : Math.floor(value * (1 + boostValue));
+    }
+
+    return value;
 };

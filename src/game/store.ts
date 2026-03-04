@@ -1,237 +1,62 @@
 import { create } from "zustand";
-import type {
-    GameState,
-    Location,
-    Contract,
-    Module,
-    CrewMember,
-    ShopItem,
-    Artifact,
-    EnemyModule,
-    RaceId,
-    BattleResult,
-    CargoItem,
-    Goods,
-    ShipMergeTrait,
-    CrewMemberAssignment,
-    CrewMemberCombatAssignment,
-} from "@/game/types";
+import {
+    getArtifactEffectValue,
+    getRandomUndiscoveredArtifact,
+} from "@/game/artifacts";
+import { getBossById } from "@/game/bosses";
+import { MODULES_BY_LEVEL } from "@/game/components/station";
+import { MUTATION_TRAITS } from "@/game/traits/consts";
 import {
     CONTRACT_REWARDS,
+    CREW_TRAITS,
+    DELIVERY_GOODS,
+    EMERGENCY_SHUTDOWN_DAMAGE,
+    PLANET_SPECIALIZATIONS,
+    RACES,
+    RESEARCH_TREE,
     TRADE_GOODS,
     WEAPON_TYPES,
-    DELIVERY_GOODS,
+    RESEARCH_RESOURCES,
 } from "@/game/constants";
-import { generateGalaxy } from "@/game/galaxy";
-import { RACES } from "@/game/constants/races";
-import { CREW_TRAITS } from "@/game/constants/crew";
-import { PLANET_SPECIALIZATIONS } from "@/game/constants/planets";
-import { getRandomName, giveCrewExperience } from "@/game/crew/utils";
+import { handleSurvivorCapsuleDelivery } from "@/game/contracts";
 import {
-    getMutationTraitDesc,
-    getMutationTraitName,
-} from "@/game/traits/utils";
-import { MUTATION_TRAITS } from "@/game/traits/consts";
-import { getRandomUndiscoveredArtifact } from "@/game/artifacts/utils";
-import { getBossById } from "@/game/bosses/utils";
-import { determineSignalOutcome } from "@/game/signals/utils";
-import { typedKeys } from "@/lib/utils";
-import { initializeStationData } from "@/game/stations";
-import { MODULES_BY_LEVEL } from "@/game/components/station/station-data";
-import { initialState } from "./initial";
-import { getActiveAssignment } from "./crew";
-import { playSound } from "@/sounds";
+    getActiveAssignment,
+    getRandomName,
+    giveCrewExperience,
+} from "@/game/crew";
+import { generateGalaxy } from "@/game/galaxy";
+import { initialState } from "@/game/initial";
+import { areAllModulesConnected } from "@/game/modules";
 import {
     clearLocalStorage,
     loadFromLocalStorage,
     saveToLocalStorage,
-} from "./saves/utils";
-import { handleSurvivorCapsuleDelivery } from "./contracts/handleSurvivorCapsuleDelivery";
-import { areAllModulesConnected } from "./modules";
-
-// ═══════════════════════════════════════════════════════════════
-// Power management constants
-// ═══════════════════════════════════════════════════════════════
-const EMERGENCY_SHUTDOWN_DAMAGE = 0.1; // 10% урона модулю, когда он аварийно выключен из-за отсутствия энергии
-
+} from "@/game/saves/utils";
+import { determineSignalOutcome } from "@/game/signals";
+import { initializeStationData } from "@/game/stations";
+import { getMutationTraitDesc, getMutationTraitName } from "@/game/traits";
+import { playSound } from "@/sounds";
+import { typedKeys } from "@/lib/utils";
 import {
-    getMiningResources,
-    getCombatLootResources,
-    getBossLootResources,
+    getAdjacentTechs,
     getAnomalyResources,
-} from "./research/utils";
-import { RESEARCH_RESOURCES } from "./constants/research";
-
-// Helper function to get artifact effect value with active boost bonus
-const getArtifactEffectValue = (
-    artifact: Artifact | undefined,
-    state: GameState,
-): number => {
-    if (!artifact) return 0;
-
-    let value = artifact.effect.value || 0;
-
-    // Check if this artifact is boosted by voidborn ritual
-    const boostEffect = state.activeEffects.find(
-        (e) =>
-            e.effects.some((ef) => ef.type === "artifact_boost") &&
-            e.targetArtifactId === artifact.id,
-    );
-
-    if (boostEffect) {
-        const boostValue =
-            (boostEffect.effects.find((ef) => ef.type === "artifact_boost")
-                ?.value as number) ?? 0.5;
-        // For percentage values (< 1), don't use floor - keep decimal precision
-        // For integer values (>= 1), use floor for clean numbers
-        value =
-            value < 1
-                ? value * (1 + boostValue)
-                : Math.floor(value * (1 + boostValue));
-    }
-
-    return value;
-};
+    getBossLootResources,
+    getCombatLootResources,
+    getMiningResources,
+} from "@/game/research/utils";
+import type {
+    BattleResult,
+    CargoItem,
+    CrewMember,
+    EnemyModule,
+    GameStore,
+    Module,
+    RaceId,
+    ShipMergeTrait,
+} from "@/game/types";
 
 // Game store
-export const useGameStore = create<
-    GameState & {
-        // Actions
-        addLog: (
-            message: string,
-            type?: "info" | "warning" | "error" | "combat",
-        ) => void;
-        updateShipStats: () => void;
-        getTotalPower: () => number;
-        getTotalConsumption: () => number;
-        getTotalDamage: () => {
-            total: number;
-            kinetic: number;
-            laser: number;
-            missile: number;
-        };
-        getCrewCapacity: () => number;
-        getFuelCapacity: () => number;
-        getFuelEfficiency: () => number;
-        getDrillLevel: () => number;
-        getCargoCapacity: () => number;
-        getScanLevel: () => number;
-        getScanRange: () => number;
-        calculateFuelCost: (targetTier: number) => number;
-        areEnginesFunctional: () => boolean;
-        areFuelTanksFunctional: () => boolean;
-        refuel: (amount: number, price: number) => void;
-        gainExp: (crewMember: CrewMember | undefined, amount: number) => void;
-
-        // Game actions
-        nextTurn: () => void;
-        skipTurn: () => void;
-        selectSector: (sectorId: number) => void;
-        selectLocation: (locationIdx: number) => void;
-        travelThroughBlackHole: () => void;
-        mineAsteroid: () => void;
-        enterStorm: () => void;
-
-        // Mode changes
-        showGalaxyMap: () => void;
-        showSectorMap: () => void;
-        showAssignments: () => void;
-        closeArtifactsPanel: () => void;
-
-        // Combat
-        startCombat: (enemy: Location, isAmbush?: boolean) => void;
-        startBossCombat: (bossLocation: Location) => void;
-        selectEnemyModule: (moduleId: number) => void;
-        attackEnemy: () => void;
-        executeAmbushAttack: () => void; // Execute enemy attack for ambush (first strike)
-        retreat: () => void;
-
-        // Station/Planet
-        buyItem: (item: ShopItem, targetModuleId?: number) => void;
-        repairShip: () => void;
-        healCrew: () => void;
-        buyTradeGood: (goodId: Goods, quantity?: number) => void;
-        sellTradeGood: (goodId: Goods, quantity?: number) => void;
-        installModuleFromCargo: (
-            cargoIndex: number,
-            x: number,
-            y: number,
-        ) => void;
-
-        // Crew
-        hireCrew: (
-            crewData: Partial<CrewMember> & { price: number },
-            locationId?: string,
-        ) => void;
-        fireCrewMember: (crewId: number) => void;
-        assignCrewTask: (
-            crewId: number,
-            task: CrewMemberAssignment,
-            effect: string | null,
-        ) => void;
-        assignCombatTask: (
-            crewId: number,
-            task: CrewMemberCombatAssignment,
-            effect: string,
-        ) => void;
-        moveCrewMember: (crewId: number, targetModuleId: number) => void;
-        isModuleAdjacent: (moduleId1: number, moduleId2: number) => boolean;
-        getCrewInModule: (moduleId: number) => CrewMember[];
-
-        // Contracts
-        acceptContract: (contract: Contract) => void;
-        completeDeliveryContract: (contractId: string) => void;
-        cancelContract: (contractId: string) => void;
-
-        // Module
-        toggleModule: (moduleId: number) => void;
-        scrapModule: (moduleId: number) => void;
-        moveModule: (moduleId: number, x: number, y: number) => void;
-        canPlaceModule: (module: Module, x: number, y: number) => boolean;
-
-        // Anomaly
-        handleAnomaly: (anomaly: Location) => void;
-
-        // Scouting
-        sendScoutingMission: (planetId: string) => void;
-
-        // Distress Signal
-        respondToDistressSignal: () => void;
-
-        // Artifacts
-        researchArtifact: (artifactId: string) => void;
-        toggleArtifact: (artifactId: string) => void;
-        tryFindArtifact: () => Artifact | null;
-        showArtifacts: () => void;
-        showResearch: () => void;
-
-        // Races
-        discoverRace: (raceId: RaceId) => void;
-
-        // Planet Specializations
-        trainCrew: (crewMemberId: number) => void;
-        scanSector: () => void;
-        boostArtifact: (artifactId: string) => void;
-        activatePlanetEffect: (raceId: RaceId, planetId?: string) => void;
-        removeExpiredEffects: () => void;
-
-        // Game Over
-        checkGameOver: () => void;
-
-        // Victory
-        triggerVictory: () => void;
-
-        // Research
-        startResearch: (techId: string) => void;
-        addResearchResource: (type: string, quantity: number) => void;
-        processResearch: () => void;
-
-        // Game Management
-        restartGame: () => void;
-        saveGame: () => void;
-        loadGame: () => boolean;
-    }
->((set, get) => ({
+export const useGameStore = create<GameStore>((set, get) => ({
     ...initialState,
 
     addLog: (message, type = "info") => {
@@ -8986,22 +8811,3 @@ export const useGameStore = create<
         }
     },
 }));
-
-// Helper function to get adjacent technologies (for discovery)
-function getAdjacentTechs(techId: string): string[] {
-    const adjacent: string[] = [];
-    const tech = RESEARCH_TREE[techId];
-    if (!tech) return adjacent;
-
-    // Technologies that have this tech as prerequisite
-    Object.values(RESEARCH_TREE).forEach((t) => {
-        if (t.prerequisites.includes(techId)) {
-            adjacent.push(t.id);
-        }
-    });
-
-    return adjacent;
-}
-
-// Import research constants at the top
-import { RESEARCH_TREE } from "@/game/constants/research";

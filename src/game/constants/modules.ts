@@ -19,30 +19,4 @@ export const MODULE_TYPES: Record<
     lab: { color: "#00ff4133", borderColor: "#00ff41" },
 };
 
-// Lab module stats by level
-export const LAB_MODULE_STATS: Record<
-    number,
-    {
-        power: number;
-        consumption: number;
-        researchOutput: number;
-        health: number;
-        defense: number;
-    }
-> = {
-    1: { power: 5, consumption: 3, researchOutput: 5, health: 80, defense: 3 },
-    2: {
-        power: 8,
-        consumption: 5,
-        researchOutput: 10,
-        health: 120,
-        defense: 5,
-    },
-    3: {
-        power: 12,
-        consumption: 7,
-        researchOutput: 20,
-        health: 180,
-        defense: 8,
-    },
-};
+export const EMERGENCY_SHUTDOWN_DAMAGE = 0.1; // 10% урона модулю, когда он аварийно выключен из-за отсутствия энергии

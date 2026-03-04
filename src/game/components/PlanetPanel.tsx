@@ -13,8 +13,8 @@ import { DELIVERY_GOODS } from "@/game/constants/contracts";
 import type { DeliveryGoods } from "@/game/types/contracts";
 import { TRADE_GOODS } from "@/game/constants/goods";
 import type { Goods } from "@/game/types/goods";
-import { getPlanetBackgroundClass } from "@/game/constants/planetBackgrounds";
 import { PlanetVisual } from "./PlanetVisual";
+import { getPlanetBackgroundClass } from "@/game/planets";
 
 export function PlanetPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);

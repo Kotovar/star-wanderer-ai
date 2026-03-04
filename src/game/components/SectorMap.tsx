@@ -2,13 +2,8 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useGameStore } from "@/game/store";
-import {
-    Location,
-    LocationType,
-    PlanetType,
-    StarType,
-    StormType,
-} from "@/game/types";
+import { Location, LocationType, StarType, StormType } from "@/game/types";
+import { PLANET_COLORS_IN_SECTOR } from "../constants";
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
@@ -26,29 +21,6 @@ const seededRandom = (loc: Location, seed: number = 0): number => {
     }
     const x = Math.sin(hash + seed) * 10000;
     return x - Math.floor(x);
-};
-
-// Planet colors based on type (inspired by solar system)
-const PLANET_COLORS: Record<
-    PlanetType,
-    { base: string; atmosphere: string; rings?: string }
-> = {
-    Пустынная: { base: "#d4a574", atmosphere: "#e8c89e" }, // Mars-like
-    Ледяная: { base: "#a8d4e6", atmosphere: "#d4e8f2" }, // Europa-like
-    Лесная: { base: "#4a7c59", atmosphere: "#6b9b7a" }, // Earth-like green
-    Вулканическая: { base: "#8b4513", atmosphere: "#ff4500" }, // Io-like
-    Океаническая: { base: "#1e90ff", atmosphere: "#87ceeb" }, // Earth-like blue
-    "Газовый гигант": { base: "#9933ff", atmosphere: "#cc66ff" }, // Purple gas giant
-    Радиоактивная: { base: "#5a8f3a", atmosphere: "#7fff00" }, // Green radioactive glow
-    Тропическая: { base: "#228b22", atmosphere: "#90ee90" }, // Lush green tropical
-    Арктическая: { base: "#b0e0e6", atmosphere: "#f0f8ff" }, // Ice blue arctic
-    "Разрушенная войной": { base: "#4a4a4a", atmosphere: "#8b0000" }, // Dark grey with red haze
-    "Планета-кольцо": {
-        base: "#c9b896",
-        atmosphere: "#e8d5b5",
-        rings: "#d4c4a5",
-    }, // Saturn-like with rings
-    Приливная: { base: "#cd853f", atmosphere: "#ff6347" }, // Tidal heated orange
 };
 
 // Scanner info levels - scanLevel is now 1-4 (scanner level)
@@ -1219,7 +1191,7 @@ function drawPlanet(
     const radius = loc.isEmpty ? 8 : 12;
     const planetType = loc.planetType;
     const colors = planetType
-        ? PLANET_COLORS[planetType]
+        ? PLANET_COLORS_IN_SECTOR[planetType]
         : {
               base: "#888888",
               atmosphere: "#aaaaaa",

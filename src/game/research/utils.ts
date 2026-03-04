@@ -1,4 +1,7 @@
-import type { ResearchResourceType } from "@/game/constants/research";
+import {
+    RESEARCH_TREE,
+    type ResearchResourceType,
+} from "@/game/constants/research";
 
 /**
  * Get research resources from mining asteroids
@@ -124,3 +127,19 @@ export function getBossLootResources(
 
     return resources;
 }
+
+// Helper function to get adjacent technologies (for discovery)
+export const getAdjacentTechs = (techId: string) => {
+    const adjacent: string[] = [];
+    const tech = RESEARCH_TREE[techId];
+    if (!tech) return adjacent;
+
+    // Technologies that have this tech as prerequisite
+    Object.values(RESEARCH_TREE).forEach((t) => {
+        if (t.prerequisites.includes(techId)) {
+            adjacent.push(t.id);
+        }
+    });
+
+    return adjacent;
+};
