@@ -83,20 +83,20 @@ export function EventDisplay() {
                     <div className="grid grid-cols-2 gap-2 shrink-0">
                         <Button
                             onClick={showSectorMap}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-10"
+                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs"
                         >
                             {LABELS.mapSector}
                         </Button>
                         <div className="grid grid-rows-2 gap-2">
                             <Button
                                 onClick={showAssignments}
-                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-full"
+                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs"
                             >
                                 {LABELS.crew}
                             </Button>
                             <Button
                                 onClick={skipTurn}
-                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-full"
+                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs"
                             >
                                 {LABELS.skip}
                             </Button>
@@ -126,20 +126,20 @@ export function EventDisplay() {
                     <div className="grid grid-cols-2 gap-2 shrink-0">
                         <Button
                             onClick={showGalaxyMap}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-10"
+                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs"
                         >
                             {LABELS.mapGalaxy}
                         </Button>
                         <div className="grid grid-rows-2 gap-2">
                             <Button
                                 onClick={showAssignments}
-                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-full"
+                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs"
                             >
                                 {LABELS.crew}
                             </Button>
                             <Button
                                 onClick={skipTurn}
-                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-full"
+                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs"
                             >
                                 {LABELS.skip}
                             </Button>
