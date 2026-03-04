@@ -57,9 +57,10 @@ export function StormResultsPanel() {
                     <div className="text-[#00ff41] text-lg">
                         +{stormResult.creditsEarned}₢ кредитов
                     </div>
-                    {stormResult.rareLoot && (
-                        <div className="text-[#ff00ff] mt-2">
-                            ★ РЕДКАЯ НАХОДКА! +{stormResult.rareBonus}₢
+                    {stormResult.rareLoot && stormResult.rareBonus && (
+                        <div className="text-[#ff00ff] mt-2 text-sm">
+                            (включая ★ РЕДКАЯ НАХОДКА: +{stormResult.rareBonus}
+                            ₢)
                         </div>
                     )}
                 </div>

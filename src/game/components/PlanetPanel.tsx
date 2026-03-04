@@ -382,7 +382,7 @@ export function PlanetPanel() {
                                                 onClick={() =>
                                                     acceptContract(c)
                                                 }
-                                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs ml-2"
+                                                className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs ml-2"
                                             >
                                                 {isActive
                                                     ? "ПРИНЯТ"

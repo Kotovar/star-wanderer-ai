@@ -30,11 +30,10 @@ export function UnknownShipPanel() {
     const effectiveScanner = hasScanner || hasAllSeeing;
 
     const handleApproach = () => {
-        // Mark location as revealed on sector map ONLY if we have scanner
-        // Without scanner, the object remains unknown even after approaching
+        // Mark location as revealed - we discovered what it is by approaching
         const revealedLocation = {
             ...currentLocation,
-            signalRevealed: effectiveScanner, // Only reveal if we have scanner or All-Seeing Eye
+            signalRevealed: true, // Always reveal after approaching (we now know what it is)
         };
 
         // Update the location in the current sector

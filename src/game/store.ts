@@ -3396,23 +3396,8 @@ export const useGameStore = create<
                 set({ gameMode: "asteroid_belt" });
                 break;
             case "storm":
-                // Mark storm as revealed when entering
-                const updatedStormLoc = { ...loc, signalRevealed: true };
-                set((s) => {
-                    const updatedSector = s.currentSector
-                        ? {
-                              ...s.currentSector,
-                              locations: s.currentSector.locations.map((l) =>
-                                  l.id === loc.id ? updatedStormLoc : l,
-                              ),
-                          }
-                        : null;
-                    return {
-                        currentLocation: updatedStormLoc,
-                        currentSector: updatedSector,
-                    };
-                });
-                set({ gameMode: "storm" });
+                // Don't reveal storm yet - only reveal when we actually enter it
+                set({ currentLocation: loc, gameMode: "storm" });
                 break;
             case "distress_signal":
                 // Check scanner for reveal chance (one-time check)
@@ -3770,9 +3755,17 @@ export const useGameStore = create<
             return;
         }
 
-        // Mark as completed immediately to prevent double-click
+        // Mark as completed and revealed to prevent double entry and show on map
         set((s) => ({
             completedLocations: [...s.completedLocations, loc.id],
+            currentSector: s.currentSector
+                ? {
+                      ...s.currentSector,
+                      locations: s.currentSector.locations.map((l) =>
+                          l.id === loc.id ? { ...l, signalRevealed: true } : l,
+                      ),
+                  }
+                : s.currentSector,
         }));
 
         const stormType = loc.stormType || "radiation";

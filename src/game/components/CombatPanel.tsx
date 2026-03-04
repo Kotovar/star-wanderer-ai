@@ -82,7 +82,7 @@ export function CombatPanel() {
     const playerDefense = ship.armor; // Total defense from all modules
 
     return (
-        <div className="flex flex-col gap-4 max-h-[75vh] overflow-y-auto pr-2">
+        <div className="flex flex-col gap-4 max-h-[82vh] overflow-y-auto pr-2">
             <div
                 className={`font-['Orbitron'] font-bold text-lg ${isBoss ? "text-[#ff00ff]" : "text-[#ffb000]"}`}
             >

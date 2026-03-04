@@ -226,7 +226,7 @@ function BuyButton({
         <Button
             disabled={disabled}
             onClick={onBuy}
-            className="bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] px-1.5"
+            className="bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] px-1.5 cursor-pointer disabled:cursor-not-allowed"
         >
             +{quantity}
         </Button>
@@ -246,7 +246,7 @@ function SellButton({
         <Button
             disabled={disabled}
             onClick={onSell}
-            className="bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase text-[9px] px-1.5"
+            className="bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase text-[9px] px-1.5 cursor-pointer disabled:cursor-not-allowed"
         >
             -{quantity}
         </Button>

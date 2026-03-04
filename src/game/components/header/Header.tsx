@@ -192,13 +192,13 @@ export function GameHeader() {
                         <Button
                             variant="outline"
                             onClick={() => setShowRestartDialog(false)}
-                            className="border-[#00ff41] text-[#00ff41] hover:bg-[rgba(0,255,65,0.1)]"
+                            className="cursor-pointer border-[#00ff41] text-[#00ff41] hover:bg-[rgba(0,255,65,0.1)]"
                         >
                             Отмена
                         </Button>
                         <Button
                             onClick={handleRestartConfirm}
-                            className="bg-[#ff4444] text-white hover:bg-[#ff6666] border-0"
+                            className="cursor-pointer bg-[#ff4444] text-white hover:bg-[#ff6666] border-0"
                         >
                             Начать заново
                         </Button>

@@ -153,25 +153,25 @@ export function StationPanel() {
                 <TabsList className="grid w-full grid-cols-4 bg-[rgba(0,255,65,0.1)] border border-[#00ff41] h-auto">
                     <TabsTrigger
                         value="shop"
-                        className="data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
+                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
                     >
                         МОДУЛИ
                     </TabsTrigger>
                     <TabsTrigger
                         value="trade"
-                        className="data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
+                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
                     >
                         ТОРГОВЛЯ
                     </TabsTrigger>
                     <TabsTrigger
                         value="crew"
-                        className="data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
+                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
                     >
                         ЭКИПАЖ
                     </TabsTrigger>
                     <TabsTrigger
                         value="services"
-                        className="data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
+                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
                     >
                         УСЛУГИ
                     </TabsTrigger>
