@@ -102,10 +102,12 @@ function ModuleCard({ module, onClick }: ModuleCardProps) {
 
     return (
         <div
-            className={`bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-2.5 text-xs cursor-pointer transition-all hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_10px_rgba(0,255,65,0.5)] ${
+            className={`bg-[rgba(0,255,65,0.05)] border p-2.5 text-xs cursor-pointer transition-all hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_10px_rgba(0,255,65,0.5)] ${
                 module.disabled || module.manualDisabled
                     ? "opacity-50 border-[#ff0040]"
-                    : ""
+                    : module.health <= 0
+                      ? "border-[#ff0040] border-2"
+                      : "border-[#00ff41]"
             }`}
             onClick={onClick}
         >
@@ -315,14 +317,24 @@ export function ModuleDetailDialog({
                                     className={
                                         module.disabled || module.manualDisabled
                                             ? "text-[#ff0040]"
-                                            : "text-[#00ff41]"
+                                            : module.health <= 0
+                                              ? "text-[#ff0040]"
+                                              : "text-[#00ff41]"
                                     }
                                 >
                                     {module.disabled || module.manualDisabled
                                         ? "ОТКЛЮЧЁН"
-                                        : "АКТИВЕН"}
+                                        : module.health <= 0
+                                          ? "ПОВРЕЖДЁН"
+                                          : "АКТИВЕН"}
                                 </span>
                             </div>
+
+                            {module.health <= 0 && (
+                                <div className="text-[11px] text-[#ff0040]">
+                                    ⚠️ Модуль повреждён и не работает!
+                                </div>
+                            )}
 
                             <div className="text-[11px] text-[#888]">
                                 ⚠ Отключение модуля сэкономит энергию, но

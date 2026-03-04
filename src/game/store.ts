@@ -875,6 +875,51 @@ export const useGameStore = create<
         }
 
         // ═══════════════════════════════════════════════════════════════
+        // MODULE DAMAGE - Crew takes damage from damaged/destroyed modules
+        // ═══════════════════════════════════════════════════════════════
+        const currentState = get();
+        const crewInDamagedModules = currentState.crew.filter((c) => {
+            if (c.moduleId === undefined) return false;
+            const shipModule = currentState.ship.modules.find(
+                (m) => m.id === c.moduleId,
+            );
+            if (!shipModule) return false;
+            // Check if module is damaged (< 30% health) or destroyed (0% health)
+            const healthPercent =
+                (shipModule.health / (shipModule.maxHealth || 100)) * 100;
+            return healthPercent < 30;
+        });
+
+        if (crewInDamagedModules.length > 0) {
+            crewInDamagedModules.forEach((crewMember) => {
+                const shipModule = currentState.ship.modules.find(
+                    (m) => m.id === crewMember.moduleId,
+                );
+                if (!shipModule) return;
+
+                const healthPercent =
+                    (shipModule.health / (shipModule.maxHealth || 100)) * 100;
+
+                // Destroyed module (0% health) - 15% damage per turn
+                // Damaged module (< 30% health) - 5% damage per turn
+                const damage = healthPercent <= 0 ? 15 : 5;
+
+                set((s) => ({
+                    crew: s.crew.map((c) =>
+                        c.id === crewMember.id
+                            ? { ...c, health: Math.max(1, c.health - damage) }
+                            : c,
+                    ),
+                }));
+
+                get().addLog(
+                    `⚠️ ${crewMember.name} получил -${damage}% урона в ${shipModule.name} (${Math.round(healthPercent)}% ❤️)`,
+                    "warning",
+                );
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════
         // POWER MANAGEMENT - Disable modules if power deficit
         // ═══════════════════════════════════════════════════════════════
         const currentPower = get().getTotalPower();
@@ -883,7 +928,7 @@ export const useGameStore = create<
 
         if (powerDeficit > 0) {
             // Need to disable modules to balance power
-            const currentState = get();
+            const currentStatePowerDeficit = get();
             const modulesByPriority = [
                 // Lowest priority (disable first)
                 { type: "cargo", name: "Грузовой отсек" },
@@ -898,7 +943,7 @@ export const useGameStore = create<
             ];
 
             let disabledCount = 0;
-            const updatedModules = [...currentState.ship.modules];
+            const updatedModules = [...currentStatePowerDeficit.ship.modules];
 
             // Calculate current power after each disable
             let deficit = powerDeficit;
@@ -965,10 +1010,11 @@ export const useGameStore = create<
             }
         } else {
             // Power surplus - re-enable disabled modules if possible
-            const currentState = get();
-            const disabledModules = currentState.ship.modules.filter(
-                (m) => m.disabled && m.health > 0,
-            );
+            const currentStatePowerDeficit = get();
+            const disabledModules =
+                currentStatePowerDeficit.ship.modules.filter(
+                    (m) => m.disabled && m.health > 0,
+                );
 
             if (disabledModules.length > 0) {
                 // Check if we have enough power to re-enable all disabled modules
