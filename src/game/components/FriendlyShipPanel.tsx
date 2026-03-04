@@ -927,8 +927,8 @@ export function FriendlyShipPanel() {
 
             {/* Quest */}
             {currentLocation.hasQuest && !questAlreadyTaken && (
-                <>
-                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mt-5">
+                <div className="border p-2 bg-[rgba(0,255,65,0.05)]">
+                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mt-2">
                         Задание
                     </div>
                     <div className="text-sm p-2.5">
@@ -948,7 +948,7 @@ export function FriendlyShipPanel() {
                     >
                         ПРИНЯТЬ
                     </Button>
-                </>
+                </div>
             )}
 
             {/* Quest already taken message */}

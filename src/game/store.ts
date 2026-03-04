@@ -1044,57 +1044,62 @@ export const useGameStore = create<
             }
         }
 
-        // Shield regen
-        let shieldRegen = Math.floor(Math.random() * 6) + 5;
+        // Shield regen - only if not in combat
+        // Shields don't regenerate during combat (enemy fire suppresses shield regeneration)
+        const inCombat = !!state.currentCombat;
 
-        // Apply race shieldRegen bonuses (voidborn: +5 shield regen)
-        state.crew.forEach((c) => {
-            const race = RACES[c.race];
-            if (race?.specialTraits) {
-                const shieldTrait = race.specialTraits.find(
-                    (t) => t.effects.shieldRegen,
-                );
-                if (shieldTrait && shieldTrait.effects.shieldRegen) {
-                    shieldRegen += Math.floor(
-                        Number(shieldTrait.effects.shieldRegen),
+        if (!inCombat) {
+            let shieldRegen = Math.floor(Math.random() * 6) + 5;
+
+            // Apply race shieldRegen bonuses (voidborn: +5 shield regen)
+            state.crew.forEach((c) => {
+                const race = RACES[c.race];
+                if (race?.specialTraits) {
+                    const shieldTrait = race.specialTraits.find(
+                        (t) => t.effects.shieldRegen,
                     );
-                }
-                // TECHNO-SYMBIOSIS - Xenosymbionts provide +2 shield regen when merged with ship
-                if (race.id === "xenosymbiont") {
-                    const symbiosisTrait = race.specialTraits.find(
-                        (t) => t.effects.canMerge,
-                    );
-                    if (symbiosisTrait) {
-                        shieldRegen += 2;
+                    if (shieldTrait && shieldTrait.effects.shieldRegen) {
+                        shieldRegen += Math.floor(
+                            Number(shieldTrait.effects.shieldRegen),
+                        );
+                    }
+                    // TECHNO-SYMBIOSIS - Xenosymbionts provide +2 shield regen when merged with ship
+                    if (race.id === "xenosymbiont") {
+                        const symbiosisTrait = race.specialTraits.find(
+                            (t) => t.effects.canMerge,
+                        );
+                        if (symbiosisTrait) {
+                            shieldRegen += 2;
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        // ═══════════════════════════════════════════════════════════════
-        // NANITE HULL - Bonus shield regeneration
-        // ═══════════════════════════════════════════════════════════════
-        const naniteHull = state.artifacts.find(
-            (a) => a.effect.type === "shield_regen" && a.effect.active,
-        );
-        if (naniteHull) {
-            shieldRegen += Number(naniteHull.effect.value || 10);
-        }
-
-        set((s) => ({
-            ship: {
-                ...s.ship,
-                shields: Math.min(
-                    s.ship.maxShields,
-                    s.ship.shields + shieldRegen,
-                ),
-            },
-        }));
-        if (shieldRegen > 0 && state.ship.shields < state.ship.maxShields) {
-            get().addLog(
-                `Щиты: +${shieldRegen} (${get().ship.shields}/${get().ship.maxShields})`,
-                "info",
+            // ═══════════════════════════════════════════════════════════════
+            // NANITE HULL - Bonus shield regeneration
+            // ═══════════════════════════════════════════════════════════════
+            const naniteHull = state.artifacts.find(
+                (a) => a.effect.type === "shield_regen" && a.effect.active,
             );
+            if (naniteHull) {
+                shieldRegen += Number(naniteHull.effect.value || 10);
+            }
+
+            set((s) => ({
+                ship: {
+                    ...s.ship,
+                    shields: Math.min(
+                        s.ship.maxShields,
+                        s.ship.shields + shieldRegen,
+                    ),
+                },
+            }));
+            if (shieldRegen > 0 && state.ship.shields < state.ship.maxShields) {
+                get().addLog(
+                    `Щиты: +${shieldRegen} (${get().ship.shields}/${get().ship.maxShields})`,
+                    "info",
+                );
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════
