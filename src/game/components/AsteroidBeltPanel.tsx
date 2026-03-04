@@ -91,7 +91,7 @@ export function AsteroidBeltPanel() {
 
                 <Button
                     onClick={showSectorMap}
-                    className="w-full bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] font-bold"
+                    className="cursor-pointer w-full bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] font-bold"
                 >
                     ПОКИНУТЬ ПОЯС
                 </Button>

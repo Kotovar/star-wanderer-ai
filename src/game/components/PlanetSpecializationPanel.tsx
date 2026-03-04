@@ -287,13 +287,13 @@ export function PlanetSpecializationPanel({
                                 0 &&
                             !selectedArtifactId)
                     }
-                    className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider flex-1"
+                    className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider flex-1"
                 >
                     ПОДТВЕРДИТЬ
                 </Button>
                 <Button
                     onClick={onClose}
-                    className="bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase tracking-wider"
+                    className="cursor-pointer bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase tracking-wider"
                 >
                     ОТМЕНА
                 </Button>

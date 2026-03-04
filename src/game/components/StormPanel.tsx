@@ -165,7 +165,7 @@ export function StormPanel() {
     // Without scanner, show generic "Unknown object" info
     if (!hasScanner) {
         return (
-            <div className="bg-[rgba(50,0,50,0.3)] border-2 border-[#666] p-4">
+            <div className="bg-[rgba(50,50,50,0.3)] border-2 border-[#666] p-4">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold font-['Orbitron'] text-[#888]">
                         ❓ Неизвестный объект
@@ -181,8 +181,8 @@ export function StormPanel() {
                     </p>
                 </div>
 
-                <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#ff4444]">
-                    <p className="text-[#ff4444] font-bold mb-2">
+                <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#ffb000]">
+                    <p className="text-[#ffb000] font-bold mb-2">
                         ⚠ ПРЕДУПРЕЖДЕНИЕ
                     </p>
                     <p className="text-[#888] text-sm">

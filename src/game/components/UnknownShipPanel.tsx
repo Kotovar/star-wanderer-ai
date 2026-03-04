@@ -125,8 +125,8 @@ export function UnknownShipPanel() {
                 )}
             </div>
 
-            <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#ff4444]">
-                <p className="text-[#ff4444] font-bold mb-2">
+            <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#ffb000]">
+                <p className="text-[#ffb000] font-bold mb-2">
                     ⚠ ПРЕДУПРЕЖДЕНИЕ
                 </p>
                 <p className="text-[#888] text-sm">

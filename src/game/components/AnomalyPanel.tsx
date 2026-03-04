@@ -94,7 +94,7 @@ export function AnomalyPanel() {
                 </div>
                 <Button
                     onClick={showSectorMap}
-                    className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider"
+                    className="self-center-safe cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider"
                 >
                     ОТСТУПИТЬ
                 </Button>

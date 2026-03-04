@@ -144,7 +144,7 @@ export function PlanetPanel() {
                                 onClick={() =>
                                     sendScoutingMission(currentLocation.id)
                                 }
-                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider mt-3"
+                                className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider mt-3"
                             >
                                 ОТПРАВИТЬ РАЗВЕДКУ
                             </Button>
@@ -246,7 +246,7 @@ export function PlanetPanel() {
                                 className={`bg-transparent border-2 text-xs px-3 py-1.5 uppercase ${
                                     isOnCooldown
                                         ? "border-[#444] text-[#444] cursor-not-allowed"
-                                        : "border-[#9933ff] text-[#9933ff] hover:bg-[#9933ff] hover:text-[#050810]"
+                                        : "border-[#9933ff] text-[#9933ff] hover:bg-[#9933ff] hover:text-[#050810] cursor-pointer"
                                 }`}
                             >
                                 {isOnCooldown
