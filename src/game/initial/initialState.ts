@@ -50,7 +50,7 @@ export const initialState: GameState = {
     previousGameMode: null,
     traveling: null,
     ship: {
-        armor: initialModules.length,
+        armor: 1, // Average defense: all starting modules have defense: 1
         shields: 0,
         maxShields: 0,
         crewCapacity: INITIAL_CREW_CAPACITY,

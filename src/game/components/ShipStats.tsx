@@ -137,13 +137,7 @@ export function ShipStats() {
             </div>
             <div className="flex justify-between mb-2 text-sm">
                 <span className="text-[#ffb000]">🛡 Защита:</span>
-                <span
-                    className={
-                        totalDefense > 5 ? "text-[#00ff41]" : "text-[#ff0040]"
-                    }
-                >
-                    {totalDefense} ед.
-                </span>
+                <span className="text-[#00ff41]">{totalDefense} ед.</span>
             </div>
             <div className="flex justify-between mb-2 text-sm">
                 <span className="text-[#ffb000]">🎯 Уклонение:</span>

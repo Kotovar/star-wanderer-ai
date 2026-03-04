@@ -249,10 +249,17 @@ export const useGameStore = create<
             const isFunctional = (m: (typeof state.ship.modules)[0]) =>
                 !m.disabled && !m.manualDisabled && m.health > 0;
 
-            // Total defense (sum of all module defense values)
-            let totalDefense = state.ship.modules
-                .filter(isFunctional)
-                .reduce((sum, m) => sum + (m.defense || 0), 0);
+            // Average defense (average of all module defense values)
+            const functionalModules = state.ship.modules.filter(isFunctional);
+            const totalDefenseSum = functionalModules.reduce(
+                (sum, m) => sum + (m.defense || 0),
+                0,
+            );
+            // Calculate average defense (rounded down, min 0)
+            const averageDefense =
+                functionalModules.length > 0
+                    ? Math.floor(totalDefenseSum / functionalModules.length)
+                    : 0;
 
             let totalShields = state.ship.modules
                 .filter((m) => m.type === "shield" && isFunctional(m))
@@ -270,12 +277,13 @@ export const useGameStore = create<
             const crystallineArmor = state.artifacts.find(
                 (a) => a.effect.type === "module_armor" && a.effect.active,
             );
+            let finalDefense = averageDefense;
             if (crystallineArmor) {
                 const armorBonus = getArtifactEffectValue(
                     crystallineArmor,
                     state,
                 );
-                totalDefense += state.ship.modules.length * armorBonus;
+                finalDefense += armorBonus;
             }
 
             const totalOxygen = state.ship.modules
@@ -295,7 +303,7 @@ export const useGameStore = create<
             return {
                 ship: {
                     ...state.ship,
-                    armor: totalDefense, // Use total defense as armor value
+                    armor: finalDefense, // Use average defense as armor value
                     maxShields: maxShieldsWithBonus,
                     shields: Math.min(state.ship.shields, maxShieldsWithBonus),
                     crewCapacity: totalOxygen,
@@ -2750,12 +2758,12 @@ export const useGameStore = create<
                         remainingDamage -= shieldAbsorb;
                     }
 
-                    // Armor reduces remaining damage
+                    // Armor reduces remaining damage (use target module's defense, not total ship armor)
                     if (remainingDamage > 0) {
-                        const shipDefense = state.ship.armor || 0;
+                        const moduleDefense = tgt.defense || 0;
                         remainingDamage = Math.max(
                             1,
-                            remainingDamage - shipDefense,
+                            remainingDamage - moduleDefense,
                         );
                     }
 
@@ -5375,25 +5383,25 @@ export const useGameStore = create<
 
                 if (overflow > 0 && tgt) {
                     // ═══════════════════════════════════════════════════════════════
-                    // MODULE DEFENSE (ARMOR) - Flat damage reduction
-                    // Each point of defense reduces damage by 1
+                    // MODULE DEFENSE (ARMOR) - Flat damage reduction per module
+                    // Each point of module defense reduces damage by 1
                     // ═══════════════════════════════════════════════════════════════
-                    const shipDefense = state.ship.armor || 0;
+                    const moduleDefense = tgt.defense || 0;
                     const damageAfterArmor = Math.max(
                         1,
-                        overflow - shipDefense,
+                        overflow - moduleDefense,
                     );
 
                     // Log armor reduction if applicable
-                    if (shipDefense > 0 && damageAfterArmor < overflow) {
+                    if (moduleDefense > 0 && damageAfterArmor < overflow) {
                         get().addLog(
-                            `🛡️ Броня: -${overflow - damageAfterArmor} урона`,
+                            `🛡️ Броня модуля "${tgt.name}": -${overflow - damageAfterArmor} урона`,
                             "info",
                         );
                     }
 
                     // ═══════════════════════════════════════════════════════════════
-                    // CRYSTALLINE ARMOR ARTIFACT - +3 defense to ALL modules
+                    // CRYSTALLINE ARMOR ARTIFACT - +X defense to ALL modules
                     // ═══════════════════════════════════════════════════════════════
                     const crystalArmorArtifact = state.artifacts.find(
                         (a) =>
@@ -5420,7 +5428,7 @@ export const useGameStore = create<
                     // ═══════════════════════════════════════════════════════════════
                     // CRYSTALLINE RACE - Additional percentage damage reduction
                     // ═══════════════════════════════════════════════════════════════
-                    let moduleDefense = 0;
+                    let crystallineDefense = 0;
                     const crystallineCrew = state.crew.filter(
                         (c) => c.race === "crystalline",
                     );
@@ -5434,14 +5442,14 @@ export const useGameStore = create<
                                 armorTrait &&
                                 armorTrait.effects.moduleDefense
                             ) {
-                                moduleDefense += armorTrait.effects
+                                crystallineDefense += armorTrait.effects
                                     .moduleDefense as number;
                             }
                         }
                     });
 
                     const reducedDamage = Math.floor(
-                        damageAfterArtifact * (1 - moduleDefense),
+                        damageAfterArtifact * (1 - crystallineDefense),
                     );
                     const wasDestroyed = tgt.health <= reducedDamage;
                     set((s) => ({
