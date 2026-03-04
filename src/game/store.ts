@@ -1093,6 +1093,25 @@ export const useGameStore = create<
                 shieldRegen += Number(naniteHull.effect.value || 10);
             }
 
+            // ═══════════════════════════════════════════════════════════════
+            // SHIELD REGENERATOR - Percentage boost to shield regen
+            // ═══════════════════════════════════════════════════════════════
+            const shieldRegenerator = state.artifacts.find(
+                (a) =>
+                    a.effect.type === "shield_regen_boost" && a.effect.active,
+            );
+            if (shieldRegenerator) {
+                const regenBoost = getArtifactEffectValue(
+                    shieldRegenerator,
+                    state,
+                );
+                shieldRegen = Math.floor(shieldRegen * (1 + regenBoost));
+                get().addLog(
+                    `⚡ Регенератор Щитов: +${Math.round(regenBoost * 100)}% к регенерации`,
+                    "info",
+                );
+            }
+
             set((s) => ({
                 ship: {
                     ...s.ship,
@@ -5116,6 +5135,17 @@ export const useGameStore = create<
 
             // Add ship evasion bonus
             pilotEvasionChance += (state.ship.bonusEvasion || 0) / 100;
+
+            // Evasion Matrix artifact bonus: +10% evasion
+            const evasionMatrix = state.artifacts.find(
+                (a) => a.effect.type === "evasion_boost" && a.effect.active,
+            );
+            if (evasionMatrix) {
+                pilotEvasionChance += getArtifactEffectValue(
+                    evasionMatrix,
+                    state,
+                );
+            }
         }
 
         if (

@@ -118,6 +118,17 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         requiresScientistLevel: 3,
         rarity: "legendary",
     },
+    {
+        id: "evasion_matrix",
+        name: "Матрица Уклонения",
+        description:
+            "+10% к шансу уклонения корабля. Пилот выполняет сложные манёвры.",
+        effect: { type: "evasion_boost", value: 0.1, active: false },
+        discovered: false,
+        researched: false,
+        requiresScientistLevel: 3,
+        rarity: "legendary",
+    },
 
     // MYTHIC artifacts (Tier 3 anomalies, black holes, extremely rare)
     {
@@ -276,6 +287,17 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         requiresScientistLevel: 2,
         rarity: "cursed",
         cursed: true,
+    },
+    {
+        id: "shield_regenerator",
+        name: "⚡ Регенератор Щитов",
+        description:
+            "+50% к скорости регенерации щитов. Щиты восстанавливаются быстрее в бою и вне боя.",
+        effect: { type: "shield_regen_boost", value: 0.5, active: false },
+        discovered: false,
+        researched: false,
+        requiresScientistLevel: 3,
+        rarity: "legendary",
     },
     {
         id: "void_drive",

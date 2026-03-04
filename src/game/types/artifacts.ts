@@ -52,7 +52,9 @@ export type ArtifactType =
     | "dark_shield" // Strong shield but morale drain
     | "ai_control" // Ship can operate without crew
     | "void_engine" // Free travel but crew suffering
-    | "accuracy_boost"; // бонус к точности
+    | "accuracy_boost" // бонус к точности
+    | "evasion_boost" // шанс уклонения
+    | "shield_regen_boost"; // шанс уклонения
 
 export type ArtifactNegativeType =
     | "happiness_drain" // -X happiness per turn
