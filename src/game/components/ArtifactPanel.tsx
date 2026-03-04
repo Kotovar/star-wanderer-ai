@@ -2,12 +2,7 @@
 
 import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { Artifact } from "../types";
 
 const RARITY_COLORS: Record<
@@ -232,91 +227,77 @@ export function ArtifactPanel() {
                 </div>
             </div>
 
-            {/* Accordion sections */}
-            <Accordion
-                type="multiple"
-                defaultValue={["regular", "cursed"]}
-                className="w-full flex-1 overflow-hidden"
+            {/* Tabs for regular and cursed artifacts */}
+            <Tabs
+                defaultValue="regular"
+                className="flex-1 overflow-hidden flex flex-col"
             >
-                {/* Regular artifacts section */}
-                {regularArtifacts.length > 0 && (
-                    <AccordionItem value="regular" className="border-[#00d4ff]">
-                        <AccordionTrigger className="text-[#00d4ff] hover:text-[#00ff41] cursor-pointer">
-                            <span className="flex items-center gap-2 ">
-                                ★ ОБЫЧНЫЕ АРТЕФАКТЫ
-                                <span className="text-xs text-[#888]">
-                                    (
-                                    {discoveredCount -
-                                        cursedArtifacts.filter(
-                                            (a) => a.discovered,
-                                        ).length}
-                                    /{regularArtifacts.length})
-                                </span>
-                            </span>
-                        </AccordionTrigger>
-                        <AccordionContent className="overflow-hidden">
-                            <div className="max-h-64 overflow-y-auto pr-2 grid gap-3 pt-2">
-                                {regularArtifacts.map((artifact) => (
-                                    <ArtifactCard
-                                        key={artifact.id}
-                                        artifact={artifact}
-                                        onResearch={() =>
-                                            researchArtifact(artifact.id)
-                                        }
-                                        onToggle={() =>
-                                            toggleArtifact(artifact.id)
-                                        }
-                                    />
-                                ))}
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                )}
+                <TabsList className="shrink-0">
+                    <TabsTrigger
+                        value="regular"
+                        className="text-[#00d4ff] data-[state=active]:border-[#00d4ff] data-[state=active]:bg-[rgba(0,212,255,0.1)] cursor-pointer"
+                    >
+                        ★ Обычные (
+                        {discoveredCount -
+                            cursedArtifacts.filter((a) => a.discovered).length}
+                        /{regularArtifacts.length})
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="cursed"
+                        className="text-[#ff0040] data-[state=active]:border-[#ff0040] data-[state=active]:bg-[rgba(255,0,64,0.1)] cursor-pointer"
+                    >
+                        ⚠️ Проклятые (
+                        {cursedArtifacts.filter((a) => a.discovered).length}/
+                        {cursedArtifacts.length})
+                    </TabsTrigger>
+                </TabsList>
 
-                {/* Cursed artifacts section */}
-                {cursedArtifacts.length > 0 && (
-                    <AccordionItem value="cursed" className="border-[#ff0040]">
-                        <AccordionTrigger className="text-[#ff0040] hover:text-[#ff6666] cursor-pointer">
-                            <span className="flex items-center gap-2">
-                                ⚠️ ПРОКЛЯТЫЕ АРТЕФАКТЫ
-                                <span className="text-xs text-[#888]">
-                                    (
-                                    {
-                                        cursedArtifacts.filter(
-                                            (a) => a.discovered,
-                                        ).length
-                                    }
-                                    /{cursedArtifacts.length})
-                                </span>
-                            </span>
-                        </AccordionTrigger>
-                        <AccordionContent className="overflow-hidden">
-                            <div className="max-h-64 overflow-y-auto pr-2 space-y-3 pt-2 pb-4">
-                                <div className="text-xs text-[#ff6666] bg-[rgba(255,0,64,0.1)] p-2 border-l-2 border-[#ff0040]">
-                                    Сила этих артефактов сопровождается ценой.
-                                    Каждый ход активный проклятый артефакт
-                                    оказывает негативное воздействие на корабль
-                                    или экипаж.
-                                </div>
-                                <div className="grid gap-3">
-                                    {cursedArtifacts.map((artifact) => (
-                                        <ArtifactCard
-                                            key={artifact.id}
-                                            artifact={artifact}
-                                            onResearch={() =>
-                                                researchArtifact(artifact.id)
-                                            }
-                                            onToggle={() =>
-                                                toggleArtifact(artifact.id)
-                                            }
-                                        />
-                                    ))}
-                                </div>
+                <TabsContent
+                    value="regular"
+                    className="flex-1 overflow-hidden mt-2"
+                >
+                    <div className="h-full overflow-y-auto pr-2 grid gap-3">
+                        {regularArtifacts.map((artifact) => (
+                            <ArtifactCard
+                                key={artifact.id}
+                                artifact={artifact}
+                                onResearch={() => researchArtifact(artifact.id)}
+                                onToggle={() => toggleArtifact(artifact.id)}
+                            />
+                        ))}
+                        {regularArtifacts.length === 0 && (
+                            <div className="text-sm text-[#888] text-center py-8">
+                                Нет обычных артефактов
                             </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                )}
-            </Accordion>
+                        )}
+                    </div>
+                </TabsContent>
+
+                <TabsContent
+                    value="cursed"
+                    className="flex-1 overflow-hidden mt-2"
+                >
+                    <div className="h-full overflow-y-auto pr-2 space-y-3">
+                        <div className="grid gap-3">
+                            {cursedArtifacts.map((artifact) => (
+                                <ArtifactCard
+                                    key={artifact.id}
+                                    artifact={artifact}
+                                    onResearch={() =>
+                                        researchArtifact(artifact.id)
+                                    }
+                                    onToggle={() => toggleArtifact(artifact.id)}
+                                />
+                            ))}
+                        </div>
+                        {cursedArtifacts.length === 0 && (
+                            <div className="text-sm text-[#888] text-center py-8">
+                                Нет проклятых артефактов
+                            </div>
+                        )}
+                    </div>
+                </TabsContent>
+            </Tabs>
 
             {/* Footer - Advice */}
             <div className="shrink-0 mt-auto">
