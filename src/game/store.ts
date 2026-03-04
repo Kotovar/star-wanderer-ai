@@ -1074,12 +1074,19 @@ export const useGameStore = create<
 
             switch (negativeType) {
                 case "happiness_drain":
-                    // -X happiness to all crew per turn
+                    // -X happiness to all crew per turn (except synthetics)
                     set((s) => ({
-                        crew: s.crew.map((c) => ({
-                            ...c,
-                            happiness: Math.max(0, c.happiness - negativeValue),
-                        })),
+                        crew: s.crew.map((c) => {
+                            // Synthetics don't have morale/happiness
+                            if (c.race === "synthetic") return c;
+                            return {
+                                ...c,
+                                happiness: Math.max(
+                                    0,
+                                    c.happiness - negativeValue,
+                                ),
+                            };
+                        }),
                     }));
                     if (negativeValue > 0) {
                         get().addLog(
@@ -1090,12 +1097,19 @@ export const useGameStore = create<
                     break;
 
                 case "morale_drain":
-                    // -X morale to all crew per turn (same as happiness)
+                    // -X morale to all crew per turn (except synthetics)
                     set((s) => ({
-                        crew: s.crew.map((c) => ({
-                            ...c,
-                            happiness: Math.max(0, c.happiness - negativeValue),
-                        })),
+                        crew: s.crew.map((c) => {
+                            // Synthetics don't have morale/happiness
+                            if (c.race === "synthetic") return c;
+                            return {
+                                ...c,
+                                happiness: Math.max(
+                                    0,
+                                    c.happiness - negativeValue,
+                                ),
+                            };
+                        }),
                     }));
                     if (negativeValue > 0) {
                         get().addLog(
@@ -1304,9 +1318,13 @@ export const useGameStore = create<
 
         // ═══════════════════════════════════════════════════════════════
         // CREW DESERTION - Remove crew with 0 happiness for 3+ turns
+        // Synthetics don't have morale and cannot desert
         // ═══════════════════════════════════════════════════════════════
         set((s) => {
             const crewToKeep = s.crew.filter((c) => {
+                // Synthetics don't have morale and cannot desert
+                if (c.race === "synthetic") return true;
+
                 if (c.happiness <= 0) {
                     const turnsAtZero = c.turnsAtZeroHappiness || 0;
                     if (turnsAtZero >= 3) {
@@ -2519,13 +2537,17 @@ export const useGameStore = create<
 
             switch (artifact.negativeEffect.type) {
                 case "happiness_drain": {
-                    // Abyss Reactor: -X happiness per turn
+                    // Abyss Reactor: -X happiness per turn (except synthetics)
                     const drain = artifact.negativeEffect.value || 5;
                     set((s) => ({
-                        crew: s.crew.map((c) => ({
-                            ...c,
-                            happiness: Math.max(0, c.happiness - drain),
-                        })),
+                        crew: s.crew.map((c) => {
+                            // Synthetics don't have morale/happiness
+                            if (c.race === "synthetic") return c;
+                            return {
+                                ...c,
+                                happiness: Math.max(0, c.happiness - drain),
+                            };
+                        }),
                     }));
                     get().addLog(
                         `⚛️ ${artifact.name}: -${drain} счастья`,
@@ -2534,13 +2556,17 @@ export const useGameStore = create<
                     break;
                 }
                 case "morale_drain": {
-                    // Dark Shield: -X morale per turn
+                    // Dark Shield: -X morale per turn (except synthetics)
                     const drain = artifact.negativeEffect.value || 3;
                     set((s) => ({
-                        crew: s.crew.map((c) => ({
-                            ...c,
-                            happiness: Math.max(0, c.happiness - drain),
-                        })),
+                        crew: s.crew.map((c) => {
+                            // Synthetics don't have morale/happiness
+                            if (c.race === "synthetic") return c;
+                            return {
+                                ...c,
+                                happiness: Math.max(0, c.happiness - drain),
+                            };
+                        }),
                     }));
                     get().addLog(
                         `🛡️ ${artifact.name}: команда чувствует холод`,
