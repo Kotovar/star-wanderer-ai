@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { GameHeader } from "@/game/components/Header";
+import { GameHeader } from "@/game/components/header";
 import { ShipGrid } from "@/game/components/ShipGrid";
 import { ModuleList } from "@/game/components/ModuleList";
 import { CrewList } from "@/game/components/CrewList";
@@ -10,8 +10,7 @@ import { CargoDisplay } from "@/game/components/CargoDisplay";
 import { GameLog } from "@/game/components/GameLog";
 import { ContractsList } from "@/game/components/ContractsList";
 import { EventDisplay } from "@/game/components/EventPanels";
-import { GameOverPanel } from "@/game/components/GameOverPanel";
-import { VictoryPanel } from "@/game/components/VictoryPanel";
+import { GameEndPanel } from "@/game/components/panels";
 import { useGameStore } from "@/game/store";
 import { RaceDiscoveryModal } from "@/game/components/RaceDiscoveryModal";
 import {
@@ -34,7 +33,6 @@ export default function Home() {
         loadGame();
     }, [loadGame]);
 
-    // Close research panel on mobile when switching to desktop
     useEffect(() => {
         const handleResize = () => {
             if (window.innerWidth >= 1024 && gameMode === "research") {
@@ -47,7 +45,6 @@ export default function Home() {
 
     return (
         <div className="min-h-screen flex flex-col bg-[#050810] font-['Share_Tech_Mono'] text-[#00ff41]">
-            {/* Scanline effect */}
             <div
                 className="fixed inset-0 pointer-events-none z-9999"
                 style={{
@@ -59,12 +56,12 @@ export default function Home() {
 
             {/* Game Over Panel */}
             {gameOver && gameOverReason && (
-                <GameOverPanel reason={gameOverReason} />
+                <GameEndPanel reason={gameOverReason} type="gameover" />
             )}
 
             {/* Victory Panel */}
             {gameVictory && gameVictoryReason && (
-                <VictoryPanel reason={gameVictoryReason} />
+                <GameEndPanel reason={gameVictoryReason} type="victory" />
             )}
 
             <style jsx global>{`

@@ -385,6 +385,34 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                         </ul>
                     </section>
 
+                    {/* Research */}
+                    <section>
+                        <h3 className="text-[#9933ff] font-bold text-lg mb-2">
+                            🔬 НАУКА
+                        </h3>
+                        <p className="text-[#888] text-xs mb-2">
+                            Откройте панель исследований (кнопка{" "}
+                            <span className="text-[#9933ff] font-bold">
+                                🔬 НАУКА
+                            </span>{" "}
+                            вверху) для изучения новых технологий.
+                        </p>
+                        <ul className="text-[#888] text-xs space-y-1 list-disc list-inside">
+                            <li>
+                                Исследования открывают новые возможности:
+                                улучшение модулей, оружия, щитов
+                            </li>
+                            <li>Для исследований требуются ресурсы и время</li>
+                            <li>
+                                Учёные в экипаже ускоряют процесс исследований
+                            </li>
+                            <li>
+                                Некоторые технологии требуют предварительного
+                                изучения других
+                            </li>
+                        </ul>
+                    </section>
+
                     {/* Tips */}
                     <section>
                         <h3 className="text-[#ffb000] font-bold text-lg mb-2">
@@ -419,12 +447,9 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                     {/* Victory and Defeat */}
                     <section>
                         <h3 className="text-[#ff0040] font-bold text-lg mb-2">
-                            ⚠️ ПОБЕДА И ПОРАЖЕНИЕ
+                            ⚠️ Окончание игры
                         </h3>
-                        <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3 mb-1">
-                            <div className="text-[#00ff41] font-bold text-sm mb-1">
-                                🎉 Как победить:
-                            </div>
+                        <div className=" mb-1">
                             <p className="text-[#888] text-xs">
                                 Исследуйте галактику, улучшайте корабль и
                                 экипаж. Достигните самых отдалённых уголков
@@ -432,23 +457,6 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                                 галактики. Но помните — путь к границе открыт
                                 только для тех, кто докажет свою готовность...
                             </p>
-                        </div>
-                        <div className="space-y-3">
-                            <div className="bg-[rgba(255,0,64,0.05)] border border-[#ff0040] p-3">
-                                <div className="text-[#ff0040] font-bold text-sm mb-1">
-                                    💥 Как проиграть:
-                                </div>
-                                <ul className="text-[#888] text-xs space-y-1 list-disc list-inside">
-                                    <li>
-                                        Потеряйте весь экипаж без возможности
-                                        управления ИИ
-                                    </li>
-                                    <li>
-                                        Разрушьте все модули корабля до
-                                        последнего
-                                    </li>
-                                </ul>
-                            </div>
                         </div>
                     </section>
                 </div>

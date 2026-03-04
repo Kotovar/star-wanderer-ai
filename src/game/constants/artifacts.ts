@@ -83,6 +83,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         researched: false,
         requiresScientistLevel: 3,
         rarity: "legendary",
+        canBoost: false,
     },
     {
         id: "void_engine",
@@ -94,6 +95,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         researched: false,
         requiresScientistLevel: 3,
         rarity: "legendary",
+        canBoost: false,
     },
     {
         id: "critical_matrix",
@@ -128,6 +130,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         researched: false,
         requiresScientistLevel: 4,
         rarity: "mythic",
+        canBoost: false,
     },
     {
         id: "artifact_compass",
@@ -150,6 +153,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         researched: false,
         requiresScientistLevel: 4,
         rarity: "mythic",
+        canBoost: false,
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -189,6 +193,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         requiresScientistLevel: 3,
         rarity: "cursed",
         cursed: true,
+        canBoost: false,
     },
     {
         id: "ancient_biosphere",
@@ -205,6 +210,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         requiresScientistLevel: 4,
         rarity: "cursed",
         cursed: true,
+        canBoost: false,
     },
     {
         id: "black_box",
@@ -259,14 +265,14 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         id: "dark_shield_generator",
         name: "🛡️ Тёмный Щит",
         description: "+100 к максимальным щитам. Но экипаж чувствует холод.",
-        effect: { type: "dark_shield", value: 100, active: false },
+        effect: { type: "dark_shield", value: 100, active: true },
         negativeEffect: {
             type: "morale_drain",
             value: 3,
             description: "-3 мораль всему экипажу каждый ход",
         },
-        discovered: false,
-        researched: false,
+        discovered: true,
+        researched: true,
         requiresScientistLevel: 2,
         rarity: "cursed",
         cursed: true,
@@ -286,5 +292,6 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         requiresScientistLevel: 3,
         rarity: "cursed",
         cursed: true,
+        canBoost: false,
     },
 ];

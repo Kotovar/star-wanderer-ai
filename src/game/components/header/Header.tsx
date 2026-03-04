@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useGameStore } from "../store";
-import { HelpPanel } from "./HelpPanel";
-import { ActiveEffectsPanel } from "./ActiveEffectsPanel";
-import { ResearchPanel } from "./ResearchPanel";
+import { useGameStore } from "@/game/store";
+import { HelpPanel, ActiveEffectsPanel } from "../panels";
+import { ResearchPanel } from "../ResearchPanel";
 import {
     Dialog,
     DialogContent,
@@ -51,7 +50,6 @@ export function GameHeader() {
     };
 
     const handleResearchClick = () => {
-        // On mobile, open modal; on desktop, change gameMode
         if (typeof window !== "undefined" && window.innerWidth < 1024) {
             setShowResearchModal(true);
         } else {
@@ -63,7 +61,6 @@ export function GameHeader() {
         }
     };
 
-    // Close mobile modal when switching to desktop
     useEffect(() => {
         const handleResize = () => {
             if (window.innerWidth >= 1024) {
@@ -84,11 +81,11 @@ export function GameHeader() {
                     <button
                         onClick={() => setShowHelp(true)}
                         className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
-                        title="Справка"
+                        title="Бортовой журнал"
                     >
                         <span className="text-[#00d4ff]">📖</span>
                         <span className="text-[#00d4ff] hidden md:inline">
-                            СПРАВКА
+                            БОРТЖУРНАЛ
                         </span>
                     </button>
                     <button

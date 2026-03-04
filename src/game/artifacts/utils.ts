@@ -1,5 +1,5 @@
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
-import type { Artifact } from "@/game/types";
+import type { ActiveEffect, ArtefatType, Artifact } from "@/game/types";
 
 // Get artifact by ID
 export const getArtifactById = (id: string): Artifact | undefined => {
@@ -32,4 +32,35 @@ export const getRandomUndiscoveredArtifact = (
     }
 
     return undiscovered[0];
+};
+
+export const getEffectDescription = (
+    effect: { type: ArtefatType; value: number | string },
+    activeEffect?: ActiveEffect,
+) => {
+    switch (effect.type) {
+        case "health_regen":
+            return `+${effect.value} к регенерации здоровья за ход`;
+        case "combat_bonus":
+            return `+${Math.round(Number(effect.value) * 100)}% к урону в бою`;
+        case "evasion_bonus":
+            return `+${Math.round(Number(effect.value) * 100)}% к уклонению`;
+        case "power_boost":
+            return `+${effect.value} к энергии реактора`;
+        case "shield_boost":
+            return `+${effect.value} к максимальным щитам`;
+        case "fuel_efficiency":
+            return `+${Math.round(Number(effect.value) * 100)}% к эффективности топлива`;
+        case "artifact_boost":
+            // Show the boosted artifact name
+            if (activeEffect?.targetArtifactId) {
+                const artifact = getArtifactById(activeEffect.targetArtifactId);
+                if (artifact) {
+                    return `Усиление артефакта: ${artifact.name} (+50%)`;
+                }
+            }
+            return `Усиление артефакта (+50%)`;
+        default:
+            return `${effect.type}: ${effect.value}`;
+    }
 };

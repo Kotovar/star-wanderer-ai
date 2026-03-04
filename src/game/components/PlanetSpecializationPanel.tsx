@@ -85,7 +85,7 @@ export function PlanetSpecializationPanel({
             if (selectedArtifactId) {
                 boostArtifact(selectedArtifactId);
             }
-            // Add fuel efficiency effect manually (boostArtifact already charged)
+            // Add fuel efficiency and artifact_boost effects
             useGameStore.setState((s) => ({
                 activeEffects: [
                     ...s.activeEffects,
@@ -95,10 +95,16 @@ export function PlanetSpecializationPanel({
                         description: spec.description,
                         raceId,
                         turnsRemaining: 5,
-                        effects: [{ type: "fuel_efficiency", value: 0.1 }],
+                        effects: [
+                            { type: "fuel_efficiency", value: 0.1 },
+                            { type: "artifact_boost", value: 0.5 },
+                        ],
+                        targetArtifactId: selectedArtifactId || undefined,
                     },
                 ],
             }));
+            // Update ship stats immediately to reflect artifact boost
+            useGameStore.getState().updateShipStats();
         } else {
             // For other specializations, use activatePlanetEffect
             activatePlanetEffect(raceId, planetId);
@@ -231,7 +237,9 @@ export function PlanetSpecializationPanel({
                     </div>
                     <div className="flex flex-col gap-2 max-h-40 overflow-y-auto">
                         {artifacts
-                            .filter((a) => a.effect.active)
+                            .filter(
+                                (a) => a.effect.active && a.canBoost !== false,
+                            )
                             .map((artifact) => (
                                 <div
                                     key={artifact.id}
@@ -254,10 +262,11 @@ export function PlanetSpecializationPanel({
                                     </div>
                                 </div>
                             ))}
-                        {artifacts.filter((a) => a.effect.active).length ===
-                            0 && (
+                        {artifacts.filter(
+                            (a) => a.effect.active && a.canBoost !== false,
+                        ).length === 0 && (
                             <div className="text-[#ff0040] text-xs p-2">
-                                Нет активных артефактов
+                                Нет активных артефактов для усиления
                             </div>
                         )}
                     </div>

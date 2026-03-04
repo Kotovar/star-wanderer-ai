@@ -63,6 +63,37 @@ import {
 } from "./research/utils";
 import { RESEARCH_RESOURCES } from "./constants/research";
 
+// Helper function to get artifact effect value with active boost bonus
+const getArtifactEffectValue = (
+    artifact: Artifact | undefined,
+    state: GameState,
+): number => {
+    if (!artifact) return 0;
+
+    let value = artifact.effect.value || 0;
+
+    // Check if this artifact is boosted by voidborn ritual
+    const boostEffect = state.activeEffects.find(
+        (e) =>
+            e.effects.some((ef) => ef.type === "artifact_boost") &&
+            e.targetArtifactId === artifact.id,
+    );
+
+    if (boostEffect) {
+        const boostValue =
+            (boostEffect.effects.find((ef) => ef.type === "artifact_boost")
+                ?.value as number) ?? 0.5;
+        // For percentage values (< 1), don't use floor - keep decimal precision
+        // For integer values (>= 1), use floor for clean numbers
+        value =
+            value < 1
+                ? value * (1 + boostValue)
+                : Math.floor(value * (1 + boostValue));
+    }
+
+    return value;
+};
+
 // Game store
 export const useGameStore = create<
     GameState & {
@@ -235,7 +266,7 @@ export const useGameStore = create<
                 (a) => a.effect.type === "dark_shield" && a.effect.active,
             );
             if (darkShield) {
-                totalShields += darkShield.effect.value || 100;
+                totalShields += getArtifactEffectValue(darkShield, state);
             }
 
             // Crystalline Armor artifact bonus (+X defense to all modules)
@@ -243,7 +274,10 @@ export const useGameStore = create<
                 (a) => a.effect.type === "module_armor" && a.effect.active,
             );
             if (crystallineArmor) {
-                const armorBonus = crystallineArmor.effect.value || 3;
+                const armorBonus = getArtifactEffectValue(
+                    crystallineArmor,
+                    state,
+                );
                 totalDefense += state.ship.modules.length * armorBonus;
             }
 
@@ -294,7 +328,7 @@ export const useGameStore = create<
             (a) => a.effect.type === "abyss_power" && a.effect.active,
         );
         if (abyssReactor) {
-            power += abyssReactor.effect.value || 25;
+            power += getArtifactEffectValue(abyssReactor, state);
         }
 
         // Eternal Reactor Core artifact bonus (+10 free power)
@@ -302,7 +336,7 @@ export const useGameStore = create<
             (a) => a.effect.type === "free_power" && a.effect.active,
         );
         if (eternalReactor) {
-            power += eternalReactor.effect.value || 10;
+            power += getArtifactEffectValue(eternalReactor, state);
         }
 
         // Planet effect bonus power
@@ -396,9 +430,8 @@ export const useGameStore = create<
             (a) => a.effect.type === "damage_boost" && a.effect.active,
         );
         if (plasmaInjector) {
-            dmg.total = Math.floor(
-                dmg.total * (1 + (plasmaInjector.effect.value || 0.3)),
-            );
+            const boostValue = getArtifactEffectValue(plasmaInjector, state);
+            dmg.total = Math.floor(dmg.total * (1 + boostValue));
         }
 
         // Apply weapon damage technology bonuses
@@ -544,7 +577,7 @@ export const useGameStore = create<
             (a) => a.effect.type === "quantum_scan" && a.effect.active,
         );
         if (quantumScanner && scanners.length > 0) {
-            maxRange += quantumScanner.effect.value || 5;
+            maxRange += getArtifactEffectValue(quantumScanner, state);
         }
 
         // Apply scan range technology bonuses
@@ -2656,7 +2689,7 @@ export const useGameStore = create<
             (a) => a.effect.type === "auto_repair" && a.effect.active,
         );
         if (autoRepair) {
-            const repairAmount = autoRepair.effect.value || 8;
+            const repairAmount = getArtifactEffectValue(autoRepair, state);
             set((s) => ({
                 ship: {
                     ...s.ship,
@@ -4340,12 +4373,12 @@ export const useGameStore = create<
             (a) => a.effect.type === "crit_chance" && a.effect.active,
         );
         let critMultiplier = 1;
-        if (
-            criticalMatrix &&
-            Math.random() < (criticalMatrix.effect.value || 0.35)
-        ) {
-            critMultiplier = 2;
-            get().addLog(`💥 КРИТИЧЕСКИЙ УДАР! x2 урон!`, "combat");
+        if (criticalMatrix) {
+            const critChance = getArtifactEffectValue(criticalMatrix, state);
+            if (Math.random() < critChance) {
+                critMultiplier = 2;
+                get().addLog(`💥 КРИТИЧЕСКИЙ УДАР! x2 урон!`, "combat");
+            }
         }
 
         // Calculate accuracy modifier from crew assignments and traits
@@ -4374,8 +4407,13 @@ export const useGameStore = create<
             (a) => a.effect.type === "accuracy_boost" && a.effect.active,
         );
         if (targetingCore) {
-            accuracyModifier += targetingCore.effect.value || 0.15;
-            get().addLog(`🎯 Ядро Прицеливания: +15% точность`, "info");
+            const accuracyBonus =
+                getArtifactEffectValue(targetingCore, state) / 100;
+            accuracyModifier += accuracyBonus;
+            get().addLog(
+                `🎯 Ядро Прицеливания: +${Math.round(accuracyBonus * 100)}% точность`,
+                "info",
+            );
         }
 
         // Crew trait modifiers (accuracyPenalty from "Плохой стрелок")
@@ -4647,9 +4685,9 @@ export const useGameStore = create<
                 (a) => a.effect.type === "credit_booster" && a.effect.active,
             );
             if (blackBox) {
-                creditsAmount = Math.floor(
-                    creditsAmount * (1 + (blackBox.effect.value || 0.75)),
-                );
+                const boostValue =
+                    getArtifactEffectValue(blackBox, state) / 100;
+                creditsAmount = Math.floor(creditsAmount * (1 + boostValue));
             }
 
             // Apply lootBonus trait (Удачливый: +5% credits)
@@ -4996,8 +5034,10 @@ export const useGameStore = create<
                     a.effect.active,
             );
             if (criticalOverload && state.ship.modules.length > 0) {
-                const negativeValue =
-                    criticalOverload.negativeEffect?.value || 75;
+                const negativeValue = getArtifactEffectValue(
+                    criticalOverload,
+                    state,
+                );
                 const randomModuleIdx = Math.floor(
                     Math.random() * state.ship.modules.length,
                 );
@@ -5271,8 +5311,10 @@ export const useGameStore = create<
             let reflectedDamage = 0;
 
             if (mirrorShield) {
+                const reflectChance =
+                    getArtifactEffectValue(mirrorShield, state) / 100;
                 get().addLog(
-                    `🛡️ Зеркальный Щит активен! Шанс отражения: ${(mirrorShield.effect.value ?? 0.3) * 100}%`,
+                    `🛡️ Зеркальный Щит активен! Шанс отражения: ${Math.round(reflectChance * 100)}%`,
                     "info",
                 );
             }
@@ -5281,7 +5323,8 @@ export const useGameStore = create<
             if (
                 mirrorShield &&
                 updatedCombat &&
-                Math.random() < (mirrorShield.effect.value ?? 0.3)
+                Math.random() <
+                    getArtifactEffectValue(mirrorShield, state) / 100
             ) {
                 const aliveModules = updatedCombat.enemy.modules.filter(
                     (m) => m.health > 0,
@@ -5367,8 +5410,10 @@ export const useGameStore = create<
                     );
                     let artifactDefense = 0;
                     if (crystalArmorArtifact) {
-                        artifactDefense =
-                            crystalArmorArtifact.effect.value || 3;
+                        artifactDefense = getArtifactEffectValue(
+                            crystalArmorArtifact,
+                            state,
+                        );
                         get().addLog(
                             `💎 Кристаллическая Броня (артефакт): +${artifactDefense} к защите модуля`,
                             "info",
@@ -5467,7 +5512,10 @@ export const useGameStore = create<
                 );
                 let artifactDefense = 0;
                 if (crystalArmorArtifact) {
-                    artifactDefense = crystalArmorArtifact.effect.value || 3;
+                    artifactDefense = getArtifactEffectValue(
+                        crystalArmorArtifact,
+                        state,
+                    );
                     get().addLog(
                         `💎 Кристаллическая Броня (артефакт): +${artifactDefense} к защите модуля`,
                         "info",
@@ -7723,10 +7771,12 @@ export const useGameStore = create<
         const state = get();
 
         // Check for artifact finder bonus
-        let artifactFinderBonus =
-            state.artifacts.find(
-                (a) => a.effect.type === "artifact_finder" && a.effect.active,
-            )?.effect.value || 1;
+        const artifactFinder = state.artifacts.find(
+            (a) => a.effect.type === "artifact_finder" && a.effect.active,
+        );
+        let artifactFinderBonus = artifactFinder
+            ? getArtifactEffectValue(artifactFinder, state)
+            : 1;
 
         // Apply crystalline artifactBonus (+15% to artifact effects)
         state.crew.forEach((c) => {
@@ -7914,7 +7964,6 @@ export const useGameStore = create<
 
     boostArtifact: (artifactId: string) => {
         const state = get();
-        const cost = 600;
         const artifact = state.artifacts.find((a) => a.id === artifactId);
 
         if (!artifact || !artifact.effect.active) {
@@ -7922,29 +7971,14 @@ export const useGameStore = create<
             return;
         }
 
-        if (state.credits < cost) {
-            get().addLog("Недостаточно кредитов для усиления!", "error");
-            return;
-        }
-
-        // Boost artifact effect by 50%
+        // Mark artifact as boosted (actual bonus applied via activeEffect)
         set((s) => ({
-            credits: s.credits - cost,
             artifacts: s.artifacts.map((a) =>
-                a.id === artifactId
-                    ? {
-                          ...a,
-                          boosted: true,
-                          effect: {
-                              ...a.effect,
-                              value: Math.floor((a.effect.value || 1) * 1.5),
-                          },
-                      }
-                    : a,
+                a.id === artifactId ? { ...a, boosted: true } : a,
             ),
         }));
 
-        get().addLog(`🔮 ${artifact.name} усилен! Эффект: +50%`, "info");
+        get().addLog(`🔮 ${artifact.name} готов к усилению!`, "info");
         playSound("success");
     },
 
@@ -8099,7 +8133,12 @@ export const useGameStore = create<
             let bonusShieldsToRemove = 0;
             let bonusEvasionToRemove = 0;
 
+            // Find artifacts to un-boost
+            const artifactsToUnboost: string[] = [];
             expiringEffects.forEach((effect) => {
+                if (effect.targetArtifactId) {
+                    artifactsToUnboost.push(effect.targetArtifactId);
+                }
                 effect.effects.forEach((ef) => {
                     if (ef.type === "power_boost") {
                         bonusPowerToRemove += ef.value as number;
@@ -8128,6 +8167,11 @@ export const useGameStore = create<
 
             return {
                 activeEffects,
+                artifacts: s.artifacts.map((a) =>
+                    artifactsToUnboost.includes(a.id)
+                        ? { ...a, boosted: false }
+                        : a,
+                ),
                 ship: {
                     ...s.ship,
                     bonusPower: Math.max(

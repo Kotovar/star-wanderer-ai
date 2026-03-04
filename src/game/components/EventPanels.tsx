@@ -19,6 +19,14 @@ import { UnknownShipPanel } from "./UnknownShipPanel";
 import { BattleResultsPanel } from "./BattleResultsPanel";
 import { ResearchPanel } from "./ResearchPanel";
 
+const LABELS = {
+    mapSector: "карта сектора",
+    mapGalaxy: "карта галактики",
+    crew: "задачи экипажа",
+    skip: "пропустить ход",
+    next: "следующий ход",
+};
+
 export function EventDisplay() {
     const gameMode = useGameStore((s) => s.gameMode);
     const traveling = useGameStore((s) => s.traveling);
@@ -52,13 +60,13 @@ export function EventDisplay() {
                         onClick={skipTurn}
                         className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
                     >
-                        СЛЕДУЮЩИЙ ХОД
+                        {LABELS.next}
                     </Button>
                     <Button
                         onClick={showAssignments}
                         className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
                     >
-                        ЭКИПАЖ
+                        {LABELS.crew}
                     </Button>
                 </div>
             </div>
@@ -69,33 +77,33 @@ export function EventDisplay() {
         case "galaxy_map":
             return (
                 <div className="flex flex-col h-full">
-                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mb-2">
-                        ▸ КАРТА ГАЛАКТИКИ
+                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mb-2 uppercase">
+                        ▸ Карта галактики
                     </div>
                     <div className="grid grid-cols-2 gap-2 shrink-0">
                         <Button
                             onClick={showSectorMap}
                             className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-10"
                         >
-                            ИССЛЕДОВАТЬ СЕКТОР
+                            {LABELS.mapSector}
                         </Button>
                         <div className="grid grid-rows-2 gap-2">
                             <Button
                                 onClick={showAssignments}
                                 className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-full"
                             >
-                                ЭКИПАЖ
+                                {LABELS.crew}
                             </Button>
                             <Button
                                 onClick={skipTurn}
                                 className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-full"
                             >
-                                ПРОПУСТИТЬ ХОД
+                                {LABELS.skip}
                             </Button>
                         </div>
                     </div>
                     <div className="text-sm text-center shrink-0 h-6 flex items-center justify-center">
-                        Позиция:{" "}
+                        Сектор:{" "}
                         <span className="text-[#ffb000]">
                             {currentSector?.name}
                         </span>
@@ -120,20 +128,20 @@ export function EventDisplay() {
                             onClick={showGalaxyMap}
                             className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-10"
                         >
-                            КАРТА
+                            {LABELS.mapGalaxy}
                         </Button>
                         <div className="grid grid-rows-2 gap-2">
                             <Button
                                 onClick={showAssignments}
                                 className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-full"
                             >
-                                ЭКИПАЖ
+                                {LABELS.crew}
                             </Button>
                             <Button
                                 onClick={skipTurn}
                                 className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs h-full"
                             >
-                                ПРОПУСТИТЬ ХОД
+                                {LABELS.skip}
                             </Button>
                         </div>
                     </div>

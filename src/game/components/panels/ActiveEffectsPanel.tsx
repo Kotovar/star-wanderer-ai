@@ -1,8 +1,9 @@
 "use client";
 
-import { useGameStore } from "../store";
-import { RACES } from "../constants/races";
+import { useGameStore } from "@/game/store";
+import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
+import { getEffectDescription } from "@/game/artifacts";
 
 interface ActiveEffectsPanelProps {
     onClose: () => void;
@@ -52,7 +53,7 @@ export function ActiveEffectsPanel({ onClose }: ActiveEffectsPanelProps) {
                 </button>
             </div>
             <div className="text-xs text-[#888] mb-2">
-                Эффекты длятся 5 ходов и автоматически истекают
+                Эффекты длятся несколько ходов и автоматически истекают
             </div>
 
             <div className="flex flex-col gap-3 max-h-80 overflow-y-auto">
@@ -65,18 +66,16 @@ export function ActiveEffectsPanel({ onClose }: ActiveEffectsPanelProps) {
                         >
                             <div className="flex justify-between items-start mb-2">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xl">
-                                        {race?.icon}
-                                    </span>
+                                    <span className="text-xl">{race.icon}</span>
                                     <div>
                                         <div
                                             className="font-bold text-sm"
-                                            style={{ color: race?.color }}
+                                            style={{ color: race.color }}
                                         >
                                             {effect.name}
                                         </div>
                                         <div className="text-[10px] text-[#888]">
-                                            {race?.pluralName}
+                                            {race.pluralName}
                                         </div>
                                     </div>
                                 </div>
@@ -101,7 +100,7 @@ export function ActiveEffectsPanel({ onClose }: ActiveEffectsPanelProps) {
                                         key={idx}
                                         className="text-[11px] text-[#00ff41]"
                                     >
-                                        ✓ {getEffectDescription(ef)}
+                                        ✓ {getEffectDescription(ef, effect)}
                                     </div>
                                 ))}
                             </div>
@@ -118,26 +117,4 @@ export function ActiveEffectsPanel({ onClose }: ActiveEffectsPanelProps) {
             </Button>
         </div>
     );
-}
-
-function getEffectDescription(effect: {
-    type: string;
-    value: number | string;
-}): string {
-    switch (effect.type) {
-        case "health_regen":
-            return `+${effect.value} к регенерации здоровья за ход`;
-        case "combat_bonus":
-            return `+${Math.round((effect.value as number) * 100)}% к урону в бою`;
-        case "evasion_bonus":
-            return `+${Math.round((effect.value as number) * 100)}% к уклонению`;
-        case "power_boost":
-            return `+${effect.value} к энергии реактора`;
-        case "shield_boost":
-            return `+${effect.value} к максимальным щитам`;
-        case "fuel_efficiency":
-            return `+${Math.round((effect.value as number) * 100)}% к эффективности топлива`;
-        default:
-            return `${effect.type}: ${effect.value}`;
-    }
 }

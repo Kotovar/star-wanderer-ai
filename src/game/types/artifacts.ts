@@ -13,6 +13,7 @@ export interface Artifact {
     negativeEffect?: ArtifactNegativeEffect; // For cursed artifacts
     hinted?: boolean; // Has been hinted at by synthetic archives
     cursed?: boolean; // Is this a cursed artifact with negative effects
+    canBoost?: boolean; // Can be enhanced by voidborn ritual (default: true if has numeric value)
 }
 
 export interface ArtifactEffect {
