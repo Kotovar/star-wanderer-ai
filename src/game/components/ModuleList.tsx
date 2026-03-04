@@ -103,7 +103,9 @@ function ModuleCard({ module, onClick }: ModuleCardProps) {
     return (
         <div
             className={`bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-2.5 text-xs cursor-pointer transition-all hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_10px_rgba(0,255,65,0.5)] ${
-                module.disabled ? "opacity-50 border-[#ff0040]" : ""
+                module.disabled || module.manualDisabled
+                    ? "opacity-50 border-[#ff0040]"
+                    : ""
             }`}
             onClick={onClick}
         >
@@ -181,7 +183,9 @@ function ModuleStats({ module }: ModuleStatsProps) {
                 )}
                 %
             </span>
-            {module.disabled && <span className="text-[#ff0040]">⚠ ВЫКЛ</span>}
+            {(module.disabled || module.manualDisabled) && (
+                <span className="text-[#ff0040]">⚠ ВЫКЛ</span>
+            )}
         </>
     );
 }
@@ -309,12 +313,14 @@ export function ModuleDetailDialog({
                                 <span className="text-[#ffb000]">Статус: </span>
                                 <span
                                     className={
-                                        module.disabled
+                                        module.disabled || module.manualDisabled
                                             ? "text-[#ff0040]"
                                             : "text-[#00ff41]"
                                     }
                                 >
-                                    {module.disabled ? "ОТКЛЮЧЁН" : "АКТИВЕН"}
+                                    {module.disabled || module.manualDisabled
+                                        ? "ОТКЛЮЧЁН"
+                                        : "АКТИВЕН"}
                                 </span>
                             </div>
 
@@ -331,7 +337,9 @@ export function ModuleDetailDialog({
                                     }}
                                     className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
                                 >
-                                    {module.disabled ? "ВКЛЮЧИТЬ" : "ОТКЛЮЧИТЬ"}
+                                    {module.disabled || module.manualDisabled
+                                        ? "ВКЛЮЧИТЬ"
+                                        : "ОТКЛЮЧИТЬ"}
                                 </Button>
                             </div>
                         </>

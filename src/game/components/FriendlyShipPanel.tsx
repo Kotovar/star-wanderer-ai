@@ -76,7 +76,13 @@ export function FriendlyShipPanel() {
     };
 
     // Calculate available cargo space
-    const cargoModules = ship.modules.filter((m) => m.type === "cargo");
+    const cargoModules = ship.modules.filter(
+        (m) =>
+            m.type === "cargo" &&
+            !m.disabled &&
+            !m.manualDisabled &&
+            m.health > 0,
+    );
     const totalCargoCapacity = cargoModules.reduce(
         (sum, m) => sum + (m.capacity || 0),
         0,

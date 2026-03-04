@@ -280,7 +280,9 @@ function ModuleRenderer({
 
             <HealthBar module={module} x={x} y={y} w={w} h={h} />
 
-            {module.disabled && <DisabledOverlay x={x} y={y} w={w} h={h} />}
+            {(module.disabled || module.manualDisabled) && (
+                <DisabledOverlay x={x} y={y} w={w} h={h} />
+            )}
             {module.health < 30 && <DamageOverlay x={x} y={y} w={w} h={h} />}
 
             {crewInModule.length > 0 && (

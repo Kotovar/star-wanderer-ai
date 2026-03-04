@@ -33,7 +33,11 @@ export const TIER_COLORS: Record<GalaxyTier, TierDetails> = {
 // Get engine level from modules
 export function getEngineLevel(modules: Module[]): number {
     const engines = modules.filter(
-        (m) => m.type === "engine" && !m.disabled && m.health > 0,
+        (m) =>
+            m.type === "engine" &&
+            !m.disabled &&
+            !m.manualDisabled &&
+            m.health > 0,
     );
     if (engines.length === 0) return 1;
     return Math.max(...engines.map((e) => e.level || 1));
@@ -42,7 +46,11 @@ export function getEngineLevel(modules: Module[]): number {
 // Get scanner level from modules
 export function getScannerLevel(modules: Module[]): number {
     const scanners = modules.filter(
-        (m) => m.type === "scanner" && !m.disabled && m.health > 0,
+        (m) =>
+            m.type === "scanner" &&
+            !m.disabled &&
+            !m.manualDisabled &&
+            m.health > 0,
     );
     if (scanners.length === 0) return 0;
     return Math.max(...scanners.map((s) => s.level || 1));

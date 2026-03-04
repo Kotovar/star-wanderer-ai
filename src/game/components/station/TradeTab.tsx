@@ -16,7 +16,13 @@ interface TradeTabProps {
     ship: {
         tradeGoods: Array<{ item: string; quantity: number }>;
         cargo: Array<{ quantity: number }>;
-        modules: Array<{ type: string; capacity?: number }>;
+        modules: Array<{
+            type: string;
+            capacity?: number;
+            disabled?: boolean;
+            manualDisabled?: boolean;
+            health?: number;
+        }>;
     };
     buyTradeGood: (goodId: Goods, quantity: number) => void;
     sellTradeGood: (goodId: Goods, quantity: number) => void;
@@ -31,7 +37,14 @@ export function TradeTab({
     buyTradeGood,
     sellTradeGood,
 }: TradeTabProps) {
-    const cargoModules = ship.modules.filter((m) => m.type === "cargo");
+    const cargoModules = ship.modules.filter(
+        (m) =>
+            m.type === "cargo" &&
+            !m.disabled &&
+            !m.manualDisabled &&
+            m.health &&
+            m.health > 0,
+    );
     const totalCargoCapacity = cargoModules.reduce(
         (sum, m) => sum + (m.capacity || 0),
         0,

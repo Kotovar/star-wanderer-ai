@@ -31,7 +31,11 @@ export function ShipStats() {
 
     // Get engine level from modules
     const engines = ship.modules.filter(
-        (m) => m.type === "engine" && !m.disabled && m.health > 0,
+        (m) =>
+            m.type === "engine" &&
+            !m.disabled &&
+            !m.manualDisabled &&
+            m.health > 0,
     );
     const engineLevel =
         engines.length > 0 ? Math.max(...engines.map((e) => e.level || 1)) : 1;

@@ -6,7 +6,13 @@ import { DELIVERY_GOODS } from "../constants/contracts";
 
 export function CargoDisplay() {
     const ship = useGameStore((s) => s.ship);
-    const cargoModules = ship.modules.filter((m) => m.type === "cargo");
+    const cargoModules = ship.modules.filter(
+        (m) =>
+            m.type === "cargo" &&
+            !m.disabled &&
+            !m.manualDisabled &&
+            m.health > 0,
+    );
 
     if (cargoModules.length === 0) {
         return <div className="text-xs text-[#888]">Нет грузового отсека</div>;

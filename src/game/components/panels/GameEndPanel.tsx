@@ -171,7 +171,7 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                                 restartGame();
                                 window.location.href = "/";
                             }}
-                            className="w-full bg-transparent border-2 hover:bg-(--border-color) hover:text-[#050810] uppercase tracking-wider text-lg py-6"
+                            className="cursor-pointer w-full bg-transparent border-2 hover:bg-(--border-color) hover:text-[#050810] uppercase tracking-wider text-lg py-6"
                             style={{
                                 borderColor: theme.border,
                                 color: theme.border,

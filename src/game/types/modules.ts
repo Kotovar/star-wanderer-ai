@@ -37,7 +37,8 @@ export interface Module {
     scanRange?: number;
     fuelEfficiency?: number; // For engines - lower is better (fuel per tier)
     researchOutput?: number; // For lab - research points per turn
-    disabled?: boolean;
+    disabled?: boolean; // Disabled due to power deficit (auto-disabled)
+    manualDisabled?: boolean; // Manually disabled by player
     weapons?: Weapon[];
     movedThisTurn?: boolean; // Whether the module has been moved this turn
 }

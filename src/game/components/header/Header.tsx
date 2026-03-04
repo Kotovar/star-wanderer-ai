@@ -180,7 +180,7 @@ export function GameHeader() {
             >
                 <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ff4444] text-[#00ff41] max-w-md">
                     <DialogHeader>
-                        <DialogTitle className="text-xl font-['Orbitron'] text-[#ff4444]">
+                        <DialogTitle className="cursor-pointer text-xl font-['Orbitron'] text-[#ff4444]">
                             Начать заново?
                         </DialogTitle>
                         <DialogDescription className="text-[#00ff41] text-base mt-2">

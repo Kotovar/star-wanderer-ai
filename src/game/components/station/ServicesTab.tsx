@@ -20,6 +20,7 @@ interface ServicesTabProps {
             type: string;
             level?: number;
             disabled?: boolean;
+            manualDisabled?: boolean;
             x: number;
             y: number;
             width?: number;
@@ -241,7 +242,7 @@ function ScrapModuleSection({
     // Count enabled modules by type
     const moduleCounts: Record<string, number> = {};
     ship.modules.forEach((m) => {
-        if (!(m.disabled ?? false)) {
+        if (!(m.disabled ?? false) && !(m.manualDisabled ?? false)) {
             moduleCounts[m.type] = (moduleCounts[m.type] || 0) + 1;
         }
     });
@@ -249,6 +250,7 @@ function ScrapModuleSection({
     // Get modules that can be scrapped (not the last essential one, and no crew)
     const scrappableModules = ship.modules.filter((m) => {
         if (m.disabled ?? false) return false;
+        if (m.manualDisabled ?? false) return false;
         if (!essentialTypes.includes(m.type)) return true;
         if ((moduleCounts[m.type] || 0) <= 1) return false;
         // Check if any crew member is in this module
@@ -319,7 +321,7 @@ function InstallModuleSection({
 
                 // Check if position is occupied by existing module
                 const isOccupied = ship.modules.some((m) => {
-                    if (m.disabled) return false;
+                    if (m.disabled || m.manualDisabled) return false;
                     const mWidth = m.width || 2;
                     const mHeight = m.height || 2;
                     return (

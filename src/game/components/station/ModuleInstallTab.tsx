@@ -33,6 +33,7 @@ export function ModuleInstallTab({ onClose }: ModuleInstallTabProps) {
         const isOccupied = modules.some(
             (m) =>
                 !m.disabled &&
+                !m.manualDisabled &&
                 m.health > 0 &&
                 Math.abs(m.x - x) < (m.width || 2) &&
                 Math.abs(m.y - y) < (m.height || 2),
@@ -61,6 +62,7 @@ export function ModuleInstallTab({ onClose }: ModuleInstallTabProps) {
         return modules.some(
             (m) =>
                 !m.disabled &&
+                !m.manualDisabled &&
                 m.health > 0 &&
                 Math.abs(m.x - x) < (m.width || 2) &&
                 Math.abs(m.y - y) < (m.height || 2),

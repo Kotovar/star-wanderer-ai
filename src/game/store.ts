@@ -245,19 +245,17 @@ export const useGameStore = create<
 
     updateShipStats: () => {
         set((state) => {
-            // Total hull health (sum of all module health)
-            // const totalHealth = state.ship.modules.reduce(
-            //     (sum, m) => sum + (m.maxHealth || m.health),
-            //     0,
-            // );
+            // Helper: check if module is functional (not disabled and has health)
+            const isFunctional = (m: (typeof state.ship.modules)[0]) =>
+                !m.disabled && !m.manualDisabled && m.health > 0;
+
             // Total defense (sum of all module defense values)
-            let totalDefense = state.ship.modules.reduce(
-                (sum, m) => sum + (m.defense || 0),
-                0,
-            );
+            let totalDefense = state.ship.modules
+                .filter(isFunctional)
+                .reduce((sum, m) => sum + (m.defense || 0), 0);
 
             let totalShields = state.ship.modules
-                .filter((m) => m.type === "shield")
+                .filter((m) => m.type === "shield" && isFunctional(m))
                 .reduce((sum, m) => sum + (m.shields || 0), 0);
 
             // Dark Shield artifact bonus
@@ -281,12 +279,10 @@ export const useGameStore = create<
             }
 
             const totalOxygen = state.ship.modules
-                .filter((m) => m.type === "lifesupport")
+                .filter((m) => m.type === "lifesupport" && isFunctional(m))
                 .reduce((sum, m) => sum + (m.oxygen || 0), 0);
             const totalFuelCapacity = state.ship.modules
-                .filter(
-                    (m) => m.type === "fueltank" && !m.disabled && m.health > 0,
-                )
+                .filter((m) => m.type === "fueltank" && isFunctional(m))
                 .reduce((sum, m) => sum + (m.capacity || 0), 0);
 
             // Safeguard against NaN or undefined fuel
@@ -313,7 +309,7 @@ export const useGameStore = create<
     getTotalPower: () => {
         const state = get();
         let power = state.ship.modules
-            .filter((m) => !m.disabled)
+            .filter((m) => !m.disabled && !m.manualDisabled && m.health > 0)
             .reduce((sum, m) => sum + (m.power || 0), 0);
 
         // Engineer power boost assignment (+5 power)
@@ -354,7 +350,7 @@ export const useGameStore = create<
         // Calculate energy consumption per module, applying crew bonuses locally
         let base = 0;
         state.ship.modules.forEach((m) => {
-            if (m.disabled) return;
+            if (m.disabled || m.manualDisabled || m.health <= 0) return;
 
             let moduleConsumption = m.consumption || 0;
 
@@ -380,7 +376,7 @@ export const useGameStore = create<
         const state = get();
         const dmg = { total: 0, kinetic: 0, laser: 0, missile: 0 };
         state.ship.modules.forEach((m) => {
-            if (m.disabled) return;
+            if (m.disabled || m.manualDisabled || m.health <= 0) return;
             if (m.type === "weaponbay" && m.weapons) {
                 m.weapons.forEach((w) => {
                     if (w) {
@@ -476,7 +472,11 @@ export const useGameStore = create<
     getCrewCapacity: () => {
         const state = get();
         const lifesupport = state.ship.modules.filter(
-            (m) => m.type === "lifesupport" && !m.disabled,
+            (m) =>
+                m.type === "lifesupport" &&
+                !m.disabled &&
+                !m.manualDisabled &&
+                m.health > 0,
         );
         return lifesupport.reduce((sum, m) => sum + (m.oxygen || 0), 0);
     },
@@ -484,14 +484,24 @@ export const useGameStore = create<
     getFuelCapacity: () => {
         const state = get();
         return state.ship.modules
-            .filter((m) => m.type === "fueltank" && !m.disabled && m.health > 0)
+            .filter(
+                (m) =>
+                    m.type === "fueltank" &&
+                    !m.disabled &&
+                    !m.manualDisabled &&
+                    m.health > 0,
+            )
             .reduce((sum, m) => sum + (m.capacity || 0), 0);
     },
 
     getFuelEfficiency: () => {
         const state = get();
         const engines = state.ship.modules.filter(
-            (m) => m.type === "engine" && !m.disabled && m.health > 0,
+            (m) =>
+                m.type === "engine" &&
+                !m.disabled &&
+                !m.manualDisabled &&
+                m.health > 0,
         );
         if (engines.length === 0) return 20; // Default inefficient
         // Use the best (lowest) fuel efficiency
@@ -501,7 +511,11 @@ export const useGameStore = create<
     getDrillLevel: () => {
         const state = get();
         const drills = state.ship.modules.filter(
-            (m) => m.type === "drill" && !m.disabled && m.health > 0,
+            (m) =>
+                m.type === "drill" &&
+                !m.disabled &&
+                !m.manualDisabled &&
+                m.health > 0,
         );
         if (drills.length === 0) return 0;
         // Return the highest level drill
@@ -511,7 +525,11 @@ export const useGameStore = create<
     getCargoCapacity: () => {
         const state = get();
         const cargoModules = state.ship.modules.filter(
-            (m) => m.type === "cargo" && !m.disabled && m.health > 0,
+            (m) =>
+                m.type === "cargo" &&
+                !m.disabled &&
+                !m.manualDisabled &&
+                m.health > 0,
         );
         return cargoModules.reduce((sum, m) => sum + (m.capacity || 40), 0);
     },
@@ -519,7 +537,11 @@ export const useGameStore = create<
     getScanLevel: () => {
         const state = get();
         const scanners = state.ship.modules.filter(
-            (m) => m.type === "scanner" && !m.disabled && m.health > 0,
+            (m) =>
+                m.type === "scanner" &&
+                !m.disabled &&
+                !m.manualDisabled &&
+                m.health > 0,
         );
 
         // Apply all_seeing artifact (Eye of Singularity) - acts as scanner level 3
@@ -816,6 +838,41 @@ export const useGameStore = create<
 
         // Process research
         get().processResearch();
+
+        // ═══════════════════════════════════════════════════════════════
+        // OXYGEN CHECK - Crew takes damage if not enough oxygen
+        // ═══════════════════════════════════════════════════════════════
+        const crewCount = get().crew.length;
+        const oxygenCapacity = get().getCrewCapacity();
+
+        if (crewCount > oxygenCapacity) {
+            // Not enough oxygen - all crew take 20% damage (can die)
+            const damagePercent = 20;
+            set((s) => ({
+                crew: s.crew.map((c) => ({
+                    ...c,
+                    health: c.health - damagePercent, // Can go below 1 - crew dies
+                })),
+            }));
+            get().addLog(
+                `⚠️ НЕХВАТКА КИСЛОРОДА! Экипаж получил -${damagePercent}% урона (${crewCount}/${oxygenCapacity})`,
+                "error",
+            );
+            // Remove dead crew
+            set((s) => ({
+                crew: s.crew.filter((c) => c.health > 0),
+            }));
+
+            // Check if all crew died - game over
+            if (get().crew.length === 0) {
+                get().addLog("💀 ВЕСЬ ЭКИПАЖ ПОГИБ! Игра окончена.", "error");
+                set(() => ({
+                    gameOver: true,
+                    gameOverReason: "Экипаж погиб из-за нехватки кислорода",
+                }));
+                return; // Stop processing
+            }
+        }
 
         // ═══════════════════════════════════════════════════════════════
         // POWER MANAGEMENT - Disable modules if power deficit
@@ -6957,19 +7014,67 @@ export const useGameStore = create<
     },
 
     toggleModule: (moduleId) => {
-        set((s) => ({
-            ship: {
-                ...s.ship,
-                modules: s.ship.modules.map((m) =>
-                    m.id === moduleId ? { ...m, disabled: !m.disabled } : m,
-                ),
-            },
-        }));
-        const mod = get().ship.modules.find((m) => m.id === moduleId);
-        get().addLog(
-            `Модуль "${mod?.name}" ${mod?.disabled ? "включён" : "отключён"}`,
-            "info",
-        );
+        const state = get();
+        const mod = state.ship.modules.find((m) => m.id === moduleId);
+        if (!mod) return;
+
+        const isDisabling = !mod.manualDisabled;
+
+        if (isDisabling) {
+            // Manual disable - no damage
+            set((s) => ({
+                ship: {
+                    ...s.ship,
+                    modules: s.ship.modules.map((m) =>
+                        m.id === moduleId ? { ...m, manualDisabled: true } : m,
+                    ),
+                },
+            }));
+            get().addLog(`Модуль "${mod.name}" отключён вручную`, "warning");
+        } else {
+            // Re-enabling module
+            set((s) => ({
+                ship: {
+                    ...s.ship,
+                    modules: s.ship.modules.map((m) =>
+                        m.id === moduleId ? { ...m, manualDisabled: false } : m,
+                    ),
+                },
+            }));
+            get().addLog(`Модуль "${mod.name}" включён`, "info");
+
+            // Check if we now have enough power to re-enable auto-disabled modules
+            const currentPower = get().getTotalPower();
+            const currentConsumption = get().getTotalConsumption();
+            const autoDisabledModules = get().ship.modules.filter(
+                (m) => m.disabled && m.health > 0,
+            );
+
+            if (autoDisabledModules.length > 0) {
+                const powerNeeded = autoDisabledModules.reduce(
+                    (sum, m) => sum + (m.consumption || 0),
+                    0,
+                );
+
+                if (currentPower >= currentConsumption + powerNeeded) {
+                    // We have enough power to re-enable all auto-disabled modules
+                    set((s) => ({
+                        ship: {
+                            ...s.ship,
+                            modules: s.ship.modules.map((m) =>
+                                m.disabled && m.health > 0
+                                    ? { ...m, disabled: false }
+                                    : m,
+                            ),
+                        },
+                    }));
+                    get().addLog(
+                        `⚡ Включено модулей: ${autoDisabledModules.length}. Баланс: ${get().getTotalPower() - get().getTotalConsumption()}`,
+                        "info",
+                    );
+                }
+            }
+        }
         get().updateShipStats();
     },
 
