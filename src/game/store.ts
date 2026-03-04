@@ -4384,7 +4384,23 @@ export const useGameStore = create<
         let accuracyModifier = 0;
 
         // No gunner penalty: -20% accuracy (instead of -50% damage)
-        if (!hasGunner) accuracyModifier -= 0.2;
+        if (!hasGunner) {
+            accuracyModifier -= 0.2;
+        } else {
+            // Gunner level bonus: +2% accuracy per gunner level (max +20% at level 10)
+            const gunnerInWeaponBay = crewInWeaponBays.find(
+                (c) => c.profession === "gunner",
+            );
+            if (gunnerInWeaponBay) {
+                const gunnerLevel = gunnerInWeaponBay.level || 1;
+                const gunnerAccuracyBonus = Math.min(0.2, gunnerLevel * 0.02); // Cap at 20%
+                accuracyModifier += gunnerAccuracyBonus;
+                get().addLog(
+                    `🎯 Стрелок ${gunnerInWeaponBay.name} (Ур.${gunnerLevel}): +${Math.round(gunnerAccuracyBonus * 100)}% точность`,
+                    "info",
+                );
+            }
+        }
 
         // Crew assignment modifiers
         if (hasTargeting) accuracyModifier += 0.05; // +5% accuracy from targeting
