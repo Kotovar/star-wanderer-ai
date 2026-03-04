@@ -352,7 +352,7 @@ function ItemDescription({ item }: ItemDescriptionProps) {
             )}
             {item.type === "module" &&
                 item.moduleType === "shield" &&
-                item.defense && <span>🛡 Защита: {item.defense}</span>}
+                item.shields && <span>🛡 Щиты: {item.shields}</span>}
             {item.type === "module" &&
                 item.moduleType === "cargo" &&
                 item.capacity && <span>📦 Вместимость: {item.capacity}</span>}

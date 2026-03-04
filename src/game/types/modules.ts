@@ -32,6 +32,7 @@ export interface Module {
     level?: number;
     capacity?: number; // For cargo and fuel tanks
     defense?: number; // Armor/defense value (reduces incoming damage)
+    shields?: number; // Shield generator power (only for shield modules)
     oxygen?: number;
     scanRange?: number;
     fuelEfficiency?: number; // For engines - lower is better (fuel per tier)

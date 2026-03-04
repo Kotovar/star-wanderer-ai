@@ -8,6 +8,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import type { ShopItem, Module } from "../../types";
+import { MODULES_BY_LEVEL } from "./station-data";
 
 interface ModuleUpgradeModalProps {
     open: boolean;
@@ -95,6 +96,16 @@ function ModuleSelectionList({
         <div className="max-h-62.5 overflow-y-auto space-y-2">
             {eligibleModules.map((module) => {
                 const isMaxLevel = (module.level || 1) >= 3;
+                const currentLevel = module.level || 1;
+                const nextLevel = currentLevel + 1;
+
+                // Find the next level module template to get new consumption
+                const nextModuleTemplate = (
+                    MODULES_BY_LEVEL[nextLevel] || []
+                ).find((m) => m.moduleType === targetType);
+                const currentConsumption = module.consumption || 0;
+                const nextConsumption = nextModuleTemplate?.consumption || 0;
+                const consumptionDiff = nextConsumption - currentConsumption;
 
                 return (
                     <ModuleUpgradeCard
@@ -104,6 +115,8 @@ function ModuleSelectionList({
                         pendingUpgrade={pendingUpgrade}
                         buyItem={buyItem}
                         onClose={onClose}
+                        consumptionDiff={consumptionDiff}
+                        nextLevel={nextLevel}
                     />
                 );
             })}
@@ -117,6 +130,8 @@ interface ModuleUpgradeCardProps {
     pendingUpgrade: ShopItem;
     buyItem: (item: ShopItem, moduleId?: number) => void;
     onClose: (open: boolean) => void;
+    consumptionDiff: number;
+    nextLevel: number;
 }
 
 function ModuleUpgradeCard({
@@ -125,6 +140,8 @@ function ModuleUpgradeCard({
     pendingUpgrade,
     buyItem,
     onClose,
+    consumptionDiff,
+    nextLevel,
 }: ModuleUpgradeCardProps) {
     return (
         <div
@@ -151,18 +168,34 @@ function ModuleUpgradeCard({
                     <span>⛽эф. {module.fuelEfficiency}</span>
                 )}
                 {module.oxygen !== undefined && <span>💨 {module.oxygen}</span>}
-                {module.defense !== undefined && (
-                    <span>🛡 {module.defense}</span>
+                {module.shields !== undefined && module.shields > 0 && (
+                    <span>🛡 Щиты: {module.shields}</span>
+                )}
+                {module.defense !== undefined && module.defense > 0 && (
+                    <span>
+                        🛡 Броня:{" "}
+                        {module.type === "shield"
+                            ? module.level
+                            : module.defense}
+                    </span>
                 )}
                 {module.scanRange !== undefined && (
                     <span>📡 {module.scanRange}</span>
                 )}
+                {module.consumption !== undefined && module.consumption > 0 && (
+                    <span>⚡ -{module.consumption}</span>
+                )}
             </div>
-            {module.level && (
-                <div className="text-[10px] text-[#ffb000] mt-1">
-                    Уровень: {module.level}
-                </div>
-            )}
+            <div className="text-[10px] text-[#ffb000] mt-1 flex justify-between">
+                <span>
+                    Уровень: {module.level} → {nextLevel}
+                </span>
+                {consumptionDiff > 0 && (
+                    <span className="text-[#ff0040]">
+                        ⚡ Потребление: +{consumptionDiff}
+                    </span>
+                )}
+            </div>
             {isMaxLevel && (
                 <div className="text-[9px] text-[#ff0040] mt-1">
                     ⚠ МАКСИМАЛЬНЫЙ УРОВЕНЬ

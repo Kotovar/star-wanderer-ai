@@ -37,6 +37,7 @@ import { getBossById } from "@/game/bosses/utils";
 import { determineSignalOutcome } from "@/game/signals/utils";
 import { typedKeys } from "@/lib/utils";
 import { initializeStationData } from "@/game/stations";
+import { MODULES_BY_LEVEL } from "@/game/components/station/station-data";
 import { initialState } from "./initial";
 import { getActiveAssignment } from "./crew";
 import { playSound } from "@/sounds";
@@ -257,7 +258,7 @@ export const useGameStore = create<
 
             let totalShields = state.ship.modules
                 .filter((m) => m.type === "shield")
-                .reduce((sum, m) => sum + (m.defense || 0), 0);
+                .reduce((sum, m) => sum + (m.shields || 0), 0);
 
             // Dark Shield artifact bonus
             const darkShield = state.artifacts.find(
@@ -5855,79 +5856,15 @@ export const useGameStore = create<
                 return;
             }
 
-            // Apply upgrades
-            const power = item.effect?.power;
-            if (power) {
-                set((s) => ({
-                    ship: {
-                        ...s.ship,
-                        modules: s.ship.modules.map((m) =>
-                            m.id === tgt.id
-                                ? {
-                                      ...m,
-                                      power: (m.power || 0) + power,
-                                  }
-                                : m,
-                        ),
-                    },
-                }));
-            }
-            const capacity = item.effect?.capacity;
-            if (capacity) {
-                set((s) => ({
-                    ship: {
-                        ...s.ship,
-                        modules: s.ship.modules.map((m) =>
-                            m.id === tgt.id
-                                ? {
-                                      ...m,
-                                      capacity: (m.capacity || 0) + capacity,
-                                  }
-                                : m,
-                        ),
-                    },
-                }));
-            }
+            // Calculate next level first
+            const nextLevel = currentLevel + 1;
 
-            // Scanner upgrade: improve scanRange
-            const scanRange = item.effect?.scanRange;
-            if (scanRange) {
-                set((s) => ({
-                    ship: {
-                        ...s.ship,
-                        modules: s.ship.modules.map((m) =>
-                            m.id === tgt.id
-                                ? {
-                                      ...m,
-                                      scanRange: (m.scanRange || 0) + scanRange,
-                                  }
-                                : m,
-                        ),
-                    },
-                }));
-            }
+            // Special handling for engine upgrades (no engine-2, engine-3 templates)
+            if (item.targetType === "engine") {
+                // Engine upgrades only improve fuel efficiency
+                const fuelEfficiencyImprovement =
+                    item.effect?.fuelEfficiency || 0;
 
-            // Life support upgrade: improve oxygen
-            const oxygen = item.effect?.oxygen;
-            if (oxygen) {
-                set((s) => ({
-                    ship: {
-                        ...s.ship,
-                        modules: s.ship.modules.map((m) =>
-                            m.id === tgt.id
-                                ? {
-                                      ...m,
-                                      oxygen: (m.oxygen || 0) + oxygen,
-                                  }
-                                : m,
-                        ),
-                    },
-                }));
-            }
-
-            // Engine upgrade: improve fuel efficiency using effect value
-            const fuelEfficiency = item.effect?.fuelEfficiency;
-            if (fuelEfficiency !== undefined && item.targetType === "engine") {
                 set((s) => ({
                     ship: {
                         ...s.ship,
@@ -5938,16 +5875,66 @@ export const useGameStore = create<
                                       fuelEfficiency: Math.max(
                                           1,
                                           (m.fuelEfficiency || 10) +
-                                              fuelEfficiency,
+                                              fuelEfficiencyImprovement,
                                       ),
+                                      level: nextLevel,
+                                      defense: nextLevel,
+                                      maxHealth: (m.maxHealth || 100) + 20,
+                                      health: (m.health || 100) + 20,
                                   }
                                 : m,
                         ),
                     },
                 }));
+
+                set((s) => ({
+                    credits: s.credits - item.price,
+                    stationInventory: {
+                        ...s.stationInventory,
+                        [stationId]: { ...inv, [item.id]: bought + 1 },
+                    },
+                }));
+
+                const updatedModule = get().ship.modules.find(
+                    (m) => m.id === tgt.id,
+                );
+                get().addLog(
+                    `Модуль "${updatedModule?.name}" улучшен до LV${updatedModule?.level}`,
+                    "info",
+                );
+                get().updateShipStats(); // Immediately update ship stats
+                playSound("success");
+                return;
             }
 
-            // Increment level and defense
+            // Find the target module template from MODULES_BY_LEVEL
+            const targetModuleTemplate = (
+                MODULES_BY_LEVEL[nextLevel] || []
+            ).find((m) => m.moduleType === item.targetType);
+
+            if (!targetModuleTemplate) {
+                get().addLog(
+                    `Нет модуля ${nextLevel} уровня для улучшения!`,
+                    "error",
+                );
+                return;
+            }
+
+            // Check if there's enough space on the ship for the upgraded module
+            const newWidth = targetModuleTemplate.width || tgt.width;
+            const newHeight = targetModuleTemplate.height || tgt.height;
+
+            if (newWidth > tgt.width || newHeight > tgt.height) {
+                // Need to check if there's enough space around the module
+                get().addLog(
+                    `⚠ Для улучшения нужно больше места! Модуль станет ${newWidth}x${newHeight}`,
+                    "warning",
+                );
+                // For now, allow the upgrade but the player needs to ensure there's space
+                // A more sophisticated check would require grid-based placement validation
+            }
+
+            // Apply the upgrade by copying properties from the target module template
             set((s) => ({
                 ship: {
                     ...s.ship,
@@ -5955,9 +5942,34 @@ export const useGameStore = create<
                         m.id === tgt.id
                             ? {
                                   ...m,
-                                  level: (m.level || 1) + 1,
-                                  defense: (m.defense || 1) + 1, // +1 defense per level
-                                  maxHealth: (m.maxHealth || 100) + 20, // +20 HP per level
+                                  // Copy properties from the template
+                                  name: targetModuleTemplate.name,
+                                  width: newWidth,
+                                  height: newHeight,
+                                  consumption:
+                                      targetModuleTemplate.consumption || 0,
+                                  power: targetModuleTemplate.power,
+                                  capacity: targetModuleTemplate.capacity,
+                                  oxygen: targetModuleTemplate.oxygen,
+                                  scanRange: targetModuleTemplate.scanRange,
+                                  fuelEfficiency:
+                                      targetModuleTemplate.fuelEfficiency,
+                                  ...(targetModuleTemplate.researchOutput && {
+                                      researchOutput:
+                                          targetModuleTemplate.researchOutput,
+                                  }),
+                                  ...(targetModuleTemplate.healing && {
+                                      healing: targetModuleTemplate.healing,
+                                  }),
+                                  ...(targetModuleTemplate.shields && {
+                                      shields: targetModuleTemplate.shields,
+                                  }),
+                                  // Keep position and health
+                                  x: m.x,
+                                  y: m.y,
+                                  level: nextLevel,
+                                  defense: nextLevel, // Defense equals module level
+                                  maxHealth: (m.maxHealth || 100) + 20,
                                   health: (m.health || 100) + 20, // Heal on upgrade
                               }
                             : m,
@@ -5981,6 +5993,7 @@ export const useGameStore = create<
                 `Модуль "${updatedModule?.name}" улучшен до LV${updatedModule?.level}`,
                 "info",
             );
+            get().updateShipStats(); // Immediately update ship stats
             playSound("success");
         } else if (item.type === "module") {
             // Check if player already has a scanner or drill (can only have 1)
@@ -6064,7 +6077,7 @@ export const useGameStore = create<
                     researchOutput: item.researchOutput || 5,
                 }),
                 ...(item.moduleType === "shield" && {
-                    defense: item.defense || 20,
+                    shields: item.shields || 20,
                     consumption: item.consumption || 3,
                 }),
                 ...(item.moduleType === "scanner" && {
@@ -8709,7 +8722,7 @@ export const useGameStore = create<
             }
 
             if (shieldBonusApplied) {
-                get().addLog(`🔵 Защита щитов увеличена`, "info");
+                get().addLog(`🔵 Мощность щитов увеличена`, "info");
                 get().updateShipStats();
             }
 

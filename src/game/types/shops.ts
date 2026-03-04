@@ -16,8 +16,10 @@ export interface ShopItem {
     power?: number;
     consumption?: number;
     defense?: number;
+    shields?: number; // For shield generator modules
     scanRange?: number;
     oxygen?: number;
+    healing?: number;
     capacity?: number; // For cargo, fuel tanks
     fuelEfficiency?: number; // For engine modules
     researchOutput?: number; // For lab modules
@@ -30,6 +32,7 @@ export interface ShopItem {
         fuelEfficiency?: number;
         level?: number;
         healing?: number;
+        consumption?: number;
     };
     weaponType?: WeaponType;
     requiresWeaponBay?: boolean;

@@ -152,12 +152,15 @@ function ModuleStats({ module }: ModuleStatsProps) {
                 module.scanRange &&
                 module.scanRange > 0 && <span>📡 {module.scanRange}</span>}
             {module.type === "shield" &&
-                module.defense &&
-                module.defense > 0 && <span>🛡 {module.defense}</span>}
-            {/* Defense for all modules (not just shield) */}
-            {module.type !== "shield" &&
-                module.defense &&
-                module.defense > 0 && <span>🛡 {module.defense}</span>}
+                module.shields &&
+                module.shields > 0 && <span>🛡 Щиты: {module.shields}</span>}
+            {/* Defense for all modules (not just shield) - for shields use level */}
+            {module.defense && module.defense > 0 && (
+                <span>
+                    🛡 Броня:{" "}
+                    {module.type === "shield" ? module.level : module.defense}
+                </span>
+            )}
             {module.type === "lifesupport" &&
                 module.oxygen &&
                 module.oxygen > 0 && <span>💨 {module.oxygen} сущ.</span>}
@@ -434,11 +437,11 @@ function ModuleDetailedStats({
                 </div>
             )}
             {module.type === "shield" &&
-                module.defense &&
-                module.defense > 0 && (
+                module.shields &&
+                module.shields > 0 && (
                     <div>
-                        <span className="text-[#ffb000]">🛡 Защита щитов:</span>{" "}
-                        {module.defense}
+                        <span className="text-[#ffb000]">🛡 Щиты:</span>{" "}
+                        {module.shields}
                     </div>
                 )}
             {module.type === "lifesupport" &&
@@ -449,11 +452,11 @@ function ModuleDetailedStats({
                         {module.oxygen} существ
                     </div>
                 )}
-            {/* Defense/Armor for all modules */}
+            {/* Defense/Armor for all modules - for shields use level */}
             {module.defense !== undefined && module.defense > 0 && (
                 <div>
-                    <span className="text-[#ffb000]">🛡 Защита:</span>{" "}
-                    {module.defense}
+                    <span className="text-[#ffb000]">🛡 Броня:</span>{" "}
+                    {module.type === "shield" ? module.level : module.defense}
                 </div>
             )}
             <div>
