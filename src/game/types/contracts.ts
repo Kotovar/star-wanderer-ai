@@ -73,13 +73,6 @@ export type DeliveryGoods =
     | "scientific_equipment"
     | "diplomatic_cargo";
 
-export interface ScoutingMission {
-    planetId: string;
-    scoutId: number;
-    turnsLeft: number;
-    startTurn: number;
-}
-
 // Battle results for showing after combat
 export interface BattleResult {
     victory: boolean;

@@ -87,34 +87,6 @@ export function getCombatLootResources(
 }
 
 /**
- * Get research resources from scouting empty planets
- */
-export function getScoutResources(): {
-    type: ResearchResourceType;
-    quantity: number;
-}[] {
-    const resources: { type: ResearchResourceType; quantity: number }[] = [];
-
-    const roll = Math.random();
-
-    if (roll < 0.3) {
-        // 30% - Alien biology
-        resources.push({
-            type: "alien_biology",
-            quantity: Math.floor(Math.random() * 3) + 1,
-        });
-    } else if (roll < 0.5) {
-        // 20% - Ancient data
-        resources.push({
-            type: "ancient_data",
-            quantity: Math.floor(Math.random() * 2) + 1,
-        });
-    }
-
-    return resources;
-}
-
-/**
  * Get research resources from boss defeats
  */
 export function getBossLootResources(

@@ -75,7 +75,6 @@ export const initialState: GameState = {
     currentCombat: null,
     log: [],
     randomEventCooldown: 0,
-    scoutingMissions: [],
     hiredCrew: {},
     hiredCrewFromShips: [],
     artifacts: ANCIENT_ARTIFACTS.map((a) => ({ ...a })),

@@ -1,12 +1,7 @@
 import type { Artifact } from "./artifacts";
 import type { CargoItem } from "./cargo";
 import type { CombatState } from "./combat";
-import type {
-    BattleResult,
-    Contract,
-    ScoutingMission,
-    StormResult,
-} from "./contracts";
+import type { BattleResult, Contract, StormResult } from "./contracts";
 import type { CrewMember } from "./crew";
 import type { ActiveEffect } from "./effects";
 import type { TradeGood } from "./goods";
@@ -80,7 +75,6 @@ export interface GameState {
     currentCombat: CombatState | null;
     log: LogEntry[];
     randomEventCooldown: number;
-    scoutingMissions: ScoutingMission[];
     hiredCrew: Record<string, string[]>;
     artifacts: Artifact[]; // Ancient artifacts discovered by player
     knownRaces: RaceId[]; // Races discovered by player

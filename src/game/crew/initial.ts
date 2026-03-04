@@ -44,7 +44,7 @@ export const initialCrew: CrewMember[] = [
     },
     {
         id: 3,
-        name: "Доктор Сидоров",
+        name: "Медик Сидоров",
         race: "human",
         profession: "medic",
         level: 1,

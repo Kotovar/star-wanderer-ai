@@ -5,7 +5,6 @@ import type {
     Contract,
     Module,
     CrewMember,
-    ScoutingMission,
     ShopItem,
     Artifact,
     EnemyModule,
@@ -56,7 +55,6 @@ const EMERGENCY_SHUTDOWN_DAMAGE = 0.1; // 10% урона модулю, когд�
 
 import {
     getMiningResources,
-    getScoutResources,
     getCombatLootResources,
     getBossLootResources,
     getAnomalyResources,
@@ -2335,151 +2333,8 @@ export const useGameStore = create<
             set((s) => ({ crew: s.crew.filter((cr) => cr.id !== c.id) }));
         });
 
-        // Process scouting missions
-        const missions = get().scoutingMissions;
-        missions.forEach((mission, idx) => {
-            const newTurnsLeft = mission.turnsLeft - 1;
-            if (newTurnsLeft <= 0) {
-                const scout = get().crew.find((c) => c.id === mission.scoutId);
-
-                // Declare result variables outside the if block
-                let resultType: "credits" | "tradeGood" | "nothing" | "enemy" =
-                    "nothing";
-                let resultValue: number | undefined;
-                let resultItemName: string | undefined;
-
-                if (scout) {
-                    const outcome = Math.random();
-                    get().gainExp(scout, 12);
-
-                    if (outcome < 0.4) {
-                        const reward = 20 + Math.floor(Math.random() * 30);
-                        set((s) => ({ credits: s.credits + reward }));
-                        get().addLog(
-                            `Разведка: ${scout.name} нашёл ресурсы! +${reward}₢`,
-                            "info",
-                        );
-                        resultType = "credits";
-                        resultValue = reward;
-                    } else if (outcome < 0.7) {
-                        const keys = typedKeys(TRADE_GOODS);
-                        const goodId =
-                            keys[Math.floor(Math.random() * keys.length)];
-                        set((s) => ({
-                            ship: {
-                                ...s.ship,
-                                tradeGoods: [
-                                    ...s.ship.tradeGoods,
-                                    { item: goodId, quantity: 5, buyPrice: 0 },
-                                ],
-                            },
-                        }));
-                        get().addLog(
-                            `Разведка: ${scout.name} нашёл ${TRADE_GOODS[goodId].name}!`,
-                            "info",
-                        );
-                        resultType = "tradeGood";
-                        resultItemName = TRADE_GOODS[goodId].name;
-                    } else {
-                        get().addLog(
-                            `Разведка: ${scout.name} ничего не нашёл`,
-                            "info",
-                        );
-                        resultType = "nothing";
-                    }
-
-                    // Get research resources from scouting (25% chance)
-                    if (scout && Math.random() < 0.25) {
-                        const scoutResources = getScoutResources();
-                        if (scoutResources.length > 0) {
-                            set((s) => ({
-                                research: {
-                                    ...s.research,
-                                    resources: {
-                                        ...s.research.resources,
-                                        ...scoutResources.reduce(
-                                            (acc, res) => ({
-                                                ...acc,
-                                                [res.type]:
-                                                    (s.research.resources[
-                                                        res.type as keyof typeof s.research.resources
-                                                    ] || 0) + res.quantity,
-                                            }),
-                                            {},
-                                        ),
-                                    },
-                                },
-                            }));
-                            scoutResources.forEach((res) => {
-                                if (res.quantity > 0) {
-                                    get().addLog(
-                                        `🔬 Найдены исследовательские ресурсы: ${RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].icon} ${RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].name} x${res.quantity}`,
-                                        "info",
-                                    );
-                                }
-                            });
-                        }
-                    }
-                }
-
-                // Update scoutedTimes on the planet location
-                const planet = get().currentSector?.locations.find(
-                    (l) => l.id === mission.planetId,
-                );
-                const newScoutedTimes = (planet?.scoutedTimes || 0) + 1;
-                const isFullyExplored = newScoutedTimes >= 3;
-                set((s) => ({
-                    currentSector: s.currentSector
-                        ? {
-                              ...s.currentSector,
-                              locations: s.currentSector.locations.map((loc) =>
-                                  loc.id === mission.planetId
-                                      ? {
-                                            ...loc,
-                                            scoutedTimes: newScoutedTimes,
-                                            explored: isFullyExplored,
-                                            lastScoutResult: scout
-                                                ? {
-                                                      type: resultType,
-                                                      value: resultValue,
-                                                      itemName: resultItemName,
-                                                  }
-                                                : undefined,
-                                        }
-                                      : loc,
-                              ),
-                          }
-                        : null,
-                    currentLocation:
-                        s.currentLocation?.id === mission.planetId
-                            ? {
-                                  ...s.currentLocation,
-                                  scoutedTimes: newScoutedTimes,
-                                  explored: isFullyExplored,
-                                  lastScoutResult: scout
-                                      ? {
-                                            type: resultType,
-                                            value: resultValue,
-                                            itemName: resultItemName,
-                                        }
-                                      : undefined,
-                              }
-                            : s.currentLocation,
-                }));
-
-                set((s) => ({
-                    scoutingMissions: s.scoutingMissions.filter(
-                        (_, i) => i !== idx,
-                    ),
-                }));
-            } else {
-                set((s) => ({
-                    scoutingMissions: s.scoutingMissions.map((m, i) =>
-                        i === idx ? { ...m, turnsLeft: newTurnsLeft } : m,
-                    ),
-                }));
-            }
-        });
+        // Scouting missions are now instant - no processing needed here
+        // Old scouting mission processing code removed
 
         // Power check
         const power = get().getTotalPower();
@@ -3645,17 +3500,25 @@ export const useGameStore = create<
         // Check if we have space
         const totalNeeded = mineralsGained + rareGained;
         if (totalNeeded > cargoSpaceLeft) {
-            // Scale down proportionally
-            const scale = cargoSpaceLeft / totalNeeded;
-            addedMinerals = Math.floor(mineralsGained * scale);
-            addedRare = Math.floor(rareGained * scale);
-
             if (cargoSpaceLeft === 0) {
+                // No space at all - lose everything
+                addedMinerals = 0;
+                addedRare = 0;
                 get().addLog(
                     "⚠️ Нет места в грузовом отсеке! Ресурсы потеряны.",
                     "warning",
                 );
             } else {
+                // Some space left - fill it proportionally, but ensure at least 1 of each if possible
+                const scale = cargoSpaceLeft / totalNeeded;
+                addedMinerals = Math.max(1, Math.floor(mineralsGained * scale));
+                addedRare = Math.max(1, Math.floor(rareGained * scale));
+
+                // If we can't fit both, prioritize minerals
+                if (addedMinerals + addedRare > cargoSpaceLeft) {
+                    addedRare = Math.max(0, cargoSpaceLeft - addedMinerals);
+                }
+
                 get().addLog(
                     `⚠️ Недостаточно места! Получено: ${addedMinerals + addedRare} из ${totalNeeded}т`,
                     "warning",
@@ -7419,20 +7282,99 @@ export const useGameStore = create<
     },
 
     sendScoutingMission: (planetId) => {
-        const scout = get().crew.find((c) => c.profession === "scout");
+        const state = get();
+        const scout = state.crew.find((c) => c.profession === "scout");
         if (!scout) {
             get().addLog("Нет разведчика!", "error");
             return;
         }
-        const mission: ScoutingMission = {
-            planetId,
-            scoutId: scout.id,
-            turnsLeft: 1,
-            startTurn: get().turn,
-        };
-        set((s) => ({ scoutingMissions: [...s.scoutingMissions, mission] }));
-        get().addLog(`${scout.name} отправлен на разведку`, "info");
-        get().nextTurn();
+
+        // Instant scouting - resolve immediately (takes 1 turn)
+        const outcome = Math.random();
+        let resultType: "credits" | "tradeGood" | "nothing" | "enemy" =
+            "nothing";
+        let resultValue: number | undefined;
+        let resultItemName: string | undefined;
+
+        get().gainExp(scout, 12);
+
+        if (outcome < 0.4) {
+            const reward = 20 + Math.floor(Math.random() * 30);
+            set((s) => ({ credits: s.credits + reward }));
+            get().addLog(
+                `Разведка: ${scout.name} нашёл ресурсы! +${reward}₢`,
+                "info",
+            );
+            resultType = "credits";
+            resultValue = reward;
+        } else if (outcome < 0.7) {
+            const keys = typedKeys(TRADE_GOODS);
+            const goodId = keys[Math.floor(Math.random() * keys.length)];
+            set((s) => ({
+                ship: {
+                    ...s.ship,
+                    tradeGoods: [
+                        ...s.ship.tradeGoods,
+                        { item: goodId, quantity: 5, buyPrice: 0 },
+                    ],
+                },
+            }));
+            get().addLog(
+                `Разведка: ${scout.name} нашёл ${TRADE_GOODS[goodId].name}!`,
+                "info",
+            );
+            resultType = "tradeGood";
+            resultItemName = TRADE_GOODS[goodId].name;
+        } else {
+            get().addLog(`Разведка: ${scout.name} ничего не нашёл`, "info");
+            resultType = "nothing";
+        }
+
+        // Update scoutedTimes on the planet location
+        const planet = state.currentSector?.locations.find(
+            (l) => l.id === planetId,
+        );
+        const newScoutedTimes = (planet?.scoutedTimes || 0) + 1;
+        const isFullyExplored = newScoutedTimes >= 3;
+
+        set((s) => ({
+            turn: s.turn + 1,
+            currentSector: s.currentSector
+                ? {
+                      ...s.currentSector,
+                      locations: s.currentSector.locations.map((loc) =>
+                          loc.id === planetId
+                              ? {
+                                    ...loc,
+                                    scoutedTimes: newScoutedTimes,
+                                    explored: isFullyExplored,
+                                    lastScoutResult: {
+                                        type: resultType,
+                                        value: resultValue,
+                                        itemName: resultItemName,
+                                    },
+                                }
+                              : loc,
+                      ),
+                  }
+                : null,
+            currentLocation:
+                s.currentLocation?.id === planetId
+                    ? {
+                          ...s.currentLocation,
+                          scoutedTimes: newScoutedTimes,
+                          explored: isFullyExplored,
+                          lastScoutResult: {
+                              type: resultType,
+                              value: resultValue,
+                              itemName: resultItemName,
+                          },
+                      }
+                    : s.currentLocation,
+        }));
+
+        get().addLog(`Разведка завершена: ${newScoutedTimes}/3`, "info");
+        get().updateShipStats();
     },
 
     // Distress Signal Handler
