@@ -62,7 +62,7 @@ export const useGameStore = create<GameStore>()(
     immer((set, get) => ({
         ...initialState,
         ...createLogSlice(set),
-        ...createShipSlice(set),
+        ...createShipSlice(set, get),
 
         getTotalPower: () => {
             const state = get();

@@ -5,6 +5,8 @@
 export { createShipSlice } from "./shipSlice";
 export type { ShipSlice } from "./shipSlice";
 
+export { getTotalPower } from "./shipGetters";
+
 export {
     ARTIFACT_TYPES,
     isModuleFunctional,

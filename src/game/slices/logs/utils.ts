@@ -10,16 +10,12 @@ export const MAX_LOG_ENTRIES = 100;
  * Типы сообщений лога
  * Определяют важность и способ отображения сообщения
  */
-export const LOG_TYPES = {
-    /** Обычное информационное сообщение */
-    INFO: "info" as const,
-    /** Предупреждение о потенциальной проблеме */
-    WARNING: "warning" as const,
-    /** Сообщение об ошибке */
-    ERROR: "error" as const,
-    /** Сообщение о событии в бою */
-    COMBAT: "combat" as const,
-} as const;
+export const LOG_TYPES: Record<string, LogEntry["type"]> = {
+    INFO: "info",
+    WARNING: "warning",
+    ERROR: "error",
+    COMBAT: "combat",
+};
 
 /**
  * Создаёт новую запись лога

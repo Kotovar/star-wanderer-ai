@@ -1,14 +1,12 @@
-import type { Artifact, Module } from "@/game/types";
+import type { Artifact, ArtifactType, Module } from "@/game/types";
 
 /**
  * Типы артефактов, влияющие на характеристики корабля
  */
-export const ARTIFACT_TYPES = {
-    /** Тёмный щит - добавляет бонус к щитам */
-    DARK_SHIELD: "dark_shield" as const,
-    /** Кристаллическая броня - добавляет бонус к защите модулей */
-    CRYSTALLINE_ARMOR: "module_armor" as const,
-} as const;
+export const ARTIFACT_TYPES: Record<string, ArtifactType> = {
+    DARK_SHIELD: "dark_shield",
+    CRYSTALLINE_ARMOR: "module_armor",
+};
 
 /**
  * Проверяет, функционален ли модуль

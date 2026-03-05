@@ -8,10 +8,11 @@ import {
     calculateTotalShields,
     findActiveArtifact,
 } from "./utils";
+import { getTotalPower } from "./shipGetters";
 
 /**
- * Интерфейс ShipSlice
- * Содержит методы для управления состоянием корабля
+ * Расширенный интерфейс ShipSlice с геттерами
+ * Содержит методы для управления состоянием корабля и вычисления характеристик
  */
 export interface ShipSlice {
     /**
@@ -20,6 +21,13 @@ export interface ShipSlice {
      * на основе текущих модулей, артефактов и эффектов
      */
     updateShipStats: () => void;
+
+    /**
+     * Вычисляет общую мощность энергии корабля
+     * Учитывает модули, назначения экипажа, артефакты и эффекты планет
+     * @returns Общая мощность энергии
+     */
+    getTotalPower: () => number;
 }
 
 /**
@@ -42,6 +50,7 @@ export interface ShipSlice {
  */
 export const createShipSlice = (
     set: (fn: (state: GameState & ShipSlice) => void) => void,
+    get: () => GameState & ShipSlice,
 ): ShipSlice => ({
     updateShipStats: () => {
         set((state) => {
@@ -97,5 +106,10 @@ export const createShipSlice = (
             state.ship.maxFuel = totalFuelCapacity;
             state.ship.fuel = Math.min(currentFuel, totalFuelCapacity);
         });
+    },
+
+    getTotalPower: () => {
+        const state = get();
+        return getTotalPower(state);
     },
 });
