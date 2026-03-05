@@ -15,6 +15,7 @@ export type ModuleType =
     | "lab"; // Science laboratory for research
 
 export type WeaponType = "kinetic" | "laser" | "missile";
+export type WeaponTypeTotal = WeaponType | "total";
 export type PartialModuleType = Exclude<ModuleType, "weaponShed">;
 
 export interface Module {

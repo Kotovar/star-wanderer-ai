@@ -1,11 +1,14 @@
-import { CREW_TRAITS, PROFESSION_NAMES } from "@/game/constants/crew";
-import { RACE_LAST_NAMES } from "@/game/constants/races";
-import type { CrewTrait, Profession, RaceId } from "@/game/types";
 import { useGameStore } from "@/game/store";
+import {
+    CREW_TRAITS,
+    PROFESSION_NAMES,
+    RACE_LAST_NAMES,
+} from "@/game/constants";
+import type { CrewTrait, Profession, Quality, RaceId } from "@/game/types";
 
 // Generate crew traits based on quality level
 export const generateCrewTraits = (
-    quality: "poor" | "average" | "good" | "excellent" = "average",
+    quality: Quality = "average",
     seed: number = 0,
 ): { traits: CrewTrait[]; priceModifier: number } => {
     const traits: CrewTrait[] = [];

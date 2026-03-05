@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { EnemyModuleGrid, ShipStatusCard } from "./EnemyModuleGrid";
 import { CrewMemberCard } from "./CrewMemberCard";
 import type { CrewMember, CrewMemberCombatAssignment } from "../types";
-import { getTotalEvasion } from "@/game/slices/ship";
+import { getTotalEvasion } from "@/game/slices";
 
 export function CombatPanel() {
     const currentCombat = useGameStore((s) => s.currentCombat);

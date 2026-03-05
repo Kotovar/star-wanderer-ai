@@ -105,3 +105,11 @@ export interface CrewTrait {
     effect: CrewTraitEffect;
     type: CrewTraitType;
 }
+
+export type TraitDetails = {
+    name: string;
+    desc: string;
+    effect: CrewTraitEffect;
+    rarity: string;
+    priceMod: number;
+};

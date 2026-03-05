@@ -9,6 +9,8 @@ import {
     findActiveArtifact,
 } from "./utils";
 import { getTotalPower, getTotalConsumption } from "./shipGetters";
+import { WeaponTypeTotal } from "@/game/types";
+import { getTotalDamage } from "./getTotalDamage";
 
 /**
  * Расширенный интерфейс ShipSlice с геттерами
@@ -35,6 +37,12 @@ export interface ShipSlice {
      * @returns Общее потребление энергии
      */
     getTotalConsumption: () => number;
+
+    /**
+     * Вычисляет общий урон корабля по типам оружия
+     * @returns Объект с уроном по типам: total, kinetic, laser, missile
+     */
+    getTotalDamage: () => Record<WeaponTypeTotal, number>;
 }
 
 /**
@@ -112,5 +120,10 @@ export const createShipSlice = (
     getTotalConsumption: () => {
         const state = get();
         return getTotalConsumption(state);
+    },
+
+    getTotalDamage: () => {
+        const state = get();
+        return getTotalDamage(state);
     },
 });

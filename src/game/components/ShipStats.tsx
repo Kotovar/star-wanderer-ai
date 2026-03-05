@@ -1,7 +1,7 @@
 "use client";
 
-import { getTotalEvasion } from "../slices/ship";
-import { useGameStore } from "../store";
+import { getTotalEvasion } from "@/game/slices";
+import { useGameStore } from "@/game/store";
 
 export function ShipStats() {
     const ship = useGameStore((s) => s.ship);
