@@ -135,6 +135,14 @@ interface ModuleStatsProps {
 }
 
 function ModuleStats({ module }: ModuleStatsProps) {
+    const artifactArmor = useGameStore((s) => {
+        const artifact = s.artifacts.find(
+            (a) => a.effect.type === "module_armor" && a.effect.active,
+        );
+        if (!artifact) return 0;
+        return artifact.effect.value || 0;
+    });
+
     return (
         <>
             {module.type === "reactor" && module.power && module.power > 0 && (
@@ -159,10 +167,11 @@ function ModuleStats({ module }: ModuleStatsProps) {
                 module.shields &&
                 module.shields > 0 && <span>🛡 Щиты: {module.shields}</span>}
             {/* Defense for all modules (not just shield) - for shields use level */}
-            {module.defense && module.defense > 0 && (
+            {module.defense !== undefined && module.defense > 0 && (
                 <span>
                     🛡 Броня:{" "}
                     {module.type === "shield" ? module.level : module.defense}
+                    {artifactArmor > 0 && ` (+${artifactArmor})`}
                 </span>
             )}
             {module.type === "lifesupport" &&
@@ -379,6 +388,13 @@ function ModuleDetailedStats({
     maxFuel,
 }: ModuleDetailedStatsProps) {
     const description = getModuleDescription(module);
+    const artifactArmor = useGameStore((s) => {
+        const artifact = s.artifacts.find(
+            (a) => a.effect.type === "module_armor" && a.effect.active,
+        );
+        if (!artifact) return 0;
+        return artifact.effect.value || 0;
+    });
 
     return (
         <div className="space-y-2">
@@ -477,6 +493,12 @@ function ModuleDetailedStats({
                 <div>
                     <span className="text-[#ffb000]">🛡 Броня:</span>{" "}
                     {module.type === "shield" ? module.level : module.defense}
+                    {artifactArmor > 0 && (
+                        <span className="text-[#00d4ff]">
+                            {" "}
+                            (+{artifactArmor})
+                        </span>
+                    )}
                 </div>
             )}
             <div>

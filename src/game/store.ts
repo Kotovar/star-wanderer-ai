@@ -534,7 +534,7 @@ export const useGameStore = create<GameStore>()(
             // PASSIVE EXPERIENCE - All crew gain small exp every 5 turns on ship
             // ═══════════════════════════════════════════════════════════════
             const turn = state.turn;
-            if (turn % 5 === 0) {
+            if (turn % 5 === 0 && state.crew.length > 0) {
                 state.crew.forEach((c) => {
                     get().gainExp(c, 2); // 2 exp every 5 turns
                 });
@@ -559,34 +559,68 @@ export const useGameStore = create<GameStore>()(
             const oxygenCapacity = get().getCrewCapacity();
 
             if (crewCount > oxygenCapacity) {
-                // Not enough oxygen - all crew take 20% damage (can die)
+                // Check for immortality artifacts
+                const immortalArtifact = state.artifacts.find(
+                    (a) => a.effect.type === "crew_immortal" && a.effect.active,
+                );
+                const undyingArtifact = state.artifacts.find(
+                    (a) => a.effect.type === "undying_crew" && a.effect.active,
+                );
+                const hasImmortality = immortalArtifact || undyingArtifact;
+
+                // Check for AI Neural Link (ship can operate without crew)
+                const hasAIArtifact = state.artifacts.some(
+                    (a) =>
+                        a.id === "ai_neural_link" &&
+                        !a.cursed &&
+                        a.effect.active,
+                );
+
+                // Not enough oxygen - all crew take 20% damage (can die without immortality)
                 const damagePercent = 20;
                 set((s) => ({
                     crew: s.crew.map((c) => ({
                         ...c,
-                        health: c.health - damagePercent, // Can go below 1 - crew dies
+                        health: hasImmortality
+                            ? Math.max(1, c.health - damagePercent)
+                            : c.health - damagePercent,
                     })),
                 }));
                 get().addLog(
                     `⚠️ НЕХВАТКА КИСЛОРОДА! Экипаж получил -${damagePercent}% урона (${crewCount}/${oxygenCapacity})`,
                     "error",
                 );
-                // Remove dead crew
-                set((s) => ({
-                    crew: s.crew.filter((c) => c.health > 0),
-                }));
-
-                // Check if all crew died - game over
-                if (get().crew.length === 0) {
-                    get().addLog(
-                        "💀 ВЕСЬ ЭКИПАЖ ПОГИБ! Игра окончена.",
-                        "error",
-                    );
-                    set(() => ({
-                        gameOver: true,
-                        gameOverReason: "Экипаж погиб из-за нехватки кислорода",
+                // Remove dead crew (only if no immortality)
+                if (!hasImmortality) {
+                    set((s) => ({
+                        crew: s.crew.filter((c) => c.health > 0),
                     }));
-                    return; // Stop processing
+
+                    // Check if all crew died - game over (unless AI Neural Link is active)
+                    if (get().crew.length === 0) {
+                        if (hasAIArtifact) {
+                            get().addLog(
+                                "💀 ВЕСЬ ЭКИПАЖ ПОГИБ! Но ИИ Нейросеть управляет кораблём.",
+                                "warning",
+                            );
+                        } else {
+                            get().addLog(
+                                "💀 ВЕСЬ ЭКИПАЖ ПОГИБ! Игра окончена.",
+                                "error",
+                            );
+                            set(() => ({
+                                gameOver: true,
+                                gameOverReason:
+                                    "Экипаж погиб из-за нехватки кислорода",
+                            }));
+                            return; // Stop processing
+                        }
+                    }
+                } else {
+                    get().addLog(
+                        "💖 Бессмертный экипаж выжил благодаря артефакту!",
+                        "info",
+                    );
                 }
             }
 
@@ -2538,13 +2572,48 @@ export const useGameStore = create<GameStore>()(
                             remainingDamage -= shieldAbsorb;
                         }
 
-                        // Armor reduces remaining damage (use target module's defense, not total ship armor)
+                        // Armor reduces remaining damage
                         if (remainingDamage > 0) {
+                            // Base module defense
                             const moduleDefense = tgt.defense || 0;
-                            remainingDamage = Math.max(
+                            let damageAfterBaseArmor = Math.max(
                                 1,
                                 remainingDamage - moduleDefense,
                             );
+
+                            // Log base armor reduction
+                            if (
+                                moduleDefense > 0 &&
+                                damageAfterBaseArmor < remainingDamage
+                            ) {
+                                get().addLog(
+                                    `🛡️ Броня модуля "${tgt.name}": -${remainingDamage - damageAfterBaseArmor} урона`,
+                                    "info",
+                                );
+                            }
+
+                            // Crystalline Armor artifact bonus
+                            const crystalArmorArtifact = state.artifacts.find(
+                                (a) =>
+                                    a.effect.type === "module_armor" &&
+                                    a.effect.active,
+                            );
+                            if (crystalArmorArtifact) {
+                                const artifactDefense = getArtifactEffectValue(
+                                    crystalArmorArtifact,
+                                    state,
+                                );
+                                damageAfterBaseArmor = Math.max(
+                                    1,
+                                    damageAfterBaseArmor - artifactDefense,
+                                );
+                                get().addLog(
+                                    `💎 Кристаллическая Броня: -${artifactDefense} урона (артефакт)`,
+                                    "info",
+                                );
+                            }
+
+                            remainingDamage = damageAfterBaseArmor;
                         }
 
                         // const wasDestroyed = tgt.health <= remainingDamage;
@@ -5132,17 +5201,29 @@ export const useGameStore = create<GameStore>()(
                     ? Math.floor(damage * 1.5)
                     : damage;
 
-                // Check for life_crystal artifact (crew can't die, health stays at 1)
+                // Check for immortality artifacts
                 const lifeCrystal = state.artifacts.find(
                     (a) => a.effect.type === "crew_immortal" && a.effect.active,
+                );
+                const undyingArtifact = state.artifacts.find(
+                    (a) => a.effect.type === "undying_crew" && a.effect.active,
+                );
+                const hasImmortality = lifeCrystal || undyingArtifact;
+
+                // Check for AI Neural Link (ship can operate without crew)
+                const hasAIArtifact = state.artifacts.some(
+                    (a) =>
+                        a.id === "ai_neural_link" &&
+                        !a.cursed &&
+                        a.effect.active,
                 );
 
                 set((s) => ({
                     crew: s.crew.map((c) => {
                         if (c.moduleId !== moduleId) return c;
                         let newHealth = c.health - actualDamage;
-                        // Apply life_crystal immortality
-                        if (lifeCrystal && newHealth < 1) {
+                        // Apply immortality artifacts
+                        if (hasImmortality && newHealth < 1) {
                             newHealth = 1;
                         }
                         return {
@@ -5157,8 +5238,11 @@ export const useGameStore = create<GameStore>()(
                         `💥 Модуль уничтожен! Экипаж получает критический урон: -${actualDamage}`,
                         "error",
                     );
-                    if (lifeCrystal) {
-                        get().addLog(`✨ Кристалл Жизни спас экипаж!`, "info");
+                    if (hasImmortality) {
+                        get().addLog(
+                            `✨ Экипаж выжил благодаря артефакту бессмертия!`,
+                            "info",
+                        );
                     }
                 } else {
                     get().addLog(
@@ -5173,13 +5257,35 @@ export const useGameStore = create<GameStore>()(
                         get().crew.find((cr) => cr.id === c.id)?.health || 0;
                     if (newHealth <= 0) {
                         get().addLog(`☠️ ${c.name} погиб!`, "error");
-                    } else if (lifeCrystal && newHealth === 1) {
+                    } else if (hasImmortality && newHealth === 1) {
                         get().addLog(
-                            `✨ ${c.name} выжил благодаря Кристаллу Жизни!`,
+                            `✨ ${c.name} выжил благодаря артефакту бессмертия!`,
                             "info",
                         );
                     }
                 });
+
+                // Check if all crew died and no AI artifact
+                const remainingCrew = get().crew.filter((c) => c.health > 0);
+                if (
+                    remainingCrew.length === 0 &&
+                    !hasAIArtifact &&
+                    !hasImmortality
+                ) {
+                    get().addLog(
+                        "💀 ВЕСЬ ЭКИПАЖ ПОГИБ! Игра окончена.",
+                        "error",
+                    );
+                    set(() => ({
+                        gameOver: true,
+                        gameOverReason: "Весь экипаж погиб в бою",
+                    }));
+                } else if (remainingCrew.length === 0 && hasAIArtifact) {
+                    get().addLog(
+                        "💀 ВЕСЬ ЭКИПАЖ ПОГИБ! Но ИИ Нейросеть управляет кораблём.",
+                        "warning",
+                    );
+                }
             };
 
             // ═══════════════════════════════════════════════════════════════
@@ -5402,7 +5508,21 @@ export const useGameStore = create<GameStore>()(
             } else if (tgt) {
                 // Attack was NOT reflected (checked above) - proceed with normal damage
                 // ═══════════════════════════════════════════════════════════════
-                // CRYSTALLINE ARMOR ARTIFACT - +3 defense to ALL modules
+                // MODULE DEFENSE (ARMOR) - Flat damage reduction per module
+                // ═══════════════════════════════════════════════════════════════
+                const moduleDefense = tgt.defense || 0;
+                const damageAfterBaseArmor = Math.max(1, eDmg - moduleDefense);
+
+                // Log base armor reduction if applicable
+                if (moduleDefense > 0 && damageAfterBaseArmor < eDmg) {
+                    get().addLog(
+                        `🛡️ Броня модуля "${tgt.name}": -${eDmg - damageAfterBaseArmor} урона`,
+                        "info",
+                    );
+                }
+
+                // ═══════════════════════════════════════════════════════════════
+                // CRYSTALLINE ARMOR ARTIFACT - +X defense to ALL modules
                 // ═══════════════════════════════════════════════════════════════
                 const crystalArmorArtifact = state.artifacts.find(
                     (a) => a.effect.type === "module_armor" && a.effect.active,
@@ -5420,12 +5540,15 @@ export const useGameStore = create<GameStore>()(
                 }
 
                 // Apply artifact defense bonus (flat reduction)
-                const damageAfterArtifact = Math.max(1, eDmg - artifactDefense);
+                const damageAfterArtifact = Math.max(
+                    1,
+                    damageAfterBaseArmor - artifactDefense,
+                );
 
                 // ═══════════════════════════════════════════════════════════════
                 // CRYSTALLINE RACE - Additional percentage damage reduction
                 // ═══════════════════════════════════════════════════════════════
-                let moduleDefense = 0;
+                let crystallineDefense = 0;
                 const crystallineCrew = state.crew.filter(
                     (c) => c.race === "crystalline",
                 );
@@ -5436,14 +5559,14 @@ export const useGameStore = create<GameStore>()(
                             (t) => t.id === "crystal_armor",
                         );
                         if (armorTrait && armorTrait.effects.moduleDefense) {
-                            moduleDefense += armorTrait.effects
+                            crystallineDefense += armorTrait.effects
                                 .moduleDefense as number;
                         }
                     }
                 });
 
                 const reducedDamage = Math.floor(
-                    damageAfterArtifact * (1 - moduleDefense),
+                    damageAfterArtifact * (1 - crystallineDefense),
                 );
                 const wasDestroyed = tgt.health <= reducedDamage;
                 set((s) => ({
