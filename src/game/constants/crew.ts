@@ -329,14 +329,9 @@ export const CREW_ACTIONS: Record<
         { value: "", label: "ОЖИДАНИЕ", effect: null },
         { value: "repair", label: "Ремонт", effect: "+15% броня за ход" },
         {
-            value: "calibration",
-            label: "Калибровка",
-            effect: "+10% точность",
-        },
-        {
-            value: "overclock",
-            label: "Перегрузка",
-            effect: "+25% урон, -10% броня",
+            value: "reactor_overload",
+            label: "Разгон реактора",
+            effect: "+5⚡ энергии реактору",
         },
     ],
     medic: [
@@ -371,3 +366,17 @@ export const CREW_ACTIONS: Record<
         },
     ],
 };
+
+/**
+ * Бонусы от назначения экипажа
+ */
+export const CREW_ASSIGNMENT_BONUSES = {
+    REACTOR_OVERLOAD: 5,
+} as const;
+
+/**
+ * Бонусы от нахождения экипажа в модулях
+ */
+export const CREW_IN_MODULE_BONUSES = {
+    ENGINEER_IN_REACTOR: 3,
+} as const;

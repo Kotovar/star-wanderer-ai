@@ -45,9 +45,24 @@ export function AssignmentsPanel() {
 
             <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-4 mt-2.5">
                 {crew.map((c) => {
-                    const actions = CREW_ACTIONS[c.profession] || [
+                    let actions = CREW_ACTIONS[c.profession] || [
                         { value: "", label: "ОЖИДАНИЕ", effect: null },
                     ];
+
+                    // Фильтр задач для инженеров - "Разгон реактора" только в реакторе
+                    if (c.profession === "engineer") {
+                        const currentModule = useGameStore
+                            .getState()
+                            .ship.modules.find((m) => m.id === c.moduleId);
+                        const isInReactor = currentModule?.type === "reactor";
+
+                        // Показываем "Разгон реактора" только если инженер в реакторе
+                        actions = actions.filter(
+                            (a) =>
+                                a.value !== "reactor_overload" || isInReactor,
+                        );
+                    }
+
                     // Convert empty string to 'none' for Select value
                     const currentValue: string =
                         assignments[c.id]?.task || c.assignment || "none";

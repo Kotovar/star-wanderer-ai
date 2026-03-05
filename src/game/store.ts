@@ -18,6 +18,7 @@ import {
     TRADE_GOODS,
     WEAPON_TYPES,
     RESEARCH_RESOURCES,
+    CREW_ASSIGNMENT_BONUSES,
 } from "@/game/constants";
 import { handleSurvivorCapsuleDelivery } from "@/game/contracts";
 import {
@@ -63,41 +64,6 @@ export const useGameStore = create<GameStore>()(
         ...initialState,
         ...createLogSlice(set),
         ...createShipSlice(set, get),
-
-        getTotalPower: () => {
-            const state = get();
-            let power = state.ship.modules
-                .filter((m) => !m.disabled && !m.manualDisabled && m.health > 0)
-                .reduce((sum, m) => sum + (m.power || 0), 0);
-
-            // Engineer power boost assignment (+5 power)
-            const powerBoost = state.crew.find((c) => c.assignment === "power")
-                ? 5
-                : 0;
-            power += powerBoost;
-
-            // Abyss Reactor artifact bonus (+25 power)
-            const abyssReactor = state.artifacts.find(
-                (a) => a.effect.type === "abyss_power" && a.effect.active,
-            );
-            if (abyssReactor) {
-                power += getArtifactEffectValue(abyssReactor, state);
-            }
-
-            // Eternal Reactor Core artifact bonus (+10 free power)
-            const eternalReactor = state.artifacts.find(
-                (a) => a.effect.type === "free_power" && a.effect.active,
-            );
-            if (eternalReactor) {
-                power += getArtifactEffectValue(eternalReactor, state);
-            }
-
-            // Planet effect bonus power
-            const bonusPower = state.ship.bonusPower || 0;
-            power += bonusPower;
-
-            return power;
-        },
 
         getTotalConsumption: () => {
             const state = get();
@@ -1973,18 +1939,18 @@ export const useGameStore = create<GameStore>()(
                             get().gainExp(c, 10);
                             break;
                         }
-                        case "power": {
-                            // Engineer can boost power only if in reactor
+                        case "reactor_overload": {
+                            // Engineer can boost reactor power only if in reactor
                             if (currentModule?.type === "reactor") {
-                                // Power boost is handled in getTotalPower
+                                // Reactor overload bonus is handled in getTotalPower
                                 get().addLog(
-                                    `${c.name}: Разгон реактора +5⚡`,
+                                    `${c.name}: Разгон реактора +${CREW_ASSIGNMENT_BONUSES.REACTOR_OVERLOAD}⚡`,
                                     "info",
                                 );
                                 get().gainExp(c, 6);
                             } else {
                                 get().addLog(
-                                    `${c.name}: Нужно быть в реакторе для разгона!`,
+                                    `${c.name}: Инженер должен быть в реакторе для разгона!`,
                                     "warning",
                                 );
                             }

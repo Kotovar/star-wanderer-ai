@@ -30,6 +30,7 @@ export type CrewMemberAssignment =
     | "research"
     | "analyzing"
     | "maintenance"
+    | "reactor_overload"
     | ""
     | null;
 

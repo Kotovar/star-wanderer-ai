@@ -1,55 +1,62 @@
 import type { GameState } from "@/game/types/game";
-import { getArtifactEffectValue } from "@/game/artifacts";
-import { findActiveArtifact, isModuleFunctional } from "./utils";
-import type { ArtifactType } from "@/game/types";
-
-/**
- * Типы артефактов, влияющие на энергию корабля
- */
-const POWER_ARTIFACT_TYPES: Record<string, ArtifactType> = {
-    ABYSS_POWER: "abyss_power",
-    FREE_POWER: "free_power",
-};
+import {
+    calculateArtifactPowerBonus,
+    isModuleFunctional,
+    isReactorModule,
+} from "./utils";
+import {
+    CREW_ASSIGNMENT_BONUSES,
+    CREW_IN_MODULE_BONUSES,
+} from "@/game/constants";
 
 /**
  * Вычисляет общую мощность энергии корабля
- * Учитывает модули, назначения экипажа, артефакты и эффекты планет
+ *
+ * Учитывает:
+ * - Базовую энергию от реакторов и других модулей
+ * - Бонус от назначения экипажа на энергию (+5)
+ * - Бонусы от артефактов (Реактор Бездны, Вечное ядро)
+ * - Бонус от эффектов планет (временные эффекты от специализации)
+ * - Бонус от инженеров в реакторах (+3 к энергии за каждого)
+ *
  * @param state - Текущее состояние игры
  * @returns Общая мощность энергии
  */
 export function getTotalPower(state: GameState): number {
-    const { modules } = state.ship;
+    const { crew, artifacts, ship } = state;
+    const { modules } = ship;
 
-    // Базовая энергия от модулей
+    // === Базовая энергия от модулей ===
     let power = modules
         .filter(isModuleFunctional)
         .reduce((sum, m) => sum + (m.power ?? 0), 0);
 
-    // Бонус от назначения экипажа "энергия" (+5)
-    const powerBoost = state.crew.some((c) => c.assignment === "power") ? 5 : 0;
-    power += powerBoost;
-
-    // Артефакт "Реактор Бездны" (+25)
-    const abyssReactor = findActiveArtifact(
-        state.artifacts,
-        POWER_ARTIFACT_TYPES.ABYSS_POWER,
+    // === Бонус от назначения экипажа "разгон реактора" ===
+    // Инженер с назначением "reactor_overload" в реакторе даёт +5 к энергии
+    const hasReactorOverload = crew.some(
+        (c) => c.assignment === "reactor_overload",
     );
-    if (abyssReactor) {
-        power += getArtifactEffectValue(abyssReactor, state);
+    if (hasReactorOverload) {
+        power += CREW_ASSIGNMENT_BONUSES.REACTOR_OVERLOAD;
     }
 
-    // Артефакт "Вечное ядро" (+10)
-    const eternalReactor = findActiveArtifact(
-        state.artifacts,
-        POWER_ARTIFACT_TYPES.FREE_POWER,
-    );
-    if (eternalReactor) {
-        power += getArtifactEffectValue(eternalReactor, state);
+    // === Бонус от инженеров в реакторах ===
+    const engineersInReactors = crew.filter(
+        (c) =>
+            c.profession === "engineer" &&
+            c.moduleId !== undefined &&
+            isReactorModule(modules, c.moduleId),
+    ).length;
+
+    if (engineersInReactors > 0) {
+        // +3 к энергии за каждого инженера в реакторе
+        power +=
+            engineersInReactors * CREW_IN_MODULE_BONUSES.ENGINEER_IN_REACTOR;
     }
 
-    // Бонус от эффектов планет
-    const bonusPower = state.ship.bonusPower ?? 0;
-    power += bonusPower;
+    // === Бонусы от артефактов ===
+    const artifactBonus = calculateArtifactPowerBonus(artifacts, state);
+    power += artifactBonus;
 
     return power;
 }
