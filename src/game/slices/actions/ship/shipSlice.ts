@@ -8,9 +8,9 @@ import {
     calculateTotalShields,
     findActiveArtifact,
 } from "./utils";
-import { getTotalPower, getTotalConsumption } from "./shipGetters";
 import { WeaponTypeTotal } from "@/game/types";
-import { getTotalDamage } from "./getTotalDamage";
+import { getTotalDamage } from "./helpers/getTotalDamage";
+import { getTotalConsumption, getTotalPower } from "./helpers";
 
 /**
  * Расширенный интерфейс ShipSlice с геттерами
