@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { EnemyModuleGrid, ShipStatusCard } from "./EnemyModuleGrid";
 import { CrewMemberCard } from "./CrewMemberCard";
 import type { CrewMember, CrewMemberCombatAssignment } from "../types";
+import { getTotalEvasion } from "@/game/slices/ship";
 
 export function CombatPanel() {
     const currentCombat = useGameStore((s) => s.currentCombat);
@@ -42,9 +43,9 @@ export function CombatPanel() {
     const pDmg = getTotalDamage();
     const actualDamage = hasGunner ? pDmg.total : Math.floor(pDmg.total * 0.5);
     const isBoss = currentCombat?.enemy.isBoss || false;
-    const captain = crew.find((c) => c.profession === "pilot");
-    const captainLevel = captain?.level || 1;
-    const evasionChance = captainLevel; // 5% per level = level in percentage
+
+    // Calculate evasion chance (in combat - includes combat assignment bonus)
+    const evasionChance = getTotalEvasion(useGameStore.getState());
 
     const getAdjacentModules = (moduleId: number) => {
         return ship.modules.filter(

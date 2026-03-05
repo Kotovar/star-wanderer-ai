@@ -5,7 +5,8 @@
 export { createShipSlice } from "./shipSlice";
 export type { ShipSlice } from "./shipSlice";
 
-export { getTotalPower } from "./shipGetters";
+export { getTotalPower, getTotalConsumption } from "./shipGetters";
+export { getTotalEvasion } from "./getTotalEvasion";
 
 export {
     ARTIFACT_TYPES,

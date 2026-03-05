@@ -259,11 +259,10 @@ export const COMBAT_ACTIONS: Record<
 > = {
     pilot: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
-        { value: "evasion", label: "Маневры", effect: "+15 щитов за ход" },
         {
-            value: "targeting",
-            label: "Прицеливание",
-            effect: "Выбор цели, +15% урон",
+            value: "evasion",
+            label: "Маневры",
+            effect: "+уровень% уклонение",
         },
     ],
     engineer: [
@@ -322,8 +321,7 @@ export const CREW_ACTIONS: Record<
 > = {
     pilot: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
-        { value: "evasion", label: "Маневры", effect: "+15 щитов за ход" },
-        { value: "navigation", label: "Навигация", effect: "-1⚡ потребление" },
+        { value: "navigation", label: "Навигация", effect: "+1⚡ потребление" },
     ],
     engineer: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
@@ -372,6 +370,8 @@ export const CREW_ACTIONS: Record<
  */
 export const CREW_ASSIGNMENT_BONUSES = {
     REACTOR_OVERLOAD: 5,
+    NAVIGATION_REDUCED_CONSUMPTION: -1,
+    EVASION: 3, // 3% за уровень пилота
 } as const;
 
 /**

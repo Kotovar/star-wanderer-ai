@@ -1,5 +1,6 @@
 "use client";
 
+import { getTotalEvasion } from "../slices/ship";
 import { useGameStore } from "../store";
 
 export function ShipStats() {
@@ -39,6 +40,9 @@ export function ShipStats() {
     );
     const engineLevel =
         engines.length > 0 ? Math.max(...engines.map((e) => e.level || 1)) : 1;
+
+    // Calculate total evasion chance (outside combat)
+    const evasionChance = getTotalEvasion(useGameStore.getState());
 
     return (
         <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4 mt-2.5">
@@ -141,15 +145,7 @@ export function ShipStats() {
             </div>
             <div className="flex justify-between mb-2 text-sm">
                 <span className="text-[#ffb000]">🎯 Уклонение:</span>
-                <span className="text-[#00ff41]">
-                    {(captain?.level || 1) + (ship.bonusEvasion || 0)}%
-                    {ship.bonusEvasion ? (
-                        <span className="text-[#9933ff]">
-                            {" "}
-                            (+{ship.bonusEvasion}% бонус)
-                        </span>
-                    ) : null}
-                </span>
+                <span className="text-[#00ff41]">{evasionChance}%</span>
             </div>
             <div className="flex justify-between text-sm">
                 <span className="text-[#ffb000]">💨 Кислород:</span>

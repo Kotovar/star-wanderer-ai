@@ -8,7 +8,7 @@ import {
     calculateTotalShields,
     findActiveArtifact,
 } from "./utils";
-import { getTotalPower } from "./shipGetters";
+import { getTotalPower, getTotalConsumption } from "./shipGetters";
 
 /**
  * Расширенный интерфейс ShipSlice с геттерами
@@ -28,21 +28,17 @@ export interface ShipSlice {
      * @returns Общая мощность энергии
      */
     getTotalPower: () => number;
+
+    /**
+     * Вычисляет общее потребление энергии кораблём
+     * Учитывает модули, расовые бонусы экипажа и назначения
+     * @returns Общее потребление энергии
+     */
+    getTotalConsumption: () => number;
 }
 
 /**
  * Создаёт слайс корабля с поддержкой immer
- * Позволяет мутировать состояние напрямую внутри set()
- *
- * @example
- * ```ts
- * export const useGameStore = create<GameStore>()(
- *   immer((set, get) => ({
- *     ...initialState,
- *     ...createShipSlice(set, get),
- *   }))
- * )
- * ```
  *
  * @param set - Функция для обновления состояния
  * @param get - Функция для получения текущего состояния
@@ -111,5 +107,10 @@ export const createShipSlice = (
     getTotalPower: () => {
         const state = get();
         return getTotalPower(state);
+    },
+
+    getTotalConsumption: () => {
+        const state = get();
+        return getTotalConsumption(state);
     },
 });

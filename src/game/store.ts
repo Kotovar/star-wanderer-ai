@@ -46,7 +46,11 @@ import {
     getCombatLootResources,
     getMiningResources,
 } from "@/game/research/utils";
-import { createLogSlice, createShipSlice } from "@/game/slices";
+import {
+    createLogSlice,
+    createShipSlice,
+    getTotalEvasion,
+} from "@/game/slices";
 import type {
     BattleResult,
     CargoItem,
@@ -64,44 +68,6 @@ export const useGameStore = create<GameStore>()(
         ...initialState,
         ...createLogSlice(set),
         ...createShipSlice(set, get),
-
-        getTotalConsumption: () => {
-            const state = get();
-            const pilotRed = state.crew.find(
-                (c) => c.assignment === "navigation",
-            )
-                ? 1
-                : 0;
-
-            // Calculate energy consumption per module, applying crew bonuses locally
-            let base = 0;
-            state.ship.modules.forEach((m) => {
-                if (m.disabled || m.manualDisabled || m.health <= 0) return;
-
-                let moduleConsumption = m.consumption || 0;
-
-                // Find crew in this module and apply their energy bonuses
-                const crewInModule = state.crew.filter(
-                    (c) => c.moduleId === m.id,
-                );
-                crewInModule.forEach((c) => {
-                    const race = RACES[c.race];
-                    if (
-                        race?.crewBonuses.energy &&
-                        race.crewBonuses.energy < 0
-                    ) {
-                        // Negative energy bonus means reduced consumption (xenosymbiont: -25%)
-                        moduleConsumption = Math.floor(
-                            moduleConsumption * (1 + race.crewBonuses.energy),
-                        );
-                    }
-                });
-
-                base += moduleConsumption;
-            });
-
-            return Math.max(0, base - pilotRed);
-        },
 
         getTotalDamage: () => {
             const state = get();
@@ -1870,49 +1836,6 @@ export const useGameStore = create<GameStore>()(
                             }
                             break;
                         }
-                        case "evasion": {
-                            // Pilot must be in cockpit for evasion maneuvers
-                            if (currentModule?.type === "cockpit") {
-                                let shieldAmount = 15;
-
-                                // Apply trait task bonuses
-                                let taskBonus = 0;
-                                c.traits?.forEach((trait) => {
-                                    if (trait.effect.taskBonus) {
-                                        taskBonus += trait.effect.taskBonus;
-                                    }
-                                    if (trait.effect.doubleTaskEffect) {
-                                        taskBonus = 1; // 100% bonus = double effect
-                                    }
-                                });
-                                if (taskBonus > 0) {
-                                    shieldAmount = Math.floor(
-                                        shieldAmount * (1 + taskBonus),
-                                    );
-                                }
-
-                                set((s) => ({
-                                    ship: {
-                                        ...s.ship,
-                                        shields: Math.min(
-                                            s.ship.maxShields,
-                                            s.ship.shields + shieldAmount,
-                                        ),
-                                    },
-                                }));
-                                get().addLog(
-                                    `${c.name}: Щиты +${shieldAmount}`,
-                                    "info",
-                                );
-                                get().gainExp(c, 5);
-                            } else {
-                                get().addLog(
-                                    `${c.name}: Нужно быть в кабине для маневров!`,
-                                    "warning",
-                                );
-                            }
-                            break;
-                        }
                         case "overclock": {
                             // Engineer overclocks the module they're in
                             if (!currentModule) break;
@@ -2562,6 +2485,31 @@ export const useGameStore = create<GameStore>()(
                 );
 
                 if (eDmg > 0) {
+                    // ═══════════════════════════════════════════════════════════════
+                    // EVASION CHECK - Chance to evade enemy attack
+                    // ═══════════════════════════════════════════════════════════════
+                    const evasionChance = getTotalEvasion(state) / 100;
+                    const hasEvasion = state.crew.some(
+                        (c) => c.combatAssignment === "evasion",
+                    );
+
+                    if (evasionChance > 0 && Math.random() < evasionChance) {
+                        const pilot = state.crew.find(
+                            (c) => c.profession === "pilot",
+                        );
+                        const evasionSource = hasEvasion
+                            ? `Боевые маневры (${Math.round(evasionChance * 100)}% шанс)`
+                            : `Уклонение (${Math.round(evasionChance * 100)}% шанс)`;
+                        get().addLog(
+                            `✈️ ${pilot ? `Пилот ${pilot.name} уклонился` : `Корабль уклонился`} от атаки! ${evasionSource}`,
+                            "info",
+                        );
+                        if (pilot) get().gainExp(pilot, 8);
+                        // Skip enemy attack
+                        get().nextTurn();
+                        return;
+                    }
+
                     // Pick random target module
                     const activeMods = state.ship.modules.filter(
                         (m) => !m.disabled && m.health > 0,
@@ -5069,456 +5017,289 @@ export const useGameStore = create<GameStore>()(
             }
 
             // ═══════════════════════════════════════════════════════════════
-            // PILOT EVASION - Chance to evade enemy attack
+            // EVASION CHECK - Chance to evade enemy attack
             // ═══════════════════════════════════════════════════════════════
-            const pilot = state.crew.find((c) => c.profession === "pilot");
-            const pilotInCockpit =
-                pilot &&
-                state.ship.modules.find((m) => m.id === pilot.moduleId)
-                    ?.type === "cockpit";
-            let pilotEvasionChance = 0;
+            // Get total evasion chance (includes pilot level, combat assignment, artifacts, race traits)
+            const evasionChance = getTotalEvasion(state) / 100; // Convert to decimal
 
-            if (pilotInCockpit && pilot) {
-                // Base evasion chance from pilot level: 5% per level
-                pilotEvasionChance = (pilot.level || 1) * 0.05;
-
-                // Add ship evasion bonus
-                pilotEvasionChance += (state.ship.bonusEvasion || 0) / 100;
-
-                // Evasion Matrix artifact bonus: +10% evasion
-                const evasionMatrix = state.artifacts.find(
-                    (a) => a.effect.type === "evasion_boost" && a.effect.active,
+            if (evasionChance > 0 && Math.random() < evasionChance) {
+                const pilot = state.crew.find((c) => c.profession === "pilot");
+                const hasEvasion = state.crew.some(
+                    (c) => c.combatAssignment === "evasion",
                 );
-                if (evasionMatrix) {
-                    pilotEvasionChance += getArtifactEffectValue(
-                        evasionMatrix,
-                        state,
-                    );
-                }
-            }
-
-            if (
-                pilot &&
-                pilotEvasionChance > 0 &&
-                Math.random() < pilotEvasionChance
-            ) {
+                const evasionSource = hasEvasion
+                    ? `Боевые маневры (${Math.round(evasionChance * 100)}% шанс)`
+                    : `Уклонение (${Math.round(evasionChance * 100)}% шанс)`;
                 get().addLog(
-                    `✈️ Пилот ${pilot.name} уклонился от атаки!`,
+                    `✈️ ${pilot ? `Пилот ${pilot.name} уклонился` : `Корабль уклонился`} от атаки! ${evasionSource}`,
                     "info",
                 );
-                get().gainExp(pilot, 8); // Experience for successful evasion
+                if (pilot) get().gainExp(pilot, 8); // Experience for successful evasion
                 // Skip the rest of enemy attack
                 return;
             }
 
             // ═══════════════════════════════════════════════════════════════
-            // KRYLORIAN INTIMIDATION - Chance to evade enemy attack
+            // ENEMY AI - Module targeting
             // ═══════════════════════════════════════════════════════════════
-            const krylorianCrew = state.crew.filter(
-                (c) => c.race === "krylorian",
-            );
-            let evasionChance = 0;
-            krylorianCrew.forEach((c) => {
-                const race = RACES[c.race];
-                if (race?.specialTraits) {
-                    const intimidationTrait = race.specialTraits.find(
-                        (t) => t.id === "intimidation",
-                    );
-                    if (
-                        intimidationTrait &&
-                        intimidationTrait.effects.evasionBonus
-                    ) {
-                        evasionChance += Number(
-                            intimidationTrait.effects.evasionBonus,
-                        );
-                    }
-                }
-            });
+            // Priority: Weapon Bay > Cockpit > Reactor > Engine > Shield > Others
+            // Also considers: damaged modules (easier to destroy), crew presence
+            // ═══════════════════════════════════════════════════════════════
+            const activeMods = get().ship.modules.filter((m) => m.health > 0);
 
-            if (evasionChance > 0 && Math.random() < evasionChance) {
-                get().addLog(
-                    `🦎 Крилорианское устрашение! Враг промахнулся!`,
-                    "info",
-                );
-                // Skip the rest of enemy attack
-            } else {
-                // ═══════════════════════════════════════════════════════════════
-                // ENEMY AI - Module targeting
-                // Priority: Weapon Bay > Cockpit > Reactor > Engine > Shield > Others
-                // Also considers: damaged modules (easier to destroy), crew presence
-                // ═══════════════════════════════════════════════════════════════
-                const activeMods = get().ship.modules.filter(
-                    (m) => m.health > 0,
+            const getModuleTargetPriority = (m: Module): number => {
+                let priority = 0;
+                const crewInModule = get().crew.filter(
+                    (c) => c.moduleId === m.id,
                 );
 
-                const getModuleTargetPriority = (m: Module): number => {
-                    let priority = 0;
-                    const crewInModule = get().crew.filter(
-                        (c) => c.moduleId === m.id,
-                    );
-
-                    // Base priority by module type
-                    switch (m.type) {
-                        case "weaponbay":
-                            priority = 100;
-                            break; // High priority - disable weapons
-                        case "cockpit":
-                            priority = 90;
-                            break; // High - disable navigation
-                        case "reactor":
-                            priority = 85;
-                            break; // High - disable power
-                        case "engine":
-                            priority = 70;
-                            break; // Medium - disable travel
-                        case "shield":
-                            priority = 60;
-                            break; // Medium - disable defense
-                        case "lifesupport":
-                            priority = 50;
-                            break; // Lower - crew suffocation
-                        case "fueltank":
-                            priority = 45;
-                            break; // Lower - fuel
-                        case "medical":
-                            priority = 40;
-                            break; // Lower - healing
-                        case "cargo":
-                            priority = 20;
-                            break; // Low
-                        case "scanner":
-                            priority = 15;
-                            break; // Low
-                        case "drill":
-                            priority = 5;
-                            break; // Lowest
-                        default:
-                            priority = 30;
-                    }
-
-                    // Bonus for damaged modules (easier to destroy)
-                    if (m.health < 30) priority += 30;
-                    else if (m.health < 50) priority += 15;
-                    else if (m.health < 70) priority += 5;
-
-                    // Bonus for modules with crew (kill crew)
-                    priority += crewInModule.length * 10;
-
-                    // Add some randomness
-                    priority += Math.random() * 20;
-
-                    return priority;
-                };
-
-                // Select target module
-                let tgt: Module | null = null;
-                if (activeMods.length > 0) {
-                    // Sort by priority and pick the highest
-                    const sortedMods = [...activeMods].sort(
-                        (a, b) =>
-                            getModuleTargetPriority(b) -
-                            getModuleTargetPriority(a),
-                    );
-                    tgt = sortedMods[0];
+                // Base priority by module type
+                switch (m.type) {
+                    case "weaponbay":
+                        priority = 100;
+                        break; // High priority - disable weapons
+                    case "cockpit":
+                        priority = 90;
+                        break; // High - disable navigation
+                    case "reactor":
+                        priority = 85;
+                        break; // High - disable power
+                    case "engine":
+                        priority = 70;
+                        break; // Medium - disable travel
+                    case "shield":
+                        priority = 60;
+                        break; // Medium - disable defense
+                    case "lifesupport":
+                        priority = 50;
+                        break; // Lower - crew suffocation
+                    case "fueltank":
+                        priority = 45;
+                        break; // Lower - fuel
+                    case "medical":
+                        priority = 40;
+                        break; // Lower - healing
+                    case "cargo":
+                        priority = 20;
+                        break; // Low
+                    case "scanner":
+                        priority = 15;
+                        break; // Low
+                    case "drill":
+                        priority = 5;
+                        break; // Lowest
+                    default:
+                        priority = 30;
                 }
 
-                // Helper: Damage crew in module
-                const damageCrewInModule = (
-                    moduleId: number,
-                    damage: number,
-                    isDestruction: boolean,
-                ) => {
-                    const crewInModule = get().crew.filter(
-                        (c) => c.moduleId === moduleId,
-                    );
-                    if (crewInModule.length === 0) return;
+                // Bonus for damaged modules (easier to destroy)
+                if (m.health < 30) priority += 30;
+                else if (m.health < 50) priority += 15;
+                else if (m.health < 70) priority += 5;
 
-                    const actualDamage = isDestruction
-                        ? Math.floor(damage * 1.5)
-                        : damage;
+                // Bonus for modules with crew (kill crew)
+                priority += crewInModule.length * 10;
 
-                    // Check for life_crystal artifact (crew can't die, health stays at 1)
-                    const lifeCrystal = state.artifacts.find(
-                        (a) =>
-                            a.effect.type === "crew_immortal" &&
-                            a.effect.active,
-                    );
+                // Add some randomness
+                priority += Math.random() * 20;
 
-                    set((s) => ({
-                        crew: s.crew.map((c) => {
-                            if (c.moduleId !== moduleId) return c;
-                            let newHealth = c.health - actualDamage;
-                            // Apply life_crystal immortality
-                            if (lifeCrystal && newHealth < 1) {
-                                newHealth = 1;
-                            }
-                            return {
-                                ...c,
-                                health: Math.max(0, newHealth),
-                            };
-                        }),
-                    }));
+                return priority;
+            };
 
-                    if (isDestruction) {
-                        get().addLog(
-                            `💥 Модуль уничтожен! Экипаж получает критический урон: -${actualDamage}`,
-                            "error",
-                        );
-                        if (lifeCrystal) {
-                            get().addLog(
-                                `✨ Кристалл Жизни спас экипаж!`,
-                                "info",
-                            );
+            // Select target module
+            let tgt: Module | null = null;
+            if (activeMods.length > 0) {
+                // Sort by priority and pick the highest
+                const sortedMods = [...activeMods].sort(
+                    (a, b) =>
+                        getModuleTargetPriority(b) - getModuleTargetPriority(a),
+                );
+                tgt = sortedMods[0];
+            }
+
+            // Helper: Damage crew in module
+            const damageCrewInModule = (
+                moduleId: number,
+                damage: number,
+                isDestruction: boolean,
+            ) => {
+                const crewInModule = get().crew.filter(
+                    (c) => c.moduleId === moduleId,
+                );
+                if (crewInModule.length === 0) return;
+
+                const actualDamage = isDestruction
+                    ? Math.floor(damage * 1.5)
+                    : damage;
+
+                // Check for life_crystal artifact (crew can't die, health stays at 1)
+                const lifeCrystal = state.artifacts.find(
+                    (a) => a.effect.type === "crew_immortal" && a.effect.active,
+                );
+
+                set((s) => ({
+                    crew: s.crew.map((c) => {
+                        if (c.moduleId !== moduleId) return c;
+                        let newHealth = c.health - actualDamage;
+                        // Apply life_crystal immortality
+                        if (lifeCrystal && newHealth < 1) {
+                            newHealth = 1;
                         }
-                    } else {
-                        get().addLog(
-                            `👤 Экипаж в модуле получил урон: -${actualDamage}`,
-                            "warning",
-                        );
+                        return {
+                            ...c,
+                            health: Math.max(0, newHealth),
+                        };
+                    }),
+                }));
+
+                if (isDestruction) {
+                    get().addLog(
+                        `💥 Модуль уничтожен! Экипаж получает критический урон: -${actualDamage}`,
+                        "error",
+                    );
+                    if (lifeCrystal) {
+                        get().addLog(`✨ Кристалл Жизни спас экипаж!`, "info");
                     }
-
-                    // Log affected crew
-                    crewInModule.forEach((c) => {
-                        const newHealth =
-                            get().crew.find((cr) => cr.id === c.id)?.health ||
-                            0;
-                        if (newHealth <= 0) {
-                            get().addLog(`☠️ ${c.name} погиб!`, "error");
-                        } else if (lifeCrystal && newHealth === 1) {
-                            get().addLog(
-                                `✨ ${c.name} выжил благодаря Кристаллу Жизни!`,
-                                "info",
-                            );
-                        }
-                    });
-                };
-
-                // ═══════════════════════════════════════════════════════════════
-                // DEBUG - Log all active artifacts
-                // ═══════════════════════════════════════════════════════════════
-                const activeArtifacts = state.artifacts.filter(
-                    (a) => a.effect.active,
-                );
-                if (activeArtifacts.length > 0) {
+                } else {
                     get().addLog(
-                        `📦 Активные артефакты: ${activeArtifacts.map((a) => a.name).join(", ")}`,
-                        "info",
+                        `👤 Экипаж в модуле получил урон: -${actualDamage}`,
+                        "warning",
                     );
                 }
 
-                // ═══════════════════════════════════════════════════════════════
-                // MIRROR SHIELD - Chance to reflect attack to random enemy module
-                // When triggered, attack hits enemy module instead of player's ship
-                // Works regardless of shields - checked FIRST
-                // ═══════════════════════════════════════════════════════════════
-                const mirrorShield = state.artifacts.find(
-                    (a) =>
-                        a.effect.type === "damage_reflect" && a.effect.active,
-                );
-                let attackReflected = false;
-                let reflectedTarget = null;
-                let reflectedDamage = 0;
-
-                if (mirrorShield) {
-                    const reflectChance =
-                        getArtifactEffectValue(mirrorShield, state) / 100;
-                    get().addLog(
-                        `🛡️ Зеркальный Щит активен! Шанс отражения: ${Math.round(reflectChance * 100)}%`,
-                        "info",
-                    );
-                }
-
-                // Check reflection FIRST (before shields, works without shields)
-                if (
-                    mirrorShield &&
-                    updatedCombat &&
-                    Math.random() <
-                        getArtifactEffectValue(mirrorShield, state) / 100
-                ) {
-                    const aliveModules = updatedCombat.enemy.modules.filter(
-                        (m) => m.health > 0,
-                    );
-                    if (aliveModules.length > 0) {
-                        reflectedTarget =
-                            aliveModules[
-                                Math.floor(Math.random() * aliveModules.length)
-                            ];
-                        reflectedDamage = eDmg;
-                        attackReflected = true;
+                // Log affected crew
+                crewInModule.forEach((c) => {
+                    const newHealth =
+                        get().crew.find((cr) => cr.id === c.id)?.health || 0;
+                    if (newHealth <= 0) {
+                        get().addLog(`☠️ ${c.name} погиб!`, "error");
+                    } else if (lifeCrystal && newHealth === 1) {
                         get().addLog(
-                            `🎲 Шанс сработал! Отражаем атаку!`,
+                            `✨ ${c.name} выжил благодаря Кристаллу Жизни!`,
                             "info",
                         );
                     }
+                });
+            };
+
+            // ═══════════════════════════════════════════════════════════════
+            // DEBUG - Log all active artifacts
+            // ═══════════════════════════════════════════════════════════════
+            const activeArtifacts = state.artifacts.filter(
+                (a) => a.effect.active,
+            );
+            if (activeArtifacts.length > 0) {
+                get().addLog(
+                    `📦 Активные артефакты: ${activeArtifacts.map((a) => a.name).join(", ")}`,
+                    "info",
+                );
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // MIRROR SHIELD - Chance to reflect attack to random enemy module
+            // When triggered, attack hits enemy module instead of player's ship
+            // Works regardless of shields - checked FIRST
+            // ═══════════════════════════════════════════════════════════════
+            const mirrorShield = state.artifacts.find(
+                (a) => a.effect.type === "damage_reflect" && a.effect.active,
+            );
+            let attackReflected = false;
+            let reflectedTarget = null;
+            let reflectedDamage = 0;
+
+            if (mirrorShield) {
+                const reflectChance =
+                    getArtifactEffectValue(mirrorShield, state) / 100;
+                get().addLog(
+                    `🛡️ Зеркальный Щит активен! Шанс отражения: ${Math.round(reflectChance * 100)}%`,
+                    "info",
+                );
+            }
+
+            // Check reflection FIRST (before shields, works without shields)
+            if (
+                mirrorShield &&
+                updatedCombat &&
+                Math.random() <
+                    getArtifactEffectValue(mirrorShield, state) / 100
+            ) {
+                const aliveModules = updatedCombat.enemy.modules.filter(
+                    (m) => m.health > 0,
+                );
+                if (aliveModules.length > 0) {
+                    reflectedTarget =
+                        aliveModules[
+                            Math.floor(Math.random() * aliveModules.length)
+                        ];
+                    reflectedDamage = eDmg;
+                    attackReflected = true;
+                    get().addLog(`🎲 Шанс сработал! Отражаем атаку!`, "info");
                 }
+            }
 
-                // If reflected, deal damage to enemy and skip all player damage
-                if (attackReflected && reflectedTarget) {
-                    set((s) => {
-                        if (!s.currentCombat) return s;
-                        return {
-                            currentCombat: {
-                                ...s.currentCombat,
-                                enemy: {
-                                    ...s.currentCombat.enemy,
-                                    modules: s.currentCombat.enemy.modules.map(
-                                        (m) =>
-                                            m.id === reflectedTarget.id
-                                                ? {
-                                                      ...m,
-                                                      health: Math.max(
-                                                          0,
-                                                          m.health -
-                                                              reflectedDamage,
-                                                      ),
-                                                  }
-                                                : m,
-                                    ),
-                                },
-                            },
-                        };
-                    });
-                    get().addLog(
-                        `🛡️ ЗЕРКАЛЬНЫЙ ЩИТ! Атака отражена в "${reflectedTarget.name}"! -${reflectedDamage}%`,
-                        "info",
-                    );
-                    return; // Skip all damage to player
-                }
-
-                // Attack NOT reflected - proceed with normal damage
-                if (get().ship.shields > 0) {
-                    const sDmg = Math.min(get().ship.shields, eDmg);
-                    set((s) => ({
-                        ship: { ...s.ship, shields: s.ship.shields - sDmg },
-                    }));
-                    get().addLog(`Враг по щитам: -${sDmg}`, "warning");
-                    const overflow = eDmg - sDmg;
-
-                    if (overflow > 0 && tgt) {
-                        // ═══════════════════════════════════════════════════════════════
-                        // MODULE DEFENSE (ARMOR) - Flat damage reduction per module
-                        // Each point of module defense reduces damage by 1
-                        // ═══════════════════════════════════════════════════════════════
-                        const moduleDefense = tgt.defense || 0;
-                        const damageAfterArmor = Math.max(
-                            1,
-                            overflow - moduleDefense,
-                        );
-
-                        // Log armor reduction if applicable
-                        if (moduleDefense > 0 && damageAfterArmor < overflow) {
-                            get().addLog(
-                                `🛡️ Броня модуля "${tgt.name}": -${overflow - damageAfterArmor} урона`,
-                                "info",
-                            );
-                        }
-
-                        // ═══════════════════════════════════════════════════════════════
-                        // CRYSTALLINE ARMOR ARTIFACT - +X defense to ALL modules
-                        // ═══════════════════════════════════════════════════════════════
-                        const crystalArmorArtifact = state.artifacts.find(
-                            (a) =>
-                                a.effect.type === "module_armor" &&
-                                a.effect.active,
-                        );
-                        let artifactDefense = 0;
-                        if (crystalArmorArtifact) {
-                            artifactDefense = getArtifactEffectValue(
-                                crystalArmorArtifact,
-                                state,
-                            );
-                            get().addLog(
-                                `💎 Кристаллическая Броня (артефакт): +${artifactDefense} к защите модуля`,
-                                "info",
-                            );
-                        }
-
-                        // Apply artifact defense bonus (flat reduction)
-                        const damageAfterArtifact = Math.max(
-                            1,
-                            damageAfterArmor - artifactDefense,
-                        );
-
-                        // ═══════════════════════════════════════════════════════════════
-                        // CRYSTALLINE RACE - Additional percentage damage reduction
-                        // ═══════════════════════════════════════════════════════════════
-                        let crystallineDefense = 0;
-                        const crystallineCrew = state.crew.filter(
-                            (c) => c.race === "crystalline",
-                        );
-                        crystallineCrew.forEach((c) => {
-                            const race = RACES[c.race];
-                            if (race?.specialTraits) {
-                                const armorTrait = race.specialTraits.find(
-                                    (t) => t.id === "crystal_armor",
-                                );
-                                if (
-                                    armorTrait &&
-                                    armorTrait.effects.moduleDefense
-                                ) {
-                                    crystallineDefense += armorTrait.effects
-                                        .moduleDefense as number;
-                                }
-                            }
-                        });
-
-                        const reducedDamage = Math.floor(
-                            damageAfterArtifact * (1 - crystallineDefense),
-                        );
-                        const wasDestroyed = tgt.health <= reducedDamage;
-                        set((s) => ({
-                            ship: {
-                                ...s.ship,
-                                modules: s.ship.modules.map((m) =>
-                                    m.id === tgt.id
-                                        ? {
-                                              ...m,
-                                              health: Math.max(
-                                                  0,
-                                                  m.health - reducedDamage,
-                                              ),
-                                          }
-                                        : m,
+            // If reflected, deal damage to enemy and skip all player damage
+            if (attackReflected && reflectedTarget) {
+                set((s) => {
+                    if (!s.currentCombat) return s;
+                    return {
+                        currentCombat: {
+                            ...s.currentCombat,
+                            enemy: {
+                                ...s.currentCombat.enemy,
+                                modules: s.currentCombat.enemy.modules.map(
+                                    (m) =>
+                                        m.id === reflectedTarget.id
+                                            ? {
+                                                  ...m,
+                                                  health: Math.max(
+                                                      0,
+                                                      m.health -
+                                                          reflectedDamage,
+                                                  ),
+                                              }
+                                            : m,
                                 ),
                             },
-                        }));
+                        },
+                    };
+                });
+                get().addLog(
+                    `🛡️ ЗЕРКАЛЬНЫЙ ЩИТ! Атака отражена в "${reflectedTarget.name}"! -${reflectedDamage}%`,
+                    "info",
+                );
+                return; // Skip all damage to player
+            }
 
-                        if (artifactDefense > 0) {
-                            get().addLog(
-                                `💎 Кристаллическая Броня: -${artifactDefense} урона (артефакт)`,
-                                "info",
-                            );
-                        }
-                        if (
-                            moduleDefense > 0 &&
-                            reducedDamage < damageAfterArtifact
-                        ) {
-                            get().addLog(
-                                `💎 Кристаллическая раса: -${damageAfterArtifact - reducedDamage} урона (%)`,
-                                "info",
-                            );
-                        }
-                        get().addLog(
-                            `Пробитие! Враг по "${tgt.name}": -${reducedDamage}%`,
-                            "warning",
-                        );
+            // Attack NOT reflected - proceed with normal damage
+            if (get().ship.shields > 0) {
+                const sDmg = Math.min(get().ship.shields, eDmg);
+                set((s) => ({
+                    ship: { ...s.ship, shields: s.ship.shields - sDmg },
+                }));
+                get().addLog(`Враг по щитам: -${sDmg}`, "warning");
+                const overflow = eDmg - sDmg;
 
-                        // Damage crew in module
-                        let crewDamage = Math.floor(reducedDamage * 0.5);
-                        // Extra damage to crew in broken modules (health < 30)
-                        if (tgt.health < 30) {
-                            crewDamage = Math.floor(crewDamage * 1.5);
-                            get().addLog(
-                                `⚠️ Модуль повреждён! Экипаж получает повышенный урон!`,
-                                "error",
-                            );
-                        }
-                        damageCrewInModule(tgt.id, crewDamage, wasDestroyed);
-                    }
-                } else if (tgt) {
-                    // Attack was NOT reflected (checked above) - proceed with normal damage
+                if (overflow > 0 && tgt) {
                     // ═══════════════════════════════════════════════════════════════
-                    // CRYSTALLINE ARMOR ARTIFACT - +3 defense to ALL modules
+                    // MODULE DEFENSE (ARMOR) - Flat damage reduction per module
+                    // Each point of module defense reduces damage by 1
+                    // ═══════════════════════════════════════════════════════════════
+                    const moduleDefense = tgt.defense || 0;
+                    const damageAfterArmor = Math.max(
+                        1,
+                        overflow - moduleDefense,
+                    );
+
+                    // Log armor reduction if applicable
+                    if (moduleDefense > 0 && damageAfterArmor < overflow) {
+                        get().addLog(
+                            `🛡️ Броня модуля "${tgt.name}": -${overflow - damageAfterArmor} урона`,
+                            "info",
+                        );
+                    }
+
+                    // ═══════════════════════════════════════════════════════════════
+                    // CRYSTALLINE ARMOR ARTIFACT - +X defense to ALL modules
                     // ═══════════════════════════════════════════════════════════════
                     const crystalArmorArtifact = state.artifacts.find(
                         (a) =>
@@ -5539,13 +5320,13 @@ export const useGameStore = create<GameStore>()(
                     // Apply artifact defense bonus (flat reduction)
                     const damageAfterArtifact = Math.max(
                         1,
-                        eDmg - artifactDefense,
+                        damageAfterArmor - artifactDefense,
                     );
 
                     // ═══════════════════════════════════════════════════════════════
                     // CRYSTALLINE RACE - Additional percentage damage reduction
                     // ═══════════════════════════════════════════════════════════════
-                    let moduleDefense = 0;
+                    let crystallineDefense = 0;
                     const crystallineCrew = state.crew.filter(
                         (c) => c.race === "crystalline",
                     );
@@ -5559,14 +5340,14 @@ export const useGameStore = create<GameStore>()(
                                 armorTrait &&
                                 armorTrait.effects.moduleDefense
                             ) {
-                                moduleDefense += armorTrait.effects
+                                crystallineDefense += armorTrait.effects
                                     .moduleDefense as number;
                             }
                         }
                     });
 
                     const reducedDamage = Math.floor(
-                        damageAfterArtifact * (1 - moduleDefense),
+                        damageAfterArtifact * (1 - crystallineDefense),
                     );
                     const wasDestroyed = tgt.health <= reducedDamage;
                     set((s) => ({
@@ -5602,7 +5383,7 @@ export const useGameStore = create<GameStore>()(
                         );
                     }
                     get().addLog(
-                        `Враг по "${tgt.name}": -${reducedDamage}%`,
+                        `Пробитие! Враг по "${tgt.name}": -${reducedDamage}%`,
                         "warning",
                     );
 
@@ -5617,49 +5398,139 @@ export const useGameStore = create<GameStore>()(
                         );
                     }
                     damageCrewInModule(tgt.id, crewDamage, wasDestroyed);
-
-                    // Apply combatMoraleDrain trait (Трус: -10 морали в бою при получении урона)
-                    const crewInDamagedModule = get().crew.filter(
-                        (c) => c.moduleId === tgt.id,
+                }
+            } else if (tgt) {
+                // Attack was NOT reflected (checked above) - proceed with normal damage
+                // ═══════════════════════════════════════════════════════════════
+                // CRYSTALLINE ARMOR ARTIFACT - +3 defense to ALL modules
+                // ═══════════════════════════════════════════════════════════════
+                const crystalArmorArtifact = state.artifacts.find(
+                    (a) => a.effect.type === "module_armor" && a.effect.active,
+                );
+                let artifactDefense = 0;
+                if (crystalArmorArtifact) {
+                    artifactDefense = getArtifactEffectValue(
+                        crystalArmorArtifact,
+                        state,
                     );
-                    crewInDamagedModule.forEach((c) => {
-                        c.traits?.forEach((trait) => {
-                            if (trait.effect.combatMoraleDrain) {
-                                const moraleDrain =
-                                    trait.effect.combatMoraleDrain;
-                                set((s) => ({
-                                    crew: s.crew.map((cr) =>
-                                        cr.id === c.id
-                                            ? {
-                                                  ...cr,
-                                                  happiness: Math.max(
-                                                      0,
-                                                      cr.happiness -
-                                                          moraleDrain,
-                                                  ),
-                                              }
-                                            : cr,
-                                    ),
-                                }));
-                                get().addLog(
-                                    `⚠️ ${c.name} (${trait.name}): -${moraleDrain} морали от урона`,
-                                    "warning",
-                                );
-                            }
-                        });
-                    });
+                    get().addLog(
+                        `💎 Кристаллическая Броня (артефакт): +${artifactDefense} к защите модуля`,
+                        "info",
+                    );
                 }
 
-                // Remove dead crew from ship
-                const deadCrew = get().crew.filter((c) => c.health <= 0);
-                if (deadCrew.length > 0) {
-                    set((s) => ({ crew: s.crew.filter((c) => c.health > 0) }));
+                // Apply artifact defense bonus (flat reduction)
+                const damageAfterArtifact = Math.max(1, eDmg - artifactDefense);
+
+                // ═══════════════════════════════════════════════════════════════
+                // CRYSTALLINE RACE - Additional percentage damage reduction
+                // ═══════════════════════════════════════════════════════════════
+                let moduleDefense = 0;
+                const crystallineCrew = state.crew.filter(
+                    (c) => c.race === "crystalline",
+                );
+                crystallineCrew.forEach((c) => {
+                    const race = RACES[c.race];
+                    if (race?.specialTraits) {
+                        const armorTrait = race.specialTraits.find(
+                            (t) => t.id === "crystal_armor",
+                        );
+                        if (armorTrait && armorTrait.effects.moduleDefense) {
+                            moduleDefense += armorTrait.effects
+                                .moduleDefense as number;
+                        }
+                    }
+                });
+
+                const reducedDamage = Math.floor(
+                    damageAfterArtifact * (1 - moduleDefense),
+                );
+                const wasDestroyed = tgt.health <= reducedDamage;
+                set((s) => ({
+                    ship: {
+                        ...s.ship,
+                        modules: s.ship.modules.map((m) =>
+                            m.id === tgt.id
+                                ? {
+                                      ...m,
+                                      health: Math.max(
+                                          0,
+                                          m.health - reducedDamage,
+                                      ),
+                                  }
+                                : m,
+                        ),
+                    },
+                }));
+
+                if (artifactDefense > 0) {
                     get().addLog(
-                        `☠️ Потери экипажа: ${deadCrew.map((c) => c.name).join(", ")}`,
+                        `💎 Кристаллическая Броня: -${artifactDefense} урона (артефакт)`,
+                        "info",
+                    );
+                }
+                if (moduleDefense > 0 && reducedDamage < damageAfterArtifact) {
+                    get().addLog(
+                        `💎 Кристаллическая раса: -${damageAfterArtifact - reducedDamage} урона (%)`,
+                        "info",
+                    );
+                }
+                get().addLog(
+                    `Враг по "${tgt.name}": -${reducedDamage}%`,
+                    "warning",
+                );
+
+                // Damage crew in module
+                let crewDamage = Math.floor(reducedDamage * 0.5);
+                // Extra damage to crew in broken modules (health < 30)
+                if (tgt.health < 30) {
+                    crewDamage = Math.floor(crewDamage * 1.5);
+                    get().addLog(
+                        `⚠️ Модуль повреждён! Экипаж получает повышенный урон!`,
                         "error",
                     );
                 }
-            } // End of else block for evasion check
+                damageCrewInModule(tgt.id, crewDamage, wasDestroyed);
+
+                // Apply combatMoraleDrain trait (Трус: -10 морали в бою при получении урона)
+                const crewInDamagedModule = get().crew.filter(
+                    (c) => c.moduleId === tgt.id,
+                );
+                crewInDamagedModule.forEach((c) => {
+                    c.traits?.forEach((trait) => {
+                        if (trait.effect.combatMoraleDrain) {
+                            const moraleDrain = trait.effect.combatMoraleDrain;
+                            set((s) => ({
+                                crew: s.crew.map((cr) =>
+                                    cr.id === c.id
+                                        ? {
+                                              ...cr,
+                                              happiness: Math.max(
+                                                  0,
+                                                  cr.happiness - moraleDrain,
+                                              ),
+                                          }
+                                        : cr,
+                                ),
+                            }));
+                            get().addLog(
+                                `⚠️ ${c.name} (${trait.name}): -${moraleDrain} морали от урона`,
+                                "warning",
+                            );
+                        }
+                    });
+                });
+            }
+
+            // Remove dead crew from ship
+            const deadCrew = get().crew.filter((c) => c.health <= 0);
+            if (deadCrew.length > 0) {
+                set((s) => ({ crew: s.crew.filter((c) => c.health > 0) }));
+                get().addLog(
+                    `☠️ Потери экипажа: ${deadCrew.map((c) => c.name).join(", ")}`,
+                    "error",
+                );
+            }
 
             // ═══════════════════════════════════════════════════════════════
             // BOSS REGENERATION AND SPECIAL ABILITIES
@@ -5758,16 +5629,16 @@ export const useGameStore = create<GameStore>()(
                                 // Apply some damage to player instead (reflection)
                                 const reflectDmg = Math.floor(eDmg * 0.3);
                                 if (reflectDmg > 0) {
-                                    const activeMods =
+                                    const reflectActiveMods =
                                         get().ship.modules.filter(
                                             (m) => m.health > 0,
                                         );
-                                    if (activeMods.length > 0) {
-                                        const tgt =
-                                            activeMods[
+                                    if (reflectActiveMods.length > 0) {
+                                        const reflectTgt =
+                                            reflectActiveMods[
                                                 Math.floor(
                                                     Math.random() *
-                                                        activeMods.length,
+                                                        reflectActiveMods.length,
                                                 )
                                             ];
                                         set((s) => ({
@@ -5775,7 +5646,7 @@ export const useGameStore = create<GameStore>()(
                                                 ...s.ship,
                                                 modules: s.ship.modules.map(
                                                     (m) =>
-                                                        m.id === tgt.id
+                                                        m.id === reflectTgt.id
                                                             ? {
                                                                   ...m,
                                                                   health: Math.max(

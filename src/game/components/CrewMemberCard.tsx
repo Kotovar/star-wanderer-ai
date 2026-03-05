@@ -236,7 +236,7 @@ function getActionDescription(
     const descriptions: Record<Profession, Record<string, string>> = {
         pilot: {
             "": "Ожидание - бездействие",
-            evasion: "Уклонение - +15 к щитам, -1 топливо",
+            evasion: "Уклонение - повышение уклонения",
             navigation: "Навигация - снижает расход топлива",
             targeting: "Прицеливание - выбор цели, +15% урона",
         },

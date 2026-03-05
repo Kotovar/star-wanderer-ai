@@ -189,9 +189,9 @@ export const RACES: Record<RaceId, Race> = {
                 id: "intimidation",
                 name: "Устрашение",
                 description:
-                    "Враги чаще промахиваются (-10% шанс попадания по кораблю)",
+                    "Враги чаще промахиваются (-2% шанс попадания по кораблю)",
                 type: "positive",
-                effects: { evasionBonus: 0.1 },
+                effects: { evasionBonus: 0.02 },
             },
         ],
         relations: {
