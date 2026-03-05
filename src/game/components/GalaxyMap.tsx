@@ -89,6 +89,22 @@ export function GalaxyMap() {
         (s) => s.areFuelTanksFunctional,
     );
 
+    // Get set function from store to update sector positions
+    const updateSectorPosition = useCallback(
+        (sectorId: number, x: number, y: number) => {
+            useGameStore.setState((state) => {
+                const sector = state.galaxy.sectors.find(
+                    (s) => s.id === sectorId,
+                );
+                if (sector) {
+                    sector.mapX = x;
+                    sector.mapY = y;
+                }
+            });
+        },
+        [],
+    );
+
     // Initialize canvas size once
     useEffect(() => {
         const container = containerRef.current;
@@ -253,6 +269,7 @@ export function GalaxyMap() {
             areFuelTanksFunctional,
             currentSector,
             artifacts,
+            updateSectorPosition,
         );
 
         ctx.restore();
@@ -268,6 +285,7 @@ export function GalaxyMap() {
         areFuelTanksFunctional,
         zoom,
         offset,
+        updateSectorPosition,
     ]);
 
     // Handle wheel zoom
@@ -513,6 +531,7 @@ function drawSectors(
     areFuelTanksFunctional: () => boolean,
     currentSector: ReturnType<typeof useGameStore.getState>["currentSector"],
     artifacts: ReturnType<typeof useGameStore.getState>["artifacts"],
+    updateSectorPosition: (sectorId: number, x: number, y: number) => void,
 ) {
     const canSeeT4 = canSeeTier4(modules, artifacts);
 
@@ -533,6 +552,7 @@ function drawSectors(
             areEnginesFunctional,
             areFuelTanksFunctional,
             sector.id === currentSector?.id,
+            updateSectorPosition,
         );
     });
 }

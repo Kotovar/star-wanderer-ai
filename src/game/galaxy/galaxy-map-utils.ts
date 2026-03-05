@@ -146,6 +146,8 @@ export function drawSector(
     areEnginesFunctional: () => boolean,
     areFuelTanksFunctional: () => boolean,
     isCurrentSector: boolean,
+    // Optional callbacks to update sector position in store
+    updateSectorPosition?: (sectorId: number, x: number, y: number) => void,
 ) {
     const tier = sector.tier;
     const isAccessible =
@@ -163,8 +165,10 @@ export function drawSector(
     const x = centerX + Math.cos(angle) * radius;
     const y = centerY + 10 + Math.sin(angle) * radius;
 
-    sector.mapX = x;
-    sector.mapY = y;
+    // Update sector position in store if callback provided
+    if (updateSectorPosition && (sector.mapX !== x || sector.mapY !== y)) {
+        updateSectorPosition(sector.id, x, y);
+    }
 
     if (isCurrentSector) {
         drawSectorGlow(ctx, x, y);

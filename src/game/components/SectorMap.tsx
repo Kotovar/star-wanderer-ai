@@ -351,16 +351,18 @@ export function SectorMap() {
         // Draw locations at grid-based positions
         const locations = currentSector.locations;
 
-        locations.forEach((loc) => {
-            // Use pre-computed distanceRatio and angle from location data
+        // Helper function to compute location position
+        const computeLocationPosition = (loc: (typeof locations)[0]) => {
             const distanceRatio = loc.distanceRatio ?? 0.5;
             const distance = baseMaxRadius * distanceRatio;
             const angle = loc.angle ?? 0;
-
             const x = centerX + Math.cos(angle) * distance;
             const y = centerY + Math.sin(angle) * distance;
-            loc.x = x;
-            loc.y = y;
+            return { x, y };
+        };
+
+        locations.forEach((loc) => {
+            const { x, y } = computeLocationPosition(loc);
 
             const completed = completedLocations.includes(loc.id);
             const hasScanner = scanLevel > 0 || hasAllSeeing; // Eye of Singularity acts as scanner
@@ -643,16 +645,21 @@ export function SectorMap() {
                     const star = currentSector.star;
                     drawStar(ctx, centerX, centerY, star);
 
-                    // Draw locations
-                    currentSector.locations.forEach((loc) => {
+                    // Helper function to compute location position
+                    const computeLocationPosition = (
+                        loc: (typeof currentSector.locations)[0],
+                    ) => {
                         const distanceRatio = loc.distanceRatio ?? 0.5;
                         const distance = baseMaxRadius * distanceRatio;
                         const angle = loc.angle ?? 0;
-
                         const x = centerX + Math.cos(angle) * distance;
                         const y = centerY + Math.sin(angle) * distance;
-                        loc.x = x;
-                        loc.y = y;
+                        return { x, y };
+                    };
+
+                    // Draw locations
+                    currentSector.locations.forEach((loc) => {
+                        const { x, y } = computeLocationPosition(loc);
 
                         const completed = completedLocations.includes(loc.id);
                         const hasScanner = scanLevel > 0 || hasAllSeeing;
@@ -778,11 +785,25 @@ export function SectorMap() {
             const worldMouseY =
                 (mouseY - centerY - currentOffset.y) / zoom + centerY;
 
+            // Helper function to compute location position
+            const computeLocationPosition = (
+                loc: (typeof currentSector.locations)[0],
+            ) => {
+                const distanceRatio = loc.distanceRatio ?? 0.5;
+                const baseMaxRadius =
+                    Math.min(canvas.width, canvas.height) * 0.45;
+                const distance = baseMaxRadius * distanceRatio;
+                const angle = loc.angle ?? 0;
+                const x = centerX + Math.cos(angle) * distance;
+                const y = centerY + Math.sin(angle) * distance;
+                return { x, y };
+            };
+
             let found = false;
             currentSector.locations.forEach((loc) => {
-                if (loc.x === undefined || loc.y === undefined) return;
+                const { x, y } = computeLocationPosition(loc);
                 const dist = Math.sqrt(
-                    (worldMouseX - loc.x) ** 2 + (worldMouseY - loc.y) ** 2,
+                    (worldMouseX - x) ** 2 + (worldMouseY - y) ** 2,
                 );
                 const hitboxSize = 25 / zoom;
                 if (dist < hitboxSize) {
@@ -978,10 +999,23 @@ export function SectorMap() {
             return;
         }
 
+        // Helper function to compute location position
+        const baseMaxRadius = Math.min(canvas.width, canvas.height) * 0.45;
+        const computeLocationPosition = (
+            loc: (typeof currentSector.locations)[0],
+        ) => {
+            const distanceRatio = loc.distanceRatio ?? 0.5;
+            const distance = baseMaxRadius * distanceRatio;
+            const angle = loc.angle ?? 0;
+            const x = centerX + Math.cos(angle) * distance;
+            const y = centerY + Math.sin(angle) * distance;
+            return { x, y };
+        };
+
         currentSector.locations.forEach((loc, idx) => {
-            if (loc.x === undefined || loc.y === undefined) return;
+            const { x, y } = computeLocationPosition(loc);
             const dist = Math.sqrt(
-                (worldClickX - loc.x) ** 2 + (worldClickY - loc.y) ** 2,
+                (worldClickX - x) ** 2 + (worldClickY - y) ** 2,
             );
             // Hitbox size scales with zoom for consistent feel
             const hitboxSize = 25 / zoom;
