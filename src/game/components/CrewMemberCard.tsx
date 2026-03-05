@@ -95,6 +95,7 @@ export function CrewMemberCard({
                     />
                     <TaskRow
                         crewMember={crewMember}
+                        module={module}
                         actions={actions}
                         onAssignTask={onAssignTask}
                         currentAssignment={currentAssignment}
@@ -153,6 +154,7 @@ function MovementRow({
 
 interface TaskRowProps {
     crewMember: CrewMember;
+    module: Module | undefined;
     actions: Array<{
         value: NonNullable<CrewMemberCombatAssignment>;
         label: string;
@@ -169,18 +171,28 @@ interface TaskRowProps {
 
 function TaskRow({
     crewMember,
+    module,
     actions,
     onAssignTask,
     currentAssignment,
     isCombat = false,
 }: TaskRowProps) {
+    // Filter actions based on crew position and module type
+    const filteredActions = actions.filter((a) => {
+        // Overclock requires engineer to be in weaponbay
+        if (a.value === "overclock" && crewMember.profession === "engineer") {
+            return module?.type === "weaponbay";
+        }
+        return true;
+    });
+
     return (
         <div className="flex items-start gap-2">
             <span className="text-[#ffb000] min-w-27.5 pt-0.5">
                 {isCombat ? "Боевая задача:" : "Задача:"}
             </span>
             <div className="flex flex-wrap gap-1">
-                {actions.map((a) => {
+                {filteredActions.map((a) => {
                     const itemValue = a.value === "" ? "none" : a.value;
                     const currentTask = currentAssignment || "none";
                     const isActive = currentTask === itemValue;

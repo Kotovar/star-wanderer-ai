@@ -51,8 +51,7 @@ export function CombatPanel() {
         return ship.modules.filter(
             (m) =>
                 m.id !== moduleId &&
-                !m.disabled &&
-                m.health > 0 &&
+                !m.manualDisabled &&
                 isModuleAdjacent(moduleId, m.id),
         );
     };

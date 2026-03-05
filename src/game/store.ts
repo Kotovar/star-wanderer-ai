@@ -1150,170 +1150,182 @@ export const useGameStore = create<GameStore>()(
 
             // Traveling
             const traveling = get().traveling;
-            if (!traveling) return;
-
-            const nextTurnsLeft = traveling.turnsLeft - 1;
-
-            set((s) => ({
-                traveling: s.traveling
-                    ? { ...s.traveling, turnsLeft: nextTurnsLeft }
-                    : null,
-            }));
-            get().addLog(
-                `Путешествие в ${traveling.destination.name}: ${get().traveling?.turnsLeft} ходов`,
-                "info",
-            );
-
-            if (Math.random() < 0.3) {
-                const events = ["Аномалия", "Астероиды", "Тревога", "Сигнал"];
-                const event = events[Math.floor(Math.random() * events.length)];
-                get().addLog(event, "warning");
-                if (event === "Астероиды") {
-                    set((s) => ({
-                        ship: {
-                            ...s.ship,
-                            modules: s.ship.modules.map((m) =>
-                                m.id ===
-                                s.ship.modules[
-                                    Math.floor(
-                                        Math.random() * s.ship.modules.length,
-                                    )
-                                ].id
-                                    ? {
-                                          ...m,
-                                          health: Math.max(10, m.health - 5),
-                                      }
-                                    : m,
-                            ),
-                        },
-                    }));
-                }
-            }
-
-            if (nextTurnsLeft <= 0) {
-                // Travel complete - no additional effects needed
-                // (Void Drive health drain already applied during travel initiation)
-
-                const destinationSector = traveling.destination;
-
-                // Update patrol contracts (xenosymbiont quest - visit sectors)
-                const patrolContracts = state.activeContracts.filter(
-                    (c) =>
-                        c.type === "patrol" &&
-                        c.isRaceQuest &&
-                        c.targetSectors?.includes(destinationSector.id),
-                );
-
-                // Update scan_planet contracts - check if we visited the target planet type
-                const scanContracts = state.activeContracts.filter(
-                    (c) =>
-                        c.type === "scan_planet" &&
-                        c.targetSector === destinationSector.id,
-                );
-
-                let newActiveContracts = state.activeContracts;
-                let contractCompleted = false;
-                let completedContractId = "";
-
-                // Process scan_planet contracts
-                scanContracts.forEach((c) => {
-                    // Check if player has scanner
-                    const hasScanner = state.ship.modules.some(
-                        (m) =>
-                            m.type === "scanner" && !m.disabled && m.health > 0,
-                    );
-                    if (!hasScanner) {
-                        get().addLog(
-                            `📡 Сканирование: нужен сканер для выполнения контракта`,
-                            "warning",
-                        );
-                        return;
-                    }
-
-                    // Check if target planet type exists in this sector
-                    const hasTargetPlanet = destinationSector.locations.some(
-                        (l) =>
-                            l.type === "planet" &&
-                            l.planetType === c.planetType,
-                    );
-                    if (!hasTargetPlanet) {
-                        get().addLog(
-                            `📡 Сканирование: планета типа "${c.planetType}" не найдена`,
-                            "warning",
-                        );
-                        return;
-                    }
-
-                    // Mark as visited
-                    const updated = { ...c, visited: (c.visited || 0) + 1 };
-                    newActiveContracts = newActiveContracts.map((ac) =>
-                        ac.id === c.id ? updated : ac,
-                    );
-
-                    get().addLog(
-                        `📡 Сканирование: ${c.planetType} отсканировано! Возвращайтесь на базу`,
-                        "info",
-                    );
-                });
-
-                patrolContracts.forEach((c) => {
-                    const visitedSectors = [
-                        ...new Set([
-                            ...(c.visitedSectors || []),
-                            destinationSector.id,
-                        ]),
-                    ];
-                    const targetSectors = c.targetSectors || [];
-
-                    if (visitedSectors.length >= targetSectors.length) {
-                        // All sectors visited - complete contract
-                        contractCompleted = true;
-                        completedContractId = c.id;
-                        get().addLog(
-                            `Сбор биообразцов завершён! +${c.reward}₢`,
-                            "info",
-                        );
-
-                        // Give experience to all crew members
-                        const expReward = CONTRACT_REWARDS.patrol.baseExp;
-                        giveCrewExperience(
-                            expReward,
-                            `Экипаж получил опыт: +${expReward} ед.`,
-                        );
-
-                        newActiveContracts = newActiveContracts.filter(
-                            (ac) => ac.id !== c.id,
-                        );
-                    } else {
-                        // Update progress
-                        newActiveContracts = newActiveContracts.map((ac) =>
-                            ac.id === c.id ? { ...ac, visitedSectors } : ac,
-                        );
-                        get().addLog(
-                            `Биообразцы: ${visitedSectors.length}/${targetSectors.length} секторов`,
-                            "info",
-                        );
-                    }
-                });
+            if (traveling) {
+                const nextTurnsLeft = traveling.turnsLeft - 1;
 
                 set((s) => ({
-                    currentSector: destinationSector,
-                    traveling: null,
-                    credits: contractCompleted
-                        ? s.credits +
-                          (patrolContracts.find(
-                              (c) => c.id === completedContractId,
-                          )?.reward || 0)
-                        : s.credits,
-                    completedContractIds: contractCompleted
-                        ? [...s.completedContractIds, completedContractId]
-                        : s.completedContractIds,
-                    activeContracts: newActiveContracts,
+                    traveling: s.traveling
+                        ? { ...s.traveling, turnsLeft: nextTurnsLeft }
+                        : null,
                 }));
-                get().addLog(`Прибытие в ${destinationSector.name}`, "info");
-                get().updateShipStats();
-                set({ gameMode: "sector_map" });
-                return;
+
+                if (Math.random() < 0.3) {
+                    const events = [
+                        "Аномалия",
+                        "Астероиды",
+                        "Тревога",
+                        "Сигнал",
+                    ];
+                    const event =
+                        events[Math.floor(Math.random() * events.length)];
+                    get().addLog(event, "warning");
+                    if (event === "Астероиды") {
+                        set((s) => ({
+                            ship: {
+                                ...s.ship,
+                                modules: s.ship.modules.map((m) =>
+                                    m.id ===
+                                    s.ship.modules[
+                                        Math.floor(
+                                            Math.random() *
+                                                s.ship.modules.length,
+                                        )
+                                    ].id
+                                        ? {
+                                              ...m,
+                                              health: Math.max(
+                                                  10,
+                                                  m.health - 5,
+                                              ),
+                                          }
+                                        : m,
+                                ),
+                            },
+                        }));
+                    }
+                }
+
+                if (nextTurnsLeft <= 0) {
+                    // Travel complete - no additional effects needed
+                    // (Void Drive health drain already applied during travel initiation)
+
+                    const destinationSector = traveling.destination;
+
+                    // Update patrol contracts (xenosymbiont quest - visit sectors)
+                    const patrolContracts = state.activeContracts.filter(
+                        (c) =>
+                            c.type === "patrol" &&
+                            c.isRaceQuest &&
+                            c.targetSectors?.includes(destinationSector.id),
+                    );
+
+                    // Update scan_planet contracts - check if we visited the target planet type
+                    const scanContracts = state.activeContracts.filter(
+                        (c) =>
+                            c.type === "scan_planet" &&
+                            c.targetSector === destinationSector.id,
+                    );
+
+                    let newActiveContracts = state.activeContracts;
+                    let contractCompleted = false;
+                    let completedContractId = "";
+
+                    // Process scan_planet contracts
+                    scanContracts.forEach((c) => {
+                        // Check if player has scanner
+                        const hasScanner = state.ship.modules.some(
+                            (m) =>
+                                m.type === "scanner" &&
+                                !m.disabled &&
+                                m.health > 0,
+                        );
+                        if (!hasScanner) {
+                            get().addLog(
+                                `📡 Сканирование: нужен сканер для выполнения контракта`,
+                                "warning",
+                            );
+                            return;
+                        }
+
+                        // Check if target planet type exists in this sector
+                        const hasTargetPlanet =
+                            destinationSector.locations.some(
+                                (l) =>
+                                    l.type === "planet" &&
+                                    l.planetType === c.planetType,
+                            );
+                        if (!hasTargetPlanet) {
+                            get().addLog(
+                                `📡 Сканирование: планета типа "${c.planetType}" не найдена`,
+                                "warning",
+                            );
+                            return;
+                        }
+
+                        // Mark as visited
+                        const updated = { ...c, visited: (c.visited || 0) + 1 };
+                        newActiveContracts = newActiveContracts.map((ac) =>
+                            ac.id === c.id ? updated : ac,
+                        );
+
+                        get().addLog(
+                            `📡 Сканирование: ${c.planetType} отсканировано! Возвращайтесь на базу`,
+                            "info",
+                        );
+                    });
+
+                    patrolContracts.forEach((c) => {
+                        const visitedSectors = [
+                            ...new Set([
+                                ...(c.visitedSectors || []),
+                                destinationSector.id,
+                            ]),
+                        ];
+                        const targetSectors = c.targetSectors || [];
+
+                        if (visitedSectors.length >= targetSectors.length) {
+                            // All sectors visited - complete contract
+                            contractCompleted = true;
+                            completedContractId = c.id;
+                            get().addLog(
+                                `Сбор биообразцов завершён! +${c.reward}₢`,
+                                "info",
+                            );
+
+                            // Give experience to all crew members
+                            const expReward = CONTRACT_REWARDS.patrol.baseExp;
+                            giveCrewExperience(
+                                expReward,
+                                `Экипаж получил опыт: +${expReward} ед.`,
+                            );
+
+                            newActiveContracts = newActiveContracts.filter(
+                                (ac) => ac.id !== c.id,
+                            );
+                        } else {
+                            // Update progress
+                            newActiveContracts = newActiveContracts.map((ac) =>
+                                ac.id === c.id ? { ...ac, visitedSectors } : ac,
+                            );
+                            get().addLog(
+                                `Биообразцы: ${visitedSectors.length}/${targetSectors.length} секторов`,
+                                "info",
+                            );
+                        }
+                    });
+
+                    set((s) => ({
+                        currentSector: destinationSector,
+                        traveling: null,
+                        credits: contractCompleted
+                            ? s.credits +
+                              (patrolContracts.find(
+                                  (c) => c.id === completedContractId,
+                              )?.reward || 0)
+                            : s.credits,
+                        completedContractIds: contractCompleted
+                            ? [...s.completedContractIds, completedContractId]
+                            : s.completedContractIds,
+                        activeContracts: newActiveContracts,
+                    }));
+                    get().addLog(
+                        `Прибытие в ${destinationSector.name}`,
+                        "info",
+                    );
+                    get().updateShipStats();
+                    set({ gameMode: "sector_map" });
+                    return;
+                }
             }
 
             // Random events (only when not in combat)
@@ -1548,13 +1560,6 @@ export const useGameStore = create<GameStore>()(
                 }
 
                 if (c.assignment) {
-                    // const currentModule = get().ship.modules.find(
-                    //     (m) => m.id === c.moduleId,
-                    // );
-                    const crewInSameModule = get().crew.filter(
-                        (cr) => cr.moduleId === c.moduleId,
-                    );
-
                     switch (c.assignment) {
                         case "repair": {
                             // Engineer can only repair the module they're in
@@ -1629,6 +1634,72 @@ export const useGameStore = create<GameStore>()(
                             get().addLog(
                                 `${c.name}: Ремонт "${currentModule.name}" +${repairAmount}%`,
                                 "info",
+                            );
+                            get().gainExp(c, 8);
+                            break;
+                        }
+                    }
+                }
+
+                // Combat assignments (during battle)
+                if (c.combatAssignment) {
+                    const crewInSameModule = get().crew.filter(
+                        (cr) => cr.moduleId === c.moduleId,
+                    );
+
+                    switch (c.combatAssignment) {
+                        case "repair": {
+                            // Engineer repairs the module they're in (combat version)
+                            if (!currentModule) break;
+                            let repairAmount = 15;
+
+                            // Apply trait task bonuses
+                            let taskBonus = 0;
+                            c.traits?.forEach((trait) => {
+                                if (trait.effect.taskBonus) {
+                                    taskBonus += trait.effect.taskBonus;
+                                }
+                                if (trait.effect.doubleTaskEffect) {
+                                    taskBonus = 1;
+                                }
+                            });
+                            if (taskBonus > 0) {
+                                repairAmount = Math.floor(
+                                    repairAmount * (1 + taskBonus),
+                                );
+                            }
+
+                            if (crewRace?.crewBonuses.repair) {
+                                repairAmount = Math.floor(
+                                    repairAmount *
+                                        (1 + crewRace.crewBonuses.repair),
+                                );
+                            }
+
+                            // Check if module actually needs repair
+                            if (currentModule.health >= 100) {
+                                break;
+                            }
+
+                            set((s) => ({
+                                ship: {
+                                    ...s.ship,
+                                    modules: s.ship.modules.map((m) =>
+                                        m.id === currentModule.id
+                                            ? {
+                                                  ...m,
+                                                  health: Math.min(
+                                                      100,
+                                                      m.health + repairAmount,
+                                                  ),
+                                              }
+                                            : m,
+                                    ),
+                                },
+                            }));
+                            get().addLog(
+                                `${c.name}: Экстренный ремонт "${currentModule.name}" +${repairAmount}%`,
+                                "combat",
                             );
                             get().gainExp(c, 8);
                             break;
@@ -1765,29 +1836,35 @@ export const useGameStore = create<GameStore>()(
                             break;
                         }
                         case "overclock": {
-                            // Engineer overclocks the module they're in
-                            if (!currentModule) break;
-                            set((s) => ({
-                                ship: {
-                                    ...s.ship,
-                                    modules: s.ship.modules.map((m) =>
-                                        m.id === currentModule.id
-                                            ? {
-                                                  ...m,
-                                                  health: Math.max(
-                                                      0,
-                                                      m.health - 10,
-                                                  ),
-                                              }
-                                            : m,
-                                    ),
-                                },
-                            }));
-                            get().addLog(
-                                `${c.name}: Перегрузка "${currentModule.name}" (+25% урон,-10% броня)`,
-                                "warning",
-                            );
-                            get().gainExp(c, 10);
+                            // Engineer must be in weaponbay for overclock
+                            if (currentModule?.type !== "weaponbay") {
+                                get().addLog(
+                                    `${c.name}: Перегрузка неактивна - нужен в оружейной палубе!`,
+                                    "warning",
+                                );
+                            } else {
+                                set((s) => ({
+                                    ship: {
+                                        ...s.ship,
+                                        modules: s.ship.modules.map((m) =>
+                                            m.id === currentModule.id
+                                                ? {
+                                                      ...m,
+                                                      health: Math.max(
+                                                          0,
+                                                          m.health - 10,
+                                                      ),
+                                                  }
+                                                : m,
+                                        ),
+                                    },
+                                }));
+                                get().addLog(
+                                    `${c.name}: Перегрузка "${currentModule.name}" (+25% урон,-10% броня)`,
+                                    "warning",
+                                );
+                                get().gainExp(c, 10);
+                            }
                             break;
                         }
                         case "reactor_overload": {
@@ -1870,6 +1947,25 @@ export const useGameStore = create<GameStore>()(
                             // Scientist can research from anywhere
                             get().addLog(`${c.name}: Исследования`, "info");
                             get().gainExp(c, 5);
+                            break;
+                        }
+                        case "analysis": {
+                            // Scientist analyzes enemy vulnerabilities
+                            // Effect is applied during attack (requires gunner with targeting)
+                            get().addLog(
+                                `${c.name}: Анализ уязвимостей врага`,
+                                "info",
+                            );
+                            get().gainExp(c, 6);
+                            break;
+                        }
+                        case "sabotage": {
+                            // Scout performs sabotage to disrupt enemy accuracy
+                            get().addLog(
+                                `${c.name}: Диверсии (-5% точность врага)`,
+                                "info",
+                            );
+                            get().gainExp(c, 6);
                             break;
                         }
                         default:
@@ -4201,14 +4297,25 @@ export const useGameStore = create<GameStore>()(
             const hasCalibration = state.crew.some(
                 (c) => c.combatAssignment === "calibration",
             );
+            const hasAnalysis = state.crew.some(
+                (c) => c.combatAssignment === "analysis",
+            );
 
             // Damage bonuses from assignments
-            if (hasTargeting)
-                finalDamagePerWeapon = Math.floor(finalDamagePerWeapon * 1.15);
+            // Targeting: no damage bonus, only allows module targeting
             if (hasOverclock)
                 finalDamagePerWeapon = Math.floor(finalDamagePerWeapon * 1.25);
             if (hasRapidfire)
                 finalDamagePerWeapon = Math.floor(finalDamagePerWeapon * 1.25);
+            // Analysis: +10% damage to selected module (requires gunner with targeting)
+            const hasGunnerWithTargeting = hasTargeting && hasGunner;
+            if (hasAnalysis && hasGunnerWithTargeting) {
+                finalDamagePerWeapon = Math.floor(finalDamagePerWeapon * 1.1);
+                get().addLog(
+                    `🔬 Анализ уязвимостей: +10% урон по цели`,
+                    "info",
+                );
+            }
 
             // Apply critical_matrix artifact (35% crit chance for double damage)
             const criticalMatrix = state.artifacts.find(
@@ -4458,6 +4565,14 @@ export const useGameStore = create<GameStore>()(
                     );
                     logs.push(
                         `🛡 Броня снижена на 50%: ${tgtMod.defense} → ${moduleDefense}`,
+                    );
+                }
+
+                // Overclock penalty: -10% armor (defense)
+                if (hasOverclock) {
+                    moduleDefense = Math.floor(moduleDefense * 0.9);
+                    logs.push(
+                        `⚠️ Перегрузка: броня -10% (${tgtMod.defense} → ${moduleDefense})`,
                     );
                 }
 
@@ -5080,6 +5195,14 @@ export const useGameStore = create<GameStore>()(
                 tgt = sortedMods[0];
             }
 
+            // SABOTAGE CHECK - Scout reduces enemy accuracy by 5%
+            const hasSabotage = state.crew.some(
+                (c) => c.combatAssignment === "sabotage",
+            );
+            if (hasSabotage) {
+                get().addLog(`🕵️ Диверсии: шанс попадания врага -5%`, "info");
+            }
+
             // Helper: Damage crew in module
             const damageCrewInModule = (
                 moduleId: number,
@@ -5271,6 +5394,15 @@ export const useGameStore = create<GameStore>()(
             }
 
             // Attack NOT reflected - proceed with normal damage
+            // SABOTAGE: 5% chance to miss due to scout sabotage
+            if (hasSabotage && Math.random() < 0.01) {
+                get().addLog(
+                    `🕵️ Диверсии сорвали атаку врага! Промах!`,
+                    "info",
+                );
+                return; // Skip all damage
+            }
+
             if (get().ship.shields > 0) {
                 const sDmg = Math.min(get().ship.shields, eDmg);
                 set((s) => ({
@@ -5754,6 +5886,7 @@ export const useGameStore = create<GameStore>()(
                 };
             });
             get().updateShipStats();
+            get().nextTurn(); // Process crew assignments after attack
 
             // ═══════════════════════════════════════════════════════════════
             // ALIEN PRESENCE - Xenosymbionts and Voidborn reduce organic morale
@@ -6897,8 +7030,8 @@ export const useGameStore = create<GameStore>()(
                 return;
             }
 
-            // Check if target module is disabled
-            if (targetModule.disabled) {
+            // Check if target module is disabled (manually turned off, not destroyed)
+            if (targetModule.manualDisabled) {
                 get().addLog(
                     "Нельзя переместиться в отключённый модуль!",
                     "error",

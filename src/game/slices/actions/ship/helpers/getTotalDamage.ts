@@ -125,5 +125,31 @@ export function getTotalDamage(state: GameState) {
         }
     });
 
+    // === Бонусы от боевых заданий (только в бою) ===
+    const hasOverclock = state.crew.some(
+        (c) => c.combatAssignment === "overclock",
+    );
+    const hasRapidfire = state.crew.some(
+        (c) => c.combatAssignment === "rapidfire",
+    );
+    const hasAnalysis = state.crew.some(
+        (c) => c.combatAssignment === "analysis",
+    );
+    const hasGunner = state.crew.some((c) => c.profession === "gunner");
+    const hasTargeting = state.crew.some(
+        (c) => c.combatAssignment === "targeting",
+    );
+    const hasGunnerWithTargeting = hasTargeting && hasGunner;
+
+    if (hasOverclock) {
+        dmg.total = Math.floor(dmg.total * 1.25);
+    }
+    if (hasRapidfire) {
+        dmg.total = Math.floor(dmg.total * 1.25);
+    }
+    if (hasAnalysis && hasGunnerWithTargeting) {
+        dmg.total = Math.floor(dmg.total * 1.1);
+    }
+
     return dmg;
 }

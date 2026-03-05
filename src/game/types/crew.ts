@@ -31,6 +31,8 @@ export type CrewMemberAssignment =
     | "analyzing"
     | "maintenance"
     | "reactor_overload"
+    | "analysis"
+    | "sabotage"
     | ""
     | null;
 
@@ -46,6 +48,11 @@ export type CrewMemberCombatAssignment =
     | "firstaid"
     | "patrol"
     | "research"
+    | "analysis"
+    | "sabotage"
+    | "morale"
+    | "reactor_overload"
+    | "navigation"
     | ""
     | null;
 

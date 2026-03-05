@@ -69,9 +69,19 @@ export const COMBAT_ACTIONS: Record<
     ],
     scout: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
+        {
+            value: "sabotage",
+            label: "Диверсии",
+            effect: "-5% шанс попадания врага",
+        },
     ],
     scientist: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
+        {
+            value: "analysis",
+            label: "Анализ уязвимостей",
+            effect: "+10% урон по цели",
+        },
     ],
     gunner: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
