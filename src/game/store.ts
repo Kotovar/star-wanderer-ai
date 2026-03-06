@@ -188,9 +188,9 @@ export const useGameStore = create<GameStore>()(
             const currentTier = state.currentSector?.tier ?? 1;
             const distance = Math.abs(targetTier - currentTier);
 
-            // Base fuel cost per tier distance
-            const baseCost =
-                distance === 0 ? 5 : distance * get().getFuelEfficiency();
+            // Base fuel cost: учитываем fuelEfficiency даже для прыжков внутри одного тира
+            // distance = 0 для intra-tier прыжков, но всё равно используем fuelEfficiency
+            const baseCost = Math.max(1, distance) * get().getFuelEfficiency();
 
             // Apply race fuel efficiency bonuses (voidborn: +20% fuel efficiency = -20% consumption)
             let modifier = 1;
@@ -6089,13 +6089,25 @@ export const useGameStore = create<GameStore>()(
                                       ...(targetModuleTemplate.shields && {
                                           shields: targetModuleTemplate.shields,
                                       }),
-                                      // Keep position and health
+                                      // Keep position
                                       x: m.x,
                                       y: m.y,
+                                      // Update level, defense, and health based on new level
                                       level: nextLevel,
                                       defense: nextLevel, // Defense equals module level
-                                      maxHealth: (m.maxHealth || 100) + 20,
-                                      health: (m.health || 100) + 20, // Heal on upgrade
+                                      // Max health based on level (100/120/140)
+                                      maxHealth:
+                                          nextLevel === 2
+                                              ? 120
+                                              : nextLevel === 3
+                                                ? 140
+                                                : 100,
+                                      health:
+                                          nextLevel === 2
+                                              ? 120
+                                              : nextLevel === 3
+                                                ? 140
+                                                : 100, // Heal to new max
                                   }
                                 : m,
                         ),
@@ -6164,33 +6176,34 @@ export const useGameStore = create<GameStore>()(
                     y: 0,
                     width: item.width || 1,
                     height: item.height || 1,
-                    health: 100,
-                    maxHealth: 100,
+                    // Level from item or default to 1
+                    level: item.level ?? 1,
+                    // Max health from item or based on level (100/120/140/200)
+                    maxHealth:
+                        item.maxHealth ??
+                        (item.level === 2
+                            ? 120
+                            : item.level === 3
+                              ? 140
+                              : item.level === 4
+                                ? 200
+                                : 100),
+                    health:
+                        item.maxHealth ??
+                        (item.level === 2
+                            ? 120
+                            : item.level === 3
+                              ? 140
+                              : item.level === 4
+                                ? 200
+                                : 100),
                     // Defense based on module level (1 defense per level, max 5 for rare tier 4)
-                    defense: 1,
-                    // Determine level from item ID - check for specific patterns
-                    level: (() => {
-                        // Check for unique tier 4 modules first
-                        if (
-                            item.id.includes("-ancient") ||
-                            item.id.includes("-quantum") ||
-                            item.id.includes("-fusion")
-                        )
-                            return 4;
-                        // Check for tier level in ID (e.g., "fueltank-3", "reactor-2")
-                        // Match pattern: moduleType-N where N is 2, 3, or 4
-                        const tierMatch = item.id.match(/-(\d)(?:-|$)/);
-                        if (tierMatch) {
-                            const tier = parseInt(tierMatch[1], 10);
-                            if (tier >= 2 && tier <= 4) return tier;
-                        }
-                        return 1;
-                    })(),
+                    defense: item.level === 4 ? 5 : (item.level ?? 1),
                     ...(item.moduleType === "reactor" && {
                         power: item.power || 10,
                     }),
                     ...(item.moduleType === "engine" && {
-                        fuelEfficiency: 10,
+                        fuelEfficiency: item.fuelEfficiency ?? 10,
                         consumption: item.consumption || 1,
                     }),
                     ...(item.moduleType === "drill" && {

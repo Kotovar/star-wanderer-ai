@@ -383,14 +383,36 @@ function ItemDescription({ item }: ItemDescriptionProps) {
             )}
             {/* Fallback for upgrades */}
             {item.type === "upgrade" && item.targetType === "engine" && (
-                <span>⛽ -10% расход топлива</span>
+                // <span>⛽ Меньше расход топлива</span>
+                <span>{`⛽ ${item.effect?.fuelEfficiency ?? 2} потребления топлива`}</span>
             )}
             {item.type === "upgrade" &&
                 item.targetType === "fueltank" &&
-                `⛽ +${item.effect?.capacity || 30} топлива`}
+                `⛽ +${item.effect?.capacity ?? 20} топлива`}
             {item.type === "upgrade" &&
-                item.targetType !== "engine" &&
-                item.targetType !== "fueltank" && <span>Улучшение</span>}
+                item.targetType === "reactor" &&
+                `⚡ +${item.effect?.power ?? 5} энергии`}
+            {item.type === "upgrade" &&
+                item.targetType === "cargo" &&
+                `📦 +${item.effect?.capacity ?? 20} вместимости`}
+            {item.type === "upgrade" &&
+                item.targetType === "lifesupport" &&
+                `💨 +${item.effect?.oxygen ?? 3} кислорода`}
+            {item.type === "upgrade" &&
+                item.targetType === "scanner" &&
+                `📡 +${item.effect?.scanRange ?? 2} дальности сканера`}
+            {item.type === "upgrade" &&
+                item.targetType === "drill" &&
+                `⛏ +${item.effect?.level ?? 2} уровень доступных астероидов для бурения`}
+            {item.type === "upgrade" &&
+                item.targetType === "shield" &&
+                `🛡 +${item.effect?.shields ?? 15} щитов`}
+            {item.type === "upgrade" &&
+                item.targetType === "shield" &&
+                `🛡 +${item.effect?.shields ?? 15} щитов`}
+            {item.type === "upgrade" &&
+                item.targetType === "medical" &&
+                `🏥 +${item.effect?.healing ?? 6} лечения`}
         </div>
     );
 }
@@ -465,12 +487,12 @@ function UpgradeDialog({
                 );
             }
             case "shield": {
-                const current = currentModule?.defense || 20;
-                const upgrade = item.effect?.defense || 10;
+                const current = currentModule?.shields ?? 20;
+                const upgrade = item.effect?.shields ?? 15;
                 return (
                     <div className="text-xs">
                         <div>
-                            🛡 Защита:{" "}
+                            🛡 Щиты:{" "}
                             <span className="text-[#00ff41]">{current}</span> →{" "}
                             <span className="text-[#ffb000]">
                                 {current + upgrade}

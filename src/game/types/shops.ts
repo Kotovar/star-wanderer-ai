@@ -23,6 +23,8 @@ export interface ShopItem {
     capacity?: number; // For cargo, fuel tanks
     fuelEfficiency?: number; // For engine modules
     researchOutput?: number; // For lab modules
+    level?: number; // Module level (1-4)
+    maxHealth?: number; // Module health at purchase
     effect?: {
         power?: number;
         capacity?: number;
@@ -33,6 +35,7 @@ export interface ShopItem {
         level?: number;
         healing?: number;
         consumption?: number;
+        shields?: number;
     };
     weaponType?: WeaponType;
     requiresWeaponBay?: boolean;
