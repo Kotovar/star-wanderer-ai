@@ -239,7 +239,10 @@ export const useGameStore = create<GameStore>()(
             const engines = state.ship.modules.filter(
                 (m) => m.type === "engine",
             );
-            return engines.some((e) => !e.disabled && e.health > 0);
+            // Двигатель считается рабочим, если он не отключён вручную, не отключён автоматически и имеет здоровье > 0
+            return engines.some(
+                (e) => !e.disabled && !e.manualDisabled && e.health > 0,
+            );
         },
 
         areFuelTanksFunctional: () => {
@@ -2644,14 +2647,15 @@ export const useGameStore = create<GameStore>()(
                 return;
             }
 
-            // Check if engines or fuel tanks are damaged
+            // Проверка работоспособности двигателей и топливных баков
             const enginesWorking = get().areEnginesFunctional();
             const tanksWorking = get().areFuelTanksFunctional();
 
-            // If engines or tanks are damaged, can only travel in tier 1
-            if ((!enginesWorking || !tanksWorking) && sector.tier > 1) {
+            // Если двигатели или баки не работают - межсистемные полёты запрещены
+            if (!enginesWorking || !tanksWorking) {
+                const reason = !enginesWorking ? "Двигатели" : "Топливные баки";
                 get().addLog(
-                    `Двигатели или баки повреждены! Доступен только Тир 1`,
+                    `${reason} не работают! Межсистемные полёты запрещены`,
                     "error",
                 );
                 playSound("error");
