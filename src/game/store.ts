@@ -58,6 +58,7 @@ import type {
     EnemyModule,
     GameStore,
     Module,
+    PartialModuleType,
     RaceId,
     ShipMergeTrait,
 } from "@/game/types";
@@ -68,71 +69,6 @@ export const useGameStore = create<GameStore>()(
         ...initialState,
         ...createLogSlice(set),
         ...createShipSlice(set, get),
-
-        getCrewCapacity: () => {
-            const state = get();
-            const lifesupport = state.ship.modules.filter(
-                (m) =>
-                    m.type === "lifesupport" &&
-                    !m.disabled &&
-                    !m.manualDisabled &&
-                    m.health > 0,
-            );
-            return lifesupport.reduce((sum, m) => sum + (m.oxygen || 0), 0);
-        },
-
-        getFuelCapacity: () => {
-            const state = get();
-            return state.ship.modules
-                .filter(
-                    (m) =>
-                        m.type === "fueltank" &&
-                        !m.disabled &&
-                        !m.manualDisabled &&
-                        m.health > 0,
-                )
-                .reduce((sum, m) => sum + (m.capacity || 0), 0);
-        },
-
-        getFuelEfficiency: () => {
-            const state = get();
-            const engines = state.ship.modules.filter(
-                (m) =>
-                    m.type === "engine" &&
-                    !m.disabled &&
-                    !m.manualDisabled &&
-                    m.health > 0,
-            );
-            if (engines.length === 0) return 20; // Default inefficient
-            // Use the best (lowest) fuel efficiency
-            return Math.min(...engines.map((e) => e.fuelEfficiency || 10));
-        },
-
-        getDrillLevel: () => {
-            const state = get();
-            const drills = state.ship.modules.filter(
-                (m) =>
-                    m.type === "drill" &&
-                    !m.disabled &&
-                    !m.manualDisabled &&
-                    m.health > 0,
-            );
-            if (drills.length === 0) return 0;
-            // Return the highest level drill
-            return Math.max(...drills.map((d) => d.level || 1));
-        },
-
-        getCargoCapacity: () => {
-            const state = get();
-            const cargoModules = state.ship.modules.filter(
-                (m) =>
-                    m.type === "cargo" &&
-                    !m.disabled &&
-                    !m.manualDisabled &&
-                    m.health > 0,
-            );
-            return cargoModules.reduce((sum, m) => sum + (m.capacity || 40), 0);
-        },
 
         getScanLevel: () => {
             const state = get();
@@ -574,10 +510,15 @@ export const useGameStore = create<GameStore>()(
             const currentConsumption = get().getTotalConsumption();
             const powerDeficit = currentConsumption - currentPower;
 
+            type Modules = {
+                type: PartialModuleType;
+                name: string;
+            };
+
             if (powerDeficit > 0) {
                 // Need to disable modules to balance power
                 const currentStatePowerDeficit = get();
-                const modulesByPriority = [
+                const modulesByPriority: Modules[] = [
                     // Lowest priority (disable first)
                     { type: "cargo", name: "Грузовой отсек" },
                     { type: "fueltank", name: "Топливный бак" },

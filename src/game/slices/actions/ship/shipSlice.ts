@@ -10,7 +10,15 @@ import {
 } from "./utils";
 import { WeaponTypeTotal } from "@/game/types";
 import { getTotalDamage } from "./helpers/getTotalDamage";
-import { getTotalConsumption, getTotalPower } from "./helpers";
+import {
+    getTotalConsumption,
+    getTotalPower,
+    getCrewCapacity,
+    getFuelCapacity,
+    getFuelEfficiency,
+    getDrillLevel,
+    getCargoCapacity,
+} from "./helpers";
 
 /**
  * Расширенный интерфейс ShipSlice с геттерами
@@ -43,6 +51,40 @@ export interface ShipSlice {
      * @returns Объект с уроном по типам: total, kinetic, laser, missile
      */
     getTotalDamage: () => Record<WeaponTypeTotal, number>;
+
+    /**
+     * Вычисляет максимальную вместимость экипажа корабля
+     * Суммирует oxygen всех активных модулей жизнеобеспечения
+     * @returns Общая вместимость экипажа
+     */
+    getCrewCapacity: () => number;
+
+    /**
+     * Вычисляет максимальную вместимость топливного бака
+     * Суммирует capacity всех активных топливных баков
+     * @returns Общая вместимость топлива
+     */
+    getFuelCapacity: () => number;
+
+    /**
+     * Получает лучшую эффективность топлива среди двигателей
+     * Возвращает минимальное значение fuelEfficiency (лучше = меньше потребление)
+     * @returns Лучшая эффективность топлива (по умолчанию 20)
+     */
+    getFuelEfficiency: () => number;
+
+    /**
+     * Получает максимальный уровень бура среди всех активных буров
+     * @returns Уровень бура (0 если нет активных буров)
+     */
+    getDrillLevel: () => number;
+
+    /**
+     * Вычисляет общую грузоподъёмность корабля
+     * Суммирует capacity всех активных грузовых модулей
+     * @returns Общая грузоподъёмность (по умолчанию 40 на модуль)
+     */
+    getCargoCapacity: () => number;
 }
 
 /**
@@ -125,5 +167,30 @@ export const createShipSlice = (
     getTotalDamage: () => {
         const state = get();
         return getTotalDamage(state);
+    },
+
+    getCrewCapacity: () => {
+        const state = get();
+        return getCrewCapacity(state);
+    },
+
+    getFuelCapacity: () => {
+        const state = get();
+        return getFuelCapacity(state);
+    },
+
+    getFuelEfficiency: () => {
+        const state = get();
+        return getFuelEfficiency(state);
+    },
+
+    getDrillLevel: () => {
+        const state = get();
+        return getDrillLevel(state);
+    },
+
+    getCargoCapacity: () => {
+        const state = get();
+        return getCargoCapacity(state);
     },
 });
