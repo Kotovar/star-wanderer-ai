@@ -70,7 +70,21 @@ export function ShopTab({
                         inv[item.id] !== undefined
                             ? Math.max(0, item.stock - inv[item.id])
                             : item.stock;
-                    const soldOut = stockLeft === 0;
+
+                    // For upgrades, check if all modules of this type are at max level (3)
+                    const isUpgrade = item.type === "upgrade";
+                    let soldOut = false;
+                    if (isUpgrade && item.targetType) {
+                        const modulesOfType = ship.modules.filter(
+                            (m) => m.type === item.targetType,
+                        );
+                        // Sold out if all modules are at max level (3)
+                        soldOut = modulesOfType.every(
+                            (m) => (m.level || 1) >= 3,
+                        );
+                    } else {
+                        soldOut = stockLeft === 0;
+                    }
 
                     // Check weapon bay requirement - weapons require weapon bay with free slots
                     const hasFreeWeaponSlot = ship.modules.some(
@@ -109,8 +123,6 @@ export function ShopTab({
                         item.id.includes("ancient") ||
                         item.id.includes("fusion") ||
                         item.id.includes("quantum");
-
-                    const isUpgrade = item.type === "upgrade";
 
                     return (
                         <ShopItemCard
@@ -292,12 +304,16 @@ function ItemPriceAndStock({
                 }`}
             >
                 {soldOut
-                    ? "ПРОДАНО"
+                    ? isUpgrade
+                        ? "МАКС. УРОВЕНЬ"
+                        : "ПРОДАНО"
                     : noWB
                       ? "НУЖНА ОРУЖЕЙНАЯ ПАЛУБА СО СВОБОДНЫМ РАЗЪЁМОМ"
                       : alreadyOwned && !isUpgrade
                         ? "УЖЕ ЕСТЬ"
-                        : `В наличии: ${stockLeft}`}
+                        : isUpgrade
+                          ? "ДОСТУПНО"
+                          : `В наличии: ${stockLeft}`}
             </span>
         </div>
     );
@@ -408,8 +424,8 @@ function ItemDescription({ item }: ItemDescriptionProps) {
                 item.targetType === "shield" &&
                 `🛡 +${item.effect?.shields ?? 15} щитов`}
             {item.type === "upgrade" &&
-                item.targetType === "shield" &&
-                `🛡 +${item.effect?.shields ?? 15} щитов`}
+                item.targetType === "lab" &&
+                `🔬 +${item.effect?.researchOutput ?? 3} иссл./ход`}
             {item.type === "upgrade" &&
                 item.targetType === "medical" &&
                 `🏥 +${item.effect?.healing ?? 6} лечения`}
@@ -604,6 +620,21 @@ function UpgradeDialog({
                         </div>
                     </div>
                 );
+            case "lab": {
+                const current = currentModule?.researchOutput || 5;
+                const upgrade = item.effect?.researchOutput || 3;
+                return (
+                    <div className="text-xs">
+                        <div>
+                            🔬 Наука:{" "}
+                            <span className="text-[#00ff41]">{current}</span> →{" "}
+                            <span className="text-[#ffb000]">
+                                {current + upgrade}
+                            </span>
+                        </div>
+                    </div>
+                );
+            }
             case "weaponbay":
                 return (
                     <div className="text-xs">
@@ -627,6 +658,7 @@ function UpgradeDialog({
     };
 
     const canAfford = credits >= item.price;
+    const isMaxLevel = currentLevel >= 3;
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
@@ -641,35 +673,45 @@ function UpgradeDialog({
                 </DialogHeader>
 
                 <div className="space-y-4">
-                    <div className="text-[#ffb000] font-bold mb-2">
-                        Улучшение до МК-{nextLevel}
-                    </div>
-                    <div className="text-xs text-[#888] mb-2">
-                        Текущие параметры → После улучшения
-                    </div>
-                    <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 text-xs">
-                        {getUpgradeStats()}
-                    </div>
+                    {isMaxLevel ? (
+                        <div className="text-[#ff0040] font-bold mb-2">
+                            ⚠ МАКСИМАЛЬНЫЙ УРОВЕНЬ
+                        </div>
+                    ) : (
+                        <>
+                            <div className="text-[#ffb000] font-bold mb-2">
+                                Улучшение до МК-{nextLevel}
+                            </div>
+                            <div className="text-xs text-[#888] mb-2">
+                                Текущие параметры → После улучшения
+                            </div>
+                            <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 text-xs">
+                                {getUpgradeStats()}
+                            </div>
+                        </>
+                    )}
 
-                    <div className="flex gap-2">
-                        <Button
-                            disabled={!canAfford}
-                            onClick={onUpgrade}
-                            className={`bg-transparent border-2 text-xs uppercase flex-1 cursor-pointer ${
-                                canAfford
-                                    ? "border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
-                                    : "border-[#444] text-[#444] cursor-not-allowed"
-                            }`}
-                        >
-                            Улучшить ({item.price}₢)
-                        </Button>
-                        <Button
-                            onClick={onClose}
-                            className="cursor-pointer bg-transparent border-2 border-[#888] text-[#888] hover:bg-[#888] hover:text-[#050810] text-xs uppercase"
-                        >
-                            Отмена
-                        </Button>
-                    </div>
+                    {!isMaxLevel && (
+                        <div className="flex gap-2">
+                            <Button
+                                disabled={!canAfford}
+                                onClick={onUpgrade}
+                                className={`bg-transparent border-2 text-xs uppercase flex-1 cursor-pointer ${
+                                    canAfford
+                                        ? "border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
+                                        : "border-[#444] text-[#444] cursor-not-allowed"
+                                }`}
+                            >
+                                Улучшить ({item.price}₢)
+                            </Button>
+                            <Button
+                                onClick={onClose}
+                                className="cursor-pointer bg-transparent border-2 border-[#888] text-[#888] hover:bg-[#888] hover:text-[#050810] text-xs uppercase"
+                            >
+                                Отмена
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>

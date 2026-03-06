@@ -41,6 +41,7 @@ export interface Module {
     disabled?: boolean; // Disabled due to power deficit (auto-disabled)
     manualDisabled?: boolean; // Manually disabled by player
     weapons?: Weapon[];
+    healing?: number;
     movedThisTurn?: boolean; // Whether the module has been moved this turn
 }
 

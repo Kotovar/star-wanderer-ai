@@ -36,6 +36,7 @@ export interface ShopItem {
         healing?: number;
         consumption?: number;
         shields?: number;
+        researchOutput?: number;
     };
     weaponType?: WeaponType;
     requiresWeaponBay?: boolean;

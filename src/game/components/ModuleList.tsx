@@ -184,6 +184,9 @@ function ModuleStats({ module }: ModuleStatsProps) {
                         🔬 {module.researchOutput} {SEARCH_INFO}
                     </span>
                 )}
+            {module.type === "medical" &&
+                module.healing &&
+                module.healing > 0 && <span>🏥 +{module.healing} HP</span>}
             <span>
                 ❤{" "}
                 {Math.min(

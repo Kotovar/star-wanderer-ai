@@ -6234,6 +6234,10 @@ export const useGameStore = create<GameStore>()(
                         oxygen: item.oxygen || 5,
                         consumption: item.consumption || 2,
                     }),
+                    ...(item.moduleType === "medical" && {
+                        healing: item.healing || 8,
+                        consumption: item.consumption || 2,
+                    }),
                     ...(item.moduleType === "weaponbay" && {
                         weapons: Array(
                             (item.width || 1) * (item.height || 1),
@@ -6470,7 +6474,10 @@ export const useGameStore = create<GameStore>()(
                 credits: s.credits - 200,
                 ship: {
                     ...s.ship,
-                    modules: s.ship.modules.map((m) => ({ ...m, health: 100 })),
+                    modules: s.ship.modules.map((m) => ({
+                        ...m,
+                        health: m.maxHealth,
+                    })),
                 },
             }));
             get().addLog("Корабль отремонтирован", "info");
