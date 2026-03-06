@@ -92,6 +92,25 @@ function ModuleSelectionList({
         );
     }
 
+    // Check if all modules are at max level
+    const allMaxLevel = eligibleModules.every((m) => (m.level || 1) >= 3);
+
+    if (allMaxLevel) {
+        return (
+            <div className="text-[#ff0040] p-4 border border-[#ff0040] bg-[rgba(255,0,64,0.05)]">
+                <div className="font-bold mb-2">
+                    ⚠ Все модули улучшены до максимума!
+                </div>
+                <div className="text-sm text-[#ff6688]">
+                    Все модули типа &quot;{targetType}&quot; уже имеют
+                    максимальный уровень (LV3). Для дальнейшего улучшения нужны
+                    модули LV4, которые можно найти в секторах тир 3 или
+                    получить с боссов.
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="max-h-62.5 overflow-y-auto space-y-2">
             {eligibleModules.map((module) => {
@@ -145,9 +164,9 @@ function ModuleUpgradeCard({
 }: ModuleUpgradeCardProps) {
     return (
         <div
-            className={`bg-[rgba(0,255,65,0.05)] border p-3 transition-colors ${
+            className={`bg-[rgba(0,255,65,0.05)] border p-3 transition-colors relative ${
                 isMaxLevel
-                    ? "border-[#666] opacity-60 cursor-not-allowed"
+                    ? "border-[#666] opacity-50 cursor-not-allowed bg-[rgba(30,30,30,0.3)]"
                     : "border-[#00ff41] cursor-pointer hover:bg-[rgba(0,255,65,0.1)]"
             }`}
             onClick={() => {
@@ -156,7 +175,12 @@ function ModuleUpgradeCard({
                 onClose(false);
             }}
         >
-            <div className="text-[#00d4ff] font-bold">{module.name}</div>
+            {isMaxLevel && (
+                <div className="absolute top-0 right-0 bg-[#ff0040] text-white text-[9px] px-2 py-0.5 font-bold">
+                    MAX
+                </div>
+            )}
+            <div className="text-[#00d4ff] font-bold pr-8">{module.name}</div>
             <div className="text-xs text-[#00ff41] mt-1 flex gap-4">
                 {module.power !== undefined && module.power > 0 && (
                     <span>⚡ {module.power}</span>
@@ -196,11 +220,6 @@ function ModuleUpgradeCard({
                     </span>
                 )}
             </div>
-            {isMaxLevel && (
-                <div className="text-[9px] text-[#ff0040] mt-1">
-                    ⚠ МАКСИМАЛЬНЫЙ УРОВЕНЬ
-                </div>
-            )}
         </div>
     );
 }

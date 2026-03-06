@@ -40,9 +40,6 @@ export function ShopTab({
 }: ShopTabProps) {
     const inv = stationId ? stationInventory[stationId] || {} : {};
     const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
-    const [selectedUpgrade, setSelectedUpgrade] = useState<ShopItem | null>(
-        null,
-    );
     const [selectedWeapon, setSelectedWeapon] = useState<ShopItem | null>(null);
 
     // Get owned module types for filtering upgrades
@@ -138,7 +135,7 @@ export function ShopTab({
                             isUpgrade={isUpgrade}
                             onViewDetails={() =>
                                 item.type === "upgrade"
-                                    ? setSelectedUpgrade(item)
+                                    ? onUpgradeClick(item)
                                     : item.type === "weapon"
                                       ? setSelectedWeapon(item)
                                       : setSelectedItem(item)
@@ -148,7 +145,7 @@ export function ShopTab({
                                     item.type === "upgrade" &&
                                     item.targetType
                                 ) {
-                                    setSelectedUpgrade(item);
+                                    onUpgradeClick(item);
                                 } else {
                                     buyItem(item);
                                 }
@@ -186,19 +183,6 @@ export function ShopTab({
                     }}
                     onClose={() => setSelectedItem(null)}
                     isStationItem={true}
-                />
-            )}
-            {/* Upgrade dialog */}
-            {selectedUpgrade && (
-                <UpgradeDialog
-                    item={selectedUpgrade}
-                    ship={ship}
-                    credits={credits}
-                    onClose={() => setSelectedUpgrade(null)}
-                    onUpgrade={() => {
-                        onUpgradeClick(selectedUpgrade);
-                        setSelectedUpgrade(null);
-                    }}
                 />
             )}
             {/* Weapon details dialog */}
@@ -460,261 +444,6 @@ function BuyButton({
         >
             {soldOut ? "НЕТ" : noWB ? "--" : isUpgrade ? "УЛУЧШИТЬ" : "КУПИТЬ"}
         </Button>
-    );
-}
-
-// Upgrade dialog component
-interface UpgradeDialogProps {
-    item: ShopItem;
-    ship: { modules: Module[] };
-    credits: number;
-    onClose: () => void;
-    onUpgrade: () => void;
-}
-
-function UpgradeDialog({
-    item,
-    ship,
-    credits,
-    onClose,
-    onUpgrade,
-}: UpgradeDialogProps) {
-    // Find current module stats
-    const currentModule = ship.modules.find((m) => m.type === item.targetType);
-    const currentLevel = currentModule?.level || 1;
-    const nextLevel = currentLevel + 1;
-
-    // Calculate upgrade stats using item.effect values
-    const getUpgradeStats = () => {
-        switch (item.targetType) {
-            case "reactor": {
-                const current = currentModule?.power || 10;
-                const upgrade = item.effect?.power || 5;
-                return (
-                    <div className="text-xs">
-                        <div>
-                            ⚡ Энергия:{" "}
-                            <span className="text-[#00ff41]">{current}</span> →{" "}
-                            <span className="text-[#ffb000]">
-                                {current + upgrade}
-                            </span>
-                        </div>
-                    </div>
-                );
-            }
-            case "shield": {
-                const current = currentModule?.shields ?? 20;
-                const upgrade = item.effect?.shields ?? 15;
-                return (
-                    <div className="text-xs">
-                        <div>
-                            🛡 Щиты:{" "}
-                            <span className="text-[#00ff41]">{current}</span> →{" "}
-                            <span className="text-[#ffb000]">
-                                {current + upgrade}
-                            </span>
-                        </div>
-                    </div>
-                );
-            }
-            case "cargo": {
-                const current = currentModule?.capacity || 40;
-                const upgrade = item.effect?.capacity || 30;
-                return (
-                    <div className="text-xs">
-                        <div>
-                            📦 Вместимость:{" "}
-                            <span className="text-[#00ff41]">{current}т</span> →{" "}
-                            <span className="text-[#ffb000]">
-                                {current + upgrade}т
-                            </span>
-                        </div>
-                    </div>
-                );
-            }
-            case "scanner": {
-                const current = currentModule?.scanRange || 3;
-                const upgrade = item.effect?.scanRange || 2;
-                return (
-                    <div className="text-xs">
-                        <div>
-                            📡 Дальность:{" "}
-                            <span className="text-[#00ff41]">{current}</span> →{" "}
-                            <span className="text-[#ffb000]">
-                                {current + upgrade}
-                            </span>
-                        </div>
-                    </div>
-                );
-            }
-            case "lifesupport": {
-                const current = currentModule?.oxygen || 5;
-                const upgrade = item.effect?.oxygen || 3;
-                return (
-                    <div className="text-xs">
-                        <div>
-                            💚 Кислород:{" "}
-                            <span className="text-[#00ff41]">{current}</span> →{" "}
-                            <span className="text-[#ffb000]">
-                                {current + upgrade}
-                            </span>
-                        </div>
-                    </div>
-                );
-            }
-            case "engine": {
-                const current = currentModule?.fuelEfficiency || 10;
-                const upgrade = item.effect?.fuelEfficiency || -2;
-                return (
-                    <div className="text-xs">
-                        <div>
-                            ⛽ Эффективность:{" "}
-                            <span className="text-[#00ff41]">{current}</span> →{" "}
-                            <span className="text-[#ffb000]">
-                                {Math.max(1, current + upgrade)}
-                            </span>
-                        </div>
-                    </div>
-                );
-            }
-            case "fueltank": {
-                const current = currentModule?.capacity || 80;
-                const upgrade = item.effect?.capacity || 40;
-                return (
-                    <div className="text-xs">
-                        <div>
-                            ⛽ Ёмкость:{" "}
-                            <span className="text-[#00ff41]">{current}</span> →{" "}
-                            <span className="text-[#ffb000]">
-                                {current + upgrade}
-                            </span>
-                        </div>
-                    </div>
-                );
-            }
-            case "drill":
-                return (
-                    <div className="text-xs">
-                        <div>
-                            ⛏ Уровень:{" "}
-                            <span className="text-[#00ff41]">
-                                {currentLevel}
-                            </span>{" "}
-                            →{" "}
-                            <span className="text-[#ffb000]">{nextLevel}</span>
-                        </div>
-                        <div className="text-[#888]">
-                            Доступны астероиды тира {nextLevel}
-                        </div>
-                    </div>
-                );
-            case "medical":
-                return (
-                    <div className="text-xs">
-                        <div>
-                            🏥 Лечение:{" "}
-                            <span className="text-[#00ff41]">+8 HP</span> →{" "}
-                            <span className="text-[#ffb000]">
-                                +{8 + nextLevel * 2} HP
-                            </span>
-                        </div>
-                    </div>
-                );
-            case "lab": {
-                const current = currentModule?.researchOutput || 5;
-                const upgrade = item.effect?.researchOutput || 3;
-                return (
-                    <div className="text-xs">
-                        <div>
-                            🔬 Наука:{" "}
-                            <span className="text-[#00ff41]">{current}</span> →{" "}
-                            <span className="text-[#ffb000]">
-                                {current + upgrade}
-                            </span>
-                        </div>
-                    </div>
-                );
-            }
-            case "weaponbay":
-                return (
-                    <div className="text-xs">
-                        <div>
-                            ⚔ Слоты:{" "}
-                            <span className="text-[#00ff41]">
-                                {currentModule?.weapons?.length || 1}
-                            </span>{" "}
-                            →{" "}
-                            <span className="text-[#ffb000]">{nextLevel}</span>
-                        </div>
-                    </div>
-                );
-            default:
-                return (
-                    <div className="text-xs text-[#888]">
-                        Улучшение характеристик модуля
-                    </div>
-                );
-        }
-    };
-
-    const canAfford = credits >= item.price;
-    const isMaxLevel = currentLevel >= 3;
-
-    return (
-        <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ffb000] text-[#ffb000] max-w-md w-[calc(100%-2rem)] md:w-auto">
-                <DialogHeader>
-                    <DialogTitle className="text-[#ffb000] font-['Orbitron']">
-                        ⬆ {item.name}
-                    </DialogTitle>
-                    <DialogDescription className="sr-only">
-                        Диалог улучшения модуля
-                    </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-4">
-                    {isMaxLevel ? (
-                        <div className="text-[#ff0040] font-bold mb-2">
-                            ⚠ МАКСИМАЛЬНЫЙ УРОВЕНЬ
-                        </div>
-                    ) : (
-                        <>
-                            <div className="text-[#ffb000] font-bold mb-2">
-                                Улучшение до МК-{nextLevel}
-                            </div>
-                            <div className="text-xs text-[#888] mb-2">
-                                Текущие параметры → После улучшения
-                            </div>
-                            <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 text-xs">
-                                {getUpgradeStats()}
-                            </div>
-                        </>
-                    )}
-
-                    {!isMaxLevel && (
-                        <div className="flex gap-2">
-                            <Button
-                                disabled={!canAfford}
-                                onClick={onUpgrade}
-                                className={`bg-transparent border-2 text-xs uppercase flex-1 cursor-pointer ${
-                                    canAfford
-                                        ? "border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
-                                        : "border-[#444] text-[#444] cursor-not-allowed"
-                                }`}
-                            >
-                                Улучшить ({item.price}₢)
-                            </Button>
-                            <Button
-                                onClick={onClose}
-                                className="cursor-pointer bg-transparent border-2 border-[#888] text-[#888] hover:bg-[#888] hover:text-[#050810] text-xs uppercase"
-                            >
-                                Отмена
-                            </Button>
-                        </div>
-                    )}
-                </div>
-            </DialogContent>
-        </Dialog>
     );
 }
 

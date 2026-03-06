@@ -5938,12 +5938,16 @@ export const useGameStore = create<GameStore>()(
             const stationId = state.currentLocation?.stationId;
             if (!stationId) return;
 
+            // Get inventory for this station (used for regular items)
             const inv = state.stationInventory[stationId] || {};
             const bought = inv[item.id] || 0;
 
-            if (bought >= item.stock) {
-                get().addLog("Товар распродан!", "error");
-                return;
+            // Upgrades don't have stock limits - they're services, not physical goods
+            if (item.type !== "upgrade") {
+                if (bought >= item.stock) {
+                    get().addLog("Товар распродан!", "error");
+                    return;
+                }
             }
 
             if (item.type === "upgrade" && item.targetType) {
@@ -6010,14 +6014,7 @@ export const useGameStore = create<GameStore>()(
                                     : m,
                             ),
                         },
-                    }));
-
-                    set((s) => ({
                         credits: s.credits - item.price,
-                        stationInventory: {
-                            ...s.stationInventory,
-                            [stationId]: { ...inv, [item.id]: bought + 1 },
-                        },
                     }));
 
                     const updatedModule = get().ship.modules.find(
@@ -6116,10 +6113,6 @@ export const useGameStore = create<GameStore>()(
 
                 set((s) => ({
                     credits: s.credits - item.price,
-                    stationInventory: {
-                        ...s.stationInventory,
-                        [stationId]: { ...inv, [item.id]: bought + 1 },
-                    },
                 }));
 
                 // Re-read the module to get updated values
