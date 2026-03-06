@@ -120,6 +120,18 @@ function MovementRow({
     onMove,
     onSelect,
 }: MovementRowProps) {
+    // Group modules by type and assign numbers for easier identification
+    const modulesWithTypeIndex = adjacentModules.map((mod, index) => {
+        // Count how many modules of the same type came before this one
+        const sameTypeBefore = adjacentModules
+            .slice(0, index)
+            .filter((m) => m.type === mod.type).length;
+        return {
+            module: mod,
+            typeIndex: sameTypeBefore + 1,
+        };
+    });
+
     return (
         <div className="flex items-start gap-2 mb-1.5">
             <span className="text-[#00ff41] min-w-27.5 pt-0.5">
@@ -127,17 +139,17 @@ function MovementRow({
             </span>
             <div className="flex flex-wrap gap-1">
                 {!crewMember.movedThisTurn && adjacentModules.length > 0 ? (
-                    adjacentModules.map((mod) => (
+                    modulesWithTypeIndex.map(({ module, typeIndex }) => (
                         <Button
-                            key={mod.id}
+                            key={module.id}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                onMove(crewMember.id, mod.id);
+                                onMove(crewMember.id, module.id);
                                 onSelect(null);
                             }}
                             className="cursor-pointer bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-[9px] px-2 h-6 rounded-none"
                         >
-                            {mod.name}
+                            {module.name} #{typeIndex} ({module.x},{module.y})
                         </Button>
                     ))
                 ) : (

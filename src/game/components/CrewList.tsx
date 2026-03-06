@@ -327,23 +327,58 @@ export function CrewList() {
                                             </div>
                                         ) : adjacentModules.length > 0 ? (
                                             <div className="flex flex-wrap gap-1">
-                                                {adjacentModules.map((mod) => (
-                                                    <Button
-                                                        key={mod.id}
-                                                        onClick={() => {
-                                                            moveCrewMember(
-                                                                selectedCrew.id,
-                                                                mod.id,
-                                                            );
-                                                            setSelectedCrew(
-                                                                null,
-                                                            );
-                                                        }}
-                                                        className="bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-xs py-1 px-2 h-auto"
-                                                    >
-                                                        → {mod.name}
-                                                    </Button>
-                                                ))}
+                                                {/* Number modules by type for easier identification */}
+                                                {(() => {
+                                                    const modulesWithTypeIndex =
+                                                        adjacentModules.map(
+                                                            (mod, index) => {
+                                                                const sameTypeBefore =
+                                                                    adjacentModules
+                                                                        .slice(
+                                                                            0,
+                                                                            index,
+                                                                        )
+                                                                        .filter(
+                                                                            (
+                                                                                m,
+                                                                            ) =>
+                                                                                m.type ===
+                                                                                mod.type,
+                                                                        ).length;
+                                                                return {
+                                                                    module: mod,
+                                                                    typeIndex:
+                                                                        sameTypeBefore +
+                                                                        1,
+                                                                };
+                                                            },
+                                                        );
+                                                    return modulesWithTypeIndex.map(
+                                                        ({
+                                                            module,
+                                                            typeIndex,
+                                                        }) => (
+                                                            <Button
+                                                                key={module.id}
+                                                                onClick={() => {
+                                                                    moveCrewMember(
+                                                                        selectedCrew.id,
+                                                                        module.id,
+                                                                    );
+                                                                    setSelectedCrew(
+                                                                        null,
+                                                                    );
+                                                                }}
+                                                                className="bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-xs py-1 px-2 h-auto"
+                                                            >
+                                                                → {module.name}{" "}
+                                                                #{typeIndex} (
+                                                                {module.x},
+                                                                {module.y})
+                                                            </Button>
+                                                        ),
+                                                    );
+                                                })()}
                                             </div>
                                         ) : (
                                             <div className="text-[#888] text-xs">

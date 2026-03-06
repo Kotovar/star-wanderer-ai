@@ -111,9 +111,15 @@ function ModuleSelectionList({
         );
     }
 
+    // Number modules of the same type for easier identification
+    const modulesWithIndex = eligibleModules.map((module, index) => ({
+        module,
+        index: index + 1,
+    }));
+
     return (
         <div className="max-h-62.5 overflow-y-auto space-y-2">
-            {eligibleModules.map((module) => {
+            {modulesWithIndex.map(({ module, index }) => {
                 const isMaxLevel = (module.level || 1) >= 3;
                 const currentLevel = module.level || 1;
                 const nextLevel = currentLevel + 1;
@@ -130,6 +136,7 @@ function ModuleSelectionList({
                     <ModuleUpgradeCard
                         key={module.id}
                         module={module}
+                        moduleIndex={index}
                         isMaxLevel={isMaxLevel}
                         pendingUpgrade={pendingUpgrade}
                         buyItem={buyItem}
@@ -145,6 +152,7 @@ function ModuleSelectionList({
 
 interface ModuleUpgradeCardProps {
     module: Module;
+    moduleIndex: number;
     isMaxLevel: boolean;
     pendingUpgrade: ShopItem;
     buyItem: (item: ShopItem, moduleId?: number) => void;
@@ -155,6 +163,7 @@ interface ModuleUpgradeCardProps {
 
 function ModuleUpgradeCard({
     module,
+    moduleIndex,
     isMaxLevel,
     pendingUpgrade,
     buyItem,
@@ -180,7 +189,14 @@ function ModuleUpgradeCard({
                     MAX
                 </div>
             )}
-            <div className="text-[#00d4ff] font-bold pr-8">{module.name}</div>
+            <div className="flex justify-between items-start">
+                <div className="text-[#00d4ff] font-bold pr-8">
+                    {module.name} #{moduleIndex}
+                </div>
+                <div className="text-[10px] text-[#888] bg-[rgba(0,0,0,0.3)] px-2 py-0.5 rounded">
+                    Позиция: ({module.x}, {module.y})
+                </div>
+            </div>
             <div className="text-xs text-[#00ff41] mt-1 flex gap-4">
                 {module.power !== undefined && module.power > 0 && (
                     <span>⚡ {module.power}</span>

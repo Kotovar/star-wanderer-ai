@@ -9,7 +9,7 @@ import type { GameState } from "@/game/types/game";
 const INITIAL_TURN = 1;
 
 /** Начальное количество кредитов игрока */
-const INITIAL_CREDITS = 1000;
+const INITIAL_CREDITS = 100000;
 
 /**
  * Начальная вместимость экипажа.
