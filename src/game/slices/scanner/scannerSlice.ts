@@ -5,7 +5,6 @@ import {
     getEarlyWarningChance,
     getSignalRevealChance,
 } from "./helpers/getEffectiveScanRange";
-import { getScanRange } from "./helpers/getScanRange";
 
 /**
  * Расширенный интерфейс ScannerSlice с геттерами
@@ -18,13 +17,6 @@ export interface ScannerSlice {
      * @returns Эффективный диапазон сканирования (0 если нет сканеров)
      */
     getEffectiveScanRange: () => number;
-
-    /**
-     * Вычисляет диапазон сканирования корабля (устаревший метод для обратной совместимости)
-     * @deprecated Используйте getEffectiveScanRange
-     * @returns Диапазон сканирования (0 если нет сканеров)
-     */
-    getScanRange: () => number;
 
     /**
      * Проверяет, может ли сканер обнаружить объекты определённого типа
@@ -62,11 +54,6 @@ export const createScannerSlice = (
     getEffectiveScanRange: () => {
         const state = get();
         return getEffectiveScanRange(state);
-    },
-
-    getScanRange: () => {
-        const state = get();
-        return getScanRange(state);
     },
 
     canScanObject: (objectType, objectTier) => {

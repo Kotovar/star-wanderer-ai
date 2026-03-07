@@ -111,7 +111,6 @@ export interface GameActions {
     getDrillLevel: () => number;
     getCargoCapacity: () => number;
     getEffectiveScanRange: () => number;
-    getScanRange: () => number;
     canScanObject: (objectType: LocationType, objectTier?: number) => boolean;
     getEarlyWarningChance: (threatLevel: number) => number;
     getSignalRevealChance: () => number;

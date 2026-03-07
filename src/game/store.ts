@@ -2975,12 +2975,14 @@ export const useGameStore = create<GameStore>()(
                     break;
                 case "enemy": {
                     // Check scanner level vs enemy threat level
-                    const scannerLevel = get().getEffectiveScanRange();
-                    const scannerRange = get().getScanRange();
-                    const enemyTier = loc.threat || 1;
-                    const needsScanner = scannerLevel < enemyTier;
+                    const enemyTier = loc.threat ?? 1;
+                    const scannerRange = get().getEffectiveScanRange();
+                    const canScanEnemy = get().canScanObject(
+                        "enemy",
+                        enemyTier,
+                    );
 
-                    if (needsScanner && !loc.signalRevealed) {
+                    if (!canScanEnemy && !loc.signalRevealed) {
                         // Early warning system: chance to detect ambush with high scanRange
                         // Base 10% + 3% per point of scanRange above 3
                         const earlyWarningChance = Math.min(
@@ -3038,7 +3040,11 @@ export const useGameStore = create<GameStore>()(
                     break;
                 }
                 case "anomaly": {
-                    const canScanAnomaly = get().canScanObject("anomaly");
+                    const anomalyTier = loc.anomalyTier ?? 1;
+                    const canScanAnomaly = get().canScanObject(
+                        "anomaly",
+                        anomalyTier,
+                    );
 
                     if (!canScanAnomaly && !loc.signalRevealed) {
                         set({ gameMode: "unknown_ship" });
@@ -3049,11 +3055,10 @@ export const useGameStore = create<GameStore>()(
                     break;
                 }
                 case "friendly_ship": {
+                    const canScanFriendlyShip =
+                        get().canScanObject("friendly_ship");
                     // Check scanner level (friendly ships are tier 1)
-                    const scannerLevel = get().getEffectiveScanRange();
-                    const needsScanner = scannerLevel < 1;
-
-                    if (needsScanner && !loc.signalRevealed) {
+                    if (!canScanFriendlyShip && !loc.signalRevealed) {
                         set({ gameMode: "unknown_ship" });
                     } else {
                         set({ gameMode: "friendly_ship" });
