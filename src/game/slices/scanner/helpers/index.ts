@@ -1,2 +1,2 @@
-export * from "./getScanLevel";
+export * from "./getEffectiveScanRange";
 export * from "./getScanRange";

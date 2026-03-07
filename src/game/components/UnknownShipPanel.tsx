@@ -11,8 +11,7 @@ export function UnknownShipPanel() {
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const startCombat = useGameStore((s) => s.startCombat);
     const startBossCombat = useGameStore((s) => s.startBossCombat);
-    const getScanLevel = useGameStore((s) => s.getScanLevel);
-    const artifacts = useGameStore((s) => s.artifacts);
+    const canScanObject = useGameStore((s) => s.canScanObject);
     const captain = useGameStore((s) =>
         s.crew.find((c) => c.profession === "pilot"),
     );
@@ -20,14 +19,10 @@ export function UnknownShipPanel() {
     if (!currentLocation) return null;
 
     const isShip = ["enemy", "friendly_ship"].includes(currentLocation.type);
-    const scanLevel = getScanLevel();
-    const hasScanner = scanLevel > 0;
-
-    // Eye of Singularity - reveals all enemies like scanner level 3
-    const hasAllSeeing = artifacts.some(
-        (a) => a.effect.type === "all_seeing" && a.effect.active,
+    const canScan = canScanObject(
+        currentLocation.type,
+        currentLocation.threat || currentLocation.anomalyTier,
     );
-    const effectiveScanner = hasScanner || hasAllSeeing;
 
     const handleApproach = () => {
         // Mark location as revealed - we discovered what it is by approaching
@@ -59,7 +54,7 @@ export function UnknownShipPanel() {
         // Now we discover what it actually is
         if (currentLocation.type === "enemy") {
             // If no scanner, this is an ambush - enemy attacks first
-            startCombat(currentLocation, !hasScanner);
+            startCombat(currentLocation, !canScan);
         } else if (currentLocation.type === "boss") {
             startBossCombat(currentLocation);
         } else if (currentLocation.type === "friendly_ship") {
@@ -73,15 +68,15 @@ export function UnknownShipPanel() {
 
     // Get appropriate title and description
     const getTitle = () => {
-        if (effectiveScanner) {
-            // Eye of Singularity reveals the true identity
+        if (canScan) {
+            // Scanner reveals the true identity
             return currentLocation.name;
         }
         return "❓ Неизвестный объект";
     };
 
     const getDescription = () => {
-        if (effectiveScanner) {
+        if (canScan) {
             // Show actual type info
             if (currentLocation.type === "enemy") {
                 return `⚔️ Вражеский корабль (угроза ${currentLocation.threat || 1})`;
@@ -118,7 +113,7 @@ export function UnknownShipPanel() {
 
             <div className="bg-[rgba(0,0,0,0.4)] p-3 mb-4 border border-[#666]">
                 <p className="text-[#888] mb-2">{getDescription()}</p>
-                {!effectiveScanner && (
+                {!canScan && (
                     <p className="text-[#ffb000]">
                         Требуется сканер для получения информации.
                     </p>

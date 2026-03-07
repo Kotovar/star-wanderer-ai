@@ -2975,7 +2975,7 @@ export const useGameStore = create<GameStore>()(
                     break;
                 case "enemy": {
                     // Check scanner level vs enemy threat level
-                    const scannerLevel = get().getScanLevel();
+                    const scannerLevel = get().getEffectiveScanRange();
                     const scannerRange = get().getScanRange();
                     const enemyTier = loc.threat || 1;
                     const needsScanner = scannerLevel < enemyTier;
@@ -3011,11 +3011,9 @@ export const useGameStore = create<GameStore>()(
                         return;
                     }
                     // Bosses are tier 3, need scanner level 3+
-                    const scannerLevel = get().getScanLevel();
-                    const scannerRange = get().getScanRange();
-                    const needsScanner = scannerLevel < 3;
+                    const scannerRange = get().getEffectiveScanRange();
 
-                    if (needsScanner && !loc.signalRevealed) {
+                    if (!loc.signalRevealed) {
                         // Early warning for boss: chance to detect with high scanRange
                         // Base 5% + 2% per point of scanRange above 8
                         const earlyWarningChance = Math.min(
@@ -3040,12 +3038,9 @@ export const useGameStore = create<GameStore>()(
                     break;
                 }
                 case "anomaly": {
-                    // Check scanner level vs anomaly tier
-                    const scannerLevel = get().getScanLevel();
-                    const anomalyTier = loc.anomalyTier || 1;
-                    const needsScanner = scannerLevel < anomalyTier;
+                    const canScanAnomaly = get().canScanObject("anomaly");
 
-                    if (needsScanner && !loc.signalRevealed) {
+                    if (!canScanAnomaly && !loc.signalRevealed) {
                         set({ gameMode: "unknown_ship" });
                     } else {
                         // Always open anomaly panel, let AnomalyPanel handle scientist check
@@ -3055,7 +3050,7 @@ export const useGameStore = create<GameStore>()(
                 }
                 case "friendly_ship": {
                     // Check scanner level (friendly ships are tier 1)
-                    const scannerLevel = get().getScanLevel();
+                    const scannerLevel = get().getEffectiveScanRange();
                     const needsScanner = scannerLevel < 1;
 
                     if (needsScanner && !loc.signalRevealed) {
@@ -3075,37 +3070,11 @@ export const useGameStore = create<GameStore>()(
                 case "distress_signal":
                     // Check scanner for reveal chance (one-time check)
                     if (!loc.signalRevealChecked) {
-                        const scanLevel = get().getScanLevel();
-                        const scanRange = get().getScanRange();
+                        const signalRevealChance =
+                            get().getSignalRevealChance();
 
-                        // Base reveal chances by scanner level: LV1=15%, LV2=30%, LV3=50%, LV4=75%
-                        let revealChance = 0;
-                        if (scanLevel >= 4) revealChance = 75;
-                        else if (scanLevel >= 3) revealChance = 50;
-                        else if (scanLevel >= 2) revealChance = 30;
-                        else if (scanLevel >= 1) revealChance = 15;
-
-                        // Bonus from numeric scanRange: +2% per point above base requirement
-                        // Scanner MK-1 (base 3): +2% per point above 3
-                        // Scanner MK-2 (base 5): +2% per point above 5
-                        // Scanner MK-3 (base 8): +2% per point above 8
-                        // Quantum (base 15): +2% per point above 15
-                        let baseRequirement = 0;
-                        if (scanLevel >= 4) baseRequirement = 15;
-                        else if (scanLevel >= 3) baseRequirement = 8;
-                        else if (scanLevel >= 2) baseRequirement = 5;
-                        else if (scanLevel >= 1) baseRequirement = 3;
-
-                        if (scanRange > baseRequirement) {
-                            const rangeBonus =
-                                (scanRange - baseRequirement) * 2;
-                            revealChance = Math.min(
-                                95,
-                                revealChance + rangeBonus,
-                            );
-                        }
-
-                        const canReveal = Math.random() * 100 < revealChance;
+                        const canReveal =
+                            Math.random() * 100 < signalRevealChance;
 
                         if (canReveal && !loc.signalType) {
                             // Determine outcome and reveal it

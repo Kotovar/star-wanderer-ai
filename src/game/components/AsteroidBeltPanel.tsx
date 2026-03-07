@@ -22,7 +22,7 @@ function getMiningBonus(drillLevel: number, asteroidTier: number): number {
 export function AsteroidBeltPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
     const getDrillLevel = useGameStore((s) => s.getDrillLevel);
-    const getScanLevel = useGameStore((s) => s.getScanLevel);
+    const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
     const mineAsteroid = useGameStore((s) => s.mineAsteroid);
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const log = useGameStore((s) => s.log);
@@ -31,7 +31,7 @@ export function AsteroidBeltPanel() {
         return null;
 
     const drillLevel = getDrillLevel();
-    const scanLevel = getScanLevel();
+    const scanRange = getEffectiveScanRange();
     const asteroidTier = currentLocation.asteroidTier || 1;
     const resources = currentLocation.resources || {
         minerals: 0,
@@ -132,7 +132,7 @@ export function AsteroidBeltPanel() {
                 <p className="text-[#ffb000] mb-2">
                     Плотное скопление астероидов с ценными ресурсами.
                 </p>
-                {scanLevel >= 2 ? (
+                {scanRange >= 5 ? (
                     <>
                         <p className="text-[#00ff41]">Обнаруженные ресурсы:</p>
                         <ul className="text-sm ml-4 mt-1">
@@ -150,7 +150,7 @@ export function AsteroidBeltPanel() {
                             <li>₢ Ценные образцы: ???</li>
                         </ul>
                         <p className="text-[#ffb000] text-xs mt-2">
-                            ⚠ Требуется сканер уровня 2+ для точных данных
+                            ⚠ Требуется scanRange 5+ для точных данных
                         </p>
                     </>
                 )}

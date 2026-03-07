@@ -21,7 +21,7 @@ export function getScanRange(state: GameState): number {
     if (scanners.length === 0) return 0;
 
     // Return the numeric scanRange value with all bonuses
-    let maxRange = Math.max(...scanners.map((s) => s.scanRange || 0));
+    let maxRange = Math.max(...scanners.map((s) => s.scanRange ?? 0));
 
     // Apply quantum_scanner artifact bonus (+5 scan range) - requires scanner module
     const quantumScanner = state.artifacts.find(
@@ -57,10 +57,10 @@ export function getScanRange(state: GameState): number {
             const trait = race.specialTraits.find(
                 (t) => t.id === "resonance" && t.effects.artifactBonus,
             );
-            if (trait) {
+            if (trait && trait.effects.artifactBonus !== undefined) {
                 artifactBonus = Math.max(
                     artifactBonus,
-                    trait.effects.artifactBonus as number,
+                    trait.effects.artifactBonus,
                 );
             }
         }

@@ -50,15 +50,15 @@ export function StormPanel() {
     const log = useGameStore((s) => s.log);
     const enterStorm = useGameStore((s) => s.enterStorm);
     const showSectorMap = useGameStore((s) => s.showSectorMap);
-    const getScanLevel = useGameStore((s) => s.getScanLevel);
+    const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
 
     if (!currentLocation || currentLocation.type !== "storm") return null;
 
     const stormType = currentLocation.stormType || "radiation";
     const intensity = currentLocation.stormIntensity || 1;
     const info = STORM_INFO[stormType];
-    const scanLevel = getScanLevel();
-    const hasScanner = scanLevel > 0;
+    const scanRange = getEffectiveScanRange();
+    const canScan = scanRange >= 5; // Storm detection requires scanRange >= 5
 
     const intensityLabels = ["", "Слабый", "Средний", "Сильный"];
 
@@ -161,7 +161,7 @@ export function StormPanel() {
 
     // Show storm info before entering
     // Without scanner, show generic "Unknown object" info
-    if (!hasScanner) {
+    if (!canScan) {
         return (
             <div className="bg-[rgba(50,50,50,0.3)] border-2 border-[#666] p-4">
                 <div className="flex justify-between items-center mb-4">

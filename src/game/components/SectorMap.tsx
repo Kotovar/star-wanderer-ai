@@ -23,22 +23,14 @@ const seededRandom = (loc: Location, seed: number = 0): number => {
     return x - Math.floor(x);
 };
 
-// Scanner info levels - scanLevel is now 1-4 (scanner level)
 // scanRange is the numeric value (3, 5, 8, 15+)
 function getScannerInfo(
     loc: Location,
-    scanLevel: number,
     scanRange: number,
     isRevealed: boolean = false,
-    hasAllSeeing: boolean = false, // Eye of Singularity artifact
 ): string[] {
     const info: string[] = [];
     const completed = loc.mined || loc.bossDefeated || loc.signalResolved;
-
-    // Eye of Singularity acts as scanner level 3
-    const effectiveScanLevel = hasAllSeeing
-        ? Math.max(scanLevel, 3)
-        : scanLevel;
 
     // If location was revealed (e.g., approached without scanner), show full info
     if (isRevealed) {
@@ -103,16 +95,19 @@ function getScannerInfo(
     // Stations, planets, asteroid belts, and distress signals are always visible
     if (loc.type === "station") {
         info.push(`📍 ${loc.name}`);
-        // Show station type with scanner level 2+
-        if (scanLevel >= 2 && loc.stationType) {
+        // Show station type with scanRange >= 5
+        if (scanRange >= 5 && loc.stationType) {
             info.push(`🏷️ ${loc.stationType}`);
         }
         return info;
     }
 
-    // For other objects, check scanner level
-    if (effectiveScanLevel <= 0) {
-        // No scanner - show as unknown
+    // For other objects, check if scanner can detect them
+    const locTier = loc.threat || loc.anomalyTier || 1;
+    const canDetect = canDetectObject(loc.type, scanRange, locTier);
+
+    if (!canDetect) {
+        // No scanner detection - show as unknown
         // Ships (enemy, friendly, boss) show as "Unknown ship" because they use ship icon
         if (
             loc.type === "boss" ||
@@ -149,7 +144,7 @@ function getScannerInfo(
                 const raceName =
                     raceNames[loc.dominantRace] || loc.dominantRace;
                 info.push(`🧬 ${raceName}`);
-                if (scanLevel >= 5) {
+                if (scanRange >= 15) {
                     info.push(`👥 Население: ${loc.population || 0}k`);
                 }
             }
@@ -158,9 +153,9 @@ function getScannerInfo(
     }
     if (loc.type === "asteroid_belt") {
         info.push(`📍 ${loc.name}`);
-        // Always show asteroid tier with any scanner level
+        // Always show asteroid tier with any scanner detection
         info.push(`🏷️ Уровень: ${loc.asteroidTier || 1}`);
-        if (scanLevel >= 5 && loc.resources && !completed) {
+        if (scanRange >= 15 && loc.resources && !completed) {
             info.push(`📦 Минералы: ~${loc.resources.minerals}`);
             if (loc.resources.rare > 0)
                 info.push(`💎 Редкие: ~${loc.resources.rare}`);
@@ -184,16 +179,6 @@ function getScannerInfo(
         return info;
     }
 
-    // For other objects, check scanner level vs location tier
-    const locTier = loc.threat || loc.anomalyTier || loc.stormIntensity || 1;
-    const canScanFully = scanLevel >= locTier;
-
-    if (!canScanFully) {
-        // Scanner level too low - show as unknown
-        info.push(`❓ Неизвестный объект`);
-        return info;
-    }
-
     // Show name for scanned objects (except storms)
     if (loc.type !== "storm") {
         info.push(`📍 ${loc.name}`);
@@ -201,10 +186,10 @@ function getScannerInfo(
 
     // Storm info
     if (loc.type === "storm") {
-        if (scanLevel < locTier) {
+        if (scanRange < 5) {
             info.push(`🌪️ Космический шторм`);
         } else {
-            // Level 2+ scanner: detailed storm info
+            // scanRange >= 5: detailed storm info
             const stormNames: Record<StormType, string> = {
                 radiation: "Радиационное облако",
                 ionic: "Ионный шторм",
@@ -245,7 +230,7 @@ function getScannerInfo(
 
     // Anomaly info
     if (loc.type === "anomaly") {
-        if (scanLevel >= 5) {
+        if (scanRange >= 15) {
             const type =
                 loc.anomalyType === "good" ? "✓ Благоприятная" : "⚠ Опасная";
             info.push(`🔮 ${type}`);
@@ -264,6 +249,42 @@ function getScannerInfo(
     return info;
 }
 
+/**
+ * Проверяет, может ли сканер обнаружить объект на основе scanRange
+ * Пороги scanRange для обнаружения:
+ * - friendly_ship: scanRange >= 3
+ * - enemy/anomaly tier 1: scanRange >= 3
+ * - enemy/anomaly tier 2: scanRange >= 5
+ * - enemy/anomaly tier 3, boss: scanRange >= 8
+ * - anomaly tier 4: scanRange >= 15
+ * - storm: scanRange >= 5
+ */
+function canDetectObject(
+    objectType: LocationType,
+    scanRange: number,
+    tier: number = 1,
+): boolean {
+    switch (objectType) {
+        case "friendly_ship":
+            return scanRange >= 3;
+        case "enemy":
+            if (tier === 1) return scanRange >= 3;
+            if (tier === 2) return scanRange >= 5;
+            return scanRange >= 8; // tier 3+
+        case "boss":
+            return scanRange >= 8;
+        case "anomaly":
+            if (tier === 1) return scanRange >= 3;
+            if (tier === 2) return scanRange >= 5;
+            if (tier === 3) return scanRange >= 8;
+            return scanRange >= 15; // tier 4
+        case "storm":
+            return scanRange >= 5;
+        default:
+            return true; // Always visible
+    }
+}
+
 export function SectorMap() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -273,9 +294,8 @@ export function SectorMap() {
         (s) => s.travelThroughBlackHole,
     );
     const completedLocations = useGameStore((s) => s.completedLocations);
-    const getScanLevel = useGameStore((s) => s.getScanLevel);
-    const getScanRange = useGameStore((s) => s.getScanRange);
-    const artifacts = useGameStore((s) => s.artifacts);
+    const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
+    const canScanObject = useGameStore((s) => s.canScanObject);
 
     const [hoveredLocation, setHoveredLocation] = useState<{
         loc: Location;
@@ -309,13 +329,7 @@ export function SectorMap() {
     // Store canvas size to detect actual resize
     const canvasSizeRef = useRef({ width: 0, height: 0 });
 
-    const scanLevel = getScanLevel();
-    const scanRange = getScanRange();
-
-    // Eye of Singularity artifact - reveals all enemies like scanner level 3
-    const hasAllSeeing = artifacts.some(
-        (a) => a.effect.type === "all_seeing" && a.effect.active,
-    );
+    const scanRange = getEffectiveScanRange();
 
     // Draw the canvas content
     const drawCanvas = useCallback(() => {
@@ -365,8 +379,13 @@ export function SectorMap() {
             const { x, y } = computeLocationPosition(loc);
 
             const completed = completedLocations.includes(loc.id);
-            const hasScanner = scanLevel > 0 || hasAllSeeing; // Eye of Singularity acts as scanner
             const isRevealed = loc.signalRevealed; // Location was approached and revealed
+
+            // Check if scanner can detect this object type
+            const canScan = canScanObject(
+                loc.type,
+                loc.threat || loc.anomalyTier,
+            );
 
             if (loc.type === "station") {
                 drawStation(ctx, x, y, completed);
@@ -374,20 +393,20 @@ export function SectorMap() {
                 drawPlanet(ctx, x, y, loc, completed);
             } else if (loc.type === "enemy") {
                 // Without scanner AND not revealed - show as unknown
-                if (!hasScanner && !isRevealed) {
+                if (!canScan && !isRevealed) {
                     drawUnknownShip(ctx, x, y, completed);
                 } else {
                     drawEnemy(ctx, x, y, loc, completed);
                 }
             } else if (loc.type === "anomaly") {
-                if (hasScanner || isRevealed) {
+                if (canScan || isRevealed) {
                     drawAnomaly(ctx, x, y, loc, completed);
                 } else {
                     drawUnknown(ctx, x, y, completed);
                 }
             } else if (loc.type === "friendly_ship") {
                 // Without scanner AND not revealed - show as unknown
-                if (!hasScanner && !isRevealed) {
+                if (!canScan && !isRevealed) {
                     drawUnknownShip(ctx, x, y, completed);
                 } else {
                     drawFriendlyShip(ctx, x, y, completed);
@@ -395,7 +414,7 @@ export function SectorMap() {
             } else if (loc.type === "asteroid_belt") {
                 drawAsteroidBelt(ctx, x, y, loc, completed);
             } else if (loc.type === "storm") {
-                if (hasScanner || isRevealed) {
+                if (canScan || isRevealed) {
                     drawStorm(ctx, x, y, loc, completed);
                 } else {
                     drawUnknown(ctx, x, y, completed);
@@ -404,7 +423,7 @@ export function SectorMap() {
                 // Distress signals are always visible (SOS beacon)
                 drawDistressSignal(ctx, x, y, loc, completed);
             } else if (loc.type === "boss") {
-                if (hasScanner || isRevealed) {
+                if (canScan || isRevealed) {
                     drawAncientBoss(ctx, x, y, loc, completed);
                 } else {
                     drawUnknownShip(ctx, x, y, completed);
@@ -419,18 +438,18 @@ export function SectorMap() {
 
             // Boss shows as "Unknown ship" (not "Unknown object") because it uses ship icon
             const isUnknownBoss =
-                loc.type === "boss" && !hasScanner && !isRevealed && !completed;
+                loc.type === "boss" && !canScan && !isRevealed && !completed;
 
             const displayName = isUnknownBoss
                 ? "❓ Неизвестный корабль"
-                : needsScanner && !hasScanner && !isRevealed && !completed
+                : needsScanner && !canScan && !isRevealed && !completed
                   ? "❓ Неизвестный объект"
                   : loc.name;
 
             // Also hide enemy/friendly ship names without scanner and not revealed
             const isUnknownShip =
                 ["enemy", "friendly_ship"].includes(loc.type) &&
-                !hasScanner &&
+                !canScan &&
                 !isRevealed &&
                 !completed;
 
@@ -477,8 +496,7 @@ export function SectorMap() {
     }, [
         currentSector,
         completedLocations,
-        hasAllSeeing,
-        scanLevel,
+        canScanObject,
         zoom,
         offset,
         isDragging,
@@ -662,7 +680,10 @@ export function SectorMap() {
                         const { x, y } = computeLocationPosition(loc);
 
                         const completed = completedLocations.includes(loc.id);
-                        const hasScanner = scanLevel > 0 || hasAllSeeing;
+                        const canScan = canScanObject(
+                            loc.type,
+                            loc.threat || loc.anomalyTier,
+                        );
                         const isRevealed = loc.signalRevealed;
 
                         if (loc.type === "station") {
@@ -670,19 +691,19 @@ export function SectorMap() {
                         } else if (loc.type === "planet") {
                             drawPlanet(ctx, x, y, loc, completed);
                         } else if (loc.type === "enemy") {
-                            if (!hasScanner && !isRevealed) {
+                            if (!canScan && !isRevealed) {
                                 drawUnknownShip(ctx, x, y, completed);
                             } else {
                                 drawEnemy(ctx, x, y, loc, completed);
                             }
                         } else if (loc.type === "anomaly") {
-                            if (hasScanner || isRevealed) {
+                            if (canScan || isRevealed) {
                                 drawAnomaly(ctx, x, y, loc, completed);
                             } else {
                                 drawUnknown(ctx, x, y, completed);
                             }
                         } else if (loc.type === "friendly_ship") {
-                            if (!hasScanner && !isRevealed) {
+                            if (!canScan && !isRevealed) {
                                 drawUnknownShip(ctx, x, y, completed);
                             } else {
                                 drawFriendlyShip(ctx, x, y, completed);
@@ -690,7 +711,7 @@ export function SectorMap() {
                         } else if (loc.type === "asteroid_belt") {
                             drawAsteroidBelt(ctx, x, y, loc, completed);
                         } else if (loc.type === "storm") {
-                            if (hasScanner || isRevealed) {
+                            if (canScan || isRevealed) {
                                 drawStorm(ctx, x, y, loc, completed);
                             } else {
                                 drawUnknown(ctx, x, y, completed);
@@ -698,7 +719,7 @@ export function SectorMap() {
                         } else if (loc.type === "distress_signal") {
                             drawDistressSignal(ctx, x, y, loc, completed);
                         } else if (loc.type === "boss") {
-                            if (hasScanner || isRevealed) {
+                            if (canScan || isRevealed) {
                                 drawAncientBoss(ctx, x, y, loc, completed);
                             } else {
                                 drawUnknownShip(ctx, x, y, completed);
@@ -711,7 +732,7 @@ export function SectorMap() {
                         );
                         const displayName =
                             needsScanner &&
-                            !hasScanner &&
+                            !canScan &&
                             !isRevealed &&
                             !completed
                                 ? "❓ Неизвестный объект"
@@ -719,7 +740,7 @@ export function SectorMap() {
 
                         const isUnknownShip =
                             ["enemy", "friendly_ship"].includes(loc.type) &&
-                            !hasScanner &&
+                            !canScan &&
                             !isRevealed &&
                             !completed;
 
@@ -824,8 +845,7 @@ export function SectorMap() {
             offset,
             currentSector,
             completedLocations,
-            scanLevel,
-            hasAllSeeing,
+            canScanObject,
         ],
     );
 
@@ -1038,10 +1058,10 @@ export function SectorMap() {
                 </div>
             )}
 
-            {/* Scanner level indicator */}
-            {scanLevel > 0 && (
+            {/* Scanner range indicator */}
+            {scanRange > 0 && (
                 <div className="absolute top-2 right-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-2 py-1 text-xs text-[#00ff41] z-10">
-                    📡 Сканер: LV{scanLevel}
+                    📡 Сканер: {scanRange} ly
                 </div>
             )}
 
@@ -1107,12 +1127,10 @@ export function SectorMap() {
                 >
                     {getScannerInfo(
                         hoveredLocation.loc,
-                        scanLevel,
                         scanRange,
                         hoveredLocation.loc.signalRevealed ||
                             hoveredLocation.loc.visited ||
                             false,
-                        hasAllSeeing,
                     ).map((line, i) => (
                         <div
                             key={i}

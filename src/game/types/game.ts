@@ -10,7 +10,7 @@ import type {
 import type { ActiveEffect } from "./effects";
 import type { Goods, TradeGood } from "./goods";
 import type { Sector, TravelingState } from "./locations/sectors";
-import type { Location } from "./locations/locations";
+import type { Location, LocationType } from "./locations/locations";
 import type { LogEntry } from "./logs";
 import type { Module } from "./modules";
 import type { RaceId } from "./races";
@@ -110,8 +110,11 @@ export interface GameActions {
     getFuelEfficiency: () => number;
     getDrillLevel: () => number;
     getCargoCapacity: () => number;
-    getScanLevel: () => number;
+    getEffectiveScanRange: () => number;
     getScanRange: () => number;
+    canScanObject: (objectType: LocationType, objectTier?: number) => boolean;
+    getEarlyWarningChance: (threatLevel: number) => number;
+    getSignalRevealChance: () => number;
     calculateFuelCost: (targetTier: number) => number;
     areEnginesFunctional: () => boolean;
     areFuelTanksFunctional: () => boolean;

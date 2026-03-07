@@ -3,22 +3,13 @@
 import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
 
-// Get reveal chance based on scan level
-function getRevealChance(scanLevel: number): number {
-    if (scanLevel >= 15) return 75;
-    if (scanLevel >= 8) return 50;
-    if (scanLevel >= 5) return 30;
-    if (scanLevel >= 3) return 15;
-    return 0;
-}
-
-// Get scanner level label
-function getScannerLevelLabel(scanLevel: number): string {
-    if (scanLevel >= 15) return "LV4";
-    if (scanLevel >= 8) return "LV3";
-    if (scanLevel >= 5) return "LV2";
-    if (scanLevel >= 3) return "LV1";
-    return "нет";
+// Get scanner range label
+function getScannerRangeLabel(scanRange: number): string {
+    if (scanRange >= 15) return "15+ ly";
+    if (scanRange >= 8) return "8+ ly";
+    if (scanRange >= 5) return "5+ ly";
+    if (scanRange >= 3) return "3+ ly";
+    return "0 ly";
 }
 
 const OUTCOME_INFO = {
@@ -51,11 +42,13 @@ export function DistressSignalPanel() {
         (s) => s.respondToDistressSignal,
     );
     const showSectorMap = useGameStore((s) => s.showSectorMap);
-    const getScanLevel = useGameStore((s) => s.getScanLevel);
+    const getSignalRevealChance = useGameStore((s) => s.getSignalRevealChance);
+    const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
 
     if (!currentLocation) return null;
 
-    const scanLevel = getScanLevel();
+    const scanRange = getEffectiveScanRange();
+    const revealChance = getSignalRevealChance();
     const outcome = currentLocation.signalType;
     const isResolved = currentLocation.signalResolved;
     const isRevealed = currentLocation.signalRevealed;
@@ -239,8 +232,7 @@ export function DistressSignalPanel() {
 
     // Unknown signal - offer to investigate
     // Show scanner chance if available and not yet checked
-    const revealChance = getRevealChance(scanLevel);
-    const scannerLabel = getScannerLevelLabel(scanLevel);
+    const scannerLabel = getScannerRangeLabel(scanRange);
 
     return (
         <div className="flex flex-col gap-4">
@@ -272,7 +264,7 @@ export function DistressSignalPanel() {
             </div>
 
             {/* Scanner info */}
-            {scanLevel > 0 && !revealChecked && (
+            {scanRange > 0 && !revealChecked && (
                 <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3 text-sm">
                     <span className="text-[#00ff41]">
                         📡 Сканер {scannerLabel}:
@@ -285,7 +277,7 @@ export function DistressSignalPanel() {
                 </div>
             )}
 
-            {scanLevel > 0 && revealChecked && !isRevealed && (
+            {scanRange > 0 && revealChecked && !isRevealed && (
                 <div className="bg-[rgba(100,100,100,0.1)] border border-[#666] p-3 text-sm">
                     <span className="text-[#888]">
                         📡 Сканер не смог определить тип сигнала.

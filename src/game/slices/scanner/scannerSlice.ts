@@ -1,5 +1,10 @@
-import type { GameState } from "@/game/types";
-import { getScanLevel } from "./helpers/getScanLevel";
+import type { GameState, LocationType } from "@/game/types";
+import {
+    getEffectiveScanRange,
+    canScanObject,
+    getEarlyWarningChance,
+    getSignalRevealChance,
+} from "./helpers/getEffectiveScanRange";
 import { getScanRange } from "./helpers/getScanRange";
 
 /**
@@ -8,18 +13,39 @@ import { getScanRange } from "./helpers/getScanRange";
  */
 export interface ScannerSlice {
     /**
-     * Вычисляет уровень сканера корабля
-     * Определяет уровень (0-4) на основе максимального scanRange среди активных модулей
-     * @returns Уровень сканера (0: нет сканера, 1-4: MK-1 до Quantum)
+     * Вычисляет эффективный диапазон сканирования корабля
+     * Возвращает числовое значение диапазона со всеми бонусами
+     * @returns Эффективный диапазон сканирования (0 если нет сканеров)
      */
-    getScanLevel: () => number;
+    getEffectiveScanRange: () => number;
 
     /**
-     * Вычисляет диапазон сканирования корабля
-     * Возвращает числовое значение диапазона со всеми бонусами
+     * Вычисляет диапазон сканирования корабля (устаревший метод для обратной совместимости)
+     * @deprecated Используйте getEffectiveScanRange
      * @returns Диапазон сканирования (0 если нет сканеров)
      */
     getScanRange: () => number;
+
+    /**
+     * Проверяет, может ли сканер обнаружить объекты определённого типа
+     * @param objectType - Тип объекта для проверки
+     * @param objectTier - Уровень угрозы объекта (если применимо)
+     * @returns true если объект может быть обнаружен
+     */
+    canScanObject: (objectType: LocationType, objectTier?: number) => boolean;
+
+    /**
+     * Вычисляет шанс раннего обнаружения засады
+     * @param threatLevel - Уровень угрозы (enemy tier)
+     * @returns Шанс обнаружения в процентах (0-100)
+     */
+    getEarlyWarningChance: (threatLevel: number) => number;
+
+    /**
+     * Вычисляет шанс раскрытия типа сигнала бедствия
+     * @returns Шанс раскрытия в процентах (0-100)
+     */
+    getSignalRevealChance: () => number;
 }
 
 /**
@@ -33,13 +59,30 @@ export const createScannerSlice = (
     set: (fn: (state: GameState & ScannerSlice) => void) => void,
     get: () => GameState & ScannerSlice,
 ): ScannerSlice => ({
-    getScanLevel: () => {
+    getEffectiveScanRange: () => {
         const state = get();
-        return getScanLevel(state);
+        return getEffectiveScanRange(state);
     },
 
     getScanRange: () => {
         const state = get();
         return getScanRange(state);
+    },
+
+    canScanObject: (objectType, objectTier) => {
+        const state = get();
+        return canScanObject(state, objectType, objectTier);
+    },
+
+    getEarlyWarningChance: (threatLevel) => {
+        const state = get();
+        const scanRange = getEffectiveScanRange(state);
+        return getEarlyWarningChance(scanRange, threatLevel);
+    },
+
+    getSignalRevealChance: () => {
+        const state = get();
+        const scanRange = getEffectiveScanRange(state);
+        return getSignalRevealChance(scanRange);
     },
 });
