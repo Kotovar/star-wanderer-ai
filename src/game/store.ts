@@ -49,6 +49,7 @@ import {
 import {
     createLogSlice,
     createShipSlice,
+    createScannerSlice,
     getTotalEvasion,
 } from "@/game/slices";
 import type {
@@ -69,119 +70,7 @@ export const useGameStore = create<GameStore>()(
         ...initialState,
         ...createLogSlice(set),
         ...createShipSlice(set, get),
-
-        getScanLevel: () => {
-            const state = get();
-            const scanners = state.ship.modules.filter(
-                (m) =>
-                    m.type === "scanner" &&
-                    !m.disabled &&
-                    !m.manualDisabled &&
-                    m.health > 0,
-            );
-
-            // Apply all_seeing artifact (Eye of Singularity) - acts as scanner level 3
-            // This works even without a scanner module
-            const allSeeing = state.artifacts.find(
-                (a) => a.effect.type === "all_seeing" && a.effect.active,
-            );
-            if (allSeeing) {
-                return 3; // Eye of Singularity gives scanner level 3
-            }
-
-            if (scanners.length === 0) return 0;
-            // Return the scanner level (1-4) based on scanRange
-            let maxRange = Math.max(...scanners.map((s) => s.scanRange || 0));
-
-            // Apply crystalline artifactBonus (+15% to artifact effects)
-            let artifactBonus = 0;
-            state.crew.forEach((c) => {
-                const race = RACES[c.race];
-                if (race?.specialTraits) {
-                    const trait = race.specialTraits.find(
-                        (t) => t.id === "resonance" && t.effects.artifactBonus,
-                    );
-                    if (trait) {
-                        artifactBonus = Math.max(
-                            artifactBonus,
-                            trait.effects.artifactBonus as number,
-                        );
-                    }
-                }
-            });
-            if (artifactBonus > 0) {
-                maxRange = Math.floor(maxRange * (1 + artifactBonus));
-            }
-
-            if (maxRange >= 15) return 4; // Quantum scanner
-            if (maxRange >= 8) return 3; // Scanner MK-3
-            if (maxRange >= 5) return 2; // Scanner MK-2
-            if (maxRange >= 3) return 1; // Scanner MK-1
-            return 0;
-        },
-
-        getScanRange: () => {
-            const state = get();
-            const scanners = state.ship.modules.filter(
-                (m) => m.type === "scanner" && !m.disabled && m.health > 0,
-            );
-            if (scanners.length === 0) return 0;
-            // Return the numeric scanRange value with all bonuses
-            let maxRange = Math.max(...scanners.map((s) => s.scanRange || 0));
-
-            // Apply quantum_scanner artifact bonus (+5 scan range) - requires scanner module
-            const quantumScanner = state.artifacts.find(
-                (a) => a.effect.type === "quantum_scan" && a.effect.active,
-            );
-            if (quantumScanner && scanners.length > 0) {
-                maxRange += getArtifactEffectValue(quantumScanner, state);
-            }
-
-            // Apply scan range technology bonuses
-            const scanRangeTechs = state.research.researchedTechs.filter(
-                (techId) => {
-                    const tech = RESEARCH_TREE[techId];
-                    return tech.bonuses.some((b) => b.type === "scan_range");
-                },
-            );
-            let techScanRangeBonus = 0;
-            scanRangeTechs.forEach((techId) => {
-                const tech = RESEARCH_TREE[techId];
-                tech.bonuses.forEach((bonus) => {
-                    if (bonus.type === "scan_range") {
-                        techScanRangeBonus = Math.max(
-                            techScanRangeBonus,
-                            bonus.value,
-                        );
-                    }
-                });
-            });
-            if (techScanRangeBonus > 0) {
-                maxRange = Math.floor(maxRange * (1 + techScanRangeBonus));
-            }
-
-            // Apply crystalline artifactBonus (+15% to artifact effects)
-            let artifactBonus = 0;
-            state.crew.forEach((c) => {
-                const race = RACES[c.race];
-                if (race?.specialTraits) {
-                    const trait = race.specialTraits.find(
-                        (t) => t.id === "resonance" && t.effects.artifactBonus,
-                    );
-                    if (trait) {
-                        artifactBonus = Math.max(
-                            artifactBonus,
-                            trait.effects.artifactBonus as number,
-                        );
-                    }
-                }
-            });
-            if (artifactBonus > 0 && quantumScanner) {
-                maxRange = Math.floor(maxRange * (1 + artifactBonus));
-            }
-
-            return maxRange;
-        },
+        ...createScannerSlice(set, get),
 
         calculateFuelCost: (targetTier: number) => {
             const state = get();
