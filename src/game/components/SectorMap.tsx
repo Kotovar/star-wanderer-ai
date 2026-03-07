@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { useGameStore } from "@/game/store";
 import { Location, LocationType, StarType, StormType } from "@/game/types";
 import { PLANET_COLORS_IN_SECTOR } from "../constants";
+import { getScannerRangeLabel } from "./DistressSignalPanel";
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
@@ -1059,9 +1060,9 @@ export function SectorMap() {
             )}
 
             {/* Scanner range indicator */}
-            {scanRange > 0 && (
+            {scanRange >= 0 && (
                 <div className="absolute top-2 right-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-2 py-1 text-xs text-[#00ff41] z-10">
-                    📡 Сканер: {scanRange} ly
+                    📡 Сканер: {getScannerRangeLabel(scanRange)}
                 </div>
             )}
 

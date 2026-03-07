@@ -2976,23 +2976,19 @@ export const useGameStore = create<GameStore>()(
                 case "enemy": {
                     // Check scanner level vs enemy threat level
                     const enemyTier = loc.threat ?? 1;
-                    const scannerRange = get().getEffectiveScanRange();
                     const canScanEnemy = get().canScanObject(
                         "enemy",
                         enemyTier,
                     );
 
                     if (!canScanEnemy && !loc.signalRevealed) {
-                        // Early warning system: chance to detect ambush with high scanRange
-                        // Base 10% + 3% per point of scanRange above 3
-                        const earlyWarningChance = Math.min(
-                            80,
-                            10 + (scannerRange - 3) * 3,
-                        );
+                        // Early warning system: chance to detect ambush
+                        const earlyWarningChance =
+                            get().getEarlyWarningChance(enemyTier);
                         const detected =
                             Math.random() * 100 < earlyWarningChance;
 
-                        if (detected && scannerRange > 3) {
+                        if (detected) {
                             get().addLog(
                                 `📡 Сканер обнаружил засаду! Вы готовы к бою.`,
                                 "info",
@@ -3013,19 +3009,16 @@ export const useGameStore = create<GameStore>()(
                         return;
                     }
                     // Bosses are tier 3, need scanner level 3+
-                    const scannerRange = get().getEffectiveScanRange();
+                    const canScanBoss = get().canScanObject("boss", 3);
 
-                    if (!loc.signalRevealed) {
+                    if (!canScanBoss && !loc.signalRevealed) {
                         // Early warning for boss: chance to detect with high scanRange
-                        // Base 5% + 2% per point of scanRange above 8
-                        const earlyWarningChance = Math.min(
-                            60,
-                            5 + (scannerRange - 8) * 2,
-                        );
+                        const earlyWarningChance =
+                            get().getEarlyWarningChance(3);
                         const detected =
                             Math.random() * 100 < earlyWarningChance;
 
-                        if (detected && scannerRange > 8) {
+                        if (detected) {
                             get().addLog(
                                 `📡 Сканер обнаружил ДРЕВНЮЮ УГРОЗУ! Готовьтесь к бою.`,
                                 "warning",
@@ -3069,8 +3062,19 @@ export const useGameStore = create<GameStore>()(
                     set({ gameMode: "asteroid_belt" });
                     break;
                 case "storm":
-                    // Don't reveal storm yet - only reveal when we actually enter it
-                    set({ currentLocation: loc, gameMode: "storm" });
+                    // Check scanner for storm detection
+                    const canScanStorm = get().canScanObject("storm");
+                    if (!canScanStorm && !loc.signalRevealed) {
+                        // Storm not detected - surprise encounter
+                        set({ currentLocation: loc, gameMode: "storm" });
+                    } else {
+                        // Storm detected - show warning
+                        get().addLog(
+                            `📡 Сканер обнаружил шторм впереди!`,
+                            "warning",
+                        );
+                        set({ currentLocation: loc, gameMode: "storm" });
+                    }
                     break;
                 case "distress_signal":
                     // Check scanner for reveal chance (one-time check)

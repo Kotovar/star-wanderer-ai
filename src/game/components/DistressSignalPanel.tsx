@@ -4,12 +4,12 @@ import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
 
 // Get scanner range label
-function getScannerRangeLabel(scanRange: number): string {
-    if (scanRange >= 15) return "15+ ly";
-    if (scanRange >= 8) return "8+ ly";
-    if (scanRange >= 5) return "5+ ly";
-    if (scanRange >= 3) return "3+ ly";
-    return "0 ly";
+export function getScannerRangeLabel(scanRange: number): string {
+    if (scanRange >= 15) return "4 тир";
+    if (scanRange >= 8) return "3 тир";
+    if (scanRange >= 5) return "2 тир";
+    if (scanRange >= 3) return "1 тир";
+    return "отсутствует";
 }
 
 const OUTCOME_INFO = {

@@ -40,7 +40,7 @@ export function getEffectiveScanRange(state: GameState): number {
         maxRange += getArtifactEffectValue(quantumScanner, state);
     }
 
-    // Apply scan range technology bonuses
+    // Apply scan range technology bonuses (flat bonuses: +1, +2, +3)
     const scanRangeTechs = state.research.researchedTechs.filter((techId) => {
         const tech = RESEARCH_TREE[techId];
         return tech.bonuses.some((b) => b.type === "scan_range");
@@ -50,15 +50,17 @@ export function getEffectiveScanRange(state: GameState): number {
         const tech = RESEARCH_TREE[techId];
         tech.bonuses.forEach((bonus) => {
             if (bonus.type === "scan_range") {
-                techScanRangeBonus = Math.max(techScanRangeBonus, bonus.value);
+                // Flat bonus: add directly (e.g., +1, +2, +3)
+                techScanRangeBonus += bonus.value;
             }
         });
     });
     if (techScanRangeBonus > 0) {
-        maxRange = Math.floor(maxRange * (1 + techScanRangeBonus));
+        maxRange += techScanRangeBonus;
     }
 
     // Apply crystalline artifactBonus (+15% to artifact effects)
+    // Only applies to quantum_scanner artifact bonus, not tech bonuses
     let artifactBonus = 0;
     state.crew.forEach((c) => {
         const race = RACES[c.race];
@@ -74,8 +76,10 @@ export function getEffectiveScanRange(state: GameState): number {
             }
         }
     });
+    // Apply resonance bonus only to the quantum scanner artifact value
     if (artifactBonus > 0 && quantumScanner) {
-        maxRange = Math.floor(maxRange * (1 + artifactBonus));
+        const quantumBonus = getArtifactEffectValue(quantumScanner, state);
+        maxRange += Math.floor(quantumBonus * artifactBonus);
     }
 
     return maxRange;

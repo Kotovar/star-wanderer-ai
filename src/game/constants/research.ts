@@ -226,8 +226,9 @@ export const RESEARCH_TREE: Record<string, Technology> = {
     // Science
     scanner_mk2: {
         id: "scanner_mk2",
-        name: "Сканер МК-2",
-        description: "Удвоение дальности сканирования сектора.",
+        name: "Модуль сканера +1",
+        description:
+            "Улучшение сканера увеличивает дальность сканирования на +1.",
         tier: 1,
         category: "science",
         prerequisites: [],
@@ -237,8 +238,8 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         bonuses: [
             {
                 type: "scan_range",
-                value: 0.5,
-                description: "+50% к дальности сканирования",
+                value: 1,
+                description: "+1 к дальности сканирования",
             },
         ],
         icon: "📡",
@@ -360,9 +361,9 @@ export const RESEARCH_TREE: Record<string, Technology> = {
 
     quantum_scanner: {
         id: "quantum_scanner",
-        name: "Квантовый сканер",
+        name: "Модуль сканера +2",
         description:
-            "Квантовые сенсоры обнаруживают скрытые объекты и аномалии.",
+            "Квантовые сенсоры увеличивают дальность сканирования на +2.",
         tier: 2,
         category: "science",
         prerequisites: ["scanner_mk2"],
@@ -372,13 +373,8 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         bonuses: [
             {
                 type: "scan_range",
-                value: 1.0,
-                description: "+100% к дальности сканирования",
-            },
-            {
-                type: "special_ability",
-                value: 1,
-                description: "Обнаружение скрытых объектов",
+                value: 2,
+                description: "+2 к дальности сканирования",
             },
         ],
         icon: "🌀",
@@ -535,8 +531,8 @@ export const RESEARCH_TREE: Record<string, Technology> = {
 
     deep_scan: {
         id: "deep_scan",
-        name: "Глубокое сканирование",
-        description: "Сканирование сектора без затрат хода.",
+        name: "Модуль сканера +3",
+        description: "Глубокое сканирование увеличивает дальность на +3.",
         tier: 3,
         category: "science",
         prerequisites: ["quantum_scanner"],
@@ -545,9 +541,9 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         turns: 8,
         bonuses: [
             {
-                type: "special_ability",
-                value: 1,
-                description: "Бесплатное сканирование сектора",
+                type: "scan_range",
+                value: 3,
+                description: "+3 к дальности сканирования",
             },
         ],
         icon: "🔮",
