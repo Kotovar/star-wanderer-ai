@@ -254,7 +254,6 @@ export function GalaxyMap() {
             captainLevel,
             artifacts,
         );
-        drawCenterMarker(ctx, centerX, centerY);
         drawSectors(
             ctx,
             sectors,
@@ -505,16 +504,6 @@ export function GalaxyMap() {
             </div>
         </div>
     );
-}
-
-function drawCenterMarker(ctx: CanvasRenderingContext2D, x: number, y: number) {
-    ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    ctx.beginPath();
-    ctx.arc(x, y, 8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#00ff41";
-    ctx.lineWidth = 1;
-    ctx.stroke();
 }
 
 function drawSectors(

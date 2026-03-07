@@ -361,7 +361,7 @@ export function SectorMap() {
 
         // Draw central star
         const star = currentSector.star;
-        drawStar(ctx, centerX, centerY, star);
+        drawStar(ctx, centerX, centerY, star, currentSector.id);
 
         // Draw locations at grid-based positions
         const locations = currentSector.locations;
@@ -662,7 +662,7 @@ export function SectorMap() {
 
                     // Draw central star
                     const star = currentSector.star;
-                    drawStar(ctx, centerX, centerY, star);
+                    drawStar(ctx, centerX, centerY, star, currentSector.id);
 
                     // Helper function to compute location position
                     const computeLocationPosition = (
@@ -1156,6 +1156,7 @@ function drawStar(
     x: number,
     y: number,
     star: { type: StarType; name: string } | undefined,
+    sectorId?: number,
 ) {
     if (!star) return;
 
@@ -1167,7 +1168,7 @@ function drawStar(
         gradient.addColorStop(1, "transparent");
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(x, y, 50, 0, Math.PI * 2);
+        ctx.arc(x, y, 50, 50, Math.PI * 2);
         ctx.fill();
 
         // Event horizon
@@ -1184,16 +1185,28 @@ function drawStar(
         ctx.ellipse(x, y, 40, 15, Math.PI / 6, 0, Math.PI * 2);
         ctx.stroke();
     } else if (star.type === "triple") {
-        // Three stars
+        // Three stars with varied color combinations based on sector ID
+        const colorSets = [
+            { c1: "#ffdd44", c2: "#ffaa00", c3: "#ff6600" }, // Yellow-Orange-Red
+            { c1: "#ffdd44", c2: "#ffdd44", c3: "#ffaa00" }, // All yellow-orange
+            { c1: "#ffaa00", c2: "#ff6644", c3: "#ffdd44" }, // Orange-Red-Yellow
+            { c1: "#ffdd44", c2: "#ffee88", c3: "#ffcc00" }, // Light yellow variations
+        ];
+        // Use sector ID to deterministically select color set
+        const index =
+            sectorId !== undefined ? Math.abs(sectorId) % colorSets.length : 0;
+        const colorSet = colorSets[index];
+
         for (let i = 0; i < 3; i++) {
             const angle = i * ((Math.PI * 2) / 3);
             const sx = x + Math.cos(angle) * 20;
             const sy = y + Math.sin(angle) * 20;
+            const colors = [colorSet.c1, colorSet.c2, colorSet.c3];
 
             // Glow
             const gradient = ctx.createRadialGradient(sx, sy, 0, sx, sy, 20);
             gradient.addColorStop(0, "#fff");
-            gradient.addColorStop(0.3, "#ffdd44");
+            gradient.addColorStop(0.3, colors[i]);
             gradient.addColorStop(1, "transparent");
             ctx.fillStyle = gradient;
             ctx.beginPath();
@@ -1201,8 +1214,21 @@ function drawStar(
             ctx.fill();
         }
     } else if (star.type === "double") {
-        // Binary stars
-        for (const offset of [-15, 15]) {
+        // Binary stars with varied color combinations based on sector ID
+        const colorSets = [
+            { c1: "#ffdd44", c2: "#ffaa00" }, // Yellow-Orange
+            { c1: "#ffaa00", c2: "#ff6644" }, // Orange-Red
+            { c1: "#ffdd44", c2: "#ffee88" }, // Light yellow - Yellow
+            { c1: "#ff6644", c2: "#ffdd44" }, // Red-Yellow
+            { c1: "#ffcc00", c2: "#ff9900" }, // Gold-Orange
+        ];
+        // Use sector ID to deterministically select color set
+        const index =
+            sectorId !== undefined ? Math.abs(sectorId) % colorSets.length : 0;
+        const colorSet = colorSets[index];
+
+        for (const [i, offset] of [-15, 15].entries()) {
+            const colors = [colorSet.c1, colorSet.c2];
             const gradient = ctx.createRadialGradient(
                 x + offset,
                 y,
@@ -1212,24 +1238,93 @@ function drawStar(
                 25,
             );
             gradient.addColorStop(0, "#fff");
-            gradient.addColorStop(0.3, offset < 0 ? "#ffaa00" : "#ff6600");
+            gradient.addColorStop(0.3, colors[i]);
             gradient.addColorStop(1, "transparent");
             ctx.fillStyle = gradient;
             ctx.beginPath();
             ctx.arc(x + offset, y, 25, 0, Math.PI * 2);
             ctx.fill();
         }
-    } else {
-        // Single yellow star (Sun-like)
+    } else if (star.type === "red_dwarf") {
+        // Red dwarf - small, dim, red
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 25);
+        gradient.addColorStop(0, "#ff6644");
+        gradient.addColorStop(0.6, "#cc3311");
+        gradient.addColorStop(1, "transparent");
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, 25, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (star.type === "yellow_dwarf") {
+        // Yellow dwarf - Sun-like, medium size
         const gradient = ctx.createRadialGradient(x, y, 0, x, y, 35);
         gradient.addColorStop(0, "#fff");
-        gradient.addColorStop(0.2, "#ffee88");
-        gradient.addColorStop(0.5, "#ffcc00");
+        gradient.addColorStop(0.2, "#ffff88");
+        gradient.addColorStop(0.5, "#ffdd44");
         gradient.addColorStop(1, "transparent");
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.arc(x, y, 35, 0, Math.PI * 2);
         ctx.fill();
+    } else if (star.type === "white_dwarf") {
+        // White dwarf - small, bright, white-blue
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 20);
+        gradient.addColorStop(0, "#ffffff");
+        gradient.addColorStop(0.4, "#aaddff");
+        gradient.addColorStop(1, "transparent");
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, 20, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (star.type === "blue_giant") {
+        // Blue giant - large, bright, blue-white
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 45);
+        gradient.addColorStop(0, "#ffffff");
+        gradient.addColorStop(0.3, "#66aaff");
+        gradient.addColorStop(0.7, "#2266aa");
+        gradient.addColorStop(1, "transparent");
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, 45, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (star.type === "red_supergiant") {
+        // Red supergiant - huge, dim, deep red
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 55);
+        gradient.addColorStop(0, "#ff8866");
+        gradient.addColorStop(0.4, "#ff4422");
+        gradient.addColorStop(0.8, "#aa1100");
+        gradient.addColorStop(1, "transparent");
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, 55, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (star.type === "neutron_star") {
+        // Neutron star - tiny, bright, with pulsing effect
+        // Outer glow
+        const outerGradient = ctx.createRadialGradient(x, y, 0, x, y, 30);
+        outerGradient.addColorStop(0, "rgba(100, 100, 255, 0.4)");
+        outerGradient.addColorStop(1, "transparent");
+        ctx.fillStyle = outerGradient;
+        ctx.beginPath();
+        ctx.arc(x, y, 30, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Core
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 12);
+        gradient.addColorStop(0, "#ffffff");
+        gradient.addColorStop(0.5, "#6688ff");
+        gradient.addColorStop(1, "transparent");
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pulsing ring
+        ctx.strokeStyle = "rgba(100, 150, 255, 0.7)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, 18, 0, Math.PI * 2);
+        ctx.stroke();
     }
 }
 

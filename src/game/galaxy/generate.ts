@@ -24,24 +24,100 @@ const ENEMY_TYPES = ["Пираты", "Рейдеры", "Наёмники", "Ма
 
 /**
  * Генерирует звезду для сектора на основе уровня и случайности
+ *
+ * Распределение типов звёзд по уровням:
+ * - Tier 1: Красные карлики (40%), Жёлтые карлики (35%), Белые карлики (10%), Двойные (10%), Чёрные дыры (5%)
+ * - Tier 2: Красные карлики (35%), Жёлтые карлики (25%), Голубые гиганты (10%), Нейтронные (10%),
+ *           Красные сверхгиганты (5%), Тройные (5%), Чёрные дыры (10%)
+ * - Tier 3: Красные карлики (25%), Жёлтые карлики (15%), Голубые гиганты (15%), Нейтронные (15%),
+ *           Красные сверхгиганты (10%), Тройные (5%), Чёрные дыры (15%)
  */
 export const generateStar = (tier: GalaxyTier): Sector["star"] => {
     const starRoll = Math.random();
+
+    // Шансы для чёрных дыр
     const blackHoleChance = STAR_CHANCES[`blackHoleTier${tier}`];
-    const tripleStarChance = tier === 2 ? STAR_CHANCES.tripleStarTier2 : 0;
+
+    // Шансы для кратных звёздных систем
+    const tripleStarChance = tier >= 2 ? STAR_CHANCES.tripleStarTier2 : 0;
     const doubleStarChance =
         STAR_CHANCES.doubleStarBase + tier * STAR_CHANCES.doubleStarTierBonus;
 
+    // Проверка на чёрную дыру
     if (starRoll < blackHoleChance) {
         return { type: "blackhole", name: "Чёрная дыра" };
     }
-    if (tier === 2 && starRoll < tripleStarChance) {
+
+    // Проверка на тройную систему
+    if (tier >= 2 && starRoll < tripleStarChance) {
         return { type: "triple", name: "Тройная звезда" };
     }
+
+    // Проверка на двойную систему
     if (starRoll < doubleStarChance) {
         return { type: "double", name: "Двойная звезда" };
     }
-    return { type: "single", name: "Одиночная звезда" };
+
+    // Распределение одиночных звёзд по типам
+    const remainingRoll = starRoll - doubleStarChance;
+    const remainingRange =
+        1 - doubleStarChance - blackHoleChance - tripleStarChance;
+    const normalizedRoll = remainingRoll / remainingRange;
+
+    if (tier === 1) {
+        // Tier 1: больше красных и жёлтых карликов
+        if (normalizedRoll < 0.45) {
+            return { type: "red_dwarf", name: "Красный карлик" };
+        }
+        if (normalizedRoll < 0.85) {
+            return { type: "yellow_dwarf", name: "Жёлтый карлик" };
+        }
+        if (normalizedRoll < 0.95) {
+            return { type: "white_dwarf", name: "Белый карлик" };
+        }
+        return { type: "yellow_dwarf", name: "Жёлтый карлик" };
+    }
+
+    if (tier === 2) {
+        // Tier 2: разнообразие с появлением гигантов
+        if (normalizedRoll < 0.35) {
+            return { type: "red_dwarf", name: "Красный карлик" };
+        }
+        if (normalizedRoll < 0.6) {
+            return { type: "yellow_dwarf", name: "Жёлтый карлик" };
+        }
+        if (normalizedRoll < 0.75) {
+            return { type: "white_dwarf", name: "Белый карлик" };
+        }
+        if (normalizedRoll < 0.85) {
+            return { type: "blue_giant", name: "Голубой гигант" };
+        }
+        if (normalizedRoll < 0.92) {
+            return { type: "neutron_star", name: "Нейтронная звезда" };
+        }
+        return { type: "red_supergiant", name: "Красный сверхгигант" };
+    }
+
+    // Tier 3+: больше редких звёзд
+    if (normalizedRoll < 0.25) {
+        return { type: "red_dwarf", name: "Красный карлик" };
+    }
+    if (normalizedRoll < 0.45) {
+        return { type: "yellow_dwarf", name: "Жёлтый карлик" };
+    }
+    if (normalizedRoll < 0.55) {
+        return { type: "white_dwarf", name: "Белый карлик" };
+    }
+    if (normalizedRoll < 0.7) {
+        return { type: "blue_giant", name: "Голубой гигант" };
+    }
+    if (normalizedRoll < 0.85) {
+        return { type: "neutron_star", name: "Нейтронная звезда" };
+    }
+    if (normalizedRoll < 0.95) {
+        return { type: "red_supergiant", name: "Красный сверхгигант" };
+    }
+    return { type: "blue_giant", name: "Голубой гигант" };
 };
 
 /**

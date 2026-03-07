@@ -185,7 +185,7 @@ export function drawSector(
         fuelCost,
     );
 
-    drawStar(ctx, x, y, sector.star, isCurrentSector, isAccessible);
+    drawStar(ctx, x, y, sector.star, isCurrentSector, isAccessible, sector.id);
 }
 
 function drawSectorGlow(ctx: CanvasRenderingContext2D, x: number, y: number) {
@@ -322,6 +322,7 @@ export function drawStar(
     star: { type?: StarType } | undefined,
     isActive: boolean,
     isAccessible: boolean,
+    seed?: number,
 ) {
     const size = isActive ? 8 : 6;
 
@@ -340,11 +341,23 @@ export function drawStar(
     if (starType === "blackhole") {
         drawBlackHole(ctx, x, y, size);
     } else if (starType === "triple") {
-        drawTripleStar(ctx, x, y, size, isActive);
+        drawTripleStar(ctx, x, y, size, isActive, seed);
     } else if (starType === "double") {
-        drawDoubleStar(ctx, x, y, size, isActive);
+        drawDoubleStar(ctx, x, y, size, isActive, seed);
+    } else if (starType === "red_dwarf") {
+        drawRedDwarf(ctx, x, y, size, isActive);
+    } else if (starType === "yellow_dwarf") {
+        drawYellowDwarf(ctx, x, y, size, isActive);
+    } else if (starType === "white_dwarf") {
+        drawWhiteDwarf(ctx, x, y, size, isActive);
+    } else if (starType === "blue_giant") {
+        drawBlueGiant(ctx, x, y, size, isActive);
+    } else if (starType === "red_supergiant") {
+        drawRedSupergiant(ctx, x, y, size, isActive);
+    } else if (starType === "neutron_star") {
+        drawNeutronStar(ctx, x, y, size, isActive);
     } else {
-        drawSingleStar(ctx, x, y, size, isActive);
+        drawYellowDwarf(ctx, x, y, size, isActive);
     }
 
     ctx.globalAlpha = isAccessible ? 1 : 0.4;
@@ -371,12 +384,28 @@ function drawTripleStar(
     y: number,
     size: number,
     isActive: boolean,
+    seed?: number,
 ) {
+    // Different color combinations for triple stars
+    const colorSets = [
+        { c1: "#ffdd44", c2: "#ffaa00", c3: "#ff6600" }, // Yellow-Orange-Red
+        { c1: "#ffdd44", c2: "#ffdd44", c3: "#ffaa00" }, // All yellow-orange
+        { c1: "#ffaa00", c2: "#ff6644", c3: "#ffdd44" }, // Orange-Red-Yellow
+        { c1: "#ffdd44", c2: "#ffee88", c3: "#ffcc00" }, // Light yellow variations
+    ];
+    // Use seed deterministically
+    const index =
+        seed !== undefined && seed !== null
+            ? Math.abs(seed) % colorSets.length
+            : Math.floor(Math.random() * colorSets.length);
+    const colorSet = colorSets[index];
+
     for (let i = 0; i < 3; i++) {
         const angle = i * ((Math.PI * 2) / 3);
         const sx = x + Math.cos(angle) * (size * 0.5);
         const sy = y + Math.sin(angle) * (size * 0.5);
-        ctx.fillStyle = isActive ? "#ffdd44" : "#ffaa00";
+        const colors = [colorSet.c1, colorSet.c2, colorSet.c3];
+        ctx.fillStyle = isActive ? colors[i] : darkenColor(colors[i], 30);
         ctx.beginPath();
         ctx.arc(sx, sy, size * 0.4, 0, Math.PI * 2);
         ctx.fill();
@@ -389,27 +418,181 @@ function drawDoubleStar(
     y: number,
     size: number,
     isActive: boolean,
+    seed?: number,
 ) {
-    ctx.fillStyle = isActive ? "#ffdd44" : "#ffaa00";
+    // Different color combinations for double stars
+    const colorSets = [
+        { c1: "#ffdd44", c2: "#ffaa00" }, // Yellow-Orange
+        { c1: "#ffaa00", c2: "#ff6644" }, // Orange-Red
+        { c1: "#ffdd44", c2: "#ffee88" }, // Light yellow - Yellow
+        { c1: "#ff6644", c2: "#ffdd44" }, // Red-Yellow
+        { c1: "#ffcc00", c2: "#ff9900" }, // Gold-Orange
+    ];
+    // Use seed deterministically
+    const index =
+        seed !== undefined && seed !== null
+            ? Math.abs(seed) % colorSets.length
+            : Math.floor(Math.random() * colorSets.length);
+    const colorSet = colorSets[index];
+
+    ctx.fillStyle = isActive ? colorSet.c1 : darkenColor(colorSet.c1, 30);
     ctx.beginPath();
     ctx.arc(x - size * 0.4, y, size * 0.6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = isActive ? colorSet.c2 : darkenColor(colorSet.c2, 30);
+    ctx.beginPath();
     ctx.arc(x + size * 0.4, y, size * 0.6, 0, Math.PI * 2);
     ctx.fill();
 }
 
-function drawSingleStar(
+// Helper to darken colors for inactive state
+function darkenColor(hex: string, percent: number): string {
+    const num = parseInt(hex.replace("#", ""), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = Math.max((num >> 16) - amt, 0);
+    const G = Math.max(((num >> 8) & 0x00ff) - amt, 0);
+    const B = Math.max((num & 0x0000ff) - amt, 0);
+    return `#${((1 << 24) | (R << 16) | (G << 8) | B).toString(16).slice(1)}`;
+}
+
+/**
+ * Красный карлик - маленький, тусклый, красный
+ */
+function drawRedDwarf(
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
     size: number,
     isActive: boolean,
 ) {
-    const gradient = ctx.createRadialGradient(x, y, 0, x, y, size * 1.5);
-    gradient.addColorStop(0, isActive ? "#fff" : "#ffee88");
-    gradient.addColorStop(0.5, isActive ? "#ffcc00" : "#ff9900");
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, size);
+    gradient.addColorStop(0, isActive ? "#ff6644" : "#cc4422");
+    gradient.addColorStop(0.7, isActive ? "#cc3311" : "#882200");
     gradient.addColorStop(1, "transparent");
     ctx.fillStyle = gradient;
     ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+/**
+ * Жёлтый карлик - звезда главной последовательности (как Солнце)
+ */
+function drawYellowDwarf(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number,
+    isActive: boolean,
+) {
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, size * 1.3);
+    gradient.addColorStop(0, isActive ? "#ffff88" : "#ffee88");
+    gradient.addColorStop(0.5, isActive ? "#ffdd44" : "#ffcc00");
+    gradient.addColorStop(1, "transparent");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 1.3, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+/**
+ * Белый карлик - маленький, яркий, белый/голубоватый
+ */
+function drawWhiteDwarf(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number,
+    isActive: boolean,
+) {
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, size * 0.8);
+    gradient.addColorStop(0, isActive ? "#ffffff" : "#eeeeee");
+    gradient.addColorStop(0.4, isActive ? "#aaddff" : "#88aacc");
+    gradient.addColorStop(1, "transparent");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.8, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+/**
+ * Голубой гигант - большой, яркий, сине-белый
+ */
+function drawBlueGiant(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number,
+    isActive: boolean,
+) {
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, size * 1.8);
+    gradient.addColorStop(0, isActive ? "#ffffff" : "#e0e0ff");
+    gradient.addColorStop(0.3, isActive ? "#66aaff" : "#4488dd");
+    gradient.addColorStop(0.7, isActive ? "#2266aa" : "#114488");
+    gradient.addColorStop(1, "transparent");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 1.8, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+/**
+ * Красный сверхгигант - огромный, тусклый, красный
+ */
+function drawRedSupergiant(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number,
+    isActive: boolean,
+) {
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, size * 2.2);
+    gradient.addColorStop(0, isActive ? "#ff8866" : "#dd6644");
+    gradient.addColorStop(0.4, isActive ? "#ff4422" : "#cc3311");
+    gradient.addColorStop(0.8, isActive ? "#aa1100" : "#660000");
+    gradient.addColorStop(1, "transparent");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 2.2, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+/**
+ * Нейтронная звезда - очень маленькая, яркая, с пульсирующим эффектом
+ */
+function drawNeutronStar(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number,
+    isActive: boolean,
+) {
+    // Внешнее свечение
+    const outerGradient = ctx.createRadialGradient(x, y, 0, x, y, size * 1.5);
+    outerGradient.addColorStop(0, "rgba(100, 100, 255, 0.3)");
+    outerGradient.addColorStop(1, "transparent");
+    ctx.fillStyle = outerGradient;
+    ctx.beginPath();
     ctx.arc(x, y, size * 1.5, 0, Math.PI * 2);
     ctx.fill();
+
+    // Основная звезда
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, size * 0.5);
+    gradient.addColorStop(0, isActive ? "#ffffff" : "#cccccc");
+    gradient.addColorStop(0.5, isActive ? "#6688ff" : "#4466cc");
+    gradient.addColorStop(1, "transparent");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Пульсирующее кольцо (если активна)
+    if (isActive) {
+        ctx.strokeStyle = "rgba(100, 150, 255, 0.6)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(x, y, size * 0.8, 0, Math.PI * 2);
+        ctx.stroke();
+    }
 }
