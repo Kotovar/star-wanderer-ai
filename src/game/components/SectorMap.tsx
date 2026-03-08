@@ -2,7 +2,13 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useGameStore } from "@/game/store";
-import { Location, LocationType, StarType, StormType } from "@/game/types";
+import {
+    Location,
+    LocationType,
+    RaceId,
+    StarType,
+    StormType,
+} from "@/game/types";
 import { PLANET_COLORS_IN_SECTOR } from "../constants";
 import { getScannerRangeLabel } from "./DistressSignalPanel";
 
@@ -100,11 +106,11 @@ function getScannerInfo(
         // Show type-specific info
         if (loc.type === "enemy") {
             info.push(`⚔️ Вражеский корабль`);
-            info.push(`Угроза: ${loc.threat || 1}`);
+            info.push(`Угроза: ${loc.threat ?? 1}`);
         } else if (loc.type === "friendly_ship") {
             info.push(`🤝 Дружеский корабль`);
             if (loc.shipRace) {
-                const raceNames: Record<string, string> = {
+                const raceNames: Record<RaceId, string> = {
                     human: "Люди",
                     synthetic: "Синтетики",
                     xenosymbiont: "Ксеноморфы-симбионты",
@@ -141,7 +147,6 @@ function getScannerInfo(
                 info.push(`🧬 ${raceName}`);
             }
         } else if (loc.type === "station") {
-            info.push(`🛰️ Станция`);
             if (loc.stationType) {
                 info.push(`🏷️ ${loc.stationType}`);
             }
@@ -156,8 +161,8 @@ function getScannerInfo(
     // Stations, planets, asteroid belts, and distress signals are always visible
     if (loc.type === "station") {
         info.push(`📍 ${loc.name}`);
-        // Show station type with scanRange >= 5
-        if (scanRange >= 5 && loc.stationType) {
+        // Show station type with scanRange >= 3
+        if (scanRange >= 3 && loc.stationType) {
             info.push(`🏷️ ${loc.stationType}`);
         }
         return info;
@@ -188,13 +193,16 @@ function getScannerInfo(
 
     if (loc.type === "planet") {
         info.push(`📍 ${loc.name}`);
-        info.push(`🏷️ ${loc.planetType || "Неизвестно"}`);
-        // Planet details
-        if (loc.isEmpty) {
-            info.push(`🏜️ Безлюдная`);
-        } else {
-            if (loc.dominantRace) {
-                const raceNames: Record<string, string> = {
+        // Planet type requires scanRange >= 3 to detect
+        if (scanRange >= 3 && loc.planetType) {
+            info.push(`🏷️ ${loc.planetType}`);
+        }
+        // Planet details (empty or colonized) requires scanRange >= 5
+        if (scanRange >= 5) {
+            if (loc.isEmpty) {
+                info.push(`🏜️ Безлюдная`);
+            } else if (loc.dominantRace) {
+                const raceNames: Record<RaceId, string> = {
                     human: "Люди",
                     synthetic: "Синтетики",
                     xenosymbiont: "Ксеноморфы-симбионты",
@@ -205,8 +213,9 @@ function getScannerInfo(
                 const raceName =
                     raceNames[loc.dominantRace] || loc.dominantRace;
                 info.push(`🧬 ${raceName}`);
-                if (scanRange >= 15) {
-                    info.push(`👥 Население: ${loc.population || 0}k`);
+                // Population amount requires scanRange >= 8
+                if (scanRange >= 8 && loc.population) {
+                    info.push(`👥 Население: ${loc.population}k`);
                 }
             }
         }
@@ -233,9 +242,18 @@ function getScannerInfo(
     }
     if (loc.type === "distress_signal") {
         info.push(`🆘 Сигнал бедствия`);
-        // Quantum scanner shows probabilities
-        if (scanRange >= 15 && !loc.signalResolved) {
-            info.push(`⚡ Засада (40%) / Выжившие (30%) / Груз (30%)`);
+        // Show specific type if revealed by scanner or after interaction
+        if (loc.signalType && loc.signalRevealed) {
+            if (loc.signalType === "pirate_ambush") {
+                info.push(`⚔️ Засада пиратов`);
+            } else if (loc.signalType === "survivors") {
+                info.push(`👥 Выжившие`);
+            } else if (loc.signalType === "abandoned_cargo") {
+                info.push(`📦 Заброшенный груз`);
+            }
+        } else if (scanRange >= 15 && !loc.signalResolved) {
+            // Quantum scanner shows probabilities if type not yet revealed
+            info.push(`⚡ Засада (35%) / Выжившие (30%) / Груз (35%)`);
         }
         return info;
     }

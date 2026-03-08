@@ -2720,18 +2720,41 @@ export const useGameStore = create<GameStore>()(
                 const sector = state.currentSector;
                 if (sector) {
                     set((s) => {
-                        const currentSector = s.galaxy.sectors.find(
-                            (sec) => sec.id === sector.id,
-                        );
-                        if (currentSector) {
-                            const locIndex = currentSector.locations.findIndex(
-                                (l) => l.id === loc.id,
-                            );
-                            if (locIndex !== -1) {
-                                currentSector.locations[locIndex].visited =
-                                    true;
+                        const newSectors = s.galaxy.sectors.map((sec) => {
+                            if (sec.id === sector.id) {
+                                return {
+                                    ...sec,
+                                    locations: sec.locations.map((l) =>
+                                        l.id === loc.id
+                                            ? { ...l, visited: true }
+                                            : l,
+                                    ),
+                                };
                             }
-                        }
+                            return sec;
+                        });
+
+                        // Also update currentSector to reflect the visited status
+                        const newCurrentSector =
+                            s.currentSector && s.currentSector.id === sector.id
+                                ? {
+                                      ...s.currentSector,
+                                      locations: s.currentSector.locations.map(
+                                          (l) =>
+                                              l.id === loc.id
+                                                  ? { ...l, visited: true }
+                                                  : l,
+                                      ),
+                                  }
+                                : s.currentSector;
+
+                        return {
+                            galaxy: {
+                                ...s.galaxy,
+                                sectors: newSectors,
+                            },
+                            currentSector: newCurrentSector,
+                        };
                     });
                 }
             }
