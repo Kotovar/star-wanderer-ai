@@ -1,4 +1,4 @@
-import type { GameState } from "@/game/types/game";
+import type { GameState, GameStore } from "@/game/types/game";
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import {
     calculateAverageDefense,
@@ -19,6 +19,7 @@ import {
     calculateFuelCost,
     areModulesFunctional,
 } from "./helpers";
+import { refuel } from "./helpers/fuel";
 import { ARTIFACT_TYPES } from "@/game/constants";
 
 /**
@@ -116,6 +117,14 @@ export interface ShipSlice {
      * @returns true если есть рабочий топливный бак
      */
     areFuelTanksFunctional: () => boolean;
+
+    /**
+     * Заправляет корабль топливом
+     *
+     * @param amount - Количество топлива для заправки
+     * @param price - Стоимость заправки в кредитах
+     */
+    refuel: (amount: number, price: number) => void;
 }
 
 /**
@@ -127,7 +136,7 @@ export interface ShipSlice {
  */
 export const createShipSlice = (
     set: (fn: (state: GameState & ShipSlice) => void) => void,
-    get: () => GameState & ShipSlice,
+    get: () => GameStore,
 ): ShipSlice => ({
     updateShipStats: () => {
         set((state) => {
@@ -238,5 +247,10 @@ export const createShipSlice = (
     areFuelTanksFunctional: () => {
         const state = get();
         return areModulesFunctional(state, "fueltank");
+    },
+
+    refuel: (amount: number, price: number) => {
+        const state = get();
+        refuel(state, amount, price, get().addLog, set);
     },
 });

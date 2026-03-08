@@ -72,35 +72,6 @@ export const useGameStore = create<GameStore>()(
         ...createShipSlice(set, get),
         ...createScannerSlice(set, get),
 
-        refuel: (amount: number, price: number) => {
-            const state = get();
-            // Safeguard against NaN or undefined fuel
-            const maxFuel = state.ship.maxFuel || 0;
-            const currentFuel = state.ship.fuel || 0;
-            const spaceAvailable = maxFuel - currentFuel;
-            const actualAmount = Math.min(amount, spaceAvailable);
-
-            if (actualAmount <= 0) {
-                get().addLog("Топливные баки полны!", "warning");
-                return;
-            }
-
-            if (state.credits < price) {
-                get().addLog("Недостаточно кредитов!", "error");
-                return;
-            }
-
-            set((s) => ({
-                credits: s.credits - price,
-                ship: { ...s.ship, fuel: (s.ship.fuel || 0) + actualAmount },
-            }));
-            get().addLog(
-                `Заправка: +${actualAmount} топлива за ${price}₢`,
-                "info",
-            );
-            playSound("success");
-        },
-
         gainExp: (crewMember, amount) => {
             if (!crewMember) return;
 
