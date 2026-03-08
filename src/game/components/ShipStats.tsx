@@ -11,11 +11,14 @@ export function ShipStats() {
     const getTotalConsumption = useGameStore((s) => s.getTotalConsumption);
     const getTotalDamage = useGameStore((s) => s.getTotalDamage);
     const getCrewCapacity = useGameStore((s) => s.getCrewCapacity);
+    const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
     const captain = useGameStore((s) =>
         s.crew.find((c) => c.profession === "pilot"),
     );
 
     const { efficiencyPercent } = useFuelEfficiency();
+
+    const scanRange = getEffectiveScanRange();
 
     const totalPower = getTotalPower();
     const engineerBoost = crew.find((c) => c.assignment === "power") ? 5 : 0;
@@ -82,6 +85,14 @@ export function ShipStats() {
                     }
                 >
                     {crew.length}/{crewCapacity}
+                </span>
+            </div>
+            <div className="flex justify-between mb-2 text-sm">
+                <span className="text-[#ffb000]">
+                    📡 Дальность сканирования:
+                </span>
+                <span className="text-[#00ff41]">
+                    {scanRange > 0 ? `${scanRange}` : "—"}
                 </span>
             </div>
             <div className="mt-2.5 pt-2.5 border-t border-[#00ff41]">

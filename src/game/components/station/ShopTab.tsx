@@ -309,7 +309,7 @@ function ItemPriceAndStock({
         <div className="text-[#ffb000] mt-1 text-xs">
             💰 {isUpgrade ? "" : price + " ₢"}
             <span
-                className={`ml-4 ${
+                className={`${isUpgrade ? "" : "ml-4"} ${
                     soldOut || noWB || (alreadyOwned && !isUpgrade)
                         ? "text-[#ff0040]"
                         : "text-[#00ff41]"

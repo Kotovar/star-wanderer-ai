@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 
 // Get scanner range label
 export function getScannerRangeLabel(scanRange: number): string {
-    if (scanRange >= 15) return "4 тир";
-    if (scanRange >= 8) return "3 тир";
-    if (scanRange >= 5) return "2 тир";
-    if (scanRange >= 3) return "1 тир";
+    if (scanRange >= 15) return "4 LVL";
+    if (scanRange >= 8) return "3 LVL";
+    if (scanRange >= 5) return "2 LVL";
+    if (scanRange >= 3) return "1 LVL";
     return "отсутствует";
 }
 
