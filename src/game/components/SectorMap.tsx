@@ -382,6 +382,8 @@ export function SectorMap() {
         ny: number; // normalized y (0-1)
         size: number;
         brightness: number;
+        twinkleSpeed: number;
+        twinkleOffset: number;
     }> | null>(null);
 
     // Off-screen canvas for static background (stars)
@@ -393,6 +395,39 @@ export function SectorMap() {
         height: number;
         starType?: StarType;
     }>({ width: 0, height: 0 });
+
+    // Animation state for space effects
+    const animationStateRef = useRef<{
+        meteors: Array<{
+            x: number;
+            y: number;
+            vx: number;
+            vy: number;
+            length: number;
+            brightness: number;
+            active: boolean;
+        }>;
+        particles: Array<{
+            nx: number; // normalized x (0-1)
+            ny: number; // normalized y (0-1)
+            size: number;
+            vx: number;
+            vy: number;
+            brightness: number;
+            color: string;
+        }>;
+        time: number;
+    }>({
+        meteors: [],
+        particles: [],
+        time: 0,
+    });
+
+    // Animation frame ID
+    const animationFrameIdRef = useRef<number | null>(null);
+
+    // Ref for animation canvas
+    const animCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
     const scanRange = getEffectiveScanRange();
 
@@ -571,7 +606,8 @@ export function SectorMap() {
     useEffect(() => {
         const canvas = canvasRef.current;
         const container = containerRef.current;
-        if (!canvas || !container || !currentSector) return;
+        const animCanvas = animCanvasRef.current;
+        if (!canvas || !container || !animCanvas || !currentSector) return;
 
         const rect = container.getBoundingClientRect();
         const newWidth = Math.round(Math.max(rect.width, 500));
@@ -579,6 +615,12 @@ export function SectorMap() {
 
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
+
+        // Setup animation canvas
+        animCanvas.width = newWidth;
+        animCanvas.height = newHeight;
+        const animCtx = animCanvas.getContext("2d");
+        if (!animCtx) return;
 
         // Regenerate background if canvas size changed OR star type changed
         const sizeChanged =
@@ -646,6 +688,8 @@ export function SectorMap() {
                         ny: number;
                         size: number;
                         brightness: number;
+                        twinkleSpeed: number;
+                        twinkleOffset: number;
                     }> = [];
 
                     // Simple hash function for pseudo-random but consistent values
@@ -660,16 +704,58 @@ export function SectorMap() {
                             ny: hash(i + 1000),
                             size: 0.5 + hash(i + 2000) * 1.5,
                             brightness: hash(i + 3000),
+                            twinkleSpeed: 0.5 + hash(i + 4000) * 2,
+                            twinkleOffset: hash(i + 5000) * Math.PI * 2,
                         });
                     }
                     starsRef.current = stars;
                 }
 
+                // Initialize animation effects
+                const animState = animationStateRef.current;
+                animState.time = 0;
+
+                // Initialize meteors
+                if (animState.meteors.length === 0) {
+                    animState.meteors = Array.from({ length: 3 }, () => ({
+                        x: Math.random() * newWidth,
+                        y: Math.random() * newHeight,
+                        vx: (Math.random() - 0.3) * 3,
+                        vy: (Math.random() - 0.3) * 3,
+                        length: 20 + Math.random() * 40,
+                        brightness: 0.3 + Math.random() * 0.5,
+                        active: Math.random() > 0.5,
+                    }));
+                }
+
+                // Initialize particles (cosmic dust)
+                if (animState.particles.length === 0) {
+                    const particleColors = [
+                        "rgba(100, 150, 255, 0.4)",
+                        "rgba(150, 100, 255, 0.3)",
+                        "rgba(100, 255, 150, 0.3)",
+                        "rgba(255, 150, 100, 0.3)",
+                    ];
+                    animState.particles = Array.from({ length: 20 }, () => ({
+                        nx: Math.random(),
+                        ny: Math.random(),
+                        size: 0.5 + Math.random() * 1.5,
+                        vx: (Math.random() - 0.5) * 0.0005,
+                        vy: (Math.random() - 0.5) * 0.0005,
+                        brightness: 0.3 + Math.random() * 0.5,
+                        color: particleColors[
+                            Math.floor(Math.random() * particleColors.length)
+                        ],
+                    }));
+                }
+
                 // Draw stars using normalized coordinates scaled to current canvas size
+                // Only draw base stars (no twinkle on background - that's animated on main canvas)
                 starsRef.current.forEach((star) => {
                     const x = star.nx * newWidth;
                     const y = star.ny * newHeight;
-                    bgCtx.fillStyle = `rgba(255, 255, 255, ${0.3 + star.brightness * 0.7})`;
+                    // Use reduced brightness for background (twinkle happens on main canvas)
+                    bgCtx.fillStyle = `rgba(255, 255, 255, ${0.2 + star.brightness * 0.4})`;
                     bgCtx.beginPath();
                     bgCtx.arc(x, y, star.size, 0, Math.PI * 2);
                     bgCtx.fill();
@@ -681,6 +767,79 @@ export function SectorMap() {
 
         // Initial draw
         drawCanvas();
+
+        // Start animation loop
+        const animate = () => {
+            const animState = animationStateRef.current;
+            animState.time += 16; // ~16ms per frame
+
+            // Update meteors
+            animState.meteors.forEach((meteor) => {
+                if (!meteor.active) {
+                    // Randomly activate meteor
+                    if (Math.random() < 0.005) {
+                        meteor.active = true;
+                        meteor.x = Math.random() > 0.5 ? -50 : newWidth + 50;
+                        meteor.y = Math.random() * newHeight;
+                        meteor.vx =
+                            (Math.random() > 0.5 ? 1 : -1) *
+                            (2 + Math.random() * 3);
+                        meteor.vy = (Math.random() - 0.3) * 2;
+                    }
+                } else {
+                    meteor.x += meteor.vx;
+                    meteor.y += meteor.vy;
+
+                    // Deactivate if off screen
+                    if (
+                        meteor.x < -100 ||
+                        meteor.x > newWidth + 100 ||
+                        meteor.y < -100 ||
+                        meteor.y > newHeight + 100
+                    ) {
+                        meteor.active = false;
+                    }
+                }
+            });
+
+            // Update particles
+            animState.particles.forEach((particle) => {
+                particle.nx += particle.vx;
+                particle.ny += particle.vy;
+
+                // Wrap around
+                if (particle.nx < 0) particle.nx = 1;
+                if (particle.nx > 1) particle.nx = 0;
+                if (particle.ny < 0) particle.ny = 1;
+                if (particle.ny > 1) particle.ny = 0;
+            });
+
+            // Draw animations on separate canvas
+            if (animCtx && starsRef.current) {
+                animCtx.clearRect(0, 0, newWidth, newHeight);
+                drawMeteors(animCtx, animState);
+                drawParticles(animCtx, animState, newWidth, newHeight);
+                drawTwinklingStars(
+                    animCtx,
+                    starsRef.current,
+                    animState.time,
+                    newWidth,
+                    newHeight,
+                );
+            }
+
+            drawCanvas();
+            animationFrameIdRef.current = requestAnimationFrame(animate);
+        };
+
+        animationFrameIdRef.current = requestAnimationFrame(animate);
+
+        // Cleanup
+        return () => {
+            if (animationFrameIdRef.current) {
+                cancelAnimationFrame(animationFrameIdRef.current);
+            }
+        };
     }, [currentSector, drawCanvas]);
 
     // Handle wheel zoom
@@ -1186,6 +1345,15 @@ export function SectorMap() {
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
+            />
+
+            {/* Animation overlay canvas */}
+            <canvas
+                ref={animCanvasRef}
+                className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                style={{
+                    zIndex: 1,
+                }}
             />
 
             {/* Zoom controls */}
@@ -2260,4 +2428,126 @@ function drawAncientBoss(
     ctx.fillText("⚙", x, y + 5);
 
     ctx.globalAlpha = 1;
+}
+
+// Draw meteors - shooting stars flying across the sector
+function drawMeteors(
+    ctx: CanvasRenderingContext2D,
+    animState: {
+        meteors: Array<{
+            x: number;
+            y: number;
+            vx: number;
+            vy: number;
+            length: number;
+            brightness: number;
+            active: boolean;
+        }>;
+        time: number;
+    },
+) {
+    animState.meteors.forEach((meteor) => {
+        if (!meteor.active) return;
+
+        const angle = Math.atan2(meteor.vy, meteor.vx);
+        const tailX = meteor.x - Math.cos(angle) * meteor.length;
+        const tailY = meteor.y - Math.sin(angle) * meteor.length;
+
+        // Meteor gradient tail
+        const gradient = ctx.createLinearGradient(
+            meteor.x,
+            meteor.y,
+            tailX,
+            tailY,
+        );
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${meteor.brightness})`);
+        gradient.addColorStop(
+            0.3,
+            `rgba(200, 200, 255, ${meteor.brightness * 0.6})`,
+        );
+        gradient.addColorStop(1, "transparent");
+
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(meteor.x, meteor.y);
+        ctx.lineTo(tailX, tailY);
+        ctx.stroke();
+
+        // Bright head
+        ctx.fillStyle = `rgba(255, 255, 255, ${meteor.brightness})`;
+        ctx.beginPath();
+        ctx.arc(meteor.x, meteor.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+    });
+}
+
+// Draw cosmic dust particles - floating space debris
+function drawParticles(
+    ctx: CanvasRenderingContext2D,
+    animState: {
+        particles: Array<{
+            nx: number;
+            ny: number;
+            size: number;
+            vx: number;
+            vy: number;
+            brightness: number;
+            color: string;
+        }>;
+        time: number;
+    },
+    width: number,
+    height: number,
+) {
+    animState.particles.forEach((particle) => {
+        const x = particle.nx * width;
+        const y = particle.ny * height;
+
+        // Twinkle effect
+        const twinkle =
+            Math.sin(animState.time * 0.003 + particle.brightness * Math.PI) *
+                0.3 +
+            0.7;
+
+        ctx.fillStyle = particle.color.replace(
+            /[\d.]+\)$/g,
+            `${particle.brightness * twinkle * 0.5})`,
+        );
+        ctx.beginPath();
+        ctx.arc(x, y, particle.size, 0, Math.PI * 2);
+        ctx.fill();
+    });
+}
+
+// Draw twinkling stars on main canvas (overlay for animation)
+function drawTwinklingStars(
+    ctx: CanvasRenderingContext2D,
+    stars: Array<{
+        nx: number;
+        ny: number;
+        size: number;
+        brightness: number;
+        twinkleSpeed: number;
+        twinkleOffset: number;
+    }>,
+    time: number,
+    width: number,
+    height: number,
+) {
+    stars.forEach((star) => {
+        const x = star.nx * width;
+        const y = star.ny * height;
+        const twinkle =
+            Math.sin(time * 0.002 * star.twinkleSpeed + star.twinkleOffset) *
+                0.3 +
+            0.7;
+        const alpha = (0.3 + star.brightness * 0.7) * twinkle;
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(x, y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+    });
 }
