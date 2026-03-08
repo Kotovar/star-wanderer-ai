@@ -2,6 +2,7 @@
 
 import { getTotalEvasion } from "@/game/slices";
 import { useGameStore } from "@/game/store";
+import { useFuelEfficiency } from "./ship/useFuelEfficiency";
 
 export function ShipStats() {
     const ship = useGameStore((s) => s.ship);
@@ -13,6 +14,8 @@ export function ShipStats() {
     const captain = useGameStore((s) =>
         s.crew.find((c) => c.profession === "pilot"),
     );
+
+    const { efficiencyPercent } = useFuelEfficiency();
 
     const totalPower = getTotalPower();
     const engineerBoost = crew.find((c) => c.assignment === "power") ? 5 : 0;
@@ -53,6 +56,14 @@ export function ShipStats() {
                     {ship.fuel || 0}/{ship.maxFuel || 0}
                 </span>
             </div>
+            {efficiencyPercent >= 0 && (
+                <div className="flex justify-between mb-2 text-sm">
+                    <span className="text-[#ffb000]">
+                        💨 Эффективность топлива:
+                    </span>
+                    <span className="text-[#00ff41]">{efficiencyPercent}%</span>
+                </div>
+            )}
             <div className="flex justify-between mb-2 text-sm">
                 <span className="text-[#ffb000]">🔥 Двигатель:</span>
                 <span className="text-[#00ff41]">Ур.{engineLevel}</span>
@@ -73,7 +84,6 @@ export function ShipStats() {
                     {crew.length}/{crewCapacity}
                 </span>
             </div>
-
             <div className="mt-2.5 pt-2.5 border-t border-[#00ff41]">
                 <div className="flex justify-between mb-2 text-sm">
                     <span className="text-[#ffb000]">⚡ Генерация:</span>

@@ -16,6 +16,7 @@ import {
     getFuelEfficiency,
     getDrillLevel,
     getCargoCapacity,
+    calculateFuelCost,
 } from "./helpers";
 import { ARTIFACT_TYPES } from "@/game/constants";
 
@@ -84,6 +85,21 @@ export interface ShipSlice {
      * @returns Общая грузоподъёмность (по умолчанию 40 на модуль)
      */
     getCargoCapacity: () => number;
+
+    /**
+     * Вычисляет стоимость перелёта в другой сектор
+     *
+     * Учитывает:
+     * - Расстояние между тирами секторов
+     * - Эффективность двигателей корабля
+     * - Расовые бонусы экипажа (например, voidborn: +20% к эффективности топлива)
+     * - Трейты пилота, влияющие на потребление топлива
+     * - Бонусы от активных эффектов планеты (например, "Мистический ритуал")
+     *
+     * @param targetTier - Целевой тир сектора для перелёта
+     * @returns Стоимость топлива в единицах (минимум 1, по умолчанию 5 при ошибке)
+     */
+    calculateFuelCost: (targetTier: number) => number;
 }
 
 /**
@@ -191,5 +207,10 @@ export const createShipSlice = (
     getCargoCapacity: () => {
         const state = get();
         return getCargoCapacity(state);
+    },
+
+    calculateFuelCost: (targetTier: number) => {
+        const state = get();
+        return calculateFuelCost(state, targetTier);
     },
 });

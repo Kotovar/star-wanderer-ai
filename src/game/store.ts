@@ -28,6 +28,7 @@ import {
 } from "@/game/crew";
 import { generateGalaxy } from "@/game/galaxy";
 import { initialState } from "@/game/initial";
+import { calculateFuelCost } from "@/game/slices/ship/helpers";
 import { areAllModulesConnected } from "@/game/modules";
 import {
     clearLocalStorage,
@@ -74,53 +75,7 @@ export const useGameStore = create<GameStore>()(
 
         calculateFuelCost: (targetTier: number) => {
             const state = get();
-            const currentTier = state.currentSector?.tier ?? 1;
-            const distance = Math.abs(targetTier - currentTier);
-
-            // Base fuel cost: учитываем fuelEfficiency даже для прыжков внутри одного тира
-            // distance = 0 для intra-tier прыжков, но всё равно используем fuelEfficiency
-            const baseCost = Math.max(1, distance) * get().getFuelEfficiency();
-
-            // Apply race fuel efficiency bonuses (voidborn: +20% fuel efficiency = -20% consumption)
-            let modifier = 1;
-            state.crew.forEach((c) => {
-                const race = RACES[c.race];
-                let fuelBonus = 0;
-                if (race?.crewBonuses.fuelEfficiency) {
-                    fuelBonus = Math.max(
-                        fuelBonus,
-                        race.crewBonuses.fuelEfficiency,
-                    );
-                }
-                if (fuelBonus > 0) {
-                    modifier *= 1 - fuelBonus;
-                }
-            });
-
-            // Captain traits can modify fuel consumption
-            const captain = state.crew.find((c) => c.profession === "pilot");
-            if (captain?.traits) {
-                captain.traits.forEach((t) => {
-                    if (t.effect?.fuelConsumption)
-                        modifier *= t.effect.fuelConsumption;
-                });
-            }
-
-            // Apply fuel efficiency bonus from planet effects (Mystic Ritual)
-            const fuelEfficiencyEffect = state.activeEffects.find((e) =>
-                e.effects.some((ef) => ef.type === "fuel_efficiency"),
-            );
-            if (fuelEfficiencyEffect) {
-                const fuelEffBonus =
-                    (fuelEfficiencyEffect.effects.find(
-                        (ef) => ef.type === "fuel_efficiency",
-                    )?.value as number) || 0;
-                modifier *= 1 - fuelEffBonus;
-            }
-
-            const result = Math.ceil(baseCost * modifier);
-            // Safeguard against NaN
-            return isNaN(result) ? 5 : result;
+            return calculateFuelCost(state, targetTier);
         },
 
         areEnginesFunctional: () => {
@@ -2790,7 +2745,7 @@ export const useGameStore = create<GameStore>()(
                         `Начато путешествие в ${sector.name} (${distance} ходов)`,
                         "info",
                     );
-                    get().nextTurn();
+                    // Не вызываем nextTurn() автоматически - игрок должен сам завершить ход
                 }
             }
         },

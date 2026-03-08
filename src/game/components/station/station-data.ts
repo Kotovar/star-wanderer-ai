@@ -649,7 +649,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             width: 2,
             height: 2,
             consumption: 0,
-            fuelEfficiency: 10,
+            fuelEfficiency: 6,
             price: 12000,
             stock: 1,
             description: "Двигатель на квантовой тяге",

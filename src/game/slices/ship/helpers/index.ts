@@ -7,3 +7,5 @@ export * from "./getFuelCapacity";
 export * from "./getFuelEfficiency";
 export * from "./getDrillLevel";
 export * from "./getCargoCapacity";
+export * from "./calculateFuelCost";
+export * from "./fuel";
