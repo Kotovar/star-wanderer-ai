@@ -12,6 +12,66 @@ const ZOOM_SENSITIVITY = 0.001;
 const DRAG_THRESHOLD = 5;
 const NEEDS_SCANNER_LOCATIONS: LocationType[] = ["storm", "anomaly", "boss"];
 
+/**
+ * Возвращает цвет фона для сектора на основе типа звезды
+ */
+function getStarBackgroundColor(starType: StarType | undefined): string {
+    switch (starType) {
+        case "red_dwarf":
+            return "#0a0810"; // Тёмный с красноватым оттенком
+        case "yellow_dwarf":
+            return "#0a0a08"; // Тёмный с желтоватым оттенком
+        case "white_dwarf":
+            return "#080a10"; // Тёмный с голубоватым оттенком
+        case "blue_giant":
+            return "#050818"; // Тёмный с синим оттенком
+        case "red_supergiant":
+            return "#0c0608"; // Тёмный с красно-оранжевым оттенком
+        case "neutron_star":
+            return "#080814"; // Тёмный с фиолетовым оттенком
+        case "gas_giant":
+            return "#050a08"; // Тёмный с зеленоватым оттенком
+        case "double":
+            return "#0a0908"; // Тёмный с оранжевым оттенком
+        case "triple":
+            return "#0c0808"; // Тёмный с красно-оранжевым оттенком
+        case "blackhole":
+            return "#0a0010"; // Тёмный с фиолетово-пурпурным оттенком
+        default:
+            return "#050810"; // Стандартный космический чёрный
+    }
+}
+
+/**
+ * Возвращает цвет свечения для фона на основе типа звезды
+ */
+function getStarGlowColor(starType: StarType | undefined): string {
+    switch (starType) {
+        case "red_dwarf":
+            return "rgba(255, 100, 80, 0.03)";
+        case "yellow_dwarf":
+            return "rgba(255, 220, 150, 0.03)";
+        case "white_dwarf":
+            return "rgba(170, 220, 255, 0.03)";
+        case "blue_giant":
+            return "rgba(100, 150, 255, 0.04)";
+        case "red_supergiant":
+            return "rgba(255, 120, 80, 0.04)";
+        case "neutron_star":
+            return "rgba(150, 180, 255, 0.03)";
+        case "gas_giant":
+            return "rgba(0, 255, 120, 0.03)";
+        case "double":
+            return "rgba(255, 180, 100, 0.03)";
+        case "triple":
+            return "rgba(255, 150, 80, 0.04)";
+        case "blackhole":
+            return "rgba(200, 50, 200, 0.03)";
+        default:
+            return "transparent";
+    }
+}
+
 // Seeded random helper - returns deterministic value based on location ID
 const seededRandom = (loc: Location, seed: number = 0): number => {
     const str = loc.id || "unknown";
@@ -328,7 +388,11 @@ export function SectorMap() {
     const bgCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
     // Store canvas size to detect actual resize
-    const canvasSizeRef = useRef({ width: 0, height: 0 });
+    const canvasSizeRef = useRef<{
+        width: number;
+        height: number;
+        starType?: StarType;
+    }>({ width: 0, height: 0 });
 
     const scanRange = getEffectiveScanRange();
 
@@ -516,15 +580,22 @@ export function SectorMap() {
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        // Regenerate background only if canvas size actually changed (not fractional)
+        // Regenerate background if canvas size changed OR star type changed
         const sizeChanged =
             canvasSizeRef.current.width !== newWidth ||
             canvasSizeRef.current.height !== newHeight;
 
-        if (sizeChanged) {
+        const starTypeChanged =
+            canvasSizeRef.current.starType !== currentSector.star?.type;
+
+        if (sizeChanged || starTypeChanged) {
             canvas.width = newWidth;
             canvas.height = newHeight;
-            canvasSizeRef.current = { width: newWidth, height: newHeight };
+            canvasSizeRef.current = {
+                width: newWidth,
+                height: newHeight,
+                starType: currentSector.star?.type,
+            };
 
             // Create off-screen background canvas
             const bgCanvas = document.createElement("canvas");
@@ -533,9 +604,39 @@ export function SectorMap() {
             const bgCtx = bgCanvas.getContext("2d");
 
             if (bgCtx) {
-                // Clear with space background
-                bgCtx.fillStyle = "#050810";
+                // Clear with space background - color depends on star type
+                const bgColor = getStarBackgroundColor(
+                    currentSector.star?.type,
+                );
+                bgCtx.fillStyle = bgColor;
                 bgCtx.fillRect(0, 0, newWidth, newHeight);
+
+                // Add subtle glow from the star
+                const glowColor = getStarGlowColor(currentSector.star?.type);
+                if (glowColor !== "transparent") {
+                    const centerX = newWidth / 2;
+                    const centerY = newHeight / 2;
+                    const maxRadius = Math.max(newWidth, newHeight) * 0.7;
+
+                    const glowGradient = bgCtx.createRadialGradient(
+                        centerX,
+                        centerY,
+                        0,
+                        centerX,
+                        centerY,
+                        maxRadius,
+                    );
+                    glowGradient.addColorStop(0, glowColor);
+                    glowGradient.addColorStop(
+                        0.5,
+                        glowColor
+                            .replace("0.03", "0.015")
+                            .replace("0.04", "0.02"),
+                    );
+                    glowGradient.addColorStop(1, "transparent");
+                    bgCtx.fillStyle = glowGradient;
+                    bgCtx.fillRect(0, 0, newWidth, newHeight);
+                }
 
                 // Generate stars once in normalized coordinates (0-1)
                 // Only generate if not already cached
@@ -1324,6 +1425,60 @@ function drawStar(
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(x, y, 18, 0, Math.PI * 2);
+        ctx.stroke();
+    } else if (star.type === "gas_giant") {
+        // Gas giant - огромный зелёный шар с атмосферными полосами
+
+        // Внешнее зелёное свечение
+        const outerGlow = ctx.createRadialGradient(x, y, 0, x, y, 60);
+        outerGlow.addColorStop(0, "rgba(0, 255, 100, 0.4)");
+        outerGlow.addColorStop(0.5, "rgba(0, 200, 50, 0.2)");
+        outerGlow.addColorStop(1, "transparent");
+        ctx.fillStyle = outerGlow;
+        ctx.beginPath();
+        ctx.arc(x, y, 60, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Основной зелёный шар
+        const bodyGradient = ctx.createRadialGradient(x, y, 0, x, y, 40);
+        bodyGradient.addColorStop(0, "#00ff66"); // Яркий зелёный центр
+        bodyGradient.addColorStop(0.5, "#00cc55"); // Основной зелёный
+        bodyGradient.addColorStop(0.8, "#009933"); // Тёмно-зелёный край
+        bodyGradient.addColorStop(1, "transparent");
+        ctx.fillStyle = bodyGradient;
+        ctx.beginPath();
+        ctx.arc(x, y, 40, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Атмосферные полосы (горизонтальные зелёные ленты)
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, 38, 0, Math.PI * 2);
+        ctx.clip();
+
+        // Полоса 1 - светлая
+        ctx.fillStyle = "rgba(100, 255, 150, 0.5)";
+        ctx.fillRect(x - 45, y - 15, 90, 5);
+
+        // Полоса 2 - тёмная
+        ctx.fillStyle = "rgba(0, 150, 50, 0.6)";
+        ctx.fillRect(x - 45, y - 3, 90, 6);
+
+        // Полоса 3 - светлая
+        ctx.fillStyle = "rgba(50, 255, 100, 0.4)";
+        ctx.fillRect(x - 45, y + 10, 90, 5);
+
+        // Полоса 4 - тёмная
+        ctx.fillStyle = "rgba(0, 120, 40, 0.5)";
+        ctx.fillRect(x - 45, y + 20, 90, 4);
+
+        ctx.restore();
+
+        // Лёгкое мерцание (турбулентность атмосферы)
+        ctx.strokeStyle = "rgba(150, 255, 200, 0.3)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(x, y, 42, 0, Math.PI * 2);
         ctx.stroke();
     }
 }

@@ -28,7 +28,6 @@ import {
 } from "@/game/crew";
 import { generateGalaxy } from "@/game/galaxy";
 import { initialState } from "@/game/initial";
-import { calculateFuelCost } from "@/game/slices/ship/helpers";
 import { areAllModulesConnected } from "@/game/modules";
 import {
     clearLocalStorage,
@@ -72,11 +71,6 @@ export const useGameStore = create<GameStore>()(
         ...createLogSlice(set),
         ...createShipSlice(set, get),
         ...createScannerSlice(set, get),
-
-        calculateFuelCost: (targetTier: number) => {
-            const state = get();
-            return calculateFuelCost(state, targetTier);
-        },
 
         areEnginesFunctional: () => {
             const state = get();

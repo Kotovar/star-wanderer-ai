@@ -356,6 +356,8 @@ export function drawStar(
         drawRedSupergiant(ctx, x, y, size, isActive);
     } else if (starType === "neutron_star") {
         drawNeutronStar(ctx, x, y, size, isActive);
+    } else if (starType === "gas_giant") {
+        drawGasGiant(ctx, x, y, size, isActive);
     } else {
         drawYellowDwarf(ctx, x, y, size, isActive);
     }
@@ -593,6 +595,79 @@ function drawNeutronStar(
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(x, y, size * 0.8, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+}
+
+/**
+ * Газовый гигант - огромный зелёный шар с атмосферными полосами
+ */
+function drawGasGiant(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number,
+    isActive: boolean,
+) {
+    // Внешнее зелёное свечение
+    const outerGlow = ctx.createRadialGradient(x, y, 0, x, y, size * 2.5);
+    outerGlow.addColorStop(
+        0,
+        isActive ? "rgba(0, 255, 100, 0.4)" : "rgba(0, 200, 50, 0.25)",
+    );
+    outerGlow.addColorStop(
+        0.5,
+        isActive ? "rgba(0, 200, 50, 0.2)" : "rgba(0, 150, 40, 0.1)",
+    );
+    outerGlow.addColorStop(1, "transparent");
+    ctx.fillStyle = outerGlow;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Основной зелёный шар
+    const bodyGradient = ctx.createRadialGradient(x, y, 0, x, y, size * 1.8);
+    bodyGradient.addColorStop(0, isActive ? "#00ff66" : "#00cc55");
+    bodyGradient.addColorStop(0.5, isActive ? "#00cc55" : "#009933");
+    bodyGradient.addColorStop(0.8, isActive ? "#009933" : "#006622");
+    bodyGradient.addColorStop(1, "transparent");
+    ctx.fillStyle = bodyGradient;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 1.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Атмосферные полосы (горизонтальные зелёные ленты)
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, size * 1.7, 0, Math.PI * 2);
+    ctx.clip();
+
+    // Полоса 1 - светлая
+    ctx.fillStyle = isActive
+        ? "rgba(100, 255, 150, 0.5)"
+        : "rgba(50, 200, 100, 0.35)";
+    ctx.fillRect(x - size * 2, y - size * 0.8, size * 4, size * 0.3);
+
+    // Полоса 2 - тёмная
+    ctx.fillStyle = isActive
+        ? "rgba(0, 150, 50, 0.6)"
+        : "rgba(0, 100, 40, 0.4)";
+    ctx.fillRect(x - size * 2, y - size * 0.15, size * 4, size * 0.35);
+
+    // Полоса 3 - светлая
+    ctx.fillStyle = isActive
+        ? "rgba(50, 255, 100, 0.4)"
+        : "rgba(30, 180, 80, 0.3)";
+    ctx.fillRect(x - size * 2, y + size * 0.5, size * 4, size * 0.3);
+
+    ctx.restore();
+
+    // Лёгкое мерцание (турбулентность атмосферы)
+    if (isActive) {
+        ctx.strokeStyle = "rgba(150, 255, 200, 0.3)";
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.arc(x, y, size * 1.85, 0, Math.PI * 2);
         ctx.stroke();
     }
 }

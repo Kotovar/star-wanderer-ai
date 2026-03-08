@@ -6,7 +6,6 @@ export const PLANET_TYPES: PlanetType[] = [
     "Лесная",
     "Вулканическая",
     "Океаническая",
-    "Газовый гигант",
     "Радиоактивная",
     "Тропическая",
     "Арктическая",
@@ -26,8 +25,6 @@ export const PLANET_DESCRIPTIONS: Record<PlanetType, string> = {
         "Геологически активный мир с постоянными извержениями. Богата серой и редкими металлами.",
     Океаническая:
         "Водный мир с архипелагами. Перспективен для рыболовства и добычи морских ресурсов.",
-    "Газовый гигант":
-        "Огромная планета из газа с мощными штормами. Добыча гелия-3 возможна только орбитальными станциями.",
     Радиоактивная:
         "Мир с высоким уровнем радиации после катастрофы или бомбардировки. Требует защитных костюмов.",
     Тропическая:
@@ -58,11 +55,6 @@ export const PLANET_COLORS: Record<
         primary: "#2d6a87",
         secondary: "#1a3a5a",
         accent: "#4a9fd4",
-    },
-    "Газовый гигант": {
-        primary: "#6a4a8a",
-        secondary: "#3a2a5a",
-        accent: "#9a7aba",
     },
     Радиоактивная: {
         primary: "#4a8a3a",
@@ -101,7 +93,6 @@ export const PLANET_COLORS_IN_SECTOR: Record<
     Лесная: { base: "#4a7c59", atmosphere: "#6b9b7a" }, // Earth-like green
     Вулканическая: { base: "#8b4513", atmosphere: "#ff4500" }, // Io-like
     Океаническая: { base: "#1e90ff", atmosphere: "#87ceeb" }, // Earth-like blue
-    "Газовый гигант": { base: "#9933ff", atmosphere: "#cc66ff" }, // Purple gas giant
     Радиоактивная: { base: "#5a8f3a", atmosphere: "#7fff00" }, // Green radioactive glow
     Тропическая: { base: "#228b22", atmosphere: "#90ee90" }, // Lush green tropical
     Арктическая: { base: "#b0e0e6", atmosphere: "#f0f8ff" }, // Ice blue arctic
@@ -120,7 +111,6 @@ export const PLANET_CLASS_MAP: Record<PlanetType, string> = {
     Лесная: "planet-bg-лесная",
     Вулканическая: "planet-bg-вулканическая",
     Океаническая: "planet-bg-океаническая",
-    "Газовый гигант": "planet-bg-газовый-гигант",
     Радиоактивная: "planet-bg-радиоактивная",
     Тропическая: "planet-bg-тропическая",
     Арктическая: "planet-bg-арктическая",

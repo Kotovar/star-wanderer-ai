@@ -82,6 +82,10 @@ export const STAR_CHANCES = {
     tripleStarTier2: 0.2,
     doubleStarBase: 0.3,
     doubleStarTierBonus: 0.1,
+    gasGiantTier1: 0.05, // 5% для tier 1
+    gasGiantTier2: 0.08, // 8% для tier 2
+    gasGiantTier3: 0.1, // 10% для tier 3
+    gasGiantTier4: 0.05, // 5% для tier 4
 };
 
 /** Конфигурация типов станций */

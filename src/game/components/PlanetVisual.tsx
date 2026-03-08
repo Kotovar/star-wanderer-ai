@@ -222,47 +222,6 @@ export function PlanetVisual({ planetType }: PlanetVisualProps) {
                     </>
                 )}
 
-                {planetType === "Газовый гигант" && (
-                    <>
-                        <rect
-                            x="40"
-                            y="70"
-                            width="120"
-                            height="8"
-                            fill={colors.accent}
-                            opacity="0.3"
-                            rx="4"
-                        />
-                        <rect
-                            x="35"
-                            y="90"
-                            width="130"
-                            height="10"
-                            fill={colors.accent}
-                            opacity="0.25"
-                            rx="5"
-                        />
-                        <rect
-                            x="45"
-                            y="110"
-                            width="110"
-                            height="7"
-                            fill={colors.accent}
-                            opacity="0.2"
-                            rx="3"
-                        />
-                        <rect
-                            x="50"
-                            y="130"
-                            width="100"
-                            height="6"
-                            fill={colors.accent}
-                            opacity="0.15"
-                            rx="3"
-                        />
-                    </>
-                )}
-
                 {planetType === "Радиоактивная" && (
                     <>
                         <circle

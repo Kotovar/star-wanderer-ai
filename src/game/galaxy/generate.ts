@@ -26,11 +26,11 @@ const ENEMY_TYPES = ["Пираты", "Рейдеры", "Наёмники", "Ма
  * Генерирует звезду для сектора на основе уровня и случайности
  *
  * Распределение типов звёзд по уровням:
- * - Tier 1: Красные карлики (40%), Жёлтые карлики (35%), Белые карлики (10%), Двойные (10%), Чёрные дыры (5%)
+ * - Tier 1: Красные карлики (40%), Жёлтые карлики (35%), Белые карлики (10%), Двойные (10%), Чёрные дыры (5%), Газовые гиганты (5%)
  * - Tier 2: Красные карлики (35%), Жёлтые карлики (25%), Голубые гиганты (10%), Нейтронные (10%),
- *           Красные сверхгиганты (5%), Тройные (5%), Чёрные дыры (10%)
+ *           Красные сверхгиганты (5%), Тройные (5%), Чёрные дыры (10%), Газовые гиганты (8%)
  * - Tier 3: Красные карлики (25%), Жёлтые карлики (15%), Голубые гиганты (15%), Нейтронные (15%),
- *           Красные сверхгиганты (10%), Тройные (5%), Чёрные дыры (15%)
+ *           Красные сверхгиганты (10%), Тройные (5%), Чёрные дыры (15%), Газовые гиганты (10%)
  */
 export const generateStar = (tier: GalaxyTier): Sector["star"] => {
     const starRoll = Math.random();
@@ -43,25 +43,39 @@ export const generateStar = (tier: GalaxyTier): Sector["star"] => {
     const doubleStarChance =
         STAR_CHANCES.doubleStarBase + tier * STAR_CHANCES.doubleStarTierBonus;
 
+    // Шансы для газовых гигантов (коричневых карликов)
+    const gasGiantChance = STAR_CHANCES[`gasGiantTier${tier}`] ?? 0;
+
+    // Накопительные пороги для последовательной проверки
+    let cumulativeChance = 0;
+
     // Проверка на чёрную дыру
-    if (starRoll < blackHoleChance) {
+    cumulativeChance += blackHoleChance;
+    if (starRoll < cumulativeChance) {
         return { type: "blackhole", name: "Чёрная дыра" };
     }
 
     // Проверка на тройную систему
-    if (tier >= 2 && starRoll < tripleStarChance) {
+    cumulativeChance += tripleStarChance;
+    if (tier >= 2 && starRoll < cumulativeChance) {
         return { type: "triple", name: "Тройная звезда" };
     }
 
     // Проверка на двойную систему
-    if (starRoll < doubleStarChance) {
+    cumulativeChance += doubleStarChance;
+    if (starRoll < cumulativeChance) {
         return { type: "double", name: "Двойная звезда" };
     }
 
-    // Распределение одиночных звёзд по типам
-    const remainingRoll = starRoll - doubleStarChance;
-    const remainingRange =
-        1 - doubleStarChance - blackHoleChance - tripleStarChance;
+    // Проверка на газовый гигант (коричневый карлик)
+    cumulativeChance += gasGiantChance;
+    if (starRoll < cumulativeChance) {
+        return { type: "gas_giant", name: "Газовый гигант" };
+    }
+
+    // Распределение одиночных звёзд по типам (нормализуем оставшийся диапазон)
+    const remainingRoll = starRoll - cumulativeChance;
+    const remainingRange = 1 - cumulativeChance;
     const normalizedRoll = remainingRoll / remainingRange;
 
     if (tier === 1) {
