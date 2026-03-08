@@ -2576,7 +2576,7 @@ export const useGameStore = create<GameStore>()(
             );
 
             // Calculate fuel cost with penalty if pilot not in cockpit
-            let fuelCost = get().calculateFuelCost(sector.tier);
+            let fuelCost = get().calculateFuelCost(sector.id);
             let travelInstant = false;
 
             // Apply void_engine artifact bonus (free inter-sector travel)

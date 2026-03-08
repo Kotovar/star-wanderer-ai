@@ -114,7 +114,7 @@ export interface GameActions {
     canScanObject: (objectType: LocationType, objectTier?: number) => boolean;
     getEarlyWarningChance: (threatLevel: number) => number;
     getSignalRevealChance: () => number;
-    calculateFuelCost: (targetTier: number) => number;
+    calculateFuelCost: (targetSectorId: number) => number;
     areEnginesFunctional: () => boolean;
     areFuelTanksFunctional: () => boolean;
     refuel: (amount: number, price: number) => void;

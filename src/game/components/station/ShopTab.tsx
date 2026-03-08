@@ -21,6 +21,7 @@ interface ShopTabProps {
     ship: {
         modules: Module[];
     };
+    stationTier?: number;
     stationConfig?: {
         guaranteedWeapons?: string[];
         guaranteedModules: string[];
@@ -35,6 +36,7 @@ export function ShopTab({
     stationInventory,
     credits,
     ship,
+    stationTier = 1,
     buyItem,
     onUpgradeClick,
 }: ShopTabProps) {
@@ -55,9 +57,50 @@ export function ShopTab({
             // Always show non-upgrade items
             if (item.type !== "upgrade") return true;
             // Only show upgrades for modules we own
-            return item.targetType && ownedModuleTypes.has(item.targetType);
+            if (!item.targetType || !ownedModuleTypes.has(item.targetType)) {
+                return false;
+            }
+
+            // For engine upgrades, show only the one matching the module level
+            // and available for this station tier:
+            // - Tier 1: only engine-upgrade-1 (1→2)
+            // - Tier 2: engine-upgrade-1 (1→2), engine-upgrade-2 (2→3)
+            // - Tier 3+: engine-upgrade-1 (1→2), engine-upgrade-2 (2→3), engine-upgrade-3 (3→4)
+            if (
+                item.targetType === "engine" &&
+                item.id.includes("engine-upgrade")
+            ) {
+                const modulesOfType = ship.modules.filter(
+                    (m) => m.type === "engine" && !m.disabled && m.health > 0,
+                );
+                const maxEngineLevel =
+                    modulesOfType.length > 0
+                        ? Math.max(...modulesOfType.map((m) => m.level || 1))
+                        : 1;
+
+                // Note: ID format is "engine-upgrade-N-stationId"
+                const upgradeLevel = item.id.startsWith("engine-upgrade-1-")
+                    ? 1
+                    : item.id.startsWith("engine-upgrade-2-")
+                      ? 2
+                      : item.id.startsWith("engine-upgrade-3-")
+                        ? 3
+                        : 1;
+
+                // Hide upgrade if all engines are at max level (3)
+                if (maxEngineLevel >= 3) return false;
+
+                // Check if this upgrade is available at this station tier
+                if (stationTier === 1 && upgradeLevel > 1) return false;
+                if (stationTier === 2 && upgradeLevel > 2) return false;
+                // Tier 3+ has all upgrades
+
+                return upgradeLevel === maxEngineLevel;
+            }
+
+            return true;
         });
-    }, [stationItems, ownedModuleTypes]);
+    }, [stationItems, ownedModuleTypes, ship.modules, stationTier]);
 
     return (
         <>

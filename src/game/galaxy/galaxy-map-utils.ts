@@ -142,7 +142,7 @@ export function drawSector(
     modules: Module[],
     captainLevel: number,
     fuel: number,
-    calculateFuelCost: (targetTier: number) => number,
+    calculateFuelCost: (targetSectorId: number) => number,
     areEnginesFunctional: () => boolean,
     areFuelTanksFunctional: () => boolean,
     isCurrentSector: boolean,
@@ -154,7 +154,7 @@ export function drawSector(
         canAccessTier(tier, modules, captainLevel) &&
         areEnginesFunctional() &&
         areFuelTanksFunctional();
-    const fuelCost = calculateFuelCost(tier);
+    const fuelCost = calculateFuelCost(sector.id);
     // Safeguard against NaN or undefined fuel
     const safeFuel = fuel !== undefined && !isNaN(fuel) ? fuel : 0;
     const canAffordFuel = safeFuel >= fuelCost;

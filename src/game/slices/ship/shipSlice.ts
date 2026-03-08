@@ -91,15 +91,16 @@ export interface ShipSlice {
      *
      * Учитывает:
      * - Расстояние между тирами секторов
+     * - Угловое расстояние между секторами на одном тире (для intra-tier прыжков)
      * - Эффективность двигателей корабля
      * - Расовые бонусы экипажа (например, voidborn: +20% к эффективности топлива)
      * - Трейты пилота, влияющие на потребление топлива
      * - Бонусы от активных эффектов планеты (например, "Мистический ритуал")
      *
-     * @param targetTier - Целевой тир сектора для перелёта
+     * @param targetSectorId - Целевой сектор для перелёта
      * @returns Стоимость топлива в единицах (минимум 1, по умолчанию 5 при ошибке)
      */
-    calculateFuelCost: (targetTier: number) => number;
+    calculateFuelCost: (targetSectorId: number) => number;
 }
 
 /**
@@ -209,8 +210,8 @@ export const createShipSlice = (
         return getCargoCapacity(state);
     },
 
-    calculateFuelCost: (targetTier: number) => {
+    calculateFuelCost: (targetSectorId: number) => {
         const state = get();
-        return calculateFuelCost(state, targetTier);
+        return calculateFuelCost(state, targetSectorId);
     },
 });

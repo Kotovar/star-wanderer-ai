@@ -732,11 +732,33 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             name: "Настройка двигателя",
             type: "upgrade",
             targetType: "engine",
-            price: 1000,
+            price: 3000,
             effect: { fuelEfficiency: -2 },
             stock: 2,
             moduleType: "engine",
             description: "Снижает расход топлива на 2 единицы за прыжок",
+        },
+        {
+            id: "engine-upgrade-2",
+            name: "Настройка двигателя",
+            type: "upgrade",
+            targetType: "engine",
+            price: 6000,
+            effect: { fuelEfficiency: -3 },
+            stock: 1,
+            moduleType: "engine",
+            description: "Снижает расход топлива на 3 единицы за прыжок",
+        },
+        {
+            id: "engine-upgrade-3",
+            name: "Настройка двигателя",
+            type: "upgrade",
+            targetType: "engine",
+            price: 9000,
+            effect: { fuelEfficiency: -4 },
+            stock: 1,
+            moduleType: "engine",
+            description: "Снижает расход топлива на 4 единицы за прыжок",
         },
         {
             id: "drill-upgrade-1",
@@ -841,15 +863,37 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             description: "Увеличивает производство кислорода на 4 единицы",
         },
         {
+            id: "engine-upgrade-1",
+            name: "Настройка двигателя",
+            type: "upgrade",
+            targetType: "engine",
+            price: 3000,
+            effect: { fuelEfficiency: -2 },
+            stock: 2,
+            moduleType: "engine",
+            description: "Снижает расход топлива на 2 единицы за прыжок",
+        },
+        {
             id: "engine-upgrade-2",
             name: "Настройка двигателя",
             type: "upgrade",
             targetType: "engine",
-            price: 2000,
+            price: 6000,
             effect: { fuelEfficiency: -3 },
             stock: 1,
             moduleType: "engine",
             description: "Снижает расход топлива на 3 единицы за прыжок",
+        },
+        {
+            id: "engine-upgrade-3",
+            name: "Настройка двигателя",
+            type: "upgrade",
+            targetType: "engine",
+            price: 9000,
+            effect: { fuelEfficiency: -4 },
+            stock: 1,
+            moduleType: "engine",
+            description: "Снижает расход топлива на 4 единицы за прыжок",
         },
         {
             id: "drill-upgrade-2",
@@ -954,11 +998,33 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             description: "Увеличивает производство кислорода на 5 единиц",
         },
         {
+            id: "engine-upgrade-1",
+            name: "Настройка двигателя",
+            type: "upgrade",
+            targetType: "engine",
+            price: 3000,
+            effect: { fuelEfficiency: -2 },
+            stock: 2,
+            moduleType: "engine",
+            description: "Снижает расход топлива на 2 единицы за прыжок",
+        },
+        {
+            id: "engine-upgrade-2",
+            name: "Настройка двигателя",
+            type: "upgrade",
+            targetType: "engine",
+            price: 6000,
+            effect: { fuelEfficiency: -3 },
+            stock: 1,
+            moduleType: "engine",
+            description: "Снижает расход топлива на 3 единицы за прыжок",
+        },
+        {
             id: "engine-upgrade-3",
             name: "Настройка двигателя",
             type: "upgrade",
             targetType: "engine",
-            price: 2800,
+            price: 9000,
             effect: { fuelEfficiency: -4 },
             stock: 1,
             moduleType: "engine",
@@ -1058,18 +1124,39 @@ export function generateStationItems(
 
     const items: ShopItem[] = [];
 
+    // Available module levels by station tier:
+    // - Tier 1: levels 1-2
+    // - Tier 2: levels 1-3
+    // - Tier 3: levels 1-4 (level 4 is rare)
+    // - Tier 4 (secret): levels 3-4 (level 4 is rare)
     let availableLevels: number[];
     if (sectorTier === 1) {
         availableLevels = [1, 2];
     } else if (sectorTier === 2) {
-        availableLevels = [2, 3];
-    } else {
-        // Tier 3+ stations can have tier 4 modules (rare)
+        availableLevels = [1, 2, 3];
+    } else if (sectorTier === 4) {
+        // Secret tier 4: only high-tier modules
         availableLevels = [3, 4];
+    } else {
+        // Tier 3 stations can have tier 4 modules (rare)
+        availableLevels = [1, 2, 3, 4];
     }
 
+    // Get upgrades for this tier, but filter engine upgrades by tier
     const tierUpgrades = UPGRADES_BY_TIER[sectorTier] || UPGRADES_BY_TIER[1];
     tierUpgrades.forEach((upgrade) => {
+        // Filter engine upgrades by station tier:
+        // - Tier 1: only engine-upgrade-1 (1→2)
+        // - Tier 2: engine-upgrade-1 (1→2), engine-upgrade-2 (2→3)
+        // - Tier 3+: all engine upgrades (1→2, 2→3, 3→4)
+        if (upgrade.id.includes("engine-upgrade")) {
+            if (sectorTier === 1 && upgrade.id.includes("engine-upgrade-2"))
+                return;
+            if (sectorTier === 1 && upgrade.id.includes("engine-upgrade-3"))
+                return;
+            if (sectorTier === 2 && upgrade.id.includes("engine-upgrade-3"))
+                return;
+        }
         items.push({ ...upgrade, id: `${upgrade.id}-${stationId}` });
     });
 

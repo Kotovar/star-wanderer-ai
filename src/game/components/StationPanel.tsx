@@ -184,6 +184,7 @@ export function StationPanel() {
                         stationInventory={stationInventory}
                         credits={credits}
                         ship={ship}
+                        stationTier={sectorTier}
                         stationConfig={stationConfig}
                         buyItem={buyItem}
                         onUpgradeClick={(item) => {
