@@ -357,6 +357,8 @@ export function SectorMap() {
     const completedLocations = useGameStore((s) => s.completedLocations);
     const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
     const canScanObject = useGameStore((s) => s.canScanObject);
+    const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
+    const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
 
     const [hoveredLocation, setHoveredLocation] = useState<{
         loc: Location;
@@ -773,59 +775,68 @@ export function SectorMap() {
             const animState = animationStateRef.current;
             animState.time += 16; // ~16ms per frame
 
-            // Update meteors
-            animState.meteors.forEach((meteor) => {
-                if (!meteor.active) {
-                    // Randomly activate meteor
-                    if (Math.random() < 0.005) {
-                        meteor.active = true;
-                        meteor.x = Math.random() > 0.5 ? -50 : newWidth + 50;
-                        meteor.y = Math.random() * newHeight;
-                        meteor.vx =
-                            (Math.random() > 0.5 ? 1 : -1) *
-                            (2 + Math.random() * 3);
-                        meteor.vy = (Math.random() - 0.3) * 2;
-                    }
-                } else {
-                    meteor.x += meteor.vx;
-                    meteor.y += meteor.vy;
+            // Update and draw animations only if enabled
+            if (animationsEnabled) {
+                // Update meteors
+                animState.meteors.forEach((meteor) => {
+                    if (!meteor.active) {
+                        // Randomly activate meteor
+                        if (Math.random() < 0.005) {
+                            meteor.active = true;
+                            meteor.x =
+                                Math.random() > 0.5 ? -50 : newWidth + 50;
+                            meteor.y = Math.random() * newHeight;
+                            meteor.vx =
+                                (Math.random() > 0.5 ? 1 : -1) *
+                                (2 + Math.random() * 3);
+                            meteor.vy = (Math.random() - 0.3) * 2;
+                        }
+                    } else {
+                        meteor.x += meteor.vx;
+                        meteor.y += meteor.vy;
 
-                    // Deactivate if off screen
-                    if (
-                        meteor.x < -100 ||
-                        meteor.x > newWidth + 100 ||
-                        meteor.y < -100 ||
-                        meteor.y > newHeight + 100
-                    ) {
-                        meteor.active = false;
+                        // Deactivate if off screen
+                        if (
+                            meteor.x < -100 ||
+                            meteor.x > newWidth + 100 ||
+                            meteor.y < -100 ||
+                            meteor.y > newHeight + 100
+                        ) {
+                            meteor.active = false;
+                        }
                     }
+                });
+
+                // Update particles
+                animState.particles.forEach((particle) => {
+                    particle.nx += particle.vx;
+                    particle.ny += particle.vy;
+
+                    // Wrap around
+                    if (particle.nx < 0) particle.nx = 1;
+                    if (particle.nx > 1) particle.nx = 0;
+                    if (particle.ny < 0) particle.ny = 1;
+                    if (particle.ny > 1) particle.ny = 0;
+                });
+
+                // Draw animations on separate canvas
+                if (animCtx && starsRef.current) {
+                    animCtx.clearRect(0, 0, newWidth, newHeight);
+                    drawMeteors(animCtx, animState);
+                    drawParticles(animCtx, animState, newWidth, newHeight);
+                    drawTwinklingStars(
+                        animCtx,
+                        starsRef.current,
+                        animState.time,
+                        newWidth,
+                        newHeight,
+                    );
                 }
-            });
-
-            // Update particles
-            animState.particles.forEach((particle) => {
-                particle.nx += particle.vx;
-                particle.ny += particle.vy;
-
-                // Wrap around
-                if (particle.nx < 0) particle.nx = 1;
-                if (particle.nx > 1) particle.nx = 0;
-                if (particle.ny < 0) particle.ny = 1;
-                if (particle.ny > 1) particle.ny = 0;
-            });
-
-            // Draw animations on separate canvas
-            if (animCtx && starsRef.current) {
-                animCtx.clearRect(0, 0, newWidth, newHeight);
-                drawMeteors(animCtx, animState);
-                drawParticles(animCtx, animState, newWidth, newHeight);
-                drawTwinklingStars(
-                    animCtx,
-                    starsRef.current,
-                    animState.time,
-                    newWidth,
-                    newHeight,
-                );
+            } else {
+                // Clear animation canvas when animations are disabled
+                if (animCtx) {
+                    animCtx.clearRect(0, 0, newWidth, newHeight);
+                }
             }
 
             drawCanvas();
@@ -840,7 +851,7 @@ export function SectorMap() {
                 cancelAnimationFrame(animationFrameIdRef.current);
             }
         };
-    }, [currentSector, drawCanvas]);
+    }, [animationsEnabled, currentSector, drawCanvas]);
 
     // Handle wheel zoom
     const handleWheel = useCallback(
@@ -1358,6 +1369,17 @@ export function SectorMap() {
 
             {/* Zoom controls */}
             <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+                <button
+                    onClick={() => setAnimationsEnabled(!animationsEnabled)}
+                    className="w-10 h-10 bg-[#050810] border-2 border-[#00ff41] text-[#00ff41] text-xs font-bold hover:bg-[#0a1a20] transition-colors flex items-center justify-center cursor-pointer"
+                    title={
+                        animationsEnabled
+                            ? "Выключить анимации"
+                            : "Включить анимации"
+                    }
+                >
+                    {animationsEnabled ? "✨" : "⊘"}
+                </button>
                 <button
                     onClick={handleZoomIn}
                     className="w-10 h-10 bg-[#050810] border-2 border-[#00ff41] text-[#00ff41] text-xl font-bold hover:bg-[#0a1a20] transition-colors flex items-center justify-center cursor-pointer"

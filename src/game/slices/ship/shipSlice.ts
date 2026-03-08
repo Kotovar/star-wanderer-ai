@@ -210,7 +210,7 @@ export const createShipSlice = (
         return getCargoCapacity(state);
     },
 
-    calculateFuelCost: (targetSectorId: number) => {
+    calculateFuelCost: (targetSectorId) => {
         const state = get();
         return calculateFuelCost(state, targetSectorId);
     },

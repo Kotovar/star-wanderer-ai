@@ -8353,6 +8353,12 @@ export const useGameStore = create<GameStore>()(
             saveToLocalStorage(state);
         },
 
+        setAnimationsEnabled: (enabled: boolean) => {
+            set((state) => {
+                state.settings.animationsEnabled = enabled;
+            });
+        },
+
         saveGame: () => {
             const state = get();
             saveToLocalStorage(state);
@@ -8366,6 +8372,10 @@ export const useGameStore = create<GameStore>()(
                 // Initialize ship stats for new game
                 get().updateShipStats();
                 return false;
+            }
+            // Migration: add settings if missing (for old saves)
+            if (!saved.settings) {
+                saved.settings = { animationsEnabled: true };
             }
             set({ ...saved });
             get().addLog("Игра загружена", "info");

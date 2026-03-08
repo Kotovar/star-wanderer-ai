@@ -100,4 +100,7 @@ export const initialState: GameState = {
         researchedTechs: [],
         activeResearch: null,
     },
+    settings: {
+        animationsEnabled: true,
+    },
 };

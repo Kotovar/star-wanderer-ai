@@ -92,6 +92,9 @@ export interface GameState {
     activeEffects: ActiveEffect[]; // Active planet specialization effects
     planetCooldowns: Record<string, number>; // Track cooldowns per planet (planetId -> turnsRemaining)
     research: ResearchData; // Research system data
+    settings: {
+        animationsEnabled: boolean; // Sector map animations toggle
+    };
 }
 
 export interface GameActions {
@@ -119,6 +122,7 @@ export interface GameActions {
     areFuelTanksFunctional: () => boolean;
     refuel: (amount: number, price: number) => void;
     gainExp: (crewMember: CrewMember | undefined, amount: number) => void;
+    setAnimationsEnabled: (enabled: boolean) => void;
 }
 
 export interface GameActionsClick {

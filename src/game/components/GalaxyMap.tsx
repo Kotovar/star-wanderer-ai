@@ -10,6 +10,10 @@ import {
     getSectorRadius,
 } from "@/game/galaxy/galaxy-map-utils";
 
+// Animation constants
+const TWINKLING_STARS_COUNT = 40;
+const COSMIC_PARTICLES_COUNT = 10;
+
 // Generate stars once and reuse them
 function generateStars(
     width: number,
@@ -47,6 +51,65 @@ function generateStars(
     return stars;
 }
 
+// Generate twinkling stars with animation properties
+function generateTwinklingStars(width: number, height: number) {
+    const stars: Array<{
+        x: number;
+        y: number;
+        size: number;
+        brightness: number;
+        twinkleSpeed: number;
+        twinkleOffset: number;
+    }> = [];
+
+    for (let i = 0; i < TWINKLING_STARS_COUNT; i++) {
+        stars.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            size: 0.5 + Math.random() * 1.5,
+            brightness: Math.random(),
+            twinkleSpeed: 0.5 + Math.random() * 2,
+            twinkleOffset: Math.random() * Math.PI * 2,
+        });
+    }
+
+    return stars;
+}
+
+// Generate cosmic dust particles
+function generateCosmicParticles() {
+    const particles: Array<{
+        nx: number;
+        ny: number;
+        size: number;
+        vx: number;
+        vy: number;
+        brightness: number;
+        color: string;
+    }> = [];
+
+    const colors = [
+        "rgba(100, 150, 255, 0.4)",
+        "rgba(150, 100, 255, 0.3)",
+        "rgba(100, 255, 150, 0.3)",
+        "rgba(255, 150, 100, 0.3)",
+    ];
+
+    for (let i = 0; i < COSMIC_PARTICLES_COUNT; i++) {
+        particles.push({
+            nx: Math.random(),
+            ny: Math.random(),
+            size: 0.5 + Math.random() * 1.5,
+            vx: (Math.random() - 0.5) * 0.0003,
+            vy: (Math.random() - 0.5) * 0.0003,
+            brightness: 0.3 + Math.random() * 0.5,
+            color: colors[Math.floor(Math.random() * colors.length)],
+        });
+    }
+
+    return particles;
+}
+
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const ZOOM_SENSITIVITY = 0.001;
@@ -61,9 +124,30 @@ export function GalaxyMap() {
         radius: number;
         brightness: number;
     }> | null>(null);
+    const twinklingStarsRef = useRef<Array<{
+        x: number;
+        y: number;
+        size: number;
+        brightness: number;
+        twinkleSpeed: number;
+        twinkleOffset: number;
+    }> | null>(null);
+    const particlesRef = useRef<Array<{
+        nx: number;
+        ny: number;
+        size: number;
+        vx: number;
+        vy: number;
+        brightness: number;
+        color: string;
+    }> | null>(null);
+    const animationStateRef = useRef<{ time: number }>({ time: 0 });
     const initializedRef = useRef(false);
     const canvasSizeRef = useRef({ width: 0, height: 0 });
-    const hasMovedRef = useRef(false); // Track if mouse moved during click
+    const hasMovedRef = useRef(false);
+
+    // Animation canvas ref
+    const animCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
     // Zoom and pan state
     const [zoom, setZoom] = useState(1);
@@ -88,6 +172,8 @@ export function GalaxyMap() {
     const areFuelTanksFunctional = useGameStore(
         (s) => s.areFuelTanksFunctional,
     );
+    const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
+    const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
 
     // Get set function from store to update sector positions
     const updateSectorPosition = useCallback(
@@ -287,6 +373,104 @@ export function GalaxyMap() {
         updateSectorPosition,
     ]);
 
+    // Animation effect for twinkling stars and cosmic particles
+    useEffect(() => {
+        const animCanvas = animCanvasRef.current;
+        const container = containerRef.current;
+        if (!animCanvas || !container) return;
+
+        const rect = container.getBoundingClientRect();
+        const width = Math.round(rect.width);
+        const height = Math.round(rect.height);
+
+        animCanvas.width = width;
+        animCanvas.height = height;
+        const animCtx = animCanvas.getContext("2d");
+        if (!animCtx) return;
+
+        // Initialize twinkling stars and particles
+        if (!twinklingStarsRef.current) {
+            twinklingStarsRef.current = generateTwinklingStars(width, height);
+        }
+        if (!particlesRef.current) {
+            particlesRef.current = generateCosmicParticles();
+        }
+
+        // Animation loop
+        let animationFrameId: number;
+        const animate = () => {
+            animationStateRef.current.time += 16;
+
+            if (animationsEnabled) {
+                animCtx.clearRect(0, 0, width, height);
+
+                // Draw twinkling stars
+                if (twinklingStarsRef.current) {
+                    const time = animationStateRef.current.time;
+                    twinklingStarsRef.current.forEach((star) => {
+                        const twinkle =
+                            Math.sin(
+                                time * 0.002 * star.twinkleSpeed +
+                                    star.twinkleOffset,
+                            ) *
+                                0.3 +
+                            0.7;
+                        const alpha = (0.3 + star.brightness * 0.7) * twinkle;
+
+                        animCtx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                        animCtx.beginPath();
+                        animCtx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                        animCtx.fill();
+                    });
+                }
+
+                // Draw cosmic particles
+                if (particlesRef.current) {
+                    const time = animationStateRef.current.time;
+                    particlesRef.current.forEach((particle) => {
+                        particle.nx += particle.vx;
+                        particle.ny += particle.vy;
+
+                        // Wrap around
+                        if (particle.nx < 0) particle.nx = 1;
+                        if (particle.nx > 1) particle.nx = 0;
+                        if (particle.ny < 0) particle.ny = 1;
+                        if (particle.ny > 1) particle.ny = 0;
+
+                        const x = particle.nx * width;
+                        const y = particle.ny * height;
+
+                        // Twinkle effect
+                        const twinkle =
+                            Math.sin(
+                                time * 0.003 + particle.brightness * Math.PI,
+                            ) *
+                                0.3 +
+                            0.7;
+
+                        animCtx.fillStyle = particle.color.replace(
+                            /[\d.]+\)$/g,
+                            `${particle.brightness * twinkle * 0.5})`,
+                        );
+                        animCtx.beginPath();
+                        animCtx.arc(x, y, particle.size, 0, Math.PI * 2);
+                        animCtx.fill();
+                    });
+                }
+            } else {
+                animCtx.clearRect(0, 0, width, height);
+            }
+
+            animationFrameId = requestAnimationFrame(animate);
+        };
+
+        animationFrameId = requestAnimationFrame(animate);
+
+        return () => {
+            cancelAnimationFrame(animationFrameId);
+        };
+    }, [animationsEnabled]);
+
     // Handle wheel zoom
     const handleWheel = useCallback(
         (e: React.WheelEvent<HTMLCanvasElement>) => {
@@ -473,8 +657,28 @@ export function GalaxyMap() {
                 onTouchEnd={handleTouchEnd}
             />
 
+            {/* Animation overlay canvas */}
+            <canvas
+                ref={animCanvasRef}
+                className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                style={{
+                    zIndex: 1,
+                }}
+            />
+
             {/* Zoom controls */}
             <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+                <button
+                    onClick={() => setAnimationsEnabled(!animationsEnabled)}
+                    className="w-10 h-10 bg-[#050810] border-2 border-[#00ff41] text-[#00ff41] text-xs font-bold hover:bg-[#0a1a20] transition-colors flex items-center justify-center cursor-pointer"
+                    title={
+                        animationsEnabled
+                            ? "Выключить анимации"
+                            : "Включить анимации"
+                    }
+                >
+                    {animationsEnabled ? "✨" : "⊘"}
+                </button>
                 <button
                     onClick={handleZoomIn}
                     className="w-10 h-10 bg-[#050810] border-2 border-[#00ff41] text-[#00ff41] text-xl font-bold hover:bg-[#0a1a20] transition-colors flex items-center justify-center cursor-pointer"
