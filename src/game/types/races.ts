@@ -13,6 +13,23 @@ export type RaceId =
     | "voidborn"
     | "crystalline";
 
+/**
+ * ID специальных трейтов рас
+ */
+export type RaceTraitId =
+    | "quick_learner"
+    | "no_happiness"
+    | "ai_glitch"
+    | "symbiosis"
+    | "disturbing_presence"
+    | "intimidation"
+    | "void_shield"
+    | "unnerving"
+    | "low_health"
+    | "crystal_armor"
+    | "resonance"
+    | "brittle_crystal";
+
 type RaceTraitEffects = {
     expBonus?: number;
     noHappiness?: number;
@@ -27,7 +44,7 @@ type RaceTraitEffects = {
 };
 
 export interface RaceTrait {
-    id: string;
+    id: RaceTraitId;
     name: string;
     description: string;
     type: CrewTraitType;

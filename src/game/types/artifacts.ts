@@ -14,6 +14,7 @@ export interface Artifact {
     hinted?: boolean; // Has been hinted at by synthetic archives
     cursed?: boolean; // Is this a cursed artifact with negative effects
     canBoost?: boolean; // Can be enhanced by voidborn ritual (default: true if has numeric value)
+    scanRange?: number; // Scan range value for artifacts that provide scan range
 }
 
 export interface ArtifactEffect {

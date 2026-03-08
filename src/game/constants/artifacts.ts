@@ -1,4 +1,4 @@
-import type { Artifact } from "../types";
+import type { Artifact, ArtifactType } from "../types";
 
 // ============================================
 // ANCIENT ARTIFACTS - Unique items from lost civilization
@@ -205,6 +205,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         rarity: "cursed",
         cursed: true,
         canBoost: false,
+        scanRange: 8,
     },
     {
         id: "ancient_biosphere",
@@ -316,4 +317,22 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         cursed: true,
         canBoost: false,
     },
+];
+
+/**
+ * Типы артефактов, влияющие на характеристики корабля
+ */
+export const ARTIFACT_TYPES: Record<string, ArtifactType> = {
+    DARK_SHIELD: "dark_shield",
+    CRYSTALLINE_ARMOR: "module_armor",
+    EYE_OF_SINGULARITY: "all_seeing",
+    QUANTUM_SCANNER: "quantum_scan",
+};
+
+/**
+ * Типы артефактов, влияющие на энергию корабля
+ */
+export const POWER_ARTIFACT_TYPES: ArtifactType[] = [
+    "abyss_power",
+    "free_power",
 ];

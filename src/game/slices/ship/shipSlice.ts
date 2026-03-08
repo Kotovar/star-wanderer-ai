@@ -1,12 +1,10 @@
 import type { GameState } from "@/game/types/game";
-import { getArtifactEffectValue } from "@/game/artifacts";
+import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import {
-    ARTIFACT_TYPES,
     calculateAverageDefense,
     calculateTotalFuelCapacity,
     calculateTotalOxygen,
     calculateTotalShields,
-    findActiveArtifact,
 } from "./utils";
 import { WeaponTypeTotal } from "@/game/types";
 import { getTotalDamage } from "./helpers/getTotalDamage";
@@ -19,6 +17,7 @@ import {
     getDrillLevel,
     getCargoCapacity,
 } from "./helpers";
+import { ARTIFACT_TYPES } from "@/game/constants";
 
 /**
  * Расширенный интерфейс ShipSlice с геттерами

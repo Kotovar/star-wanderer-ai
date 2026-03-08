@@ -100,3 +100,12 @@ export const getArtifactEffectValue = (
 
     return value;
 };
+
+/**
+ * Находит активный артефакт по типу эффекта
+ * @param artifacts - Список всех артефактов
+ * @param effectType - Тип эффекта для поиска
+ * @returns Активный артефакт или undefined
+ */
+export const findActiveArtifact = (artifacts: Artifact[], effectType: string) =>
+    artifacts.find((a) => a.effect.type === effectType && a.effect.active);

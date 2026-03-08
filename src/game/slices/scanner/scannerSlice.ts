@@ -4,7 +4,7 @@ import {
     canScanObject,
     getEarlyWarningChance,
     getSignalRevealChance,
-} from "./helpers/getEffectiveScanRange";
+} from "./helpers";
 
 /**
  * Расширенный интерфейс ScannerSlice с геттерами

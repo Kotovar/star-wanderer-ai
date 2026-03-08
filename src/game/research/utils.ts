@@ -2,6 +2,7 @@ import {
     RESEARCH_TREE,
     type ResearchResourceType,
 } from "@/game/constants/research";
+import type { ResearchBonusType, ResearchData } from "@/game/types";
 
 /**
  * Get research resources from mining asteroids
@@ -142,4 +143,29 @@ export const getAdjacentTechs = (techId: string) => {
     });
 
     return adjacent;
+};
+
+/**
+ * Вычисляет суммарный бонус от исследованных технологий
+ *
+ * @param research - Данные об исследованиях
+ * @param bonusType - Тип бонуса для поиска (например, "scan_range")
+ * @returns Суммарное значение бонуса
+ */
+export const getTechBonusSum = (
+    research: ResearchData,
+    bonusType: ResearchBonusType,
+): number => {
+    let totalBonus = 0;
+
+    research.researchedTechs.forEach((techId) => {
+        const tech = RESEARCH_TREE[techId];
+        tech.bonuses.forEach((bonus) => {
+            if (bonus.type === bonusType) {
+                totalBonus += bonus.value;
+            }
+        });
+    });
+
+    return totalBonus;
 };
