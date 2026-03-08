@@ -21,7 +21,6 @@ interface ShopTabProps {
     ship: {
         modules: Module[];
     };
-    stationTier?: number;
     stationConfig?: {
         guaranteedWeapons?: string[];
         guaranteedModules: string[];
@@ -36,7 +35,6 @@ export function ShopTab({
     stationInventory,
     credits,
     ship,
-    stationTier = 1,
     buyItem,
     onUpgradeClick,
 }: ShopTabProps) {
@@ -61,46 +59,33 @@ export function ShopTab({
                 return false;
             }
 
-            // For engine upgrades, show only the one matching the module level
-            // and available for this station tier:
-            // - Tier 1: only engine-upgrade-1 (1→2)
-            // - Tier 2: engine-upgrade-1 (1→2), engine-upgrade-2 (2→3)
-            // - Tier 3+: engine-upgrade-1 (1→2), engine-upgrade-2 (2→3), engine-upgrade-3 (3→4)
-            if (
-                item.targetType === "engine" &&
-                item.id.includes("engine-upgrade")
-            ) {
-                const modulesOfType = ship.modules.filter(
-                    (m) => m.type === "engine" && !m.disabled && m.health > 0,
-                );
-                const maxEngineLevel =
-                    modulesOfType.length > 0
-                        ? Math.max(...modulesOfType.map((m) => m.level || 1))
-                        : 1;
+            // For all upgrades, check if any module can use it
+            // Extract upgrade level from ID (e.g., "reactor-upgrade-1-stationId" → 1)
+            const upgradeMatch = item.id.match(/-upgrade-(\d+)-/);
+            if (!upgradeMatch) return true;
 
-                // Note: ID format is "engine-upgrade-N-stationId"
-                const upgradeLevel = item.id.startsWith("engine-upgrade-1-")
-                    ? 1
-                    : item.id.startsWith("engine-upgrade-2-")
-                      ? 2
-                      : item.id.startsWith("engine-upgrade-3-")
-                        ? 3
-                        : 1;
+            const upgradeLevel = parseInt(upgradeMatch[1], 10);
 
-                // Hide upgrade if all engines are at max level (3)
-                if (maxEngineLevel >= 3) return false;
+            const modulesOfType = ship.modules.filter(
+                (m) =>
+                    m.type === item.targetType && !m.disabled && m.health > 0,
+            );
 
-                // Check if this upgrade is available at this station tier
-                if (stationTier === 1 && upgradeLevel > 1) return false;
-                if (stationTier === 2 && upgradeLevel > 2) return false;
-                // Tier 3+ has all upgrades
+            // Check if any module matches this upgrade level
+            const hasMatchingModule = modulesOfType.some(
+                (m) => (m.level || 1) === upgradeLevel,
+            );
 
-                return upgradeLevel === maxEngineLevel;
-            }
+            // Hide upgrade if all modules are at max level (3)
+            const allAtMaxLevel = modulesOfType.every(
+                (m) => (m.level || 1) >= 3,
+            );
+            if (allAtMaxLevel) return false;
 
-            return true;
+            // Show upgrade if any module can use it
+            return hasMatchingModule;
         });
-    }, [stationItems, ownedModuleTypes, ship.modules, stationTier]);
+    }, [stationItems, ownedModuleTypes, ship.modules]);
 
     return (
         <>
@@ -322,7 +307,7 @@ function ItemPriceAndStock({
 }) {
     return (
         <div className="text-[#ffb000] mt-1 text-xs">
-            💰 {price}₢
+            💰 {isUpgrade ? "" : price + " ₢"}
             <span
                 className={`ml-4 ${
                     soldOut || noWB || (alreadyOwned && !isUpgrade)

@@ -184,7 +184,6 @@ export function StationPanel() {
                         stationInventory={stationInventory}
                         credits={credits}
                         ship={ship}
-                        stationTier={sectorTier}
                         stationConfig={stationConfig}
                         buyItem={buyItem}
                         onUpgradeClick={(item) => {
@@ -268,6 +267,7 @@ export function StationPanel() {
                 open={upgradeModalOpen}
                 onOpenChange={setUpgradeModalOpen}
                 pendingUpgrade={pendingUpgrade}
+                stationItems={stationItems}
                 shipModules={ship.modules}
                 buyItem={buyItem}
             />

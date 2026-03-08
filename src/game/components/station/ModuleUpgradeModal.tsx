@@ -14,6 +14,7 @@ interface ModuleUpgradeModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     pendingUpgrade: ShopItem | null;
+    stationItems: ShopItem[];
     shipModules: Module[];
     buyItem: (item: ShopItem, moduleId?: number) => void;
 }
@@ -22,6 +23,7 @@ export function ModuleUpgradeModal({
     open,
     onOpenChange,
     pendingUpgrade,
+    stationItems,
     shipModules,
     buyItem,
 }: ModuleUpgradeModalProps) {
@@ -48,12 +50,10 @@ export function ModuleUpgradeModal({
                               ? `+${pendingUpgrade.effect.capacity} ёмкости`
                               : "Улучшение"}
                     </div>
-                    <div className="text-sm text-[#ffb000] mb-2">
-                        💰 Цена: {pendingUpgrade.price}₢
-                    </div>
 
                     <ModuleSelectionList
                         targetType={pendingUpgrade.targetType}
+                        stationItems={stationItems}
                         shipModules={shipModules}
                         pendingUpgrade={pendingUpgrade}
                         buyItem={buyItem}
@@ -67,6 +67,7 @@ export function ModuleUpgradeModal({
 
 interface ModuleSelectionListProps {
     targetType: string | undefined;
+    stationItems: ShopItem[];
     shipModules: Module[];
     pendingUpgrade: ShopItem;
     buyItem: (item: ShopItem, moduleId?: number) => void;
@@ -75,6 +76,7 @@ interface ModuleSelectionListProps {
 
 function ModuleSelectionList({
     targetType,
+    stationItems,
     shipModules,
     pendingUpgrade,
     buyItem,
@@ -132,13 +134,35 @@ function ModuleSelectionList({
                 const nextConsumption = nextModuleTemplate?.consumption || 0;
                 const consumptionDiff = nextConsumption - currentConsumption;
 
+                // Calculate upgrade price based on module's current level
+                // Find the correct upgrade item for this module's level from station items
+                const upgradeItem = stationItems.find((item) => {
+                    if (
+                        item.type !== "upgrade" ||
+                        item.targetType !== targetType
+                    ) {
+                        return false;
+                    }
+                    // Match upgrade level from ID (e.g., "reactor-upgrade-1-stationId" → 1)
+                    const match = item.id.match(/upgrade-(\d+)/);
+                    if (!match) return false;
+                    const itemUpgradeLevel = parseInt(match[1], 10);
+                    return itemUpgradeLevel === currentLevel;
+                });
+
+                // If no upgrade item found for this level, this upgrade is not available at this station tier
+                const isUpgradeAvailable = upgradeItem !== undefined;
+                const upgradePrice = upgradeItem?.price || pendingUpgrade.price;
+
                 return (
                     <ModuleUpgradeCard
                         key={module.id}
                         module={module}
                         moduleIndex={index}
                         isMaxLevel={isMaxLevel}
+                        isUpgradeAvailable={isUpgradeAvailable}
                         pendingUpgrade={pendingUpgrade}
+                        upgradePrice={upgradePrice}
                         buyItem={buyItem}
                         onClose={onClose}
                         consumptionDiff={consumptionDiff}
@@ -154,7 +178,9 @@ interface ModuleUpgradeCardProps {
     module: Module;
     moduleIndex: number;
     isMaxLevel: boolean;
+    isUpgradeAvailable: boolean;
     pendingUpgrade: ShopItem;
+    upgradePrice: number;
     buyItem: (item: ShopItem, moduleId?: number) => void;
     onClose: (open: boolean) => void;
     consumptionDiff: number;
@@ -165,28 +191,32 @@ function ModuleUpgradeCard({
     module,
     moduleIndex,
     isMaxLevel,
+    isUpgradeAvailable,
     pendingUpgrade,
+    upgradePrice,
     buyItem,
     onClose,
     consumptionDiff,
     nextLevel,
 }: ModuleUpgradeCardProps) {
+    const isDisabled = isMaxLevel || !isUpgradeAvailable;
+
     return (
         <div
             className={`bg-[rgba(0,255,65,0.05)] border p-3 transition-colors relative ${
-                isMaxLevel
+                isDisabled
                     ? "border-[#666] opacity-50 cursor-not-allowed bg-[rgba(30,30,30,0.3)]"
                     : "border-[#00ff41] cursor-pointer hover:bg-[rgba(0,255,65,0.1)]"
             }`}
             onClick={() => {
-                if (isMaxLevel) return;
+                if (isDisabled) return;
                 buyItem(pendingUpgrade, module.id);
                 onClose(false);
             }}
         >
-            {isMaxLevel && (
+            {(isMaxLevel || !isUpgradeAvailable) && (
                 <div className="absolute top-0 right-0 bg-[#ff0040] text-white text-[9px] px-2 py-0.5 font-bold">
-                    MAX
+                    {isMaxLevel ? "MAX" : "НЕДОСТУПНО"}
                 </div>
             )}
             <div className="flex justify-between items-start">
@@ -235,6 +265,9 @@ function ModuleUpgradeCard({
                         ⚡ Потребление: +{consumptionDiff}
                     </span>
                 )}
+            </div>
+            <div className="text-sm text-[#ffb000] mt-2 font-bold">
+                💰 Цена: {upgradePrice}₢
             </div>
         </div>
     );

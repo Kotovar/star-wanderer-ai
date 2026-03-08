@@ -739,28 +739,6 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             description: "Снижает расход топлива на 2 единицы за прыжок",
         },
         {
-            id: "engine-upgrade-2",
-            name: "Настройка двигателя",
-            type: "upgrade",
-            targetType: "engine",
-            price: 6000,
-            effect: { fuelEfficiency: -3 },
-            stock: 1,
-            moduleType: "engine",
-            description: "Снижает расход топлива на 3 единицы за прыжок",
-        },
-        {
-            id: "engine-upgrade-3",
-            name: "Настройка двигателя",
-            type: "upgrade",
-            targetType: "engine",
-            price: 9000,
-            effect: { fuelEfficiency: -4 },
-            stock: 1,
-            moduleType: "engine",
-            description: "Снижает расход топлива на 4 единицы за прыжок",
-        },
-        {
             id: "drill-upgrade-1",
             name: "Улучшение бура",
             type: "upgrade",
@@ -885,17 +863,6 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             description: "Снижает расход топлива на 3 единицы за прыжок",
         },
         {
-            id: "engine-upgrade-3",
-            name: "Настройка двигателя",
-            type: "upgrade",
-            targetType: "engine",
-            price: 9000,
-            effect: { fuelEfficiency: -4 },
-            stock: 1,
-            moduleType: "engine",
-            description: "Снижает расход топлива на 4 единицы за прыжок",
-        },
-        {
             id: "drill-upgrade-2",
             name: "Улучшение бура",
             type: "upgrade",
@@ -996,28 +963,6 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             stock: 1,
             moduleType: "lifesupport",
             description: "Увеличивает производство кислорода на 5 единиц",
-        },
-        {
-            id: "engine-upgrade-1",
-            name: "Настройка двигателя",
-            type: "upgrade",
-            targetType: "engine",
-            price: 3000,
-            effect: { fuelEfficiency: -2 },
-            stock: 2,
-            moduleType: "engine",
-            description: "Снижает расход топлива на 2 единицы за прыжок",
-        },
-        {
-            id: "engine-upgrade-2",
-            name: "Настройка двигателя",
-            type: "upgrade",
-            targetType: "engine",
-            price: 6000,
-            effect: { fuelEfficiency: -3 },
-            stock: 1,
-            moduleType: "engine",
-            description: "Снижает расход топлива на 3 единицы за прыжок",
         },
         {
             id: "engine-upgrade-3",
@@ -1142,21 +1087,22 @@ export function generateStationItems(
         availableLevels = [1, 2, 3, 4];
     }
 
-    // Get upgrades for this tier, but filter engine upgrades by tier
-    const tierUpgrades = UPGRADES_BY_TIER[sectorTier] || UPGRADES_BY_TIER[1];
-    tierUpgrades.forEach((upgrade) => {
-        // Filter engine upgrades by station tier:
-        // - Tier 1: only engine-upgrade-1 (1→2)
-        // - Tier 2: engine-upgrade-1 (1→2), engine-upgrade-2 (2→3)
-        // - Tier 3+: all engine upgrades (1→2, 2→3, 3→4)
-        if (upgrade.id.includes("engine-upgrade")) {
-            if (sectorTier === 1 && upgrade.id.includes("engine-upgrade-2"))
-                return;
-            if (sectorTier === 1 && upgrade.id.includes("engine-upgrade-3"))
-                return;
-            if (sectorTier === 2 && upgrade.id.includes("engine-upgrade-3"))
-                return;
-        }
+    // Get upgrades for this tier and lower tiers
+    // - Tier 1: only tier 1 upgrades (1→2)
+    // - Tier 2: tier 1 and tier 2 upgrades (1→2, 2→3)
+    // - Tier 3+: all upgrades (1→2, 2→3, 3→4)
+    const upgradesToAdd: ShopItem[] = [];
+    if (sectorTier >= 1) {
+        upgradesToAdd.push(...(UPGRADES_BY_TIER[1] || []));
+    }
+    if (sectorTier >= 2) {
+        upgradesToAdd.push(...(UPGRADES_BY_TIER[2] || []));
+    }
+    if (sectorTier >= 3) {
+        upgradesToAdd.push(...(UPGRADES_BY_TIER[3] || []));
+    }
+
+    upgradesToAdd.forEach((upgrade) => {
         items.push({ ...upgrade, id: `${upgrade.id}-${stationId}` });
     });
 
