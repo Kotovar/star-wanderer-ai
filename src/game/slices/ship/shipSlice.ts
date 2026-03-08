@@ -17,6 +17,7 @@ import {
     getDrillLevel,
     getCargoCapacity,
     calculateFuelCost,
+    areModulesFunctional,
 } from "./helpers";
 import { ARTIFACT_TYPES } from "@/game/constants";
 
@@ -101,6 +102,20 @@ export interface ShipSlice {
      * @returns Стоимость топлива в единицах (минимум 1, по умолчанию 5 при ошибке)
      */
     calculateFuelCost: (targetSectorId: number) => number;
+
+    /**
+     * Проверяет, работает ли хотя бы один двигатель
+     * Двигатель считается рабочим, если он не отключён вручную, не отключён автоматически и имеет здоровье > 0
+     * @returns true если есть рабочий двигатель
+     */
+    areEnginesFunctional: () => boolean;
+
+    /**
+     * Проверяет, работает ли хотя бы один топливный бак
+     * Бак считается рабочим, если он не отключён и имеет здоровье > 0
+     * @returns true если есть рабочий топливный бак
+     */
+    areFuelTanksFunctional: () => boolean;
 }
 
 /**
@@ -213,5 +228,15 @@ export const createShipSlice = (
     calculateFuelCost: (targetSectorId) => {
         const state = get();
         return calculateFuelCost(state, targetSectorId);
+    },
+
+    areEnginesFunctional: () => {
+        const state = get();
+        return areModulesFunctional(state, "engine");
+    },
+
+    areFuelTanksFunctional: () => {
+        const state = get();
+        return areModulesFunctional(state, "fueltank");
     },
 });

@@ -72,25 +72,6 @@ export const useGameStore = create<GameStore>()(
         ...createShipSlice(set, get),
         ...createScannerSlice(set, get),
 
-        areEnginesFunctional: () => {
-            const state = get();
-            const engines = state.ship.modules.filter(
-                (m) => m.type === "engine",
-            );
-            // Двигатель считается рабочим, если он не отключён вручную, не отключён автоматически и имеет здоровье > 0
-            return engines.some(
-                (e) => !e.disabled && !e.manualDisabled && e.health > 0,
-            );
-        },
-
-        areFuelTanksFunctional: () => {
-            const state = get();
-            const tanks = state.ship.modules.filter(
-                (m) => m.type === "fueltank",
-            );
-            return tanks.some((t) => !t.disabled && t.health > 0);
-        },
-
         refuel: (amount: number, price: number) => {
             const state = get();
             // Safeguard against NaN or undefined fuel

@@ -8,4 +8,5 @@ export * from "./getFuelEfficiency";
 export * from "./getDrillLevel";
 export * from "./getCargoCapacity";
 export * from "./calculateFuelCost";
+export * from "./areModulesFunctional";
 export * from "./fuel";
