@@ -63,17 +63,6 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
 
     // LEGENDARY artifacts (Tier 2-3 anomalies, rare finds)
     {
-        id: "mirror_shield",
-        name: "Зеркальный Щит",
-        description:
-            "30% шанс отразить атаку в случайный модуль врага без урона по кораблю.",
-        effect: { type: "damage_reflect", value: 0.1, active: false },
-        discovered: false,
-        researched: false,
-        requiresScientistLevel: 3,
-        rarity: "legendary",
-    },
-    {
         id: "warp_coil",
         name: "Варп-Катушка",
         description:
@@ -129,6 +118,17 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         requiresScientistLevel: 3,
         rarity: "legendary",
     },
+    {
+        id: "shield_regenerator",
+        name: "⚡ Регенератор Щитов",
+        description:
+            "+50% к скорости регенерации щитов. Щиты восстанавливаются быстрее в бою и вне боя.",
+        effect: { type: "shield_regen_boost", value: 0.5, active: false },
+        discovered: false,
+        researched: false,
+        requiresScientistLevel: 3,
+        rarity: "legendary",
+    },
 
     // MYTHIC artifacts (Tier 3 anomalies, black holes, extremely rare)
     {
@@ -165,6 +165,17 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         requiresScientistLevel: 4,
         rarity: "mythic",
         canBoost: false,
+    },
+    {
+        id: "mirror_shield",
+        name: "Зеркальный Щит",
+        description:
+            "10% шанс отразить атаку в случайный модуль врага без урона по кораблю.",
+        effect: { type: "damage_reflect", value: 0.1, active: false },
+        discovered: false,
+        researched: false,
+        requiresScientistLevel: 4,
+        rarity: "mythic",
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -260,7 +271,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         id: "overload_matrix",
         name: "💥 Матрица Перегрузки",
         description: "+100% критический урон в бою. Мощность сжигает системы.",
-        effect: { type: "critical_overload", value: 1.0, active: false },
+        effect: { type: "crit_damage_boost", value: 1.0, active: false },
         negativeEffect: {
             type: "self_damage",
             value: 75,
@@ -288,17 +299,6 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         requiresScientistLevel: 2,
         rarity: "cursed",
         cursed: true,
-    },
-    {
-        id: "shield_regenerator",
-        name: "⚡ Регенератор Щитов",
-        description:
-            "+50% к скорости регенерации щитов. Щиты восстанавливаются быстрее в бою и вне боя.",
-        effect: { type: "shield_regen_boost", value: 0.5, active: false },
-        discovered: false,
-        researched: false,
-        requiresScientistLevel: 3,
-        rarity: "legendary",
     },
     {
         id: "void_drive",

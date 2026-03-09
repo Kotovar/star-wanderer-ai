@@ -37,7 +37,8 @@ export type ArtifactType =
     | "shield_regen"
     | "fuel_free"
     | "crew_immortal"
-    | "crit_chance"
+    | "crit_chance" // шанс критического удара
+    | "crit_damage_boost" // бонус к критическому урону
     | "artifact_finder"
     | "damage_boost"
     | "module_armor"
@@ -49,7 +50,6 @@ export type ArtifactType =
     | "undying_crew" // Crew can't die but mutates
     | "credit_booster" // More credits but random damage
     | "auto_repair" // Auto repair but crew leaves
-    | "critical_overload" // Massive crit but self damage
     | "dark_shield" // Strong shield but morale drain
     | "ai_control" // Ship can operate without crew
     | "void_engine" // Free travel but crew suffering

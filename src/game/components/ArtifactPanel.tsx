@@ -46,7 +46,7 @@ const EFFECT_ICONS: Record<string, string> = {
     undying_crew: "🧬",
     credit_booster: "📦",
     auto_repair: "🔧",
-    critical_overload: "💥",
+    crit_damage_boost: "💥",
     dark_shield: "🛡️",
     void_engine: "🌀",
 };

@@ -202,7 +202,7 @@ export const processArtifactEffects = (
             }
 
             // === УРОН ===
-            case "critical_overload": {
+            case "crit_damage_boost": {
                 // Матрица Перегрузки - критический урон (обрабатывается в бою)
                 const critDamage = Math.round(effectValue * 100);
                 get().addLog(

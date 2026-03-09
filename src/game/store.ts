@@ -16,6 +16,13 @@ import {
     WEAPON_TYPES,
     RESEARCH_RESOURCES,
 } from "@/game/constants";
+import {
+    BASE_CRIT_CHANCE,
+    BASE_CRIT_MULTIPLIER,
+    BASE_ACCURACY,
+    MIN_ACCURACY,
+    MAX_ACCURACY,
+} from "@/game/constants/combat";
 import { handleSurvivorCapsuleDelivery } from "@/game/contracts";
 import {
     getActiveAssignment,
@@ -1990,20 +1997,53 @@ export const useGameStore = create<GameStore>()(
                 );
             }
 
-            // Apply critical_matrix artifact (35% crit chance for double damage)
+            // ═══════════════════════════════════════════════════════════════
+            // CRITICAL HIT CALCULATION
+            // Base crit chance + artifacts bonuses
+            // ═══════════════════════════════════════════════════════════════
+
+            // Calculate total crit chance (base + artifacts)
+            let totalCritChance = BASE_CRIT_CHANCE;
             const criticalMatrix = state.artifacts.find(
                 (a) => a.effect.type === "crit_chance" && a.effect.active,
             );
-            let critMultiplier = 1;
             if (criticalMatrix) {
-                const critChance = getArtifactEffectValue(
+                const critChanceBonus = getArtifactEffectValue(
                     criticalMatrix,
                     state,
                 );
-                if (Math.random() < critChance) {
-                    critMultiplier = 2;
-                    get().addLog(`💥 КРИТИЧЕСКИЙ УДАР! x2 урон!`, "combat");
-                }
+                totalCritChance += critChanceBonus;
+                get().addLog(
+                    `💎 Критическая Матрица: +${Math.round(critChanceBonus * 100)}% шанс крита`,
+                    "info",
+                );
+            }
+
+            // Calculate crit damage multiplier (base + artifacts)
+            let critMultiplier = BASE_CRIT_MULTIPLIER;
+            const overloadMatrix = state.artifacts.find(
+                (a) => a.effect.type === "crit_damage_boost" && a.effect.active,
+            );
+            if (overloadMatrix) {
+                const critDamageBonus = getArtifactEffectValue(
+                    overloadMatrix,
+                    state,
+                );
+                critMultiplier += critDamageBonus;
+                get().addLog(
+                    `💥 Матрица Перегрузки: +${Math.round(critDamageBonus * 100)}% крит. урон`,
+                    "info",
+                );
+            }
+
+            // Roll for critical hit
+            let isCrit = false;
+            if (Math.random() < totalCritChance) {
+                isCrit = true;
+                get().addLog(
+                    `💥 КРИТИЧЕСКИЙ УДАР! x${critMultiplier.toFixed(1)} урон!`,
+                    "combat",
+                );
             }
 
             // Calculate accuracy modifier from crew assignments and traits
@@ -2074,16 +2114,16 @@ export const useGameStore = create<GameStore>()(
                 });
             });
 
-            // Base accuracy by weapon type
+            // Base accuracy by weapon type (from global constants)
             const getWeaponAccuracy = (weaponType: string): number => {
-                const baseAccuracy: Record<string, number> = {
-                    laser: 0.95, // 95% base accuracy
-                    kinetic: 0.9, // 90% base accuracy
-                    missile: 0.8, // 80% base accuracy (can be intercepted)
-                };
-                const base = baseAccuracy[weaponType] || 0.85;
-                // Apply accuracy modifier (clamped between 50% and 100%)
-                return Math.max(0.5, Math.min(1.0, base + accuracyModifier));
+                const base =
+                    BASE_ACCURACY[weaponType as keyof typeof BASE_ACCURACY] ||
+                    0.85;
+                // Apply accuracy modifier (clamped between min and max)
+                return Math.max(
+                    MIN_ACCURACY,
+                    Math.min(MAX_ACCURACY, base + accuracyModifier),
+                );
             };
 
             // Calculate damage by weapon type
@@ -2095,6 +2135,9 @@ export const useGameStore = create<GameStore>()(
             const enemyShields = state.currentCombat.enemy.shields;
             let remainingShields = enemyShields;
 
+            // Apply critical hit multiplier if crit occurred
+            const damageMultiplier = isCrit ? critMultiplier : 1;
+
             // Process each weapon type independently
             // 1. Lasers: +20% damage vs shields, 95% base accuracy
             if (weaponCounts.laser > 0) {
@@ -2104,7 +2147,7 @@ export const useGameStore = create<GameStore>()(
                         missedShots.laser++;
                         continue; // Laser missed
                     }
-                    const laserDmg = finalDamagePerWeapon * critMultiplier;
+                    const laserDmg = finalDamagePerWeapon * damageMultiplier;
                     const shieldDmg = Math.floor(laserDmg * 1.2); // +20% vs shields
                     const actualShieldDmg = Math.min(
                         remainingShields,
@@ -2133,7 +2176,7 @@ export const useGameStore = create<GameStore>()(
                         missedShots.kinetic++;
                         continue; // Kinetic missed
                     }
-                    const kineticDmg = finalDamagePerWeapon * critMultiplier;
+                    const kineticDmg = finalDamagePerWeapon * damageMultiplier;
                     const shieldDmg = Math.min(remainingShields, kineticDmg);
                     const overflow = kineticDmg - shieldDmg;
 
@@ -2169,7 +2212,7 @@ export const useGameStore = create<GameStore>()(
                         missileInterceptedCount++;
                         continue; // Missile intercepted, no damage
                     }
-                    const missileDmg = finalDamagePerWeapon * critMultiplier;
+                    const missileDmg = finalDamagePerWeapon * damageMultiplier;
                     const shieldDmg = Math.min(remainingShields, missileDmg);
                     const overflow = missileDmg - shieldDmg;
 
@@ -2712,7 +2755,7 @@ export const useGameStore = create<GameStore>()(
                 const criticalOverload = state.artifacts.find(
                     (a) =>
                         a.cursed &&
-                        a.effect.type === "critical_overload" &&
+                        a.effect.type === "crit_damage_boost" &&
                         a.effect.active,
                 );
                 if (criticalOverload && state.ship.modules.length > 0) {
