@@ -15,6 +15,7 @@ export const MODULE_TRANSLATIONS: Record<
         lifesupport: { name: "Жизнеобеспечение" },
         cargo: { name: "Грузовой отсек" },
         weaponbay: { name: "Оружейная палуба" },
+        weapon: { name: "Оружие" },
         weaponShed: { name: "Сарай" },
         shield: { name: "Щиты" },
         medical: { name: "Медотсек" },
@@ -24,6 +25,27 @@ export const MODULE_TRANSLATIONS: Record<
         drill: { name: "Бур" },
         ai_core: { name: "ИИ Ядро" },
         lab: { name: "Лаборатория" },
+        // Boss modules
+        ancient_core: { name: "Древнее ядро" },
+        plasma_cannon: { name: "Плазменная пушка" },
+        regen_hull: { name: "Регенератор корпуса" },
+        ancient_shield: { name: "Древний щит" },
+        conversion_core: { name: "Конверсионное ядро" },
+        disintegrate_beam: { name: "Луч дезинтеграции" },
+        nano_swarm: { name: "Нано-рой" },
+        absorption_hull: { name: "Поглощающий корпус" },
+        ancient_shield_mk2: { name: "Древний щит MK2" },
+        prophecy_engine: { name: "Двигатель пророчества" },
+        entropy_cannon: { name: "Энтропийная пушка" },
+        void_anchor: { name: "Якорь пустоты" },
+        temporal_hull: { name: "Временной корпус" },
+        singularity_core: { name: "Ядро сингулярности" },
+        infinity_core: { name: "Ядро бесконечности" },
+        reality_tear: { name: "Разлом реальности" },
+        void_embrace: { name: "Объятия пустоты" },
+        entropy_field: { name: "Поле энтропии" },
+        quantum_barrier: { name: "Квантовый барьер" },
+        temporal_shift: { name: "Временной сдвиг" },
     },
     en: {
         reactor: { name: "Reactor" },
@@ -31,6 +53,7 @@ export const MODULE_TRANSLATIONS: Record<
         lifesupport: { name: "Life Support" },
         cargo: { name: "Cargo Bay" },
         weaponbay: { name: "Weapon Bay" },
+        weapon: { name: "Weapon" },
         weaponShed: { name: "Shed" },
         shield: { name: "Shields" },
         medical: { name: "Medical Bay" },
@@ -40,6 +63,27 @@ export const MODULE_TRANSLATIONS: Record<
         drill: { name: "Drill" },
         ai_core: { name: "AI Core" },
         lab: { name: "Laboratory" },
+        // Boss modules
+        ancient_core: { name: "Ancient Core" },
+        plasma_cannon: { name: "Plasma Cannon" },
+        regen_hull: { name: "Hull Regenerator" },
+        ancient_shield: { name: "Ancient Shield" },
+        conversion_core: { name: "Conversion Core" },
+        disintegrate_beam: { name: "Disintegration Beam" },
+        nano_swarm: { name: "Nano Swarm" },
+        absorption_hull: { name: "Absorption Hull" },
+        ancient_shield_mk2: { name: "Ancient Shield MK2" },
+        prophecy_engine: { name: "Prophecy Engine" },
+        entropy_cannon: { name: "Entropy Cannon" },
+        void_anchor: { name: "Void Anchor" },
+        temporal_hull: { name: "Temporal Hull" },
+        singularity_core: { name: "Singularity Core" },
+        infinity_core: { name: "Infinity Core" },
+        reality_tear: { name: "Reality Tear" },
+        void_embrace: { name: "Void Embrace" },
+        entropy_field: { name: "Entropy Field" },
+        quantum_barrier: { name: "Quantum Barrier" },
+        temporal_shift: { name: "Temporal Shift" },
     },
 };
 
@@ -48,7 +92,9 @@ export function getModuleTranslation(
     moduleType: string,
     lang: "ru" | "en" = "ru",
 ): ModuleTranslation {
-    return MODULE_TRANSLATIONS[lang][moduleType] || {
-        name: moduleType,
-    };
+    return (
+        MODULE_TRANSLATIONS[lang][moduleType] || {
+            name: moduleType,
+        }
+    );
 }

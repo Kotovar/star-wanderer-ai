@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { EnemyModuleGrid, ShipStatusCard } from "./EnemyModuleGrid";
+import { CombatShipVisual } from "./CombatShipVisual";
+import { CombatShipGrid } from "./CombatShipGrid";
 import { CrewMemberCard } from "./CrewMemberCard";
 import type { CrewMember, CrewMemberCombatAssignment } from "../types";
 import { getTotalEvasion } from "@/game/slices";
@@ -24,6 +25,7 @@ export function CombatPanel() {
     const isModuleAdjacent = useGameStore((s) => s.isModuleAdjacent);
 
     const [selectedCrew, setSelectedCrew] = useState<CrewMember | null>(null);
+    const [zoomLevel, setZoomLevel] = useState<number>(1); // 0.5 = 50%, 1 = 100%
 
     const weaponBays = ship.modules.filter(
         (m) => m.type === "weaponbay" && !m.disabled && m.health > 0,
@@ -111,89 +113,90 @@ export function CombatPanel() {
                 />
             )}
 
-            <div className="grid grid-cols-2 gap-5 my-2">
+            {/* Ship stats summary */}
+            <div className="grid grid-cols-2 gap-4 my-3">
                 <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4">
-                    <div className="text-base font-bold mb-2 text-[#00d4ff]">
+                    <div className="text-base font-bold mb-3 text-[#00d4ff]">
                         {t("combat.your_ship")}
                     </div>
-                    <div className="text-[#00ff41]">
-                        ⚔ {t("ship_stats.damage")} {actualDamage}{" "}
-                        {!hasGunner && "(-50%)"}
-                    </div>
-                    <div className="my-2">
-                        {t("ship_stats.shields")} {ship.shields}/
-                        {ship.maxShields}
-                        <div className="h-2 rounded-full mt-1 bg-[rgba(0,0,0,0.5)] relative">
-                            <div
-                                className="absolute rounded-full top-0 left-0 h-full bg-[#0080ff]"
-                                style={{
-                                    width: `${(ship.shields / Math.max(1, ship.maxShields)) * 100}%`,
-                                }}
+                    <div className="text-sm space-y-2">
+                        <div className="text-[#00ff41]">
+                            {t("ship_stats.damage")} {actualDamage}{" "}
+                            {!hasGunner && "(-50%)"}
+                        </div>
+                        <div>
+                            {t("ship_stats.shields")} {ship.shields}/
+                            {ship.maxShields}
+                            <div className="h-2 rounded-full mt-1 bg-[rgba(0,0,0,0.5)] relative">
+                                <div
+                                    className="absolute rounded-full top-0 left-0 h-full bg-[#0080ff]"
+                                    style={{
+                                        width: `${(ship.shields / Math.max(1, ship.maxShields)) * 100}%`,
+                                    }}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            {t("combat.hull")} {playerHP}/{playerMaxHP}
+                            <Progress
+                                value={
+                                    (playerHP / Math.max(1, playerMaxHP)) * 100
+                                }
+                                className="h-2 mt-1 bg-[rgba(0,0,0,0.5)] [&>div]:bg-[#00ff41]"
                             />
                         </div>
-                    </div>
-                    <div className="my-2">
-                        {t("combat.hull")} {playerHP}/{playerMaxHP}
-                        <Progress
-                            value={(playerHP / Math.max(1, playerMaxHP)) * 100}
-                            className="h-2 mt-1 bg-[rgba(0,0,0,0.5)] [&>div]:bg-[#00ff41]"
-                        />
-                    </div>
-
-                    <div>
-                        {t("combat.defense")} {playerDefense}
-                    </div>
-                    <div className="text-xs text-[#00ff41] mt-1">
-                        {t("combat.evasion")} {evasionChance}%
-                    </div>
-                    {gunnerInWeaponBay && (
-                        <div className="text-xs text-[#00ff41] mt-1">
-                            {t("combat.gunner")} {gunnerInWeaponBay.name}
+                        <div>
+                            {t("combat.defense")} {playerDefense}
                         </div>
-                    )}
+                        <div className="text-xs text-[#00ff41]">
+                            {t("combat.evasion")} {evasionChance}%
+                        </div>
+                        {gunnerInWeaponBay && (
+                            <div className="text-xs text-[#00ff41]">
+                                {t("combat.gunner")} {gunnerInWeaponBay.name}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                <ShipStatusCard
-                    title={currentCombat.enemy.name}
-                    shields={currentCombat.enemy.shields || 0}
-                    maxShields={currentCombat.enemy.maxShields || 0}
-                    armor={eDef}
-                    damage={eDmg}
-                    isEnemy
-                    isBoss={isBoss}
-                >
-                    <div className="my-2">
-                        {t("combat.hull")} {eHP}/{eMaxHP}
-                        <Progress
-                            value={(eHP / eMaxHP) * 100}
-                            className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${isBoss ? "[&>div]:bg-[#ff00ff]" : "[&>div]:bg-[#ff0040]"}`}
-                        />
-                    </div>
-                    <div>
-                        {t("combat.defense")} {eDef}
-                    </div>
-                </ShipStatusCard>
-            </div>
-
-            <div
-                className={`${isBoss ? "border-[#ff00ff]" : "border-[#ff0040]"} border p-2`}
-            >
                 <div
-                    className={`text-sm font-bold mb-2 ${isBoss ? "text-[#ff00ff]" : "text-[#ff0040]"}`}
+                    className={`${isBoss ? "bg-[rgba(255,0,255,0.05)] border-[#ff00ff]" : "bg-[rgba(255,0,64,0.05)] border-[#ff0040]"} border p-4`}
                 >
-                    {t("combat.enemy_ship")}{" "}
-                    {hasGunner
-                        ? t("combat.click_target")
-                        : t("combat.random_target")}
+                    <div
+                        className={`text-base font-bold mb-3 ${isBoss ? "text-[#ff00ff]" : "text-[#ff0040]"}`}
+                    >
+                        {currentCombat.enemy.name}
+                    </div>
+                    <div className="text-sm space-y-2">
+                        <div>
+                            {t("ship_stats.damage")} {eDmg}
+                        </div>
+                        <div>
+                            {t("combat.shields")}{" "}
+                            {currentCombat.enemy.shields || 0}/
+                            {currentCombat.enemy.maxShields || 0}
+                            <div className="h-2 rounded-full mt-1 bg-[rgba(0,0,0,0.5)] relative">
+                                <div
+                                    className={`absolute rounded-full top-0 left-0 h-full ${isBoss ? "bg-[#ff00ff]" : "bg-[#ff0040]"}`}
+                                    style={{
+                                        width: `${Math.min(100, Math.max(0, ((currentCombat.enemy.shields || 0) / Math.max(1, currentCombat.enemy.maxShields || 0)) * 100))}%`,
+                                    }}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            {t("combat.hull")} {eHP}/{eMaxHP}
+                            <Progress
+                                value={(eHP / eMaxHP) * 100}
+                                className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${isBoss ? "[&>div]:bg-[#ff00ff]" : "[&>div]:bg-[#ff0040]"}`}
+                            />
+                        </div>
+                        <div>
+                            {t("combat.defense")} {eDef}
+                        </div>
+                    </div>
                 </div>
-                <EnemyModuleGrid
-                    currentCombat={currentCombat}
-                    isBoss={isBoss}
-                    onModuleClick={selectEnemyModule}
-                    hasGunner={hasGunner}
-                />
             </div>
-
             <CombatActions
                 canAttack={canAttack}
                 hasGunner={hasGunner}
@@ -201,6 +204,55 @@ export function CombatPanel() {
                 onRetreat={retreat}
                 t={t}
             />
+            {/* Ship visuals - side by side */}
+            <div className="grid grid-cols-2 gap-4 my-2 items-start">
+                <div className="flex flex-col items-center">
+                    <div className="text-base font-bold mb-4 px-4 py-2 rounded bg-[rgba(0,255,65,0.2)] text-[#00d4ff] min-h-11 flex items-center justify-center">
+                        {t("combat.your_ship")}
+                    </div>
+                    <div className="flex items-center gap-2 mb-3">
+                        <Button
+                            onClick={() =>
+                                setZoomLevel((z) => Math.max(0.5, z - 0.1))
+                            }
+                            disabled={zoomLevel <= 0.5}
+                            className="cursor-pointer bg-[#0a0f1a] border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] w-8 h-8 p-0 text-lg disabled:opacity-30 disabled:cursor-not-allowed"
+                            aria-label="Уменьшить"
+                        >
+                            −
+                        </Button>
+                        <span className="text-[#00ff41] text-xs w-12 text-center">
+                            {Math.round(zoomLevel * 100)}%
+                        </span>
+                        <Button
+                            onClick={() =>
+                                setZoomLevel((z) => Math.min(1, z + 0.1))
+                            }
+                            disabled={zoomLevel >= 1}
+                            className="cursor-pointer bg-[#0a0f1a] border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] w-8 h-8 p-0 text-lg disabled:opacity-30 disabled:cursor-not-allowed"
+                            aria-label="Увеличить"
+                        >
+                            +
+                        </Button>
+                    </div>
+                    <CombatShipGrid scale={zoomLevel} />
+                </div>
+                <div className="flex flex-col items-center">
+                    <div className="text-base font-bold mb-4 px-4 py-2 rounded bg-[rgba(255,0,64,0.2)] text-[#ff0040] min-h-11 flex items-center justify-center">
+                        {t("combat.enemy_ship")} — {currentCombat.enemy.name}
+                    </div>
+                    <div className="flex items-center gap-2 h-11"></div>
+                    <CombatShipVisual
+                        modules={currentCombat.enemy.modules}
+                        crew={[]}
+                        isEnemy={true}
+                        isBoss={isBoss}
+                        onModuleClick={selectEnemyModule}
+                        canSelectTarget={hasGunner}
+                        title=""
+                    />
+                </div>
+            </div>
 
             <CrewManagement
                 crew={crew}
