@@ -225,7 +225,16 @@ function drawSectorText(
         ctx.font = "10px Share Tech Mono";
         ctx.textAlign = "center";
         ctx.fillStyle = isCurrent ? "#ffb000" : "#00ff41";
-        ctx.fillText("✓", x, y - 26);
+
+        if (isCurrent) {
+            // Draw spaceship icon for current sector
+            ctx.font = "16px Arial";
+            ctx.fillText("🚀", x, y - 24);
+        } else {
+            // Draw checkmark for visited sectors
+            ctx.font = "10px Share Tech Mono";
+            ctx.fillText("✓", x, y - 26);
+        }
     }
 
     ctx.font = `${isCurrent ? "bold " : ""}10px Share Tech Mono`;
