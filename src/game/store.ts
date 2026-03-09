@@ -50,6 +50,7 @@ import {
     createLogSlice,
     createShipSlice,
     createScannerSlice,
+    createCrewSlice,
     getTotalEvasion,
 } from "@/game/slices";
 import type {
@@ -71,66 +72,7 @@ export const useGameStore = create<GameStore>()(
         ...createLogSlice(set),
         ...createShipSlice(set, get),
         ...createScannerSlice(set, get),
-
-        gainExp: (crewMember, amount) => {
-            if (!crewMember) return;
-
-            // Apply racial exp bonuses (human: +15% quick_learner)
-            // const race = RACES[crewMember.race];
-            let expMultiplier = 1;
-
-            // Human racial bonus: +15% exp
-            if (crewMember.race === "human") {
-                expMultiplier += 0.15;
-            }
-
-            // Apply crew trait exp bonuses
-            crewMember.traits?.forEach((trait) => {
-                if (trait.effect?.expBonus) {
-                    expMultiplier += trait.effect.expBonus;
-                }
-            });
-
-            // Apply crew_exp technology bonuses
-            const currentState = get();
-            const crewExpTechs = currentState.research.researchedTechs.filter(
-                (techId) => {
-                    const tech = RESEARCH_TREE[techId];
-                    return tech.bonuses.some((b) => b.type === "crew_exp");
-                },
-            );
-            crewExpTechs.forEach((techId) => {
-                const tech = RESEARCH_TREE[techId];
-                tech.bonuses.forEach((bonus) => {
-                    if (bonus.type === "crew_exp") {
-                        expMultiplier += bonus.value;
-                    }
-                });
-            });
-
-            const finalAmount = Math.floor(amount * expMultiplier);
-
-            set((s) => ({
-                crew: s.crew.map((c) => {
-                    if (c.id !== crewMember.id) return c;
-                    const newExp = (c.exp || 0) + finalAmount;
-                    const expNeeded = (c.level || 1) * 100;
-                    if (newExp >= expNeeded) {
-                        playSound("success");
-                        get().addLog(
-                            `${c.name} повысил уровень до ${(c.level || 1) + 1}!`,
-                            "info",
-                        );
-                        return {
-                            ...c,
-                            level: (c.level || 1) + 1,
-                            exp: newExp - expNeeded,
-                        };
-                    }
-                    return { ...c, exp: newExp };
-                }),
-            }));
-        },
+        ...createCrewSlice(set, get),
 
         nextTurn: () => {
             const state = get();

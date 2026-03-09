@@ -179,6 +179,7 @@ export interface GameCrew {
     moveCrewMember: (crewId: number, targetModuleId: number) => void;
     isModuleAdjacent: (moduleId1: number, moduleId2: number) => boolean;
     getCrewInModule: (moduleId: number) => CrewMember[];
+    gainExp: (crewMember: CrewMember, amount: number) => void;
 }
 
 export interface GameContracts {
