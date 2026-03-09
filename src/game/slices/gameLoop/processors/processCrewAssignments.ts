@@ -1,18 +1,17 @@
+import { RACES, CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
 import type {
     GameState,
     GameStore,
     CrewMember,
     Module,
     Race,
+    ShipMergeTrait,
 } from "@/game/types";
-import { RACES, CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
-import type { ShipMergeTrait } from "@/game/types";
 
 /**
  * Обработка назначений экипажа
  */
 export const processCrewAssignments = (
-    state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
 ): void => {
@@ -41,7 +40,7 @@ export const processCrewAssignments = (
 
         // Module damage check
         if (currentModule) {
-            const moduleHealth = currentModule.health || 0;
+            const moduleHealth = currentModule.health ?? 0;
             const medicWithFirstAid = get().crew.find(
                 (cr) =>
                     cr.moduleId === c.moduleId &&

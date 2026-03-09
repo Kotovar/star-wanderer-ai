@@ -1,13 +1,5 @@
 import type { GameState, GameStore } from "@/game/types/game";
-import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
-import {
-    calculateAverageDefense,
-    calculateTotalFuelCapacity,
-    calculateTotalOxygen,
-    calculateTotalShields,
-} from "./utils";
 import { WeaponTypeTotal } from "@/game/types";
-import { getTotalDamage } from "./helpers/getTotalDamage";
 import {
     getTotalConsumption,
     getTotalPower,
@@ -18,9 +10,10 @@ import {
     getCargoCapacity,
     calculateFuelCost,
     areModulesFunctional,
+    updateShipStats,
+    getTotalDamage,
 } from "./helpers";
 import { refuel } from "./helpers/fuel";
-import { ARTIFACT_TYPES } from "@/game/constants";
 
 /**
  * Расширенный интерфейс ShipSlice с геттерами
@@ -140,57 +133,7 @@ export const createShipSlice = (
 ): ShipSlice => ({
     updateShipStats: () => {
         set((state) => {
-            const { artifacts, ship } = state;
-            const { modules } = ship;
-
-            // === Расчёт защиты ===
-            const averageDefense = calculateAverageDefense(modules);
-            const crystallineArmor = findActiveArtifact(
-                artifacts,
-                ARTIFACT_TYPES.CRYSTALLINE_ARMOR,
-            );
-            let finalDefense = averageDefense;
-
-            if (crystallineArmor) {
-                const armorBonus = getArtifactEffectValue(
-                    crystallineArmor,
-                    state,
-                );
-                finalDefense += armorBonus;
-            }
-
-            // === Расчёт щитов ===
-            let totalShields = calculateTotalShields(modules);
-
-            const darkShield = findActiveArtifact(
-                artifacts,
-                ARTIFACT_TYPES.DARK_SHIELD,
-            );
-            if (darkShield) {
-                totalShields += getArtifactEffectValue(darkShield, state);
-            }
-
-            // Сохраняем бонусные щиты от эффектов планет
-            const bonusShields = ship.bonusShields || 0;
-            const maxShieldsWithBonus = totalShields + bonusShields;
-
-            // === Расчёт кислорода и топлива ===
-            const totalOxygen = calculateTotalOxygen(modules);
-            const totalFuelCapacity = calculateTotalFuelCapacity(modules);
-
-            // Защита от NaN или undefined для текущего топлива
-            const currentFuel = ship.fuel || 0;
-
-            // === Обновление состояния корабля ===
-            state.ship.armor = finalDefense;
-            state.ship.maxShields = maxShieldsWithBonus;
-            state.ship.shields = Math.min(
-                state.ship.shields,
-                maxShieldsWithBonus,
-            );
-            state.ship.crewCapacity = totalOxygen;
-            state.ship.maxFuel = totalFuelCapacity;
-            state.ship.fuel = Math.min(currentFuel, totalFuelCapacity);
+            updateShipStats(state);
         });
     },
 

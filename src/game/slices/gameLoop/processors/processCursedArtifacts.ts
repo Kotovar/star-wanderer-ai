@@ -16,7 +16,7 @@ export const processCursedArtifacts = (
 
     cursedArtifacts.forEach((artifact) => {
         const positiveType = artifact.effect?.type;
-        const positiveValue = artifact.effect?.value || 0;
+        const positiveValue = artifact.effect?.value ?? 0;
 
         if (positiveType === "auto_repair" && positiveValue > 0) {
             if (state.ship.modules.length > 0) {
@@ -55,10 +55,7 @@ export const processCursedArtifacts = (
                         if (c.race === "synthetic") return c;
                         return {
                             ...c,
-                            happiness: Math.max(
-                                0,
-                                c.happiness - negativeValue,
-                            ),
+                            happiness: Math.max(0, c.happiness - negativeValue),
                         };
                     }),
                 }));
@@ -103,9 +100,7 @@ export const processCursedArtifacts = (
                 state.crew.forEach((crewMember) => {
                     if (Math.random() * 100 < negativeValue) {
                         set((s) => ({
-                            crew: s.crew.filter(
-                                (c) => c.id !== crewMember.id,
-                            ),
+                            crew: s.crew.filter((c) => c.id !== crewMember.id),
                         }));
                         get().addLog(
                             `⚠️ ${artifact.name}: ${crewMember.name} покинул корабль`,
@@ -132,8 +127,12 @@ export const processCursedArtifacts = (
                                           traits: [
                                               ...c.traits,
                                               {
-                                                  name: getMutationTraitName(newTrait),
-                                                  desc: getMutationTraitDesc(newTrait),
+                                                  name: getMutationTraitName(
+                                                      newTrait,
+                                                  ),
+                                                  desc: getMutationTraitDesc(
+                                                      newTrait,
+                                                  ),
                                                   effect: {},
                                                   type: "negative",
                                                   rarity: "mutation",

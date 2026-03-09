@@ -4,7 +4,6 @@ import type { GameState, GameStore } from "@/game/types";
  * Обработка дезертирства экипажа
  */
 export const processDesertion = (
-    state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
 ): void => {
@@ -29,9 +28,7 @@ export const processDesertion = (
         const updatedCrew = crewToKeep.map((c) => ({
             ...c,
             turnsAtZeroHappiness:
-                c.happiness <= 0
-                    ? (c.turnsAtZeroHappiness || 0) + 1
-                    : 0,
+                c.happiness <= 0 ? (c.turnsAtZeroHappiness || 0) + 1 : 0,
         }));
 
         return { crew: updatedCrew };

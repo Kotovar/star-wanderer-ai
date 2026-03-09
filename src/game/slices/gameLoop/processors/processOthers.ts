@@ -106,25 +106,6 @@ export const processPowerCheck = (
 };
 
 /**
- * Проверка критической нехватки кислорода
- */
-export const processOxygenCheck = (
-    state: GameState,
-    set: (fn: (s: GameState) => void) => void,
-    get: () => GameStore,
-): void => {
-    if (get().crew.length <= get().getCrewCapacity()) return;
-
-    get().addLog("КРИТИЧНО: Недостаток кислорода!", "error");
-    set((s) => ({
-        crew: s.crew.map((c) => ({
-            ...c,
-            health: Math.max(0, c.health - 20),
-        })),
-    }));
-};
-
-/**
  * Эффекты проклятых артефактов
  */
 export const processCursedArtifactEffects = (

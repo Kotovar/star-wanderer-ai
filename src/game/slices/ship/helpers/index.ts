@@ -10,3 +10,4 @@ export * from "./getCargoCapacity";
 export * from "./calculateFuelCost";
 export * from "./areModulesFunctional";
 export * from "./fuel";
+export * from "./updateShipStats";

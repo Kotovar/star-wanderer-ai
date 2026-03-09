@@ -7,7 +7,6 @@ import type { PartialModuleType } from "@/game/types";
  * Отключает модули при дефиците, включает при избытке
  */
 export const managePower = (
-    state: GameState,
     get: () => GameStore,
     set: (fn: (s: GameState) => void) => void,
 ): void => {
@@ -17,7 +16,10 @@ export const managePower = (
 
     if (powerDeficit > 0) {
         const currentStatePowerDeficit = get();
-        const modulesByPriority: Array<{ type: PartialModuleType; name: string }> = [
+        const modulesByPriority: Array<{
+            type: PartialModuleType;
+            name: string;
+        }> = [
             { type: "cargo", name: "Грузовой отсек" },
             { type: "fueltank", name: "Топливный бак" },
             { type: "scanner", name: "Сканер" },
@@ -35,10 +37,7 @@ export const managePower = (
             if (deficit <= 0) break;
 
             const enabledModules = updatedModules.filter(
-                (m) =>
-                    m.type === priority.type &&
-                    !m.disabled &&
-                    m.health > 0,
+                (m) => m.type === priority.type && !m.disabled && m.health > 0,
             );
 
             for (const mod of enabledModules) {

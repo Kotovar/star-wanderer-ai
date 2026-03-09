@@ -1,6 +1,7 @@
 import type { GameState, GameStore } from "@/game/types";
 import { RACES } from "@/game/constants/races";
-import { getArtifactEffectValue } from "@/game/artifacts";
+import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
+import { ARTIFACT_TYPES } from "@/game/constants";
 
 /**
  * Регенерация щитов (только вне боя)
@@ -21,7 +22,9 @@ export const regenerateShields = (
                 (t) => t.effects.shieldRegen,
             );
             if (shieldTrait && shieldTrait.effects.shieldRegen) {
-                shieldRegen += Math.floor(Number(shieldTrait.effects.shieldRegen));
+                shieldRegen += Math.floor(
+                    Number(shieldTrait.effects.shieldRegen),
+                );
             }
             if (race.id === "xenosymbiont") {
                 const symbiosisTrait = race.specialTraits.find(
@@ -34,18 +37,20 @@ export const regenerateShields = (
         }
     });
 
-    const naniteHull = state.artifacts.find(
-        (a) => a.effect.type === "shield_regen" && a.effect.active,
+    const naniteHull = findActiveArtifact(
+        state.artifacts,
+        ARTIFACT_TYPES.NANITE_HULL,
     );
+
     if (naniteHull) {
-        shieldRegen += Number(naniteHull.effect.value || 10);
+        shieldRegen += Number(naniteHull.effect.value ?? 10);
     }
 
-    const shieldRegenerator = state.artifacts.find(
-        (a) =>
-            a.effect.type === "shield_regen_boost" &&
-            a.effect.active,
+    const shieldRegenerator = findActiveArtifact(
+        state.artifacts,
+        ARTIFACT_TYPES.SHIELD_REGENERATOR,
     );
+
     if (shieldRegenerator) {
         const regenBoost = getArtifactEffectValue(shieldRegenerator, state);
         shieldRegen = Math.floor(shieldRegen * (1 + regenBoost));
@@ -59,10 +64,7 @@ export const regenerateShields = (
     set((s) => ({
         ship: {
             ...s.ship,
-            shields: Math.min(
-                s.ship.maxShields,
-                s.ship.shields + shieldRegen,
-            ),
+            shields: Math.min(s.ship.maxShields, s.ship.shields + shieldRegen),
         },
     }));
 

@@ -327,6 +327,11 @@ export const ARTIFACT_TYPES: Record<string, ArtifactType> = {
     CRYSTALLINE_ARMOR: "module_armor",
     EYE_OF_SINGULARITY: "all_seeing",
     QUANTUM_SCANNER: "quantum_scan",
+    IMMORTAL: "crew_immortal",
+    UNDYING: "undying_crew",
+    AI_NEURAL_LINK: "ai_control",
+    NANITE_HULL: "shield_regen",
+    SHIELD_REGENERATOR: "shield_regen_boost",
 };
 
 /**

@@ -27,7 +27,7 @@ export const createGameLoopSlice = (
         const state = get();
 
         // Инициализация нового хода
-        initNewTurn(state, set);
+        initNewTurn(set);
 
         // Пассивный опыт каждые 5 ходов
         processPassiveExperience(state, get);
@@ -45,7 +45,7 @@ export const createGameLoopSlice = (
         checkModuleDamage(state, get, set);
 
         // Управление энергией
-        managePower(state, get, set);
+        managePower(get, set);
 
         // Регенерация щитов
         regenerateShields(state, get, set);
@@ -57,7 +57,7 @@ export const createGameLoopSlice = (
         processors.processMutations(state, set, get);
 
         // Дезертирство экипажа
-        processors.processDesertion(state, set, get);
+        processors.processDesertion(set, get);
 
         // Путешествия
         processors.processTravel(state, set, get);
@@ -66,13 +66,12 @@ export const createGameLoopSlice = (
         processors.processRandomEvents(state, set, get);
 
         // Назначения экипажа
-        processors.processCrewAssignments(state, set, get);
+        processors.processCrewAssignments(set, get);
 
         // Трейты морали и прочее
         processors.processMoraleTraits(state, set, get);
         processors.processUnhappyCrew(state, set, get);
         processors.processPowerCheck(state, set, get);
-        processors.processOxygenCheck(state, set, get);
         processors.processCursedArtifactEffects(state, set, get);
         processors.processArtifactBonuses(state, set, get);
 

@@ -5,7 +5,6 @@ import type { GameState, GameStore } from "@/game/types";
  * Сбрасывает флаги движения для экипажа и модулей
  */
 export const initNewTurn = (
-    state: GameState,
     set: (fn: (s: GameState) => void) => void,
 ): void => {
     set((s) => ({
