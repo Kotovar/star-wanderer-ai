@@ -7350,7 +7350,7 @@ export const useGameStore = create<GameStore>()(
             get().gainExp(scout, 12);
 
             if (outcome < 0.4) {
-                const reward = 20 + Math.floor(Math.random() * 30);
+                const reward = 100 + Math.floor(Math.random() * 150);
                 set((s) => ({ credits: s.credits + reward }));
                 get().addLog(
                     `Разведка: ${scout.name} нашёл ресурсы! +${reward}₢`,
