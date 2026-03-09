@@ -13,10 +13,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { TRADE_GOODS } from "../constants/goods";
 import { DELIVERY_GOODS } from "../constants/contracts";
+import { useTranslation } from "@/lib/useTranslation";
 
 export function ContractsList() {
     const activeContracts = useGameStore((s) => s.activeContracts);
     const cancelContract = useGameStore((s) => s.cancelContract);
+    const { t } = useTranslation();
     const [selectedContract, setSelectedContract] = useState<Contract | null>(
         null,
     );
@@ -24,7 +26,7 @@ export function ContractsList() {
     if (activeContracts.length === 0) {
         return (
             <div className="text-xs text-[#888] p-2.5">
-                Нет активных заданий
+                {t("contracts.no_active")}
             </div>
         );
     }
@@ -327,7 +329,7 @@ export function ContractsList() {
                             if (!details) {
                                 return (
                                     <span className="text-[#ffb000]">
-                                        Задание не найдено
+                                        {t("contracts.not_found")}
                                     </span>
                                 );
                             }
@@ -335,7 +337,7 @@ export function ContractsList() {
                                 <div className="space-y-4 text-sm">
                                     <div>
                                         <span className="text-[#ffb000]">
-                                            Тип задания:{" "}
+                                            {t("contracts.type")}:{" "}
                                         </span>
                                         <span className="text-[#00d4ff]">
                                             {details.type}
@@ -376,7 +378,7 @@ export function ContractsList() {
                                             }}
                                             className="bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810]"
                                         >
-                                            ОТКАЗАТЬСЯ
+                                            {t("contracts.cancel")}
                                         </Button>
                                     </div>
                                 </div>

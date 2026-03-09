@@ -5,6 +5,7 @@ import { useGameStore } from "../store";
 import { GalaxyMap } from "./GalaxyMap";
 import { SectorMap } from "./SectorMap";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/useTranslation";
 
 import { CombatPanel } from "./CombatPanel";
 import { AssignmentsPanel } from "./AssignmentsPanel";
@@ -21,14 +22,6 @@ import { BattleResultsPanel } from "./BattleResultsPanel";
 import { StormResultsPanel } from "./StormResultsPanel";
 import { ResearchPanel } from "./ResearchPanel";
 
-const LABELS = {
-    mapSector: "карта сектора",
-    mapGalaxy: "карта галактики",
-    crew: "задачи экипажа",
-    skip: "пропустить ход",
-    next: "следующий ход",
-};
-
 export function EventDisplay() {
     const gameMode = useGameStore((s) => s.gameMode);
     const traveling = useGameStore((s) => s.traveling);
@@ -37,6 +30,7 @@ export function EventDisplay() {
     const showAssignments = useGameStore((s) => s.showAssignments);
     const skipTurn = useGameStore((s) => s.skipTurn);
     const currentSector = useGameStore((s) => s.currentSector);
+    const { t } = useTranslation();
 
     const [isSkipping, setIsSkipping] = useState(false);
 
@@ -75,13 +69,15 @@ export function EventDisplay() {
                                 : ""
                         }`}
                     >
-                        {isSkipping ? "⏱️ ПРОПУСКАЕМ..." : LABELS.next}
+                        {isSkipping
+                            ? "⏱️ ПРОПУСКАЕМ..."
+                            : t("galaxy.buttons.next_turn")}
                     </Button>
                     <Button
                         onClick={showAssignments}
                         className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                     >
-                        {LABELS.crew}
+                        {t("galaxy.buttons.crew_tasks")}
                     </Button>
                 </div>
             </div>
@@ -93,21 +89,21 @@ export function EventDisplay() {
             return (
                 <div className="flex flex-col h-full">
                     <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mb-2 uppercase">
-                        ▸ Карта галактики
+                        ▸ {t("galaxy.tiers.tier4")}
                     </div>
                     <div className="grid grid-cols-2 gap-2 shrink-0">
                         <Button
                             onClick={showSectorMap}
                             className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                         >
-                            {LABELS.mapSector}
+                            {t("galaxy.buttons.sector_map")}
                         </Button>
                         <div className="grid grid-rows-2 gap-2">
                             <Button
                                 onClick={showAssignments}
                                 className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                             >
-                                {LABELS.crew}
+                                {t("galaxy.buttons.crew_tasks")}
                             </Button>
                             <Button
                                 onClick={handleSkipTurn}
@@ -119,12 +115,12 @@ export function EventDisplay() {
                                 }`}
                             >
                                 {isSkipping ? "⏱️ " : ""}
-                                {LABELS.skip}
+                                {t("galaxy.buttons.skip_turn")}
                             </Button>
                         </div>
                     </div>
                     <div className="text-sm text-center shrink-0 h-6 flex items-center justify-center">
-                        Сектор:{" "}
+                        {t("galaxy.labels.sector")}:{" "}
                         <span className="text-[#ffb000]">
                             {currentSector?.name}
                         </span>
@@ -133,7 +129,7 @@ export function EventDisplay() {
                         <GalaxyMap />
                     </div>
                     <div className="text-[11px] text-center text-[#00ff41] py-2 shrink-0">
-                        Кликните на сектор
+                        {t("galaxy.labels.click_sector")}
                     </div>
                 </div>
             );
@@ -149,14 +145,14 @@ export function EventDisplay() {
                             onClick={showGalaxyMap}
                             className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                         >
-                            {LABELS.mapGalaxy}
+                            {t("galaxy.buttons.galaxy_map")}
                         </Button>
                         <div className="grid grid-rows-2 gap-2">
                             <Button
                                 onClick={showAssignments}
                                 className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                             >
-                                {LABELS.crew}
+                                {t("galaxy.buttons.crew_tasks")}
                             </Button>
                             <Button
                                 onClick={handleSkipTurn}
@@ -168,18 +164,19 @@ export function EventDisplay() {
                                 }`}
                             >
                                 {isSkipping ? "⏱️ " : ""}
-                                {LABELS.skip}
+                                {t("galaxy.buttons.skip_turn")}
                             </Button>
                         </div>
                     </div>
                     <div className="text-sm text-center shrink-0 h-6 flex items-center justify-center">
-                        Уровень угрозы: {currentSector?.danger}
+                        {t("galaxy.labels.threat_level")}:{" "}
+                        {currentSector?.danger}
                     </div>
                     <div className="h-80 md:h-auto md:flex-1 relative shrink-0">
                         <SectorMap />
                     </div>
                     <div className="text-[11px] text-center text-[#00ff41] py-2 shrink-0">
-                        Кликните по объекту
+                        {t("galaxy.labels.click_object")}
                     </div>
                 </div>
             );

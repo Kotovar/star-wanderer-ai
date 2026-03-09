@@ -19,6 +19,8 @@ import type {
     TradeGood,
 } from "@/game/types";
 import { typedKeys } from "@/lib/utils";
+import { useTranslation } from "@/lib/useTranslation";
+import { getTechTranslation } from "@/lib/techTranslations";
 
 const CATEGORY_COLORS: Record<ResearchCategory, string> = {
     ship_systems: "#00d4ff",
@@ -39,12 +41,12 @@ const CATEGORY_ICONS: Record<ResearchCategory, string> = {
 };
 
 const CATEGORY_NAMES: Record<ResearchCategory, string> = {
-    ship_systems: "Системы",
-    weapons: "Оружие",
-    science: "Наука",
-    engineering: "Инженерия",
-    biology: "Биология",
-    ancient_tech: "Древние",
+    ship_systems: "research.categories.ship_systems",
+    weapons: "research.categories.weapons",
+    science: "research.categories.science",
+    engineering: "research.categories.engineering",
+    biology: "research.categories.biology",
+    ancient_tech: "research.categories.ancient_tech",
 };
 
 interface ResearchContentProps {
@@ -67,6 +69,8 @@ interface ResearchContentProps {
     selectedTechnology: Technology | null;
     startResearch: (techId: string) => void;
     isMobile?: boolean;
+    t: (key: string) => string;
+    currentLanguage: "ru" | "en";
 }
 
 function ResearchContent({
@@ -89,6 +93,8 @@ function ResearchContent({
     selectedTechnology,
     startResearch,
     isMobile = false,
+    t,
+    currentLanguage,
 }: ResearchContentProps) {
     const technologies = getTechnologiesByTier(selectedTier).filter(
         (tech) =>
@@ -107,21 +113,21 @@ function ResearchContent({
                     <div>
                         <div className="text-[#ffb000] font-bold text-xs md:text-sm">
                             {hasLab
-                                ? "✅ Лаборатория активна"
-                                : "❌ Требуется лаборатория"}
+                                ? t("research.lab_active")
+                                : t("research.lab_required")}
                         </div>
                         <div className="text-xs text-[#888] mt-1">
                             {hasLab ? (
                                 scientists.length > 0 ? (
-                                    `👨‍🔬 Учёных: ${scientists.length}`
+                                    `${t("research.scientists")}: ${scientists.length}`
                                 ) : (
                                     <span className="text-[#ff0040]">
-                                        ⚠️ Нет учёных
+                                        {t("research.no_scientists")}
                                     </span>
                                 )
                             ) : (
                                 <span className="text-[#ff0040]">
-                                    Постройте модуль
+                                    {t("research.build_module")}
                                 </span>
                             )}
                         </div>
@@ -147,7 +153,7 @@ function ResearchContent({
                 {hasLab && (
                     <div className="mt-2 pt-2 border-t border-[#00ff41]">
                         <div className="text-xs text-[#888]">
-                            🔬 Наука:{" "}
+                            {t("research.science")}:{" "}
                             <span className="text-[#00d4ff] font-bold">
                                 {(() => {
                                     const labs = ship.modules.filter(
@@ -170,7 +176,7 @@ function ResearchContent({
                                     });
                                     return output;
                                 })()}
-                                /ход
+                                {t("research.per_turn")}
                             </span>
                         </div>
                     </div>
@@ -180,12 +186,15 @@ function ResearchContent({
             {/* Research resources */}
             <div className="p-2 md:p-3 border border-[#9933ff] bg-[rgba(153,51,255,0.05)]">
                 <div className="font-['Orbitron'] font-bold text-xs md:text-sm text-[#9933ff] mb-2">
-                    ▸ РЕСУРСЫ
+                    {t("research.resources_label")}
                 </div>
                 <div className="flex flex-wrap gap-1 md:gap-2">
                     {typedKeys(RESEARCH_RESOURCES).map((type) => {
                         const data = RESEARCH_RESOURCES[type];
                         const quantity = getResearchResourceQuantity(type);
+                        const translatedName = t(
+                            `research.resources.${type}.name`,
+                        );
                         return (
                             <div
                                 key={type}
@@ -200,7 +209,7 @@ function ResearchContent({
                                 <span className="font-bold">{quantity}</span>
                                 {!isMobile && (
                                     <span className="text-[#888] hidden md:inline">
-                                        {data.name}
+                                        {translatedName}
                                     </span>
                                 )}
                             </div>
@@ -236,13 +245,13 @@ function ResearchContent({
                             : "border-[#333] text-[#666] hover:border-[#555]"
                     }`}
                 >
-                    Все
+                    {t("research.categories.all")}
                 </Button>
                 {typedKeys(isMobile ? CATEGORY_ICONS : CATEGORY_NAMES).map(
                     (catId) => {
                         const label = isMobile
                             ? CATEGORY_ICONS[catId]
-                            : CATEGORY_NAMES[catId];
+                            : t(CATEGORY_NAMES[catId]);
                         const isActive = selectedCategory === catId;
                         return (
                             <Button
@@ -326,24 +335,37 @@ function ResearchContent({
                                                 ],
                                             }}
                                         >
-                                            {tech.name}
+                                            {
+                                                getTechTranslation(
+                                                    tech.id,
+                                                    currentLanguage,
+                                                ).name
+                                            }
                                         </div>
                                         <div className="text-[10px] text-[#888]">
                                             {isResearched ? (
                                                 <span className="text-[#00ff41]">
-                                                    ✅
+                                                    {t(
+                                                        "research.tech_status.discovered",
+                                                    )}
                                                 </span>
                                             ) : isActive ? (
                                                 <span className="text-[#00d4ff]">
-                                                    🔬
+                                                    {t(
+                                                        "research.tech_status.active",
+                                                    )}
                                                 </span>
                                             ) : isAvailable ? (
                                                 <span className="text-[#ffb000]">
-                                                    Доступно
+                                                    {t(
+                                                        "research.tech_status.available",
+                                                    )}
                                                 </span>
                                             ) : (
                                                 <span className="text-[#444]">
-                                                    🔒
+                                                    {t(
+                                                        "research.tech_status.locked",
+                                                    )}
                                                 </span>
                                             )}
                                         </div>
@@ -354,7 +376,8 @@ function ResearchContent({
                                         {tech.credits}₢
                                     </div>
                                     <div className="text-[#888]">
-                                        {calculateEstimatedTurns()} ход.
+                                        {calculateEstimatedTurns()}{" "}
+                                        {t("research.panel.turns")}
                                     </div>
                                 </div>
                             </div>
@@ -372,7 +395,7 @@ function ResearchContent({
                             setSelectedTech(null);
                         }}
                         className="absolute top-1 right-2 text-[#ffb000] hover:text-[#00ff41] text-lg cursor-pointer"
-                        aria-label="Закрыть"
+                        aria-label={t("research.panel.close")}
                     >
                         ✕
                     </button>
@@ -388,18 +411,28 @@ function ResearchContent({
                                 ],
                             }}
                         >
-                            {selectedTechnology.name}
+                            {
+                                getTechTranslation(
+                                    selectedTechnology.id,
+                                    currentLanguage,
+                                ).name
+                            }
                         </div>
                     </div>
                     <div className="text-xs text-[#888] mb-2">
-                        {selectedTechnology.description}
+                        {
+                            getTechTranslation(
+                                selectedTechnology.id,
+                                currentLanguage,
+                            ).description
+                        }
                     </div>
 
                     {/* Requirements */}
                     <div className="grid grid-cols-2 gap-2 text-xs mb-2">
                         <div>
                             <div className="text-[#ffb000] font-bold mb-1">
-                                ▸ Требования:
+                                {t("research.panel.prerequisites_title")}
                             </div>
                             <div className="text-[#888]">
                                 {selectedTechnology.prerequisites.length > 0 ? (
@@ -416,19 +449,26 @@ function ResearchContent({
                                                             : "text-[#ff0040]"
                                                     }
                                                 >
-                                                    {RESEARCH_TREE[prereq].name}
+                                                    {
+                                                        getTechTranslation(
+                                                            prereq,
+                                                            currentLanguage,
+                                                        ).name
+                                                    }
                                                 </li>
                                             ),
                                         )}
                                     </ul>
                                 ) : (
-                                    <span className="text-[#888]">Нет</span>
+                                    <span className="text-[#888]">
+                                        {t("research.panel.no_requirements")}
+                                    </span>
                                 )}
                             </div>
                         </div>
                         <div>
                             <div className="text-[#ffb000] font-bold mb-1">
-                                ▸ Ресурсы:
+                                {t("research.panel.resources_title")}
                             </div>
                             <div className="text-[#888]">
                                 {typedKeys(selectedTechnology.resources)
@@ -463,7 +503,9 @@ function ResearchContent({
                                         })}
                                     </ul>
                                 ) : (
-                                    <span className="text-[#888]">Нет</span>
+                                    <span className="text-[#888]">
+                                        {t("research.panel.no_resources")}
+                                    </span>
                                 )}
                             </div>
                         </div>
@@ -472,7 +514,7 @@ function ResearchContent({
                     {/* Bonuses */}
                     <div className="mb-2">
                         <div className="text-[#ffb000] font-bold text-xs mb-1">
-                            ▸ Бонусы:
+                            {t("research.panel.bonuses_title")}
                         </div>
                         <div className="flex flex-wrap gap-1">
                             {selectedTechnology.bonuses.map(
@@ -497,7 +539,7 @@ function ResearchContent({
                             disabled
                             className="w-full border-2 uppercase text-xs border-[#444] text-[#444] cursor-not-allowed"
                         >
-                            ✅ ИЗУЧЕНО
+                            {t("research.panel.studied")}
                         </Button>
                     ) : research?.activeResearch?.techId ===
                       selectedTechnology.id ? (
@@ -529,12 +571,12 @@ function ResearchContent({
                             }`}
                         >
                             {!canResearch
-                                ? "Нет лабораторий/учёного"
+                                ? t("research.panel.no_labs_scientist")
                                 : !hasResources(selectedTechnology)
-                                  ? "Нет ресурсов"
+                                  ? t("research.panel.no_resources_btn")
                                   : credits < selectedTechnology.credits
-                                    ? "Нет кредитов"
-                                    : `НАЧАТЬ (${calculateEstimatedTurns()} ход.)`}
+                                    ? t("research.panel.no_credits")
+                                    : `${t("research.panel.start")} (${calculateEstimatedTurns()} ${t("research.panel.turns")})`}
                         </Button>
                     )}
                 </div>
@@ -550,6 +592,7 @@ export function ResearchPanel() {
     const ship = useGameStore((s) => s.ship);
 
     const startResearch = useGameStore((s) => s.startResearch);
+    const { t, currentLanguage } = useTranslation();
 
     const [selectedTier, setSelectedTier] = useState<ResearchTier>(1);
     const [selectedTech, setSelectedTech] = useState<string | null>(null);
@@ -630,6 +673,8 @@ export function ResearchPanel() {
         calculateEstimatedTurns,
         selectedTechnology,
         startResearch,
+        t,
+        currentLanguage,
     };
 
     return (

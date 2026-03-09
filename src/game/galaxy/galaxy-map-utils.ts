@@ -6,27 +6,27 @@ type TierDetails = {
     name: string;
 };
 
-// Tier colors
+// Tier colors - names are now translated via locale files
 export const TIER_COLORS: Record<GalaxyTier, TierDetails> = {
     1: {
         ring: "#00ff41",
         glow: "rgba(0, 255, 65, 0.15)",
-        name: "Тир 1 - Безопасный",
+        name: "tier1", // Translation key: galaxy.tiers.tier1
     },
     2: {
         ring: "#ffaa00",
         glow: "rgba(255, 170, 0, 0.15)",
-        name: "Тир 2 - Средний",
+        name: "tier2", // Translation key: galaxy.tiers.tier2
     },
     3: {
         ring: "#ff0040",
         glow: "rgba(255, 0, 64, 0.15)",
-        name: "Тир 3 - Опасный",
+        name: "tier3", // Translation key: galaxy.tiers.tier3
     },
     4: {
         ring: "#ff00ff",
         glow: "rgba(255, 0, 255, 0.15)",
-        name: "Тир 4 - Граница Галактики",
+        name: "tier4", // Translation key: galaxy.tiers.tier4
     },
 };
 
@@ -109,6 +109,7 @@ export function drawStaticLegend(
     modules: Module[],
     captainLevel: number,
     fuel: number,
+    t: (key: string) => string,
 ) {
     const legendX = 10;
     const legendY = 10;
@@ -120,16 +121,28 @@ export function drawStaticLegend(
     // Safeguard against NaN or undefined fuel
     const displayFuel = fuel !== undefined && !isNaN(fuel) ? fuel : 0;
     ctx.fillStyle = "#9933ff";
-    ctx.fillText(`⛽ Топливо: ${displayFuel}`, legendX, legendY + 16);
+    ctx.fillText(
+        `${t("galaxy.legend.fuel")}: ${displayFuel}`,
+        legendX,
+        legendY + 16,
+    );
 
     ctx.fillStyle = "#00ff41";
-    ctx.fillText(`Двигатель: Ур.${engineLevel}`, legendX, legendY + 32);
+    ctx.fillText(
+        `${t("galaxy.legend.engine")}: Ур.${engineLevel}`,
+        legendX,
+        legendY + 32,
+    );
 
     ctx.fillStyle = "#888";
-    ctx.fillText(`Капитан: Ур.${captainLevel}`, legendX, legendY + 48);
-    ctx.fillText("Сектор 1: Двиг.Ур1 + Кап.Ур1", legendX, legendY + 68);
-    ctx.fillText("Сектор 2: Двиг.Ур2 + Кап.Ур2", legendX, legendY + 84);
-    ctx.fillText("Сектор 3: Двиг.Ур3 + Кап.Ур3", legendX, legendY + 100);
+    ctx.fillText(
+        `${t("galaxy.legend.captain")}: Ур.${captainLevel}`,
+        legendX,
+        legendY + 48,
+    );
+    ctx.fillText(t("galaxy.legend.sector_info_1"), legendX, legendY + 68);
+    ctx.fillText(t("galaxy.legend.sector_info_2"), legendX, legendY + 84);
+    ctx.fillText(t("galaxy.legend.sector_info_3"), legendX, legendY + 100);
 }
 
 // Draw a sector on the galaxy map

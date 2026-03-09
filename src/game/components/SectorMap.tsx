@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useGameStore } from "@/game/store";
+import { useTranslation } from "@/lib/useTranslation";
 import {
     Location,
     LocationType,
@@ -377,6 +378,7 @@ export function SectorMap() {
     const canScanObject = useGameStore((s) => s.canScanObject);
     const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
     const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
+    const { t } = useTranslation();
 
     const [hoveredLocation, setHoveredLocation] = useState<{
         loc: Location;
@@ -1351,7 +1353,8 @@ export function SectorMap() {
             {/* Scanner range indicator */}
             {scanRange >= 0 && (
                 <div className="absolute top-2 right-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-2 py-1 text-xs text-[#00ff41] z-10">
-                    📡 Сканер: {getScannerRangeLabel(scanRange)}
+                    {t("galaxy.labels.scanner")}:{" "}
+                    {getScannerRangeLabel(scanRange, t)}
                 </div>
             )}
 

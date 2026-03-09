@@ -6,6 +6,8 @@ import { WEAPON_TYPES } from "../constants";
 import { RACES } from "../constants/races";
 import type { Module, CrewMember, Weapon } from "../types";
 import { MODULE_TYPES } from "../constants/modules";
+import { useTranslation } from "@/lib/useTranslation";
+import { getModuleTranslation } from "@/lib/moduleTranslations";
 
 const CELL_SIZE = 100;
 
@@ -17,6 +19,7 @@ export function ShipGrid() {
     const moveModule = useGameStore((s) => s.moveModule);
     const canPlaceModule = useGameStore((s) => s.canPlaceModule);
     const currentCombat = useGameStore((s) => s.currentCombat);
+    const { t, currentLanguage } = useTranslation();
 
     const [draggedModule, setDraggedModule] = useState<Module | null>(null);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -153,6 +156,7 @@ export function ShipGrid() {
                             tempPos={
                                 draggedModule?.id === mod.id ? tempPos : null
                             }
+                            currentLanguage={currentLanguage}
                         />
                     </g>
                 ))}
@@ -160,7 +164,7 @@ export function ShipGrid() {
 
             {isCombatMode && (
                 <div className="text-[#ff0040] text-[10px] mt-1 text-center">
-                    ⚠️ Нельзя перемещать модули во время боя!
+                    {t("ship.cannot_move_combat")}
                 </div>
             )}
         </div>
@@ -204,6 +208,7 @@ interface ModuleRendererProps {
     crew: CrewMember[];
     isDragging: boolean;
     tempPos?: { x: number; y: number } | null;
+    currentLanguage: "ru" | "en";
 }
 
 function ModuleRenderer({
@@ -212,6 +217,7 @@ function ModuleRenderer({
     crew,
     isDragging,
     tempPos,
+    currentLanguage,
 }: ModuleRendererProps) {
     // Use tempPos when dragging, otherwise use module's original position
     //
@@ -265,7 +271,7 @@ function ModuleRenderer({
                 className="select-none"
                 style={{ userSelect: "none", WebkitUserSelect: "none" }}
             >
-                {module.name}
+                {getModuleTranslation(module.type, currentLanguage).name}
             </text>
 
             {module.type === "weaponbay" && module.weapons && (
@@ -286,7 +292,7 @@ function ModuleRenderer({
             {module.health < 30 && <DamageOverlay x={x} y={y} w={w} h={h} />}
 
             {crewInModule.length > 0 && (
-                <CrewIcons crew={crewInModule} x={x} y={y} w={w} />
+                <CrewIcons crew={crewInModule} x={x} y={y} h={h} />
             )}
         </g>
     );
@@ -454,16 +460,17 @@ function CrewIcons({
     crew,
     x,
     y,
-    w,
+    h,
 }: {
     crew: CrewMember[];
     x: number;
     y: number;
-    w: number;
+    h: number;
 }) {
     const iconSize = 18;
-    const startX = x + w - (crew.length * (iconSize + 4) + 4);
-    const startY = y + 4;
+    const startX = x + 10; // Same offset as health bar
+    // Position above health bar (health bar is at y + h - 15)
+    const startY = y + h - iconSize - 20;
 
     return (
         <>

@@ -19,6 +19,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useTranslation } from "@/lib/useTranslation";
 
 export default function Home() {
     const gameOver = useGameStore((s) => s.gameOver);
@@ -28,6 +29,7 @@ export default function Home() {
     const moduleMovedThisTurn = useGameStore((s) => s.ship.moduleMovedThisTurn);
     const loadGame = useGameStore((s) => s.loadGame);
     const gameMode = useGameStore((s) => s.gameMode);
+    const { t } = useTranslation();
 
     useEffect(() => {
         loadGame();
@@ -129,7 +131,8 @@ export default function Home() {
                             className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
                         >
                             <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
-                                КОРАБЛЬ {moduleMovedThisTurn && "🔒"}
+                                {t("ship.title")}{" "}
+                                {moduleMovedThisTurn && t("ship.locked")}
                             </AccordionTrigger>
                             <AccordionContent>
                                 <ShipGrid />
@@ -141,7 +144,7 @@ export default function Home() {
                             className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
                         >
                             <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
-                                СОСТОЯНИЕ КОРАБЛЯ
+                                {t("ship.ship_state")}
                             </AccordionTrigger>
                             <AccordionContent>
                                 <ShipStats />
@@ -153,7 +156,7 @@ export default function Home() {
                             className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
                         >
                             <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
-                                ЭКИПАЖ
+                                {t("ship.crew")}
                             </AccordionTrigger>
                             <AccordionContent>
                                 <CrewList />
@@ -165,7 +168,7 @@ export default function Home() {
                             className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
                         >
                             <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
-                                МОДУЛИ
+                                {t("ship.modules")}
                             </AccordionTrigger>
                             <AccordionContent>
                                 <ModuleList />
@@ -177,7 +180,7 @@ export default function Home() {
                             className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
                         >
                             <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
-                                ГРУЗОВОЙ ОТСЕК
+                                {t("ship.cargo")}
                             </AccordionTrigger>
                             <AccordionContent>
                                 <CargoDisplay />
@@ -189,7 +192,7 @@ export default function Home() {
                             className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
                         >
                             <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
-                                АКТИВНЫЕ ЗАДАНИЯ
+                                {t("ship.contracts")}
                             </AccordionTrigger>
                             <AccordionContent>
                                 <ContractsList />
@@ -212,7 +215,7 @@ export default function Home() {
                                 className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5 overflow-hidden"
                             >
                                 <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer truncate">
-                                    ЖУРНАЛ СОБЫТИЙ
+                                    {t("ship.event_log")}
                                 </AccordionTrigger>
                                 <AccordionContent>
                                     <div className="max-h-50 overflow-y-scroll">

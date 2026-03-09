@@ -3,9 +3,11 @@
 import { useGameStore } from "../store";
 import { TRADE_GOODS } from "../constants/goods";
 import { DELIVERY_GOODS } from "../constants/contracts";
+import { useTranslation } from "@/lib/useTranslation";
 
 export function CargoDisplay() {
     const ship = useGameStore((s) => s.ship);
+    const { t } = useTranslation();
     const cargoModules = ship.modules.filter(
         (m) =>
             m.type === "cargo" &&
@@ -15,7 +17,9 @@ export function CargoDisplay() {
     );
 
     if (cargoModules.length === 0) {
-        return <div className="text-xs text-[#888]">Нет грузового отсека</div>;
+        return (
+            <div className="text-xs text-[#888]">{t("cargo.no_module")}</div>
+        );
     }
 
     // Sum capacity from all cargo modules
@@ -31,13 +35,15 @@ export function CargoDisplay() {
     return (
         <div>
             <div className="mb-2.5 text-xs">
-                Вместимость:{" "}
+                {t("cargo.capacity_label")}:{" "}
                 <span className="text-[#ffb000]">
                     {totalCargo}/{totalCapacity}т
                 </span>
             </div>
             {totalCargo === 0 ? (
-                <div className="text-[11px] text-[#888]">Трюм пуст</div>
+                <div className="text-[11px] text-[#888]">
+                    {t("cargo.hold_empty")}
+                </div>
             ) : (
                 <div>
                     {ship.cargo.map((c, i) => {

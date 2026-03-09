@@ -1,0 +1,621 @@
+{
+    "game": {
+        "title": "STAR WANDERER",
+        "turn": "TURN",
+        "sector": "SECTOR",
+        "restart": "RESTART",
+        "science": "SCIENCE",
+        "artifacts": "ARTIFACTS",
+        "effects": "EFFECTS",
+        "logbook": "LOGBOOK",
+        "start": "START"
+    },
+    "ship": {
+        "title": "SHIP",
+        "locked": "🔒",
+        "ship_state": "SHIP STATUS",
+        "crew": "CREW",
+        "modules": "MODULES",
+        "cargo": "CARGO BAY",
+        "contracts": "ACTIVE CONTRACTS",
+        "event_log": "EVENT LOG",
+        "cannot_move_combat": "⚠️ Cannot move modules during combat!",
+        "confirm_restart_title": "Restart?",
+        "confirm_restart_desc": "Are you sure you want to restart? All progress will be lost.",
+        "cancel": "Cancel",
+        "confirm": "Confirm"
+    },
+    "crew": {
+        "unknown": "Unknown",
+        "moved": "MOVED",
+        "waiting": "WAITING",
+        "no_happiness": "No happiness",
+        "immune_morale": "🤖 No happiness - immune to morale effects",
+        "regen": "Regeneration",
+        "turn": "turn",
+        "experience": "Experience",
+        "health": "Health",
+        "happiness": "Mood",
+        "current_module": "📍 Current module",
+        "profession": "Profession",
+        "assignment": "Assignment",
+        "movement": "🚶 Movement",
+        "moved_this_turn": "Already moved this turn",
+        "no_adjacent_modules": "No adjacent modules",
+        "racial_bonuses": "Racial bonuses",
+        "happiness_bonus": "😊 +% mood",
+        "repair_bonus": "🔧 +% repair",
+        "level": "Level",
+        "no_health": "No health",
+        "rest": "Rest",
+        "fatigue": "Fatigue",
+        "traits": "Traits"
+    },
+    "cargo": {
+        "title": "Cargo Bay",
+        "empty": "Cargo bay is empty",
+        "weight": "Weight",
+        "capacity": "Capacity",
+        "goods": "Goods",
+        "no_module": "No cargo bay",
+        "capacity_label": "Capacity",
+        "hold_empty": "Hold is empty"
+    },
+    "modules": {
+        "search_per_turn": "res/turn",
+        "mk": "MK",
+        "ancient": "Ancient",
+        "quantum": "Quantum",
+        "size": "📐 Size",
+        "status": "Status",
+        "active": "ACTIVE",
+        "disabled": "DISABLED",
+        "damaged": "DAMAGED",
+        "module_damaged_warning": "⚠️ Module is damaged and not working!",
+        "disable_saves_energy": "⚠ Disabling module will save energy but disable its functions",
+        "enable": "ENABLE",
+        "disable": "DISABLE",
+        "buy_prompt": "💰 Click BUY to purchase",
+        "generation": "⚡ Generation",
+        "consumption": "⚡ Consumption",
+        "fuel": "⛽ Fuel",
+        "capacity": "📦 Capacity",
+        "efficiency": "⛽ Efficiency",
+        "efficiency_note": "(lower is better)",
+        "drill_level": "⛏ Drill level",
+        "asteroid_tier": "(for asteroids tier",
+        "scan_range": "📡 Scan range",
+        "research": "🔬 Research",
+        "shields": "🛡 Shields",
+        "oxygen": "💨 Oxygen",
+        "creatures": "creatures",
+        "armor": "🛡 Armor",
+        "condition": "❤ Condition",
+        "weapon_slots": "Weapon slots",
+        "empty_slot": "Slot {{number}}: Empty",
+        "scanner_title": "Scanner functions",
+        "scanner_info_1": "• Shows location info on hover",
+        "scanner_info_2": "• Reveals true nature of distress signals",
+        "scanner_info_3": "• Object name and type",
+        "scanner_info_4": "• Resources and contents",
+        "scanner_info_5": "• Hidden rewards ★",
+        "scanner_info_6": "• Full info on all objects",
+        "off": "⚠ OFF",
+        "power": "⚡ Power",
+        "defense": "🛡 Defense",
+        "healing": "🏥 Healing",
+        "scan_level": "★ Scanner level"
+    },
+    "ship_stats": {
+        "fuel": "⛽ Fuel",
+        "engine": "🔥 Engine",
+        "level": "Lvl",
+        "captain": "👤 Captain",
+        "crew_count": "👥 Crew",
+        "power_generation": "⚡ Generation",
+        "power_consumption": "⚡ Consumption",
+        "power_available": "⚡ Available",
+        "damage": "⚔ Damage",
+        "hull": "🔧 Hull",
+        "shields": "⚡️ Shields",
+        "defense": "🛡 Defense",
+        "evasion": "🎯 Evasion",
+        "reflection": "🛡️ Reflection",
+        "shield_regen": "💚 Shield regen",
+        "crit_chance": "💥 Crit chance",
+        "crit_damage": "💀 Crit damage",
+        "accuracy": "🎯 Accuracy",
+        "oxygen": "💨 Oxygen",
+        "power_balance": "⚡ Power balance",
+        "combat_stats": "⚔️ Combat stats",
+        "fuel_efficiency": "💨 Fuel efficiency",
+        "scan_range": "📡 Scan range",
+        "kinetic": "├ Kinetic:",
+        "laser": "├ Laser:",
+        "missile": "└ Missile:",
+        "per_turn": "per turn",
+        "units": "pts"
+    },
+    "header": {
+        "tooltip_logbook": "Ship's logbook",
+        "tooltip_effects": "Active effects",
+        "tooltip_artifacts": "Ancient artifacts",
+        "tooltip_research": "Research",
+        "tooltip_restart": "Restart game"
+    },
+    "professions": {
+        "pilot": "Pilot",
+        "engineer": "Engineer",
+        "medic": "Medic",
+        "scout": "Scout",
+        "scientist": "Scientist",
+        "gunner": "Gunner"
+    },
+    "profession_descriptions": {
+        "pilot": "Can improve maneuvering and navigation.",
+        "engineer": "Can repair and upgrade ship systems.",
+        "medic": "Can heal crew and maintain morale on ship.",
+        "scout": "Can scout empty planets and find resources.",
+        "scientist": "Can investigate anomalies and technologies.",
+        "gunner": "Controls ship fire. Can select targets in combat."
+    },
+    "combat_actions": {
+        "waiting": "WAITING",
+        "evasion": "Maneuvers",
+        "evasion_effect": "+level% evasion",
+        "repair": "Repair",
+        "repair_effect": "+15% hull per turn",
+        "calibration": "Calibration",
+        "calibration_effect": "+10% accuracy",
+        "overclock": "Overclock",
+        "overclock_effect": "+25% damage, -10% armor",
+        "heal": "Heal",
+        "heal_effect": "+20 health",
+        "firstaid": "Medkits",
+        "firstaid_effect": "Protection on damage",
+        "sabotage": "Sabotage",
+        "sabotage_effect": "-5% enemy hit chance",
+        "analysis": "Vulnerability analysis",
+        "analysis_effect": "+10% damage to target",
+        "targeting": "Targeting",
+        "targeting_effect": "Target selection",
+        "rapidfire": "Rapid fire",
+        "rapidfire_effect": "+25% damage, -5% accuracy"
+    },
+    "crew_actions": {
+        "waiting": "WAITING",
+        "navigation": "Navigation",
+        "navigation_effect": "+1⚡ consumption",
+        "repair": "Repair",
+        "repair_effect": "+15% armor per turn",
+        "reactor_overload": "Reactor overload",
+        "reactor_overload_effect": "+5⚡ reactor energy",
+        "heal": "Heal",
+        "heal_effect": "+20 health",
+        "morale": "Morale",
+        "morale_effect": "+15 mood",
+        "firstaid": "Medkits",
+        "firstaid_effect": "Protection on damage",
+        "patrol": "Patrol",
+        "patrol_effect": "+info about enemy",
+        "research": "Research",
+        "research_effect": "+100% science",
+        "analyzing": "Anomaly analysis",
+        "analyzing_effect": "+data from anomalies",
+        "maintenance": "Maintenance",
+        "maintenance_effect": "+5% accuracy"
+    },
+    "races": {
+        "human": {
+            "name": "Human",
+            "plural": "Humans",
+            "adjective": "Human",
+            "description": "Universal race that mastered space. Learn and adapt quickly.",
+            "homeworld": "Earth"
+        },
+        "synthetic": {
+            "name": "Synthetic",
+            "plural": "Synthetics",
+            "adjective": "Synthetic",
+            "description": "Artificial intelligence created by ancient civilization or humans. No emotions but flawless logic.",
+            "homeworld": "Unknown"
+        },
+        "xenosymbiont": {
+            "name": "Xenomorph-Symbiont",
+            "plural": "Xenomorph-Symbionts",
+            "adjective": "Symbiont",
+            "description": "Semi-organic creatures living in symbiosis with technology. Can \"merge\" with ship.",
+            "homeworld": "Unknown planet in Tier 3"
+        },
+        "krylorian": {
+            "name": "Krylorian",
+            "plural": "Krylorians",
+            "adjective": "Krylorian",
+            "description": "Warlike reptilian race with strong sense of honor. Excellent fighters.",
+            "homeworld": "Krylor Prime"
+        },
+        "voidborn": {
+            "name": "Voidborn",
+            "plural": "Voidborn",
+            "adjective": "Void",
+            "description": "Creatures born in the depths of space. Don't need atmosphere or comfort.",
+            "homeworld": "Unknown"
+        },
+        "crystalline": {
+            "name": "Crystalline",
+            "plural": "Crystallines",
+            "adjective": "Crystalline",
+            "description": "Sentient crystalline beings. Think slowly but possess great wisdom.",
+            "homeworld": "Geoda Prime"
+        }
+    },
+    "racial_traits": {
+        "quick_learner": {
+            "name": "Quick Learner",
+            "description": "+15% experience gained"
+        },
+        "no_happiness": {
+            "name": "No Emotions",
+            "description": "No happiness - immune to morale effects"
+        },
+        "ai_glitch": {
+            "name": "AI Glitch",
+            "description": "Sometimes make illogical decisions"
+        },
+        "symbiosis": {
+            "name": "Techno-Symbiosis",
+            "description": "Can merge with ship, gaining unique traits"
+        },
+        "disturbing_presence": {
+            "name": "Disturbing Presence",
+            "description": "Reduce organic crew happiness by -5"
+        },
+        "intimidation": {
+            "name": "Intimidation",
+            "description": "Enemies miss more often (-2% hit chance on ship)"
+        },
+        "void_shield": {
+            "name": "Void Shield",
+            "description": "Ship shields regenerate 5% more per turn"
+        },
+        "unnerving": {
+            "name": "Unnerving",
+            "description": "Their presence unsettles organics by -10"
+        },
+        "low_health": {
+            "name": "Ethereal Body",
+            "description": "-20% max health"
+        },
+        "crystal_armor": {
+            "name": "Crystal Armor",
+            "description": "+5% ship module defense"
+        },
+        "resonance": {
+            "name": "Crystal Resonance",
+            "description": "Can amplify Ancient artifacts by 15%"
+        },
+        "brittle_crystal": {
+            "name": "Brittleness",
+            "description": "-15% max health"
+        }
+    },
+    "battle": {
+        "rewards": "💰 Rewards",
+        "module_damage": "🔧 Module damage",
+        "modules_undamaged": "Modules undamaged",
+        "crew_losses": "👥 Crew losses",
+        "battle_clean": "✨ Battle completed without damage!",
+        "victory": "Victory",
+        "defeat": "Defeat",
+        "fled": "Fled"
+    },
+    "storm": {
+        "results": "Results",
+        "current_stats": "Current stats",
+        "shields": "🛡 Shields",
+        "armor": "🔧 Armor",
+        "crew": "❤ Crew",
+        "your_stats": "Your stats",
+        "damage_taken": "Damage taken"
+    },
+    "unknown_ship": {
+        "your_stats": "Your stats"
+    },
+    "contracts": {
+        "active": "Active contracts",
+        "completed": "Completed",
+        "failed": "Failed",
+        "reward": "Reward",
+        "delivery": "Delivery",
+        "exploration": "Exploration",
+        "no_active": "No active contracts",
+        "not_found": "Contract not found",
+        "type": "Contract type",
+        "cancel": "CANCEL"
+    },
+    "research": {
+        "title": "Research",
+        "available": "Available",
+        "completed": "Researched",
+        "in_progress": "In progress",
+        "cost": "Cost",
+        "time": "Time",
+        "lab_active": "✅ Lab active",
+        "lab_required": "❌ Lab required",
+        "scientists": "👨‍🔬 Scientists",
+        "no_scientists": "⚠️ No scientists",
+        "build_module": "Build module",
+        "science": "🔬 Science",
+        "per_turn": "/turn",
+        "resources_label": "▸ RESOURCES",
+        "categories": {
+            "all": "All",
+            "ship_systems": "Systems",
+            "weapons": "Weapons",
+            "science": "Science",
+            "engineering": "Engineering",
+            "biology": "Biology",
+            "ancient_tech": "Ancient"
+        },
+        "tiers": {
+            "tier1": "Tier 1",
+            "tier2": "Tier 2",
+            "tier3": "Tier 3",
+            "tier4": "Tier 4"
+        },
+        "start_research": "START RESEARCH",
+        "requires": "Requires",
+        "estimated_turns": "Turns: {{turns}}",
+        "no_tech_selected": "Select technology to research",
+        "researching": "Researching",
+        "tech_status": {
+            "discovered": "★ Researched",
+            "active": "🔬 Researching",
+            "available": "Available",
+            "locked": "🔒 Requires research"
+        },
+        "tech_categories": {
+            "ship_systems": "Ship Systems",
+            "weapons": "Weapon Systems",
+            "science": "Scientific Research",
+            "engineering": "Engineering",
+            "biology": "Biotechnology",
+            "ancient_tech": "Ancient Technologies"
+        },
+        "no_tech_in_category": "No technologies in this category",
+        "select_tech": "Select technology",
+        "tech_details": "Technology details",
+        "prerequisites": "Prerequisites",
+        "effects": "Effects",
+        "panel": {
+            "no_requirements": "None",
+            "no_resources": "None",
+            "studied": "✅ STUDIED",
+            "no_labs_scientist": "No labs/scientist",
+            "no_resources_btn": "No resources",
+            "no_credits": "No credits",
+            "start": "START",
+            "turns": "turns",
+            "close": "Close",
+            "prerequisites_title": "▸ Prerequisites:",
+            "resources_title": "▸ Resources:",
+            "bonuses_title": "▸ Bonuses:"
+        },
+        "resources": {
+            "ancient_data": {
+                "name": "Ancient Data",
+                "description": "Encrypted information from the Ancient civilization"
+            },
+            "rare_minerals": {
+                "name": "Rare Minerals",
+                "description": "Exotic elements with unique properties"
+            },
+            "alien_biology": {
+                "name": "Alien Biology",
+                "description": "Samples of alien flora and fauna"
+            },
+            "energy_samples": {
+                "name": "Energy Samples",
+                "description": "Concentrated energy signatures"
+            },
+            "quantum_crystals": {
+                "name": "Quantum Crystals",
+                "description": "Crystals with quantum properties from anomalies"
+            },
+            "tech_salvage": {
+                "name": "Tech Salvage",
+                "description": "Recovered components from enemy technologies"
+            }
+        }
+    },
+    "artifacts": {
+        "title": "▸ ANCIENT ARTIFACTS",
+        "discovered": "Discovered",
+        "researched": "Researched",
+        "active": "Active",
+        "cursed_active": "cursed",
+        "scientists_onboard": "Scientists on board",
+        "no_scientists": "none",
+        "tabs": {
+            "regular": "★ Regular",
+            "cursed": "⚠️ Cursed"
+        },
+        "no_regular": "No regular artifacts",
+        "no_cursed": "No cursed artifacts",
+        "tip_title": "★ Tip: ",
+        "tip_text": "Regular artifacts can be found in anomalies and storms. Cursed artifacts are rarer, but their effects are very powerful — and dangerous.",
+        "undiscovered": "Not yet discovered...",
+        "active_label": "ACTIVE",
+        "research_btn": "RESEARCH",
+        "research_btn_dangerous": "⚠️ RESEARCH (DANGEROUS)",
+        "deactivate_btn": "DEACTIVATE",
+        "activate_btn": "ACTIVATE",
+        "active_neutralize_btn": "✓ ACTIVE (NEUTRALIZE)",
+        "requires_scientist": "Requires scientist",
+        "rarity": {
+            "rare": "Rare",
+            "legendary": "Legendary",
+            "mythic": "Mythic",
+            "cursed": "⚠️ Cursed"
+        }
+    },
+    "effects": {
+        "title": "▸ Active Effects",
+        "no_effects": "No active effects",
+        "close": "CLOSE",
+        "description": "Effects last several turns and expire automatically",
+        "turns": "turn(s)"
+    },
+    "help": {
+        "title": "📖 LOGBOOK",
+        "about_title": "🌟 ABOUT",
+        "about_text": "\"Star Wanderer\" is a space game where you control a ship, explore the galaxy, trade, fight pirates, and discover ancient artifacts.",
+        "modules_title": "🚀 SHIP MODULES",
+        "reactor": "Reactor",
+        "reactor_desc": "Produces energy for the ship",
+        "cockpit": "Cockpit",
+        "cockpit_desc": "Ship control, evasion",
+        "life_support": "Life Support",
+        "life_support_desc": "Oxygen for crew",
+        "cargo": "Cargo",
+        "cargo_desc": "Storage for goods and cargo",
+        "engine": "Engine",
+        "engine_desc": "Travel between sectors",
+        "fuel_tank": "Fuel Tank",
+        "fuel_tank_desc": "Fuel storage",
+        "weapon_bay": "Weapon Bay",
+        "weapon_bay_desc": "Attack enemies (needs gunner)",
+        "scanner": "Scanner",
+        "scanner_desc": "Detect objects and anomalies",
+        "scanner_detail_1": "📡 Detect objects and anomalies",
+        "scanner_detail_2": "⚡ Higher range = better chance:",
+        "scanner_detail_3": "• +2% distress signal discovery per point",
+        "scanner_detail_4": "• +5% hidden reward detection per point",
+        "scanner_detail_5": "• +3% ambush warning per point",
+        "shield": "Shield",
+        "shield_desc": "Protection from damage",
+        "lab": "Laboratory",
+        "lab_desc": "Research technologies",
+        "drill": "Drill",
+        "drill_desc": "Mine resources from asteroids",
+        "medical": "Medical Bay",
+        "medical_desc": "Heal crew members",
+        "module_movement_title": "🔧 Module Movement",
+        "module_movement_text": "You can move one module per turn. After moving, the ship frame turns yellow 🔒. Moved module is locked until end of turn.",
+        "crew_title": "👥 CREW",
+        "pilot_desc": "— Evasion in cockpit, targeting in weapon bay",
+        "engineer_desc": "— Repair modules, overclock (+damage), reactor boost",
+        "medic_desc": "— Heal crew, boost morale",
+        "scientist_desc": "— Research anomalies and artifacts",
+        "scout_desc": "— Scout empty planets, patrol",
+        "gunner_desc": "— Control ship fire",
+        "races_title": "🛸 RACES",
+        "human_desc": "Universal race, learn quickly",
+        "synthetic_desc": "Artificial intelligence, no emotions",
+        "xenosymbiont_desc": "Semi-organic creatures, techno-symbiosis",
+        "krylorian_desc": "Warlike reptilian race",
+        "voidborn_desc": "Creatures from the depths of space",
+        "crystalline_desc": "Sentient crystalline beings",
+        "controls_title": "🎮 CONTROLS",
+        "controls_text": "Click to select, drag to move modules. Right mouse button to cancel.",
+        "animations_title": "✨ ANIMATIONS",
+        "animations_text": "Sector animations (meteors, twinkling stars) can be toggled with ✨ button on sector or galaxy map",
+        "victory_title": "⚠️ Game End",
+        "victory_text": "Explore the galaxy, upgrade your ship and crew. Reach the farthest corners of space to find the edge of the known galaxy. But remember — the path to the edge is open only to those who prove their readiness...",
+        "combat_title": "⚔️ COMBAT",
+        "combat_text_1": "Without gunner, damage -50%, target selected randomly",
+        "combat_text_2": "Gunner in weapon bay allows target selection",
+        "combat_text_3": "At 0% armor — defeat",
+        "combat_text_4": "Retreat deals damage to modules and reduces crew morale",
+        "combat_text_5": "Bosses regenerate health every turn",
+        "science_title": "🔬 SCIENCE",
+        "science_text": "Open research panel (🔬 SCIENCE button at top) to research new technologies.",
+        "science_detail_1": "Research unlocks new capabilities: module upgrades, weapons, shields",
+        "science_detail_2": "Research requires resources and time",
+        "science_detail_3": "Scientists in crew speed up research process",
+        "science_detail_4": "Some technologies require prior research of others",
+        "tips_title": "💡 TIPS",
+        "tip_1": "Without scanner, many objects in sector are hidden",
+        "tip_2": "📡 Scanner with high scan range gives bonuses: signal discovery, reward detection, ambush warning",
+        "tip_3": "Watch your fuel — can't travel without it",
+        "tip_4": "Hiring crew at stations is cheaper than at friendly ships",
+        "tip_5": "Artifacts provide unique abilities",
+        "tip_6": "Black holes teleport to random sector",
+        "tip_7": "Crew levels increase effectiveness of their abilities"
+    },
+    "station": {
+        "shop": "Shop",
+        "trade": "Trade",
+        "crew": "Crew",
+        "services": "Services",
+        "buy": "Buy",
+        "sell": "Sell",
+        "hire": "Hire"
+    },
+    "events": {
+        "anomaly": "Anomaly",
+        "distress_signal": "Distress signal",
+        "asteroid": "Asteroid",
+        "enemy_ship": "Enemy ship",
+        "friendly_ship": "Friendly ship",
+        "planet": "Planet",
+        "station": "Station"
+    },
+    "galaxy": {
+        "tiers": {
+            "tier1": "Tier 1 - Safe",
+            "tier2": "Tier 2 - Medium",
+            "tier3": "Tier 3 - Dangerous",
+            "tier4": "Tier 4 - Galaxy Edge"
+        },
+        "legend": {
+            "fuel": "⛽ Fuel",
+            "engine": "Engine",
+            "captain": "Captain",
+            "sector_info_1": "Sector 1: Eng.Lvl1 + Capt.Lvl1",
+            "sector_info_2": "Sector 2: Eng.Lvl2 + Capt.Lvl2",
+            "sector_info_3": "Sector 3: Eng.Lvl3 + Capt.Lvl3"
+        },
+        "buttons": {
+            "sector_map": "SECTOR MAP",
+            "galaxy_map": "GALAXY MAP",
+            "crew_tasks": "CREW TASKS",
+            "skip_turn": "SKIP TURN",
+            "next_turn": "NEXT TURN"
+        },
+        "labels": {
+            "sector": "Sector",
+            "threat_level": "Threat level",
+            "scanner": "📡 Scanner",
+            "scanner_absent": "none",
+            "click_sector": "Click on a sector",
+            "click_object": "Click on an object"
+        },
+        "scanner_levels": {
+            "level_4": "4 LVL",
+            "level_3": "3 LVL",
+            "level_2": "2 LVL",
+            "level_1": "1 LVL"
+        }
+    },
+    "turn_skip": "Turn skipped - tasks executing",
+    "language": {
+        "switch": "LANG",
+        "ru": "RU",
+        "en": "EN"
+    },
+    "common": {
+        "yes": "Yes",
+        "no": "No",
+        "ok": "OK",
+        "close": "Close",
+        "back": "Back",
+        "next": "Next",
+        "previous": "Previous",
+        "loading": "Loading...",
+        "error": "Error",
+        "success": "Success",
+        "warning": "Warning",
+        "info": "Info"
+    }
+}

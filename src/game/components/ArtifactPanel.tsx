@@ -4,6 +4,7 @@ import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { Artifact } from "../types";
+import { useTranslation } from "@/lib/useTranslation";
 
 const RARITY_COLORS: Record<
     string,
@@ -29,6 +30,16 @@ const RARITY_NAMES: Record<string, string> = {
     mythic: "Мифический",
     cursed: "⚠️ Проклятый",
 };
+
+function getRarityName(rarity: string, t: (key: string) => string): string {
+    const translations: Record<string, string> = {
+        rare: t("artifacts.rarity.rare"),
+        legendary: t("artifacts.rarity.legendary"),
+        mythic: t("artifacts.rarity.mythic"),
+        cursed: t("artifacts.rarity.cursed"),
+    };
+    return translations[rarity] || RARITY_NAMES[rarity] || rarity;
+}
 
 const EFFECT_ICONS: Record<string, string> = {
     free_power: "⚡",
@@ -60,6 +71,7 @@ function ArtifactCard({
     onResearch: () => void;
     onToggle: () => void;
 }) {
+    const { t } = useTranslation();
     const colors = RARITY_COLORS[artifact.rarity];
     const icon = EFFECT_ICONS[artifact.effect.type] || "?";
 
@@ -88,14 +100,14 @@ function ArtifactCard({
                             {artifact.discovered ? artifact.name : "???"}
                         </div>
                         <div className="text-xs" style={{ color: colors.text }}>
-                            {RARITY_NAMES[artifact.rarity]}
+                            {getRarityName(artifact.rarity, t)}
                         </div>
                     </div>
                 </div>
 
                 {artifact.effect.active && (
                     <span className="text-xs text-[#00ff41] bg-[rgba(0,255,65,0.2)] px-2 py-1">
-                        АКТИВЕН
+                        {t("artifacts.active_label")}
                     </span>
                 )}
             </div>
@@ -115,7 +127,9 @@ function ArtifactCard({
                     )}
 
                     <div className="text-xs mt-2">
-                        <span className="text-[#888]">Требуется учёный: </span>
+                        <span className="text-[#888]">
+                            {t("artifacts.requires_scientist")}:{" "}
+                        </span>
                         <span
                             className={
                                 artifact.researched
@@ -137,8 +151,8 @@ function ArtifactCard({
                             }`}
                         >
                             {artifact.cursed
-                                ? "⚠️ ИЗУЧИТЬ (ОПАСНО)"
-                                : "ИЗУЧИТЬ"}
+                                ? t("artifacts.research_btn_dangerous")
+                                : t("artifacts.research_btn")}
                         </Button>
                     )}
 
@@ -155,9 +169,9 @@ function ArtifactCard({
                         >
                             {artifact.effect.active
                                 ? artifact.cursed
-                                    ? "✓ АКТИВ (НЕЙТРАЛИЗОВАТЬ)"
-                                    : "ДЕАКТИВИРОВАТЬ"
-                                : "АКТИВИРОВАТЬ"}
+                                    ? t("artifacts.active_neutralize_btn")
+                                    : t("artifacts.deactivate_btn")
+                                : t("artifacts.activate_btn")}
                         </Button>
                     )}
                 </>
@@ -165,7 +179,7 @@ function ArtifactCard({
 
             {!artifact.discovered && (
                 <div className="text-xs text-[#666] mt-2 italic">
-                    Ещё не обнаружен...
+                    {t("artifacts.undiscovered")}
                 </div>
             )}
         </div>
@@ -177,6 +191,7 @@ export function ArtifactPanel() {
     const researchArtifact = useGameStore((s) => s.researchArtifact);
     const toggleArtifact = useGameStore((s) => s.toggleArtifact);
     const crew = useGameStore((s) => s.crew);
+    const { t } = useTranslation();
 
     const scientists = crew.filter((c) => c.profession === "scientist");
     const maxScientistLevel =
@@ -200,30 +215,32 @@ export function ArtifactPanel() {
             {/* Header */}
             <div className="shrink-0">
                 <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                    ▸ АРТЕФАКТЫ ДРЕВНИХ
+                    {t("artifacts.title")}
                 </div>
 
                 <div className="text-sm text-[#888]">
-                    Обнаружено:{" "}
+                    {t("artifacts.discovered")}:{" "}
                     <span className="text-[#00ff41]">{discoveredCount}</span> /{" "}
                     {artifacts.length}
                     {" | "}
-                    Изучено:{" "}
+                    {t("artifacts.researched")}:{" "}
                     <span className="text-[#ffb000]">{researchedCount}</span>
                     {" | "}
-                    Активно:{" "}
+                    {t("artifacts.active")}:{" "}
                     <span className="text-[#00d4ff]">{activeCount}</span>
                     {cursedActive > 0 && (
                         <span className="text-[#ff0040]">
                             {" "}
-                            ({cursedActive} проклятых)
+                            ({cursedActive} {t("artifacts.cursed_active")})
                         </span>
                     )}
                 </div>
 
                 <div className="text-xs text-[#888]">
-                    Учёные на борту:{" "}
-                    {scientists.length > 0 ? `Ур. ${maxScientistLevel}` : "нет"}
+                    {t("artifacts.scientists_onboard")}:{" "}
+                    {scientists.length > 0
+                        ? `Ур. ${maxScientistLevel}`
+                        : t("artifacts.no_scientists")}
                 </div>
             </div>
 
@@ -237,7 +254,7 @@ export function ArtifactPanel() {
                         value="regular"
                         className="text-[#00d4ff] data-[state=active]:border-[#00d4ff] data-[state=active]:bg-[rgba(0,212,255,0.1)] cursor-pointer"
                     >
-                        ★ Обычные (
+                        {t("artifacts.tabs.regular")} (
                         {discoveredCount -
                             cursedArtifacts.filter((a) => a.discovered).length}
                         /{regularArtifacts.length})
@@ -246,7 +263,7 @@ export function ArtifactPanel() {
                         value="cursed"
                         className="text-[#ff0040] data-[state=active]:border-[#ff0040] data-[state=active]:bg-[rgba(255,0,64,0.1)] cursor-pointer"
                     >
-                        ⚠️ Проклятые (
+                        {t("artifacts.tabs.cursed")} (
                         {cursedArtifacts.filter((a) => a.discovered).length}/
                         {cursedArtifacts.length})
                     </TabsTrigger>
@@ -267,7 +284,7 @@ export function ArtifactPanel() {
                         ))}
                         {regularArtifacts.length === 0 && (
                             <div className="text-sm text-[#888] text-center py-8">
-                                Нет обычных артефактов
+                                {t("artifacts.no_regular")}
                             </div>
                         )}
                     </div>
@@ -292,7 +309,7 @@ export function ArtifactPanel() {
                         </div>
                         {cursedArtifacts.length === 0 && (
                             <div className="text-sm text-[#888] text-center py-8">
-                                Нет проклятых артефактов
+                                {t("artifacts.no_cursed")}
                             </div>
                         )}
                     </div>
@@ -302,11 +319,11 @@ export function ArtifactPanel() {
             {/* Footer - Advice */}
             <div className="shrink-0 mt-auto">
                 <div className="bg-[rgba(255,176,0,0.1)] border border-[#ffb000] p-3 text-xs">
-                    <span className="text-[#ffb000]">★ Совет: </span>
+                    <span className="text-[#ffb000]">
+                        {t("artifacts.tip_title")}
+                    </span>
                     <span className="text-[#888]">
-                        Обычные артефакты можно найти в аномалиях и штормах.
-                        Проклятые артефакты встречаются реже, но их эффекты
-                        очень мощные — и опасные.
+                        {t("artifacts.tip_text")}
                     </span>
                 </div>
             </div>

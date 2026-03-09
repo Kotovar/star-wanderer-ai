@@ -2,14 +2,18 @@
 
 import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/useTranslation";
 
 // Get scanner range label
-export function getScannerRangeLabel(scanRange: number): string {
-    if (scanRange >= 15) return "4 LVL";
-    if (scanRange >= 8) return "3 LVL";
-    if (scanRange >= 5) return "2 LVL";
-    if (scanRange >= 3) return "1 LVL";
-    return "отсутствует";
+export function getScannerRangeLabel(
+    scanRange: number,
+    t: (key: string) => string,
+): string {
+    if (scanRange >= 15) return t("galaxy.scanner_levels.level_4");
+    if (scanRange >= 8) return t("galaxy.scanner_levels.level_3");
+    if (scanRange >= 5) return t("galaxy.scanner_levels.level_2");
+    if (scanRange >= 3) return t("galaxy.scanner_levels.level_1");
+    return t("galaxy.labels.scanner_absent");
 }
 
 const OUTCOME_INFO = {
@@ -44,6 +48,7 @@ export function DistressSignalPanel() {
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const getSignalRevealChance = useGameStore((s) => s.getSignalRevealChance);
     const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
+    const { t } = useTranslation();
 
     if (!currentLocation) return null;
 
@@ -232,7 +237,7 @@ export function DistressSignalPanel() {
 
     // Unknown signal - offer to investigate
     // Show scanner chance if available and not yet checked
-    const scannerLabel = getScannerRangeLabel(scanRange);
+    const scannerLabel = getScannerRangeLabel(scanRange, t);
 
     return (
         <div className="flex flex-col gap-4">

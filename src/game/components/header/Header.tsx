@@ -13,6 +13,7 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/useTranslation";
 
 export function GameHeader() {
     const [showHelp, setShowHelp] = useState(false);
@@ -28,6 +29,7 @@ export function GameHeader() {
     const showResearch = useGameStore((s) => s.showResearch);
     const gameMode = useGameStore((s) => s.gameMode);
     const restartGame = useGameStore((s) => s.restartGame);
+    const { t, changeLanguage, currentLanguage } = useTranslation();
 
     const discoveredArtifacts = artifacts.filter((a) => a.discovered).length;
     const activeArtifacts = artifacts.filter((a) => a.effect.active).length;
@@ -75,27 +77,27 @@ export function GameHeader() {
         <>
             <header className="bg-[rgba(10,20,30,0.9)] border-b-2 border-[#00ff41] px-4 py-3 md:px-5 md:py-4 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0 shadow-[0_0_20px_rgba(0,255,65,0.3)]">
                 <h1 className="font-['Orbitron'] font-black text-lg md:text-2xl tracking-[2px] md:tracking-[3px] text-[#00ff41] animate-pulse drop-shadow-[0_0_10px_#00ff41] text-center md:text-left">
-                    ◆ ЗВЁЗДНЫЙ СТРАННИК ◆
+                    ◆ {t("game.title")} ◆
                 </h1>
                 <div className="flex gap-2 md:gap-5 text-xs md:text-sm items-center flex-wrap justify-center md:justify-normal">
                     <button
                         onClick={() => setShowHelp(true)}
                         className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
-                        title="Бортовой журнал"
+                        title={t("header.tooltip_logbook")}
                     >
                         <span className="text-[#00d4ff]">📖</span>
                         <span className="text-[#00d4ff] hidden md:inline">
-                            БОРТЖУРНАЛ
+                            {t("game.logbook")}
                         </span>
                     </button>
                     <button
                         onClick={() => setShowEffects(true)}
                         className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer relative"
-                        title="Активные эффекты"
+                        title={t("header.tooltip_effects")}
                     >
                         <span className="text-[#9933ff]">⚡</span>
                         <span className="text-[#9933ff] hidden md:inline">
-                            ЭФФЕКТЫ
+                            {t("game.effects")}
                         </span>
                         {activeEffects.length > 0 && (
                             <span className="absolute -top-1 -right-1 bg-[#9933ff] text-[#050810] text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
@@ -106,7 +108,7 @@ export function GameHeader() {
                     <button
                         onClick={handleArtifactsClick}
                         className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#ff00ff] hover:bg-[rgba(255,0,255,0.2)] transition-colors cursor-pointer"
-                        title="Артефакты Древних"
+                        title={t("header.tooltip_artifacts")}
                     >
                         <span className="text-[#ff00ff]">★</span>
                         <span className="text-[#ff00ff]">
@@ -121,16 +123,16 @@ export function GameHeader() {
                     <button
                         onClick={handleResearchClick}
                         className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
-                        title="Исследования"
+                        title={t("header.tooltip_research")}
                     >
                         <span className="text-[#9933ff]">🔬</span>
                         <span className="text-[#9933ff] hidden lg:inline">
-                            НАУКА
+                            {t("game.science")}
                         </span>
                     </button>
                     <div className="flex items-center gap-1 md:gap-2">
                         <span className="text-[#ffb000] hidden md:inline">
-                            ХОД:
+                            {t("game.turn")}:
                         </span>
                         <span className="text-[#ffb000] md:hidden">🔢</span>
                         <span className="font-bold text-[#00ff41]">{turn}</span>
@@ -143,21 +145,37 @@ export function GameHeader() {
                     </div>
                     <div className="flex items-center gap-1 md:gap-2">
                         <span className="text-[#ffb000] hidden md:inline">
-                            СЕКТОР:
+                            {t("game.sector")}:
                         </span>
                         <span className="text-[#ffb000] md:hidden">📍</span>
                         <span className="font-bold text-[#00ff41] text-xs md:text-base">
-                            {currentSector?.name || "СТАРТ"}
+                            {currentSector?.name || "START"}
                         </span>
                     </div>
                     <button
                         onClick={handleRestartClick}
                         className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#ff4444] hover:bg-[rgba(255,68,68,0.2)] transition-colors cursor-pointer"
-                        title="Начать заново"
+                        title={t("header.tooltip_restart")}
                     >
                         <span className="text-[#ff4444]">🔄</span>
                         <span className="text-[#ff4444] hidden md:inline">
-                            ЗАНОВО
+                            {t("game.restart")}
+                        </span>
+                    </button>
+                    <button
+                        onClick={() =>
+                            changeLanguage(
+                                currentLanguage === "ru" ? "en" : "ru",
+                            )
+                        }
+                        className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00ff41] hover:bg-[rgba(0,255,65,0.2)] transition-colors cursor-pointer font-bold"
+                        title={t("language.switch")}
+                    >
+                        <span className="text-[#00ff41]">🌐</span>
+                        <span className="text-[#00ff41]">
+                            {currentLanguage === "ru"
+                                ? t("language.ru")
+                                : t("language.en")}
                         </span>
                     </button>
                 </div>
@@ -181,11 +199,10 @@ export function GameHeader() {
                 <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ff4444] text-[#00ff41] max-w-md">
                     <DialogHeader>
                         <DialogTitle className="cursor-pointer text-xl font-['Orbitron'] text-[#ff4444]">
-                            Начать заново?
+                            {t("ship.confirm_restart_title")}
                         </DialogTitle>
                         <DialogDescription className="text-[#00ff41] text-base mt-2">
-                            Вы уверены, что хотите начать игру заново? Весь
-                            прогресс будет потерян.
+                            {t("ship.confirm_restart_desc")}
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="gap-2 mt-4">
@@ -194,13 +211,13 @@ export function GameHeader() {
                             onClick={() => setShowRestartDialog(false)}
                             className="cursor-pointer border-[#00ff41] text-[#00ff41] hover:bg-[rgba(0,255,65,0.1)]"
                         >
-                            Отмена
+                            {t("ship.cancel")}
                         </Button>
                         <Button
                             onClick={handleRestartConfirm}
                             className="cursor-pointer bg-[#ff4444] text-white hover:bg-[#ff6666] border-0"
                         >
-                            Начать заново
+                            {t("ship.confirm")}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -218,7 +235,7 @@ export function GameHeader() {
                 >
                     <DialogHeader>
                         <DialogTitle className="text-[#ffb000] font-['Orbitron'] text-lg">
-                            🔬 ИССЛЕДОВАНИЯ
+                            🔬 {t("game.science")}
                         </DialogTitle>
                     </DialogHeader>
                     <div className="mt-2 min-h-[60vh]">

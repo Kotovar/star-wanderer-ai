@@ -1,17 +1,22 @@
 "use client";
 
+import { useTranslation } from "@/lib/useTranslation";
+import { Button } from "@/components/ui/button";
+
 interface HelpPanelProps {
     onClose: () => void;
 }
 
 export function HelpPanel({ onClose }: HelpPanelProps) {
+    const { t } = useTranslation();
+
     return (
         <div className="fixed inset-0 bg-[rgba(0,0,0,0.9)] z-50 flex items-center justify-center p-4">
             <div className="bg-[#0a0f1a] border-2 border-[#00d4ff] max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex justify-between items-center p-4 border-b border-[#00d4ff] sticky top-0 bg-[#0a0f1a]">
                     <h2 className="font-['Orbitron'] text-xl font-bold text-[#00d4ff]">
-                        📖 БОРТОВОЙ ЖУРНАЛ
+                        {t("help.title")}
                     </h2>
                     <button
                         onClick={onClose}
@@ -26,126 +31,128 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                     {/* Introduction */}
                     <section>
                         <h3 className="text-[#ffb000] font-bold text-lg mb-2">
-                            🌟 О ИГРЕ
+                            {t("help.about_title")}
                         </h3>
-                        <p className="text-[#aaa]">
-                            &quot;Звёздный странник&quot; — космическая игра,
-                            где вы управляете кораблём, исследуете галактику,
-                            торгуете, сражаетесь с пиратами и находите древние
-                            артефакты.
-                        </p>
+                        <p className="text-[#aaa]">{t("help.about_text")}</p>
                     </section>
 
                     {/* Ship Modules */}
                     <section>
                         <h3 className="text-[#00ff41] font-bold text-lg mb-2">
-                            🚀 МОДУЛИ КОРАБЛЯ
+                            {t("help.modules_title")}
                         </h3>
                         <div className="grid grid-cols-2 gap-2 text-xs">
                             <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
                                 <span className="text-[#00ff41] font-bold">
-                                    Реактор
+                                    {t("help.reactor")}
                                 </span>
                                 <p className="text-[#888]">
-                                    Производит энергию для корабля
+                                    {t("help.reactor_desc")}
                                 </p>
                             </div>
                             <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
                                 <span className="text-[#00ff41] font-bold">
-                                    Кабина
+                                    {t("help.cockpit")}
                                 </span>
                                 <p className="text-[#888]">
-                                    Управление кораблём, уклонение
+                                    {t("help.cockpit_desc")}
                                 </p>
                             </div>
                             <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
                                 <span className="text-[#00ff41] font-bold">
-                                    Жизнеобеспечение
+                                    {t("help.life_support")}
                                 </span>
                                 <p className="text-[#888]">
-                                    Кислород для экипажа
+                                    {t("help.life_support_desc")}
                                 </p>
                             </div>
                             <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
                                 <span className="text-[#00ff41] font-bold">
-                                    Склад
+                                    {t("help.cargo")}
                                 </span>
                                 <p className="text-[#888]">
-                                    Хранение грузов и товаров
+                                    {t("help.cargo_desc")}
                                 </p>
                             </div>
                             <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
                                 <span className="text-[#00ff41] font-bold">
-                                    Двигатель
+                                    {t("help.engine")}
                                 </span>
                                 <p className="text-[#888]">
-                                    Путешествия между секторами
+                                    {t("help.engine_desc")}
                                 </p>
                             </div>
                             <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
                                 <span className="text-[#00ff41] font-bold">
-                                    Топливный бак
+                                    {t("help.fuel_tank")}
                                 </span>
-                                <p className="text-[#888]">Запас топлива</p>
+                                <p className="text-[#888]">
+                                    {t("help.fuel_tank_desc")}
+                                </p>
                             </div>
                             <div className="p-2 bg-[rgba(255,0,64,0.1)] border border-[#ff0040]">
                                 <span className="text-[#ff0040] font-bold">
-                                    Оружейная палуба
+                                    {t("help.weapon_bay")}
                                 </span>
                                 <p className="text-[#888]">
-                                    Атака врагов (нужен стрелок)
+                                    {t("help.weapon_bay_desc")}
                                 </p>
                             </div>
                             <div className="p-2 bg-[rgba(0,128,255,0.1)] border border-[#0080ff]">
                                 <span className="text-[#0080ff] font-bold">
-                                    Щиты
+                                    {t("help.shield")}
                                 </span>
                                 <p className="text-[#888]">
-                                    Защита от повреждений
+                                    {t("help.shield_desc")}
                                 </p>
                             </div>
                             <div className="p-2 bg-[rgba(0,212,255,0.1)] border border-[#00d4ff]">
                                 <span className="text-[#00d4ff] font-bold">
-                                    Сканер
+                                    {t("help.scanner")}
                                 </span>
                                 <p className="text-[#888] text-xs mt-1">
-                                    📡 Обнаружение объектов и аномалий
+                                    {t("help.scanner_detail_1")}
                                 </p>
                                 <p className="text-[#888] text-xs mt-1">
-                                    ⚡ Выше радиус = лучше шанс:
+                                    {t("help.scanner_detail_2")}
                                 </p>
                                 <ul className="text-[#888] text-xs mt-1 space-y-0.5 ml-2">
-                                    <li>
-                                        • +2% к раскрытию сигналов бедствия за
-                                        точку
-                                    </li>
-                                    <li>
-                                        • +5% к обнаружению скрытых наград за
-                                        точку
-                                    </li>
-                                    <li>
-                                        • +3% к предупреждению засад за точку
-                                    </li>
+                                    <li>{t("help.scanner_detail_3")}</li>
+                                    <li>{t("help.scanner_detail_4")}</li>
+                                    <li>{t("help.scanner_detail_5")}</li>
                                 </ul>
                             </div>
                             <div className="p-2 bg-[rgba(255,170,0,0.1)] border border-[#ffaa00]">
                                 <span className="text-[#ffaa00] font-bold">
-                                    Бур
+                                    {t("help.drill")}
                                 </span>
                                 <p className="text-[#888]">
-                                    Добыча ресурсов из астероидов
+                                    {t("help.drill_desc")}
+                                </p>
+                            </div>
+                            <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
+                                <span className="text-[#00ff41] font-bold">
+                                    {t("help.lab")}
+                                </span>
+                                <p className="text-[#888]">
+                                    {t("help.lab_desc")}
+                                </p>
+                            </div>
+                            <div className="p-2 bg-[rgba(255,0,64,0.1)] border border-[#ff0040]">
+                                <span className="text-[#ff0040] font-bold">
+                                    {t("help.medical")}
+                                </span>
+                                <p className="text-[#888]">
+                                    {t("help.medical_desc")}
                                 </p>
                             </div>
                         </div>
                         <div className="mt-3 p-3 bg-[rgba(255,176,0,0.1)] border border-[#ffb000] text-xs">
                             <div className="text-[#ffb000] font-bold mb-1">
-                                🔧 Перемещение модулей
+                                {t("help.module_movement_title")}
                             </div>
                             <p className="text-[#aaa]">
-                                Можно переместить{" "}
-                                <strong>один модуль за ход</strong>. После
-                                перемещения рамка корабля становится жёлтой 🔒.
-                                Перемещённый модуль блокируется до конца хода.
+                                {t("help.module_movement_text")}
                             </p>
                         </div>
                     </section>
@@ -153,57 +160,55 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                     {/* Crew */}
                     <section>
                         <h3 className="text-[#ffb000] font-bold text-lg mb-2">
-                            👥 ЭКИПАЖ
+                            {t("help.crew_title")}
                         </h3>
                         <div className="space-y-2 text-xs">
                             <div className="p-2 bg-[rgba(255,170,0,0.1)] border border-[#ffaa00]">
                                 <span className="text-[#ffaa00] font-bold">
-                                    Пилот
+                                    {t("professions.pilot")}
                                 </span>
                                 <span className="text-[#888] ml-2">
-                                    — Уклонение в кабине, наведение в оружейной
-                                    палубе
+                                    {t("help.pilot_desc")}
                                 </span>
                             </div>
                             <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
                                 <span className="text-[#00ff41] font-bold">
-                                    Инженер
+                                    {t("professions.engineer")}
                                 </span>
                                 <span className="text-[#888] ml-2">
-                                    — Ремонт модулей, перегрузка (+урон), разгон
-                                    реактора
+                                    {t("help.engineer_desc")}
                                 </span>
                             </div>
                             <div className="p-2 bg-[rgba(255,0,64,0.1)] border border-[#ff0040]">
                                 <span className="text-[#ff0040] font-bold">
-                                    Медик
+                                    {t("professions.medic")}
                                 </span>
                                 <span className="text-[#888] ml-2">
-                                    — Лечение экипажа, поднятие морали
+                                    {t("help.medic_desc")}
                                 </span>
                             </div>
                             <div className="p-2 bg-[rgba(0,212,255,0.1)] border border-[#00d4ff]">
                                 <span className="text-[#00d4ff] font-bold">
-                                    Учёный
+                                    {t("professions.scientist")}
                                 </span>
                                 <span className="text-[#888] ml-2">
-                                    — Исследование аномалий и артефактов
+                                    {t("help.scientist_desc")}
                                 </span>
                             </div>
                             <div className="p-2 bg-[rgba(0,128,255,0.1)] border border-[#0080ff]">
                                 <span className="text-[#0080ff] font-bold">
-                                    Разведчик
+                                    {t("professions.scout")}
                                 </span>
                                 <span className="text-[#888] ml-2">
-                                    — Разведка планет, поиск ресурсов
+                                    {t("help.scout_desc")}
                                 </span>
                             </div>
-                            <div className="p-2 bg-[rgba(255,0,64,0.2)] border border-[#ff0040]">
+                            <div className="p-2 bg-[rgba(255,0,64,0.1)] border border-[#ff0040]">
                                 <span className="text-[#ff0040] font-bold">
-                                    Стрелок
+                                    {t("professions.gunner")}
                                 </span>
                                 <span className="text-[#888] ml-2">
-                                    — Выбор цели в бою, +урон от оружия
+                                    {t("help.gunner_desc")}
                                 </span>
                             </div>
                         </div>
@@ -211,262 +216,146 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
 
                     {/* Races */}
                     <section>
-                        <h3 className="text-[#ffb000] font-bold text-lg mb-2">
-                            🌌 РАСЫ
+                        <h3 className="text-[#9933ff] font-bold text-lg mb-2">
+                            {t("help.races_title")}
                         </h3>
                         <div className="space-y-2 text-xs">
                             <div className="p-2 bg-[rgba(74,144,217,0.1)] border border-[#4a90d9]">
                                 <span className="text-[#4a90d9] font-bold">
-                                    👤 Люди
+                                    {t("races.human.name")}
                                 </span>
                                 <span className="text-[#888] ml-2">
-                                    — +10% настроение, +5 HP реген, +15% опыт
+                                    {t("help.human_desc")}
                                 </span>
                             </div>
                             <div className="p-2 bg-[rgba(0,212,255,0.1)] border border-[#00d4ff]">
                                 <span className="text-[#00d4ff] font-bold">
-                                    🤖 Синтетики
+                                    {t("races.synthetic.name")}
                                 </span>
                                 <span className="text-[#888] ml-2">
-                                    — +25% ремонт, +25% наука, нет усталости
+                                    {t("help.synthetic_desc")}
                                 </span>
                             </div>
                             <div className="p-2 bg-[rgba(170,85,255,0.1)] border border-[#aa55ff]">
                                 <span className="text-[#aa55ff] font-bold">
-                                    🦠 Ксеноморфы-симбионты
+                                    {t("races.xenosymbiont.name")}
                                 </span>
                                 <span className="text-[#888] ml-2">
-                                    — -25% энергия, +10 HP реген
+                                    {t("help.xenosymbiont_desc")}
                                 </span>
                             </div>
                             <div className="p-2 bg-[rgba(255,102,0,0.1)] border border-[#ff6600]">
                                 <span className="text-[#ff6600] font-bold">
-                                    🦎 Крилорианцы
+                                    {t("races.krylorian.name")}
                                 </span>
                                 <span className="text-[#888] ml-2">
-                                    — +35% бой, +15 HP, -10% уклонение врага
+                                    {t("help.krylorian_desc")}
                                 </span>
                             </div>
                             <div className="p-2 bg-[rgba(153,51,255,0.1)] border border-[#9933ff]">
                                 <span className="text-[#9933ff] font-bold">
-                                    👁️ Порождённые Пустотой
+                                    {t("races.voidborn.name")}
                                 </span>
                                 <span className="text-[#888] ml-2">
-                                    — -20% топливо, +5 щиты/ход, -10% настроение
+                                    {t("help.voidborn_desc")}
                                 </span>
                             </div>
                             <div className="p-2 bg-[rgba(0,255,170,0.1)] border border-[#00ffaa]">
                                 <span className="text-[#00ffaa] font-bold">
-                                    💎 Кристаллоиды
+                                    {t("races.crystalline.name")}
                                 </span>
                                 <span className="text-[#888] ml-2">
-                                    — +40% наука, +5% защита модулей, +15%
-                                    артефакты
+                                    {t("help.crystalline_desc")}
                                 </span>
                             </div>
                         </div>
                     </section>
 
-                    {/* Locations */}
+                    {/* Controls */}
                     <section>
-                        <h3 className="text-[#ffb000] font-bold text-lg mb-2">
-                            📍 ТИПЫ ЛОКАЦИЙ
+                        <h3 className="text-[#00d4ff] font-bold text-lg mb-2">
+                            {t("help.controls_title")}
                         </h3>
-                        <div className="space-y-1 text-xs">
-                            <p>
-                                <span className="text-[#4a90a4]">
-                                    🛰 Станция
-                                </span>{" "}
-                                <span className="text-[#888]">
-                                    — Торговля, ремонт, найм экипажа, заправка
-                                    топливом, утилизация модулей
-                                </span>
-                            </p>
-                            <p>
-                                <span className="text-[#4a7c59]">
-                                    🌍 Планета
-                                </span>{" "}
-                                <span className="text-[#888]">
-                                    — Задачи, разведка, получение эффектов
-                                </span>
-                            </p>
-                            <p className="text-[10px] text-[#9933ff] ml-4">
-                                🌟 У каждой расы на планете есть уникальная
-                                активность:
-                                <br />
-                                • 👤 Люди: 🎓 Обучение экипажа (+1 уровень)
-                                <br />
-                                • 🤖 Синтетики: 📚 Сканирование сектора
-                                <br />
-                                • 🦠 Ксеноморфы-симбионты: 🧬 Улучшение
-                                выживаемости экипажа
-                                <br />
-                                • 🦎 Крилорианцы: ⚔️ Боевые бонусы
-                                <br />
-                                • 👁️ Порождённые Пустотой: 🔮 Усиление
-                                артефактов
-                                <br />• 💎 Кристаллоиды: 💫 Улучшение систем
-                                корабля
-                            </p>
-                            <p>
-                                <span className="text-[#ff0040]">👾 Враг</span>{" "}
-                                <span className="text-[#888]">
-                                    — Бой, добыча кредитов
-                                </span>
-                            </p>
-                            <p>
-                                <span className="text-[#00ff41]">
-                                    ⚡ Аномалия
-                                </span>{" "}
-                                <span className="text-[#888]">
-                                    — Случайный эффект (нужен учёный)
-                                </span>
-                            </p>
-                            <p>
-                                <span className="text-[#2a6a8a]">
-                                    🚀 Дружественный корабль
-                                </span>{" "}
-                                <span className="text-[#888]">
-                                    — Торговля, найм, квесты
-                                </span>
-                            </p>
-                            <p>
-                                <span className="text-[#8b7355]">
-                                    ☄️ Пояс астероидов
-                                </span>{" "}
-                                <span className="text-[#888]">
-                                    — Добыча ресурсов (нужен бур)
-                                </span>
-                            </p>
-                            <p>
-                                <span className="text-[#00ff00]">☢️ Шторм</span>{" "}
-                                <span className="text-[#888]">
-                                    — Опасность и ресурсы
-                                </span>
-                            </p>
-                            <p>
-                                <span className="text-[#ffaa00]">
-                                    🆘 Сигнал бедствия
-                                </span>{" "}
-                                <span className="text-[#888]">
-                                    — Случайное событие
-                                </span>
-                            </p>
-                            <p>
-                                <span className="text-[#ff00ff]">
-                                    💀 Древний босс
-                                </span>{" "}
-                                <span className="text-[#888]">
-                                    — Сложный бой, гарантированный артефакт
-                                </span>
-                            </p>
-                        </div>
+                        <p className="text-[#aaa] text-xs">
+                            {t("help.controls_text")}
+                        </p>
+                    </section>
+
+                    {/* Animations */}
+                    <section>
+                        <h3 className="text-[#00ff41] font-bold text-lg mb-2">
+                            {t("help.animations_title")}
+                        </h3>
+                        <p className="text-[#aaa] text-xs">
+                            {t("help.animations_text")}
+                        </p>
                     </section>
 
                     {/* Combat */}
                     <section>
                         <h3 className="text-[#ff0040] font-bold text-lg mb-2">
-                            ⚔️ БОЙ
+                            {t("help.combat_title")}
                         </h3>
-                        <ul className="text-[#888] text-xs space-y-1 list-disc list-inside">
-                            <li>
-                                Без стрелка урон -50%, цель выбирается случайно
-                            </li>
-                            <li>
-                                Стрелок в оружейной палубе позволяет выбирать
-                                цель
-                            </li>
-                            <li>При 0% брони — поражение</li>
-                            <li>
-                                Отступление наносит урон модулям и снижает
-                                мораль экипажа
-                            </li>
-                            <li>Боссы регенерируют здоровье каждый ход</li>
+                        <ul className="text-[#888] text-xs space-y-1">
+                            <li>{t("help.combat_text_1")}</li>
+                            <li>{t("help.combat_text_2")}</li>
+                            <li>{t("help.combat_text_3")}</li>
+                            <li>{t("help.combat_text_4")}</li>
+                            <li>{t("help.combat_text_5")}</li>
                         </ul>
                     </section>
 
-                    {/* Research */}
+                    {/* Science */}
                     <section>
                         <h3 className="text-[#9933ff] font-bold text-lg mb-2">
-                            🔬 НАУКА
+                            {t("help.science_title")}
                         </h3>
-                        <p className="text-[#888] text-xs mb-2">
-                            Откройте панель исследований (кнопка{" "}
-                            <span className="text-[#9933ff] font-bold">
-                                🔬 НАУКА
-                            </span>{" "}
-                            вверху) для изучения новых технологий.
+                        <p className="text-[#aaa] text-xs mb-2">
+                            {t("help.science_text")}
                         </p>
-                        <ul className="text-[#888] text-xs space-y-1 list-disc list-inside">
-                            <li>
-                                Исследования открывают новые возможности:
-                                улучшение модулей, оружия, щитов
-                            </li>
-                            <li>Для исследований требуются ресурсы и время</li>
-                            <li>
-                                Учёные в экипаже ускоряют процесс исследований
-                            </li>
-                            <li>
-                                Некоторые технологии требуют предварительного
-                                изучения других
-                            </li>
+                        <ul className="text-[#888] text-xs space-y-1">
+                            <li>{t("help.science_detail_1")}</li>
+                            <li>{t("help.science_detail_2")}</li>
+                            <li>{t("help.science_detail_3")}</li>
+                            <li>{t("help.science_detail_4")}</li>
                         </ul>
                     </section>
 
                     {/* Tips */}
                     <section>
                         <h3 className="text-[#ffb000] font-bold text-lg mb-2">
-                            💡 СОВЕТЫ
+                            {t("help.tips_title")}
                         </h3>
-                        <ul className="text-[#888] text-xs space-y-1 list-disc list-inside">
-                            <li>Без сканера многие объекты в секторе скрыты</li>
-                            <li>
-                                📡 Сканер с высоким радиусом сканирования даёт
-                                бонусы: раскрытие сигналов, обнаружение наград,
-                                предупреждение засад
-                            </li>
-                            <li>
-                                Следите за топливом — без него нельзя
-                                путешествовать
-                            </li>
-                            <li>
-                                Наём экипажа на станциях дешевле, чем у
-                                дружественных кораблей
-                            </li>
-                            <li>Артефакты дают уникальные возможности</li>
-                            <li>
-                                Чёрные дыры телепортируют в случайный сектор
-                            </li>
-                            <li>
-                                Уровни экипажа повышают эффективность их
-                                способностей
-                            </li>
-                            <li>
-                                ✨ Анимации секторов (метеориты, мерцающие
-                                звёзды) можно включить/выключить кнопкой{" "}
-                                <span className="text-[#00ff41] font-bold">
-                                    ✨
-                                </span>{" "}
-                                на карте сектора или галактики
-                            </li>
+                        <ul className="text-[#888] text-xs space-y-1">
+                            <li>{t("help.tip_1")}</li>
+                            <li>{t("help.tip_2")}</li>
+                            <li>{t("help.tip_3")}</li>
+                            <li>{t("help.tip_4")}</li>
+                            <li>{t("help.tip_5")}</li>
+                            <li>{t("help.tip_6")}</li>
+                            <li>{t("help.tip_7")}</li>
                         </ul>
                     </section>
 
                     {/* Victory and Defeat */}
                     <section>
                         <h3 className="text-[#ff0040] font-bold text-lg mb-2">
-                            ⚠️ Окончание игры
+                            {t("help.victory_title")}
                         </h3>
-                        <div className=" mb-1">
-                            <p className="text-[#888] text-xs">
-                                Исследуйте галактику, улучшайте корабль и
-                                экипаж. Достигните самых отдалённых уголков
-                                космоса, чтобы найти границу известной
-                                галактики. Но помните — путь к границе открыт
-                                только для тех, кто докажет свою готовность...
-                            </p>
-                        </div>
+                        <p className="text-[#888] text-xs">
+                            {t("help.victory_text")}
+                        </p>
                     </section>
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 border-t border-[#00d4ff] sticky bottom-0 bg-[#0a0f1a]">
+                    <Button
+                        onClick={onClose}
+                        className="w-full bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider"
+                    >
+                        {t("effects.close")}
+                    </Button>
                 </div>
             </div>
         </div>

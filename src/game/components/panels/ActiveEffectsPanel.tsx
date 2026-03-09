@@ -4,6 +4,7 @@ import { useGameStore } from "@/game/store";
 import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
 import { getEffectDescription } from "@/game/artifacts";
+import { useTranslation } from "@/lib/useTranslation";
 
 interface ActiveEffectsPanelProps {
     onClose: () => void;
@@ -11,13 +12,14 @@ interface ActiveEffectsPanelProps {
 
 export function ActiveEffectsPanel({ onClose }: ActiveEffectsPanelProps) {
     const activeEffects = useGameStore((s) => s.activeEffects);
+    const { t } = useTranslation();
 
     if (activeEffects.length === 0) {
         return (
             <div className="flex flex-col gap-4">
                 <div className="flex justify-between items-center">
                     <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                        ▸ Активные эффекты
+                        {t("effects.title")}
                     </div>
                     <button
                         onClick={onClose}
@@ -27,13 +29,13 @@ export function ActiveEffectsPanel({ onClose }: ActiveEffectsPanelProps) {
                     </button>
                 </div>
                 <div className="text-sm text-[#888] text-center py-8">
-                    Нет активных эффектов
+                    {t("effects.no_effects")}
                 </div>
                 <Button
                     onClick={onClose}
                     className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
                 >
-                    ЗАКРЫТЬ
+                    {t("effects.close")}
                 </Button>
             </div>
         );
@@ -43,7 +45,7 @@ export function ActiveEffectsPanel({ onClose }: ActiveEffectsPanelProps) {
         <div className="flex flex-col gap-4">
             <div className="flex justify-between items-center">
                 <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                    ▸ Активные эффекты
+                    {t("effects.title")}
                 </div>
                 <button
                     onClick={onClose}
@@ -53,7 +55,7 @@ export function ActiveEffectsPanel({ onClose }: ActiveEffectsPanelProps) {
                 </button>
             </div>
             <div className="text-xs text-[#888] mb-2">
-                Эффекты длятся несколько ходов и автоматически истекают
+                {t("effects.description")}
             </div>
 
             <div className="flex flex-col gap-3 max-h-80 overflow-y-auto">
@@ -86,7 +88,8 @@ export function ActiveEffectsPanel({ onClose }: ActiveEffectsPanelProps) {
                                             : "bg-[rgba(0,255,65,0.2)] text-[#00ff41]"
                                     }`}
                                 >
-                                    ⏱️ {effect.turnsRemaining} ход(а)
+                                    ⏱️ {effect.turnsRemaining}{" "}
+                                    {t("effects.turns")}
                                 </div>
                             </div>
 
@@ -113,7 +116,7 @@ export function ActiveEffectsPanel({ onClose }: ActiveEffectsPanelProps) {
                 onClick={onClose}
                 className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
             >
-                ЗАКРЫТЬ
+                {t("effects.close")}
             </Button>
         </div>
     );

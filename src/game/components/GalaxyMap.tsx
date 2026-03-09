@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useGameStore } from "../store";
+import { useTranslation } from "@/lib/useTranslation";
 import {
     drawStaticLegend,
     drawSector,
@@ -118,6 +119,7 @@ const DRAG_THRESHOLD = 5; // Minimum pixels to move before considering it a drag
 export function GalaxyMap() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const { t, currentLanguage } = useTranslation();
     const starsRef = useRef<Array<{
         x: number;
         y: number;
@@ -322,7 +324,7 @@ export function GalaxyMap() {
         }
 
         // Draw static legend (fuel, engine, captain info) BEFORE transform
-        drawStaticLegend(ctx, modules, captainLevel, fuel);
+        drawStaticLegend(ctx, modules, captainLevel, fuel, t);
 
         // Apply transform for zoom and pan
         ctx.save();
@@ -359,18 +361,21 @@ export function GalaxyMap() {
 
         ctx.restore();
     }, [
-        sectors,
-        currentSector,
-        modules,
-        artifacts,
-        captainLevel,
-        fuel,
-        calculateFuelCost,
         areEnginesFunctional,
         areFuelTanksFunctional,
-        zoom,
-        offset,
+        artifacts,
+        calculateFuelCost,
+        captainLevel,
+        currentLanguage,
+        currentSector,
+        fuel,
+        modules,
+        offset.x,
+        offset.y,
+        sectors,
+        t,
         updateSectorPosition,
+        zoom,
     ]);
 
     // Animation effect for twinkling stars and cosmic particles

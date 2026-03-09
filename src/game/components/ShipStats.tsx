@@ -3,6 +3,7 @@
 import { getTotalEvasion } from "@/game/slices";
 import { useGameStore } from "@/game/store";
 import { useFuelEfficiency } from "./ship/useFuelEfficiency";
+import { useTranslation } from "@/lib/useTranslation";
 import {
     BASE_CRIT_CHANCE,
     BASE_CRIT_MULTIPLIER,
@@ -21,6 +22,8 @@ export function ShipStats() {
     const captain = useGameStore((s) =>
         s.crew.find((c) => c.profession === "pilot"),
     );
+
+    const { t } = useTranslation();
 
     const { efficiencyPercent } = useFuelEfficiency();
 
@@ -188,7 +191,7 @@ export function ShipStats() {
         <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4 mt-2.5">
             {/* Новые параметры в верхней части */}
             <div className="flex justify-between mb-2 text-sm">
-                <span className="text-[#ffb000]">⛽ Топливо:</span>
+                <span className="text-[#ffb000]">{t("ship_stats.fuel")}:</span>
                 <span className="text-[#9933ff]">
                     {ship.fuel || 0}/{ship.maxFuel || 0}
                 </span>
@@ -196,21 +199,33 @@ export function ShipStats() {
             {efficiencyPercent >= 0 && (
                 <div className="flex justify-between mb-2 text-sm">
                     <span className="text-[#ffb000]">
-                        💨 Эффективность топлива:
+                        {t("ship_stats.fuel_efficiency")}:
                     </span>
                     <span className="text-[#00ff41]">{efficiencyPercent}%</span>
                 </div>
             )}
             <div className="flex justify-between mb-2 text-sm">
-                <span className="text-[#ffb000]">🔥 Двигатель:</span>
-                <span className="text-[#00ff41]">Ур.{engineLevel}</span>
+                <span className="text-[#ffb000]">
+                    {t("ship_stats.engine")}:
+                </span>
+                <span className="text-[#00ff41]">
+                    {t("ship_stats.level")}
+                    {engineLevel}
+                </span>
             </div>
             <div className="flex justify-between mb-2 text-sm">
-                <span className="text-[#ffb000]">👤 Капитан:</span>
-                <span className="text-[#00ff41]">Ур.{captain?.level ?? 1}</span>
+                <span className="text-[#ffb000]">
+                    {t("ship_stats.captain")}:
+                </span>
+                <span className="text-[#00ff41]">
+                    {t("ship_stats.level")}
+                    {captain?.level ?? 1}
+                </span>
             </div>
             <div className="flex justify-between mb-2 text-sm">
-                <span className="text-[#ffb000]">👥 Экипаж:</span>
+                <span className="text-[#ffb000]">
+                    {t("ship_stats.crew_count")}:
+                </span>
                 <span
                     className={
                         crew.length <= crewCapacity
@@ -223,7 +238,7 @@ export function ShipStats() {
             </div>
             <div className="flex justify-between mb-2 text-sm">
                 <span className="text-[#ffb000]">
-                    📡 Дальность сканирования:
+                    {t("ship_stats.scan_range")}:
                 </span>
                 <span className="text-[#00ff41]">
                     {scanRange > 0 ? `${scanRange}` : "—"}
@@ -231,14 +246,18 @@ export function ShipStats() {
             </div>
             <div className="mt-2.5 pt-2.5 border-t border-[#00ff41]">
                 <div className="flex justify-between mb-2 text-sm">
-                    <span className="text-[#ffb000]">⚡ Генерация:</span>
+                    <span className="text-[#ffb000]">
+                        {t("ship_stats.power_generation")}:
+                    </span>
                     <span className="text-[#00ff41]">
                         {totalPower + engineerBoost}
                         {engineerBoost > 0 ? ` (+${engineerBoost})` : ""}
                     </span>
                 </div>
                 <div className="flex justify-between mb-2 text-sm">
-                    <span className="text-[#ffb000]">⚡ Потребление:</span>
+                    <span className="text-[#ffb000]">
+                        {t("ship_stats.power_consumption")}:
+                    </span>
                     <span
                         className={
                             available >= 0 ? "text-[#00ff41]" : "text-[#ff0040]"
@@ -248,7 +267,9 @@ export function ShipStats() {
                     </span>
                 </div>
                 <div className="flex justify-between mb-2 text-sm font-bold">
-                    <span className="text-[#ffb000]">⚡ Доступно:</span>
+                    <span className="text-[#ffb000]">
+                        {t("ship_stats.power_available")}:
+                    </span>
                     <span
                         className={
                             available >= 0 ? "text-[#00ff41]" : "text-[#ff0040]"
@@ -260,53 +281,65 @@ export function ShipStats() {
             </div>
             <div className="mt-2.5 pt-2.5 border-t border-[#00ff41]">
                 <div className="flex justify-between mb-2 text-sm">
-                    <span className="text-[#ffb000]">⚔ Урон:</span>
+                    <span className="text-[#ffb000]">
+                        {t("ship_stats.damage")}:
+                    </span>
                     <span className="text-[#00ff41]">{damage.total}</span>
                 </div>
                 {damage.kinetic > 0 && (
                     <div className="flex justify-between text-sm text-[#888]">
-                        <span>├ Кинетич.:</span>
+                        <span>{t("ship_stats.kinetic")}</span>
                         <span>{damage.kinetic}</span>
                     </div>
                 )}
                 {damage.laser > 0 && (
                     <div className="flex justify-between text-sm text-[#f00]">
-                        <span>├ Лазерн.:</span>
+                        <span>{t("ship_stats.laser")}</span>
                         <span>{damage.laser}</span>
                     </div>
                 )}
                 {damage.missile > 0 && (
                     <div className="flex justify-between text-sm text-[#fa0]">
-                        <span>└ Ракетн.:</span>
+                        <span>{t("ship_stats.missile")}</span>
                         <span>{damage.missile}</span>
                     </div>
                 )}
             </div>
             <div className="flex justify-between mb-2 text-sm">
-                <span className="text-[#ffb000]">🔧 Корпус:</span>
+                <span className="text-[#ffb000]">{t("ship_stats.hull")}:</span>
                 <span className="text-[#00ff41]">
                     {currentHull}/{maxHull}
                 </span>
             </div>
             <div className="flex justify-between mb-2 text-sm">
-                <span className="text-[#ffb000]">⚡️ Щиты:</span>
+                <span className="text-[#ffb000]">
+                    {t("ship_stats.shields")}:
+                </span>
                 <span className="text-[#00d4ff]">
                     {ship.shields}/{ship.maxShields}
                 </span>
             </div>
             <div className="flex justify-between mb-2 text-sm">
-                <span className="text-[#ffb000]">🛡 Защита:</span>
-                <span className="text-[#00ff41]">{totalDefense} ед.</span>
+                <span className="text-[#ffb000]">
+                    {t("ship_stats.defense")}:
+                </span>
+                <span className="text-[#00ff41]">
+                    {totalDefense} {t("ship_stats.units")}
+                </span>
             </div>
             <div className="flex justify-between mb-2 text-sm">
-                <span className="text-[#ffb000]">🎯 Уклонение:</span>
+                <span className="text-[#ffb000]">
+                    {t("ship_stats.evasion")}:
+                </span>
                 <span className="text-[#00ff41]">{evasionChance}%</span>
             </div>
 
             {/* Shield reflect chance (Mirror Shield artifact) */}
             {reflectChance > 0 && (
                 <div className="flex justify-between mb-2 text-sm">
-                    <span className="text-[#ffb000]">🛡️ Отражение:</span>
+                    <span className="text-[#ffb000]">
+                        {t("ship_stats.reflection")}:
+                    </span>
                     <span className="text-[#00d4ff]">
                         {Math.round(reflectChance)}%
                     </span>
@@ -315,7 +348,9 @@ export function ShipStats() {
 
             {/* Shield regeneration per turn */}
             <div className="flex justify-between mb-2 text-sm">
-                <span className="text-[#ffb000]">💚 Восстановление щитов:</span>
+                <span className="text-[#ffb000]">
+                    {t("ship_stats.shield_regen")}:
+                </span>
                 <span
                     className={
                         shieldRegen >= 15
@@ -325,7 +360,7 @@ export function ShipStats() {
                               : "text-[#888]"
                     }
                 >
-                    ~{Math.round(shieldRegen)} за ход
+                    ~{Math.round(shieldRegen)} {t("ship_stats.per_turn")}
                     {shieldRegenerator && (
                         <span className="text-[#00ff41] text-xs">
                             {" "}
@@ -344,10 +379,12 @@ export function ShipStats() {
                 ═══════════════════════════════════════════════════════════════ */}
             <div className="mt-2.5 pt-2.5 border-t border-[#00ff41]">
                 <div className="text-xs text-[#ffb000] mb-2 font-bold">
-                    ⚔️ БОЕВЫЕ ПАРАМЕТРЫ
+                    {t("ship_stats.combat_stats")}
                 </div>
                 <div className="flex justify-between mb-2 text-sm">
-                    <span className="text-[#ffb000]">💥 Шанс крита:</span>
+                    <span className="text-[#ffb000]">
+                        {t("ship_stats.crit_chance")}:
+                    </span>
                     <span className="text-[#ff6600]">
                         {Math.round(totalCritChance * 100)}%
                         {totalCritChance > BASE_CRIT_CHANCE && (
@@ -363,7 +400,9 @@ export function ShipStats() {
                     </span>
                 </div>
                 <div className="flex justify-between mb-2 text-sm">
-                    <span className="text-[#ffb000]">💀 Крит. урон:</span>
+                    <span className="text-[#ffb000]">
+                        {t("ship_stats.crit_damage")}:
+                    </span>
                     <span className="text-[#ff0040]">
                         x{totalCritDamage.toFixed(1)}
                         {totalCritDamage > BASE_CRIT_MULTIPLIER && (
@@ -380,7 +419,9 @@ export function ShipStats() {
                     </span>
                 </div>
                 <div className="flex justify-between mb-2 text-sm">
-                    <span className="text-[#ffb000]">🎯 Точность:</span>
+                    <span className="text-[#ffb000]">
+                        {t("ship_stats.accuracy")}:
+                    </span>
                     <span
                         className={
                             finalAccuracy >= 0.9
@@ -409,7 +450,9 @@ export function ShipStats() {
             </div>
 
             <div className="flex justify-between text-sm">
-                <span className="text-[#ffb000]">💨 Кислород:</span>
+                <span className="text-[#ffb000]">
+                    {t("ship_stats.oxygen")}:
+                </span>
                 <span
                     className={
                         crew.length <= ship.crewCapacity
