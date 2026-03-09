@@ -262,14 +262,16 @@ function ResearchContent({
                                         ? "border-[#ffb000] bg-[#ffb000] text-[#050810]"
                                         : "border-[#333] text-[#666] hover:border-[#555]"
                                 }`}
-                                style={{
-                                    borderColor: isActive
-                                        ? CATEGORY_COLORS[catId]
-                                        : undefined,
-                                    color: isActive
-                                        ? CATEGORY_COLORS[catId]
-                                        : undefined,
-                                }}
+                                style={
+                                    isActive
+                                        ? {
+                                              borderColor:
+                                                  CATEGORY_COLORS[catId],
+                                              backgroundColor:
+                                                  CATEGORY_COLORS[catId],
+                                          }
+                                        : undefined
+                                }
                             >
                                 {label}
                             </Button>
