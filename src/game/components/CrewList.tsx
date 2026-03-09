@@ -96,7 +96,7 @@ export function CrewList() {
                                 )}
                                 {member.movedThisTurn && (
                                     <span className="text-[10px] px-1.5 py-0.5 rounded border border-[#ff0040] text-[#ff0040]">
-                                        ПЕРЕМЕЩЁН
+                                        {t("crew_member.moved")}
                                     </span>
                                 )}
                             </div>
@@ -112,14 +112,15 @@ export function CrewList() {
                             </div>
                             <div className="grid grid-cols-1 gap-1 mt-1">
                                 <div>
-                                    Опыт: {member.exp}/{expNeeded}
+                                    {t("crew_member.experience")} {member.exp}/
+                                    {expNeeded}
                                     <Progress
                                         value={expPercent}
                                         className="h-2 mt-1 bg-[rgba(0,0,0,0.5)] [&>div]:bg-[#00d4ff]"
                                     />
                                 </div>
                                 <div>
-                                    Здоровье: {member.health}/
+                                    {t("crew_member.health")} {member.health}/
                                     {member.maxHealth || 100}
                                     <Progress
                                         value={
@@ -131,7 +132,7 @@ export function CrewList() {
                                     />
                                 </div>
                                 <div className="text-[10px] text-[#00ff41]">
-                                    ❤ Регенерация: +
+                                    {t("crew_member.regen_short")}
                                     {5 +
                                         (member.race === "xenosymbiont"
                                             ? 5
@@ -147,11 +148,11 @@ export function CrewList() {
                                             )
                                             ? 5
                                             : 0)}
-                                    /ход
+                                    /{t("crew.turn")}
                                 </div>
                                 {race?.hasHappiness && (
                                     <div>
-                                        Настроение:
+                                        {t("crew_member.mood")}
                                         <Progress
                                             value={member.happiness}
                                             className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${member.happiness < 30 ? "[&>div]:bg-[#ff0040]" : member.happiness < 60 ? "[&>div]:bg-[#ffb000]" : "[&>div]:bg-[#00ff41]"}`}
@@ -160,7 +161,7 @@ export function CrewList() {
                                 )}
                                 {!race?.hasHappiness && (
                                     <div className="text-gray-500 text-[10px]">
-                                        Не имеет счастья
+                                        {t("crew_member.no_happiness")}
                                     </div>
                                 )}
                             </div>

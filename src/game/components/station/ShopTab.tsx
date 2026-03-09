@@ -12,6 +12,54 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslation } from "@/lib/useTranslation";
+
+// Helper to get translated module name
+function getTranslatedModuleName(
+    moduleType: string,
+    t: (key: string) => string,
+): string {
+    const nameMap: Record<string, string> = {
+        reactor: "module_names.reactor",
+        cockpit: "module_names.cockpit",
+        lifesupport: "module_names.lifesupport",
+        cargo: "module_names.cargo",
+        weaponbay: "module_names.weaponbay",
+        shield: "module_names.shield",
+        medical: "module_names.medical",
+        scanner: "module_names.scanner",
+        engine: "module_names.engine",
+        fueltank: "module_names.fueltank",
+        drill: "module_names.drill",
+        ai_core: "module_names.ai_core",
+        lab: "module_names.lab",
+    };
+    const key = nameMap[moduleType];
+    return key ? t(key) : moduleType;
+}
+
+// Helper to get translated upgrade name
+function getTranslatedUpgradeName(
+    item: { type: string; targetType?: string; name: string },
+    t: (key: string, params?: Record<string, string | number>) => string,
+): string {
+    if (item.type !== "upgrade" || !item.targetType) return item.name;
+
+    const nameMap: Record<string, string> = {
+        reactor: "station_upgrades.reactor_upgrade",
+        cargo: "station_upgrades.cargo_expansion",
+        fueltank: "station_upgrades.tank_upgrade",
+        lifesupport: "station_upgrades.lifesupport_upgrade",
+        engine: "station_upgrades.engine_tuning",
+        scanner: "station_upgrades.scanner_upgrade",
+        drill: "station_upgrades.drill_upgrade",
+        shield: "station_upgrades.shield_upgrade",
+        lab: "station_upgrades.lab_upgrade",
+        medical: "station_upgrades.medical_upgrade",
+    };
+    const key = nameMap[item.targetType];
+    return key ? t(key) : item.name;
+}
 
 interface ShopTabProps {
     stationId: string;
@@ -252,6 +300,18 @@ function ShopItemCard({
     onViewDetails,
     onBuy,
 }: ShopItemCardProps) {
+    const { t } = useTranslation();
+
+    // Get translated name for modules, weapons, and upgrades
+    const displayName =
+        item.type === "module" && item.moduleType
+            ? getTranslatedModuleName(item.moduleType, t)
+            : item.type === "weapon" && item.weaponType
+              ? t(`weapon_types.${item.weaponType}`)
+              : item.type === "upgrade" && item.targetType
+                ? getTranslatedUpgradeName(item, t)
+                : item.name;
+
     return (
         <div
             className={`flex justify-between items-center bg-[rgba(0,255,65,0.05)] border p-3 ${
@@ -266,7 +326,7 @@ function ShopItemCard({
                     onClick={onViewDetails}
                 >
                     {isUnique && "★ "}
-                    {item.name}
+                    {displayName}
                 </div>
                 <ItemPriceAndStock
                     price={item.price}
@@ -305,6 +365,8 @@ function ItemPriceAndStock({
     alreadyOwned: boolean;
     isUpgrade: boolean;
 }) {
+    const { t } = useTranslation();
+
     return (
         <div className="text-[#ffb000] mt-1 text-xs">
             💰 {isUpgrade ? "" : price + " ₢"}
@@ -317,15 +379,17 @@ function ItemPriceAndStock({
             >
                 {soldOut
                     ? isUpgrade
-                        ? "МАКС. УРОВЕНЬ"
-                        : "ПРОДАНО"
+                        ? t("station_upgrades.max_level")
+                        : t("station_upgrades.sold_out")
                     : noWB
-                      ? "НУЖНА ОРУЖЕЙНАЯ ПАЛУБА СО СВОБОДНЫМ РАЗЪЁМОМ"
+                      ? t("station_upgrades.need_weapon_bay")
                       : alreadyOwned && !isUpgrade
-                        ? "УЖЕ ЕСТЬ"
+                        ? t("station_upgrades.already_owned")
                         : isUpgrade
-                          ? "ДОСТУПНО"
-                          : `В наличии: ${stockLeft}`}
+                          ? t("station_upgrades.available")
+                          : t("station_upgrades.in_stock", {
+                                count: stockLeft,
+                            })}
             </span>
         </div>
     );
@@ -336,6 +400,8 @@ type ItemDescriptionProps = {
 };
 
 function ItemDescription({ item }: ItemDescriptionProps) {
+    const { t } = useTranslation();
+
     // Get module level from ID (e.g., "reactor-2-station123" = level 2)
     const getModuleLevel = () => {
         if (item.type !== "module") return null;
@@ -352,95 +418,64 @@ function ItemDescription({ item }: ItemDescriptionProps) {
             {/* Module level - only show for ancient/quantum modules (level 4+) */}
             {moduleLevel && moduleLevel >= 4 && (
                 <div className="text-[#ffb000] mb-1">
-                    ★ Уровень: {moduleLevel}
+                    ★ {t("module_list.level")}: {moduleLevel}
                 </div>
             )}
             {/* Module size */}
             {item.type === "module" && item.width && item.height && (
                 <div className="text-[#888] mb-1">
-                    📐 Размер: {item.width}x{item.height}
+                    {t("module_list.size")}: {item.width}x{item.height}
                 </div>
             )}
-            {/* Module purpose descriptions */}
-            {item.type === "module" && item.moduleType === "cockpit" && (
-                <span className="text-[#888]">
-                    🎯 Кабина пилота — управление кораблём
-                </span>
-            )}
-            {item.type === "module" && item.moduleType === "reactor" && (
-                <span>⚡ Реактор — генерация энергии для систем</span>
-            )}
-            {item.type === "module" &&
-                item.moduleType === "fueltank" &&
-                item.capacity && <span>⛽ Ёмкость: {item.capacity}</span>}
-            {item.type === "module" && item.moduleType === "engine" && (
-                <span className="text-[#888]">
-                    🚀 Двигатель — перемещение между секторами
-                </span>
-            )}
-            {item.type === "module" &&
-                item.moduleType === "shield" &&
-                item.shields && <span>🛡 Щиты: {item.shields}</span>}
-            {item.type === "module" &&
-                item.moduleType === "cargo" &&
-                item.capacity && <span>📦 Вместимость: {item.capacity}</span>}
-            {item.type === "module" &&
-                item.moduleType === "scanner" &&
-                item.scanRange && <span>📡 Дальность: {item.scanRange}</span>}
-            {item.type === "module" && item.moduleType === "lifesupport" && (
-                <span>💚 Жизнеобеспечение — поддержка экипажа</span>
-            )}
-            {item.type === "module" && item.moduleType === "medical" && (
-                <span className="text-[#888]">
-                    🏥 Медотсек — лечение экипажа
-                </span>
-            )}
-            {item.type === "module" && item.moduleType === "drill" && (
-                <span className="text-[#888]">
-                    ⛏ Бур — добыча ресурсов из астероидов
-                </span>
-            )}
-            {item.type === "module" && item.moduleType === "weaponbay" && (
-                <span>⚔ Оружейная палуба — размещение оружия</span>
-            )}
+            {/* Weapon info */}
             {item.type === "weapon" && item.weaponType && (
                 <span>
-                    ⚔ {WEAPON_TYPES[item.weaponType].icon}{" "}
-                    {WEAPON_TYPES[item.weaponType].damage}
+                    ⚔ {t(`weapon_types.${item.weaponType}`)} (
+                    {WEAPON_TYPES[item.weaponType].damage})
                 </span>
             )}
-            {/* Fallback for upgrades */}
             {item.type === "upgrade" && item.targetType === "engine" && (
-                // <span>⛽ Меньше расход топлива</span>
-                <span>{`⛽ ${item.effect?.fuelEfficiency ?? 2} потребления топлива`}</span>
+                <span>
+                    {t("station_upgrades.efficiency", {
+                        value: item.effect?.fuelEfficiency ?? 2,
+                    })}
+                </span>
             )}
             {item.type === "upgrade" &&
                 item.targetType === "fueltank" &&
-                `⛽ +${item.effect?.capacity ?? 20} топлива`}
+                t("station_upgrades.fuel", {
+                    value: item.effect?.capacity ?? 20,
+                })}
             {item.type === "upgrade" &&
                 item.targetType === "reactor" &&
-                `⚡ +${item.effect?.power ?? 5} энергии`}
+                t("station_upgrades.energy", {
+                    value: item.effect?.power ?? 5,
+                })}
             {item.type === "upgrade" &&
                 item.targetType === "cargo" &&
-                `📦 +${item.effect?.capacity ?? 20} вместимости`}
+                t("station_upgrades.capacity", {
+                    value: item.effect?.capacity ?? 20,
+                })}
             {item.type === "upgrade" &&
                 item.targetType === "lifesupport" &&
-                `💨 +${item.effect?.oxygen ?? 3} кислорода`}
+                t("station_upgrades.oxygen", {
+                    value: item.effect?.oxygen ?? 3,
+                })}
             {item.type === "upgrade" &&
                 item.targetType === "scanner" &&
-                `📡 +${item.effect?.scanRange ?? 2} дальности сканера`}
+                `📡 +${item.effect?.scanRange ?? 2} ${t("module_list.scan_range")}`}
             {item.type === "upgrade" &&
                 item.targetType === "drill" &&
-                `⛏ +${item.effect?.level ?? 2} уровень доступных астероидов для бурения`}
+                `⛏ +${item.effect?.level ?? 2} ${t("module_list.drill_level")}`}
             {item.type === "upgrade" &&
                 item.targetType === "shield" &&
-                `🛡 +${item.effect?.shields ?? 15} щитов`}
+                `🛡 +${item.effect?.shields ?? 15} ${t("module_list.shields")}`}
             {item.type === "upgrade" &&
                 item.targetType === "lab" &&
-                `🔬 +${item.effect?.researchOutput ?? 3} иссл./ход`}
+                `🔬 +${item.effect?.researchOutput ?? 3} ${t("module_list.search_per_turn")}`}
             {item.type === "upgrade" &&
                 item.targetType === "medical" &&
-                `🏥 +${item.effect?.healing ?? 6} лечения`}
+                `🏥 +${item.effect?.healing ?? 6} ${t("crew_member.regen_short").replace("❤ Регенерация: +", "").replace("/ход", "")}`}
         </div>
     );
 }
@@ -460,6 +495,8 @@ function BuyButton({
     isUpgrade: boolean;
     onClick: () => void;
 }) {
+    const { t } = useTranslation();
+
     return (
         <Button
             disabled={disabled}
@@ -470,7 +507,13 @@ function BuyButton({
                     : "border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
             }`}
         >
-            {soldOut ? "НЕТ" : noWB ? "--" : isUpgrade ? "УЛУЧШИТЬ" : "КУПИТЬ"}
+            {soldOut
+                ? t("station_upgrades.no")
+                : noWB
+                  ? "--"
+                  : isUpgrade
+                    ? t("station_upgrades.upgrade")
+                    : t("station_upgrades.buy")}
         </Button>
     );
 }
@@ -482,6 +525,7 @@ interface WeaponDetailDialogProps {
 }
 
 function WeaponDetailDialog({ weaponType, onClose }: WeaponDetailDialogProps) {
+    const { t } = useTranslation();
     const weapon = WEAPON_TYPES[weaponType as keyof typeof WEAPON_TYPES];
 
     if (!weapon) return null;
@@ -496,10 +540,10 @@ function WeaponDetailDialog({ weaponType, onClose }: WeaponDetailDialogProps) {
                         >
                             {weapon.icon}
                         </span>
-                        {weapon.name}
+                        {t(`weapon_types.${weaponType}`)}
                     </DialogTitle>
                     <DialogDescription className="sr-only">
-                        Информация об оружии
+                        {t("weapon_info.info_title")}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -507,75 +551,72 @@ function WeaponDetailDialog({ weaponType, onClose }: WeaponDetailDialogProps) {
                     {/* Damage */}
                     <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 text-xs">
                         <div className="text-[#ffb000] font-bold mb-2">
-                            ⚔ Урон: {weapon.damage}
+                            ⚔ {t("weapon_info.damage")}: {weapon.damage}
                         </div>
                         <div className="text-[#888]">
-                            Базовый урон оружия при попадании
+                            {t("weapon_info.damage_desc")}
                         </div>
                     </div>
 
                     {/* Accuracy */}
                     <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 text-xs">
                         <div className="text-[#ffb000] font-bold mb-2">
-                            🎯 Точность
+                            🎯 {t("weapon_info.accuracy")}
                         </div>
                         {weaponType === "kinetic" && (
                             <div className="text-[#00ff41]">
-                                90% базовая точность
+                                90% {t("weapon_info.accuracy_desc")}
                             </div>
                         )}
                         {weaponType === "laser" && (
                             <div className="text-[#00ff41]">
-                                95% базовая точность
+                                95% {t("weapon_info.accuracy_desc")}
                             </div>
                         )}
                         {weaponType === "missile" && (
                             <div className="text-[#00ff41]">
-                                80% базовая точность
+                                80% {t("weapon_info.accuracy_desc")}
                             </div>
                         )}
                         <div className="text-[#888] mt-1">
-                            Может быть изменена задачами экипажа, особенностями
-                            и артефактами
+                            {t("weapon_info.accuracy_note")}
                         </div>
                     </div>
 
                     {/* Special ability */}
                     <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 text-xs">
                         <div className="text-[#ffb000] font-bold mb-2">
-                            ★ Особенность
+                            ★ {t("weapon_info.feature")}
                         </div>
                         <div className="text-[#00ff41]">
-                            {weapon.description}
+                            {t(`weapon_info.${weaponType}_feature`)}
                         </div>
                     </div>
 
                     {/* Usage tips */}
                     <div className="border-t border-[#ffb000] pt-3 text-xs">
                         <div className="text-[#ffb000] font-bold mb-2">
-                            💡 Когда использовать:
+                            💡 {t("weapon_info.when_to_use")}
                         </div>
                         {weaponType === "kinetic" && (
                             <div className="text-[#888] space-y-1">
-                                <div>• Против бронированных целей</div>
-                                <div>• Когда у врага слабые щиты</div>
-                                <div>
-                                    • Для добивания врага с высокой защитой
-                                </div>
+                                <div>{t("weapon_info.kinetic_usage_1")}</div>
+                                <div>{t("weapon_info.kinetic_usage_2")}</div>
+                                <div>{t("weapon_info.kinetic_usage_3")}</div>
                             </div>
                         )}
                         {weaponType === "laser" && (
                             <div className="text-[#888] space-y-1">
-                                <div>• Против целей с мощными щитами</div>
-                                <div>• Для быстрого вывода щитов из строя</div>
-                                <div>• Когда нужна точность</div>
+                                <div>{t("weapon_info.laser_usage_1")}</div>
+                                <div>{t("weapon_info.laser_usage_2")}</div>
+                                <div>{t("weapon_info.laser_usage_3")}</div>
                             </div>
                         )}
                         {weaponType === "missile" && (
                             <div className="text-[#888] space-y-1">
-                                <div>• Для максимального урона по корпусу</div>
-                                <div>• Против слабощищенных целей</div>
-                                <div>• Когда важен каждый выстрел</div>
+                                <div>{t("weapon_info.missile_usage_1")}</div>
+                                <div>{t("weapon_info.missile_usage_2")}</div>
+                                <div>{t("weapon_info.missile_usage_3")}</div>
                             </div>
                         )}
                     </div>
@@ -585,7 +626,7 @@ function WeaponDetailDialog({ weaponType, onClose }: WeaponDetailDialogProps) {
                             onClick={onClose}
                             className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-xs uppercase flex-1"
                         >
-                            Закрыть
+                            {t("weapon_info.close")}
                         </Button>
                     </div>
                 </div>

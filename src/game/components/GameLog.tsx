@@ -1,8 +1,10 @@
 "use client";
 
 import { useGameStore } from "../store";
+import { useTranslation } from "@/lib/useTranslation";
 
 export function GameLog() {
+    const { t } = useTranslation();
     const log = useGameStore((s) => s.log);
 
     const getTypeClass = (type: string) => {
@@ -25,7 +27,7 @@ export function GameLog() {
                     key={i}
                     className={`py-1.5 px-2 border-l-2 mb-1.5 text-[11px] leading-snug ${getTypeClass(entry.type)}`}
                 >
-                    [ХОД {entry.turn}] {entry.message}
+                    [{t("game_log.turn_label")} {entry.turn}] {entry.message}
                 </div>
             ))}
         </div>

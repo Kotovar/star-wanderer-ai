@@ -9,6 +9,76 @@ import {
 } from "@/components/ui/dialog";
 import type { ShopItem, Module } from "../../types";
 import { MODULES_BY_LEVEL } from "./station-data";
+import { useTranslation } from "@/lib/useTranslation";
+
+// Helper to get translated module name
+function getTranslatedModuleName(
+    moduleType: string,
+    t: (key: string, params?: Record<string, string | number>) => string,
+): string {
+    const nameMap: Record<string, string> = {
+        reactor: "module_names.reactor",
+        cockpit: "module_names.cockpit",
+        lifesupport: "module_names.lifesupport",
+        cargo: "module_names.cargo",
+        weaponbay: "module_names.weaponbay",
+        shield: "module_names.shield",
+        medical: "module_names.medical",
+        scanner: "module_names.scanner",
+        engine: "module_names.engine",
+        fueltank: "module_names.fueltank",
+        drill: "module_names.drill",
+        ai_core: "module_names.ai_core",
+        lab: "module_names.lab",
+    };
+    const key = nameMap[moduleType];
+    return key ? t(key) : moduleType;
+}
+
+// Helper to get translated upgrade name
+function getTranslatedUpgradeName(
+    item: ShopItem,
+    t: (key: string, params?: Record<string, string | number>) => string,
+): string {
+    if (item.type !== "upgrade" || !item.targetType) return item.name;
+
+    const nameMap: Record<string, string> = {
+        reactor: "station_upgrades.reactor_upgrade",
+        cargo: "station_upgrades.cargo_expansion",
+        fueltank: "station_upgrades.tank_upgrade",
+        lifesupport: "station_upgrades.lifesupport_upgrade",
+        engine: "station_upgrades.engine_tuning",
+    };
+    const key = nameMap[item.targetType];
+    return key ? t(key) : item.name;
+}
+
+// Helper to get translated upgrade effect
+function getUpgradeEffect(
+    item: ShopItem,
+    t: (key: string, params?: Record<string, string | number>) => string,
+): string {
+    if (item.type !== "upgrade") return "";
+
+    if (item.effect?.power) {
+        return t("station_upgrades.energy", { value: item.effect.power });
+    }
+    if (item.effect?.capacity && item.targetType === "cargo") {
+        return t("station_upgrades.capacity", { value: item.effect.capacity });
+    }
+    if (item.effect?.capacity && item.targetType === "fueltank") {
+        return t("station_upgrades.fuel", { value: item.effect.capacity });
+    }
+    if (item.effect?.oxygen) {
+        return t("station_upgrades.oxygen", { value: item.effect.oxygen });
+    }
+    if (item.effect?.fuelEfficiency) {
+        return t("station_upgrades.efficiency", {
+            value: item.effect.fuelEfficiency,
+        });
+    }
+    return "";
+}
 
 interface ModuleUpgradeModalProps {
     open: boolean;
@@ -27,6 +97,8 @@ export function ModuleUpgradeModal({
     shipModules,
     buyItem,
 }: ModuleUpgradeModalProps) {
+    const { t } = useTranslation();
+
     if (!pendingUpgrade) return null;
 
     return (
@@ -34,21 +106,17 @@ export function ModuleUpgradeModal({
             <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ffb000] text-[#00ff41] max-w-md w-[calc(100%-2rem)] md:w-auto">
                 <DialogHeader>
                     <DialogTitle className="text-[#ffb000] font-['Orbitron']">
-                        Выберите модуль для улучшения
+                        {t("station_upgrades.select_module")}
                     </DialogTitle>
                     <DialogDescription className="sr-only">
-                        Выбор модуля для улучшения
+                        {t("station_upgrades.select_module_desc")}
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-3">
                     <div className="text-sm text-[#888] mb-4">
-                        {pendingUpgrade.name} —{" "}
-                        {pendingUpgrade.effect?.power
-                            ? `+${pendingUpgrade.effect.power} мощности`
-                            : pendingUpgrade.effect?.capacity
-                              ? `+${pendingUpgrade.effect.capacity} ёмкости`
-                              : "Улучшение"}
+                        {getTranslatedUpgradeName(pendingUpgrade, t)} —{" "}
+                        {getUpgradeEffect(pendingUpgrade, t)}
                     </div>
 
                     <ModuleSelectionList
@@ -82,14 +150,19 @@ function ModuleSelectionList({
     buyItem,
     onClose,
 }: ModuleSelectionListProps) {
-    const eligibleModules = targetType
-        ? shipModules.filter((m) => m.type === targetType)
-        : [];
+    const { t } = useTranslation();
+
+    // targetType must be defined for this to work
+    if (!targetType) return null;
+
+    const eligibleModules = shipModules.filter((m) => m.type === targetType);
 
     if (eligibleModules.length === 0) {
         return (
             <div className="text-[#ff0040] p-3 border border-[#ff0040]">
-                Нет модулей типа &quot;{targetType}&quot; для улучшения!
+                {t("station_upgrades.no_modules")} &quot;
+                {getTranslatedModuleName(targetType, t)}&quot;{" "}
+                {t("station_upgrades.for_upgrade")}!
             </div>
         );
     }
@@ -101,13 +174,12 @@ function ModuleSelectionList({
         return (
             <div className="text-[#ff0040] p-4 border border-[#ff0040] bg-[rgba(255,0,64,0.05)]">
                 <div className="font-bold mb-2">
-                    ⚠ Все модули улучшены до максимума!
+                    {t("station_upgrades.all_max_title")}
                 </div>
                 <div className="text-sm text-[#ff6688]">
-                    Все модули типа &quot;{targetType}&quot; уже имеют
-                    максимальный уровень (LV3). Для дальнейшего улучшения нужны
-                    модули LV4, которые можно найти в секторах тир 3 или
-                    получить с боссов.
+                    {t("station_upgrades.all_max_desc", {
+                        type: getTranslatedModuleName(targetType, t),
+                    })}
                 </div>
             </div>
         );
@@ -199,6 +271,7 @@ function ModuleUpgradeCard({
     consumptionDiff,
     nextLevel,
 }: ModuleUpgradeCardProps) {
+    const { t } = useTranslation();
     const isDisabled = isMaxLevel || !isUpgradeAvailable;
 
     return (
@@ -216,15 +289,17 @@ function ModuleUpgradeCard({
         >
             {(isMaxLevel || !isUpgradeAvailable) && (
                 <div className="absolute top-0 right-0 bg-[#ff0040] text-white text-[9px] px-2 py-0.5 font-bold">
-                    {isMaxLevel ? "MAX" : "НЕДОСТУПНО"}
+                    {isMaxLevel
+                        ? t("station_upgrades.max")
+                        : t("station_upgrades.unavailable")}
                 </div>
             )}
             <div className="flex justify-between items-start">
                 <div className="text-[#00d4ff] font-bold pr-8">
-                    {module.name} #{moduleIndex}
+                    {getTranslatedModuleName(module.type, t)} #{moduleIndex}
                 </div>
                 <div className="text-[10px] text-[#888] bg-[rgba(0,0,0,0.3)] px-2 py-0.5 rounded">
-                    Позиция: ({module.x}, {module.y})
+                    {t("station_upgrades.position")}: ({module.x}, {module.y})
                 </div>
             </div>
             <div className="text-xs text-[#00ff41] mt-1 flex gap-4">
@@ -239,11 +314,13 @@ function ModuleUpgradeCard({
                 )}
                 {module.oxygen !== undefined && <span>💨 {module.oxygen}</span>}
                 {module.shields !== undefined && module.shields > 0 && (
-                    <span>🛡 Щиты: {module.shields}</span>
+                    <span>
+                        {t("module_list.shields")}: {module.shields}
+                    </span>
                 )}
                 {module.defense !== undefined && module.defense > 0 && (
                     <span>
-                        🛡 Броня:{" "}
+                        {t("module_list.armor")}:{" "}
                         {module.type === "shield"
                             ? module.level
                             : module.defense}
@@ -258,16 +335,17 @@ function ModuleUpgradeCard({
             </div>
             <div className="text-[10px] text-[#ffb000] mt-1 flex justify-between">
                 <span>
-                    Уровень: {module.level} → {nextLevel}
+                    {t("station_upgrades.level")}: {module.level} → {nextLevel}
                 </span>
                 {consumptionDiff > 0 && (
                     <span className="text-[#ff0040]">
-                        ⚡ Потребление: +{consumptionDiff}
+                        ⚡ {t("station_upgrades.consumption")}: +
+                        {consumptionDiff}
                     </span>
                 )}
             </div>
             <div className="text-sm text-[#ffb000] mt-2 font-bold">
-                💰 Цена: {upgradePrice}₢
+                💰 {t("station_upgrades.price")}: {upgradePrice}₢
             </div>
         </div>
     );

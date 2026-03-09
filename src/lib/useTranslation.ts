@@ -33,7 +33,7 @@ const store = {
         }
     },
 
-    t(key: string): string {
+    t(key: string, params?: Record<string, string | number>): string {
         const keys = key.split(".");
         let value: unknown = resources[this.lng];
         for (const k of keys) {
@@ -43,7 +43,19 @@ const store = {
                 return key;
             }
         }
-        return typeof value === "string" ? value : key;
+        let result = typeof value === "string" ? value : key;
+
+        // Replace placeholders like {{param}} with actual values
+        if (params) {
+            for (const [paramKey, paramValue] of Object.entries(params)) {
+                result = result.replace(
+                    new RegExp(`\\{\\{${paramKey}\\}\\}`, "g"),
+                    String(paramValue),
+                );
+            }
+        }
+
+        return result;
     },
 
     changeLanguage(lng: "ru" | "en") {
@@ -83,9 +95,12 @@ export function useTranslation() {
         store.hydrate();
     }, []);
 
-    const t = useCallback((key: string): string => {
-        return store.t(key);
-    }, []);
+    const t = useCallback(
+        (key: string, params?: Record<string, string | number>): string => {
+            return store.t(key, params);
+        },
+        [],
+    );
 
     const changeLanguage = useCallback((newLng: "ru" | "en") => {
         store.changeLanguage(newLng);

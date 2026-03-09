@@ -288,13 +288,46 @@ function StationHeader({
     location: { name: string; stationType?: string; dominantRace?: RaceId };
     sectorTier: number;
     race: (typeof RACES)[keyof typeof RACES] | null;
-    t: (key: string) => string;
+    t: (key: string, params?: Record<string, string | number>) => string;
 }) {
+    // Map Russian station type names to translation keys
+    const stationTypeMap: Record<string, string> = {
+        Торговая: "trade",
+        Военная: "military",
+        Добывающая: "mining",
+        Исследовательская: "research",
+        Медицинская: "medical",
+        Промышленная: "industrial",
+        Trade: "trade",
+        Military: "military",
+        Mining: "mining",
+        Research: "research",
+        Medical: "medical",
+        Industrial: "industrial",
+    };
+
+    const stationTypeKey = location.stationType
+        ? stationTypeMap[location.stationType] ||
+          location.stationType.toLowerCase()
+        : undefined;
+
+    // Extract station name without "Станция" or "Station" prefix if present
+    const getStationName = (fullName: string) => {
+        const withoutPrefix = fullName
+            .replace(/^Станция\s+/i, "")
+            .replace(/^Station\s+/i, "");
+        return withoutPrefix || fullName;
+    };
+
     return (
         <>
             <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                ▸ {location.name} -{" "}
-                {location.stationType || t("events.station")}
+                {t("station_upgrades.title", {
+                    name: getStationName(location.name),
+                    type: stationTypeKey
+                        ? t(`station_upgrades.station_types.${stationTypeKey}`)
+                        : t("events.station"),
+                })}
             </div>
             <div className="text-xs text-[#888]">
                 {t("station.sector_tier").replace(
@@ -323,10 +356,11 @@ function StationHeader({
                                 style={{ color: race.color }}
                                 className="font-bold"
                             >
-                                {race.pluralName}
+                                {t(`race_names.${location.dominantRace}`) ||
+                                    race.pluralName}
                             </div>
                             <div className="text-xs text-gray-400">
-                                {t("station.dominant_race")}
+                                {t("station_upgrades.dominant_race")}
                             </div>
                         </div>
                     </div>

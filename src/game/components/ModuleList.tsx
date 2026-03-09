@@ -12,43 +12,53 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { MODULES_BY_LEVEL } from "./station/station-data";
+import { useTranslation } from "@/lib/useTranslation";
 
-const SEARCH_INFO = "иссл./ход";
-
-// Получение описания модуля по типу и уровню из MODULES_BY_LEVEL
-function getModuleDescription(module: Module): string | undefined {
-    const moduleType = module.type;
-    const level = module.level || 1;
-
-    // Определяем уровень для сканера по scanRange
-    if (moduleType === "scanner") {
-        const scanRange = module.scanRange || 0;
-        if (scanRange >= 15) return findModuleDescription("scanner", 4);
-        if (scanRange >= 8) return findModuleDescription("scanner", 3);
-        if (scanRange >= 5) return findModuleDescription("scanner", 2);
-        return findModuleDescription("scanner", 1);
-    }
-
-    // Для особых модулей (уровень 4)
-    if (level >= 4 || moduleType === "ai_core") {
-        // Проверяем по имени для особых модулей
-        const name = module.name || "";
-        if (name.includes("Древний") || name.includes("★")) {
-            return findModuleDescription(moduleType, 4);
-        }
-    }
-
-    return findModuleDescription(moduleType, Math.min(level, 3));
+// Helper to get translated module name
+function getTranslatedModuleName(
+    moduleType: string,
+    t: (key: string) => string,
+): string {
+    const nameMap: Record<string, string> = {
+        reactor: t("module_names.reactor"),
+        cockpit: t("module_names.cockpit"),
+        lifesupport: t("module_names.lifesupport"),
+        cargo: t("module_names.cargo"),
+        weaponbay: t("module_names.weaponbay"),
+        shield: t("module_names.shield"),
+        medical: t("module_names.medical"),
+        scanner: t("module_names.scanner"),
+        engine: t("module_names.engine"),
+        fueltank: t("module_names.fueltank"),
+        drill: t("module_names.drill"),
+        ai_core: t("module_names.ai_core"),
+        lab: t("module_names.lab"),
+    };
+    return nameMap[moduleType] || moduleType;
 }
 
-function findModuleDescription(
-    moduleType: string,
-    level: number,
-): string | undefined {
-    const modules = MODULES_BY_LEVEL[level] || [];
-    const found = modules.find((m) => m.moduleType === moduleType);
-    return found?.description;
+// Helper to get translated module description
+function getModuleDescription(module: Module): string {
+    const moduleType = module.type;
+
+    // Use translation-based descriptions
+    const descriptionMap: Record<string, string> = {
+        reactor: "module_descriptions.reactor",
+        cockpit: "module_descriptions.cockpit",
+        lifesupport: "module_descriptions.lifesupport",
+        cargo: "module_descriptions.cargo",
+        weaponbay: "module_descriptions.weaponbay",
+        shield: "module_descriptions.shield",
+        medical: "module_descriptions.medical",
+        scanner: "module_descriptions.scanner",
+        engine: "module_descriptions.engine",
+        fueltank: "module_descriptions.fueltank",
+        drill: "module_descriptions.drill",
+        ai_core: "module_descriptions.ai_core",
+        lab: "module_descriptions.lab",
+    };
+
+    return descriptionMap[moduleType] || "";
 }
 
 export function ModuleList() {
@@ -81,22 +91,24 @@ interface ModuleCardProps {
 }
 
 function ModuleCard({ module, onClick }: ModuleCardProps) {
+    const { t } = useTranslation();
+
     // Get module tier name (МК-1, МК-2, etc.)
     const getModuleTier = () => {
         // Special handling for scanner - determine level by scanRange
         if (module.type === "scanner") {
             const scanRange = module.scanRange || 0;
-            if (scanRange >= 15) return " (Квантовый)";
-            if (scanRange >= 8) return " (МК-3)";
-            if (scanRange >= 5) return " (МК-2)";
-            if (scanRange >= 3) return " (МК-1)";
+            if (scanRange >= 15) return ` (${t("module_list.quantum")})`;
+            if (scanRange >= 8) return ` (${t("module_list.mk_3")})`;
+            if (scanRange >= 5) return ` (${t("module_list.mk_2")})`;
+            if (scanRange >= 3) return ` (${t("module_list.mk_1")})`;
             return "";
         }
 
         if (!module.level) return "";
         // Cap display at level 4 (ancient)
         const displayLevel = Math.min(module.level, 4);
-        if (displayLevel >= 4) return " (Древний)";
+        if (displayLevel >= 4) return ` (${t("module_list.ancient")})`;
         return ` (МК-${displayLevel})`;
     };
 
@@ -112,7 +124,7 @@ function ModuleCard({ module, onClick }: ModuleCardProps) {
             onClick={onClick}
         >
             <div className="text-[#00d4ff] font-bold">
-                {module.name}
+                {getTranslatedModuleName(module.type, t)}
                 {getModuleTier()}{" "}
                 {module.width > 1 || module.height > 1
                     ? `[${module.width}x${module.height}]`
@@ -135,6 +147,7 @@ interface ModuleStatsProps {
 }
 
 function ModuleStats({ module }: ModuleStatsProps) {
+    const { t } = useTranslation();
     const artifactArmor = useGameStore((s) => {
         const artifact = s.artifacts.find(
             (a) => a.effect.type === "module_armor" && a.effect.active,
@@ -157,7 +170,7 @@ function ModuleStats({ module }: ModuleStatsProps) {
                 module.capacity &&
                 module.capacity > 0 && <span>📦 {module.capacity}т</span>}
             {module.type === "engine" && module.fuelEfficiency && (
-                <span>⛽эф. {module.fuelEfficiency}</span>
+                <span>⛽ {module.fuelEfficiency}</span>
             )}
             {module.type === "drill" && <span>⛏ Ур.{module.level || 1}</span>}
             {module.type === "scanner" &&
@@ -165,30 +178,40 @@ function ModuleStats({ module }: ModuleStatsProps) {
                 module.scanRange > 0 && <span>📡 {module.scanRange}</span>}
             {module.type === "shield" &&
                 module.shields &&
-                module.shields > 0 && <span>🛡 Щиты: {module.shields}</span>}
+                module.shields > 0 && (
+                    <span>
+                        {t("module_list.shields")}: {module.shields}
+                    </span>
+                )}
             {/* Defense for all modules (not just shield) - for shields use level */}
             {module.defense !== undefined && module.defense > 0 && (
                 <span>
-                    🛡 Броня:{" "}
+                    {t("module_list.armor")}:{" "}
                     {module.type === "shield" ? module.level : module.defense}
                     {artifactArmor > 0 && ` (+${artifactArmor})`}
                 </span>
             )}
             {module.type === "lifesupport" &&
                 module.oxygen &&
-                module.oxygen > 0 && <span>💨 {module.oxygen} сущ.</span>}
+                module.oxygen > 0 && (
+                    <span>
+                        {t("module_list.oxygen")}: {module.oxygen}{" "}
+                        {t("module_list.creatures")}
+                    </span>
+                )}
             {module.type === "lab" &&
                 module.researchOutput &&
                 module.researchOutput > 0 && (
                     <span>
-                        🔬 {module.researchOutput} {SEARCH_INFO}
+                        {t("module_list.research")}: {module.researchOutput}{" "}
+                        {t("module_list.search_per_turn")}
                     </span>
                 )}
             {module.type === "medical" &&
                 module.healing &&
                 module.healing > 0 && <span>🏥 +{module.healing} HP</span>}
             <span>
-                ❤{" "}
+                {t("module_list.condition")}:{" "}
                 {Math.min(
                     100,
                     Math.round(
@@ -198,7 +221,7 @@ function ModuleStats({ module }: ModuleStatsProps) {
                 %
             </span>
             {(module.disabled || module.manualDisabled) && (
-                <span className="text-[#ff0040]">⚠ ВЫКЛ</span>
+                <span className="text-[#ff0040]">{t("module_list.off")}</span>
             )}
         </>
     );
@@ -220,6 +243,8 @@ interface WeaponsListProps {
 }
 
 function WeaponsList({ weapons }: WeaponsListProps) {
+    const { t } = useTranslation();
+
     return (
         <div className="mt-2 pt-2 border-t border-[#00ff41]">
             {weapons.map((weapon, i) =>
@@ -232,7 +257,7 @@ function WeaponsList({ weapons }: WeaponsListProps) {
                         }}
                     >
                         {WEAPON_TYPES[weapon.type].icon}{" "}
-                        {WEAPON_TYPES[weapon.type].name} (
+                        {t(`weapon_types.${weapon.type}`)} (
                         {WEAPON_TYPES[weapon.type].damage})
                     </div>
                 ) : (
@@ -240,7 +265,7 @@ function WeaponsList({ weapons }: WeaponsListProps) {
                         key={i}
                         className="bg-[rgba(0,0,0,0.3)] border border-[#666] p-1.5 mt-1.5 text-[11px] text-[#888]"
                     >
-                        Слот {i + 1}: пусто
+                        {t("module_list.empty_slot", { number: i + 1 })}
                     </div>
                 ),
             )}
@@ -259,6 +284,7 @@ export function ModuleDetailDialog({
     onClose,
     isStationItem = false,
 }: ModuleDetailDialogProps) {
+    const { t } = useTranslation();
     const fuel = useGameStore((s) => s.ship.fuel);
     const maxFuel = useGameStore((s) => s.ship.maxFuel);
     const toggleModule = useGameStore((s) => s.toggleModule);
@@ -283,24 +309,27 @@ export function ModuleDetailDialog({
             <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md w-[calc(100%-2rem)] md:w-auto">
                 <DialogHeader>
                     <DialogTitle className="text-[#ffb000] font-['Orbitron']">
-                        {module.name}
+                        {getTranslatedModuleName(module.type, t)}
                     </DialogTitle>
                     <DialogDescription className="sr-only">
-                        Информация о модуле корабля
+                        {t("module_list.info_title")}
                     </DialogDescription>
                     {/* Module level and size */}
                     <div className="flex gap-4 text-xs mt-2">
                         {isValidLevel && (
                             <span className="text-[#ffb000]">
-                                ★ Уровень: {module.level}
+                                ★ {t("module_list.level")}: {module.level}
                             </span>
                         )}
                         {(module.width || 0) > 1 || (module.height || 0) > 1 ? (
                             <span className="text-[#888]">
-                                📐 Размер: {module.width}x{module.height}
+                                {t("module_list.size")}: {module.width}x
+                                {module.height}
                             </span>
                         ) : (
-                            <span className="text-[#888]">📐 Размер: 1x1</span>
+                            <span className="text-[#888]">
+                                {t("module_list.size")}: 1x1
+                            </span>
                         )}
                     </div>
                 </DialogHeader>
@@ -324,7 +353,9 @@ export function ModuleDetailDialog({
                     {!isStationItem && (
                         <>
                             <div>
-                                <span className="text-[#ffb000]">Статус: </span>
+                                <span className="text-[#ffb000]">
+                                    {t("module_list.status")}:{" "}
+                                </span>
                                 <span
                                     className={
                                         module.disabled || module.manualDisabled
@@ -335,22 +366,21 @@ export function ModuleDetailDialog({
                                     }
                                 >
                                     {module.disabled || module.manualDisabled
-                                        ? "ОТКЛЮЧЁН"
+                                        ? t("module_list.disabled")
                                         : module.health <= 0
-                                          ? "ПОВРЕЖДЁН"
-                                          : "АКТИВЕН"}
+                                          ? t("module_list.damaged")
+                                          : t("module_list.active")}
                                 </span>
                             </div>
 
                             {module.health <= 0 && (
                                 <div className="text-[11px] text-[#ff0040]">
-                                    ⚠️ Модуль повреждён и не работает!
+                                    {t("module_list.module_damaged_warning")}
                                 </div>
                             )}
 
                             <div className="text-[11px] text-[#888]">
-                                ⚠ Отключение модуля сэкономит энергию, но
-                                отключит его функции
+                                {t("module_list.disable_saves_energy")}
                             </div>
 
                             <div className="flex gap-2 justify-center">
@@ -362,15 +392,15 @@ export function ModuleDetailDialog({
                                     className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
                                 >
                                     {module.disabled || module.manualDisabled
-                                        ? "ВКЛЮЧИТЬ"
-                                        : "ОТКЛЮЧИТЬ"}
+                                        ? t("module_list.enable")
+                                        : t("module_list.disable")}
                                 </Button>
                             </div>
                         </>
                     )}
                     {isStationItem && (
                         <div className="text-[11px] text-[#888] text-center">
-                            💰 Нажмите КУПИТЬ для приобретения
+                            {t("module_list.buy_prompt")}
                         </div>
                     )}
                 </div>
@@ -390,7 +420,8 @@ function ModuleDetailedStats({
     fuel,
     maxFuel,
 }: ModuleDetailedStatsProps) {
-    const description = getModuleDescription(module);
+    const { t } = useTranslation();
+    const descriptionKey = getModuleDescription(module);
     const artifactArmor = useGameStore((s) => {
         const artifact = s.artifacts.find(
             (a) => a.effect.type === "module_armor" && a.effect.active,
@@ -401,15 +432,17 @@ function ModuleDetailedStats({
 
     return (
         <div className="space-y-2">
-            {/* Module purpose description from shop data */}
-            {description && (
-                <div className="text-[#888] text-xs">{description}</div>
+            {/* Module purpose description */}
+            {descriptionKey && (
+                <div className="text-[#888] text-xs">{t(descriptionKey)}</div>
             )}
 
             {module.type === "reactor" && module.power && module.power > 0 && (
                 <div>
-                    <span className="text-[#ffb000]">⚡ Генерация:</span> +
-                    {module.power}
+                    <span className="text-[#ffb000]">
+                        {t("module_list.generation")}:
+                    </span>{" "}
+                    +{module.power}
                 </div>
             )}
             {module.type !== "reactor" &&
@@ -417,34 +450,48 @@ function ModuleDetailedStats({
                 module.consumption &&
                 module.consumption > 0 && (
                     <div>
-                        <span className="text-[#ffb000]">⚡ Потребление:</span>{" "}
+                        <span className="text-[#ffb000]">
+                            {t("module_list.consumption")}:
+                        </span>{" "}
                         -{module.consumption}
                     </div>
                 )}
             {module.type === "fueltank" && (
                 <div>
-                    <span className="text-[#ffb000]">⛽ Топливо:</span> {fuel}/
-                    {maxFuel}
+                    <span className="text-[#ffb000]">
+                        {t("module_list.fuel")}:
+                    </span>{" "}
+                    {fuel}/{maxFuel}
                 </div>
             )}
             {module.type === "cargo" &&
                 module.capacity &&
                 module.capacity > 0 && (
                     <div>
-                        <span className="text-[#ffb000]">📦 Вместимость:</span>{" "}
+                        <span className="text-[#ffb000]">
+                            {t("module_list.capacity")}:
+                        </span>{" "}
                         {module.capacity}т
                     </div>
                 )}
             {module.type === "engine" && module.fuelEfficiency && (
                 <div>
-                    <span className="text-[#ffb000]">⛽ Эффективность:</span>{" "}
-                    {module.fuelEfficiency} (чем меньше, тем лучше)
+                    <span className="text-[#ffb000]">
+                        {t("module_list.efficiency")}:
+                    </span>{" "}
+                    {module.fuelEfficiency} {t("module_list.efficiency_note")}
                 </div>
             )}
             {module.type === "drill" && (
                 <div>
-                    <span className="text-[#ffb000]">⛏ Уровень бура:</span>{" "}
-                    {module.level || 1} (для астероидов тир {module.level || 1})
+                    <span className="text-[#ffb000]">
+                        {t("module_list.drill_level")}:
+                    </span>{" "}
+                    {module.level || 1} (
+                    {t("module_list.asteroid_tier", {
+                        tier: module.level ?? 1,
+                    })}
+                    )
                 </div>
             )}
             {module.type === "scanner" &&
@@ -452,18 +499,20 @@ function ModuleDetailedStats({
                 module.scanRange > 0 && (
                     <>
                         <div>
-                            <span className="text-[#ffb000]">★ Уровень:</span>{" "}
+                            <span className="text-[#ffb000]">
+                                ★ {t("module_list.level")}:
+                            </span>{" "}
                             {module.scanRange >= 15
-                                ? "Квантовый"
+                                ? t("module_list.scanner_quantum")
                                 : module.scanRange >= 8
-                                  ? "МК-3"
+                                  ? t("module_list.scanner_mk3")
                                   : module.scanRange >= 5
-                                    ? "МК-2"
-                                    : "МК-1"}
+                                    ? t("module_list.scanner_mk2")
+                                    : t("module_list.scanner_mk1")}
                         </div>
                         <div>
                             <span className="text-[#ffb000]">
-                                📡 Дальность сканирования:
+                                {t("module_list.scan_range")}:
                             </span>{" "}
                             {module.scanRange}
                         </div>
@@ -471,15 +520,20 @@ function ModuleDetailedStats({
                 )}
             {module.type === "lab" && (
                 <div>
-                    <span className="text-[#ffb000]">🔬 Исследования:</span>{" "}
-                    {module.researchOutput || 5} {SEARCH_INFO}
+                    <span className="text-[#ffb000]">
+                        {t("module_list.research")}:
+                    </span>{" "}
+                    {module.researchOutput || 5}{" "}
+                    {t("module_list.search_per_turn")}
                 </div>
             )}
             {module.type === "shield" &&
                 module.shields &&
                 module.shields > 0 && (
                     <div>
-                        <span className="text-[#ffb000]">🛡 Щиты:</span>{" "}
+                        <span className="text-[#ffb000]">
+                            {t("module_list.shields")}:
+                        </span>{" "}
                         {module.shields}
                     </div>
                 )}
@@ -487,14 +541,18 @@ function ModuleDetailedStats({
                 module.oxygen &&
                 module.oxygen > 0 && (
                     <div>
-                        <span className="text-[#ffb000]">💨 Кислород:</span>{" "}
-                        {module.oxygen} существ
+                        <span className="text-[#ffb000]">
+                            {t("module_list.oxygen")}:
+                        </span>{" "}
+                        {module.oxygen} {t("module_list.creatures")}
                     </div>
                 )}
             {/* Defense/Armor for all modules - for shields use level */}
             {module.defense !== undefined && module.defense > 0 && (
                 <div>
-                    <span className="text-[#ffb000]">🛡 Броня:</span>{" "}
+                    <span className="text-[#ffb000]">
+                        {t("module_list.armor")}:
+                    </span>{" "}
                     {module.type === "shield" ? module.level : module.defense}
                     {artifactArmor > 0 && (
                         <span className="text-[#00d4ff]">
@@ -505,7 +563,9 @@ function ModuleDetailedStats({
                 </div>
             )}
             <div>
-                <span className="text-[#ffb000]">❤ Состояние:</span>{" "}
+                <span className="text-[#ffb000]">
+                    {t("module_list.condition")}:
+                </span>{" "}
                 {Math.min(
                     100,
                     Math.round(
@@ -519,14 +579,16 @@ function ModuleDetailedStats({
 }
 
 function ScannerDescription({ scanRange }: { scanRange?: number }) {
+    const { t } = useTranslation();
+
     // Determine scanner level based on scanRange
     const getScannerLevel = () => {
         const range = scanRange || 0;
-        if (range >= 15) return "Квантовый сканер";
-        if (range >= 8) return "Сканер МК-3";
-        if (range >= 5) return "Сканер МК-2";
-        if (range >= 3) return "Сканер МК-1";
-        return "Сканер";
+        if (range >= 15) return t("module_list.scanner_quantum");
+        if (range >= 8) return t("module_list.scanner_mk3");
+        if (range >= 5) return t("module_list.scanner_mk2");
+        if (range >= 3) return t("module_list.scanner_mk1");
+        return t("module_list.scanner_default");
     };
 
     return (
@@ -534,15 +596,23 @@ function ScannerDescription({ scanRange }: { scanRange?: number }) {
             <div className="text-[#00d4ff] mb-1 font-bold">
                 {getScannerLevel()}
             </div>
-            <div className="text-[#00d4ff] mb-1">Функции сканера:</div>
+            <div className="text-[#00d4ff] mb-1">
+                {t("module_list.scanner_title")}:
+            </div>
             <ul className="text-[#888] space-y-1">
-                <li>• Показывает информацию о локациях при наведении</li>
-                <li>• Раскрывает истинную природу сигналов бедствия</li>
-                {(scanRange || 0) >= 3 && <li>• Название и тип объекта</li>}
-                {(scanRange || 0) >= 5 && <li>• Ресурсы и содержимое</li>}
-                {(scanRange || 0) >= 8 && <li>• Скрытые награды ★</li>}
+                <li>{t("module_list.scanner_info_1")}</li>
+                <li>{t("module_list.scanner_info_2")}</li>
+                {(scanRange || 0) >= 3 && (
+                    <li>{t("module_list.scanner_info_3")}</li>
+                )}
+                {(scanRange || 0) >= 5 && (
+                    <li>{t("module_list.scanner_info_4")}</li>
+                )}
+                {(scanRange || 0) >= 8 && (
+                    <li>{t("module_list.scanner_info_5")}</li>
+                )}
                 {(scanRange || 0) >= 15 && (
-                    <li>• Полная информация о всех объектах</li>
+                    <li>{t("module_list.scanner_info_6")}</li>
                 )}
             </ul>
         </div>
@@ -550,9 +620,13 @@ function ScannerDescription({ scanRange }: { scanRange?: number }) {
 }
 
 function WeaponsDetail({ weapons }: { weapons: (Weapon | null)[] }) {
+    const { t } = useTranslation();
+
     return (
         <div className="pt-4 border-t border-[#00ff41]">
-            <div className="text-[#ffb000] mb-2">Слоты оружия:</div>
+            <div className="text-[#ffb000] mb-2">
+                {t("module_list.weapon_slots")}:
+            </div>
             {weapons.map((weapon, i) =>
                 weapon ? (
                     <div
@@ -563,9 +637,9 @@ function WeaponsDetail({ weapons }: { weapons: (Weapon | null)[] }) {
                         }}
                     >
                         {WEAPON_TYPES[weapon.type].icon}{" "}
-                        {WEAPON_TYPES[weapon.type].name}{" "}
+                        {t(`weapon_types.${weapon.type}`)}{" "}
                         <span className="text-[#ff0040]">
-                            ({WEAPON_TYPES[weapon.type].damage} урон)
+                            ({WEAPON_TYPES[weapon.type].damage})
                         </span>
                     </div>
                 ) : (
@@ -573,7 +647,7 @@ function WeaponsDetail({ weapons }: { weapons: (Weapon | null)[] }) {
                         key={i}
                         className="p-2 my-2 bg-[rgba(100,100,100,0.05)] border border-[#444] text-[#888]"
                     >
-                        Слот {i + 1}: Пусто
+                        {t("module_list.empty_slot", { number: i + 1 })}
                     </div>
                 ),
             )}
