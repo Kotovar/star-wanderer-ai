@@ -53,6 +53,9 @@ export const createGameLoopSlice = (
         // Обработка проклятых артефактов
         processors.processCursedArtifacts(state, set, get);
 
+        // Обработка положительных эффектов артефактов
+        processors.processArtifactEffects(state, set, get);
+
         // Обработка мутаций
         processors.processMutations(state, set, get);
 
@@ -72,8 +75,6 @@ export const createGameLoopSlice = (
         processors.processMoraleTraits(state, set, get);
         processors.processUnhappyCrew(state, set, get);
         processors.processPowerCheck(state, set, get);
-        processors.processCursedArtifactEffects(state, set, get);
-        processors.processArtifactBonuses(state, set, get);
 
         // Сохранение
         get().updateShipStats();

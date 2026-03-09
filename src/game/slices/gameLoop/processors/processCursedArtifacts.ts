@@ -15,35 +15,6 @@ export const processCursedArtifacts = (
     );
 
     cursedArtifacts.forEach((artifact) => {
-        const positiveType = artifact.effect?.type;
-        const positiveValue = artifact.effect?.value ?? 0;
-
-        if (positiveType === "auto_repair" && positiveValue > 0) {
-            if (state.ship.modules.length > 0) {
-                const needsRepair = state.ship.modules.some(
-                    (m) => m.health < (m.maxHealth || 100),
-                );
-                if (needsRepair) {
-                    set((s) => ({
-                        ship: {
-                            ...s.ship,
-                            modules: s.ship.modules.map((m) => ({
-                                ...m,
-                                health: Math.min(
-                                    m.maxHealth || 100,
-                                    m.health + positiveValue,
-                                ),
-                            })),
-                        },
-                    }));
-                    get().addLog(
-                        `✨ ${artifact.name}: Модули отремонтированы на +${positiveValue}%`,
-                        "info",
-                    );
-                }
-            }
-        }
-
         const negativeType = artifact.negativeEffect?.type;
         const negativeValue = artifact.negativeEffect?.value || 0;
 
