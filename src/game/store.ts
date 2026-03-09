@@ -83,6 +83,104 @@ export const useGameStore = create<GameStore>()(
 
                 if (eDmg > 0) {
                     // ═══════════════════════════════════════════════════════════════
+                    // MIRROR SHIELD - Chance to reflect attack
+                    // ═══════════════════════════════════════════════════════════════
+                    const mirrorShield = state.artifacts.find(
+                        (a) =>
+                            a.effect.type === "damage_reflect" &&
+                            a.effect.active,
+                    );
+
+                    if (
+                        mirrorShield &&
+                        Math.random() <
+                            getArtifactEffectValue(mirrorShield, state)
+                    ) {
+                        const aliveModules =
+                            state.currentCombat.enemy.modules.filter(
+                                (m) => m.health > 0,
+                            );
+                        if (aliveModules.length > 0) {
+                            const reflectedTarget =
+                                aliveModules[
+                                    Math.floor(
+                                        Math.random() * aliveModules.length,
+                                    )
+                                ];
+
+                            // First apply damage to enemy shields
+                            let remainingDamage = eDmg;
+
+                            if (state.currentCombat.enemy.shields > 0) {
+                                const shieldAbsorb = Math.min(
+                                    state.currentCombat.enemy.shields,
+                                    remainingDamage,
+                                );
+                                set((s) => {
+                                    if (!s.currentCombat) return s;
+                                    return {
+                                        currentCombat: {
+                                            ...s.currentCombat,
+                                            enemy: {
+                                                ...s.currentCombat.enemy,
+                                                shields:
+                                                    s.currentCombat.enemy
+                                                        .shields - shieldAbsorb,
+                                            },
+                                        },
+                                    };
+                                });
+                                remainingDamage -= shieldAbsorb;
+                                get().addLog(
+                                    `🛡️ Щиты врага поглотили: -${shieldAbsorb}`,
+                                    "info",
+                                );
+                            }
+
+                            // Then apply remaining damage to module
+                            if (remainingDamage > 0) {
+                                set((s) => {
+                                    if (!s.currentCombat) return s;
+                                    return {
+                                        currentCombat: {
+                                            ...s.currentCombat,
+                                            enemy: {
+                                                ...s.currentCombat.enemy,
+                                                modules:
+                                                    s.currentCombat.enemy.modules.map(
+                                                        (m) =>
+                                                            m.id ===
+                                                            reflectedTarget.id
+                                                                ? {
+                                                                      ...m,
+                                                                      health: Math.max(
+                                                                          0,
+                                                                          m.health -
+                                                                              remainingDamage,
+                                                                      ),
+                                                                  }
+                                                                : m,
+                                                    ),
+                                            },
+                                        },
+                                    };
+                                });
+                                get().addLog(
+                                    `🛡️ Зеркальный Щит отразил атаку! ${reflectedTarget.name} получил -${remainingDamage}%`,
+                                    "info",
+                                );
+                            } else {
+                                get().addLog(
+                                    `🛡️ Зеркальный Щит отразил атаку! Полностью поглощена щитами врага!`,
+                                    "info",
+                                );
+                            }
+                            get().nextTurn();
+                            return;
+                        }
+                    }
+
+                    // ═══════════════════════════════════════════════════════════════
                     // EVASION CHECK - Chance to evade enemy attack
                     // ═══════════════════════════════════════════════════════════════
                     const evasionChance = getTotalEvasion(state) / 100;
@@ -2902,12 +3000,14 @@ export const useGameStore = create<GameStore>()(
                 (a) => a.effect.type === "damage_reflect" && a.effect.active,
             );
             let attackReflected = false;
-            let reflectedTarget = null;
+            let reflectedTarget: EnemyModule | null = null;
             let reflectedDamage = 0;
 
             if (mirrorShield) {
-                const reflectChance =
-                    getArtifactEffectValue(mirrorShield, state) / 100;
+                const reflectChance = getArtifactEffectValue(
+                    mirrorShield,
+                    state,
+                );
                 get().addLog(
                     `🛡️ Зеркальный Щит активен! Шанс отражения: ${Math.round(reflectChance * 100)}%`,
                     "info",
@@ -2917,11 +3017,10 @@ export const useGameStore = create<GameStore>()(
             // Check reflection FIRST (before shields, works without shields)
             if (
                 mirrorShield &&
-                updatedCombat &&
-                Math.random() <
-                    getArtifactEffectValue(mirrorShield, state) / 100
+                state.currentCombat &&
+                Math.random() < getArtifactEffectValue(mirrorShield, state)
             ) {
-                const aliveModules = updatedCombat.enemy.modules.filter(
+                const aliveModules = state.currentCombat.enemy.modules.filter(
                     (m) => m.health > 0,
                 );
                 if (aliveModules.length > 0) {
@@ -2937,34 +3036,71 @@ export const useGameStore = create<GameStore>()(
 
             // If reflected, deal damage to enemy and skip all player damage
             if (attackReflected && reflectedTarget) {
-                set((s) => {
-                    if (!s.currentCombat) return s;
-                    return {
-                        currentCombat: {
-                            ...s.currentCombat,
-                            enemy: {
-                                ...s.currentCombat.enemy,
-                                modules: s.currentCombat.enemy.modules.map(
-                                    (m) =>
-                                        m.id === reflectedTarget.id
-                                            ? {
-                                                  ...m,
-                                                  health: Math.max(
-                                                      0,
-                                                      m.health -
-                                                          reflectedDamage,
-                                                  ),
-                                              }
-                                            : m,
-                                ),
+                // First apply damage to enemy shields
+                let remainingDamage = reflectedDamage;
+
+                if (state.currentCombat.enemy.shields > 0) {
+                    const shieldAbsorb = Math.min(
+                        state.currentCombat.enemy.shields,
+                        remainingDamage,
+                    );
+                    set((s) => {
+                        if (!s.currentCombat) return s;
+                        return {
+                            currentCombat: {
+                                ...s.currentCombat,
+                                enemy: {
+                                    ...s.currentCombat.enemy,
+                                    shields:
+                                        s.currentCombat.enemy.shields -
+                                        shieldAbsorb,
+                                },
                             },
-                        },
-                    };
-                });
-                get().addLog(
-                    `🛡️ ЗЕРКАЛЬНЫЙ ЩИТ! Атака отражена в "${reflectedTarget.name}"! -${reflectedDamage}%`,
-                    "info",
-                );
+                        };
+                    });
+                    remainingDamage -= shieldAbsorb;
+                    get().addLog(
+                        `🛡️ Щиты врага поглотили: -${shieldAbsorb}`,
+                        "info",
+                    );
+                }
+
+                // Then apply remaining damage to module
+                if (remainingDamage > 0) {
+                    set((s) => {
+                        if (!s.currentCombat) return s;
+                        return {
+                            currentCombat: {
+                                ...s.currentCombat,
+                                enemy: {
+                                    ...s.currentCombat.enemy,
+                                    modules: s.currentCombat.enemy.modules.map(
+                                        (m) =>
+                                            m.id === reflectedTarget.id
+                                                ? {
+                                                      ...m,
+                                                      health: Math.max(
+                                                          0,
+                                                          m.health -
+                                                              remainingDamage,
+                                                      ),
+                                                  }
+                                                : m,
+                                    ),
+                                },
+                            },
+                        };
+                    });
+                    get().addLog(
+                        `🛡️ ЗЕРКАЛЬНЫЙ ЩИТ! Атака отражена в "${reflectedTarget.name}"! -${remainingDamage}%`,
+                        "info",
+                    );
+                } else {
+                    get().addLog(
+                        `🛡️ ЗЕРКАЛЬНЫЙ ЩИТ! Атака полностью поглощена щитами врага!`,
+                        "info",
+                    );
+                }
                 return; // Skip all damage to player
             }
 

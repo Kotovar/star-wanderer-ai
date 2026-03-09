@@ -21,9 +21,7 @@ export const processArtifactEffects = (
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
 ): void => {
-    const activeArtifacts = state.artifacts.filter(
-        (a) => a.effect.active,
-    );
+    const activeArtifacts = state.artifacts.filter((a) => a.effect.active);
 
     activeArtifacts.forEach((artifact) => {
         const effectType = artifact.effect.type;
@@ -44,10 +42,7 @@ export const processArtifactEffects = (
             case "abyss_power": {
                 // Реактор Бездны - бонус к энергии (обрабатывается в getTotalPower)
                 const powerBonus = effectValue || 25;
-                get().addLog(
-                    `⚛️ Реактор Бездны: +${powerBonus}⚡`,
-                    "info",
-                );
+                get().addLog(`⚛️ Реактор Бездны: +${powerBonus}⚡`, "info");
                 break;
             }
 
@@ -94,10 +89,7 @@ export const processArtifactEffects = (
             case "dark_shield": {
                 // Тёмный Щит - бонус к максимальным щитам (обрабатывается в updateShipStats)
                 const shieldBonus = effectValue || 100;
-                get().addLog(
-                    `🛡️ Тёмный Щит: +${shieldBonus} к щитам`,
-                    "info",
-                );
+                get().addLog(`🛡️ Тёмный Щит: +${shieldBonus} к щитам`, "info");
                 break;
             }
 
@@ -115,30 +107,21 @@ export const processArtifactEffects = (
             case "damage_boost": {
                 // Усиление урона (обрабатывается в getTotalDamage)
                 const damageBoost = Math.round(effectValue * 100);
-                get().addLog(
-                    `💥 Бонус к урону: +${damageBoost}%`,
-                    "info",
-                );
+                get().addLog(`💥 Бонус к урону: +${damageBoost}%`, "info");
                 break;
             }
 
             case "accuracy_boost": {
                 // Бонус к точности (обрабатывается в attackEnemy)
                 const accuracyBoost = Math.round(effectValue * 100);
-                get().addLog(
-                    `🎯 Бонус к точности: +${accuracyBoost}%`,
-                    "info",
-                );
+                get().addLog(`🎯 Бонус к точности: +${accuracyBoost}%`, "info");
                 break;
             }
 
             case "crit_chance": {
                 // Шанс крита (обрабатывается в attackEnemy)
                 const critChance = Math.round(effectValue * 100);
-                get().addLog(
-                    `⚡ Шанс крита: ${critChance}%`,
-                    "info",
-                );
+                get().addLog(`⚡ Шанс крита: ${critChance}%`, "info");
                 break;
             }
 
@@ -155,10 +138,7 @@ export const processArtifactEffects = (
 
             case "all_seeing": {
                 // Око Сингулярности - все враги видны (обрабатывается в selectLocation)
-                get().addLog(
-                    `👁️ Око Сингулярности: все враги видны`,
-                    "info",
-                );
+                get().addLog(`👁️ Око Сингулярности: все враги видны`, "info");
                 break;
             }
 
@@ -174,29 +154,20 @@ export const processArtifactEffects = (
 
             case "fuel_free": {
                 // Варп-Катушка - мгновенные перемещения (обрабатывается в selectSector)
-                get().addLog(
-                    `⚡ Варп-Катушка: мгновенные перемещения`,
-                    "info",
-                );
+                get().addLog(`⚡ Варп-Катушка: мгновенные перемещения`, "info");
                 break;
             }
 
             // === ЭКИПАЖ ===
             case "crew_immortal": {
                 // Кристалл Жизни - бессмертие (обрабатывается в checkOxygen/moduleDamage)
-                get().addLog(
-                    `💖 Кристалл Жизни: экипаж бессмертен`,
-                    "info",
-                );
+                get().addLog(`💖 Кристалл Жизни: экипаж бессмертен`, "info");
                 break;
             }
 
             case "undying_crew": {
                 // Биосфера Древних - бессмертие с мутациями
-                get().addLog(
-                    `🧬 Биосфера Древних: экипаж не умирает`,
-                    "info",
-                );
+                get().addLog(`🧬 Биосфера Древних: экипаж не умирает`, "info");
                 break;
             }
 
@@ -245,10 +216,7 @@ export const processArtifactEffects = (
             case "evasion_boost": {
                 // Матрица Уклонения - бонус к уклонению (обрабатывается в getTotalEvasion)
                 const evasionBoost = Math.round(effectValue * 100);
-                get().addLog(
-                    `💨 Бонус к уклонению: +${evasionBoost}%`,
-                    "info",
-                );
+                get().addLog(`💨 Бонус к уклонению: +${evasionBoost}%`, "info");
                 break;
             }
 

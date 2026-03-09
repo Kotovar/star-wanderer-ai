@@ -67,7 +67,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         name: "Зеркальный Щит",
         description:
             "30% шанс отразить атаку в случайный модуль врага без урона по кораблю.",
-        effect: { type: "damage_reflect", value: 0.3, active: false },
+        effect: { type: "damage_reflect", value: 0.1, active: false },
         discovered: false,
         researched: false,
         requiresScientistLevel: 3,
