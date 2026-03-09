@@ -47,15 +47,30 @@ export function ContractsList() {
                               : "кораблю";
                     return `📦 Доставить на ${typeText} "${contract.targetLocationName}" (${contract.targetSectorName})`;
                 }
-                return `📦 Доставить в ${contract.targetSectorName}`;
+                return t("contracts.deliver_to").replace(
+                    "{{sector}}",
+                    contract.targetSectorName || t("contracts.unknown"),
+                );
             case "scan_planet":
-                return `📡 Сканировать планету в ${contract.targetSectorName}`;
+                return t("contracts.scan_sector").replace(
+                    "{{sector}}",
+                    contract.targetSectorName || t("contracts.unknown"),
+                );
             case "combat":
-                return `⚔ Зачистить ${contract.sectorName}`;
+                return t("contracts.clear_sector").replace(
+                    "{{sector}}",
+                    contract.sectorName || t("contracts.unknown"),
+                );
             case "research":
-                return `🔬 Исследовать ${contract.requiresAnomalies} аномалии (${contract.visitedAnomalies || 0}/${contract.requiresAnomalies})`;
+                return t("contracts.research_count")
+                    .replace("{{count}}", String(contract.requiresAnomalies))
+                    .replace(
+                        "{{current}}",
+                        String(contract.visitedAnomalies || 0),
+                    )
+                    .replace("{{total}}", String(contract.requiresAnomalies));
             default:
-                return "✓ Выполнить задание";
+                return t("contracts.default");
         }
     };
 
@@ -63,7 +78,7 @@ export function ContractsList() {
         // Determine destination text
         const getDestText = () => {
             if (!contract.targetLocationType)
-                return contract.targetSectorName || "Неизвестно";
+                return contract.targetSectorName || t("contracts.unknown");
             const typeText =
                 contract.targetLocationType === "planet"
                     ? "планете"
@@ -93,37 +108,48 @@ export function ContractsList() {
                     }
                 }
                 return {
-                    type: "Доставка груза",
+                    type: t("contracts.type_delivery"),
                     tasks: [
                         {
-                            label: "Что сделать",
-                            value: `Доставить груз "${deliveryCargoName}" (10т) на ${getDestText()}`,
+                            label: t("contracts.task_what"),
+                            value: t("contracts.delivery_cargo")
+                                .replace("{{cargo}}", deliveryCargoName)
+                                .replace("{{destination}}", getDestText()),
                         },
-                        { label: "Куда доставить", value: getDestText() },
-                        { label: "Где сдать", value: "На месте назначения" },
+                        {
+                            label: t("contracts.task_destination"),
+                            value: getDestText(),
+                        },
+                        {
+                            label: t("contracts.task_where"),
+                            value: t("contracts.scan_auto"),
+                        },
                     ],
                 };
             case "scan_planet":
                 return {
-                    type: "Сканирование",
+                    type: t("contracts.type_scan"),
                     tasks: [
                         {
-                            label: "Что сделать",
-                            value: `Провести сканирование ${contract.planetType?.toLowerCase() || ""} планеты`,
+                            label: t("contracts.task_what"),
+                            value: t("contracts.scan_planet").replace(
+                                "{{planetType}}",
+                                contract.planetType?.toLowerCase() || "",
+                            ),
                         },
                         {
-                            label: "Целевая планета",
+                            label: t("contracts.task_target"),
                             value: contract.targetPlanetName
                                 ? `${contract.targetPlanetName} (${contract.targetSectorName})`
-                                : "Неизвестно",
+                                : t("contracts.unknown"),
                         },
                         {
-                            label: "Требования",
-                            value: "Необходим модуль сканера на корабле",
+                            label: t("contracts.task_requirements"),
+                            value: t("contracts.scan_requirement"),
                         },
                         {
-                            label: "Где сдать",
-                            value: "Автоматически после сканирования",
+                            label: t("contracts.task_where"),
+                            value: t("contracts.scan_auto"),
                         },
                     ],
                 };
@@ -133,97 +159,116 @@ export function ContractsList() {
                 const cargoName = TRADE_GOODS[contract.cargo as Goods]?.name;
 
                 return {
-                    type: "Поставка товаров",
+                    type: t("contracts.type_supply"),
                     tasks: [
                         {
-                            label: "Что сделать",
-                            value: `Найти и доставить ${cargoName} (${contract.quantity}т)`,
+                            label: t("contracts.task_what"),
+                            value: t("contracts.supply_find")
+                                .replace("{{cargo}}", cargoName || "")
+                                .replace(
+                                    "{{quantity}}",
+                                    String(contract.quantity),
+                                ),
                         },
                         {
-                            label: "Где найти",
-                            value: "Купить на любой торговой станции или найти в другом месте",
+                            label: t("contracts.task_where"),
+                            value: t("contracts.supply_find_location"),
                         },
                         {
-                            label: "Где сдать",
-                            value: `${contract.sourceType === "planet" ? "Планета" : "Корабль"} "${contract.sourceName}" (${contract.sourceSectorName})`,
+                            label: t("contracts.task_where"),
+                            value: `${contract.sourceType === "planet" ? t("events.planet") : t("events.friendly_ship")} "${contract.sourceName}" (${contract.sourceSectorName})`,
                         },
                     ],
                 };
             case "combat":
                 return {
-                    type: "Боевое задание",
+                    type: t("contracts.type_combat"),
                     tasks: [
                         {
-                            label: "Что сделать",
-                            value: "Уничтожить всех врагов в указанном секторе",
+                            label: t("contracts.task_what"),
+                            value: t("contracts.combat_destroy"),
                         },
                         {
-                            label: "Целевой сектор",
-                            value: contract.sectorName || "Неизвестно",
+                            label: t("contracts.task_target"),
+                            value:
+                                contract.sectorName || t("contracts.unknown"),
                         },
                         {
-                            label: "Где сдать",
-                            value: "Автоматически после победы",
+                            label: t("contracts.task_where"),
+                            value: t("contracts.combat_auto"),
                         },
                     ],
                 };
             case "research":
                 return {
-                    type: "Исследование",
+                    type: t("contracts.type_research"),
                     tasks: [
                         {
-                            label: "Что сделать",
-                            value: `Исследовать ${contract.requiresAnomalies} аномалии`,
+                            label: t("contracts.task_what"),
+                            value: t("contracts.research_anomalies").replace(
+                                "{{count}}",
+                                String(contract.requiresAnomalies),
+                            ),
                         },
                         {
-                            label: "Где выполнить",
-                            value: "В любом секторе",
+                            label: t("contracts.task_where"),
+                            value: t("contracts.research_location"),
                         },
                         {
-                            label: "Прогресс",
-                            value: `${contract.visitedAnomalies || 0} / ${contract.requiresAnomalies} аномалий`,
+                            label: t("contracts.task_progress"),
+                            value: `${contract.visitedAnomalies || 0} / ${contract.requiresAnomalies}`,
                         },
                         {
-                            label: "Требования",
-                            value: "Необходим учёный соответствующего уровня",
+                            label: t("contracts.task_requirements"),
+                            value: t("contracts.research_scientist"),
                         },
                         {
-                            label: "Где сдать",
-                            value: "Автоматически при выполнении",
+                            label: t("contracts.task_where"),
+                            value: t("contracts.research_auto"),
                         },
                     ],
                 };
             case "rescue":
                 return {
-                    type: "Спасение",
+                    type: t("contracts.type_rescue"),
                     tasks: [
                         {
-                            label: "Что сделать",
-                            value: `Войти в ${contract.stormName || "шторм"} в секторе ${contract.sectorName || "Неизвестно"}`,
+                            label: t("contracts.task_what"),
+                            value: t("contracts.rescue_enter")
+                                .replace(
+                                    "{{stormName}}",
+                                    contract.stormName ||
+                                        t("contracts.unknown"),
+                                )
+                                .replace(
+                                    "{{sectorName}}",
+                                    contract.sectorName ||
+                                        t("contracts.unknown"),
+                                ),
                         },
                         {
-                            label: "Где сдать",
-                            value: "Автоматически после прохождения шторма",
+                            label: t("contracts.task_where"),
+                            value: t("contracts.rescue_auto"),
                         },
                     ],
                 };
             case "mining":
                 return {
-                    type: "Добыча",
+                    type: t("contracts.type_mining"),
                     tasks: [
                         {
-                            label: "Что сделать",
-                            value: "Найти артефакт (исследовать аномалии или победить босса)",
+                            label: t("contracts.task_what"),
+                            value: t("contracts.mining_find"),
                         },
                         {
-                            label: "Прогресс",
+                            label: t("contracts.task_progress"),
                             value: contract.bossDefeated
-                                ? "✓ Босс побеждён, ждём доставки"
-                                : "⚠ Босс не найден",
+                                ? t("contracts.mining_boss_done")
+                                : t("contracts.mining_boss_not_found"),
                         },
                         {
-                            label: "Где сдать",
-                            value: "Автоматически при находке артефакта",
+                            label: t("contracts.task_where"),
+                            value: t("contracts.mining_auto"),
                         },
                     ],
                 };
@@ -231,56 +276,90 @@ export function ContractsList() {
                 const visitedCount = contract.visitedSectors?.length || 0;
                 const targetCount = contract.targetSectors?.length || 0;
                 return {
-                    type: "Патрулирование",
+                    type: t("contracts.type_patrol"),
                     tasks: [
                         {
-                            label: "Что сделать",
-                            value: `Посетить сектора: ${contract.targetSectorNames || "Неизвестно"} (${visitedCount}/${targetCount})`,
+                            label: t("contracts.task_what"),
+                            value: t("contracts.patrol_visit")
+                                .replace(
+                                    "{{sectors}}",
+                                    contract.targetSectorNames ||
+                                        t("contracts.unknown"),
+                                )
+                                .replace("{{visited}}", String(visitedCount))
+                                .replace("{{target}}", String(targetCount)),
                         },
                         {
-                            label: "Где сдать",
-                            value: "Автоматически после посещения всех секторов",
+                            label: t("contracts.task_where"),
+                            value: t("contracts.patrol_auto"),
                         },
                     ],
                 };
             case "bounty":
                 return {
-                    type: "Охота за головой",
+                    type: t("contracts.type_bounty"),
                     tasks: [
                         {
-                            label: "Что сделать",
-                            value: `Уничтожить врага (угроза ${contract.targetThreat || 1}) в секторе ${contract.targetSectorName || "Неизвестно"}`,
+                            label: t("contracts.task_what"),
+                            value: t("contracts.bounty_destroy")
+                                .replace(
+                                    "{{threat}}",
+                                    String(contract.targetThreat || 1),
+                                )
+                                .replace(
+                                    "{{sector}}",
+                                    contract.targetSectorName ||
+                                        t("contracts.unknown"),
+                                ),
                         },
                         {
-                            label: "Где сдать",
-                            value: "Автоматически после победы",
+                            label: t("contracts.task_where"),
+                            value: t("contracts.bounty_auto"),
                         },
                     ],
                 };
             case "diplomacy":
                 return {
-                    type: "Дипломатия",
+                    type: t("contracts.type_diplomacy"),
                     tasks: [
                         {
-                            label: "Что сделать",
-                            value: `Посетить планету ${contract.targetPlanetName || "Неизвестно"} (${contract.targetPlanetType || "планета"})`,
+                            label: t("contracts.task_what"),
+                            value: t("contracts.diplomacy_visit")
+                                .replace(
+                                    "{{planet}}",
+                                    contract.targetPlanetName ||
+                                        t("contracts.unknown"),
+                                )
+                                .replace(
+                                    "{{type}}",
+                                    contract.targetPlanetType ||
+                                        t("events.planet"),
+                                ),
                         },
                         {
-                            label: "Целевой сектор",
-                            value: contract.targetSectorName || "Неизвестно",
+                            label: t("contracts.task_target"),
+                            value:
+                                contract.targetSectorName ||
+                                t("contracts.unknown"),
                         },
                         {
-                            label: "Где сдать",
-                            value: "Автоматически при посещении планеты",
+                            label: t("contracts.task_where"),
+                            value: t("contracts.diplomacy_auto"),
                         },
                     ],
                 };
             default:
                 return {
-                    type: "Задание",
+                    type: t("contracts.default"),
                     tasks: [
-                        { label: "Что сделать", value: contract.desc },
-                        { label: "Где сдать", value: "См. описание задания" },
+                        {
+                            label: t("contracts.task_what"),
+                            value: contract.desc,
+                        },
+                        {
+                            label: t("contracts.task_where"),
+                            value: contract.desc,
+                        },
                     ],
                 };
         }

@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import type { CombatState } from "../types";
+import { useTranslation } from "@/lib/useTranslation";
 
 interface EnemyModuleGridProps {
     currentCombat: CombatState;
@@ -152,6 +153,7 @@ export function ShipStatusCard({
     isBoss,
     children,
 }: ShipStatusCardProps) {
+    const { t } = useTranslation();
     const borderColor = isEnemy ? (isBoss ? "#ff00ff" : "#ff0040") : "#00ff41";
     const bgColor = isEnemy
         ? isBoss
@@ -167,16 +169,17 @@ export function ShipStatusCard({
     const armorColor =
         armor < 50 ? "[&>div]:bg-[#ff0040]" : "[&>div]:bg-[#00ff41]";
     const maxArmorValue = maxArmor || armor || 1;
-    const showArmorBar = !isEnemy; // Only show armor bar for player ship
+    const showArmorBar = !isEnemy;
 
     return (
         <div className={`${bgColor} border border-${borderColor} p-4`}>
             <div className={`text-base font-bold mb-2 ${titleColor}`}>
                 {title}
             </div>
-            ⚔ Урон: {damage}{" "}
+            {t("combat.damage")} {damage}{" "}
             <div className="my-2">
-                Щиты: {Math.max(0, shields)}/{Math.max(1, maxShields)}
+                {t("combat.shields")} {Math.max(0, shields)}/
+                {Math.max(1, maxShields)}
                 <div className="h-2 rounded-full mt-1 bg-[rgba(0,0,0,0.5)] relative">
                     <div
                         className={`absolute rounded-full top-0 left-0 h-full ${shieldBarColor}`}
@@ -188,7 +191,7 @@ export function ShipStatusCard({
             </div>
             {armor !== undefined && !isEnemy && (
                 <div className="my-2">
-                    Броня: {armor} ед.
+                    {t("combat.armor")} {armor} {t("combat.armor_units")}
                     {showArmorBar && (
                         <div
                             className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] relative ${armorColor}`}

@@ -15,6 +15,7 @@ import type {
     Profession,
 } from "@/game/types";
 import { COMBAT_ACTIONS } from "@/game/constants/crew";
+import { useTranslation } from "@/lib/useTranslation";
 
 interface CrewMemberCardProps {
     crewMember: CrewMember;
@@ -41,9 +42,10 @@ export function CrewMemberCard({
     onAssignTask,
     isCombat = false,
 }: CrewMemberCardProps) {
+    const { t } = useTranslation();
     // Use combat actions during battle, civilian actions otherwise
     const actions = COMBAT_ACTIONS[crewMember.profession] || [
-        { value: "", label: "ОЖИДАНИЕ", effect: null },
+        { value: "", label: t("crew_member.waiting"), effect: null },
     ];
 
     // const actions = isCombat
@@ -80,7 +82,7 @@ export function CrewMemberCard({
                 </span>
                 {crewMember.movedThisTurn && (
                     <span className="text-[#ff0040] px-1 border border-[#ff0040] text-[9px]">
-                        ПЕРЕМЕЩЁН
+                        {t("crew_member.moved")}
                     </span>
                 )}
             </div>
@@ -100,6 +102,7 @@ export function CrewMemberCard({
                         onAssignTask={onAssignTask}
                         currentAssignment={currentAssignment}
                         isCombat={isCombat}
+                        t={t}
                     />
                 </div>
             )}
@@ -120,6 +123,8 @@ function MovementRow({
     onMove,
     onSelect,
 }: MovementRowProps) {
+    const { t } = useTranslation();
+
     // Group modules by type and assign numbers for easier identification
     const modulesWithTypeIndex = adjacentModules.map((mod, index) => {
         // Count how many modules of the same type came before this one
@@ -135,7 +140,7 @@ function MovementRow({
     return (
         <div className="flex items-start gap-2 mb-1.5">
             <span className="text-[#00ff41] min-w-27.5 pt-0.5">
-                Переместиться в:
+                {t("crew_member.move_to")}
             </span>
             <div className="flex flex-wrap gap-1">
                 {!crewMember.movedThisTurn && adjacentModules.length > 0 ? (
@@ -155,8 +160,8 @@ function MovementRow({
                 ) : (
                     <span className="text-[#888] text-[9px] pt-0.5">
                         {crewMember.movedThisTurn
-                            ? "Уже перемещался"
-                            : "Нет доступных модулей"}
+                            ? t("crew_member.moved_already")
+                            : t("crew_member.no_modules")}
                     </span>
                 )}
             </div>
@@ -179,6 +184,7 @@ interface TaskRowProps {
     ) => void;
     currentAssignment: string | null;
     isCombat?: boolean;
+    t: (key: string) => string;
 }
 
 function TaskRow({
@@ -188,6 +194,7 @@ function TaskRow({
     onAssignTask,
     currentAssignment,
     isCombat = false,
+    t,
 }: TaskRowProps) {
     // Filter actions based on crew position and module type
     const filteredActions = actions.filter((a) => {
@@ -201,7 +208,9 @@ function TaskRow({
     return (
         <div className="flex items-start gap-2">
             <span className="text-[#ffb000] min-w-27.5 pt-0.5">
-                {isCombat ? "Боевая задача:" : "Задача:"}
+                {isCombat
+                    ? t("crew_member.task_combat")
+                    : t("crew_member.task")}
             </span>
             <div className="flex flex-wrap gap-1">
                 {filteredActions.map((a) => {
@@ -239,9 +248,11 @@ function TaskRow({
                                     side="top"
                                     className="border border-[#ffb000] bg-[#050810] text-[#ffb000] text-[9px] max-w-45"
                                 >
-                                    {getActionDescription(
-                                        crewMember.profession,
-                                        a.value,
+                                    {t(
+                                        getActionDescription(
+                                            crewMember.profession,
+                                            a.value,
+                                        ),
                                     )}
                                 </TooltipContent>
                             </Tooltip>
@@ -259,37 +270,39 @@ function getActionDescription(
 ): string {
     const descriptions: Record<Profession, Record<string, string>> = {
         pilot: {
-            "": "Ожидание - бездействие",
-            evasion: "Уклонение - повышение уклонения",
-            navigation: "Навигация - снижает расход топлива",
-            targeting: "Прицеливание - выбор цели, +15% урона",
+            "": "profession_actions.pilot.waiting",
+            evasion: "profession_actions.pilot.evasion",
+            navigation: "profession_actions.pilot.navigation",
+            targeting: "profession_actions.pilot.targeting",
         },
         engineer: {
-            "": "Ожидание - бездействие",
-            power: "Энергия - +5 к генерации",
-            repair: "Ремонт - +15% здоровья модулю",
-            overclock: "Перегрузка - +25% урон, -10% брони",
-            calibration: "+10% точность",
+            "": "profession_actions.engineer.waiting",
+            power: "profession_actions.engineer.power",
+            repair: "profession_actions.engineer.repair",
+            overclock: "profession_actions.engineer.overclock",
+            calibration: "profession_actions.engineer.calibration",
         },
         medic: {
-            "": "Ожидание - бездействие",
-            heal: "Лечение - +20 здоровья экипажу",
-            morale: "Мораль - +15 настроения",
-            firstaid: "Первая помощь - стабилизация",
+            "": "profession_actions.medic.waiting",
+            heal: "profession_actions.medic.heal",
+            morale: "profession_actions.medic.morale",
+            firstaid: "profession_actions.medic.firstaid",
         },
         scout: {
-            "": "Ожидание - бездействие",
-            patrol: "Патруль - информация о секторе",
+            "": "profession_actions.scout.waiting",
+            patrol: "profession_actions.scout.patrol",
         },
         scientist: {
-            "": "Ожидание - бездействие",
-            research: "Исследование аномалий",
+            "": "profession_actions.scientist.waiting",
+            research: "profession_actions.scientist.research",
         },
         gunner: {
-            "": "Ожидание - бездействие",
-            targeting: "Прицеливание - выбор цели, +15% урона",
-            rapidfire: "Шквал - +25% урон, -5% точность",
+            "": "profession_actions.gunner.waiting",
+            targeting: "profession_actions.gunner.targeting",
+            rapidfire: "profession_actions.gunner.rapidfire",
         },
     };
-    return descriptions[profession]?.[actionValue] ?? "Нет описания";
+    return (
+        descriptions[profession]?.[actionValue] ?? "crew_member.no_description"
+    );
 }

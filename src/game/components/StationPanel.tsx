@@ -17,6 +17,7 @@ import { CrewTab } from "./station/CrewTab";
 import { ServicesTab } from "./station/ServicesTab";
 import { ModuleUpgradeModal } from "./station/ModuleUpgradeModal";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/useTranslation";
 
 // Re-export these from the original file - they contain complex logic
 export {
@@ -34,6 +35,7 @@ import {
 } from "./station/station-data";
 
 export function StationPanel() {
+    const { t } = useTranslation();
     const currentLocation = useGameStore((s) => s.currentLocation);
     const currentSector = useGameStore((s) => s.currentSector);
     const credits = useGameStore((s) => s.credits);
@@ -129,19 +131,21 @@ export function StationPanel() {
                 location={currentLocation}
                 sectorTier={sectorTier}
                 race={race}
+                t={t}
             />
 
             <Button
                 onClick={showSectorMap}
                 className="bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider w-fit cursor-pointer"
             >
-                ← ПОКИНУТЬ СТАНЦИЮ
+                {t("station.leave")}
             </Button>
 
             {deliveryContracts.length > 0 && (
                 <DeliveryContracts
                     contracts={deliveryContracts}
                     onComplete={completeDeliveryContract}
+                    t={t}
                 />
             )}
 
@@ -155,25 +159,25 @@ export function StationPanel() {
                         value="shop"
                         className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
                     >
-                        МОДУЛИ
+                        {t("station.modules_tab")}
                     </TabsTrigger>
                     <TabsTrigger
                         value="trade"
                         className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
                     >
-                        ТОРГОВЛЯ
+                        {t("station.trade_tab")}
                     </TabsTrigger>
                     <TabsTrigger
                         value="crew"
                         className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
                     >
-                        ЭКИПАЖ
+                        {t("station.crew_tab")}
                     </TabsTrigger>
                     <TabsTrigger
                         value="services"
                         className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
                     >
-                        УСЛУГИ
+                        {t("station.services_tab")}
                     </TabsTrigger>
                 </TabsList>
 
@@ -279,17 +283,25 @@ function StationHeader({
     location,
     sectorTier,
     race,
+    t,
 }: {
     location: { name: string; stationType?: string; dominantRace?: RaceId };
     sectorTier: number;
     race: (typeof RACES)[keyof typeof RACES] | null;
+    t: (key: string) => string;
 }) {
     return (
         <>
             <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                ▸ {location.name} - {location.stationType || "Станция"}
+                ▸ {location.name} -{" "}
+                {location.stationType || t("events.station")}
             </div>
-            <div className="text-xs text-[#888]">Тир сектора: {sectorTier}</div>
+            <div className="text-xs text-[#888]">
+                {t("station.sector_tier").replace(
+                    "{{tier}}",
+                    String(sectorTier),
+                )}
+            </div>
 
             {race && (
                 <div
@@ -314,7 +326,7 @@ function StationHeader({
                                 {race.pluralName}
                             </div>
                             <div className="text-xs text-gray-400">
-                                Доминирующая раса
+                                {t("station.dominant_race")}
                             </div>
                         </div>
                     </div>
@@ -327,9 +339,11 @@ function StationHeader({
 function DeliveryContracts({
     contracts,
     onComplete,
+    t,
 }: {
     contracts: Contract[];
     onComplete: (id: string) => void;
+    t: (key: string) => string;
 }) {
     const [completingId, setCompletingId] = useState<string | null>(null);
 
@@ -344,10 +358,10 @@ function DeliveryContracts({
     return (
         <>
             <div className="font-['Orbitron'] font-bold text-base text-[#00ff41] mt-4">
-                Сдать груз
+                {t("station.deliver_cargo")}
             </div>
             <div className="text-xs text-[#888] mb-2">
-                Вы прибыли в место назначения
+                {t("station.arrived_at_destination")}
             </div>
             <div className="flex flex-col gap-2">
                 {contracts.map((c) => (
@@ -375,7 +389,7 @@ function DeliveryContracts({
                             disabled={completingId !== null}
                             className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            СДАТЬ
+                            {t("station.submit")}
                         </Button>
                     </div>
                 ))}

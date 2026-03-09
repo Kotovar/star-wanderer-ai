@@ -2,6 +2,7 @@
 
 import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/useTranslation";
 
 export function AnomalyPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
@@ -10,6 +11,7 @@ export function AnomalyPanel() {
     const log = useGameStore((s) => s.log);
     const handleAnomaly = useGameStore((s) => s.handleAnomaly);
     const showSectorMap = useGameStore((s) => s.showSectorMap);
+    const { t } = useTranslation();
 
     if (!currentLocation) return null;
 
@@ -30,7 +32,9 @@ export function AnomalyPanel() {
         .filter(
             (entry) =>
                 entry.message.includes("Аномалия:") ||
-                entry.message.includes("аномали"),
+                entry.message.includes("аномали") ||
+                entry.message.includes("Anomaly:") ||
+                entry.message.includes("anomal"),
         );
 
     // Already processed - show results
@@ -38,11 +42,13 @@ export function AnomalyPanel() {
         return (
             <div className="flex flex-col gap-4">
                 <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                    ▸ АНОМАЛИЯ LV{reqLevel}
+                    {t("anomaly.title").replace("{{level}}", String(reqLevel))}
                 </div>
 
                 <div className="bg-[rgba(0,0,0,0.4)] p-3 border border-[#ffb000]">
-                    <p className="text-[#ffb000] mb-3 font-bold">Результаты:</p>
+                    <p className="text-[#ffb000] mb-3 font-bold">
+                        {t("anomaly.results")}
+                    </p>
                     <div className="space-y-1.5 text-sm">
                         {recentAnomalyLogs.map((entry, i) => (
                             <div
@@ -63,7 +69,7 @@ export function AnomalyPanel() {
                     onClick={showSectorMap}
                     className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
                 >
-                    ПОКИНУТЬ АНОМАЛИЮ
+                    {t("anomaly.leave")}
                 </Button>
             </div>
         );
@@ -73,30 +79,35 @@ export function AnomalyPanel() {
         return (
             <div className="flex flex-col gap-4">
                 <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                    ▸ АНОМАЛИЯ УРОВНЯ {reqLevel}
+                    {t("anomaly.title_level").replace(
+                        "{{level}}",
+                        String(reqLevel),
+                    )}
                 </div>
                 <div className="text-sm leading-relaxed">
                     <span className="text-[#ff0040]">
-                        ⚠ Аномалия слишком сложна для исследования!
+                        {t("anomaly.too_complex")}
                     </span>
                     <br />
                     <br />
-                    Требуется учёный уровня{" "}
-                    <span className="text-[#ffb000]">{reqLevel}</span> или выше.
+                    {t("anomaly.requires_scientist").replace(
+                        "{{level}}",
+                        String(reqLevel),
+                    )}
                     <br />
                     <br />
                     <span className="text-[#888]">
-                        Ваши учёные:{" "}
+                        {t("anomaly.your_scientists")}{" "}
                         {scientists.length > 0
                             ? `LV${maxScientistLevel}`
-                            : "нет"}
+                            : t("anomaly.none")}
                     </span>
                 </div>
                 <Button
                     onClick={showSectorMap}
                     className="self-center-safe cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider"
                 >
-                    ОТСТУПИТЬ
+                    {t("anomaly.retreat")}
                 </Button>
             </div>
         );
@@ -105,28 +116,21 @@ export function AnomalyPanel() {
     return (
         <div className="flex flex-col gap-4">
             <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                ▸ АНОМАЛИЯ LV{reqLevel}
+                {t("anomaly.title").replace("{{level}}", String(reqLevel))}
             </div>
             <div className="text-sm leading-relaxed">
-                Обнаружена{" "}
-                <span
-                    className={
-                        currentLocation.anomalyType === "good"
-                            ? "text-[#00ff41]"
-                            : "text-[#ff0040]"
-                    }
-                >
-                    {currentLocation.anomalyType === "good"
-                        ? "благоприятная"
-                        : "опасная"}
-                </span>{" "}
-                аномалия.
+                {t("anomaly.detected").replace(
+                    "{{type}}",
+                    currentLocation.anomalyType === "good"
+                        ? t("anomaly.good")
+                        : t("anomaly.dangerous"),
+                )}
                 <br />
                 <br />
-                Уровень сложности:{" "}
+                {t("anomaly.difficulty_level")}{" "}
                 <span className="text-[#ffb000]">{reqLevel}</span>
                 <br />
-                Ваши учёные:{" "}
+                {t("anomaly.your_scientists")}{" "}
                 <span className="text-[#00ff41]">LV{maxScientistLevel}</span> ✓
             </div>
             <div className="flex gap-3">
@@ -134,13 +138,13 @@ export function AnomalyPanel() {
                     onClick={() => handleAnomaly(currentLocation)}
                     className="flex-1 bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
                 >
-                    ИССЛЕДОВАТЬ
+                    {t("anomaly.investigate")}
                 </Button>
                 <Button
                     onClick={showSectorMap}
                     className="bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)] uppercase tracking-wider"
                 >
-                    ОТСТУПИТЬ
+                    {t("anomaly.retreat")}
                 </Button>
             </div>
         </div>

@@ -17,8 +17,10 @@ import {
     PROFESSION_DESCRIPTIONS,
     PROFESSION_NAMES,
 } from "@/game/constants/crew";
+import { useTranslation } from "@/lib/useTranslation";
 
 export function CrewList() {
+    const { t } = useTranslation();
     const crew = useGameStore((s) => s.crew);
     const modules = useGameStore((s) => s.ship.modules);
     const moveCrewMember = useGameStore((s) => s.moveCrewMember);
@@ -29,7 +31,7 @@ export function CrewList() {
 
     const getModuleName = (moduleId: number) => {
         const mod = modules.find((m) => m.id === moduleId);
-        return mod ? mod.name : "Неизвестно";
+        return mod ? mod.name : t("crew_member.unknown");
     };
 
     const getAdjacentModules = (moduleId: number) => {
@@ -62,7 +64,7 @@ export function CrewList() {
                         : member.assignment;
                     const assignText = currentAssignment
                         ? `[${currentAssignment.toUpperCase()}]`
-                        : "[ОЖИДАНИЕ]";
+                        : t("crew_member.waiting_short");
                     const race = RACES[member.race];
                     const moduleName = getModuleName(member.moduleId);
 
@@ -177,7 +179,7 @@ export function CrewList() {
                             ▸ {selectedCrew?.name}
                         </DialogTitle>
                         <DialogDescription className="sr-only">
-                            Информация о члене экипажа
+                            {t("crew_member.info_title")}
                         </DialogDescription>
                     </DialogHeader>
                     {selectedCrew &&
@@ -220,27 +222,29 @@ export function CrewList() {
                                     )}
                                     <div>
                                         <span className="text-[#ffb000]">
-                                            📍 Текущий модуль:{" "}
+                                            {t(
+                                                "crew_member.current_module",
+                                            )}{" "}
                                         </span>
                                         <span className="text-[#00d4ff]">
                                             {currentModule?.name ||
-                                                "Неизвестно"}
+                                                t("crew_member.unknown")}
                                         </span>
                                     </div>
                                     <div>
                                         <span className="text-[#ffb000]">
-                                            Профессия:{" "}
+                                            {t("crew_member.profession")}{" "}
                                         </span>
                                         {PROFESSION_NAMES[
                                             selectedCrew.profession
                                         ] || selectedCrew.profession}
                                         {selectedCrew.level
-                                            ? ` [LV${selectedCrew.level}]`
+                                            ? ` [${t("crew_member.level_short")}${selectedCrew.level}]`
                                             : ""}
                                     </div>
                                     <div>
                                         <span className="text-[#ffb000]">
-                                            Опыт:{" "}
+                                            {t("crew_member.experience")}{" "}
                                         </span>
                                         {selectedCrew.exp}/
                                         {(selectedCrew.level || 1) * 100}
@@ -257,7 +261,7 @@ export function CrewList() {
                                     </div>
                                     <div>
                                         <span className="text-[#ffb000]">
-                                            Здоровье:{" "}
+                                            {t("crew_member.health")}{" "}
                                         </span>
                                         {selectedCrew.health}/
                                         {selectedCrew.maxHealth || 100}
@@ -272,18 +276,18 @@ export function CrewList() {
                                         />
                                     </div>
                                     <div className="text-[10px] text-[#00ff41]">
-                                        ❤ Регенерация: +
+                                        {t("crew_member.regen_short")}
                                         {5 +
                                             (selectedCrew.race ===
                                             "xenosymbiont"
                                                 ? 5
                                                 : 0)}
-                                        /ход
+                                        /{t("crew.turn")}
                                     </div>
                                     {race?.hasHappiness ? (
                                         <div>
                                             <span className="text-[#ffb000]">
-                                                Настроение:{" "}
+                                                {t("crew_member.mood")}{" "}
                                             </span>
                                             {selectedCrew.happiness}/
                                             {selectedCrew.maxHappiness || 100}
@@ -299,31 +303,30 @@ export function CrewList() {
                                         </div>
                                     ) : (
                                         <div className="text-[#00d4ff] text-xs">
-                                            🤖 Не имеет счастья - иммунитет к
-                                            моральным эффектам
+                                            {t("crew_member.immune_morale")}
                                         </div>
                                     )}
                                     <div>
                                         <span className="text-[#ffb000]">
-                                            Задание:{" "}
+                                            {t("crew_member.assignment")}{" "}
                                         </span>
                                         {isCombat
                                             ? selectedCrew.combatAssignment
                                                 ? `[${selectedCrew.combatAssignment.toUpperCase()}]`
-                                                : "[ОЖИДАНИЕ]"
+                                                : t("crew_member.waiting_short")
                                             : selectedCrew.assignment
                                               ? `[${selectedCrew.assignment.toUpperCase()}]`
-                                              : "[ОЖИДАНИЕ]"}
+                                              : t("crew_member.waiting_short")}
                                     </div>
 
                                     {/* Module movement section */}
                                     <div className="border-t border-[#00ff41] pt-4">
                                         <div className="text-[#ffb000] mb-2">
-                                            🚶 Перемещение:
+                                            {t("crew_member.movement")}
                                         </div>
                                         {selectedCrew.movedThisTurn ? (
                                             <div className="text-[#ff0040] text-xs">
-                                                Уже перемещался в этот ход
+                                                {t("crew_member.moved_already")}
                                             </div>
                                         ) : adjacentModules.length > 0 ? (
                                             <div className="flex flex-wrap gap-1">
@@ -382,7 +385,7 @@ export function CrewList() {
                                             </div>
                                         ) : (
                                             <div className="text-[#888] text-xs">
-                                                Нет соседних модулей
+                                                {t("crew_member.no_adjacent")}
                                             </div>
                                         )}
                                     </div>
@@ -390,7 +393,9 @@ export function CrewList() {
                                     {race && (
                                         <div>
                                             <span className="text-[#ffb000]">
-                                                Расовые бонусы:
+                                                {t(
+                                                    "crew_member.racial_bonuses",
+                                                )}
                                             </span>
                                             {/* crewBonuses */}
                                             {race.crewBonuses &&
@@ -406,7 +411,9 @@ export function CrewList() {
                                                                         .crewBonuses
                                                                         .happiness
                                                                 }
-                                                                % настроение
+                                                                {t(
+                                                                    "crew_member.bonus_mood",
+                                                                )}
                                                             </span>
                                                         )}
                                                         {race.crewBonuses
@@ -419,7 +426,9 @@ export function CrewList() {
                                                                         .repair *
                                                                         100,
                                                                 )}
-                                                                % ремонт
+                                                                {t(
+                                                                    "crew_member.bonus_repair",
+                                                                )}
                                                             </span>
                                                         )}
                                                         {race.crewBonuses
@@ -432,7 +441,9 @@ export function CrewList() {
                                                                         .science *
                                                                         100,
                                                                 )}
-                                                                % наука
+                                                                {t(
+                                                                    "crew_member.bonus_science",
+                                                                )}
                                                             </span>
                                                         )}
                                                         {race.crewBonuses
@@ -445,7 +456,9 @@ export function CrewList() {
                                                                         .combat *
                                                                         100,
                                                                 )}
-                                                                % бой
+                                                                {t(
+                                                                    "crew_member.bonus_combat",
+                                                                )}
                                                             </span>
                                                         )}
                                                         {race.crewBonuses
@@ -457,7 +470,9 @@ export function CrewList() {
                                                                         .crewBonuses
                                                                         .health
                                                                 }
-                                                                HP/ход
+                                                                {t(
+                                                                    "crew_member.bonus_hp_turn",
+                                                                )}
                                                             </span>
                                                         )}
                                                         {race.crewBonuses
@@ -471,7 +486,9 @@ export function CrewList() {
                                                                             .energy,
                                                                     ) * 100,
                                                                 )}
-                                                                % расход энергии
+                                                                {t(
+                                                                    "crew_member.bonus_energy",
+                                                                )}
                                                             </span>
                                                         )}
                                                         {race.crewBonuses
@@ -484,7 +501,9 @@ export function CrewList() {
                                                                         .adaptation *
                                                                         100,
                                                                 )}
-                                                                % адаптация
+                                                                {t(
+                                                                    "crew_member.bonus_adaptation",
+                                                                )}
                                                             </span>
                                                         )}
                                                         {race.crewBonuses
@@ -497,7 +516,9 @@ export function CrewList() {
                                                                         .fuelEfficiency *
                                                                         100,
                                                                 )}
-                                                                % расход топлива
+                                                                {t(
+                                                                    "crew_member.bonus_fuel",
+                                                                )}
                                                             </span>
                                                         )}
                                                     </div>
@@ -543,24 +564,25 @@ export function CrewList() {
                                         selectedCrew.traits.length > 0 && (
                                             <div>
                                                 <span className="text-[#ffb000]">
-                                                    Черты:
+                                                    {t("crew_member.traits")}
                                                 </span>
                                                 <br />
                                                 {selectedCrew.traits.map(
-                                                    (t, idx) => (
+                                                    (trait, idx) => (
                                                         <div
-                                                            key={`${selectedCrew.id}-trait-${idx}-${t.type}`}
+                                                            key={`${selectedCrew.id}-trait-${idx}-${trait.type}`}
                                                             className={
-                                                                t.type ===
+                                                                trait.type ===
                                                                 "negative"
                                                                     ? "text-[#ff0040]"
-                                                                    : t.type ===
+                                                                    : trait.type ===
                                                                         "neutral"
                                                                       ? "text-[#888]"
                                                                       : "text-[#00ff41]"
                                                             }
                                                         >
-                                                            {t.name}: {t.desc}
+                                                            {trait.name}:{" "}
+                                                            {trait.desc}
                                                         </div>
                                                     ),
                                                 )}
@@ -573,7 +595,7 @@ export function CrewList() {
                                         <br />
                                         {PROFESSION_DESCRIPTIONS[
                                             selectedCrew.profession
-                                        ] || "Специалист"}
+                                        ] || t("crew_member.specialist")}
                                     </div>
 
                                     {/* Fire crew button */}
@@ -586,12 +608,11 @@ export function CrewList() {
                                             disabled={crew.length <= 1}
                                             className="bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase tracking-wider w-full disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                            🚪 ВЫГНАТЬ
+                                            {t("crew_member.fire")}
                                         </Button>
                                         {crew.length <= 1 && (
                                             <div className="text-xs text-[#888] text-center mt-1">
-                                                Нельзя уволить последнего члена
-                                                экипажа
+                                                {t("crew_member.fire_warning")}
                                             </div>
                                         )}
                                     </div>

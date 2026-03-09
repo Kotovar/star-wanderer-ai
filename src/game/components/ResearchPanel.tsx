@@ -198,7 +198,7 @@ function ResearchContent({
                         return (
                             <div
                                 key={type}
-                                className="flex items-center gap-1 md:gap-2 px-2 py-1 rounded border text-xs"
+                                className="pointer-events-none flex items-center gap-1 md:gap-2 px-2 py-1 rounded border text-xs"
                                 style={{
                                     borderColor: data.color,
                                     backgroundColor: `${data.color}10`,

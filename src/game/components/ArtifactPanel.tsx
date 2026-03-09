@@ -25,20 +25,14 @@ const RARITY_COLORS: Record<
 };
 
 const RARITY_NAMES: Record<string, string> = {
-    rare: "Редкий",
-    legendary: "Легендарный",
-    mythic: "Мифический",
-    cursed: "⚠️ Проклятый",
+    rare: "artifacts.rarity.rare",
+    legendary: "artifacts.rarity.legendary",
+    mythic: "artifacts.rarity.mythic",
+    cursed: "artifacts.rarity.cursed",
 };
 
 function getRarityName(rarity: string, t: (key: string) => string): string {
-    const translations: Record<string, string> = {
-        rare: t("artifacts.rarity.rare"),
-        legendary: t("artifacts.rarity.legendary"),
-        mythic: t("artifacts.rarity.mythic"),
-        cursed: t("artifacts.rarity.cursed"),
-    };
-    return translations[rarity] || RARITY_NAMES[rarity] || rarity;
+    return t(RARITY_NAMES[rarity] || `artifacts.rarity.${rarity}`);
 }
 
 const EFFECT_ICONS: Record<string, string> = {
@@ -137,7 +131,7 @@ function ArtifactCard({
                                     : "text-[#ffb000]"
                             }
                         >
-                            Ур. {artifact.requiresScientistLevel}
+                            {t("crew.level")} {artifact.requiresScientistLevel}
                         </span>
                     </div>
 
@@ -239,7 +233,7 @@ export function ArtifactPanel() {
                 <div className="text-xs text-[#888]">
                     {t("artifacts.scientists_onboard")}:{" "}
                     {scientists.length > 0
-                        ? `Ур. ${maxScientistLevel}`
+                        ? `${t("crew.level")} ${maxScientistLevel}`
                         : t("artifacts.no_scientists")}
                 </div>
             </div>

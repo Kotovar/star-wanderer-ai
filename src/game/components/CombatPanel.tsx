@@ -8,8 +8,10 @@ import { EnemyModuleGrid, ShipStatusCard } from "./EnemyModuleGrid";
 import { CrewMemberCard } from "./CrewMemberCard";
 import type { CrewMember, CrewMemberCombatAssignment } from "../types";
 import { getTotalEvasion } from "@/game/slices";
+import { useTranslation } from "@/lib/useTranslation";
 
 export function CombatPanel() {
+    const { t } = useTranslation();
     const currentCombat = useGameStore((s) => s.currentCombat);
     const ship = useGameStore((s) => s.ship);
     const crew = useGameStore((s) => s.crew);
@@ -86,35 +88,41 @@ export function CombatPanel() {
             <div
                 className={`font-['Orbitron'] font-bold text-lg ${isBoss ? "text-[#ff00ff]" : "text-[#ffb000]"}`}
             >
-                {isBoss ? "⚠️ БОСС: " : "▸ БОЙ С "}
+                {isBoss ? t("combat.boss_title") : t("combat.fight_title")}
                 {currentCombat.enemy.name.toUpperCase()}
             </div>
 
             {!hasWeaponBay && (
                 <div className="bg-[rgba(255,0,64,0.1)] border border-[#ff0040] p-2 text-sm text-[#ff0040]">
-                    ⚠️ Нет оружейной палубы или оружия! Невозможно атаковать.
+                    {t("combat.no_weapon_bay")}
                 </div>
             )}
             {hasWeaponBay && !hasGunner && (
                 <div className="bg-[rgba(255,170,0,0.1)] border border-[#ffaa00] p-2 text-sm text-[#ffaa00]">
-                    ⚠️ Нет стрелка! Урон -50%, цель выбирается случайно.
+                    {t("combat.no_gunner")}
                 </div>
             )}
 
             {isBoss && currentCombat.enemy.specialAbility && (
-                <BossAbilityCard ability={currentCombat.enemy.specialAbility} />
+                <BossAbilityCard
+                    ability={currentCombat.enemy.specialAbility}
+                    regenRate={currentCombat.enemy.regenRate}
+                    t={t}
+                />
             )}
 
             <div className="grid grid-cols-2 gap-5 my-2">
                 <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4">
                     <div className="text-base font-bold mb-2 text-[#00d4ff]">
-                        ВАШ КОРАБЛЬ
+                        {t("combat.your_ship")}
                     </div>
                     <div className="text-[#00ff41]">
-                        ⚔ Урон: {actualDamage} {!hasGunner && "(-50%)"}
+                        ⚔ {t("ship_stats.damage")} {actualDamage}{" "}
+                        {!hasGunner && "(-50%)"}
                     </div>
                     <div className="my-2">
-                        Щиты: {ship.shields}/{ship.maxShields}
+                        {t("ship_stats.shields")} {ship.shields}/
+                        {ship.maxShields}
                         <div className="h-2 rounded-full mt-1 bg-[rgba(0,0,0,0.5)] relative">
                             <div
                                 className="absolute rounded-full top-0 left-0 h-full bg-[#0080ff]"
@@ -125,20 +133,22 @@ export function CombatPanel() {
                         </div>
                     </div>
                     <div className="my-2">
-                        Корпус: {playerHP}/{playerMaxHP}
+                        {t("combat.hull")} {playerHP}/{playerMaxHP}
                         <Progress
                             value={(playerHP / Math.max(1, playerMaxHP)) * 100}
                             className="h-2 mt-1 bg-[rgba(0,0,0,0.5)] [&>div]:bg-[#00ff41]"
                         />
                     </div>
 
-                    <div>🛡 Защита: {playerDefense}</div>
+                    <div>
+                        {t("combat.defense")} {playerDefense}
+                    </div>
                     <div className="text-xs text-[#00ff41] mt-1">
-                        🎯 Уклонение: {evasionChance}%
+                        {t("combat.evasion")} {evasionChance}%
                     </div>
                     {gunnerInWeaponBay && (
                         <div className="text-xs text-[#00ff41] mt-1">
-                            🎯 Наводчик: {gunnerInWeaponBay.name}
+                            {t("combat.gunner")} {gunnerInWeaponBay.name}
                         </div>
                     )}
                 </div>
@@ -153,13 +163,15 @@ export function CombatPanel() {
                     isBoss={isBoss}
                 >
                     <div className="my-2">
-                        Корпус: {eHP}/{eMaxHP}
+                        {t("combat.hull")} {eHP}/{eMaxHP}
                         <Progress
                             value={(eHP / eMaxHP) * 100}
                             className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${isBoss ? "[&>div]:bg-[#ff00ff]" : "[&>div]:bg-[#ff0040]"}`}
                         />
                     </div>
-                    <div>🛡 Защита: {eDef}</div>
+                    <div>
+                        {t("combat.defense")} {eDef}
+                    </div>
                 </ShipStatusCard>
             </div>
 
@@ -169,10 +181,10 @@ export function CombatPanel() {
                 <div
                     className={`text-sm font-bold mb-2 ${isBoss ? "text-[#ff00ff]" : "text-[#ff0040]"}`}
                 >
-                    КОРАБЛЬ ВРАГА{" "}
+                    {t("combat.enemy_ship")}{" "}
                     {hasGunner
-                        ? "(кликните для выбора цели)"
-                        : "(цель выбирается случайно)"}
+                        ? t("combat.click_target")
+                        : t("combat.random_target")}
                 </div>
                 <EnemyModuleGrid
                     currentCombat={currentCombat}
@@ -187,6 +199,7 @@ export function CombatPanel() {
                 hasGunner={hasGunner}
                 onAttack={attackEnemy}
                 onRetreat={retreat}
+                t={t}
             />
 
             <CrewManagement
@@ -201,7 +214,7 @@ export function CombatPanel() {
 
             {isBoss && (
                 <div className="mt-2 text-center text-sm text-[#ffaa00]">
-                    ⚠️ Победа гарантирует артефакт!
+                    {t("combat.boss_artifact_guaranteed")}
                 </div>
             )}
         </div>
@@ -211,18 +224,19 @@ export function CombatPanel() {
 interface BossAbilityCardProps {
     ability: { name: string; description: string };
     regenRate?: number;
+    t?: (key: string) => string;
 }
 
-function BossAbilityCard({ ability, regenRate }: BossAbilityCardProps) {
+function BossAbilityCard({ ability, regenRate, t }: BossAbilityCardProps) {
     return (
         <div className="bg-[rgba(255,0,255,0.1)] border border-[#ff00ff] p-3 text-sm">
             <div className="text-[#ff00ff] font-bold mb-1">
                 ★ {ability.name}
             </div>
             <div className="text-[#cccccc]">{ability.description}</div>
-            {regenRate && (
+            {regenRate && t && (
                 <div className="text-[#ffaa00] mt-1">
-                    ⚙️ Регенерация: +{regenRate}% за ход
+                    {t("combat.regen").replace("{{rate}}", String(regenRate))}
                 </div>
             )}
         </div>
@@ -234,6 +248,7 @@ interface CombatActionsProps {
     hasGunner: boolean;
     onAttack: () => void;
     onRetreat: () => void;
+    t: (key: string) => string;
 }
 
 function CombatActions({
@@ -241,6 +256,7 @@ function CombatActions({
     hasGunner,
     onAttack,
     onRetreat,
+    t,
 }: CombatActionsProps) {
     return (
         <div className="flex gap-2.5 flex-col sm:flex-row">
@@ -249,20 +265,20 @@ function CombatActions({
                 onClick={onAttack}
                 className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
             >
-                {hasGunner ? "АТАКОВАТЬ" : "АТАКОВАТЬ (случайная цель)"}
+                {hasGunner ? t("combat.attack") : t("combat.attack_random")}
             </Button>
             <Button
                 onClick={() => useGameStore.getState().skipTurn()}
                 className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
             >
-                ПРОПУСТИТЬ ХОД
+                {t("combat.skip_turn")}
             </Button>
             <Button
                 variant="destructive"
                 onClick={onRetreat}
                 className="cursor-pointer bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
             >
-                ОТСТУПИТЬ
+                {t("combat.retreat")}
             </Button>
         </div>
     );
@@ -293,10 +309,11 @@ function CrewManagement({
     assignCombatTask,
     getAdjacentModules,
 }: CrewManagementProps) {
+    const { t } = useTranslation();
     return (
         <div className="border-t border-[#00ff41] pt-3 mt-2">
             <div className="text-[#ffb000] font-bold mb-2 text-sm">
-                ▸ УПРАВЛЕНИЕ ЭКИПАЖЕМ
+                {t("combat.crew_control")}
             </div>
             <div className="space-y-1.5 max-h-64 overflow-y-auto">
                 {crew.map((c) => {

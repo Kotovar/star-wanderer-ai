@@ -20,22 +20,22 @@ const OUTCOME_INFO = {
     pirate_ambush: {
         icon: "🚨",
         color: "#ff0040",
-        name: "Засада пиратов",
-        desc: "Пираты используют ложный сигнал для ловушки!",
+        nameKey: "distress_signal.pirate_ambush",
+        descKey: "distress_signal.pirate_ambush_desc",
         bgClass: "bg-[rgba(255,0,64,0.1)]",
     },
     survivors: {
         icon: "💚",
         color: "#00ff41",
-        name: "Выжившие",
-        desc: "На борту настоящие выжившие, ждут спасения.",
+        nameKey: "distress_signal.survivors",
+        descKey: "distress_signal.survivors_desc",
         bgClass: "bg-[rgba(0,255,65,0.1)]",
     },
     abandoned_cargo: {
         icon: "📦",
         color: "#00d4ff",
-        name: "Заброшенный груз",
-        desc: "Корабль покинут, груз можно забрать.",
+        nameKey: "distress_signal.abandoned_cargo",
+        descKey: "distress_signal.abandoned_cargo_desc",
         bgClass: "bg-[rgba(0,212,255,0.1)]",
     },
 };
@@ -68,7 +68,7 @@ export function DistressSignalPanel() {
         return (
             <div className="flex flex-col gap-4">
                 <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                    ▸ СИГНАЛ БЕДСТВИЯ [ИССЛЕДОВАНО]
+                    {t("distress_signal.title_investigated")}
                 </div>
 
                 <div
@@ -76,17 +76,17 @@ export function DistressSignalPanel() {
                     style={{ borderColor: info.color }}
                 >
                     <span style={{ color: info.color }} className="font-bold">
-                        {info.icon} {info.name}!
+                        {info.icon} {t(info.nameKey)}!
                     </span>
                     <br />
                     <br />
-                    <span className="text-[#888]">{info.desc}</span>
+                    <span className="text-[#888]">{t(info.descKey)}</span>
                     {outcome === "pirate_ambush" && (
                         <>
                             <br />
                             <br />
                             <span className="text-[#ffb000]">
-                                Здесь были обнаружены враги.
+                                {t("distress_signal.enemy_found")}
                             </span>
                         </>
                     )}
@@ -95,12 +95,11 @@ export function DistressSignalPanel() {
                             <br />
                             <br />
                             <span className="text-[#00ff41]">
-                                Капсула с выжившими добавлена в трюм.
+                                {t("distress_signal.survivors_capsule")}
                             </span>
                             <br />
                             <span className="text-[#ffb000]">
-                                Доставьте на станцию или колонию для получения
-                                награды.
+                                {t("distress_signal.deliver_for_reward")}
                             </span>
                         </>
                     )}
@@ -109,7 +108,7 @@ export function DistressSignalPanel() {
                             <br />
                             <br />
                             <span className="text-[#00d4ff]">
-                                Пустой корабль дрейфует в космосе.
+                                {t("distress_signal.abandoned_ship")}
                             </span>
                             {/* Show loot details */}
                             {currentLocation.signalLoot && (
@@ -118,7 +117,7 @@ export function DistressSignalPanel() {
                                     <br />
                                     <div className="border-t border-[#00d4ff] pt-2 mt-2">
                                         <span className="text-[#ffb000] font-bold">
-                                            Найдено:
+                                            {t("distress_signal.found")}
                                         </span>
                                         {currentLocation.signalLoot.credits && (
                                             <div className="text-[#00ff41] text-xs mt-1">
@@ -167,7 +166,7 @@ export function DistressSignalPanel() {
                     onClick={showSectorMap}
                     className="cursor-pointer bg-transparent border-2 border-[#666] text-[#666] hover:bg-[#666] hover:text-[#050810] uppercase tracking-wider mt-3"
                 >
-                    ПОКИНУТЬ СИГНАЛ
+                    {t("distress_signal.leave_signal")}
                 </Button>
             </div>
         );
@@ -180,23 +179,24 @@ export function DistressSignalPanel() {
         return (
             <div className="flex flex-col gap-4">
                 <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                    ▸ СИГНАЛ БЕДСТВИЯ
+                    {t("distress_signal.title")}
                 </div>
 
                 <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3 text-sm">
-                    <span className="text-[#00ff41]">📡 Сканер обнаружил:</span>
-                    <br />
-                    <span style={{ color: info.color }} className="font-bold">
-                        {info.icon} {info.name}
+                    <span className="text-[#00ff41]">
+                        {t("distress_signal.scanner_detected")}
                     </span>
                     <br />
-                    <span className="text-[#888]">{info.desc}</span>
+                    <span style={{ color: info.color }} className="font-bold">
+                        {info.icon} {t(info.nameKey)}
+                    </span>
+                    <br />
+                    <span className="text-[#888]">{t(info.descKey)}</span>
                 </div>
 
                 <div className="text-sm leading-relaxed">
                     <span className="text-[#ffb000]">
-                        Сканер смог проанализировать сигнал и определить тип
-                        ситуации.
+                        {t("distress_signal.scanner_analyzed")}
                     </span>
                 </div>
 
@@ -221,15 +221,15 @@ export function DistressSignalPanel() {
                     }}
                 >
                     {outcome === "pirate_ambush"
-                        ? "⚔️ ПРИБЛИЗИТЬСЯ К БОЮ"
-                        : "ПРИБЛИЗИТЬСЯ"}
+                        ? t("distress_signal.approach_combat")
+                        : t("distress_signal.approach")}
                 </Button>
 
                 <Button
                     onClick={showSectorMap}
                     className="bg-transparent border-2 border-[#666] text-[#666] hover:bg-[#666] hover:text-[#050810] uppercase tracking-wider"
                 >
-                    ИГНОРИРОВАТЬ
+                    {t("distress_signal.ignore")}
                 </Button>
             </div>
         );
@@ -242,29 +242,37 @@ export function DistressSignalPanel() {
     return (
         <div className="flex flex-col gap-4">
             <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                ▸ СИГНАЛ БЕДСТВИЯ
+                {t("distress_signal.title")}
             </div>
 
             <div className="text-sm leading-relaxed">
                 <span className="text-[#ffaa00]">
-                    ⚠ Обнаружен аварийный маяк!
+                    {t("distress_signal.warning_detected")}
                 </span>
                 <br />
                 <br />
-                Корабль подаёт сигналы бедствия. На связи только статика.
+                {t("distress_signal.static_message")}
                 <br />
                 <br />
-                <span className="text-[#888]">Возможные сценарии:</span>
+                <span className="text-[#888]">
+                    {t("distress_signal.possible_scenarios")}
+                </span>
                 <br />
-                <span className="text-[#00ff41]">• Выжившие ждут спасения</span>
+                <span className="text-[#00ff41]">
+                    {t("distress_signal.survivors_waiting")}
+                </span>
                 <br />
-                <span className="text-[#00d4ff]">• Заброшенный груз</span>
+                <span className="text-[#00d4ff]">
+                    {t("distress_signal.abandoned_cargo_item")}
+                </span>
                 <br />
-                <span className="text-[#ff0040]">• Засада пиратов</span>
+                <span className="text-[#ff0040]">
+                    {t("distress_signal.pirate_ambush_item")}
+                </span>
                 <br />
                 <br />
                 <span className="text-[#ffb000]">
-                    Внимание: исход неизвестен до прибытия!
+                    {t("distress_signal.risk_warning")}
                 </span>
             </div>
 
@@ -272,11 +280,14 @@ export function DistressSignalPanel() {
             {scanRange > 0 && !revealChecked && (
                 <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3 text-sm">
                     <span className="text-[#00ff41]">
-                        📡 Сканер {scannerLabel}:
+                        {t("distress_signal.scanner_label").replace(
+                            "{{label}}",
+                            scannerLabel,
+                        )}
                     </span>
                     <br />
                     <span className="text-[#888]">
-                        Шанс определить тип сигнала:{" "}
+                        {t("distress_signal.reveal_chance")}{" "}
                     </span>
                     <span className="text-[#ffb000]">{revealChance}%</span>
                 </div>
@@ -285,15 +296,17 @@ export function DistressSignalPanel() {
             {scanRange > 0 && revealChecked && !isRevealed && (
                 <div className="bg-[rgba(100,100,100,0.1)] border border-[#666] p-3 text-sm">
                     <span className="text-[#888]">
-                        📡 Сканер не смог определить тип сигнала.
+                        {t("distress_signal.scanner_failed")}
                     </span>
                 </div>
             )}
 
             <div className="bg-[rgba(255,176,0,0.1)] border border-[#ffb000] p-3 text-sm">
-                <span className="text-[#ffb000]">? Риск: </span>
+                <span className="text-[#ffb000]">
+                    {t("distress_signal.risk_title")}{" "}
+                </span>
                 <span className="text-white">
-                    Вы не узнаете правду, пока не подойдёте ближе.
+                    {t("distress_signal.risk_text")}
                 </span>
             </div>
 
@@ -304,14 +317,14 @@ export function DistressSignalPanel() {
                     }}
                     className=" cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider "
                 >
-                    ОТКЛИКНУТЬСЯ
+                    {t("distress_signal.respond")}
                 </Button>
 
                 <Button
                     onClick={showSectorMap}
                     className=" cursor-pointer bg-transparent border-2 border-[#666] text-[#666] hover:bg-[#666] hover:text-[#050810] uppercase tracking-wider"
                 >
-                    ИГНОРИРОВАТЬ
+                    {t("distress_signal.ignore")}
                 </Button>
             </div>
         </div>

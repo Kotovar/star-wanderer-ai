@@ -2,8 +2,10 @@
 
 import { useGameStore } from "@/game/store";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/useTranslation";
 
 export function UnknownShipPanel() {
+    const { t } = useTranslation();
     const currentLocation = useGameStore((s) => s.currentLocation);
     const currentSector = useGameStore((s) => s.currentSector);
     const ship = useGameStore((s) => s.ship);
@@ -72,29 +74,32 @@ export function UnknownShipPanel() {
             // Scanner reveals the true identity
             return currentLocation.name;
         }
-        return "❓ Неизвестный объект";
+        return t("unknown_ship.unknown_object");
     };
 
     const getDescription = () => {
         if (canScan) {
             // Show actual type info
             if (currentLocation.type === "enemy") {
-                return `⚔️ Вражеский корабль (угроза ${currentLocation.threat || 1})`;
+                return t("unknown_ship.enemy_ship").replace(
+                    "{{threat}}",
+                    String(currentLocation.threat || 1),
+                );
             } else if (currentLocation.type === "friendly_ship") {
-                return `🤝 Дружеский корабль`;
+                return t("unknown_ship.friendly_ship");
             } else if (currentLocation.type === "boss") {
-                return `⚠️ Древний корабль`;
+                return t("unknown_ship.ancient_ship");
             } else if (currentLocation.type === "anomaly") {
                 const type =
                     currentLocation.anomalyType === "good"
-                        ? "✓ Благоприятная"
-                        : "⚠ Опасная";
+                        ? t("unknown_ship.anomaly_good")
+                        : t("unknown_ship.anomaly_dangerous");
                 return `🔮 ${type}`;
             } else if (currentLocation.type === "storm") {
-                return `🌪️ Космический шторм`;
+                return t("unknown_ship.storm");
             }
         }
-        return "Датчики не могут определить тип этого объекта.";
+        return t("unknown_ship.no_scanner");
     };
 
     const currentHull = ship.modules.reduce((s, m) => s + m.health, 0);
@@ -115,28 +120,30 @@ export function UnknownShipPanel() {
                 <p className="text-[#888] mb-2">{getDescription()}</p>
                 {!canScan && (
                     <p className="text-[#ffb000]">
-                        Требуется сканер для получения информации.
+                        {t("unknown_ship.scanner_required")}
                     </p>
                 )}
             </div>
 
             <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#ffb000]">
                 <p className="text-[#ffb000] font-bold mb-2">
-                    ⚠ ПРЕДУПРЕЖДЕНИЕ
+                    {t("unknown_ship.warning")}
                 </p>
                 <p className="text-[#888] text-sm">
                     {isShip
-                        ? "Приближение к неизвестному кораблю может быть опасно! Это может быть как враг, так и дружественный корабль."
-                        : "Приближение к неизвестному объекту может быть опасно!"}
+                        ? t("unknown_ship.warning_ship")
+                        : t("unknown_ship.warning_object")}
                 </p>
             </div>
 
             <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#00ff41]">
-                <p className="text-[#ffb000] mb-2">Ваши показатели:</p>
+                <p className="text-[#ffb000] mb-2">
+                    {t("unknown_ship.your_stats")}
+                </p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs md:text-sm">
                     <div className="min-w-0">
                         <span className="text-[#00d4ff] whitespace-nowrap">
-                            🛡 Щиты:
+                            {t("unknown_ship.shields")}
                         </span>
                         <span className="text-[#00ff41] ml-1">
                             {ship.shields}/{ship.maxShields}
@@ -144,7 +151,7 @@ export function UnknownShipPanel() {
                     </div>
                     <div className="min-w-0">
                         <span className="text-[#ffb000] whitespace-nowrap">
-                            🔧 Защита:
+                            {t("unknown_ship.defense")}
                         </span>
                         <span className="text-[#00ff41] ml-1">
                             {ship.armor}
@@ -152,7 +159,7 @@ export function UnknownShipPanel() {
                     </div>
                     <div className="min-w-0">
                         <span className="text-[#ffb000] whitespace-nowrap">
-                            🔧 Корпус:
+                            {t("unknown_ship.hull")}
                         </span>
                         <span className="text-[#00ff41] ml-1">
                             {currentHull}/{maxHull}
@@ -160,7 +167,7 @@ export function UnknownShipPanel() {
                     </div>
                     <div className="min-w-0">
                         <span className="text-[#ff4444] whitespace-nowrap">
-                            ❤ Экипаж:
+                            {t("unknown_ship.crew")}
                         </span>
                         <span className="text-[#00ff41] ml-1">
                             {crew.filter((c) => c.health > 50).length}/
@@ -170,14 +177,17 @@ export function UnknownShipPanel() {
                 </div>
                 <div className="mt-2 text-xs md:text-sm">
                     <span className="text-[#00ff41] whitespace-nowrap">
-                        🎯 Уклонение:
+                        {t("unknown_ship.evasion")}
                     </span>
                     <span className="text-[#00ff41] ml-1">
                         {(captain?.level || 1) + (ship.bonusEvasion || 0)}%
                         {ship.bonusEvasion ? (
                             <span className="text-[#9933ff]">
                                 {" "}
-                                (+{ship.bonusEvasion}% бонус)
+                                {t("unknown_ship.bonus").replace(
+                                    "{{bonus}}",
+                                    String(ship.bonusEvasion),
+                                )}
                             </span>
                         ) : null}
                     </span>
@@ -189,13 +199,13 @@ export function UnknownShipPanel() {
                     onClick={handleApproach}
                     className="flex-1 bg-[#ff4444] hover:bg-[#ff6666] text-white font-bold cursor-pointer"
                 >
-                    ❓ ПРИБЛИЗИТЬСЯ
+                    {t("unknown_ship.approach")}
                 </Button>
                 <Button
                     onClick={showSectorMap}
                     className="bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)] cursor-pointer"
                 >
-                    ОТСТУПИТЬ
+                    {t("unknown_ship.retreat")}
                 </Button>
             </div>
         </div>

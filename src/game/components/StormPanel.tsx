@@ -3,15 +3,16 @@
 import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
 import type { StormType } from "../types";
+import { useTranslation } from "@/lib/useTranslation";
 
 // StormType
 type StormDetails = {
     icon: string;
     color: string;
-    name: string;
-    desc: string;
-    damage: string;
-    loot: string;
+    nameKey: string;
+    descKey: string;
+    damageKey: string;
+    lootKey: string;
 };
 type StormInfo = Record<StormType, StormDetails>;
 
@@ -19,30 +20,31 @@ const STORM_INFO: StormInfo = {
     radiation: {
         icon: "☢️",
         color: "#00ff00",
-        name: "Радиационное облако",
-        desc: "Радиационное облако с высоким уровнем ионизирующего излучения.",
-        damage: "Наносит урон экипажу и модулям",
-        loot: "x2 к добыче",
+        nameKey: "storm.radiation_cloud",
+        descKey: "storm.radiation_cloud_desc",
+        damageKey: "storm.radiation_cloud_damage",
+        lootKey: "storm.radiation_cloud_loot",
     },
     ionic: {
         icon: "⚡",
         color: "#00d4ff",
-        name: "Ионный шторм",
-        desc: "Ионный шторм с мощными электромагнитными возмущениями.",
-        damage: "Сжигает щиты, повреждает электронику",
-        loot: "x2.5 к добыче",
+        nameKey: "storm.ion_storm",
+        descKey: "storm.ion_storm_desc",
+        damageKey: "storm.ion_storm_damage",
+        lootKey: "storm.ion_storm_loot",
     },
     plasma: {
         icon: "🔥",
         color: "#ff4400",
-        name: "Плазменный шторм",
-        desc: "Плазменный шторм - крайне опасное явление с высокой температурой.",
-        damage: "Урон щитам, модулям и экипажу",
-        loot: "x3 к добыче, шанс редких находок",
+        nameKey: "storm.plasma_storm",
+        descKey: "storm.plasma_storm_desc",
+        damageKey: "storm.plasma_storm_damage",
+        lootKey: "storm.plasma_storm_loot",
     },
 };
 
 export function StormPanel() {
+    const { t } = useTranslation();
     const currentLocation = useGameStore((s) => s.currentLocation);
     const ship = useGameStore((s) => s.ship);
     const crew = useGameStore((s) => s.crew);
@@ -60,7 +62,12 @@ export function StormPanel() {
     const scanRange = getEffectiveScanRange();
     const canScan = scanRange >= 5; // Storm detection requires scanRange >= 5
 
-    const intensityLabels = ["", "Слабый", "Средний", "Сильный"];
+    const intensityLabels = [
+        "",
+        t("storm.weak"),
+        t("storm.medium"),
+        t("storm.strong"),
+    ];
 
     // Check if storm was already entered
     const stormCompleted = completedLocations.includes(currentLocation.id);
@@ -71,12 +78,19 @@ export function StormPanel() {
         .filter(
             (entry) =>
                 entry.message.includes("Шторм") ||
+                entry.message.includes("Storm") ||
                 entry.message.includes("Щиты:") ||
+                entry.message.includes("Shields:") ||
                 entry.message.includes("Модули повреждены") ||
+                entry.message.includes("Modules damaged") ||
                 entry.message.includes("Экипаж:") ||
+                entry.message.includes("Crew:") ||
                 entry.message.includes("Добыча:") ||
+                entry.message.includes("Loot:") ||
                 entry.message.includes("РЕДКАЯ НАХОДКА") ||
-                entry.message.includes("ВХОД В"),
+                entry.message.includes("RARE FIND") ||
+                entry.message.includes("ВХОД В") ||
+                entry.message.includes("ENTERING"),
         );
 
     if (stormCompleted) {
@@ -91,10 +105,10 @@ export function StormPanel() {
                         className="text-xl font-bold font-['Orbitron']"
                         style={{ color: info.color }}
                     >
-                        {info.icon} {info.name}
+                        {info.icon} {t(info.nameKey)}
                     </h2>
                     <span className="text-sm text-[#00ff41]">
-                        ✓ Исследовано
+                        {t("storm.investigated")}
                     </span>
                 </div>
 
@@ -102,7 +116,9 @@ export function StormPanel() {
                     className="bg-[rgba(0,0,0,0.4)] p-3 mb-4 border"
                     style={{ borderColor: info.color }}
                 >
-                    <p className="text-[#ffb000] mb-3 font-bold">Результаты:</p>
+                    <p className="text-[#ffb000] mb-3 font-bold">
+                        {t("storm.results_title")}
+                    </p>
                     <div className="space-y-1.5 text-sm">
                         {recentStormLogs.map((entry, i) => (
                             <div
@@ -121,10 +137,14 @@ export function StormPanel() {
                 </div>
 
                 <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#00ff41]">
-                    <p className="text-[#ffb000] mb-2">Текущие показатели:</p>
+                    <p className="text-[#ffb000] mb-2">
+                        {t("storm.stats_title")}
+                    </p>
                     <div className="grid grid-cols-3 gap-2 text-sm">
                         <div>
-                            <span className="text-[#00d4ff]">🛡 Щиты:</span>
+                            <span className="text-[#00d4ff]">
+                                {t("storm.shields")}:
+                            </span>
                             <span
                                 className={`${ship.shields > 0 ? "text-[#00ff41]" : "text-[#ff4444]"} ml-1`}
                             >
@@ -132,13 +152,17 @@ export function StormPanel() {
                             </span>
                         </div>
                         <div>
-                            <span className="text-[#ffb000]">🔧 Броня:</span>
+                            <span className="text-[#ffb000]">
+                                {t("storm.defense_label")}
+                            </span>
                             <span className="text-[#00ff41] ml-1">
-                                {ship.armor} ед.
+                                {ship.armor} {t("ship_stats.units")}
                             </span>
                         </div>
                         <div>
-                            <span className="text-[#ff4444]">❤ Экипаж:</span>
+                            <span className="text-[#ff4444]">
+                                {t("storm.crew_label")}
+                            </span>
                             <span
                                 className={`${crew.filter((c) => c.health > 50).length === crew.length ? "text-[#00ff41]" : "text-[#ffb000]"} ml-1`}
                             >
@@ -153,7 +177,7 @@ export function StormPanel() {
                     onClick={showSectorMap}
                     className="w-full bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] font-bold cursor-pointer"
                 >
-                    ПОКИНУТЬ ШТОРМ
+                    {t("storm.leave_storm")}
                 </Button>
             </div>
         );
@@ -166,45 +190,53 @@ export function StormPanel() {
             <div className="bg-[rgba(50,50,50,0.3)] border-2 border-[#666] p-4">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold font-['Orbitron'] text-[#888]">
-                        ❓ Неизвестный объект
+                        {t("unknown_ship.unknown_object")}
                     </h2>
                 </div>
 
                 <div className="bg-[rgba(0,0,0,0.4)] p-3 mb-4 border border-[#666]">
                     <p className="text-[#888] mb-2">
-                        Датчики не могут определить тип этого объекта.
+                        {t("unknown_ship.sensors_unknown")}
                     </p>
                     <p className="text-[#ffb000]">
-                        Требуется сканер для получения информации.
+                        {t("unknown_ship.scanner_required")}
                     </p>
                 </div>
 
                 <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#ffb000]">
                     <p className="text-[#ffb000] font-bold mb-2">
-                        ⚠ ПРЕДУПРЕЖДЕНИЕ
+                        {t("unknown_ship.warning")}
                     </p>
                     <p className="text-[#888] text-sm">
-                        Вход в неизвестный объект может быть опасен!
+                        {t("unknown_ship.warning_enter")}
                     </p>
                 </div>
 
                 <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#00ff41]">
-                    <p className="text-[#ffb000] mb-2">Ваши показатели:</p>
+                    <p className="text-[#ffb000] mb-2">
+                        {t("unknown_ship.your_stats")}
+                    </p>
                     <div className="grid grid-cols-3 gap-2 text-sm">
                         <div>
-                            <span className="text-[#00d4ff]">🛡 Щиты:</span>
+                            <span className="text-[#00d4ff]">
+                                {t("unknown_ship.shields")}
+                            </span>
                             <span className="text-[#00ff41] ml-1">
                                 {ship.shields}/{ship.maxShields}
                             </span>
                         </div>
                         <div>
-                            <span className="text-[#ffb000]">🔧 Броня:</span>
+                            <span className="text-[#ffb000]">
+                                {t("unknown_ship.defense")}
+                            </span>
                             <span className="text-[#00ff41] ml-1">
-                                {ship.armor} ед.
+                                {ship.armor} {t("ship_stats.units")}
                             </span>
                         </div>
                         <div>
-                            <span className="text-[#ff4444]">❤ Экипаж:</span>
+                            <span className="text-[#ff4444]">
+                                {t("unknown_ship.crew")}
+                            </span>
                             <span className="text-[#00ff41] ml-1">
                                 {crew.filter((c) => c.health > 50).length}/
                                 {crew.length}
@@ -218,13 +250,13 @@ export function StormPanel() {
                         onClick={enterStorm}
                         className="flex-1 bg-[#ff4444] hover:bg-[#ff6666] text-white font-bold cursor-pointer"
                     >
-                        ❓ ИССЛЕДОВАТЬ
+                        {t("storm.investigate")}
                     </Button>
                     <Button
                         onClick={showSectorMap}
                         className="bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)] cursor-pointer"
                     >
-                        ОТСТУПИТЬ
+                        {t("storm.retreat")}
                     </Button>
                 </div>
             </div>
@@ -242,10 +274,12 @@ export function StormPanel() {
                     className="text-xl font-bold font-['Orbitron']"
                     style={{ color: info.color }}
                 >
-                    {info.icon} {currentLocation.name}
+                    {info.icon} {t(info.nameKey)}
                 </h2>
                 <span className="text-sm text-[#ffb000]">
-                    Интенсивность: {intensity} ({intensityLabels[intensity]})
+                    {t("storm.intensity")
+                        .replace("{{intensity}}", String(intensity))
+                        .replace("{{label}}", intensityLabels[intensity])}
                 </span>
             </div>
 
@@ -253,45 +287,55 @@ export function StormPanel() {
                 className="bg-[rgba(0,0,0,0.4)] p-3 mb-4 border"
                 style={{ borderColor: info.color }}
             >
-                <p className="text-[#ffb000] mb-2">{info.desc}</p>
+                <p className="text-[#ffb000] mb-2">{t(info.descKey)}</p>
                 <div className="grid grid-cols-2 gap-4 text-sm mt-3">
                     <div>
-                        <span className="text-[#ff4444]">⚠ Опасность:</span>
-                        <p className="text-[#888] ml-2">{info.damage}</p>
+                        <span className="text-[#ff4444]">
+                            {t("storm.danger")}
+                        </span>
+                        <p className="text-[#888] ml-2">{t(info.damageKey)}</p>
                     </div>
                     <div>
-                        <span className="text-[#00ff41]">★ Добыча:</span>
-                        <p className="text-[#888] ml-2">{info.loot}</p>
+                        <span className="text-[#00ff41]">
+                            {t("storm.loot")}
+                        </span>
+                        <p className="text-[#888] ml-2">{t(info.lootKey)}</p>
                     </div>
                 </div>
             </div>
 
             <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#ff4444]">
                 <p className="text-[#ff4444] font-bold mb-2">
-                    ⚠ ПРЕДУПРЕЖДЕНИЕ
+                    {t("storm.warning")}
                 </p>
                 <p className="text-[#888] text-sm">
-                    Вход в шторм нанесёт повреждения кораблю и экипажу!
+                    {t("storm.warning_storm")}
                 </p>
             </div>
 
             <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#00ff41]">
-                <p className="text-[#ffb000] mb-2">Ваши показатели:</p>
+                <p className="text-[#ffb000] mb-2">{t("storm.your_stats")}</p>
                 <div className="grid grid-cols-3 gap-2 text-sm">
                     <div>
-                        <span className="text-[#00d4ff]">🛡 Щиты:</span>
+                        <span className="text-[#00d4ff]">
+                            {t("storm.shields")}:
+                        </span>
                         <span className="text-[#00ff41] ml-1">
                             {ship.shields}/{ship.maxShields}
                         </span>
                     </div>
                     <div>
-                        <span className="text-[#ffb000]">🔧 Броня:</span>
+                        <span className="text-[#ffb000]">
+                            {t("storm.defense_label")}
+                        </span>
                         <span className="text-[#00ff41] ml-1">
-                            {ship.armor} ед.
+                            {ship.armor} {t("ship_stats.units")}
                         </span>
                     </div>
                     <div>
-                        <span className="text-[#ff4444]">❤ Экипаж:</span>
+                        <span className="text-[#ff4444]">
+                            {t("storm.crew_label")}
+                        </span>
                         <span className="text-[#00ff41] ml-1">
                             {crew.filter((c) => c.health > 50).length}/
                             {crew.length}
@@ -305,13 +349,13 @@ export function StormPanel() {
                     onClick={enterStorm}
                     className="flex-1 bg-[#ff4444] hover:bg-[#ff6666] text-white font-bold cursor-pointer"
                 >
-                    {info.icon} ВОЙТИ В ШТОРМ
+                    {t("storm.enter_storm").replace("{{icon}}", info.icon)}
                 </Button>
                 <Button
                     onClick={showSectorMap}
                     className="bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)] cursor-pointer"
                 >
-                    ОТСТУПИТЬ
+                    {t("storm.retreat")}
                 </Button>
             </div>
         </div>
