@@ -53,10 +53,14 @@ export function GameHeader() {
 
     const handleResearchClick = () => {
         if (typeof window !== "undefined" && window.innerWidth < 1024) {
+            // Save previous game mode for mobile modal (without changing gameMode)
+            if (gameMode !== "research" && gameMode !== "artifacts") {
+                useGameStore.getState().savePreviousGameMode();
+            }
             setShowResearchModal(true);
         } else {
             if (gameMode === "research") {
-                useGameStore.getState().showSectorMap();
+                useGameStore.getState().closeResearchPanel();
             } else {
                 showResearch();
             }
@@ -226,7 +230,12 @@ export function GameHeader() {
             {/* Mobile research modal */}
             <Dialog
                 open={showResearchModal}
-                onOpenChange={setShowResearchModal}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        useGameStore.getState().closeResearchPanel();
+                    }
+                    setShowResearchModal(open);
+                }}
             >
                 <DialogContent
                     className="bg-[rgba(10,20,30,0.98)] border-2 border-[#9933ff] text-[#00ff41] max-w-[95vw] w-[95vw] md:hidden max-h-[90vh] overflow-y-auto p-4 scrollbar-gutter-stable"
@@ -237,6 +246,9 @@ export function GameHeader() {
                         <DialogTitle className="text-[#ffb000] font-['Orbitron'] text-lg">
                             🔬 {t("game.science")}
                         </DialogTitle>
+                        <DialogDescription className="sr-only">
+                            {t("research.panel_title")}
+                        </DialogDescription>
                     </DialogHeader>
                     <div className="mt-2 min-h-[60vh]">
                         <ResearchPanel />

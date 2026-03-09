@@ -35,12 +35,6 @@ import {
  * - Гарантированные: минимум 1 аномалия, 1 колонизированная планета, 1 станция
  *
  * @returns Массив секторов галактики с назначенными локациями и координатами
- *
- * @example
- * ```typescript
- * const galaxy = generateGalaxy();
- * console.log(`Сгенерировано ${galaxy.length} секторов`);
- * ```
  */
 export const generateGalaxy = (): Sector[] => {
     const sectors: Sector[] = [];

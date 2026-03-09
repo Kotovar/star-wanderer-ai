@@ -43,6 +43,6 @@ export const calculateExpMultiplier = (
             }
         });
     });
-    console.log(expMultiplier);
+
     return expMultiplier;
 };

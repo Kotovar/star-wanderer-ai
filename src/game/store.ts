@@ -1483,6 +1483,11 @@ export const useGameStore = create<GameStore>()(
                 gameMode: state.previousGameMode || "galaxy_map",
                 previousGameMode: null,
             })),
+        closeResearchPanel: () =>
+            set((state) => ({
+                gameMode: state.previousGameMode || "galaxy_map",
+                previousGameMode: null,
+            })),
 
         startCombat: (enemy, isAmbush = false) => {
             playSound("combat");
@@ -5874,15 +5879,36 @@ export const useGameStore = create<GameStore>()(
 
         showArtifacts: () => {
             set((state) => ({
-                previousGameMode: state.gameMode,
+                // Don't overwrite previousGameMode if we're already in a panel mode
+                previousGameMode:
+                    state.gameMode === "research" ||
+                    state.gameMode === "artifacts"
+                        ? state.previousGameMode
+                        : state.gameMode,
                 gameMode: "artifacts",
             }));
         },
 
         showResearch: () => {
             set((state) => ({
-                previousGameMode: state.gameMode,
+                // Don't overwrite previousGameMode if we're already in a panel mode
+                previousGameMode:
+                    state.gameMode === "research" ||
+                    state.gameMode === "artifacts"
+                        ? state.previousGameMode
+                        : state.gameMode,
                 gameMode: "research",
+            }));
+        },
+
+        // Save previous game mode for mobile modal (without changing current game mode)
+        savePreviousGameMode: () => {
+            set((state) => ({
+                previousGameMode:
+                    state.gameMode === "research" ||
+                    state.gameMode === "artifacts"
+                        ? state.previousGameMode
+                        : state.gameMode,
             }));
         },
 

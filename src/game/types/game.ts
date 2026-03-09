@@ -140,6 +140,8 @@ export interface GameModeChanges {
     showSectorMap: () => void;
     showAssignments: () => void;
     closeArtifactsPanel: () => void;
+    closeResearchPanel: () => void;
+    savePreviousGameMode: () => void;
 }
 
 export interface GameCombat {
