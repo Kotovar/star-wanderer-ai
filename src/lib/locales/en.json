@@ -1005,7 +1005,8 @@
         "damage": "⚔ Damage:",
         "shields": "Shields:",
         "armor": "Armor:",
-        "armor_units": "pts"
+        "armor_units": "pts",
+        "auto_attack_active": "🎯 Auto-attack on selected target"
     },
     "distress_signal": {
         "title": "▸ DISTRESS SIGNAL",

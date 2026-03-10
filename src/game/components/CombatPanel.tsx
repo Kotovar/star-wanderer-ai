@@ -33,6 +33,16 @@ export function CombatPanel() {
     const hasWeaponBay =
         weaponBays.length > 0 &&
         weaponBays.some((wb) => wb.weapons && wb.weapons.some((w) => w));
+
+    // Проверяем, есть ли стрелок с заданием "прицеливание"
+    const gunnerWithTargeting = crew.find(
+        (c) =>
+            weaponBays.some((wb) => wb.id === c.moduleId) &&
+            c.profession === "gunner" &&
+            c.combatAssignment === "targeting",
+    );
+
+    // Есть ли просто стрелок в оружейной (без прицеливания)
     const gunnerInWeaponBay = crew.find(
         (c) =>
             weaponBays.some((wb) => wb.id === c.moduleId) &&
@@ -41,7 +51,9 @@ export function CombatPanel() {
                     (c.combatAssignment === "targeting" ||
                         c.assignment === "targeting"))),
     );
+
     const hasGunner = !!gunnerInWeaponBay;
+    const hasTargetingGunner = !!gunnerWithTargeting;
     const canAttack = hasWeaponBay;
 
     const pDmg = getTotalDamage();
@@ -200,6 +212,7 @@ export function CombatPanel() {
             <CombatActions
                 canAttack={canAttack}
                 hasGunner={hasGunner}
+                hasTargetingGunner={hasTargetingGunner}
                 onAttack={attackEnemy}
                 onRetreat={retreat}
                 t={t}
@@ -247,7 +260,15 @@ export function CombatPanel() {
                         crew={[]}
                         isEnemy={true}
                         isBoss={isBoss}
-                        onModuleClick={selectEnemyModule}
+                        onModuleClick={
+                            hasTargetingGunner
+                                ? (moduleId) => {
+                                      selectEnemyModule(moduleId);
+                                      // Сразу атакуем после выбора цели
+                                      setTimeout(() => attackEnemy(), 50);
+                                  }
+                                : selectEnemyModule
+                        }
                         canSelectTarget={hasGunner}
                         title=""
                     />
@@ -298,6 +319,7 @@ function BossAbilityCard({ ability, regenRate, t }: BossAbilityCardProps) {
 interface CombatActionsProps {
     canAttack: boolean;
     hasGunner: boolean;
+    hasTargetingGunner: boolean;
     onAttack: () => void;
     onRetreat: () => void;
     t: (key: string) => string;
@@ -306,10 +328,35 @@ interface CombatActionsProps {
 function CombatActions({
     canAttack,
     hasGunner,
+    hasTargetingGunner,
     onAttack,
     onRetreat,
     t,
 }: CombatActionsProps) {
+    // Если есть стрелок с прицеливанием - кнопка не нужна (автоматическая атака)
+    if (hasTargetingGunner) {
+        return (
+            <div className="flex gap-2.5 flex-col sm:flex-row">
+                <div className="bg-[rgba(0,255,65,0.1)] border border-[#00ff41] p-3 text-sm text-[#00ff41] w-full text-center">
+                    🎯 {t("combat.auto_attack_active")}
+                </div>
+                <Button
+                    onClick={() => useGameStore.getState().skipTurn()}
+                    className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
+                >
+                    {t("combat.skip_turn")}
+                </Button>
+                <Button
+                    variant="destructive"
+                    onClick={onRetreat}
+                    className="cursor-pointer bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
+                >
+                    {t("combat.retreat")}
+                </Button>
+            </div>
+        );
+    }
+
     return (
         <div className="flex gap-2.5 flex-col sm:flex-row">
             <Button

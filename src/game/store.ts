@@ -1869,15 +1869,16 @@ export const useGameStore = create<GameStore>()(
             const weaponBays = state.ship.modules.filter(
                 (m) => m.type === "weaponbay" && !m.disabled && m.health > 0,
             );
-            const hasGunnerInWeaponBay = state.crew.some(
+            const hasTargetingGunner = state.crew.some(
                 (c) =>
                     weaponBays.some((wb) => wb.id === c.moduleId) &&
+                    c.profession === "gunner" &&
                     getActiveAssignment(c, true) === "targeting",
             );
 
-            if (!hasGunnerInWeaponBay) {
+            if (!hasTargetingGunner) {
                 get().addLog(
-                    "Нужен наводчик в оружейной для выбора цели!",
+                    "Нужен наводчик с прицеливанием для выбора цели!",
                     "warning",
                 );
                 return;
@@ -1931,6 +1932,13 @@ export const useGameStore = create<GameStore>()(
                 (m) => m.id === state?.currentCombat?.enemy.selectedModule,
             );
 
+            // Проверяем, есть ли стрелок с прицеливанием
+            const hasTargetingGunner = crewInWeaponBays.some(
+                (c) =>
+                    c.profession === "gunner" &&
+                    c.combatAssignment === "targeting",
+            );
+
             if (!hasGunner) {
                 // Without gunner, attack random alive module
                 const aliveModules = state.currentCombat.enemy.modules.filter(
@@ -1942,6 +1950,16 @@ export const useGameStore = create<GameStore>()(
                         Math.floor(Math.random() * aliveModules.length)
                     ];
                 get().addLog(`Случайная цель: ${tgtMod.name}`, "warning");
+            } else if (!hasTargetingGunner) {
+                // Gunner without targeting - attack random alive module
+                const aliveModules = state.currentCombat.enemy.modules.filter(
+                    (m) => m.health > 0,
+                );
+                if (aliveModules.length === 0) return;
+                tgtMod =
+                    aliveModules[
+                        Math.floor(Math.random() * aliveModules.length)
+                    ];
             } else if (!tgtMod || tgtMod.health <= 0) {
                 get().addLog("Выберите цель!", "error");
                 return;

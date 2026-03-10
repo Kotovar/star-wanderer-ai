@@ -1005,7 +1005,8 @@
         "damage": "⚔ Урон:",
         "shields": "Щиты:",
         "armor": "Броня:",
-        "armor_units": "ед."
+        "armor_units": "ед.",
+        "auto_attack_active": "🎯 Автоматическая атака по выбранной цели"
     },
     "distress_signal": {
         "title": "▸ СИГНАЛ БЕДСТВИЯ",
