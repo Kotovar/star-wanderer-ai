@@ -1,20 +1,20 @@
+import { DEFAULT_MAX_HEALTH, MIN_CREW_HEALTH } from "@/game/constants";
+import { removeDeadCrew } from "./crewUtils";
 import type { GameState, GameStore, CrewMember, Module } from "@/game/types";
+
+// === Constants ===
+const CRITICAL_HEALTH_THRESHOLD = 30;
+const DAMAGE_IN_CRITICAL_MODULE = 5;
+const DAMAGE_IN_BROKEN_MODULE = 20;
 
 /**
  * Вычисляет процент здоровья модуля
- *
- * @param module - Модуль для проверки
- * @returns Процент здоровья (0-100)
  */
 const getModuleHealthPercent = (module: Module) =>
-    (module.health / (module.maxHealth || 100)) * 100;
+    (module.health / (module.maxHealth || DEFAULT_MAX_HEALTH)) * 100;
 
 /**
- * Проверяет, находится ли член экипажа в повреждённом модуле
- *
- * @param crewMember - Член экипажа для проверки
- * @param state - Текущее состояние игры
- * @returns true если член экипажа в модуле с здоровьем < 30%
+ * Проверяет, находится ли член экипажа в повреждённом или разрушенном модуле
  */
 const isCrewInDamagedModule = (crewMember: CrewMember, state: GameState) => {
     if (crewMember.moduleId === undefined) return false;
@@ -26,27 +26,21 @@ const isCrewInDamagedModule = (crewMember: CrewMember, state: GameState) => {
     if (!shipModule) return false;
 
     const healthPercent = getModuleHealthPercent(shipModule);
-    return healthPercent < 30;
+    return healthPercent < CRITICAL_HEALTH_THRESHOLD;
 };
 
 /**
- * Вычисляет урон для члена экипажа в повреждённом модуле
- *
- * @param healthPercent - Процент здоровья модуля
- * @returns Урон (15 для разрушенного модуля, 5 для повреждённого)
+ * Вычисляет урон в зависимости от состояния модуля
+ * @returns урон для экипажа
  */
-const calculateDamageInModule = (healthPercent: number): number => {
-    return healthPercent <= 0 ? 15 : 5;
+const calculateDamage = (healthPercent: number): number => {
+    return healthPercent <= 0
+        ? DAMAGE_IN_BROKEN_MODULE
+        : DAMAGE_IN_CRITICAL_MODULE;
 };
 
 /**
- * Обрабатывает урон члену экипажа в повреждённом модуле
- *
- * @param crewMember - Член экипажа
- * @param shipModule - Модуль, в котором находится член экипажа
- * @param damage - Размер урона
- * @param set - Функция обновления состояния
- * @param get - Функция получения состояния
+ * Применяет урон члену экипажа и логирует событие
  */
 const applyDamageToCrewMember = (
     crewMember: CrewMember,
@@ -60,143 +54,52 @@ const applyDamageToCrewMember = (
             c.id === crewMember.id
                 ? {
                       ...c,
-                      health: Math.max(1, c.health - damage),
+                      health: Math.max(MIN_CREW_HEALTH, c.health - damage),
                   }
                 : c,
         ),
     }));
 
     const healthPercent = getModuleHealthPercent(shipModule);
+    const logType = healthPercent <= 0 ? "error" : "warning";
     get().addLog(
         `⚠️ ${crewMember.name} получил -${damage}% урона в ${shipModule.name} (${Math.round(healthPercent)}% ❤️)`,
-        "warning",
-    );
-};
-
-/**
- * Находит все разрушенные модули, в которых есть экипаж
- *
- * @param state - Текущее состояние игры
- * @returns Список разрушенных модулей с экипажем
- */
-const findBrokenModulesWithCrew = (state: GameState): Module[] => {
-    return state.ship.modules.filter(
-        (m) => m.health <= 0 && state.crew.some((c) => c.moduleId === m.id),
-    );
-};
-
-/**
- * Применяет урон экипажу в разрушенном модуле
- *
- * @param module - Разрушенный модуль
- * @param set - Функция обновления состояния
- * @param get - Функция получения состояния
- */
-const applyDamageInBrokenModule = (
-    module: Module,
-    set: (fn: (s: GameState) => void) => void,
-    get: () => GameStore,
-): void => {
-    const damage = 10;
-
-    set((s) => ({
-        crew: s.crew.map((c) =>
-            c.moduleId === module.id
-                ? {
-                      ...c,
-                      health: Math.max(0, c.health - damage),
-                  }
-                : c,
-        ),
-    }));
-
-    get().addLog(
-        `⚠️ Экипаж в "${module.name}": -${damage} (модуль разрушен)`,
-        "error",
-    );
-};
-
-/**
- * Проверяет и удаляет погибший экипаж
- *
- * @param set - Функция обновления состояния
- * @param get - Функция получения состояния
- */
-const removeDeadCrew = (
-    set: (fn: (s: GameState) => void) => void,
-    get: () => GameStore,
-): void => {
-    const deadCrew = get().crew.filter((c) => c.health <= 0);
-
-    if (deadCrew.length === 0) return;
-
-    set((s) => ({
-        crew: s.crew.filter((c) => c.health > 0),
-    }));
-
-    get().addLog(
-        `☠️ Погибли: ${deadCrew.map((c) => c.name).join(", ")}`,
-        "error",
+        logType,
     );
 };
 
 /**
  * Проверка повреждений модулей и урон экипажу
  *
- * Обрабатывает два типа урона экипажу:
- * 1. **Повреждённые модули (< 30% здоровья)**:
- *    - Разрушенный модуль (0% здоровья): 15 урона
- *    - Критически повреждённый (< 30%): 5 урона
- *
- * 2. **Разрушенные модули (0 здоровья)**:
- *    - 10 урона всему экипажу в модуле
- *    - Проверка на гибель экипажа
- *
  * @param state - Текущее состояние игры
  * @param get - Функция получения состояния
  * @param set - Функция обновления состояния
- *
- * @example
- * ```ts
- * // В gameLoopSlice
- * checkModuleDamage(state, get, set);
- * ```
  */
 export const checkModuleDamage = (
-    state: GameState,
     get: () => GameStore,
     set: (fn: (s: GameState) => void) => void,
 ): void => {
     const currentState = get();
 
-    // === Этап 1: Урон в повреждённых модулях (< 30% здоровья) ===
+    // Находим весь экипаж в повреждённых/разрушенных модулях
     const crewInDamagedModules = currentState.crew.filter((c) =>
         isCrewInDamagedModule(c, currentState),
     );
 
-    if (crewInDamagedModules.length > 0) {
-        crewInDamagedModules.forEach((crewMember) => {
-            const shipModule = currentState.ship.modules.find(
-                (m) => m.id === crewMember.moduleId,
-            );
-            if (!shipModule) return;
+    if (crewInDamagedModules.length === 0) return;
 
-            const healthPercent = getModuleHealthPercent(shipModule);
-            const damage = calculateDamageInModule(healthPercent);
+    // Применяем урон каждому члену экипажа
+    crewInDamagedModules.forEach((crewMember) => {
+        const shipModule = currentState.ship.modules.find(
+            (m) => m.id === crewMember.moduleId,
+        );
+        if (!shipModule) return;
 
-            applyDamageToCrewMember(crewMember, shipModule, damage, set, get);
-        });
-    }
+        const healthPercent = getModuleHealthPercent(shipModule);
+        const damage = calculateDamage(healthPercent);
 
-    // === Этап 2: Урон в разрушенных модулях (0 здоровья) ===
-    const brokenModulesWithCrew = findBrokenModulesWithCrew(state);
+        applyDamageToCrewMember(crewMember, shipModule, damage, set, get);
+    });
 
-    if (brokenModulesWithCrew.length > 0) {
-        brokenModulesWithCrew.forEach((module) => {
-            applyDamageInBrokenModule(module, set, get);
-        });
-
-        // Проверка на гибель экипажа
-        removeDeadCrew(set, get);
-    }
+    removeDeadCrew(set, get);
 };

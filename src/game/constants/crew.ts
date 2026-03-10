@@ -171,3 +171,7 @@ export const CREW_ASSIGNMENT_BONUSES = {
 export const CREW_IN_MODULE_BONUSES = {
     ENGINEER_IN_REACTOR: 3,
 } as const;
+
+export const DEFAULT_MAX_HEALTH = 100;
+export const MIN_CREW_HEALTH = 0;
+export const MIN_HEALTH_WITH_IMMORTALITY = 1;

@@ -19,4 +19,21 @@ export const MODULE_TYPES: Record<
     lab: { color: "#00ff4133", borderColor: "#00ff41" },
 };
 
+export const MODULES_BY_PRIOTITY = [
+    { type: "cargo", name: "Грузовой отсек" },
+    { type: "fueltank", name: "Топливный бак" },
+    { type: "scanner", name: "Сканер" },
+    { type: "drill", name: "Бур" },
+    { type: "weaponbay", name: "Оружейная палуба" },
+    { type: "shield", name: "Генератор щита" },
+    { type: "engine", name: "Двигатель" },
+] satisfies {
+    type: PartialModuleType;
+    name: string;
+}[];
+
 export const EMERGENCY_SHUTDOWN_DAMAGE = 0.1; // 10% урона модулю, когда он аварийно выключен из-за отсутствия энергии
+export const DEFAULT_MAX_HEALTH_MODULE = 100;
+export const MIN_MODULE_HEALTH = 0;
+export const BASE_SHIELD_REGEN_MIN = 5;
+export const BASE_SHIELD_REGEN_MAX = 10;

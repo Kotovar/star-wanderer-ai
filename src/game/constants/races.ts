@@ -1,8 +1,20 @@
 import type { Race, RaceId } from "@/game/types";
 
-// ═══════════════════════════════════════════════════════════════
-// GALACTIC RACES - Species system
-// ═══════════════════════════════════════════════════════════════
+/**
+ * Эффект сращивания ксеноморфа-симбионта с модулем корабля
+ */
+export interface XenosymbiontMergeEffect {
+    /** ID модуля, с которым произошло сращивание */
+    moduleId: string;
+    /** Бонус к регенерации щитов (%) */
+    shieldRegenBonus?: number;
+    /** Бонус к ремонту модулей (%) */
+    repairBonus?: number;
+    /** Снижение потребления энергии (%) */
+    energyReduction?: number;
+    /** Другие эффекты */
+    [key: string]: number | string | undefined;
+}
 
 export const RACES: Record<RaceId, Race> = {
     human: {
@@ -145,6 +157,8 @@ export const RACES: Record<RaceId, Race> = {
                 effects: { alienPresencePenalty: -5 },
             },
         ],
+        /** Эффекты сращивания с модулями корабля (заполняется во время игры) */
+        mergeEffects: [],
         relations: {
             human: 5,
             synthetic: -20,

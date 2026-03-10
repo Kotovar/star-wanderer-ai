@@ -3,3 +3,4 @@ export * from "./oxygenCheck";
 export * from "./moduleDamage";
 export * from "./powerManagement";
 export * from "./shieldRegen";
+export * from "./crewUtils";

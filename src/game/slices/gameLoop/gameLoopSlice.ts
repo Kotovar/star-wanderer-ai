@@ -42,7 +42,7 @@ export const createGameLoopSlice = (
         if (gameOver) return;
 
         // Проверка повреждений модулей
-        checkModuleDamage(state, get, set);
+        checkModuleDamage(get, set);
 
         // Управление энергией
         managePower(get, set);
