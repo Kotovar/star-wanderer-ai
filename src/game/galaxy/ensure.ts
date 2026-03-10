@@ -124,7 +124,10 @@ export const ensureBlackHoles = (sectors: Sector[]): void => {
     );
 
     for (let i = 0; i < Math.min(missing, tier3Sectors.length); i++) {
-        tier3Sectors[i].star = { type: "blackhole", name: "Чёрная дыра" };
+        tier3Sectors[i].star = {
+            type: "blackhole",
+            name: "star_types.blackhole",
+        };
         tier3Sectors[i].locations = tier3Sectors[i].locations.slice(
             0,
             Math.min(5, tier3Sectors[i].locations.length),

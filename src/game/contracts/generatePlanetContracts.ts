@@ -49,7 +49,7 @@ export const generatePlanetContracts = (
             return {
                 id: `c-${planetId}-human-${Date.now()}-${Math.random()}`,
                 type: "diplomacy",
-                desc: "🌍 Дипломатическая миссия",
+                desc: "contracts.desc_diplomacy_human",
                 targetSector: targetSector?.id,
                 targetSectorName: targetSector?.name,
                 targetPlanetName: target.name,
@@ -78,7 +78,7 @@ export const generatePlanetContracts = (
             return {
                 id: `c-${planetId}-synth-${Date.now()}-${Math.random()}`,
                 type: "research",
-                desc: "🤖 Анализ данных Древних",
+                desc: "contracts.desc_research_synth",
                 sectorId: tgt.id,
                 sectorName: tgt.name,
                 sourcePlanetId: planetId,
@@ -99,7 +99,7 @@ export const generatePlanetContracts = (
             return {
                 id: `c-${planetId}-xeno-${Date.now()}-${Math.random()}`,
                 type: "patrol",
-                desc: "🦠 Сбор биообразцов",
+                desc: "contracts.desc_patrol_xeno",
                 targetSectors: targets.map((t) => t.id),
                 targetSectorNames: targets.map((t) => t.name).join(", "),
                 visitedSectors: [],
@@ -129,7 +129,7 @@ export const generatePlanetContracts = (
             return {
                 id: `c-${planetId}-kryl-${Date.now()}-${Math.random()}`,
                 type: "bounty",
-                desc: "🦎 Дуэль чести",
+                desc: "contracts.desc_bounty_kryl",
                 targetThreat: 3,
                 sourcePlanetId: planetId,
                 sourceSectorName: sector.name,
@@ -154,7 +154,7 @@ export const generatePlanetContracts = (
             return {
                 id: `c-${planetId}-void-${Date.now()}-${Math.random()}`,
                 type: "rescue",
-                desc: "👁️ Путешествие в Пустоту",
+                desc: "contracts.desc_rescue_void",
                 sectorId: tgt.id,
                 sectorName: tgt.name,
                 stormName: storm?.name,
@@ -173,7 +173,7 @@ export const generatePlanetContracts = (
             return {
                 id: `c-${planetId}-crys-${Date.now()}-${Math.random()}`,
                 type: "mining",
-                desc: "💎 Поиск кристалла Древних",
+                desc: "contracts.desc_mining_crystal",
                 sourcePlanetId: planetId,
                 sourceSectorName: sector.name,
                 requiredRace: "crystalline",
@@ -230,7 +230,7 @@ export const generatePlanetContracts = (
                 return {
                     id: `c-${planetId}-scan-${Date.now()}-${Math.random()}`,
                     type: "scan_planet",
-                    desc: `📡 Сканирование: ${targetType}`,
+                    desc: "contracts.desc_scan",
                     planetType: targetType,
                     targetSector: tgt.id,
                     targetSectorName: tgt.name,
@@ -353,7 +353,7 @@ export const generatePlanetContracts = (
                 return {
                     id: `c-${planetId}-${Date.now()}-${Math.random()}`,
                     type: "combat",
-                    desc: "⚔ Зачистка сектора",
+                    desc: "contracts.desc_combat_generic",
                     sectorId: tgt.id,
                     sectorName: tgt.name,
                     sourcePlanetId: planetId,
@@ -369,7 +369,7 @@ export const generatePlanetContracts = (
                 return {
                     id: `c-${planetId}-${Date.now()}-${Math.random()}`,
                     type: "research",
-                    desc: "🔬 Исследование аномалий",
+                    desc: "contracts.desc_research_generic",
                     sectorId: undefined, // Can be completed in any sector
                     sectorName: "любой",
                     sourcePlanetId: planetId,
@@ -398,7 +398,7 @@ export const generatePlanetContracts = (
                 return {
                     id: `c-${planetId}-${Date.now()}-${Math.random()}`,
                     type: "bounty",
-                    desc: "🎯 Охота на пирата",
+                    desc: "contracts.desc_bounty_generic",
                     targetThreat: threat,
                     sourcePlanetId: planetId,
                     sourceSectorName: sector.name,

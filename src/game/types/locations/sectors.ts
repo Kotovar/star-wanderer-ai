@@ -27,16 +27,16 @@ export type StarType =
     | "gas_giant"; // Газовый гигант (коричневый карлик)
 
 export type StarName =
-    | "Красный карлик"
-    | "Жёлтый карлик"
-    | "Белый карлик"
-    | "Голубой гигант"
-    | "Красный сверхгигант"
-    | "Нейтронная звезда"
-    | "Двойная звезда"
-    | "Тройная звезда"
-    | "Чёрная дыра"
-    | "Газовый гигант";
+    | "star_types.red_dwarf"
+    | "star_types.yellow_dwarf"
+    | "star_types.white_dwarf"
+    | "star_types.blue_giant"
+    | "star_types.red_supergiant"
+    | "star_types.neutron_star"
+    | "star_types.double"
+    | "star_types.triple"
+    | "star_types.blackhole"
+    | "star_types.gas_giant";
 
 export interface Sector {
     id: number;

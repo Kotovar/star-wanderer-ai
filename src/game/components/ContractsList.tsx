@@ -74,6 +74,53 @@ export function ContractsList() {
         }
     };
 
+    // Get translated contract name for display
+    const getContractName = (contract: Contract): string => {
+        switch (contract.type) {
+            case "delivery":
+                if (contract.cargo) {
+                    const cargoName =
+                        DELIVERY_GOODS[
+                            contract.cargo as keyof typeof DELIVERY_GOODS
+                        ]?.name || contract.cargo;
+                    return t("contracts.name_delivery", { cargo: cargoName });
+                }
+                return t("contracts.name_delivery", {
+                    cargo: t("contracts.cargo"),
+                });
+            case "scan_planet":
+                return t("contracts.name_scan", {
+                    planetType: contract.planetType || t("contracts.unknown"),
+                });
+            case "combat":
+                return t("contracts.name_combat");
+            case "research":
+                return t("contracts.name_research");
+            case "bounty":
+                return t("contracts.name_bounty");
+            case "diplomacy":
+                return t("contracts.name_diplomacy");
+            case "patrol":
+                return t("contracts.name_patrol");
+            case "rescue":
+                return t("contracts.name_rescue");
+            case "mining":
+                return t("contracts.name_mining");
+            case "supply_run":
+                if (contract.cargo) {
+                    const cargoName =
+                        TRADE_GOODS[contract.cargo as Goods]?.name ||
+                        contract.cargo;
+                    return t("contracts.name_supply", { cargo: cargoName });
+                }
+                return t("contracts.name_supply", {
+                    cargo: t("contracts.cargo"),
+                });
+            default:
+                return contract.desc;
+        }
+    };
+
     const getContractDetails = (contract: Contract) => {
         // Determine destination text
         const getDestText = () => {
@@ -375,13 +422,15 @@ export function ContractsList() {
                         onClick={() => setSelectedContract(contract)}
                     >
                         <div className="text-[#00d4ff] font-bold">
-                            {contract.desc}
+                            {getContractName(contract)}
                         </div>
                         <div className="text-[11px] mt-1">
                             {getStatusText(contract)}
                         </div>
                         <div className="text-[#ffb000] text-xs mt-1">
-                            💰 Награда: {contract.reward}₢
+                            {t("contracts.reward_short", {
+                                reward: contract.reward,
+                            })}
                         </div>
                     </div>
                 ))}
@@ -397,7 +446,7 @@ export function ContractsList() {
                             {selectedContract?.desc}
                         </DialogTitle>
                         <DialogDescription className="sr-only">
-                            Детали задания
+                            {t("contracts.details_title")}
                         </DialogDescription>
                     </DialogHeader>
                     {selectedContract &&
@@ -441,7 +490,7 @@ export function ContractsList() {
 
                                     <div className="pt-4 border-t border-[#00ff41]">
                                         <span className="text-[#00ff41] text-lg">
-                                            💰 Награда:{" "}
+                                            {t("contracts.reward_label")}{" "}
                                             {selectedContract.reward}₢
                                         </span>
                                     </div>

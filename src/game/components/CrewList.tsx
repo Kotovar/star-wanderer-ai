@@ -13,10 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import {
-    PROFESSION_DESCRIPTIONS,
-    PROFESSION_NAMES,
-} from "@/game/constants/crew";
 import { useTranslation } from "@/lib/useTranslation";
 
 export function CrewList() {
@@ -31,7 +27,13 @@ export function CrewList() {
 
     const getModuleName = (moduleId: number) => {
         const mod = modules.find((m) => m.id === moduleId);
-        return mod ? mod.name : t("crew_member.unknown");
+        if (!mod) return t("crew_member.unknown");
+        // Try to get translated module name
+        const translatedName =
+            t(`module_names.${mod.type}`) !== `module_names.${mod.type}`
+                ? t(`module_names.${mod.type}`)
+                : mod.name;
+        return translatedName;
     };
 
     const getAdjacentModules = (moduleId: number) => {
@@ -55,9 +57,6 @@ export function CrewList() {
                         100,
                         ((member.exp || 0) / expNeeded) * 100,
                     );
-                    const profName =
-                        PROFESSION_NAMES[member.profession] ||
-                        member.profession;
                     // Use combat assignment during combat, civilian assignment otherwise
                     const currentAssignment = isCombat
                         ? member.combatAssignment
@@ -74,38 +73,42 @@ export function CrewList() {
                             className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-2.5 text-xs cursor-pointer transition-all hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_10px_rgba(0,255,65,0.5)]"
                             onClick={() => setSelectedCrew(member)}
                         >
-                            <div className="flex items-center gap-2">
-                                {race && (
-                                    <span style={{ color: race.color }}>
-                                        {race.icon}
+                            <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    {race && (
+                                        <span style={{ color: race.color }}>
+                                            {race.icon}
+                                        </span>
+                                    )}
+                                    <span className="text-[#00d4ff] font-bold">
+                                        {member.name}
                                     </span>
-                                )}
-                                <span className="text-[#00d4ff] font-bold">
-                                    {member.name}
-                                </span>
-                                {race && (
-                                    <span
-                                        className="text-[10px] px-1.5 py-0.5 rounded border"
-                                        style={{
-                                            borderColor: race.color,
-                                            color: race.color,
-                                        }}
-                                    >
-                                        {race.name}
+                                    {race && (
+                                        <span
+                                            className="text-[10px] px-1.5 py-0.5 rounded border"
+                                            style={{
+                                                borderColor: race.color,
+                                                color: race.color,
+                                            }}
+                                        >
+                                            {t(`races.${member.race}.name`)}
+                                        </span>
+                                    )}
+                                    {member.movedThisTurn && (
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded border border-[#ff0040] text-[#ff0040]">
+                                            {t("crew_member.moved")}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="text-[#ffb000] text-[11px]">
+                                    {t(`professions.${member.profession}`)}
+                                    {member.level
+                                        ? ` LV${member.level}`
+                                        : ""}{" "}
+                                    <span className="text-[#00d4ff]">
+                                        {assignText}
                                     </span>
-                                )}
-                                {member.movedThisTurn && (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded border border-[#ff0040] text-[#ff0040]">
-                                        {t("crew_member.moved")}
-                                    </span>
-                                )}
-                            </div>
-                            <div className="text-[#ffb000] text-[11px] mt-1">
-                                {profName}
-                                {member.level ? ` LV${member.level}` : ""}{" "}
-                                <span className="text-[#00d4ff]">
-                                    {assignText}
-                                </span>
+                                </div>
                             </div>
                             <div className="text-[#888] text-[10px] mt-1">
                                 📍 {moduleName}
@@ -213,10 +216,14 @@ export function CrewList() {
                                                         color: race.color,
                                                     }}
                                                 >
-                                                    {race.name}
+                                                    {t(
+                                                        `races.${selectedCrew.race}.name`,
+                                                    )}
                                                 </div>
                                                 <div className="text-xs text-gray-400">
-                                                    {race.description}
+                                                    {t(
+                                                        `races.${selectedCrew.race}.description`,
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -228,17 +235,20 @@ export function CrewList() {
                                             )}{" "}
                                         </span>
                                         <span className="text-[#00d4ff]">
-                                            {currentModule?.name ||
-                                                t("crew_member.unknown")}
+                                            {currentModule
+                                                ? getModuleName(
+                                                      currentModule.id,
+                                                  )
+                                                : t("crew_member.unknown")}
                                         </span>
                                     </div>
                                     <div>
                                         <span className="text-[#ffb000]">
                                             {t("crew_member.profession")}{" "}
                                         </span>
-                                        {PROFESSION_NAMES[
-                                            selectedCrew.profession
-                                        ] || selectedCrew.profession}
+                                        {t(
+                                            `professions.${selectedCrew.profession}`,
+                                        )}
                                         {selectedCrew.level
                                             ? ` [${t("crew_member.level_short")}${selectedCrew.level}]`
                                             : ""}
@@ -375,7 +385,10 @@ export function CrewList() {
                                                                 }}
                                                                 className="bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-xs py-1 px-2 h-auto"
                                                             >
-                                                                → {module.name}{" "}
+                                                                →{" "}
+                                                                {getModuleName(
+                                                                    module.id,
+                                                                )}{" "}
                                                                 #{typeIndex} (
                                                                 {module.x},
                                                                 {module.y})
@@ -530,32 +543,94 @@ export function CrewList() {
                                                     0 && (
                                                     <div className="mt-1.5 space-y-1">
                                                         {race.specialTraits.map(
-                                                            (trait) => (
-                                                                <div
-                                                                    key={
-                                                                        trait.id
-                                                                    }
-                                                                    className={`text-[10px] ${
-                                                                        trait.type ===
-                                                                        "positive"
-                                                                            ? "text-[#00ff41]"
-                                                                            : trait.type ===
-                                                                                "negative"
-                                                                              ? "text-[#ff4444]"
-                                                                              : "text-[#888]"
-                                                                    }`}
-                                                                >
-                                                                    <span className="font-bold">
-                                                                        {
-                                                                            trait.name
+                                                            (trait) => {
+                                                                // Map Russian trait names to translation keys
+                                                                const traitNameToKey: Record<
+                                                                    string,
+                                                                    string
+                                                                > = {
+                                                                    "Быстрый ученик":
+                                                                        "quick_learner",
+                                                                    "Отсутствие эмоций":
+                                                                        "no_happiness",
+                                                                    "Сбой ИИ":
+                                                                        "ai_glitch",
+                                                                    "Техно-симбиоз":
+                                                                        "symbiosis",
+                                                                    "Беспокоящее присутствие":
+                                                                        "disturbing_presence",
+                                                                    Устрашение:
+                                                                        "intimidation",
+                                                                    "Пустотная защита":
+                                                                        "void_shield",
+                                                                    Беспокойство:
+                                                                        "unnerving",
+                                                                    "Эфирное тело":
+                                                                        "low_health",
+                                                                    "Кристаллическая броня":
+                                                                        "crystal_armor",
+                                                                    "Кристаллический резонанс":
+                                                                        "resonance",
+                                                                    Хрупкость:
+                                                                        "brittle_crystal",
+                                                                };
+                                                                const traitKey =
+                                                                    traitNameToKey[
+                                                                        trait
+                                                                            .name
+                                                                    ] ||
+                                                                    trait.name
+                                                                        .toLowerCase()
+                                                                        .replace(
+                                                                            /\s+/g,
+                                                                            "_",
+                                                                        );
+                                                                const translatedName =
+                                                                    t(
+                                                                        `racial_traits.${traitKey}.name`,
+                                                                    ) !==
+                                                                    `racial_traits.${traitKey}.name`
+                                                                        ? t(
+                                                                              `racial_traits.${traitKey}.name`,
+                                                                          )
+                                                                        : trait.name;
+                                                                const translatedDesc =
+                                                                    t(
+                                                                        `racial_traits.${traitKey}.description`,
+                                                                    ) !==
+                                                                    `racial_traits.${traitKey}.description`
+                                                                        ? t(
+                                                                              `racial_traits.${traitKey}.description`,
+                                                                          )
+                                                                        : trait.description;
+
+                                                                return (
+                                                                    <div
+                                                                        key={
+                                                                            trait.id
                                                                         }
-                                                                    </span>
-                                                                    :{" "}
-                                                                    {
-                                                                        trait.description
-                                                                    }
-                                                                </div>
-                                                            ),
+                                                                        className={`text-[10px] ${
+                                                                            trait.type ===
+                                                                            "positive"
+                                                                                ? "text-[#00ff41]"
+                                                                                : trait.type ===
+                                                                                    "negative"
+                                                                                  ? "text-[#ff4444]"
+                                                                                  : "text-[#888]"
+                                                                        }`}
+                                                                    >
+                                                                        <span className="font-bold">
+                                                                            {
+                                                                                translatedName
+                                                                            }
+                                                                        </span>
+                                                                        :{" "}
+                                                                        {
+                                                                            translatedDesc
+                                                                        }
+                                                                    </div>
+                                                                );
+                                                            },
                                                         )}
                                                     </div>
                                                 )}
@@ -569,34 +644,149 @@ export function CrewList() {
                                                 </span>
                                                 <br />
                                                 {selectedCrew.traits.map(
-                                                    (trait, idx) => (
-                                                        <div
-                                                            key={`${selectedCrew.id}-trait-${idx}-${trait.type}`}
-                                                            className={
-                                                                trait.type ===
-                                                                "negative"
-                                                                    ? "text-[#ff0040]"
-                                                                    : trait.type ===
-                                                                        "neutral"
-                                                                      ? "text-[#888]"
-                                                                      : "text-[#00ff41]"
-                                                            }
-                                                        >
-                                                            {trait.name}:{" "}
-                                                            {trait.desc}
-                                                        </div>
-                                                    ),
+                                                    (trait, idx) => {
+                                                        // Map Russian trait names to translation keys
+                                                        const traitNameToKey: Record<
+                                                            string,
+                                                            string
+                                                        > = {
+                                                            Мастер: "master",
+                                                            Бунтарь: "rebel",
+                                                            "Меткий стрелок":
+                                                                "sharpshooter",
+                                                            Выносливый: "tough",
+                                                            Трус: "coward",
+                                                            Легенда: "legend",
+                                                            "Быстрый ученик":
+                                                                "quick_learner",
+                                                            "Отсутствие эмоций":
+                                                                "no_happiness",
+                                                            "Сбой ИИ":
+                                                                "ai_glitch",
+                                                            "Техно-симбиоз":
+                                                                "symbiosis",
+                                                            "Беспокоящее присутствие":
+                                                                "disturbing_presence",
+                                                            Устрашение:
+                                                                "intimidation",
+                                                            "Пустотная защита":
+                                                                "void_shield",
+                                                            Беспокойство:
+                                                                "unnerving",
+                                                            "Эфирное тело":
+                                                                "low_health",
+                                                            "Кристаллическая броня":
+                                                                "crystal_armor",
+                                                            "Кристаллический резонанс":
+                                                                "resonance",
+                                                            Хрупкость:
+                                                                "brittle_crystal",
+                                                            Удачливый: "lucky",
+                                                            Трудолюбивый:
+                                                                "hardworking",
+                                                            Болезненный:
+                                                                "sickly",
+                                                            Ветеран: "veteran",
+                                                            Лидер: "leader",
+                                                            Опытный:
+                                                                "experienced",
+                                                            Специалист:
+                                                                "skilled",
+                                                            Элита: "elite",
+                                                            Гений: "genius",
+                                                            Вундеркинд:
+                                                                "prodigy",
+                                                            Талант: "natural",
+                                                            Адаптированный:
+                                                                "adapted",
+                                                            Сильный: "strong",
+                                                            Слабый: "weak",
+                                                            Быстрый: "fast",
+                                                            Медленный: "slow",
+                                                            Храбрый: "brave",
+                                                            Боязливый:
+                                                                "fearful",
+                                                            Оптимист:
+                                                                "optimist",
+                                                            Пессимист:
+                                                                "pessimist",
+                                                            Дружелюбный:
+                                                                "friendly",
+                                                            Агрессивный:
+                                                                "aggressive",
+                                                            Спокойный: "calm",
+                                                            Нервный: "nervous",
+                                                            Сосредоточенный:
+                                                                "focused",
+                                                            Рассеянный:
+                                                                "distracted",
+                                                            Эффективный:
+                                                                "efficient",
+                                                            Расточительный:
+                                                                "wasteful",
+                                                            "Рождённый под счастливой звездой":
+                                                                "lucky_star",
+                                                            Проклятый: "cursed",
+                                                        };
+                                                        const traitKey =
+                                                            traitNameToKey[
+                                                                trait.name
+                                                            ] ||
+                                                            trait.name
+                                                                .toLowerCase()
+                                                                .replace(
+                                                                    /\s+/g,
+                                                                    "_",
+                                                                );
+                                                        const translatedName =
+                                                            t(
+                                                                `racial_traits.${traitKey}.name`,
+                                                            ) !==
+                                                            `racial_traits.${traitKey}.name`
+                                                                ? t(
+                                                                      `racial_traits.${traitKey}.name`,
+                                                                  )
+                                                                : trait.name;
+                                                        const translatedDesc =
+                                                            t(
+                                                                `racial_traits.${traitKey}.description`,
+                                                            ) !==
+                                                            `racial_traits.${traitKey}.description`
+                                                                ? t(
+                                                                      `racial_traits.${traitKey}.description`,
+                                                                  )
+                                                                : trait.desc;
+
+                                                        return (
+                                                            <div
+                                                                key={`${selectedCrew.id}-trait-${idx}-${trait.type}`}
+                                                                className={
+                                                                    trait.type ===
+                                                                    "negative"
+                                                                        ? "text-[#ff0040]"
+                                                                        : trait.type ===
+                                                                            "neutral"
+                                                                          ? "text-[#888]"
+                                                                          : "text-[#00ff41]"
+                                                                }
+                                                            >
+                                                                {translatedName}
+                                                                :{" "}
+                                                                {translatedDesc}
+                                                            </div>
+                                                        );
+                                                    },
                                                 )}
                                             </div>
                                         )}
                                     <div>
                                         <span className="text-[#ffb000]">
-                                            Особенности:
+                                            {t("crew_member.features")}
                                         </span>
                                         <br />
-                                        {PROFESSION_DESCRIPTIONS[
-                                            selectedCrew.profession
-                                        ] || t("crew_member.specialist")}
+                                        {t(
+                                            `profession_descriptions.${selectedCrew.profession}`,
+                                        )}
                                     </div>
 
                                     {/* Fire crew button */}

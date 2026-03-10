@@ -2,10 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useGameStore } from "@/game/store";
-import {
-    PLANET_SPECIALIZATIONS,
-    PLANET_DESCRIPTIONS,
-} from "@/game/constants/planets";
+import { PLANET_SPECIALIZATIONS } from "@/game/constants/planets";
 import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
 import { PlanetSpecializationPanel } from "./PlanetSpecializationPanel";
@@ -15,6 +12,12 @@ import { TRADE_GOODS } from "@/game/constants/goods";
 import type { Goods } from "@/game/types/goods";
 import { PlanetVisual } from "./PlanetVisual";
 import { getPlanetBackgroundClass } from "@/game/planets";
+import { useTranslation } from "@/lib/useTranslation";
+import {
+    getLocationName,
+    getPlanetDescription,
+    getPlanetTypeName,
+} from "@/lib/translationHelpers";
 
 export function PlanetPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
@@ -22,6 +25,8 @@ export function PlanetPanel() {
     const credits = useGameStore((s) => s.credits);
     const activeContracts = useGameStore((s) => s.activeContracts);
     const completedContractIds = useGameStore((s) => s.completedContractIds);
+
+    const { t } = useTranslation();
 
     const acceptContract = useGameStore((s) => s.acceptContract);
     const completeDeliveryContract = useGameStore(
@@ -72,27 +77,31 @@ export function PlanetPanel() {
                     <PlanetVisual planetType={currentLocationPlanetType} />
 
                     <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                        ▸ {currentLocation.name} -{" "}
-                        {currentLocationPlanetType ?? ""}
+                        ▸ {getLocationName(currentLocation.name, t)} -{" "}
+                        {currentLocationPlanetType
+                            ? getPlanetTypeName(currentLocationPlanetType, t)
+                            : ""}
                     </div>
                     <div className="text-sm text-[#888] italic">
                         {currentLocationPlanetType
-                            ? PLANET_DESCRIPTIONS[currentLocationPlanetType]
-                            : "Описание недоступно"}
+                            ? getPlanetDescription(
+                                  currentLocationPlanetType,
+                                  t,
+                              ) || t("planet_panel.empty_description")
+                            : t("planet_panel.empty_description")}
                     </div>
                     <div className="text-sm leading-relaxed">
-                        Пустая планета. Нет населения и заданий.
+                        {t("planet_panel.empty_planet")}
                         <br />
                         <br />
                         {canScout ? (
                             <span className="text-[#ffb000]">
-                                Эта планета доступна для разведки (
-                                {scoutedTimes}
+                                {t("planet_panel.can_scout")} ({scoutedTimes}
                                 /3).
                             </span>
                         ) : (
                             <span className="text-[#00ff41]">
-                                Планета полностью исследована (3/3).
+                                {t("planet_panel.fully_explored")} (3/3).
                             </span>
                         )}
                     </div>
@@ -101,44 +110,53 @@ export function PlanetPanel() {
                     {lastScoutResult && (
                         <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3 mt-2">
                             <div className="text-[#ffb000] font-bold text-sm mb-1">
-                                Последняя разведка:
+                                {t("planet_panel.last_scouting")}
                             </div>
-                            {lastScoutResult.type === "credits" && (
-                                <div className="text-[#00ff41] text-sm">
-                                    💰 Найдены ресурсы: +{lastScoutResult.value}
-                                    ₢
-                                </div>
-                            )}
-                            {lastScoutResult.type === "tradeGood" && (
-                                <div className="text-[#00ff41] text-sm">
-                                    📦 Найден груз: {lastScoutResult.itemName}{" "}
-                                    (5т)
-                                </div>
-                            )}
+                            {lastScoutResult.type === "credits" &&
+                                lastScoutResult.value && (
+                                    <div className="text-[#00ff41] text-sm">
+                                        {t("planet_panel.found_resources", {
+                                            value: lastScoutResult.value,
+                                        })}
+                                    </div>
+                                )}
+                            {lastScoutResult.type === "tradeGood" &&
+                                lastScoutResult.itemName && (
+                                    <div className="text-[#00ff41] text-sm">
+                                        {t("planet_panel.found_goods", {
+                                            name: lastScoutResult.itemName,
+                                        })}
+                                    </div>
+                                )}
                             {lastScoutResult.type === "nothing" && (
                                 <div className="text-[#888] text-sm">
-                                    ❌ Ничего не найдено
+                                    {t("planet_panel.found_nothing")}
                                 </div>
                             )}
-                            {lastScoutResult.type === "enemy" && (
-                                <div className="text-[#ff0040] text-sm">
-                                    ⚔️ Засада! Враг с угрозой{" "}
-                                    {lastScoutResult.enemyThreat}
-                                </div>
-                            )}
+                            {lastScoutResult.type === "enemy" &&
+                                lastScoutResult.enemyThreat && (
+                                    <div className="text-[#ff0040] text-sm">
+                                        {t("planet_panel.found_enemy", {
+                                            threat: lastScoutResult.enemyThreat,
+                                        })}
+                                    </div>
+                                )}
                         </div>
                     )}
 
                     {hasScout && canScout && (
                         <>
                             <div className="font-['Orbitron'] font-bold text-base text-[#ffb000] mt-4">
-                                Разведка
+                                {t("planet_panel.scouting")}
                             </div>
                             <div className="text-sm leading-relaxed">
-                                Отправьте разведчика для исследования планеты.
-                                <br />• Ресурсы (100-300₢)
-                                <br />• Торговые товары (5т)
-                                <br />• Встреча с врагами
+                                {t("planet_panel.scouting_desc_1")}
+                                <br />
+                                {t("planet_panel.scouting_credits")}
+                                <br />
+                                {t("planet_panel.scouting_goods")}
+                                <br />
+                                {t("planet_panel.scouting_enemies")}
                             </div>
                             <Button
                                 onClick={() =>
@@ -163,7 +181,7 @@ export function PlanetPanel() {
                             onClick={showSectorMap}
                             className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider"
                         >
-                            ПОКИНУТЬ ПЛАНЕТУ
+                            {t("planet_panel.leave_planet")}
                         </Button>
                     </div>
                 </div>
@@ -196,14 +214,18 @@ export function PlanetPanel() {
             {/* Content overlay for readability */}
             <div className="relative z-10 bg-[rgba(5,8,16,0.85)] p-4 rounded border border-[#333]">
                 <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                    ▸ {currentLocation.name} - {currentLocationPlanetType ?? ""}
+                    ▸ {getLocationName(currentLocation.name, t)} -{" "}
+                    {currentLocationPlanetType
+                        ? getPlanetTypeName(currentLocationPlanetType, t)
+                        : ""}
                 </div>
 
                 {/* Planet type description */}
                 <div className="text-sm text-[#888] italic leading-relaxed">
                     {currentLocationPlanetType
-                        ? PLANET_DESCRIPTIONS[currentLocationPlanetType]
-                        : "Описание недоступно"}
+                        ? getPlanetDescription(currentLocationPlanetType, t) ||
+                          t("planet_panel.empty_description")
+                        : t("planet_panel.empty_description")}
                 </div>
 
                 {/* Population and Race info */}
@@ -222,13 +244,14 @@ export function PlanetPanel() {
                                     style={{ color: race.color }}
                                     className="font-bold"
                                 >
-                                    {race.pluralName}
+                                    {t(
+                                        `races.${currentLocation.dominantRace}.plural`,
+                                    )}
                                 </div>
                                 {currentLocation.population && (
                                     <div className="text-xs text-gray-400">
-                                        👥{" "}
-                                        {currentLocation.population.toLocaleString()}{" "}
-                                        тыс.
+                                        👥 {currentLocation.population}{" "}
+                                        {t("planet_panel.thousands")}
                                     </div>
                                 )}
                             </div>
@@ -250,8 +273,8 @@ export function PlanetPanel() {
                                 }`}
                             >
                                 {isOnCooldown
-                                    ? "⏱️ Использовано"
-                                    : "🌟 Активность"}
+                                    ? t("planet_panel.on_cooldown")
+                                    : t("planet_panel.activity")}
                             </Button>
                         )}
                 </div>
@@ -260,20 +283,20 @@ export function PlanetPanel() {
                 <PlanetVisual planetType={currentLocationPlanetType} />
 
                 <div className="text-sm">
-                    Населённая планета.
+                    {t("planet_panel.inhabited_planet")}
                     {availableContracts.length > 0
-                        ? " Доступны задачи."
-                        : " Задач нет."}
+                        ? ` ${t("planet_panel.tasks_available")}`
+                        : ` ${t("planet_panel.no_tasks")}`}
                 </div>
 
                 {/* Delivery contracts completion */}
                 {deliveryContracts.length > 0 && (
                     <>
                         <div className="font-['Orbitron'] font-bold text-base text-[#00ff41] mt-4">
-                            Сдать груз
+                            {t("planet_panel.submit_cargo")}
                         </div>
                         <div className="text-xs text-[#888] mb-2">
-                            Вы прибыли в место назначения
+                            {t("planet_panel.arrived_at_destination")}
                         </div>
                         <div className="flex flex-col gap-2">
                             {deliveryContracts.map((c) => (
@@ -306,7 +329,7 @@ export function PlanetPanel() {
                                         }
                                         className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs"
                                     >
-                                        СДАТЬ
+                                        {t("planet_panel.submit")}
                                     </Button>
                                 </div>
                             ))}
@@ -318,7 +341,7 @@ export function PlanetPanel() {
                 {availableContracts.length > 0 && (
                     <>
                         <div className="font-['Orbitron'] font-bold text-base text-[#ffb000] mt-4">
-                            Доступные задачи
+                            {t("planet_panel.available_tasks")}
                         </div>
                         <div className="flex flex-col gap-2 max-h-75 overflow-y-auto">
                             {availableContracts.map((c) => {
@@ -359,7 +382,19 @@ export function PlanetPanel() {
                                         <div className="flex justify-between items-start">
                                             <div className="flex-1">
                                                 <div className="text-[#00d4ff] font-bold flex items-center gap-2">
-                                                    {c.desc}
+                                                    {c.desc.startsWith(
+                                                        "contracts.",
+                                                    )
+                                                        ? t(c.desc, {
+                                                              planetType:
+                                                                  c.planetType
+                                                                      ? getPlanetTypeName(
+                                                                            c.planetType,
+                                                                            t,
+                                                                        )
+                                                                      : "",
+                                                          })
+                                                        : c.desc}
                                                     {c.isRaceQuest &&
                                                         raceInfo && (
                                                             <span
@@ -370,7 +405,9 @@ export function PlanetPanel() {
                                                                 }}
                                                             >
                                                                 {raceInfo.icon}{" "}
-                                                                {raceInfo.name}
+                                                                {t(
+                                                                    `races.${c.requiredRace}.plural`,
+                                                                )}
                                                             </span>
                                                         )}
                                                 </div>
@@ -385,8 +422,8 @@ export function PlanetPanel() {
                                                 className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs ml-2"
                                             >
                                                 {isActive
-                                                    ? "ПРИНЯТ"
-                                                    : "ПРИНЯТЬ"}
+                                                    ? t("contracts.accepted")
+                                                    : t("contracts.accept")}
                                             </Button>
                                         </div>
 
@@ -396,55 +433,149 @@ export function PlanetPanel() {
                                             <div className="text-[#00ff41]">
                                                 {c.type === "delivery" &&
                                                     c.cargo &&
-                                                    `📦 Доставить "${DELIVERY_GOODS[c.cargo as DeliveryGoods].name}" (10т) на ${getDestText(c)}`}
+                                                    t(
+                                                        "contracts.desc_delivery",
+                                                        {
+                                                            cargo: DELIVERY_GOODS[
+                                                                c.cargo as DeliveryGoods
+                                                            ].name,
+                                                            destination:
+                                                                getDestText(
+                                                                    c,
+                                                                ) || "",
+                                                        },
+                                                    )}
                                                 {c.type === "combat" &&
-                                                    `⚔ Уничтожить всех врагов в секторе ${c.sectorName}`}
+                                                    t("contracts.desc_combat", {
+                                                        sector:
+                                                            c.sectorName || "",
+                                                    })}
                                                 {c.type === "research" &&
-                                                    `🔬 Исследовать ${c.requiresAnomalies} аномалии`}
+                                                    t(
+                                                        "contracts.desc_research",
+                                                        {
+                                                            count:
+                                                                c.requiresAnomalies ||
+                                                                0,
+                                                        },
+                                                    )}
                                                 {c.type === "bounty" &&
-                                                    `🎯 Уничтожить врага (угроза ${c.targetThreat}) в секторе ${c.targetSectorName}`}
+                                                    t("contracts.desc_bounty", {
+                                                        threat:
+                                                            c.targetThreat || 1,
+                                                        sector:
+                                                            c.targetSectorName ||
+                                                            "",
+                                                    })}
                                                 {c.type === "diplomacy" &&
-                                                    `🌍 Посетить планету ${c.targetPlanetName} (${c.targetPlanetType}) в секторе ${c.targetSectorName}`}
+                                                    t(
+                                                        "contracts.desc_diplomacy",
+                                                        {
+                                                            planet:
+                                                                c.targetPlanetName ||
+                                                                "",
+                                                            type:
+                                                                c.targetPlanetType ||
+                                                                "",
+                                                            sector:
+                                                                c.targetSectorName ||
+                                                                "",
+                                                        },
+                                                    )}
                                                 {c.type === "patrol" &&
-                                                    `🦠 Посетить сектора: ${c.targetSectorNames} (${c.visitedSectors?.length || 0}/${c.targetSectors?.length || 0})`}
+                                                    t("contracts.desc_patrol", {
+                                                        sectors:
+                                                            c.targetSectorNames ||
+                                                            "",
+                                                        visited:
+                                                            c.visitedSectors
+                                                                ?.length || 0,
+                                                        target:
+                                                            c.targetSectors
+                                                                ?.length || 0,
+                                                    })}
                                                 {c.type === "rescue" &&
-                                                    `👁️ Войти в ${c.stormName || "шторм"} в секторе ${c.sectorName}`}
+                                                    t("contracts.desc_rescue", {
+                                                        stormName:
+                                                            c.stormName ||
+                                                            t(
+                                                                "storm.radiation_cloud",
+                                                            ),
+                                                        sectorName:
+                                                            c.sectorName || "",
+                                                    })}
                                                 {c.type === "mining" &&
-                                                    `💎 Найти артефакт (исследовать аномалии или победить босса)`}
+                                                    t("contracts.desc_mining")}
                                                 {c.type === "scan_planet" &&
-                                                    `📡 Отсканировать планету типа "${c.planetType}" в секторе ${c.targetSectorName}`}
+                                                    t("contracts.desc_scan", {
+                                                        planetType:
+                                                            c.planetType || "",
+                                                        sector:
+                                                            c.targetSectorName ||
+                                                            "",
+                                                    })}
                                                 {c.type === "supply_run" &&
                                                     c.cargo &&
-                                                    `📦 Найти и доставить ${TRADE_GOODS[c.cargo as Goods]?.name} (${c.quantity}т) на ${c.sourceName || c.sourceSectorName}`}
+                                                    t("contracts.desc_supply", {
+                                                        cargo:
+                                                            TRADE_GOODS[
+                                                                c.cargo as Goods
+                                                            ]?.name || "",
+                                                        quantity:
+                                                            c.quantity || 0,
+                                                        destination:
+                                                            c.sourceName ||
+                                                            c.sourceSectorName ||
+                                                            "",
+                                                    })}
                                             </div>
 
                                             {/* Where to turn in */}
                                             <div className="text-[#ffb000]">
                                                 {c.type === "delivery" &&
-                                                    `✓ Сдать груз на месте назначения`}
+                                                    t(
+                                                        "contracts.turn_in_delivery",
+                                                    )}
                                                 {c.type === "combat" &&
-                                                    `✓ Автоматически после победы`}
+                                                    t(
+                                                        "contracts.turn_in_combat",
+                                                    )}
                                                 {c.type === "research" &&
-                                                    `✓ Автоматически после исследования`}
+                                                    t(
+                                                        "contracts.turn_in_research",
+                                                    )}
                                                 {c.type === "bounty" &&
-                                                    `✓ Автоматически после победы`}
+                                                    t(
+                                                        "contracts.turn_in_bounty",
+                                                    )}
                                                 {c.type === "diplomacy" &&
-                                                    `✓ Автоматически при посещении планеты`}
+                                                    t(
+                                                        "contracts.turn_in_diplomacy",
+                                                    )}
                                                 {c.type === "patrol" &&
-                                                    `✓ Автоматически после посещения всех секторов`}
+                                                    t(
+                                                        "contracts.turn_in_patrol",
+                                                    )}
                                                 {c.type === "rescue" &&
-                                                    `✓ Автоматически после прохождения шторма`}
+                                                    t(
+                                                        "contracts.turn_in_rescue",
+                                                    )}
                                                 {c.type === "mining" &&
-                                                    `✓ Автоматически при находке артефакта`}
+                                                    t(
+                                                        "contracts.turn_in_mining",
+                                                    )}
                                                 {c.type === "scan_planet" &&
-                                                    `✓ Автоматически после сканирования`}
+                                                    t("contracts.turn_in_scan")}
                                                 {c.type === "supply_run" &&
-                                                    `✓ Автоматически после поставки`}
+                                                    t(
+                                                        "contracts.turn_in_supply",
+                                                    )}
                                             </div>
 
                                             {/* Reward */}
                                             <div className="text-[#ffaa00] font-bold">
-                                                💰 Награда: {c.reward}₢
+                                                {t("contracts.reward_label")}{" "}
+                                                {c.reward}₢
                                             </div>
                                         </div>
                                     </div>
@@ -457,7 +588,7 @@ export function PlanetPanel() {
                 {availableContracts.length === 0 &&
                     deliveryContracts.length === 0 && (
                         <div className="text-sm text-[#888] mt-4">
-                            Нет доступных заданий.
+                            {t("contracts.no_contracts")}
                         </div>
                     )}
 
@@ -466,7 +597,7 @@ export function PlanetPanel() {
                         onClick={showSectorMap}
                         className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider"
                     >
-                        ПОКИНУТЬ ПЛАНЕТУ
+                        {t("planet_panel.leave_planet")}
                     </Button>
                 </div>
 

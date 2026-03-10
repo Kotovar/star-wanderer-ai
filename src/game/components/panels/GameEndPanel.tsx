@@ -2,6 +2,7 @@
 
 import { useGameStore } from "@/game/store";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/useTranslation";
 
 interface GameEndPanelProps {
     type: "victory" | "gameover";
@@ -12,15 +13,15 @@ const THEMES = {
     victory: {
         border: "#ff00ff",
         bg: "rgba(255,0,255,0.1)",
-        title: "🎉 ПОБЕДА!",
-        reasonTitle: "ГРАНИЦА ГАЛАКТИКИ ДОСТИГНУТА:",
+        titleKey: "game_end.victory_title",
+        reasonTitleKey: "game_end.reason_title",
         reasonIcon: "🌟",
     },
     gameover: {
         border: "#ff0040",
         bg: "rgba(255,0,64,0.1)",
-        title: "💥 ИГРА ОКОНЧЕНА",
-        reasonTitle: "ПРИЧИНА ПОРАЖЕНИЯ:",
+        titleKey: "game_end.gameover_title",
+        reasonTitleKey: "game_end.defeat_reason",
         reasonIcon: "⚠️",
     },
 } as const;
@@ -31,6 +32,7 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
     const crew = useGameStore((s) => s.crew);
     const ship = useGameStore((s) => s.ship);
     const restartGame = useGameStore((s) => s.restartGame);
+    const { t } = useTranslation();
 
     const theme = THEMES[type];
     const isVictory = type === "victory";
@@ -58,11 +60,11 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                         className="font-['Orbitron'] text-2xl font-bold animate-pulse"
                         style={{ color: theme.border }}
                     >
-                        {theme.title}
+                        {t(theme.titleKey)}
                     </h2>
                     <div className="text-sm" style={{ color: theme.border }}>
-                        Ход: {turn} | Сектор:{" "}
-                        {currentSector?.name ?? "Неизвестно"}
+                        {t("game.turn")}: {turn} | {t("game.sector")}:{" "}
+                        {currentSector?.name ?? t("game_end.unknown")}
                     </div>
                 </div>
 
@@ -78,7 +80,7 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                             className="font-bold text-lg mb-2"
                             style={{ color: theme.border }}
                         >
-                            {theme.reasonIcon} {theme.reasonTitle}
+                            {theme.reasonIcon} {t(theme.reasonTitleKey)}
                         </div>
                         <div className="text-[#ffb000] text-base whitespace-pre-line">
                             {reason}
@@ -87,11 +89,13 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
 
                     <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4">
                         <div className="text-[#00ff41] font-bold text-lg mb-3">
-                            📊 СОСТОЯНИЕ КОРАБЛЯ:
+                            📊 {t("game_end.ship_status")}:
                         </div>
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-[#888]">Корпус:</span>
+                                <span className="text-[#888]">
+                                    {t("game_end.hull_label")}
+                                </span>
                                 <span
                                     className={
                                         !isVictory && hullHealth <= 0
@@ -99,17 +103,22 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                                             : "text-[#00ff41]"
                                     }
                                 >
-                                    {hullHealth}/{hullMaxHealth} ед.
+                                    {hullHealth}/{hullMaxHealth}{" "}
+                                    {t("game_end.units")}
                                 </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-[#888]">Щиты:</span>
+                                <span className="text-[#888]">
+                                    {t("game_end.shields_label")}
+                                </span>
                                 <span className="text-[#0080ff]">
                                     {ship.shields}/{ship.maxShields}
                                 </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-[#888]">Экипаж:</span>
+                                <span className="text-[#888]">
+                                    {t("game_end.crew_label")}
+                                </span>
                                 <span
                                     className={
                                         !isVictory && crew.length === 0
@@ -121,7 +130,9 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                                 </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-[#888]">Модули:</span>
+                                <span className="text-[#888]">
+                                    {t("game_end.modules_label")}
+                                </span>
                                 <span className="text-[#00ff41]">
                                     {activeModules}/{ship.modules.length}
                                 </span>
@@ -132,12 +143,10 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                     {!isVictory && crew.length === 0 && (
                         <div className="bg-[rgba(255,0,64,0.1)] border border-[#ff0040] p-4">
                             <div className="text-[#ff0040] font-bold text-lg mb-2">
-                                ☠️ ЭКИПАЖ ПОГИБ:
+                                ☠️ {t("game_end.crew_lost")}:
                             </div>
                             <div className="text-[#888] text-sm">
-                                Все члены экипажа погибли или покинули корабль.
-                                <br />
-                                Без ИИ Ядра корабль не может функционировать.
+                                {t("game_end.crew_lost_desc")}
                             </div>
                         </div>
                     )}
@@ -145,7 +154,7 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                     {isVictory && (
                         <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-4">
                             <div className="text-[#00d4ff] font-bold text-lg mb-3">
-                                👥 ЭКИПАЖ:
+                                👥 {t("ship.crew")}:
                             </div>
                             <div className="space-y-1 text-sm">
                                 {crew.map((member) => (
@@ -154,10 +163,15 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                                         className="flex justify-between"
                                     >
                                         <span className="text-[#888]">
-                                            {member.name} ({member.profession})
+                                            {member.name} (
+                                            {t(
+                                                `professions.${member.profession}`,
+                                            )}
+                                            )
                                         </span>
                                         <span className="text-[#00ff41]">
-                                            Ур.{member.level}
+                                            {t("crew_member.level_short")}
+                                            {member.level}
                                         </span>
                                     </div>
                                 ))}
@@ -178,7 +192,7 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                                 ["--border-color" as string]: theme.border,
                             }}
                         >
-                            🔄 НАЧАТЬ ЗАНОВО
+                            🔄 {t("game_end.restart")}
                         </Button>
                     </div>
 
@@ -190,7 +204,7 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                                 }}
                                 className="w-full bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-lg py-6"
                             >
-                                🚀 ПРОДОЛЖИТЬ ИССЛЕДОВАНИЕ
+                                🚀 {t("game_end.continue_exploration")}
                             </Button>
                         </div>
                     )}

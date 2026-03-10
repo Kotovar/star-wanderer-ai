@@ -4,6 +4,7 @@ import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
 import type { StormType } from "../types";
 import { useTranslation } from "@/lib/useTranslation";
+import { ShipStatsPanel } from "./ShipStatsPanel";
 
 // StormType
 type StormDetails = {
@@ -105,7 +106,7 @@ export function StormPanel() {
                         className="text-xl font-bold font-['Orbitron']"
                         style={{ color: info.color }}
                     >
-                        {info.icon} {t(info.nameKey)}
+                        {info.icon} {t("storm.storm_overcome")}
                     </h2>
                     <span className="text-sm text-[#00ff41]">
                         {t("storm.investigated")}
@@ -117,7 +118,7 @@ export function StormPanel() {
                     style={{ borderColor: info.color }}
                 >
                     <p className="text-[#ffb000] mb-3 font-bold">
-                        {t("storm.results_title")}
+                        {t("storm.rewards")}
                     </p>
                     <div className="space-y-1.5 text-sm">
                         {recentStormLogs.map((entry, i) => (
@@ -196,10 +197,10 @@ export function StormPanel() {
 
                 <div className="bg-[rgba(0,0,0,0.4)] p-3 mb-4 border border-[#666]">
                     <p className="text-[#888] mb-2">
-                        {t("unknown_ship.sensors_unknown")}
+                        {t("storm.sensors_unknown")}
                     </p>
                     <p className="text-[#ffb000]">
-                        {t("unknown_ship.scanner_required")}
+                        {t("storm.scanner_required")}
                     </p>
                 </div>
 
@@ -208,43 +209,11 @@ export function StormPanel() {
                         {t("unknown_ship.warning")}
                     </p>
                     <p className="text-[#888] text-sm">
-                        {t("unknown_ship.warning_enter")}
+                        {t("unknown_ship.warning_object")}
                     </p>
                 </div>
 
-                <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#00ff41]">
-                    <p className="text-[#ffb000] mb-2">
-                        {t("unknown_ship.your_stats")}
-                    </p>
-                    <div className="grid grid-cols-3 gap-2 text-sm">
-                        <div>
-                            <span className="text-[#00d4ff]">
-                                {t("unknown_ship.shields")}
-                            </span>
-                            <span className="text-[#00ff41] ml-1">
-                                {ship.shields}/{ship.maxShields}
-                            </span>
-                        </div>
-                        <div>
-                            <span className="text-[#ffb000]">
-                                {t("unknown_ship.defense")}
-                            </span>
-                            <span className="text-[#00ff41] ml-1">
-                                {ship.armor} {t("ship_stats.units")}
-                            </span>
-                        </div>
-                        <div>
-                            <span className="text-[#ff4444]">
-                                {t("unknown_ship.crew")}
-                            </span>
-                            <span className="text-[#00ff41] ml-1">
-                                {crew.filter((c) => c.health > 50).length}/
-                                {crew.length}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
+                <ShipStatsPanel />
                 <div className="flex gap-4">
                     <Button
                         onClick={enterStorm}

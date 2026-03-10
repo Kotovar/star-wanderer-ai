@@ -2,6 +2,8 @@
 
 import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/useTranslation";
+import { getLocationName } from "@/lib/translationHelpers";
 
 // Calculate mining bonus percentage
 function getMiningBonus(drillLevel: number, asteroidTier: number): number {
@@ -26,6 +28,7 @@ export function AsteroidBeltPanel() {
     const mineAsteroid = useGameStore((s) => s.mineAsteroid);
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const log = useGameStore((s) => s.log);
+    const { t } = useTranslation();
 
     if (!currentLocation || currentLocation.type !== "asteroid_belt")
         return null;
@@ -54,6 +57,7 @@ export function AsteroidBeltPanel() {
 
     // Check if this is a rare ancient belt
     const isAncient = asteroidTier === 4;
+    const locationName = getLocationName(currentLocation.name, t);
 
     // After mining - show results
     if (currentLocation.mined) {
@@ -65,14 +69,16 @@ export function AsteroidBeltPanel() {
                     <h2
                         className={`text-xl font-bold font-['Orbitron'] ${isAncient ? "text-[#ffb000]" : "text-[#cd853f]"}`}
                     >
-                        ⛏️ {currentLocation.name}
+                        ⛏️ {locationName}
                     </h2>
-                    <span className="text-sm text-[#00ff41]">✓ Разработан</span>
+                    <span className="text-sm text-[#00ff41]">
+                        {t("asteroid_belt.developed")}
+                    </span>
                 </div>
 
                 <div className="bg-[rgba(0,0,0,0.4)] p-3 mb-4 border border-[#00ff41]">
                     <p className="text-[#ffb000] mb-3 font-bold">
-                        Результаты добычи:
+                        {t("asteroid_belt.mining_results")}:
                     </p>
                     <div className="space-y-1.5 text-sm">
                         {recentMiningLogs.map((entry, i) => (
@@ -93,7 +99,7 @@ export function AsteroidBeltPanel() {
                     onClick={showSectorMap}
                     className="cursor-pointer w-full bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] font-bold"
                 >
-                    ПОКИНУТЬ ПОЯС
+                    {t("asteroid_belt.leave")}
                 </Button>
             </div>
         );
@@ -108,49 +114,65 @@ export function AsteroidBeltPanel() {
                 <h2
                     className={`text-xl font-bold font-['Orbitron'] ${isAncient ? "text-[#ffb000]" : "text-[#cd853f]"}`}
                 >
-                    ⛏️ {currentLocation.name}
+                    ⛏️ {locationName}
                 </h2>
                 <span
                     className={`text-sm ${isAncient ? "text-[#ffb000]" : "text-[#ffb000]"}`}
                 >
-                    {isAncient ? "★ Редкий" : ""} Уровень: {asteroidTier}
+                    {isAncient ? t("asteroid_belt.rare") : ""}{" "}
+                    {t("asteroid_belt.tier")}: {asteroidTier}
                 </span>
             </div>
 
             {isAncient && (
                 <div className="bg-[rgba(255,170,0,0.1)] p-3 mb-4 border border-[#ffb000]">
                     <p className="text-[#ffb000] font-bold">
-                        ⚠ ДРЕВНИЙ ПОЯС АСТЕРОИДОВ
+                        ⚠ {t("asteroid_belt.ancient_title")}
                     </p>
                     <p className="text-[#888] text-sm mt-1">
-                        Требуется Древний бур
+                        {t("asteroid_belt.ancient_required")}
                     </p>
                 </div>
             )}
 
             <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#cd853f]">
                 <p className="text-[#ffb000] mb-2">
-                    Плотное скопление астероидов с ценными ресурсами.
+                    {t("asteroid_belt.description")}
                 </p>
                 {scanRange >= 5 ? (
                     <>
-                        <p className="text-[#00ff41]">Обнаруженные ресурсы:</p>
+                        <p className="text-[#00ff41]">
+                            {t("asteroid_belt.detected_resources")}
+                        </p>
                         <ul className="text-sm ml-4 mt-1">
-                            <li>📦 Минералы: ~{resources.minerals}</li>
-                            <li>💎 Редкие минералы: ~{resources.rare}</li>
-                            <li>₢ Ценные образцы: ~{resources.credits}₢</li>
+                            <li>
+                                📦 {t("asteroid_belt.minerals")}: ~
+                                {resources.minerals}
+                            </li>
+                            <li>
+                                💎 {t("asteroid_belt.rare_minerals")}: ~
+                                {resources.rare}
+                            </li>
+                            <li>
+                                ₢ {t("asteroid_belt.valuable_samples")}: ~
+                                {resources.credits}₢
+                            </li>
                         </ul>
                     </>
                 ) : (
                     <>
-                        <p className="text-[#888]">Обнаруженные ресурсы:</p>
+                        <p className="text-[#888]">
+                            {t("asteroid_belt.detected_resources")}
+                        </p>
                         <ul className="text-sm ml-4 mt-1 text-[#888]">
-                            <li>📦 Минералы: ???</li>
-                            <li>💎 Редкие минералы: ???</li>
-                            <li>₢ Ценные образцы: ???</li>
+                            <li>📦 {t("asteroid_belt.minerals")}: ???</li>
+                            <li>💎 {t("asteroid_belt.rare_minerals")}: ???</li>
+                            <li>
+                                ₢ {t("asteroid_belt.valuable_samples")}: ???
+                            </li>
                         </ul>
                         <p className="text-[#ffb000] text-xs mt-2">
-                            ⚠ Требуется scanRange 5+ для точных данных
+                            ⚠ {t("asteroid_belt.scan_required")}
                         </p>
                     </>
                 )}
@@ -158,7 +180,9 @@ export function AsteroidBeltPanel() {
 
             <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#00ff41]">
                 <div className="flex justify-between">
-                    <span className="text-[#ffb000]">Ваш бур:</span>
+                    <span className="text-[#ffb000]">
+                        {t("asteroid_belt.your_drill")}
+                    </span>
                     <span
                         className={
                             bonusPercent >= 0
@@ -166,15 +190,15 @@ export function AsteroidBeltPanel() {
                                 : "text-[#ff0040]"
                         }
                     >
-                        Уровень {drillLevel}{" "}
+                        {t("asteroid_belt.level")} {drillLevel}{" "}
                         {bonusPercent >= 0
                             ? "✓"
-                            : `(требуется ${asteroidTier})`}
+                            : `(${t("asteroid_belt.required")} ${asteroidTier})`}
                     </span>
                 </div>
                 {bonusPercent > 0 && (
                     <p className="text-[#00ff41] text-sm mt-1">
-                        Бонус к добыче: +{bonusPercent}%
+                        {t("asteroid_belt.bonus")}: +{bonusPercent}%
                     </p>
                 )}
             </div>
@@ -185,25 +209,25 @@ export function AsteroidBeltPanel() {
                         onClick={mineAsteroid}
                         className={`cursor-pointer flex-1 font-bold ${isAncient ? "bg-[#ffb000] hover:bg-[#ffc000] text-black" : "bg-[#cd853f] hover:bg-[#daa520] text-black"}`}
                     >
-                        ⛏️ НАЧАТЬ ДОБЫЧУ
+                        ⛏️ {t("asteroid_belt.start_mining")}
                     </Button>
                     <Button
                         onClick={showSectorMap}
                         className="cursor-pointer bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)]"
                     >
-                        УЙТИ
+                        {t("asteroid_belt.leave")}
                     </Button>
                 </div>
             ) : (
                 <div className="text-center">
                     <p className="text-[#ff0040] mb-4">
-                        ⚠ Требуется буровой модуль уровня {asteroidTier}!
+                        ⚠ {t("asteroid_belt.drill_required")} {asteroidTier}!
                     </p>
                     <Button
                         onClick={showSectorMap}
                         className="cursor-pointer bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)]"
                     >
-                        УЙТИ
+                        {t("asteroid_belt.leave")}
                     </Button>
                 </div>
             )}

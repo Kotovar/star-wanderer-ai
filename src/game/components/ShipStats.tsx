@@ -2,13 +2,13 @@
 
 import { getTotalEvasion } from "@/game/slices";
 import { useGameStore } from "@/game/store";
-import { useFuelEfficiency } from "./ship/useFuelEfficiency";
 import { useTranslation } from "@/lib/useTranslation";
 import {
     BASE_CRIT_CHANCE,
     BASE_CRIT_MULTIPLIER,
     BASE_ACCURACY,
-} from "../constants";
+} from "@/game/constants";
+import { useFuelEfficiency } from "@/game/hooks";
 
 export function ShipStats() {
     const ship = useGameStore((s) => s.ship);

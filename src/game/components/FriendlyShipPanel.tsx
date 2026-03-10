@@ -15,6 +15,7 @@ import { Contract } from "@/game/types/contracts";
 import { Profession } from "@/game/types/crew";
 import { RaceId } from "../types/races";
 import { typedKeys } from "@/lib/utils";
+import { useTranslation } from "@/lib/useTranslation";
 
 const INITIAL_STOCK: Goods[] = ["water", "food", "medicine"];
 
@@ -23,6 +24,8 @@ export function FriendlyShipPanel() {
     const credits = useGameStore((s) => s.credits);
     const ship = useGameStore((s) => s.ship);
     const crew = useGameStore((s) => s.crew);
+
+    const { t } = useTranslation();
 
     const hireCrew = useGameStore((s) => s.hireCrew);
     const getCrewCapacity = useGameStore((s) => s.getCrewCapacity);
@@ -273,7 +276,7 @@ export function FriendlyShipPanel() {
             return {
                 id: `ship-${currentLocation.id}-scan-${Date.now()}`,
                 type: "scan_planet" as const,
-                desc: `📡 Сканирование: ${targetType}`,
+                desc: t("contracts.desc_scan", { planetType: targetType }),
                 planetType: targetType,
                 targetSector: tgt.id,
                 targetSectorName: tgt.name,
@@ -306,7 +309,10 @@ export function FriendlyShipPanel() {
             return {
                 id: `ship-${currentLocation.id}-supply-${Date.now()}`,
                 type: "supply_run" as const,
-                desc: `📦 Поставка: ${cargo.name} x${quantity}т`,
+                desc: t("contracts.desc_supply", {
+                    cargo: cargo.name,
+                    quantity,
+                }),
                 cargo: cargoKey,
                 quantity,
                 sourcePlanetId: currentLocation.id,
@@ -835,24 +841,25 @@ export function FriendlyShipPanel() {
                                 )}
                             {traits.length > 0 && (
                                 <div className="text-[10px] mt-2 space-y-1">
-                                    {traits.map((t, ti) => (
+                                    {traits.map((trait, ti) => (
                                         <div
                                             key={ti}
                                             style={{
                                                 color:
-                                                    t.type === "positive"
+                                                    trait.type === "positive"
                                                         ? "#00ff41"
-                                                        : t.type === "negative"
+                                                        : trait.type ===
+                                                            "negative"
                                                           ? "#ff4444"
                                                           : "#ffb000",
                                             }}
                                         >
-                                            {t.type === "positive"
+                                            {trait.type === "positive"
                                                 ? "✓"
-                                                : t.type === "negative"
+                                                : trait.type === "negative"
                                                   ? "✗"
                                                   : "⚡"}{" "}
-                                            {t.name}: {t.desc}
+                                            {trait.name}: {trait.desc}
                                         </div>
                                     ))}
                                 </div>
@@ -929,24 +936,24 @@ export function FriendlyShipPanel() {
             {currentLocation.hasQuest && !questAlreadyTaken && (
                 <div className="border p-2 bg-[rgba(0,255,65,0.05)]">
                     <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mt-2">
-                        Задание
+                        {t("friendly_ship.contract")}
                     </div>
                     <div className="text-sm p-2.5">
                         <div className="mb-2">
-                            Срочная доставка груза в другой сектор.
+                            {t("contracts.quest_delivery_desc")}
                         </div>
                         <div className="text-[11px] text-[#888]">
-                            📦 Груз будет загружен на ваш корабль
+                            {t("contracts.quest_delivery_cargo")}
                         </div>
                         <div className="text-[#ffb000] text-xs mt-2">
-                            💰 Награда: 400₢
+                            {t("contracts.reward_label")} 400₢
                         </div>
                     </div>
                     <Button
                         onClick={handleAcceptQuest}
                         className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
                     >
-                        ПРИНЯТЬ
+                        {t("contracts.accept")}
                     </Button>
                 </div>
             )}

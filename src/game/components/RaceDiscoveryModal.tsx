@@ -9,8 +9,10 @@ import {
 import { useGameStore } from "../store";
 import { RACES } from "../constants/races";
 import { RaceId } from "../types";
+import { useTranslation } from "@/lib/useTranslation";
 
 export function RaceDiscoveryModal() {
+    const { t } = useTranslation();
     // Get the list of known races from the store
     const knownRaces = useGameStore((s) => s.knownRaces);
 
@@ -50,10 +52,10 @@ export function RaceDiscoveryModal() {
             <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ffb000] text-[#00ff41] max-w-md w-[calc(100%-2rem)] md:w-auto">
                 <DialogHeader>
                     <DialogTitle className="text-[#ffb000] font-['Orbitron']">
-                        Открыта новая раса
+                        {t("race_discovery.title")}
                     </DialogTitle>
                     <DialogDescription className="sr-only">
-                        Детали расы
+                        {t("race_discovery.description")}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -61,22 +63,28 @@ export function RaceDiscoveryModal() {
                     <div className="flex items-center gap-3">
                         <span className="text-2xl">{race.icon}</span>
                         <div>
-                            <div className="font-bold text-xl">{race.name}</div>
-                            <div className="text-sm text-[#888]">
-                                {race.pluralName}
+                            <div className="font-bold text-xl">
+                                {t(`races.${raceId}.name`)}
                             </div>
                         </div>
                     </div>
 
                     <div className="text-sm text-[#888]">
-                        <strong>Особенности:</strong>{" "}
-                        {race.specialTraits
-                            .map((trait) => trait.name)
-                            .join(", ") || "Отсутствуют"}
+                        <strong>{t("race_discovery.traits")}:</strong>{" "}
+                        {race.specialTraits.length > 0
+                            ? race.specialTraits
+                                  .map((trait) =>
+                                      t(`racial_traits.${trait.id}.name`),
+                                  )
+                                  .join(", ")
+                            : t("race_discovery.traits_none")}
                     </div>
 
                     <div className="text-sm text-[#888]">
-                        <strong>Описание:</strong> {race.description}
+                        <strong>
+                            {t("race_discovery.description_label")}:
+                        </strong>{" "}
+                        {t(`races.${raceId}.description`)}
                     </div>
                 </div>
             </DialogContent>

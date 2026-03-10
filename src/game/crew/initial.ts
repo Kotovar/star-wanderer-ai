@@ -4,7 +4,7 @@ import type { CrewMember } from "../types";
 export const initialCrew: CrewMember[] = [
     {
         id: 1,
-        name: "Капитан Иванов",
+        name: "Иванов",
         race: "human",
         profession: "pilot",
         level: 1,
@@ -24,7 +24,7 @@ export const initialCrew: CrewMember[] = [
     },
     {
         id: 2,
-        name: "Инженер Петрова",
+        name: "Петрова",
         race: "human",
         profession: "engineer",
         level: 1,
@@ -44,7 +44,7 @@ export const initialCrew: CrewMember[] = [
     },
     {
         id: 3,
-        name: "Медик Сидоров",
+        name: "Сидоров",
         race: "human",
         profession: "medic",
         level: 1,

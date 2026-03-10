@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/useTranslation";
 
 interface ServicesTabProps {
     fuel: number;
@@ -98,17 +99,21 @@ function RefuelSection({
     credits: number;
     onRefuel: (amount: number, price: number) => void;
 }) {
+    const { t } = useTranslation();
+
     return (
         <div className="bg-[rgba(153,51,255,0.05)] border border-[#9933ff] p-4">
             <div className="text-[#9933ff] font-bold mb-2">
-                ⛽ Заправка топливом
+                {t("services.refuel_title")}
             </div>
             <div className="text-sm text-[#00ff41] mb-2">
-                Топливо: {fuel}/{maxFuel}
+                {t("services.refuel_fuel_label", { fuel, maxFuel })}
             </div>
             <div className="text-xs mb-3">
                 <span className="text-[#ffb000]">
-                    Цена: {fuelPricePerUnit}₢ за единицу
+                    {t("services.refuel_price_label", {
+                        price: fuelPricePerUnit,
+                    })}
                 </span>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -131,7 +136,7 @@ function RefuelSection({
                 <RefuelButton
                     amount={fuelNeeded}
                     price={fullRefuelPrice}
-                    label="ПОЛНЫЙ БАК"
+                    label={t("services.refuel_full")}
                     disabled={fuelNeeded <= 0 || credits < fullRefuelPrice}
                     onRefuel={onRefuel}
                 />
@@ -170,13 +175,15 @@ function RepairSection({
     credits: number;
     onRepair: () => void;
 }) {
+    const { t } = useTranslation();
+
     return (
         <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4">
             <div className="text-[#00d4ff] font-bold mb-2">
-                🔧 Ремонт корабля
+                {t("services.repair_title")}
             </div>
             <div className="text-sm text-[#00ff41] mb-3">
-                Полное восстановление всех модулей до 100%
+                {t("services.repair_desc")}
             </div>
             <div className="flex justify-between items-center">
                 <span className="text-[#ffb000]">💰 200₢</span>
@@ -185,7 +192,7 @@ function RepairSection({
                     onClick={onRepair}
                     className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    РЕМОНТ
+                    {t("services.repair_button")}
                 </Button>
             </div>
         </div>
@@ -199,13 +206,15 @@ function HealSection({
     credits: number;
     onHeal: () => void;
 }) {
+    const { t } = useTranslation();
+
     return (
         <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4">
             <div className="text-[#00d4ff] font-bold mb-2">
-                💊 Лечение экипажа
+                {t("services.heal_title")}
             </div>
             <div className="text-sm text-[#00ff41] mb-3">
-                Восстановление здоровья до 100% и поднятие настроения на +20
+                {t("services.heal_desc")}
             </div>
             <div className="flex justify-between items-center">
                 <span className="text-[#ffb000]">💰 150₢</span>
@@ -214,7 +223,7 @@ function HealSection({
                     onClick={onHeal}
                     className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    ЛЕЧЕНИЕ
+                    {t("services.heal_button")}
                 </Button>
             </div>
         </div>
@@ -230,6 +239,7 @@ function ScrapModuleSection({
     crew: ServicesTabProps["crew"];
     onScrap: (moduleId: number) => void;
 }) {
+    const { t } = useTranslation();
     // Essential modules that must have at least 1
     const essentialTypes = [
         "cockpit",
@@ -264,10 +274,10 @@ function ScrapModuleSection({
     return (
         <div className="bg-[rgba(255,0,64,0.05)] border border-[#ff0040] p-4">
             <div className="text-[#ff0040] font-bold mb-2">
-                ♻️ Утилизация модулей
+                {t("services.scrap_title")}
             </div>
             <div className="text-sm text-[#888] mb-3">
-                Получите 20-40% от стоимости модуля
+                {t("services.scrap_desc")}
             </div>
             <div className="space-y-2 max-h-48 overflow-y-auto">
                 {scrappableModules.map((mod) => (
@@ -277,7 +287,10 @@ function ScrapModuleSection({
                     >
                         <div className="text-xs">
                             <div className="text-[#00d4ff]">
-                                {mod.name}{" "}
+                                {t(`module_names.${mod.type}`) !==
+                                `module_names.${mod.type}`
+                                    ? t(`module_names.${mod.type}`)
+                                    : mod.name}{" "}
                                 {mod.level ? `(МК-${mod.level})` : ""}
                             </div>
                             <div className="text-[#888]">
@@ -289,7 +302,7 @@ function ScrapModuleSection({
                             onClick={() => onScrap(mod.id)}
                             className="cursor-pointer bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase text-xs"
                         >
-                            УТИЛИЗИРОВАТЬ
+                            {t("services.scrap_button")}
                         </Button>
                     </div>
                 ))}
@@ -305,6 +318,7 @@ function InstallModuleSection({
     ship: ServicesTabProps["ship"];
     onInstall: (cargoIndex: number, x: number, y: number) => void;
 }) {
+    const { t } = useTranslation();
     const moduleCargo = ship.cargo.filter((c) => c.isModule && c.moduleType);
 
     // Find a valid position for a module on the ship grid
@@ -344,10 +358,10 @@ function InstallModuleSection({
     return (
         <div className="bg-[rgba(255,0,255,0.05)] border border-[#ff00ff] p-4">
             <div className="text-[#ff00ff] font-bold mb-2">
-                🔧 Установка модулей
+                {t("services.install_title")}
             </div>
             <div className="text-sm text-[#888] mb-3">
-                Установите модули из трюма на корабль
+                {t("services.install_desc")}
             </div>
             {moduleCargo.length > 0 ? (
                 <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -376,10 +390,10 @@ function InstallModuleSection({
                                         {item.item} (Ур.{item.moduleLevel || 4})
                                     </div>
                                     <div className="text-[#888]">
-                                        Размер: 2x2 |{" "}
+                                        {t("services.size_label")} 2x2 |{" "}
                                         {validPosition
-                                            ? `Позиция: (${validPosition.x}, ${validPosition.y})`
-                                            : "Нет места"}
+                                            ? `${t("services.position_label")} (${validPosition.x}, ${validPosition.y})`
+                                            : t("services.no_space")}
                                     </div>
                                 </div>
                                 <Button
@@ -398,7 +412,7 @@ function InstallModuleSection({
                                             : "border-[#888] text-[#888] cursor-not-allowed"
                                     }`}
                                 >
-                                    УСТАНОВИТЬ
+                                    {t("services.install_button")}
                                 </Button>
                             </div>
                         );
@@ -406,7 +420,7 @@ function InstallModuleSection({
                 </div>
             ) : (
                 <div className="text-sm text-[#888] italic">
-                    В трюме нет модулей для установки.
+                    {t("services.no_modules")}
                 </div>
             )}
         </div>

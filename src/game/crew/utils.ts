@@ -1,9 +1,5 @@
 import { useGameStore } from "@/game/store";
-import {
-    CREW_TRAITS,
-    PROFESSION_NAMES,
-    RACE_LAST_NAMES,
-} from "@/game/constants";
+import { CREW_TRAITS, RACE_LAST_NAMES } from "@/game/constants";
 import type { CrewTrait, Profession, Quality, RaceId } from "@/game/types";
 
 // Generate crew traits based on quality level
@@ -102,7 +98,6 @@ export const getRandomName = (
     seed?: number,
 ): string => {
     const raceLastNames = RACE_LAST_NAMES[race];
-    const profName = PROFESSION_NAMES[profession];
 
     let index: number;
     if (seed !== undefined) {
@@ -122,7 +117,7 @@ export const getRandomName = (
         index = Math.floor(Math.random() * raceLastNames.length);
     }
 
-    return `${profName} ${raceLastNames[index]}`;
+    return raceLastNames[index];
 };
 
 /**

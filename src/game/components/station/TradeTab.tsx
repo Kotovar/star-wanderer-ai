@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { TRADE_GOODS } from "../../constants";
 import { typedKeys } from "@/lib/utils";
 import type { Goods } from "@/game/types";
+import { useTranslation } from "@/lib/useTranslation";
 
 interface TradeTabProps {
     stationId: string;
@@ -141,21 +142,33 @@ function TradeGoodInfo({
     stock: number;
     playerGood: { item: string; quantity: number } | undefined;
 }) {
+    const { t } = useTranslation();
     // Calculate per-unit price (prices are stored as 5-ton batches)
     const buyPerUnit = Math.floor(prices.buy / 5);
     const sellPerUnit = Math.floor(prices.sell / 5);
 
+    // Get translated name from trade.goods key
+    const translatedName =
+        t(`trade.goods.${good.id}`) !== `trade.goods.${good.id}`
+            ? t(`trade.goods.${good.id}`)
+            : good.name;
+
     return (
         <div className="flex-1">
-            <div className="text-[#00d4ff] font-bold">{good.name}</div>
+            <div className="text-[#00d4ff] font-bold">{translatedName}</div>
             <div className="text-[#ffb000] text-xs mt-1">
-                Купить: {buyPerUnit}₢/т | Продать: {sellPerUnit}₢/т
+                {t("trade.buy_label")}{" "}
+                {t("trade.per_ton", { price: buyPerUnit })} |{" "}
+                {t("trade.sell_label")}{" "}
+                {t("trade.per_ton", { price: sellPerUnit })}
             </div>
             <div className="text-[11px] mt-1">
-                <span className="text-[#00ff41]">На станции: {stock}т</span>
+                <span className="text-[#00ff41]">
+                    {t("trade.at_station", { stock })}
+                </span>
                 {playerGood && (
                     <span className="text-[#00d4ff] ml-3">
-                        В трюме: {playerGood.quantity}т
+                        {t("trade.in_hold", { quantity: playerGood.quantity })}
                     </span>
                 )}
             </div>

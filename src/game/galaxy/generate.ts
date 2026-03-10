@@ -52,25 +52,25 @@ export const generateStar = (tier: GalaxyTier): Sector["star"] => {
     // Проверка на чёрную дыру
     cumulativeChance += blackHoleChance;
     if (starRoll < cumulativeChance) {
-        return { type: "blackhole", name: "Чёрная дыра" };
+        return { type: "blackhole", name: "star_types.blackhole" };
     }
 
     // Проверка на тройную систему
     cumulativeChance += tripleStarChance;
     if (tier >= 2 && starRoll < cumulativeChance) {
-        return { type: "triple", name: "Тройная звезда" };
+        return { type: "triple", name: "star_types.triple" };
     }
 
     // Проверка на двойную систему
     cumulativeChance += doubleStarChance;
     if (starRoll < cumulativeChance) {
-        return { type: "double", name: "Двойная звезда" };
+        return { type: "double", name: "star_types.double" };
     }
 
     // Проверка на газовый гигант (коричневый карлик)
     cumulativeChance += gasGiantChance;
     if (starRoll < cumulativeChance) {
-        return { type: "gas_giant", name: "Газовый гигант" };
+        return { type: "gas_giant", name: "star_types.gas_giant" };
     }
 
     // Распределение одиночных звёзд по типам (нормализуем оставшийся диапазон)
@@ -81,57 +81,57 @@ export const generateStar = (tier: GalaxyTier): Sector["star"] => {
     if (tier === 1) {
         // Tier 1: больше красных и жёлтых карликов
         if (normalizedRoll < 0.45) {
-            return { type: "red_dwarf", name: "Красный карлик" };
+            return { type: "red_dwarf", name: "star_types.red_dwarf" };
         }
         if (normalizedRoll < 0.85) {
-            return { type: "yellow_dwarf", name: "Жёлтый карлик" };
+            return { type: "yellow_dwarf", name: "star_types.yellow_dwarf" };
         }
         if (normalizedRoll < 0.95) {
-            return { type: "white_dwarf", name: "Белый карлик" };
+            return { type: "white_dwarf", name: "star_types.white_dwarf" };
         }
-        return { type: "yellow_dwarf", name: "Жёлтый карлик" };
+        return { type: "yellow_dwarf", name: "star_types.yellow_dwarf" };
     }
 
     if (tier === 2) {
         // Tier 2: разнообразие с появлением гигантов
         if (normalizedRoll < 0.35) {
-            return { type: "red_dwarf", name: "Красный карлик" };
+            return { type: "red_dwarf", name: "star_types.red_dwarf" };
         }
         if (normalizedRoll < 0.6) {
-            return { type: "yellow_dwarf", name: "Жёлтый карлик" };
+            return { type: "yellow_dwarf", name: "star_types.yellow_dwarf" };
         }
         if (normalizedRoll < 0.75) {
-            return { type: "white_dwarf", name: "Белый карлик" };
+            return { type: "white_dwarf", name: "star_types.white_dwarf" };
         }
         if (normalizedRoll < 0.85) {
-            return { type: "blue_giant", name: "Голубой гигант" };
+            return { type: "blue_giant", name: "star_types.blue_giant" };
         }
         if (normalizedRoll < 0.92) {
-            return { type: "neutron_star", name: "Нейтронная звезда" };
+            return { type: "neutron_star", name: "star_types.neutron_star" };
         }
-        return { type: "red_supergiant", name: "Красный сверхгигант" };
+        return { type: "red_supergiant", name: "star_types.red_supergiant" };
     }
 
     // Tier 3+: больше редких звёзд
     if (normalizedRoll < 0.25) {
-        return { type: "red_dwarf", name: "Красный карлик" };
+        return { type: "red_dwarf", name: "star_types.red_dwarf" };
     }
     if (normalizedRoll < 0.45) {
-        return { type: "yellow_dwarf", name: "Жёлтый карлик" };
+        return { type: "yellow_dwarf", name: "star_types.yellow_dwarf" };
     }
     if (normalizedRoll < 0.55) {
-        return { type: "white_dwarf", name: "Белый карлик" };
+        return { type: "white_dwarf", name: "star_types.white_dwarf" };
     }
     if (normalizedRoll < 0.7) {
-        return { type: "blue_giant", name: "Голубой гигант" };
+        return { type: "blue_giant", name: "star_types.blue_giant" };
     }
     if (normalizedRoll < 0.85) {
-        return { type: "neutron_star", name: "Нейтронная звезда" };
+        return { type: "neutron_star", name: "star_types.neutron_star" };
     }
     if (normalizedRoll < 0.95) {
-        return { type: "red_supergiant", name: "Красный сверхгигант" };
+        return { type: "red_supergiant", name: "star_types.red_supergiant" };
     }
-    return { type: "blue_giant", name: "Голубой гигант" };
+    return { type: "blue_giant", name: "star_types.blue_giant" };
 };
 
 /**
@@ -150,7 +150,7 @@ export const generateStation = (
         id: `${sectorIdx}-${locIdx}`,
         stationId: `station-${sectorIdx}-${locIdx}`,
         type: "station",
-        name: `Станция ${String.fromCharCode(65 + (locIdx % 26))}`,
+        name: `station_name.${String.fromCharCode(65 + (locIdx % 26))}`,
         stationType,
         stationConfig,
         dominantRace,
@@ -270,8 +270,8 @@ export const generateAsteroidBelt = (
         type: "asteroid_belt",
         name:
             asteroidTier === 4
-                ? "★ Древний астероидный пояс"
-                : `Пояс астероидов`,
+                ? "asteroid_belt_names.ancient"
+                : "asteroid_belt_names.regular",
         mined: false,
         asteroidTier,
         resources,
@@ -307,7 +307,7 @@ export const generateDistressSignal = (
 ): Location => ({
     id: `${sectorIdx}-${locIdx}`,
     type: "distress_signal",
-    name: "Сигнал бедствия",
+    name: "location_types.distress_signal",
     signalResolved: false,
 });
 
@@ -364,7 +364,7 @@ export const generateAnomaly = (
     return {
         id: `${sectorIdx}-${locIdx}`,
         type: "anomaly",
-        name: "Аномалия",
+        name: "location_types.anomaly",
         anomalyType: Math.random() < 0.5 ? "good" : "bad",
         anomalyTier,
         anomalyColor,

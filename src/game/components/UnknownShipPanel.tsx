@@ -3,20 +3,16 @@
 import { useGameStore } from "@/game/store";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
+import { ShipStatsPanel } from "./ShipStatsPanel";
 
 export function UnknownShipPanel() {
     const { t } = useTranslation();
     const currentLocation = useGameStore((s) => s.currentLocation);
     const currentSector = useGameStore((s) => s.currentSector);
-    const ship = useGameStore((s) => s.ship);
-    const crew = useGameStore((s) => s.crew);
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const startCombat = useGameStore((s) => s.startCombat);
     const startBossCombat = useGameStore((s) => s.startBossCombat);
     const canScanObject = useGameStore((s) => s.canScanObject);
-    const captain = useGameStore((s) =>
-        s.crew.find((c) => c.profession === "pilot"),
-    );
 
     if (!currentLocation) return null;
 
@@ -74,6 +70,12 @@ export function UnknownShipPanel() {
             // Scanner reveals the true identity
             return currentLocation.name;
         }
+        if (
+            currentLocation.type === "friendly_ship" ||
+            currentLocation.type === "enemy"
+        ) {
+            return t("locations.unknown_ship");
+        }
         return t("unknown_ship.unknown_object");
     };
 
@@ -101,12 +103,6 @@ export function UnknownShipPanel() {
         }
         return t("unknown_ship.no_scanner");
     };
-
-    const currentHull = ship.modules.reduce((s, m) => s + m.health, 0);
-    const maxHull = ship.modules.reduce(
-        (s, m) => s + (m.maxHealth || m.health),
-        0,
-    );
 
     return (
         <div className="bg-[rgba(50,50,50,0.3)] border-2 border-[#666] p-4">
@@ -136,63 +132,7 @@ export function UnknownShipPanel() {
                 </p>
             </div>
 
-            <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#00ff41]">
-                <p className="text-[#ffb000] mb-2">
-                    {t("unknown_ship.your_stats")}
-                </p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs md:text-sm">
-                    <div className="min-w-0">
-                        <span className="text-[#00d4ff] whitespace-nowrap">
-                            {t("unknown_ship.shields")}
-                        </span>
-                        <span className="text-[#00ff41] ml-1">
-                            {ship.shields}/{ship.maxShields}
-                        </span>
-                    </div>
-                    <div className="min-w-0">
-                        <span className="text-[#ffb000] whitespace-nowrap">
-                            {t("unknown_ship.defense")}
-                        </span>
-                        <span className="text-[#00ff41] ml-1">
-                            {ship.armor}
-                        </span>
-                    </div>
-                    <div className="min-w-0">
-                        <span className="text-[#ffb000] whitespace-nowrap">
-                            {t("unknown_ship.hull")}
-                        </span>
-                        <span className="text-[#00ff41] ml-1">
-                            {currentHull}/{maxHull}
-                        </span>
-                    </div>
-                    <div className="min-w-0">
-                        <span className="text-[#ff4444] whitespace-nowrap">
-                            {t("unknown_ship.crew")}
-                        </span>
-                        <span className="text-[#00ff41] ml-1">
-                            {crew.filter((c) => c.health > 50).length}/
-                            {crew.length}
-                        </span>
-                    </div>
-                </div>
-                <div className="mt-2 text-xs md:text-sm">
-                    <span className="text-[#00ff41] whitespace-nowrap">
-                        {t("unknown_ship.evasion")}
-                    </span>
-                    <span className="text-[#00ff41] ml-1">
-                        {(captain?.level || 1) + (ship.bonusEvasion || 0)}%
-                        {ship.bonusEvasion ? (
-                            <span className="text-[#9933ff]">
-                                {" "}
-                                {t("unknown_ship.bonus").replace(
-                                    "{{bonus}}",
-                                    String(ship.bonusEvasion),
-                                )}
-                            </span>
-                        ) : null}
-                    </span>
-                </div>
-            </div>
+            <ShipStatsPanel />
 
             <div className="flex gap-4">
                 <Button

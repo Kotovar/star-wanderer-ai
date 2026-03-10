@@ -48,34 +48,46 @@ export function CargoDisplay() {
                 <div>
                     {ship.cargo.map((c, i) => {
                         // Try to get cargo name from DELIVERY_GOODS first, then TRADE_GOODS
+                        const cargoKey = c.item as keyof typeof DELIVERY_GOODS;
                         const cargoName =
-                            DELIVERY_GOODS[
-                                c.item as keyof typeof DELIVERY_GOODS
-                            ]?.name ||
+                            DELIVERY_GOODS[cargoKey]?.name ||
                             TRADE_GOODS[c.item as keyof typeof TRADE_GOODS]
                                 ?.name ||
                             c.item;
+                        // Use translation if available
+                        const translatedName =
+                            t(`trade.goods.${c.item}`) !==
+                            `trade.goods.${c.item}`
+                                ? t(`trade.goods.${c.item}`)
+                                : cargoName;
                         return (
                             <div
                                 key={i}
                                 className="bg-[rgba(0,0,0,0.3)] border border-[#ffb000] p-2 mb-1.5 text-xs"
                             >
-                                📦 {cargoName} x{c.quantity}т{" "}
+                                📦 {translatedName} x{c.quantity}т{" "}
                                 <span className="text-[#00d4ff]">
-                                    [Задание]
+                                    {t("cargo.contract_label")}
                                 </span>
                             </div>
                         );
                     })}
-                    {ship.tradeGoods.map((g, i) => (
-                        <div
-                            key={i}
-                            className="bg-[rgba(0,0,0,0.3)] border border-[#ffb000] p-2 mb-1.5 text-xs"
-                        >
-                            💰 {TRADE_GOODS[g.item]?.name || g.item} x
-                            {g.quantity}т
-                        </div>
-                    ))}
+                    {ship.tradeGoods.map((g, i) => {
+                        // Use translation if available
+                        const translatedName =
+                            t(`trade.goods.${g.item}`) !==
+                            `trade.goods.${g.item}`
+                                ? t(`trade.goods.${g.item}`)
+                                : TRADE_GOODS[g.item]?.name || g.item;
+                        return (
+                            <div
+                                key={i}
+                                className="bg-[rgba(0,0,0,0.3)] border border-[#ffb000] p-2 mb-1.5 text-xs"
+                            >
+                                💰 {translatedName} x{g.quantity}т
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </div>

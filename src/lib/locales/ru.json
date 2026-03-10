@@ -25,6 +25,9 @@
         "cancel": "Отмена",
         "confirm": "Подтвердить"
     },
+    "friendly_ship": {
+        "contract": "Задание"
+    },
     "crew": {
         "unknown": "Неизвестно",
         "moved": "ПЕРЕМЕЩЁН",
@@ -59,7 +62,8 @@
         "goods": "Грузы",
         "no_module": "Нет грузового отсека",
         "capacity_label": "Вместимость",
-        "hold_empty": "Трюм пуст"
+        "hold_empty": "Трюм пуст",
+        "contract_label": "[Задание]"
     },
     "modules": {
         "search_per_turn": "иссл./ход",
@@ -297,6 +301,150 @@
         "brittle_crystal": {
             "name": "Хрупкость",
             "description": "-15% к максимальному здоровью"
+        },
+        "master": {
+            "name": "Мастер",
+            "description": "Двойной эффект от заданий"
+        },
+        "rebel": {
+            "name": "Бунтарь",
+            "description": "-15 настроение, риск дезертирства"
+        },
+        "sharpshooter": {
+            "name": "Меткий стрелок",
+            "description": "+10% к урону"
+        },
+        "tough": {
+            "name": "Выносливый",
+            "description": "+20% здоровье"
+        },
+        "coward": {
+            "name": "Трус",
+            "description": "-10 морали в бою каждый ход"
+        },
+        "legend": {
+            "name": "Легенда",
+            "description": "+50% к макс. здоровью и морали"
+        },
+        "lucky": {
+            "name": "Удачливый",
+            "description": "+5% ко всем наградам"
+        },
+        "hardworking": {
+            "name": "Трудолюбивый",
+            "description": "+10% к опыту"
+        },
+        "sickly": {
+            "name": "Болезненный",
+            "description": "-15% здоровье"
+        },
+        "veteran": {
+            "name": "Ветеран",
+            "description": "+25% к урону, +15% защита"
+        },
+        "leader": {
+            "name": "Лидер",
+            "description": "+20 настроение команды, +10% эффективность"
+        },
+        "experienced": {
+            "name": "Опытный",
+            "description": "+15% эффективность"
+        },
+        "skilled": {
+            "name": "Специалист",
+            "description": "+20% к эффективности профессии"
+        },
+        "elite": {
+            "name": "Элита",
+            "description": "+30% ко всем бонусам"
+        },
+        "genius": {
+            "name": "Гений",
+            "description": "+50% к науке"
+        },
+        "prodigy": {
+            "name": "Вундеркинд",
+            "description": "+25% к опыту, +10% ко всем характеристикам"
+        },
+        "natural": {
+            "name": "Талант",
+            "description": "+15% ко всем характеристикам"
+        },
+        "adapted": {
+            "name": "Адаптированный",
+            "description": "Иммунитет к негативным эффектам среды"
+        },
+        "strong": {
+            "name": "Сильный",
+            "description": "+20% к здоровью"
+        },
+        "weak": {
+            "name": "Слабый",
+            "description": "-10% к здоровью"
+        },
+        "fast": {
+            "name": "Быстрый",
+            "description": "+10% к уклонению"
+        },
+        "slow": {
+            "name": "Медленный",
+            "description": "-5% к уклонению"
+        },
+        "brave": {
+            "name": "Храбрый",
+            "description": "+15 морали, иммунитет к панике"
+        },
+        "fearful": {
+            "name": "Боязливый",
+            "description": "-10 морали в бою"
+        },
+        "optimist": {
+            "name": "Оптимист",
+            "description": "+10 морали"
+        },
+        "pessimist": {
+            "name": "Пессимист",
+            "description": "-5 морали"
+        },
+        "friendly": {
+            "name": "Дружелюбный",
+            "description": "+5 морали экипажу"
+        },
+        "aggressive": {
+            "name": "Агрессивный",
+            "description": "+10% к урону, -5 морали экипажу"
+        },
+        "calm": {
+            "name": "Спокойный",
+            "description": "Иммунитет к стрессу"
+        },
+        "nervous": {
+            "name": "Нервный",
+            "description": "-5 морали, риск паники"
+        },
+        "focused": {
+            "name": "Сосредоточенный",
+            "description": "+10% точности"
+        },
+        "distracted": {
+            "name": "Рассеянный",
+            "description": "-5% точности"
+        },
+        "efficient": {
+            "name": "Эффективный",
+            "description": "-10% потребление ресурсов"
+        },
+        "wasteful": {
+            "name": "Расточительный",
+            "description": "+10% потребление ресурсов"
+        },
+        "lucky_star": {
+            "name": "Рождённый под счастливой звездой",
+            "description": "+10% ко всем положительным эффектам"
+        },
+        "cursed": {
+            "name": "Проклятый",
+            "description": "-10% ко всем характеристикам"
         }
     },
     "battle": {
@@ -307,7 +455,14 @@
         "battle_clean": "✨ Бой прошёл без повреждений!",
         "victory": "Победа",
         "defeat": "Поражение",
-        "fled": "Побег"
+        "fled": "Побег",
+        "defeated": "Повержен",
+        "credits": "кредитов",
+        "artifact": "Артефакт",
+        "destroyed": "Уничтожены",
+        "killed": "Погибли",
+        "wounded": "Ранены",
+        "continue": "ПРОДОЛЖИТЬ"
     },
     "storm": {
         "results": "Результаты",
@@ -349,7 +504,16 @@
         "danger": "⚠ Опасность:",
         "loot": "★ Добыча:",
         "warning_storm": "Вход в шторм нанесёт повреждения кораблю и экипажу!",
-        "enter_storm": "{{icon}} ВОЙТИ В ШТОРМ"
+        "enter_storm": "{{icon}} ВОЙТИ В ШТОРМ",
+        "storm_overcome": "⚡ ШТОРМ ПРЕОДОЛЁН",
+        "rewards": "💰 Награды:",
+        "credits_found": "+{{credits}}₢ кредитов",
+        "rare_find": "(включая ★ РЕДКАЯ НАХОДКА: +{{rare}}₢)",
+        "damage": "🔧 Повреждения:",
+        "shields_damage": "🛡 Щиты: -{{damage}}",
+        "modules_damage": "Модули: -{{percent}}% x{{count}}",
+        "module_damage_detail": "{{module}}: -{{percent}}%",
+        "continue": "ПРОДОЛЖИТЬ"
     },
     "unknown_ship": {
         "your_stats": "Ваши показатели",
@@ -385,6 +549,8 @@
         "not_found": "Задание не найдено",
         "type": "Тип задания",
         "cancel": "ОТКАЗАТЬСЯ",
+        "accept": "ПРИНЯТЬ",
+        "accepted": "ПРИНЯТ",
         "type_delivery": "Доставка груза",
         "type_scan": "Сканирование",
         "type_combat": "Боевое задание",
@@ -395,6 +561,7 @@
         "type_patrol": "Патрулирование",
         "type_bounty": "Охота за головой",
         "type_diplomacy": "Дипломатия",
+        "type_rescue_survivors": "Спасение выживших",
         "task_what": "Что сделать",
         "task_where": "Где сдать",
         "task_destination": "Куда доставить",
@@ -432,7 +599,112 @@
         "scan_sector": "Сканировать планету в {{sector}}",
         "clear_sector": "Зачистить {{sector}}",
         "research_count": "Исследовать {{count}} аномалии ({{current}}/{{total}})",
-        "default": "✓ Выполнить задание"
+        "default": "✓ Выполнить задание",
+        "details_title": "Детали задания",
+        "reward_label": "💰 Награда:",
+        "desc_scan": "📡 Сканирование: {{planetType}}",
+        "desc_supply": "📦 Поставка: {{cargo}} x{{quantity}}т",
+        "desc_delivery": "📦 Доставить \"{{cargo}}\" (10т)",
+        "desc_combat": "⚔ Уничтожить всех врагов в секторе {{sector}}",
+        "desc_bounty": "🎯 Уничтожить врага (угроза {{threat}}) в секторе {{sector}}",
+        "desc_diplomacy": "🌍 Посетить планету {{planet}} ({{type}}) в секторе {{sector}}",
+        "desc_patrol": "🦠 Посетить сектора: {{sectors}} ({{visited}}/{{target}})",
+        "desc_rescue": "👁️ Войти в {{stormName}} в секторе {{sectorName}}",
+        "desc_mining": "💎 Найти артефакт (исследовать аномалии или победить босса)",
+        "desc_research": "🔬 Исследовать {{count}} аномалии",
+        "turn_in_delivery": "✓ Сдать груз на месте назначения",
+        "turn_in_combat": "✓ Автоматически после победы",
+        "turn_in_research": "✓ Автоматически после исследования",
+        "turn_in_bounty": "✓ Автоматически после победы",
+        "turn_in_diplomacy": "✓ Автоматически при посещении планеты",
+        "turn_in_patrol": "✓ Автоматически после посещения всех секторов",
+        "turn_in_rescue": "✓ Автоматически после прохождения шторма",
+        "turn_in_mining": "✓ Автоматически при находке артефакта",
+        "turn_in_scan": "✓ Автоматически после сканирования",
+        "turn_in_supply": "✓ Автоматически после поставки",
+        "no_contracts": "Нет доступных заданий.",
+        "quest_delivery_desc": "Срочная доставка груза в другой сектор.",
+        "quest_delivery_cargo": "📦 Груз будет загружен на ваш корабль",
+        "name_delivery": "📦 Доставка: {{cargo}}",
+        "name_scan": "📡 Сканирование: {{planetType}}",
+        "name_combat": "⚔ Зачистка сектора",
+        "name_research": "🔬 Исследование аномалий",
+        "name_bounty": "🎯 Охота за головами",
+        "name_diplomacy": "🌍 Дипломатическая миссия",
+        "name_patrol": "🦠 Патрулирование секторов",
+        "name_rescue": "👁️ Спасательная операция",
+        "name_mining": "💎 Поиск артефактов",
+        "name_supply": "📦 Поставка: {{cargo}}",
+        "reward_short": "💰 Награда: {{reward}}₢",
+        "cargo": "Груз",
+        "desc_bounty_kryl": "🦎 Дуэль чести",
+        "desc_rescue_void": "👁️ Путешествие в Пустоту",
+        "desc_mining_crystal": "💎 Поиск кристалла Древних",
+        "desc_diplomacy_human": "🌍 Дипломатическая миссия",
+        "desc_research_synth": "🤖 Анализ данных Древних",
+        "desc_patrol_xeno": "🦠 Сбор биообразцов",
+        "desc_combat_generic": "⚔ Зачистка сектора",
+        "desc_research_generic": "🔬 Исследование аномалий",
+        "desc_bounty_generic": "🎯 Охота на пирата"
+    },
+    "locations": {
+        "enemy_ship": "Вражеский корабль",
+        "friendly_ship": "Дружеский корабль",
+        "ancient_ship": "Древний корабль",
+        "unknown_ship": "Неизвестный корабль",
+        "cosmic_storm": "Космический шторм",
+        "anomaly_beneficial": "✓ Благоприятная",
+        "anomaly_dangerous": "⚠ Опасная",
+        "planet": "Планета",
+        "deserted": "Безлюдная",
+        "station": "Станция",
+        "asteroid_belt": "Пояс астероидов",
+        "unknown_object": "Неизвестный объект",
+        "threat": "Угроза",
+        "level": "Уровень",
+        "tier": "Тир",
+        "population": "Население",
+        "minerals": "Минералы",
+        "rare": "Редкие",
+        "distress_signal": "Сигнал бедствия",
+        "pirate_ambush": "Засада пиратов",
+        "survivors": "Выжившие",
+        "abandoned_cargo": "Заброшенный груз",
+        "ambush_prob": "Засада",
+        "survivors_prob": "Выжившие",
+        "cargo_prob": "Груз",
+        "radiation_cloud": "Радиационное облако",
+        "ionic_storm": "Ионный шторм",
+        "plasma_storm": "Плазменный шторм",
+        "intensity": "Интенсивность",
+        "crew_damage": "Урон экипажу",
+        "shield_damage": "Урон щитам",
+        "complex_damage": "Комплексный урон",
+        "loot": "Добыча",
+        "rare_resources": "★ Редкие ресурсы!",
+        "scientist_required": "🔬 Учёный",
+        "ancient_ship_reward": "★ Гарантирован артефакт!",
+        "planet_types": {
+            "desert": "Пустынная",
+            "ice": "Ледяная",
+            "forest": "Лесная",
+            "volcanic": "Вулканическая",
+            "oceanic": "Океаническая",
+            "tropical": "Тропическая",
+            "arctic": "Арктическая",
+            "ringed": "Планета-кольцо",
+            "radioactive": "Радиоактивная",
+            "war_torn": "Разрушенная войной",
+            "tidal": "Приливная"
+        },
+        "station_types": {
+            "trade": "Торговая",
+            "military": "Военная",
+            "mining": "Добывающая",
+            "research": "Исследовательская",
+            "medical": "Медицинская",
+            "industrial": "Промышленная"
+        }
     },
     "research": {
         "title": "Исследования",
@@ -661,7 +933,54 @@
         "modules_tab": "МОДУЛИ",
         "trade_tab": "ТОРГОВЛЯ",
         "crew_tab": "ЭКИПАЖ",
-        "services_tab": "УСЛУГИ"
+        "services_tab": "УСЛУГИ",
+        "crew_profession": "Профессия:",
+        "crew_price": "💰 Цена: {{price}}₢",
+        "race_bonuses": "Бонусы расы:",
+        "features": "Особенности:",
+        "station_stock": "На станции: {{stock}}т",
+        "no_space": "⚠ Нет места для экипажа. Постройте жилой модуль.",
+        "hire_button": "НАНЯТЬ",
+        "close": "Закрыть",
+        "energy_consumption": "расход"
+    },
+    "trade": {
+        "buy_label": "Купить:",
+        "sell_label": "Продать:",
+        "per_ton": "{{price}}₢/т",
+        "at_station": "На станции: {{stock}}т",
+        "in_hold": "В трюме: {{quantity}}т",
+        "goods": {
+            "water": "Вода",
+            "food": "Продукты",
+            "medicine": "Медикаменты",
+            "electronics": "Электроника",
+            "minerals": "Минералы",
+            "rare_minerals": "Редкие минералы"
+        }
+    },
+    "services": {
+        "tab_title": "УСЛУГИ",
+        "refuel_title": "⛽ Заправка топливом",
+        "refuel_fuel_label": "Топливо: {{fuel}}/{{maxFuel}}",
+        "refuel_price_label": "Цена: {{price}}₢ за единицу",
+        "refuel_full": "ПОЛНЫЙ БАК",
+        "repair_title": "🔧 Ремонт корабля",
+        "repair_desc": "Полное восстановление всех модулей до 100%",
+        "repair_button": "РЕМОНТ",
+        "heal_title": "💊 Лечение экипажа",
+        "heal_desc": "Восстановление здоровья до 100% и поднятие настроения на +20",
+        "heal_button": "ЛЕЧЕНИЕ",
+        "scrap_title": "♻️ Утилизация модулей",
+        "scrap_desc": "Получите 20-40% от стоимости модуля",
+        "scrap_button": "УТИЛИЗИРОВАТЬ",
+        "install_title": "🔧 Установка модулей",
+        "install_desc": "Установите модули из трюма на корабль",
+        "install_button": "УСТАНОВИТЬ",
+        "no_modules": "В трюме нет модулей для установки.",
+        "size_label": "Размер:",
+        "position_label": "Позиция:",
+        "no_space": "Нет места"
     },
     "combat": {
         "no_weapon_bay": "⚠️ Нет оружейной палубы или оружия! Невозможно атаковать.",
@@ -730,6 +1049,67 @@
         "friendly_ship": "Дружественный корабль",
         "planet": "Планета",
         "station": "Станция"
+    },
+    "planet_panel": {
+        "empty_planet": "Пустая планета. Нет населения и заданий.",
+        "inhabited_planet": "Населённая планета.",
+        "tasks_available": "Доступны задачи.",
+        "no_tasks": "Задач нет.",
+        "can_scout": "Эта планета доступна для разведки",
+        "fully_explored": "Планета полностью исследована",
+        "submit_cargo": "Сдать груз",
+        "arrived_at_destination": "Вы прибыли в место назначения",
+        "available_tasks": "Доступные задачи",
+        "on_cooldown": "⏱️ Использовано",
+        "activity": "🌟 Активность",
+        "empty_description": "Описание недоступно",
+        "leave_planet": "ПОКИНУТЬ ПЛАНЕТУ",
+        "scouting": "Разведка",
+        "scouting_desc_1": "Отправьте разведчика для исследования планеты.",
+        "scouting_credits": "• Ресурсы (100-300₢)",
+        "scouting_goods": "• Торговые товары (5т)",
+        "scouting_enemies": "• Встреча с врагами",
+        "last_scouting": "Последняя разведка:",
+        "found_resources": "💰 Найдены ресурсы: +{{value}}₢",
+        "found_goods": "📦 Найден груз: {{name}} (5т)",
+        "found_nothing": "❌ Ничего не найдено",
+        "found_enemy": "⚔️ Засада! Враг с угрозой {{threat}}",
+        "thousands": "тыс.",
+        "submit": "СДАТЬ"
+    },
+    "race_discovery": {
+        "title": "Открыта новая раса",
+        "description": "Детали расы",
+        "traits": "Особенности",
+        "traits_none": "Отсутствуют",
+        "description_label": "Описание"
+    },
+    "sector_map": {
+        "visited": "(посещено)",
+        "explored": "(исследовано)",
+        "unknown_ship": "❓ Неизвестный корабль",
+        "unknown_object": "❓ Неизвестный объект",
+        "storm_types": {
+            "radiation": "Радиационное облако",
+            "ionic": "Ионный шторм",
+            "plasma": "Плазменный шторм"
+        },
+        "enemy_types": {
+            "pirates": "Пираты",
+            "raiders": "Рейдеры",
+            "mercenaries": "Наёмники",
+            "marauders": "Мародёры"
+        },
+        "friendly_ships": {
+            "human": "Человеческий Корабль Исследователей",
+            "synthetic": "Синтетический Корабль Исследователей",
+            "xenosymbiont": "Ксеноморфский Корабль Исследователей",
+            "krylorian": "Крилорианский Корабль Исследователей",
+            "voidborn": "Корабль Исследователей Порождённых Пустотой",
+            "crystalline": "Кристаллоидный Корабль Исследователей"
+        },
+        "station_prefix": "Станция",
+        "anomaly": "Аномалия"
     },
     "galaxy": {
         "tiers": {
@@ -949,7 +1329,8 @@
         "fueltank": "Топливный бак",
         "drill": "Бур",
         "ai_core": "ИИ Ядро",
-        "lab": "Лаборатория"
+        "lab": "Лаборатория",
+        "weaponShed": "Сарай"
     },
     "weapon_types": {
         "kinetic": "Кинетическое",
@@ -1049,5 +1430,117 @@
         "krylorian": "Крилорианцы",
         "voidborn": "Порождённые Пустотой",
         "crystalline": "Кристаллоиды"
+    },
+    "battle_results": {
+        "rewards_title": "💰 Награды:",
+        "module_damage_title": "🔧 Повреждения модулей:",
+        "modules_undamaged": "Модули не повреждены",
+        "crew_losses_title": "👥 Потери экипажа:",
+        "battle_clean": "✨ Бой прошёл без повреждений!"
+    },
+    "game_end": {
+        "victory_title": "🎉 ПОБЕДА!",
+        "gameover_title": "💥 ИГРА ОКОНЧЕНА",
+        "reason_title": "ГРАНИЦА ГАЛАКТИКИ ДОСТИГНУТА:",
+        "defeat_reason": "ПРИЧИНА ПОРАЖЕНИЯ:",
+        "ship_status": "СОСТОЯНИЕ КОРАБЛЯ:",
+        "hull_label": "Корпус:",
+        "shields_label": "Щиты:",
+        "crew_label": "Экипаж:",
+        "modules_label": "Модули:",
+        "units": "ед.",
+        "crew_lost": "ЭКИПАЖ ПОГИБ",
+        "crew_lost_desc": "Все члены экипажа погибли или покинули корабль. Без ИИ Ядра корабль не может функционировать.",
+        "restart": "НАЧАТЬ ЗАНОВО",
+        "continue_exploration": "ПРОДОЛЖИТЬ ИССЛЕДОВАНИЕ",
+        "unknown": "Неизвестно"
+    },
+    "asteroid_belt": {
+        "developed": "✓ Разработан",
+        "detected_resources": "Обнаруженные ресурсы:",
+        "no_resources": "Обнаруженные ресурсы:",
+        "your_drill": "Ваш бур:",
+        "mining_results": "Результаты добычи",
+        "leave": "ПОКИНУТЬ ПОЯС",
+        "rare": "★ Редкий",
+        "tier": "Уровень",
+        "ancient_title": "ДРЕВНИЙ ПОЯС АСТЕРОИДОВ",
+        "ancient_required": "Требуется Древний бур",
+        "description": "Плотное скопление астероидов с ценными ресурсами.",
+        "minerals": "Минералы",
+        "rare_minerals": "Редкие минералы",
+        "valuable_samples": "Ценные образцы",
+        "scan_required": "Требуется scanRange 5+ для точных данных",
+        "level": "Уровень",
+        "required": "требуется",
+        "bonus": "Бонус к добыче",
+        "start_mining": "НАЧАТЬ ДОБЫЧУ",
+        "drill_required": "Требуется буровой модуль уровня"
+    },
+    "star_types": {
+        "red_dwarf": "Красный карлик",
+        "yellow_dwarf": "Жёлтый карлик",
+        "white_dwarf": "Белый карлик",
+        "blue_giant": "Голубой гигант",
+        "red_supergiant": "Красный сверхгигант",
+        "neutron_star": "Нейтронная звезда",
+        "double": "Двойная звезда",
+        "triple": "Тройная звезда",
+        "blackhole": "Чёрная дыра",
+        "gas_giant": "Газовый гигант"
+    },
+    "location_types": {
+        "asteroid_belt": "Пояс астероидов",
+        "anomaly": "Аномалия",
+        "blackhole": "Чёрная дыра",
+        "planet": "Планета",
+        "station": "Станция",
+        "enemy_ship": "Вражеский корабль",
+        "friendly_ship": "Дружеский корабль",
+        "distress_signal": "Сигнал бедствия",
+        "cosmic_storm": "Космический шторм"
+    },
+    "asteroid_belt_names": {
+        "regular": "Пояс астероидов",
+        "ancient": "★ Древний астероидный пояс"
+    },
+    "planet_descriptions": {
+        "desert": "Засушливый мир с экстремальными перепадами температур. Богата минералами, но требует импорта воды.",
+        "ice": "Замерзший мир с подлёдными океанами. Перспективен для добычи дейтерия и редких газов.",
+        "forest": "Планета с богатой биосферой и умеренным климатом. Идеальна для колонизации и сельского хозяйства.",
+        "volcanic": "Геологически активный мир с постоянными извержениями. Богата серой и редкими металлами.",
+        "oceanic": "Водный мир с архипелагами. Перспективен для рыболовства и добычи морских ресурсов.",
+        "radioactive": "Мир с высоким уровнем радиации после катастрофы или бомбардировки. Требует защитных костюмов.",
+        "tropical": "Влажная планета с густыми джунглями. Богата биоресурсами, но опасна болезнями.",
+        "arctic": "Холодный мир с ледяными пустошами. Перспективен для добычи льда и криогенных минералов.",
+        "war_torn": "Планета, опустошённая древними конфликтами. Полна руин, артефактов и опасных зон.",
+        "ringed": "Планета с выраженной системой колец. Кольца богаты минералами и льдом.",
+        "tidal": "Мир с мощной приливной активностью. Геотермальная энергия доступна, но поверхность нестабильна."
+    },
+    "planet_specializations": {
+        "human_academy": {
+            "name": "Космическая Академия",
+            "description": "Военная академия людей предлагает обучение для членов экипажа. Интенсивная программа повышает боевую эффективность."
+        },
+        "synthetic_archives": {
+            "name": "Архивы Данных",
+            "description": "Синтетики хранят знания древних цивилизаций. Можно получить ценную информацию о секторе."
+        },
+        "xenosymbiont_lab": {
+            "name": "Биолаборатория",
+            "description": "Ксилориане — мастера биотехнологий. Улучшите здоровье и регенерацию экипажа."
+        },
+        "krylorian_dojo": {
+            "name": "Воинское Додзё",
+            "description": "Инсектоиды-крилориане — прирождённые воины. Обучение в додзё повышает боевые навыки."
+        },
+        "voidborn_ritual": {
+            "name": "Мистический Ритуал",
+            "description": "Рождённые Пустотой проводят древние ритуалы для усиления артефактов и связи с космосом."
+        },
+        "crystalline_resonator": {
+            "name": "Кристальный Резонатор",
+            "description": "Кристаллические существа могут настроить энергосистемы корабля на резонанс с кристаллами."
+        }
     }
 }

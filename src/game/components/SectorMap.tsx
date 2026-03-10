@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useGameStore } from "@/game/store";
 import { useTranslation } from "@/lib/useTranslation";
+import { getLocationName } from "@/lib/translationHelpers";
 import {
     Location,
     LocationType,
@@ -91,69 +92,138 @@ const seededRandom = (loc: Location, seed: number = 0): number => {
     return x - Math.floor(x);
 };
 
+// Helper to get translated planet type
+function getPlanetTypeTranslation(
+    planetType: string,
+    t: (key: string) => string,
+): string {
+    const typeMap: Record<string, string> = {
+        Пустынная: "desert",
+        Ледяная: "ice",
+        Лесная: "forest",
+        Вулканическая: "volcanic",
+        Океаническая: "oceanic",
+        Тропическая: "tropical",
+        Арктическая: "arctic",
+        "Планета-кольцо": "ringed",
+        Радиоактивная: "radioactive",
+        "Разрушенная войной": "war_torn",
+        Приливная: "tidal",
+        Desert: "desert",
+        Ice: "ice",
+        Forest: "forest",
+        Volcanic: "volcanic",
+        Oceanic: "oceanic",
+        Tropical: "tropical",
+        Arctic: "arctic",
+        "Ringed Planet": "ringed",
+        Radioactive: "radioactive",
+        "War-torn": "war_torn",
+        Tidal: "tidal",
+    };
+    const key = typeMap[planetType];
+    if (key) {
+        const translated = t(`locations.planet_types.${key}`);
+        if (translated !== `locations.planet_types.${key}`) {
+            return translated;
+        }
+    }
+    return planetType;
+}
+
+// Helper to get translated station type
+function getStationTypeTranslation(
+    stationType: string,
+    t: (key: string) => string,
+): string {
+    const typeMap: Record<string, string> = {
+        Торговая: "trade",
+        Военная: "military",
+        Добывающая: "mining",
+        Исследовательская: "research",
+        Медицинская: "medical",
+        Промышленная: "industrial",
+        Trade: "trade",
+        Military: "military",
+        Mining: "mining",
+        Research: "research",
+        Medical: "medical",
+        Industrial: "industrial",
+    };
+    const key = typeMap[stationType];
+    if (key) {
+        const translated = t(`locations.station_types.${key}`);
+        if (translated !== `locations.station_types.${key}`) {
+            return translated;
+        }
+    }
+    return stationType;
+}
+
 // scanRange is the numeric value (3, 5, 8, 15+)
 function getScannerInfo(
     loc: Location,
     scanRange: number,
     isRevealed: boolean = false,
+    t: (key: string) => string,
 ): string[] {
     const info: string[] = [];
     const completed = loc.mined || loc.bossDefeated || loc.signalResolved;
 
+    // Race name translations
+    const raceNames: Record<RaceId, string> = {
+        human: t("races.human.name"),
+        synthetic: t("races.synthetic.name"),
+        xenosymbiont: t("races.xenosymbiont.name"),
+        krylorian: t("races.krylorian.name"),
+        voidborn: t("races.voidborn.name"),
+        crystalline: t("races.crystalline.name"),
+    };
+
     // If location was revealed (e.g., approached without scanner), show full info
     if (isRevealed) {
-        info.push(`📍 ${loc.name}`);
+        info.push(`📍 ${getLocationName(loc.name, t)}`);
 
         // Show type-specific info
         if (loc.type === "enemy") {
-            info.push(`⚔️ Вражеский корабль`);
-            info.push(`Угроза: ${loc.threat ?? 1}`);
+            info.push(`⚔️ ${t("locations.enemy_ship")}`);
+            info.push(`${t("locations.threat")}: ${loc.threat ?? 1}`);
         } else if (loc.type === "friendly_ship") {
-            info.push(`🤝 Дружеский корабль`);
+            info.push(`🤝 ${t("locations.friendly_ship")}`);
             if (loc.shipRace) {
-                const raceNames: Record<RaceId, string> = {
-                    human: "Люди",
-                    synthetic: "Синтетики",
-                    xenosymbiont: "Ксеноморфы-симбионты",
-                    krylorian: "Крилорианцы",
-                    voidborn: "Порождённые Пустотой",
-                    crystalline: "Кристаллоиды",
-                };
                 info.push(`🧬 ${raceNames[loc.shipRace] || loc.shipRace}`);
             }
         } else if (loc.type === "boss") {
-            info.push(`⚠️ Древний корабль`);
+            info.push(`⚠️ ${t("locations.ancient_ship")}`);
         } else if (loc.type === "storm") {
-            info.push(`🌪️ Космический шторм`);
+            info.push(`🌪️ ${t("locations.cosmic_storm")}`);
         } else if (loc.type === "anomaly") {
             const type =
-                loc.anomalyType === "good" ? "✓ Благоприятная" : "⚠ Опасная";
+                loc.anomalyType === "good"
+                    ? t("locations.anomaly_beneficial")
+                    : t("locations.anomaly_dangerous");
             info.push(`🔮 ${type}`);
         } else if (loc.type === "planet") {
-            info.push(`🪐 Планета`);
-            info.push(`🏷️ ${loc.planetType || "Неизвестно"}`);
+            info.push(`🪐 ${t("locations.planet")}`);
+            info.push(
+                `🏷️ ${loc.planetType ? getPlanetTypeTranslation(loc.planetType, t) : t("locations.unknown")}`,
+            );
             if (loc.isEmpty) {
-                info.push(`🏜️ Безлюдная`);
+                info.push(`🏜️ ${t("locations.deserted")}`);
             } else if (loc.dominantRace) {
-                const raceNames: Record<string, string> = {
-                    human: "Люди",
-                    synthetic: "Синтетики",
-                    xenosymbiont: "Ксеноморфы-симбионты",
-                    krylorian: "Крилорианцы",
-                    voidborn: "Порождённые Пустотой",
-                    crystalline: "Кристаллоиды",
-                };
                 const raceName =
-                    raceNames[loc.dominantRace] || loc.dominantRace;
+                    raceNames[loc.dominantRace as RaceId] || loc.dominantRace;
                 info.push(`🧬 ${raceName}`);
             }
         } else if (loc.type === "station") {
             if (loc.stationType) {
-                info.push(`🏷️ ${loc.stationType}`);
+                info.push(
+                    `🏷️ ${getStationTypeTranslation(loc.stationType, t)}`,
+                );
             }
         } else if (loc.type === "asteroid_belt") {
-            info.push(`⛏️ Пояс астероидов`);
-            info.push(`🏷️ Уровень: ${loc.asteroidTier || 1}`);
+            info.push(`⛏️ ${t("locations.asteroid_belt")}`);
+            info.push(`🏷️ ${t("locations.tier")}: ${loc.asteroidTier || 1}`);
         }
 
         return info;
@@ -161,10 +231,10 @@ function getScannerInfo(
 
     // Stations, planets, asteroid belts, and distress signals are always visible
     if (loc.type === "station") {
-        info.push(`📍 ${loc.name}`);
+        info.push(`📍 ${getLocationName(loc.name, t)}`);
         // Show station type with scanRange >= 3
         if (scanRange >= 3 && loc.stationType) {
-            info.push(`🏷️ ${loc.stationType}`);
+            info.push(`🏷️ ${getStationTypeTranslation(loc.stationType, t)}`);
         }
         return info;
     }
@@ -181,55 +251,51 @@ function getScannerInfo(
             loc.type === "enemy" ||
             loc.type === "friendly_ship"
         ) {
-            info.push(`❓ Неизвестный корабль`);
+            info.push(`❓ ${t("locations.unknown_ship")}`);
         } else if (loc.type === "planet") {
-            info.push(`🌏 Планета`);
+            info.push(`🌏 ${t("locations.planet")}`);
         } else if (loc.type === "asteroid_belt") {
-            info.push(`🪨 Пояс астероидов`);
+            info.push(`🪨 ${t("locations.asteroid_belt")}`);
         } else {
-            info.push(`❓ Неизвестный объект`);
+            info.push(`❓ ${t("locations.unknown_object")}`);
         }
         return info;
     }
 
     if (loc.type === "planet") {
-        info.push(`📍 ${loc.name}`);
+        info.push(`📍 ${getLocationName(loc.name, t)}`);
         // Planet type requires scanRange >= 3 to detect
         if (scanRange >= 3 && loc.planetType) {
-            info.push(`🏷️ ${loc.planetType}`);
+            info.push(`🏷️ ${getPlanetTypeTranslation(loc.planetType, t)}`);
         }
         // Planet details (empty or colonized) requires scanRange >= 5
         if (scanRange >= 5) {
             if (loc.isEmpty) {
-                info.push(`🏜️ Безлюдная`);
+                info.push(`🏜️ ${t("locations.deserted")}`);
             } else if (loc.dominantRace) {
-                const raceNames: Record<RaceId, string> = {
-                    human: "Люди",
-                    synthetic: "Синтетики",
-                    xenosymbiont: "Ксеноморфы-симбионты",
-                    krylorian: "Крилорианцы",
-                    voidborn: "Порождённые Пустотой",
-                    crystalline: "Кристаллоиды",
-                };
                 const raceName =
                     raceNames[loc.dominantRace] || loc.dominantRace;
                 info.push(`🧬 ${raceName}`);
                 // Population amount requires scanRange >= 8
                 if (scanRange >= 8 && loc.population) {
-                    info.push(`👥 Население: ${loc.population}k`);
+                    info.push(
+                        `👥 ${t("locations.population")}: ${loc.population}k`,
+                    );
                 }
             }
         }
         return info;
     }
     if (loc.type === "asteroid_belt") {
-        info.push(`📍 ${loc.name}`);
+        info.push(`📍 ${getLocationName(loc.name, t)}`);
         // Always show asteroid tier with any scanner detection
-        info.push(`🏷️ Уровень: ${loc.asteroidTier || 1}`);
+        info.push(`🏷️ ${t("locations.tier")}: ${loc.asteroidTier || 1}`);
         if (scanRange >= 15 && loc.resources && !completed) {
-            info.push(`📦 Минералы: ~${loc.resources.minerals}`);
+            info.push(
+                `📦 ${t("locations.minerals")}: ~${loc.resources.minerals}`,
+            );
             if (loc.resources.rare > 0)
-                info.push(`💎 Редкие: ~${loc.resources.rare}`);
+                info.push(`💎 ${t("locations.rare")}: ~${loc.resources.rare}`);
             info.push(`₢ ~${loc.resources.credits}₢`);
         }
         // Hidden rewards for ancient asteroid belts
@@ -242,80 +308,92 @@ function getScannerInfo(
         return info;
     }
     if (loc.type === "distress_signal") {
-        info.push(`🆘 Сигнал бедствия`);
+        info.push(`🆘 ${t("locations.distress_signal")}`);
         // Show specific type if revealed by scanner or after interaction
         if (loc.signalType && loc.signalRevealed) {
             if (loc.signalType === "pirate_ambush") {
-                info.push(`⚔️ Засада пиратов`);
+                info.push(`⚔️ ${t("locations.pirate_ambush")}`);
             } else if (loc.signalType === "survivors") {
-                info.push(`👥 Выжившие`);
+                info.push(`👥 ${t("locations.survivors")}`);
             } else if (loc.signalType === "abandoned_cargo") {
-                info.push(`📦 Заброшенный груз`);
+                info.push(`📦 ${t("locations.abandoned_cargo")}`);
             }
         } else if (scanRange >= 15 && !loc.signalResolved) {
             // Quantum scanner shows probabilities if type not yet revealed
-            info.push(`⚡ Засада (35%) / Выжившие (30%) / Груз (35%)`);
+            info.push(
+                `⚡ ${t("locations.ambush_prob")} (35%) / ${t("locations.survivors_prob")} (30%) / ${t("locations.cargo_prob")} (35%)`,
+            );
         }
         return info;
     }
 
     // Show name for scanned objects (except storms)
     if (loc.type !== "storm") {
-        info.push(`📍 ${loc.name}`);
+        info.push(`📍 ${getLocationName(loc.name, t)}`);
     }
 
     // Storm info
     if (loc.type === "storm") {
         if (scanRange < 5) {
-            info.push(`🌪️ Космический шторм`);
+            info.push(`🌪️ ${t("locations.cosmic_storm")}`);
         } else {
             // scanRange >= 5: detailed storm info
             const stormNames: Record<StormType, string> = {
-                radiation: "Радиационное облако",
-                ionic: "Ионный шторм",
-                plasma: "Плазменный шторм",
+                radiation: t("locations.radiation_cloud"),
+                ionic: t("locations.ionic_storm"),
+                plasma: t("locations.plasma_storm"),
             };
             const intensity = loc.stormIntensity || 1;
             info.push(
-                `🌪️ ${loc.stormType ? stormNames[loc.stormType] : "Шторм"}`,
+                `🌪️ ${loc.stormType ? stormNames[loc.stormType] : t("locations.cosmic_storm")}`,
             );
-            info.push(`⚡ Интенсивность: ${intensity}`);
+            info.push(`⚡ ${t("locations.intensity")}: ${intensity}`);
 
             // Show possible effects
             if (loc.stormType === "radiation") {
-                info.push(`☢️ Урон экипажу: ~${15 * intensity}%`);
+                info.push(
+                    `☢️ ${t("locations.crew_damage")}: ~${15 * intensity}%`,
+                );
             } else if (loc.stormType === "ionic") {
-                info.push(`⚡ Урон щитам: ~${30 * intensity}%`);
+                info.push(
+                    `⚡ ${t("locations.shield_damage")}: ~${30 * intensity}%`,
+                );
             } else {
-                info.push(`🔥 Комплексный урон: ~${20 * intensity}%`);
+                info.push(
+                    `🔥 ${t("locations.complex_damage")}: ~${20 * intensity}%`,
+                );
             }
 
             info.push(
-                `💰 Добыча: x${loc.stormType === "radiation" ? 2 : loc.stormType === "ionic" ? 2.5 : 3}`,
+                `💰 ${t("locations.loot")}: x${loc.stormType === "radiation" ? 2 : loc.stormType === "ionic" ? 2.5 : 3}`,
             );
         }
         // Hidden rewards for storms
         if (scanRange >= 8 && !completed) {
             const detectionChance = Math.min(100, 50 + (scanRange - 8) * 5);
             if (Math.random() * 100 < detectionChance) {
-                info.push(`★ Редкие ресурсы!`);
+                info.push(t("locations.rare_resources"));
             }
         }
     }
 
     // Enemy info
     if (loc.type === "enemy") {
-        info.push(`⚔️ Угроза: ${loc.threat || 1}`);
+        info.push(`⚔️ ${t("locations.threat")}: ${loc.threat || 1}`);
     }
 
     // Anomaly info
     if (loc.type === "anomaly") {
         if (scanRange >= 15) {
             const type =
-                loc.anomalyType === "good" ? "✓ Благоприятная" : "⚠ Опасная";
+                loc.anomalyType === "good"
+                    ? t("locations.anomaly_beneficial")
+                    : t("locations.anomaly_dangerous");
             info.push(`🔮 ${type}`);
         }
-        info.push(`🔬 Учёный: LV${loc.requiresScientistLevel || 1}`);
+        info.push(
+            `${t("locations.scientist_required")}: LV${loc.requiresScientistLevel || 1}`,
+        );
     }
 
     // Hidden rewards for ancient bosses
@@ -563,10 +641,10 @@ export function SectorMap() {
                 loc.type === "boss" && !canScan && !isRevealed && !completed;
 
             const displayName = isUnknownBoss
-                ? "❓ Неизвестный корабль"
+                ? t("sector_map.unknown_ship")
                 : needsScanner && !canScan && !isRevealed && !completed
-                  ? "❓ Неизвестный объект"
-                  : loc.name;
+                  ? t("sector_map.unknown_object")
+                  : getLocationName(loc.name, t);
 
             // Also hide enemy/friendly ship names without scanner and not revealed
             const isUnknownShip =
@@ -586,12 +664,13 @@ export function SectorMap() {
             // Check for visited station (opened station panel at least once)
             const isVisitedStation = loc.type === "station" && loc.visited;
 
+            const translatedName = getLocationName(loc.name, t);
             const finalDisplayName = isUnknownShip
-                ? "❓ Неизвестный корабль"
+                ? t("sector_map.unknown_ship")
                 : isExploredEmptyPlanet
-                  ? `${loc.name} (исследовано)`
+                  ? `${translatedName} ${t("sector_map.explored")}`
                   : isVisitedColonizedPlanet || isVisitedStation
-                    ? `${loc.name} (посещено)`
+                    ? `${translatedName} ${t("sector_map.visited")}`
                     : displayName;
 
             ctx.font = "11px Share Tech Mono";
@@ -616,12 +695,13 @@ export function SectorMap() {
 
         ctx.restore();
     }, [
-        currentSector,
-        completedLocations,
         canScanObject,
-        zoom,
-        offset,
+        completedLocations,
+        currentSector,
         isDragging,
+        offset,
+        t,
+        zoom,
     ]);
 
     // Initialize canvas and background
@@ -1027,8 +1107,8 @@ export function SectorMap() {
                             !canScan &&
                             !isRevealed &&
                             !completed
-                                ? "❓ Неизвестный объект"
-                                : loc.name;
+                                ? t("sector_map.unknown_object")
+                                : getLocationName(loc.name, t);
 
                         const isUnknownShip =
                             ["enemy", "friendly_ship"].includes(loc.type) &&
@@ -1047,12 +1127,13 @@ export function SectorMap() {
                         const isVisitedStation =
                             loc.type === "station" && loc.visited;
 
+                        const translatedName = getLocationName(loc.name, t);
                         const finalDisplayName = isUnknownShip
-                            ? "❓ Неизвестный корабль"
+                            ? t("sector_map.unknown_ship")
                             : isExploredEmptyPlanet
-                              ? `${loc.name} (исследовано)`
+                              ? `${translatedName} ${t("sector_map.explored")}`
                               : isVisitedColonizedPlanet || isVisitedStation
-                                ? `${loc.name} (посещено)`
+                                ? `${translatedName} ${t("sector_map.visited")}`
                                 : displayName;
 
                         ctx.font = "11px Share Tech Mono";
@@ -1132,12 +1213,13 @@ export function SectorMap() {
             }
         },
         [
-            isDragging,
-            zoom,
-            offset,
-            currentSector,
-            completedLocations,
             canScanObject,
+            completedLocations,
+            currentSector,
+            isDragging,
+            offset,
+            t,
+            zoom,
         ],
     );
 
@@ -1444,6 +1526,7 @@ export function SectorMap() {
                         hoveredLocation.loc.signalRevealed ||
                             hoveredLocation.loc.visited ||
                             false,
+                        t,
                     ).map((line, i) => (
                         <div
                             key={i}

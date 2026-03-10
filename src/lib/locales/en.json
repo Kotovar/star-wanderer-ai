@@ -25,6 +25,9 @@
         "cancel": "Cancel",
         "confirm": "Confirm"
     },
+    "friendly_ship": {
+        "contract": "Contract"
+    },
     "crew": {
         "unknown": "Unknown",
         "moved": "MOVED",
@@ -59,7 +62,8 @@
         "goods": "Goods",
         "no_module": "No cargo bay",
         "capacity_label": "Capacity",
-        "hold_empty": "Hold is empty"
+        "hold_empty": "Hold is empty",
+        "contract_label": "[Contract]"
     },
     "modules": {
         "search_per_turn": "res/turn",
@@ -297,6 +301,150 @@
         "brittle_crystal": {
             "name": "Brittleness",
             "description": "-15% max health"
+        },
+        "master": {
+            "name": "Master",
+            "description": "Double effect from assignments"
+        },
+        "rebel": {
+            "name": "Rebel",
+            "description": "-15 mood, desertion risk"
+        },
+        "sharpshooter": {
+            "name": "Sharpshooter",
+            "description": "+10% damage"
+        },
+        "tough": {
+            "name": "Tough",
+            "description": "+20% health"
+        },
+        "coward": {
+            "name": "Coward",
+            "description": "-10 morale in combat each turn"
+        },
+        "legend": {
+            "name": "Legend",
+            "description": "+50% max health and morale"
+        },
+        "lucky": {
+            "name": "Lucky",
+            "description": "+5% to all rewards"
+        },
+        "hardworking": {
+            "name": "Hardworking",
+            "description": "+10% experience"
+        },
+        "sickly": {
+            "name": "Sickly",
+            "description": "-15% health"
+        },
+        "veteran": {
+            "name": "Veteran",
+            "description": "+25% damage, +15% defense"
+        },
+        "leader": {
+            "name": "Leader",
+            "description": "+20 crew morale, +10% efficiency"
+        },
+        "experienced": {
+            "name": "Experienced",
+            "description": "+15% efficiency"
+        },
+        "skilled": {
+            "name": "Skilled",
+            "description": "+20% profession efficiency"
+        },
+        "elite": {
+            "name": "Elite",
+            "description": "+30% to all bonuses"
+        },
+        "genius": {
+            "name": "Genius",
+            "description": "+50% science"
+        },
+        "prodigy": {
+            "name": "Prodigy",
+            "description": "+25% experience, +10% all stats"
+        },
+        "natural": {
+            "name": "Natural",
+            "description": "+15% all stats"
+        },
+        "adapted": {
+            "name": "Adapted",
+            "description": "Immune to negative environment effects"
+        },
+        "strong": {
+            "name": "Strong",
+            "description": "+20% health"
+        },
+        "weak": {
+            "name": "Weak",
+            "description": "-10% health"
+        },
+        "fast": {
+            "name": "Fast",
+            "description": "+10% evasion"
+        },
+        "slow": {
+            "name": "Slow",
+            "description": "-5% evasion"
+        },
+        "brave": {
+            "name": "Brave",
+            "description": "+15 morale, immune to panic"
+        },
+        "fearful": {
+            "name": "Fearful",
+            "description": "-10 morale in combat"
+        },
+        "optimist": {
+            "name": "Optimist",
+            "description": "+10 morale"
+        },
+        "pessimist": {
+            "name": "Pessimist",
+            "description": "-5 morale"
+        },
+        "friendly": {
+            "name": "Friendly",
+            "description": "+5 morale to crew"
+        },
+        "aggressive": {
+            "name": "Aggressive",
+            "description": "+10% damage, -5 morale to crew"
+        },
+        "calm": {
+            "name": "Calm",
+            "description": "Immune to stress"
+        },
+        "nervous": {
+            "name": "Nervous",
+            "description": "-5 morale, panic risk"
+        },
+        "focused": {
+            "name": "Focused",
+            "description": "+10% accuracy"
+        },
+        "distracted": {
+            "name": "Distracted",
+            "description": "-5% accuracy"
+        },
+        "efficient": {
+            "name": "Efficient",
+            "description": "-10% resource consumption"
+        },
+        "wasteful": {
+            "name": "Wasteful",
+            "description": "+10% resource consumption"
+        },
+        "lucky_star": {
+            "name": "Born Under Lucky Star",
+            "description": "+10% to all positive effects"
+        },
+        "cursed": {
+            "name": "Cursed",
+            "description": "-10% all stats"
         }
     },
     "battle": {
@@ -307,7 +455,14 @@
         "battle_clean": "✨ Battle completed without damage!",
         "victory": "Victory",
         "defeat": "Defeat",
-        "fled": "Fled"
+        "fled": "Fled",
+        "defeated": "defeated",
+        "credits": "credits",
+        "artifact": "Artifact",
+        "destroyed": "Destroyed",
+        "killed": "Killed",
+        "wounded": "Wounded",
+        "continue": "CONTINUE"
     },
     "storm": {
         "results": "Results",
@@ -343,13 +498,22 @@
         "scanner_required": "Scanner required to get information.",
         "warning": "⚠ WARNING",
         "warning_enter": "Entering an unknown object may be dangerous!",
-        "investigate": "❓ INVESTIGATE",
+        "investigate": "❓ APPROACH",
         "retreat": "RETREAT",
         "intensity": "Intensity: {{intensity}} ({{label}})",
         "danger": "⚠ Danger:",
         "loot": "★ Loot:",
         "warning_storm": "Entering the storm will deal damage to ship and crew!",
-        "enter_storm": "{{icon}} ENTER STORM"
+        "enter_storm": "{{icon}} ENTER STORM",
+        "storm_overcome": "⚡ STORM OVERCOME",
+        "rewards": "💰 Rewards:",
+        "credits_found": "+{{credits}}₢ credits",
+        "rare_find": "(including ★ RARE FIND: +{{rare}}₢)",
+        "damage": "🔧 Damage:",
+        "shields_damage": "🛡 Shields: -{{damage}}",
+        "modules_damage": "Modules: -{{percent}}% x{{count}}",
+        "module_damage_detail": "{{module}}: -{{percent}}%",
+        "continue": "CONTINUE"
     },
     "unknown_ship": {
         "your_stats": "Your stats",
@@ -385,6 +549,8 @@
         "not_found": "Contract not found",
         "type": "Contract type",
         "cancel": "CANCEL",
+        "accept": "ACCEPT",
+        "accepted": "ACCEPTED",
         "type_delivery": "Cargo Delivery",
         "type_scan": "Scanning",
         "type_combat": "Combat Mission",
@@ -395,6 +561,7 @@
         "type_patrol": "Patrol",
         "type_bounty": "Bounty Hunt",
         "type_diplomacy": "Diplomacy",
+        "type_rescue_survivors": "Rescue Survivors",
         "task_what": "What to do",
         "task_where": "Where to complete",
         "task_destination": "Destination",
@@ -432,7 +599,112 @@
         "scan_sector": "Scan planet in {{sector}}",
         "clear_sector": "Clear {{sector}}",
         "research_count": "Investigate {{count}} anomalies ({{current}}/{{total}})",
-        "default": "✓ Complete mission"
+        "default": "✓ Complete mission",
+        "details_title": "Contract Details",
+        "reward_label": "💰 Reward:",
+        "desc_scan": "📡 Scanning: {{planetType}}",
+        "desc_supply": "📦 Supply: {{cargo}} x{{quantity}}t",
+        "desc_delivery": "📦 Deliver \"{{cargo}}\" (10t)",
+        "desc_combat": "⚔ Destroy all enemies in sector {{sector}}",
+        "desc_bounty": "🎯 Destroy enemy (threat {{threat}}) in sector {{sector}}",
+        "desc_diplomacy": "🌍 Visit planet {{planet}} ({{type}}) in sector {{sector}}",
+        "desc_patrol": "🦠 Visit sectors: {{sectors}} ({{visited}}/{{target}})",
+        "desc_rescue": "👁️ Enter {{stormName}} in sector {{sectorName}}",
+        "desc_mining": "💎 Find artifact (investigate anomalies or defeat boss)",
+        "desc_research": "🔬 Investigate {{count}} anomalies",
+        "turn_in_delivery": "✓ Deliver cargo at destination",
+        "turn_in_combat": "✓ Automatically after victory",
+        "turn_in_research": "✓ Automatically after research",
+        "turn_in_bounty": "✓ Automatically after victory",
+        "turn_in_diplomacy": "✓ Automatically upon visiting planet",
+        "turn_in_patrol": "✓ Automatically after visiting all sectors",
+        "turn_in_rescue": "✓ Automatically after passing through storm",
+        "turn_in_mining": "✓ Automatically upon finding artifact",
+        "turn_in_scan": "✓ Automatically after scanning",
+        "turn_in_supply": "✓ Automatically after delivery",
+        "no_contracts": "No available contracts.",
+        "quest_delivery_desc": "Urgent cargo delivery to another sector.",
+        "quest_delivery_cargo": "📦 Cargo will be loaded onto your ship",
+        "name_delivery": "📦 Delivery: {{cargo}}",
+        "name_scan": "📡 Scanning: {{planetType}}",
+        "name_combat": "⚔ Sector Clearance",
+        "name_research": "🔬 Anomaly Research",
+        "name_bounty": "🎯 Bounty Hunt",
+        "name_diplomacy": "🌍 Diplomatic Mission",
+        "name_patrol": "🦠 Sector Patrol",
+        "name_rescue": "👁️ Rescue Operation",
+        "name_mining": "💎 Artifact Hunt",
+        "name_supply": "📦 Supply: {{cargo}}",
+        "reward_short": "💰 Reward: {{reward}}₢",
+        "cargo": "Cargo",
+        "desc_bounty_kryl": "🦎 Duel of Honor",
+        "desc_rescue_void": "👁️ Journey into the Void",
+        "desc_mining_crystal": "💎 Search for Ancient Crystal",
+        "desc_diplomacy_human": "🌍 Diplomatic Mission",
+        "desc_research_synth": "🤖 Ancient Data Analysis",
+        "desc_patrol_xeno": "🦠 Bio-Sample Collection",
+        "desc_combat_generic": "⚔ Sector Clearance",
+        "desc_research_generic": "🔬 Anomaly Research",
+        "desc_bounty_generic": "🎯 Pirate Hunt"
+    },
+    "locations": {
+        "enemy_ship": "Enemy ship",
+        "friendly_ship": "Friendly ship",
+        "ancient_ship": "Ancient ship",
+        "unknown_ship": "Unknown ship",
+        "cosmic_storm": "Cosmic storm",
+        "anomaly_beneficial": "✓ Beneficial",
+        "anomaly_dangerous": "⚠ Dangerous",
+        "planet": "Planet",
+        "deserted": "Deserted",
+        "station": "Station",
+        "asteroid_belt": "Asteroid belt",
+        "unknown_object": "Unknown object",
+        "threat": "Threat",
+        "level": "Level",
+        "tier": "Tier",
+        "population": "Population",
+        "minerals": "Minerals",
+        "rare": "Rare",
+        "distress_signal": "Distress signal",
+        "pirate_ambush": "Pirate ambush",
+        "survivors": "Survivors",
+        "abandoned_cargo": "Abandoned cargo",
+        "ambush_prob": "Ambush",
+        "survivors_prob": "Survivors",
+        "cargo_prob": "Cargo",
+        "radiation_cloud": "Radiation cloud",
+        "ionic_storm": "Ion storm",
+        "plasma_storm": "Plasma storm",
+        "intensity": "Intensity",
+        "crew_damage": "Crew damage",
+        "shield_damage": "Shield damage",
+        "complex_damage": "Complex damage",
+        "loot": "Loot",
+        "rare_resources": "★ Rare resources!",
+        "scientist_required": "🔬 Scientist",
+        "ancient_ship_reward": "★ Guaranteed artifact!",
+        "planet_types": {
+            "desert": "Desert",
+            "ice": "Ice",
+            "forest": "Forest",
+            "volcanic": "Volcanic",
+            "oceanic": "Oceanic",
+            "tropical": "Tropical",
+            "arctic": "Arctic",
+            "ringed": "Ringed Planet",
+            "radioactive": "Radioactive",
+            "war_torn": "War-torn",
+            "tidal": "Tidal"
+        },
+        "station_types": {
+            "trade": "Trade",
+            "military": "Military",
+            "mining": "Mining",
+            "research": "Research",
+            "medical": "Medical",
+            "industrial": "Industrial"
+        }
     },
     "research": {
         "title": "Research",
@@ -661,7 +933,54 @@
         "modules_tab": "MODULES",
         "trade_tab": "TRADE",
         "crew_tab": "CREW",
-        "services_tab": "SERVICES"
+        "services_tab": "SERVICES",
+        "crew_profession": "Profession:",
+        "crew_price": "💰 Price: {{price}}₢",
+        "race_bonuses": "Race bonuses:",
+        "features": "Features:",
+        "station_stock": "At station: {{stock}}t",
+        "no_space": "⚠ No space for crew. Build a life support module.",
+        "hire_button": "HIRE",
+        "close": "Close",
+        "energy_consumption": "consumption"
+    },
+    "trade": {
+        "buy_label": "Buy:",
+        "sell_label": "Sell:",
+        "per_ton": "{{price}}₢/t",
+        "at_station": "At station: {{stock}}t",
+        "in_hold": "In hold: {{quantity}}t",
+        "goods": {
+            "water": "Water",
+            "food": "Food",
+            "medicine": "Medicine",
+            "electronics": "Electronics",
+            "minerals": "Minerals",
+            "rare_minerals": "Rare minerals"
+        }
+    },
+    "services": {
+        "tab_title": "SERVICES",
+        "refuel_title": "⛽ Refuel",
+        "refuel_fuel_label": "Fuel: {{fuel}}/{{maxFuel}}",
+        "refuel_price_label": "Price: {{price}}₢ per unit",
+        "refuel_full": "FULL TANK",
+        "repair_title": "🔧 Ship Repair",
+        "repair_desc": "Full restoration of all modules to 100%",
+        "repair_button": "REPAIR",
+        "heal_title": "💊 Crew Healing",
+        "heal_desc": "Restore health to 100% and boost mood by +20",
+        "heal_button": "HEAL",
+        "scrap_title": "♻️ Module Scrap",
+        "scrap_desc": "Get 20-40% of module value",
+        "scrap_button": "SCRAP",
+        "install_title": "🔧 Module Installation",
+        "install_desc": "Install modules from cargo hold to ship",
+        "install_button": "INSTALL",
+        "no_modules": "No modules in cargo hold to install.",
+        "size_label": "Size:",
+        "position_label": "Position:",
+        "no_space": "No space"
     },
     "combat": {
         "no_weapon_bay": "⚠️ No weapon bay or weapons! Cannot attack.",
@@ -730,6 +1049,67 @@
         "friendly_ship": "Friendly ship",
         "planet": "Planet",
         "station": "Station"
+    },
+    "planet_panel": {
+        "empty_planet": "Empty planet. No population or quests.",
+        "inhabited_planet": "Inhabited planet.",
+        "tasks_available": "Tasks available.",
+        "no_tasks": "No tasks.",
+        "can_scout": "This planet is available for scouting",
+        "fully_explored": "Planet fully explored",
+        "submit_cargo": "Submit cargo",
+        "arrived_at_destination": "You have arrived at destination",
+        "available_tasks": "Available tasks",
+        "on_cooldown": "⏱️ On cooldown",
+        "activity": "🌟 Activity",
+        "empty_description": "Description unavailable",
+        "leave_planet": "LEAVE PLANET",
+        "scouting": "Scouting",
+        "scouting_desc_1": "Send a scout to investigate the planet.",
+        "scouting_credits": "• Resources (100-300₢)",
+        "scouting_goods": "• Trade goods (5t)",
+        "scouting_enemies": "• Enemy encounter",
+        "last_scouting": "Last scouting:",
+        "found_resources": "💰 Found resources: +{{value}}₢",
+        "found_goods": "📦 Found cargo: {{name}} (5t)",
+        "found_nothing": "❌ Nothing found",
+        "found_enemy": "⚔️ Ambush! Enemy with threat {{threat}}",
+        "thousands": "k",
+        "submit": "SUBMIT"
+    },
+    "race_discovery": {
+        "title": "New Race Discovered",
+        "description": "Race details",
+        "traits": "Traits",
+        "traits_none": "None",
+        "description_label": "Description"
+    },
+    "sector_map": {
+        "visited": "(visited)",
+        "explored": "(explored)",
+        "unknown_ship": "❓ Unknown Ship",
+        "unknown_object": "❓ Unknown Object",
+        "storm_types": {
+            "radiation": "Radiation Cloud",
+            "ionic": "Ion Storm",
+            "plasma": "Plasma Storm"
+        },
+        "enemy_types": {
+            "pirates": "Pirates",
+            "raiders": "Raiders",
+            "mercenaries": "Mercenaries",
+            "marauders": "Marauders"
+        },
+        "friendly_ships": {
+            "human": "Human Explorer Ship",
+            "synthetic": "Synthetic Explorer Ship",
+            "xenosymbiont": "Xenomorph Explorer Ship",
+            "krylorian": "Krylorian Explorer Ship",
+            "voidborn": "Voidborn Explorer Ship",
+            "crystalline": "Crystalline Explorer Ship"
+        },
+        "station_prefix": "Station",
+        "anomaly": "Anomaly"
     },
     "galaxy": {
         "tiers": {
@@ -949,7 +1329,8 @@
         "fueltank": "Fuel Tank",
         "drill": "Drill",
         "ai_core": "AI Core",
-        "lab": "Laboratory"
+        "lab": "Laboratory",
+        "weaponShed": "Shed"
     },
     "weapon_types": {
         "kinetic": "Kinetic",
@@ -1049,5 +1430,117 @@
         "krylorian": "Krylorians",
         "voidborn": "Voidborn",
         "crystalline": "Crystallines"
+    },
+    "battle_results": {
+        "rewards_title": "💰 Rewards:",
+        "module_damage_title": "🔧 Module damage:",
+        "modules_undamaged": "Modules undamaged",
+        "crew_losses_title": "👥 Crew losses:",
+        "battle_clean": "✨ Battle completed without damage!"
+    },
+    "game_end": {
+        "victory_title": "🎉 VICTORY!",
+        "gameover_title": "💥 GAME OVER",
+        "reason_title": "GALAXY EDGE REACHED:",
+        "defeat_reason": "DEFEAT REASON:",
+        "ship_status": "SHIP STATUS:",
+        "hull_label": "Hull:",
+        "shields_label": "Shields:",
+        "crew_label": "Crew:",
+        "modules_label": "Modules:",
+        "units": "pts",
+        "crew_lost": "CREW LOST",
+        "crew_lost_desc": "All crew members died or left the ship. Without AI Core, the ship cannot function.",
+        "restart": "RESTART",
+        "continue_exploration": "CONTINUE EXPLORATION",
+        "unknown": "Unknown"
+    },
+    "asteroid_belt": {
+        "developed": "✓ Developed",
+        "detected_resources": "Detected resources:",
+        "no_resources": "Detected resources:",
+        "your_drill": "Your drill:",
+        "mining_results": "Mining results",
+        "leave": "LEAVE BELT",
+        "rare": "★ Rare",
+        "tier": "Tier",
+        "ancient_title": "ANCIENT ASTEROID BELT",
+        "ancient_required": "Ancient drill required",
+        "description": "Dense cluster of asteroids with valuable resources.",
+        "minerals": "Minerals",
+        "rare_minerals": "Rare minerals",
+        "valuable_samples": "Valuable samples",
+        "scan_required": "Requires scanRange 5+ for accurate data",
+        "level": "Level",
+        "required": "required",
+        "bonus": "Mining bonus",
+        "start_mining": "START MINING",
+        "drill_required": "Drill module level required"
+    },
+    "star_types": {
+        "red_dwarf": "Red Dwarf",
+        "yellow_dwarf": "Yellow Dwarf",
+        "white_dwarf": "White Dwarf",
+        "blue_giant": "Blue Giant",
+        "red_supergiant": "Red Supergiant",
+        "neutron_star": "Neutron Star",
+        "double": "Double Star",
+        "triple": "Triple Star",
+        "blackhole": "Black Hole",
+        "gas_giant": "Gas Giant"
+    },
+    "location_types": {
+        "asteroid_belt": "Asteroid Belt",
+        "anomaly": "Anomaly",
+        "blackhole": "Black Hole",
+        "planet": "Planet",
+        "station": "Station",
+        "enemy_ship": "Enemy Ship",
+        "friendly_ship": "Friendly Ship",
+        "distress_signal": "Distress Signal",
+        "cosmic_storm": "Cosmic Storm"
+    },
+    "asteroid_belt_names": {
+        "regular": "Asteroid Belt",
+        "ancient": "★ Ancient Asteroid Belt"
+    },
+    "planet_descriptions": {
+        "desert": "Arid world with extreme temperature swings. Rich in minerals but requires water imports.",
+        "ice": "Frozen world with subsurface oceans. Prospective for deuterium and rare gas mining.",
+        "forest": "Planet with rich biosphere and moderate climate. Ideal for colonization and agriculture.",
+        "volcanic": "Geologically active world with constant eruptions. Rich in sulfur and rare metals.",
+        "oceanic": "Water world with archipelagos. Prospective for fishing and marine resource extraction.",
+        "radioactive": "World with high radiation levels after catastrophe or bombardment. Requires protective suits.",
+        "tropical": "Humid planet with dense jungles. Rich in bio-resources but dangerous due to diseases.",
+        "arctic": "Cold world with ice wastelands. Prospective for ice and cryogenic mineral mining.",
+        "war_torn": "Planet devastated by ancient conflicts. Full of ruins, artifacts, and dangerous zones.",
+        "ringed": "Planet with prominent ring system. Rings are rich in minerals and ice.",
+        "tidal": "World with powerful tidal activity. Geothermal energy available but surface is unstable."
+    },
+    "planet_specializations": {
+        "human_academy": {
+            "name": "Space Academy",
+            "description": "Human military academy offers crew training. Intensive program enhances combat effectiveness."
+        },
+        "synthetic_archives": {
+            "name": "Data Archives",
+            "description": "Synthetics store knowledge of ancient civilizations. Can obtain valuable sector information."
+        },
+        "xenosymbiont_lab": {
+            "name": "Bio-Laboratory",
+            "description": "Krylorians are masters of biotechnology. Improve crew health and regeneration."
+        },
+        "krylorian_dojo": {
+            "name": "Warrior Dojo",
+            "description": "Insectoid-krylorians are born warriors. Dojo training enhances combat skills."
+        },
+        "voidborn_ritual": {
+            "name": "Mystic Ritual",
+            "description": "Voidborn conduct ancient rituals to amplify artifacts and connect with the cosmos."
+        },
+        "crystalline_resonator": {
+            "name": "Crystal Resonator",
+            "description": "Crystalline beings can tune ship energy systems to resonate with crystals."
+        }
     }
 }
