@@ -21,6 +21,8 @@ export const initialCrew: CrewMember[] = [
         moduleId: 2,
         movedThisTurn: false,
         turnsAtZeroHappiness: 0,
+        isMerged: false,
+        mergedModuleId: null,
     },
     {
         id: 2,
@@ -41,6 +43,8 @@ export const initialCrew: CrewMember[] = [
         moduleId: 3,
         movedThisTurn: false,
         turnsAtZeroHappiness: 0,
+        isMerged: false,
+        mergedModuleId: null,
     },
     {
         id: 3,
@@ -61,5 +65,7 @@ export const initialCrew: CrewMember[] = [
         moduleId: 3,
         movedThisTurn: false,
         turnsAtZeroHappiness: 0,
+        isMerged: false,
+        mergedModuleId: null,
     },
 ];

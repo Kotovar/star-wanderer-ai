@@ -3,6 +3,7 @@ import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import { getActiveModules } from "@/lib";
 import { getMaxCrewTraitBonus } from "@/game/traits";
 import { getTechBonusSum } from "@/game/research";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type { GameState } from "@/game/types";
 
 /**
@@ -59,6 +60,12 @@ export const getEffectiveScanRange = (state: GameState) => {
     if (artifactBonus > 0 && quantumScanner) {
         const quantumBonus = getArtifactEffectValue(quantumScanner, state);
         maxRange += Math.floor(quantumBonus * artifactBonus);
+    }
+
+    // Бонус от сращивания ксеноморфа с scanner
+    const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);
+    if (mergeBonus.scanRange) {
+        maxRange = Math.floor(maxRange * (1 + mergeBonus.scanRange / 100));
     }
 
     return maxRange;

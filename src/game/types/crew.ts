@@ -33,6 +33,7 @@ export type CrewMemberAssignment =
     | "reactor_overload"
     | "analysis"
     | "sabotage"
+    | "merge"
     | ""
     | null;
 
@@ -76,6 +77,9 @@ export interface CrewMember {
     traits: CrewTrait[];
     moduleId: number; // ID of the module where the crew member is located
     movedThisTurn: boolean; // Whether the crew member has moved this turn
+    // Xenosymbiont merge state
+    isMerged: boolean; // Whether the crew member is merged with a module
+    mergedModuleId: number | null; // ID of the module the crew member is merged with
 }
 
 export type CrewTraitEffect = {

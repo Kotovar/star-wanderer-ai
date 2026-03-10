@@ -6,6 +6,7 @@ import {
 } from "../utils";
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type { GameState } from "@/game/types";
 
 /**
@@ -45,11 +46,24 @@ export const updateShipStats = (state: GameState): void => {
 
     // Сохраняем бонусные щиты от эффектов планет
     const bonusShields = ship.bonusShields || 0;
-    const maxShieldsWithBonus = totalShields + bonusShields;
+    let maxShieldsWithBonus = totalShields + bonusShields;
 
     // === Расчёт кислорода и топлива ===
     const totalOxygen = calculateTotalOxygen(modules);
-    const totalFuelCapacity = calculateTotalFuelCapacity(modules);
+    let totalFuelCapacity = calculateTotalFuelCapacity(modules);
+
+    // === Бонусы от сращивания ксеноморфов ===
+    const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);
+    if (mergeBonus.shieldCapacity) {
+        maxShieldsWithBonus = Math.floor(
+            maxShieldsWithBonus * (1 + mergeBonus.shieldCapacity / 100),
+        );
+    }
+    if (mergeBonus.fuelCapacity) {
+        totalFuelCapacity = Math.floor(
+            totalFuelCapacity * (1 + mergeBonus.fuelCapacity / 100),
+        );
+    }
 
     // Защита от NaN или undefined для текущего топлива
     const currentFuel = ship.fuel || 0;

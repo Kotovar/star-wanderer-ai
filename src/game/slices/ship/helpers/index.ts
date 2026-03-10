@@ -11,3 +11,4 @@ export * from "./calculateFuelCost";
 export * from "./areModulesFunctional";
 export * from "./fuel";
 export * from "./updateShipStats";
+export { getMergeEffectsBonus } from "@/game/slices/crew/helpers";

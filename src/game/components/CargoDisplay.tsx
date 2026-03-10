@@ -7,6 +7,7 @@ import { useTranslation } from "@/lib/useTranslation";
 
 export function CargoDisplay() {
     const ship = useGameStore((s) => s.ship);
+    const getCargoCapacity = useGameStore((s) => s.getCargoCapacity);
     const { t } = useTranslation();
     const cargoModules = ship.modules.filter(
         (m) =>
@@ -22,11 +23,8 @@ export function CargoDisplay() {
         );
     }
 
-    // Sum capacity from all cargo modules
-    const totalCapacity = cargoModules.reduce(
-        (sum, m) => sum + (m.capacity || 0),
-        0,
-    );
+    // Используем геттер для получения вместимости с учётом бонусов
+    const totalCapacity = getCargoCapacity();
 
     const contractCargo = ship.cargo.reduce((sum, c) => sum + c.quantity, 0);
     const tradeCargo = ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0);

@@ -5,6 +5,7 @@ import {
     getPilotFuelConsumptionModifier,
     getPlanetFuelEfficiencyModifier,
 } from "@/game/slices/ship";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { BASE_FUEL_COST_MULTIPLIER, DEFAULT_FUEL_COST } from "@/game/constants";
 
 /**
@@ -77,8 +78,18 @@ export const calculateFuelCost = (state: GameState, targetSectorId: number) => {
     const pilotModifier = getPilotFuelConsumptionModifier(state.crew);
     const planetModifier = getPlanetFuelEfficiencyModifier(state.activeEffects);
 
+    // Бонус от сращивания ксеноморфов
+    const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);
+    const mergeFuelModifier = mergeBonus.fuelEfficiency
+        ? 1 - mergeBonus.fuelEfficiency / 100
+        : 1;
+
     const result = Math.ceil(
-        baseCost * raceModifier * pilotModifier * planetModifier,
+        baseCost *
+            raceModifier *
+            pilotModifier *
+            planetModifier *
+            mergeFuelModifier,
     );
 
     // Защита от NaN

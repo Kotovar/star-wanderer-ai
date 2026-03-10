@@ -1,5 +1,6 @@
 import type { GameState } from "@/game/types/game";
 import { CREW_ASSIGNMENT_BONUSES, RACES } from "@/game/constants";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 
 /**
  * Вычисляет общий шанс уклонения корабля
@@ -49,6 +50,12 @@ export function getTotalEvasion(state: GameState): number {
             });
         }
     });
+
+    // Бонус от сращивания ксеноморфа с cockpit
+    const mergeBonus = getMergeEffectsBonus(crew, state.ship.modules);
+    if (mergeBonus.evasionBonus) {
+        evasion += mergeBonus.evasionBonus;
+    }
 
     return Math.round(evasion);
 }

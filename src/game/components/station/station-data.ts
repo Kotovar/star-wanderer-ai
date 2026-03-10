@@ -1340,6 +1340,8 @@ export function generateStationCrew(
                 moduleId: 1,
                 movedThisTurn: false,
                 turnsAtZeroHappiness: 0,
+                isMerged: false,
+                mergedModuleId: null,
             },
             price: finalPrice,
             quality,

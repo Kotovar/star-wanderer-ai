@@ -56,6 +56,7 @@ import {
     createGameLoopSlice,
     getTotalEvasion,
 } from "@/game/slices";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type {
     BattleResult,
     CargoItem,
@@ -1163,6 +1164,15 @@ export const useGameStore = create<GameStore>()(
             } else if (drillLevel > asteroidTier) {
                 // Regular drill bonus: 20% per level above
                 efficiencyBonus = 1 + (drillLevel - asteroidTier) * 0.2;
+            }
+
+            // Бонус от сращивания ксеноморфа с drill
+            const mergeBonus = getMergeEffectsBonus(
+                state.crew,
+                state.ship.modules,
+            );
+            if (mergeBonus.resourceYield) {
+                efficiencyBonus *= 1 + mergeBonus.resourceYield / 100;
             }
             // const bonusPercent = Math.round((efficiencyBonus - 1) * 100);
 
@@ -4405,10 +4415,20 @@ export const useGameStore = create<GameStore>()(
             const currentCargo =
                 state.ship.cargo.reduce((s, c) => s + c.quantity, 0) +
                 state.ship.tradeGoods.reduce((s, g) => s + g.quantity, 0);
-            if (
-                cargoModule.capacity &&
-                currentCargo + quantity > cargoModule.capacity
-            ) {
+
+            // Вычисляем вместимость с бонусом от сращивания
+            const mergeBonus = getMergeEffectsBonus(
+                state.crew,
+                state.ship.modules,
+            );
+            let cargoCapacity = cargoModule.capacity || 0;
+            if (mergeBonus.cargoCapacity) {
+                cargoCapacity = Math.floor(
+                    cargoCapacity * (1 + mergeBonus.cargoCapacity / 100),
+                );
+            }
+
+            if (currentCargo + quantity > cargoCapacity) {
                 get().addLog("Недостаточно места!", "error");
                 return;
             }
@@ -4634,6 +4654,8 @@ export const useGameStore = create<GameStore>()(
                 moduleId: crewData.moduleId || initialModuleId,
                 movedThisTurn: false,
                 turnsAtZeroHappiness: 0,
+                isMerged: false,
+                mergedModuleId: null,
             };
 
             // Track hired crew by station to prevent re-hiring
@@ -4722,6 +4744,10 @@ export const useGameStore = create<GameStore>()(
                               ...c,
                               assignment: task || null,
                               assignmentEffect: effect || null,
+                              // Сброс сращивания при смене задания с "merge"
+                              isMerged: task === "merge" ? c.isMerged : false,
+                              mergedModuleId:
+                                  task === "merge" ? c.mergedModuleId : null,
                           }
                         : c,
                 ),
@@ -4830,6 +4856,9 @@ export const useGameStore = create<GameStore>()(
                               movedThisTurn: true,
                               assignment: null,
                               assignmentEffect: null,
+                              // Сброс сращивания при перемещении
+                              isMerged: false,
+                              mergedModuleId: null,
                           }
                         : c,
                 ),
@@ -5594,6 +5623,8 @@ export const useGameStore = create<GameStore>()(
                             moduleId: initialModuleId,
                             movedThisTurn: false,
                             turnsAtZeroHappiness: 0,
+                            isMerged: false,
+                            mergedModuleId: null,
                         };
                         set((s) => ({ crew: [...s.crew, newCrew] }));
                         get().addLog(
@@ -6639,6 +6670,17 @@ export const useGameStore = create<GameStore>()(
             );
             if (hasResearchSpeedTech) {
                 researchOutput = Math.floor(researchOutput * 1.2);
+            }
+
+            // Бонус от сращивания ксеноморфа с lab
+            const mergeBonus = getMergeEffectsBonus(
+                state.crew,
+                state.ship.modules,
+            );
+            if (mergeBonus.researchSpeed) {
+                researchOutput = Math.floor(
+                    researchOutput * (1 + mergeBonus.researchSpeed / 100),
+                );
             }
 
             // Calculate progress (base: 100 points needed)

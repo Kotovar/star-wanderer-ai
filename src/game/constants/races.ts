@@ -1,19 +1,54 @@
 import type { Race, RaceId } from "@/game/types";
+import type { ModuleType } from "@/game/types";
 
 /**
- * Эффект сращивания ксеноморфа-симбионта с модулем корабля
+ * Эффекты сращивания ксеноморфа-симбионта с модулем корабля
  */
 export interface XenosymbiontMergeEffect {
     /** ID модуля, с которым произошло сращивание */
-    moduleId: string;
+    moduleId: number;
+    /** Тип модуля */
+    moduleType: ModuleType;
     /** Бонус к регенерации щитов (%) */
     shieldRegenBonus?: number;
+    /** Бонус к ёмкости щита (%) */
+    shieldCapacity?: number;
     /** Бонус к ремонту модулей (%) */
     repairBonus?: number;
     /** Снижение потребления энергии (%) */
     energyReduction?: number;
-    /** Другие эффекты */
-    [key: string]: number | string | undefined;
+    /** Бонус к выработке энергии (%) */
+    powerOutput?: number;
+    /** Бонус к уклонению корабля (%) */
+    evasionBonus?: number;
+    /** Бонус к инициативе (%) */
+    initiativeBonus?: number;
+    /** Эффективность кислорода (%) */
+    oxygenEfficiency?: number;
+    /** Регенерация здоровья экипажа */
+    crewHealthRegen?: number;
+    /** Вместимость груза (%) */
+    cargoCapacity?: number;
+    /** Эффективность топлива (%) */
+    fuelEfficiency?: number;
+    /** Вместимость топлива (%) */
+    fuelCapacity?: number;
+    /** Дальность сканирования (%) */
+    scanRange?: number;
+    /** Скорость исследований (%) */
+    researchSpeed?: number;
+    /** Урон оружия (%) */
+    weaponDamage?: number;
+    /** Точность оружия (%) */
+    weaponAccuracy?: number;
+    /** Скорость лечения (%) */
+    healingSpeed?: number;
+    /** Скорость добычи (%) */
+    miningSpeed?: number;
+    /** Выход ресурсов (%) */
+    resourceYield?: number;
+    /** Сопротивление сбоям ИИ (%) */
+    glitchResistance?: number;
 }
 
 export const RACES: Record<RaceId, Race> = {
@@ -157,8 +192,6 @@ export const RACES: Record<RaceId, Race> = {
                 effects: { alienPresencePenalty: -5 },
             },
         ],
-        /** Эффекты сращивания с модулями корабля (заполняется во время игры) */
-        mergeEffects: [],
         relations: {
             human: 5,
             synthetic: -20,
@@ -474,3 +507,154 @@ export const RACE_LAST_NAMES: Record<RaceId, readonly string[]> = {
         "Базальт-Итера",
     ],
 } as const;
+
+// ═══════════════════════════════════════════════════════════════
+// XENOSYMBIONT MERGE EFFECTS
+// ═══════════════════════════════════════════════════════════════
+export const XENOSYMBIONT_MERGE_EFFECTS: Record<
+    ModuleType,
+    {
+        name: string;
+        description: string;
+        effects: Omit<XenosymbiontMergeEffect, "moduleId" | "moduleType">;
+    }
+> = {
+    // ═══════════════════════════════════════════════════════════
+    // ЭНЕРГЕТИКА И ИНФРАСТРУКТУРА
+    // ═══════════════════════════════════════════════════════════
+    reactor: {
+        name: "Симбиоз с реактором",
+        description:
+            "Ксеноморф срастается с реактором, оптимизируя энергопотоки",
+        effects: {
+            powerOutput: 10,
+        },
+    },
+
+    cockpit: {
+        name: "Нейронная связь с мостиком",
+        description:
+            "Симбионт улучшает управление кораблём через нейронную связь",
+        effects: {
+            evasionBonus: 5,
+        },
+    },
+
+    lifesupport: {
+        name: "Био-усиление систем жизнеобеспечения",
+        description:
+            "Ксеноморф улучшает циркуляцию кислорода и питательных веществ",
+        effects: {
+            oxygenEfficiency: 20,
+            crewHealthRegen: 2,
+        },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // ОБОРУДОВАНИЕ И ХРАНЕНИЕ
+    // ═══════════════════════════════════════════════════════════
+    cargo: {
+        name: "Органическая упаковка",
+        description: "Груз оптимизирован биологическими структурами",
+        effects: {
+            cargoCapacity: 10,
+        },
+    },
+
+    fueltank: {
+        name: "Био-мембрана хранения",
+        description: "Топливо хранится в органических резервуарах",
+        effects: {
+            fuelEfficiency: 15,
+            fuelCapacity: 10,
+        },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // НАУКА И РАЗВЕДКА
+    // ═══════════════════════════════════════════════════════════
+    scanner: {
+        name: "Органическое сканирование",
+        description: "Био-сенсоры расширяют диапазон сканирования",
+        effects: {
+            scanRange: 20,
+        },
+    },
+
+    lab: {
+        name: "Био-лаборатория",
+        description: "Живые структуры ускоряют исследования",
+        effects: {
+            researchSpeed: 15,
+        },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // БОЕВЫЕ СИСТЕМЫ
+    // ═══════════════════════════════════════════════════════════
+    weaponbay: {
+        name: "Живое оружие",
+        description: "Оружейные системы усилены био-усилителями",
+        effects: {
+            weaponDamage: 10,
+            weaponAccuracy: 5,
+        },
+    },
+
+    shield: {
+        name: "Щитовой симбиоз",
+        description: "Био-поле усиливает генератор щита",
+        effects: {
+            shieldRegenBonus: 15,
+            shieldCapacity: 10,
+        },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // МЕДИЦИНА И ПОДДЕРЖКА
+    // ═══════════════════════════════════════════════════════════
+    medical: {
+        name: "Регенеративная камера",
+        description: "Живые ткани ускоряют лечение экипажа",
+        effects: {
+            healingSpeed: 25,
+        },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // ДВИЖЕНИЕ И ДОБЫЧА
+    // ═══════════════════════════════════════════════════════════
+    engine: {
+        name: "Био-двигатель",
+        description: "Органические компоненты улучшают тягу",
+        effects: {
+            fuelEfficiency: 10,
+        },
+    },
+
+    drill: {
+        name: "Живой бур",
+        description: "Био-минеральные структуры улучшают добычу",
+        effects: {
+            resourceYield: 10,
+        },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // ИСКУССТВЕННЫЙ ИНТЕЛЛЕКТ
+    // ═══════════════════════════════════════════════════════════
+    ai_core: {
+        name: "Нейро-синтез",
+        description: "Симбиоз органического и искусственного интеллекта",
+        effects: {
+            glitchResistance: 50,
+        },
+    },
+
+    // weaponShed не поддерживает сращивание
+    weaponShed: {
+        name: "",
+        description: "",
+        effects: {},
+    },
+};

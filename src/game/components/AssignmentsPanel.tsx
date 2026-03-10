@@ -66,6 +66,18 @@ export function AssignmentsPanel() {
                         );
                     }
 
+                    // Добавляем "Сращивание" для ксеноморфов
+                    if (c.race === "xenosymbiont") {
+                        actions = [
+                            ...actions,
+                            {
+                                value: "merge",
+                                label: "🧬 Сращивание",
+                                effect: "Бонус модулю",
+                            },
+                        ];
+                    }
+
                     // Convert empty string to 'none' for Select value
                     const currentValue: string =
                         assignments[c.id]?.task || c.assignment || "none";

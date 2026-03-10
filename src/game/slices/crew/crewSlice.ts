@@ -1,6 +1,13 @@
-import type { GameState, GameStore } from "@/game/types/game";
+import type { GameStore } from "@/game/types/game";
 import type { CrewMember } from "@/game/types";
 import { gainExp as gainExpHelper } from "./helpers";
+import {
+    canMergeWithModule,
+    canUnmerge,
+    mergeWithModule as mergeWithModuleFn,
+    unmergeFromModule as unmergeFromModuleFn,
+    autoUnmergeOnMove as autoUnmergeOnMoveFn,
+} from "./helpers/merge";
 
 /**
  * Интерфейс CrewSlice
@@ -9,16 +16,33 @@ import { gainExp as gainExpHelper } from "./helpers";
 export interface CrewSlice {
     /**
      * Начисляет опыт члену экипажа с учётом всех бонусов
-     *
-     * Учитывает:
-     * - Расовые бонусы (например, человек: +15% к опыту)
-     * - Бонусы от трейтов члена экипажа
-     * - Бонусы от исследованных технологий (crew_exp)
-     *
-     * @param crewMember - Член экипажа для получения опыта (или undefined)
-     * @param amount - Базовое количество опыта
      */
     gainExp: (crewMember: CrewMember | undefined, amount: number) => void;
+
+    /**
+     * Проверка возможности сращивания с модулем
+     */
+    canMerge: (crewMember: CrewMember) => boolean;
+
+    /**
+     * Проверка возможности отсоединения от модуля
+     */
+    canUnmerge: (crewMember: CrewMember) => boolean;
+
+    /**
+     * Сращивает члена экипажа с модулем
+     */
+    mergeWithModule: (crewMemberId: number, moduleId: number) => boolean;
+
+    /**
+     * Отсоединяет члена экипажа от модуля
+     */
+    unmergeFromModule: (crewMemberId: number) => boolean;
+
+    /**
+     * Автоматически отсоединяет ксеноморфа при перемещении
+     */
+    autoUnmergeOnMove: (crewMemberId: number) => void;
 }
 
 /**
@@ -29,11 +53,24 @@ export interface CrewSlice {
  * @returns Объект с методами управления экипажем
  */
 export const createCrewSlice = (
-    set: (fn: (state: GameState & CrewSlice) => void) => void,
-    get: () => GameState & CrewSlice & GameStore,
+    set: (fn: (state: GameStore) => void) => void,
+    get: () => GameStore,
 ): CrewSlice => ({
     gainExp: (crewMember, amount) => {
         const state = get();
         gainExpHelper(crewMember, amount, state, get(), set);
     },
+
+    canMerge: (crewMember) => canMergeWithModule(crewMember),
+
+    canUnmerge: (crewMember) => canUnmerge(crewMember),
+
+    mergeWithModule: (crewMemberId, moduleId) =>
+        mergeWithModuleFn(crewMemberId, moduleId, set, get),
+
+    unmergeFromModule: (crewMemberId) =>
+        unmergeFromModuleFn(crewMemberId, set, get),
+
+    autoUnmergeOnMove: (crewMemberId) =>
+        autoUnmergeOnMoveFn(crewMemberId, set, get),
 });

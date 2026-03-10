@@ -1,4 +1,4 @@
-import type { GameState, GameStore } from "@/game/types/game";
+import type { GameStore } from "@/game/types/game";
 import { WeaponTypeTotal } from "@/game/types";
 import {
     getTotalConsumption,
@@ -12,6 +12,7 @@ import {
     areModulesFunctional,
     updateShipStats,
     getTotalDamage,
+    getMergeEffectsBonus,
 } from "./helpers";
 import { refuel } from "./helpers/fuel";
 
@@ -118,6 +119,12 @@ export interface ShipSlice {
      * @param price - Стоимость заправки в кредитах
      */
     refuel: (amount: number, price: number) => void;
+
+    /**
+     * Получает суммарные бонусы от сращивания ксеноморфов
+     * @returns Объект с бонусами от сращивания
+     */
+    getMergeEffectsBonus: () => ReturnType<typeof getMergeEffectsBonus>;
 }
 
 /**
@@ -128,7 +135,7 @@ export interface ShipSlice {
  * @returns Объект с методами управления кораблём
  */
 export const createShipSlice = (
-    set: (fn: (state: GameState & ShipSlice) => void) => void,
+    set: (fn: (state: GameStore) => void) => void,
     get: () => GameStore,
 ): ShipSlice => ({
     updateShipStats: () => {
@@ -195,5 +202,10 @@ export const createShipSlice = (
     refuel: (amount: number, price: number) => {
         const state = get();
         refuel(state, amount, price, get().addLog, set);
+    },
+
+    getMergeEffectsBonus: () => {
+        const state = get();
+        return getMergeEffectsBonus(state.crew, state.ship.modules);
     },
 });

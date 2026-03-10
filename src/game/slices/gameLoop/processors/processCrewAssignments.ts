@@ -1,11 +1,15 @@
-import { RACES, CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
+import {
+    RACES,
+    CREW_ASSIGNMENT_BONUSES,
+    XENOSYMBIONT_MERGE_EFFECTS,
+} from "@/game/constants";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type {
     GameState,
     GameStore,
     CrewMember,
     Module,
     Race,
-    ShipMergeTrait,
 } from "@/game/types";
 
 /**
@@ -27,7 +31,18 @@ export const processCrewAssignments = (
                 (t) => t.effects.glitchChance,
             );
             if (glitchTrait && glitchTrait.effects.glitchChance) {
-                const glitchChance = Number(glitchTrait.effects.glitchChance);
+                let glitchChance = Number(glitchTrait.effects.glitchChance);
+
+                // Бонус от сращивания ксеноморфа с ai_core (-50% шанс сбоя)
+                const state = get();
+                const mergeBonus = getMergeEffectsBonus(
+                    state.crew,
+                    state.ship.modules,
+                );
+                if (mergeBonus.glitchResistance) {
+                    glitchChance *= 1 - mergeBonus.glitchResistance / 100;
+                }
+
                 if (Math.random() < glitchChance) {
                     get().addLog(
                         `⚠️ ${c.name}: Сбой ИИ! Действие не выполнено`,
@@ -85,7 +100,7 @@ export const processCrewAssignments = (
         }
 
         // Health regen
-        let healthRegen = crewRace?.crewBonuses?.health || 0;
+        let healthRegen = crewRace?.crewBonuses?.health ?? 0;
         let regenBonus = 0;
         c.traits?.forEach((trait) => {
             if (trait.effect?.regenBonus) {
@@ -126,7 +141,19 @@ export const processCrewAssignments = (
                     (cr) =>
                         cr.moduleId === c.moduleId && cr.profession === "medic",
                 );
-                const healAmount = medicInModule ? 15 : 8;
+                let healAmount = medicInModule ? 15 : 8;
+
+                // Бонус от сращивания ксеноморфа с medical
+                const state = get();
+                const mergeBonus = getMergeEffectsBonus(
+                    state.crew,
+                    state.ship.modules,
+                );
+                if (mergeBonus.healingSpeed) {
+                    healAmount = Math.floor(
+                        healAmount * (1 + mergeBonus.healingSpeed / 100),
+                    );
+                }
 
                 set((s) => ({
                     crew: s.crew.map((cr) =>
@@ -169,11 +196,6 @@ export const processCrewAssignments = (
 
         // Alien presence penalty
         processAlienPresence(c, crewRace, set, get);
-
-        // Symbiosis merge
-        if (crewRace?.specialTraits && currentModule) {
-            processSymbiosis(c, crewRace, currentModule, set, get);
-        }
     });
 };
 
@@ -184,7 +206,26 @@ const processAssignment = (
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
 ): void => {
-    if (c.assignment !== "repair" || !currentModule) return;
+    if (!currentModule) return;
+
+    switch (c.assignment) {
+        case "repair":
+            processRepairAssignment(c, currentModule, crewRace, set, get);
+            break;
+        case "merge":
+            processMergeAssignment(c, currentModule, crewRace, set, get);
+            break;
+    }
+};
+
+const processRepairAssignment = (
+    c: CrewMember,
+    currentModule: Module | undefined,
+    crewRace: Race | undefined,
+    set: (fn: (s: GameState) => void) => void,
+    get: () => GameStore,
+): void => {
+    if (!currentModule) return;
 
     let repairAmount = 15;
 
@@ -246,6 +287,67 @@ const processAssignment = (
         "info",
     );
     get().gainExp(c, 8);
+};
+
+const processMergeAssignment = (
+    c: CrewMember,
+    currentModule: Module,
+    crewRace: Race | undefined,
+    set: (fn: (s: GameState) => void) => void,
+    get: () => GameStore,
+): void => {
+    // Только ксеноморфы могут сращиваться
+    if (crewRace?.id !== "xenosymbiont") {
+        get().addLog(
+            `${c.name}: Только ксеноморфы могут сращиваться с модулями!`,
+            "warning",
+        );
+        return;
+    }
+
+    // Если уже сращён с этим модулем - ничего не делаем (без лога)
+    if (c.isMerged && c.mergedModuleId === currentModule.id) {
+        return;
+    }
+
+    // Если сращён с другим модулем - сначала отсоединяем
+    if (c.isMerged && c.mergedModuleId !== null) {
+        set((s) => ({
+            crew: s.crew.map((cr) =>
+                cr.id === c.id
+                    ? {
+                          ...cr,
+                          isMerged: false,
+                          mergedModuleId: null,
+                      }
+                    : cr,
+            ),
+        }));
+        get().addLog(
+            `🧬 ${c.name}: Отсоединился от предыдущего модуля`,
+            "info",
+        );
+    }
+
+    // Сращиваемся с текущим модулем
+    set((s) => ({
+        crew: s.crew.map((cr) =>
+            cr.id === c.id
+                ? {
+                      ...cr,
+                      isMerged: true,
+                      mergedModuleId: currentModule.id,
+                  }
+                : cr,
+        ),
+    }));
+
+    const mergeEffect = XENOSYMBIONT_MERGE_EFFECTS[currentModule.type];
+    get().addLog(
+        `🧬 ${c.name}: Сращивание с "${currentModule.name}" (${mergeEffect.name})`,
+        "info",
+    );
+    get().gainExp(c, 10);
 };
 
 const processCombatAssignment = (
@@ -647,44 +749,4 @@ const processAlienPresence = (
             );
         });
     }
-};
-
-const processSymbiosis = (
-    c: CrewMember,
-    crewRace: Race,
-    currentModule: Module,
-    set: (fn: (s: GameState) => void) => void,
-    get: () => GameStore,
-): void => {
-    const canMergeTrait = crewRace.specialTraits.find(
-        (t) => t.effects.canMerge,
-    );
-    if (!canMergeTrait) return;
-
-    const mergeTraitId = `merge_${currentModule.id}`;
-    const existingMergeTrait = get().ship.mergeTraits?.find(
-        (t) => t.id === mergeTraitId,
-    );
-
-    if (existingMergeTrait) return;
-
-    const mergeTrait: ShipMergeTrait = {
-        id: mergeTraitId,
-        name: `Симбиоз с "${currentModule.name}"`,
-        description: "+10% эффективности, +5 HP к модулю от ксеноморфа",
-        effects: {
-            moduleEfficiency: 0.1,
-            moduleHealthBonus: 5,
-        },
-    };
-    set((s) => ({
-        ship: {
-            ...s.ship,
-            mergeTraits: [...(s.ship.mergeTraits || []), mergeTrait],
-        },
-    }));
-    get().addLog(
-        `🔗 ${c.name} (${crewRace.name}): Симбиоз с модулем "${currentModule.name}"!`,
-        "info",
-    );
 };

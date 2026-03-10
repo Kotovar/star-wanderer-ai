@@ -7,6 +7,7 @@ import {
     CREW_ASSIGNMENT_BONUSES,
     CREW_IN_MODULE_BONUSES,
 } from "@/game/constants";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type { GameState } from "@/game/types/game";
 
 /**
@@ -57,6 +58,12 @@ export function getTotalPower(state: GameState): number {
     // === Бонусы от артефактов ===
     const artifactBonus = calculateArtifactPowerBonus(artifacts, state);
     power += artifactBonus;
+
+    // === Бонус от сращивания ксеноморфов ===
+    const mergeBonus = getMergeEffectsBonus(crew, modules);
+    if (mergeBonus.powerOutput) {
+        power = Math.floor(power * (1 + mergeBonus.powerOutput / 100));
+    }
 
     return power;
 }

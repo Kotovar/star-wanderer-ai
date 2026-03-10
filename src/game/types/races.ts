@@ -4,7 +4,6 @@
 
 import type { CrewTraitType } from "./crew";
 import type { PlanetType } from "./planets";
-import type { XenosymbiontMergeEffect } from "@/game/constants/races";
 
 export type RaceId =
     | "human"
@@ -80,9 +79,6 @@ export interface Race {
 
     // Special traits
     specialTraits: RaceTrait[];
-
-    // Эффекты сращивания с модулями (только для ксеноморфов-симбионтов)
-    mergeEffects?: XenosymbiontMergeEffect[];
 
     // Race relations (-100 to 100, 0 = neutral)
     relations: Partial<Record<RaceId, number>>;

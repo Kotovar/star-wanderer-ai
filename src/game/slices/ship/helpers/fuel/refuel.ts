@@ -1,6 +1,7 @@
 import type { GameState } from "@/game/types/game";
 import type { LogEntry } from "@/game/types/logs";
 import { playSound } from "@/sounds";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 
 /**
  * Заправляет корабль топливом
@@ -19,7 +20,13 @@ export const refuel = (
     addLog: (message: string, type?: LogEntry["type"]) => void,
     set: (fn: (s: GameState) => Partial<GameState>) => void,
 ): { success: boolean; actualAmount: number } => {
-    const maxFuel = state.ship.maxFuel || 0;
+    // Вычисляем бонус ёмкости от сращивания
+    const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);
+    let maxFuel = state.ship.maxFuel || 0;
+    if (mergeBonus.fuelCapacity) {
+        maxFuel = Math.floor(maxFuel * (1 + mergeBonus.fuelCapacity / 100));
+    }
+
     const currentFuel = state.ship.fuel || 0;
     const spaceAvailable = maxFuel - currentFuel;
     const actualAmount = Math.min(amount, spaceAvailable);

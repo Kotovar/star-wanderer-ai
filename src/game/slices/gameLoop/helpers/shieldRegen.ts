@@ -1,6 +1,7 @@
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import { RACES } from "@/game/constants/races";
 import { ARTIFACT_TYPES } from "@/game/constants";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type { GameState, GameStore } from "@/game/types";
 
 // === Constants ===
@@ -33,15 +34,6 @@ const getRaceRegenMultiplier = (state: GameState): number => {
         );
         if (shieldTrait?.effects.shieldRegen) {
             multiplier += Number(shieldTrait.effects.shieldRegen) / 100;
-        }
-
-        // Бонус от сращивания ксеноморфа с кораблём
-        if (race.id === "xenosymbiont" && race.mergeEffects) {
-            const totalMergeBonus = race.mergeEffects.reduce(
-                (sum, effect) => sum + (effect.shieldRegenBonus ?? 0),
-                0,
-            );
-            multiplier += totalMergeBonus / 100;
         }
     });
 
@@ -93,22 +85,34 @@ export const regenerateShields = (
     const { multiplier: artifactMultiplier, logs } =
         getArtifactRegenBonus(state);
 
+    // Бонус от сращивания ксеноморфов
+    const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);
+    const mergeMultiplier = (mergeBonus.shieldRegenBonus ?? 0) / 100;
+
+    // Итоговая ёмкость щита с бонусом от сращивания
+    const maxShieldsWithBonus = mergeBonus.shieldCapacity
+        ? Math.floor(
+              state.ship.maxShields * (1 + mergeBonus.shieldCapacity / 100),
+          )
+        : state.ship.maxShields;
+
     // Применяем процентные бонусы к базовой регенерации
-    const totalMultiplier = 1 + raceMultiplier + artifactMultiplier;
+    const totalMultiplier =
+        1 + raceMultiplier + artifactMultiplier + mergeMultiplier;
     const totalRegen = Math.floor(baseRegen * totalMultiplier);
 
     // Применяем регенерацию
     set((s) => ({
         ship: {
             ...s.ship,
-            shields: Math.min(s.ship.maxShields, s.ship.shields + totalRegen),
+            shields: Math.min(maxShieldsWithBonus, s.ship.shields + totalRegen),
         },
     }));
 
     // Логируем
     if (totalRegen > 0) {
         get().addLog(
-            `Щиты: +${totalRegen} (${get().ship.shields}/${get().ship.maxShields})`,
+            `Щиты: +${totalRegen} (${get().ship.shields}/${maxShieldsWithBonus})`,
             "info",
         );
     }

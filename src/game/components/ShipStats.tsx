@@ -9,6 +9,7 @@ import {
     BASE_ACCURACY,
 } from "@/game/constants";
 import { useFuelEfficiency } from "@/game/hooks";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 
 export function ShipStats() {
     const ship = useGameStore((s) => s.ship);
@@ -28,6 +29,27 @@ export function ShipStats() {
     const { efficiencyPercent } = useFuelEfficiency();
 
     const scanRange = getEffectiveScanRange();
+
+    // Итоговая регенерация щита с бонусом
+    const BASE_SHIELD_REGEN = 7.5;
+    let shieldRegen = BASE_SHIELD_REGEN;
+    crew.forEach((c) => {
+        if (c.race === "xenosymbiont") shieldRegen += 2;
+    });
+    const shieldRegenerator = artifacts.find(
+        (a) => a.effect.type === "shield_regen_boost" && a.effect.active,
+    );
+    if (shieldRegenerator) {
+        const regenBoost = shieldRegenerator.effect.value ?? 0;
+        shieldRegen = Math.floor(shieldRegen * (1 + regenBoost));
+    }
+    // Бонусы сращивания для регенерации
+    const mergeBonus = getMergeEffectsBonus(crew, ship.modules);
+    if (mergeBonus.shieldRegenBonus) {
+        shieldRegen = Math.floor(
+            shieldRegen * (1 + mergeBonus.shieldRegenBonus / 100),
+        );
+    }
 
     const totalPower = getTotalPower();
     const engineerBoost = crew.find((c) => c.assignment === "power") ? 5 : 0;
@@ -140,6 +162,19 @@ export function ShipStats() {
         });
     });
 
+    // Бонус от сращивания ксеноморфа с weaponbay
+    const xenosymbiontMerge = crew.find(
+        (c) => c.isMerged && c.mergedModuleId !== null,
+    );
+    if (xenosymbiontMerge) {
+        const mergedModule = ship.modules.find(
+            (m) => m.id === xenosymbiontMerge.mergedModuleId,
+        );
+        if (mergedModule?.type === "weaponbay") {
+            accuracyModifier += 0.05; // +5% accuracy
+        }
+    }
+
     // Final accuracy (clamped)
     const finalAccuracy = Math.max(
         0.5,
@@ -156,37 +191,6 @@ export function ShipStats() {
         ? (mirrorShield.effect.value || 0) * 100
         : 0;
 
-    // ═══════════════════════════════════════════════════════════════
-    // SHIELD REGENERATION PER TURN
-    // ═══════════════════════════════════════════════════════════════
-    // Base regen: 5-10 (random), we show average (7.5)
-    const BASE_SHIELD_REGEN = 7.5;
-    let shieldRegen = BASE_SHIELD_REGEN;
-
-    // Race bonuses (Xenosymbiont +2)
-    crew.forEach((c) => {
-        if (c.race === "xenosymbiont") {
-            shieldRegen += 2;
-        }
-    });
-
-    // Nanite Hull artifact: +10
-    const naniteHull = artifacts.find(
-        (a) => a.effect.type === "nanite_repair" && a.effect.active,
-    );
-    if (naniteHull) {
-        shieldRegen += naniteHull.effect.value ?? 10;
-    }
-
-    // Shield Regenerator artifact: +50% multiplier
-    const shieldRegenerator = artifacts.find(
-        (a) => a.effect.type === "shield_regen_boost" && a.effect.active,
-    );
-    if (shieldRegenerator) {
-        const regenBoost = shieldRegenerator.effect.value ?? 0;
-        shieldRegen = Math.floor(shieldRegen * (1 + regenBoost));
-    }
-
     return (
         <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4 mt-2.5">
             {/* Новые параметры в верхней части */}
@@ -201,7 +205,9 @@ export function ShipStats() {
                     <span className="text-[#ffb000]">
                         {t("ship_stats.fuel_efficiency")}:
                     </span>
-                    <span className="text-[#00ff41]">{efficiencyPercent}%</span>
+                    <span className="text-[#00ff41]">
+                        {efficiencyPercent + (mergeBonus.fuelEfficiency || 0)}%
+                    </span>
                 </div>
             )}
             <div className="flex justify-between mb-2 text-sm">
@@ -455,12 +461,12 @@ export function ShipStats() {
                 </span>
                 <span
                     className={
-                        crew.length <= ship.crewCapacity
+                        crew.length <= crewCapacity
                             ? "text-[#00ff41]"
                             : "text-[#ff0040]"
                     }
                 >
-                    {crew.length}/{ship.crewCapacity}
+                    {crew.length}/{crewCapacity}
                 </span>
             </div>
         </div>

@@ -5,6 +5,7 @@ import {
     RESEARCH_TREE,
     WEAPON_TYPES,
 } from "@/game/constants";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type { GameState, WeaponTypeTotal } from "@/game/types";
 
 const INITIAL_DAMAGE: Record<WeaponTypeTotal, number> = {
@@ -162,6 +163,15 @@ export function getTotalDamage(state: GameState) {
         damage.total = applyDamageBonus(
             damage.total,
             CREW_ASSIGNMENT_BONUSES.ANALYSIS_DAMAGE,
+        );
+    }
+
+    // === Бонус от сращивания ксеноморфов с weaponbay ===
+    const mergeBonus = getMergeEffectsBonus(crew, ship.modules);
+    if (mergeBonus.weaponDamage) {
+        damage.total = applyDamageBonus(
+            damage.total,
+            mergeBonus.weaponDamage / 100,
         );
     }
 

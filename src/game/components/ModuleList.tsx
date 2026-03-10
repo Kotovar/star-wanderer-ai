@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 
 // Helper to get translated module name
 function getTranslatedModuleName(
@@ -148,6 +149,11 @@ interface ModuleStatsProps {
 
 function ModuleStats({ module }: ModuleStatsProps) {
     const { t } = useTranslation();
+    const crew = useGameStore((s) => s.crew);
+    const shipModules = useGameStore((s) => s.ship.modules);
+
+    const mergeBonus = getMergeEffectsBonus(crew, shipModules);
+
     const artifactArmor = useGameStore((s) => {
         const artifact = s.artifacts.find(
             (a) => a.effect.type === "module_armor" && a.effect.active,
@@ -165,12 +171,34 @@ function ModuleStats({ module }: ModuleStatsProps) {
                 module.type !== "fueltank" &&
                 module.consumption &&
                 module.consumption > 0 && <span>⚡ -{module.consumption}</span>}
-            {module.type === "fueltank" && <FuelStats />}
+            {module.type === "fueltank" && (
+                <FuelStats mergeBonus={mergeBonus} />
+            )}
             {module.type === "cargo" &&
                 module.capacity &&
-                module.capacity > 0 && <span>📦 {module.capacity}т</span>}
-            {module.type === "engine" && module.fuelEfficiency && (
-                <span>⛽ {module.fuelEfficiency}</span>
+                module.capacity > 0 && (
+                    <span>
+                        📦 {module.capacity}т
+                        {mergeBonus.cargoCapacity &&
+                            mergeBonus.cargoCapacity > 0 && (
+                                <span className="text-[#00d4ff]">
+                                    {" "}
+                                    (+{mergeBonus.cargoCapacity}%)
+                                </span>
+                            )}
+                    </span>
+                )}
+            {module.type === "engine" && (
+                <span>
+                    ⛽ {module.fuelEfficiency}
+                    {mergeBonus.fuelEfficiency &&
+                        mergeBonus.fuelEfficiency > 0 && (
+                            <span className="text-[#00d4ff]">
+                                {" "}
+                                (-{mergeBonus.fuelEfficiency}%)
+                            </span>
+                        )}
+                </span>
             )}
             {module.type === "drill" && <span>⛏ Ур.{module.level || 1}</span>}
             {module.type === "scanner" &&
@@ -227,13 +255,29 @@ function ModuleStats({ module }: ModuleStatsProps) {
     );
 }
 
-function FuelStats() {
+function FuelStats({
+    mergeBonus,
+}: {
+    mergeBonus?: ReturnType<typeof getMergeEffectsBonus>;
+}) {
     const fuel = useGameStore((s) => s.ship.fuel);
     const maxFuel = useGameStore((s) => s.ship.maxFuel);
 
     return (
         <span>
             ⛽ {fuel}/{maxFuel}
+            {mergeBonus?.fuelCapacity && mergeBonus.fuelCapacity > 0 && (
+                <span className="text-[#00d4ff]">
+                    {" "}
+                    (+{mergeBonus.fuelCapacity}%)
+                </span>
+            )}
+            {mergeBonus?.fuelEfficiency && mergeBonus.fuelEfficiency > 0 && (
+                <span className="text-[#00d4ff]">
+                    {" "}
+                    (-{mergeBonus.fuelEfficiency}%)
+                </span>
+            )}
         </span>
     );
 }
@@ -285,6 +329,9 @@ export function ModuleDetailDialog({
     isStationItem = false,
 }: ModuleDetailDialogProps) {
     const { t } = useTranslation();
+    const crew = useGameStore((s) => s.crew);
+    const shipModules = useGameStore((s) => s.ship.modules);
+    const mergeBonus = getMergeEffectsBonus(crew, shipModules);
     const fuel = useGameStore((s) => s.ship.fuel);
     const maxFuel = useGameStore((s) => s.ship.maxFuel);
     const toggleModule = useGameStore((s) => s.toggleModule);
@@ -344,6 +391,21 @@ export function ModuleDetailDialog({
                     {module.type === "scanner" && (
                         <ScannerDescription scanRange={module.scanRange} />
                     )}
+
+                    {module.type === "medical" &&
+                        module.healing &&
+                        module.healing > 0 && (
+                            <div>
+                                🏥 +{module.healing} HP
+                                {mergeBonus.healingSpeed &&
+                                    mergeBonus.healingSpeed > 0 && (
+                                        <span className="text-[#00d4ff]">
+                                            {" "}
+                                            (+{mergeBonus.healingSpeed}%)
+                                        </span>
+                                    )}
+                            </div>
+                        )}
 
                     {module.type === "weaponbay" && module.weapons && (
                         <WeaponsDetail weapons={module.weapons} />
