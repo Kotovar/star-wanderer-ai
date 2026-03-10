@@ -15,6 +15,7 @@ export interface Contract {
     targetLocationName?: string; // Name of target location
     targetLocationType?: ContactSourceType; // Type of target location
     sourcePlanetId?: string;
+    sourcePlanetName?: string;
     sourceSectorName?: string;
     sourceName?: string; // Name of the source (planet or ship)
     sourceType?: Exclude<ContactSourceType, "station">; // Type of source

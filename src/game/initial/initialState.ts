@@ -1,15 +1,15 @@
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
-import { initialCrew } from "@/game/crew/initial";
 import { generateGalaxy } from "@/game/galaxy/generateGalaxy";
 import { initialModules, STARTING_FUEL } from "@/game/modules/initial";
 import { initializeStationData } from "@/game/stations/initialize";
 import type { GameState } from "@/game/types/game";
+import { CrewMember } from "../types";
 
 /** Начальный номер хода */
 const INITIAL_TURN = 1;
 
 /** Начальное количество кредитов игрока */
-const INITIAL_CREDITS = 100000;
+const INITIAL_CREDITS = 1000;
 
 /**
  * Начальная вместимость экипажа.
@@ -27,8 +27,83 @@ const INITIAL_GAME_MODE = "galaxy_map" as const;
 /** Начальная раса, известная игроку */
 const INITIAL_KNOWN_RACE = "human" as const;
 
+/** Счётчик загрузок игры (для предотвращения показа модалок после загрузки) */
+const INITIAL_GAME_LOADED_COUNT = 0;
+
 const sectors = generateGalaxy();
 const { prices, stock } = initializeStationData(sectors);
+
+const initialCrew: CrewMember[] = [
+    {
+        id: 1,
+        name: "Иванов",
+        race: "human",
+        profession: "pilot",
+        level: 1,
+        exp: 0,
+        health: 105,
+        maxHealth: 105,
+        happiness: 80,
+        maxHappiness: 100,
+        assignment: null,
+        assignmentEffect: null,
+        combatAssignment: null,
+        combatAssignmentEffect: null,
+        traits: [],
+        moduleId: 2,
+        movedThisTurn: false,
+        turnsAtZeroHappiness: 0,
+        isMerged: false,
+        mergedModuleId: null,
+        firstaidActive: false,
+    },
+    {
+        id: 2,
+        name: "Петрова",
+        race: "human",
+        profession: "engineer",
+        level: 1,
+        exp: 0,
+        health: 105,
+        maxHealth: 105,
+        happiness: 75,
+        maxHappiness: 100,
+        assignment: null,
+        assignmentEffect: null,
+        combatAssignment: null,
+        combatAssignmentEffect: null,
+        traits: [],
+        moduleId: 3,
+        movedThisTurn: false,
+        turnsAtZeroHappiness: 0,
+        isMerged: false,
+        mergedModuleId: null,
+        firstaidActive: false,
+    },
+    {
+        id: 3,
+        name: "Сидоров",
+        race: "human",
+        profession: "medic",
+        level: 1,
+        exp: 0,
+        health: 105,
+        maxHealth: 105,
+        happiness: 70,
+        maxHappiness: 100,
+        assignment: null,
+        assignmentEffect: null,
+        combatAssignment: null,
+        combatAssignmentEffect: null,
+        traits: [],
+        moduleId: 3,
+        movedThisTurn: false,
+        turnsAtZeroHappiness: 0,
+        isMerged: false,
+        mergedModuleId: null,
+        firstaidActive: false,
+    },
+];
 
 /**
  * Начальное состояние игры.
@@ -79,6 +154,7 @@ export const initialState: GameState = {
     hiredCrewFromShips: [],
     artifacts: ANCIENT_ARTIFACTS.map((a) => ({ ...a })),
     knownRaces: [INITIAL_KNOWN_RACE],
+    gameLoadedCount: INITIAL_GAME_LOADED_COUNT,
     battleResult: null,
     stormResult: null,
     gameOver: false,

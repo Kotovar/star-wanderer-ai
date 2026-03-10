@@ -1,12 +1,12 @@
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
-import { RACES } from "@/game/constants/races";
-import { ARTIFACT_TYPES } from "@/game/constants";
+import {
+    ARTIFACT_TYPES,
+    BASE_SHIELD_REGEN_MAX,
+    BASE_SHIELD_REGEN_MIN,
+    RACES,
+} from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type { GameState, GameStore } from "@/game/types";
-
-// === Constants ===
-const BASE_SHIELD_REGEN_MIN = 5;
-const BASE_SHIELD_REGEN_MAX = 10;
 
 /**
  * Вычисляет базовую регенерацию щитов

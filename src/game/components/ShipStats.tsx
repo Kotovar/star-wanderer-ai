@@ -7,6 +7,7 @@ import {
     BASE_CRIT_CHANCE,
     BASE_CRIT_MULTIPLIER,
     BASE_ACCURACY,
+    CREW_ASSIGNMENT_BONUSES,
 } from "@/game/constants";
 import { useFuelEfficiency } from "@/game/hooks";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
@@ -52,7 +53,9 @@ export function ShipStats() {
     }
 
     const totalPower = getTotalPower();
-    const engineerBoost = crew.find((c) => c.assignment === "power") ? 5 : 0;
+    const engineerBoost = crew.find((c) => c.assignment === "reactor_overload")
+        ? CREW_ASSIGNMENT_BONUSES.REACTOR_OVERLOAD
+        : 0;
     const totalConsumption = getTotalConsumption();
     const available = totalPower + engineerBoost - totalConsumption;
     const damage = getTotalDamage();

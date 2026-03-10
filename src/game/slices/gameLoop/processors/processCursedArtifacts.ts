@@ -1,9 +1,184 @@
 import type { GameState, GameStore } from "@/game/types";
+import type { ArtifactNegativeType } from "@/game/types";
 import { MUTATION_TRAITS } from "@/game/constants";
 import { getMutationTraitDesc, getMutationTraitName } from "@/game/traits";
 
 /**
+ * Обработчик негативного эффекта проклятого артефакта
+ */
+interface CurseHandler {
+    process: (
+        state: GameState,
+        set: (fn: (s: GameState) => void) => void,
+        get: () => GameStore,
+        artifact: { name: string },
+        value: number,
+    ) => void;
+    logMessage: (artifactName: string, value: number) => string;
+}
+
+/**
+ * Обработчики проклятых эффектов
+ */
+const CURSE_HANDLERS: Record<ArtifactNegativeType, CurseHandler | undefined> = {
+    happiness_drain: {
+        process: applyStatDrain,
+        logMessage: (name, value) =>
+            `⚠️ ${name}: -${value} счастья/морали экипажу`,
+    },
+    module_damage: {
+        process: applyModuleDamage,
+        logMessage: (name, value) =>
+            `⚠️ ${name}: случайный модуль повреждён на -${value}%`,
+    },
+    crew_desertion: {
+        process: applyCrewDesertion,
+        logMessage: (name) => `⚠️ ${name}: член экипажа покинул корабль`,
+    },
+    crew_mutation: {
+        process: applyCrewMutation,
+        logMessage: (name) => `⚠️ ${name}: член экипажа мутировал`,
+    },
+    ambush_chance: undefined, // Обрабатывается в signals/utils.ts
+    self_damage: undefined, // Обрабатывается в store.ts после боя
+    health_drain: undefined, // Обрабатывается в store.ts при перемещении
+};
+
+/**
+ * Снижение счастья экипажа
+ */
+function applyStatDrain(
+    _state: GameState,
+    set: (fn: (s: GameState) => void) => void,
+    _get: () => GameStore,
+    _artifact: { name: string },
+    value: number,
+) {
+    set((s) => ({
+        crew: s.crew.map((c) => {
+            if (c.race === "synthetic") return c;
+            return {
+                ...c,
+                happiness: Math.max(0, c.happiness - value),
+            };
+        }),
+    }));
+}
+
+/**
+ * Повреждение случайного модуля
+ */
+function applyModuleDamage(
+    state: GameState,
+    set: (fn: (s: GameState) => void) => void,
+    get: () => GameStore,
+    artifact: { name: string },
+    value: number,
+) {
+    if (state.ship.modules.length === 0) return;
+
+    const randomModuleIdx = Math.floor(
+        Math.random() * state.ship.modules.length,
+    );
+    const targetModule = state.ship.modules[randomModuleIdx];
+
+    set((s) => ({
+        ship: {
+            ...s.ship,
+            modules: s.ship.modules.map((m, i) =>
+                i === randomModuleIdx
+                    ? { ...m, health: Math.max(1, m.health - value) }
+                    : m,
+            ),
+        },
+    }));
+
+    get().addLog(
+        `⚠️ ${artifact.name}: ${targetModule.name} повреждён на -${value}%`,
+        "warning",
+    );
+}
+
+/**
+ * Дезертирство экипажа
+ */
+function applyCrewDesertion(
+    state: GameState,
+    set: (fn: (s: GameState) => void) => void,
+    get: () => GameStore,
+    artifact: { name: string },
+    value: number,
+) {
+    state.crew.forEach((crewMember) => {
+        if (Math.random() * 100 < value) {
+            set((s) => ({
+                crew: s.crew.filter((c) => c.id !== crewMember.id),
+            }));
+            get().addLog(
+                `⚠️ ${artifact.name}: ${crewMember.name} покинул корабль`,
+                "warning",
+            );
+        }
+    });
+}
+
+/**
+ * Мутация экипажа
+ */
+function applyCrewMutation(
+    state: GameState,
+    set: (fn: (s: GameState) => void) => void,
+    get: () => GameStore,
+    artifact: { name: string },
+    value: number,
+) {
+    state.crew.forEach((crewMember) => {
+        if (Math.random() * 100 < value) {
+            const newTrait =
+                MUTATION_TRAITS[
+                    Math.floor(Math.random() * MUTATION_TRAITS.length)
+                ];
+
+            set((s) => ({
+                crew: s.crew.map((c) =>
+                    c.id === crewMember.id
+                        ? {
+                              ...c,
+                              traits: [
+                                  ...c.traits,
+                                  {
+                                      name: getMutationTraitName(newTrait),
+                                      desc: getMutationTraitDesc(newTrait),
+                                      effect: {},
+                                      type: "negative",
+                                      rarity: "mutation",
+                                  },
+                              ],
+                          }
+                        : c,
+                ),
+            }));
+
+            get().addLog(
+                `⚠️ ${artifact.name}: ${crewMember.name} мутировал`,
+                "warning",
+            );
+        }
+    });
+}
+
+/**
  * Обработка проклятых артефактов
+ *
+ * Обрабатывает негативные эффекты каждый ход:
+ * - happiness_drain (Реактор Бездны, Тёмный Щит) - снижение счастья/морали
+ * - module_damage (Чёрный Ящик) - повреждение модуля
+ * - crew_desertion (Паразитические Наниты) - дезертирство
+ * - crew_mutation (Биосфера Древних) - мутация экипажа
+ *
+ * @param state - Текущее состояние игры
+ * @param set - Функция обновления состояния
+ * @param get - Функция получения состояния
  */
 export const processCursedArtifacts = (
     state: GameState,
@@ -16,110 +191,18 @@ export const processCursedArtifacts = (
 
     cursedArtifacts.forEach((artifact) => {
         const negativeType = artifact.negativeEffect?.type;
-        const negativeValue = artifact.negativeEffect?.value || 0;
+        const negativeValue = artifact.negativeEffect?.value ?? 0;
 
-        switch (negativeType) {
-            case "happiness_drain":
-            case "morale_drain":
-                set((s) => ({
-                    crew: s.crew.map((c) => {
-                        if (c.race === "synthetic") return c;
-                        return {
-                            ...c,
-                            happiness: Math.max(0, c.happiness - negativeValue),
-                        };
-                    }),
-                }));
-                if (negativeValue > 0) {
-                    get().addLog(
-                        `⚠️ ${artifact.name}: -${negativeValue} ${negativeType === "happiness_drain" ? "счастья" : "морали"} экипажу`,
-                        "warning",
-                    );
-                }
-                break;
+        if (!negativeType) return;
 
-            case "module_damage":
-                if (state.ship.modules.length > 0) {
-                    const randomModuleIdx = Math.floor(
-                        Math.random() * state.ship.modules.length,
-                    );
-                    const targetModule = state.ship.modules[randomModuleIdx];
-                    set((s) => ({
-                        ship: {
-                            ...s.ship,
-                            modules: s.ship.modules.map((m, i) =>
-                                i === randomModuleIdx
-                                    ? {
-                                          ...m,
-                                          health: Math.max(
-                                              1,
-                                              m.health - negativeValue,
-                                          ),
-                                      }
-                                    : m,
-                            ),
-                        },
-                    }));
-                    get().addLog(
-                        `⚠️ ${artifact.name}: ${targetModule.name} повреждён на -${negativeValue}%`,
-                        "warning",
-                    );
-                }
-                break;
+        const handler = CURSE_HANDLERS[negativeType];
 
-            case "crew_desertion":
-                state.crew.forEach((crewMember) => {
-                    if (Math.random() * 100 < negativeValue) {
-                        set((s) => ({
-                            crew: s.crew.filter((c) => c.id !== crewMember.id),
-                        }));
-                        get().addLog(
-                            `⚠️ ${artifact.name}: ${crewMember.name} покинул корабль`,
-                            "warning",
-                        );
-                    }
-                });
-                break;
-
-            case "crew_mutation":
-                state.crew.forEach((crewMember) => {
-                    if (Math.random() * 100 < negativeValue) {
-                        const newTrait =
-                            MUTATION_TRAITS[
-                                Math.floor(
-                                    Math.random() * MUTATION_TRAITS.length,
-                                )
-                            ];
-                        set((s) => ({
-                            crew: s.crew.map((c) =>
-                                c.id === crewMember.id
-                                    ? {
-                                          ...c,
-                                          traits: [
-                                              ...c.traits,
-                                              {
-                                                  name: getMutationTraitName(
-                                                      newTrait,
-                                                  ),
-                                                  desc: getMutationTraitDesc(
-                                                      newTrait,
-                                                  ),
-                                                  effect: {},
-                                                  type: "negative",
-                                                  rarity: "mutation",
-                                              },
-                                          ],
-                                      }
-                                    : c,
-                            ),
-                        }));
-                        get().addLog(
-                            `⚠️ ${artifact.name}: ${crewMember.name} мутировал`,
-                            "warning",
-                        );
-                    }
-                });
-                break;
+        if (!handler) {
+            // Эффект обрабатывается в другом месте
+            return;
         }
+
+        handler.process(state, set, get, artifact, negativeValue);
+        handler.logMessage(artifact.name, negativeValue);
     });
 };

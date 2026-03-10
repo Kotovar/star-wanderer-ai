@@ -196,35 +196,27 @@ export const generatePlanetContracts = (
         {
             type: "scan_planet" as const,
             gen: (): Contract | null => {
-                // Scan planet - fly to a specific planet type with scanner, then return
-                const planetTypes = [
+                // Scan planet - find any planet of specified type in any sector
+                const planetTypes: PlanetType[] = [
                     "Пустынная",
                     "Ледяная",
                     "Лесная",
                     "Вулканическая",
                     "Океаническая",
+                    "Радиоактивная",
                     "Тропическая",
                     "Арктическая",
-                ] satisfies PlanetType[];
+                    "Разрушенная войной",
+                    "Планета-кольцо",
+                    "Приливная",
+                ];
 
                 const targetType =
                     planetTypes[Math.floor(Math.random() * planetTypes.length)];
 
-                // Find sectors with this planet type
-                const targetSectors = availableSectors.filter((s) =>
-                    s.locations.some(
-                        (l) =>
-                            l.type === "planet" && l.planetType === targetType,
-                    ),
-                );
-                if (targetSectors.length === 0) return null;
-
-                const tgt =
-                    targetSectors[
-                        Math.floor(Math.random() * targetSectors.length)
-                    ];
-                const targetPlanet = tgt.locations.find(
-                    (l) => l.type === "planet" && l.planetType === targetType,
+                // Find source planet name
+                const sourcePlanet = sector.locations.find(
+                    (l) => l.type === "planet" && l.id === planetId,
                 );
 
                 return {
@@ -232,11 +224,8 @@ export const generatePlanetContracts = (
                     type: "scan_planet",
                     desc: "contracts.desc_scan",
                     planetType: targetType,
-                    targetSector: tgt.id,
-                    targetSectorName: tgt.name,
-                    targetPlanetId: targetPlanet?.id,
-                    targetPlanetName: targetPlanet?.name,
                     sourcePlanetId: planetId,
+                    sourcePlanetName: sourcePlanet?.name,
                     sourceSectorName: sector.name,
                     sourceType: "planet",
                     requiresVisit: 1,

@@ -290,9 +290,9 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         description: "+100 к максимальным щитам. Но экипаж чувствует холод.",
         effect: { type: "dark_shield", value: 100, active: false },
         negativeEffect: {
-            type: "morale_drain",
+            type: "happiness_drain",
             value: 3,
-            description: "-3 мораль всему экипажу каждый ход",
+            description: "-3 морали всему экипажу каждый ход",
         },
         discovered: false,
         researched: false,

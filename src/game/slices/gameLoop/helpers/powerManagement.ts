@@ -5,6 +5,7 @@ import {
     MODULES_BY_PRIOTITY,
 } from "@/game/constants";
 import type { GameState, GameStore, Module } from "@/game/types";
+import { isModuleActive } from "@/lib";
 
 interface PowerStatus {
     currentPower: number;
@@ -70,7 +71,7 @@ const handlePowerDeficit = (
         if (remainingDeficit <= 0) break;
 
         const enabledModules = modules.filter(
-            (m) => m.type === priority.type && !m.disabled && m.health > 0,
+            (m) => m.type === priority.type && isModuleActive(m),
         );
 
         for (const mod of enabledModules) {

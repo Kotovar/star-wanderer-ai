@@ -34,7 +34,6 @@ export type ArtifactType =
     | "free_power"
     | "damage_reflect"
     | "sector_teleport"
-    | "shield_regen"
     | "fuel_free"
     | "crew_immortal"
     | "crit_chance" // шанс критического удара
@@ -55,14 +54,13 @@ export type ArtifactType =
     | "void_engine" // Free travel but crew suffering
     | "accuracy_boost" // бонус к точности
     | "evasion_boost" // шанс уклонения
-    | "shield_regen_boost"; // шанс уклонения
+    | "shield_regen_boost"; // регенерация щитов
 
 export type ArtifactNegativeType =
-    | "happiness_drain" // -X happiness per turn
+    | "happiness_drain" // -X happiness/morale per turn
     | "ambush_chance" // +X% ambush chance
     | "crew_mutation" // Random negative traits
     | "module_damage" // Random module damage
     | "crew_desertion" // Chance crew leaves
     | "self_damage" // Damage to own ship
-    | "morale_drain" // -X morale per turn
     | "health_drain"; // -X crew health per turn

@@ -15,6 +15,8 @@ export function RaceDiscoveryModal() {
     const { t } = useTranslation();
     // Get the list of known races from the store
     const knownRaces = useGameStore((s) => s.knownRaces);
+    // Get game load counter to detect when game is loaded
+    const gameLoadedCount = useGameStore((s) => s.gameLoadedCount);
 
     // Local state to control the modal
     const [open, setOpen] = useState(false);
@@ -22,6 +24,12 @@ export function RaceDiscoveryModal() {
 
     // Ref to keep track of the previous length of knownRaces
     const prevLengthRef = useRef(knownRaces.length);
+
+    // Reset the ref when game is loaded to prevent showing modal for old discoveries
+    useEffect(() => {
+        prevLengthRef.current = knownRaces.length;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [gameLoadedCount]);
 
     useEffect(() => {
         const prevLength = prevLengthRef.current;

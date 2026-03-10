@@ -52,10 +52,7 @@ export function ContractsList() {
                     contract.targetSectorName || t("contracts.unknown"),
                 );
             case "scan_planet":
-                return t("contracts.scan_sector").replace(
-                    "{{sector}}",
-                    contract.targetSectorName || t("contracts.unknown"),
-                );
+                return t("contracts.scan_sector");
             case "combat":
                 return t("contracts.clear_sector").replace(
                     "{{sector}}",
@@ -179,16 +176,11 @@ export function ContractsList() {
                     tasks: [
                         {
                             label: t("contracts.task_what"),
-                            value: t("contracts.scan_planet").replace(
-                                "{{planetType}}",
-                                contract.planetType?.toLowerCase() || "",
-                            ),
+                            value: t("contracts.scan_planet"),
                         },
                         {
                             label: t("contracts.task_target"),
-                            value: contract.targetPlanetName
-                                ? `${contract.targetPlanetName} (${contract.targetSectorName})`
-                                : t("contracts.unknown"),
+                            value: `Планета типа: ${contract.planetType?.toLowerCase() || ""}`,
                         },
                         {
                             label: t("contracts.task_requirements"),
@@ -196,7 +188,17 @@ export function ContractsList() {
                         },
                         {
                             label: t("contracts.task_where"),
-                            value: t("contracts.scan_auto"),
+                            value: contract.sourcePlanetName
+                                ? `${contract.sourceSectorName}, ${contract.sourcePlanetName}`
+                                : contract.sourceSectorName ||
+                                  t("contracts.unknown"),
+                        },
+                        {
+                            label: t("contracts.task_status"),
+                            value:
+                                contract.visited && contract.visited >= 1
+                                    ? t("contracts.completed")
+                                    : t("contracts.in_progress"),
                         },
                     ],
                 };
@@ -443,7 +445,8 @@ export function ContractsList() {
                 <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md w-[calc(100%-2rem)] md:w-auto">
                     <DialogHeader>
                         <DialogTitle className="text-[#ffb000] font-['Orbitron']">
-                            {selectedContract?.desc}
+                            {selectedContract &&
+                                getContractName(selectedContract)}
                         </DialogTitle>
                         <DialogDescription className="sr-only">
                             {t("contracts.details_title")}

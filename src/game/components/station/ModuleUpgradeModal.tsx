@@ -52,7 +52,7 @@ function getTranslatedUpgradeName(
     const key = nameMap[item.targetType];
     return key ? t(key) : item.name;
 }
-
+// 🏥 +{module.healing} HP
 // Helper to get translated upgrade effect
 function getUpgradeEffect(
     item: ShopItem,
@@ -71,6 +71,9 @@ function getUpgradeEffect(
     }
     if (item.effect?.oxygen) {
         return t("station_upgrades.oxygen", { value: item.effect.oxygen });
+    }
+    if (item.effect?.healing) {
+        return t("station_upgrades.oxygen", { value: item.effect.healing });
     }
     if (item.effect?.fuelEfficiency) {
         return t("station_upgrades.efficiency", {
@@ -115,7 +118,7 @@ export function ModuleUpgradeModal({
 
                 <div className="space-y-3">
                     <div className="text-sm text-[#888] mb-4">
-                        {getTranslatedUpgradeName(pendingUpgrade, t)} —{" "}
+                        {getTranslatedUpgradeName(pendingUpgrade, t)}:{" "}
                         {getUpgradeEffect(pendingUpgrade, t)}
                     </div>
 
@@ -206,6 +209,10 @@ function ModuleSelectionList({
                 const nextConsumption = nextModuleTemplate?.consumption || 0;
                 const consumptionDiff = nextConsumption - currentConsumption;
 
+                const currentHealing = module.healing ?? 0;
+                const nextHealing = nextModuleTemplate?.healing ?? 0;
+                const healingDiff = nextHealing - currentHealing;
+
                 // Calculate upgrade price based on module's current level
                 // Find the correct upgrade item for this module's level from station items
                 const upgradeItem = stationItems.find((item) => {
@@ -238,6 +245,7 @@ function ModuleSelectionList({
                         buyItem={buyItem}
                         onClose={onClose}
                         consumptionDiff={consumptionDiff}
+                        healingDiff={healingDiff}
                         nextLevel={nextLevel}
                     />
                 );
@@ -257,6 +265,7 @@ interface ModuleUpgradeCardProps {
     onClose: (open: boolean) => void;
     consumptionDiff: number;
     nextLevel: number;
+    healingDiff?: number;
 }
 
 function ModuleUpgradeCard({
@@ -270,6 +279,7 @@ function ModuleUpgradeCard({
     onClose,
     consumptionDiff,
     nextLevel,
+    healingDiff,
 }: ModuleUpgradeCardProps) {
     const { t } = useTranslation();
     const isDisabled = isMaxLevel || !isUpgradeAvailable;
@@ -332,15 +342,25 @@ function ModuleUpgradeCard({
                 {module.consumption !== undefined && module.consumption > 0 && (
                     <span>⚡ -{module.consumption}</span>
                 )}
+                {module.healing !== undefined && module.healing > 0 && (
+                    <span>🏥 {module.healing} HP</span>
+                )}
             </div>
-            <div className="text-[10px] text-[#ffb000] mt-1 flex justify-between">
+            <div className="text-[10px] text-[#ffb000] mt-1 flex justify-between flex-col">
                 <span>
                     {t("station_upgrades.level")}: {module.level} → {nextLevel}
                 </span>
+
                 {consumptionDiff > 0 && (
                     <span className="text-[#ff0040]">
                         ⚡ {t("station_upgrades.consumption")}: +
                         {consumptionDiff}
+                    </span>
+                )}
+
+                {healingDiff && healingDiff > 0 && (
+                    <span className="text-[#00ff41]">
+                        {t("modules.healing")}: +{healingDiff}
                     </span>
                 )}
             </div>

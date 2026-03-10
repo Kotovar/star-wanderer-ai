@@ -1,42 +1,65 @@
 import type { CrewTrait, GameState, GameStore } from "@/game/types";
+import { CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
+
+/** Бонус к настроению от трейта морали */
+const MORALE_TRAIT_BONUS = 5;
+
+/** Штраф к настроению при нехватке энергии */
+const POWER_SHORTAGE_HAPPINESS_PENALTY = 5;
+
+/** Шанс повреждения модуля при нехватке энергии */
+const POWER_OVERLOAD_CHANCE = 0.4;
+
+/** Урон модулю от перегрузки */
+const POWER_OVERLOAD_DAMAGE = 15;
+
+/** Бонус энергии от назначения экипажа на разгон реактора */
+const POWER_ASSIGNMENT_BONUS = CREW_ASSIGNMENT_BONUSES.REACTOR_OVERLOAD;
 
 /**
- * Обработка трейтов морали
+ * Обрабатывает трейты морали экипажа
+ * Члены экипажа с трейтами морали повышают настроение другим в том же модуле
+ * @param state - Текущее состояние игры
+ * @param set - Функция обновления состояния
+ * @param get - Функция получения состояния
  */
 export const processMoraleTraits = (
-    state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
 ): void => {
-    get().crew.forEach((c) => {
-        c.traits?.forEach((trait: CrewTrait) => {
+    const crew = get().crew;
+
+    crew.forEach((crewMember) => {
+        crewMember.traits?.forEach((trait: CrewTrait) => {
             if (!trait.effect.moduleMorale) return;
 
-            const moraleBonus = trait.effect.moduleMorale;
-            const crewInSameModule = get().crew.filter(
-                (cr) =>
-                    cr.moduleId === c.moduleId &&
-                    cr.id !== c.id &&
-                    cr.happiness < (cr.maxHappiness || 100),
+            // Находим экипаж в том же модуле с пониженным настроением
+            const affectedCrew = crew.filter(
+                (c) =>
+                    c.moduleId === crewMember.moduleId &&
+                    c.id !== crewMember.id &&
+                    c.happiness < (c.maxHappiness || 100),
             );
 
-            if (crewInSameModule.length === 0) return;
+            if (affectedCrew.length === 0) return;
 
+            // Повышаем настроение
             set((s) => ({
-                crew: s.crew.map((cr) =>
-                    cr.moduleId === c.moduleId && cr.id !== c.id
+                crew: s.crew.map((c) =>
+                    c.moduleId === crewMember.moduleId && c.id !== crewMember.id
                         ? {
-                              ...cr,
+                              ...c,
                               happiness: Math.min(
-                                  cr.maxHappiness || 100,
-                                  cr.happiness + moraleBonus,
+                                  c.maxHappiness || 100,
+                                  c.happiness + MORALE_TRAIT_BONUS,
                               ),
                           }
-                        : cr,
+                        : c,
                 ),
             }));
+
             get().addLog(
-                `★ ${c.name} (${trait.name}): +${moraleBonus} настроения модулю`,
+                `★ ${crewMember.name} (${trait.name}): +${MORALE_TRAIT_BONUS} настроения модулю`,
                 "info",
             );
         });
@@ -44,61 +67,86 @@ export const processMoraleTraits = (
 };
 
 /**
- * Удаление несчастного экипажа
+ * Обрабатывает несчастный экипаж
+ * Члены экипажа с нулевым настроением покидают корабль
+ * @param state - Текущее состояние игры
+ * @param set - Функция обновления состояния
+ * @param get - Функция получения состояния
  */
 export const processUnhappyCrew = (
-    state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
 ): void => {
     const unhappyCrew = get().crew.filter((c) => c.happiness === 0);
-    unhappyCrew.forEach((c) => {
-        get().addLog(`${c.name} покинул корабль!`, "error");
-        set((s) => ({ crew: s.crew.filter((cr) => cr.id !== c.id) }));
+
+    unhappyCrew.forEach((crewMember) => {
+        get().addLog(`${crewMember.name} покинул корабль!`, "error");
+        set((s) => ({
+            crew: s.crew.filter((c) => c.id !== crewMember.id),
+        }));
     });
 };
 
 /**
- * Проверка критической нехватки энергии
+ * Проверяет критическую нехватку энергии
+ * При нехватке энергии:
+ * - Весь экипаж теряет настроение
+ * - Случайный модуль может получить повреждения от перегрузки
+ * @param state - Текущее состояние игры
+ * @param set - Функция обновления состояния
+ * @param get - Функция получения состояния
  */
 export const processPowerCheck = (
-    state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
 ): void => {
     const power = get().getTotalPower();
-    const boost = get().crew.find((c) => c.assignment === "power") ? 5 : 0;
+    const hasReactorOverload = get().crew.some(
+        (c) => c.assignment === "reactor_overload",
+    );
+    const powerBonus = hasReactorOverload ? POWER_ASSIGNMENT_BONUS : 0;
     const consumption = get().getTotalConsumption();
-    const available = power + boost - consumption;
+    const available = power + powerBonus - consumption;
 
+    // Энергии достаточно
     if (available >= 0) return;
 
     get().addLog("КРИТИЧНО: Недостаток энергии!", "error");
+
+    // Штраф к настроению всего экипажа
     set((s) => ({
         crew: s.crew.map((c) => ({
             ...c,
-            happiness: Math.max(0, c.happiness - 10),
+            happiness: Math.max(
+                0,
+                c.happiness - POWER_SHORTAGE_HAPPINESS_PENALTY,
+            ),
         })),
     }));
 
-    if (Math.random() < 0.4) {
-        const mod =
-            get().ship.modules[
-                Math.floor(Math.random() * get().ship.modules.length)
-            ];
+    // Шанс повреждения случайного модуля
+    if (Math.random() < POWER_OVERLOAD_CHANCE) {
+        const modules = get().ship.modules;
+        const targetModule =
+            modules[Math.floor(Math.random() * modules.length)];
+
         set((s) => ({
             ship: {
                 ...s.ship,
-                modules: s.ship.modules.map((m) =>
-                    m.id === mod.id
+                modules: modules.map((m) =>
+                    m.id === targetModule.id
                         ? {
                               ...m,
-                              health: Math.max(0, m.health - 15),
+                              health: Math.max(
+                                  0,
+                                  m.health - POWER_OVERLOAD_DAMAGE,
+                              ),
                           }
                         : m,
                 ),
             },
         }));
-        get().addLog(`"${mod.name}" повреждён перегрузкой!`, "error");
+
+        get().addLog(`"${targetModule.name}" повреждён перегрузкой!`, "error");
     }
 };

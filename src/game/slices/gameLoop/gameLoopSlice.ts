@@ -72,9 +72,9 @@ export const createGameLoopSlice = (
         processors.processCrewAssignments(set, get);
 
         // Трейты морали и прочее
-        processors.processMoraleTraits(state, set, get);
-        processors.processUnhappyCrew(state, set, get);
-        processors.processPowerCheck(state, set, get);
+        processors.processMoraleTraits(set, get);
+        processors.processUnhappyCrew(set, get);
+        processors.processPowerCheck(set, get);
 
         // Сохранение
         get().updateShipStats();

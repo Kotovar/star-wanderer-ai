@@ -16,7 +16,6 @@ export type MutationName = "nightmares" | "paranoid" | "unstable";
 
 export type CrewMemberAssignment =
     | "targeting"
-    | "power"
     | "navigation"
     | "firstaid"
     | "heal"
@@ -41,19 +40,14 @@ export type CrewMemberCombatAssignment =
     | "targeting"
     | "overclock"
     | "rapidfire"
-    | "maintenance"
     | "calibration"
     | "evasion"
     | "repair"
     | "heal"
     | "firstaid"
-    | "patrol"
-    | "research"
     | "analysis"
     | "sabotage"
-    | "morale"
-    | "reactor_overload"
-    | "navigation"
+    | "maintenance"
     | ""
     | null;
 
@@ -80,6 +74,8 @@ export interface CrewMember {
     // Xenosymbiont merge state
     isMerged: boolean; // Whether the crew member is merged with a module
     mergedModuleId: number | null; // ID of the module the crew member is merged with
+    // First aid protection (reduces damage to crew in same module)
+    firstaidActive: boolean;
 }
 
 export type CrewTraitEffect = {

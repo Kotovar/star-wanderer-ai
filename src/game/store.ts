@@ -6,6 +6,7 @@ import {
 } from "@/game/artifacts";
 import { getBossById } from "@/game/bosses";
 import { MODULES_BY_LEVEL } from "@/game/components/station";
+import { isModuleActive } from "@/lib";
 import {
     CONTRACT_REWARDS,
     DELIVERY_GOODS,
@@ -54,6 +55,7 @@ import {
     createScannerSlice,
     createCrewSlice,
     createGameLoopSlice,
+    createScanContractsSlice,
     getTotalEvasion,
 } from "@/game/slices";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
@@ -76,6 +78,7 @@ export const useGameStore = create<GameStore>()(
         ...createScannerSlice(set, get),
         ...createCrewSlice(set, get),
         ...createGameLoopSlice(set, get),
+        ...createScanContractsSlice(set, get),
 
         skipTurn: () => {
             const state = get();
@@ -214,9 +217,8 @@ export const useGameStore = create<GameStore>()(
                     }
 
                     // Pick random target module
-                    const activeMods = state.ship.modules.filter(
-                        (m) => !m.disabled && m.health > 0,
-                    );
+                    const activeMods =
+                        state.ship.modules.filter(isModuleActive);
                     const tgt =
                         activeMods[
                             Math.floor(Math.random() * activeMods.length)
@@ -399,7 +401,7 @@ export const useGameStore = create<GameStore>()(
 
             // Check tier access requirements (only when traveling to new sector)
             const engines = state.ship.modules.filter(
-                (m) => m.type === "engine" && !m.disabled && m.health > 0,
+                (m) => m.type === "engine" && isModuleActive(m),
             );
             const engineLevel =
                 engines.length > 0
@@ -719,6 +721,10 @@ export const useGameStore = create<GameStore>()(
                     if (!loc.isEmpty) {
                         handleSurvivorCapsuleDelivery("planet");
                     }
+                    // Обработка контрактов на сканирование планет
+                    get().processScanContracts();
+                    // Завершение выполненных контрактов на сканирование
+                    get().completeScanContracts();
                     // Complete diplomacy contracts (human quest - visit human planet)
                     if (loc.dominantRace === "human" && !loc.isEmpty) {
                         const diplomacyContract = get().activeContracts.find(
@@ -756,37 +762,6 @@ export const useGameStore = create<GameStore>()(
                             }));
                         }
                     }
-
-                    // Complete scan_planet contracts - return to source planet after scanning
-                    const scanComplete = get().activeContracts.filter(
-                        (c) =>
-                            c.type === "scan_planet" &&
-                            c.sourcePlanetId === loc.id &&
-                            c.visited &&
-                            c.visited >= 1,
-                    );
-                    scanComplete.forEach((c) => {
-                        set((s) => ({
-                            credits: s.credits + (c.reward || 0),
-                            completedContractIds: [
-                                ...s.completedContractIds,
-                                c.id,
-                            ],
-                            activeContracts: s.activeContracts.filter(
-                                (ac) => ac.id !== c.id,
-                            ),
-                        }));
-                        get().addLog(
-                            `📡 Контракт выполнен: ${c.desc} +${c.reward}₢`,
-                            "info",
-                        );
-                        // Give experience to all crew members
-                        const expReward = CONTRACT_REWARDS.scan_planet.baseExp;
-                        giveCrewExperience(
-                            expReward,
-                            `Экипаж получил опыт: +${expReward} ед.`,
-                        );
-                    });
 
                     // Complete supply_run contracts - deliver goods to source planet
                     const supplyComplete = get().activeContracts.filter(
@@ -1867,7 +1842,7 @@ export const useGameStore = create<GameStore>()(
 
             // Check if any crew is in a weapon bay with targeting assignment (combat assignment during battle)
             const weaponBays = state.ship.modules.filter(
-                (m) => m.type === "weaponbay" && !m.disabled && m.health > 0,
+                (m) => m.type === "weaponbay" && isModuleActive(m),
             );
             const hasTargetingGunner = state.crew.some(
                 (c) =>
@@ -1910,7 +1885,7 @@ export const useGameStore = create<GameStore>()(
 
             // Check if any crew is in a weapon bay for accuracy bonuses
             const weaponBays = state.ship.modules.filter(
-                (m) => m.type === "weaponbay" && !m.disabled && m.health > 0,
+                (m) => m.type === "weaponbay" && isModuleActive(m),
             );
             const crewInWeaponBays = state.crew.filter(
                 (c) =>
@@ -2003,9 +1978,6 @@ export const useGameStore = create<GameStore>()(
             );
             const hasRapidfire = state.crew.some(
                 (c) => c.combatAssignment === "rapidfire",
-            );
-            const hasMaintenance = state.crew.some(
-                (c) => c.combatAssignment === "maintenance",
             );
             const hasCalibration = state.crew.some(
                 (c) => c.combatAssignment === "calibration",
@@ -2107,12 +2079,11 @@ export const useGameStore = create<GameStore>()(
             // Crew assignment modifiers
             if (hasTargeting) accuracyModifier += 0.05; // +5% accuracy from targeting
             if (hasRapidfire) accuracyModifier -= 0.05; // -5% accuracy from rapidfire
-            if (hasMaintenance) accuracyModifier += 0.05; // +5% accuracy from maintenance
             if (hasCalibration && hasEngineer) accuracyModifier += 0.1; // +10% from engineer calibration
 
             // AI Core module bonus: +5% accuracy per AI core module
             const aiCoreModules = state.ship.modules.filter(
-                (m) => m.type === "ai_core" && !m.disabled && m.health > 0,
+                (m) => m.type === "ai_core" && isModuleActive(m),
             ).length;
             if (aiCoreModules > 0) {
                 accuracyModifier += aiCoreModules * 0.05;
@@ -2984,10 +2955,26 @@ export const useGameStore = create<GameStore>()(
                         a.effect.active,
                 );
 
+                // Check for first aid (medic with firstaid assignment reduces damage)
+                const hasFirstAid = crewInModule.some(
+                    (c) => c.combatAssignment === "firstaid",
+                );
+                const firstAidReduction = hasFirstAid ? 0.5 : 0; // -50% урона
+
                 set((s) => ({
                     crew: s.crew.map((c) => {
                         if (c.moduleId !== moduleId) return c;
                         let newHealth = c.health - actualDamage;
+
+                        // Apply first aid reduction
+                        if (hasFirstAid) {
+                            newHealth =
+                                c.health -
+                                Math.floor(
+                                    actualDamage * (1 - firstAidReduction),
+                                );
+                        }
+
                         // Apply immortality artifacts
                         if (hasImmortality && newHealth < 1) {
                             newHealth = 1;
@@ -3004,6 +2991,12 @@ export const useGameStore = create<GameStore>()(
                         `💥 Модуль уничтожен! Экипаж получает критический урон: -${actualDamage}`,
                         "error",
                     );
+                    if (hasFirstAid) {
+                        get().addLog(
+                            `🩹 Первая помощь: урон снижен на 50%!`,
+                            "info",
+                        );
+                    }
                     if (hasImmortality) {
                         get().addLog(
                             `✨ Экипаж выжил благодаря артефакту бессмертия!`,
@@ -3015,6 +3008,12 @@ export const useGameStore = create<GameStore>()(
                         `👤 Экипаж в модуле получил урон: -${actualDamage}`,
                         "warning",
                     );
+                    if (hasFirstAid) {
+                        get().addLog(
+                            `🩹 Первая помощь: урон снижен на 50%!`,
+                            "info",
+                        );
+                    }
                 }
 
                 // Log affected crew
@@ -4674,6 +4673,7 @@ export const useGameStore = create<GameStore>()(
                 turnsAtZeroHappiness: 0,
                 isMerged: false,
                 mergedModuleId: null,
+                firstaidActive: false,
             };
 
             // Track hired crew by station to prevent re-hiring
@@ -4934,7 +4934,6 @@ export const useGameStore = create<GameStore>()(
                 ],
             }));
             get().addLog(`Задача принята: ${contract.desc}`, "info");
-
             // Special message for supply_run contracts
             if (contract.type === "supply_run") {
                 get().addLog(
@@ -5643,6 +5642,7 @@ export const useGameStore = create<GameStore>()(
                             turnsAtZeroHappiness: 0,
                             isMerged: false,
                             mergedModuleId: null,
+                            firstaidActive: false,
                         };
                         set((s) => ({ crew: [...s.crew, newCrew] }));
                         get().addLog(
@@ -6445,6 +6445,12 @@ export const useGameStore = create<GameStore>()(
             if (!saved.settings) {
                 saved.settings = { animationsEnabled: true };
             }
+            // Migration: add gameLoadedCount if missing
+            if (saved.gameLoadedCount === undefined) {
+                saved.gameLoadedCount = 0;
+            }
+            // Increment load counter to prevent modals from showing
+            saved.gameLoadedCount += 1;
             set({ ...saved });
             get().addLog("Игра загружена", "info");
             return true;
@@ -6522,7 +6528,7 @@ export const useGameStore = create<GameStore>()(
 
             // Check lab and scientist
             const hasLab = state.ship.modules.some(
-                (m) => m.type === "lab" && m.health > 0 && !m.disabled,
+                (m) => isModuleActive(m) && m.type === "lab",
             );
             const hasScientist = state.crew.some(
                 (c) => c.profession === "scientist",
@@ -6582,7 +6588,7 @@ export const useGameStore = create<GameStore>()(
 
             // Calculate research output to determine turns remaining
             const labs = state.ship.modules.filter(
-                (m) => m.type === "lab" && m.health > 0 && !m.disabled,
+                (m) => m.type === "lab" && isModuleActive(m),
             );
             let researchOutput = labs.reduce(
                 (sum, m) => sum + (m.researchOutput || 0),
@@ -6655,7 +6661,7 @@ export const useGameStore = create<GameStore>()(
 
             // Calculate research output from lab modules
             const labs = state.ship.modules.filter(
-                (m) => m.type === "lab" && m.health > 0 && !m.disabled,
+                (m) => m.type === "lab" && isModuleActive(m),
             );
             let researchOutput = labs.reduce(
                 (sum, m) => sum + (m.researchOutput || 0),

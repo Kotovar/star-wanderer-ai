@@ -16,7 +16,7 @@ import { CrewMemberAssignment } from "@/game/types";
 
 export function AssignmentsPanel() {
     const crew = useGameStore((s) => s.crew);
-    const ship = useGameStore((s) => s.ship);
+
     const assignCrewTask = useGameStore((s) => s.assignCrewTask);
     const showGalaxyMap = useGameStore((s) => s.showGalaxyMap);
     const [assignments, setAssignments] = useState<
@@ -50,22 +50,6 @@ export function AssignmentsPanel() {
                         { value: "", label: "ОЖИДАНИЕ", effect: null },
                     ];
 
-                    // Get current module for this crew member
-                    const currentModule = ship.modules.find(
-                        (m) => m.id === c.moduleId,
-                    );
-
-                    // Фильтр задач для инженеров - "Разгон реактора" только в реакторе
-                    if (c.profession === "engineer") {
-                        const isInReactor = currentModule?.type === "reactor";
-
-                        // Показываем "Разгон реактора" только если инженер в реакторе
-                        actions = actions.filter(
-                            (a) =>
-                                a.value !== "reactor_overload" || isInReactor,
-                        );
-                    }
-
                     // Добавляем "Сращивание" для ксеноморфов
                     if (c.race === "xenosymbiont") {
                         actions = [
@@ -96,12 +80,6 @@ export function AssignmentsPanel() {
                                     <div className="text-[#00d4ff] font-bold mb-1.5">
                                         {c.name} ({profName} LV{c.level || 1})
                                     </div>
-                                    {currentModule && (
-                                        <div className="text-[9px] text-[#888] mb-1.5">
-                                            📍 {currentModule.name} (
-                                            {currentModule.x},{currentModule.y})
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                             <Select

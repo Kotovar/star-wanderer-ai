@@ -2,6 +2,7 @@ import type {
     CrewMemberAssignment,
     CrewMemberCombatAssignment,
     Profession,
+    ModuleType,
 } from "@/game/types";
 
 // Base prices for crew by profession
@@ -38,6 +39,7 @@ export const COMBAT_ACTIONS: Record<
         value: NonNullable<CrewMemberCombatAssignment>;
         label: string;
         effect: string | null;
+        moduleType?: ModuleType; // Требуемый тип модуля
     }[]
 > = {
     pilot: [
@@ -46,6 +48,7 @@ export const COMBAT_ACTIONS: Record<
             value: "evasion",
             label: "Маневры",
             effect: "+уровень% уклонение",
+            moduleType: "cockpit",
         },
     ],
     engineer: [
@@ -55,17 +58,29 @@ export const COMBAT_ACTIONS: Record<
             value: "calibration",
             label: "Калибровка",
             effect: "+10% точность",
+            moduleType: "weaponbay",
         },
         {
             value: "overclock",
             label: "Перегрузка",
             effect: "+25% урон, -10% броня",
+            moduleType: "weaponbay",
+        },
+        {
+            value: "maintenance",
+            label: "Обслуживание",
+            effect: "+5% точность",
+            moduleType: "weaponbay",
         },
     ],
     medic: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
         { value: "heal", label: "Лечение", effect: "+20 здоровье" },
-        { value: "firstaid", label: "Медпаки", effect: "Защита при уроне" },
+        {
+            value: "firstaid",
+            label: "Медпаки",
+            effect: "Защита при уроне",
+        },
     ],
     scout: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
@@ -89,11 +104,13 @@ export const COMBAT_ACTIONS: Record<
             value: "targeting",
             label: "Прицеливание",
             effect: "Выбор цели",
+            moduleType: "weaponbay",
         },
         {
             value: "rapidfire",
             label: "Скорострельность",
             effect: "+25% урон, -5% точность",
+            moduleType: "weaponbay",
         },
     ],
 };
@@ -123,7 +140,6 @@ export const CREW_ACTIONS: Record<
         { value: "", label: "ОЖИДАНИЕ", effect: null },
         { value: "heal", label: "Лечение", effect: "+20 здоровье" },
         { value: "morale", label: "Мораль", effect: "+15 настроение" },
-        { value: "firstaid", label: "Медпаки", effect: "Защита при уроне" },
     ],
     scout: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
@@ -142,14 +158,7 @@ export const CREW_ACTIONS: Record<
             effect: "+данные с аномалий",
         },
     ],
-    gunner: [
-        { value: "", label: "ОЖИДАНИЕ", effect: null },
-        {
-            value: "maintenance",
-            label: "Обслуживание",
-            effect: "+5% точность",
-        },
-    ],
+    gunner: [{ value: "", label: "ОЖИДАНИЕ", effect: null }],
 };
 
 /**

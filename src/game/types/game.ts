@@ -83,6 +83,7 @@ export interface GameState {
     hiredCrew: Record<string, string[]>;
     artifacts: Artifact[]; // Ancient artifacts discovered by player
     knownRaces: RaceId[]; // Races discovered by player
+    gameLoadedCount: number; // Counter to track game loads (prevents modal re-show)
     battleResult: BattleResult | null; // Results of last battle
     stormResult: StormResult | null; // Results of last storm entry
     gameOver: boolean; // Game over state
@@ -240,6 +241,11 @@ export interface GameResearch {
     processResearch: () => void;
 }
 
+export interface GameScanContracts {
+    processScanContracts: () => Contract[];
+    completeScanContracts: () => void;
+}
+
 export interface GameManagement {
     restartGame: () => void;
     saveGame: () => void;
@@ -263,4 +269,5 @@ export type GameStore = GameState &
     GamePlanetSpecializations &
     GameFinish &
     GameResearch &
+    GameScanContracts &
     GameManagement;

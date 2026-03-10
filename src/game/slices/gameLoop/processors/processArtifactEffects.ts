@@ -1,5 +1,5 @@
-import type { GameState, GameStore } from "@/game/types";
 import { getArtifactEffectValue } from "@/game/artifacts";
+import type { GameState, GameStore } from "@/game/types";
 
 /**
  * Обработка положительных эффектов артефактов
@@ -31,7 +31,7 @@ export const processArtifactEffects = (
             // === ЭНЕРГИЯ ===
             case "free_power": {
                 // Вечное Ядро - бесплатная энергия (обрабатывается в getTotalPower)
-                const powerBonus = effectValue || 10;
+                const powerBonus = effectValue;
                 get().addLog(
                     `⚡ Вечное Ядро: +${powerBonus}⚡ бесплатной энергии`,
                     "info",
@@ -41,7 +41,7 @@ export const processArtifactEffects = (
 
             case "abyss_power": {
                 // Реактор Бездны - бонус к энергии (обрабатывается в getTotalPower)
-                const powerBonus = effectValue || 25;
+                const powerBonus = effectValue;
                 get().addLog(`⚛️ Реактор Бездны: +${powerBonus}⚡`, "info");
                 break;
             }
@@ -49,7 +49,7 @@ export const processArtifactEffects = (
             // === АВТО-РЕМОНТ ===
             case "nanite_repair": {
                 // Нанитовая Обшивка - ремонт модулей
-                const repairAmount = effectValue || 5;
+                const repairAmount = effectValue;
                 set((s) => ({
                     ship: {
                         ...s.ship,
@@ -88,7 +88,7 @@ export const processArtifactEffects = (
             // === ЩИТЫ ===
             case "dark_shield": {
                 // Тёмный Щит - бонус к максимальным щитам (обрабатывается в updateShipStats)
-                const shieldBonus = effectValue || 100;
+                const shieldBonus = effectValue;
                 get().addLog(`🛡️ Тёмный Щит: +${shieldBonus} к щитам`, "info");
                 break;
             }
@@ -128,7 +128,7 @@ export const processArtifactEffects = (
             // === СКАНИРОВАНИЕ ===
             case "quantum_scan": {
                 // Квантовый сканер (обрабатывается в getEffectiveScanRange)
-                const scanBonus = effectValue || 5;
+                const scanBonus = effectValue;
                 get().addLog(
                     `📡 Квантовый Сканер: +${scanBonus} к дальности`,
                     "info",
@@ -183,7 +183,7 @@ export const processArtifactEffects = (
             // === НАХОДКИ ===
             case "artifact_finder": {
                 // Компас Древних - шанс находок (обрабатывается в tryFindArtifact)
-                const findBonus = effectValue || 3;
+                const findBonus = effectValue;
                 get().addLog(
                     `🧭 Компас Древних: x${findBonus} к находкам`,
                     "info",
@@ -223,7 +223,7 @@ export const processArtifactEffects = (
             // === МОДУЛЬНАЯ БРОНЯ ===
             case "module_armor": {
                 // Кристаллическая Броня - бонус к защите (обрабатывается в calculateAverageDefense)
-                const armorBonus = effectValue || 3;
+                const armorBonus = effectValue;
                 get().addLog(
                     `🛡️ Кристаллическая Броня: +${armorBonus} к защите`,
                     "info",

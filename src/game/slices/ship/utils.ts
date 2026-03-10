@@ -1,6 +1,7 @@
 import { getArtifactEffectValue } from "@/game/artifacts";
 import { POWER_ARTIFACT_TYPES } from "@/game/constants";
 import type { GameState, Module } from "@/game/types";
+import { isModuleActive } from "@/lib";
 
 /**
  * Проверяет, функционален ли модуль
@@ -8,8 +9,7 @@ import type { GameState, Module } from "@/game/types";
  * @param module - Модуль для проверки
  * @returns true если модуль работает, false иначе
  */
-export const isModuleFunctional = (module: Module) =>
-    !module.disabled && !module.manualDisabled && module.health > 0;
+export const isModuleFunctional = (module: Module) => isModuleActive(module);
 
 /**
  * Вычисляет среднюю защиту всех функциональных модулей

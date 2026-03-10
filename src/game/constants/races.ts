@@ -42,7 +42,7 @@ export interface XenosymbiontMergeEffect {
     /** Точность оружия (%) */
     weaponAccuracy?: number;
     /** Скорость лечения (%) */
-    healingSpeed?: number;
+    healing?: number;
     /** Скорость добычи (%) */
     miningSpeed?: number;
     /** Выход ресурсов (%) */
@@ -615,9 +615,9 @@ export const XENOSYMBIONT_MERGE_EFFECTS: Record<
     // ═══════════════════════════════════════════════════════════
     medical: {
         name: "Регенеративная камера",
-        description: "Живые ткани ускоряют лечение экипажа",
+        description: "Живые ткани увеличивают эффективность лечения",
         effects: {
-            healingSpeed: 25,
+            healing: 25,
         },
     },
 

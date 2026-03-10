@@ -12,6 +12,7 @@ import type {
     CrewMember,
     CrewMemberCombatAssignment,
     Module,
+    ModuleType,
     Profession,
 } from "@/game/types";
 import { COMBAT_ACTIONS } from "@/game/constants/crew";
@@ -47,14 +48,6 @@ export function CrewMemberCard({
     const actions = COMBAT_ACTIONS[crewMember.profession] || [
         { value: "", label: t("crew_member.waiting"), effect: null },
     ];
-
-    // const actions = isCombat
-    //     ? COMBAT_ACTIONS[crewMember.profession] || [
-    //           { value: "", label: "ОЖИДАНИЕ", effect: null },
-    //       ]
-    //     : CREW_ACTIONS[crewMember.profession] || [
-    //           { value: "", label: "ОЖИДАНИЕ", effect: null },
-    //       ];
 
     // Get current assignment based on combat state
     const currentAssignment = isCombat
@@ -176,6 +169,7 @@ interface TaskRowProps {
         value: NonNullable<CrewMemberCombatAssignment>;
         label: string;
         effect: string | null;
+        moduleType?: ModuleType;
     }>;
     onAssignTask: (
         crewMemberId: number,
@@ -196,11 +190,9 @@ function TaskRow({
     isCombat = false,
     t,
 }: TaskRowProps) {
-    // Filter actions based on crew position and module type
-    const filteredActions = actions.filter((a) => {
-        // Overclock requires engineer to be in weaponbay
-        if (a.value === "overclock" && crewMember.profession === "engineer") {
-            return module?.type === "weaponbay";
+    const filteredActions = actions.filter((action) => {
+        if (action.moduleType && module?.type !== action.moduleType) {
+            return false;
         }
         return true;
     });

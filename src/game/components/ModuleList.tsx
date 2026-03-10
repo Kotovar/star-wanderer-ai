@@ -397,11 +397,11 @@ export function ModuleDetailDialog({
                         module.healing > 0 && (
                             <div>
                                 🏥 +{module.healing} HP
-                                {mergeBonus.healingSpeed &&
-                                    mergeBonus.healingSpeed > 0 && (
+                                {mergeBonus.healing &&
+                                    mergeBonus.healing > 0 && (
                                         <span className="text-[#00d4ff]">
                                             {" "}
-                                            (+{mergeBonus.healingSpeed}%)
+                                            (+{mergeBonus.healing}%)
                                         </span>
                                     )}
                             </div>
