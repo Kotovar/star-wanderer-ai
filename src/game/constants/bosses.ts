@@ -7,6 +7,10 @@ import type { AncientBoss } from "@/game/types";
 // ═══════════════════════════════════════════════════════════════
 
 export const ANCIENT_BOSSES: AncientBoss[] = [
+    // ═══════════════════════════════════════════════════════════
+    // TIER 1 BOSSES (3 variants)
+    // ═══════════════════════════════════════════════════════════
+
     // Tier 1 Boss - Guardian of the Gate
     {
         id: "guardian_sentinel",
@@ -37,7 +41,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
                 health: 120,
                 defense: 5,
                 isAncient: true,
-                specialEffect: "regen_15",
+                specialEffect: { type: "regen", value: 15 },
                 description: "Восстанавливает 15% здоровья каждый ход",
             },
             {
@@ -53,14 +57,129 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
         regenRate: 10,
         specialAbility: {
             name: "Энергетический Барьер",
-            description: "При низком здоровье восстанавливает 50% щитов",
+            description:
+                "При низком здоровье восстанавливает 50% щитов 1 раз за бой",
             trigger: "low_health",
             effect: "shield_restore",
             value: 50,
         },
         guaranteedArtifactRarity: "rare",
-        guaranteedModuleDrop: "ancient_core",
     },
+
+    // Tier 1 Boss - Nova Stalker
+    {
+        id: "nova_stalker",
+        name: "🔥 Ловец Нов",
+        description:
+            "Охотник за звёздной энергией. Поглощает излучение звёзд для подзарядки своих систем.",
+        tier: 1,
+        modules: [
+            {
+                type: "solar_collector",
+                name: "Солнечный Коллектор",
+                health: 140,
+                defense: 4,
+                isAncient: true,
+                specialEffect: { type: "regen", value: 10 },
+                description: "Восстанавливает 10% здоровья каждый ход",
+            },
+            {
+                type: "flare_launcher",
+                name: "Метатель Вспышек",
+                health: 70,
+                damage: 30,
+                isAncient: true,
+                description: "Выстреливает звёздными вспышками",
+            },
+            {
+                type: "heat_sink",
+                name: "Теплоотвод",
+                health: 100,
+                defense: 6,
+                isAncient: true,
+                description: "Рассеивает избыточное тепло",
+            },
+            {
+                type: "radiation_core",
+                name: "Радиационное Ядро",
+                health: 90,
+                damage: 20,
+                isAncient: true,
+                specialEffect: { type: "damage_aura", value: 5 },
+                description: "Наносит 5 урона каждый ход",
+            },
+        ],
+        shields: 60,
+        regenRate: 8,
+        specialAbility: {
+            name: "Звёздная Вспышка",
+            description: "Каждый 3-й ход наносит 40 урона всем модулям",
+            trigger: "every_turn",
+            effect: "aoe_damage",
+            value: 40,
+        },
+        guaranteedArtifactRarity: "rare",
+    },
+
+    // Tier 1 Boss - Void Leech
+    {
+        id: "void_leech",
+        name: "🩸 Пустотный Паразит",
+        description:
+            "Машина-паразит, питающаяся энергией кораблей. Присасывается к жертве и высасывает силы.",
+        tier: 1,
+        modules: [
+            {
+                type: "energy_drain",
+                name: "Энергетический Вампир",
+                health: 100,
+                damage: 20,
+                isAncient: true,
+                specialEffect: { type: "heal_on_damage", value: 30 },
+                description: "Лечится на 30% нанесённого урона",
+            },
+            {
+                type: "grapple_arm",
+                name: "Захватная Клешня",
+                health: 80,
+                defense: 4,
+                isAncient: true,
+                description: "Удерживает цель для атаки",
+            },
+            {
+                type: "power_cell",
+                name: "Энергоячейка",
+                health: 130,
+                defense: 5,
+                isAncient: true,
+                specialEffect: { type: "regen", value: 12 },
+                description: "Восстанавливает 12% здоровья каждый ход",
+            },
+            {
+                type: "shield_drain",
+                name: "Поглотитель Щитов",
+                health: 70,
+                damage: 15,
+                isAncient: true,
+                specialEffect: { type: "shield_break", value: 15 },
+                description: "Каждый удар снимает 15 щитов",
+            },
+        ],
+        shields: 50,
+        regenRate: 12,
+        specialAbility: {
+            name: "Энергетический Вампиризм",
+            description: "При атаке лечится на 20% от нанесённого урона",
+            trigger: "every_turn",
+            effect: "lifesteal",
+            value: 20,
+        },
+        guaranteedArtifactRarity: "rare",
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // TIER 2 BOSSES (3 variants)
+    // ═══════════════════════════════════════════════════════════
 
     // Tier 2 Boss - Harvester
     {
@@ -84,7 +203,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
                 health: 100,
                 damage: 40,
                 isAncient: true,
-                specialEffect: "shield_pierce",
+                specialEffect: { type: "shield_pierce", value: 50 },
                 description: "Игнорирует 50% щитов",
             },
             {
@@ -93,7 +212,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
                 health: 80,
                 damage: 15,
                 isAncient: true,
-                specialEffect: "multi_hit",
+                specialEffect: { type: "multi_hit", value: 3 },
                 description: "Атакует 3 раза за ход",
             },
             {
@@ -102,7 +221,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
                 health: 180,
                 defense: 7,
                 isAncient: true,
-                specialEffect: "damage_absorb",
+                specialEffect: { type: "damage_absorb", value: 25 },
                 description: "25% урона конвертируется в щиты",
             },
             {
@@ -125,8 +244,125 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
             value: 25,
         },
         guaranteedArtifactRarity: "legendary",
-        guaranteedModuleDrop: "conversion_core",
     },
+
+    // Tier 2 Boss - Phase Hunter
+    {
+        id: "phase_hunter",
+        name: "⚡ Фазовый Охотник",
+        description:
+            "Машина, способная перемещаться между измерениями. Появляется из ниоткуда и атакует.",
+        tier: 2,
+        modules: [
+            {
+                type: "phase_drive",
+                name: "Фазовый Двигатель",
+                health: 160,
+                defense: 6,
+                isAncient: true,
+                specialEffect: { type: "dodge", value: 25 },
+                description: "25% шанс уклонения",
+            },
+            {
+                type: "void_cannon",
+                name: "Пушка Пустоты",
+                health: 110,
+                damage: 50,
+                isAncient: true,
+                specialEffect: { type: "ignore_defense", value: 100 },
+                description: "Игнорирует всю защиту",
+            },
+            {
+                type: "dimensional_anchor",
+                name: "Якорь Измерений",
+                health: 140,
+                defense: 8,
+                isAncient: true,
+                description: "Стабилизирует положение в пространстве",
+            },
+            {
+                type: "quantum_reflector",
+                name: "Квантовый Отражатель",
+                health: 90,
+                defense: 7,
+                isAncient: true,
+                specialEffect: { type: "damage_mirror", value: 15 },
+                description: "Отражает 15% урона",
+            },
+        ],
+        shields: 100,
+        regenRate: 12,
+        specialAbility: {
+            name: "Фазовый Сдвиг",
+            description: "30% шанс полностью избежать атаки",
+            trigger: "every_turn",
+            effect: "evasion_boost",
+            value: 30,
+        },
+        guaranteedArtifactRarity: "legendary",
+    },
+
+    // Tier 2 Boss - Cryo Reaver
+    {
+        id: "cryo_reaver",
+        name: "❄️ Ледяной Разоритель",
+        description:
+            "Машина холода, замораживающая всё вокруг. Её системы работают при абсолютном нуле.",
+        tier: 2,
+        modules: [
+            {
+                type: "cryo_core",
+                name: "Крио Ядро",
+                health: 180,
+                defense: 8,
+                isAncient: true,
+                specialEffect: { type: "regen", value: 18 },
+                description: "Восстанавливает 18% здоровья каждый ход",
+            },
+            {
+                type: "ice_beam",
+                name: "Ледяной Луч",
+                health: 95,
+                damage: 45,
+                isAncient: true,
+                specialEffect: { type: "shield_break", value: 25 },
+                description: "Каждый удар снимает 25 щитов",
+            },
+            {
+                type: "frost_shield",
+                name: "Морозный Щит",
+                health: 120,
+                defense: 9,
+                isAncient: true,
+                specialEffect: { type: "shield_regen", value: 15 },
+                description: "Восстанавливает 15 щитов каждый ход",
+            },
+            {
+                type: "absolute_zero",
+                name: "Абсолютный Ноль",
+                health: 100,
+                damage: 35,
+                isAncient: true,
+                specialEffect: { type: "guaranteed_crit", value: 4 },
+                description: "Каждая 4-я атака - критическая",
+            },
+        ],
+        shields: 140,
+        regenRate: 18,
+        specialAbility: {
+            name: "Вечная Мерзлота",
+            description:
+                "При низком здоровье восстанавливает 30 щитов каждый ход",
+            trigger: "low_health",
+            effect: "shield_regen",
+            value: 30,
+        },
+        guaranteedArtifactRarity: "legendary",
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // TIER 3 BOSSES (3 variants)
+    // ═══════════════════════════════════════════════════════════
 
     // Tier 3 Boss - Void Oracle
     {
@@ -142,7 +378,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
                 health: 250,
                 defense: 8,
                 isAncient: true,
-                specialEffect: "dodge_30",
+                specialEffect: { type: "dodge", value: 30 },
                 description: "30% шанс уклонения",
             },
             {
@@ -151,7 +387,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
                 health: 120,
                 damage: 60,
                 isAncient: true,
-                specialEffect: "ignore_defense",
+                specialEffect: { type: "ignore_defense", value: 100 },
                 description: "Игнорирует всю защиту",
             },
             {
@@ -160,7 +396,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
                 health: 150,
                 damage: 30,
                 isAncient: true,
-                specialEffect: "shield_break",
+                specialEffect: { type: "shield_break", value: 20 },
                 description: "Каждый удар снимает 20 щитов",
             },
             {
@@ -169,7 +405,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
                 health: 200,
                 defense: 10,
                 isAncient: true,
-                specialEffect: "phase_shift",
+                specialEffect: { type: "phase_shift", value: 50 },
                 description: "50% шанс избежать критического удара",
             },
             {
@@ -178,7 +414,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
                 health: 180,
                 defense: 8,
                 isAncient: true,
-                specialEffect: "damage_mirror",
+                specialEffect: { type: "damage_mirror", value: 20 },
                 description: "Отражает 20% урона",
             },
         ],
@@ -192,8 +428,144 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
             value: 25,
         },
         guaranteedArtifactRarity: "mythic",
-        guaranteedModuleDrop: "quantum_engine",
     },
+
+    // Tier 3 Boss - Nexus Destroyer
+    {
+        id: "nexus_destroyer",
+        name: "💀 Разрушитель Связи",
+        description:
+            "Машина разрушения, способная разрывать связи между модулями корабля. Её присутствие дестабилизирует системы.",
+        tier: 3,
+        modules: [
+            {
+                type: "disruption_field",
+                name: "Поле Помех",
+                health: 220,
+                defense: 9,
+                isAncient: true,
+                specialEffect: { type: "damage_aura", value: 15 },
+                description: "Наносит 15 урона каждый ход",
+            },
+            {
+                type: "link_breaker",
+                name: "Разрыватель Связей",
+                health: 140,
+                damage: 55,
+                isAncient: true,
+                specialEffect: { type: "shield_break", value: 30 },
+                description: "Каждый удар снимает 30 щитов",
+            },
+            {
+                type: "chaos_core",
+                name: "Ядро Хаоса",
+                health: 200,
+                defense: 7,
+                isAncient: true,
+                specialEffect: { type: "regen", value: 20 },
+                description: "Восстанавливает 20% здоровья каждый ход",
+            },
+            {
+                type: "void_shield",
+                name: "Щит Пустоты",
+                health: 130,
+                defense: 11,
+                isAncient: true,
+                specialEffect: { type: "shield_regen", value: 25 },
+                description: "Восстанавливает 25 щитов каждый ход",
+            },
+            {
+                type: "annihilation_beam",
+                name: "Луч Уничтожения",
+                health: 150,
+                damage: 70,
+                isAncient: true,
+                specialEffect: { type: "guaranteed_crit", value: 3 },
+                description: "Каждая 3-я атака - критическая",
+            },
+        ],
+        shields: 180,
+        regenRate: 22,
+        specialAbility: {
+            name: "Хаотическая Регенерация",
+            description: "Каждый ход восстанавливает 15% здоровья всем модулям",
+            trigger: "every_turn",
+            effect: "heal_all",
+            value: 15,
+        },
+        guaranteedArtifactRarity: "mythic",
+    },
+
+    // Tier 3 Boss - Chronos Warden
+    {
+        id: "chronos_warden",
+        name: "⏳ Хранитель Времени",
+        description:
+            "Машина, управляющая потоком времени. Может замедлять противника и ускорять свои системы.",
+        tier: 3,
+        modules: [
+            {
+                type: "time_core",
+                name: "Временное Ядро",
+                health: 240,
+                defense: 10,
+                isAncient: true,
+                specialEffect: { type: "regen", value: 22 },
+                description: "Восстанавливает 22% здоровья каждый ход",
+            },
+            {
+                type: "temporal_cannon",
+                name: "Временная Пушка",
+                health: 130,
+                damage: 65,
+                isAncient: true,
+                specialEffect: { type: "ignore_defense", value: 100 },
+                description: "Игнорирует всю защиту",
+            },
+            {
+                type: "stasis_field",
+                name: "Поле Стазиса",
+                health: 160,
+                defense: 12,
+                isAncient: true,
+                specialEffect: { type: "turn_skip", value: 25 },
+                description: "25% шанс пропустить ход противника",
+            },
+            {
+                type: "acceleration_matrix",
+                name: "Матрица Ускорения",
+                health: 110,
+                defense: 8,
+                isAncient: true,
+                specialEffect: { type: "dodge", value: 35 },
+                description: "35% шанс уклонения",
+            },
+            {
+                type: "paradox_engine",
+                name: "Двигатель Парадоксов",
+                health: 170,
+                damage: 50,
+                isAncient: true,
+                specialEffect: { type: "multi_hit", value: 2 },
+                description: "Атакует 2 раза за ход",
+            },
+        ],
+        shields: 200,
+        regenRate: 25,
+        specialAbility: {
+            name: "Петля Времени",
+            description:
+                "При низком здоровье 40% шанс восстановить 50 здоровья",
+            trigger: "low_health",
+            effect: "self_heal",
+            value: 50,
+        },
+        guaranteedArtifactRarity: "mythic",
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // SPECIAL BOSSES (Black Holes)
+    // ═══════════════════════════════════════════════════════════
 
     // Special Black Hole Boss - The Eternal
     {
@@ -209,7 +581,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
                 health: 300,
                 defense: 10,
                 isAncient: true,
-                specialEffect: "regen_25",
+                specialEffect: { type: "regen", value: 25 },
                 description: "Восстанавливает 25% здоровья каждый ход",
             },
             {
@@ -218,7 +590,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
                 health: 150,
                 damage: 80,
                 isAncient: true,
-                specialEffect: "guaranteed_crit",
+                specialEffect: { type: "guaranteed_crit", value: 3 },
                 description: "Каждая 3-я атака - критическая",
             },
             {
@@ -227,7 +599,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
                 health: 180,
                 damage: 45,
                 isAncient: true,
-                specialEffect: "heal_on_damage",
+                specialEffect: { type: "heal_on_damage", value: 50 },
                 description: "Лечится на 50% нанесённого урона",
             },
             {
@@ -236,7 +608,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
                 health: 200,
                 defense: 10,
                 isAncient: true,
-                specialEffect: "damage_aura",
+                specialEffect: { type: "damage_aura", value: 10 },
                 description: "Наносит 10 урона каждый ход",
             },
             {
@@ -245,7 +617,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
                 health: 120,
                 defense: 10,
                 isAncient: true,
-                specialEffect: "shield_regen_20",
+                specialEffect: { type: "shield_regen", value: 20 },
                 description: "Восстанавливает 20 щитов каждый ход",
             },
             {
@@ -254,7 +626,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
                 health: 100,
                 defense: 8,
                 isAncient: true,
-                specialEffect: "turn_skip_20",
+                specialEffect: { type: "turn_skip", value: 20 },
                 description: "20% шанс пропустить ход противника",
             },
         ],
@@ -268,6 +640,5 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
             value: 20,
         },
         guaranteedArtifactRarity: "cursed",
-        guaranteedModuleDrop: "quantum_engine",
     },
 ];

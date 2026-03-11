@@ -5,6 +5,7 @@ import { TIER_CONFIG } from "./config";
 import { TIER_NAMES } from "./consts";
 import {
     ensureBlackHoles,
+    ensureBoss,
     ensureColonizedPlanet,
     ensureMinAnomalies,
     ensureStation,
@@ -16,6 +17,7 @@ import {
     calculateSectorRadius,
     getLocationCount,
 } from "./utils";
+import { bossDistribution } from "./bossDistribution";
 
 // ============================================================================
 // Основная функция генерации
@@ -33,10 +35,14 @@ import {
  * - Звезду (одиночная, двойная, тройная или чёрная дыра)
  * - Набор локаций (планеты, станции, корабли, астероиды, штормы, аномалии)
  * - Гарантированные: минимум 1 аномалия, 1 колонизированная планета, 1 станция
+ * - Гарантированные боссы: по одному уникальному боссу для каждого тира (1, 2, 3)
  *
  * @returns Массив секторов галактики с назначенными локациями и координатами
  */
 export const generateGalaxy = (): Sector[] => {
+    // Reset boss distribution for new game
+    bossDistribution.reset();
+
     const sectors: Sector[] = [];
     let sectorIdx = 0;
 
@@ -80,6 +86,7 @@ export const generateGalaxy = (): Sector[] => {
             if (!isBlackHole) {
                 ensureColonizedPlanet(sector);
                 ensureStation(sector);
+                ensureBoss(sector); // Guarantee boss in tier 3 sectors
             } else {
                 addEternalBoss(sector);
             }

@@ -1,4 +1,4 @@
-import type { GalaxyTier } from "./galaxy";
+import type { GalaxyTierAll } from "./galaxy";
 import type { Location } from "./locations";
 
 /**
@@ -43,7 +43,7 @@ export interface Sector {
     name: string;
     danger: number;
     distance: number;
-    tier: GalaxyTier; // System tier (1=center, 2=middle, 3=outer)
+    tier: GalaxyTierAll; // System tier (1=center, 2=middle, 3=outer)
     locations: Location[];
     star: {
         type: StarType;

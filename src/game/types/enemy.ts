@@ -1,3 +1,5 @@
+import type { BossModuleEffect } from "./bosses";
+
 export type EnemyModule = {
     id: number;
     type: string;
@@ -9,7 +11,7 @@ export type EnemyModule = {
     maxHealth?: number;
     isAncient?: boolean; // Module not available to player
     regenRate?: number; // Self-regeneration
-    specialEffect?: string; // e.g., 'shield_boost', 'damage_aura'
+    specialEffect?: BossModuleEffect; // e.g., { type: 'damage_aura', value: 10 }
 };
 
 export type EnemyModuleType = "weapon" | "shield" | "reactor";

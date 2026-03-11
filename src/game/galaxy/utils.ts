@@ -1,4 +1,4 @@
-import type { GalaxyTier } from "../types";
+import type { GalaxyTierAll } from "../types";
 import { LOCATION_COUNT } from "./config";
 
 // ============================================================================
@@ -11,7 +11,7 @@ import { LOCATION_COUNT } from "./config";
 export const calculateSectorAngle = (
     index: number,
     total: number,
-    tier: GalaxyTier,
+    tier: GalaxyTierAll,
 ): number => {
     const baseAngle = (index / total) * Math.PI * 2;
     const offset = tier === 1 ? 0 : Math.PI / total;
@@ -30,7 +30,7 @@ export const calculateSectorRadius = (baseRadius: number): number => {
  * Определяет количество локаций для сектора
  */
 export const getLocationCount = (
-    tier: GalaxyTier,
+    tier: GalaxyTierAll,
     isBlackHole: boolean,
 ): number => {
     if (isBlackHole) {

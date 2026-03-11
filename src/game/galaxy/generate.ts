@@ -1,6 +1,6 @@
 import { RACES } from "@/game/constants/races";
-import {
-    GalaxyTier,
+import type {
+    GalaxyTierAll,
     Sector,
     Location,
     RaceId,
@@ -19,6 +19,7 @@ import { PLANET_TYPES } from "@/game/constants/planets";
 import { getRandomRace, getDominantRaceForPlanet } from "@/game/races/utils";
 import { getRandomBossForTier } from "@/game/bosses/utils";
 import { ANCIENT_BOSSES } from "@/game/constants/bosses";
+import { bossDistribution } from "./bossDistribution";
 
 const ENEMY_TYPES = ["Пираты", "Рейдеры", "Наёмники", "Мародёры"];
 
@@ -32,7 +33,7 @@ const ENEMY_TYPES = ["Пираты", "Рейдеры", "Наёмники", "Ма
  * - Tier 3: Красные карлики (25%), Жёлтые карлики (15%), Голубые гиганты (15%), Нейтронные (15%),
  *           Красные сверхгиганты (10%), Тройные (5%), Чёрные дыры (15%), Газовые гиганты (10%)
  */
-export const generateStar = (tier: GalaxyTier): Sector["star"] => {
+export const generateStar = (tier: GalaxyTierAll): Sector["star"] => {
     const starRoll = Math.random();
 
     // Шансы для чёрных дыр
@@ -189,7 +190,7 @@ export const generateFriendlyShip = (
 export const generatePlanet = (
     sectorIdx: number,
     locIdx: number,
-    tier: GalaxyTier,
+    tier: GalaxyTierAll,
     isBlackHole: boolean,
 ): Location => {
     const planetType =
@@ -250,7 +251,7 @@ export const generateEnemyShip = (
 export const generateAsteroidBelt = (
     sectorIdx: number,
     locIdx: number,
-    tier: GalaxyTier,
+    tier: GalaxyTierAll,
 ): Location => {
     let asteroidTier: AsteroidTier = tier;
     const TIER4_CHANCE = 0.15;
@@ -284,7 +285,7 @@ export const generateAsteroidBelt = (
 export const generateStorm = (
     sectorIdx: number,
     locIdx: number,
-    tier: GalaxyTier,
+    tier: GalaxyTierAll,
 ): Location => {
     const stormType =
         STORM_TYPES_LIST[Math.floor(Math.random() * STORM_TYPES_LIST.length)];
@@ -317,12 +318,13 @@ export const generateDistressSignal = (
 export const generateBossOrAnomaly = (
     sectorIdx: number,
     locIdx: number,
-    tier: GalaxyTier,
+    tier: GalaxyTierAll,
     isBlackHole: boolean,
 ): Location => {
     const boss = getRandomBossForTier(tier);
 
     if (boss) {
+        bossDistribution.markBossAsUsed(boss.id);
         return {
             id: `${sectorIdx}-${locIdx}`,
             type: "boss",
@@ -341,7 +343,7 @@ export const generateBossOrAnomaly = (
 export const generateAnomaly = (
     sectorIdx: number,
     locIdx: number,
-    tier: GalaxyTier,
+    tier: GalaxyTierAll,
     isBlackHole: boolean,
 ): Location => {
     let anomalyTier = tier;
@@ -357,7 +359,7 @@ export const generateAnomaly = (
     }
 
     if (isBlackHole) {
-        anomalyTier = Math.min(4, anomalyTier + 1) as GalaxyTier;
+        anomalyTier = Math.min(4, anomalyTier + 1) as GalaxyTierAll;
         anomalyColor = "#ff00ff";
     }
 
@@ -378,6 +380,8 @@ export const generateAnomaly = (
 export const addEternalBoss = (sector: Sector): void => {
     const eternalBoss = ANCIENT_BOSSES.find((b) => b.id === "the_eternal");
     if (!eternalBoss) return;
+
+    bossDistribution.markBossAsUsed(eternalBoss.id);
 
     sector.locations.push({
         id: `${sector.id}-boss-eternal`,

@@ -35,6 +35,5 @@ export interface CombatState {
 export type Loot = {
     credits: number;
     guaranteedArtifact?: string;
-    guaranteedModuleDrop?: string; // Module ID from MODULES_FROM_BOSSES
-    module?: ShopItem; // Full module item for boss rewards
+    module?: ShopItem; // Full module item for boss rewards (randomly selected from MODULES_FROM_BOSSES)
 };

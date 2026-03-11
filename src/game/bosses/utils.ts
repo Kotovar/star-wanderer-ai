@@ -1,5 +1,6 @@
 import { ANCIENT_BOSSES } from "@/game/constants/bosses";
-import type { AncientBoss, GalaxyTier } from "@/game/types";
+import type { AncientBoss, GalaxyTierAll } from "@/game/types";
+import { bossDistribution } from "@/game/galaxy/bossDistribution";
 
 // Get boss by ID
 export const getBossById = (id: string): AncientBoss | undefined => {
@@ -7,8 +8,9 @@ export const getBossById = (id: string): AncientBoss | undefined => {
 };
 
 // Get random boss for tier (used in sector generation)
-export const getRandomBossForTier = (tier: GalaxyTier): AncientBoss | null => {
-    const eligibleBosses = ANCIENT_BOSSES.filter((b) => b.tier <= tier);
-    if (eligibleBosses.length === 0) return null;
-    return eligibleBosses[Math.floor(Math.random() * eligibleBosses.length)];
+// This function is deprecated - use bossDistribution.getRandomBossForTier instead
+export const getRandomBossForTier = (
+    tier: GalaxyTierAll,
+): AncientBoss | null => {
+    return bossDistribution.getRandomBossForTier(tier);
 };

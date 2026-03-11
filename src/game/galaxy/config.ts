@@ -1,4 +1,4 @@
-import type { GalaxyTier, StationConfig, StormType } from "../types";
+import type { GalaxyTierAll, StationConfig, StormType } from "../types";
 
 // ============================================================================
 // Константы конфигурации галактики
@@ -6,7 +6,7 @@ import type { GalaxyTier, StationConfig, StormType } from "../types";
 
 /** Конфигурация уровней галактики */
 export const TIER_CONFIG: Array<{
-    tier: GalaxyTier;
+    tier: GalaxyTierAll;
     count: number;
     baseDanger: number;
     radiusRatio: number;

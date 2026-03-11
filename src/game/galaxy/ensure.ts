@@ -1,5 +1,6 @@
 import { PLANET_TYPES } from "@/game/constants/planets";
-import { GalaxyTier, Sector } from "@/game/types";
+import type { GalaxyTierAll, Sector } from "@/game/types";
+import { bossDistribution } from "./bossDistribution";
 import { ANOMALY_COLORS, MIN_REQUIREMENTS, STATION_CONFIG } from "./config";
 import { STATION_TYPES } from "./consts";
 import { getRandomRace, getDominantRaceForPlanet } from "@/game/races/utils";
@@ -7,7 +8,10 @@ import { getRandomRace, getDominantRaceForPlanet } from "@/game/races/utils";
 /**
  * Обеспечивает минимальное количество аномалий в секторе
  */
-export const ensureMinAnomalies = (sector: Sector, tier: GalaxyTier): void => {
+export const ensureMinAnomalies = (
+    sector: Sector,
+    tier: GalaxyTierAll,
+): void => {
     const anomalyCount = sector.locations.filter(
         (l) => l.type === "anomaly",
     ).length;
@@ -23,6 +27,63 @@ export const ensureMinAnomalies = (sector: Sector, tier: GalaxyTier): void => {
         anomalyColor: ANOMALY_COLORS[tier],
         requiresScientistLevel: tier,
     });
+};
+
+/**
+ * Обеспечивает наличие гарантированных боссов по тирам
+ * - Тир 1: 1 случайный босс 1 тира
+ * - Тир 2: 1 случайный босс 2 тира
+ * - Тир 3: 1 Оракул Пустоты (только в одном секторе)
+ */
+export const ensureBoss = (sector: Sector): void => {
+    // Tier 3: guarantee exactly ONE Void Oracle across all tier 3 sectors
+    if (sector.tier === 3) {
+        const bossCount = sector.locations.filter(
+            (l) => l.type === "boss",
+        ).length;
+
+        // If no boss in this sector and Void Oracle not yet placed
+        if (bossCount === 0 && !bossDistribution.isGuaranteedBossPlaced(3)) {
+            bossDistribution.markBossAsUsed("void_oracle");
+            bossDistribution.markGuaranteedBossPlaced(3);
+            sector.locations.push({
+                id: `${sector.id}-guaranteed-boss`,
+                type: "boss",
+                name: "👁️ Оракул Пустоты",
+                bossId: "void_oracle",
+                bossDefeated: false,
+            });
+        }
+        return;
+    }
+
+    // Tier 1 and 2: guarantee exactly one boss per tier
+    if (sector.tier === 1 || sector.tier === 2) {
+        const tierNum = sector.tier;
+        const bossCount = sector.locations.filter(
+            (l) => l.type === "boss",
+        ).length;
+
+        // If no boss in this sector and guaranteed boss not yet placed for this tier
+        if (
+            bossCount === 0 &&
+            !bossDistribution.isGuaranteedBossPlaced(tierNum)
+        ) {
+            const guaranteedBoss =
+                bossDistribution.getGuaranteedBossForTier(tierNum);
+            if (guaranteedBoss) {
+                bossDistribution.markBossAsUsed(guaranteedBoss.id);
+                bossDistribution.markGuaranteedBossPlaced(tierNum);
+                sector.locations.push({
+                    id: `${sector.id}-guaranteed-boss`,
+                    type: "boss",
+                    name: guaranteedBoss.name,
+                    bossId: guaranteedBoss.id,
+                    bossDefeated: false,
+                });
+            }
+        }
+    }
 };
 
 /**

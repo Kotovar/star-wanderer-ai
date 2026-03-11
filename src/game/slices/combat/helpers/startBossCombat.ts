@@ -47,7 +47,7 @@ export function initializeBossCombat(
             loot: {
                 credits: lootCredits,
                 guaranteedArtifact: rewards.artifactId,
-                guaranteedModuleDrop: rewards.module?.id,
+                module: rewards.module,
             },
             isAmbush: false,
             ambushAttackDone: false,

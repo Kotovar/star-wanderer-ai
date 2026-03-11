@@ -1,4 +1,4 @@
-import type { Sector, Module, StarType, GalaxyTier } from "@/game/types";
+import type { Sector, Module, StarType, GalaxyTierAll } from "@/game/types";
 
 type TierDetails = {
     ring: string;
@@ -7,7 +7,7 @@ type TierDetails = {
 };
 
 // Tier colors - names are now translated via locale files
-export const TIER_COLORS: Record<GalaxyTier, TierDetails> = {
+export const TIER_COLORS: Record<GalaxyTierAll, TierDetails> = {
     1: {
         ring: "#00ff41",
         glow: "rgba(0, 255, 65, 0.15)",
@@ -276,7 +276,7 @@ export function drawTierRings(
     const canSeeT4 = canSeeTier4(modules, artifacts);
 
     tierRadius.forEach((radius, idx) => {
-        const tier = (idx + 1) as GalaxyTier;
+        const tier = (idx + 1) as GalaxyTierAll;
         const colors = TIER_COLORS[tier];
         const isAccessible = canAccessTier(tier, modules, captainLevel);
 

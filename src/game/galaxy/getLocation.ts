@@ -1,4 +1,4 @@
-import type { GalaxyTier, LocationType, Location } from "@/game/types";
+import type { GalaxyTierAll, LocationType, Location } from "@/game/types";
 import { LOCATION_CHANCES, LOCATION_TYPE_CHANCES } from "./config";
 import {
     generateAnomaly,
@@ -17,7 +17,7 @@ import {
  */
 const getLocationType = (
     roll: number,
-    tier: GalaxyTier,
+    tier: GalaxyTierAll,
     isBlackHole: boolean,
 ): LocationType => {
     if (isBlackHole) {
@@ -82,7 +82,7 @@ const getLocationType = (
 export const generateLocation = (
     sectorIdx: number,
     locIdx: number,
-    tier: GalaxyTier,
+    tier: GalaxyTierAll,
     baseDanger: number,
     isBlackHole: boolean,
 ): Location => {
