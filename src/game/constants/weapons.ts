@@ -11,7 +11,7 @@ export const WEAPON_TYPES: Record<Weapon["type"], WeaponDetails> = {
         color: "#888888",
         icon: "●",
         description: `Игнорирует ${armorPenetration * 100}% защиты врага`,
-        armorPenetration: 0.5,
+        armorPenetration,
     },
     laser: {
         name: "Лазерное",

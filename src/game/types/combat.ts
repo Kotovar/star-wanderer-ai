@@ -1,4 +1,6 @@
 import type { BossAbility } from "./bosses";
+import type { ShopItem } from "./shops";
+import type { EnemyModule } from "./enemy";
 
 export interface CombatState {
     enemy: {
@@ -30,22 +32,9 @@ export interface CombatState {
     };
 }
 
-export interface EnemyModule {
-    id: number;
-    type: string;
-    name: string;
-    health: number;
-    maxHealth?: number;
-    damage?: number;
-    defense?: number;
-    // Boss-specific module features
-    isAncient?: boolean; // Module not available to player
-    regenRate?: number; // Self-regeneration
-    specialEffect?: string; // e.g., 'shield_boost', 'damage_aura'
-}
-
 export type Loot = {
     credits: number;
     guaranteedArtifact?: string;
-    guaranteedModuleDrop?: boolean;
+    guaranteedModuleDrop?: string; // Module ID from MODULES_FROM_BOSSES
+    module?: ShopItem; // Full module item for boss rewards
 };

@@ -16,3 +16,4 @@ export * from "./effects";
 export * from "./shops";
 export * from "./bosses";
 export * from "./research";
+export * from "./enemy";

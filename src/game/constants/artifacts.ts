@@ -332,8 +332,8 @@ export const ARTIFACT_TYPES: Record<string, ArtifactType> = {
     AI_NEURAL_LINK: "ai_control",
     NANITE_HULL: "nanite_repair",
     SHIELD_REGENERATOR: "shield_regen_boost",
+    MIRROR_SHIELD: "damage_reflect",
 };
-
 /**
  * Типы артефактов, влияющие на энергию корабля
  */

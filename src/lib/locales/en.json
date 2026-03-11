@@ -1237,7 +1237,7 @@
             "waiting": "Waiting - inactive",
             "evasion": "Evasion - increase evasion",
             "navigation": "Navigation - reduces fuel consumption",
-            "targeting": "Targeting - target selection, +15% damage"
+            "targeting": "Targeting - target selection"
         },
         "engineer": {
             "waiting": "Waiting - inactive",
@@ -1262,7 +1262,7 @@
         },
         "gunner": {
             "waiting": "Waiting - inactive",
-            "targeting": "Targeting - target selection, +15% damage",
+            "targeting": "Targeting - target selection",
             "rapidfire": "Rapid fire - +25% damage, -5% accuracy"
         }
     },

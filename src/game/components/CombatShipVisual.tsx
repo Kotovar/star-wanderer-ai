@@ -1,8 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import type { Module, CrewMember } from "../types";
-import type { EnemyModule } from "../types/combat";
+import type { Module, CrewMember, EnemyModule } from "../types";
 import { MODULE_TYPES } from "../constants/modules";
 import { RACES } from "../constants/races";
 import { useTranslation } from "@/lib/useTranslation";

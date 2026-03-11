@@ -338,7 +338,7 @@ function CombatActions({
         return (
             <div className="flex gap-2.5 flex-col sm:flex-row">
                 <div className="bg-[rgba(0,255,65,0.1)] border border-[#00ff41] p-3 text-sm text-[#00ff41] w-full text-center">
-                    🎯 {t("combat.auto_attack_active")}
+                    {t("combat.auto_attack_active")}
                 </div>
                 <Button
                     onClick={() => useGameStore.getState().skipTurn()}

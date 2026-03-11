@@ -151,6 +151,7 @@ export interface GameCombat {
     selectEnemyModule: (moduleId: number) => void;
     attackEnemy: () => void;
     executeAmbushAttack: () => void; // Execute enemy attack for ambush (first strike)
+    processEnemyAttack: () => void; // Process enemy counter-attack during combat
     retreat: () => void;
 }
 
