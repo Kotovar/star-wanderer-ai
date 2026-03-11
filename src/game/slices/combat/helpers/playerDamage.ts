@@ -4,11 +4,9 @@ import {
     MIN_ACCURACY,
     MAX_ACCURACY,
     WEAPON_TYPES,
-} from "@/game/constants";
-import {
     COMBAT_ACCURACY_MODIFIERS,
     COMBAT_DAMAGE_MODIFIERS,
-} from "@/game/constants/combat";
+} from "@/game/constants";
 
 /**
  * Calculates weapon accuracy with all modifiers

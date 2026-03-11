@@ -15,3 +15,4 @@ export * from "./moduleDamage";
 export * from "./bossAbilities";
 export * from "./alienPresence";
 export * from "./combatConstants";
+export * from "./completeBattleContracts";

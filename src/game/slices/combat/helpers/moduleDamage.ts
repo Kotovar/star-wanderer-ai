@@ -1,11 +1,11 @@
-import type { GameState, GameStore, Module } from "@/game/types";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
-import { ARTIFACT_TYPES } from "@/game/constants";
-import { RACES } from "@/game/constants/races";
 import {
+    ARTIFACT_TYPES,
     CREW_DAMAGE_MODIFIERS,
     MODULE_HEALTH_THRESHOLDS,
-} from "@/game/constants/combat";
+    RACES,
+} from "@/game/constants";
+import type { GameState, GameStore, Module } from "@/game/types";
 
 /**
  * Applies damage to module with armor and artifacts
@@ -51,10 +51,7 @@ export function applyModuleDamage(
             const armorTrait = race?.specialTraits?.find(
                 (t) => t.id === "crystal_armor",
             );
-            if (armorTrait?.effects.moduleDefense) {
-                crystallineDefense += armorTrait.effects
-                    .moduleDefense as number;
-            }
+            crystallineDefense += armorTrait?.effects.moduleDefense ?? 0;
         });
 
     const reducedDamage = Math.floor(
@@ -88,6 +85,7 @@ export function applyModuleDamage(
     let crewDamage = Math.floor(
         reducedDamage * CREW_DAMAGE_MODIFIERS.BASE_RATIO,
     );
+
     if (targetModule.health < MODULE_HEALTH_THRESHOLDS.CRITICAL) {
         crewDamage = Math.floor(
             crewDamage * CREW_DAMAGE_MODIFIERS.CRITICAL_MULTIPLIER,
@@ -115,8 +113,8 @@ export function applyModuleDamage(
         crewInDamagedModule.forEach((c) => {
             c.traits?.forEach((trait) => {
                 if (trait.effect.combatMoraleDrain) {
-                    const moraleDrain = trait.effect
-                        .combatMoraleDrain as number;
+                    const moraleDrain = trait.effect.combatMoraleDrain;
+
                     set((s) => {
                         const cr = s.crew.find((x) => x.id === c.id);
                         if (cr)

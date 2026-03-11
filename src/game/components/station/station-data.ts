@@ -99,7 +99,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             height: 1,
             consumption: 2,
             price: 500,
-            stock: 1,
+            stock: 2,
             description: "Размещает оружие корабля",
         },
         {
@@ -248,7 +248,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             height: 1,
             consumption: 3,
             price: 800,
-            stock: 1,
+            stock: 2,
             description: "Двойная оружейная палуба",
         },
         {

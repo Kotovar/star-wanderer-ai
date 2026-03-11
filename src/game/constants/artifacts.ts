@@ -333,6 +333,8 @@ export const ARTIFACT_TYPES: Record<string, ArtifactType> = {
     NANITE_HULL: "nanite_repair",
     SHIELD_REGENERATOR: "shield_regen_boost",
     MIRROR_SHIELD: "damage_reflect",
+    BLACK_BOX: "credit_booster",
+    CRITICAL_OVERLOAD: "crit_damage_boost",
 };
 /**
  * Типы артефактов, влияющие на энергию корабля

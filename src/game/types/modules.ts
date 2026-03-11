@@ -17,6 +17,9 @@ export type ModuleType =
 export type WeaponType = "kinetic" | "laser" | "missile";
 export type WeaponTypeTotal = WeaponType | "total";
 export type PartialModuleType = Exclude<ModuleType, "weaponShed">;
+export type WeaponCounts = {
+    [K in WeaponType]: number;
+};
 
 export interface Module {
     id: number;

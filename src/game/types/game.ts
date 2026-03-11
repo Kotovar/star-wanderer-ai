@@ -12,7 +12,7 @@ import type { Goods, TradeGood } from "./goods";
 import type { Sector, TravelingState } from "./locations/sectors";
 import type { Location, LocationType } from "./locations/locations";
 import type { LogEntry } from "./logs";
-import type { Module } from "./modules";
+import type { Module, WeaponCounts } from "./modules";
 import type { RaceId } from "./races";
 import type { ShipMergeTrait } from "./ships";
 import type { ResearchData } from "./research";
@@ -103,11 +103,8 @@ export interface GameActions {
     updateShipStats: () => void;
     getTotalPower: () => number;
     getTotalConsumption: () => number;
-    getTotalDamage: () => {
+    getTotalDamage: () => WeaponCounts & {
         total: number;
-        kinetic: number;
-        laser: number;
-        missile: number;
     };
     getCrewCapacity: () => number;
     getFuelCapacity: () => number;

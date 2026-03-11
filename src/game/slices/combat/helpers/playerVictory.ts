@@ -1,16 +1,21 @@
-import type {
-    GameState,
-    GameStore,
-    CargoItem,
-    ModuleType,
-    BattleResult,
-} from "@/game/types";
-import { CONTRACT_REWARDS, RESEARCH_RESOURCES } from "@/game/constants";
+import {
+    ARTIFACT_TYPES,
+    CONTRACT_REWARDS,
+    RESEARCH_RESOURCES,
+} from "@/game/constants";
 import {
     getCombatLootResources,
     getBossLootResources,
 } from "@/game/research/utils";
 import { giveCrewExperience, getActiveAssignment } from "@/game/crew";
+import type {
+    GameState,
+    GameStore,
+    CargoItem,
+    BattleResult,
+} from "@/game/types";
+import { findActiveArtifact } from "@/game/artifacts";
+import { completeBattleContracts } from "./completeBattleContracts";
 
 /**
  * Handles victory after defeating boss
@@ -30,7 +35,7 @@ export function handleVictory(
         updatedCombat.enemy.specialAbility?.effect === "resurrect_chance"
     ) {
         const resurrectChance =
-            (updatedCombat.enemy.specialAbility.value || 20) / 100;
+            (updatedCombat.enemy.specialAbility.value ?? 20) / 100;
         if (Math.random() < resurrectChance) {
             get().addLog(`⚠️ ${updatedCombat.enemy.name} ВОСКРЕСАЕТ!`, "error");
             set((s) => {
@@ -61,13 +66,13 @@ export function handleVictory(
     // Calculate credits
     let creditsAmount = loot.credits;
 
-    const blackBox = state.artifacts.find(
-        (a) => a.effect.type === "credit_booster" && a.effect.active,
+    const blackBox = findActiveArtifact(
+        state.artifacts,
+        ARTIFACT_TYPES.BLACK_BOX,
     );
+
     if (blackBox) {
-        const boostValue =
-            (get().artifacts.find((a) => a.id === blackBox.id)?.effect
-                .value as number) ?? 0;
+        const boostValue = blackBox.effect.value ?? 0;
         creditsAmount = Math.floor(creditsAmount * (1 + boostValue));
     }
 
@@ -90,11 +95,8 @@ export function handleVictory(
         );
     }
     if (lootBonus > 0) {
-        const luckyCrew = get().crew.filter((c) =>
-            c.traits?.some((t) => t.effect.lootBonus),
-        );
         get().addLog(
-            `★ Удачливый экипаж: +${Math.round(lootBonus * 100)}% к награде (${luckyCrew.map((c) => c.name).join(", ")})`,
+            `★ Удачливый экипаж: +${Math.round(lootBonus * 100)}% к награде)`,
             "info",
         );
     }
@@ -112,34 +114,34 @@ export function handleVictory(
                     if (a.id === loot.guaranteedArtifact) a.discovered = true;
                 });
             });
-
-            // Complete mining contract
-            const miningContract = get().activeContracts.find(
-                (c) => c.type === "mining" && c.isRaceQuest && c.bossDefeated,
-            );
-            if (miningContract) {
-                set((s) => ({
-                    credits: s.credits + (miningContract.reward || 0),
-                }));
-                get().addLog(
-                    `Кристалл Древних найден! +${miningContract.reward}₢`,
-                    "info",
-                );
-                giveCrewExperience(
-                    CONTRACT_REWARDS.mining.baseExp,
-                    `Экипаж получил опыт: +${CONTRACT_REWARDS.mining.baseExp} ед.`,
-                );
-                set((s) => ({
-                    completedContractIds: [
-                        ...s.completedContractIds,
-                        miningContract.id,
-                    ],
-                    activeContracts: s.activeContracts.filter(
-                        (ac) => ac.id !== miningContract.id,
-                    ),
-                }));
-            }
         }
+    }
+
+    // Complete mining contract (Crystalline race quest - find artifact after boss defeat)
+    const miningContract = get().activeContracts.find(
+        (c) => c.type === "mining" && c.isRaceQuest && c.bossDefeated,
+    );
+    if (miningContract) {
+        set((s) => ({
+            credits: s.credits + (miningContract.reward || 0),
+        }));
+        get().addLog(
+            `💎 Контракт "${miningContract.desc}" выполнен! +${miningContract.reward}₢`,
+            "info",
+        );
+        giveCrewExperience(
+            CONTRACT_REWARDS.mining.baseExp,
+            `Экипаж получил опыт: +${CONTRACT_REWARDS.mining.baseExp} ед.`,
+        );
+        set((s) => ({
+            completedContractIds: [
+                ...s.completedContractIds,
+                miningContract.id,
+            ],
+            activeContracts: s.activeContracts.filter(
+                (ac) => ac.id !== miningContract.id,
+            ),
+        }));
     }
 
     // Check for module drop
@@ -149,7 +151,7 @@ export function handleVictory(
         const newCargoItem: CargoItem = {
             item: moduleName,
             quantity: 1,
-            moduleType: loot.module.moduleType as ModuleType,
+            moduleType: loot.module.moduleType,
             moduleLevel: 4,
             isModule: true,
         };
@@ -178,7 +180,13 @@ export function handleVictory(
     }
 
     // Complete contracts
-    completeContracts(state, set, get, updatedCombat);
+    const enemyThreat = updatedCombat.enemy.threat ?? 1;
+    completeBattleContracts(
+        set,
+        get,
+        enemyThreat,
+        updatedCombat.enemy.isBoss ?? false,
+    );
 
     // Research resources
     const enemyTier = updatedCombat.enemy.threat || 1;
@@ -260,13 +268,11 @@ export function handleVictory(
         artifactFound: artifactName,
     };
 
-    // Cursed artifact: Critical Overload
-    const criticalOverload = state.artifacts.find(
-        (a) =>
-            a.cursed &&
-            a.effect.type === "crit_damage_boost" &&
-            a.effect.active,
+    const criticalOverload = findActiveArtifact(
+        state.artifacts,
+        ARTIFACT_TYPES.CRITICAL_OVERLOAD,
     );
+
     if (criticalOverload && state.ship.modules.length > 0) {
         const negativeValue = (criticalOverload.effect.value as number) ?? 0;
         const randomModuleIdx = Math.floor(
@@ -291,71 +297,4 @@ export function handleVictory(
     }));
 
     get().updateShipStats();
-}
-
-/**
- * Completes combat and bounty contracts
- */
-export function completeContracts(
-    state: GameState,
-    set: (fn: (s: GameState) => void) => void,
-    get: () => GameStore,
-    updatedCombat: NonNullable<GameState["currentCombat"]>,
-) {
-    const enemyThreat = updatedCombat.enemy.threat || 1;
-
-    // Combat contracts
-    const completedCombat = get().activeContracts.filter(
-        (c) => c.type === "combat" && c.sectorId === get().currentSector?.id,
-    );
-    completedCombat.forEach((c) => {
-        set((s) => ({ credits: s.credits + c.reward }));
-        get().addLog(`Задача "${c.desc}" выполнена! +${c.reward}₢`, "info");
-        const rewardConfig = CONTRACT_REWARDS.combat;
-        const expReward =
-            rewardConfig.baseExp +
-            enemyThreat * (rewardConfig.threatBonus || 0);
-        giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
-        set((s) => ({
-            completedContractIds: [...s.completedContractIds, c.id],
-            activeContracts: s.activeContracts.filter((ac) => ac.id !== c.id),
-        }));
-    });
-
-    // Bounty contracts
-    const completedBounty = get().activeContracts.filter(
-        (c) =>
-            c.type === "bounty" &&
-            c.targetSector === get().currentSector?.id &&
-            enemyThreat >= (c.targetThreat || 1),
-    );
-    completedBounty.forEach((c) => {
-        set((s) => ({ credits: s.credits + c.reward }));
-        get().addLog(`Охота выполнена! +${c.reward}₢`, "info");
-        const rewardConfig = CONTRACT_REWARDS.bounty;
-        const expReward =
-            rewardConfig.baseExp +
-            enemyThreat * (rewardConfig.threatBonus || 0);
-        giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
-        set((s) => ({
-            completedContractIds: [...s.completedContractIds, c.id],
-            activeContracts: s.activeContracts.filter((ac) => ac.id !== c.id),
-        }));
-    });
-
-    // Mining contract
-    const miningContract = get().activeContracts.find(
-        (c) => c.type === "mining" && c.isRaceQuest,
-    );
-    if (miningContract && updatedCombat.enemy.isBoss) {
-        set((s) => {
-            s.activeContracts.forEach((ac) => {
-                if (ac.id === miningContract.id) ac.bossDefeated = true;
-            });
-        });
-        get().addLog(
-            `Босс побеждён! Кристалл будет получен после исследования`,
-            "info",
-        );
-    }
 }

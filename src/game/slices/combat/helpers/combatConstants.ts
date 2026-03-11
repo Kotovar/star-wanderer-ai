@@ -21,3 +21,14 @@ export const MODULE_TARGET_PRIORITY: Record<string, number> = {
 };
 
 export const DEFAULT_MODULE_PRIORITY = 30;
+
+export const MODULE_HEALTH_PRIORITY = {
+    LOW: 30,
+    MIDDLE: 50,
+    HIGH: 70,
+    LOW_BONUS: 30,
+    MIDDLE_BONUS: 15,
+    HIGH_BONUS: 5,
+    LENGTH_BONUS: 10,
+    RANDOM_BONUS: 20,
+} as const;

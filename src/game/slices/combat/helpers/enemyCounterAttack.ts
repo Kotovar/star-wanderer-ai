@@ -6,6 +6,7 @@ import { applyModuleDamage } from "./moduleDamage";
 import { processBossRegeneration } from "./bossAbilities";
 import {
     DEFAULT_MODULE_PRIORITY,
+    MODULE_HEALTH_PRIORITY,
     MODULE_TARGET_PRIORITY,
 } from "./combatConstants";
 
@@ -107,12 +108,15 @@ export function selectTargetModule(
 
         priority = MODULE_TARGET_PRIORITY[m.type] ?? DEFAULT_MODULE_PRIORITY;
 
-        if (m.health < 30) priority += 30;
-        else if (m.health < 50) priority += 15;
-        else if (m.health < 70) priority += 5;
+        if (m.health < MODULE_HEALTH_PRIORITY.LOW)
+            priority += MODULE_HEALTH_PRIORITY.LOW_BONUS;
+        else if (m.health < MODULE_HEALTH_PRIORITY.MIDDLE)
+            priority += MODULE_HEALTH_PRIORITY.MIDDLE_BONUS;
+        else if (m.health < MODULE_HEALTH_PRIORITY.HIGH)
+            priority += MODULE_HEALTH_PRIORITY.HIGH_BONUS;
 
-        priority += crewInModule.length * 10;
-        priority += Math.random() * 20;
+        priority += crewInModule.length * MODULE_HEALTH_PRIORITY.LENGTH_BONUS;
+        priority += Math.random() * MODULE_HEALTH_PRIORITY.RANDOM_BONUS;
 
         return priority;
     };
