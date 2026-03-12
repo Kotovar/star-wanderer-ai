@@ -15,3 +15,11 @@ export type EnemyModule = {
 };
 
 export type EnemyModuleType = "weapon" | "shield" | "reactor";
+export type EnemyShip = "pirate" | "raider" | "mercenary" | "marauder";
+export type EnemyStats = {
+    healthMod: number;
+    damageMod: number;
+    shieldMod: number;
+    weaponCountMod: number;
+    lootMod: number;
+};

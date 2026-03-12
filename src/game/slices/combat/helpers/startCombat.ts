@@ -1,4 +1,4 @@
-import type { GameState, GameStore, Location } from "@/game/types";
+import type { EnemyShip, GameState, GameStore, Location } from "@/game/types";
 import * as combatSetup from "./combatSetup";
 
 /**
@@ -11,8 +11,11 @@ export function initializeCombat(
     get: () => GameStore,
 ) {
     const threat = enemy.threat ?? 1;
-    const enemyModules = combatSetup.generateEnemyModules(threat);
-    const lootCredits = combatSetup.calculateCombatLoot(threat);
+    const enemyModules = combatSetup.generateEnemyModules(
+        threat,
+        enemy.name as EnemyShip,
+    );
+    const lootCredits = combatSetup.calculateCombatLoot(threat, enemy.name);
 
     set((s) => {
         s.ship.shields = s.ship.maxShields;

@@ -1,4 +1,9 @@
-import type { EnemyModule, EnemyModuleType } from "@/game/types";
+import type {
+    EnemyModule,
+    EnemyModuleType,
+    EnemyShip,
+    EnemyStats,
+} from "@/game/types";
 
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -18,20 +23,86 @@ const LOOT_BOSS_BASE = 900;
 const LOOT_BOSS_VARIATION_MIN = 0.75;
 const LOOT_BOSS_VARIATION_RANGE = 0.5; // 0.75 - 1.25 (±25%)
 
+// Enemy type modifiers
+const ENEMY_TYPE_MODIFIERS: Record<EnemyShip, EnemyStats> = {
+    pirate: {
+        healthMod: 0.8, // -20% здоровья (хрупкие)
+        damageMod: 1.0, // обычный урон
+        shieldMod: 0, // без бонуса к щитам
+        weaponCountMod: 1, // +1 оружие
+        lootMod: 1.2, // +20% лута (грабят груз)
+    },
+    raider: {
+        healthMod: 0.9, // -10% здоровья
+        damageMod: 1.25, // +25% урона
+        shieldMod: 0, // без бонуса к щитам
+        weaponCountMod: 0, // обычное оружие
+        lootMod: 1.0, // обычный лут
+    },
+    mercenary: {
+        healthMod: 1.0, // обычное здоровье
+        damageMod: 1.0, // обычный урон
+        shieldMod: 1, // +1 к защите щитов
+        weaponCountMod: 0, // обычное оружие
+        lootMod: 1.0, // обычный лут
+    },
+    marauder: {
+        healthMod: 1.0, // обычное здоровье
+        damageMod: 0.9, // -10% урона
+        shieldMod: 0, // без бонуса к щитам
+        weaponCountMod: 0, // обычное оружие (но с вариацией)
+        lootMod: 0.85, // -15% лута (дешёвое оборудование)
+    },
+};
+
 /**
- * Generates random enemy modules based on threat level
+ * Определяет тип врага по имени
  */
-export const generateEnemyModules = (threat: number): EnemyModule[] => {
+const getEnemyType = (name: string): EnemyShip => {
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes("пират") || lowerName.includes("pirate"))
+        return "pirate";
+    if (lowerName.includes("рейд") || lowerName.includes("raider"))
+        return "raider";
+    if (lowerName.includes("наём") || lowerName.includes("mercenary"))
+        return "mercenary";
+    if (lowerName.includes("марод") || lowerName.includes("marauder"))
+        return "marauder";
+    return "pirate";
+};
+
+/**
+ * Generates random enemy modules based on threat level and enemy type
+ */
+export const generateEnemyModules = (
+    threat: number,
+    enemyName?: EnemyShip,
+): EnemyModule[] => {
+    const enemyType = getEnemyType(enemyName || "");
+    const modifiers = ENEMY_TYPE_MODIFIERS[enemyType] || {
+        healthMod: 1.0,
+        damageMod: 1.0,
+        shieldMod: 0,
+        weaponCountMod: 0,
+        lootMod: 1.0,
+    };
+
     const modules: EnemyModule[] = [];
-    const moduleCount = threat + 2;
+    const moduleCount = threat + 2 + modifiers.weaponCountMod;
+
+    // Calculate base stats with modifiers
+    const healthMultiplier = modifiers.healthMod;
+    const damageMultiplier = modifiers.damageMod;
 
     // Always add at least one weapon module first
     modules.push({
         id: 0,
         type: "weapon",
         name: "Оружие",
-        health: MODULE_HEALTH_BASE,
-        damage: threat * MODULE_DAMAGE_PER_THREAT,
+        health: Math.floor(MODULE_HEALTH_BASE * healthMultiplier),
+        damage: Math.floor(
+            threat * MODULE_DAMAGE_PER_THREAT * damageMultiplier,
+        ),
         defense: 0,
     });
 
@@ -41,17 +112,34 @@ export const generateEnemyModules = (threat: number): EnemyModule[] => {
             ENEMY_MODULE_TYPES[
                 Math.floor(Math.random() * ENEMY_MODULE_TYPES.length)
             ];
+
+        // Marauders have unstable weapons (random damage variation)
+        let damageMultiplierWithVar = damageMultiplier;
+        if (enemyType === "marauder" && type === "weapon") {
+            // ±30% variation for marauder weapons
+            damageMultiplierWithVar =
+                damageMultiplier * (0.7 + Math.random() * 0.6);
+        }
+
         const defenseValue =
             type === "shield"
-                ? Math.min(MODULE_SHIELD_DEFENSE_MAX, Math.ceil(threat / 2))
+                ? Math.min(MODULE_SHIELD_DEFENSE_MAX, Math.ceil(threat / 2)) +
+                  modifiers.shieldMod
                 : 0;
 
         modules.push({
             id: i,
             type,
             name: getModuleName(type),
-            health: MODULE_HEALTH_BASE,
-            damage: type === "weapon" ? threat * MODULE_DAMAGE_PER_THREAT : 0,
+            health: Math.floor(MODULE_HEALTH_BASE * healthMultiplier),
+            damage:
+                type === "weapon"
+                    ? Math.floor(
+                          threat *
+                              MODULE_DAMAGE_PER_THREAT *
+                              damageMultiplierWithVar,
+                      )
+                    : 0,
             defense: defenseValue,
         });
     }
@@ -74,13 +162,16 @@ const getModuleName = (type: EnemyModuleType) => {
 };
 
 /**
- * Calculates combat loot based on threat level
+ * Calculates combat loot based on threat level and enemy type
  * Includes random variation: ±20%
  */
-export const calculateCombatLoot = (threat: number) => {
+export const calculateCombatLoot = (threat: number, enemyName?: string) => {
+    const enemyType = getEnemyType(enemyName || "");
+    const modifiers = ENEMY_TYPE_MODIFIERS[enemyType] || { lootMod: 1.0 };
+
     const baseLoot = threat * LOOT_BASE_THREAT;
     const variation = LOOT_VARIATION_MIN + Math.random() * LOOT_VARIATION_RANGE;
-    return Math.floor(baseLoot * variation);
+    return Math.floor(baseLoot * variation * modifiers.lootMod);
 };
 
 /**
