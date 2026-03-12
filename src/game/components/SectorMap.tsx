@@ -640,7 +640,7 @@ export function SectorMap() {
                 if (!canScan && !isRevealed) {
                     drawUnknownShip(ctx, x, y, completed);
                 } else {
-                    drawFriendlyShip(ctx, x, y, completed);
+                    drawFriendlyShip(ctx, x, y, loc, completed);
                 }
             } else if (loc.type === "asteroid_belt") {
                 drawAsteroidBelt(ctx, x, y, loc, completed);
@@ -1109,7 +1109,7 @@ export function SectorMap() {
                             if (!canScan && !isRevealed) {
                                 drawUnknownShip(ctx, x, y, completed);
                             } else {
-                                drawFriendlyShip(ctx, x, y, completed);
+                                drawFriendlyShip(ctx, x, y, loc, completed);
                             }
                         } else if (loc.type === "asteroid_belt") {
                             drawAsteroidBelt(ctx, x, y, loc, completed);
@@ -2441,13 +2441,73 @@ function drawFriendlyShip(
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
+    loc: Location,
     completed: boolean,
 ) {
     if (completed) {
         ctx.globalAlpha = 0.4;
     }
 
-    // Friendly glow (blue)
+    const shipRace = loc.shipRace || "human";
+    const shipName = loc.name || "";
+
+    // Determine ship type from name
+    const getShipType = (name: string): string => {
+        if (name.includes("Торговец") || name.includes("Trader"))
+            return "trader";
+        if (name.includes("Наём") || name.includes("Mercenary"))
+            return "mercenary";
+        if (
+            name.includes("Курьер") ||
+            name.includes("Courier") ||
+            name.includes("Фрегат")
+        )
+            return "courier";
+        if (name.includes("Баржа") || name.includes("Barge")) return "barge";
+        if (name.includes("Зонд") || name.includes("Probe")) return "probe";
+        if (name.includes("Исслед") || name.includes("Explorer"))
+            return "explorer";
+        return "default";
+    };
+
+    const shipType = getShipType(shipName);
+
+    // Race colors
+    const raceColors: Record<
+        string,
+        { primary: string; secondary: string; accent: string }
+    > = {
+        human: { primary: "#2a6a8a", secondary: "#4a9aba", accent: "#7fc8dc" },
+        synthetic: {
+            primary: "#6a6a7a",
+            secondary: "#8a8a9a",
+            accent: "#00ffff",
+        },
+        xenosymbiont: {
+            primary: "#4a8a4a",
+            secondary: "#6aaa6a",
+            accent: "#88ff88",
+        },
+        krylorian: {
+            primary: "#8a6a4a",
+            secondary: "#aa8a6a",
+            accent: "#ffcc88",
+        },
+        voidborn: {
+            primary: "#4a3a5a",
+            secondary: "#6a5a7a",
+            accent: "#aa88ff",
+        },
+        crystalline: {
+            primary: "#5a7a9a",
+            secondary: "#7a9aba",
+            accent: "#aaddff",
+        },
+    };
+
+    const colors = raceColors[shipRace] || raceColors.human;
+
+    // Friendly glow (blue/cyan)
     const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, 25);
     glowGradient.addColorStop(0, "rgba(0, 180, 255, 0.3)");
     glowGradient.addColorStop(1, "transparent");
@@ -2456,31 +2516,214 @@ function drawFriendlyShip(
     ctx.arc(x, y, 25, 0, Math.PI * 2);
     ctx.fill();
 
-    // Ship body
-    ctx.fillStyle = "#2a6a8a";
-    ctx.strokeStyle = "#4a9aba";
-    ctx.lineWidth = 2;
+    // Ship type-specific designs
+    switch (shipType) {
+        case "trader":
+            // Trader: bulky cargo holds
+            ctx.fillStyle = colors.primary;
+            ctx.strokeStyle = colors.secondary;
+            ctx.lineWidth = 2;
 
-    ctx.beginPath();
-    ctx.moveTo(x, y - 12);
-    ctx.lineTo(x - 10, y + 8);
-    ctx.lineTo(x, y + 4);
-    ctx.lineTo(x + 10, y + 8);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+            // Main hull
+            ctx.beginPath();
+            ctx.ellipse(x, y, 14, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
 
-    // Cockpit
-    ctx.fillStyle = "#7fc8dc";
-    ctx.beginPath();
-    ctx.arc(x, y - 4, 3, 0, Math.PI * 2);
-    ctx.fill();
+            // Cargo containers on sides
+            ctx.fillStyle = colors.secondary;
+            ctx.fillRect(x - 18, y - 6, 6, 12);
+            ctx.fillRect(x + 12, y - 6, 6, 12);
 
-    // Engine
-    ctx.fillStyle = "#4a9aba";
-    ctx.beginPath();
-    ctx.arc(x, y + 6, 2, 0, Math.PI * 2);
-    ctx.fill();
+            // Cockpit
+            ctx.fillStyle = colors.accent;
+            ctx.beginPath();
+            ctx.arc(x, y - 2, 4, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        case "mercenary":
+            // Mercenary: angular, weapon mounts
+            ctx.fillStyle = colors.primary;
+            ctx.strokeStyle = colors.secondary;
+            ctx.lineWidth = 2;
+
+            // Angular hull
+            ctx.beginPath();
+            ctx.moveTo(x, y - 14);
+            ctx.lineTo(x - 12, y + 6);
+            ctx.lineTo(x - 6, y + 6);
+            ctx.lineTo(x, y + 2);
+            ctx.lineTo(x + 6, y + 6);
+            ctx.lineTo(x + 12, y + 6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Weapon mounts
+            ctx.fillStyle = colors.accent;
+            ctx.beginPath();
+            ctx.arc(x - 10, y - 4, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + 10, y - 4, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cockpit slit
+            ctx.fillStyle = colors.secondary;
+            ctx.fillRect(x - 4, y - 6, 8, 3);
+            break;
+
+        case "courier":
+            // Courier: sleek, fast design
+            ctx.fillStyle = colors.primary;
+            ctx.strokeStyle = colors.secondary;
+            ctx.lineWidth = 2;
+
+            // Sleek pointed hull
+            ctx.beginPath();
+            ctx.moveTo(x, y - 16);
+            ctx.lineTo(x - 8, y + 4);
+            ctx.lineTo(x, y + 2);
+            ctx.lineTo(x + 8, y + 4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Engine boost
+            ctx.fillStyle = colors.accent;
+            ctx.beginPath();
+            ctx.arc(x, y + 8, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Wings
+            ctx.strokeStyle = colors.secondary;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(x - 6, y - 4);
+            ctx.lineTo(x - 14, y + 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x + 6, y - 4);
+            ctx.lineTo(x + 14, y + 2);
+            ctx.stroke();
+            break;
+
+        case "barge":
+            // Barge: massive, blocky
+            ctx.fillStyle = colors.primary;
+            ctx.strokeStyle = colors.secondary;
+            ctx.lineWidth = 2;
+
+            // Large rectangular hull
+            ctx.fillRect(x - 16, y - 10, 32, 20);
+            ctx.strokeRect(x - 16, y - 10, 32, 20);
+
+            // Bridge tower
+            ctx.fillStyle = colors.secondary;
+            ctx.fillRect(x - 6, y - 14, 12, 8);
+
+            // Engine cluster
+            ctx.fillStyle = colors.accent;
+            ctx.beginPath();
+            ctx.arc(x - 8, y + 12, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + 8, y + 12, 3, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        case "probe":
+            // Probe: small, automated
+            ctx.fillStyle = colors.primary;
+            ctx.strokeStyle = colors.secondary;
+            ctx.lineWidth = 1.5;
+
+            // Central sphere
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Solar panels (cross shape)
+            ctx.fillStyle = colors.secondary;
+            ctx.fillRect(x - 14, y - 2, 8, 4);
+            ctx.fillRect(x + 6, y - 2, 8, 4);
+            ctx.fillRect(x - 2, y - 14, 4, 8);
+            ctx.fillRect(x - 2, y + 6, 4, 8);
+
+            // Antenna
+            ctx.strokeStyle = colors.accent;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x, y - 8);
+            ctx.lineTo(x, y - 16);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(x, y - 17, 2, 0, Math.PI * 2);
+            ctx.stroke();
+            break;
+
+        case "explorer":
+            // Explorer: scientific equipment, sensors
+            ctx.fillStyle = colors.primary;
+            ctx.strokeStyle = colors.secondary;
+            ctx.lineWidth = 2;
+
+            // Main hull (teardrop shape)
+            ctx.beginPath();
+            ctx.moveTo(x, y - 14);
+            ctx.quadraticCurveTo(x - 10, y, x - 8, y + 10);
+            ctx.lineTo(x + 8, y + 10);
+            ctx.quadraticCurveTo(x + 10, y, x, y - 14);
+            ctx.fill();
+            ctx.stroke();
+
+            // Sensor dishes
+            ctx.strokeStyle = colors.accent;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(x - 12, y - 6, 4, 0, Math.PI, false);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(x + 12, y - 6, 4, 0, Math.PI, false);
+            ctx.stroke();
+
+            // Lab module
+            ctx.fillStyle = colors.accent;
+            ctx.beginPath();
+            ctx.arc(x, y + 4, 3, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        default:
+            // Generic ship
+            ctx.fillStyle = colors.primary;
+            ctx.strokeStyle = colors.secondary;
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            ctx.moveTo(x, y - 12);
+            ctx.lineTo(x - 10, y + 8);
+            ctx.lineTo(x, y + 4);
+            ctx.lineTo(x + 10, y + 8);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Cockpit
+            ctx.fillStyle = colors.accent;
+            ctx.beginPath();
+            ctx.arc(x, y - 4, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Engine
+            ctx.fillStyle = colors.secondary;
+            ctx.beginPath();
+            ctx.arc(x, y + 6, 2, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+    }
 
     ctx.globalAlpha = 1;
 }
