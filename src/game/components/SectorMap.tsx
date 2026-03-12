@@ -342,6 +342,9 @@ function getScannerInfo(
                 radiation: t("locations.radiation_cloud"),
                 ionic: t("locations.ionic_storm"),
                 plasma: t("locations.plasma_storm"),
+                gravitational: t("locations.gravitational_storm"),
+                temporal: t("locations.temporal_storm"),
+                nanite: t("locations.nanite_storm"),
             };
             const intensity = loc.stormIntensity || 1;
             info.push(
@@ -349,24 +352,52 @@ function getScannerInfo(
             );
             info.push(`⚡ ${t("locations.intensity")}: ${intensity}`);
 
-            // Show possible effects
-            if (loc.stormType === "radiation") {
-                info.push(
-                    `☢️ ${t("locations.crew_damage")}: ~${15 * intensity}%`,
-                );
-            } else if (loc.stormType === "ionic") {
-                info.push(
-                    `⚡ ${t("locations.shield_damage")}: ~${30 * intensity}%`,
-                );
-            } else {
-                info.push(
-                    `🔥 ${t("locations.complex_damage")}: ~${20 * intensity}%`,
-                );
+            // Show possible effects based on storm type
+            switch (loc.stormType) {
+                case "radiation":
+                    info.push(
+                        `☢️ ${t("locations.crew_damage")}: ~${25 * intensity}% HP`,
+                    );
+                    break;
+                case "ionic":
+                    info.push(`⚡ ${t("locations.shield_strip")}: 100%`);
+                    break;
+                case "plasma":
+                    info.push(
+                        `🔥 ${t("locations.shield_module_damage")}: ~${25 * intensity}%`,
+                    );
+                    break;
+                case "gravitational":
+                    info.push(
+                        `🕳️ ${t("locations.module_damage")}: ~${20 * intensity}%`,
+                    );
+                    break;
+                case "temporal":
+                    info.push(
+                        `⏳ ${t("locations.crew_damage")}: ~${15 * intensity}% + EXP reset`,
+                    );
+                    break;
+                case "nanite":
+                    info.push(`🦠 ${t("locations.modules_disabled")} + damage`);
+                    break;
+                default:
+                    info.push(
+                        `⚠️ ${t("locations.complex_damage")}: ~${20 * intensity}%`,
+                    );
             }
 
-            info.push(
-                `💰 ${t("locations.loot")}: x${loc.stormType === "radiation" ? 2 : loc.stormType === "ionic" ? 2.5 : 3}`,
-            );
+            // Show loot multiplier
+            const lootMult =
+                loc.stormType === "radiation"
+                    ? 2
+                    : loc.stormType === "ionic" ||
+                        loc.stormType === "gravitational" ||
+                        loc.stormType === "temporal"
+                      ? 2.5
+                      : loc.stormType === "plasma"
+                        ? 3
+                        : 2;
+            info.push(`💰 ${t("locations.loot")}: x${lootMult}`);
         }
         // Hidden rewards for storms
         if (scanRange >= 8 && !completed) {
@@ -2411,14 +2442,26 @@ function drawStorm(
             break;
         case "plasma":
             color = "#ff4400";
-            icon = "🔥";
+            icon = "✦";
+            break;
+        case "gravitational":
+            color = "#9d00ff";
+            icon = "🕳";
+            break;
+        case "temporal":
+            color = "#ff00ff";
+            icon = "⏳";
+            break;
+        case "nanite":
+            color = "#ffaa00";
+            icon = "⬡";
             break;
         default:
             color = "#00ff00";
             icon = "?";
     }
 
-    // Storm cloud
+    // Storm cloud base
     const gradient = ctx.createRadialGradient(x, y, 0, x, y, 20);
     gradient.addColorStop(0, color + "60");
     gradient.addColorStop(0.5, color + "30");
@@ -2428,17 +2471,161 @@ function drawStorm(
     ctx.arc(x, y, 20, 0, Math.PI * 2);
     ctx.fill();
 
-    // Swirl effect
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 3; i++) {
-        const radius = 8 + i * 4;
-        ctx.beginPath();
-        ctx.arc(x, y, radius, i * 0.5, Math.PI * 1.5 + i * 0.3);
-        ctx.stroke();
+    // Unique visual effects for each storm type
+    switch (stormType) {
+        case "radiation":
+            // Radiation: pulsing waves emanating from center
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 4; i++) {
+                const radius = 6 + i * 5;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            // Radiation symbols around
+            ctx.font = "10px Share Tech Mono";
+            for (let i = 0; i < 3; i++) {
+                const angle = (i * Math.PI * 2) / 3;
+                const rx = x + Math.cos(angle) * 14;
+                const ry = y + Math.sin(angle) * 14;
+                ctx.fillText("☢", rx, ry);
+            }
+            break;
+
+        case "ionic":
+            // Ionic: lightning bolts striking outward
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 5; i++) {
+                const angle = (i * Math.PI * 2) / 5;
+                const startX = x + Math.cos(angle) * 8;
+                const startY = y + Math.sin(angle) * 8;
+                const endX = x + Math.cos(angle) * 18;
+                const endY = y + Math.sin(angle) * 18;
+                // Zigzag lightning
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                const midX = (startX + endX) / 2 + (Math.random() - 0.5) * 6;
+                const midY = (startY + endY) / 2 + (Math.random() - 0.5) * 6;
+                ctx.lineTo(midX, midY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+            }
+            break;
+
+        case "plasma":
+            // Plasma: simple fiery blobs without animation
+            ctx.fillStyle = color + "60";
+            for (let i = 0; i < 4; i++) {
+                const angle = (i * Math.PI * 2) / 4;
+                const dist = 10;
+                const px = x + Math.cos(angle) * dist;
+                const py = y + Math.sin(angle) * dist;
+                const blobSize = 4;
+                ctx.beginPath();
+                ctx.arc(px, py, blobSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            // Simple center glow
+            const plasmaGradient = ctx.createRadialGradient(x, y, 0, x, y, 12);
+            plasmaGradient.addColorStop(0, color + "80");
+            plasmaGradient.addColorStop(1, "transparent");
+            ctx.fillStyle = plasmaGradient;
+            ctx.beginPath();
+            ctx.arc(x, y, 12, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        case "gravitational":
+            // Gravitational: spiral arms pulling inward
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            for (let arm = 0; arm < 3; arm++) {
+                const baseAngle = (arm * Math.PI * 2) / 3;
+                ctx.beginPath();
+                for (let t = 0; t <= 1; t += 0.1) {
+                    const spiralAngle = baseAngle + t * Math.PI;
+                    const radius = 18 - t * 14;
+                    const sx = x + Math.cos(spiralAngle) * radius;
+                    const sy = y + Math.sin(spiralAngle) * radius;
+                    if (t === 0) {
+                        ctx.moveTo(sx, sy);
+                    } else {
+                        ctx.lineTo(sx, sy);
+                    }
+                }
+                ctx.stroke();
+            }
+            // Dark core
+            const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, 8);
+            coreGradient.addColorStop(0, "#000");
+            coreGradient.addColorStop(0.5, color + "40");
+            coreGradient.addColorStop(1, "transparent");
+            ctx.fillStyle = coreGradient;
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        case "temporal":
+            // Temporal: concentric rings with gaps (time distortion)
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 4; i++) {
+                const radius = 5 + i * 4;
+                const startAngle = i * 0.3;
+                const endAngle = Math.PI * 2 - i * 0.3;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, startAngle, endAngle);
+                ctx.stroke();
+            }
+            // Pulsing dots on rings
+            ctx.fillStyle = color;
+            for (let i = 0; i < 3; i++) {
+                const angle = (i * Math.PI * 2) / 3 + Date.now() * 0.001;
+                const radius = 8 + i * 3;
+                const dx = x + Math.cos(angle) * radius;
+                const dy = y + Math.sin(angle) * radius;
+                ctx.beginPath();
+                ctx.arc(dx, dy, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            break;
+
+        case "nanite":
+            // Nanite: swarm of small particles
+            ctx.fillStyle = color;
+            const particleCount = 20;
+            for (let i = 0; i < particleCount; i++) {
+                const angle = (i / particleCount) * Math.PI * 2;
+                const dist = 6 + (i % 5) * 3;
+                const px = x + Math.cos(angle + i * 0.3) * dist;
+                const py = y + Math.sin(angle + i * 0.3) * dist;
+                ctx.beginPath();
+                ctx.rect(px - 1.5, py - 1.5, 3, 3); // Small squares
+                ctx.fill();
+            }
+            // Hexagonal boundary
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            for (let i = 0; i <= 6; i++) {
+                const angle = (i * Math.PI * 2) / 6;
+                const hx = x + Math.cos(angle) * 18;
+                const hy = y + Math.sin(angle) * 18;
+                if (i === 0) {
+                    ctx.moveTo(hx, hy);
+                } else {
+                    ctx.lineTo(hx, hy);
+                }
+            }
+            ctx.closePath();
+            ctx.stroke();
+            break;
     }
 
-    // Storm icon
+    // Storm icon in center
     ctx.font = "bold 14px Share Tech Mono";
     ctx.fillStyle = color;
     ctx.textAlign = "center";

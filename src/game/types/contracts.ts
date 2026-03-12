@@ -99,4 +99,5 @@ export interface StormResult {
     creditsEarned: number;
     rareLoot: boolean;
     rareBonus?: number;
+    specialResources?: { type: string; amount: number }[];
 }

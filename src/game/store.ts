@@ -741,23 +741,47 @@ export const useGameStore = create<GameStore>()(
             let moduleDamage = 0;
             let crewDamage = 0;
             let lootMultiplier = 1;
+            let disableModules = false; // For nanite storm
+            let resetExp = false; // For temporal storm
+            let damageAllModules = false; // For gravitational storm
 
             switch (stormType) {
                 case "radiation":
-                    crewDamage = (15 + Math.random() * 15) * intensity;
-                    moduleDamage = (5 + Math.random() * 10) * intensity;
+                    // Radiation: damage crew (~25% of max HP) and small module damage
+                    crewDamage = (25 + Math.random() * 10) * intensity; // ~25-35% of max 100 HP
+                    moduleDamage = (5 + Math.random() * 5) * intensity;
                     lootMultiplier = 2;
                     break;
                 case "ionic":
-                    shieldDamage = (30 + Math.random() * 30) * intensity;
-                    moduleDamage = (10 + Math.random() * 15) * intensity;
+                    // Ionic: strip ALL shields, small module damage
+                    shieldDamage = state.ship.shields; // Remove all shields
+                    moduleDamage = (8 + Math.random() * 7) * intensity;
                     lootMultiplier = 2.5;
                     break;
                 case "plasma":
-                    shieldDamage = (20 + Math.random() * 20) * intensity;
-                    moduleDamage = (15 + Math.random() * 20) * intensity;
-                    crewDamage = (10 + Math.random() * 10) * intensity;
+                    // Plasma: damage shields AND modules
+                    shieldDamage = (25 + Math.random() * 20) * intensity;
+                    moduleDamage = (18 + Math.random() * 12) * intensity;
                     lootMultiplier = 3;
+                    break;
+                case "gravitational":
+                    // Gravitational: heavy module damage to ALL modules from gravitational compression
+                    moduleDamage = (20 + Math.random() * 15) * intensity;
+                    damageAllModules = true;
+                    lootMultiplier = 2.5;
+                    break;
+                case "temporal":
+                    // Temporal: crew damage from desynchronization, reset current level EXP
+                    crewDamage = (15 + Math.random() * 10) * intensity;
+                    resetExp = true;
+                    lootMultiplier = 2.5;
+                    break;
+                case "nanite":
+                    // Nanite: disable ALL modules, small damage to modules and shields
+                    disableModules = true;
+                    moduleDamage = (10 + Math.random() * 8) * intensity;
+                    shieldDamage = (15 + Math.random() * 10) * intensity;
+                    lootMultiplier = 2; // Only credits, no special resources
                     break;
             }
 
@@ -766,24 +790,55 @@ export const useGameStore = create<GameStore>()(
 
             // Apply module damage to random modules
             const damagedModules = [...state.ship.modules];
-            const numModulesToDamage = Math.floor(Math.random() * 2) + 1;
             const modulesDamagedList: { name: string; damage: number }[] = [];
-            for (let i = 0; i < numModulesToDamage; i++) {
-                const randomIdx = Math.floor(
-                    Math.random() * damagedModules.length,
-                );
-                const damage = Math.floor(moduleDamage);
-                damagedModules[randomIdx] = {
-                    ...damagedModules[randomIdx],
-                    health: Math.max(
-                        10,
-                        damagedModules[randomIdx].health - damage,
-                    ),
-                };
-                modulesDamagedList.push({
-                    name: damagedModules[randomIdx].name,
-                    damage: damage,
+
+            if (disableModules) {
+                // Nanite storm: disable ALL modules
+                damagedModules.forEach((mod, idx) => {
+                    const damage = Math.floor(moduleDamage);
+                    damagedModules[idx] = {
+                        ...mod,
+                        health: Math.max(10, mod.health - damage),
+                        manualDisabled: true, // Disable all modules
+                    };
+                    modulesDamagedList.push({
+                        name: mod.name,
+                        damage: damage,
+                    });
                 });
+            } else if (damageAllModules) {
+                // Gravitational storm: damage ALL modules
+                damagedModules.forEach((mod, idx) => {
+                    const damage = Math.floor(moduleDamage);
+                    damagedModules[idx] = {
+                        ...mod,
+                        health: Math.max(10, mod.health - damage),
+                    };
+                    modulesDamagedList.push({
+                        name: mod.name,
+                        damage: damage,
+                    });
+                });
+            } else {
+                // Normal storm: damage random modules
+                const numModulesToDamage = Math.floor(Math.random() * 2) + 1;
+                for (let i = 0; i < numModulesToDamage; i++) {
+                    const randomIdx = Math.floor(
+                        Math.random() * damagedModules.length,
+                    );
+                    const damage = Math.floor(moduleDamage);
+                    damagedModules[randomIdx] = {
+                        ...damagedModules[randomIdx],
+                        health: Math.max(
+                            10,
+                            damagedModules[randomIdx].health - damage,
+                        ),
+                    };
+                    modulesDamagedList.push({
+                        name: damagedModules[randomIdx].name,
+                        damage: damage,
+                    });
+                }
             }
 
             // Apply crew damage
@@ -792,6 +847,13 @@ export const useGameStore = create<GameStore>()(
                 health: Math.max(10, c.health - Math.floor(crewDamage)),
                 happiness: Math.max(0, c.happiness - 10),
             }));
+
+            // Handle temporal storm: reset current level EXP for all crew
+            if (resetExp) {
+                damagedCrew.forEach((c) => {
+                    c.exp = 0;
+                });
+            }
 
             // Calculate loot (storms give better rewards than random events)
             const baseLoot = Math.floor(
@@ -804,6 +866,29 @@ export const useGameStore = create<GameStore>()(
                 rareBonus = Math.floor(100 + Math.random() * 150) * intensity;
             }
 
+            // Handle special storm resources
+            const specialResources: { type: string; amount: number }[] = [];
+            if (stormType === "gravitational") {
+                // Gravitational storm gives quantum crystals
+                const crystalAmount = Math.floor(
+                    (15 + Math.random() * 10) * intensity,
+                );
+                specialResources.push({
+                    type: "quantum_crystals",
+                    amount: crystalAmount,
+                });
+            } else if (stormType === "temporal") {
+                // Temporal storm gives ancient data
+                const dataAmount = Math.floor(
+                    (20 + Math.random() * 15) * intensity,
+                );
+                specialResources.push({
+                    type: "ancient_data",
+                    amount: dataAmount,
+                });
+            }
+            // Nanite storm only gives credits (no special resources)
+
             // Apply changes
             set((s) => ({
                 ship: {
@@ -813,6 +898,22 @@ export const useGameStore = create<GameStore>()(
                 },
                 crew: damagedCrew,
                 credits: s.credits + baseLoot + rareBonus,
+                research: {
+                    ...s.research,
+                    resources: {
+                        ...s.research.resources,
+                        quantum_crystals:
+                            (s.research.resources.quantum_crystals || 0) +
+                            (specialResources.find(
+                                (r) => r.type === "quantum_crystals",
+                            )?.amount || 0),
+                        ancient_data:
+                            (s.research.resources.ancient_data || 0) +
+                            (specialResources.find(
+                                (r) => r.type === "ancient_data",
+                            )?.amount || 0),
+                    },
+                },
                 stormResult: {
                     stormName: loc.name,
                     stormType,
@@ -820,11 +921,17 @@ export const useGameStore = create<GameStore>()(
                     shieldDamage: Math.floor(shieldDamage),
                     moduleDamage: modulesDamagedList,
                     moduleDamagePercent: Math.floor(moduleDamage),
-                    numModulesDamaged: numModulesToDamage,
+                    numModulesDamaged: disableModules
+                        ? damagedModules.length
+                        : modulesDamagedList.length,
                     crewDamage: Math.floor(crewDamage),
                     creditsEarned: baseLoot + rareBonus,
                     rareLoot,
                     rareBonus: rareLoot ? rareBonus : undefined,
+                    specialResources:
+                        specialResources.length > 0
+                            ? specialResources
+                            : undefined,
                 },
                 gameMode: "storm_results",
             }));

@@ -17,13 +17,19 @@ export function StormResultsPanel() {
     const stormIcons: Record<string, string> = {
         radiation: "☢️",
         ionic: "⚡",
-        plasma: "🔥",
+        plasma: "✦",
+        gravitational: "🕳️",
+        temporal: "⏳",
+        nanite: "🦠",
     };
 
     const stormColors: Record<string, string> = {
-        radiation: "#ffaa00",
+        radiation: "#00ff00",
         ionic: "#00d4ff",
-        plasma: "#ff4444",
+        plasma: "#ff4400",
+        gravitational: "#9d00ff",
+        temporal: "#ff00ff",
+        nanite: "#ffaa00",
     };
 
     const icon = stormIcons[stormResult.stormType] || "🌪️";
@@ -67,6 +73,18 @@ export function StormResultsPanel() {
                             ₢)
                         </div>
                     )}
+                    {stormResult.specialResources &&
+                        stormResult.specialResources.map((res, idx) => (
+                            <div
+                                key={idx}
+                                className="text-[#00ffff] mt-1 text-sm"
+                            >
+                                {res.type === "quantum_crystals" &&
+                                    `+${res.amount} Квантовых кристаллов`}
+                                {res.type === "ancient_data" &&
+                                    `+${res.amount} Древних данных`}
+                            </div>
+                        ))}
                 </div>
 
                 {/* Damage */}

@@ -35,12 +35,36 @@ const STORM_INFO: StormInfo = {
         lootKey: "storm.ion_storm_loot",
     },
     plasma: {
-        icon: "🔥",
+        icon: "✦",
         color: "#ff4400",
         nameKey: "storm.plasma_storm",
         descKey: "storm.plasma_storm_desc",
         damageKey: "storm.plasma_storm_damage",
         lootKey: "storm.plasma_storm_loot",
+    },
+    gravitational: {
+        icon: "🕳️",
+        color: "#9d00ff",
+        nameKey: "storm.gravitational_storm",
+        descKey: "storm.gravitational_storm_desc",
+        damageKey: "storm.gravitational_storm_damage",
+        lootKey: "storm.gravitational_storm_loot",
+    },
+    temporal: {
+        icon: "⏳",
+        color: "#ff00ff",
+        nameKey: "storm.temporal_storm",
+        descKey: "storm.temporal_storm_desc",
+        damageKey: "storm.temporal_storm_damage",
+        lootKey: "storm.temporal_storm_loot",
+    },
+    nanite: {
+        icon: "🦠",
+        color: "#ffaa00",
+        nameKey: "storm.nanite_storm",
+        descKey: "storm.nanite_storm_desc",
+        damageKey: "storm.nanite_storm_damage",
+        lootKey: "storm.nanite_storm_loot",
     },
 };
 

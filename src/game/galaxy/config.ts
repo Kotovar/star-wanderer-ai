@@ -132,11 +132,21 @@ export const ANOMALY_COLORS: Record<number, string> = {
 };
 
 /** Типы штормов */
-export const STORM_TYPES_LIST: StormType[] = ["radiation", "ionic", "plasma"];
+export const STORM_TYPES_LIST: StormType[] = [
+    "radiation",
+    "ionic",
+    "plasma",
+    "gravitational",
+    "temporal",
+    "nanite",
+];
 
 /** Названия штормов */
 export const STORM_NAMES: Record<StormType, string> = {
     radiation: "Радиационное облако",
     ionic: "Ионный шторм",
     plasma: "Плазменный шторм",
+    gravitational: "Гравитационный шторм",
+    temporal: "Временной шторм",
+    nanite: "Нанитный рой",
 };

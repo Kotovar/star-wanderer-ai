@@ -5,7 +5,13 @@ import type { StationConfig, StationName } from "../stations";
 
 export type AsteroidTier = 1 | 2 | 3 | 4;
 
-export type StormType = "radiation" | "ionic" | "plasma";
+export type StormType =
+    | "radiation"
+    | "ionic"
+    | "plasma"
+    | "gravitational"
+    | "temporal"
+    | "nanite";
 
 export type SignalType = "pirate_ambush" | "survivors" | "abandoned_cargo";
 
