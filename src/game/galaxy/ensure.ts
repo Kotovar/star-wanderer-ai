@@ -79,6 +79,7 @@ export const ensureBoss = (sector: Sector): void => {
                     type: "boss",
                     name: guaranteedBoss.name,
                     bossId: guaranteedBoss.id,
+                    bossType: guaranteedBoss.bossType,
                     bossDefeated: false,
                 });
             }

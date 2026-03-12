@@ -3,6 +3,7 @@ import type { PlanetType } from "../planets";
 import type { RaceId } from "../races";
 import type { StationConfig, StationName } from "../stations";
 import type { EnemyShip } from "../enemy";
+import type { BossType } from "../bosses";
 
 export type AsteroidTier = 1 | 2 | 3 | 4;
 
@@ -90,6 +91,7 @@ export interface Location {
     };
     // Ancient boss fields
     bossId?: string;
+    bossType?: BossType; // Type of ancient boss
     bossDefeated?: boolean;
     // Race fields
 

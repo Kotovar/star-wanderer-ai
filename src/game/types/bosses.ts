@@ -36,6 +36,19 @@ export interface BossModuleEffect {
     value: number; // Числовое значение эффекта
 }
 
+export type BossType =
+    | "sentinel"
+    | "stalker"
+    | "leech"
+    | "harvester"
+    | "hunter"
+    | "reaver"
+    | "oracle"
+    | "destroyer"
+    | "warden"
+    | "eternal"
+    | "default";
+
 // ═══════════════════════════════════════════════════════════════
 // ACTIVE BOSS ABILITIES
 // Special abilities that bosses use (active skills)
@@ -57,6 +70,7 @@ export interface AncientBoss {
     name: string;
     description: string;
     tier: GalaxyTierAll; // Minimum sector tier to spawn
+    bossType: BossType; // Type identifier for rendering
 
     modules: BossModule[];
     shields: number;

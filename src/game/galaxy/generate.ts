@@ -339,6 +339,7 @@ export const generateBossOrAnomaly = (
             type: "boss",
             name: boss.name,
             bossId: boss.id,
+            bossType: boss.bossType,
             bossDefeated: false,
         };
     }
@@ -397,6 +398,7 @@ export const addEternalBoss = (sector: Sector): void => {
         type: "boss",
         name: eternalBoss.name,
         bossId: eternalBoss.id,
+        bossType: eternalBoss.bossType,
         bossDefeated: false,
     });
 };

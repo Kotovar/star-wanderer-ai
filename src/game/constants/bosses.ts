@@ -15,6 +15,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
     {
         id: "guardian_sentinel",
         name: "⚙️ Страж Врат",
+        bossType: "sentinel",
         description:
             "Древний страж, охраняющий границы обитаемого пространства. Его системы работают вечно.",
         tier: 1,
@@ -70,6 +71,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
     {
         id: "nova_stalker",
         name: "🔥 Ловец Нов",
+        bossType: "stalker",
         description:
             "Охотник за звёздной энергией. Поглощает излучение звёзд для подзарядки своих систем.",
         tier: 1,
@@ -125,6 +127,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
     {
         id: "void_leech",
         name: "🩸 Пустотный Паразит",
+        bossType: "leech",
         description:
             "Машина-паразит, питающаяся энергией кораблей. Присасывается к жертве и высасывает силы.",
         tier: 1,
@@ -185,6 +188,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
     {
         id: "harvester_prime",
         name: "🌀 Жнец Прайм",
+        bossType: "harvester",
         description:
             "Колоссальная машина для сбора ресурсов. Автоматически перерабатывает всё, что встречает.",
         tier: 2,
@@ -250,6 +254,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
     {
         id: "phase_hunter",
         name: "⚡ Фазовый Охотник",
+        bossType: "hunter",
         description:
             "Машина, способная перемещаться между измерениями. Появляется из ниоткуда и атакует.",
         tier: 2,
@@ -306,6 +311,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
     {
         id: "cryo_reaver",
         name: "❄️ Ледяной Разоритель",
+        bossType: "reaver",
         description:
             "Машина холода, замораживающая всё вокруг. Её системы работают при абсолютном нуле.",
         tier: 2,
@@ -368,6 +374,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
     {
         id: "void_oracle",
         name: "👁️ Оракул Пустоты",
+        bossType: "oracle",
         description:
             "Машина-оракул, видящая все возможные исходы. Её атаки неизбежны.",
         tier: 3,
@@ -434,6 +441,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
     {
         id: "nexus_destroyer",
         name: "💀 Разрушитель Связи",
+        bossType: "destroyer",
         description:
             "Машина разрушения, способная разрывать связи между модулями корабля. Её присутствие дестабилизирует системы.",
         tier: 3,
@@ -500,6 +508,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
     {
         id: "chronos_warden",
         name: "⏳ Хранитель Времени",
+        bossType: "warden",
         description:
             "Машина, управляющая потоком времени. Может замедлять противника и ускорять свои системы.",
         tier: 3,
@@ -571,6 +580,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
     {
         id: "the_eternal",
         name: "♾️ Вечный",
+        bossType: "eternal",
         description:
             "Древний хранитель чёрных дыр. Существует вне времени. Неизвестно, машина ли это.",
         tier: 3,

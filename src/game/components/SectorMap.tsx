@@ -3270,6 +3270,8 @@ function drawAncientBoss(
         ctx.globalAlpha = 0.4;
     }
 
+    const bossType = loc.bossType || "default";
+
     // Danger aura (purple for ancient)
     const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, 35);
     glowGradient.addColorStop(0, "rgba(255, 0, 255, 0.4)");
@@ -3297,28 +3299,226 @@ function drawAncientBoss(
     ctx.closePath();
     ctx.stroke();
 
-    // Central core
-    const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, 12);
-    coreGradient.addColorStop(0, "#fff");
-    coreGradient.addColorStop(0.3, "#ff00ff");
-    coreGradient.addColorStop(1, "#8800aa");
-    ctx.fillStyle = coreGradient;
-    ctx.beginPath();
-    ctx.arc(x, y, 12, 0, Math.PI * 2);
-    ctx.fill();
+    // Boss-specific icons
+    switch (bossType) {
+        case "sentinel":
+            // ⚙️ Страж Врат - Gear/Watchman
+            ctx.fillStyle = "#ffaa00";
+            ctx.beginPath();
+            ctx.arc(x, y, 12, 0, Math.PI * 2);
+            ctx.fill();
+            // Gear teeth
+            ctx.strokeStyle = "#ffcc00";
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                ctx.beginPath();
+                ctx.moveTo(x + Math.cos(angle) * 12, y + Math.sin(angle) * 12);
+                ctx.lineTo(x + Math.cos(angle) * 16, y + Math.sin(angle) * 16);
+                ctx.stroke();
+            }
+            // Central eye
+            ctx.fillStyle = "#00ffff";
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fill();
+            break;
 
-    // Inner energy ring
-    ctx.strokeStyle = "#ff88ff";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(x, y, 6, 0, Math.PI * 2);
-    ctx.stroke();
+        case "stalker":
+            // 🔥 Ловец Нов - Nova Stalker (flame collector)
+            ctx.fillStyle = "#ff4400";
+            ctx.beginPath();
+            ctx.moveTo(x, y - 14);
+            ctx.lineTo(x - 8, y + 6);
+            ctx.lineTo(x - 4, y + 6);
+            ctx.lineTo(x, y - 4);
+            ctx.lineTo(x + 4, y + 6);
+            ctx.lineTo(x + 8, y + 6);
+            ctx.closePath();
+            ctx.fill();
+            // Solar flare accents
+            ctx.fillStyle = "#ffaa00";
+            ctx.beginPath();
+            ctx.arc(x - 6, y - 8, 3, 0, Math.PI * 2);
+            ctx.arc(x + 6, y - 8, 3, 0, Math.PI * 2);
+            ctx.fill();
+            break;
 
-    // Boss skull/tech icon
-    ctx.font = "bold 14px Share Tech Mono";
-    ctx.fillStyle = "#fff";
-    ctx.textAlign = "center";
-    ctx.fillText("⚙", x, y + 5);
+        case "leech":
+            // 🩸 Пустотный Паразит - Void Leech (tentacles)
+            ctx.fillStyle = "#aa00ff";
+            ctx.beginPath();
+            ctx.arc(x, y - 4, 8, 0, Math.PI * 2);
+            ctx.fill();
+            // Tentacles
+            ctx.strokeStyle = "#cc44ff";
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 4; i++) {
+                const angle = Math.PI + (i / 3) * Math.PI;
+                ctx.beginPath();
+                ctx.moveTo(x, y + 4);
+                ctx.quadraticCurveTo(
+                    x + Math.sin(angle) * 10,
+                    y + 8,
+                    x + Math.sin(angle) * 14,
+                    y + 14,
+                );
+                ctx.stroke();
+            }
+            break;
+
+        case "harvester":
+            // 🌀 Жнец Прайм - Harvester (spiral collector)
+            ctx.strokeStyle = "#00ff88";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < 3; i++) {
+                const angle = (i / 3) * Math.PI * 2;
+                ctx.beginPath();
+                ctx.arc(x, y, 8 + i * 3, angle, angle + Math.PI);
+                ctx.stroke();
+            }
+            // Central core
+            ctx.fillStyle = "#00ff88";
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        case "hunter":
+            // ⚡ Фазовый Охотник - Phase Hunter (lightning bolt)
+            ctx.fillStyle = "#00d4ff";
+            ctx.beginPath();
+            ctx.moveTo(x + 4, y - 14);
+            ctx.lineTo(x - 6, y - 4);
+            ctx.lineTo(x, y - 4);
+            ctx.lineTo(x - 4, y + 14);
+            ctx.lineTo(x + 6, y + 4);
+            ctx.lineTo(x, y + 4);
+            ctx.closePath();
+            ctx.fill();
+            // Phase rings
+            ctx.strokeStyle = "#00d4ff";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(x, y, 12, 0, Math.PI * 2);
+            ctx.stroke();
+            break;
+
+        case "reaver":
+            // ❄️ Ледяной Разоритель - Cryo Reaver (snowflake)
+            ctx.strokeStyle = "#88ffff";
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 6; i++) {
+                const angle = (i / 6) * Math.PI * 2;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + Math.cos(angle) * 12, y + Math.sin(angle) * 12);
+                ctx.stroke();
+            }
+            // Ice crystals
+            ctx.fillStyle = "#88ffff";
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        case "oracle":
+            // 👁️ Оракул Пустоты - Void Oracle (all-seeing eye)
+            ctx.fillStyle = "#ff00ff";
+            ctx.beginPath();
+            ctx.ellipse(x, y, 10, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // Eye pupil
+            ctx.fillStyle = "#00ffff";
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, Math.PI * 2);
+            ctx.fill();
+            // Eyelids
+            ctx.strokeStyle = "#ff00ff";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x, y, 10, Math.PI * 0.2, Math.PI * 0.8);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(x, y, 10, Math.PI * 1.2, Math.PI * 1.8);
+            ctx.stroke();
+            break;
+
+        case "destroyer":
+            // 💀 Разрушитель Связи - Nexus Destroyer (skull/crossbones)
+            ctx.fillStyle = "#ff4444";
+            ctx.beginPath();
+            ctx.arc(x, y - 4, 8, 0, Math.PI * 2);
+            ctx.fill();
+            // Eye sockets
+            ctx.fillStyle = "#000";
+            ctx.beginPath();
+            ctx.arc(x - 3, y - 6, 2, 0, Math.PI * 2);
+            ctx.arc(x + 3, y - 6, 2, 0, Math.PI * 2);
+            ctx.fill();
+            // Cross bones
+            ctx.strokeStyle = "#ff4444";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x - 8, y + 4);
+            ctx.lineTo(x + 8, y + 12);
+            ctx.moveTo(x + 8, y + 4);
+            ctx.lineTo(x - 8, y + 12);
+            ctx.stroke();
+            break;
+
+        case "warden":
+            // ⏳ Хранитель Времени - Chronos Warden (hourglass)
+            ctx.strokeStyle = "#ffaa00";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x - 8, y - 10);
+            ctx.lineTo(x + 8, y - 10);
+            ctx.lineTo(x + 4, y);
+            ctx.lineTo(x + 8, y + 10);
+            ctx.lineTo(x - 8, y + 10);
+            ctx.lineTo(x - 4, y);
+            ctx.closePath();
+            ctx.stroke();
+            // Sand
+            ctx.fillStyle = "#ffaa00";
+            ctx.beginPath();
+            ctx.arc(x, y - 5, 3, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        case "eternal":
+            // ♾️ Вечный - The Eternal (infinity symbol)
+            ctx.strokeStyle = "#aa00ff";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.bezierCurveTo(x - 8, y - 8, x - 14, y, x - 8, y + 8);
+            ctx.bezierCurveTo(x - 4, y + 4, x, y, x, y);
+            ctx.bezierCurveTo(x + 4, y - 4, x + 8, y + 8, x + 8, y + 8);
+            ctx.bezierCurveTo(x + 14, y, x + 8, y - 8, x, y);
+            ctx.stroke();
+            // Center glow
+            ctx.fillStyle = "#cc44ff";
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        default:
+            // Generic ancient boss
+            ctx.fillStyle = "#ff00ff";
+            ctx.beginPath();
+            ctx.arc(x, y, 12, 0, Math.PI * 2);
+            ctx.fill();
+            // Tech symbol
+            ctx.font = "bold 14px Share Tech Mono";
+            ctx.fillStyle = "#fff";
+            ctx.textAlign = "center";
+            ctx.fillText("⚙", x, y + 5);
+            break;
+    }
 
     ctx.globalAlpha = 1;
 }
