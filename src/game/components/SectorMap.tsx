@@ -589,10 +589,6 @@ export function SectorMap() {
         ctx.scale(zoom, zoom);
         ctx.translate(-centerX, -centerY);
 
-        // Draw central star
-        const star = currentSector.star;
-        drawStar(ctx, centerX, centerY, star, currentSector.id);
-
         // Draw locations at grid-based positions
         const locations = currentSector.locations;
 
@@ -970,7 +966,51 @@ export function SectorMap() {
                 }
             }
 
+            // Draw main canvas
             drawCanvas();
+
+            // Draw animated star on top (after bgCanvas is drawn)
+            const mainCanvas = canvasRef.current;
+            if (mainCanvas && currentSector) {
+                const mainCtx = mainCanvas.getContext("2d");
+                if (mainCtx) {
+                    const width = mainCanvas.width;
+                    const height = mainCanvas.height;
+                    const centerX = width / 2;
+                    const centerY = height / 2;
+
+                    // Clear only the star area to avoid clearing the whole canvas
+                    const star = currentSector.star;
+                    const currentAnimState = animationStateRef.current;
+
+                    // Save context state
+                    mainCtx.save();
+                    // Apply the same transforms as in drawCanvas
+                    const currentOffset = isDragging
+                        ? offsetRef.current
+                        : offset;
+                    mainCtx.translate(
+                        centerX + currentOffset.x,
+                        centerY + currentOffset.y,
+                    );
+                    mainCtx.scale(zoom, zoom);
+                    mainCtx.translate(-centerX, -centerY);
+
+                    // Redraw star with current time
+                    drawStar(
+                        mainCtx,
+                        centerX,
+                        centerY,
+                        star,
+                        currentSector.id,
+                        currentAnimState.time,
+                    );
+
+                    // Restore context state
+                    mainCtx.restore();
+                }
+            }
+
             animationFrameIdRef.current = requestAnimationFrame(animate);
         };
 
@@ -982,7 +1022,14 @@ export function SectorMap() {
                 cancelAnimationFrame(animationFrameIdRef.current);
             }
         };
-    }, [animationsEnabled, currentSector, drawCanvas]);
+    }, [
+        animationsEnabled,
+        currentSector,
+        drawCanvas,
+        isDragging,
+        offset,
+        zoom,
+    ]);
 
     // Handle wheel zoom
     const handleWheel = useCallback(
@@ -1061,10 +1108,6 @@ export function SectorMap() {
                     ctx.translate(centerX + newOffset.x, centerY + newOffset.y);
                     ctx.scale(zoom, zoom);
                     ctx.translate(-centerX, -centerY);
-
-                    // Draw central star
-                    const star = currentSector.star;
-                    drawStar(ctx, centerX, centerY, star, currentSector.id);
 
                     // Helper function to compute location position
                     const computeLocationPosition = (
@@ -1576,58 +1619,70 @@ export function SectorMap() {
     );
 }
 
-// Draw star at center
+// Draw star at center with animations
 function drawStar(
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
     star: { type: StarType; name: string } | undefined,
     sectorId?: number,
+    time?: number,
 ) {
     if (!star) return;
 
+    const currentTime = time || 0;
+
     if (star.type === "blackhole") {
-        // Black hole with accretion disk
+        // Black hole with rotating accretion disk
+        const rotation = currentTime * 0.0005;
         const gradient = ctx.createRadialGradient(x, y, 0, x, y, 50);
         gradient.addColorStop(0, "#000");
         gradient.addColorStop(0.5, "#1a0a2e");
         gradient.addColorStop(1, "transparent");
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(x, y, 50, 50, Math.PI * 2);
+        ctx.arc(x, y, 50, 0, Math.PI * 2);
         ctx.fill();
 
-        // Event horizon
+        // Event horizon (pulsing)
+        const pulse = Math.sin(currentTime * 0.002) * 2;
         ctx.strokeStyle = "#ff00ff";
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.arc(x, y, 20, 0, Math.PI * 2);
+        ctx.arc(x, y, 20 + pulse, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Accretion disk
+        // Rotating accretion disk
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
         ctx.strokeStyle = "rgba(255, 100, 255, 0.5)";
         ctx.lineWidth = 8;
         ctx.beginPath();
-        ctx.ellipse(x, y, 40, 15, Math.PI / 6, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, 40, 15, 0, 0, Math.PI * 2);
         ctx.stroke();
+        ctx.restore();
     } else if (star.type === "triple") {
-        // Three stars with varied color combinations based on sector ID
+        // Three stars orbiting around center
+        const orbitSpeed = 0.0003;
+        const orbitRadius = 20;
+        const rotation = currentTime * orbitSpeed;
+
         const colorSets = [
-            { c1: "#ffdd44", c2: "#ffaa00", c3: "#ff6600" }, // Yellow-Orange-Red
-            { c1: "#ffdd44", c2: "#ffdd44", c3: "#ffaa00" }, // All yellow-orange
-            { c1: "#ffaa00", c2: "#ff6644", c3: "#ffdd44" }, // Orange-Red-Yellow
-            { c1: "#ffdd44", c2: "#ffee88", c3: "#ffcc00" }, // Light yellow variations
+            { c1: "#ffdd44", c2: "#ffaa00", c3: "#ff6600" },
+            { c1: "#ffdd44", c2: "#ffdd44", c3: "#ffaa00" },
+            { c1: "#ffaa00", c2: "#ff6644", c3: "#ffdd44" },
+            { c1: "#ffdd44", c2: "#ffee88", c3: "#ffcc00" },
         ];
-        // Use sector ID to deterministically select color set
         const index =
             sectorId !== undefined ? Math.abs(sectorId) % colorSets.length : 0;
         const colorSet = colorSets[index];
+        const colors = [colorSet.c1, colorSet.c2, colorSet.c3];
 
         for (let i = 0; i < 3; i++) {
-            const angle = i * ((Math.PI * 2) / 3);
-            const sx = x + Math.cos(angle) * 20;
-            const sy = y + Math.sin(angle) * 20;
-            const colors = [colorSet.c1, colorSet.c2, colorSet.c3];
+            const angle = rotation + i * ((Math.PI * 2) / 3);
+            const sx = x + Math.cos(angle) * orbitRadius;
+            const sy = y + Math.sin(angle) * orbitRadius;
 
             // Glow
             const gradient = ctx.createRadialGradient(sx, sy, 0, sx, sy, 20);
@@ -1640,99 +1695,126 @@ function drawStar(
             ctx.fill();
         }
     } else if (star.type === "double") {
-        // Binary stars with varied color combinations based on sector ID
+        // Binary stars orbiting each other
+        const orbitSpeed = 0.0005;
+        const orbitRadius = 15;
+        const rotation = currentTime * orbitSpeed;
+
         const colorSets = [
-            { c1: "#ffdd44", c2: "#ffaa00" }, // Yellow-Orange
-            { c1: "#ffaa00", c2: "#ff6644" }, // Orange-Red
-            { c1: "#ffdd44", c2: "#ffee88" }, // Light yellow - Yellow
-            { c1: "#ff6644", c2: "#ffdd44" }, // Red-Yellow
-            { c1: "#ffcc00", c2: "#ff9900" }, // Gold-Orange
+            { c1: "#ffdd44", c2: "#ffaa00" },
+            { c1: "#ffaa00", c2: "#ff6644" },
+            { c1: "#ffdd44", c2: "#ffee88" },
+            { c1: "#ff6644", c2: "#ffdd44" },
+            { c1: "#ffcc00", c2: "#ff9900" },
         ];
-        // Use sector ID to deterministically select color set
         const index =
             sectorId !== undefined ? Math.abs(sectorId) % colorSets.length : 0;
         const colorSet = colorSets[index];
+        const colors = [colorSet.c1, colorSet.c2];
 
-        for (const [i, offset] of [-15, 15].entries()) {
-            const colors = [colorSet.c1, colorSet.c2];
-            const gradient = ctx.createRadialGradient(
-                x + offset,
-                y,
-                0,
-                x + offset,
-                y,
-                25,
-            );
+        for (let i = 0; i < 2; i++) {
+            const angle = rotation + i * Math.PI;
+            const sx = x + Math.cos(angle) * orbitRadius;
+            const sy = y + Math.sin(angle) * orbitRadius;
+
+            // Glow
+            const gradient = ctx.createRadialGradient(sx, sy, 0, sx, sy, 25);
             gradient.addColorStop(0, "#fff");
             gradient.addColorStop(0.3, colors[i]);
             gradient.addColorStop(1, "transparent");
             ctx.fillStyle = gradient;
             ctx.beginPath();
-            ctx.arc(x + offset, y, 25, 0, Math.PI * 2);
+            ctx.arc(sx, sy, 25, 0, Math.PI * 2);
             ctx.fill();
         }
     } else if (star.type === "red_dwarf") {
-        // Red dwarf - small, dim, red
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 25);
+        // Red dwarf with pulsing effect
+        const pulse = Math.sin(currentTime * 0.001) * 2;
+
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 25 + pulse);
         gradient.addColorStop(0, "#ff6644");
         gradient.addColorStop(0.6, "#cc3311");
         gradient.addColorStop(1, "transparent");
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(x, y, 25, 0, Math.PI * 2);
+        ctx.arc(x, y, 25 + pulse, 0, Math.PI * 2);
         ctx.fill();
     } else if (star.type === "yellow_dwarf") {
-        // Yellow dwarf - Sun-like, medium size
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 35);
+        // Yellow dwarf (Sun-like) with pulsing
+        const pulse = Math.sin(currentTime * 0.0015) * 2;
+
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 35 + pulse);
         gradient.addColorStop(0, "#fff");
         gradient.addColorStop(0.2, "#ffff88");
         gradient.addColorStop(0.5, "#ffdd44");
         gradient.addColorStop(1, "transparent");
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(x, y, 35, 0, Math.PI * 2);
+        ctx.arc(x, y, 35 + pulse, 0, Math.PI * 2);
         ctx.fill();
     } else if (star.type === "white_dwarf") {
-        // White dwarf - small, bright, white-blue
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 20);
+        // White dwarf with fast pulsing
+        const pulse = Math.sin(currentTime * 0.002) * 1.5;
+
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 20 + pulse);
         gradient.addColorStop(0, "#ffffff");
         gradient.addColorStop(0.4, "#aaddff");
         gradient.addColorStop(1, "transparent");
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(x, y, 20, 0, Math.PI * 2);
+        ctx.arc(x, y, 20 + pulse, 0, Math.PI * 2);
         ctx.fill();
     } else if (star.type === "blue_giant") {
-        // Blue giant - large, bright, blue-white
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 45);
+        // Blue giant with slow majestic pulsing
+        const pulse = Math.sin(currentTime * 0.0008) * 3;
+
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 45 + pulse);
         gradient.addColorStop(0, "#ffffff");
         gradient.addColorStop(0.3, "#66aaff");
         gradient.addColorStop(0.7, "#2266aa");
         gradient.addColorStop(1, "transparent");
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(x, y, 45, 0, Math.PI * 2);
+        ctx.arc(x, y, 45 + pulse, 0, Math.PI * 2);
         ctx.fill();
     } else if (star.type === "red_supergiant") {
-        // Red supergiant - huge, dim, deep red
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 55);
+        // Red supergiant with slow rotation and pulsing
+        const surfaceRotation = currentTime * 0.0003;
+        const pulse = Math.sin(currentTime * 0.001) * 3;
+
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 55 + pulse);
         gradient.addColorStop(0, "#ff8866");
         gradient.addColorStop(0.4, "#ff4422");
         gradient.addColorStop(0.8, "#aa1100");
         gradient.addColorStop(1, "transparent");
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(x, y, 55, 0, Math.PI * 2);
+        ctx.arc(x, y, 55 + pulse, 0, Math.PI * 2);
         ctx.fill();
+
+        // Rotating surface bands
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(surfaceRotation);
+        ctx.strokeStyle = "rgba(255, 100, 50, 0.3)";
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 5; i++) {
+            ctx.beginPath();
+            ctx.arc(0, 0, 18 + i * 6, 0, Math.PI * 1.5);
+            ctx.stroke();
+        }
+        ctx.restore();
     } else if (star.type === "neutron_star") {
-        // Neutron star - tiny, bright, with pulsing effect
+        // Neutron star with fast pulsing
+        const pulse = Math.sin(currentTime * 0.003) * 2;
+
         // Outer glow
         const outerGradient = ctx.createRadialGradient(x, y, 0, x, y, 30);
         outerGradient.addColorStop(0, "rgba(100, 100, 255, 0.4)");
         outerGradient.addColorStop(1, "transparent");
         ctx.fillStyle = outerGradient;
         ctx.beginPath();
-        ctx.arc(x, y, 30, 0, Math.PI * 2);
+        ctx.arc(x, y, 30 + pulse, 0, Math.PI * 2);
         ctx.fill();
 
         // Core
@@ -1752,59 +1834,63 @@ function drawStar(
         ctx.arc(x, y, 18, 0, Math.PI * 2);
         ctx.stroke();
     } else if (star.type === "gas_giant") {
-        // Gas giant - огромный зелёный шар с атмосферными полосами
+        // Gas giant - green color like on galaxy map
+        const pulse = Math.sin(currentTime * 0.001) * 2;
 
-        // Внешнее зелёное свечение
-        const outerGlow = ctx.createRadialGradient(x, y, 0, x, y, 60);
+        // Outer green glow
+        const outerGlow = ctx.createRadialGradient(x, y, 0, x, y, 60 + pulse);
         outerGlow.addColorStop(0, "rgba(0, 255, 100, 0.4)");
         outerGlow.addColorStop(0.5, "rgba(0, 200, 50, 0.2)");
         outerGlow.addColorStop(1, "transparent");
         ctx.fillStyle = outerGlow;
         ctx.beginPath();
-        ctx.arc(x, y, 60, 0, Math.PI * 2);
+        ctx.arc(x, y, 60 + pulse, 0, Math.PI * 2);
         ctx.fill();
 
-        // Основной зелёный шар
+        // Main green sphere
         const bodyGradient = ctx.createRadialGradient(x, y, 0, x, y, 40);
-        bodyGradient.addColorStop(0, "#00ff66"); // Яркий зелёный центр
-        bodyGradient.addColorStop(0.5, "#00cc55"); // Основной зелёный
-        bodyGradient.addColorStop(0.8, "#009933"); // Тёмно-зелёный край
+        bodyGradient.addColorStop(0, "#00ff66");
+        bodyGradient.addColorStop(0.5, "#00cc55");
+        bodyGradient.addColorStop(0.8, "#009933");
         bodyGradient.addColorStop(1, "transparent");
         ctx.fillStyle = bodyGradient;
         ctx.beginPath();
         ctx.arc(x, y, 40, 0, Math.PI * 2);
         ctx.fill();
 
-        // Атмосферные полосы (горизонтальные зелёные ленты)
+        // Atmospheric bands (horizontal green ribbons)
         ctx.save();
         ctx.beginPath();
         ctx.arc(x, y, 38, 0, Math.PI * 2);
         ctx.clip();
 
-        // Полоса 1 - светлая
+        // Band 1 - light
         ctx.fillStyle = "rgba(100, 255, 150, 0.5)";
         ctx.fillRect(x - 45, y - 15, 90, 5);
 
-        // Полоса 2 - тёмная
+        // Band 2 - dark
         ctx.fillStyle = "rgba(0, 150, 50, 0.6)";
         ctx.fillRect(x - 45, y - 3, 90, 6);
 
-        // Полоса 3 - светлая
+        // Band 3 - light
         ctx.fillStyle = "rgba(50, 255, 100, 0.4)";
         ctx.fillRect(x - 45, y + 10, 90, 5);
 
-        // Полоса 4 - тёмная
+        // Band 4 - dark
         ctx.fillStyle = "rgba(0, 120, 40, 0.5)";
         ctx.fillRect(x - 45, y + 20, 90, 4);
 
         ctx.restore();
-
-        // Лёгкое мерцание (турбулентность атмосферы)
-        ctx.strokeStyle = "rgba(150, 255, 200, 0.3)";
-        ctx.lineWidth = 1;
+    } else {
+        // Default star
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 30);
+        gradient.addColorStop(0, "#fff");
+        gradient.addColorStop(0.5, "#ffdd44");
+        gradient.addColorStop(1, "transparent");
+        ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(x, y, 42, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.arc(x, y, 30, 0, Math.PI * 2);
+        ctx.fill();
     }
 }
 

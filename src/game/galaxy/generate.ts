@@ -49,7 +49,7 @@ export const generateStar = (tier: GalaxyTierAll): Sector["star"] => {
     const blackHoleChance = STAR_CHANCES[`blackHoleTier${tier}`];
 
     // Шансы для кратных звёздных систем
-    const tripleStarChance = tier >= 2 ? STAR_CHANCES.tripleStarTier2 : 0;
+    const tripleStarChance = STAR_CHANCES[`tripleStarTier${tier}`] ?? 0;
     const doubleStarChance =
         STAR_CHANCES.doubleStarBase + tier * STAR_CHANCES.doubleStarTierBonus;
 
@@ -67,7 +67,7 @@ export const generateStar = (tier: GalaxyTierAll): Sector["star"] => {
 
     // Проверка на тройную систему
     cumulativeChance += tripleStarChance;
-    if (tier >= 2 && starRoll < cumulativeChance) {
+    if (starRoll < cumulativeChance) {
         return { type: "triple", name: "star_types.triple" };
     }
 
