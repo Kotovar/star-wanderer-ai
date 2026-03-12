@@ -2351,6 +2351,21 @@ function drawEnemy(
         ctx.globalAlpha = 0.3;
     }
 
+    const enemyType = loc.enemyType || loc.name || "";
+
+    // Determine enemy type
+    const getEnemyType = (name: string): string => {
+        if (name.includes("Пират") || name.includes("Pirate")) return "pirate";
+        if (name.includes("Рейд") || name.includes("Raider")) return "raider";
+        if (name.includes("Наём") || name.includes("Mercenary"))
+            return "mercenary";
+        if (name.includes("Марод") || name.includes("Marauder"))
+            return "marauder";
+        return "default";
+    };
+
+    const shipType = getEnemyType(enemyType);
+
     // Danger glow (red)
     const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, 25);
     glowGradient.addColorStop(0, "rgba(255, 0, 64, 0.3)");
@@ -2360,35 +2375,210 @@ function drawEnemy(
     ctx.arc(x, y, 25, 0, Math.PI * 2);
     ctx.fill();
 
-    // Ship body (aggressive shape)
-    ctx.fillStyle = "#8b0000";
-    ctx.strokeStyle = "#ff4444";
-    ctx.lineWidth = 2;
+    // Ship type-specific designs
+    switch (shipType) {
+        case "pirate":
+            // Pirate: jagged, scrap-metal look with multiple weapons
+            ctx.fillStyle = "#8b0000";
+            ctx.strokeStyle = "#ff4444";
+            ctx.lineWidth = 2;
 
-    ctx.beginPath();
-    ctx.moveTo(x, y - 15);
-    ctx.lineTo(x - 12, y + 10);
-    ctx.lineTo(x, y + 5);
-    ctx.lineTo(x + 12, y + 10);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+            // Jagged hull
+            ctx.beginPath();
+            ctx.moveTo(x, y - 15);
+            ctx.lineTo(x - 10, y - 5);
+            ctx.lineTo(x - 14, y + 8);
+            ctx.lineTo(x - 6, y + 10);
+            ctx.lineTo(x, y + 5);
+            ctx.lineTo(x + 6, y + 10);
+            ctx.lineTo(x + 14, y + 8);
+            ctx.lineTo(x + 10, y - 5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
 
-    // Weapon ports
-    ctx.fillStyle = "#ff6600";
-    ctx.beginPath();
-    ctx.arc(x - 6, y + 3, 2, 0, Math.PI * 2);
-    ctx.arc(x + 6, y + 3, 2, 0, Math.PI * 2);
-    ctx.fill();
+            // Multiple weapon ports (scattered)
+            ctx.fillStyle = "#ff6600";
+            ctx.beginPath();
+            ctx.arc(x - 8, y - 2, 2, 0, Math.PI * 2);
+            ctx.arc(x + 8, y - 2, 2, 0, Math.PI * 2);
+            ctx.arc(x - 10, y + 6, 2, 0, Math.PI * 2);
+            ctx.arc(x + 10, y + 6, 2, 0, Math.PI * 2);
+            ctx.fill();
 
-    // Engine glow
-    ctx.fillStyle = "#ff4400";
-    ctx.beginPath();
-    ctx.moveTo(x - 5, y + 10);
-    ctx.lineTo(x, y + 16);
-    ctx.lineTo(x + 5, y + 10);
-    ctx.closePath();
-    ctx.fill();
+            // Skull-like cockpit
+            ctx.fillStyle = "#ff4444";
+            ctx.beginPath();
+            ctx.arc(x, y - 8, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Engine
+            ctx.fillStyle = "#ff4400";
+            ctx.beginPath();
+            ctx.moveTo(x - 4, y + 8);
+            ctx.lineTo(x, y + 15);
+            ctx.lineTo(x + 4, y + 8);
+            ctx.closePath();
+            ctx.fill();
+            break;
+
+        case "raider":
+            // Raider: sleek, fast, aggressive design
+            ctx.fillStyle = "#a02020";
+            ctx.strokeStyle = "#ff5555";
+            ctx.lineWidth = 2;
+
+            // Sleek pointed hull
+            ctx.beginPath();
+            ctx.moveTo(x, y - 18);
+            ctx.lineTo(x - 8, y + 2);
+            ctx.lineTo(x - 12, y + 10);
+            ctx.lineTo(x - 4, y + 8);
+            ctx.lineTo(x, y + 5);
+            ctx.lineTo(x + 4, y + 8);
+            ctx.lineTo(x + 12, y + 10);
+            ctx.lineTo(x + 8, y + 2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Forward cannons
+            ctx.fillStyle = "#ff6600";
+            ctx.fillRect(x - 3, y - 12, 2, 8);
+            ctx.fillRect(x + 1, y - 12, 2, 8);
+
+            // Cockpit slit
+            ctx.fillStyle = "#ff4444";
+            ctx.fillRect(x - 4, y - 6, 8, 3);
+
+            // Twin engines
+            ctx.fillStyle = "#ff4400";
+            ctx.beginPath();
+            ctx.arc(x - 6, y + 10, 3, 0, Math.PI * 2);
+            ctx.arc(x + 6, y + 10, 3, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        case "mercenary":
+            // Mercenary: professional, military-grade, angular
+            ctx.fillStyle = "#6a3a3a";
+            ctx.strokeStyle = "#ff6666";
+            ctx.lineWidth = 2;
+
+            // Angular military hull
+            ctx.beginPath();
+            ctx.moveTo(x, y - 14);
+            ctx.lineTo(x - 12, y + 2);
+            ctx.lineTo(x - 8, y + 6);
+            ctx.lineTo(x - 12, y + 10);
+            ctx.lineTo(x - 4, y + 10);
+            ctx.lineTo(x, y + 6);
+            ctx.lineTo(x + 4, y + 10);
+            ctx.lineTo(x + 12, y + 10);
+            ctx.lineTo(x + 8, y + 6);
+            ctx.lineTo(x + 12, y + 2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Weapon mounts (symmetrical)
+            ctx.fillStyle = "#ff6600";
+            ctx.beginPath();
+            ctx.arc(x - 10, y, 2.5, 0, Math.PI * 2);
+            ctx.arc(x + 10, y, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Military cockpit
+            ctx.fillStyle = "#ff5555";
+            ctx.beginPath();
+            ctx.moveTo(x, y - 10);
+            ctx.lineTo(x - 4, y - 4);
+            ctx.lineTo(x + 4, y - 4);
+            ctx.closePath();
+            ctx.fill();
+
+            // Engine cluster
+            ctx.fillStyle = "#ff4400";
+            ctx.beginPath();
+            ctx.arc(x, y + 12, 4, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        case "marauder":
+            // Marauder: scavenged, mismatched, opportunistic
+            ctx.fillStyle = "#7a2a2a";
+            ctx.strokeStyle = "#ff5555";
+            ctx.lineWidth = 2;
+
+            // Asymmetric hull (scavenged look)
+            ctx.beginPath();
+            ctx.moveTo(x - 2, y - 14);
+            ctx.lineTo(x - 10, y - 2);
+            ctx.lineTo(x - 14, y + 6);
+            ctx.lineTo(x - 8, y + 10);
+            ctx.lineTo(x, y + 6);
+            ctx.lineTo(x + 10, y + 8);
+            ctx.lineTo(x + 12, y + 2);
+            ctx.lineTo(x + 8, y - 6);
+            ctx.lineTo(x + 4, y - 12);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Mismatched weapons
+            ctx.fillStyle = "#ff6600";
+            ctx.beginPath();
+            ctx.arc(x - 8, y - 4, 2, 0, Math.PI * 2);
+            ctx.arc(x + 6, y + 4, 2.5, 0, Math.PI * 2);
+            ctx.arc(x - 6, y + 8, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Patched cockpit
+            ctx.fillStyle = "#ff5555";
+            ctx.beginPath();
+            ctx.arc(x + 2, y - 6, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Uneven engines
+            ctx.fillStyle = "#ff4400";
+            ctx.beginPath();
+            ctx.arc(x - 4, y + 10, 2.5, 0, Math.PI * 2);
+            ctx.arc(x + 6, y + 10, 3, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        default:
+            // Generic enemy ship
+            ctx.fillStyle = "#8b0000";
+            ctx.strokeStyle = "#ff4444";
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            ctx.moveTo(x, y - 15);
+            ctx.lineTo(x - 12, y + 10);
+            ctx.lineTo(x, y + 5);
+            ctx.lineTo(x + 12, y + 10);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Weapon ports
+            ctx.fillStyle = "#ff6600";
+            ctx.beginPath();
+            ctx.arc(x - 6, y + 3, 2, 0, Math.PI * 2);
+            ctx.arc(x + 6, y + 3, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Engine glow
+            ctx.fillStyle = "#ff4400";
+            ctx.beginPath();
+            ctx.moveTo(x - 5, y + 10);
+            ctx.lineTo(x, y + 16);
+            ctx.lineTo(x + 5, y + 10);
+            ctx.closePath();
+            ctx.fill();
+            break;
+    }
 
     ctx.globalAlpha = 1;
 }
