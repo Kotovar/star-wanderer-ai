@@ -5,7 +5,7 @@ import {
     getRandomUndiscoveredArtifact,
 } from "@/game/artifacts";
 import { MODULES_BY_LEVEL } from "@/game/components/station";
-import { isModuleActive } from "@/lib";
+import { isModuleActive } from "@/game/modules";
 import {
     CONTRACT_REWARDS,
     DELIVERY_GOODS,

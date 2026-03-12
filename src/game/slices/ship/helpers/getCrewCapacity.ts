@@ -1,5 +1,5 @@
 import type { GameState } from "@/game/types/game";
-import { getActiveModules } from "@/lib";
+import { getActiveModules } from "@/game/modules/utils";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 
 /**

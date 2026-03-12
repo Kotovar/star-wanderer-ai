@@ -335,6 +335,7 @@ export const ARTIFACT_TYPES: Record<string, ArtifactType> = {
     MIRROR_SHIELD: "damage_reflect",
     BLACK_BOX: "credit_booster",
     CRITICAL_OVERLOAD: "crit_damage_boost",
+    WARP_COIL: "sector_teleport",
 };
 /**
  * Типы артефактов, влияющие на энергию корабля

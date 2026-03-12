@@ -1,6 +1,6 @@
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
-import { getActiveModules } from "@/lib";
+import { getActiveModules } from "@/game/modules/utils";
 import { getMaxCrewTraitBonus } from "@/game/traits";
 import { getTechBonusSum } from "@/game/research";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";

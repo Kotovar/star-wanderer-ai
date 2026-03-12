@@ -8,12 +8,12 @@ import {
     getFuelEfficiency,
     getDrillLevel,
     getCargoCapacity,
-    calculateFuelCost,
     areModulesFunctional,
     updateShipStats,
     getTotalDamage,
-    getMergeEffectsBonus,
 } from "./helpers";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
 import { refuel } from "./helpers/fuel";
 
 /**
@@ -186,7 +186,7 @@ export const createShipSlice = (
 
     calculateFuelCost: (targetSectorId) => {
         const state = get();
-        return calculateFuelCost(state, targetSectorId);
+        return calculateFuelCostForUI(state, targetSectorId).fuelCost;
     },
 
     areEnginesFunctional: () => {

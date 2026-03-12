@@ -1,6 +1,6 @@
 import { initialModules } from "@/game/modules";
 import type { GameState } from "@/game/types/game";
-import { getActiveModules } from "@/lib";
+import { getActiveModules } from "@/game/modules/utils";
 
 const fuelEfficiencyDefault =
     initialModules.find((module) => module.type === "engine")?.fuelEfficiency ??

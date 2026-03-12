@@ -1,5 +1,5 @@
 import type { GameState, LogEntry } from "@/game/types";
-import { isModuleActive } from "@/lib";
+import { isModuleActive } from "@/game/modules/utils";
 
 /**
  * Обрабатывает сканирование планеты при посещении локации

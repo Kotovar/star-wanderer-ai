@@ -11,4 +11,4 @@ export const BASE_FUEL_COST_MULTIPLIER = 1;
 /**
  * Значение стоимости топлива по умолчанию при ошибке расчёта
  */
-export const DEFAULT_FUEL_COST = 5;
+export const DEFAULT_FUEL_COST = 10;

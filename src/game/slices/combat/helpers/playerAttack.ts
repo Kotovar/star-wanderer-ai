@@ -6,7 +6,7 @@ import type {
 } from "@/game/types";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES, WEAPON_TYPES } from "@/game/constants";
-import { isModuleActive } from "@/lib";
+import { isModuleActive } from "@/game/modules/utils";
 import { getActiveAssignment } from "@/game/crew";
 import {
     getWeaponAccuracy,

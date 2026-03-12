@@ -5,7 +5,7 @@ import {
     MODULES_BY_PRIOTITY,
 } from "@/game/constants";
 import type { GameState, GameStore, Module } from "@/game/types";
-import { isModuleActive } from "@/lib";
+import { isModuleActive } from "@/game/modules/utils";
 
 interface PowerStatus {
     currentPower: number;

@@ -7,8 +7,6 @@ export * from "./getFuelCapacity";
 export * from "./getFuelEfficiency";
 export * from "./getDrillLevel";
 export * from "./getCargoCapacity";
-export * from "./calculateFuelCost";
 export * from "./areModulesFunctional";
 export * from "./fuel";
 export * from "./updateShipStats";
-export { getMergeEffectsBonus } from "@/game/slices/crew/helpers";

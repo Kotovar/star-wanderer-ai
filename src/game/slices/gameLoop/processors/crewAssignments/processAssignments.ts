@@ -13,7 +13,7 @@ import type {
     Module,
     Race,
 } from "@/game/types";
-import { getActiveModules } from "@/lib";
+import { getActiveModules } from "@/game/modules/utils";
 
 /**
  * Обрабатывает все назначения экипажа

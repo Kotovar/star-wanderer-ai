@@ -1,7 +1,7 @@
 import { getArtifactEffectValue } from "@/game/artifacts";
 import { POWER_ARTIFACT_TYPES } from "@/game/constants";
 import type { GameState, Module } from "@/game/types";
-import { isModuleActive } from "@/lib";
+import { isModuleActive } from "@/game/modules/utils";
 
 /**
  * Проверяет, функционален ли модуль

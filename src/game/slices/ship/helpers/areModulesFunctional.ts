@@ -1,4 +1,4 @@
-import { getActiveModules } from "@/lib";
+import { getActiveModules } from "@/game/modules/utils";
 import type { GameState, ModuleType } from "@/game/types";
 
 /**

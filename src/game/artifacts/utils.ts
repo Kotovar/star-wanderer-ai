@@ -109,3 +109,17 @@ export const getArtifactEffectValue = (
  */
 export const findActiveArtifact = (artifacts: Artifact[], effectType: string) =>
     artifacts.find((a) => a.effect.type === effectType && a.effect.active);
+
+/**
+ * Находит активный артефакт по типу эффекта
+ * @param state - Текущее состояние игры
+ * @param effectTypes - Типы эффектов для поиска
+ * @returns Найденный артефакт или undefined
+ */
+export const findArtifactByEffect = (
+    state: GameState,
+    effectTypes: string[],
+): Artifact | undefined =>
+    state.artifacts.find(
+        (a) => effectTypes.includes(a.effect.type) && a.effect.active,
+    );

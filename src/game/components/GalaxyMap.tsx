@@ -10,6 +10,7 @@ import {
     canSeeTier4,
     getSectorRadius,
 } from "@/game/galaxy/galaxy-map-utils";
+import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
 
 // Animation constants
 const TWINKLING_STARS_COUNT = 40;
@@ -169,13 +170,18 @@ export function GalaxyMap() {
         (s) => s.crew.find((c) => c.profession === "pilot")?.level ?? 1,
     );
     const fuel = useGameStore((s) => s.ship.fuel);
-    const calculateFuelCost = useGameStore((s) => s.calculateFuelCost);
     const areEnginesFunctional = useGameStore((s) => s.areEnginesFunctional);
     const areFuelTanksFunctional = useGameStore(
         (s) => s.areFuelTanksFunctional,
     );
     const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
     const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
+
+    // Calculate fuel cost with all modifiers for UI display
+    const calculateFuelCost = useCallback((sectorId: number) => {
+        const state = useGameStore.getState();
+        return calculateFuelCostForUI(state, sectorId).fuelCost;
+    }, []);
 
     // Get set function from store to update sector positions
     const updateSectorPosition = useCallback(
