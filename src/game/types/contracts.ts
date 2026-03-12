@@ -1,4 +1,5 @@
 import type { RaceId } from "./races";
+import type { EnemyShip } from "./enemy";
 
 export type ContactSourceType = "planet" | "station" | "ship";
 
@@ -46,7 +47,7 @@ export interface Contract {
     requiredRace?: RaceId;
     isRaceQuest?: boolean;
     // For specific enemy type quests
-    enemyType?: string;
+    enemyType?: EnemyShip;
     // For storm/rescue quests
     stormName?: string;
     // For mining quests (crystalline)

@@ -2,6 +2,7 @@ import type { Contract } from "../contracts";
 import type { PlanetType } from "../planets";
 import type { RaceId } from "../races";
 import type { StationConfig, StationName } from "../stations";
+import type { EnemyShip } from "../enemy";
 
 export type AsteroidTier = 1 | 2 | 3 | 4;
 
@@ -53,7 +54,7 @@ export interface Location {
     contracts?: Contract[];
     scoutingAvailable?: boolean;
     scoutedTimes?: number;
-    enemyType?: string;
+    enemyType?: EnemyShip; // Type of enemy ship (pirate, raider, mercenary, marauder)
     threat?: number;
     anomalyType?: "good" | "bad";
     anomalyTier?: number;

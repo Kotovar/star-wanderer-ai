@@ -84,7 +84,8 @@ export const createCombatSlice = (
         if (Math.random() < retreatChance) {
             set((s) => {
                 s.currentCombat = null;
-                s.gameMode = s.previousGameMode ?? "galaxy_map";
+                // Always return to sector map after combat (not galaxy map)
+                s.gameMode = "sector_map";
                 s.crew.forEach((c) => {
                     c.combatAssignment = null;
                     c.combatAssignmentEffect = null;

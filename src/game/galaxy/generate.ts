@@ -5,6 +5,7 @@ import type {
     Location,
     RaceId,
     AsteroidTier,
+    EnemyShip,
 } from "@/game/types";
 import {
     ANOMALY_COLORS,
@@ -21,7 +22,15 @@ import { getRandomBossForTier } from "@/game/bosses/utils";
 import { ANCIENT_BOSSES } from "@/game/constants/bosses";
 import { bossDistribution } from "./bossDistribution";
 
-const ENEMY_TYPES = ["Пираты", "Рейдеры", "Наёмники", "Мародёры"];
+const ENEMY_TYPES: EnemyShip[] = ["pirate", "raider", "mercenary", "marauder"];
+
+// Enemy type display names
+const ENEMY_TYPE_NAMES: Record<EnemyShip, string> = {
+    pirate: "Пираты",
+    raider: "Рейдеры",
+    mercenary: "Наёмники",
+    marauder: "Мародёры",
+};
 
 /**
  * Генерирует звезду для сектора на основе уровня и случайности
@@ -239,7 +248,7 @@ export const generateEnemyShip = (
     return {
         id: `${sectorIdx}-${locIdx}`,
         type: "enemy",
-        name: enemyType,
+        name: ENEMY_TYPE_NAMES[enemyType],
         enemyType,
         threat: isBlackHole ? Math.min(3, threat + 1) : threat,
     };

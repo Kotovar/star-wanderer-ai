@@ -5,7 +5,6 @@ import { useGameStore } from "@/game/store";
 import { useTranslation } from "@/lib/useTranslation";
 import { getLocationName } from "@/lib/translationHelpers";
 import {
-    EnemyShip,
     Location,
     LocationType,
     RaceId,
@@ -2352,20 +2351,7 @@ function drawEnemy(
         ctx.globalAlpha = 0.3;
     }
 
-    const enemyType = loc.enemyType || loc.name || "";
-
-    // Determine enemy type
-    const getEnemyType = (name: string): EnemyShip => {
-        if (name.includes("Пират") || name.includes("Pirate")) return "pirate";
-        if (name.includes("Рейд") || name.includes("Raider")) return "raider";
-        if (name.includes("Наём") || name.includes("Mercenary"))
-            return "mercenary";
-        if (name.includes("Марод") || name.includes("Marauder"))
-            return "marauder";
-        return "pirate";
-    };
-
-    const shipType = getEnemyType(enemyType);
+    const shipType = loc.enemyType || "pirate";
 
     // Danger glow (red)
     const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, 25);

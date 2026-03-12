@@ -135,7 +135,7 @@ export const generatePlanetContracts = (
                 sourceSectorName: sector.name,
                 targetSector: tgt.id,
                 targetSectorName: tgt.name,
-                enemyType: enemy?.name,
+                enemyType: enemy?.enemyType,
                 requiredRace: "krylorian",
                 isRaceQuest: true,
                 reward: 1000 + Math.floor(Math.random() * 500),

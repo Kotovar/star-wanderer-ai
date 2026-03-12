@@ -56,36 +56,21 @@ const ENEMY_TYPE_MODIFIERS: Record<EnemyShip, EnemyStats> = {
 };
 
 /**
- * Определяет тип врага по имени
- */
-const getEnemyType = (name: string): EnemyShip => {
-    const lowerName = name.toLowerCase();
-    if (lowerName.includes("пират") || lowerName.includes("pirate"))
-        return "pirate";
-    if (lowerName.includes("рейд") || lowerName.includes("raider"))
-        return "raider";
-    if (lowerName.includes("наём") || lowerName.includes("mercenary"))
-        return "mercenary";
-    if (lowerName.includes("марод") || lowerName.includes("marauder"))
-        return "marauder";
-    return "pirate";
-};
-
-/**
  * Generates random enemy modules based on threat level and enemy type
  */
 export const generateEnemyModules = (
     threat: number,
-    enemyName?: EnemyShip,
+    enemyType?: EnemyShip,
 ): EnemyModule[] => {
-    const enemyType = getEnemyType(enemyName || "");
-    const modifiers = ENEMY_TYPE_MODIFIERS[enemyType] || {
-        healthMod: 1.0,
-        damageMod: 1.0,
-        shieldMod: 0,
-        weaponCountMod: 0,
-        lootMod: 1.0,
-    };
+    const modifiers = enemyType
+        ? ENEMY_TYPE_MODIFIERS[enemyType]
+        : {
+              healthMod: 1.0,
+              damageMod: 1.0,
+              shieldMod: 0,
+              weaponCountMod: 0,
+              lootMod: 1.0,
+          };
 
     const modules: EnemyModule[] = [];
     const moduleCount = threat + 2 + modifiers.weaponCountMod;
@@ -165,9 +150,10 @@ const getModuleName = (type: EnemyModuleType) => {
  * Calculates combat loot based on threat level and enemy type
  * Includes random variation: ±20%
  */
-export const calculateCombatLoot = (threat: number, enemyName?: string) => {
-    const enemyType = getEnemyType(enemyName || "");
-    const modifiers = ENEMY_TYPE_MODIFIERS[enemyType] || { lootMod: 1.0 };
+export const calculateCombatLoot = (threat: number, enemyType?: EnemyShip) => {
+    const modifiers = enemyType
+        ? ENEMY_TYPE_MODIFIERS[enemyType]
+        : { lootMod: 1.0 };
 
     const baseLoot = threat * LOOT_BASE_THREAT;
     const variation = LOOT_VARIATION_MIN + Math.random() * LOOT_VARIATION_RANGE;
