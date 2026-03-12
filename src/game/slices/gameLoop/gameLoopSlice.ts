@@ -8,12 +8,14 @@ import {
     regenerateShields,
 } from "./helpers";
 import * as processors from "./processors";
+import { processTravel } from "@/game/slices/travel/helpers";
 
 /**
  * Интерфейс GameLoopSlice
  */
 export interface GameLoopSlice {
     nextTurn: () => void;
+    skipTurn: () => void;
 }
 
 /**
@@ -63,7 +65,7 @@ export const createGameLoopSlice = (
         processors.processDesertion(set, get);
 
         // Путешествия
-        processors.processTravel(state, set, get);
+        processTravel(state, set, get);
 
         // Случайные события
         processors.processRandomEvents(state, set, get);
@@ -79,5 +81,18 @@ export const createGameLoopSlice = (
         // Сохранение
         get().updateShipStats();
         get().saveGame();
+    },
+
+    skipTurn: () => {
+        get().addLog("Ход пропущен - задачи выполняются", "info");
+
+        // Enemy attacks when we skip
+        if (get().currentCombat) {
+            get().processEnemyAttack();
+            get().updateShipStats();
+            get().checkGameOver();
+        }
+
+        get().nextTurn();
     },
 });

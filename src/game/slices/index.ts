@@ -5,3 +5,4 @@ export * from "./crew";
 export * from "./gameLoop";
 export * from "./contracts";
 export * from "./combat";
+export * from "./travel";
