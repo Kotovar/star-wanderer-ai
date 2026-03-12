@@ -414,6 +414,9 @@ export const useGameStore = create<GameStore>()(
         },
 
         travelThroughBlackHole: () => {
+            // TODO: если несколько раз прыгнуть через ЧД - то экипаж умрёт, но игра не закончится
+            // В игре есть логика - что без экипажа игра заканчивается, только если нет специального модуля
+            // или артефакта. Нужно сделать правки для проверки конца игры после прыжка через ЧД
             const state = get();
             const currentSector = state.currentSector;
 
