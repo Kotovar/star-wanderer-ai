@@ -1779,7 +1779,6 @@ function drawStar(
         ctx.fill();
     } else if (star.type === "red_supergiant") {
         // Red supergiant with slow rotation and pulsing
-        const surfaceRotation = currentTime * 0.0003;
         const pulse = Math.sin(currentTime * 0.001) * 3;
 
         const gradient = ctx.createRadialGradient(x, y, 0, x, y, 55 + pulse);
@@ -1791,19 +1790,6 @@ function drawStar(
         ctx.beginPath();
         ctx.arc(x, y, 55 + pulse, 0, Math.PI * 2);
         ctx.fill();
-
-        // Rotating surface bands
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(surfaceRotation);
-        ctx.strokeStyle = "rgba(255, 100, 50, 0.3)";
-        ctx.lineWidth = 2;
-        for (let i = 0; i < 5; i++) {
-            ctx.beginPath();
-            ctx.arc(0, 0, 18 + i * 6, 0, Math.PI * 1.5);
-            ctx.stroke();
-        }
-        ctx.restore();
     } else if (star.type === "neutron_star") {
         // Neutron star with fast pulsing
         const pulse = Math.sin(currentTime * 0.003) * 2;
@@ -1881,6 +1867,67 @@ function drawStar(
         ctx.fillRect(x - 45, y + 20, 90, 4);
 
         ctx.restore();
+    } else if (star.type === "variable_star") {
+        // Variable star - slowly changes brightness
+        const brightness = 0.5 + Math.sin(currentTime * 0.0005) * 0.3;
+        const size = 32 + Math.sin(currentTime * 0.0005) * 8;
+        // Outer glow (pulsing)
+        const outerGlow = ctx.createRadialGradient(x, y, 0, x, y, size * 1.5);
+        outerGlow.addColorStop(0, `rgba(255, 200, 100, ${brightness * 0.6})`);
+        outerGlow.addColorStop(0.5, `rgba(255, 150, 50, ${brightness * 0.3})`);
+        outerGlow.addColorStop(1, "transparent");
+        ctx.fillStyle = outerGlow;
+        ctx.beginPath();
+        ctx.arc(x, y, size * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Core (pulsing)
+        const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, size);
+        coreGradient.addColorStop(0, `rgba(255, 255, 200, ${brightness})`);
+        coreGradient.addColorStop(
+            0.4,
+            `rgba(255, 200, 100, ${brightness * 0.8})`,
+        );
+        coreGradient.addColorStop(1, "transparent");
+        ctx.fillStyle = coreGradient;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (star.type === "stellar_remnant") {
+        // Stellar remnant - dim, fading star with particles
+        const pulse = Math.sin(currentTime * 0.0008) * 3;
+
+        // Faint outer glow
+        const outerGlow = ctx.createRadialGradient(x, y, 0, x, y, 50 + pulse);
+        outerGlow.addColorStop(0, "rgba(150, 150, 150, 0.3)");
+        outerGlow.addColorStop(0.5, "rgba(100, 100, 100, 0.15)");
+        outerGlow.addColorStop(1, "transparent");
+        ctx.fillStyle = outerGlow;
+        ctx.beginPath();
+        ctx.arc(x, y, 50 + pulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dim core
+        const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, 25);
+        coreGradient.addColorStop(0, "rgba(200, 200, 200, 0.6)");
+        coreGradient.addColorStop(0.5, "rgba(150, 150, 150, 0.4)");
+        coreGradient.addColorStop(1, "transparent");
+        ctx.fillStyle = coreGradient;
+        ctx.beginPath();
+        ctx.arc(x, y, 25, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Faint particles around
+        ctx.fillStyle = "rgba(180, 180, 180, 0.4)";
+        for (let i = 0; i < 5; i++) {
+            const angle = (i / 5) * Math.PI * 2 + currentTime * 0.0002;
+            const dist = 35 + Math.sin(currentTime * 0.001 + i) * 5;
+            const px = x + Math.cos(angle) * dist;
+            const py = y + Math.sin(angle) * dist;
+            ctx.beginPath();
+            ctx.arc(px, py, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
     } else {
         // Default star
         const gradient = ctx.createRadialGradient(x, y, 0, x, y, 30);

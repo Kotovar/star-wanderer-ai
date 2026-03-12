@@ -1508,7 +1508,9 @@
         "double": "Double Star",
         "triple": "Triple Star",
         "blackhole": "Black Hole",
-        "gas_giant": "Gas Giant"
+        "gas_giant": "Gas Giant",
+        "variable_star": "Variable Star",
+        "stellar_remnant": "Stellar Remnant"
     },
     "location_types": {
         "asteroid_belt": "Asteroid Belt",

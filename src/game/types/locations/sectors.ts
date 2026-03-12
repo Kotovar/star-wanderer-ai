@@ -24,7 +24,9 @@ export type StarType =
     | "double" // Двойная звёздная система
     | "triple" // Тройная звёздная система
     | "blackhole" // Чёрная дыра
-    | "gas_giant"; // Газовый гигант (коричневый карлик)
+    | "gas_giant" // Газовый гигант
+    | "variable_star" // Переменная звезда (медленно меняет яркость)
+    | "stellar_remnant"; // Звёздный остаток (тусклое свечение)
 
 export type StarName =
     | "star_types.red_dwarf"
@@ -36,7 +38,9 @@ export type StarName =
     | "star_types.double"
     | "star_types.triple"
     | "star_types.blackhole"
-    | "star_types.gas_giant";
+    | "star_types.gas_giant"
+    | "star_types.variable_star"
+    | "star_types.stellar_remnant";
 
 export interface Sector {
     id: number;

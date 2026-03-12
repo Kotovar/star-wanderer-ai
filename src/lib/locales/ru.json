@@ -1508,7 +1508,9 @@
         "double": "Двойная звезда",
         "triple": "Тройная звезда",
         "blackhole": "Чёрная дыра",
-        "gas_giant": "Газовый гигант"
+        "gas_giant": "Газовый гигант",
+        "variable_star": "Переменная звезда",
+        "stellar_remnant": "Звёздный остаток"
     },
     "location_types": {
         "asteroid_belt": "Пояс астероидов",

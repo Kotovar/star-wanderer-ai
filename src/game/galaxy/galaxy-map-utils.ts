@@ -380,6 +380,10 @@ export function drawStar(
         drawNeutronStar(ctx, x, y, size, isActive);
     } else if (starType === "gas_giant") {
         drawGasGiant(ctx, x, y, size, isActive);
+    } else if (starType === "variable_star") {
+        drawVariableStar(ctx, x, y, size, isActive);
+    } else if (starType === "stellar_remnant") {
+        drawStellarRemnant(ctx, x, y, size, isActive);
     } else {
         drawYellowDwarf(ctx, x, y, size, isActive);
     }
@@ -692,4 +696,95 @@ function drawGasGiant(
         ctx.arc(x, y, size * 1.85, 0, Math.PI * 2);
         ctx.stroke();
     }
+}
+
+/**
+ * Переменная звезда - медленно меняет яркость
+ */
+function drawVariableStar(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number,
+    isActive: boolean,
+) {
+    // Жёлто-оранжевое свечение с пульсацией
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, size * 1.5);
+    gradient.addColorStop(
+        0,
+        isActive ? "rgba(255, 255, 200, 0.9)" : "rgba(255, 255, 180, 0.7)",
+    );
+    gradient.addColorStop(
+        0.5,
+        isActive ? "rgba(255, 200, 100, 0.5)" : "rgba(255, 180, 80, 0.35)",
+    );
+    gradient.addColorStop(1, "transparent");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ядро
+    const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, size);
+    coreGradient.addColorStop(0, isActive ? "#ffffc8" : "#eee0a0");
+    coreGradient.addColorStop(0.6, isActive ? "#ffc864" : "#cc9944");
+    coreGradient.addColorStop(1, "transparent");
+    ctx.fillStyle = coreGradient;
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+/**
+ * Звёздный остаток - тусклый, угасающий белый карлик
+ */
+function drawStellarRemnant(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number,
+    isActive: boolean,
+) {
+    // Тусклое серое свечение
+    const outerGlow = ctx.createRadialGradient(x, y, 0, x, y, size * 2);
+    outerGlow.addColorStop(
+        0,
+        isActive ? "rgba(180, 180, 180, 0.4)" : "rgba(150, 150, 150, 0.25)",
+    );
+    outerGlow.addColorStop(
+        0.5,
+        isActive ? "rgba(150, 150, 150, 0.2)" : "rgba(120, 120, 120, 0.1)",
+    );
+    outerGlow.addColorStop(1, "transparent");
+    ctx.fillStyle = outerGlow;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Тусклое ядро
+    const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, size * 1.2);
+    coreGradient.addColorStop(0, isActive ? "#d0d0d0" : "#a0a0a0");
+    coreGradient.addColorStop(0.6, isActive ? "#a0a0a0" : "#707070");
+    coreGradient.addColorStop(1, "transparent");
+    ctx.fillStyle = coreGradient;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 1.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Частицы вокруг (звёздная пыль)
+    ctx.fillStyle = isActive
+        ? "rgba(200, 200, 200, 0.5)"
+        : "rgba(150, 150, 150, 0.3)";
+    const particlePositions = [
+        { x: -size * 1.5, y: -size * 0.8 },
+        { x: size * 1.3, y: -size * 0.5 },
+        { x: -size * 1.2, y: size * 1.0 },
+        { x: size * 1.6, y: size * 0.6 },
+        { x: -size * 0.6, y: size * 1.4 },
+    ];
+    particlePositions.forEach((pos) => {
+        ctx.beginPath();
+        ctx.arc(x + pos.x, y + pos.y, size * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+    });
 }

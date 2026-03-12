@@ -85,6 +85,14 @@ export const STAR_CHANCES = {
     tripleStarTier4: 0.2, // 20% для tier 4
     doubleStarBase: 0.15, // 15% базовый шанс
     doubleStarTierBonus: 0.05, // +5% за тир
+    variableStarTier1: 0.08, // 8% для tier 1
+    variableStarTier2: 0.12, // 12% для tier 2
+    variableStarTier3: 0.15, // 15% для tier 3
+    variableStarTier4: 0.18, // 18% для tier 4
+    stellarRemnantTier1: 0.03, // 3% для tier 1
+    stellarRemnantTier2: 0.06, // 6% для tier 2
+    stellarRemnantTier3: 0.1, // 10% для tier 3
+    stellarRemnantTier4: 0.15, // 15% для tier 4
     gasGiantTier1: 0.05, // 5% для tier 1
     gasGiantTier2: 0.08, // 8% для tier 2
     gasGiantTier3: 0.1, // 10% для tier 3

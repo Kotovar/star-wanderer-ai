@@ -53,6 +53,10 @@ export const generateStar = (tier: GalaxyTierAll): Sector["star"] => {
     const doubleStarChance =
         STAR_CHANCES.doubleStarBase + tier * STAR_CHANCES.doubleStarTierBonus;
 
+    // Шансы для особых типов звёзд
+    const variableStarChance = STAR_CHANCES[`variableStarTier${tier}`] ?? 0;
+    const stellarRemnantChance = STAR_CHANCES[`stellarRemnantTier${tier}`] ?? 0;
+
     // Шансы для газовых гигантов (коричневых карликов)
     const gasGiantChance = STAR_CHANCES[`gasGiantTier${tier}`] ?? 0;
 
@@ -75,6 +79,18 @@ export const generateStar = (tier: GalaxyTierAll): Sector["star"] => {
     cumulativeChance += doubleStarChance;
     if (starRoll < cumulativeChance) {
         return { type: "double", name: "star_types.double" };
+    }
+
+    // Проверка на переменную звезду
+    cumulativeChance += variableStarChance;
+    if (starRoll < cumulativeChance) {
+        return { type: "variable_star", name: "star_types.variable_star" };
+    }
+
+    // Проверка на звёздный остаток
+    cumulativeChance += stellarRemnantChance;
+    if (starRoll < cumulativeChance) {
+        return { type: "stellar_remnant", name: "star_types.stellar_remnant" };
     }
 
     // Проверка на газовый гигант (коричневый карлик)
