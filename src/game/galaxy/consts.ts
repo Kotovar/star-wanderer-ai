@@ -74,8 +74,8 @@ export const SHIP_TYPES: ShipType[] = [
 ];
 
 export const STATION_TYPES: StationName[] = [
-    "Торговая",
-    "Военная",
-    "Исследовательская",
-    "Добывающая",
+    "trade",
+    "military",
+    "research",
+    "mining",
 ];

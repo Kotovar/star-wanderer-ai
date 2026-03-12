@@ -290,26 +290,8 @@ function StationHeader({
     race: (typeof RACES)[keyof typeof RACES] | null;
     t: (key: string, params?: Record<string, string | number>) => string;
 }) {
-    // Map Russian station type names to translation keys
-    const stationTypeMap: Record<string, string> = {
-        Торговая: "trade",
-        Военная: "military",
-        Добывающая: "mining",
-        Исследовательская: "research",
-        Медицинская: "medical",
-        Промышленная: "industrial",
-        Trade: "trade",
-        Military: "military",
-        Mining: "mining",
-        Research: "research",
-        Medical: "medical",
-        Industrial: "industrial",
-    };
-
-    const stationTypeKey = location.stationType
-        ? stationTypeMap[location.stationType] ||
-          location.stationType.toLowerCase()
-        : undefined;
+    // Station type is already a translation key (trade, military, mining, research)
+    const stationTypeKey = location.stationType || undefined;
 
     // Extract station name without "Станция" or "Station" prefix if present
     const getStationName = (fullName: string) => {

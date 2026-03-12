@@ -1,11 +1,7 @@
 import type { ModuleType, WeaponType } from "./modules";
 import type { Profession } from "./crew";
 
-export type StationName =
-    | "Торговая"
-    | "Военная"
-    | "Исследовательская"
-    | "Добывающая";
+export type StationName = "trade" | "military" | "research" | "mining";
 
 export type StationConfig = {
     cargoBonus?: number; // Множитель вместимости грузового отсека (1.5 = +50%)

@@ -3634,6 +3634,8 @@ export const useGameStore = create<GameStore>()(
             clearLocalStorage();
             // Generate new galaxy and station data for fresh start
             const newSectors = generateGalaxy();
+            // Mark the starting sector as visited
+            newSectors[0].visited = true;
             const { prices: restartPrices, stock: restartStock } =
                 initializeStationData(newSectors);
             set({
