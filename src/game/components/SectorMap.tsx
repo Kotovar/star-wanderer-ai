@@ -1816,7 +1816,7 @@ function drawPlanet(
     loc: Location,
     completed: boolean,
 ) {
-    const radius = loc.isEmpty ? 8 : 12;
+    const radius = 12;
     const planetType = loc.planetType;
     const colors = planetType
         ? PLANET_COLORS_IN_SECTOR[planetType]
@@ -1887,6 +1887,109 @@ function drawPlanet(
     // Surface details
     ctx.strokeStyle = colors.base + "60";
     ctx.lineWidth = 1;
+
+    if (loc.planetType === "Пустынная") {
+        // Desert dunes pattern
+        ctx.fillStyle = "#e6a85c";
+        for (let i = 0; i < 4; i++) {
+            const angle = seededRandom(loc, i) * Math.PI * 2;
+            const dist = seededRandom(loc, i + 10) * radius * 0.5;
+            ctx.beginPath();
+            ctx.arc(
+                x + Math.cos(angle) * dist,
+                y + Math.sin(angle) * dist,
+                2.5,
+                0,
+                Math.PI * 2,
+            );
+            ctx.fill();
+        }
+        // Sand ripples
+        ctx.strokeStyle = "#8b5a2b";
+        ctx.lineWidth = 0.5;
+        for (let i = 0; i < 3; i++) {
+            const yOff = (i - 1) * 4;
+            ctx.beginPath();
+            ctx.moveTo(x - radius * 0.6, y + yOff);
+            ctx.quadraticCurveTo(x - radius * 0.3, y + yOff - 2, x, y + yOff);
+            ctx.quadraticCurveTo(
+                x + radius * 0.3,
+                y + yOff + 2,
+                x + radius * 0.6,
+                y + yOff,
+            );
+            ctx.stroke();
+        }
+    }
+
+    if (loc.planetType === "Лесная") {
+        // Forest patches
+        ctx.fillStyle = "#2d5a2d";
+        for (let i = 0; i < 5; i++) {
+            const angle = seededRandom(loc, i) * Math.PI * 2;
+            const dist = seededRandom(loc, i + 10) * radius * 0.6;
+            ctx.beginPath();
+            ctx.arc(
+                x + Math.cos(angle) * dist,
+                y + Math.sin(angle) * dist,
+                3,
+                0,
+                Math.PI * 2,
+            );
+            ctx.fill();
+        }
+        // Tree clusters (small dots)
+        ctx.fillStyle = "#1a4a2a";
+        for (let i = 0; i < 8; i++) {
+            const angle = seededRandom(loc, i + 20) * Math.PI * 2;
+            const dist = seededRandom(loc, i + 30) * radius * 0.7;
+            ctx.beginPath();
+            ctx.arc(
+                x + Math.cos(angle) * dist,
+                y + Math.sin(angle) * dist,
+                1.5,
+                0,
+                Math.PI * 2,
+            );
+            ctx.fill();
+        }
+    }
+
+    if (loc.planetType === "Океаническая") {
+        // Ocean waves
+        ctx.strokeStyle = "#4a8bc9";
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 4; i++) {
+            const angle = seededRandom(loc, i) * Math.PI * 2;
+            const dist = seededRandom(loc, i + 10) * radius * 0.5;
+            ctx.beginPath();
+            ctx.arc(
+                x + Math.cos(angle) * dist,
+                y + Math.sin(angle) * dist,
+                4,
+                0,
+                Math.PI * 2,
+            );
+            ctx.stroke();
+        }
+        // Islands
+        ctx.fillStyle = "#8b7355";
+        for (let i = 0; i < 3; i++) {
+            const angle = seededRandom(loc, i + 20) * Math.PI * 2;
+            const dist = seededRandom(loc, i + 30) * radius * 0.6;
+            ctx.beginPath();
+            ctx.ellipse(
+                x + Math.cos(angle) * dist,
+                y + Math.sin(angle) * dist,
+                3,
+                2,
+                seededRandom(loc, i + 40) * Math.PI,
+                0,
+                Math.PI * 2,
+            );
+            ctx.fill();
+        }
+    }
 
     if (loc.planetType === "Вулканическая") {
         // Lava spots
@@ -1992,19 +2095,6 @@ function drawPlanet(
             );
             ctx.fill();
         }
-    }
-
-    // Empty planet marker
-    if (loc.isEmpty) {
-        ctx.strokeStyle = "#666";
-        ctx.lineWidth = 1;
-        // Cross pattern
-        ctx.beginPath();
-        ctx.moveTo(x - 4, y - 4);
-        ctx.lineTo(x + 4, y + 4);
-        ctx.moveTo(x + 4, y - 4);
-        ctx.lineTo(x - 4, y + 4);
-        ctx.stroke();
     }
 
     ctx.globalAlpha = 1;
