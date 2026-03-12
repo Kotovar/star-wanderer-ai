@@ -90,25 +90,25 @@ export const STAR_CHANCES = {
 
 /** Конфигурация типов станций */
 export const STATION_CONFIG: Record<string, StationConfig> = {
-    Торговая: {
+    trade: {
         cargoBonus: 1.5,
         priceDiscount: 0.85,
         mineralDiscount: 0.9,
         guaranteedWeapons: ["missile"],
         guaranteedModules: ["cargo", "reactor", "fueltank"],
     },
-    Военная: {
+    military: {
         priceDiscount: 0.9,
         guaranteedWeapons: ["kinetic", "laser", "missile"],
         guaranteedModules: ["weaponbay", "shield", "reactor", "weaponbay"],
     },
-    Исследовательская: {
+    research: {
         priceDiscount: 0.9,
         guaranteedProfessions: ["scientist"],
         guaranteedWeapons: ["laser"],
         guaranteedModules: ["scanner", "reactor", "lifesupport", "lab"],
     },
-    Добывающая: {
+    mining: {
         mineralDiscount: 0.5,
         rareMineralDiscount: 0.5,
         guaranteedWeapons: ["kinetic"],

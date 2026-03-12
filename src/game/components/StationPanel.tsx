@@ -293,12 +293,21 @@ function StationHeader({
     // Station type is already a translation key (trade, military, mining, research)
     const stationTypeKey = location.stationType || undefined;
 
-    // Extract station name without "Станция" or "Station" prefix if present
+    // Extract station name - handle both "station_name.X" keys and "Станция X" / "Station X" formats
     const getStationName = (fullName: string) => {
-        const withoutPrefix = fullName
-            .replace(/^Станция\s+/i, "")
-            .replace(/^Station\s+/i, "");
-        return withoutPrefix || fullName;
+        // Handle translation key format "station_name.A"
+        if (fullName.startsWith("station_name.")) {
+            return fullName.replace("station_name.", "");
+        }
+        // Handle Russian format "Станция A"
+        if (fullName.startsWith("Станция ")) {
+            return fullName.replace("Станция ", "");
+        }
+        // Handle English format "Station A"
+        if (fullName.startsWith("Station ")) {
+            return fullName.replace("Station ", "");
+        }
+        return fullName;
     };
 
     return (

@@ -282,31 +282,44 @@ export function getLocationName(
     locationName: string,
     i18nT: (key: string) => string,
 ): string {
-    // Check if it's a translation key
+    // Handle station names like "station_name.A"
+    if (locationName.startsWith("station_name.")) {
+        const letter = locationName.replace("station_name.", "");
+        const prefix = i18nT("sector_map.station_prefix");
+        return `${prefix} ${letter}`;
+    }
+
+    // Handle Russian station names like "Станция A"
+    if (locationName.startsWith("Станция ")) {
+        const letter = locationName.replace("Станция ", "");
+        const prefix = i18nT("sector_map.station_prefix");
+        return `${prefix} ${letter}`;
+    }
+
+    // Handle English station names like "Station A"
+    if (locationName.startsWith("Station ")) {
+        const letter = locationName.replace("Station ", "");
+        const prefix = i18nT("sector_map.station_prefix");
+        return `${prefix} ${letter}`;
+    }
+
+    // Check if it's a translation key for other types
     if (
         locationName.startsWith("star_types.") ||
         locationName.startsWith("location_types.") ||
-        locationName.startsWith("asteroid_belt_names.") ||
-        locationName.startsWith("station_name.")
+        locationName.startsWith("asteroid_belt_names.")
     ) {
-        // Handle station names like "station_name.A"
-        if (locationName.startsWith("station_name.")) {
-            const letter = locationName.replace("station_name.", "");
-            const prefix = i18nT("sector_map.station_prefix");
-            return `${prefix} ${letter}`;
-        }
-
         const translated = i18nT(locationName);
         // If translation failed, return the key without prefix
         if (translated === locationName) {
             return locationName
                 .replace("star_types.", "")
                 .replace("location_types.", "")
-                .replace("asteroid_belt_names.", "")
-                .replace("station_name.", "");
+                .replace("asteroid_belt_names.", "");
         }
         return translated;
     }
+
     // Direct value (already translated or fallback)
     return locationName;
 }
