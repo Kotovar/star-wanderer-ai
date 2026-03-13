@@ -251,6 +251,13 @@
             "adjective": "Crystalline",
             "description": "Sentient crystalline beings. Think slowly but possess great wisdom.",
             "homeworld": "Geoda Prime"
+        },
+        "aetherian": {
+            "name": "Aetherian",
+            "plural": "Aetherians",
+            "adjective": "Aetherian",
+            "description": "Energy beings from the upper nebula layers. They sense energy flows and foresee danger.",
+            "homeworld": "Aetheris Nebula"
         }
     },
     "racial_traits": {
@@ -301,6 +308,14 @@
         "brittle_crystal": {
             "name": "Brittleness",
             "description": "-15% max health"
+        },
+        "star_attunement": {
+            "name": "Star Attunement",
+            "description": "+10% scanner range and +10% fuel efficiency"
+        },
+        "frail_bones": {
+            "name": "Fragile Shell",
+            "description": "-10% max health"
         },
         "master": {
             "name": "Master",
@@ -657,6 +672,7 @@
         "desc_diplomacy_human": "🌍 Diplomatic Mission",
         "desc_research_synth": "🤖 Ancient Data Analysis",
         "desc_patrol_xeno": "🦠 Bio-Sample Collection",
+        "desc_scan_aetherian": "✨ Astral cartography",
         "desc_combat_generic": "⚔ Sector Clearance",
         "desc_research_generic": "🔬 Anomaly Research",
         "desc_bounty_generic": "🎯 Pirate Hunt"
@@ -909,6 +925,7 @@
         "krylorian_desc": "Warlike reptilian race",
         "voidborn_desc": "Creatures from the depths of space",
         "crystalline_desc": "Sentient crystalline beings",
+        "aetherian_desc": "Nebula-born energy navigators",
         "controls_title": "🎮 CONTROLS",
         "controls_text": "Click to select, drag to move modules. Right mouse button to cancel.",
         "animations_title": "✨ ANIMATIONS",
@@ -1127,7 +1144,8 @@
             "xenosymbiont": "Xenomorph Explorer Ship",
             "krylorian": "Krylorian Explorer Ship",
             "voidborn": "Voidborn Explorer Ship",
-            "crystalline": "Crystalline Explorer Ship"
+            "crystalline": "Crystalline Explorer Ship",
+            "aetherian": "Aetherian Navigation Ship"
         },
         "station_prefix": "Station",
         "anomaly": "Anomaly"

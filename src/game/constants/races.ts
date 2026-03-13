@@ -366,6 +366,59 @@ export const RACES: Record<RaceId, Race> = {
         color: "#00ffaa",
         icon: "💎",
     },
+
+    aetherian: {
+        id: "aetherian",
+        name: "Эфирианец",
+        pluralName: "Эфирианцы",
+        adjective: "Эфирианский",
+        description:
+            "Энергетические существа из верхних слоёв туманностей. Чувствуют потоки энергии и предсказывают опасность.",
+        homeworld: "Туманность Аэтерис",
+        environmentPreference: {
+            ideal: ["Арктическая", "Планета-кольцо", "Приливная"],
+            acceptable: ["Ледяная", "Океаническая", "Радиоактивная"],
+            hostile: [
+                "Пустынная",
+                "Лесная",
+                "Вулканическая",
+                "Тропическая",
+                "Разрушенная войной",
+            ],
+        },
+        crewBonuses: {
+            science: 0.15,
+            fuelEfficiency: 0.1,
+            adaptation: 0.1,
+        },
+        specialTraits: [
+            {
+                id: "star_attunement",
+                name: "Звёздная настройка",
+                description: "+10% к дальности сканера и +10% к эффективности топлива",
+                type: "positive",
+                effects: { scannerRange: 0.1 },
+            },
+            {
+                id: "frail_bones",
+                name: "Хрупкая оболочка",
+                description: "-10% к максимальному здоровью",
+                type: "negative",
+                effects: { healthPenalty: -0.1 },
+            },
+        ],
+        relations: {
+            human: 5,
+            synthetic: 10,
+            voidborn: 20,
+            crystalline: 10,
+        },
+        hasHappiness: true,
+        hasFatigue: false,
+        canGetSick: false,
+        color: "#66ccff",
+        icon: "✨",
+    },
 };
 
 export const RACE_LAST_NAMES: Record<RaceId, readonly string[]> = {
@@ -505,6 +558,19 @@ export const RACE_LAST_NAMES: Record<RaceId, readonly string[]> = {
         "Оникс-Нова",
         "Гранит-Максимус",
         "Базальт-Итера",
+    ],
+
+    aetherian: [
+        "Аэлис",
+        "Небулон",
+        "Люмис",
+        "Вель-Орион",
+        "Эстерра",
+        "Кайрос",
+        "Селестион",
+        "Нуарис",
+        "Зефирис",
+        "Иллирион",
     ],
 } as const;
 

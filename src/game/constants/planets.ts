@@ -254,4 +254,27 @@ export const PLANET_SPECIALIZATIONS: Record<RaceId, PlanetSpecialization> = {
             },
         ],
     },
+    aetherian: {
+        id: "aetherian_observatory",
+        name: "Астральная Обсерватория",
+        description:
+            "Эфирианцы настраивают сенсоры корабля на звёздные потоки, усиливая навигацию и научные системы.",
+        icon: "✨",
+        cost: 520,
+        duration: 5,
+        cooldown: 999,
+        effects: [
+            {
+                type: "fuel_efficiency",
+                value: 0.15,
+                description: "+15% к эффективности топлива на 5 ходов",
+            },
+            {
+                type: "evasion_bonus",
+                value: 0.05,
+                description: "+5% к уклонению на 5 ходов",
+            },
+        ],
+    },
+
 };

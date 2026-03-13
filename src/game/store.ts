@@ -878,8 +878,8 @@ export const useGameStore = create<GameStore>()(
                     `Установлено ${WEAPON_TYPES[weaponType].name}`,
                     "info",
                 );
-            }
 
+            }
             playSound("success");
             get().updateShipStats();
         },
@@ -2818,6 +2818,38 @@ export const useGameStore = create<GameStore>()(
                     }));
                     get().addLog(
                         `🔮 ${spec.name}: +10% к эффективности топлива (5 ходов)`,
+                        "info",
+                    );
+                    break;
+
+                case "aetherian":
+                    // Navigation attunement for 5 turns
+                    set((s) => ({
+                        credits: s.credits - cost,
+                        ship: {
+                            ...s.ship,
+                            bonusEvasion: (s.ship.bonusEvasion || 0) + 5,
+                        },
+                        activeEffects: [
+                            ...s.activeEffects,
+                            {
+                                id: `effect-${raceId}-${Date.now()}`,
+                                name: spec.name,
+                                description: spec.description,
+                                raceId,
+                                turnsRemaining: 5,
+                                effects: [
+                                    { type: "fuel_efficiency", value: 0.15 },
+                                    { type: "evasion_bonus", value: 0.05 },
+                                ],
+                            },
+                        ],
+                        planetCooldowns: planetId
+                            ? { ...s.planetCooldowns, [planetId]: 999 }
+                            : s.planetCooldowns,
+                    }));
+                    get().addLog(
+                        `✨ ${spec.name}: +15% к эффективности топлива, +5% уклонение (5 ходов)`,
                         "info",
                     );
                     break;

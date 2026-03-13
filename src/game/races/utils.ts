@@ -16,6 +16,7 @@ export const getRandomRace = (
         krylorian: 20,
         voidborn: 8,
         crystalline: 7,
+        aetherian: 9,
     };
 
     const available = (Object.keys(weights) as RaceId[]).filter(
@@ -54,6 +55,7 @@ export const getDominantRaceForPlanet = (
         krylorian: 0,
         voidborn: 0,
         crystalline: 0,
+        aetherian: 0,
     };
 
     (Object.keys(RACES) as RaceId[]).forEach((raceId) => {

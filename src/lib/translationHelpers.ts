@@ -35,6 +35,7 @@ export function getRaceName(raceId: string): string {
         krylorian: i18n.t("races.krylorian.name"),
         voidborn: i18n.t("races.voidborn.name"),
         crystalline: i18n.t("races.crystalline.name"),
+        aetherian: i18n.t("races.aetherian.name"),
     };
     return translations[raceId] || raceId;
 }
@@ -48,6 +49,7 @@ export function getRaceDescription(raceId: string): string {
         krylorian: i18n.t("races.krylorian.description"),
         voidborn: i18n.t("races.voidborn.description"),
         crystalline: i18n.t("races.crystalline.description"),
+        aetherian: i18n.t("races.aetherian.description"),
     };
     return translations[raceId] || "";
 }

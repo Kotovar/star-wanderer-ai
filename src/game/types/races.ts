@@ -11,7 +11,8 @@ export type RaceId =
     | "xenosymbiont"
     | "krylorian"
     | "voidborn"
-    | "crystalline";
+    | "crystalline"
+    | "aetherian";
 
 /**
  * ID специальных трейтов рас
@@ -28,7 +29,9 @@ export type RaceTraitId =
     | "low_health"
     | "crystal_armor"
     | "resonance"
-    | "brittle_crystal";
+    | "brittle_crystal"
+    | "star_attunement"
+    | "frail_bones";
 
 type RaceTraitEffects = {
     expBonus?: number;
@@ -41,6 +44,7 @@ type RaceTraitEffects = {
     healthPenalty?: number;
     moduleDefense?: number;
     artifactBonus?: number;
+    scannerRange?: number;
 };
 
 export interface RaceTrait {

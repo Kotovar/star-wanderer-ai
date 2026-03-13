@@ -178,6 +178,7 @@ function getScannerInfo(
         krylorian: t("races.krylorian.name"),
         voidborn: t("races.voidborn.name"),
         crystalline: t("races.crystalline.name"),
+        aetherian: t("races.aetherian.name"),
     };
 
     // If location was revealed (e.g., approached without scanner), show full info
@@ -2919,6 +2920,11 @@ function drawFriendlyShip(
             primary: "#5a7a9a",
             secondary: "#7a9aba",
             accent: "#aaddff",
+        },
+        aetherian: {
+            primary: "#3f5f8f",
+            secondary: "#5f7fb0",
+            accent: "#8fd6ff",
         },
     };
 

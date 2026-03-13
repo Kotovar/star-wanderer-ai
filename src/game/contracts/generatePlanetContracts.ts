@@ -181,6 +181,25 @@ export const generatePlanetContracts = (
                 reward: 800 + Math.floor(Math.random() * 600),
             };
         },
+
+        aetherian: () => {
+            // Aetherians: Celestial cartography - scan distant worlds
+            return {
+                id: `c-${planetId}-aeth-${Date.now()}-${Math.random()}`,
+                type: "scan_planet",
+                desc: "contracts.desc_scan_aetherian",
+                planetType: "Планета-кольцо",
+                sourcePlanetId: planetId,
+                sourceSectorName: sector.name,
+                sourceType: "planet",
+                requiresVisit: 2,
+                visited: 0,
+                requiresScanner: true,
+                requiredRace: "aetherian",
+                isRaceQuest: true,
+                reward: 850 + Math.floor(Math.random() * 350),
+            };
+        },
     };
 
     // Add race-specific quest (30% chance, but guaranteed if no other contracts)

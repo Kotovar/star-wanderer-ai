@@ -268,6 +268,14 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                                     {t("help.crystalline_desc")}
                                 </span>
                             </div>
+                            <div className="p-2 bg-[rgba(102,204,255,0.1)] border border-[#66ccff]">
+                                <span className="text-[#66ccff] font-bold">
+                                    {t("races.aetherian.name")}
+                                </span>
+                                <span className="text-[#888] ml-2">
+                                    {t("help.aetherian_desc")}
+                                </span>
+                            </div>
                         </div>
                     </section>
 
