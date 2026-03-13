@@ -4,6 +4,7 @@ import {
     calculateHealCost,
     repairShip as repairShipAction,
     healCrew as healCrewAction,
+    installModuleFromCargo as installModuleFromCargoAction,
     type ServiceCostResult,
 } from "./helpers";
 
@@ -21,6 +22,13 @@ export interface ServicesSlice {
      * Восстанавливает здоровье и частично счастье
      */
     healCrew: () => void;
+    /**
+     * Устанавливает модуль из грузового отсека
+     * @param cargoIndex - Индекс в грузовом отсеке
+     * @param x - Координата X
+     * @param y - Координата Y
+     */
+    installModuleFromCargo: (cargoIndex: number, x: number, y: number) => void;
     /**
      * Проверяет, можно ли ремонтировать корабль
      * @returns true если есть повреждённые модули
@@ -53,6 +61,9 @@ export const createServicesSlice = (
     repairShip: () => repairShipAction(set, get),
 
     healCrew: () => healCrewAction(set, get),
+
+    installModuleFromCargo: (cargoIndex, x, y) =>
+        installModuleFromCargoAction(set, get, cargoIndex, x, y),
 
     canRepairShip: () => {
         const { canUse } = calculateRepairCost(get());

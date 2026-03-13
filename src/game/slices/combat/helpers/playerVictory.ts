@@ -151,9 +151,9 @@ export function handleVictory(
         const newCargoItem: CargoItem = {
             item: moduleName,
             quantity: 1,
-            moduleType: loot.module.moduleType,
-            moduleLevel: 4,
             isModule: true,
+            moduleLevel: loot.module.level ?? 4,
+            module: loot.module, // Store full ShopItem data
         };
         set((s) => ({
             ship: { ...s.ship, cargo: [...s.ship.cargo, newCargoItem] },

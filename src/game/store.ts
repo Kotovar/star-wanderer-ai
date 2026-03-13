@@ -63,66 +63,6 @@ export const useGameStore = create<GameStore>()(
         ...createShopSlice(set, get),
         ...createServicesSlice(set, get),
 
-        installModuleFromCargo: (cargoIndex, x, y) => {
-            const state = get();
-            const cargoItem = state.ship.cargo[cargoIndex];
-
-            if (!cargoItem || !cargoItem.isModule || !cargoItem.moduleType) {
-                get().addLog("Ошибка: это не модуль!", "error");
-                return;
-            }
-
-            // Check if position is occupied
-            const isOccupied = state.ship.modules.some(
-                (m) =>
-                    !m.disabled &&
-                    m.health > 0 &&
-                    Math.abs(m.x - x) < (m.width || 2) &&
-                    Math.abs(m.y - y) < (m.height || 2),
-            );
-
-            if (isOccupied) {
-                get().addLog("Место занято другим модулем!", "error");
-                return;
-            }
-
-            // Create the module with level from cargo item
-            const moduleLevel = cargoItem.moduleLevel || 4;
-            const newModule = {
-                id: Date.now(),
-                type: cargoItem.moduleType,
-                name: cargoItem.item,
-                level: moduleLevel,
-                health: 100,
-                maxHealth: 100,
-                power: moduleLevel * 5,
-                defense: moduleLevel * 3,
-                x: x,
-                y: y,
-                width: 2,
-                height: 2,
-                color: "#ff00ff33",
-                borderColor: "#ff00ff",
-                description: `Двигатель уровня ${moduleLevel} - позволяет достичь Тир 4`,
-            };
-
-            // Remove from cargo and add to modules
-            set((s) => ({
-                ship: {
-                    ...s.ship,
-                    cargo: s.ship.cargo.filter((_, idx) => idx !== cargoIndex),
-                    modules: [...s.ship.modules, newModule],
-                },
-            }));
-
-            get().addLog(
-                `✅ Модуль "${cargoItem.item}" установлен на позицию (${x}, ${y})!`,
-                "info",
-            );
-            playSound("success");
-            get().updateShipStats();
-        },
-
         buyTradeGood: (goodId, quantity = 5) => {
             const state = get();
             const stationId = state.currentLocation?.stationId;

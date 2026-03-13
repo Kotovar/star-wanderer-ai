@@ -7,11 +7,8 @@ import type {
 } from "@/game/types";
 import { playSound } from "@/sounds";
 import { isPositionAdjacentToModules } from "@/game/modules/adjacency";
-import {
-    MODULE_HEALTH_BY_LEVEL,
-    MODULE_DEFENSE_BY_LEVEL,
-    UNIQUE_MODULE_TYPES,
-} from "../constants";
+import { createModuleFromShopItem } from "@/game/modules/createModuleFromShopItem";
+import { UNIQUE_MODULE_TYPES } from "../constants";
 
 /**
  * Позиция на сетке
@@ -55,71 +52,12 @@ const createModuleFromItem = (
     state: GameState,
     cargoBonus: number,
 ): Module => {
-    const level = item.level ?? 1;
-
-    return {
-        id: state.ship.modules.length + 1,
-        type: item.moduleType,
-        name: item.name,
+    return createModuleFromShopItem(item, {
         x: 0,
         y: 0,
-        width: item.width || 1,
-        height: item.height || 1,
-        level,
-        maxHealth: item.maxHealth ?? MODULE_HEALTH_BY_LEVEL[level] ?? 100,
-        health: item.maxHealth ?? MODULE_HEALTH_BY_LEVEL[level] ?? 100,
-        defense: item.level === 4 ? 5 : (MODULE_DEFENSE_BY_LEVEL[level] ?? 1),
-        // Свойства по типу модуля
-        ...(item.moduleType === "reactor" && { power: item.power || 10 }),
-        ...(item.moduleType === "engine" && {
-            fuelEfficiency: item.fuelEfficiency ?? 10,
-            consumption: item.consumption || 1,
-        }),
-        ...(item.moduleType === "drill" && {
-            consumption: item.consumption || 1,
-        }),
-        ...(item.moduleType === "cargo" && {
-            capacity: Math.floor((item.capacity || 50) * cargoBonus),
-            consumption: item.consumption || 1,
-        }),
-        ...(item.moduleType === "fueltank" && {
-            capacity: item.capacity || 100,
-        }),
-        ...(item.moduleType === "lab" && {
-            consumption: item.consumption || 3,
-            researchOutput: item.researchOutput || 5,
-        }),
-        ...(item.moduleType === "shield" && {
-            shields: item.shields || 20,
-            consumption: item.consumption || 3,
-        }),
-        ...(item.moduleType === "scanner" && {
-            scanRange: item.scanRange || 3,
-            consumption: item.consumption || 1,
-        }),
-        ...(item.moduleType === "lifesupport" && {
-            oxygen: item.oxygen || 5,
-            consumption: item.consumption || 2,
-        }),
-        ...(item.moduleType === "medical" && {
-            healing: item.healing || 8,
-            consumption: item.consumption || 2,
-        }),
-        ...(item.moduleType === "weaponbay" && {
-            weapons: Array((item.width || 1) * (item.height || 1)).fill(null),
-            consumption: item.consumption || 2,
-        }),
-        ...(item.moduleType === "cockpit" && { consumption: 1 }),
-        // Дополнительные свойства
-        ...(item.power !== undefined && { power: item.power }),
-        ...(item.consumption !== undefined && {
-            consumption: item.consumption,
-        }),
-        ...(item.defense !== undefined && { defense: item.defense }),
-        ...(item.scanRange !== undefined && { scanRange: item.scanRange }),
-        ...(item.oxygen !== undefined && { oxygen: item.oxygen }),
-        ...(item.capacity !== undefined && { capacity: item.capacity }),
-    };
+        cargoBonus,
+        generateId: () => state.ship.modules.length + 1,
+    });
 };
 
 /**

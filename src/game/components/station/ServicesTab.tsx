@@ -31,8 +31,12 @@ interface ServicesTabProps {
             item: string;
             quantity: number;
             isModule?: boolean;
-            moduleType?: string;
-            moduleLevel?: number;
+            module?: {
+                moduleType: string;
+                level?: number;
+                width?: number;
+                height?: number;
+            };
         }>;
         gridSize: number;
     };
@@ -354,7 +358,7 @@ function InstallModuleSection({
     onInstall: (cargoIndex: number, x: number, y: number) => void;
 }) {
     const { t } = useTranslation();
-    const moduleCargo = ship.cargo.filter((c) => c.isModule && c.moduleType);
+    const moduleCargo = ship.cargo.filter((c) => c.isModule && c.module);
 
     // Find a valid position for a module on the ship grid
     const findValidPosition = (
@@ -422,7 +426,8 @@ function InstallModuleSection({
                                                 : "text-[#888]"
                                         }
                                     >
-                                        {item.item} (Ур.{item.moduleLevel || 4})
+                                        {item.item} (Ур.
+                                        {item.module?.level || 4})
                                     </div>
                                     <div className="text-[#888]">
                                         {t("services.size_label")} 2x2 |{" "}

@@ -24,7 +24,7 @@ export function ModuleInstallTab({ onClose }: ModuleInstallTabProps) {
         y: number;
     } | null>(null);
 
-    const moduleCargo = cargo.filter((c) => c.isModule && c.moduleType);
+    const moduleCargo = cargo.filter((c) => c.isModule && c.module);
 
     const handleCellClick = (x: number, y: number) => {
         if (selectedCargoIndex === null) return;
