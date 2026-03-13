@@ -358,7 +358,7 @@ function ModuleUpgradeCard({
                     </span>
                 )}
 
-                {healingDiff && healingDiff > 0 && (
+                {healingDiff !== undefined && healingDiff > 0 && (
                     <span className="text-[#00ff41]">
                         {t("modules.healing")}: +{healingDiff}
                     </span>

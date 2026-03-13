@@ -1,18 +1,9 @@
-import type { GameState } from "@/game/types";
+import type { SetState } from "@/game/types";
 import {
     GAME_MODES,
     DEFAULT_NAVIGATION_MODE,
     PANELS_RETURNING_TO_NAVIGATION,
 } from "./constants";
-
-// Тип для set с поддержкой immer (позволяет и мутации, и объекты)
-type SetState = {
-    (
-        partial:
-            | Partial<GameState>
-            | ((state: GameState) => Partial<GameState>),
-    ): void;
-};
 
 /**
  * Интерфейс UiSlice

@@ -44,3 +44,13 @@ export const getActiveModules = <T extends ModuleType>(
  */
 export const getActiveModuleFromState = (state: GameState, type: ModuleType) =>
     getActiveModule(state.ship.modules, type);
+
+/**
+ * Фильтрует модули указанного типа
+ *
+ * @param state - Текущее состояние игры
+ * @param type - Тип модулей для поиска
+ * @returns Отфильтрованный список модулей указанного типа
+ */
+export const getModulesFromState = (state: GameState, type: ModuleType) =>
+    state.ship.modules.filter((m) => m.type === type);
