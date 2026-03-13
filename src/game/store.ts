@@ -40,6 +40,7 @@ import {
     createLocationsSlice,
     createUiSlice,
     createShopSlice,
+    createServicesSlice,
 } from "@/game/slices";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type { CrewMember, GameStore, RaceId } from "@/game/types";
@@ -59,46 +60,7 @@ export const useGameStore = create<GameStore>()(
         ...createLocationsSlice(set, get),
         ...createUiSlice(set),
         ...createShopSlice(set, get),
-
-        repairShip: () => {
-            if (get().credits < 200) {
-                get().addLog("Недостаточно кредитов!", "error");
-                return;
-            }
-            set((s) => ({
-                credits: s.credits - 200,
-                ship: {
-                    ...s.ship,
-                    modules: s.ship.modules.map((m) => ({
-                        ...m,
-                        health: m.maxHealth,
-                    })),
-                },
-            }));
-            get().addLog("Корабль отремонтирован", "info");
-            playSound("success");
-            get().updateShipStats();
-        },
-
-        healCrew: () => {
-            if (get().credits < 150) {
-                get().addLog("Недостаточно кредитов!", "error");
-                return;
-            }
-            set((s) => ({
-                credits: s.credits - 150,
-                crew: s.crew.map((c) => ({
-                    ...c,
-                    health: c.maxHealth || 100,
-                    happiness: Math.min(
-                        c.maxHappiness || 100,
-                        c.happiness + 20,
-                    ),
-                })),
-            }));
-            get().addLog("Экипаж вылечен", "info");
-            playSound("success");
-        },
+        ...createServicesSlice(set, get),
 
         installModuleFromCargo: (cargoIndex, x, y) => {
             const state = get();

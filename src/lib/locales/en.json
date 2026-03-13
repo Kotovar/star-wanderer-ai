@@ -988,6 +988,7 @@
         "repair_title": "🔧 Ship Repair",
         "repair_desc": "Full restoration of all modules to 100%",
         "repair_button": "REPAIR",
+        "not_needed": "Not needed",
         "heal_title": "💊 Crew Healing",
         "heal_desc": "Restore health to 100% and boost mood by +20",
         "heal_button": "HEAL",

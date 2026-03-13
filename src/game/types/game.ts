@@ -159,6 +159,15 @@ export interface GameStationAndPlanets {
     buyTradeGood: (goodId: Goods, quantity?: number) => void;
     sellTradeGood: (goodId: Goods, quantity?: number) => void;
     installModuleFromCargo: (cargoIndex: number, x: number, y: number) => void;
+    // Services - dynamic pricing and availability
+    getRepairCost: () => {
+        cost: number;
+        damagePercent: number;
+        canUse: boolean;
+    };
+    getHealCost: () => { cost: number; damagePercent: number; canUse: boolean };
+    canRepairShip: () => boolean;
+    canHealCrew: () => boolean;
 }
 
 export interface GameCrew {

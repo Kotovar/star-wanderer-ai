@@ -50,6 +50,10 @@ export function StationPanel() {
     const installModuleFromCargo = useGameStore(
         (s) => s.installModuleFromCargo,
     );
+    const getRepairCost = useGameStore((s) => s.getRepairCost);
+    const getHealCost = useGameStore((s) => s.getHealCost);
+    const canRepairShip = useGameStore((s) => s.canRepairShip);
+    const canHealCrew = useGameStore((s) => s.canHealCrew);
     const buyTradeGood = useGameStore((s) => s.buyTradeGood);
     const sellTradeGood = useGameStore((s) => s.sellTradeGood);
     const hireCrew = useGameStore((s) => s.hireCrew);
@@ -263,6 +267,10 @@ export function StationPanel() {
                             gridSize: ship.gridSize,
                         }}
                         crew={crew}
+                        repairCost={getRepairCost().cost}
+                        healCost={getHealCost().cost}
+                        canRepair={canRepairShip()}
+                        canHeal={canHealCrew()}
                     />
                 </TabsContent>
             </Tabs>

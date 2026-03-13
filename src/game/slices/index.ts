@@ -9,3 +9,4 @@ export * from "./travel";
 export * from "./locations";
 export * from "./ui";
 export * from "./shop";
+export * from "./services";

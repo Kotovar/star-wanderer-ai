@@ -1,4 +1,4 @@
-import type { GameStore } from "@/game/types/game";
+import type { GameStore, SetState } from "@/game/types";
 import { WeaponTypeTotal } from "@/game/types";
 import {
     getTotalConsumption,
@@ -135,12 +135,13 @@ export interface ShipSlice {
  * @returns Объект с методами управления кораблём
  */
 export const createShipSlice = (
-    set: (fn: (state: GameStore) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): ShipSlice => ({
     updateShipStats: () => {
         set((state) => {
             updateShipStats(state);
+            return state;
         });
     },
 

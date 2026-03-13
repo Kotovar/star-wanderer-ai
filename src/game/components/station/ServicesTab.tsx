@@ -41,6 +41,11 @@ interface ServicesTabProps {
         name: string;
         moduleId: number;
     }>;
+    // Dynamic service costs
+    repairCost: number;
+    healCost: number;
+    canRepair: boolean;
+    canHeal: boolean;
 }
 
 export function ServicesTab({
@@ -56,6 +61,10 @@ export function ServicesTab({
     credits,
     ship,
     crew,
+    repairCost,
+    healCost,
+    canRepair,
+    canHeal,
 }: ServicesTabProps) {
     const fuelNeeded = maxFuel - fuel;
 
@@ -71,8 +80,18 @@ export function ServicesTab({
                 onRefuel={refuel}
             />
 
-            <RepairSection credits={credits} onRepair={repairShip} />
-            <HealSection credits={credits} onHeal={healCrew} />
+            <RepairSection
+                credits={credits}
+                repairCost={repairCost}
+                canRepair={canRepair}
+                onRepair={repairShip}
+            />
+            <HealSection
+                credits={credits}
+                healCost={healCost}
+                canHeal={canHeal}
+                onHeal={healCrew}
+            />
             <ScrapModuleSection ship={ship} crew={crew} onScrap={scrapModule} />
             <InstallModuleSection
                 ship={ship}
@@ -170,9 +189,13 @@ function RefuelButton({
 }
 function RepairSection({
     credits,
+    repairCost,
+    canRepair,
     onRepair,
 }: {
     credits: number;
+    repairCost: number;
+    canRepair: boolean;
     onRepair: () => void;
 }) {
     const { t } = useTranslation();
@@ -186,9 +209,14 @@ function RepairSection({
                 {t("services.repair_desc")}
             </div>
             <div className="flex justify-between items-center">
-                <span className="text-[#ffb000]">💰 200₢</span>
+                <span className="text-[#ffb000]">
+                    💰{" "}
+                    {canRepair
+                        ? `${repairCost}₢`
+                        : `✗ ${t("services.not_needed")}`}
+                </span>
                 <Button
-                    disabled={credits < 200}
+                    disabled={!canRepair || credits < repairCost}
                     onClick={onRepair}
                     className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -201,9 +229,13 @@ function RepairSection({
 
 function HealSection({
     credits,
+    healCost,
+    canHeal,
     onHeal,
 }: {
     credits: number;
+    healCost: number;
+    canHeal: boolean;
     onHeal: () => void;
 }) {
     const { t } = useTranslation();
@@ -217,9 +249,12 @@ function HealSection({
                 {t("services.heal_desc")}
             </div>
             <div className="flex justify-between items-center">
-                <span className="text-[#ffb000]">💰 150₢</span>
+                <span className="text-[#ffb000]">
+                    💰{" "}
+                    {canHeal ? `${healCost}₢` : `✗ ${t("services.not_needed")}`}
+                </span>
                 <Button
-                    disabled={credits < 150}
+                    disabled={!canHeal || credits < healCost}
                     onClick={onHeal}
                     className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
