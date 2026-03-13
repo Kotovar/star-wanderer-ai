@@ -501,11 +501,13 @@ export function SectorMap() {
     const zoomAnimationRef = useRef<number | null>(null);
     const [offset, setOffset] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
+    const isDraggingRef = useRef(false); // Ref for sync access in animation loop
     const dragStartRef = useRef({ x: 0, y: 0 });
     const offsetStartRef = useRef({ x: 0, y: 0 });
     const offsetRef = useRef({ x: 0, y: 0 }); // Ref for smooth dragging without re-renders
     const hasMovedRef = useRef(false);
     const animationFrameRef = useRef<number | null>(null);
+    const dragStartTimeRef = useRef<number>(0); // Store animation time when drag starts
 
     // Cache stars to prevent flickering (stored in normalized 0-1 coordinates)
     const starsRef = useRef<Array<{
@@ -582,8 +584,10 @@ export function SectorMap() {
             ctx.drawImage(bgCanvasRef.current, 0, 0);
         }
 
-        // Apply transform for zoom and pan (use ref during drag, state otherwise)
-        const currentOffset = isDragging ? offsetRef.current : offset;
+        // Apply transform for zoom and pan (use ref for sync access during drag)
+        const currentOffset = isDraggingRef.current
+            ? offsetRef.current
+            : offset;
         ctx.save();
         ctx.translate(centerX + currentOffset.x, centerY + currentOffset.y);
         ctx.scale(zoom, zoom);
@@ -721,15 +725,7 @@ export function SectorMap() {
         });
 
         ctx.restore();
-    }, [
-        canScanObject,
-        completedLocations,
-        currentSector,
-        isDragging,
-        offset,
-        t,
-        zoom,
-    ]);
+    }, [canScanObject, completedLocations, currentSector, offset, t, zoom]);
 
     // Initialize canvas and background
     useEffect(() => {
@@ -951,13 +947,16 @@ export function SectorMap() {
                     animCtx.clearRect(0, 0, newWidth, newHeight);
                     drawMeteors(animCtx, animState);
                     drawParticles(animCtx, animState, newWidth, newHeight);
-                    drawTwinklingStars(
-                        animCtx,
-                        starsRef.current,
-                        animState.time,
-                        newWidth,
-                        newHeight,
-                    );
+                    // Skip twinkling stars during drag to prevent flickering
+                    if (!isDraggingRef.current) {
+                        drawTwinklingStars(
+                            animCtx,
+                            starsRef.current,
+                            animState.time,
+                            newWidth,
+                            newHeight,
+                        );
+                    }
                 }
             } else {
                 // Clear animation canvas when animations are disabled
@@ -979,14 +978,13 @@ export function SectorMap() {
                     const centerX = width / 2;
                     const centerY = height / 2;
 
-                    // Clear only the star area to avoid clearing the whole canvas
                     const star = currentSector.star;
                     const currentAnimState = animationStateRef.current;
 
                     // Save context state
                     mainCtx.save();
                     // Apply the same transforms as in drawCanvas
-                    const currentOffset = isDragging
+                    const currentOffset = isDraggingRef.current
                         ? offsetRef.current
                         : offset;
                     mainCtx.translate(
@@ -996,14 +994,19 @@ export function SectorMap() {
                     mainCtx.scale(zoom, zoom);
                     mainCtx.translate(-centerX, -centerY);
 
-                    // Redraw star with current time
+                    // During drag, freeze animation at the time when drag started
+                    const time = isDraggingRef.current
+                        ? dragStartTimeRef.current
+                        : currentAnimState.time;
+
+                    // Redraw star with current time (or frozen during drag)
                     drawStar(
                         mainCtx,
                         centerX,
                         centerY,
                         star,
                         currentSector.id,
-                        currentAnimState.time,
+                        time,
                     );
 
                     // Restore context state
@@ -1022,14 +1025,7 @@ export function SectorMap() {
                 cancelAnimationFrame(animationFrameIdRef.current);
             }
         };
-    }, [
-        animationsEnabled,
-        currentSector,
-        drawCanvas,
-        isDragging,
-        offset,
-        zoom,
-    ]);
+    }, [animationsEnabled, currentSector, drawCanvas, offset, zoom]);
 
     // Handle wheel zoom
     const handleWheel = useCallback(
@@ -1049,9 +1045,12 @@ export function SectorMap() {
     const handleMouseDown = useCallback(
         (e: React.MouseEvent<HTMLCanvasElement>) => {
             setIsDragging(true);
+            isDraggingRef.current = true;
             hasMovedRef.current = false;
             dragStartRef.current = { x: e.clientX, y: e.clientY };
             offsetStartRef.current = { ...offset };
+            // Store current animation time to freeze star animation during drag
+            dragStartTimeRef.current = animationStateRef.current.time;
         },
         [offset],
     );
@@ -1060,7 +1059,7 @@ export function SectorMap() {
     const handleMouseMove = useCallback(
         (e: React.MouseEvent<HTMLCanvasElement>) => {
             // Handle dragging with direct canvas rendering (no React state updates)
-            if (isDragging) {
+            if (isDraggingRef.current) {
                 const dx = e.clientX - dragStartRef.current.x;
                 const dy = e.clientY - dragStartRef.current.y;
 
@@ -1083,154 +1082,93 @@ export function SectorMap() {
                     cancelAnimationFrame(animationFrameRef.current);
                 }
 
-                // Direct canvas rendering without React state
+                // Trigger a single frame render using the main animate function
+                // The main loop will handle star rendering with frozen time
                 animationFrameRef.current = requestAnimationFrame(() => {
-                    const canvas = canvasRef.current;
-                    const container = containerRef.current;
-                    if (!canvas || !container || !currentSector) return;
+                    const animState = animationStateRef.current;
+                    animState.time += 16;
 
-                    const ctx = canvas.getContext("2d");
-                    if (!ctx) return;
-
-                    const width = canvas.width;
-                    const height = canvas.height;
-                    const centerX = width / 2;
-                    const centerY = height / 2;
-                    const baseMaxRadius = Math.min(width, height) * 0.45;
-
-                    // Draw cached background
-                    if (bgCanvasRef.current) {
-                        ctx.drawImage(bgCanvasRef.current, 0, 0);
+                    // Clear animation canvas
+                    const animCanvas = animCanvasRef.current;
+                    if (animCanvas) {
+                        const animCtx = animCanvas.getContext("2d");
+                        if (
+                            animCtx &&
+                            animationsEnabled &&
+                            !isDraggingRef.current
+                        ) {
+                            animCtx.clearRect(
+                                0,
+                                0,
+                                animCanvas.width,
+                                animCanvas.height,
+                            );
+                            drawMeteors(animCtx, animState);
+                            drawParticles(
+                                animCtx,
+                                animState,
+                                animCanvas.width,
+                                animCanvas.height,
+                            );
+                            if (starsRef.current) {
+                                drawTwinklingStars(
+                                    animCtx,
+                                    starsRef.current,
+                                    animState.time,
+                                    animCanvas.width,
+                                    animCanvas.height,
+                                );
+                            }
+                        } else if (animCtx) {
+                            animCtx.clearRect(
+                                0,
+                                0,
+                                animCanvas.width,
+                                animCanvas.height,
+                            );
+                        }
                     }
 
-                    // Apply transform using ref offset (no React state)
-                    ctx.save();
-                    ctx.translate(centerX + newOffset.x, centerY + newOffset.y);
-                    ctx.scale(zoom, zoom);
-                    ctx.translate(-centerX, -centerY);
+                    // Draw main canvas
+                    drawCanvas();
 
-                    // Helper function to compute location position
-                    const computeLocationPosition = (
-                        loc: (typeof currentSector.locations)[0],
-                    ) => {
-                        const distanceRatio = loc.distanceRatio ?? 0.5;
-                        const distance = baseMaxRadius * distanceRatio;
-                        const angle = loc.angle ?? 0;
-                        const x = centerX + Math.cos(angle) * distance;
-                        const y = centerY + Math.sin(angle) * distance;
-                        return { x, y };
-                    };
+                    // Draw the central star (frozen during drag)
+                    const mainCanvas = canvasRef.current;
+                    if (mainCanvas && currentSector) {
+                        const mainCtx = mainCanvas.getContext("2d");
+                        if (mainCtx) {
+                            const width = mainCanvas.width;
+                            const height = mainCanvas.height;
+                            const centerX = width / 2;
+                            const centerY = height / 2;
+                            const star = currentSector.star;
 
-                    // Draw locations
-                    currentSector.locations.forEach((loc) => {
-                        const { x, y } = computeLocationPosition(loc);
+                            // Save context state
+                            mainCtx.save();
+                            const currentOffset = offsetRef.current;
+                            mainCtx.translate(
+                                centerX + currentOffset.x,
+                                centerY + currentOffset.y,
+                            );
+                            mainCtx.scale(zoom, zoom);
+                            mainCtx.translate(-centerX, -centerY);
 
-                        const completed = completedLocations.includes(loc.id);
-                        const canScan = canScanObject(
-                            loc.type,
-                            loc.threat || loc.anomalyTier,
-                        );
-                        const isRevealed = loc.signalRevealed;
+                            // Use frozen time during drag
+                            const time = dragStartTimeRef.current;
 
-                        if (loc.type === "station") {
-                            drawStation(ctx, x, y, loc, completed);
-                        } else if (loc.type === "planet") {
-                            drawPlanet(ctx, x, y, loc, completed);
-                        } else if (loc.type === "enemy") {
-                            if (!canScan && !isRevealed) {
-                                drawUnknownShip(ctx, x, y, completed);
-                            } else {
-                                drawEnemy(ctx, x, y, loc, completed);
-                            }
-                        } else if (loc.type === "anomaly") {
-                            if (canScan || isRevealed) {
-                                drawAnomaly(ctx, x, y, loc, completed);
-                            } else {
-                                drawUnknown(ctx, x, y, completed);
-                            }
-                        } else if (loc.type === "friendly_ship") {
-                            if (!canScan && !isRevealed) {
-                                drawUnknownShip(ctx, x, y, completed);
-                            } else {
-                                drawFriendlyShip(ctx, x, y, loc, completed);
-                            }
-                        } else if (loc.type === "asteroid_belt") {
-                            drawAsteroidBelt(ctx, x, y, loc, completed);
-                        } else if (loc.type === "storm") {
-                            if (canScan || isRevealed) {
-                                drawStorm(ctx, x, y, loc, completed);
-                            } else {
-                                drawUnknown(ctx, x, y, completed);
-                            }
-                        } else if (loc.type === "distress_signal") {
-                            drawDistressSignal(ctx, x, y, loc, completed);
-                        } else if (loc.type === "boss") {
-                            if (canScan || isRevealed) {
-                                drawAncientBoss(ctx, x, y, loc, completed);
-                            } else {
-                                drawUnknownShip(ctx, x, y, completed);
-                            }
+                            drawStar(
+                                mainCtx,
+                                centerX,
+                                centerY,
+                                star,
+                                currentSector.id,
+                                time,
+                            );
+
+                            mainCtx.restore();
                         }
+                    }
 
-                        // Draw labels
-                        const needsScanner = NEEDS_SCANNER_LOCATIONS.includes(
-                            loc.type,
-                        );
-                        const displayName =
-                            needsScanner &&
-                            !canScan &&
-                            !isRevealed &&
-                            !completed
-                                ? t("sector_map.unknown_object")
-                                : getLocationName(loc.name, t);
-
-                        const isUnknownShip =
-                            ["enemy", "friendly_ship"].includes(loc.type) &&
-                            !canScan &&
-                            !isRevealed &&
-                            !completed;
-
-                        const isExploredEmptyPlanet =
-                            loc.type === "planet" &&
-                            loc.isEmpty &&
-                            loc.explored;
-                        const isVisitedColonizedPlanet =
-                            loc.type === "planet" &&
-                            !loc.isEmpty &&
-                            loc.visited;
-                        const isVisitedStation =
-                            loc.type === "station" && loc.visited;
-
-                        const translatedName = getLocationName(loc.name, t);
-                        const finalDisplayName = isUnknownShip
-                            ? t("sector_map.unknown_ship")
-                            : isExploredEmptyPlanet
-                              ? `${translatedName} ${t("sector_map.explored")}`
-                              : isVisitedColonizedPlanet || isVisitedStation
-                                ? `${translatedName} ${t("sector_map.visited")}`
-                                : displayName;
-
-                        ctx.font = "11px Share Tech Mono";
-                        ctx.textAlign = "center";
-                        ctx.fillStyle = completed
-                            ? "#888"
-                            : isExploredEmptyPlanet ||
-                                isVisitedColonizedPlanet ||
-                                isVisitedStation
-                              ? "#00ff41"
-                              : loc.type === "planet" && !loc.isEmpty
-                                ? "#ffb000"
-                                : "#00ff41";
-                        ctx.fillText(finalDisplayName, x, y + 28);
-
-                        if (completed) {
-                            ctx.font = "9px Share Tech Mono";
-                            ctx.fillStyle = "#666";
-                            ctx.fillText("(✓)", x, y + 40);
-                        }
-                    });
-
-                    ctx.restore();
                     animationFrameRef.current = null;
                 });
             }
@@ -1247,7 +1185,9 @@ export function SectorMap() {
             // Account for zoom and pan
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const currentOffset = isDragging ? offsetRef.current : offset;
+            const currentOffset = isDraggingRef.current
+                ? offsetRef.current
+                : offset;
             const worldMouseX =
                 (mouseX - centerX - currentOffset.x) / zoom + centerX;
             const worldMouseY =
@@ -1286,41 +1226,35 @@ export function SectorMap() {
                 setHoveredLocation(null);
             }
         },
-        [
-            canScanObject,
-            completedLocations,
-            currentSector,
-            isDragging,
-            offset,
-            t,
-            zoom,
-        ],
+        [animationsEnabled, currentSector, drawCanvas, offset, zoom],
     );
 
     // Handle mouse up to stop dragging
     const handleMouseUp = useCallback(() => {
-        if (isDragging) {
+        if (isDraggingRef.current) {
             // Sync offset ref with React state when drag ends
             setOffset({ ...offsetRef.current });
         }
         setIsDragging(false);
+        isDraggingRef.current = false;
         if (animationFrameRef.current) {
             cancelAnimationFrame(animationFrameRef.current);
             animationFrameRef.current = null;
         }
-    }, [isDragging]);
+    }, []);
 
     // Handle mouse leave to stop dragging
     const handleMouseLeave = useCallback(() => {
-        if (isDragging) {
+        if (isDraggingRef.current) {
             setOffset({ ...offsetRef.current });
         }
         setIsDragging(false);
+        isDraggingRef.current = false;
         if (animationFrameRef.current) {
             cancelAnimationFrame(animationFrameRef.current);
             animationFrameRef.current = null;
         }
-    }, [isDragging]);
+    }, []);
 
     // Touch handlers for mobile
     const handleTouchStart = useCallback(
@@ -1336,7 +1270,7 @@ export function SectorMap() {
 
     const handleTouchMove = useCallback(
         (e: React.TouchEvent<HTMLCanvasElement>) => {
-            if (!isDragging) return;
+            if (!isDraggingRef.current) return;
 
             const touch = e.touches[0];
             const dx = touch.clientX - dragStartRef.current.x;
@@ -1360,22 +1294,103 @@ export function SectorMap() {
             }
 
             animationFrameRef.current = requestAnimationFrame(() => {
+                const animState = animationStateRef.current;
+                animState.time += 16;
+
+                // Clear animation canvas
+                const animCanvas = animCanvasRef.current;
+                if (animCanvas) {
+                    const animCtx = animCanvas.getContext("2d");
+                    if (
+                        animCtx &&
+                        animationsEnabled &&
+                        !isDraggingRef.current
+                    ) {
+                        animCtx.clearRect(
+                            0,
+                            0,
+                            animCanvas.width,
+                            animCanvas.height,
+                        );
+                        drawMeteors(animCtx, animState);
+                        drawParticles(
+                            animCtx,
+                            animState,
+                            animCanvas.width,
+                            animCanvas.height,
+                        );
+                        if (starsRef.current) {
+                            drawTwinklingStars(
+                                animCtx,
+                                starsRef.current,
+                                animState.time,
+                                animCanvas.width,
+                                animCanvas.height,
+                            );
+                        }
+                    } else if (animCtx) {
+                        animCtx.clearRect(
+                            0,
+                            0,
+                            animCanvas.width,
+                            animCanvas.height,
+                        );
+                    }
+                }
+
+                // Draw main canvas
                 drawCanvas();
+
+                // Draw the central star (frozen during drag)
+                const mainCanvas = canvasRef.current;
+                if (mainCanvas && currentSector) {
+                    const mainCtx = mainCanvas.getContext("2d");
+                    if (mainCtx) {
+                        const width = mainCanvas.width;
+                        const height = mainCanvas.height;
+                        const centerX = width / 2;
+                        const centerY = height / 2;
+                        const star = currentSector.star;
+
+                        mainCtx.save();
+                        const currentOffset = offsetRef.current;
+                        mainCtx.translate(
+                            centerX + currentOffset.x,
+                            centerY + currentOffset.y,
+                        );
+                        mainCtx.scale(zoom, zoom);
+                        mainCtx.translate(-centerX, -centerY);
+
+                        const time = dragStartTimeRef.current;
+
+                        drawStar(
+                            mainCtx,
+                            centerX,
+                            centerY,
+                            star,
+                            currentSector.id,
+                            time,
+                        );
+
+                        mainCtx.restore();
+                    }
+                }
             });
         },
-        [isDragging, drawCanvas],
+        [animationsEnabled, drawCanvas, currentSector, zoom],
     );
 
     const handleTouchEnd = useCallback(() => {
-        if (isDragging) {
+        if (isDraggingRef.current) {
             setOffset({ ...offsetRef.current });
         }
         setIsDragging(false);
+        isDraggingRef.current = false;
         if (animationFrameRef.current) {
             cancelAnimationFrame(animationFrameRef.current);
             animationFrameRef.current = null;
         }
-    }, [isDragging]);
+    }, []);
 
     // Zoom animation effect
     useEffect(() => {
@@ -1449,7 +1464,9 @@ export function SectorMap() {
         const centerY = canvas.height / 2;
 
         // Use ref offset during drag, state otherwise
-        const currentOffset = isDragging ? offsetRef.current : offset;
+        const currentOffset = isDraggingRef.current
+            ? offsetRef.current
+            : offset;
 
         // Inverse transform: screen -> world
         const worldClickX =
