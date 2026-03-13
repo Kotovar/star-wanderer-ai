@@ -12,6 +12,7 @@ import type {
     CrewMember,
     Module,
     Race,
+    SetState,
 } from "@/game/types";
 import { getActiveModules } from "@/game/modules/utils";
 
@@ -22,7 +23,7 @@ import { getActiveModules } from "@/game/modules/utils";
  * @param get - Функция получения состояния
  */
 export const processCrewAssignments = (
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     const crew = get().crew;
@@ -106,7 +107,7 @@ const processNonCombatAssignment = (
     crewMember: CrewMember,
     currentModule: Module | undefined,
     crewRace: Race | undefined,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     if (!currentModule) return;
@@ -170,7 +171,7 @@ const processRepairAssignment = (
     crewMember: CrewMember,
     currentModule: Module,
     crewRace: Race | undefined,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     let repairAmount: number = ASSIGNMENT_BASES.REPAIR_AMOUNT;
@@ -234,7 +235,7 @@ const processMergeAssignment = (
     crewMember: CrewMember,
     currentModule: Module,
     crewRace: Race | undefined,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     if (crewRace?.id !== "xenosymbiont") return;
@@ -263,7 +264,7 @@ const processMergeAssignment = (
 const processPowerAssignment = (
     crewMember: CrewMember,
     currentModule: Module,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     // Проверяем что экипаж в реакторе
@@ -295,7 +296,7 @@ const processPowerAssignment = (
 const processNavigationAssignment = (
     crewMember: CrewMember,
     currentModule: Module,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     // Проверяем что экипаж в двигателе
@@ -326,7 +327,7 @@ const processNavigationAssignment = (
 const processEvasionAssignment = (
     crewMember: CrewMember,
     currentModule: Module,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     // Проверяем что экипаж в двигателе
@@ -360,7 +361,7 @@ const processHealAssignment = (
     crewMember: CrewMember,
     currentModule: Module,
     crewRace: Race | undefined,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     let healAmount: number = ASSIGNMENT_BASES.HEAL_AMOUNT;
@@ -424,7 +425,7 @@ const processMoraleAssignment = (
     crewMember: CrewMember,
     currentModule: Module,
     crewRace: Race | undefined,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     let moraleAmount: number = ASSIGNMENT_BASES.MORALE_AMOUNT;
@@ -506,7 +507,7 @@ const processResearchAssignment = (
  * Медотсек лечит весь экипаж в модуле каждый ход
  */
 export const processMedicalModule = (
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     const crew = get().crew;

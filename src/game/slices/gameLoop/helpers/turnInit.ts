@@ -1,4 +1,4 @@
-import type { GameState, GameStore } from "@/game/types";
+import type { GameState, GameStore, SetState } from "@/game/types";
 
 // === Constants ===
 const PASSIVE_EXP_INTERVAL = 5;
@@ -8,9 +8,7 @@ const PASSIVE_EXP_AMOUNT = 2;
  * Инициализирует новый ход
  * Сбрасывает флаги движения для экипажа и модулей
  */
-export const initNewTurn = (
-    set: (fn: (s: GameState) => void) => void,
-): void => {
+export const initNewTurn = (set: SetState): void => {
     set((s) => ({
         turn: s.turn + 1,
         randomEventCooldown: s.randomEventCooldown - 1,

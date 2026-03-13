@@ -1,10 +1,10 @@
 import { RACES } from "@/game/constants";
 import type {
     CrewMember,
-    GameState,
     GameStore,
     Module,
     Race,
+    SetState,
 } from "@/game/types";
 
 /**
@@ -13,7 +13,7 @@ import type {
  * @param get - Функция получения состояния
  */
 export const processNegativeTraits = (
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     const crew = get().crew;
@@ -42,7 +42,7 @@ const processRaceNegativeEffects = (
     crewMember: CrewMember,
     crewRace: Race | undefined,
     currentModule: Module | undefined,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     if (!crewRace || !currentModule) return;

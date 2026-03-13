@@ -1,5 +1,9 @@
-import type { GameState, GameStore } from "@/game/types";
-import type { ArtifactNegativeType } from "@/game/types";
+import type {
+    GameState,
+    GameStore,
+    SetState,
+    ArtifactNegativeType,
+} from "@/game/types";
 import { MUTATION_TRAITS } from "@/game/constants";
 import { getMutationTraitDesc, getMutationTraitName } from "@/game/traits";
 
@@ -9,7 +13,7 @@ import { getMutationTraitDesc, getMutationTraitName } from "@/game/traits";
 interface CurseHandler {
     process: (
         state: GameState,
-        set: (fn: (s: GameState) => void) => void,
+        set: SetState,
         get: () => GameStore,
         artifact: { name: string },
         value: number,
@@ -49,7 +53,7 @@ const CURSE_HANDLERS: Record<ArtifactNegativeType, CurseHandler | undefined> = {
  */
 function applyStatDrain(
     _state: GameState,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     _get: () => GameStore,
     _artifact: { name: string },
     value: number,
@@ -70,7 +74,7 @@ function applyStatDrain(
  */
 function applyModuleDamage(
     state: GameState,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
     artifact: { name: string },
     value: number,
@@ -104,7 +108,7 @@ function applyModuleDamage(
  */
 function applyCrewDesertion(
     state: GameState,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
     artifact: { name: string },
     value: number,
@@ -127,7 +131,7 @@ function applyCrewDesertion(
  */
 function applyCrewMutation(
     state: GameState,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
     artifact: { name: string },
     value: number,
@@ -182,7 +186,7 @@ function applyCrewMutation(
  */
 export const processCursedArtifacts = (
     state: GameState,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     const cursedArtifacts = state.artifacts.filter(

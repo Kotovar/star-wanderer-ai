@@ -6,6 +6,8 @@ import type { GameState } from "@/game/types";
  */
 export type SetState = {
     (
-        partial: Partial<GameState> | ((state: GameState) => Partial<GameState>),
+        partial:
+            | Partial<GameState>
+            | ((state: GameState) => Partial<GameState>),
     ): void;
 };

@@ -1,4 +1,9 @@
-import type { GameState, GameStore, MutationName } from "@/game/types";
+import type {
+    GameState,
+    GameStore,
+    MutationName,
+    SetState,
+} from "@/game/types";
 import { typedKeys } from "@/lib";
 
 /**
@@ -124,7 +129,7 @@ const getMutationId = (traitName: string): string | null => {
  */
 export const processMutations = (
     state: GameState,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     const updates = new Map<number, { happiness: number; logs: string[] }>();

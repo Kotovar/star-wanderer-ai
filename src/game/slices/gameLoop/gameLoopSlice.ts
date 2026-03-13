@@ -1,4 +1,4 @@
-import type { GameState, GameStore } from "@/game/types";
+import type { GameStore, SetState } from "@/game/types";
 import {
     initNewTurn,
     processPassiveExperience,
@@ -22,7 +22,7 @@ export interface GameLoopSlice {
  * Создаёт слайс игрового цикла
  */
 export const createGameLoopSlice = (
-    set: (fn: (state: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): GameLoopSlice => ({
     nextTurn: () => {

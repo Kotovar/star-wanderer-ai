@@ -3,7 +3,7 @@ import {
     processMedicalModule,
     processNegativeTraits,
 } from "./crewAssignments";
-import type { GameState, GameStore } from "@/game/types";
+import type { GameStore, SetState } from "@/game/types";
 
 /**
  * Обрабатывает все аспекты экипажа:
@@ -16,7 +16,7 @@ import type { GameState, GameStore } from "@/game/types";
  * @param get - Функция получения состояния
  */
 export const processCrewAssignments = (
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     // Обработка назначений (ремонт, лечение, мораль, и т.д.)

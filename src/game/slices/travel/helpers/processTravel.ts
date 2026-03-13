@@ -1,4 +1,4 @@
-import type { GameState, GameStore } from "@/game/types";
+import type { GameState, GameStore, SetState } from "@/game/types";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
 
@@ -44,7 +44,7 @@ const randomElement = <T>(arr: readonly T[]): T =>
  * @returns Нанесённый урон
  */
 const handleAsteroidDamage = (
-    setState: (fn: (s: GameState) => void) => void,
+    setState: SetState,
     getState: () => GameStore,
 ): number => {
     const modules = getState().ship.modules;
@@ -77,7 +77,7 @@ const handleAsteroidDamage = (
  * @returns Количество повреждённых модулей
  */
 const handleAnomaly = (
-    setState: (fn: (s: GameState) => void) => void,
+    setState: SetState,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _getState: () => GameStore,
 ): number => {
@@ -107,9 +107,7 @@ const handleAnomaly = (
  * @param setState - Функция обновления состояния
  * @returns Потеря настроения
  */
-const handleStress = (
-    setState: (fn: (s: GameState) => void) => void,
-): number => {
+const handleStress = (setState: SetState): number => {
     setState((s) => ({
         crew: s.crew.map((c) => ({
             ...c,
@@ -125,9 +123,7 @@ const handleStress = (
  * @param setState - Функция обновления состояния
  * @returns Найденная сумма
  */
-const handleSignal = (
-    setState: (fn: (s: GameState) => void) => void,
-): number => {
+const handleSignal = (setState: SetState): number => {
     setState((s) => ({
         credits: s.credits + SIGNAL_REWARD,
     }));
@@ -141,10 +137,7 @@ const handleSignal = (
  * @param getState - Функция получения состояния
  * @returns Потеряно щитов
  */
-const handleEMP = (
-    setState: (fn: (s: GameState) => void) => void,
-    getState: () => GameStore,
-): number => {
+const handleEMP = (setState: SetState, getState: () => GameStore): number => {
     const currentShields = getState().ship.shields;
 
     setState((s) => ({
@@ -163,7 +156,7 @@ const handleEMP = (
  * @param getState - Функция получения состояния
  */
 const handleRandomEvent = (
-    setState: (fn: (s: GameState) => void) => void,
+    setState: SetState,
     getState: () => GameStore,
 ): void => {
     const event = randomElement(TRAVEL_EVENTS);
@@ -237,7 +230,7 @@ const handlePatrolContracts = (
     contracts: GameState["activeContracts"],
     destinationSector: GameState["currentSector"],
     state: GameState,
-    setState: (fn: (s: GameState) => void) => void,
+    setState: SetState,
     getState: () => GameStore,
 ) => {
     let newActiveContracts = state.activeContracts;
@@ -306,7 +299,7 @@ const handlePatrolContracts = (
  */
 export const processTravel = (
     state: GameState,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     const traveling = get().traveling;

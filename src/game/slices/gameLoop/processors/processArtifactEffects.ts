@@ -1,5 +1,5 @@
 import { getArtifactEffectValue } from "@/game/artifacts";
-import type { GameState, GameStore } from "@/game/types";
+import type { GameState, GameStore, SetState } from "@/game/types";
 
 /**
  * Обработка положительных эффектов артефактов
@@ -18,7 +18,7 @@ import type { GameState, GameStore } from "@/game/types";
  */
 export const processArtifactEffects = (
     state: GameState,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     const activeArtifacts = state.artifacts.filter((a) => a.effect.active);

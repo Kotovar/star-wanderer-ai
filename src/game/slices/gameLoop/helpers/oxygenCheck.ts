@@ -1,6 +1,6 @@
 import { findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES, MIN_HEALTH_WITH_IMMORTALITY } from "@/game/constants";
-import type { GameState, GameStore } from "@/game/types";
+import type { GameState, GameStore, SetState } from "@/game/types";
 import { handleDeadCrew } from "./crewUtils";
 
 // === Constants ===
@@ -27,7 +27,7 @@ const applyOxygenDamage = (
     hasImmortality: boolean,
     crewCount: number,
     oxygenCapacity: number,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     set((s) => ({
@@ -62,7 +62,7 @@ const applyOxygenDamage = (
 export const checkOxygen = (
     state: GameState,
     get: () => GameStore,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
 ): boolean => {
     const crewCount = get().crew.length;
     const oxygenCapacity = get().getCrewCapacity();

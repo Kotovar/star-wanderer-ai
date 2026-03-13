@@ -6,7 +6,7 @@ import {
     RACES,
 } from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
-import type { GameState, GameStore } from "@/game/types";
+import type { GameState, GameStore, SetState } from "@/game/types";
 
 /**
  * Вычисляет базовую регенерацию щитов
@@ -72,7 +72,7 @@ const getArtifactRegenBonus = (
 export const regenerateShields = (
     state: GameState,
     get: () => GameStore,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
 ): void => {
     if (state.currentCombat) return;
 

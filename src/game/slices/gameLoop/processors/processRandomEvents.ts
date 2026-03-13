@@ -1,4 +1,4 @@
-import type { GameState, GameStore } from "@/game/types";
+import type { GameState, GameStore, SetState } from "@/game/types";
 
 // Constants
 const EVENT_TRIGGER_CHANCE = 0.3;
@@ -18,11 +18,7 @@ const VIRUS_HAPPINESS_PENALTY = 10;
 
 interface RandomEvent {
     name: string;
-    effect: (
-        state: GameState,
-        set: (fn: (s: GameState) => void) => void,
-        get: () => GameStore,
-    ) => void;
+    effect: (state: GameState, set: SetState, get: () => GameStore) => void;
 }
 
 /**
@@ -41,7 +37,7 @@ const randomElement = <T>(arr: T[]): T => arr[randomInRange(0, arr.length - 1)];
  */
 export const processRandomEvents = (
     state: GameState,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     if (

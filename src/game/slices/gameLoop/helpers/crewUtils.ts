@@ -1,4 +1,4 @@
-import type { GameState, GameStore } from "@/game/types";
+import type { GameStore, SetState } from "@/game/types";
 
 /**
  * Результат обработки погибшего экипажа
@@ -22,7 +22,7 @@ interface DeadCrewResult {
 export const handleDeadCrew = (
     hasAIControl: boolean,
     onGameOver: (reason: string) => void,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): DeadCrewResult => {
     const deadCrew = get().crew.filter((c) => c.health <= 0);
@@ -66,10 +66,7 @@ export const handleDeadCrew = (
  * @param get - Функция получения состояния
  * @returns Количество погибших
  */
-export const removeDeadCrew = (
-    set: (fn: (s: GameState) => void) => void,
-    get: () => GameStore,
-): number => {
+export const removeDeadCrew = (set: SetState, get: () => GameStore): number => {
     const deadCrew = get().crew.filter((c) => c.health <= 0);
 
     if (deadCrew.length === 0) return 0;

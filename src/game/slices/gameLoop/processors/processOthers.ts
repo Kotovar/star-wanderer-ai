@@ -1,4 +1,4 @@
-import type { CrewTrait, GameState, GameStore } from "@/game/types";
+import type { CrewTrait, GameStore, SetState } from "@/game/types";
 import { CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
 
 /** Бонус к настроению от трейта морали */
@@ -24,7 +24,7 @@ const POWER_ASSIGNMENT_BONUS = CREW_ASSIGNMENT_BONUSES.REACTOR_OVERLOAD;
  * @param get - Функция получения состояния
  */
 export const processMoraleTraits = (
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     const crew = get().crew;
@@ -74,7 +74,7 @@ export const processMoraleTraits = (
  * @param get - Функция получения состояния
  */
 export const processUnhappyCrew = (
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     const unhappyCrew = get().crew.filter((c) => c.happiness === 0);
@@ -97,7 +97,7 @@ export const processUnhappyCrew = (
  * @param get - Функция получения состояния
  */
 export const processPowerCheck = (
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     const power = get().getTotalPower();

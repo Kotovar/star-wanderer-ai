@@ -1,5 +1,4 @@
-import type { GameStore } from "@/game/types";
-import { SetState } from "@/game/slices/types";
+import type { GameStore, SetState } from "@/game/types";
 import { mineAsteroid } from "./helpers";
 
 /**

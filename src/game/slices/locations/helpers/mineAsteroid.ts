@@ -2,8 +2,6 @@ import { ANCIENT_DRILL_BONUS, RESEARCH_RESOURCES } from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getMiningResources } from "@/game/research/utils";
 import { playSound } from "@/sounds";
-import type { GameState, GameStore } from "@/game/types";
-import { SetState } from "@/game/slices/types";
 import { getCurrentCargo } from "@/game/slices/ship/helpers";
 import {
     ASTEROID_TIER,
@@ -13,6 +11,7 @@ import {
     MIN_CARGO_QUANTITY,
     BASE_ENGINEER_EXP,
 } from "../constants";
+import type { GameState, GameStore, SetState } from "@/game/types";
 
 /** Результат распределения грузового пространства */
 interface CargoAllocation {

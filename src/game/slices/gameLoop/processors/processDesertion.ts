@@ -1,4 +1,4 @@
-import type { CrewMember, GameState, GameStore } from "@/game/types";
+import type { CrewMember, GameStore, SetState } from "@/game/types";
 
 /**
  * Конфигурация дезертирства
@@ -43,10 +43,7 @@ const updateTurnsAtZeroHappiness = (crewMember: CrewMember): number => {
  * @param set - Функция обновления состояния
  * @param get - Функция получения состояния
  */
-export const processDesertion = (
-    set: (fn: (s: GameState) => void) => void,
-    get: () => GameStore,
-): void => {
+export const processDesertion = (set: SetState, get: () => GameStore): void => {
     set((s) => {
         // Фильтруем экипаж, оставляем только тех, кто не дезертировал
         const crewToKeep = s.crew.filter((crewMember) => {

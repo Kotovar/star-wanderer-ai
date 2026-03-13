@@ -1,5 +1,5 @@
-import type { GameState, GameStore } from "@/game/types";
-import { SetState } from "@/game/slices/types";
+import type { GameStore, SetState } from "@/game/types";
+import { removeDeadCrew } from "@/game/slices/gameLoop/helpers/crewUtils";
 
 // ============================================================================
 // Константы
@@ -51,44 +51,6 @@ const calculateDamage = (
     return Math.floor((baseMin + Math.random() * baseRange) * reduction);
 };
 
-/**
- * Проверяет условие поражения после прыжка через чёрную дыру
- * @param crew - Состояние экипажа после повреждения
- * @param modules - Состояние модулей после повреждения
- * @param state - Текущее состояние игры
- * @param get - Функция получения состояния
- */
-const checkGameOverAfterJump = (
-    crew: GameState["crew"],
-    modules: GameState["ship"]["modules"],
-    state: GameState,
-    get: () => GameStore,
-): void => {
-    // Проверка: весь экипаж мёртв
-    const hasAliveCrew = crew.some((c) => c.health > 0);
-    if (hasAliveCrew) return;
-
-    // Проверка: есть ли модуль, сохраняющий экипаж
-    const hasLifeSupportModule = modules.some(
-        (m: { type: string; health: number }) =>
-            m.type === "life_support" && m.health > 0,
-    );
-    if (hasLifeSupportModule) return;
-
-    // Проверка: есть ли артефакт, сохраняющий экипаж
-    const hasImmortalArtifact = state.artifacts.some(
-        (a) =>
-            (a.effect.type === "crew_immortal" ||
-                a.effect.type === "undying_crew") &&
-            a.effect.active,
-    );
-    if (hasImmortalArtifact) return;
-
-    // Экипаж погиб - вызываем проверку конца игры
-    get().addLog("Весь экипаж погиб в чёрной дыре...", "error");
-    get().checkGameOver();
-};
-
 // ============================================================================
 // Основная функция
 // ============================================================================
@@ -101,7 +63,7 @@ const checkGameOverAfterJump = (
  * - Случайная телепортация к другой чёрной дыре
  * - Повреждение модулей и экипажа
  * - Учёный снижает урон на 50% и получает опыт
- * - При гибели всего экипажа - проверка конца игры
+ * - При гибели всего экипажа - игра заканчивается сразу
  *
  * @param set - Функция обновления состояния
  * @param get - Функция получения состояния
@@ -167,11 +129,11 @@ export const travelThroughBlackHole = (
     // Повреждение экипажа и снижение настроения
     const damagedCrew = state.crew.map((c) => ({
         ...c,
-        health: Math.max(1, c.health - baseCrewDamage),
+        health: Math.max(0, c.health - baseCrewDamage),
         happiness: Math.max(0, c.happiness - HAPPINESS_PENALTY),
     }));
 
-    // Телепортация
+    // Телепортация - применяем повреждения
     set({
         currentSector: destination,
         ship: { ...state.ship, modules: damagedModules },
@@ -197,8 +159,9 @@ export const travelThroughBlackHole = (
         );
     }
 
-    // Проверка условия поражения
-    checkGameOverAfterJump(damagedCrew, damagedModules, state, get);
+    // Удаление погибшего экипажа
+    removeDeadCrew(set, get);
 
-    get().nextTurn();
+    // Проверка конца игры
+    get().checkGameOver();
 };

@@ -1,6 +1,12 @@
 import { DEFAULT_MAX_HEALTH, MIN_CREW_HEALTH } from "@/game/constants";
 import { removeDeadCrew } from "./crewUtils";
-import type { GameState, GameStore, CrewMember, Module } from "@/game/types";
+import type {
+    GameState,
+    GameStore,
+    CrewMember,
+    Module,
+    SetState,
+} from "@/game/types";
 
 // === Constants ===
 const CRITICAL_HEALTH_THRESHOLD = 30;
@@ -46,7 +52,7 @@ const applyDamageToCrewMember = (
     crewMember: CrewMember,
     shipModule: Module,
     damage: number,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     set((s) => ({
@@ -77,7 +83,7 @@ const applyDamageToCrewMember = (
  */
 export const checkModuleDamage = (
     get: () => GameStore,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
 ): void => {
     const currentState = get();
 

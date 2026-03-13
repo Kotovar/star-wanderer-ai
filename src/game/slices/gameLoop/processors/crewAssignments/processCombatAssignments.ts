@@ -5,10 +5,10 @@ import {
 } from "./constants";
 import type {
     CrewMember,
-    GameState,
     GameStore,
     Module,
     Race,
+    SetState,
 } from "@/game/types";
 
 /**
@@ -41,7 +41,7 @@ export const processCombatAssignment = (
     crewMember: CrewMember,
     currentModule: Module | undefined,
     crewRace: Race | undefined,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     if (!currentModule) return;
@@ -109,7 +109,7 @@ const processCombatRepair = (
     crewMember: CrewMember,
     currentModule: Module,
     crewRace: Race | undefined,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     let repairAmount: number = ASSIGNMENT_BASES.REPAIR_AMOUNT;
@@ -157,7 +157,7 @@ const processCombatRepair = (
 const processCombatHeal = (
     crewMember: CrewMember,
     crewInSameModule: CrewMember[],
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     if (crewInSameModule.length === 0 && !crewMember.moduleId) return;
@@ -206,7 +206,7 @@ const processCombatHeal = (
  */
 const processCombatFirstAid = (
     crewMember: CrewMember,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     // Первая помощь работает пассивно - уменьшает урон по экипажу
@@ -234,7 +234,7 @@ const processCombatFirstAid = (
  */
 const processCombatEvasion = (
     crewMember: CrewMember,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ): void => {
     const pilotLevel = crewMember.level || 1;

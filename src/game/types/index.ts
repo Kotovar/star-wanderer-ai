@@ -17,3 +17,4 @@ export * from "./shops";
 export * from "./bosses";
 export * from "./research";
 export * from "./enemy";
+export * from "./state";

@@ -4,8 +4,10 @@ import {
     MIN_MODULE_HEALTH,
     MODULES_BY_PRIOTITY,
 } from "@/game/constants";
-import type { GameState, GameStore, Module } from "@/game/types";
+import type { GameState, GameStore, Module, SetState } from "@/game/types";
 import { isModuleActive } from "@/game/modules/utils";
+
+type SetStateFn = (fn: (s: GameState) => Partial<GameState>) => void;
 
 interface PowerStatus {
     currentPower: number;
@@ -61,7 +63,7 @@ const disableModule = (
 const handlePowerDeficit = (
     deficit: number,
     get: () => GameStore,
-    set: (fn: (s: GameState) => void) => void,
+    set: SetStateFn,
 ): void => {
     const modules = [...get().ship.modules];
     let remainingDeficit = deficit;
@@ -115,10 +117,7 @@ const handlePowerDeficit = (
 /**
  * Включает модули при избытке энергии
  */
-const handlePowerSurplus = (
-    get: () => GameStore,
-    set: (fn: (s: GameState) => void) => void,
-): void => {
+const handlePowerSurplus = (get: () => GameStore, set: SetStateFn): void => {
     const disabledModules = get().ship.modules.filter(
         (m) => m.disabled && m.health > 0,
     );
@@ -154,10 +153,7 @@ const handlePowerSurplus = (
  * Управление энергией корабля
  * Отключает модули при дефиците, включает при избытке
  */
-export const managePower = (
-    get: () => GameStore,
-    set: (fn: (s: GameState) => void) => void,
-): void => {
+export const managePower = (get: () => GameStore, set: SetState): void => {
     const { deficit } = getPowerStatus(get);
 
     if (deficit > 0) {
