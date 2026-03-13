@@ -40,6 +40,7 @@ import {
     createCombatSlice,
     createTravelSlice,
     createLocationsSlice,
+    createUiSlice,
 } from "@/game/slices";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type { CrewMember, GameStore, Module, RaceId } from "@/game/types";
@@ -57,20 +58,7 @@ export const useGameStore = create<GameStore>()(
         ...createCombatSlice(set, get),
         ...createTravelSlice(set, get),
         ...createLocationsSlice(set, get),
-
-        showGalaxyMap: () => set({ gameMode: "galaxy_map" }),
-        showSectorMap: () => set({ gameMode: "sector_map" }),
-        showAssignments: () => set({ gameMode: "assignments" }),
-        closeArtifactsPanel: () =>
-            set((state) => ({
-                gameMode: state.previousGameMode || "galaxy_map",
-                previousGameMode: null,
-            })),
-        closeResearchPanel: () =>
-            set((state) => ({
-                gameMode: state.previousGameMode || "galaxy_map",
-                previousGameMode: null,
-            })),
+        ...createUiSlice(set),
 
         buyItem: (item, targetModuleId) => {
             const state = get();
@@ -2227,41 +2215,6 @@ export const useGameStore = create<GameStore>()(
 
             playSound("success");
             return artifact;
-        },
-
-        showArtifacts: () => {
-            set((state) => ({
-                // Don't overwrite previousGameMode if we're already in a panel mode
-                previousGameMode:
-                    state.gameMode === "research" ||
-                    state.gameMode === "artifacts"
-                        ? state.previousGameMode
-                        : state.gameMode,
-                gameMode: "artifacts",
-            }));
-        },
-
-        showResearch: () => {
-            set((state) => ({
-                // Don't overwrite previousGameMode if we're already in a panel mode
-                previousGameMode:
-                    state.gameMode === "research" ||
-                    state.gameMode === "artifacts"
-                        ? state.previousGameMode
-                        : state.gameMode,
-                gameMode: "research",
-            }));
-        },
-
-        // Save previous game mode for mobile modal (without changing current game mode)
-        savePreviousGameMode: () => {
-            set((state) => ({
-                previousGameMode:
-                    state.gameMode === "research" ||
-                    state.gameMode === "artifacts"
-                        ? state.previousGameMode
-                        : state.gameMode,
-            }));
         },
 
         discoverRace: (raceId: RaceId) => {
