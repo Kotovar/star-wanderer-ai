@@ -64,6 +64,9 @@ export const createGameLoopSlice = (
         // Дезертирство экипажа
         processors.processDesertion(set, get);
 
+        // Проверка конца игры после ухода экипажа
+        get().checkGameOver();
+
         // Путешествия
         processTravel(state, set, get);
 

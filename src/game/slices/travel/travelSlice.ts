@@ -1,14 +1,10 @@
-import type { GameState, GameStore } from "@/game/types";
-import { selectSector, selectLocation } from "./helpers";
-
-// Тип для set с поддержкой immer (позволяет и мутации, и объекты)
-type SetState = {
-    (
-        partial:
-            | Partial<GameState>
-            | ((state: GameState) => Partial<GameState>),
-    ): void;
-};
+import type { GameStore } from "@/game/types";
+import { SetState } from "@/game/slices/types";
+import {
+    selectSector,
+    selectLocation,
+    travelThroughBlackHole,
+} from "./helpers";
 
 /**
  * Интерфейс TravelSlice
@@ -16,6 +12,7 @@ type SetState = {
 export interface TravelSlice {
     selectSector: (sectorId: number) => void;
     selectLocation: (locationIdx: number) => void;
+    travelThroughBlackHole: () => void;
 }
 
 /**
@@ -30,5 +27,8 @@ export const createTravelSlice = (
     },
     selectLocation: (locationIdx) => {
         selectLocation(set, get, locationIdx);
+    },
+    travelThroughBlackHole: () => {
+        travelThroughBlackHole(set, get);
     },
 });

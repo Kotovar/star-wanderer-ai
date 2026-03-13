@@ -344,3 +344,6 @@ export const POWER_ARTIFACT_TYPES: ArtifactType[] = [
     "abyss_power",
     "free_power",
 ];
+
+/** Бонусы древнего бура для каждого тира [T1, T2, T3, T4] */
+export const ANCIENT_DRILL_BONUS = [0.7, 0.5, 0.3, 0] as const;

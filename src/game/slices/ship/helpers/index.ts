@@ -7,6 +7,7 @@ export * from "./getFuelCapacity";
 export * from "./getFuelEfficiency";
 export * from "./getDrillLevel";
 export * from "./getCargoCapacity";
+export * from "./getCurrentCargo";
 export * from "./areModulesFunctional";
 export * from "./fuel";
 export * from "./updateShipStats";
