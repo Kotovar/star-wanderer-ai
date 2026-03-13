@@ -1,0 +1,303 @@
+import { findActiveArtifact } from "@/game/artifacts";
+import { ARTIFACT_TYPES } from "@/game/constants";
+import { handleSurvivorCapsuleDelivery } from "@/game/contracts";
+import { determineSignalOutcome } from "@/game/signals";
+import type { GameState, GameStore, Location } from "@/game/types";
+
+// ============================================================================
+// Константы
+// ============================================================================
+
+/** Босс требует уровень сканера 3+ */
+const BOSS_TIER = 3;
+
+/** Тип для set с поддержкой immer (позволяет и мутации, и объекты) */
+type SetState = {
+    (
+        partial:
+            | Partial<GameState>
+            | ((state: GameState) => Partial<GameState>),
+    ): void;
+};
+
+// ============================================================================
+// Вспомогательные функции
+// ============================================================================
+
+/**
+ * Обновляет статус посещения локации в галактике и текущем секторе
+ * @param loc - Локация для отметки
+ * @param set - Функция обновления состояния
+ * @param get - Функция получения состояния
+ */
+const markLocationVisited = (
+    loc: Location,
+    set: SetState,
+    get: () => GameStore,
+): void => {
+    const sector = get().currentSector;
+    if (!sector) return;
+
+    set((s) => {
+        const updateLocations = (locations: Location[]) =>
+            locations.map((l) =>
+                l.id === loc.id ? { ...l, visited: true } : l,
+            );
+
+        return {
+            galaxy: {
+                ...s.galaxy,
+                sectors: s.galaxy.sectors.map((sec) =>
+                    sec.id === sector.id
+                        ? {
+                              ...sec,
+                              locations: updateLocations(sec.locations),
+                          }
+                        : sec,
+                ),
+            },
+            currentSector: s.currentSector
+                ? {
+                      ...s.currentSector,
+                      locations: updateLocations(s.currentSector.locations),
+                  }
+                : null,
+        };
+    });
+};
+
+/**
+ * Обновляет локацию в текущем секторе и устанавливает её как выбранную
+ * @param loc - Обновлённая локация
+ * @param set - Функция обновления состояния
+ */
+const updateLocationInSector = (loc: Location, set: SetState): void => {
+    set((s) => ({
+        currentLocation: loc,
+        currentSector: s.currentSector
+            ? {
+                  ...s.currentSector,
+                  locations: s.currentSector.locations.map((l) =>
+                      l.id === loc.id ? loc : l,
+                  ),
+              }
+            : null,
+    }));
+};
+
+/**
+ * Проверяет, обнаружен ли объект сканером
+ * @param loc - Локация для проверки
+ * @param get - Функция получения состояния
+ * @returns true если объект обнаружен сканером
+ */
+const isObjectScanned = (loc: Location, get: () => GameStore): boolean => {
+    if (loc.type === "enemy") {
+        return get().canScanObject("enemy", loc.threat ?? 1);
+    }
+    if (loc.type === "boss") {
+        return get().canScanObject("boss", BOSS_TIER);
+    }
+    if (loc.type === "anomaly") {
+        return get().canScanObject("anomaly", loc.anomalyTier ?? 1);
+    }
+    if (loc.type === "friendly_ship") {
+        return get().canScanObject("friendly_ship");
+    }
+    if (loc.type === "storm") {
+        return get().canScanObject("storm");
+    }
+    return true;
+};
+
+/**
+ * Проверяет раннее обнаружение угрозы
+ * @param tier - Уровень угрозы
+ * @param get - Функция получения состояния
+ * @returns true если угроза обнаружена заранее
+ */
+const checkEarlyWarning = (tier: number, get: () => GameStore): boolean => {
+    const chance = get().getEarlyWarningChance(tier);
+    return Math.random() * 100 < chance;
+};
+
+// ============================================================================
+// Основная функция
+// ============================================================================
+
+/**
+ * Обрабатывает выбор локации для посещения в текущем секторе
+ *
+ * Функция проверяет тип локации и запускает соответствующий сценарий:
+ * - Станции/планеты: открытие панели, доставка капсул с выжившими
+ * - Враги/боссы: бой или режим "неизвестный корабль"
+ * - Аномалии: проверка учёного на борту
+ * - Сигналы бедствия: раскрытие типа сигнала
+ *
+ * @param set - Функция обновления состояния
+ * @param get - Функция получения состояния
+ * @param locationIdx - Индекс локации в массиве locations текущего сектора
+ */
+export const selectLocation = (
+    set: SetState,
+    get: () => GameStore,
+    locationIdx: number,
+): void => {
+    const state = get();
+    const loc = state.currentSector?.locations[locationIdx];
+    if (!loc) return;
+
+    // Повторное посещение resolved сигналов бедствия (просмотр того, что было)
+    if (loc.type === "distress_signal" && loc.signalResolved) {
+        set({ currentLocation: loc, gameMode: "distress_signal" });
+        return;
+    }
+
+    // Локация уже посещена
+    if (state.completedLocations.includes(loc.id)) {
+        get().addLog(`${loc.name} уже посещена`, "warning");
+        return;
+    }
+
+    set({ currentLocation: loc });
+
+    // Отметка локации как посещённой (для планет и станций)
+    if (loc.type === "planet" || loc.type === "station") {
+        markLocationVisited(loc, set, get);
+    }
+
+    // Путешествие внутри сектора всегда занимает ход
+    get().nextTurn();
+
+    // Обработка по типу локации
+    switch (loc.type) {
+        case "station":
+            set({ gameMode: "station" });
+            handleSurvivorCapsuleDelivery("station");
+            break;
+
+        case "planet":
+            set({ gameMode: "planet" });
+            if (!loc.isEmpty) {
+                handleSurvivorCapsuleDelivery("planet");
+            }
+            get().processScanContracts();
+            get().completeScanContracts();
+            get().handleDiplomacyContracts(locationIdx);
+            get().handleSupplyRunContracts(locationIdx);
+            break;
+
+        case "enemy": {
+            const enemyTier = loc.threat ?? 1;
+            const canScan = isObjectScanned(loc, get);
+
+            if (!canScan && !loc.signalRevealed) {
+                if (checkEarlyWarning(enemyTier, get)) {
+                    get().addLog(
+                        "📡 Сканер обнаружил засаду! Вы готовы к бою.",
+                        "info",
+                    );
+                    get().startCombat(loc);
+                } else {
+                    set({ gameMode: "unknown_ship" });
+                }
+            } else {
+                get().startCombat(loc);
+            }
+            break;
+        }
+
+        case "boss": {
+            if (loc.bossDefeated) {
+                get().addLog(`${loc.name} уже уничтожен`, "info");
+                return;
+            }
+
+            const canScan = isObjectScanned(loc, get);
+            if (!canScan && !loc.signalRevealed) {
+                if (checkEarlyWarning(BOSS_TIER, get)) {
+                    get().addLog(
+                        "📡 Сканер обнаружил ДРЕВНЮЮ УГРОЗУ! Готовьтесь к бою.",
+                        "warning",
+                    );
+                    get().startBossCombat(loc);
+                } else {
+                    set({ gameMode: "unknown_ship" });
+                }
+            } else {
+                get().startBossCombat(loc);
+            }
+            break;
+        }
+
+        case "anomaly": {
+            const canScan = isObjectScanned(loc, get);
+            set({
+                gameMode:
+                    canScan || loc.signalRevealed ? "anomaly" : "unknown_ship",
+            });
+            break;
+        }
+
+        case "friendly_ship": {
+            const canScan = isObjectScanned(loc, get);
+            set({
+                gameMode:
+                    canScan || loc.signalRevealed
+                        ? "friendly_ship"
+                        : "unknown_ship",
+            });
+            break;
+        }
+
+        case "asteroid_belt":
+            set({ gameMode: "asteroid_belt" });
+            break;
+
+        case "storm": {
+            const canScan = isObjectScanned(loc, get);
+            if (!canScan && !loc.signalRevealed) {
+                set({ currentLocation: loc, gameMode: "storm" });
+            } else {
+                get().addLog("📡 Сканер обнаружил шторм впереди!", "warning");
+                set({ currentLocation: loc, gameMode: "storm" });
+            }
+            break;
+        }
+
+        case "distress_signal": {
+            if (!loc.signalRevealChecked) {
+                const canReveal =
+                    Math.random() * 100 < get().getSignalRevealChance();
+
+                if (canReveal && !loc.signalType) {
+                    const eyeOfSingularity = findActiveArtifact(
+                        state.artifacts,
+                        ARTIFACT_TYPES.EYE_OF_SINGULARITY,
+                    );
+
+                    const ambushModifier = eyeOfSingularity
+                        ? (eyeOfSingularity?.negativeEffect?.value ?? 0.5)
+                        : 0;
+                    const outcome = determineSignalOutcome(ambushModifier);
+                    updateLocationInSector(
+                        {
+                            ...loc,
+                            signalType: outcome,
+                            signalRevealed: true,
+                            signalRevealChecked: true,
+                        },
+                        set,
+                    );
+                } else {
+                    updateLocationInSector(
+                        { ...loc, signalRevealChecked: true },
+                        set,
+                    );
+                }
+            }
+            set({ gameMode: "distress_signal" });
+            break;
+        }
+    }
+};

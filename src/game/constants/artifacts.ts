@@ -207,7 +207,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         effect: { type: "all_seeing", value: 1, active: false },
         negativeEffect: {
             type: "ambush_chance",
-            value: 50,
+            value: 0.5,
             description: "+50% шанс засад в сигналах бедствия",
         },
         discovered: false,

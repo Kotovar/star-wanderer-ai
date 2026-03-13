@@ -160,7 +160,7 @@ const checkTierAccess = (
  */
 const applyVoidEngineBonus = (
     voidEngine: Artifact,
-    set: (fn: (state: GameState) => void) => void,
+    set: (fn: (state: GameState) => Partial<GameState>) => void,
     get: () => GameStore,
 ): string => {
     const artifactName = voidEngine.cursed
@@ -225,7 +225,7 @@ const checkFuelAvailable = (
  */
 const consumeFuel = (
     fuelCost: number,
-    set: (fn: (state: GameState) => void) => void,
+    set: (fn: (state: GameState) => Partial<GameState>) => void,
     get: () => GameStore,
 ): void => {
     set((s) => ({
@@ -254,7 +254,7 @@ const handleNavigationError = (
     state: GameState,
     distance: number,
     pilotInCockpit: boolean,
-    set: (fn: (state: GameState) => void) => void,
+    set: (fn: (state: GameState) => Partial<GameState>) => void,
     get: () => GameStore,
 ): void => {
     if (pilotInCockpit || distance === 0) return;
@@ -300,7 +300,7 @@ const handleNavigationError = (
  */
 const markSectorVisited = (
     sector: GameState["currentSector"],
-    set: (fn: (state: GameState) => void) => void,
+    set: (fn: (state: GameState) => Partial<GameState>) => void,
 ): void => {
     if (!sector) return;
 
@@ -326,7 +326,7 @@ const markSectorVisited = (
 const handleTravelCompletion = (
     sector: GameState["currentSector"],
     travelInstant: boolean,
-    set: (fn: (state: GameState) => void) => void,
+    set: (fn: (state: GameState) => Partial<GameState>) => void,
     get: () => GameStore,
 ): void => {
     if (!sector) return;
@@ -355,7 +355,7 @@ const handleTravelStart = (
     distance: number,
     travelInstant: boolean,
     pilot: GameState["crew"][number] | undefined,
-    set: (fn: (state: GameState) => void) => void,
+    set: (fn: (state: GameState) => Partial<GameState>) => void,
     get: () => GameStore,
 ): void => {
     if (!sector) return;
@@ -408,7 +408,7 @@ const handleTravelStart = (
  * @param sectorId - ID выбранного сектора
  */
 export const selectSector = (
-    set: (fn: (state: GameState) => void) => void,
+    set: (fn: (state: GameState) => Partial<GameState>) => void,
     get: () => GameStore,
     sectorId: number,
 ): void => {

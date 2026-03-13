@@ -1,15 +1,29 @@
-import type { GameState, GameStore } from "@/game/types";
-import { processScanContracts, completeScanContracts } from "./helpers";
+import {
+    processScanContracts,
+    completeScanContracts,
+    handleDiplomacyContracts,
+    handleSupplyRunContracts,
+} from "./helpers";
 import { giveCrewExperience } from "@/game/crew";
+import type { GameState, GameStore } from "@/game/types";
+
+// Тип для set с поддержкой immer (позволяет и мутации, и объекты)
+type SetState = {
+    (
+        partial:
+            | Partial<GameState>
+            | ((state: GameState) => Partial<GameState>),
+    ): void;
+};
 
 /**
- * Создаёт слайс для обработки контрактов на сканирование планет
+ * Создаёт слайс для обработки контрактов
  * @param set - Функция обновления состояния
  * @param get - Функция получения состояния
- * @returns Методы для работы с контрактами на сканирование
+ * @returns Методы для работы с контрактами
  */
 export const createScanContractsSlice = (
-    set: (fn: (state: GameState) => void) => void,
+    set: SetState,
     get: () => GameStore,
 ) => ({
     /**
@@ -67,5 +81,29 @@ export const createScanContractsSlice = (
                 `Экипаж получил опыт: +${contract.expReward} ед.`,
             );
         });
+    },
+
+    /**
+     * Обрабатывает дипломатические контракты при посещении планеты
+     * @param locationIdx - Индекс локации в текущем секторе
+     */
+    handleDiplomacyContracts: (locationIdx: number) => {
+        const state = get();
+        const loc = state.currentSector?.locations[locationIdx];
+        if (!loc || loc.type !== "planet") return;
+
+        handleDiplomacyContracts(loc, set, get);
+    },
+
+    /**
+     * Обрабатывает контракты на поставку при посещении планеты
+     * @param locationIdx - Индекс локации в текущем секторе
+     */
+    handleSupplyRunContracts: (locationIdx: number) => {
+        const state = get();
+        const loc = state.currentSector?.locations[locationIdx];
+        if (!loc || loc.type !== "planet") return;
+
+        handleSupplyRunContracts(loc, set, get);
     },
 });

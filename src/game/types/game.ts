@@ -242,6 +242,8 @@ export interface GameResearch {
 export interface GameScanContracts {
     processScanContracts: () => Contract[];
     completeScanContracts: () => void;
+    handleDiplomacyContracts: (locationIdx: number) => void;
+    handleSupplyRunContracts: (locationIdx: number) => void;
 }
 
 export interface GameManagement {
