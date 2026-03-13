@@ -99,13 +99,20 @@ export function StormResultsPanel() {
                     )}
                     {stormResult.moduleDamage.length > 0 && (
                         <div className="text-[#ffaa00] mt-1">
-                            <div>
-                                Модули: -{stormResult.moduleDamagePercent}% x
-                                {stormResult.numModulesDamaged}
-                            </div>
+                            {stormResult.moduleDamagePercent ? (
+                                <div>
+                                    Модули: -{stormResult.moduleDamagePercent}%
+                                    x{stormResult.numModulesDamaged}
+                                </div>
+                            ) : (
+                                ""
+                            )}
                             <div className="text-xs mt-1 text-[#888]">
                                 {stormResult.moduleDamage
-                                    .map((m) => `${m.name}: -${m.damage}%`)
+                                    .map(
+                                        (m) =>
+                                            `${m.name}: ${m.damage ? "-" : ""}${m.damage}%`,
+                                    )
                                     .join(" | ")}
                             </div>
                         </div>

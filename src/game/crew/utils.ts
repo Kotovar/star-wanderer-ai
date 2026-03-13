@@ -143,3 +143,15 @@ export const giveCrewExperience = (expAmount: number, logMessage?: string) => {
         state.addLog(logMessage, "info");
     }
 };
+
+/**
+ * Находит всех членов экипажа указанной профессии.
+ *
+ * @param crew - Массив экипажа для поиска
+ * @param profession - Профессия для поиска
+ * @returns Массив членов экипажа с указанной профессией
+ */
+export const getCrewByProfession = <T extends { profession: Profession }>(
+    crew: T[],
+    profession: Profession,
+): T[] => crew.filter((c) => c.profession === profession);

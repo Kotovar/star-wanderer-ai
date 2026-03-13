@@ -1,5 +1,6 @@
 import type { GameState, GameStore } from "@/game/types";
 import { mineAsteroid } from "./helpers";
+import { handleStormEntry } from "./helpers/enterStorm";
 
 // Тип для set с поддержкой immer (позволяет и мутации, и объекты)
 type SetState = {
@@ -15,6 +16,7 @@ type SetState = {
  */
 export interface LocationsSlice {
     mineAsteroid: () => void;
+    enterStorm: () => void;
 }
 
 /**
@@ -26,5 +28,8 @@ export const createLocationsSlice = (
 ): LocationsSlice => ({
     mineAsteroid: () => {
         mineAsteroid(set, get);
+    },
+    enterStorm: () => {
+        handleStormEntry(set, get);
     },
 });
