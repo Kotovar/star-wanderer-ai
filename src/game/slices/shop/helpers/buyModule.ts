@@ -6,6 +6,7 @@ import type {
     ShopItem,
 } from "@/game/types";
 import { playSound } from "@/sounds";
+import { isPositionAdjacentToModules } from "@/game/modules/adjacency";
 import {
     MODULE_HEALTH_BY_LEVEL,
     MODULE_DEFENSE_BY_LEVEL,
@@ -122,72 +123,6 @@ const createModuleFromItem = (
 };
 
 /**
- * Проверяет, является ли позиция соседней с существующими модулями
- * @param x - Координата X
- * @param y - Координата Y
- * @param width - Ширина модуля
- * @param height - Высота модуля
- * @param existingModules - Существующие модули
- * @returns true если позиция соседняя
- */
-const isAdjacentToExisting = (
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    existingModules: Module[],
-): boolean => {
-    for (const existing of existingModules) {
-        // Проверка всех 4 сторон
-        // Верхняя сторона
-        for (let dx = 0; dx < width; dx++) {
-            if (
-                y - 1 >= existing.y &&
-                y - 1 < existing.y + existing.height &&
-                x + dx >= existing.x &&
-                x + dx < existing.x + existing.width
-            ) {
-                return true;
-            }
-        }
-        // Нижняя сторона
-        for (let dx = 0; dx < width; dx++) {
-            if (
-                y + height >= existing.y &&
-                y + height < existing.y + existing.height &&
-                x + dx >= existing.x &&
-                x + dx < existing.x + existing.width
-            ) {
-                return true;
-            }
-        }
-        // Левая сторона
-        for (let dy = 0; dy < height; dy++) {
-            if (
-                x - 1 >= existing.x &&
-                x - 1 < existing.x + existing.width &&
-                y + dy >= existing.y &&
-                y + dy < existing.y + existing.height
-            ) {
-                return true;
-            }
-        }
-        // Правая сторона
-        for (let dy = 0; dy < height; dy++) {
-            if (
-                x + width >= existing.x &&
-                x + width < existing.x + existing.width &&
-                y + dy >= existing.y &&
-                y + dy < existing.y + existing.height
-            ) {
-                return true;
-            }
-        }
-    }
-    return false;
-};
-
-/**
  * Находит лучшую позицию для нового модуля
  * @param module - Модуль для размещения
  * @param gridSize - Размер сетки корабля
@@ -216,7 +151,7 @@ const findBestPosition = (
         for (let x = 0; x < gridSize; x++) {
             if (canPlaceModule(module, x, y)) {
                 if (
-                    isAdjacentToExisting(
+                    isPositionAdjacentToModules(
                         x,
                         y,
                         module.width,

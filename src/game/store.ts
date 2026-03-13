@@ -5,6 +5,7 @@ import {
     getRandomUndiscoveredArtifact,
 } from "@/game/artifacts";
 import { isModuleActive } from "@/game/modules";
+import { areModulesAdjacent } from "@/game/modules/adjacency";
 import {
     CONTRACT_REWARDS,
     DELIVERY_GOODS,
@@ -519,26 +520,7 @@ export const useGameStore = create<GameStore>()(
             const mod1 = state.ship.modules.find((m) => m.id === moduleId1);
             const mod2 = state.ship.modules.find((m) => m.id === moduleId2);
             if (!mod1 || !mod2) return false;
-
-            // Two modules are adjacent if they share an edge (not just a corner)
-            // Check horizontal adjacency
-            if (
-                mod1.y < mod2.y + mod2.height &&
-                mod1.y + mod1.height > mod2.y
-            ) {
-                // mod1 is to the left of mod2
-                if (mod1.x + mod1.width === mod2.x) return true;
-                // mod1 is to the right of mod2
-                if (mod2.x + mod2.width === mod1.x) return true;
-            }
-            // Check vertical adjacency
-            if (mod1.x < mod2.x + mod2.width && mod1.x + mod1.width > mod2.x) {
-                // mod1 is above mod2
-                if (mod1.y + mod1.height === mod2.y) return true;
-                // mod1 is below mod2
-                if (mod2.y + mod2.height === mod1.y) return true;
-            }
-            return false;
+            return areModulesAdjacent(mod1, mod2);
         },
 
         getCrewInModule: (moduleId) => {
