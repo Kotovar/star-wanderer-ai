@@ -12,10 +12,12 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { CREW_ACTIONS, PROFESSION_NAMES } from "@/game/constants/crew";
+import { getAvailableTasksForModule } from "@/game/slices/crew/helpers";
 import { CrewMemberAssignment } from "@/game/types";
 
 export function AssignmentsPanel() {
     const crew = useGameStore((s) => s.crew);
+    const modules = useGameStore((s) => s.ship.modules);
 
     const assignCrewTask = useGameStore((s) => s.assignCrewTask);
     const showGalaxyMap = useGameStore((s) => s.showGalaxyMap);
@@ -46,14 +48,19 @@ export function AssignmentsPanel() {
 
             <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-4 mt-2.5">
                 {crew.map((c) => {
-                    let actions = CREW_ACTIONS[c.profession] || [
+                    const currentModule = modules.find(
+                        (m) => m.id === c.moduleId,
+                    );
+
+                    // Получаем все задачи для профессии
+                    let allActions = CREW_ACTIONS[c.profession] || [
                         { value: "", label: "ОЖИДАНИЕ", effect: null },
                     ];
 
                     // Добавляем "Сращивание" для ксеноморфов
                     if (c.race === "xenosymbiont") {
-                        actions = [
-                            ...actions,
+                        allActions = [
+                            ...allActions,
                             {
                                 value: "merge",
                                 label: "🧬 Сращивание",
@@ -61,6 +68,12 @@ export function AssignmentsPanel() {
                             },
                         ];
                     }
+
+                    // Фильтруем задачи по модулю
+                    const actions = getAvailableTasksForModule(
+                        currentModule,
+                        allActions,
+                    );
 
                     // Convert empty string to 'none' for Select value
                     const currentValue: string =

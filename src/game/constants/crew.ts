@@ -184,3 +184,28 @@ export const CREW_IN_MODULE_BONUSES = {
 export const DEFAULT_MAX_HEALTH = 100;
 export const MIN_CREW_HEALTH = 0;
 export const MIN_HEALTH_WITH_IMMORTALITY = 1;
+
+/**
+ * Базовое здоровье экипажа за уровень
+ */
+export const BASE_CREW_HEALTH_PER_LEVEL = 20;
+
+/**
+ * Базовое здоровье экипажа первого уровня
+ */
+export const BASE_CREW_HEALTH = 100;
+
+/**
+ * Базовое счастье экипажа при найме (в процентах от максимального)
+ */
+export const INITIAL_HAPPINESS_PERCENT = 80;
+
+/**
+ * Минимальное счастье экипажа
+ */
+export const MIN_CREW_HAPPINESS = 0;
+
+/**
+ * Максимальное счастье экипажа по умолчанию
+ */
+export const DEFAULT_MAX_HAPPINESS = 100;

@@ -1,4 +1,12 @@
-import type { Sector, Module, StarType, GalaxyTierAll } from "@/game/types";
+import type {
+    Sector,
+    Module,
+    StarType,
+    GalaxyTierAll,
+    Artifact,
+} from "@/game/types";
+import { findActiveArtifact } from "../artifacts";
+import { ARTIFACT_TYPES } from "../constants";
 
 type TierDetails = {
     ring: string;
@@ -57,22 +65,17 @@ export function getScannerLevel(modules: Module[]): number {
 }
 
 // Check if player can see tier 4 sectors (scanner level 4 or special artifact)
-export function canSeeTier4(
-    modules: Module[],
-    artifacts: Array<{
-        effect?: { type?: string; active?: boolean };
-        id?: string;
-    }>,
-): boolean {
+export function canSeeTier4(modules: Module[], artifacts: Artifact[]): boolean {
     // Check for scanner level 4
     const scannerLevel = getScannerLevel(modules);
     if (scannerLevel >= 4) return true;
 
-    // Check for all-seeing eye artifact
-    const hasAllSeeingEye = artifacts.some(
-        (a) => a.effect?.type === "all_seeing" && a.effect?.active,
+    const allSeeing = findActiveArtifact(
+        artifacts,
+        ARTIFACT_TYPES.EYE_OF_SINGULARITY,
     );
-    if (hasAllSeeingEye) return true;
+
+    if (allSeeing) return true;
 
     return false;
 }
@@ -261,10 +264,7 @@ export function drawTierRings(
     maxRadius: number,
     modules: Module[],
     captainLevel: number,
-    artifacts: Array<{
-        effect?: { type?: string; active?: boolean };
-        id?: string;
-    }>,
+    artifacts: Artifact[],
 ) {
     const tierRadius = [
         maxRadius * 0.5,

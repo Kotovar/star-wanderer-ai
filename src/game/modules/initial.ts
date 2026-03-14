@@ -3,10 +3,14 @@ import type { Module } from "../types";
 // Starting fuel (matches initial fueltank capacity)
 export const STARTING_FUEL = 80;
 
+// Base ID for initial modules - ensures no collision with dynamically generated IDs
+// Dynamic modules use Date.now() which is always > 1000
+const INITIAL_MODULE_BASE_ID = 100;
+
 // Initial ship modules
 export const initialModules: Module[] = [
     {
-        id: 1,
+        id: INITIAL_MODULE_BASE_ID + 1,
         type: "reactor",
         name: "Реактор",
         x: 1,
@@ -20,7 +24,7 @@ export const initialModules: Module[] = [
         defense: 1,
     },
     {
-        id: 2,
+        id: INITIAL_MODULE_BASE_ID + 2,
         type: "cockpit",
         name: "Кабина",
         x: 2,
@@ -34,7 +38,7 @@ export const initialModules: Module[] = [
         defense: 1,
     },
     {
-        id: 3,
+        id: INITIAL_MODULE_BASE_ID + 3,
         type: "lifesupport",
         name: "Жизнеобеспечение",
         x: 1,
@@ -49,7 +53,7 @@ export const initialModules: Module[] = [
         defense: 1,
     },
     {
-        id: 4,
+        id: INITIAL_MODULE_BASE_ID + 4,
         type: "cargo",
         name: "Грузовой отсек",
         x: 2,
@@ -64,7 +68,7 @@ export const initialModules: Module[] = [
         defense: 1,
     },
     {
-        id: 5,
+        id: INITIAL_MODULE_BASE_ID + 5,
         type: "engine",
         name: "Двигатель",
         x: 3,
@@ -79,7 +83,7 @@ export const initialModules: Module[] = [
         defense: 1,
     },
     {
-        id: 6,
+        id: INITIAL_MODULE_BASE_ID + 6,
         type: "fueltank",
         name: "Топливный бак",
         x: 3,

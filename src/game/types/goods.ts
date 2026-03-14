@@ -11,3 +11,10 @@ export interface TradeGood {
     quantity: number;
     buyPrice: number;
 }
+
+export type StationPrices = Record<
+    string,
+    Record<Goods, { buy: number; sell: number }>
+>;
+
+export type StationStock = Record<string, Record<Goods, number>>;

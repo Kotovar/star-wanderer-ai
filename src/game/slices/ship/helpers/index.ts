@@ -11,3 +11,6 @@ export * from "./getCurrentCargo";
 export * from "./areModulesFunctional";
 export * from "./fuel";
 export * from "./updateShipStats";
+export * from "./toggleModule";
+export * from "./moveModule";
+export * from "./canPlaceModule";

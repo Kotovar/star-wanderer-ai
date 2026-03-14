@@ -16,6 +16,7 @@ import type {
     Profession,
 } from "@/game/types";
 import { COMBAT_ACTIONS } from "@/game/constants/crew";
+import { getAvailableTasksForModule } from "@/game/slices/crew/helpers";
 import { useTranslation } from "@/lib/useTranslation";
 
 interface CrewMemberCardProps {
@@ -190,12 +191,8 @@ function TaskRow({
     isCombat = false,
     t,
 }: TaskRowProps) {
-    const filteredActions = actions.filter((action) => {
-        if (action.moduleType && module?.type !== action.moduleType) {
-            return false;
-        }
-        return true;
-    });
+    // Фильтруем задачи по модулю используя общую функцию
+    const filteredActions = getAvailableTasksForModule(module, actions);
 
     return (
         <div className="flex items-start gap-2">

@@ -5,6 +5,7 @@ import {
     repairShip as repairShipAction,
     healCrew as healCrewAction,
     installModuleFromCargo as installModuleFromCargoAction,
+    scrapModule as scrapModuleAction,
     type ServiceCostResult,
 } from "./helpers";
 
@@ -49,6 +50,12 @@ export interface ServicesSlice {
      * @returns Стоимость лечения и процент повреждения
      */
     getHealCost: () => ServiceCostResult;
+
+    /**
+     * Уничтожает модуль корабля и возвращает деньги
+     * @param moduleId - ID модуля для уничтожения
+     */
+    scrapModule: (moduleId: number) => void;
 }
 
 /**
@@ -78,4 +85,6 @@ export const createServicesSlice = (
     getRepairCost: () => calculateRepairCost(get()),
 
     getHealCost: () => calculateHealCost(get()),
+
+    scrapModule: (moduleId) => scrapModuleAction(moduleId, set, get),
 });

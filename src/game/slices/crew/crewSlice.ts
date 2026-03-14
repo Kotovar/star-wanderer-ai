@@ -1,6 +1,6 @@
 import type { GameStore } from "@/game/types/game";
-import type { CrewMember } from "@/game/types";
-import { gainExp as gainExpHelper } from "./helpers";
+import type { CrewMember, CrewMemberAssignment } from "@/game/types";
+import { gainExp as gainExpHelper, isValidCrewAssignment } from "./helpers";
 import {
     canMergeWithModule,
     canUnmerge,
@@ -8,6 +8,7 @@ import {
     unmergeFromModule as unmergeFromModuleFn,
     autoUnmergeOnMove as autoUnmergeOnMoveFn,
 } from "./helpers/merge";
+import { playSound } from "@/sounds";
 
 /**
  * Интерфейс CrewSlice
@@ -43,6 +44,36 @@ export interface CrewSlice {
      * Автоматически отсоединяет ксеноморфа при перемещении
      */
     autoUnmergeOnMove: (crewMemberId: number) => void;
+
+    /**
+     * Назначает гражданскую задачу члену экипажа
+     */
+    assignCrewTask: (
+        crewId: number,
+        task: CrewMemberAssignment | null,
+        effect: string | null,
+    ) => void;
+
+    /**
+     * Назначает боевую задачу члену экипажа
+     */
+    assignCombatTask: (
+        crewId: number,
+        task: string | null,
+        effect: string | null,
+    ) => void;
+
+    /**
+     * Находит всех членов экипажа в указанном модуле
+     */
+    getCrewInModule: (moduleId: number) => CrewMember[];
+
+    /**
+     * Перемещает члена экипажа в соседний модуль
+     * @param crewId - ID члена экипажа
+     * @param targetModuleId - ID целевого модуля
+     */
+    moveCrewMember: (crewId: number, targetModuleId: number) => void;
 }
 
 /**
@@ -73,4 +104,135 @@ export const createCrewSlice = (
 
     autoUnmergeOnMove: (crewMemberId) =>
         autoUnmergeOnMoveFn(crewMemberId, set, get),
+
+    assignCrewTask: (crewId, task, effect) => {
+        const state = get();
+        const crewMember = state.crew.find((c) => c.id === crewId);
+        if (!crewMember) return;
+
+        // Check if crew member's assignment is valid based on their module position
+        const currentModule = state.ship.modules.find(
+            (m) => m.id === crewMember.moduleId,
+        );
+        if (!currentModule) return;
+
+        // Validate assignment using helper function (pass task for task-specific validation)
+        if (task) {
+            const validation = isValidCrewAssignment(
+                crewMember,
+                currentModule,
+                task,
+            );
+            if (!validation.valid) {
+                get().addLog(
+                    validation.error || "Неверное назначение!",
+                    "error",
+                );
+                return;
+            }
+        }
+
+        // Update civilian assignment (non-combat)
+        set((s) => ({
+            crew: s.crew.map((c) =>
+                c.id === crewId
+                    ? {
+                          ...c,
+                          assignment: task || null,
+                          assignmentEffect: effect || null,
+                          // Сброс сращивания при смене задания с "merge"
+                          isMerged: task === "merge" ? c.isMerged : false,
+                          mergedModuleId:
+                              task === "merge" ? c.mergedModuleId : null,
+                      }
+                    : c,
+            ),
+        }));
+    },
+
+    assignCombatTask: (crewId, task, effect) => {
+        const state = get();
+        const crewMember = state.crew.find((c) => c.id === crewId);
+        if (!crewMember) return;
+
+        // Update combat assignment
+        set((s) => ({
+            crew: s.crew.map((c) =>
+                c.id === crewId
+                    ? {
+                          ...c,
+                          combatAssignment: task || null,
+                          combatAssignmentEffect: effect || null,
+                      }
+                    : c,
+            ),
+        }));
+    },
+
+    getCrewInModule: (moduleId) => {
+        return get().crew.filter((c) => c.moduleId === moduleId);
+    },
+
+    moveCrewMember: (crewId, targetModuleId) => {
+        const state = get();
+        const crewMember = state.crew.find((c) => c.id === crewId);
+        if (!crewMember) return;
+
+        // Check if crew member already moved this turn
+        if (crewMember.movedThisTurn) {
+            get().addLog(
+                `${crewMember.name} уже перемещался в этот ход!`,
+                "error",
+            );
+            return;
+        }
+
+        // Check if target module exists
+        const targetModule = state.ship.modules.find(
+            (m) => m.id === targetModuleId,
+        );
+        if (!targetModule) {
+            get().addLog("Модуль не найден!", "error");
+            return;
+        }
+
+        // Check if target module is disabled (manually turned off, not destroyed)
+        if (targetModule.manualDisabled) {
+            get().addLog("Нельзя переместиться в отключённый модуль!", "error");
+            return;
+        }
+
+        // Check if target module is adjacent to current module
+        if (!get().isModuleAdjacent(crewMember.moduleId, targetModuleId)) {
+            get().addLog(
+                "Модуль не соседний! Можно переместиться только в соседний модуль.",
+                "error",
+            );
+            return;
+        }
+
+        // Move crew member
+        set((s) => ({
+            crew: s.crew.map((c) =>
+                c.id === crewId
+                    ? {
+                          ...c,
+                          moduleId: targetModuleId,
+                          movedThisTurn: true,
+                          assignment: null,
+                          assignmentEffect: null,
+                          // Сброс сращивания при перемещении
+                          isMerged: false,
+                          mergedModuleId: null,
+                      }
+                    : c,
+            ),
+        }));
+
+        get().addLog(
+            `${crewMember.name} переместился в "${targetModule.name}"`,
+            "info",
+        );
+        playSound("click");
+    },
 });

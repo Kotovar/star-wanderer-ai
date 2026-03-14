@@ -20,13 +20,21 @@ export const MODULE_TYPES: Record<
 };
 
 export const MODULES_BY_PRIOTITY = [
+    // Низкий приоритет (отключаются первыми)
     { type: "cargo", name: "Грузовой отсек" },
     { type: "fueltank", name: "Топливный бак" },
     { type: "scanner", name: "Сканер" },
     { type: "drill", name: "Бур" },
+    { type: "lab", name: "Лаборатория" },
+    { type: "medical", name: "Медотсек" },
+    { type: "ai_core", name: "ИИ ядро" },
+    // Средний приоритет
     { type: "weaponbay", name: "Оружейная палуба" },
     { type: "shield", name: "Генератор щита" },
     { type: "engine", name: "Двигатель" },
+    // Высокий приоритет (отключаются последними)
+    { type: "lifesupport", name: "Системы жизнеобеспечения" },
+    { type: "cockpit", name: "Кокпит" },
 ] satisfies {
     type: PartialModuleType;
     name: string;

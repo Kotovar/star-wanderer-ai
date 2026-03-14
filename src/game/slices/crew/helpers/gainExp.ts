@@ -34,6 +34,18 @@ export const gainExp = (
         crew.exp = result.newExp;
         if (result.leveledUp && result.newLevel) {
             crew.level = result.newLevel;
+            // При повышении уровня увеличиваем maxHealth и health
+            const levelUpData = result.levelUpData;
+            if (levelUpData) {
+                if (levelUpData.maxHealth) {
+                    crew.maxHealth = levelUpData.maxHealth;
+                    crew.health = levelUpData.health;
+                }
+                if (levelUpData.maxHappiness !== undefined) {
+                    crew.maxHappiness = levelUpData.maxHappiness;
+                    crew.happiness = levelUpData.happiness;
+                }
+            }
         }
     });
 };

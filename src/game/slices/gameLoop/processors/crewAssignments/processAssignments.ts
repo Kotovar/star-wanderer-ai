@@ -1,5 +1,8 @@
 import { RACES, XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants";
-import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import {
+    getMergeEffectsBonus,
+    calculateHealthRegen,
+} from "@/game/slices/crew/helpers";
 import {
     ASSIGNMENT_BASES,
     ASSIGNMENT_MULTIPLIERS,
@@ -14,7 +17,7 @@ import type {
     Race,
     SetState,
 } from "@/game/types";
-import { getActiveModules } from "@/game/modules/utils";
+import { getActiveModules, isModuleActive } from "@/game/modules/utils";
 
 /**
  * Обрабатывает все назначения экипажа
@@ -27,6 +30,10 @@ export const processCrewAssignments = (
     get: () => GameStore,
 ): void => {
     const crew = get().crew;
+
+    // === ПАССИВНАЯ РЕГЕНЕРАЦИЯ ЗДОРОВЬЯ ===
+    // Применяется ко всему живому экипажу в начале хода
+    processPassiveHealthRegen(set, get);
 
     crew.forEach((crewMember) => {
         const crewRace = RACES[crewMember.race];
@@ -505,6 +512,7 @@ const processResearchAssignment = (
 /**
  * Пассивное лечение в медотсеке
  * Медотсек лечит весь экипаж в модуле каждый ход
+ * Лечат ТОЛЬКО активные модули (не отключенные вручную или из-за нехватки энергии)
  */
 export const processMedicalModule = (
     set: SetState,
@@ -513,12 +521,15 @@ export const processMedicalModule = (
     const crew = get().crew;
     const modules = get().ship.modules;
 
-    // Находим все медотсеки
+    // Находим все АКТИВНЫЕ медотсеки (отфильтрованы отключенные)
     const medicalModules = getActiveModules(modules, "medical");
 
     if (medicalModules.length === 0) return;
 
     medicalModules.forEach((medicalModule) => {
+        // Дополнительная проверка: модуль должен быть активен
+        if (!isModuleActive(medicalModule)) return;
+
         // Находим экипаж в этом медотсеке
         const crewInMedical = crew.filter(
             (c) => c.moduleId === medicalModule.id && c.health > 0,
@@ -548,5 +559,47 @@ export const processMedicalModule = (
                 ),
             }));
         });
+    });
+};
+
+/**
+ * Пассивная регенерация здоровья экипажа
+ * Применяется ко всему живому экипажу каждый ход
+ * Использует общую функцию calculateHealthRegen
+ */
+export const processPassiveHealthRegen = (
+    set: SetState,
+    get: () => GameStore,
+): void => {
+    const state = get();
+    const crew = state.crew.filter((c) => c.health > 0);
+
+    if (crew.length === 0) return;
+
+    crew.forEach((crewMember) => {
+        const maxHealth = crewMember.maxHealth;
+
+        // Если здоровье полное, пропускаем
+        if (crewMember.health >= maxHealth) return;
+
+        // Используем общую функцию расчёта пассивной регенерации
+        const regenAmount = calculateHealthRegen(crewMember);
+
+        // Применяем лечение
+        if (regenAmount > 0) {
+            set((s) => ({
+                crew: s.crew.map((c) =>
+                    c.id === crewMember.id
+                        ? {
+                              ...c,
+                              health: Math.min(
+                                  maxHealth,
+                                  c.health + regenAmount,
+                              ),
+                          }
+                        : c,
+                ),
+            }));
+        }
     });
 };

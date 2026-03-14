@@ -2,6 +2,44 @@
 
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
+import { MODULES_BY_LEVEL } from "@/game/components/station/station-data";
+import { MODULES_FROM_BOSSES } from "@/game/constants/modules";
+import type { ModuleType, Module } from "@/game/types";
+
+/**
+ * Calculates scrap value for a module (70% of base price)
+ * Uses price from corresponding tier based on module level
+ */
+const getScrapValue = (moduleType: ModuleType, moduleLevel: number): number => {
+    // Tier 4 modules (from bosses)
+    if (moduleLevel === 4) {
+        const bossModule = MODULES_FROM_BOSSES.find(
+            (m) => m.moduleType === moduleType && m.level === 4,
+        );
+        if (bossModule) {
+            return Math.floor((bossModule.price || 1000) * 0.7);
+        }
+    }
+
+    // Regular modules (levels 1-3) - use price from corresponding tier
+    // Level 1-2 → tier 1, Level 3 → tier 2, Level 4+ → tier 3
+    const tierIndex = Math.min(moduleLevel, 3);
+    const tierModules =
+        MODULES_BY_LEVEL[tierIndex] || MODULES_BY_LEVEL[1] || [];
+    const shopItem = tierModules.find((m) => m.moduleType === moduleType);
+
+    // Fallback to tier 1 if not found
+    if (!shopItem) {
+        const tier1Modules = MODULES_BY_LEVEL[1] || [];
+        const fallbackItem = tier1Modules.find(
+            (m) => m.moduleType === moduleType,
+        );
+        return Math.floor(Math.min(fallbackItem?.price || 300, 5000) * 0.7);
+    }
+
+    const price = shopItem?.price || 300;
+    return Math.floor(Math.min(price, 5000) * 0.7);
+};
 
 interface ServicesTabProps {
     fuel: number;
@@ -15,18 +53,7 @@ interface ServicesTabProps {
     installModuleFromCargo: (cargoIndex: number, x: number, y: number) => void;
     credits: number;
     ship: {
-        modules: Array<{
-            id: number;
-            name: string;
-            type: string;
-            level?: number;
-            disabled?: boolean;
-            manualDisabled?: boolean;
-            x: number;
-            y: number;
-            width?: number;
-            height?: number;
-        }>;
+        modules: Module[];
         cargo: Array<{
             item: string;
             quantity: number;
@@ -280,7 +307,7 @@ function ScrapModuleSection({
 }) {
     const { t } = useTranslation();
     // Essential modules that must have at least 1
-    const essentialTypes = [
+    const essentialTypes: ModuleType[] = [
         "cockpit",
         "reactor",
         "fueltank",
@@ -332,9 +359,8 @@ function ScrapModuleSection({
                                     : mod.name}{" "}
                                 {mod.level ? `(МК-${mod.level})` : ""}
                             </div>
-                            <div className="text-[#888]">
-                                ~{Math.floor(300 * 0.3)}-{Math.floor(300 * 0.4)}
-                                ₢
+                            <div className="text-[#00ff41]">
+                                ♻️ {getScrapValue(mod.type, mod.level ?? 1)}₢
                             </div>
                         </div>
                         <Button

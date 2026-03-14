@@ -1,4 +1,4 @@
-import type { GameStore, SetState } from "@/game/types";
+import type { GameStore, SetState, Module } from "@/game/types";
 import { WeaponTypeTotal } from "@/game/types";
 import {
     getTotalConsumption,
@@ -11,16 +11,20 @@ import {
     areModulesFunctional,
     updateShipStats,
     getTotalDamage,
+    toggleModule as toggleModuleHelper,
+    moveModule as moveModuleHelper,
+    canPlaceModule as canPlaceModuleHelper,
 } from "./helpers";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
 import { refuel } from "./helpers/fuel";
+import { areModulesAdjacent } from "@/game/modules/adjacency";
 
 /**
  * Расширенный интерфейс ShipSlice с геттерами
  * Содержит методы для управления состоянием корабля и вычисления характеристик
  */
-export interface ShipSlice {
+interface ShipSlice {
     /**
      * Обновляет все характеристики корабля
      * Пересчитывает защиту, щиты, кислород, топливо и ёмкость экипажа
@@ -125,6 +129,37 @@ export interface ShipSlice {
      * @returns Объект с бонусами от сращивания
      */
     getMergeEffectsBonus: () => ReturnType<typeof getMergeEffectsBonus>;
+
+    /**
+     * Проверяет, являются ли два модуля соседними
+     * @param moduleId1 - ID первого модуля
+     * @param moduleId2 - ID второго модуля
+     * @returns true если модули соседние
+     */
+    isModuleAdjacent: (moduleId1: number, moduleId2: number) => boolean;
+
+    /**
+     * Включает/отключает модуль
+     * @param moduleId - ID модуля
+     */
+    toggleModule: (moduleId: number) => void;
+
+    /**
+     * Перемещает модуль на новые координаты
+     * @param moduleId - ID модуля
+     * @param x - Координата X
+     * @param y - Координата Y
+     */
+    moveModule: (moduleId: number, x: number, y: number) => void;
+
+    /**
+     * Проверяет, можно ли разместить модуль на указанных координатах
+     * @param module - Модуль для размещения
+     * @param x - Координата X
+     * @param y - Координата Y
+     * @returns true если размещение возможно
+     */
+    canPlaceModule: (module: Module, x: number, y: number) => boolean;
 }
 
 /**
@@ -208,5 +243,25 @@ export const createShipSlice = (
     getMergeEffectsBonus: () => {
         const state = get();
         return getMergeEffectsBonus(state.crew, state.ship.modules);
+    },
+
+    isModuleAdjacent: (moduleId1, moduleId2) => {
+        const state = get();
+        const mod1 = state.ship.modules.find((m) => m.id === moduleId1);
+        const mod2 = state.ship.modules.find((m) => m.id === moduleId2);
+        if (!mod1 || !mod2) return false;
+        return areModulesAdjacent(mod1, mod2);
+    },
+
+    toggleModule: (moduleId) => {
+        toggleModuleHelper(moduleId, set, get);
+    },
+
+    moveModule: (moduleId, x, y) => {
+        moveModuleHelper(moduleId, x, y, set, get);
+    },
+
+    canPlaceModule: (module, x, y) => {
+        return canPlaceModuleHelper(module, x, y, get());
     },
 });

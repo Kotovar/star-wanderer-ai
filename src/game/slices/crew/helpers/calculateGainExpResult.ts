@@ -15,6 +15,11 @@ export interface GainExpResult {
     newLevel?: number;
     /** Сообщение для лога (если было повышение уровня) */
     logMessage?: string;
+    /** Данные о повышении уровня (если было повышение) */
+    levelUpData?: Pick<
+        CrewMember,
+        "maxHealth" | "health" | "maxHappiness" | "happiness"
+    >;
 }
 
 /**
@@ -42,6 +47,14 @@ export const calculateGainExpResult = (
         newExp: levelUp ? levelUp.exp : newExp,
         leveledUp: levelUp !== null,
         newLevel: levelUp?.level,
+        levelUpData: levelUp
+            ? {
+                  maxHealth: levelUp.maxHealth,
+                  health: levelUp.health,
+                  maxHappiness: levelUp.maxHappiness,
+                  happiness: levelUp.happiness,
+              }
+            : undefined,
         logMessage:
             levelUp !== null
                 ? `${crewMember.name} повысил уровень до ${levelUp.level}!`

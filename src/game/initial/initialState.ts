@@ -2,8 +2,7 @@ import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { generateGalaxy } from "@/game/galaxy/generateGalaxy";
 import { initialModules, STARTING_FUEL } from "@/game/modules/initial";
 import { initializeStationData } from "@/game/stations/initialize";
-import type { GameState } from "@/game/types/game";
-import { CrewMember } from "../types";
+import type { GameState, CrewMember } from "@/game/types";
 
 /** Начальный номер хода */
 const INITIAL_TURN = 1;
@@ -47,7 +46,7 @@ const initialCrew: CrewMember[] = [
         health: 105,
         maxHealth: 105,
         happiness: 80,
-        maxHappiness: 100,
+        maxHappiness: 110,
         assignment: null,
         assignmentEffect: null,
         combatAssignment: null,
@@ -70,7 +69,7 @@ const initialCrew: CrewMember[] = [
         health: 105,
         maxHealth: 105,
         happiness: 75,
-        maxHappiness: 100,
+        maxHappiness: 110,
         assignment: null,
         assignmentEffect: null,
         combatAssignment: null,
@@ -93,7 +92,7 @@ const initialCrew: CrewMember[] = [
         health: 105,
         maxHealth: 105,
         happiness: 70,
-        maxHappiness: 100,
+        maxHappiness: 110,
         assignment: null,
         assignmentEffect: null,
         combatAssignment: null,

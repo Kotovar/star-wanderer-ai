@@ -2,3 +2,6 @@ export * from "./processScanContracts";
 export * from "./completeScanContracts";
 export * from "./handleDiplomacyContracts";
 export * from "./handleSupplyRunContracts";
+export * from "./acceptContract";
+export * from "./completeDeliveryContract";
+export * from "./cancelContract";

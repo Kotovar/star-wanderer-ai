@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useGameStore } from "@/game/store";
 import { RACES } from "@/game/constants/races";
+import { calculateHealthRegen } from "@/game/slices/crew/helpers";
 import type { CrewMember } from "@/game/types";
 import {
     Dialog,
@@ -136,22 +137,8 @@ export function CrewList() {
                                 </div>
                                 <div className="text-[10px] text-[#00ff41]">
                                     {t("crew_member.regen_short")}
-                                    {5 +
-                                        (member.race === "xenosymbiont"
-                                            ? 5
-                                            : 0) +
-                                        (useGameStore
-                                            .getState()
-                                            .activeEffects.some((e) =>
-                                                e.effects.some(
-                                                    (ef) =>
-                                                        ef.type ===
-                                                        "health_regen",
-                                                ),
-                                            )
-                                            ? 5
-                                            : 0)}
-                                    /{t("crew.turn")}
+                                    {calculateHealthRegen(member)}/
+                                    {t("crew.turn")}
                                 </div>
                                 {race?.hasHappiness && (
                                     <div>
@@ -288,12 +275,8 @@ export function CrewList() {
                                     </div>
                                     <div className="text-[10px] text-[#00ff41]">
                                         {t("crew_member.regen_short")}
-                                        {5 +
-                                            (selectedCrew.race ===
-                                            "xenosymbiont"
-                                                ? 5
-                                                : 0)}
-                                        /{t("crew.turn")}
+                                        {calculateHealthRegen(selectedCrew)}/
+                                        {t("crew.turn")}
                                     </div>
                                     {race?.hasHappiness ? (
                                         <div>
@@ -779,6 +762,93 @@ export function CrewList() {
                                                 )}
                                             </div>
                                         )}
+
+                                    {/* Бонусы от трейтов к характеристикам */}
+                                    {selectedCrew.traits &&
+                                        selectedCrew.traits.length > 0 && (
+                                            <div className="mt-2 pt-2 border-t border-[#00ff41]">
+                                                <span className="text-[#ffb000] text-xs">
+                                                    {t(
+                                                        "crew_member.trait_bonuses",
+                                                    )}
+                                                </span>
+                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                    {selectedCrew.traits.some(
+                                                        (trait) =>
+                                                            trait.effect
+                                                                .healthBonus,
+                                                    ) && (
+                                                        <span className="text-xs bg-[#00ff4120] text-[#00ff41] px-1 rounded">
+                                                            ❤️ +
+                                                            {Math.round(
+                                                                selectedCrew.traits.reduce(
+                                                                    (
+                                                                        sum,
+                                                                        trait,
+                                                                    ) =>
+                                                                        sum +
+                                                                        (trait
+                                                                            .effect
+                                                                            .healthBonus ||
+                                                                            0),
+                                                                    0,
+                                                                ) * 100,
+                                                            )}
+                                                            % к здоровью
+                                                        </span>
+                                                    )}
+                                                    {selectedCrew.traits.some(
+                                                        (trait) =>
+                                                            trait.effect
+                                                                .healthPenalty,
+                                                    ) && (
+                                                        <span className="text-xs bg-[#ff004020] text-[#ff0040] px-1 rounded">
+                                                            ❤️ -
+                                                            {Math.round(
+                                                                selectedCrew.traits.reduce(
+                                                                    (
+                                                                        sum,
+                                                                        trait,
+                                                                    ) =>
+                                                                        sum +
+                                                                        (trait
+                                                                            .effect
+                                                                            .healthPenalty ||
+                                                                            0),
+                                                                    0,
+                                                                ) * 100,
+                                                            )}
+                                                            % к здоровью
+                                                        </span>
+                                                    )}
+                                                    {selectedCrew.traits.some(
+                                                        (trait) =>
+                                                            trait.effect
+                                                                .regenBonus,
+                                                    ) && (
+                                                        <span className="text-xs bg-[#00ff4120] text-[#00ff41] px-1 rounded">
+                                                            ⚙️ +
+                                                            {Math.round(
+                                                                selectedCrew.traits.reduce(
+                                                                    (
+                                                                        sum,
+                                                                        trait,
+                                                                    ) =>
+                                                                        sum +
+                                                                        (trait
+                                                                            .effect
+                                                                            .regenBonus ||
+                                                                            0),
+                                                                    0,
+                                                                ) * 100,
+                                                            )}
+                                                            % к регенерации
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
                                     <div>
                                         <span className="text-[#ffb000]">
                                             {t("crew_member.features")}

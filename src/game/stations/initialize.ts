@@ -1,27 +1,14 @@
 import { typedKeys } from "@/lib/utils";
-import type { Sector } from "@/game/types";
 import { TRADE_GOODS } from "@/game/constants/goods";
-
-type Stock = Record<string, Record<string, number>>;
-type Prices = Record<string, Record<string, { buy: number; sell: number }>>;
-
-/** Базовый множитель цены для расчёта цены покупки */
-const BASE_BUY_PRICE_MULTIPLIER = 1.6;
-
-/** Минимальный множитель вариации цены */
-const MIN_PRICE_VARIATION = 0.7;
-
-/** Максимальный множитель вариации цены */
-const MAX_PRICE_VARIATION = 0.6;
-
-/** Минимальное количество товара на складе */
-const MIN_STOCK_AMOUNT = 20;
-
-/** Максимальное случайное дополнение к складу */
-const MAX_STOCK_VARIATION = 30;
-
-/** Значение скидки по умолчанию (без скидки) */
-const DEFAULT_DISCOUNT = 1;
+import {
+    BASE_BUY_PRICE_MULTIPLIER,
+    MIN_PRICE_VARIATION,
+    MAX_PRICE_VARIATION,
+    MIN_STOCK_AMOUNT,
+    MAX_STOCK_VARIATION,
+    DEFAULT_DISCOUNT,
+} from "@/game/slices/trade/constants";
+import type { Sector, Goods, StationPrices, StationStock } from "@/game/types";
 
 /**
  * Инициализирует данные для всех станций в секторах.
@@ -34,14 +21,17 @@ const DEFAULT_DISCOUNT = 1;
  * @returns Объект с ценами и запасами товаров для каждой станции
  */
 export const initializeStationData = (sectors: Sector[]) => {
-    const prices: Prices = {};
-    const stock: Stock = {};
+    const prices: StationPrices = {};
+    const stock: StationStock = {};
 
     sectors.forEach((sector) => {
         sector.locations.forEach((loc) => {
             if (loc.type === "station" && loc.stationId) {
-                prices[loc.stationId] = {};
-                stock[loc.stationId] = {};
+                prices[loc.stationId] = {} as Record<
+                    Goods,
+                    { buy: number; sell: number }
+                >;
+                stock[loc.stationId] = {} as Record<Goods, number>;
 
                 const stationConfig = loc.stationConfig;
                 const mineralDiscount =

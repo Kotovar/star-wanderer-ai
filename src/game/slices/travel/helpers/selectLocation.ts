@@ -2,7 +2,7 @@ import { findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { handleSurvivorCapsuleDelivery } from "@/game/contracts";
 import { determineSignalOutcome } from "@/game/signals";
-import type { GameState, GameStore, Location } from "@/game/types";
+import type { GameStore, Location, SetState } from "@/game/types";
 
 // ============================================================================
 // Константы
@@ -10,15 +10,6 @@ import type { GameState, GameStore, Location } from "@/game/types";
 
 /** Босс требует уровень сканера 3+ */
 const BOSS_TIER = 3;
-
-/** Тип для set с поддержкой immer (позволяет и мутации, и объекты) */
-type SetState = {
-    (
-        partial:
-            | Partial<GameState>
-            | ((state: GameState) => Partial<GameState>),
-    ): void;
-};
 
 // ============================================================================
 // Вспомогательные функции
