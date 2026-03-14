@@ -1,6 +1,7 @@
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { RACES } from "@/game/constants/races";
+import { playSound } from "@/sounds";
 import * as enemyAttack from "./enemyAttack";
 import type { GameState, GameStore, Module, ModuleType } from "@/game/types";
 
@@ -282,6 +283,7 @@ function applyModuleDamage(
         `Враг по "${targetModule.name}": -${reducedDamage}%`,
         "warning",
     );
+    playSound("damage");
 
     // Damage crew in module
     let crewDmg = Math.floor(reducedDamage * 0.5);

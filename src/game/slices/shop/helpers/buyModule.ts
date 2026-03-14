@@ -182,5 +182,5 @@ export const buyModule = (
         get().updateShipStats();
     }
 
-    playSound("success");
+    playSound("upgrade");
 };

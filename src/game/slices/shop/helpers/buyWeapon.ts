@@ -108,5 +108,5 @@ export const buyWeapon = (
     }));
 
     get().addLog(`Установлено ${WEAPON_TYPES[weaponType].name}`, "info");
-    playSound("success");
+    playSound("shop");
 };

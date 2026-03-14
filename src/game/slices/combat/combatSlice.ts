@@ -28,12 +28,12 @@ export const createCombatSlice = (
     },
 
     startCombat: (enemy, isAmbush = false) => {
-        playSound("combat");
+        playSound(isAmbush ? "alert" : "combat");
         helpers.initializeCombat(enemy, isAmbush, set, get);
     },
 
     startBossCombat: (bossLocation) => {
-        playSound("combat");
+        playSound("alert");
         helpers.initializeBossCombat(bossLocation, set, get);
     },
 

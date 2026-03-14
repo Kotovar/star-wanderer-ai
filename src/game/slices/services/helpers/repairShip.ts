@@ -37,6 +37,6 @@ export const repairShip = (set: SetState, get: () => GameStore): void => {
     }));
 
     get().addLog(`Корабль отремонтирован за ${cost}₢`, "info");
-    playSound("success");
+    playSound("upgrade");
     get().updateShipStats();
 };

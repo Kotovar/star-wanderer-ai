@@ -1,6 +1,7 @@
 import type { GameStore, CrewMember, RaceId, SetState } from "@/game/types";
 import { RACES } from "@/game/constants/races";
 import { getRandomName } from "@/game/crew/utils";
+import { playSound } from "@/sounds";
 import {
     BASE_CREW_HEALTH_PER_LEVEL,
     INITIAL_HAPPINESS_PERCENT,
@@ -251,4 +252,5 @@ export const hireCrew = (
     }));
 
     get().addLog(`Нанят: ${newCrew.name} за ${crewData.price}₢`, "info");
+    playSound("success");
 };

@@ -46,7 +46,7 @@ export const refuel = (
         ship: { ...s.ship, fuel: (s.ship.fuel || 0) + actualAmount },
     }));
     addLog(`Заправка: +${actualAmount} топлива за ${price}₢`, "info");
-    playSound("success");
+    playSound("energy");
 
     return { success: true, actualAmount };
 };

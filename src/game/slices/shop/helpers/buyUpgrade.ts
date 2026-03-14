@@ -119,7 +119,7 @@ const upgradeEngine = (
         "info",
     );
     get().updateShipStats();
-    playSound("success");
+    playSound("upgrade");
 };
 
 /**
@@ -261,7 +261,7 @@ const upgradeModule = (
         "info",
     );
     get().updateShipStats();
-    playSound("success");
+    playSound("upgrade");
 };
 
 /**

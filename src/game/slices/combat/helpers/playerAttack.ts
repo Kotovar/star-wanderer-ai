@@ -4,6 +4,7 @@ import type {
     WeaponCounts,
     WeaponType,
 } from "@/game/types";
+import { playSound } from "@/sounds";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES, WEAPON_TYPES } from "@/game/constants";
 import { isModuleActive } from "@/game/modules/utils";
@@ -342,6 +343,7 @@ function applyDamageToEnemy(
             );
         });
         get().addLog(`Урон щитам врага: ${damage.totalShieldDamage}`, "combat");
+        playSound("shield");
     }
 
     // Apply module damage
@@ -385,6 +387,7 @@ function applyDamageToEnemy(
             `Пробитие! Модуль "${tgtMod.name}": -${finalDamage}%${weaponCounts.kinetic > 0 ? ` (броня -${moduleDefense})` : ""}`,
             "combat",
         );
+        playSound("damage");
     }
 }
 

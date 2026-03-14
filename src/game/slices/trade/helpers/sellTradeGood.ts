@@ -1,4 +1,5 @@
 import { TRADE_GOODS } from "@/game/constants";
+import { playSound } from "@/sounds";
 import type { GameStore, SetState, Goods, StationPrices } from "@/game/types";
 import type { SellValidation } from "./types";
 
@@ -131,4 +132,6 @@ export const sellTradeGood = (
             "warning",
         );
     }
+
+    playSound("message");
 };

@@ -1,4 +1,5 @@
 import type { SetState, GameStore, ModuleType } from "@/game/types";
+import { playSound } from "@/sounds";
 import { MODULES_BY_LEVEL } from "@/game/components/station/station-data";
 import { MODULES_FROM_BOSSES } from "@/game/constants/modules";
 
@@ -115,5 +116,6 @@ export const scrapModule = (
         `♻️ Модуль "${mod.name}" уничтожен. Получено ${scrapValue}₢`,
         "warning",
     );
+    playSound("destroy");
     get().updateShipStats();
 };

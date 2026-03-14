@@ -32,5 +32,5 @@ export const completeDeliveryContract = (
     const expReward = CONTRACT_REWARDS.delivery.baseExp;
     giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
 
-    playSound("success");
+    playSound("message");
 };

@@ -1,4 +1,5 @@
 import type { GameStore, SetState } from "@/game/types";
+import { playSound } from "@/sounds";
 
 /**
  * Результат проверки возможности увольнения
@@ -65,5 +66,6 @@ export const fireCrewMember = (
 
     if (crewMember) {
         get().addLog(`${crewMember.name} уволен`, "warning");
+        playSound("error");
     }
 };

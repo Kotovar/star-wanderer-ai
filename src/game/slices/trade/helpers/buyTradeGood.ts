@@ -1,6 +1,7 @@
 import { TRADE_GOODS } from "@/game/constants";
 import { getActiveModule } from "@/game/modules";
 import { getCargoCapacity } from "@/game/slices/ship/helpers/getCargoCapacity";
+import { playSound } from "@/sounds";
 import type {
     GameStore,
     SetState,
@@ -150,4 +151,5 @@ export const buyTradeGood = (
         `Куплено: ${TRADE_GOODS[goodId].name} ${quantity}т за ${validation.price}₢`,
         "info",
     );
+    playSound("shop");
 };

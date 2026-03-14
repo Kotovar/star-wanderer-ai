@@ -6,7 +6,11 @@ import type { GameState, GameStore } from "@/game/types";
 
 // Тип для set с поддержкой immer (позволяет и мутации, и объекты)
 type SetState = {
-    (partial: Partial<GameState> | ((state: GameState) => Partial<GameState>)): void;
+    (
+        partial:
+            | Partial<GameState>
+            | ((state: GameState) => Partial<GameState>),
+    ): void;
 };
 
 /**
@@ -21,10 +25,7 @@ type SetState = {
  * @param set - Функция обновления состояния
  * @param get - Функция получения состояния
  */
-export const mineAsteroid = (
-    set: SetState,
-    get: () => GameStore,
-): void => {
+export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
     const state = get();
     const loc = state.currentLocation;
 
@@ -135,12 +136,11 @@ export const mineAsteroid = (
         completedLocations: [...s.completedLocations, loc.id],
     }));
 
-    playSound("success");
+    playSound("shop");
 
     // Логирование результатов
     get().addLog(`Кредиты: +${creditsGained}₢`, "info");
-    if (rareGained > 0)
-        get().addLog(`Редкие минералы: +${rareGained}`, "info");
+    if (rareGained > 0) get().addLog(`Редкие минералы: +${rareGained}`, "info");
     get().addLog(`Минералы: +${mineralsGained}`, "info");
 
     // Опыт инженеру

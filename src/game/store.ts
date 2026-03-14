@@ -169,6 +169,7 @@ export const useGameStore = create<GameStore>()(
                 `${artifact.name}: ${newActive ? "активирован" : "деактивирован"}`,
                 "info",
             );
+            playSound(newActive ? "artifact" : "error");
             get().updateShipStats();
         },
 

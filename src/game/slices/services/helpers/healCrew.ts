@@ -45,5 +45,5 @@ export const healCrew = (set: SetState, get: () => GameStore): void => {
     }));
 
     get().addLog(`Экипаж вылечен за ${cost}₢`, "info");
-    playSound("success");
+    playSound("heal");
 };
