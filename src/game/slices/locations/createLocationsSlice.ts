@@ -3,6 +3,7 @@ import { mineAsteroid } from "./helpers";
 import { handleStormEntry } from "./helpers/enterStorm";
 import { handleAnomaly as handleAnomalyHelper } from "./helpers";
 import { sendScoutingMission as sendScoutingMissionHelper } from "./helpers";
+import { respondToDistressSignal as respondToDistressSignalHelper } from "./helpers";
 
 /**
  * Интерфейс LocationsSlice
@@ -30,6 +31,11 @@ export interface LocationsSlice {
      * @param planetId - ID планеты
      */
     sendScoutingMission: (planetId: string) => void;
+
+    /**
+     * Обрабатывает сигнал бедствия
+     */
+    respondToDistressSignal: () => void;
 }
 
 /**
@@ -57,5 +63,9 @@ export const createLocationsSlice = (
 
     sendScoutingMission: (planetId) => {
         sendScoutingMissionHelper(planetId, set, get);
+    },
+
+    respondToDistressSignal: () => {
+        respondToDistressSignalHelper(set, get);
     },
 });

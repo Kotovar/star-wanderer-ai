@@ -1,0 +1,399 @@
+import { ARTIFACT_TYPES } from "@/game/constants/artifacts";
+import { TRADE_GOODS } from "@/game/constants";
+import { findActiveArtifact } from "@/game/artifacts/utils";
+import { determineSignalOutcome as determineSignalOutcomeHelper } from "@/game/signals";
+import { playSound } from "@/sounds";
+import { typedKeys } from "@/lib/utils";
+import type {
+    SetState,
+    GameStore,
+    Location,
+    CrewMember,
+    SignalType,
+    Profession,
+    RaceId,
+    Sector,
+} from "@/game/types";
+import {
+    createCrewMember,
+    calculateCrewStats,
+} from "@/game/slices/crewManagement/utils";
+import {
+    SURVIVORS_REWARD,
+    SURVIVOR_JOINS_CHANCE,
+    ABANDONED_CARGO_CREDITS,
+    ABANDONED_CARGO_QUANTITY,
+    ABANDONED_CARGO_ARTIFACT_CHANCE,
+} from "../constants";
+
+/**
+ * Обрабатывает сигнал бедствия
+ *
+ * Сигнал бедствия (distress_signal) — это временная локация, которая появляется
+ * случайным образом в секторе космоса. Игрок может ответить на сигнал, что приводит
+ * к одному из трёх событий:
+ * - Пиратская засада (бой с пиратами)
+ * - Спасение выживших (награда 150-300₢ сразу + 30% шанс получить нового члена экипажа)
+ * - Заброшенный груз (кредиты + товары + шанс найти артефакт)
+ *
+ * @param set - Функция обновления состояния
+ * @param get - Функция получения состояния
+ */
+export const respondToDistressSignal = (
+    set: SetState,
+    get: () => GameStore,
+): void => {
+    const state = get();
+    const loc = state.currentLocation;
+    const sector = state.currentSector;
+
+    // Validate location
+    if (!isValidDistressSignal(loc, sector)) {
+        get().addLog("Это не сигнал бедствия!", "error");
+        return;
+    }
+
+    if (loc.signalResolved) {
+        get().addLog("Сигнал уже обработан!", "warning");
+        return;
+    }
+
+    // Determine outcome
+    const outcome = determineSignalOutcomeLocal(loc, state);
+
+    // Update location state
+    updateLocationState(loc, outcome, set);
+
+    // Play combat sound
+    playSound("combat");
+
+    // Handle outcome
+    handleSignalOutcome(outcome, set, get);
+
+    get().nextTurn();
+};
+
+/**
+ * Проверяет, является ли локация сигналом бедствия
+ */
+const isValidDistressSignal = (
+    loc: Location | null,
+    sector: Sector | null,
+): loc is Location & { type: "distress_signal" } => {
+    return loc?.type === "distress_signal" && sector !== undefined;
+};
+
+/**
+ * Определяет результат сигнала с учётом артефактов
+ */
+const determineSignalOutcomeLocal = (
+    loc: Location,
+    state: GameStore,
+): SignalType => {
+    // Use existing signalType if revealed by scanner
+    if (loc.signalType) {
+        return loc.signalType;
+    }
+
+    // Eye of Singularity increases ambush chance by 50%
+    const allSeeing = findActiveArtifact(
+        state.artifacts,
+        ARTIFACT_TYPES.EYE_OF_SINGULARITY,
+    );
+    const ambushModifier = allSeeing ? 0.5 : 0;
+
+    return determineSignalOutcomeHelper(ambushModifier);
+};
+
+/**
+ * Обновляет состояние локации
+ */
+const updateLocationState = (
+    loc: Location,
+    outcome: SignalType,
+    set: SetState,
+): void => {
+    const updatedLocation = {
+        ...loc,
+        signalType: outcome,
+        signalResolved: true,
+    };
+
+    set((s) => {
+        const updatedSector = s.currentSector
+            ? {
+                  ...s.currentSector,
+                  locations: s.currentSector.locations.map((l) =>
+                      l.id === loc.id ? updatedLocation : l,
+                  ),
+              }
+            : null;
+
+        return {
+            currentLocation: updatedLocation,
+            currentSector: updatedSector,
+            galaxy: {
+                ...s.galaxy,
+                sectors: s.galaxy.sectors.map((sec) =>
+                    sec.id === s.currentSector?.id && updatedSector
+                        ? updatedSector
+                        : sec,
+                ),
+            },
+        };
+    });
+};
+
+/**
+ * Обрабатывает результат сигнала
+ */
+const handleSignalOutcome = (
+    outcome: SignalType,
+    set: SetState,
+    get: () => GameStore,
+): void => {
+    switch (outcome) {
+        case "pirate_ambush":
+            handlePirateAmbush(get);
+            break;
+        case "survivors":
+            handleSurvivors(set, get);
+            break;
+        case "abandoned_cargo":
+            handleAbandonedCargo(set, get);
+            break;
+    }
+};
+
+/**
+ * Обработка пиратской засады
+ */
+const handlePirateAmbush = (get: () => GameStore): void => {
+    get().addLog("🚨 ЗАСАДА! Это пираты!", "error");
+
+    const state = get();
+    const tier = state.currentSector?.tier ?? 1;
+    const threat = Math.min(3, tier + 1);
+
+    get().startCombat(
+        {
+            id: `enemy-${Date.now()}`,
+            type: "enemy",
+            name: "Пираты",
+            threat,
+        },
+        true, // isAmbush = true - pirates attack first
+    );
+};
+
+/**
+ * Обработка выживших
+ * Награда и выживший выдаются сразу при спасении
+ */
+const handleSurvivors = (set: SetState, get: () => GameStore): void => {
+    const reward = getRandomReward(SURVIVORS_REWARD);
+    const hasCapacity = get().crew.length < get().getCrewCapacity();
+
+    // Выдаём награду сразу
+    set((s) => ({
+        credits: s.credits + reward,
+    }));
+
+    get().addLog("✓ Выжившие спасены!", "info");
+    get().addLog(`Награда за спасение: +${reward}₢`, "info");
+
+    // Иногда выживший присоединяется к экипажу
+    if (hasCapacity && Math.random() < SURVIVOR_JOINS_CHANCE) {
+        addSurvivorToCrew(set, get);
+    }
+
+    markLocationCompleted(set, get);
+};
+
+/**
+ * Добавляет выжившего в экипаж
+ * Использует случайную расу и профессию
+ */
+const addSurvivorToCrew = (set: SetState, get: () => GameStore): void => {
+    const professions: Profession[] = [
+        "pilot",
+        "engineer",
+        "medic",
+        "scout",
+        "scientist",
+    ];
+    const newProfession =
+        professions[Math.floor(Math.random() * professions.length)];
+
+    // Get random race (excluding synthetic - they don't survive in distress)
+    const availableRaces: Exclude<RaceId, "synthetic">[] = [
+        "human",
+        "xenosymbiont",
+        "voidborn",
+        "crystalline",
+        "krylorian",
+    ];
+    const newRace =
+        availableRaces[Math.floor(Math.random() * availableRaces.length)];
+
+    const lifesupportModule = get().ship.modules.find(
+        (m) => m.type === "lifesupport",
+    );
+    const initialModuleId =
+        lifesupportModule?.id || get().ship.modules[0]?.id || 1;
+
+    // Calculate stats for the new crew member
+    const stats = calculateCrewStats({
+        race: newRace,
+        traits: [],
+        level: 1,
+    });
+
+    const newCrew: CrewMember = createCrewMember(
+        {
+            race: newRace,
+            profession: newProfession,
+            level: 1,
+            exp: 0,
+            traits: [],
+            price: 0, // Free survivor
+        },
+        stats,
+        initialModuleId,
+    );
+
+    set((s) => ({ crew: [...s.crew, newCrew] }));
+    get().addLog(
+        `Выживший ${newCrew.name} (${getRaceName(newRace)}) присоединился к команде!`,
+        "info",
+    );
+};
+
+/**
+ * Получает название расы для отображения
+ */
+const getRaceName = (raceId: RaceId): string => {
+    const raceNames: Record<RaceId, string> = {
+        human: "Человек",
+        synthetic: "Синтетик",
+        xenosymbiont: "Ксеноморф",
+        voidborn: "Рождённый в Пустоте",
+        crystalline: "Кристаллоид",
+        krylorian: "Крилорианец",
+    };
+    return raceNames[raceId] || raceId;
+};
+
+/**
+ * Обработка заброшенного груза
+ */
+const handleAbandonedCargo = (set: SetState, get: () => GameStore): void => {
+    const creditsReward = getRandomReward(ABANDONED_CARGO_CREDITS);
+    const keys = typedKeys(TRADE_GOODS);
+    const goodId = keys[Math.floor(Math.random() * keys.length)];
+    const quantity = getRandomQuantity(ABANDONED_CARGO_QUANTITY);
+    const goodName = TRADE_GOODS[goodId].name;
+
+    set((s) => ({
+        credits: s.credits + creditsReward,
+        ship: {
+            ...s.ship,
+            tradeGoods: [
+                ...s.ship.tradeGoods,
+                { item: goodId, quantity, buyPrice: 0 },
+            ],
+        },
+    }));
+
+    get().addLog("📦 Найден заброшенный груз!", "info");
+    get().addLog(`Кредиты: +${creditsReward}₢`, "info");
+    get().addLog(`${goodName}: +${quantity}`, "info");
+
+    // Chance to find artifact
+    const artifact = get().tryFindArtifact();
+    let foundArtifact: string | undefined;
+    if (artifact && Math.random() < ABANDONED_CARGO_ARTIFACT_CHANCE) {
+        get().addLog(`★ АРТЕФАКТ НАЙДЕН: ${artifact.name}!`, "info");
+        foundArtifact = artifact.name;
+    }
+
+    // Update location with loot details
+    updateLocationWithLoot(set, get, {
+        credits: creditsReward,
+        tradeGood: { name: goodName, quantity },
+        artifact: foundArtifact,
+    });
+
+    markLocationCompleted(set, get);
+};
+
+/**
+ * Обновляет локацию с информацией о найденном грузе
+ */
+const updateLocationWithLoot = (
+    set: SetState,
+    get: () => GameStore,
+    loot: {
+        credits: number;
+        tradeGood: { name: string; quantity: number };
+        artifact?: string;
+    },
+): void => {
+    const loc = get().currentLocation;
+    if (!loc) return;
+
+    const updatedLocation = {
+        ...loc,
+        signalLoot: loot,
+    };
+
+    set((s) => {
+        const updatedSector = s.currentSector
+            ? {
+                  ...s.currentSector,
+                  locations: s.currentSector.locations.map((l) =>
+                      l.id === loc.id ? updatedLocation : l,
+                  ),
+              }
+            : null;
+
+        return {
+            currentLocation: updatedLocation,
+            currentSector: updatedSector,
+            galaxy: {
+                ...s.galaxy,
+                sectors: s.galaxy.sectors.map((sec) =>
+                    sec.id === s.currentSector?.id && updatedSector
+                        ? updatedSector
+                        : sec,
+                ),
+            },
+        };
+    });
+};
+
+/**
+ * Отмечает локацию как завершённую
+ */
+const markLocationCompleted = (set: SetState, get: () => GameStore): void => {
+    const loc = get().currentLocation;
+    if (!loc) return;
+
+    set((s) => ({
+        completedLocations: [...s.completedLocations, loc.id],
+    }));
+};
+
+/**
+ * Генерирует случайную награду в диапазоне
+ */
+const getRandomReward = (range: { MIN: number; MAX: number }): number => {
+    return range.MIN + Math.floor(Math.random() * (range.MAX - range.MIN));
+};
+
+/**
+ * Генерирует случайное количество в диапазоне
+ */
+const getRandomQuantity = (range: { MIN: number; MAX: number }): number => {
+    return range.MIN + Math.floor(Math.random() * (range.MAX - range.MIN));
+};

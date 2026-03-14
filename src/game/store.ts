@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import {
-    findActiveArtifact,
     getArtifactEffectValue,
     getRandomUndiscoveredArtifact,
 } from "@/game/artifacts";
@@ -10,11 +9,8 @@ import {
     PLANET_SPECIALIZATIONS,
     RACES,
     RESEARCH_TREE,
-    TRADE_GOODS,
     RESEARCH_RESOURCES,
-    ARTIFACT_TYPES,
 } from "@/game/constants";
-import { getRandomName } from "@/game/crew";
 import { generateGalaxy } from "@/game/galaxy";
 import { initialState } from "@/game/initial";
 import {
@@ -22,10 +18,7 @@ import {
     loadFromLocalStorage,
     saveToLocalStorage,
 } from "@/game/saves/utils";
-import { determineSignalOutcome } from "@/game/signals";
 import { initializeStationData } from "@/game/stations";
-import { playSound } from "@/sounds";
-import { typedKeys } from "@/lib/utils";
 import { getAdjacentTechs } from "@/game/research/utils";
 import {
     createLogSlice,
@@ -44,7 +37,8 @@ import {
     createCrewManagementSlice,
 } from "@/game/slices";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
-import type { CrewMember, GameStore, RaceId } from "@/game/types";
+import type { GameStore, RaceId } from "@/game/types";
+import { playSound } from "@/sounds";
 
 // Game store
 export const useGameStore = create<GameStore>()(
@@ -64,254 +58,6 @@ export const useGameStore = create<GameStore>()(
         ...createServicesSlice(set, get),
         ...createTradeSlice(set, get),
         ...createCrewManagementSlice(set, get),
-
-        // Distress Signal Handler
-        respondToDistressSignal: () => {
-            const state = get();
-            const loc = state.currentLocation;
-            const sector = state.currentSector;
-
-            if (!loc || loc.type !== "distress_signal" || !sector) {
-                get().addLog("Это не сигнал бедствия!", "error");
-                return;
-            }
-
-            if (loc.signalResolved) {
-                get().addLog("Сигнал уже обработан!", "warning");
-                return;
-            }
-
-            // Use existing signalType if revealed by scanner, otherwise determine random outcome
-            // Eye of Singularity increases ambush chance by 50%
-            const allSeeing = findActiveArtifact(
-                state.artifacts,
-                ARTIFACT_TYPES.EYE_OF_SINGULARITY,
-            );
-
-            const ambushModifier = allSeeing ? 0.5 : 0;
-            const outcome =
-                loc.signalType || determineSignalOutcome(ambushModifier);
-
-            // Update both currentLocation AND the location in the sector
-            const updatedLocation = {
-                ...loc,
-                signalType: outcome,
-                signalResolved: true,
-            };
-
-            set((s) => {
-                const updatedSector = s.currentSector
-                    ? {
-                          ...s.currentSector,
-                          locations: s.currentSector.locations.map((l) =>
-                              l.id === loc.id ? updatedLocation : l,
-                          ),
-                      }
-                    : null;
-
-                return {
-                    currentLocation: updatedLocation,
-                    currentSector: updatedSector,
-                    galaxy: {
-                        ...s.galaxy,
-                        sectors: s.galaxy.sectors.map((sec) =>
-                            sec.id === sector.id && updatedSector
-                                ? updatedSector
-                                : sec,
-                        ),
-                    },
-                };
-            });
-
-            playSound("combat");
-
-            switch (outcome) {
-                case "pirate_ambush": {
-                    get().addLog("🚨 ЗАСАДА! Это пираты!", "error");
-                    // Start combat with ambush - enemy attacks first
-                    get().startCombat(
-                        {
-                            ...loc,
-                            type: "enemy",
-                            name: "Пираты",
-                            threat: Math.min(
-                                3,
-                                (state.currentSector?.tier ?? 1) + 1,
-                            ),
-                        },
-                        true,
-                    ); // isAmbush = true - pirates attack first
-                    break;
-                }
-                case "survivors": {
-                    const reward = 50 + Math.floor(Math.random() * 50); // 50-100 credits
-                    const hasCapacity =
-                        state.crew.length < get().getCrewCapacity();
-
-                    // Add survivor capsule to cargo instead of immediate reward
-                    set((s) => ({
-                        ship: {
-                            ...s.ship,
-                            cargo: [
-                                ...s.ship.cargo,
-                                {
-                                    item: "Капсула с выжившими",
-                                    quantity: 1,
-                                    rewardValue: reward, // Store reward value for later
-                                },
-                            ],
-                        },
-                    }));
-
-                    get().addLog("✓ Выжившие спасены!", "info");
-                    get().addLog(
-                        `Капсула с выжившими добавлена в трюм. Награда: ${reward}₢ при доставке.`,
-                        "info",
-                    );
-
-                    if (hasCapacity && Math.random() < 0.3) {
-                        // Sometimes a survivor joins the crew
-                        const professions = [
-                            "pilot",
-                            "engineer",
-                            "medic",
-                            "scout",
-                            "scientist",
-                        ] as const;
-                        const newProfession =
-                            professions[
-                                Math.floor(Math.random() * professions.length)
-                            ];
-                        // Find lifesupport module for initial placement
-                        const lifesupportModule = get().ship.modules.find(
-                            (m) => m.type === "lifesupport",
-                        );
-                        const initialModuleId =
-                            lifesupportModule?.id ||
-                            get().ship.modules[0]?.id ||
-                            1;
-
-                        const newCrew: CrewMember = {
-                            id: Date.now(),
-                            name: getRandomName(newProfession, "human"),
-                            race: "human",
-                            profession: newProfession,
-                            level: 1,
-                            exp: 0,
-                            health: 100,
-                            maxHealth: 100,
-                            happiness: 100,
-                            maxHappiness: 100,
-                            assignment: null,
-                            assignmentEffect: null,
-                            combatAssignment: null,
-                            combatAssignmentEffect: null,
-                            traits: [],
-                            moduleId: initialModuleId,
-                            movedThisTurn: false,
-                            turnsAtZeroHappiness: 0,
-                            isMerged: false,
-                            mergedModuleId: null,
-                            firstaidActive: false,
-                        };
-                        set((s) => ({ crew: [...s.crew, newCrew] }));
-                        get().addLog(
-                            `Выживший ${newCrew.name} присоединился к команде!`,
-                            "info",
-                        );
-                    }
-
-                    // Mark as completed but DON'T close the panel - let player see result
-                    set((s) => ({
-                        completedLocations: [...s.completedLocations, loc.id],
-                    }));
-                    // Stay in distress_signal mode to show result
-                    break;
-                }
-                case "abandoned_cargo": {
-                    const creditsReward = 50 + Math.floor(Math.random() * 50); // 50-100 credits
-                    const keys = typedKeys(TRADE_GOODS);
-                    const goodId =
-                        keys[Math.floor(Math.random() * keys.length)];
-                    const quantity = 5 + Math.floor(Math.random() * 10);
-                    const goodName = TRADE_GOODS[goodId].name;
-
-                    set((s) => ({
-                        credits: s.credits + creditsReward,
-                        ship: {
-                            ...s.ship,
-                            tradeGoods: [
-                                ...s.ship.tradeGoods,
-                                { item: goodId, quantity, buyPrice: 0 },
-                            ],
-                        },
-                    }));
-
-                    get().addLog("📦 Найден заброшенный груз!", "info");
-                    get().addLog(`Кредиты: +${creditsReward}₢`, "info");
-                    get().addLog(`${goodName}: +${quantity}`, "info");
-
-                    // Chance to find artifact
-                    const artifact = get().tryFindArtifact();
-                    let foundArtifact: string | undefined;
-                    if (artifact) {
-                        get().addLog(
-                            `★ АРТЕФАКТ НАЙДЕН: ${artifact.name}!`,
-                            "info",
-                        );
-                        foundArtifact = artifact.name;
-                    }
-
-                    // Store loot details for display
-                    const updatedLocationForDisplay = {
-                        ...loc,
-                        signalType: outcome,
-                        signalResolved: true,
-                        signalLoot: {
-                            credits: creditsReward,
-                            tradeGood: { name: goodName, quantity },
-                            artifact: foundArtifact,
-                        },
-                    };
-
-                    set((s) => {
-                        const updatedSector = s.currentSector
-                            ? {
-                                  ...s.currentSector,
-                                  locations: s.currentSector.locations.map(
-                                      (l) =>
-                                          l.id === loc.id
-                                              ? updatedLocationForDisplay
-                                              : l,
-                                  ),
-                              }
-                            : null;
-
-                        return {
-                            currentLocation: updatedLocationForDisplay,
-                            currentSector: updatedSector,
-                            galaxy: {
-                                ...s.galaxy,
-                                sectors: s.galaxy.sectors.map((sec) =>
-                                    sec.id === sector.id && updatedSector
-                                        ? updatedSector
-                                        : sec,
-                                ),
-                            },
-                        };
-                    });
-
-                    // Mark as completed but DON'T close the panel - let player see result
-                    set((s) => ({
-                        completedLocations: [...s.completedLocations, loc.id],
-                    }));
-                    // Stay in distress_signal mode to show result
-                    break;
-                }
-            }
-
-            get().nextTurn();
-        },
 
         // Artifact functions
         researchArtifact: (artifactId) => {

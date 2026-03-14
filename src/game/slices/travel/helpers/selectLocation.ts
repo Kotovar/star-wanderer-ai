@@ -1,6 +1,5 @@
 import { findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
-import { handleSurvivorCapsuleDelivery } from "@/game/contracts";
 import { determineSignalOutcome } from "@/game/signals";
 import type { GameStore, Location, SetState } from "@/game/types";
 
@@ -164,18 +163,16 @@ export const selectLocation = (
     switch (loc.type) {
         case "station":
             set({ gameMode: "station" });
-            handleSurvivorCapsuleDelivery("station");
             break;
 
         case "planet":
             set({ gameMode: "planet" });
             if (!loc.isEmpty) {
-                handleSurvivorCapsuleDelivery("planet");
+                get().processScanContracts();
+                get().completeScanContracts();
+                get().handleDiplomacyContracts(locationIdx);
+                get().handleSupplyRunContracts(locationIdx);
             }
-            get().processScanContracts();
-            get().completeScanContracts();
-            get().handleDiplomacyContracts(locationIdx);
-            get().handleSupplyRunContracts(locationIdx);
             break;
 
         case "enemy": {

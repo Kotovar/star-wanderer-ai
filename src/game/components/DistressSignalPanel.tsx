@@ -95,11 +95,7 @@ export function DistressSignalPanel() {
                             <br />
                             <br />
                             <span className="text-[#00ff41]">
-                                {t("distress_signal.survivors_capsule")}
-                            </span>
-                            <br />
-                            <span className="text-[#ffb000]">
-                                {t("distress_signal.deliver_for_reward")}
+                                {t("distress_signal.survivors_saved")}
                             </span>
                         </>
                     )}

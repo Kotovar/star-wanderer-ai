@@ -31,7 +31,7 @@ interface CrewStats {
  * @param options - Опции расчёта
  * @returns Характеристики
  */
-const calculateCrewStats = (options: CrewStatsOptions): CrewStats => {
+export const calculateCrewStats = (options: CrewStatsOptions): CrewStats => {
     const { race, traits, level } = options;
     const raceData = RACES[race];
 
@@ -150,7 +150,7 @@ const validateHireCrew = (state: GameStore, price: number): HireValidation => {
  * @param initialModuleId - ID модуля для начального размещения
  * @returns Новый член экипажа
  */
-const createCrewMember = (
+export const createCrewMember = (
     crewData: Partial<CrewMember> & { price: number },
     stats: CrewStats,
     initialModuleId: number,

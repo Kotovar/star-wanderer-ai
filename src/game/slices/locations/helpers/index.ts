@@ -8,3 +8,4 @@ export * from "./calculateScienceBonus";
 export * from "./applyAnomalyEffect";
 export * from "./sendScoutingMission";
 export * from "./determineScoutingOutcome";
+export * from "./respondToDistressSignal";
