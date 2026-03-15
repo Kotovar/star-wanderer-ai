@@ -176,14 +176,14 @@ export const PLANET_SPECIALIZATIONS: Record<RaceId, PlanetSpecialization> = {
         effects: [
             {
                 type: "health_boost",
-                value: 20,
+                value: 5,
                 description:
-                    "+20 к максимальному здоровью всему экипажу (постоянно)",
+                    "+5 к максимальному здоровью всему экипажу (постоянно)",
             },
             {
-                type: "regen_boost",
-                value: 5,
-                description: "+5 к регенерации здоровья за ход ",
+                type: "health_regen",
+                value: 15,
+                description: "+15 к регенерации здоровья за ход",
             },
         ],
     },

@@ -1453,6 +1453,45 @@
         "voidborn": "Voidborn",
         "crystalline": "Crystallines"
     },
+    "planet_effects": {
+        "human_academy": {
+            "name": "Space Academy",
+            "description": "Human military academy offers crew training. Intensive program improves combat effectiveness."
+        },
+        "synthetic_archives": {
+            "name": "Data Archives",
+            "description": "Synthetics store knowledge of ancient civilizations. You can receive valuable information about the sector."
+        },
+        "xenosymbiont_lab": {
+            "name": "Bio Laboratory",
+            "description": "Xenosymbionts are masters of biotechnology. Improve crew health and regeneration."
+        },
+        "krylorian_dojo": {
+            "name": "Warrior Dojo",
+            "description": "Insectoid krylorians are born warriors. Dojo training improves combat skills."
+        },
+        "voidborn_ritual": {
+            "name": "Mystic Ritual",
+            "description": "Voidborn conduct ancient rituals to enhance artifacts and connection with the cosmos."
+        },
+        "crystalline_resonator": {
+            "name": "Crystal Resonator",
+            "description": "Crystalline beings can tune ship energy systems to resonate with crystals."
+        },
+        "effects": {
+            "health_boost": "+{{value}} max crew health (permanent)",
+            "health_regen": "+{{value}} health regen per turn",
+            "crew_level": "+{{value}} level to selected crew member",
+            "sector_scan": "Full scan of current sector",
+            "artifact_hints": "{{value}} artifact hints",
+            "combat_bonus": "+{{value}}% combat damage",
+            "evasion_bonus": "+{{value}}% evasion",
+            "power_boost": "+{{value}} reactor power",
+            "shield_boost": "+{{value}} max shields",
+            "fuel_efficiency": "+{{value}}% fuel efficiency",
+            "artifact_boost": "Artifact boost (+50%)"
+        }
+    },
     "battle_results": {
         "rewards_title": "💰 Rewards:",
         "module_damage_title": "🔧 Module damage:",

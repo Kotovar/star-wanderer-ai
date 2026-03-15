@@ -2,6 +2,7 @@ import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { generateGalaxy } from "@/game/galaxy/generateGalaxy";
 import { initialModules, STARTING_FUEL } from "@/game/modules/initial";
 import { initializeStationData } from "@/game/stations/initialize";
+// import { RESEARCH_TREE } from "@/game/constants/research";
 import type { GameState, CrewMember } from "@/game/types";
 
 /** Начальный номер хода */
@@ -167,6 +168,8 @@ export const initialState: GameState = {
     planetCooldowns: {},
     research: {
         resources: {},
+        // DEBUG: открываем все технологии для отладки
+        // discoveredTechs: Object.keys(RESEARCH_TREE),
         discoveredTechs: [
             "reinforced_hull",
             "efficient_reactor",

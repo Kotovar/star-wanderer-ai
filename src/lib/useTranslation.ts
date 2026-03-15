@@ -12,7 +12,7 @@ const resources: Record<"ru" | "en", Record<string, unknown>> = {
 };
 
 // Simple translation store
-const store = {
+export const store = {
     lng: "ru" as "ru" | "en",
     isHydrated: false,
     listeners: new Set<() => void>(),

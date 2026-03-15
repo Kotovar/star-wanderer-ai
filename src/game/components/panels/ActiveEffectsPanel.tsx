@@ -10,6 +10,21 @@ interface ActiveEffectsPanelProps {
     onClose: () => void;
 }
 
+/**
+ * Получает ключ перевода для эффекта планеты по ID расы
+ */
+function getPlanetEffectKey(raceId: string): string {
+    const keyMap: Record<string, string> = {
+        human: "human_academy",
+        synthetic: "synthetic_archives",
+        xenosymbiont: "xenosymbiont_lab",
+        krylorian: "krylorian_dojo",
+        voidborn: "voidborn_ritual",
+        crystalline: "crystalline_resonator",
+    };
+    return keyMap[raceId] || raceId;
+}
+
 export function ActiveEffectsPanel({ onClose }: ActiveEffectsPanelProps) {
     const activeEffects = useGameStore((s) => s.activeEffects);
     const { t } = useTranslation();
@@ -61,6 +76,8 @@ export function ActiveEffectsPanel({ onClose }: ActiveEffectsPanelProps) {
             <div className="flex flex-col gap-3 max-h-80 overflow-y-auto">
                 {activeEffects.map((effect) => {
                     const race = RACES[effect.raceId];
+                    const effectKey = getPlanetEffectKey(effect.raceId);
+
                     return (
                         <div
                             key={effect.id}
@@ -74,10 +91,12 @@ export function ActiveEffectsPanel({ onClose }: ActiveEffectsPanelProps) {
                                             className="font-bold text-sm"
                                             style={{ color: race.color }}
                                         >
-                                            {effect.name}
+                                            {t(
+                                                `planet_effects.${effectKey}.name`,
+                                            )}
                                         </div>
                                         <div className="text-[10px] text-[#888]">
-                                            {race.pluralName}
+                                            {t(`race_names.${effect.raceId}`)}
                                         </div>
                                     </div>
                                 </div>
@@ -94,7 +113,7 @@ export function ActiveEffectsPanel({ onClose }: ActiveEffectsPanelProps) {
                             </div>
 
                             <div className="text-xs text-[#888] mb-2">
-                                {effect.description}
+                                {t(`planet_effects.${effectKey}.description`)}
                             </div>
 
                             <div className="space-y-1">

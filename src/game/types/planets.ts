@@ -1,4 +1,5 @@
 import type { RaceId } from "./races";
+import type { PlanetEffectType } from "./effects";
 
 export type PlanetType =
     | "Пустынная"
@@ -22,7 +23,7 @@ export interface PlanetSpecialization {
     duration: number; // Turns required
     // Cooldown in turns (optional)
     effects: {
-        type: string;
+        type: PlanetEffectType;
         value: number | string;
         description: string;
     }[];

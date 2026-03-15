@@ -6,6 +6,7 @@ import { PLANET_SPECIALIZATIONS } from "@/game/constants/planets";
 import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
 import { createVoidbornBoostEffect } from "@/game/slices/artifacts/helpers";
+import { useTranslation } from "react-i18next";
 
 interface PlanetSpecializationPanelProps {
     onClose: () => void;
@@ -29,7 +30,7 @@ export function PlanetSpecializationPanel({
     const [selectedArtifactId, setSelectedArtifactId] = useState<string | null>(
         null,
     );
-
+    const { t } = useTranslation();
     if (!currentLocation || !currentLocation.dominantRace) return null;
 
     const race = RACES[currentLocation.dominantRace];
@@ -189,7 +190,7 @@ export function PlanetSpecializationPanel({
                                 <button
                                     key={member.id}
                                     onClick={() => setSelectedCrewId(member.id)}
-                                    className={`flex items-center gap-2 p-2 rounded border text-left transition-colors ${
+                                    className={`cursor-pointer flex items-center gap-2 p-2 rounded border text-left transition-colors ${
                                         selectedCrewId === member.id
                                             ? "border-[#00ff41] bg-[rgba(0,255,65,0.1)]"
                                             : "border-[#444] hover:border-[#666]"
@@ -212,8 +213,10 @@ export function PlanetSpecializationPanel({
                                             {member.name}
                                         </div>
                                         <div className="text-[#888]">
-                                            {member.profession} • ур.{" "}
-                                            {member.level || 1}
+                                            {t(
+                                                `professions.${member.profession}`,
+                                            )}{" "}
+                                            • ур. {member.level || 1}
                                         </div>
                                     </div>
                                     {isMaxLevel && (

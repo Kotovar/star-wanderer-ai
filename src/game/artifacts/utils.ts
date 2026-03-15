@@ -2,10 +2,12 @@ import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { ARTIFACT_BOOST_BONUS } from "@/game/slices/artifacts/constants";
 import type {
     ActiveEffect,
-    ArtefatType,
     Artifact,
+    ArtifactEffectType,
     GameState,
+    PlanetEffectType,
 } from "@/game/types";
+import { store as i18nStore } from "@/lib/useTranslation";
 
 // Get artifact by ID
 export const getArtifactById = (id: string): Artifact | undefined => {
@@ -41,31 +43,63 @@ export const getRandomUndiscoveredArtifact = (
 };
 
 export const getEffectDescription = (
-    effect: { type: ArtefatType; value: number | string },
+    effect: {
+        type: ArtifactEffectType | PlanetEffectType;
+        value: number | string;
+    },
     activeEffect?: ActiveEffect,
 ) => {
+    const value = typeof effect.value === "number" ? effect.value : 0;
+    const valuePercent = Math.round(Number(effect.value) * 100);
+
     switch (effect.type) {
+        // Артефакты
         case "health_regen":
-            return `+${effect.value} к регенерации здоровья за ход`;
+            return i18nStore.t("planet_effects.effects.health_regen", {
+                value,
+            });
         case "combat_bonus":
-            return `+${Math.round(Number(effect.value) * 100)}% к урону в бою`;
+            return i18nStore.t("planet_effects.effects.combat_bonus", {
+                value: valuePercent,
+            });
         case "evasion_bonus":
-            return `+${Math.round(Number(effect.value) * 100)}% к уклонению`;
+            return i18nStore.t("planet_effects.effects.evasion_bonus", {
+                value: valuePercent,
+            });
         case "power_boost":
-            return `+${effect.value} к энергии реактора`;
+            return i18nStore.t("planet_effects.effects.power_boost", { value });
         case "shield_boost":
-            return `+${effect.value} к максимальным щитам`;
+            return i18nStore.t("planet_effects.effects.shield_boost", {
+                value,
+            });
         case "fuel_efficiency":
-            return `+${Math.round(Number(effect.value) * 100)}% к эффективности топлива`;
+            return i18nStore.t("planet_effects.effects.fuel_efficiency", {
+                value: valuePercent,
+            });
         case "artifact_boost":
             // Show the boosted artifact name
             if (activeEffect?.targetArtifactId) {
                 const artifact = getArtifactById(activeEffect.targetArtifactId);
                 if (artifact) {
-                    return `Усиление артефакта: ${artifact.name} (+50%)`;
+                    return `${i18nStore.t("planet_effects.effects.artifact_boost")}: ${artifact.name}`;
                 }
             }
-            return `Усиление артефакта (+50%)`;
+            return i18nStore.t("planet_effects.effects.artifact_boost");
+
+        // Эффекты планет
+        case "health_boost":
+            return i18nStore.t("planet_effects.effects.health_boost", {
+                value,
+            });
+        case "crew_level":
+            return i18nStore.t("planet_effects.effects.crew_level", { value });
+        case "sector_scan":
+            return i18nStore.t("planet_effects.effects.sector_scan");
+        case "artifact_hints":
+            return i18nStore.t("planet_effects.effects.artifact_hints", {
+                value,
+            });
+
         default:
             return `${effect.type}: ${effect.value}`;
     }

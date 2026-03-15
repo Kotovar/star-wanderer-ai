@@ -1,4 +1,5 @@
-import type { GameStore, SetState, Location } from "@/game/types";
+import type { GameStore, SetState, Location, RaceId } from "@/game/types";
+import { RACES } from "@/game/constants";
 import { mineAsteroid } from "./helpers";
 import { handleStormEntry } from "./helpers/enterStorm";
 import { handleAnomaly as handleAnomalyHelper } from "./helpers";
@@ -36,6 +37,12 @@ export interface LocationsSlice {
      * Обрабатывает сигнал бедствия
      */
     respondToDistressSignal: () => void;
+
+    /**
+     * Открывает новую расу
+     * @param raceId - ID расы
+     */
+    discoverRace: (raceId: RaceId) => void;
 }
 
 /**
@@ -67,5 +74,21 @@ export const createLocationsSlice = (
 
     respondToDistressSignal: () => {
         respondToDistressSignalHelper(set, get);
+    },
+
+    discoverRace: (raceId) => {
+        set((state) => {
+            if (state.knownRaces.includes(raceId)) return state;
+            const race = RACES[raceId];
+            if (race) {
+                get().addLog(
+                    `Открыта новая раса: ${race.icon} ${race.pluralName}!`,
+                    "info",
+                );
+            }
+            return {
+                knownRaces: [...state.knownRaces, raceId],
+            };
+        });
     },
 });
