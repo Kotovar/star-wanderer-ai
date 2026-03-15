@@ -352,7 +352,7 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                 <div className="p-4 border-t border-[#00d4ff] sticky bottom-0 bg-[#0a0f1a]">
                     <Button
                         onClick={onClose}
-                        className="w-full bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider"
+                        className="cursor-pointer w-full bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider"
                     >
                         {t("effects.close")}
                     </Button>

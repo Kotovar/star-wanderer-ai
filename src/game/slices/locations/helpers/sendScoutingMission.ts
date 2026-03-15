@@ -6,10 +6,10 @@ import type {
 } from "@/game/types";
 import { TRADE_GOODS } from "@/game/constants";
 import {
-    SCOUT_BASE_EXP,
     SCOUTING_TRADE_GOOD_QUANTITY,
     SCOUTING_REQUIRED_VISITS,
 } from "../constants";
+import { SCOUT_BASE_EXP } from "@/game/constants/experience";
 import { determineScoutingOutcome } from "./determineScoutingOutcome";
 import { typedKeys } from "@/lib";
 

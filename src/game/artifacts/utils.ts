@@ -1,4 +1,5 @@
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
+import { ARTIFACT_BOOST_BONUS } from "@/game/slices/artifacts/constants";
 import type {
     ActiveEffect,
     ArtefatType,
@@ -89,7 +90,7 @@ export const getArtifactEffectValue = (
     if (boostEffect) {
         const boostValue =
             (boostEffect.effects.find((ef) => ef.type === "artifact_boost")
-                ?.value as number) ?? 0.5;
+                ?.value as number) ?? ARTIFACT_BOOST_BONUS;
         // For percentage values (< 1), don't use floor - keep decimal precision
         // For integer values (>= 1), use floor for clean numbers
         value =

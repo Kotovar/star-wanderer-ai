@@ -1,4 +1,5 @@
 import { ANCIENT_DRILL_BONUS, RESEARCH_RESOURCES } from "@/game/constants";
+import { BASE_ENGINEER_EXP } from "@/game/constants/experience";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getMiningResources } from "@/game/research/utils";
 import { playSound } from "@/sounds";
@@ -9,7 +10,6 @@ import {
     DRILL_LEVEL_BONUS,
     PERCENT_DIVISOR,
     MIN_CARGO_QUANTITY,
-    BASE_ENGINEER_EXP,
 } from "../constants";
 import type { GameState, GameStore, SetState } from "@/game/types";
 

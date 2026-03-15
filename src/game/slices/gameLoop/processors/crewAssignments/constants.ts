@@ -2,18 +2,10 @@
  * Константы для системы назначений экипажа
  */
 
+import { CREW_ASSIGNMENT_EXP } from "@/game/constants/experience";
+
 /** Базовое количество опыта за выполнение назначений */
-export const BASE_EXP_REWARDS = {
-    REPAIR: 8,
-    HEAL: 10,
-    MORALE: 6,
-    POWER: 5,
-    NAVIGATION: 5,
-    EVADE: 5,
-    COMBAT_REPAIR: 8,
-    COMBAT_OTHER: 5,
-    ANALYSIS_SABOTAGE: 6,
-} as const;
+export const BASE_EXP_REWARDS = CREW_ASSIGNMENT_EXP;
 
 /** Базовые значения эффектов назначений */
 export const ASSIGNMENT_BASES = {

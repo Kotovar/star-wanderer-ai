@@ -1,6 +1,7 @@
 import type { GameState, GameStore, SetState, StormType } from "@/game/types";
 import { playSound } from "@/sounds";
 import { CONTRACT_REWARDS } from "@/game/constants";
+import { SCIENTIST_STORM_EXP } from "@/game/constants/experience";
 import { giveCrewExperience } from "@/game/crew/utils";
 import { getCrewByProfession } from "@/game/crew/utils";
 import {
@@ -382,7 +383,7 @@ export const handleStormEntry = (set: SetState, get: () => GameStore): void => {
     // Даём опыт всем учёным за изучение шторма
     const scientists = getCrewByProfession(state.crew, "scientist");
     scientists.forEach((scientist) => {
-        get().gainExp(scientist, STORM_COMMON.scientistExp * intensity);
+        get().gainExp(scientist, SCIENTIST_STORM_EXP * intensity);
     });
 
     // Завершаем контракты на спасение (voidborn quest - выжить в шторме)

@@ -4,6 +4,11 @@ import {
     RESEARCH_RESOURCES,
 } from "@/game/constants";
 import {
+    BASE_GUNNER_COMBAT_EXP,
+    GUNNER_COMBAT_EXP_PER_TIER,
+    WEAPON_BAY_CREW_EXP,
+} from "@/game/constants/experience";
+import {
     getCombatLootResources,
     getBossLootResources,
 } from "@/game/research/utils";
@@ -227,7 +232,10 @@ export function handleVictory(
                 getActiveAssignment(c, true) === "targeting"),
     );
     if (gunner) {
-        get().gainExp(gunner, 10 + enemyTier * 5);
+        get().gainExp(
+            gunner,
+            BASE_GUNNER_COMBAT_EXP + enemyTier * GUNNER_COMBAT_EXP_PER_TIER,
+        );
         get().addLog(`${gunner.name} получил боевой опыт!`, "info");
     }
 
@@ -236,7 +244,7 @@ export function handleVictory(
             weaponBays.some((wb) => wb.id === c.moduleId) &&
             c.id !== gunner?.id,
     );
-    weaponBayCrew.forEach((c) => get().gainExp(c, 5));
+    weaponBayCrew.forEach((c) => get().gainExp(c, WEAPON_BAY_CREW_EXP));
 
     // Mark location as completed
     if (get().currentLocation) {

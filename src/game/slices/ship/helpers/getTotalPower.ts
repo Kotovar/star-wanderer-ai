@@ -65,5 +65,10 @@ export function getTotalPower(state: GameState): number {
         power = Math.floor(power * (1 + mergeBonus.powerOutput / 100));
     }
 
+    // === Временные бонусы от эффектов планет (Crystalline и др.) ===
+    if (ship.bonusPower) {
+        power += ship.bonusPower;
+    }
+
     return power;
 }

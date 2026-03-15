@@ -1,9 +1,5 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import {
-    getArtifactEffectValue,
-    getRandomUndiscoveredArtifact,
-} from "@/game/artifacts";
 import { isModuleActive } from "@/game/modules";
 import {
     PLANET_SPECIALIZATIONS,
@@ -11,6 +7,7 @@ import {
     RESEARCH_TREE,
     RESEARCH_RESOURCES,
 } from "@/game/constants";
+import { VOIDBORN_FUEL_EFFICIENCY_BONUS } from "@/game/slices/artifacts/constants";
 import { generateGalaxy } from "@/game/galaxy";
 import { initialState } from "@/game/initial";
 import {
@@ -35,6 +32,7 @@ import {
     createServicesSlice,
     createTradeSlice,
     createCrewManagementSlice,
+    createArtifactsSlice,
 } from "@/game/slices";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type { GameStore, RaceId } from "@/game/types";
@@ -58,190 +56,7 @@ export const useGameStore = create<GameStore>()(
         ...createServicesSlice(set, get),
         ...createTradeSlice(set, get),
         ...createCrewManagementSlice(set, get),
-
-        // Artifact functions
-        researchArtifact: (artifactId) => {
-            const state = get();
-            const artifact = state.artifacts.find((a) => a.id === artifactId);
-
-            if (!artifact) {
-                get().addLog("Артефакт не найден!", "error");
-                return;
-            }
-
-            if (!artifact.discovered) {
-                get().addLog("Артефакт ещё не обнаружен!", "error");
-                return;
-            }
-
-            if (artifact.researched) {
-                get().addLog("Артефакт уже изучен!", "warning");
-                return;
-            }
-
-            const scientists = state.crew.filter(
-                (c) => c.profession === "scientist",
-            );
-            const maxScientistLevel =
-                scientists.length > 0
-                    ? Math.max(...scientists.map((s) => s.level || 1))
-                    : 0;
-
-            if (maxScientistLevel < artifact.requiresScientistLevel) {
-                get().addLog(
-                    `Требуется учёный уровня ${artifact.requiresScientistLevel}!`,
-                    "error",
-                );
-                return;
-            }
-
-            // Research the artifact
-            set((s) => ({
-                artifacts: s.artifacts.map((a) =>
-                    a.id === artifactId
-                        ? {
-                              ...a,
-                              researched: true,
-                              effect: { ...a.effect, active: true },
-                          }
-                        : a,
-                ),
-            }));
-
-            playSound("success");
-            get().addLog(`★ ${artifact.name} изучен и активирован!`, "info");
-            get().addLog(`Эффект: ${artifact.description}`, "info");
-
-            // Give experience to scientists
-            scientists.forEach((s) =>
-                get().gainExp(s, artifact.requiresScientistLevel * 25),
-            );
-        },
-
-        toggleArtifact: (artifactId) => {
-            const state = get();
-            const artifact = state.artifacts.find((a) => a.id === artifactId);
-
-            if (!artifact || !artifact.researched) return;
-
-            // Check if artifact is cursed and player has scientist to deactivate
-            const newActive = !artifact.effect.active;
-            if (!newActive && artifact.cursed) {
-                // Deactivating cursed artifact - need scientist level 3+
-                const scientist = state.crew.find(
-                    (c) => c.profession === "scientist" && c.level >= 3,
-                );
-                if (!scientist) {
-                    get().addLog(
-                        "⚠️ Нельзя отключить проклятый артефакт без учёного 3+ уровня!",
-                        "error",
-                    );
-                    playSound("error");
-                    return;
-                }
-                // Damage the scientist
-                const damage = 20;
-                set((s) => ({
-                    crew: s.crew.map((c) =>
-                        c.id === scientist.id
-                            ? { ...c, health: Math.max(1, c.health - damage) }
-                            : c,
-                    ),
-                }));
-                get().addLog(
-                    `⚠️ ${scientist.name} пострадал от проклятия! -${damage} здоровья`,
-                    "warning",
-                );
-            }
-
-            set((s) => ({
-                artifacts: s.artifacts.map((a) =>
-                    a.id === artifactId
-                        ? {
-                              ...a,
-                              effect: { ...a.effect, active: newActive },
-                          }
-                        : a,
-                ),
-            }));
-
-            get().addLog(
-                `${artifact.name}: ${newActive ? "активирован" : "деактивирован"}`,
-                "info",
-            );
-            playSound(newActive ? "artifact" : "error");
-            get().updateShipStats();
-        },
-
-        tryFindArtifact: () => {
-            const state = get();
-
-            // Check for artifact finder bonus
-            const artifactFinder = state.artifacts.find(
-                (a) => a.effect.type === "artifact_finder" && a.effect.active,
-            );
-            let artifactFinderBonus = artifactFinder
-                ? getArtifactEffectValue(artifactFinder, state)
-                : 1;
-
-            // Apply crystalline artifactBonus (+15% to artifact effects)
-            state.crew.forEach((c) => {
-                const race = RACES[c.race];
-                if (race?.specialTraits) {
-                    const trait = race.specialTraits.find(
-                        (t) => t.id === "resonance" && t.effects.artifactBonus,
-                    );
-                    if (trait && artifactFinderBonus > 1) {
-                        artifactFinderBonus =
-                            1 +
-                            (artifactFinderBonus - 1) *
-                                (1 + Number(trait.effects.artifactBonus));
-                    }
-                }
-            });
-
-            // Base chance depends on tier and context
-            const tier = state.currentSector?.tier ?? 1;
-            const baseChance = 0.02 * tier * artifactFinderBonus;
-
-            if (Math.random() > baseChance) return null;
-
-            const artifact = getRandomUndiscoveredArtifact(state.artifacts);
-            if (!artifact) return null;
-
-            // Mark as discovered
-            set((s) => ({
-                artifacts: s.artifacts.map((a) =>
-                    a.id === artifact.id ? { ...a, discovered: true } : a,
-                ),
-            }));
-
-            // Complete mining contracts (crystalline quest - find artifact)
-            const miningContract = get().activeContracts.find(
-                (c) => c.type === "mining" && c.isRaceQuest,
-            );
-            if (miningContract) {
-                set((s) => ({
-                    credits: s.credits + (miningContract.reward || 0),
-                }));
-                get().addLog(
-                    `Кристалл Древних найден! +${miningContract.reward}₢`,
-                    "info",
-                );
-                set((s) => ({
-                    completedContractIds: [
-                        ...s.completedContractIds,
-                        miningContract.id,
-                    ],
-                    activeContracts: s.activeContracts.filter(
-                        (ac) => ac.id !== miningContract.id,
-                    ),
-                }));
-            }
-
-            playSound("success");
-            return artifact;
-        },
+        ...createArtifactsSlice(set, get),
 
         discoverRace: (raceId: RaceId) => {
             set((state) => {
@@ -283,11 +98,56 @@ export const useGameStore = create<GameStore>()(
                 return;
             }
 
+            // Calculate HP gain based on race and traits (same as applyLevelUp)
+            const raceData = RACES[crewMember.race];
+            let healthGain = 20; // BASE_CREW_HEALTH_PER_LEVEL
+
+            // Apply race penalty
+            let raceHealthPenaltyPercent = 0;
+            raceData?.specialTraits?.forEach((trait) => {
+                if (trait.effects.healthPenalty) {
+                    raceHealthPenaltyPercent += Math.abs(
+                        Number(trait.effects.healthPenalty),
+                    );
+                }
+            });
+            if (raceHealthPenaltyPercent > 0) {
+                healthGain = Math.floor(
+                    healthGain * (1 - raceHealthPenaltyPercent),
+                );
+            }
+
+            // Apply trait bonuses/penalties
+            crewMember.traits.forEach((trait) => {
+                if (trait.effect.healthPenalty) {
+                    healthGain = Math.floor(
+                        healthGain * (1 - trait.effect.healthPenalty),
+                    );
+                }
+                if (trait.effect.healthBonus) {
+                    healthGain = Math.floor(
+                        healthGain * (1 + trait.effect.healthBonus),
+                    );
+                }
+            });
+
+            // Add race fixed bonus
+            const raceHealthBonus = raceData?.crewBonuses?.health ?? 0;
+            healthGain += raceHealthBonus;
+
+            const newMaxHealth = crewMember.maxHealth + healthGain;
+
             set((s) => ({
                 credits: s.credits - cost,
                 crew: s.crew.map((c) =>
                     c.id === crewMemberId
-                        ? { ...c, level: c.level + 1, exp: 0 }
+                        ? {
+                              ...c,
+                              level: c.level + 1,
+                              exp: 0,
+                              maxHealth: newMaxHealth,
+                              health: newMaxHealth, // Full heal on level up
+                          }
                         : c,
                 ),
             }));
@@ -359,26 +219,6 @@ export const useGameStore = create<GameStore>()(
             playSound("success");
         },
 
-        boostArtifact: (artifactId: string) => {
-            const state = get();
-            const artifact = state.artifacts.find((a) => a.id === artifactId);
-
-            if (!artifact || !artifact.effect.active) {
-                get().addLog("Выберите активный артефакт!", "error");
-                return;
-            }
-
-            // Mark artifact as boosted (actual bonus applied via activeEffect)
-            set((s) => ({
-                artifacts: s.artifacts.map((a) =>
-                    a.id === artifactId ? { ...a, boosted: true } : a,
-                ),
-            }));
-
-            get().addLog(`🔮 ${artifact.name} готов к усилению!`, "info");
-            playSound("success");
-        },
-
         activatePlanetEffect: (raceId: RaceId, planetId?: string) => {
             const state = get();
             const spec = PLANET_SPECIALIZATIONS[raceId];
@@ -396,7 +236,7 @@ export const useGameStore = create<GameStore>()(
             // Apply effects based on race
             switch (raceId) {
                 case "xenosymbiont":
-                    // +20 max health, +5 regen for 5 turns
+                    // +20 max health, +5 regen for 15 turns
                     set((s) => ({
                         credits: s.credits - cost,
                         crew: s.crew.map((c) => ({
@@ -411,7 +251,7 @@ export const useGameStore = create<GameStore>()(
                                 name: spec.name,
                                 description: spec.description,
                                 raceId,
-                                turnsRemaining: 5,
+                                turnsRemaining: spec.duration,
                                 effects: [{ type: "health_regen", value: 5 }],
                             },
                         ],
@@ -420,13 +260,13 @@ export const useGameStore = create<GameStore>()(
                             : s.planetCooldowns,
                     }));
                     get().addLog(
-                        `🧬 ${spec.name}: +20 здоровья экипажу, +5 регенерации за ход (5 ходов)`,
+                        `🧬 ${spec.name}: +20 здоровья экипажу, +5 регенерации за ход (15 ходов)`,
                         "info",
                     );
                     break;
 
                 case "krylorian":
-                    // Combat bonuses for 5 turns
+                    // Combat bonuses for 15 turns
                     set((s) => ({
                         credits: s.credits - cost,
                         ship: {
@@ -440,7 +280,7 @@ export const useGameStore = create<GameStore>()(
                                 name: spec.name,
                                 description: spec.description,
                                 raceId,
-                                turnsRemaining: 5,
+                                turnsRemaining: spec.duration,
                                 effects: [
                                     { type: "combat_bonus", value: 0.15 },
                                     { type: "evasion_bonus", value: 0.1 },
@@ -452,13 +292,13 @@ export const useGameStore = create<GameStore>()(
                             : s.planetCooldowns,
                     }));
                     get().addLog(
-                        `⚔️ ${spec.name}: +15% урон, +10% уклонение (5 ходов)`,
+                        `⚔️ ${spec.name}: +15% урон, +10% уклонение (15 ходов)`,
                         "info",
                     );
                     break;
 
                 case "crystalline":
-                    // Apply power and shield boost for 5 turns
+                    // Apply power and shield boost for 15 turns
                     set((s) => ({
                         credits: s.credits - cost,
                         ship: {
@@ -475,7 +315,7 @@ export const useGameStore = create<GameStore>()(
                                 name: spec.name,
                                 description: spec.description,
                                 raceId,
-                                turnsRemaining: 5,
+                                turnsRemaining: spec.duration,
                                 effects: [
                                     { type: "power_boost", value: 10 },
                                     { type: "shield_boost", value: 25 },
@@ -487,13 +327,13 @@ export const useGameStore = create<GameStore>()(
                             : s.planetCooldowns,
                     }));
                     get().addLog(
-                        `💎 ${spec.name}: +10 энергии, +25 щитов (5 ходов)`,
+                        `💎 ${spec.name}: +10 энергии, +25 щитов (15 ходов)`,
                         "info",
                     );
                     break;
 
                 case "voidborn":
-                    // Fuel efficiency bonus for 5 turns
+                    // Fuel efficiency bonus for 15 turns (without artifact boost - that's handled separately)
                     set((s) => ({
                         credits: s.credits - cost,
                         activeEffects: [
@@ -503,9 +343,12 @@ export const useGameStore = create<GameStore>()(
                                 name: spec.name,
                                 description: spec.description,
                                 raceId,
-                                turnsRemaining: 5,
+                                turnsRemaining: spec.duration,
                                 effects: [
-                                    { type: "fuel_efficiency", value: 0.1 },
+                                    {
+                                        type: "fuel_efficiency",
+                                        value: VOIDBORN_FUEL_EFFICIENCY_BONUS,
+                                    },
                                 ],
                             },
                         ],
@@ -514,7 +357,7 @@ export const useGameStore = create<GameStore>()(
                             : s.planetCooldowns,
                     }));
                     get().addLog(
-                        `🔮 ${spec.name}: +10% к эффективности топлива (5 ходов)`,
+                        `🔮 ${spec.name}: +50% к эффективности топлива (15 ходов)`,
                         "info",
                     );
                     break;
@@ -549,7 +392,10 @@ export const useGameStore = create<GameStore>()(
                             bonusShieldsToRemove += ef.value as number;
                         }
                         if (ef.type === "evasion_bonus") {
-                            bonusEvasionToRemove += 10; // 10% per effect
+                            // Convert from decimal (0.1) to percentage points (10)
+                            bonusEvasionToRemove += Math.round(
+                                (ef.value as number) * 100,
+                            );
                         }
                     });
                 });

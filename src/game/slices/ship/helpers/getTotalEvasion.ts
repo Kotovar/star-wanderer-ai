@@ -15,7 +15,7 @@ import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
  * @returns Шанс уклонения в процентах
  */
 export function getTotalEvasion(state: GameState): number {
-    const { crew, artifacts } = state;
+    const { crew, artifacts, ship } = state;
     const captain = crew.find((c) => c.profession === "pilot");
     const captainLevel = captain?.level ?? 1;
 
@@ -55,6 +55,11 @@ export function getTotalEvasion(state: GameState): number {
     const mergeBonus = getMergeEffectsBonus(crew, state.ship.modules);
     if (mergeBonus.evasionBonus) {
         evasion += mergeBonus.evasionBonus;
+    }
+
+    // Временные бонусы от эффектов планет (Krylorian dojo и др.)
+    if (ship.bonusEvasion) {
+        evasion += ship.bonusEvasion;
     }
 
     return Math.round(evasion);

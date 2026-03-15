@@ -1,6 +1,7 @@
 import type { GameState, GameStore, Module } from "@/game/types";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
+import { PILOT_EVASION_COMBAT_EXP } from "@/game/constants/experience";
 import { getTotalEvasion } from "@/game/slices/ship/helpers/getTotalEvasion";
 import { applyModuleDamage } from "./moduleDamage";
 import { processBossRegeneration } from "./bossAbilities";
@@ -48,7 +49,7 @@ export function handleEnemyCounterAttack(
             `✈️ ${pilot ? `Пилот ${pilot.name} уклонился` : `Корабль уклонился`} от атаки! ${evasionSource}`,
             "info",
         );
-        if (pilot) get().gainExp(pilot, 8);
+        if (pilot) get().gainExp(pilot, PILOT_EVASION_COMBAT_EXP);
         return;
     }
 

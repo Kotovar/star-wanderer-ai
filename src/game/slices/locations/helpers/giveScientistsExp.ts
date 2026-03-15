@@ -1,6 +1,6 @@
 import type { CrewMember, RaceId } from "@/game/types";
 import { RACES } from "@/game/constants/races";
-import { ANOMALY_BASE_EXP_PER_LEVEL } from "../constants";
+import { ANOMALY_BASE_EXP_PER_LEVEL } from "@/game/constants/experience";
 
 /**
  * Начисляет опыт учёным за исследование аномалии

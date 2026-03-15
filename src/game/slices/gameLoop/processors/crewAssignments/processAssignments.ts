@@ -583,7 +583,7 @@ export const processPassiveHealthRegen = (
         if (crewMember.health >= maxHealth) return;
 
         // Используем общую функцию расчёта пассивной регенерации
-        const regenAmount = calculateHealthRegen(crewMember);
+        const regenAmount = calculateHealthRegen(crewMember, get());
 
         // Применяем лечение
         if (regenAmount > 0) {

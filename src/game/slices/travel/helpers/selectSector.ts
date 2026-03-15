@@ -1,5 +1,9 @@
 import { findActiveArtifact, findArtifactByEffect } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
+import {
+    PILOT_EXP_SAME_SECTOR,
+    PILOT_EXP_PER_TIER,
+} from "@/game/constants/experience";
 import { getActiveModule, getActiveModules } from "@/game/modules";
 import { playSound } from "@/sounds";
 import { calculateFuelCost } from "./calculateFuelCost";
@@ -34,12 +38,6 @@ const BASE_MODULE_DAMAGE = 10;
 
 /** Дополнительный случайный урон модулю */
 const RANDOM_MODULE_DAMAGE = 15;
-
-/** Опыт пилота за перелёт в пределах сектора */
-const PILOT_EXP_SAME_SECTOR = 5;
-
-/** Опыт пилота за тир расстояния при межсекторном перелёте */
-const PILOT_EXP_PER_TIER = 15;
 
 /** Значение урона здоровью экипажа от проклятого артефакта по умолчанию */
 const DEFAULT_CURSED_ARTIFACT_DAMAGE = 5;

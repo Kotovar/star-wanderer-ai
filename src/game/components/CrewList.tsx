@@ -20,6 +20,7 @@ export function CrewList() {
     const { t } = useTranslation();
     const crew = useGameStore((s) => s.crew);
     const modules = useGameStore((s) => s.ship.modules);
+    const activeEffects = useGameStore((s) => s.activeEffects);
     const moveCrewMember = useGameStore((s) => s.moveCrewMember);
     const isModuleAdjacent = useGameStore((s) => s.isModuleAdjacent);
     const fireCrewMember = useGameStore((s) => s.fireCrewMember);
@@ -36,6 +37,10 @@ export function CrewList() {
                 : mod.name;
         return translatedName;
     };
+
+    // Helper to calculate regen with active effects
+    const getRegen = (member: CrewMember) =>
+        calculateHealthRegen(member, { activeEffects });
 
     const getAdjacentModules = (moduleId: number) => {
         return modules.filter(
@@ -137,8 +142,7 @@ export function CrewList() {
                                 </div>
                                 <div className="text-[10px] text-[#00ff41]">
                                     {t("crew_member.regen_short")}
-                                    {calculateHealthRegen(member)}/
-                                    {t("crew.turn")}
+                                    {getRegen(member)}/{t("crew.turn")}
                                 </div>
                                 {race?.hasHappiness && (
                                     <div>
@@ -275,7 +279,7 @@ export function CrewList() {
                                     </div>
                                     <div className="text-[10px] text-[#00ff41]">
                                         {t("crew_member.regen_short")}
-                                        {calculateHealthRegen(selectedCrew)}/
+                                        {getRegen(selectedCrew)}/
                                         {t("crew.turn")}
                                     </div>
                                     {race?.hasHappiness ? (

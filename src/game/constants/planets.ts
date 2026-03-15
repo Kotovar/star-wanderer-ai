@@ -171,7 +171,7 @@ export const PLANET_SPECIALIZATIONS: Record<RaceId, PlanetSpecialization> = {
             "Ксилориане — мастера биотехнологий. Улучшите здоровье и регенерацию экипажа.",
         icon: "🧬",
         cost: 400,
-        duration: 5,
+        duration: 15,
         cooldown: 999,
         effects: [
             {
@@ -183,7 +183,7 @@ export const PLANET_SPECIALIZATIONS: Record<RaceId, PlanetSpecialization> = {
             {
                 type: "regen_boost",
                 value: 5,
-                description: "+5 к регенерации здоровья за ход",
+                description: "+5 к регенерации здоровья за ход ",
             },
         ],
     },
@@ -194,7 +194,7 @@ export const PLANET_SPECIALIZATIONS: Record<RaceId, PlanetSpecialization> = {
             "Инсектоиды-крилориане — прирождённые воины. Обучение в додзё повышает боевые навыки.",
         icon: "⚔️",
         cost: 450,
-        duration: 5,
+        duration: 15,
         cooldown: 999,
         effects: [
             {
@@ -205,7 +205,7 @@ export const PLANET_SPECIALIZATIONS: Record<RaceId, PlanetSpecialization> = {
             {
                 type: "evasion_bonus",
                 value: 0.1,
-                description: "+10% к уклонению от атак",
+                description: "+10% к уклонению от атак ",
             },
         ],
     },
@@ -216,7 +216,7 @@ export const PLANET_SPECIALIZATIONS: Record<RaceId, PlanetSpecialization> = {
             "Рождённые Пустотой проводят древние ритуалы для усиления артефактов и связи с космосом.",
         icon: "🔮",
         cost: 600,
-        duration: 5,
+        duration: 15,
         cooldown: 999,
         effects: [
             {
@@ -227,8 +227,8 @@ export const PLANET_SPECIALIZATIONS: Record<RaceId, PlanetSpecialization> = {
             },
             {
                 type: "fuel_efficiency",
-                value: 0.1,
-                description: "+10% к эффективности топлива",
+                value: 0.5,
+                description: "+50% к эффективности топлива ",
             },
         ],
     },
@@ -239,18 +239,18 @@ export const PLANET_SPECIALIZATIONS: Record<RaceId, PlanetSpecialization> = {
             "Кристаллические существа могут настроить энергосистемы корабля на резонанс с кристаллами.",
         icon: "💎",
         cost: 550,
-        duration: 5,
+        duration: 15,
         cooldown: 999,
         effects: [
             {
                 type: "power_boost",
                 value: 10,
-                description: "+10 к максимальной энергии реактора",
+                description: "+10 к максимальной энергии реактора ",
             },
             {
                 type: "shield_boost",
                 value: 25,
-                description: "+25 к максимальным щитам",
+                description: "+25 к максимальным щитам ",
             },
         ],
     },

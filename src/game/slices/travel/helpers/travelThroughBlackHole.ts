@@ -1,5 +1,6 @@
 import type { GameStore, SetState } from "@/game/types";
 import { removeDeadCrew } from "@/game/slices/gameLoop/helpers/crewUtils";
+import { SCIENTIST_BLACK_HOLE_EXP } from "@/game/constants";
 
 // ============================================================================
 // Константы
@@ -28,9 +29,6 @@ const MAX_MODULES_TO_DAMAGE = 3;
 
 /** Снижение настроения экипажа */
 const HAPPINESS_PENALTY = 15;
-
-/** Опыт учёному за изучение чёрной дыры */
-const SCIENTIST_EXP_REWARD = 50;
 
 // ============================================================================
 // Вспомогательные функции
@@ -152,9 +150,9 @@ export const travelThroughBlackHole = (
 
     // Опыт учёному
     if (scientist) {
-        get().gainExp(scientist, SCIENTIST_EXP_REWARD);
+        get().gainExp(scientist, SCIENTIST_BLACK_HOLE_EXP);
         get().addLog(
-            `${scientist.name} изучил чёрную дыру! +${SCIENTIST_EXP_REWARD} опыта`,
+            `${scientist.name} изучил чёрную дыру! +${SCIENTIST_BLACK_HOLE_EXP} опыта`,
             "info",
         );
     }

@@ -5,6 +5,7 @@ import { useGameStore } from "@/game/store";
 import { PLANET_SPECIALIZATIONS } from "@/game/constants/planets";
 import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
+import { createVoidbornBoostEffect } from "@/game/slices/artifacts/helpers";
 
 interface PlanetSpecializationPanelProps {
     onClose: () => void;
@@ -52,14 +53,10 @@ export function PlanetSpecializationPanel({
 
     const canAfford = credits >= actualCost;
 
-    // Check maxLevel requirement for human academy
-    const isMaxLevelReached =
-        spec.id === "human_academy" &&
-        selectedCrewId &&
-        spec.requirements?.maxLevel
-            ? (crew.find((c) => c.id === selectedCrewId)?.level || 1) >=
-              spec.requirements.maxLevel
-            : false;
+    const isMaxLevelReached = spec.requirements?.maxLevel
+        ? (crew.find((c) => c.id === selectedCrewId)?.level || 1) >=
+          spec.requirements.maxLevel
+        : false;
 
     const handleConfirm = () => {
         if (!canAfford || isOnCooldown || isMaxLevelReached) return;
@@ -82,29 +79,23 @@ export function PlanetSpecializationPanel({
         } else if (spec.id === "synthetic_archives") {
             scanSector();
         } else if (spec.id === "voidborn_ritual") {
+            // Deduct credits
+            useGameStore.setState((s) => ({
+                credits: s.credits - spec.cost,
+            }));
+
+            // Always create fuel efficiency effect
+            createVoidbornBoostEffect(
+                selectedArtifactId ?? undefined,
+                raceId,
+                spec,
+                useGameStore.setState,
+                useGameStore.getState,
+            );
+            // If artifact selected, also boost it
             if (selectedArtifactId) {
                 boostArtifact(selectedArtifactId);
             }
-            // Add fuel efficiency and artifact_boost effects
-            useGameStore.setState((s) => ({
-                activeEffects: [
-                    ...s.activeEffects,
-                    {
-                        id: `effect-${raceId}-${Date.now()}`,
-                        name: spec.name,
-                        description: spec.description,
-                        raceId,
-                        turnsRemaining: 5,
-                        effects: [
-                            { type: "fuel_efficiency", value: 0.1 },
-                            { type: "artifact_boost", value: 0.5 },
-                        ],
-                        targetArtifactId: selectedArtifactId || undefined,
-                    },
-                ],
-            }));
-            // Update ship stats immediately to reflect artifact boost
-            useGameStore.getState().updateShipStats();
         } else {
             // For other specializations, use activatePlanetEffect
             activatePlanetEffect(raceId, planetId);
@@ -169,151 +160,146 @@ export function PlanetSpecializationPanel({
                                       (c) => c.id === selectedCrewId,
                                   );
                                   const level = selectedMember?.level || 1;
-                                  return level >= 3
-                                      ? "Макс. ур."
-                                      : level === 2
-                                        ? "1500₢"
-                                        : "500₢";
+                                  return level === 2 ? "1500" : "500";
                               })()
-                            : `${spec.cost}₢`}
-                    </span>
+                            : spec.cost}
+                    </span>{" "}
+                    ₢
                 </div>
-                <div className="text-[#ffb000]">
-                    ⏱️ Длительность:{" "}
-                    <span className="text-[#00ff41]">
-                        {spec.duration === 0
-                            ? "Постоянно"
-                            : `${spec.duration} ход(а)`}
-                    </span>
-                </div>
+                {spec.duration > 0 && (
+                    <div className="text-[#00ff41]">
+                        ⏱️ Длительность: {spec.duration} ходов
+                    </div>
+                )}
             </div>
 
-            {/* Selection for crew training */}
+            {/* Selection UI for specializations that need it */}
             {spec.id === "human_academy" && (
-                <div className="mt-2">
-                    <div className="text-[#ffb000] font-bold text-sm mb-2">
+                <div className="flex flex-col gap-2">
+                    <div className="text-xs text-[#888]">
                         Выберите члена экипажа для обучения:
                     </div>
-                    <div className="flex flex-col gap-2 max-h-40 overflow-y-auto">
-                        {crew.map((member) => (
-                            <div
-                                key={member.id}
-                                className={`p-2 border cursor-pointer text-xs ${
-                                    selectedCrewId === member.id
-                                        ? "border-[#00ff41] bg-[rgba(0,255,65,0.1)]"
-                                        : "border-[#444] bg-[rgba(0,0,0,0.3)]"
-                                }`}
-                                onClick={() => setSelectedCrewId(member.id)}
-                            >
-                                <div className="flex justify-between items-center">
-                                    <span className="text-[#00d4ff]">
-                                        {member.name}
-                                    </span>
-                                    <span className="text-[#ffb000]">
-                                        Ур.{member.level}{" "}
-                                        {member.profession === "pilot"
-                                            ? "👤"
-                                            : member.profession === "engineer"
-                                              ? "⚡"
-                                              : member.profession ===
-                                                  "scientist"
-                                                ? "🔬"
-                                                : member.profession === "scout"
-                                                  ? "🗺️"
-                                                  : "⚔️"}
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
+                    <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
+                        {crew.map((member) => {
+                            const memberRace = RACES[member.race];
+                            const isMaxLevel =
+                                (member.level || 1) >=
+                                (spec.requirements?.maxLevel ?? 999);
+                            return (
+                                <button
+                                    key={member.id}
+                                    onClick={() => setSelectedCrewId(member.id)}
+                                    className={`flex items-center gap-2 p-2 rounded border text-left transition-colors ${
+                                        selectedCrewId === member.id
+                                            ? "border-[#00ff41] bg-[rgba(0,255,65,0.1)]"
+                                            : "border-[#444] hover:border-[#666]"
+                                    } ${isMaxLevel ? "opacity-50" : ""}`}
+                                    style={{
+                                        borderColor: isMaxLevel
+                                            ? "#ff0040"
+                                            : undefined,
+                                    }}
+                                    disabled={isMaxLevel}
+                                >
+                                    <div
+                                        className="w-2 h-2 rounded-full"
+                                        style={{
+                                            backgroundColor: memberRace?.color,
+                                        }}
+                                    />
+                                    <div className="flex-1 text-xs">
+                                        <div className="text-[#00ff41]">
+                                            {member.name}
+                                        </div>
+                                        <div className="text-[#888]">
+                                            {member.profession} • ур.{" "}
+                                            {member.level || 1}
+                                        </div>
+                                    </div>
+                                    {isMaxLevel && (
+                                        <div className="text-[10px] text-[#ff0040]">
+                                            МАКС.
+                                        </div>
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             )}
 
-            {/* Selection for artifact boost */}
-            {spec.id === "voidborn_ritual" && (
-                <div className="mt-2">
-                    <div className="text-[#ffb000] font-bold text-sm mb-2">
-                        Выберите артефакт для усиления:
+            {spec.id === "voidborn_ritual" && artifacts.length > 0 && (
+                <div className="flex flex-col gap-2">
+                    <div className="text-xs text-[#888]">
+                        Выберите артефакт для усиления (опционально):
                     </div>
-                    <div className="flex flex-col gap-2 max-h-40 overflow-y-auto">
+                    <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
+                        <button
+                            onClick={() => setSelectedArtifactId(null)}
+                            className={`flex items-center gap-2 p-2 rounded border text-left transition-colors ${
+                                selectedArtifactId === null
+                                    ? "border-[#00ff41] bg-[rgba(0,255,65,0.1)]"
+                                    : "border-[#444] hover:border-[#666]"
+                            }`}
+                        >
+                            <div className="cursor-pointer flex-1 text-xs text-[#888]">
+                                Без артефакта (только топливо)
+                            </div>
+                        </button>
                         {artifacts
-                            .filter(
-                                (a) => a.effect.active && a.canBoost !== false,
-                            )
+                            .filter((a) => a.discovered && a.effect.active)
                             .map((artifact) => (
-                                <div
+                                <button
                                     key={artifact.id}
-                                    className={`p-2 border cursor-pointer text-xs ${
-                                        selectedArtifactId === artifact.id
-                                            ? "border-[#9933ff] bg-[rgba(153,51,255,0.1)]"
-                                            : "border-[#444] bg-[rgba(0,0,0,0.3)]"
-                                    }`}
                                     onClick={() =>
                                         setSelectedArtifactId(artifact.id)
                                     }
+                                    className={`cursor-pointer flex items-center gap-2 p-2 rounded border text-left transition-colors ${
+                                        selectedArtifactId === artifact.id
+                                            ? "border-[#00ff41] bg-[rgba(0,255,65,0.1)]"
+                                            : "border-[#444] hover:border-[#666]"
+                                    }`}
                                 >
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[#00d4ff]">
-                                            {artifact.name}
-                                        </span>
-                                        <span className="text-[#9933ff]">
-                                            ✨ Активен
-                                        </span>
+                                    <div className="text-xl">
+                                        {artifact.cursed ? "☠️" : "✨"}
                                     </div>
-                                </div>
+                                    <div className="flex-1 text-xs">
+                                        <div className="text-[#00ff41]">
+                                            {artifact.name}
+                                        </div>
+                                        <div className="text-[#888]">
+                                            {artifact.description}
+                                        </div>
+                                    </div>
+                                </button>
                             ))}
-                        {artifacts.filter(
-                            (a) => a.effect.active && a.canBoost !== false,
-                        ).length === 0 && (
-                            <div className="text-[#ff0040] text-xs p-2">
-                                Нет активных артефактов для усиления
-                            </div>
-                        )}
                     </div>
                 </div>
             )}
 
             {/* Action buttons */}
-            <div className="flex gap-2.5 flex-wrap mt-4">
+            <div className="flex gap-2 pt-2">
                 <Button
                     onClick={handleConfirm}
-                    disabled={
-                        !canAfford ||
-                        isOnCooldown ||
-                        isMaxLevelReached ||
-                        (spec.id === "human_academy" && !selectedCrewId) ||
-                        (spec.id === "voidborn_ritual" &&
-                            artifacts.filter((a) => a.effect.active).length >
-                                0 &&
-                            !selectedArtifactId)
-                    }
-                    className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider flex-1"
+                    disabled={!canAfford || isOnCooldown || isMaxLevelReached}
+                    className="cursor-pointer flex-1 bg-[#00ff41] text-black hover:bg-[#00cc33]"
                 >
-                    ПОДТВЕРДИТЬ
+                    {isOnCooldown
+                        ? "ИСПОЛЬЗОВАНО"
+                        : isMaxLevelReached
+                          ? "МАКС. УРОВЕНЬ"
+                          : !canAfford
+                            ? "НЕДОСТАТОЧНО СРЕДСТВ"
+                            : "Подтвердить"}
                 </Button>
                 <Button
                     onClick={onClose}
-                    className="cursor-pointer bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase tracking-wider"
+                    variant="outline"
+                    className="border-[#444] text-[#888] hover:border-[#666] cursor-pointer"
                 >
-                    ОТМЕНА
+                    Отмена
                 </Button>
             </div>
-
-            {!canAfford && (
-                <div className="text-[#ff0040] text-xs text-center mt-2">
-                    ⚠ Недостаточно кредитов
-                </div>
-            )}
-            {isOnCooldown && (
-                <div className="text-[#ff0040] text-xs text-center mt-2">
-                    ⏱️ Уже использовано на этой планете
-                </div>
-            )}
-            {isMaxLevelReached && (
-                <div className="text-[#ff0040] text-xs text-center mt-2">
-                    ⚠ Достигнут максимальный уровень обучения
-                </div>
-            )}
         </div>
     );
 }
