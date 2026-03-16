@@ -3,6 +3,8 @@ export * from "./scanner";
 export * from "./ship";
 export * from "./crew";
 export * from "./gameLoop";
+export * from "./gameManagement";
+export * from "./settings";
 export * from "./contracts";
 export * from "./combat";
 export * from "./travel";

@@ -1,15 +1,7 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { isModuleActive } from "@/game/modules";
-import { RESEARCH_TREE, RESEARCH_RESOURCES } from "@/game/constants";
-import { generateGalaxy } from "@/game/galaxy";
 import { initialState } from "@/game/initial";
-import {
-    clearLocalStorage,
-    loadFromLocalStorage,
-    saveToLocalStorage,
-} from "@/game/saves/utils";
-import { initializeStationData } from "@/game/stations";
 import { getAdjacentTechs } from "@/game/research/utils";
 import {
     createLogSlice,
@@ -17,6 +9,8 @@ import {
     createScannerSlice,
     createCrewSlice,
     createGameLoopSlice,
+    createGameManagementSlice,
+    createSettingsSlice,
     createContractsSlice,
     createCombatSlice,
     createTravelSlice,
@@ -30,8 +24,9 @@ import {
     createPlanetEffectsSlice,
 } from "@/game/slices";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
-import type { GameStore } from "@/game/types";
 import { playSound } from "@/sounds";
+import { RESEARCH_TREE, RESEARCH_RESOURCES } from "@/game/constants";
+import type { GameStore } from "@/game/types";
 
 // Game store
 export const useGameStore = create<GameStore>()(
@@ -42,6 +37,8 @@ export const useGameStore = create<GameStore>()(
         ...createScannerSlice(set, get),
         ...createCrewSlice(set, get),
         ...createGameLoopSlice(set, get),
+        ...createGameManagementSlice(set, get),
+        ...createSettingsSlice(set),
         ...createContractsSlice(set, get),
         ...createCombatSlice(set, get),
         ...createTravelSlice(set, get),
@@ -53,145 +50,6 @@ export const useGameStore = create<GameStore>()(
         ...createCrewManagementSlice(set, get),
         ...createArtifactsSlice(set, get),
         ...createPlanetEffectsSlice(set, get),
-
-        checkGameOver: () => {
-            const state = get();
-            if (state.gameOver) return; // Already game over
-
-            // Check for AI artifacts/modules that allow ship to operate without crew
-            const hasAIArtifact = state.artifacts.some(
-                (a) =>
-                    a.id === "ai_neural_link" && !a.cursed && a.effect.active,
-            );
-            const hasAIModule = state.ship.modules.some(
-                (m) => m.type === "ai_core" && m.health > 0,
-            );
-            const canShipOperateWithoutCrew = hasAIArtifact || hasAIModule;
-
-            // Check for hull destroyed (all modules have 0 health)
-            const totalHullHealth = state.ship.modules.reduce(
-                (sum, m) => sum + m.health,
-                0,
-            );
-            if (totalHullHealth <= 0) {
-                set({
-                    gameOver: true,
-                    gameOverReason:
-                        "💥 Корпус корабля разрушен! Все модули уничтожены. Корабль не может продолжать полёт.",
-                });
-                get().addLog("ИГРА ОКОНЧЕНА: Корпус разрушен", "error");
-                return;
-            }
-
-            // Check for no crew (without AI core)
-            if (state.crew.length === 0 && !canShipOperateWithoutCrew) {
-                let reason =
-                    "☠️ Весь экипаж погиб! Корабль не может функционировать без экипажа.";
-
-                if (!hasAIArtifact && !hasAIModule) {
-                    reason +=
-                        " Нет ИИ Ядра (артефакта или модуля) для управления без экипажа.";
-                }
-
-                set({
-                    gameOver: true,
-                    gameOverReason: reason,
-                });
-                get().addLog("ИГРА ОКОНЧЕНА: Корабль без экипажа", "error");
-                return;
-            }
-        },
-
-        triggerVictory: () => {
-            const state = get();
-            if (state.gameVictory) return; // Already won
-
-            const turn = state.turn;
-            const captainLevel =
-                state.crew.find((c) => c.profession === "pilot")?.level ?? 1;
-            const discoveredArtifacts = state.artifacts.filter(
-                (a) => a.discovered,
-            ).length;
-            const sectorsExplored = state.galaxy.sectors.filter(
-                (s) => s.visited,
-            ).length;
-
-            set({
-                gameVictory: true,
-                gameVictoryReason: `🎉 Поздравляем! Вы достигли границы галактики!
-
-📊 ИТОГИ ИГРЫ:
-• Ходов сделано: ${turn}
-• Уровень капитана: ${captainLevel}
-• Найдено артефактов: ${discoveredArtifacts}
-• Исследовано секторов: ${sectorsExplored}
-
-Вы одни из первых, кто достиг Тир 4 - границы известной галактики.
-Квантовый двигатель привёл вас сюда, к краю космоса.
-Что ждёт за этой гранью? Это уже другая история...`,
-            });
-
-            get().addLog("🎉 ПОБЕДА! Граница галактики достигнута!", "info");
-            playSound("success");
-        },
-
-        restartGame: () => {
-            clearLocalStorage();
-            // Generate new galaxy and station data for fresh start
-            const newSectors = generateGalaxy();
-            // Mark the starting sector as visited
-            newSectors[0].visited = true;
-            const { prices: restartPrices, stock: restartStock } =
-                initializeStationData(newSectors);
-            set({
-                ...initialState,
-                currentSector: newSectors[0],
-                galaxy: { sectors: newSectors },
-                stationPrices: restartPrices,
-                stationStock: restartStock,
-                log: [],
-            });
-            get().addLog("Новая игра", "info");
-            playSound("success");
-            // Auto-save after restart (without logging) so refresh loads the new game
-            const state = get();
-            saveToLocalStorage(state);
-        },
-
-        setAnimationsEnabled: (enabled: boolean) => {
-            set((state) => {
-                state.settings.animationsEnabled = enabled;
-            });
-        },
-
-        saveGame: () => {
-            const state = get();
-            saveToLocalStorage(state);
-            get().addLog("Игра сохранена", "info");
-        },
-
-        loadGame: () => {
-            const saved = loadFromLocalStorage();
-            if (!saved) {
-                get().addLog("Нет сохранённой игры", "warning");
-                // Initialize ship stats for new game
-                get().updateShipStats();
-                return false;
-            }
-            // Migration: add settings if missing (for old saves)
-            if (!saved.settings) {
-                saved.settings = { animationsEnabled: true };
-            }
-            // Migration: add gameLoadedCount if missing
-            if (saved.gameLoadedCount === undefined) {
-                saved.gameLoadedCount = 0;
-            }
-            // Increment load counter to prevent modals from showing
-            saved.gameLoadedCount += 1;
-            set({ ...saved });
-            get().addLog("Игра загружена", "info");
-            return true;
-        },
 
         // ═══════════════════════════════════════════════════════════════
         // RESEARCH SYSTEM
