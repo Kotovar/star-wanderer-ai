@@ -209,3 +209,13 @@ export const MIN_CREW_HAPPINESS = 0;
  * Максимальное счастье экипажа по умолчанию
  */
 export const DEFAULT_MAX_HAPPINESS = 100;
+
+/**
+ * Базовый бонус учёного за ход
+ */
+export const SCIENTIST_BASE_BONUS = 5;
+
+/**
+ * Множитель бонуса за назначение на исследование (100% = 2x)
+ */
+export const RESEARCH_ASSIGNMENT_MULTIPLIER = 2;

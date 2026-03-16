@@ -1,6 +1,6 @@
 import { RACES } from "@/game/constants/races";
 import { RESEARCH_TREE } from "@/game/constants";
-import type { CrewMember, GameState } from "@/game/types";
+import type { CrewMember, GameState, TechnologyId } from "@/game/types";
 
 /**
  * Вычисляет множитель опыта для члена экипажа
@@ -31,13 +31,15 @@ export const calculateExpMultiplier = (
 
     // Apply crew_exp technology bonuses
     const crewExpTechs = state.research.researchedTechs.filter((techId) => {
-        const tech = RESEARCH_TREE[techId];
-        return tech.bonuses.some((b) => b.type === "crew_exp");
+        const tech = RESEARCH_TREE[techId as TechnologyId];
+        return tech.bonuses.some(
+            (b: { type: string }) => b.type === "crew_exp",
+        );
     });
 
     crewExpTechs.forEach((techId) => {
-        const tech = RESEARCH_TREE[techId];
-        tech.bonuses.forEach((bonus) => {
+        const tech = RESEARCH_TREE[techId as TechnologyId];
+        tech.bonuses.forEach((bonus: { type: string; value: number }) => {
             if (bonus.type === "crew_exp") {
                 expMultiplier += bonus.value;
             }

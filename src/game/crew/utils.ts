@@ -2,7 +2,6 @@ import { useGameStore } from "@/game/store";
 import { CREW_TRAITS, RACE_LAST_NAMES } from "@/game/constants";
 import type { CrewTrait, Profession, Quality, RaceId } from "@/game/types";
 
-// Generate crew traits based on quality level
 export const generateCrewTraits = (
     quality: Quality = "average",
     seed: number = 0,

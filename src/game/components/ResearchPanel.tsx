@@ -8,7 +8,6 @@ import {
     RESEARCH_RESOURCES,
     getTechnologiesByTier,
     canResearchTech,
-    type Technology,
 } from "@/game/constants/research";
 import type {
     ResearchTier,
@@ -17,6 +16,8 @@ import type {
     CrewMember,
     ResearchData,
     TradeGood,
+    TechnologyId,
+    Technology,
 } from "@/game/types";
 import { typedKeys } from "@/lib/utils";
 import { useTranslation } from "@/lib/useTranslation";
@@ -67,7 +68,7 @@ interface ResearchContentProps {
     hasResources: (tech: Technology) => boolean;
     calculateEstimatedTurns: () => number;
     selectedTechnology: Technology | null;
-    startResearch: (techId: string) => void;
+    startResearch: (techId: TechnologyId) => void;
     isMobile?: boolean;
     t: (key: string) => string;
     currentLanguage: "ru" | "en";
@@ -289,7 +290,7 @@ function ResearchContent({
                     const isDiscovered =
                         discoveredTechs.includes(tech.id) || isResearched;
                     const isAvailable = canResearchTech(
-                        tech.id,
+                        tech.id as TechnologyId,
                         researchedTechs,
                     );
                     const isActive =
@@ -552,11 +553,13 @@ function ResearchContent({
                         <Button
                             onClick={(e) => {
                                 e.stopPropagation();
-                                startResearch(selectedTechnology.id);
+                                startResearch(
+                                    selectedTechnology.id as TechnologyId,
+                                );
                             }}
                             disabled={
                                 !canResearchTech(
-                                    selectedTechnology.id,
+                                    selectedTechnology.id as TechnologyId,
                                     researchedTechs,
                                 ) ||
                                 !hasResources(selectedTechnology) ||
@@ -652,7 +655,7 @@ export function ResearchPanel() {
     };
 
     const selectedTechnology = selectedTech
-        ? RESEARCH_TREE[selectedTech]
+        ? RESEARCH_TREE[selectedTech as TechnologyId]
         : null;
     const researchedTechs = research?.researchedTechs || [];
 

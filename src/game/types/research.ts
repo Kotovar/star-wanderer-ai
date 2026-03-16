@@ -10,9 +10,43 @@ export type ResearchResourceType =
     | "tech_salvage";
 
 /**
+ * Technology ID - unique identifier for each technology in the research tree
+ */
+export type TechnologyId =
+    | "reinforced_hull"
+    | "efficient_reactor"
+    | "targeting_matrix"
+    | "scanner_mk2"
+    | "automated_repair"
+    | "medbay_upgrade"
+    | "shield_booster"
+    | "plasma_weapons"
+    | "quantum_scanner"
+    | "cargo_expansion"
+    | "crew_training"
+    | "nanite_hull"
+    | "phase_shield"
+    | "antimatter_weapons"
+    | "deep_scan"
+    | "genetic_enhancement"
+    | "ancient_power"
+    | "warp_drive";
+
+/**
  * Research tier - technology level
  */
 export type ResearchTier = 1 | 2 | 3 | 4;
+
+export type ResearchRarity = "common" | "uncommon" | "rare" | "legendary";
+
+export interface ResearchResource {
+    id: ResearchResourceType;
+    name: string;
+    description: string;
+    icon: string;
+    color: string;
+    rarity: ResearchRarity;
+}
 
 /**
  * Research category - technology branch
@@ -64,7 +98,7 @@ export type ResearchAssignment =
  * Active research project
  */
 export interface ActiveResearch {
-    techId: string;
+    techId: TechnologyId;
     progress: number; // 0-100
     turnsRemaining: number;
     scientistId?: number; // ID of scientist working on this
@@ -75,7 +109,40 @@ export interface ActiveResearch {
  */
 export interface ResearchData {
     resources: Partial<Record<ResearchResourceType, number>>; // Player's research resources
-    discoveredTechs: string[]; // IDs of discovered technologies
-    researchedTechs: string[]; // IDs of completed researches
+    discoveredTechs: TechnologyId[]; // IDs of discovered technologies
+    researchedTechs: TechnologyId[]; // IDs of completed researches
     activeResearch: ActiveResearch | null; // Currently active research project
+}
+
+export interface ResearchBonus {
+    type: ResearchBonusType;
+    value: number;
+    description: string;
+}
+
+/**
+ * Технологии в дереве технологий
+ */
+export interface Technology {
+    id: TechnologyId;
+    name: string;
+    description: string;
+    tier: ResearchTier;
+    category: ResearchCategory;
+
+    // Requirements
+    prerequisites: TechnologyId[]; // IDs of technologies that must be researched first
+    resources: Partial<Record<ResearchResourceType, number>>; // Required resources
+    credits: number; // Credit cost
+    scienceCost: number; // Science points needed to complete research
+
+    // Rewards
+    bonuses: ResearchBonus[];
+
+    // Meta
+    icon: string;
+    color: string;
+    discovered: boolean; // Whether player knows about this tech
+    researched: boolean; // Whether player has researched this tech
+    researchProgress: number; // 0-100, current progress
 }

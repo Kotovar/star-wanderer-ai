@@ -6,7 +6,7 @@ import {
     WEAPON_TYPES,
 } from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
-import type { GameState, WeaponTypeTotal } from "@/game/types";
+import type { GameState, TechnologyId, WeaponTypeTotal } from "@/game/types";
 
 const INITIAL_DAMAGE: Record<WeaponTypeTotal, number> = {
     total: 0,
@@ -84,11 +84,15 @@ const getArtifactDamageBonus = (
  */
 const getTechDamageBonus = (research: GameState["research"]) =>
     research.researchedTechs.reduce((maxBonus, techId) => {
-        const tech = RESEARCH_TREE[techId];
+        const tech = RESEARCH_TREE[techId as TechnologyId];
         const techBonus =
             tech.bonuses
-                .filter((b) => b.type === "weapon_damage")
-                .reduce((bonusMax, b) => Math.max(bonusMax, b.value), 0) || 0;
+                .filter((b: { type: string }) => b.type === "weapon_damage")
+                .reduce(
+                    (bonusMax: number, b: { value: number }) =>
+                        Math.max(bonusMax, b.value),
+                    0,
+                ) || 0;
         return Math.max(maxBonus, techBonus);
     }, 0);
 

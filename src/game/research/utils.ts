@@ -1,8 +1,10 @@
-import {
-    RESEARCH_TREE,
-    type ResearchResourceType,
-} from "@/game/constants/research";
-import type { ResearchBonusType, ResearchData } from "@/game/types";
+import { RESEARCH_TREE } from "@/game/constants/research";
+import type {
+    ResearchBonusType,
+    ResearchData,
+    TechnologyId,
+    ResearchResourceType,
+} from "@/game/types";
 
 /**
  * Get research resources from mining asteroids
@@ -130,15 +132,15 @@ export function getBossLootResources(
 }
 
 // Helper function to get adjacent technologies (for discovery)
-export const getAdjacentTechs = (techId: string) => {
-    const adjacent: string[] = [];
+export const getAdjacentTechs = (techId: TechnologyId) => {
+    const adjacent: TechnologyId[] = [];
     const tech = RESEARCH_TREE[techId];
     if (!tech) return adjacent;
 
     // Technologies that have this tech as prerequisite
     Object.values(RESEARCH_TREE).forEach((t) => {
         if (t.prerequisites.includes(techId)) {
-            adjacent.push(t.id);
+            adjacent.push(t.id as TechnologyId);
         }
     });
 
@@ -159,7 +161,7 @@ export const getTechBonusSum = (
     let totalBonus = 0;
 
     research.researchedTechs.forEach((techId) => {
-        const tech = RESEARCH_TREE[techId];
+        const tech = RESEARCH_TREE[techId as TechnologyId];
         tech.bonuses.forEach((bonus) => {
             if (bonus.type === bonusType) {
                 totalBonus += bonus.value;

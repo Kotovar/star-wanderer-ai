@@ -1,22 +1,11 @@
-/**
- * Research resource types - rare items needed for research
- */
-export type ResearchResourceType =
-    | "ancient_data" // Древние данные (с артефактов, аномалий)
-    | "rare_minerals" // Редкие минералы (с бурения, астероидов)
-    | "alien_biology" // Чужеродная биология (с существ, растений)
-    | "energy_samples" // Образцы энергии (с боссов, штормов)
-    | "quantum_crystals" // Квантовые кристаллы (редко с аномалий)
-    | "tech_salvage"; // Технологический лом (с вражеских кораблей)
-
-export interface ResearchResource {
-    id: ResearchResourceType;
-    name: string;
-    description: string;
-    icon: string;
-    color: string;
-    rarity: "common" | "uncommon" | "rare" | "legendary";
-}
+import type {
+    ResearchCategory,
+    ResearchResource,
+    ResearchResourceType,
+    ResearchTier,
+    Technology,
+    TechnologyId,
+} from "@/game/types";
 
 export const RESEARCH_RESOURCES: Record<
     ResearchResourceType,
@@ -73,78 +62,11 @@ export const RESEARCH_RESOURCES: Record<
 };
 
 /**
- * Research tier - technology level
- */
-export type ResearchTier = 1 | 2 | 3 | 4;
-
-/**
- * Research category - technology branch
- */
-export type ResearchCategory =
-    | "ship_systems" // Системы корабля
-    | "weapons" // Оружие и боевые системы
-    | "science" // Наука и сканирование
-    | "engineering" // Инженерия и ремонт
-    | "biology" // Биология и экипаж
-    | "ancient_tech"; // Технологии Древних
-
-/**
- * Research bonus type
- */
-export type ResearchBonusType =
-    | "module_health" // +% к здоровью модулей
-    | "module_power" // +% к энергии модулей
-    | "shield_strength" // +% к щитам
-    | "weapon_damage" // +% к урону оружия
-    | "scan_range" // +% к дальности сканирования
-    | "research_speed" // +% к скорости исследований
-    | "cargo_capacity" // +% к грузовместимости
-    | "fuel_efficiency" // +% к эффективности топлива
-    | "crew_health" // +% к здоровью экипажа
-    | "crew_exp" // +% к опыту экипажа
-    | "new_module" // Открывает новый модуль
-    | "new_weapon" // Открывает новое оружие
-    | "special_ability"; // Уникальная способность
-
-export interface ResearchBonus {
-    type: ResearchBonusType;
-    value: number;
-    description: string;
-}
-
-/**
- * Technology in the research tree
- */
-export interface Technology {
-    id: string;
-    name: string;
-    description: string;
-    tier: ResearchTier;
-    category: ResearchCategory;
-
-    // Requirements
-    prerequisites: string[]; // IDs of technologies that must be researched first
-    resources: Partial<Record<ResearchResourceType, number>>; // Required resources
-    credits: number; // Credit cost
-    turns: number; // Turns to complete research
-
-    // Rewards
-    bonuses: ResearchBonus[];
-
-    // Meta
-    icon: string;
-    color: string;
-    discovered: boolean; // Whether player knows about this tech
-    researched: boolean; // Whether player has researched this tech
-    researchProgress: number; // 0-100, current progress
-}
-
-/**
  * Research tree data
  */
-export const RESEARCH_TREE: Record<string, Technology> = {
+export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
     // ═══════════════════════════════════════════════════════════════
-    // TIER 1 - Basic Technologies
+    // TIER 1 - Basic Technologies (scienceCost: 50-100)
     // ═══════════════════════════════════════════════════════════════
 
     // Ship Systems
@@ -158,7 +80,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         prerequisites: [],
         resources: { rare_minerals: 5 },
         credits: 200,
-        turns: 3,
+        scienceCost: 80,
         bonuses: [
             {
                 type: "module_health",
@@ -182,7 +104,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         prerequisites: [],
         resources: { rare_minerals: 3 },
         credits: 150,
-        turns: 2,
+        scienceCost: 60,
         bonuses: [
             {
                 type: "module_power",
@@ -208,7 +130,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         prerequisites: [],
         resources: { tech_salvage: 5 },
         credits: 200,
-        turns: 3,
+        scienceCost: 80,
         bonuses: [
             {
                 type: "weapon_damage",
@@ -234,7 +156,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         prerequisites: [],
         resources: { ancient_data: 3 },
         credits: 250,
-        turns: 4,
+        scienceCost: 100,
         bonuses: [
             {
                 type: "scan_range",
@@ -260,7 +182,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         prerequisites: [],
         resources: { tech_salvage: 3, rare_minerals: 3 },
         credits: 300,
-        turns: 4,
+        scienceCost: 100,
         bonuses: [
             {
                 type: "special_ability",
@@ -286,7 +208,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         prerequisites: [],
         resources: { alien_biology: 3 },
         credits: 200,
-        turns: 3,
+        scienceCost: 80,
         bonuses: [
             {
                 type: "crew_health",
@@ -302,7 +224,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // TIER 2 - Advanced Technologies
+    // TIER 2 - Advanced Technologies (scienceCost: 150-250)
     // ═══════════════════════════════════════════════════════════════
 
     shield_booster: {
@@ -314,7 +236,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         prerequisites: ["reinforced_hull"],
         resources: { rare_minerals: 8, energy_samples: 3 },
         credits: 400,
-        turns: 5,
+        scienceCost: 180,
         bonuses: [
             {
                 type: "shield_strength",
@@ -339,7 +261,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         prerequisites: ["targeting_matrix"],
         resources: { energy_samples: 5, tech_salvage: 8 },
         credits: 500,
-        turns: 6,
+        scienceCost: 220,
         bonuses: [
             {
                 type: "new_weapon",
@@ -369,7 +291,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         prerequisites: ["scanner_mk2"],
         resources: { ancient_data: 8, quantum_crystals: 1 },
         credits: 600,
-        turns: 7,
+        scienceCost: 250,
         bonuses: [
             {
                 type: "scan_range",
@@ -393,7 +315,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         prerequisites: ["automated_repair"],
         resources: { rare_minerals: 10, tech_salvage: 5 },
         credits: 350,
-        turns: 5,
+        scienceCost: 180,
         bonuses: [
             {
                 type: "cargo_capacity",
@@ -418,7 +340,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         prerequisites: ["medbay_upgrade"],
         resources: { alien_biology: 5, ancient_data: 3 },
         credits: 400,
-        turns: 5,
+        scienceCost: 200,
         bonuses: [
             {
                 type: "crew_exp",
@@ -434,7 +356,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // TIER 3 - Elite Technologies
+    // TIER 3 - Elite Technologies (scienceCost: 300-500)
     // ═══════════════════════════════════════════════════════════════
 
     nanite_hull: {
@@ -451,7 +373,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
             energy_samples: 8,
         },
         credits: 800,
-        turns: 10,
+        scienceCost: 400,
         bonuses: [
             {
                 type: "special_ability",
@@ -476,7 +398,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         prerequisites: ["shield_booster"],
         resources: { quantum_crystals: 3, energy_samples: 10 },
         credits: 900,
-        turns: 12,
+        scienceCost: 450,
         bonuses: [
             {
                 type: "shield_strength",
@@ -509,7 +431,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
             tech_salvage: 10,
         },
         credits: 1000,
-        turns: 14,
+        scienceCost: 500,
         bonuses: [
             {
                 type: "weapon_damage",
@@ -538,7 +460,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         prerequisites: ["quantum_scanner"],
         resources: { ancient_data: 15, quantum_crystals: 2 },
         credits: 700,
-        turns: 8,
+        scienceCost: 350,
         bonuses: [
             {
                 type: "scan_range",
@@ -563,7 +485,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
         prerequisites: ["crew_training"],
         resources: { alien_biology: 15, quantum_crystals: 1 },
         credits: 750,
-        turns: 10,
+        scienceCost: 400,
         bonuses: [
             {
                 type: "crew_health",
@@ -584,7 +506,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // TIER 4 - Ancient Technologies (Endgame)
+    // TIER 4 - Ancient Technologies (Endgame) (scienceCost: 800-1000)
     // ═══════════════════════════════════════════════════════════════
 
     ancient_power: {
@@ -607,7 +529,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
             energy_samples: 20,
         },
         credits: 2000,
-        turns: 20,
+        scienceCost: 1000,
         bonuses: [
             {
                 type: "module_health",
@@ -643,7 +565,7 @@ export const RESEARCH_TREE: Record<string, Technology> = {
             ancient_data: 30,
         },
         credits: 3000,
-        turns: 25,
+        scienceCost: 1000,
         bonuses: [
             {
                 type: "fuel_efficiency",
@@ -684,7 +606,7 @@ export function getTechnologiesByCategory(
  * Check if technology can be researched
  */
 export function canResearchTech(
-    techId: string,
+    techId: TechnologyId,
     researchedTechs: string[],
 ): boolean {
     const tech = RESEARCH_TREE[techId];

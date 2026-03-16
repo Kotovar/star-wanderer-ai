@@ -15,7 +15,7 @@ import type { LogEntry } from "./logs";
 import type { Module, WeaponCounts } from "./modules";
 import type { RaceId } from "./races";
 import type { ShipMergeTrait } from "./ships";
-import type { ResearchData } from "./research";
+import type { ResearchData, TechnologyId } from "./research";
 import type { ShopItem } from "./shops";
 
 export type GameMode =
@@ -243,8 +243,7 @@ export interface GameFinish {
 }
 
 export interface GameResearch {
-    startResearch: (techId: string) => void;
-    addResearchResource: (type: string, quantity: number) => void;
+    startResearch: (techId: TechnologyId) => void;
     processResearch: () => void;
 }
 
