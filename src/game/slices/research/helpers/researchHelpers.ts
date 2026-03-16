@@ -8,7 +8,6 @@ import {
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { typedKeys } from "@/lib/utils";
 import {
-    RESEARCH_SPEED_TECH_MULTIPLIER,
     DEFAULT_MODULE_HEALTH,
     DEFAULT_REACTOR_POWER,
     DEFAULT_SHIELD_DEFENSE,
@@ -90,18 +89,23 @@ export const calculateResearchOutput = (
     // Общая производительность до множителей
     let totalOutput = labOutput + scientistBonus;
 
-    // Бонус от технологий скорости исследования
+    // Бонус от технологий скорости исследования (суммируем реальные значения)
     let techSpeedBonus = 0;
-    const hasResearchSpeedTech = state.research.researchedTechs.some((techId) =>
-        RESEARCH_TREE[techId].bonuses.some(
-            (b: { type: string }) => b.type === "research_speed",
-        ),
+    const researchSpeedMultiplier = state.research.researchedTechs.reduce(
+        (sum, techId) => {
+            const tech = RESEARCH_TREE[techId];
+            return (
+                sum +
+                tech.bonuses
+                    .filter((b: { type: string }) => b.type === "research_speed")
+                    .reduce((s: number, b: { value: number }) => s + b.value, 0)
+            );
+        },
+        0,
     );
 
-    if (hasResearchSpeedTech) {
-        const bonus = Math.floor(
-            totalOutput * (RESEARCH_SPEED_TECH_MULTIPLIER - 1),
-        );
+    if (researchSpeedMultiplier > 0) {
+        const bonus = Math.floor(totalOutput * researchSpeedMultiplier);
         totalOutput += bonus;
         techSpeedBonus = bonus;
     }
@@ -322,9 +326,7 @@ export const applyModuleBonus = (
                 if (m.type === "scanner") {
                     newModule = {
                         ...newModule,
-                        scanRange: Math.floor(
-                            (m.scanRange || 0) * (1 + bonusValue),
-                        ),
+                        scanRange: (m.scanRange || 0) + bonusValue,
                     };
                 }
                 break;

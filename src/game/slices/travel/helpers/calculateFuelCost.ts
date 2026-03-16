@@ -9,6 +9,7 @@ import {
     BASE_FUEL_COST_MULTIPLIER,
     DEFAULT_FUEL_COST,
     ARTIFACT_TYPES,
+    RESEARCH_TREE,
 } from "@/game/constants";
 import { findActiveArtifact, findArtifactByEffect } from "@/game/artifacts";
 import { getActiveModule } from "@/game/modules/utils";
@@ -86,7 +87,28 @@ const collectFuelModifiers = (state: GameState): number => {
         ? 1 - mergeBonus.fuelEfficiency / 100
         : 1;
 
-    return raceModifier * pilotModifier * planetModifier * mergeFuelModifier;
+    // Бонус от технологий (fuel_efficiency)
+    const techFuelBonus = state.research.researchedTechs.reduce(
+        (sum, techId) => {
+            const tech = RESEARCH_TREE[techId];
+            return (
+                sum +
+                tech.bonuses
+                    .filter((b) => b.type === "fuel_efficiency")
+                    .reduce((s, b) => s + b.value, 0)
+            );
+        },
+        0,
+    );
+    const techFuelModifier = 1 - techFuelBonus;
+
+    return (
+        raceModifier *
+        pilotModifier *
+        planetModifier *
+        mergeFuelModifier *
+        techFuelModifier
+    );
 };
 
 /**

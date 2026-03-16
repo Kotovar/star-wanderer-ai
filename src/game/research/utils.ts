@@ -14,8 +14,9 @@ export function getMiningResources(
 ): { type: ResearchResourceType; quantity: number }[] {
     const resources: { type: ResearchResourceType; quantity: number }[] = [];
 
-    // Small chance for quantum crystals with high level drill
-    if (drillLevel >= 3 && Math.random() < 0.05) {
+    // Quantum crystals: 10% base chance at drill level 1, +5% per additional level
+    const quantumCrystalChance = 0.1 + (drillLevel - 1) * 0.05;
+    if (Math.random() < quantumCrystalChance) {
         resources.push({
             type: "quantum_crystals",
             quantity: 1,

@@ -1,5 +1,4 @@
 // Technology translations for Research Panel
-// This file provides translated names and descriptions for technologies
 
 export interface TechTranslation {
     name: string;
@@ -14,135 +13,147 @@ export const TECH_TRANSLATIONS: Record<
         // ═══════════════════════════════════════════════════════════════
         // TIER 1 - Basic Technologies
         // ═══════════════════════════════════════════════════════════════
-
-        // Ship Systems
         reinforced_hull: {
-            name: "Усиленный корпус",
+            name: "Металлургия сплавов",
             description:
-                "Улучшенные сплавы повышают прочность всех модулей на 10%.",
+                "Экзотические сплавы нового поколения повышают прочность всех модулей на 10%.",
         },
         efficient_reactor: {
-            name: "Эффективный реактор",
-            description: "Оптимизация реактора даёт +15% к генерации энергии.",
+            name: "Термоядерный синтез",
+            description:
+                "Усовершенствованные камеры синтеза увеличивают выработку энергии реактора на 15%.",
         },
-
-        // Weapons
         targeting_matrix: {
-            name: "Матрица прицеливания",
+            name: "Баллистические вычисления",
             description:
-                "Улучшенные системы наведения увеличивают урон оружия на 10%.",
+                "Продвинутые алгоритмы наведения улучшают точность стрельбы и урон оружия на 10%.",
         },
-
-        // Science
         scanner_mk2: {
-            name: "Модуль сканера +1",
+            name: "Дистанционное зондирование",
             description:
-                "Улучшение сканера увеличивает дальность сканирования на +1.",
+                "Сенсорные технологии нового поколения расширяют дальность сканирования на +1 сектор.",
         },
-
-        // Engineering
         automated_repair: {
-            name: "Автоматический ремонт",
+            name: "Нанороботика",
             description:
-                "Наниты-ремонтники восстанавливают 2% здоровья модулей каждый ход.",
+                "Рой нанороботов непрерывно восстанавливает повреждения — 2% прочности модулей за ход.",
         },
-
-        // Biology
         medbay_upgrade: {
-            name: "Улучшенный медотсек",
+            name: "Экзобиология",
             description:
-                "Медицинские технологии увеличивают здоровье экипажа на 15%.",
+                "Изучение инопланетных организмов совершенствует медицинские протоколы, давая экипажу +15% здоровья.",
         },
 
         // ═══════════════════════════════════════════════════════════════
         // TIER 2 - Advanced Technologies
         // ═══════════════════════════════════════════════════════════════
-
-        // Ship Systems
+        ion_drive: {
+            name: "Ионная пропульсия",
+            description:
+                "Ионные двигатели снижают расход топлива на 30% и повышают КПД энергосистем на 10%.",
+        },
         shield_booster: {
-            name: "Усилитель щитов",
+            name: "Электромагнитные поля",
             description:
-                "Генераторы щитов новой конструкции дают +25% к защите.",
+                "Управление электромагнитными полями нового типа повышает мощность защитных щитов на 25%.",
         },
-
-        // Weapons
+        combat_drones: {
+            name: "Автономные системы",
+            description:
+                "Автономные боевые дроны атакуют цели без участия экипажа, давая +15% к урону.",
+        },
         plasma_weapons: {
-            name: "Плазменное оружие",
+            name: "Физика плазмы",
             description:
-                "Открывает доступ к плазменным орудиям, игнорирующим 25% брони.",
+                "Применение плазменных разрядов в бою открывает новое оружие и даёт +15% к урону.",
         },
-
-        // Science
+        lab_network: {
+            name: "Сетевая наука",
+            description:
+                "Объединение лабораторий в единую сеть ускоряет обмен данными и все исследования на 25%.",
+        },
         quantum_scanner: {
-            name: "Модуль сканера +2",
+            name: "Квантовая оптика",
             description:
-                "Квантовые сенсоры увеличивают дальность сканирования на +2.",
+                "Квантово-запутанные сенсоры сканируют пространство, расширяя дальность обнаружения на +2 сектора.",
         },
-
-        // Engineering
         cargo_expansion: {
-            name: "Расширение трюма",
+            name: "Модульная архитектура",
             description:
-                "Технологии компактного хранения увеличивают трюм на 50%.",
+                "Компактная компоновка грузовых отсеков увеличивает объём трюма на 30%.",
         },
-
-        // Biology
         crew_training: {
-            name: "Программа подготовки",
+            name: "Когнитивные технологии",
             description:
-                "Улучшенное обучение даёт экипажу +25% к получаемому опыту.",
+                "Нейропрограммы и симуляторы ускоряют обучение экипажа, давая +25% к получаемому опыту.",
         },
 
         // ═══════════════════════════════════════════════════════════════
         // TIER 3 - Elite Technologies
         // ═══════════════════════════════════════════════════════════════
-
-        // Ship Systems
+        singularity_reactor: {
+            name: "Гравитационная компрессия",
+            description:
+                "Управление микросингулярностью даёт неисчерпаемый источник энергии: +50% к мощности всех систем.",
+        },
         phase_shield: {
-            name: "Фазовый щит",
+            name: "Фазовая инженерия",
             description:
-                "Щиты с фазовым сдвигом имеют 20% шанс полностью поглотить атаку.",
+                "Фазовые щиты смещают атаки в другое измерение: 20% шанс полностью поглотить удар, +50% к мощности.",
         },
-
-        // Weapons
+        quantum_torpedo: {
+            name: "Квантовая запутанность",
+            description:
+                "Запутанные заряды телепортируются сквозь щиты противника, нанося +30% урона.",
+        },
         antimatter_weapons: {
-            name: "Антивещественное оружие",
-            description: "Орудия на антиматерии наносят двойной урон по щитам.",
+            name: "Физика антиматерии",
+            description:
+                "Аннигиляция антиматерии наносит двойной урон по щитам и увеличивает общий урон на 25%.",
         },
-
-        // Science
         deep_scan: {
-            name: "Модуль сканера +3",
-            description: "Глубокое сканирование увеличивает дальность на +3.",
+            name: "Нейтринная томография",
+            description:
+                "Нейтринные детекторы просматривают материю насквозь, расширяя дальность сканирования на +3 сектора.",
         },
-
-        // Engineering
         nanite_hull: {
-            name: "Нанитовая обшивка",
+            name: "Молекулярная сборка",
             description:
-                "Наниты в корпусе восстанавливают 5% здоровья всех модулей каждый ход.",
+                "Молекулярные машины в обшивке корабля непрерывно регенерируют 5% прочности всех модулей за ход.",
         },
-
-        // Biology
-        genetic_enhancement: {
-            name: "Генетическое улучшение",
+        neural_interface: {
+            name: "Нейрокибернетика",
             description:
-                "Биологические улучшения увеличивают здоровье экипажа на 30%.",
+                "Прямой интерфейс мозг-корабль ускоряет реакцию: +30% к опыту экипажа и скорости исследований.",
+        },
+        genetic_enhancement: {
+            name: "Генная инженерия",
+            description:
+                "Целевая модификация ДНК укрепляет биологию экипажа: +30% к здоровью и +15% к опыту.",
         },
 
         // ═══════════════════════════════════════════════════════════════
         // TIER 4 - Ancient Technologies (Endgame)
         // ═══════════════════════════════════════════════════════════════
-
-        ancient_power: {
-            name: "Сила Древних",
+        void_resonance: {
+            name: "Резонанс Пустоты",
             description:
-                "Технологии Древних дают +50% ко всем характеристикам корабля.",
+                "Гармоники пространства Пустоты усиливают щиты на 40% и увеличивают урон всего оружия на 20%.",
+        },
+        ancient_power: {
+            name: "Теория Древних",
+            description:
+                "Полная расшифровка технологий Древних открывает доступ к принципам, дающим +50% ко всем параметрам корабля.",
+        },
+        stellar_genetics: {
+            name: "Звёздная генетика",
+            description:
+                "Изучение ДНК звёздных сущностей открывает путь к эволюции: +50% здоровья, +40% опыта экипажа, +20% скорость науки.",
         },
         warp_drive: {
-            name: "Варп-двигатель",
+            name: "Варп-метрика",
             description:
-                "Двигатель Древних позволяет перемещаться без затрат топлива.",
+                "Управление метрикой пространства-времени позволяет прыгать между секторами без расхода топлива.",
         },
     },
 
@@ -150,131 +161,151 @@ export const TECH_TRANSLATIONS: Record<
         // ═══════════════════════════════════════════════════════════════
         // TIER 1 - Basic Technologies
         // ═══════════════════════════════════════════════════════════════
-
-        // Ship Systems
         reinforced_hull: {
-            name: "Reinforced Hull",
-            description: "Improved alloys increase all module health by 10%.",
+            name: "Alloy Metallurgy",
+            description:
+                "Next-generation exotic alloys increase durability of all modules by 10%.",
         },
         efficient_reactor: {
-            name: "Efficient Reactor",
-            description: "Reactor optimization provides +15% power generation.",
-        },
-
-        // Weapons
-        targeting_matrix: {
-            name: "Targeting Matrix",
+            name: "Fusion Engineering",
             description:
-                "Improved targeting systems increase weapon damage by 10%.",
+                "Improved fusion chambers increase reactor power output by 15%.",
         },
-
-        // Science
+        targeting_matrix: {
+            name: "Ballistic Computing",
+            description:
+                "Advanced targeting algorithms improve weapon accuracy and damage by 10%.",
+        },
         scanner_mk2: {
-            name: "Scanner Module +1",
-            description: "Scanner upgrade increases scan range by +1.",
+            name: "Remote Sensing",
+            description:
+                "Next-gen sensor technology extends scan range by +1 sector.",
         },
-
-        // Engineering
         automated_repair: {
-            name: "Automated Repair",
-            description: "Repair nanites restore 2% module health every turn.",
+            name: "Nanorobotics",
+            description:
+                "A nanite swarm continuously repairs damage — restoring 2% module health per turn.",
         },
-
-        // Biology
         medbay_upgrade: {
-            name: "Medbay Upgrade",
-            description: "Medical technologies increase crew health by 15%.",
+            name: "Exobiology",
+            description:
+                "Study of alien organisms improves medical protocols, increasing crew health by 15%.",
         },
 
         // ═══════════════════════════════════════════════════════════════
         // TIER 2 - Advanced Technologies
         // ═══════════════════════════════════════════════════════════════
-
-        // Ship Systems
+        ion_drive: {
+            name: "Ion Propulsion",
+            description:
+                "Ion engines reduce fuel consumption by 30% and improve power efficiency by 10%.",
+        },
         shield_booster: {
-            name: "Shield Booster",
+            name: "Electromagnetic Fields",
             description:
-                "New generation shield generators provide +25% protection.",
+                "Mastery of new electromagnetic field types increases shield power by 25%.",
         },
-
-        // Weapons
+        combat_drones: {
+            name: "Autonomous Systems",
+            description:
+                "Autonomous combat drones attack targets without crew input, providing +15% damage.",
+        },
         plasma_weapons: {
-            name: "Plasma Weapons",
-            description: "Unlocks plasma cannons that ignore 25% armor.",
-        },
-
-        // Science
-        quantum_scanner: {
-            name: "Scanner Module +2",
-            description: "Quantum sensors increase scan range by +2.",
-        },
-
-        // Engineering
-        cargo_expansion: {
-            name: "Cargo Expansion",
+            name: "Plasma Physics",
             description:
-                "Compact storage technologies increase cargo bay by 50%.",
+                "Weaponized plasma discharges unlock new armaments and provide +15% damage.",
         },
-
-        // Biology
+        lab_network: {
+            name: "Network Science",
+            description:
+                "Networking all laboratories accelerates data sharing and all research by 25%.",
+        },
+        quantum_scanner: {
+            name: "Quantum Optics",
+            description:
+                "Quantum-entangled sensors scan space, extending detection range by +2 sectors.",
+        },
+        cargo_expansion: {
+            name: "Modular Architecture",
+            description:
+                "Compact cargo bay design principles increase cargo capacity by 30%.",
+        },
         crew_training: {
-            name: "Crew Training Program",
-            description: "Improved training gives crew +25% experience gain.",
+            name: "Cognitive Technology",
+            description:
+                "Neural programs and simulators accelerate crew learning, providing +25% experience gain.",
         },
 
         // ═══════════════════════════════════════════════════════════════
         // TIER 3 - Elite Technologies
         // ═══════════════════════════════════════════════════════════════
-
-        // Ship Systems
+        singularity_reactor: {
+            name: "Gravitational Compression",
+            description:
+                "Harnessing a micro-singularity provides an inexhaustible energy source: +50% power to all systems.",
+        },
         phase_shield: {
-            name: "Phase Shield",
+            name: "Phase Engineering",
             description:
-                "Phase-shift shields have 20% chance to fully absorb attacks.",
+                "Phase shields deflect attacks into another dimension: 20% chance to fully absorb a hit, +50% power.",
         },
-
-        // Weapons
+        quantum_torpedo: {
+            name: "Quantum Entanglement",
+            description:
+                "Entangled warheads teleport through enemy shields, dealing +30% damage.",
+        },
         antimatter_weapons: {
-            name: "Antimatter Weapons",
-            description: "Antimatter cannons deal double damage to shields.",
-        },
-
-        // Science
-        deep_scan: {
-            name: "Scanner Module +3",
-            description: "Deep scan technology increases range by +3.",
-        },
-
-        // Engineering
-        nanite_hull: {
-            name: "Nanite Hull",
+            name: "Antimatter Physics",
             description:
-                "Hull nanites restore 5% health of all modules every turn.",
+                "Matter-antimatter annihilation deals double damage to shields and +25% overall damage.",
         },
-
-        // Biology
+        deep_scan: {
+            name: "Neutrino Tomography",
+            description:
+                "Neutrino detectors see through matter, extending scan range by +3 sectors.",
+        },
+        nanite_hull: {
+            name: "Molecular Assembly",
+            description:
+                "Molecular machines in the hull continuously regenerate 5% of all module health per turn.",
+        },
+        neural_interface: {
+            name: "Neurocybernetics",
+            description:
+                "Direct brain-ship interface accelerates reaction: +30% crew exp and research speed.",
+        },
         genetic_enhancement: {
-            name: "Genetic Enhancement",
-            description: "Biological enhancements increase crew health by 30%.",
+            name: "Genetic Engineering",
+            description:
+                "Targeted DNA modification strengthens crew biology: +30% health and +15% experience.",
         },
 
         // ═══════════════════════════════════════════════════════════════
         // TIER 4 - Ancient Technologies (Endgame)
         // ═══════════════════════════════════════════════════════════════
-
+        void_resonance: {
+            name: "Void Resonance",
+            description:
+                "Void-space harmonics amplify shields by 40% and increase all weapon damage by 20%.",
+        },
         ancient_power: {
-            name: "Power of the Ancients",
-            description: "Ancient technologies provide +50% to all ship stats.",
+            name: "Theory of the Ancients",
+            description:
+                "Full decipherment of Ancient technology reveals principles granting +50% to all ship parameters.",
+        },
+        stellar_genetics: {
+            name: "Stellar Genetics",
+            description:
+                "Studying the DNA of stellar entities unlocks evolutionary paths: +50% health, +40% crew exp, +20% research speed.",
         },
         warp_drive: {
-            name: "Warp Drive",
+            name: "Warp Metrics",
             description:
-                "Ancient drive allows travel without fuel consumption.",
+                "Mastery of spacetime metrics enables sector jumps without any fuel consumption.",
         },
     },
 };
 
-// Helper function to get technology translation
 export function getTechTranslation(
     techId: string,
     lang: "ru" | "en" = "ru",

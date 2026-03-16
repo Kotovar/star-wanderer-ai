@@ -3,6 +3,7 @@
 import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
+import { RESEARCH_RESOURCES } from "@/game/constants/research";
 
 export function BattleResultsPanel() {
     const battleResult = useGameStore((s) => s.battleResult);
@@ -47,6 +48,35 @@ export function BattleResultsPanel() {
                             {battleResult.artifactFound}
                         </div>
                     )}
+                    {battleResult.researchResources &&
+                        battleResult.researchResources.length > 0 && (
+                            <div className="text-[#00d4ff] mt-2 space-y-1">
+                                {battleResult.researchResources.map(
+                                    (res, idx) => {
+                                        const resData =
+                                            RESEARCH_RESOURCES[
+                                                res.type as keyof typeof RESEARCH_RESOURCES
+                                            ];
+                                        return (
+                                            <div
+                                                key={idx}
+                                                className="flex items-center gap-2"
+                                            >
+                                                <span>
+                                                    {resData?.icon || "🔧"}
+                                                </span>
+                                                <span>
+                                                    {resData?.name || res.type}
+                                                </span>
+                                                <span className="text-[#ffb000]">
+                                                    +{res.quantity}
+                                                </span>
+                                            </div>
+                                        );
+                                    },
+                                )}
+                            </div>
+                        )}
                 </div>
 
                 {/* Module damage */}

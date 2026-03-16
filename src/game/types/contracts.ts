@@ -85,6 +85,7 @@ export interface BattleResult {
     crewWounded: { name: string; damage: number }[];
     crewKilled: string[];
     artifactFound?: string;
+    researchResources?: { type: string; quantity: number }[];
 }
 
 // Storm results for showing after entering a storm

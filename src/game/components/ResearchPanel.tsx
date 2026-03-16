@@ -1,28 +1,70 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useGameStore } from "@/game/store";
-import { Button } from "@/components/ui/button";
 import {
     RESEARCH_TREE,
     RESEARCH_RESOURCES,
-    getTechnologiesByTier,
     canResearchTech,
 } from "@/game/constants/research";
 import type {
-    ResearchTier,
     ResearchCategory,
     Module,
     CrewMember,
-    ResearchData,
-    TradeGood,
     TechnologyId,
     Technology,
+    TradeGood,
 } from "@/game/types";
 import { typedKeys } from "@/lib/utils";
 import { useTranslation } from "@/lib/useTranslation";
 import { getTechTranslation } from "@/lib/techTranslations";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
+// ─── Layout constants ──────────────────────────────────────────────────────────
+const NODE_W = 162;
+const NODE_H = 84;
+const COL_GAP = 204;
+const ROW_GAP = 96;
+const PAD_X = 90;
+const PAD_Y = 50;
+
+const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
+    // T1 — col 0
+    reinforced_hull: [0, 0],
+    efficient_reactor: [0, 1.75],
+    targeting_matrix: [0, 3.75],
+    scanner_mk2: [0, 5.75],
+    automated_repair: [0, 7.5],
+    medbay_upgrade: [0, 9.5],
+    // T2 — col 1
+    shield_booster: [1, 0],
+    ion_drive: [1, 1.75],
+    plasma_weapons: [1, 3.75],
+    combat_drones: [1, 4.75],
+    quantum_scanner: [1, 5.75],
+    lab_network: [1, 7],
+    cargo_expansion: [1, 8],
+    crew_training: [1, 9.5],
+    // T3 — col 2
+    phase_shield: [2, 0],
+    singularity_reactor: [2, 1.75],
+    antimatter_weapons: [2, 3.75],
+    quantum_torpedo: [2, 5],
+    deep_scan: [2, 6.25],
+    nanite_hull: [2, 7.5],
+    neural_interface: [2, 8.5],
+    genetic_enhancement: [2, 9.75],
+    // T4 — col 3.5 / 4.5
+    void_resonance: [3.5, 2],
+    stellar_genetics: [3.5, 9],
+    ancient_power: [3.5, 5.25],
+    warp_drive: [4.5, 5.25],
+};
+
+const CANVAS_W = Math.ceil(PAD_X + 4.5 * COL_GAP + NODE_W / 2 + PAD_X);
+const CANVAS_H = Math.ceil(PAD_Y + 10 * ROW_GAP + NODE_H / 2 + PAD_Y);
+
+// ─── Category colors ───────────────────────────────────────────────────────────
 const CATEGORY_COLORS: Record<ResearchCategory, string> = {
     ship_systems: "#00d4ff",
     weapons: "#ff0040",
@@ -32,659 +74,826 @@ const CATEGORY_COLORS: Record<ResearchCategory, string> = {
     ancient_tech: "#ffd700",
 };
 
-const CATEGORY_ICONS: Record<ResearchCategory, string> = {
-    ship_systems: "⚙️",
-    weapons: "⚔️",
-    science: "🔬",
-    engineering: "🔧",
-    biology: "🧬",
-    ancient_tech: "👁️",
-};
-
-const CATEGORY_NAMES: Record<ResearchCategory, string> = {
-    ship_systems: "research.categories.ship_systems",
-    weapons: "research.categories.weapons",
-    science: "research.categories.science",
-    engineering: "research.categories.engineering",
-    biology: "research.categories.biology",
-    ancient_tech: "research.categories.ancient_tech",
-};
-
-interface ResearchContentProps {
-    research: ResearchData;
-    credits: number;
-    ship: { modules: Module[]; tradeGoods: TradeGood[] };
-    scientists: CrewMember[];
-    hasLab: boolean;
-    canResearch: boolean;
-    selectedTier: ResearchTier;
-    setSelectedTier: (tier: ResearchTier) => void;
-    selectedCategory: ResearchCategory | "all";
-    setSelectedCategory: (cat: ResearchCategory | "all") => void;
-    selectedTech: string | null;
-    setSelectedTech: (tech: string | null) => void;
-    researchedTechs: string[];
-    getResearchResourceQuantity: (type: string) => number;
-    hasResources: (tech: Technology) => boolean;
-    calculateEstimatedTurns: () => number;
-    selectedTechnology: Technology | null;
-    startResearch: (techId: TechnologyId) => void;
-    isMobile?: boolean;
-    t: (key: string) => string;
-    currentLanguage: "ru" | "en";
+// ─── Edge helpers ─────────────────────────────────────────────────────────────
+function getNodeCenter(id: TechnologyId): [number, number] {
+    const [col, row] = TREE_LAYOUT[id];
+    return [PAD_X + col * COL_GAP, PAD_Y + row * ROW_GAP];
 }
 
-function ResearchContent({
-    research,
-    credits,
-    ship,
-    scientists,
-    hasLab,
-    canResearch,
-    selectedTier,
-    setSelectedTier,
-    selectedCategory,
-    setSelectedCategory,
-    selectedTech,
-    setSelectedTech,
-    researchedTechs,
-    getResearchResourceQuantity,
-    hasResources,
-    calculateEstimatedTurns,
-    selectedTechnology,
-    startResearch,
-    isMobile = false,
-    t,
-    currentLanguage,
-}: ResearchContentProps) {
-    const technologies = getTechnologiesByTier(selectedTier).filter(
-        (tech) =>
-            selectedCategory === "all" || tech.category === selectedCategory,
-    );
+function buildEdgePath(from: TechnologyId, to: TechnologyId): string {
+    const [fx, fy] = getNodeCenter(from);
+    const [tx, ty] = getNodeCenter(to);
+    const sx = fx + NODE_W / 2;
+    const ex = tx - NODE_W / 2;
+    const mid = (sx + ex) / 2;
+    return `M ${sx} ${fy} C ${mid} ${fy}, ${mid} ${ty}, ${ex} ${ty}`;
+}
 
-    const discoveredTechs = research?.discoveredTechs || [];
+interface EdgeInfo {
+    path: string;
+    fromId: TechnologyId;
+    toId: TechnologyId;
+}
+
+function buildAllEdges(): EdgeInfo[] {
+    const edges: EdgeInfo[] = [];
+    for (const tech of Object.values(RESEARCH_TREE)) {
+        for (const prereqId of tech.prerequisites) {
+            edges.push({
+                path: buildEdgePath(prereqId as TechnologyId, tech.id),
+                fromId: prereqId as TechnologyId,
+                toId: tech.id,
+            });
+        }
+    }
+    return edges;
+}
+
+const ALL_EDGES = buildAllEdges();
+
+// ─── Tech Node ────────────────────────────────────────────────────────────────
+interface TechNodeProps {
+    tech: Technology;
+    isResearched: boolean;
+    isDiscovered: boolean;
+    isOpened: boolean; // Требования выполнены, но не хватает ресурсов/условий
+    isReady: boolean; // Всё готово для начала исследования
+    isActive: boolean;
+    isSelected: boolean;
+    activeProgress: number;
+    lang: "ru" | "en";
+    onClick: () => void;
+}
+
+function TechNode({
+    tech,
+    isResearched,
+    isDiscovered,
+    isOpened,
+    isReady,
+    isActive,
+    isSelected,
+    activeProgress,
+    lang,
+    onClick,
+}: TechNodeProps) {
+    const [cx, cy] = getNodeCenter(tech.id);
+    const catColor = CATEGORY_COLORS[tech.category];
+
+    let borderColor = "#2a2a2a";
+    let bgColor = "rgba(0,0,0,0.6)";
+    let textOpacity = "opacity-40";
+    let glowStyle = "";
+
+    if (isResearched) {
+        borderColor = "#00ff41";
+        bgColor = "rgba(0,255,65,0.08)";
+        textOpacity = "opacity-100";
+        glowStyle = "0 0 8px rgba(0,255,65,0.4)";
+    } else if (isActive) {
+        borderColor = "#00d4ff";
+        bgColor = "rgba(0,212,255,0.10)";
+        textOpacity = "opacity-100";
+        glowStyle = "0 0 12px rgba(0,212,255,0.5)";
+    } else if (isReady) {
+        // Готово к исследованию — зелёный
+        borderColor = "#00ff41";
+        bgColor = "rgba(0,255,65,0.08)";
+        textOpacity = "opacity-100";
+        glowStyle = `0 0 6px #00ff4166`;
+    } else if (isOpened) {
+        // Открыто, но не готово — жёлтый
+        borderColor = "#ffb000";
+        bgColor = "rgba(255,176,0,0.08)";
+        textOpacity = "opacity-100";
+        glowStyle = `0 0 6px #ffb00066`;
+    } else if (isDiscovered) {
+        borderColor = "#333";
+        bgColor = "rgba(0,0,0,0.5)";
+        textOpacity = "opacity-60";
+    }
+
+    if (isSelected) {
+        const ring = isResearched
+            ? "#00ff41"
+            : isReady
+              ? "#00ff41"
+              : isOpened
+                ? "#ffb000"
+                : "#888";
+        glowStyle = `0 0 0 2px ${ring}${glowStyle ? `, ${glowStyle}` : ""}`;
+    }
+
+    const translation = getTechTranslation(tech.id, lang);
+
+    // Нельзя кликнуть по неизведанным технологиям
+    const canClick = isDiscovered || isOpened || isReady || isActive;
 
     return (
-        <div className="flex flex-col gap-3 p-4">
-            {/* Lab status */}
+        <div
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+                if (canClick) {
+                    e.stopPropagation();
+                    onClick();
+                }
+            }}
+            style={{
+                position: "absolute",
+                left: cx - NODE_W / 2,
+                top: cy - NODE_H / 2,
+                width: NODE_W,
+                height: NODE_H,
+                borderColor,
+                backgroundColor: bgColor,
+                boxShadow: glowStyle || undefined,
+                cursor: canClick ? "pointer" : "not-allowed",
+            }}
+            className="border transition-all duration-200 select-none"
+        >
             <div
-                className={`p-2 md:p-3 border ${hasLab ? "border-[#00ff41] bg-[rgba(0,255,65,0.05)]" : "border-[#ff0040] bg-[rgba(255,0,64,0.05)]"}`}
+                className="absolute top-0 left-0 right-0 h-0.5"
+                style={{ backgroundColor: isDiscovered ? catColor : "#333" }}
+            />
+            <div
+                className={`flex items-start h-full px-2 pt-2 pb-1 gap-1.5 ${textOpacity}`}
             >
-                <div className="flex justify-between items-center">
-                    <div>
-                        <div className="text-[#ffb000] font-bold text-xs md:text-sm">
-                            {hasLab
-                                ? t("research.lab_active")
-                                : t("research.lab_required")}
-                        </div>
-                        <div className="text-xs text-[#888] mt-1">
-                            {hasLab ? (
-                                scientists.length > 0 ? (
-                                    `${t("research.scientists")}: ${scientists.length}`
-                                ) : (
-                                    <span className="text-[#ff0040]">
-                                        {t("research.no_scientists")}
-                                    </span>
-                                )
-                            ) : (
-                                <span className="text-[#ff0040]">
-                                    {t("research.build_module")}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                    {research?.activeResearch && !isMobile && (
-                        <div className="text-right hidden md:block">
-                            <div className="text-[#00d4ff] font-bold text-xs">
-                                🔬{" "}
-                                {
-                                    RESEARCH_TREE[
-                                        research.activeResearch.techId
-                                    ].name
-                                }
-                            </div>
-                            <div className="text-[10px] text-[#888]">
-                                {research.activeResearch.progress}% | Ходов:{" "}
-                                {research.activeResearch.turnsRemaining}
-                            </div>
-                        </div>
-                    )}
-                </div>
-                {/* Research points display */}
-                {hasLab && (
-                    <div className="mt-2 pt-2 border-t border-[#00ff41]">
-                        <div className="text-xs text-[#888]">
-                            {t("research.science")}:{" "}
-                            <span className="text-[#00d4ff] font-bold">
-                                {(() => {
-                                    const labs = ship.modules.filter(
-                                        (m: Module) =>
-                                            m.type === "lab" &&
-                                            m.health > 0 &&
-                                            !m.disabled,
-                                    );
-                                    let output = labs.reduce(
-                                        (sum: number, m: Module) =>
-                                            sum + (m.researchOutput || 0),
-                                        0,
-                                    );
-                                    scientists.forEach((s) => {
-                                        output += 5;
-                                        if (s.assignment === "research") {
-                                            output = Math.floor(output * 2);
-                                        }
-                                        output += s.level || 1;
-                                    });
-                                    return output;
-                                })()}
-                                {t("research.per_turn")}
-                            </span>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Research resources */}
-            <div className="p-2 md:p-3 border border-[#9933ff] bg-[rgba(153,51,255,0.05)]">
-                <div className="font-['Orbitron'] font-bold text-xs md:text-sm text-[#9933ff] mb-2">
-                    {t("research.resources_label")}
-                </div>
-                <div className="flex flex-wrap gap-1 md:gap-2">
-                    {typedKeys(RESEARCH_RESOURCES).map((type) => {
-                        const data = RESEARCH_RESOURCES[type];
-                        const quantity = getResearchResourceQuantity(type);
-                        const translatedName = t(
-                            `research.resources.${type}.name`,
-                        );
-                        return (
-                            <div
-                                key={type}
-                                className="pointer-events-none flex items-center gap-1 md:gap-2 px-2 py-1 rounded border text-xs"
-                                style={{
-                                    borderColor: data.color,
-                                    backgroundColor: `${data.color}10`,
-                                    color: data.color,
-                                }}
-                            >
-                                <span>{data.icon}</span>
-                                <span className="font-bold">{quantity}</span>
-                                {!isMobile && (
-                                    <span className="text-[#888] hidden md:inline">
-                                        {translatedName}
-                                    </span>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* Tier selector */}
-            <div className="flex gap-1 overflow-x-auto">
-                {[1, 2, 3, 4].map((tier) => (
-                    <Button
-                        key={tier}
-                        onClick={() => setSelectedTier(tier as ResearchTier)}
-                        className={`flex-1 min-w-12.5 md:min-w-15 border-2 uppercase text-xs cursor-pointer ${
-                            selectedTier === tier
-                                ? "border-[#ffb000] bg-[#ffb000] text-[#050810]"
-                                : "border-[#444] text-[#888] hover:border-[#ffb000]"
-                        }`}
+                <span className="text-xl shrink-0 leading-none mt-0.5">
+                    {isDiscovered ? tech.icon : "❓"}
+                </span>
+                <div className="flex-1 min-w-0">
+                    <div
+                        className="text-[11px] font-bold leading-tight"
+                        style={{ color: isDiscovered ? catColor : "#444" }}
                     >
-                        T{tier}
-                    </Button>
-                ))}
-            </div>
-
-            {/* Category filter */}
-            <div className="flex gap-1 flex-wrap">
-                <Button
-                    onClick={() => setSelectedCategory("all")}
-                    className={`min-w-12.5 md:min-w-17.5 border-2 text-xs cursor-pointer ${
-                        selectedCategory === "all"
-                            ? "border-white bg-white text-[#050810]"
-                            : "border-[#333] text-[#666] hover:border-[#555]"
-                    }`}
-                >
-                    {t("research.categories.all")}
-                </Button>
-                {typedKeys(isMobile ? CATEGORY_ICONS : CATEGORY_NAMES).map(
-                    (catId) => {
-                        const label = isMobile
-                            ? CATEGORY_ICONS[catId]
-                            : t(CATEGORY_NAMES[catId]);
-                        const isActive = selectedCategory === catId;
-                        return (
-                            <Button
-                                key={catId}
-                                onClick={() => setSelectedCategory(catId)}
-                                className={`min-w-8.75 md:min-w-15 border-2 text-xs cursor-pointer ${
-                                    isActive
-                                        ? "border-[#ffb000] bg-[#ffb000] text-[#050810]"
-                                        : "border-[#333] text-[#666] hover:border-[#555]"
-                                }`}
-                                style={
-                                    isActive
-                                        ? {
-                                              borderColor:
-                                                  CATEGORY_COLORS[catId],
-                                              backgroundColor:
-                                                  CATEGORY_COLORS[catId],
-                                          }
-                                        : undefined
-                                }
-                            >
-                                {label}
-                            </Button>
-                        );
-                    },
-                )}
-            </div>
-
-            {/* Technology tree */}
-            <div
-                className={`space-y-2 overflow-y-auto scrollbar-gutter-stable min-h-[30vh] ${selectedTechnology ? "max-h-[20vh] md:max-h-[25vh]" : "max-h-[30vh] md:max-h-[35vh]"}`}
-            >
-                {technologies.map((tech) => {
-                    const isResearched = researchedTechs.includes(tech.id);
-                    const isDiscovered =
-                        discoveredTechs.includes(tech.id) || isResearched;
-                    const isAvailable = canResearchTech(
-                        tech.id as TechnologyId,
-                        researchedTechs,
-                    );
-                    const isActive =
-                        research?.activeResearch?.techId === tech.id;
-
-                    if (!isDiscovered) {
-                        return (
-                            <div
-                                key={tech.id}
-                                className="p-2 border border-[#333] bg-[rgba(0,0,0,0.3)] opacity-50"
-                            >
-                                <div className="text-[#444] text-xs">???</div>
-                            </div>
-                        );
-                    }
-
-                    return (
-                        <div
-                            key={tech.id}
-                            className={`p-2 border cursor-pointer transition-all ${
-                                isActive
-                                    ? "border-[#00ff41] bg-[rgba(0,255,65,0.1)]"
-                                    : isResearched
-                                      ? "border-[#00ff41] bg-[rgba(0,255,65,0.05)]"
-                                      : isAvailable
-                                        ? "border-[#ffb000] bg-[rgba(255,176,0,0.05)]"
-                                        : "border-[#333] bg-[rgba(0,0,0,0.3)]"
-                            }`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedTech(
-                                    selectedTech === tech.id ? null : tech.id,
-                                );
-                            }}
-                        >
-                            <div className="flex justify-between items-start">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xl">{tech.icon}</span>
-                                    <div>
-                                        <div
-                                            className="font-bold text-xs md:text-sm"
-                                            style={{
-                                                color: CATEGORY_COLORS[
-                                                    tech.category
-                                                ],
-                                            }}
-                                        >
-                                            {
-                                                getTechTranslation(
-                                                    tech.id,
-                                                    currentLanguage,
-                                                ).name
-                                            }
-                                        </div>
-                                        <div className="text-[10px] text-[#888]">
-                                            {isResearched ? (
-                                                <span className="text-[#00ff41]">
-                                                    {t(
-                                                        "research.tech_status.discovered",
-                                                    )}
-                                                </span>
-                                            ) : isActive ? (
-                                                <span className="text-[#00d4ff]">
-                                                    {t(
-                                                        "research.tech_status.active",
-                                                    )}
-                                                </span>
-                                            ) : isAvailable ? (
-                                                <span className="text-[#ffb000]">
-                                                    {t(
-                                                        "research.tech_status.available",
-                                                    )}
-                                                </span>
-                                            ) : (
-                                                <span className="text-[#444]">
-                                                    {t(
-                                                        "research.tech_status.locked",
-                                                    )}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="text-right text-[10px]">
-                                    <div className="text-[#ffb000]">
-                                        {tech.credits}₢
-                                    </div>
-                                    <div className="text-[#888]">
-                                        {calculateEstimatedTurns()}{" "}
-                                        {t("research.panel.turns")}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Selected tech details */}
-            {selectedTechnology && (
-                <div className="border border-[#ffb000] bg-[rgba(255,176,0,0.05)] p-2 md:p-3 relative">
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedTech(null);
+                        {isDiscovered ? translation.name : "???"}
+                    </div>
+                    <div
+                        className="text-[9px] mt-0.5 leading-snug overflow-hidden"
+                        style={{
+                            color: "#666",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
                         }}
-                        className="absolute top-1 right-2 text-[#ffb000] hover:text-[#00ff41] text-lg cursor-pointer"
-                        aria-label={t("research.panel.close")}
                     >
-                        ✕
-                    </button>
-                    <div className="flex items-center gap-2 mb-2 pr-6">
-                        <span className="text-2xl md:text-3xl">
-                            {selectedTechnology.icon}
-                        </span>
-                        <div
-                            className="font-['Orbitron'] font-bold text-xs md:text-sm"
-                            style={{
-                                color: CATEGORY_COLORS[
-                                    selectedTechnology.category
-                                ],
-                            }}
-                        >
-                            {
-                                getTechTranslation(
-                                    selectedTechnology.id,
-                                    currentLanguage,
-                                ).name
-                            }
-                        </div>
+                        {isDiscovered ? translation.description : ""}
                     </div>
-                    <div className="text-xs text-[#888] mb-2">
-                        {
-                            getTechTranslation(
-                                selectedTechnology.id,
-                                currentLanguage,
-                            ).description
-                        }
-                    </div>
-
-                    {/* Requirements */}
-                    <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                        <div>
-                            <div className="text-[#ffb000] font-bold mb-1">
-                                {t("research.panel.prerequisites_title")}
-                            </div>
-                            <div className="text-[#888]">
-                                {selectedTechnology.prerequisites.length > 0 ? (
-                                    <ul className="list-disc list-inside text-[10px]">
-                                        {selectedTechnology.prerequisites.map(
-                                            (prereq: string) => (
-                                                <li
-                                                    key={prereq}
-                                                    className={
-                                                        researchedTechs.includes(
-                                                            prereq,
-                                                        )
-                                                            ? "text-[#00ff41]"
-                                                            : "text-[#ff0040]"
-                                                    }
-                                                >
-                                                    {
-                                                        getTechTranslation(
-                                                            prereq,
-                                                            currentLanguage,
-                                                        ).name
-                                                    }
-                                                </li>
-                                            ),
-                                        )}
-                                    </ul>
-                                ) : (
-                                    <span className="text-[#888]">
-                                        {t("research.panel.no_requirements")}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                        <div>
-                            <div className="text-[#ffb000] font-bold mb-1">
-                                {t("research.panel.resources_title")}
-                            </div>
-                            <div className="text-[#888]">
-                                {typedKeys(selectedTechnology.resources)
-                                    .length > 0 ? (
-                                    <ul className="list-disc list-inside text-[10px]">
-                                        {typedKeys(
-                                            selectedTechnology.resources,
-                                        ).map((type) => {
-                                            const qty =
-                                                selectedTechnology.resources[
-                                                    type
-                                                ] ?? 0;
-                                            const owned =
-                                                getResearchResourceQuantity(
-                                                    type,
-                                                );
-                                            const resourceData =
-                                                RESEARCH_RESOURCES[type];
-                                            return (
-                                                <li
-                                                    key={type}
-                                                    className={
-                                                        owned >= qty
-                                                            ? "text-[#00ff41]"
-                                                            : "text-[#ff0040]"
-                                                    }
-                                                >
-                                                    {resourceData.icon} {owned}/
-                                                    {qty}
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
-                                ) : (
-                                    <span className="text-[#888]">
-                                        {t("research.panel.no_resources")}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Bonuses */}
-                    <div className="mb-2">
-                        <div className="text-[#ffb000] font-bold text-xs mb-1">
-                            {t("research.panel.bonuses_title")}
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                            {selectedTechnology.bonuses.map(
-                                (
-                                    bonus: { description: string },
-                                    idx: number,
-                                ) => (
-                                    <div
-                                        key={idx}
-                                        className="px-1 py-0.5 rounded border border-[#00ff41] text-[10px] text-[#00ff41]"
-                                    >
-                                        {bonus.description}
-                                    </div>
-                                ),
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Action button */}
-                    {researchedTechs.includes(selectedTechnology.id) ? (
-                        <Button
-                            disabled
-                            className="w-full border-2 uppercase text-xs border-[#444] text-[#444] cursor-not-allowed"
-                        >
-                            {t("research.panel.studied")}
-                        </Button>
-                    ) : research?.activeResearch?.techId ===
-                      selectedTechnology.id ? (
-                        <div className="text-[#00d4ff] text-center font-bold text-xs py-1">
-                            🔬 {research.activeResearch.progress}%
+                    {isActive ? (
+                        <div className="mt-0.5 h-1 bg-[#1a3a40] rounded overflow-hidden">
+                            <div
+                                className="h-full bg-[#00d4ff] rounded transition-all"
+                                style={{ width: `${activeProgress}%` }}
+                            />
                         </div>
                     ) : (
-                        <Button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                startResearch(
-                                    selectedTechnology.id as TechnologyId,
-                                );
-                            }}
-                            disabled={
-                                !canResearchTech(
-                                    selectedTechnology.id as TechnologyId,
-                                    researchedTechs,
-                                ) ||
-                                !hasResources(selectedTechnology) ||
-                                credits < selectedTechnology.credits ||
-                                !canResearch
-                            }
-                            className={`w-full border-2 uppercase text-xs ${
-                                !canResearch
-                                    ? "border-[#444] text-[#444] cursor-not-allowed"
-                                    : !hasResources(selectedTechnology) ||
-                                        credits < selectedTechnology.credits
-                                      ? "border-[#ff0040] text-[#ff0040] cursor-not-allowed"
-                                      : "border-[#00ff41] text-[#00ff41]"
-                            }`}
+                        <div
+                            className="text-[9px] mt-0.5"
+                            style={{ color: "#555" }}
                         >
-                            {!canResearch
-                                ? t("research.panel.no_labs_scientist")
-                                : !hasResources(selectedTechnology)
-                                  ? t("research.panel.no_resources_btn")
-                                  : credits < selectedTechnology.credits
-                                    ? t("research.panel.no_credits")
-                                    : `${t("research.panel.start")} (${calculateEstimatedTurns()} ${t("research.panel.turns")})`}
-                        </Button>
+                            {isResearched ? (
+                                <span style={{ color: "#00ff41" }}>
+                                    ✓ Изучено
+                                </span>
+                            ) : isReady ? (
+                                <span style={{ color: "#00ff41" }}>
+                                    ● Доступно
+                                </span>
+                            ) : isOpened ? (
+                                <span style={{ color: "#ffb000" }}>
+                                    ◍ Открыто
+                                </span>
+                            ) : isDiscovered ? (
+                                "⊘ Заблокировано"
+                            ) : (
+                                "? Неизвестно"
+                            )}
+                        </div>
                     )}
                 </div>
-            )}
+            </div>
         </div>
     );
 }
 
+// ─── Pan/Zoom canvas ──────────────────────────────────────────────────────────
+function PanZoomCanvas({ children }: { children: React.ReactNode }) {
+    const [pan, setPan] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(0.8);
+    const dragging = useRef(false);
+    const lastPos = useRef({ x: 0, y: 0 });
+
+    const onMouseDown = useCallback((e: React.MouseEvent) => {
+        if (e.button !== 0) return;
+        dragging.current = true;
+        lastPos.current = { x: e.clientX, y: e.clientY };
+    }, []);
+
+    const onMouseMove = useCallback((e: React.MouseEvent) => {
+        if (!dragging.current) return;
+        const dx = e.clientX - lastPos.current.x;
+        const dy = e.clientY - lastPos.current.y;
+        lastPos.current = { x: e.clientX, y: e.clientY };
+        setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
+    }, []);
+
+    const stopDrag = useCallback(() => {
+        dragging.current = false;
+    }, []);
+
+    const onWheel = useCallback((e: React.WheelEvent) => {
+        e.preventDefault();
+        const factor = e.deltaY > 0 ? 0.9 : 1.1;
+        setZoom((z) => Math.max(0.25, Math.min(2, z * factor)));
+    }, []);
+
+    return (
+        <div
+            className="flex-1 overflow-hidden min-h-0 bg-[#030608] cursor-grab active:cursor-grabbing"
+            style={{ userSelect: "none" }}
+            onMouseDown={onMouseDown}
+            onMouseMove={onMouseMove}
+            onMouseUp={stopDrag}
+            onMouseLeave={stopDrag}
+            onWheel={onWheel}
+        >
+            <div
+                style={{
+                    transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                    transformOrigin: "0 0",
+                }}
+            >
+                {children}
+            </div>
+        </div>
+    );
+}
+
+// ─── SVG + nodes canvas ───────────────────────────────────────────────────────
+interface TechCanvasProps {
+    researchedTechs: string[];
+    discoveredTechs: string[];
+    activeResearch: { techId: TechnologyId; progress: number } | null;
+    selectedTech: TechnologyId | null;
+    onSelectTech: (id: TechnologyId) => void;
+    lang: "ru" | "en";
+    canStartResearch: (tech: Technology) => boolean;
+}
+
+function TechCanvas({
+    researchedTechs,
+    discoveredTechs,
+    activeResearch,
+    selectedTech,
+    onSelectTech,
+    lang,
+    canStartResearch,
+}: TechCanvasProps) {
+    const TIER_LABELS = [
+        "T1 — Базовые",
+        "T2 — Продвинутые",
+        "T3 — Элитные",
+        "T4 — Древние",
+    ];
+    const TIER_COLS = [0, 1, 2, 3.5] as const;
+    const TIER_COLORS = ["#00ff41", "#ffb000", "#9933ff", "#ffd700"];
+
+    return (
+        <div
+            style={{ position: "relative", width: CANVAS_W, height: CANVAS_H }}
+        >
+            {TIER_COLS.map((col, i) => (
+                <div
+                    key={col}
+                    style={{
+                        position: "absolute",
+                        left: PAD_X + col * COL_GAP - NODE_W / 2,
+                        top: -10,
+                        width: NODE_W,
+                        textAlign: "center",
+                        color: TIER_COLORS[i],
+                        fontSize: 10,
+                        fontFamily: "Orbitron, monospace",
+                        letterSpacing: "0.05em",
+                        opacity: 0.6,
+                    }}
+                >
+                    {TIER_LABELS[i]}
+                </div>
+            ))}
+
+            <svg
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    pointerEvents: "none",
+                }}
+                width={CANVAS_W}
+                height={CANVAS_H}
+            >
+                {ALL_EDGES.map(({ path, fromId, toId }) => {
+                    const fromResearched = researchedTechs.includes(fromId);
+                    const toActive = activeResearch?.techId === toId;
+                    const color = fromResearched
+                        ? "#00ff4166"
+                        : toActive
+                          ? "#00d4ff55"
+                          : "#252525";
+                    return (
+                        <path
+                            key={`${fromId}->${toId}`}
+                            d={path}
+                            stroke={color}
+                            strokeWidth={fromResearched ? 2 : 1.5}
+                            fill="none"
+                            strokeDasharray={fromResearched ? undefined : "4 3"}
+                        />
+                    );
+                })}
+            </svg>
+
+            {(Object.values(RESEARCH_TREE) as Technology[]).map((tech) => {
+                const isResearched = researchedTechs.includes(tech.id);
+                const isDiscovered =
+                    discoveredTechs.includes(tech.id) || isResearched;
+                // Требования (предварительные технологии) выполнены
+                const prereqsMet = canResearchTech(
+                    tech.id as TechnologyId,
+                    researchedTechs,
+                );
+                const isActive = activeResearch?.techId === tech.id;
+                const isSelected = selectedTech === tech.id;
+                const activeProgress = isActive ? activeResearch.progress : 0;
+
+                // Технология открыта (требования выполнены), но может не хватать условий
+                const isOpened = prereqsMet && !isResearched;
+                // Технология готова к исследованию (все условия выполнены)
+                const isReady =
+                    prereqsMet && !isResearched && canStartResearch(tech);
+
+                return (
+                    <TechNode
+                        key={tech.id}
+                        tech={tech}
+                        isResearched={isResearched}
+                        isDiscovered={isDiscovered}
+                        isOpened={isOpened}
+                        isReady={isReady}
+                        isActive={isActive}
+                        isSelected={isSelected}
+                        activeProgress={activeProgress}
+                        lang={lang}
+                        onClick={() => onSelectTech(tech.id)}
+                    />
+                );
+            })}
+        </div>
+    );
+}
+
+// ─── Tech detail modal ────────────────────────────────────────────────────────
+interface TechModalProps {
+    tech: Technology | null;
+    researchedTechs: string[];
+    getResourceQty: (type: string) => number;
+    credits: number;
+    canResearch: boolean;
+    activeResearchId: TechnologyId | null;
+    activeProgress: number;
+    onStart: (id: TechnologyId) => void;
+    onClose: () => void;
+    lang: "ru" | "en";
+}
+
+function TechModal({
+    tech,
+    researchedTechs,
+    getResourceQty,
+    credits,
+    canResearch,
+    activeResearchId,
+    activeProgress,
+    onStart,
+    onClose,
+    lang,
+}: TechModalProps) {
+    if (!tech) return null;
+
+    const translation = getTechTranslation(tech.id, lang);
+    const catColor = CATEGORY_COLORS[tech.category];
+    const isResearched = researchedTechs.includes(tech.id);
+    const isActive = activeResearchId === tech.id;
+    const prereqsMet = canResearchTech(tech.id, researchedTechs);
+    const canStart = canResearch && prereqsMet && !isResearched && !isActive;
+
+    const hasAllResources = typedKeys(tech.resources).every(
+        (type) => getResourceQty(type) >= (tech.resources[type] ?? 0),
+    );
+    const hasCredits = credits >= tech.credits;
+
+    return (
+        <Dialog open={!!tech} onOpenChange={(open) => !open && onClose()}>
+            <DialogContent
+                showCloseButton={false}
+                className="max-w-xl p-0 border gap-0"
+                style={{
+                    backgroundColor: "#060d10",
+                    borderColor: catColor + "55",
+                    boxShadow: `0 0 32px ${catColor}22`,
+                }}
+            >
+                <DialogTitle className="sr-only">
+                    {translation.name}
+                </DialogTitle>
+
+                {/* Header */}
+                <div
+                    className="flex items-start gap-3 p-4 border-b"
+                    style={{ borderColor: catColor + "33" }}
+                >
+                    <span className="text-4xl leading-none mt-0.5">
+                        {tech.icon}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                        <div
+                            className="font-['Orbitron'] font-bold text-base leading-tight"
+                            style={{ color: catColor }}
+                        >
+                            {translation.name}
+                        </div>
+                        <div className="text-xs text-[#666] mt-0.5">
+                            Тир {tech.tier} · {tech.category.replace("_", " ")}
+                        </div>
+                        <div className="text-[11px] text-[#888] mt-1.5 leading-snug">
+                            {translation.description}
+                        </div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="text-[#555] hover:text-[#aaa] text-lg leading-none cursor-pointer shrink-0"
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                {/* Body */}
+                <div
+                    className="grid grid-cols-3 gap-0 divide-x"
+                    style={{ borderColor: "#1a1a1a" }}
+                >
+                    {/* Prerequisites */}
+                    <div className="p-4">
+                        <div className="text-[#ffb000] font-bold mb-2 text-[10px] uppercase tracking-wider">
+                            Требования
+                        </div>
+                        {tech.prerequisites.length === 0 ? (
+                            <div className="text-[#555] text-xs">Нет</div>
+                        ) : (
+                            tech.prerequisites.map((prereq) => {
+                                const done = researchedTechs.includes(prereq);
+                                return (
+                                    <div
+                                        key={prereq}
+                                        className="flex items-start gap-1.5 mb-1 text-xs"
+                                        style={{
+                                            color: done ? "#00ff41" : "#ff0040",
+                                        }}
+                                    >
+                                        <span className="shrink-0 mt-px">
+                                            {done ? "✓" : "✗"}
+                                        </span>
+                                        <span className="leading-tight">
+                                            {
+                                                getTechTranslation(prereq, lang)
+                                                    .name
+                                            }
+                                        </span>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+
+                    {/* Resources */}
+                    <div className="p-4" style={{ borderColor: "#1a1a1a" }}>
+                        <div className="text-[#ffb000] font-bold mb-2 text-[10px] uppercase tracking-wider">
+                            Ресурсы
+                        </div>
+                        {typedKeys(tech.resources).map((type) => {
+                            const need = tech.resources[type] ?? 0;
+                            const have = getResourceQty(type);
+                            const ok = have >= need;
+                            const res = RESEARCH_RESOURCES[type];
+                            return (
+                                <div
+                                    key={type}
+                                    className="flex items-center gap-1.5 mb-1 text-xs"
+                                    style={{
+                                        color: ok ? "#00ff41" : "#ff4466",
+                                    }}
+                                >
+                                    <span>{res.icon}</span>
+                                    <span className="flex-1 text-[#888]">
+                                        {res.name}
+                                    </span>
+                                    <span className="font-bold">
+                                        {have}/{need}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                        <div
+                            className="flex items-center gap-1.5 mt-1.5 text-xs"
+                            style={{
+                                color: hasCredits ? "#00ff41" : "#ff4466",
+                            }}
+                        >
+                            <span>₢</span>
+                            <span className="flex-1 text-[#888]">Кредиты</span>
+                            <span className="font-bold">
+                                {credits}/{tech.credits}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Bonuses */}
+                    <div className="p-4" style={{ borderColor: "#1a1a1a" }}>
+                        <div className="text-[#ffb000] font-bold mb-2 text-[10px] uppercase tracking-wider">
+                            Эффекты
+                        </div>
+                        {tech.bonuses.map((b, i) => (
+                            <div
+                                key={i}
+                                className="flex items-start gap-1 mb-1 text-xs leading-tight"
+                                style={{ color: "#00ff41" }}
+                            >
+                                <span className="shrink-0 mt-px">▸</span>
+                                <span>{b.description}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Action footer */}
+                <div
+                    className="p-4 border-t"
+                    style={{ borderColor: catColor + "33" }}
+                >
+                    {isResearched ? (
+                        <div
+                            className="text-center text-xs py-2 border"
+                            style={{
+                                color: "#00ff41",
+                                borderColor: "#00ff4133",
+                            }}
+                        >
+                            ✓ Технология изучена
+                        </div>
+                    ) : isActive ? (
+                        <div>
+                            <div className="text-[#00d4ff] text-xs font-bold mb-1.5 text-center">
+                                🔬 Исследование: {activeProgress}%
+                            </div>
+                            <div className="h-2 bg-[#0a1a20] rounded overflow-hidden">
+                                <div
+                                    className="h-full bg-[#00d4ff] rounded transition-all"
+                                    style={{ width: `${activeProgress}%` }}
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={() =>
+                                canStart &&
+                                hasAllResources &&
+                                hasCredits &&
+                                onStart(tech.id)
+                            }
+                            disabled={
+                                !canStart || !hasAllResources || !hasCredits
+                            }
+                            className="w-full border text-xs py-2 uppercase tracking-widest font-bold transition-all cursor-pointer disabled:cursor-not-allowed"
+                            style={
+                                canStart && hasAllResources && hasCredits
+                                    ? {
+                                          borderColor: "#00ff41",
+                                          color: "#00ff41",
+                                          backgroundColor:
+                                              "rgba(0,255,65,0.05)",
+                                      }
+                                    : {
+                                          borderColor: "#333",
+                                          color: "#444",
+                                      }
+                            }
+                        >
+                            {!canResearch
+                                ? "Нужна лаборатория и учёный"
+                                : !prereqsMet
+                                  ? "Не выполнены требования"
+                                  : !hasAllResources
+                                    ? "Недостаточно ресурсов"
+                                    : !hasCredits
+                                      ? "Недостаточно кредитов"
+                                      : "▶ Начать исследование"}
+                        </button>
+                    )}
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+// ─── Main component ────────────────────────────────────────────────────────────
 export function ResearchPanel() {
     const research = useGameStore((s) => s.research);
     const credits = useGameStore((s) => s.credits);
     const crew = useGameStore((s) => s.crew);
     const ship = useGameStore((s) => s.ship);
-
     const startResearch = useGameStore((s) => s.startResearch);
-    const { t, currentLanguage } = useTranslation();
+    const { currentLanguage } = useTranslation();
 
-    const [selectedTier, setSelectedTier] = useState<ResearchTier>(1);
-    const [selectedTech, setSelectedTech] = useState<string | null>(null);
-    const [selectedCategory, setSelectedCategory] = useState<
-        ResearchCategory | "all"
-    >("all");
+    const [selectedTech, setSelectedTech] = useState<TechnologyId | null>(null);
 
-    const scientists = crew.filter((c) => c.profession === "scientist");
+    const scientists = crew.filter(
+        (c: CrewMember) => c.profession === "scientist",
+    );
     const hasLab = ship.modules.some(
-        (m) => m.type === "lab" && m.health > 0 && !m.disabled,
+        (m: Module) => m.type === "lab" && m.health > 0 && !m.disabled,
     );
     const canResearch = hasLab && scientists.length > 0;
 
-    const getResearchResourceQuantity = (type: string): number => {
+    const getResourceQty = (type: string): number => {
+        let qty =
+            research?.resources[type as keyof typeof research.resources] ?? 0;
         if (type === "rare_minerals") {
-            const tradeGood = ship.tradeGoods.find(
-                (tg) => tg.item === "rare_minerals",
+            const tg = (ship.tradeGoods as TradeGood[]).find(
+                (g) => g.item === "rare_minerals",
             );
-            return tradeGood?.quantity || 0;
+            qty += tg?.quantity ?? 0;
         }
-        const researchResource =
-            research?.resources[type as keyof typeof research.resources];
-        if (researchResource) {
-            return researchResource;
-        }
-        return 0;
+        return qty;
     };
 
-    const hasResources = (tech: Technology): boolean => {
-        for (const resourceType of typedKeys(tech.resources)) {
-            const required = tech.resources[resourceType];
-            const available = getResearchResourceQuantity(resourceType);
-            if (required === undefined || available < required) return false;
+    const researchedTechs = research?.researchedTechs ?? [];
+    const discoveredTechs = research?.discoveredTechs ?? [];
+    const activeResearch = research?.activeResearch ?? null;
+
+    // Проверка, можно ли начать исследование конкретной технологии
+    const canStartResearch = (tech: Technology): boolean => {
+        if (!canResearch) return false;
+        // Проверка кредитов
+        if (credits < tech.credits) return false;
+        // Проверка ресурсов
+        for (const [type, needed] of Object.entries(tech.resources)) {
+            if (getResourceQty(type) < (needed ?? 0)) return false;
         }
         return true;
     };
 
-    const calculateEstimatedTurns = (): number => {
-        if (!canResearch) return 999;
+    const sciencePerTurn = (() => {
+        // Используем функцию calculateResearchOutput для правильного расчёта
+        // с учётом бонусов от технологий (research_speed)
         const labs = ship.modules.filter(
             (m: Module) => m.type === "lab" && m.health > 0 && !m.disabled,
         );
-        let output = labs.reduce(
-            (sum: number, m: Module) => sum + (m.researchOutput || 0),
+        const labOutput = labs.reduce(
+            (s: number, m: Module) => s + (m.researchOutput ?? 0),
             0,
         );
-        scientists.forEach((scientist) => {
-            output += 5;
-            if (scientist.assignment === "research") {
-                output = Math.floor(output * 2);
+
+        // Бонус от учёных
+        let scientistBonus = 0;
+        scientists.forEach((s: CrewMember) => {
+            let scientistContribution = 5 + (s.level ?? 1);
+            if (s.assignment === "research") {
+                scientistContribution *= 2;
             }
-            output += scientist.level || 1;
+            scientistBonus += scientistContribution;
         });
-        return output > 0 ? Math.ceil(100 / output) : 999;
-    };
+
+        // Бонус от технологий (research_speed)
+        const techSpeedBonus = researchedTechs.reduce((sum, techId) => {
+            const tech = RESEARCH_TREE[techId];
+            return (
+                sum +
+                tech.bonuses
+                    .filter((b) => b.type === "research_speed")
+                    .reduce((s, b) => s + b.value, 0)
+            );
+        }, 0);
+
+        let totalOutput = labOutput + scientistBonus;
+        if (techSpeedBonus > 0) {
+            totalOutput += Math.floor(totalOutput * techSpeedBonus);
+        }
+
+        return totalOutput;
+    })();
 
     const selectedTechnology = selectedTech
-        ? RESEARCH_TREE[selectedTech as TechnologyId]
+        ? RESEARCH_TREE[selectedTech]
         : null;
-    const researchedTechs = research?.researchedTechs || [];
-
-    const researchProps = {
-        research,
-        credits,
-        ship,
-        scientists,
-        hasLab,
-        canResearch,
-        selectedTier,
-        setSelectedTier,
-        selectedCategory,
-        setSelectedCategory,
-        selectedTech,
-        setSelectedTech,
-        researchedTechs,
-        getResearchResourceQuantity,
-        hasResources,
-        calculateEstimatedTurns,
-        selectedTechnology,
-        startResearch,
-        t,
-        currentLanguage,
-    };
 
     return (
-        <div className="h-full overflow-hidden">
-            <ResearchContent {...researchProps} />
+        <div className="flex flex-col h-full overflow-hidden">
+            {/* ── Header ── */}
+            <div className="shrink-0 p-2 border-b border-[#1a1a1a] space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                    <div
+                        className={`text-xs font-bold px-2 py-1 border ${
+                            canResearch
+                                ? "border-[#00ff41] text-[#00ff41] bg-[rgba(0,255,65,0.05)]"
+                                : hasLab
+                                  ? "border-[#ffb000] text-[#ffb000] bg-[rgba(255,176,0,0.05)]"
+                                  : "border-[#ff0040] text-[#ff0040] bg-[rgba(255,0,64,0.05)]"
+                        }`}
+                    >
+                        {hasLab
+                            ? scientists.length > 0
+                                ? `🔬 Лаб активна · Учёных: ${scientists.length} · ${sciencePerTurn}⚗/ход`
+                                : "⚠ Нет учёных"
+                            : "⚠ Нужна лаборатория"}
+                    </div>
+                    {activeResearch && (
+                        <div className="text-[10px] text-[#00d4ff] text-right">
+                            <div className="font-bold">
+                                {
+                                    getTechTranslation(
+                                        activeResearch.techId,
+                                        currentLanguage,
+                                    ).name
+                                }
+                            </div>
+                            <div className="text-[#555]">
+                                {activeResearch.progress}% ·{" "}
+                                {activeResearch.turnsRemaining} ходов
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex flex-wrap gap-1">
+                    {typedKeys(RESEARCH_RESOURCES).map((type) => {
+                        const res = RESEARCH_RESOURCES[type];
+                        const qty = getResourceQty(type);
+                        return (
+                            <div
+                                key={type}
+                                className="flex items-center gap-1 px-1.5 py-0.5 border text-[10px]"
+                                style={{
+                                    borderColor: res.color + "66",
+                                    backgroundColor: res.color + "10",
+                                    color: qty > 0 ? res.color : "#444",
+                                }}
+                                title={res.name}
+                            >
+                                <span>{res.icon}</span>
+                                <span className="font-bold">{qty}</span>
+                            </div>
+                        );
+                    })}
+                    <div className="flex items-center gap-1 px-1.5 py-0.5 border border-[#ffb00066] bg-[#ffb00010] text-[10px] text-[#ffb000]">
+                        <span>₢</span>
+                        <span className="font-bold">{credits}</span>
+                    </div>
+                    <div className="flex items-center gap-1 px-1.5 py-0.5 border border-[#33333366] bg-[#33333310] text-[10px] text-[#555]">
+                        <span>🖱 перетащи / колесо мыши = масштаб</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Pan/Zoom tree ── */}
+            <PanZoomCanvas>
+                <TechCanvas
+                    researchedTechs={researchedTechs}
+                    discoveredTechs={discoveredTechs}
+                    activeResearch={activeResearch}
+                    selectedTech={selectedTech}
+                    onSelectTech={(id) =>
+                        setSelectedTech(selectedTech === id ? null : id)
+                    }
+                    lang={currentLanguage}
+                    canStartResearch={canStartResearch}
+                />
+            </PanZoomCanvas>
+
+            {/* ── Tech detail modal ── */}
+            <TechModal
+                tech={selectedTechnology}
+                researchedTechs={researchedTechs}
+                getResourceQty={getResourceQty}
+                credits={credits}
+                canResearch={canResearch}
+                activeResearchId={activeResearch?.techId ?? null}
+                activeProgress={activeResearch?.progress ?? 0}
+                onStart={(id) => {
+                    startResearch(id);
+                    setSelectedTech(null);
+                }}
+                onClose={() => setSelectedTech(null)}
+                lang={currentLanguage}
+            />
         </div>
     );
 }

@@ -26,15 +26,17 @@ export function AnomalyPanel() {
     // Check if anomaly was already researched
     const anomalyCompleted = completedLocations.includes(currentLocation.id);
 
-    // Get recent anomaly-related log entries
+    // Get recent anomaly-related log entries (including research resources found)
     const recentAnomalyLogs = log
-        .slice(0, 10)
+        .slice(0, 15)
         .filter(
             (entry) =>
                 entry.message.includes("Аномалия:") ||
                 entry.message.includes("аномали") ||
                 entry.message.includes("Anomaly:") ||
-                entry.message.includes("anomal"),
+                entry.message.includes("anomal") ||
+                entry.message.includes("Найдены исследовательские ресурсы") ||
+                entry.message.includes("Найденные дополнительные ресурсы"),
         );
 
     // Already processed - show results

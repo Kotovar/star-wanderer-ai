@@ -102,11 +102,11 @@ export const STORM_RESOURCES: Record<
 > = {
     gravitational: {
         type: "quantum_crystals",
-        amount: { min: 15, max: 25 },
+        amount: { min: 1, max: 2 },
     },
     temporal: {
         type: "ancient_data",
-        amount: { min: 20, max: 35 },
+        amount: { min: 2, max: 4 },
     },
     radiation: undefined,
     ionic: undefined,

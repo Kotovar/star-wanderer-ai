@@ -2,8 +2,7 @@ import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { generateGalaxy } from "@/game/galaxy/generateGalaxy";
 import { initialModules, STARTING_FUEL } from "@/game/modules/initial";
 import { initializeStationData } from "@/game/stations/initialize";
-// import { RESEARCH_TREE } from "@/game/constants/research";
-import type { GameState, CrewMember } from "@/game/types";
+import type { GameState, CrewMember, TechnologyId } from "@/game/types";
 
 /** Начальный номер хода */
 const INITIAL_TURN = 1;
@@ -26,6 +25,16 @@ const INITIAL_GAME_MODE = "galaxy_map" as const;
 
 /** Начальная раса, известная игроку */
 const INITIAL_KNOWN_RACE = "human" as const;
+
+/** НачальнЫЕ ТЕХНОЛОГИИ */
+const INITIAL_DISCOVERED_TECHS: TechnologyId[] = [
+    "reinforced_hull",
+    "efficient_reactor",
+    "targeting_matrix",
+    "scanner_mk2",
+    "automated_repair",
+    "medbay_upgrade",
+];
 
 /** Счётчик загрузок игры (для предотвращения показа модалок после загрузки) */
 const INITIAL_GAME_LOADED_COUNT = 0;
@@ -53,7 +62,7 @@ const initialCrew: CrewMember[] = [
         combatAssignment: null,
         combatAssignmentEffect: null,
         traits: [],
-        moduleId: 2,
+        moduleId: 102, // cockpit
         movedThisTurn: false,
         turnsAtZeroHappiness: 0,
         isMerged: false,
@@ -76,7 +85,7 @@ const initialCrew: CrewMember[] = [
         combatAssignment: null,
         combatAssignmentEffect: null,
         traits: [],
-        moduleId: 3,
+        moduleId: 103, // lifesupport
         movedThisTurn: false,
         turnsAtZeroHappiness: 0,
         isMerged: false,
@@ -99,7 +108,7 @@ const initialCrew: CrewMember[] = [
         combatAssignment: null,
         combatAssignmentEffect: null,
         traits: [],
-        moduleId: 3,
+        moduleId: 103, // lifesupport
         movedThisTurn: false,
         turnsAtZeroHappiness: 0,
         isMerged: false,
@@ -170,14 +179,7 @@ export const initialState: GameState = {
         resources: {},
         // DEBUG: открываем все технологии для отладки
         // discoveredTechs: Object.keys(RESEARCH_TREE),
-        discoveredTechs: [
-            "reinforced_hull",
-            "efficient_reactor",
-            "targeting_matrix",
-            "scanner_mk2",
-            "automated_repair",
-            "medbay_upgrade",
-        ],
+        discoveredTechs: INITIAL_DISCOVERED_TECHS,
         researchedTechs: [],
         activeResearch: null,
     },

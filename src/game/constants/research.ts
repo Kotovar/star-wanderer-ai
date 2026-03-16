@@ -185,7 +185,7 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         scienceCost: 100,
         bonuses: [
             {
-                type: "special_ability",
+                type: "nanite_repair",
                 value: 2,
                 description: "+2% ремонт модулей за ход",
             },
@@ -227,6 +227,36 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
     // TIER 2 - Advanced Technologies (scienceCost: 150-250)
     // ═══════════════════════════════════════════════════════════════
 
+    ion_drive: {
+        id: "ion_drive",
+        name: "Ионный двигатель",
+        description:
+            "Ионная тяга снижает расход топлива на 30% и ускоряет перелёты.",
+        tier: 2,
+        category: "ship_systems",
+        prerequisites: ["efficient_reactor"],
+        resources: { energy_samples: 5, rare_minerals: 5 },
+        credits: 350,
+        scienceCost: 170,
+        bonuses: [
+            {
+                type: "fuel_efficiency",
+                value: 0.3,
+                description: "-30% расход топлива",
+            },
+            {
+                type: "module_power",
+                value: 0.1,
+                description: "+10% к энергии систем",
+            },
+        ],
+        icon: "🚀",
+        color: "#ffb000",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
     shield_booster: {
         id: "shield_booster",
         name: "Усилитель щитов",
@@ -246,6 +276,36 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         ],
         icon: "🛡️",
         color: "#0080ff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    combat_drones: {
+        id: "combat_drones",
+        name: "Боевые дроны",
+        description:
+            "Автономные дроны патрулируют корабль и атакуют цели, давая +15% к урону.",
+        tier: 2,
+        category: "weapons",
+        prerequisites: ["targeting_matrix"],
+        resources: { tech_salvage: 8, rare_minerals: 5 },
+        credits: 400,
+        scienceCost: 200,
+        bonuses: [
+            {
+                type: "weapon_damage",
+                value: 0.15,
+                description: "+15% к урону оружия",
+            },
+            {
+                type: "new_weapon",
+                value: 3,
+                description: "Открывает боевые дроны",
+            },
+        ],
+        icon: "🤖",
+        color: "#ff6600",
         discovered: false,
         researched: false,
         researchProgress: 0,
@@ -281,6 +341,31 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         researchProgress: 0,
     },
 
+    lab_network: {
+        id: "lab_network",
+        name: "Лабораторная сеть",
+        description:
+            "Объединённая сеть лабораторий ускоряет все исследования на 25%.",
+        tier: 2,
+        category: "science",
+        prerequisites: ["scanner_mk2"],
+        resources: { ancient_data: 5, tech_salvage: 5 },
+        credits: 400,
+        scienceCost: 190,
+        bonuses: [
+            {
+                type: "research_speed",
+                value: 0.25,
+                description: "+25% скорость исследований",
+            },
+        ],
+        icon: "🔬",
+        color: "#9933ff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
     quantum_scanner: {
         id: "quantum_scanner",
         name: "Модуль сканера +2",
@@ -309,18 +394,18 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
     cargo_expansion: {
         id: "cargo_expansion",
         name: "Расширение трюма",
-        description: "Технологии компактного хранения увеличивают трюм на 50%.",
+        description: "Технологии компактного хранения увеличивают трюм на 30%.",
         tier: 2,
         category: "engineering",
         prerequisites: ["automated_repair"],
-        resources: { rare_minerals: 10, tech_salvage: 5 },
-        credits: 350,
-        scienceCost: 180,
+        resources: { rare_minerals: 15, tech_salvage: 10 },
+        credits: 500,
+        scienceCost: 250,
         bonuses: [
             {
                 type: "cargo_capacity",
-                value: 0.5,
-                description: "+50% к грузовместимости",
+                value: 0.3,
+                description: "+30% к грузовместимости",
             },
         ],
         icon: "📦",
@@ -359,6 +444,104 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
     // TIER 3 - Elite Technologies (scienceCost: 300-500)
     // ═══════════════════════════════════════════════════════════════
 
+    singularity_reactor: {
+        id: "singularity_reactor",
+        name: "Реактор сингулярности",
+        description:
+            "Реактор на основе микросингулярности даёт +50% к мощности всех систем корабля.",
+        tier: 3,
+        category: "ship_systems",
+        prerequisites: ["ion_drive"],
+        resources: { quantum_crystals: 3, energy_samples: 12 },
+        credits: 900,
+        scienceCost: 450,
+        bonuses: [
+            {
+                type: "module_power",
+                value: 0.5,
+                description: "+50% к мощности систем",
+            },
+            {
+                type: "fuel_efficiency",
+                value: 0.2,
+                description: "-20% расход топлива",
+            },
+        ],
+        icon: "⚛️",
+        color: "#00d4ff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    quantum_torpedo: {
+        id: "quantum_torpedo",
+        name: "Квантовая торпеда",
+        description:
+            "Торпеды с квантовым зарядом пробивают щиты и наносят +30% урона.",
+        tier: 3,
+        category: "weapons",
+        prerequisites: ["plasma_weapons", "combat_drones"],
+        resources: {
+            quantum_crystals: 2,
+            energy_samples: 12,
+            tech_salvage: 10,
+        },
+        credits: 1100,
+        scienceCost: 500,
+        bonuses: [
+            {
+                type: "weapon_damage",
+                value: 0.3,
+                description: "+30% к урону оружия",
+            },
+            {
+                type: "new_weapon",
+                value: 4,
+                description: "Открывает квантовые торпеды",
+            },
+        ],
+        icon: "💣",
+        color: "#ff00aa",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    neural_interface: {
+        id: "neural_interface",
+        name: "Нейронный интерфейс",
+        description:
+            "Нейроинтерфейс соединяет разум экипажа с кораблём, давая +30% опыта и ускоряя исследования.",
+        tier: 3,
+        category: "biology",
+        prerequisites: ["crew_training"],
+        resources: {
+            alien_biology: 10,
+            quantum_crystals: 2,
+            ancient_data: 8,
+        },
+        credits: 800,
+        scienceCost: 400,
+        bonuses: [
+            {
+                type: "crew_exp",
+                value: 0.3,
+                description: "+30% к опыту экипажа",
+            },
+            {
+                type: "research_speed",
+                value: 0.15,
+                description: "+15% скорость исследований",
+            },
+        ],
+        icon: "🧠",
+        color: "#ff44ff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
     nanite_hull: {
         id: "nanite_hull",
         name: "Нанитовая обшивка",
@@ -376,7 +559,7 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         scienceCost: 400,
         bonuses: [
             {
-                type: "special_ability",
+                type: "nanite_repair",
                 value: 5,
                 description: "+5% ремонт модулей за ход",
             },
@@ -509,6 +692,79 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
     // TIER 4 - Ancient Technologies (Endgame) (scienceCost: 800-1000)
     // ═══════════════════════════════════════════════════════════════
 
+    void_resonance: {
+        id: "void_resonance",
+        name: "Резонанс Пустоты",
+        description:
+            "Гармоники пространства Пустоты усиливают щиты на 40% и увеличивают урон всего оружия на 20%.",
+        tier: 4,
+        category: "ancient_tech",
+        prerequisites: ["phase_shield", "antimatter_weapons"],
+        resources: {
+            quantum_crystals: 8,
+            energy_samples: 20,
+            ancient_data: 15,
+        },
+        credits: 1800,
+        scienceCost: 900,
+        bonuses: [
+            {
+                type: "shield_strength",
+                value: 0.4,
+                description: "+40% к мощности щитов",
+            },
+            {
+                type: "weapon_damage",
+                value: 0.2,
+                description: "+20% к урону оружия",
+            },
+        ],
+        icon: "🌌",
+        color: "#aa55ff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    stellar_genetics: {
+        id: "stellar_genetics",
+        name: "Звёздная генетика",
+        description:
+            "Изучение ДНК звёздных сущностей открывает путь к эволюции: +50% здоровья, +40% опыта экипажа, +20% скорость науки.",
+        tier: 4,
+        category: "ancient_tech",
+        prerequisites: ["genetic_enhancement", "neural_interface"],
+        resources: {
+            alien_biology: 20,
+            quantum_crystals: 6,
+            ancient_data: 15,
+        },
+        credits: 1800,
+        scienceCost: 900,
+        bonuses: [
+            {
+                type: "crew_health",
+                value: 0.5,
+                description: "+50% к здоровью экипажа",
+            },
+            {
+                type: "crew_exp",
+                value: 0.4,
+                description: "+40% к опыту экипажа",
+            },
+            {
+                type: "research_speed",
+                value: 0.2,
+                description: "+20% скорость исследований",
+            },
+        ],
+        icon: "⭐",
+        color: "#ffaa00",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
     ancient_power: {
         id: "ancient_power",
         name: "Сила Древних",
@@ -518,18 +774,19 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         category: "ancient_tech",
         prerequisites: [
             "nanite_hull",
-            "phase_shield",
-            "antimatter_weapons",
+            "void_resonance",
+            "stellar_genetics",
             "deep_scan",
-            "genetic_enhancement",
+            "singularity_reactor",
         ],
         resources: {
-            quantum_crystals: 10,
-            ancient_data: 25,
-            energy_samples: 20,
+            quantum_crystals: 15,
+            ancient_data: 40,
+            energy_samples: 30,
+            alien_biology: 20,
         },
-        credits: 2000,
-        scienceCost: 1000,
+        credits: 3000,
+        scienceCost: 1500,
         bonuses: [
             {
                 type: "module_health",

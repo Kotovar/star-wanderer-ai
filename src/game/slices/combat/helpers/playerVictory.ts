@@ -274,6 +274,7 @@ export function handleVictory(
         crewWounded: woundedCrew,
         crewKilled: [],
         artifactFound: artifactName,
+        researchResources: combatResources,
     };
 
     const criticalOverload = findActiveArtifact(

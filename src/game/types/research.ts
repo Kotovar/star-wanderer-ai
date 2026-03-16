@@ -20,16 +20,24 @@ export type TechnologyId =
     | "automated_repair"
     | "medbay_upgrade"
     | "shield_booster"
+    | "ion_drive"
     | "plasma_weapons"
+    | "combat_drones"
     | "quantum_scanner"
+    | "lab_network"
     | "cargo_expansion"
     | "crew_training"
     | "nanite_hull"
     | "phase_shield"
+    | "singularity_reactor"
     | "antimatter_weapons"
+    | "quantum_torpedo"
     | "deep_scan"
     | "genetic_enhancement"
+    | "neural_interface"
+    | "void_resonance"
     | "ancient_power"
+    | "stellar_genetics"
     | "warp_drive";
 
 /**
@@ -75,7 +83,8 @@ export type ResearchBonusType =
     | "crew_exp"
     | "new_module"
     | "new_weapon"
-    | "special_ability";
+    | "special_ability"
+    | "nanite_repair";
 
 /**
  * Research resource in cargo

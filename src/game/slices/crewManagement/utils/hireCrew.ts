@@ -231,7 +231,12 @@ export const hireCrew = (
     });
 
     // Создание члена экипажа
-    const newCrew = createCrewMember(crewData, stats, initialModuleId);
+    // Игнорируем crewData.moduleId и используем initialModuleId
+    const newCrew = createCrewMember(
+        { ...crewData, moduleId: undefined },
+        stats,
+        initialModuleId,
+    );
 
     // Обновление состояния
     const hiredCrewKey = locationId || "unknown";
