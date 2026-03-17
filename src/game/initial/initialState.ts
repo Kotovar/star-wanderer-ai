@@ -143,7 +143,6 @@ export const initialState: GameState = {
         discoveredTechs: INITIAL_DISCOVERED_TECHS,
         // DEBUG: делаем все технологии изученными
         // researchedTechs: Object.keys(RESEARCH_TREE),
-        // researchedTechs: ["relic_chamber"],
         researchedTechs: [],
         activeResearch: null,
         // DEBUG: разблокируем все рецепты крафтинга
