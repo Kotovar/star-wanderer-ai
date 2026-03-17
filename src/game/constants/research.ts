@@ -698,7 +698,7 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         description:
             "Гармоники пространства Пустоты усиливают щиты на 40% и увеличивают урон всего оружия на 20%.",
         tier: 4,
-        category: "ancient_tech",
+        category: "ship_systems",
         prerequisites: ["phase_shield", "antimatter_weapons"],
         resources: {
             quantum_crystals: 8,
@@ -732,7 +732,7 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         description:
             "Изучение ДНК звёздных сущностей открывает путь к эволюции: +50% здоровья, +40% опыта экипажа, +20% скорость науки.",
         tier: 4,
-        category: "ancient_tech",
+        category: "biology",
         prerequisites: ["genetic_enhancement", "neural_interface"],
         resources: {
             alien_biology: 20,
@@ -770,18 +770,16 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         name: "Сила Древних",
         description:
             "Технологии Древних дают +50% ко всем характеристикам корабля.",
-        tier: 4,
+        tier: 5,
         category: "ancient_tech",
         prerequisites: [
-            "nanite_hull",
             "void_resonance",
             "stellar_genetics",
-            "deep_scan",
             "singularity_reactor",
         ],
         resources: {
-            quantum_crystals: 15,
-            ancient_data: 40,
+            quantum_crystals: 12,
+            ancient_data: 30,
             energy_samples: 30,
             alien_biology: 20,
         },
@@ -813,7 +811,7 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         name: "Варп-двигатель",
         description:
             "Двигатель Древних позволяет перемещаться без затрат топлива.",
-        tier: 4,
+        tier: 5,
         category: "ancient_tech",
         prerequisites: ["ancient_power"],
         resources: {
@@ -908,7 +906,7 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
             "Резонансная настройка усиливает реликвии через корабельные системы. +1 слот, +10% к эффектам артефактов.",
         tier: 3,
         category: "artifacts",
-        prerequisites: ["relic_chamber"],
+        prerequisites: ["relic_chamber", "quantum_scanner"],
         resources: { ancient_data: 20, quantum_crystals: 2, energy_samples: 8 },
         credits: 1000,
         scienceCost: 450,

@@ -14,12 +14,13 @@ export function getMiningResources(
 ): { type: ResearchResourceType; quantity: number }[] {
     const resources: { type: ResearchResourceType; quantity: number }[] = [];
 
-    // Quantum crystals: 10% base chance at drill level 1, +5% per additional level
-    const quantumCrystalChance = 0.1 + (drillLevel - 1) * 0.05;
+    // Quantum crystals: 15% base chance at drill level 1, +5% per additional level
+    // T1: 15%, T2: 20%, T3: 25%, T4: 30%
+    const quantumCrystalChance = 0.15 + (drillLevel - 1) * 0.05;
     if (Math.random() < quantumCrystalChance) {
         resources.push({
             type: "quantum_crystals",
-            quantity: 1,
+            quantity: drillLevel >= 3 ? Math.floor(Math.random() * 2) + 1 : 1,
         });
     }
 
@@ -37,20 +38,20 @@ export function getAnomalyResources(): {
 
     const roll = Math.random();
 
-    if (roll < 0.3) {
-        // 30% - Ancient data
+    if (roll < 0.45) {
+        // 45% - Ancient data (increased from 30%, qty 2-4 instead of 1-3)
         resources.push({
             type: "ancient_data",
-            quantity: Math.floor(Math.random() * 3) + 1,
+            quantity: Math.floor(Math.random() * 3) + 2,
         });
-    } else if (roll < 0.5) {
+    } else if (roll < 0.65) {
         // 20% - Energy samples
         resources.push({
             type: "energy_samples",
             quantity: Math.floor(Math.random() * 2) + 1,
         });
-    } else if (roll < 0.6) {
-        // 10% - Quantum crystals (rare!)
+    } else if (roll < 0.80) {
+        // 15% - Quantum crystals (increased from 10%)
         resources.push({
             type: "quantum_crystals",
             quantity: 1,
@@ -113,19 +114,19 @@ export function getBossLootResources(
         quantity: 5 + bossTier,
     });
 
-    // Chance for quantum crystals based on tier
+    // Quantum crystals based on tier (T2: 2, T3+: 3)
     if (bossTier >= 2) {
         resources.push({
             type: "quantum_crystals",
-            quantity: bossTier >= 3 ? 2 : 1,
+            quantity: bossTier >= 3 ? 3 : 2,
         });
     }
 
-    // Chance for ancient data
-    if (bossTier >= 3) {
+    // Ancient data from bosses (T2+: 5, T3+: 15)
+    if (bossTier >= 2) {
         resources.push({
             type: "ancient_data",
-            quantity: 10,
+            quantity: bossTier >= 3 ? 15 : 5,
         });
     }
 

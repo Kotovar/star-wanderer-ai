@@ -32,42 +32,42 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
     // T1 — col 0
     reinforced_hull: [0, 0],
     efficient_reactor: [0, 1.75],
-    targeting_matrix: [0, 3.75],
+    targeting_matrix: [0, 3.4],
     scanner_mk2: [0, 5.75],
-    automated_repair: [0, 7.5],
-    medbay_upgrade: [0, 9.5],
+    artifact_study: [0, 7.8],
+    automated_repair: [0, 9.5], // shifted +2 to make room for artifact branch
+    medbay_upgrade: [0, 11.5],
     // T2 — col 1
     shield_booster: [1, 0],
     ion_drive: [1, 1.75],
-    plasma_weapons: [1, 3.75],
-    combat_drones: [1, 4.75],
+    plasma_weapons: [1, 3.4],
+    combat_drones: [1, 4.5],
     quantum_scanner: [1, 5.75],
-    lab_network: [1, 7],
-    cargo_expansion: [1, 8],
-    crew_training: [1, 9.5],
+    lab_network: [1, 6.8],
+    relic_chamber: [1, 7.8],
+    cargo_expansion: [1, 10.3],
+    crew_training: [1, 11.5],
     // T3 — col 2
     phase_shield: [2, 0],
     singularity_reactor: [2, 1.75],
-    antimatter_weapons: [2, 3.75],
-    quantum_torpedo: [2, 5],
-    deep_scan: [2, 6.25],
-    nanite_hull: [2, 7.5],
-    neural_interface: [2, 8.5],
-    genetic_enhancement: [2, 9.75],
-    // T4 — col 3.5 / 4.5
+    antimatter_weapons: [2, 3.4],
+    quantum_torpedo: [2, 4.5],
+    deep_scan: [2, 5.75],
+    ancient_resonance: [2, 7.8],
+    nanite_hull: [2, 9.5],
+    neural_interface: [2, 10.9],
+    genetic_enhancement: [2, 12.2],
+    // T4 — col 3.5
     void_resonance: [3.5, 2],
-    stellar_genetics: [3.5, 9],
-    ancient_power: [3.5, 5.25],
-    warp_drive: [4.5, 5.25],
-    // Artifact branch — col 0-3.5, row 11.5+
-    artifact_study: [0, 11.5],
-    relic_chamber: [1, 11.5],
-    ancient_resonance: [2, 11.5],
-    artifact_mastery: [3.5, 11.5],
+    artifact_mastery: [3.5, 7.8],
+    stellar_genetics: [3.5, 11.6],
+    // T5 — col 4.5 / 5.5
+    ancient_power: [4.5, 5.25],
+    warp_drive: [5.5, 5.25],
 };
 
-const CANVAS_W = Math.ceil(PAD_X + 4.5 * COL_GAP + NODE_W / 2 + PAD_X);
-const CANVAS_H = Math.ceil(PAD_Y + 12.5 * ROW_GAP + NODE_H / 2 + PAD_Y);
+const CANVAS_W = Math.ceil(PAD_X + 5.5 * COL_GAP + NODE_W / 2 + PAD_X);
+const CANVAS_H = Math.ceil(PAD_Y + 12.25 * ROW_GAP + NODE_H / 2 + PAD_Y);
 
 // ─── Category colors ───────────────────────────────────────────────────────────
 const CATEGORY_COLORS: Record<ResearchCategory, string> = {
@@ -346,9 +346,10 @@ function TechCanvas({
         "T2 — Продвинутые",
         "T3 — Элитные",
         "T4 — Древние",
+        "T5 — Предтечи",
     ];
-    const TIER_COLS = [0, 1, 2, 3.5] as const;
-    const TIER_COLORS = ["#00ff41", "#ffb000", "#9933ff", "#ffd700"];
+    const TIER_COLS = [0, 1, 2, 3.5, 4.5] as const;
+    const TIER_COLORS = ["#00ff41", "#ffb000", "#9933ff", "#ffd700", "#ff6600"];
 
     return (
         <div

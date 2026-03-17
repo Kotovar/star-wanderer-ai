@@ -49,7 +49,7 @@ export type TechnologyId =
 /**
  * Research tier - technology level
  */
-export type ResearchTier = 1 | 2 | 3 | 4;
+export type ResearchTier = 1 | 2 | 3 | 4 | 5;
 
 export type ResearchRarity = "common" | "uncommon" | "rare" | "legendary";
 
