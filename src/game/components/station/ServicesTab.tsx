@@ -81,6 +81,9 @@ interface ServicesTabProps {
     healCost: number;
     canRepair: boolean;
     canHeal: boolean;
+    // Station type flags
+    allowsCrewHeal: boolean;
+    allowsModuleInstall: boolean;
 }
 
 export function ServicesTab({
@@ -101,6 +104,8 @@ export function ServicesTab({
     healCost,
     canRepair,
     canHeal,
+    allowsCrewHeal,
+    allowsModuleInstall,
 }: ServicesTabProps) {
     const fuelNeeded = maxFuel - fuel;
 
@@ -122,21 +127,27 @@ export function ServicesTab({
                 canRepair={canRepair}
                 onRepair={repairShip}
             />
-            <HealSection
-                credits={credits}
-                healCost={healCost}
-                canHeal={canHeal}
-                onHeal={healCrew}
-            />
+            {allowsCrewHeal && (
+                <HealSection
+                    credits={credits}
+                    healCost={healCost}
+                    canHeal={canHeal}
+                    onHeal={healCrew}
+                />
+            )}
             <ScrapModuleSection ship={ship} crew={crew} onScrap={scrapModule} />
-            <InstallModuleSection
-                ship={ship}
-                onInstall={installModuleFromCargo}
-            />
-            <InstallWeaponSection
-                ship={ship}
-                onInstall={installCraftedWeapon}
-            />
+            {allowsModuleInstall && (
+                <InstallModuleSection
+                    ship={ship}
+                    onInstall={installModuleFromCargo}
+                />
+            )}
+            {allowsModuleInstall && (
+                <InstallWeaponSection
+                    ship={ship}
+                    onInstall={installCraftedWeapon}
+                />
+            )}
         </div>
     );
 }

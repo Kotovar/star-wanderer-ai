@@ -11,6 +11,7 @@ import {
     StarType,
     StormType,
 } from "@/game/types";
+import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
 import { PLANET_COLORS_IN_SECTOR } from "../constants";
 import { getScannerRangeLabel } from "./DistressSignalPanel";
 
@@ -150,6 +151,12 @@ function getStationTypeTranslation(
         Medical: "medical",
         Industrial: "industrial",
     };
+    // First try direct key (e.g. "shipyard", "medical", "trade")
+    const directTranslation = t(`locations.station_types.${stationType}`);
+    if (directTranslation !== `locations.station_types.${stationType}`) {
+        return directTranslation;
+    }
+    // Fall back to legacy name → key mapping
     const key = typeMap[stationType];
     if (key) {
         const translated = t(`locations.station_types.${key}`);
@@ -482,6 +489,20 @@ export function SectorMap() {
     const travelThroughBlackHole = useGameStore(
         (s) => s.travelThroughBlackHole,
     );
+    const emergencyJump = useGameStore((s) => s.emergencyJump);
+    const isStuckInBlackHole = useGameStore((s) => {
+        if (s.currentSector?.star?.type !== "blackhole") return false;
+        const nonBH = s.galaxy.sectors.filter(
+            (sec) =>
+                sec.star?.type !== "blackhole" &&
+                sec.id !== s.currentSector?.id,
+        );
+        if (nonBH.length === 0) return true;
+        const minCost = Math.min(
+            ...nonBH.map((sec) => calculateFuelCostForUI(s, sec.id).fuelCost),
+        );
+        return s.ship.fuel < minCost;
+    });
     const completedLocations = useGameStore((s) => s.completedLocations);
     const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
     const canScanObject = useGameStore((s) => s.canScanObject);
@@ -1515,11 +1536,21 @@ export function SectorMap() {
             {currentSector?.star?.type === "blackhole" && (
                 <div className="bg-[rgba(255,0,255,0.1)] border border-[#ff00ff] p-2 mb-2 text-center text-sm">
                     <span className="text-[#ff00ff] font-bold">
-                        🕳️ ЧЁРНАЯ ДЫРА
+                        {t("galaxy.black_hole.title")}
                     </span>
                     <span className="text-[#ffb000] ml-2">
-                        - Нажмите на центр, чтобы телепортироваться
+                        - {t("galaxy.black_hole.hint")}
                     </span>
+                    {isStuckInBlackHole && (
+                        <div className="mt-1">
+                            <button
+                                onClick={emergencyJump}
+                                className="cursor-pointer bg-[rgba(255,50,50,0.2)] border border-[#ff3232] text-[#ff3232] px-3 py-1 text-xs font-bold hover:bg-[rgba(255,50,50,0.4)] transition-colors"
+                            >
+                                {t("galaxy.black_hole.emergency_jump")}
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -2281,6 +2312,16 @@ function drawStation(
             secondary: "#4a2a6a",
             accent: "#00d4ff",
         },
+        shipyard: {
+            primary: "#7a5a2a",
+            secondary: "#4a3a1a",
+            accent: "#ff8800",
+        },
+        medical: {
+            primary: "#2a7a5a",
+            secondary: "#1a4a3a",
+            accent: "#00ff88",
+        },
     };
 
     const colors = stationColors[stationType] || stationColors.trade;
@@ -2465,6 +2506,113 @@ function drawStation(
             ctx.beginPath();
             ctx.ellipse(x, y, 16, 8, Math.PI / 4, 0, Math.PI * 2);
             ctx.stroke();
+            break;
+
+        case "shipyard":
+            // Shipyard: dry-dock C-clamps on sides + ship skeleton inside
+            ctx.fillStyle = colors.secondary;
+            ctx.lineWidth = 2;
+
+            // Left dry-dock clamp (C-shape opening right)
+            ctx.strokeStyle = colors.primary;
+            ctx.beginPath();
+            ctx.moveTo(x - 18, y - 10);
+            ctx.lineTo(x - 10, y - 10);
+            ctx.lineTo(x - 10, y - 6);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x - 18, y + 10);
+            ctx.lineTo(x - 10, y + 10);
+            ctx.lineTo(x - 10, y + 6);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x - 18, y - 10);
+            ctx.lineTo(x - 18, y + 10);
+            ctx.stroke();
+
+            // Right dry-dock clamp (C-shape opening left)
+            ctx.beginPath();
+            ctx.moveTo(x + 18, y - 10);
+            ctx.lineTo(x + 10, y - 10);
+            ctx.lineTo(x + 10, y - 6);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x + 18, y + 10);
+            ctx.lineTo(x + 10, y + 10);
+            ctx.lineTo(x + 10, y + 6);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x + 18, y - 10);
+            ctx.lineTo(x + 18, y + 10);
+            ctx.stroke();
+
+            // Ship skeleton outline in dock
+            ctx.strokeStyle = colors.accent + "aa";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x - 8, y);
+            ctx.lineTo(x - 4, y - 4);
+            ctx.lineTo(x + 6, y - 4);
+            ctx.lineTo(x + 8, y);
+            ctx.lineTo(x + 6, y + 4);
+            ctx.lineTo(x - 4, y + 4);
+            ctx.closePath();
+            ctx.stroke();
+
+            // Orange accent lights on clamp tips
+            ctx.fillStyle = colors.accent;
+            ctx.beginPath();
+            ctx.arc(x - 18, y - 10, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x - 18, y + 10, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + 18, y - 10, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + 18, y + 10, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        case "medical":
+            // Medical station: large cross + outer ring + accent dots
+            ctx.strokeStyle = colors.primary;
+            ctx.lineWidth = 2;
+
+            // Horizontal bar of cross
+            ctx.fillStyle = colors.secondary;
+            ctx.fillRect(x - 18, y - 4, 36, 8);
+            // Vertical bar of cross
+            ctx.fillRect(x - 4, y - 18, 8, 36);
+
+            // Cross outline
+            ctx.strokeStyle = colors.primary;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x - 18, y - 4, 36, 8);
+            ctx.strokeRect(x - 4, y - 18, 8, 36);
+
+            // Outer ring
+            ctx.strokeStyle = colors.accent + "88";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(x, y, 22, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Green accent dots at cross tips
+            ctx.fillStyle = colors.accent;
+            ctx.beginPath();
+            ctx.arc(x - 18, y, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + 18, y, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x, y - 18, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x, y + 18, 2, 0, Math.PI * 2);
+            ctx.fill();
             break;
     }
 

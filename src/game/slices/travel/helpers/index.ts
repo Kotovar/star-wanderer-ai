@@ -3,3 +3,4 @@ export * from "./selectSector";
 export * from "./calculateFuelCost";
 export * from "./selectLocation";
 export * from "./travelThroughBlackHole";
+export * from "./emergencyJump";

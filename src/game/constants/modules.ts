@@ -102,6 +102,7 @@ export const MODULES_FROM_BOSSES: ShopItem[] = [
         width: 2,
         height: 1,
         shields: 80,
+        shieldRegen: 16,
         consumption: 5,
         price: 5000,
         stock: 1,

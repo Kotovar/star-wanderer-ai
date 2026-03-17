@@ -1,5 +1,6 @@
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { ARTIFACT_BOOST_BONUS } from "@/game/slices/artifacts/constants";
+import { getTechBonusSum } from "@/game/research";
 import type {
     ActiveEffect,
     Artifact,
@@ -114,7 +115,19 @@ export const getArtifactEffectValue = (
 
     let value = artifact.effect.value ?? 0;
 
-    // Check if this artifact is boosted by voidborn ritual
+    // Apply permanent research-based artifact effect boost
+    const researchBoost = getTechBonusSum(
+        state.research,
+        "artifact_effect_boost",
+    );
+    if (researchBoost > 0) {
+        value =
+            value < 1
+                ? value * (1 + researchBoost)
+                : Math.floor(value * (1 + researchBoost));
+    }
+
+    // Check if this artifact is boosted by voidborn ritual (stacks on top of research)
     const boostEffect = state.activeEffects.find(
         (e) =>
             e.effects.some((ef) => ef.type === "artifact_boost") &&
@@ -125,8 +138,6 @@ export const getArtifactEffectValue = (
         const boostValue =
             (boostEffect.effects.find((ef) => ef.type === "artifact_boost")
                 ?.value as number) ?? ARTIFACT_BOOST_BONUS;
-        // For percentage values (< 1), don't use floor - keep decimal precision
-        // For integer values (>= 1), use floor for clean numbers
         value =
             value < 1
                 ? value * (1 + boostValue)
@@ -134,6 +145,44 @@ export const getArtifactEffectValue = (
     }
 
     return value;
+};
+
+/**
+ * Helper function to get artifact shieldRegen value with active boost bonus
+ * Applies research and ritual bonuses to shieldRegen (for artifacts like dark_shield_generator)
+ */
+export const getArtifactShieldRegen = (
+    artifact: Artifact | undefined,
+    state: GameState,
+): number => {
+    if (!artifact || !artifact.effect.shieldRegen) return 0;
+
+    let shieldRegen = artifact.effect.shieldRegen;
+
+    // Apply permanent research-based artifact effect boost
+    const researchBoost = getTechBonusSum(
+        state.research,
+        "artifact_effect_boost",
+    );
+    if (researchBoost > 0) {
+        shieldRegen = Math.floor(shieldRegen * (1 + researchBoost));
+    }
+
+    // Check if this artifact is boosted by voidborn ritual (stacks on top of research)
+    const boostEffect = state.activeEffects.find(
+        (e) =>
+            e.effects.some((ef) => ef.type === "artifact_boost") &&
+            e.targetArtifactId === artifact.id,
+    );
+
+    if (boostEffect) {
+        const boostValue =
+            (boostEffect.effects.find((ef) => ef.type === "artifact_boost")
+                ?.value as number) ?? ARTIFACT_BOOST_BONUS;
+        shieldRegen = Math.floor(shieldRegen * (1 + boostValue));
+    }
+
+    return shieldRegen;
 };
 
 /**

@@ -48,18 +48,18 @@ export const handleResearchContract = (
         return { activeContracts: updated };
     });
 
-    const currentProgress = (get().activeContracts.find(
+    // Check if contract was completed
+    const updatedContract = get().activeContracts.find(
         (c) => c.id === contract.id,
-    )?.visitedAnomalies || 0) + 1;
+    );
+
+    // If contract was removed (completed), show full progress; otherwise read updated value
+    const currentProgress =
+        updatedContract?.visitedAnomalies ?? contract.requiresAnomalies;
 
     get().addLog(
         `Исследование: ${currentProgress}/${contract.requiresAnomalies} аномалий`,
         "info",
-    );
-
-    // Check if contract was completed
-    const updatedContract = get().activeContracts.find(
-        (c) => c.id === contract.id,
     );
 
     if (!updatedContract) {

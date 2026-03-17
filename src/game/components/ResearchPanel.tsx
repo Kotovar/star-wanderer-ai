@@ -32,37 +32,42 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
     // T1 — col 0
     reinforced_hull: [0, 0],
     efficient_reactor: [0, 1.75],
-    targeting_matrix: [0, 3.75],
+    targeting_matrix: [0, 3.4],
     scanner_mk2: [0, 5.75],
-    automated_repair: [0, 7.5],
-    medbay_upgrade: [0, 9.5],
+    artifact_study: [0, 8],
+    automated_repair: [0, 9.5], // shifted +2 to make room for artifact branch
+    medbay_upgrade: [0, 11.5],
     // T2 — col 1
     shield_booster: [1, 0],
     ion_drive: [1, 1.75],
-    plasma_weapons: [1, 3.75],
-    combat_drones: [1, 4.75],
-    quantum_scanner: [1, 5.75],
-    lab_network: [1, 7],
-    cargo_expansion: [1, 8],
-    crew_training: [1, 9.5],
+    plasma_weapons: [1, 3.4],
+    combat_drones: [1, 4.5],
+    quantum_scanner: [1, 6.8],
+    lab_network: [1, 5.75],
+    relic_chamber: [1, 8],
+    cargo_expansion: [1, 10.3],
+    crew_training: [1, 11.5],
     // T3 — col 2
     phase_shield: [2, 0],
     singularity_reactor: [2, 1.75],
-    antimatter_weapons: [2, 3.75],
-    quantum_torpedo: [2, 5],
-    deep_scan: [2, 6.25],
-    nanite_hull: [2, 7.5],
-    neural_interface: [2, 8.5],
-    genetic_enhancement: [2, 9.75],
-    // T4 — col 3.5 / 4.5
-    void_resonance: [3.5, 2],
-    stellar_genetics: [3.5, 9],
-    ancient_power: [3.5, 5.25],
-    warp_drive: [4.5, 5.25],
+    antimatter_weapons: [2, 3.4],
+    quantum_torpedo: [2, 4.5],
+    deep_scan: [2, 6.8],
+    ancient_resonance: [2, 8],
+    nanite_hull: [2, 9.5],
+    neural_interface: [2, 10.9],
+    genetic_enhancement: [2, 12.2],
+    // T4 — col 3.5
+    void_resonance: [3, 1],
+    artifact_mastery: [3, 8],
+    stellar_genetics: [3, 11.6],
+    // T5 — col 4.5 / 5.5
+    ancient_power: [4, 5.25],
+    warp_drive: [5, 5.25],
 };
 
-const CANVAS_W = Math.ceil(PAD_X + 4.5 * COL_GAP + NODE_W / 2 + PAD_X);
-const CANVAS_H = Math.ceil(PAD_Y + 10 * ROW_GAP + NODE_H / 2 + PAD_Y);
+const CANVAS_W = Math.ceil(PAD_X + 5.5 * COL_GAP + NODE_W / 2 + PAD_X);
+const CANVAS_H = Math.ceil(PAD_Y + 12.25 * ROW_GAP + NODE_H / 2 + PAD_Y);
 
 // ─── Category colors ───────────────────────────────────────────────────────────
 const CATEGORY_COLORS: Record<ResearchCategory, string> = {
@@ -72,6 +77,7 @@ const CATEGORY_COLORS: Record<ResearchCategory, string> = {
     engineering: "#ffb000",
     biology: "#00ff41",
     ancient_tech: "#ffd700",
+    artifacts: "#ff6600",
 };
 
 // ─── Edge helpers ─────────────────────────────────────────────────────────────
@@ -140,48 +146,34 @@ function TechNode({
     const [cx, cy] = getNodeCenter(tech.id);
     const catColor = CATEGORY_COLORS[tech.category];
 
-    let borderColor = "#2a2a2a";
+    // Бордер всегда цвет категории; для неизвестных — тёмный
+    const borderColor = isDiscovered || isOpened ? catColor : "#2a2a2a";
+
     let bgColor = "rgba(0,0,0,0.6)";
     let textOpacity = "opacity-40";
     let glowStyle = "";
 
     if (isResearched) {
-        borderColor = "#00ff41";
-        bgColor = "rgba(0,255,65,0.08)";
+        bgColor = `${catColor}14`; // ~8% opacity tint
         textOpacity = "opacity-100";
-        glowStyle = "0 0 8px rgba(0,255,65,0.4)";
+        glowStyle = `0 0 8px ${catColor}66`;
     } else if (isActive) {
-        borderColor = "#00d4ff";
         bgColor = "rgba(0,212,255,0.10)";
         textOpacity = "opacity-100";
         glowStyle = "0 0 12px rgba(0,212,255,0.5)";
     } else if (isReady) {
-        // Готово к исследованию — зелёный
-        borderColor = "#00ff41";
-        bgColor = "rgba(0,255,65,0.08)";
+        bgColor = `${catColor}0d`; // ~5% opacity tint
         textOpacity = "opacity-100";
-        glowStyle = `0 0 6px #00ff4166`;
     } else if (isOpened) {
-        // Открыто, но не готово — жёлтый
-        borderColor = "#ffb000";
-        bgColor = "rgba(255,176,0,0.08)";
+        bgColor = "rgba(0,0,0,0.5)";
         textOpacity = "opacity-100";
-        glowStyle = `0 0 6px #ffb00066`;
     } else if (isDiscovered) {
-        borderColor = "#333";
         bgColor = "rgba(0,0,0,0.5)";
         textOpacity = "opacity-60";
     }
 
     if (isSelected) {
-        const ring = isResearched
-            ? "#00ff41"
-            : isReady
-              ? "#00ff41"
-              : isOpened
-                ? "#ffb000"
-                : "#888";
-        glowStyle = `0 0 0 2px ${ring}${glowStyle ? `, ${glowStyle}` : ""}`;
+        glowStyle = `0 0 0 2px ${catColor}${glowStyle ? `, ${glowStyle}` : ""}`;
     }
 
     const translation = getTechTranslation(tech.id, lang);
@@ -211,10 +203,6 @@ function TechNode({
             }}
             className="border transition-all duration-200 select-none"
         >
-            <div
-                className="absolute top-0 left-0 right-0 h-0.5"
-                style={{ backgroundColor: isDiscovered ? catColor : "#333" }}
-            />
             <div
                 className={`flex items-start h-full px-2 pt-2 pb-1 gap-1.5 ${textOpacity}`}
             >
@@ -264,9 +252,13 @@ function TechNode({
                                     ◍ Открыто
                                 </span>
                             ) : isDiscovered ? (
-                                "⊘ Заблокировано"
+                                <span style={{ color: "#ff4444" }}>
+                                    ⊘ Заблокировано
+                                </span>
                             ) : (
-                                "? Неизвестно"
+                                <span style={{ color: "#444" }}>
+                                    ? Неизвестно
+                                </span>
                             )}
                         </div>
                     )}
@@ -354,9 +346,10 @@ function TechCanvas({
         "T2 — Продвинутые",
         "T3 — Элитные",
         "T4 — Древние",
+        "T5 — Предтечи",
     ];
-    const TIER_COLS = [0, 1, 2, 3.5] as const;
-    const TIER_COLORS = ["#00ff41", "#ffb000", "#9933ff", "#ffd700"];
+    const TIER_COLS = [0, 1, 2, 3, 4] as const;
+    const TIER_COLORS = ["#00ff41", "#ffb000", "#9933ff", "#ffd700", "#ff6600"];
 
     return (
         <div
@@ -368,7 +361,7 @@ function TechCanvas({
                     style={{
                         position: "absolute",
                         left: PAD_X + col * COL_GAP - NODE_W / 2,
-                        top: -10,
+                        top: -20,
                         width: NODE_W,
                         textAlign: "center",
                         color: TIER_COLORS[i],

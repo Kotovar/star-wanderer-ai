@@ -1,8 +1,10 @@
 import type { GameStore, CrewMember, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
+import { getTechBonusSum } from "@/game/research";
 import {
     CURSE_REMOVAL_MIN_SCIENTIST_LEVEL,
     CURSE_REMOVAL_DAMAGE,
+    DEFAULT_ARTIFACT_SLOTS,
 } from "../constants";
 
 /**
@@ -26,6 +28,24 @@ export const toggleArtifact = (
 
     const newActive = !artifact.effect.active;
 
+    // Проверка: не превышен ли лимит активных слотов
+    if (newActive) {
+        const maxSlots =
+            DEFAULT_ARTIFACT_SLOTS +
+            getTechBonusSum(state.research, "artifact_slots");
+        const currentActive = state.artifacts.filter(
+            (a) => a.effect.active,
+        ).length;
+        if (currentActive >= maxSlots) {
+            get().addLog(
+                `⚠️ Слоты артефактов заполнены (${currentActive}/${maxSlots}). Исследуйте "Изучение Артефактов" для расширения.`,
+                "error",
+            );
+            playSound("error");
+            return;
+        }
+    }
+
     // Проверка: если артефакт проклят и пытаемся деактивировать
     if (!newActive && artifact.cursed) {
         const scientist = findQualifiedScientist(state.crew);
@@ -41,6 +61,14 @@ export const toggleArtifact = (
 
         // Наносим урон учёному
         damageScientist(scientist.id, set, get);
+    }
+
+    // Предупреждение при активации проклятого артефакта
+    if (newActive && artifact.cursed && artifact.negativeEffect) {
+        get().addLog(
+            `☠️ ВНИМАНИЕ! ${artifact.name} — ПРОКЛЯТЫЙ АРТЕФАКТ! Эффект проклятья: ${artifact.negativeEffect.description}`,
+            "error",
+        );
     }
 
     // Переключаем состояние артефакта

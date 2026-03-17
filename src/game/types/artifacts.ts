@@ -10,7 +10,8 @@ export interface Artifact {
     researched: boolean; // Has been studied by scientist
     requiresScientistLevel: number; // Level needed to research
     rarity: ArtifactRarity; // cursed = special category
-    negativeEffect?: ArtifactNegativeEffect; // For cursed artifacts
+    negativeEffect?: ArtifactNegativeEffect; // Primary negative effect for cursed artifacts
+    negativeEffects?: ArtifactNegativeEffect[]; // Additional negative effects
     hinted?: boolean; // Has been hinted at by synthetic archives
     cursed?: boolean; // Is this a cursed artifact with negative effects
     canBoost?: boolean; // Can be enhanced by voidborn ritual (default: true if has numeric value)
@@ -21,6 +22,7 @@ export interface ArtifactEffect {
     type: ArtifactType;
     value?: number; // Effect magnitude
     active?: boolean; // Is effect currently active
+    shieldRegen?: number; // Shield regeneration rate (for dark_shield_generator)
 }
 
 export interface ArtifactNegativeEffect {
@@ -63,4 +65,5 @@ export type ArtifactNegativeType =
     | "module_damage" // Random module damage
     | "crew_desertion" // Chance crew leaves
     | "self_damage" // Damage to own ship
-    | "health_drain"; // -X crew health per turn
+    | "health_drain" // -X crew health per turn
+    | "evasion_penalty"; // -X% evasion chance

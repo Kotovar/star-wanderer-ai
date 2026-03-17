@@ -21,7 +21,10 @@ const getLocationType = (
     isBlackHole: boolean,
 ): LocationType => {
     if (isBlackHole) {
-        return "anomaly";
+        // В ЧД-секторах: только аномалии и враги (станций/планет/кораблей нет)
+        // Боссы добавляются гарантированно в пост-обработке generateGalaxy
+        const bhRoll = Math.random();
+        return bhRoll < 0.7 ? "anomaly" : "enemy";
     }
 
     const chances = LOCATION_CHANCES[`tier${tier}`];

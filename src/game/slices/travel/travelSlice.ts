@@ -3,6 +3,7 @@ import {
     selectSector,
     selectLocation,
     travelThroughBlackHole,
+    emergencyJump,
 } from "./helpers";
 
 /**
@@ -12,6 +13,7 @@ export interface TravelSlice {
     selectSector: (sectorId: number) => void;
     selectLocation: (locationIdx: number) => void;
     travelThroughBlackHole: () => void;
+    emergencyJump: () => void;
 }
 
 /**
@@ -29,5 +31,8 @@ export const createTravelSlice = (
     },
     travelThroughBlackHole: () => {
         travelThroughBlackHole(set, get);
+    },
+    emergencyJump: () => {
+        emergencyJump(set, get);
     },
 });

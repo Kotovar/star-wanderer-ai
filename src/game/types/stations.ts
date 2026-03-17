@@ -1,7 +1,13 @@
 import type { ModuleType, WeaponType } from "./modules";
 import type { Profession } from "./crew";
 
-export type StationName = "trade" | "military" | "research" | "mining";
+export type StationName =
+    | "trade"
+    | "military"
+    | "research"
+    | "mining"
+    | "shipyard"
+    | "medical";
 
 export type StationConfig = {
     cargoBonus?: number; // Множитель вместимости грузового отсека (1.5 = +50%)
@@ -11,4 +17,9 @@ export type StationConfig = {
     guaranteedProfessions?: Profession[]; // Профессии, которые гарантированно есть на станции
     guaranteedWeapons: WeaponType[]; // Типы оружия, которые гарантированно есть в продаже
     guaranteedModules: ModuleType[]; // Модули, которые гарантированно есть в продаже
+    // Service availability flags
+    allowsTrade: boolean; // Торговля товарами (магазин)
+    allowsCraft: boolean; // Крафт
+    allowsModuleInstall: boolean; // Установка модулей и оружия
+    allowsCrewHeal: boolean; // Лечение экипажа
 };

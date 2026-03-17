@@ -127,6 +127,7 @@
         "evasion": "🎯 Уклонение",
         "reflection": "🛡️ Отражение",
         "shield_regen": "💚 Восстановление щитов",
+        "module_repair": "🔧 Ремонт модулей",
         "crit_chance": "💥 Шанс крита",
         "crit_damage": "💀 Крит. урон",
         "accuracy": "🎯 Точность",
@@ -724,6 +725,7 @@
             "mining": "Добывающая",
             "research": "Исследовательская",
             "medical": "Медицинская",
+            "shipyard": "Верфь",
             "industrial": "Промышленная"
         }
     },
@@ -827,6 +829,8 @@
         "discovered": "Обнаружено",
         "researched": "Изучено",
         "active": "Активно",
+        "active_artifacts": "Активные артефакты",
+        "slots_full": "заполнено!",
         "cursed_active": "проклятых",
         "scientists_onboard": "Учёные на борту",
         "no_scientists": "нет",
@@ -844,7 +848,7 @@
         "research_btn_dangerous": "⚠️ ИЗУЧИТЬ (ОПАСНО)",
         "deactivate_btn": "ДЕАКТИВИРОВАТЬ",
         "activate_btn": "АКТИВИРОВАТЬ",
-        "active_neutralize_btn": "✓ АКТИВ (НЕЙТРАЛИЗОВАТЬ)",
+        "active_neutralize_btn": "✓ АКТИВНО (ОТКЛЮЧИТЬ)",
         "requires_scientist": "Требуется учёный",
         "rarity": {
             "rare": "Редкий",
@@ -1185,6 +1189,11 @@
             "level_3": "3 LVL",
             "level_2": "2 LVL",
             "level_1": "1 LVL"
+        },
+        "black_hole": {
+            "title": "🕳️ ЧЁРНАЯ ДЫРА",
+            "hint": "Нажмите на центр, чтобы телепортироваться",
+            "emergency_jump": "⚡ АВАРИЙНЫЙ ПРЫЖОК — урон всем модулям"
         }
     },
     "turn_skip": "Ход пропущен - задачи выполняются",
@@ -1459,6 +1468,7 @@
             "mining": "Добывающая",
             "research": "Исследовательская",
             "medical": "Медицинская",
+            "shipyard": "Верфь",
             "industrial": "Промышленная"
         },
         "scanner_upgrade": "Улучшение сканера",

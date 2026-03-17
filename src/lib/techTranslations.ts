@@ -155,6 +155,30 @@ export const TECH_TRANSLATIONS: Record<
             description:
                 "Управление метрикой пространства-времени позволяет прыгать между секторами без расхода топлива.",
         },
+
+        // ═══════════════════════════════════════════════════════════════
+        // ARTIFACT BRANCH
+        // ═══════════════════════════════════════════════════════════════
+        artifact_study: {
+            name: "Реликварная наука",
+            description:
+                "Базовые протоколы работы с реликвиями Древних позволяют активировать на один артефакт больше.",
+        },
+        relic_chamber: {
+            name: "Камера реликвий",
+            description:
+                "Специализированное хранилище усиливает взаимодействие с артефактами: +1 слот и +5% к их эффектам.",
+        },
+        ancient_resonance: {
+            name: "Резонанс Древних",
+            description:
+                "Резонансная настройка корабельных систем под частоты реликвий: +1 слот и +10% к эффектам артефактов.",
+        },
+        artifact_mastery: {
+            name: "Мастерство реликвий",
+            description:
+                "Полное единение с наследием Древних: +2 слота активных артефактов и +15% ко всем их эффектам.",
+        },
     },
 
     en: {
@@ -302,6 +326,30 @@ export const TECH_TRANSLATIONS: Record<
             name: "Warp Metrics",
             description:
                 "Mastery of spacetime metrics enables sector jumps without any fuel consumption.",
+        },
+
+        // ═══════════════════════════════════════════════════════════════
+        // ARTIFACT BRANCH
+        // ═══════════════════════════════════════════════════════════════
+        artifact_study: {
+            name: "Relic Science",
+            description:
+                "Basic protocols for working with Ancient relics allow activating one additional artifact.",
+        },
+        relic_chamber: {
+            name: "Relic Chamber",
+            description:
+                "Specialized storage enhances interaction with artifacts: +1 slot and +5% to their effects.",
+        },
+        ancient_resonance: {
+            name: "Ancient Resonance",
+            description:
+                "Tuning ship systems to relic frequencies: +1 slot and +10% to artifact effects.",
+        },
+        artifact_mastery: {
+            name: "Relic Mastery",
+            description:
+                "Complete unity with the Ancient heritage: +2 active artifact slots and +15% to all their effects.",
         },
     },
 };

@@ -127,6 +127,7 @@
         "evasion": "🎯 Evasion",
         "reflection": "🛡️ Reflection",
         "shield_regen": "💚 Shield regen",
+        "module_repair": "🔧 Module repair",
         "crit_chance": "💥 Crit chance",
         "crit_damage": "💀 Crit damage",
         "accuracy": "🎯 Accuracy",
@@ -724,6 +725,7 @@
             "mining": "Mining",
             "research": "Research",
             "medical": "Medical",
+            "shipyard": "Shipyard",
             "industrial": "Industrial"
         }
     },
@@ -827,6 +829,8 @@
         "discovered": "Discovered",
         "researched": "Researched",
         "active": "Active",
+        "active_artifacts": "Active artifacts",
+        "slots_full": "full!",
         "cursed_active": "cursed",
         "scientists_onboard": "Scientists on board",
         "no_scientists": "none",
@@ -844,7 +848,7 @@
         "research_btn_dangerous": "⚠️ RESEARCH (DANGEROUS)",
         "deactivate_btn": "DEACTIVATE",
         "activate_btn": "ACTIVATE",
-        "active_neutralize_btn": "✓ ACTIVE (NEUTRALIZE)",
+        "active_neutralize_btn": "✓ ACTIVE (DISABLE)",
         "requires_scientist": "Requires scientist",
         "rarity": {
             "rare": "Rare",
@@ -1185,6 +1189,11 @@
             "level_3": "3 LVL",
             "level_2": "2 LVL",
             "level_1": "1 LVL"
+        },
+        "black_hole": {
+            "title": "🕳️ BLACK HOLE",
+            "hint": "Click the center to teleport",
+            "emergency_jump": "⚡ EMERGENCY JUMP — all modules take damage"
         }
     },
     "turn_skip": "Turn skipped - tasks executing",
@@ -1459,6 +1468,7 @@
             "mining": "Mining",
             "research": "Research",
             "medical": "Medical",
+            "shipyard": "Shipyard",
             "industrial": "Industrial"
         },
         "scanner_upgrade": "Scanner Upgrade",

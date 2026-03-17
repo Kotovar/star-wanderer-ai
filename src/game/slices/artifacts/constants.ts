@@ -31,3 +31,8 @@ export const ARTIFACT_BOOST_BONUS = 0.5;
  * Бонус к эффективности топлива от ритуала Voidborn (50%)
  */
 export const VOIDBORN_FUEL_EFFICIENCY_BONUS = 0.5;
+
+/**
+ * Базовое количество слотов активных артефактов
+ */
+export const DEFAULT_ARTIFACT_SLOTS = 3;

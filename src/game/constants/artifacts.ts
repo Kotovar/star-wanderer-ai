@@ -32,8 +32,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         id: "quantum_scanner",
         name: "Квантовый Сканер",
         description:
-            "Сканер с квантовым процессором. +5 к дальности сканирования и показывает скрытые объекты.",
-        effect: { type: "quantum_scan", value: 5, active: false },
+            "Сканер с квантовым процессором. +3 к дальности сканирования и показывает скрытые объекты.",
+        effect: { type: "quantum_scan", value: 3, active: false },
         discovered: false,
         researched: false,
         requiresScientistLevel: 2,
@@ -65,8 +65,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "warp_coil",
         name: "Варп-Катушка",
-        description:
-            "Мгновенное перемещение между локациями в секторе без трат хода.",
+        description: "Мгновенное перемещение между секторами без трат хода.",
         effect: { type: "sector_teleport", value: 1, active: false },
         discovered: false,
         researched: false,
@@ -77,8 +76,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "void_engine",
         name: "Вакуумный Двигатель",
-        description:
-            "Корабль больше не потребляет топливо для межсекторных перелётов.",
+        description: "Бесплатные перелёты в 2 соседних сектора.",
         effect: { type: "fuel_free", value: 1, active: false },
         discovered: false,
         researched: false,
@@ -122,7 +120,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         id: "shield_regenerator",
         name: "⚡ Регенератор Щитов",
         description:
-            "+50% к скорости регенерации щитов. Щиты восстанавливаются быстрее в бою и вне боя.",
+            "+50% к скорости регенерации щитов. Щиты восстанавливаются быстрее.",
         effect: { type: "shield_regen_boost", value: 0.5, active: false },
         discovered: false,
         researched: false,
@@ -210,6 +208,13 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
             value: 0.5,
             description: "+50% шанс засад в сигналах бедствия",
         },
+        negativeEffects: [
+            {
+                type: "evasion_penalty",
+                value: 0.05,
+                description: "-5% к шансу уклонения корабля",
+            },
+        ],
         discovered: false,
         researched: false,
         requiresScientistLevel: 3,
@@ -225,8 +230,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         effect: { type: "undying_crew", value: 1, active: false },
         negativeEffect: {
             type: "crew_mutation",
-            value: 1,
-            description: "1% шанс мутации каждого члена экипажа каждый ход",
+            value: 3,
+            description: "3% шанс мутации каждого члена экипажа каждый ход",
         },
         discovered: false,
         researched: false,
@@ -238,7 +243,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "black_box",
         name: "📦 Чёрный Ящик",
-        description: "+75% ко всем наградам в кредитах. Но что-то ломается.",
+        description:
+            "+75% ко всем наградам(после боя) в кредитах. Но что-то ломается.",
         effect: { type: "credit_booster", value: 0.75, active: false },
         negativeEffect: {
             type: "module_damage",
@@ -270,8 +276,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "overload_matrix",
         name: "💥 Матрица Перегрузки",
-        description: "+100% критический урон в бою. Мощность сжигает системы.",
-        effect: { type: "crit_damage_boost", value: 1.0, active: false },
+        description: "+60% критический урон в бою. Мощность сжигает системы.",
+        effect: { type: "crit_damage_boost", value: 0.6, active: false },
         negativeEffect: {
             type: "self_damage",
             value: 75,
@@ -287,8 +293,14 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "dark_shield_generator",
         name: "🛡️ Тёмный Щит",
-        description: "+100 к максимальным щитам. Но экипаж чувствует холод.",
-        effect: { type: "dark_shield", value: 100, active: false },
+        description:
+            "+100 к максимальным щитам, +20 регенерация щитов. Но экипаж чувствует холод.",
+        effect: {
+            type: "dark_shield",
+            value: 100,
+            active: false,
+            shieldRegen: 20,
+        },
         negativeEffect: {
             type: "happiness_drain",
             value: 3,
@@ -303,7 +315,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "void_drive",
         name: "🌀 Варп Бездны",
-        description: "Бесплатные перелёты между секторами. Но экипаж страдает.",
+        description: "Бесплатные перелёты в любые секторы. Но экипаж страдает.",
         effect: { type: "void_engine", value: 1, active: false },
         negativeEffect: {
             type: "health_drain",
@@ -334,8 +346,11 @@ export const ARTIFACT_TYPES: Record<string, ArtifactType> = {
     SHIELD_REGENERATOR: "shield_regen_boost",
     MIRROR_SHIELD: "damage_reflect",
     BLACK_BOX: "credit_booster",
-    CRITICAL_OVERLOAD: "crit_damage_boost",
+    OVERLOAD_MATRIX: "crit_damage_boost",
     WARP_COIL: "sector_teleport",
+    PARASITIC_NANITES: "auto_repair",
+    CRITICAL_MATRIX: "crit_chance",
+    TARGETING_CORE: "accuracy_boost",
 };
 /**
  * Типы артефактов, влияющие на энергию корабля

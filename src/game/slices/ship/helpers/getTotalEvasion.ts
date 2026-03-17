@@ -1,6 +1,7 @@
 import type { GameState } from "@/game/types/game";
 import { CREW_ASSIGNMENT_BONUSES, RACES } from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import { getArtifactEffectValue } from "@/game/artifacts/utils";
 
 /**
  * Вычисляет общий шанс уклонения корабля
@@ -34,8 +35,17 @@ export function getTotalEvasion(state: GameState): number {
             artifact.effect?.type === "evasion_boost" &&
             artifact.effect?.active
         ) {
-            const value = Number(artifact.effect?.value || 0);
+            const value = getArtifactEffectValue(artifact, state);
             evasion += value * 100; // Конвертируем в проценты (0.1 = 10%)
+        }
+
+        // Штрафы к уклонению от проклятых артефактов (negativeEffects)
+        if (artifact.effect?.active && artifact.negativeEffects) {
+            artifact.negativeEffects.forEach((neg) => {
+                if (neg.type === "evasion_penalty" && neg.value) {
+                    evasion -= neg.value * 100;
+                }
+            });
         }
     });
 
@@ -62,5 +72,5 @@ export function getTotalEvasion(state: GameState): number {
         evasion += ship.bonusEvasion;
     }
 
-    return Math.round(evasion);
+    return Math.max(0, Math.round(evasion));
 }

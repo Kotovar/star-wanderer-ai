@@ -78,4 +78,6 @@ export const STATION_TYPES: StationName[] = [
     "military",
     "research",
     "mining",
+    "shipyard",
+    "medical",
 ];

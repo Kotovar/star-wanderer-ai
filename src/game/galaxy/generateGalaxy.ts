@@ -9,8 +9,9 @@ import {
     ensureColonizedPlanet,
     ensureMinAnomalies,
     ensureStation,
+    ensureStationTypes,
 } from "./ensure";
-import { addEternalBoss, generateStar } from "./generate";
+import { addEternalBoss, addRandomBossToBlackHole, generateStar } from "./generate";
 import { generateLocation } from "./getLocation";
 import {
     calculateSectorAngle,
@@ -86,9 +87,7 @@ export const generateGalaxy = (): Sector[] => {
             if (!isBlackHole) {
                 ensureColonizedPlanet(sector);
                 ensureStation(sector);
-                ensureBoss(sector); // Guarantee boss in tier 3 sectors
-            } else {
-                addEternalBoss(sector);
+                ensureBoss(sector);
             }
 
             // Позиционирование локаций на сетке
@@ -98,6 +97,25 @@ export const generateGalaxy = (): Sector[] => {
             sectorIdx++;
         }
     });
+
+    // Постобработка ЧД-секторов: 1 The Eternal на всю галактику, остальные — случайный босс
+    const bhSectors = sectors.filter((s) => s.star?.type === "blackhole");
+    if (bhSectors.length > 0) {
+        const eternalIdx = Math.floor(Math.random() * bhSectors.length);
+        bhSectors.forEach((sector, i) => {
+            const hasBoss = sector.locations.some((l) => l.type === "boss");
+            if (i === eternalIdx) {
+                addEternalBoss(sector);
+            } else if (!hasBoss) {
+                addRandomBossToBlackHole(sector);
+            }
+        });
+    }
+
+    // Гарантируем верфь и медицинскую станцию в каждом тире
+    ensureStationTypes(sectors, 1);
+    ensureStationTypes(sectors, 2);
+    ensureStationTypes(sectors, 3);
 
     // Постобработка
     populateContracts(sectors);
