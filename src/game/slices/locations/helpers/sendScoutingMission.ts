@@ -10,6 +10,7 @@ import {
     SCOUTING_REQUIRED_VISITS,
 } from "../constants";
 import { SCOUT_BASE_EXP } from "@/game/constants/experience";
+import { addTradeGood } from "@/game/slices/ship/helpers";
 import { determineScoutingOutcome } from "./determineScoutingOutcome";
 import { typedKeys } from "@/lib";
 
@@ -121,14 +122,7 @@ const applyTradeGoodReward = (
     set((s) => ({
         ship: {
             ...s.ship,
-            tradeGoods: [
-                ...s.ship.tradeGoods,
-                {
-                    item: goodId,
-                    quantity: SCOUTING_TRADE_GOOD_QUANTITY,
-                    buyPrice: 0,
-                },
-            ],
+            tradeGoods: addTradeGood(s.ship.tradeGoods, goodId, SCOUTING_TRADE_GOOD_QUANTITY),
         },
     }));
     get().addLog(`Разведка: ${scoutName} нашёл ${itemName}!`, "info");

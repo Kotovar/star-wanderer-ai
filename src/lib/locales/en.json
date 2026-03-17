@@ -1558,7 +1558,8 @@
         "required": "required",
         "bonus": "Mining bonus",
         "start_mining": "START MINING",
-        "drill_required": "Drill module level required"
+        "drill_required": "Drill module level required",
+        "engineer_required": "An engineer is required to mine asteroids"
     },
     "star_types": {
         "red_dwarf": "Red Dwarf",

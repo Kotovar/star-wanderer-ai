@@ -3,7 +3,7 @@ import { BASE_ENGINEER_EXP } from "@/game/constants/experience";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getMiningResources } from "@/game/research/utils";
 import { playSound } from "@/sounds";
-import { getCurrentCargo } from "@/game/slices/ship/helpers";
+import { getCurrentCargo, addTradeGood } from "@/game/slices/ship/helpers";
 import {
     ASTEROID_TIER,
     BONUS_BASE,
@@ -59,19 +59,12 @@ const allocateCargoSpace = (
 
     // Частичное размещение с приоритетом редких минералов
     const scale = cargoSpaceLeft / totalNeeded;
-    const addedRare = Math.max(
-        MIN_CARGO_QUANTITY,
+    const addedRare = Math.min(rareGained, Math.max(
+        rareGained > 0 ? MIN_CARGO_QUANTITY : 0,
         Math.floor(rareGained * scale),
-    );
-    let addedMinerals = Math.max(
-        MIN_CARGO_QUANTITY,
-        Math.floor(mineralsGained * scale),
-    );
-
-    // Корректировка если не влезает
-    if (addedMinerals + addedRare > cargoSpaceLeft) {
-        addedMinerals = Math.max(0, cargoSpaceLeft - addedRare);
-    }
+    ));
+    // Минералы заполняют всё оставшееся место
+    const addedMinerals = Math.min(mineralsGained, cargoSpaceLeft - addedRare);
 
     get().addLog(
         `⚠️ Недостаточно места! Получено: ${addedMinerals + addedRare} из ${totalNeeded}т`,
@@ -147,6 +140,14 @@ export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
         return;
     }
 
+    // Проверка наличия инженера
+    const hasEngineer = state.crew.some((c) => c.profession === "engineer");
+    if (!hasEngineer) {
+        get().addLog("Для разработки астероидов нужен инженер на борту!", "error");
+        playSound("error");
+        return;
+    }
+
     // Расчёт ресурсов
     const resources = loc.resources || {
         minerals: 0,
@@ -192,27 +193,17 @@ export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
         credits: s.credits + creditsGained,
         ship: {
             ...s.ship,
-            tradeGoods: [
-                ...s.ship.tradeGoods,
-                ...(addedMinerals > 0
-                    ? [
-                          {
-                              item: "minerals" as const,
-                              quantity: addedMinerals,
-                              buyPrice: 0,
-                          },
-                      ]
-                    : []),
-                ...(addedRare > 0
-                    ? [
-                          {
-                              item: "rare_minerals" as const,
-                              quantity: addedRare,
-                              buyPrice: 0,
-                          },
-                      ]
-                    : []),
-            ],
+            tradeGoods: [addedMinerals, addedRare].reduce(
+                (goods, qty, i) =>
+                    qty > 0
+                        ? addTradeGood(
+                              goods,
+                              i === 0 ? "minerals" : "rare_minerals",
+                              qty,
+                          )
+                        : goods,
+                s.ship.tradeGoods,
+            ),
         },
         research: {
             ...s.research,
@@ -223,20 +214,40 @@ export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
         },
     }));
 
-    // Логирование исследовательских ресурсов
+    // Форматирование исследовательских ресурсов для результата и лога
+    const researchLines: string[] = [];
     researchResources.forEach((res) => {
         if (res.quantity > 0) {
-            get().addLog(
-                `💎 Получены исследовательские ресурсы: ${RESEARCH_RESOURCES[res.type].icon} ${RESEARCH_RESOURCES[res.type].name} x${res.quantity}`,
-                "info",
-            );
+            const label = `${RESEARCH_RESOURCES[res.type].icon} ${RESEARCH_RESOURCES[res.type].name} x${res.quantity}`;
+            researchLines.push(label);
+            get().addLog(`💎 Получены исследовательские ресурсы: ${label}`, "info");
         }
     });
 
-    // Пояс разработан
+    // Предупреждение о грузе
+    const totalGained = mineralsGained + rareGained;
+    const totalAdded = addedMinerals + addedRare;
+    let cargoWarning: string | undefined;
+    if (totalAdded === 0 && totalGained > 0) {
+        cargoWarning = "⚠️ Нет места в грузовом отсеке! Ресурсы потеряны.";
+    } else if (totalAdded < totalGained) {
+        cargoWarning = `⚠️ Недостаточно места! Получено: ${totalAdded} из ${totalGained}т`;
+    }
+
+    // Пояс разработан — сохраняем результаты в локации
     set((s) => ({
         currentLocation: s.currentLocation
-            ? { ...s.currentLocation, mined: true }
+            ? {
+                  ...s.currentLocation,
+                  mined: true,
+                  miningResult: {
+                      minerals: addedMinerals,
+                      rare: addedRare,
+                      credits: creditsGained,
+                      researchResources: researchLines,
+                      cargoWarning,
+                  },
+              }
             : null,
         completedLocations: [...s.completedLocations, loc.id],
     }));

@@ -94,11 +94,11 @@ const addResearchResources = (set: SetState, get: () => GameStore): void => {
  * Обрабатывает контракты на исследование
  */
 const handleResearchContracts = (set: SetState, get: () => GameStore): void => {
-    const researchContract = get().activeContracts.find(
+    const researchContracts = get().activeContracts.filter(
         (c) => c.type === "research",
     );
 
-    if (!researchContract) return;
-
-    handleResearchContract(researchContract, set, get);
+    researchContracts.forEach((contract) => {
+        handleResearchContract(contract, set, get);
+    });
 };

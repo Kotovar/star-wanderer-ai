@@ -1,4 +1,5 @@
 import { RESEARCH_RESOURCES } from "@/game/constants";
+import { addTradeGood } from "@/game/slices/ship/helpers";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getMiningResources } from "@/game/research/utils";
 import { playSound } from "@/sounds";
@@ -87,27 +88,17 @@ export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
         credits: s.credits + creditsGained,
         ship: {
             ...s.ship,
-            tradeGoods: [
-                ...s.ship.tradeGoods,
-                ...(addedMinerals > 0
-                    ? [
-                          {
-                              item: "minerals" as const,
-                              quantity: addedMinerals,
-                              buyPrice: 0,
-                          },
-                      ]
-                    : []),
-                ...(addedRare > 0
-                    ? [
-                          {
-                              item: "rare_minerals" as const,
-                              quantity: addedRare,
-                              buyPrice: 0,
-                          },
-                      ]
-                    : []),
-            ],
+            tradeGoods: [addedMinerals, addedRare].reduce(
+                (goods, qty, i) =>
+                    qty > 0
+                        ? addTradeGood(
+                              goods,
+                              i === 0 ? "minerals" : "rare_minerals",
+                              qty,
+                          )
+                        : goods,
+                s.ship.tradeGoods,
+            ),
         },
         research: {
             ...s.research,

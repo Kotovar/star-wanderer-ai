@@ -27,7 +27,9 @@ export function AsteroidBeltPanel() {
     const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
     const mineAsteroid = useGameStore((s) => s.mineAsteroid);
     const showSectorMap = useGameStore((s) => s.showSectorMap);
-    const log = useGameStore((s) => s.log);
+    const hasEngineer = useGameStore((s) =>
+        s.crew.some((c) => c.profession === "engineer"),
+    );
     const { t } = useTranslation();
 
     if (!currentLocation || currentLocation.type !== "asteroid_belt")
@@ -42,18 +44,8 @@ export function AsteroidBeltPanel() {
         credits: 0,
     };
     const bonusPercent = getMiningBonus(drillLevel, asteroidTier);
-    const canMine = bonusPercent >= 0 && !currentLocation.mined;
-
-    // Get recent mining-related log entries (only the most recent set)
-    const recentMiningLogs = log
-        .slice(0, 20)
-        .filter(
-            (entry) =>
-                entry.message.includes("Минералы:") ||
-                entry.message.includes("Редкие") ||
-                entry.message.includes("Кредиты: +"),
-        )
-        .slice(0, 4); // Only show the most recent 4 entries (one set of results)
+    const canMine = bonusPercent >= 0 && !currentLocation.mined && hasEngineer;
+    const miningResult = currentLocation.miningResult;
 
     // Check if this is a rare ancient belt
     const isAncient = asteroidTier === 4;
@@ -80,19 +72,31 @@ export function AsteroidBeltPanel() {
                     <p className="text-[#ffb000] mb-3 font-bold">
                         {t("asteroid_belt.mining_results")}:
                     </p>
-                    <div className="space-y-1.5 text-sm">
-                        {recentMiningLogs.map((entry, i) => (
-                            <div
-                                key={i}
-                                className={`
-                ${entry.type === "info" && entry.message.includes("+") ? "text-[#00ff41]" : ""}
-                ${entry.type === "info" && !entry.message.includes("+") ? "text-[#888]" : ""}
-              `}
-                            >
-                                {entry.message}
+                    {miningResult ? (
+                        <div className="space-y-1.5 text-sm">
+                            <div className="text-[#00ff41]">
+                                {t("asteroid_belt.minerals")}: +{miningResult.minerals}
                             </div>
-                        ))}
-                    </div>
+                            {miningResult.rare > 0 && (
+                                <div className="text-[#00ff41]">
+                                    {t("asteroid_belt.rare_minerals")}: +{miningResult.rare}
+                                </div>
+                            )}
+                            <div className="text-[#00ff41]">
+                                {t("asteroid_belt.valuable_samples")}: +{miningResult.credits}₢
+                            </div>
+                            {miningResult.researchResources.map((label, i) => (
+                                <div key={i} className="text-[#00d4ff]">
+                                    💎 {label}
+                                </div>
+                            ))}
+                            {miningResult.cargoWarning && (
+                                <div className="text-[#ffb000] mt-1">
+                                    {miningResult.cargoWarning}
+                                </div>
+                            )}
+                        </div>
+                    ) : null}
                 </div>
 
                 <Button
@@ -220,9 +224,16 @@ export function AsteroidBeltPanel() {
                 </div>
             ) : (
                 <div className="text-center">
-                    <p className="text-[#ff0040] mb-4">
-                        ⚠ {t("asteroid_belt.drill_required")} {asteroidTier}!
-                    </p>
+                    {bonusPercent < 0 && (
+                        <p className="text-[#ff0040] mb-2">
+                            ⚠ {t("asteroid_belt.drill_required")} {asteroidTier}!
+                        </p>
+                    )}
+                    {!hasEngineer && (
+                        <p className="text-[#ff0040] mb-4">
+                            ⚠ {t("asteroid_belt.engineer_required")}
+                        </p>
+                    )}
                     <Button
                         onClick={showSectorMap}
                         className="cursor-pointer bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)]"
