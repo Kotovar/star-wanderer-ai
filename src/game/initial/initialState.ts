@@ -3,6 +3,7 @@ import { generateGalaxy } from "@/game/galaxy/generateGalaxy";
 import { initialModules, STARTING_FUEL } from "@/game/modules/initial";
 import { initializeStationData } from "@/game/stations/initialize";
 import type { GameState, CrewMember, TechnologyId } from "@/game/types";
+import { buildCrewMember } from "@/game/crew/buildCrewMember";
 // import { RESEARCH_TREE } from "../constants";
 
 /** Начальный номер хода */
@@ -47,75 +48,24 @@ const { prices, stock } = initializeStationData(sectors);
 sectors[0].visited = true;
 
 const initialCrew: CrewMember[] = [
-    {
+    buildCrewMember({
         id: 1,
         name: "Иванов",
-        race: "human",
         profession: "pilot",
-        level: 1,
-        exp: 0,
-        health: 105,
-        maxHealth: 105,
-        happiness: 80,
-        maxHappiness: 110,
-        assignment: null,
-        assignmentEffect: null,
-        combatAssignment: null,
-        combatAssignmentEffect: null,
-        traits: [],
-        moduleId: 102, // cockpit
-        movedThisTurn: false,
-        turnsAtZeroHappiness: 0,
-        isMerged: false,
-        mergedModuleId: null,
-        firstaidActive: false,
-    },
-    {
+        moduleId: 102,
+    }),
+    buildCrewMember({
         id: 2,
         name: "Петрова",
-        race: "human",
         profession: "engineer",
-        level: 1,
-        exp: 0,
-        health: 105,
-        maxHealth: 105,
-        happiness: 75,
-        maxHappiness: 110,
-        assignment: null,
-        assignmentEffect: null,
-        combatAssignment: null,
-        combatAssignmentEffect: null,
-        traits: [],
-        moduleId: 103, // lifesupport
-        movedThisTurn: false,
-        turnsAtZeroHappiness: 0,
-        isMerged: false,
-        mergedModuleId: null,
-        firstaidActive: false,
-    },
-    {
+        moduleId: 103,
+    }),
+    buildCrewMember({
         id: 3,
         name: "Сидоров",
-        race: "human",
         profession: "medic",
-        level: 1,
-        exp: 0,
-        health: 105,
-        maxHealth: 105,
-        happiness: 70,
-        maxHappiness: 110,
-        assignment: null,
-        assignmentEffect: null,
-        combatAssignment: null,
-        combatAssignmentEffect: null,
-        traits: [],
-        moduleId: 103, // lifesupport
-        movedThisTurn: false,
-        turnsAtZeroHappiness: 0,
-        isMerged: false,
-        mergedModuleId: null,
-        firstaidActive: false,
-    },
+        moduleId: 103,
+    }),
 ];
 
 /**
@@ -198,6 +148,7 @@ export const initialState: GameState = {
         unlockedRecipes: [],
         // unlockedRecipes: ["plasma", "drones", "antimatter", "quantum_torpedo"],
     },
+    pendingSurvivor: null,
     settings: {
         animationsEnabled: true,
     },

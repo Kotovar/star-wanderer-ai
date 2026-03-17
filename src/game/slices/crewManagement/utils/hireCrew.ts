@@ -1,13 +1,12 @@
 import type { GameStore, CrewMember, RaceId, SetState } from "@/game/types";
 import { RACES } from "@/game/constants/races";
-import { getRandomName } from "@/game/crew/utils";
 import { playSound } from "@/sounds";
 import {
     BASE_CREW_HEALTH_PER_LEVEL,
-    INITIAL_HAPPINESS_PERCENT,
     DEFAULT_MAX_HAPPINESS,
     BASE_CREW_HEALTH,
 } from "@/game/constants/crew";
+import { buildCrewMember } from "@/game/crew/buildCrewMember";
 
 /**
  * Опции для расчёта характеристик экипажа
@@ -145,53 +144,6 @@ const validateHireCrew = (state: GameStore, price: number): HireValidation => {
 };
 
 /**
- * Создаёт нового члена экипажа
- * @param crewData - Данные экипажа
- * @param stats - Рассчитанные характеристики
- * @param initialModuleId - ID модуля для начального размещения
- * @returns Новый член экипажа
- */
-export const createCrewMember = (
-    crewData: Partial<CrewMember> & { price: number },
-    stats: CrewStats,
-    initialModuleId: number,
-): CrewMember => {
-    const level = crewData.level || 1;
-
-    return {
-        id: Date.now(),
-        name:
-            crewData.name ||
-            getRandomName(
-                crewData.profession || "pilot",
-                crewData.race || "human",
-            ),
-        race: crewData.race || "human",
-        profession: crewData.profession || "pilot",
-        level,
-        exp: crewData.exp || 0,
-        health: stats.maxHealth,
-        maxHealth: stats.maxHealth,
-        // Счастье только для рас с настроением
-        happiness: stats.hasHappiness
-            ? Math.floor((stats.maxHappiness * INITIAL_HAPPINESS_PERCENT) / 100)
-            : 0,
-        maxHappiness: stats.maxHappiness,
-        assignment: null,
-        assignmentEffect: null,
-        combatAssignment: null,
-        combatAssignmentEffect: null,
-        traits: crewData.traits || [],
-        moduleId: crewData.moduleId || initialModuleId,
-        movedThisTurn: false,
-        turnsAtZeroHappiness: 0,
-        isMerged: false,
-        mergedModuleId: null,
-        firstaidActive: false,
-    };
-};
-
-/**
  * Наём члена экипажа
  * @param set - Функция обновления состояния
  * @param get - Функция получения состояния
@@ -222,21 +174,15 @@ export const hireCrew = (
     const initialModuleId =
         lifesupportModule?.id || state.ship.modules[0]?.id || 1;
 
-    // Расчёт характеристик
-    const level = crewData.level || 1;
-    const stats = calculateCrewStats({
-        race: crewData.race || "human",
-        traits: crewData.traits || [],
-        level,
+    const newCrew = buildCrewMember({
+        name: crewData.name,
+        race: crewData.race,
+        profession: crewData.profession,
+        level: crewData.level,
+        traits: crewData.traits,
+        exp: crewData.exp,
+        moduleId: initialModuleId,
     });
-
-    // Создание члена экипажа
-    // Игнорируем crewData.moduleId и используем initialModuleId
-    const newCrew = createCrewMember(
-        { ...crewData, moduleId: undefined },
-        stats,
-        initialModuleId,
-    );
 
     // Обновление состояния
     const hiredCrewKey = locationId || "unknown";

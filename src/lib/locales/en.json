@@ -1069,6 +1069,17 @@
         "risk_text": "You won't know the truth until you approach.",
         "respond": "RESPOND"
     },
+    "survivor_modal": {
+        "title": "Survivor Requests Asylum",
+        "subtitle": "Accept aboard?",
+        "profession_label": "Profession",
+        "race_label": "Race",
+        "level_label": "Level",
+        "traits_label": "Traits",
+        "no_traits": "None",
+        "accept": "ACCEPT",
+        "decline": "DECLINE"
+    },
     "events": {
         "anomaly": "Anomaly",
         "distress_signal": "Distress signal",

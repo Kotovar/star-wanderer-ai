@@ -10,14 +10,11 @@ import type {
     Location,
     CrewMember,
     SignalType,
-    Profession,
     RaceId,
     Sector,
 } from "@/game/types";
-import {
-    createCrewMember,
-    calculateCrewStats,
-} from "@/game/slices/crewManagement/utils";
+import { buildCrewMember } from "@/game/crew/buildCrewMember";
+import { rollQuality } from "@/game/crew/utils";
 import {
     SURVIVORS_REWARD,
     SURVIVOR_JOINS_CHANCE,
@@ -211,60 +208,34 @@ const handleSurvivors = (set: SetState, get: () => GameStore): void => {
 };
 
 /**
- * Добавляет выжившего в экипаж
- * Использует случайную расу и профессию
+ * Добавляет выжившего в очередь ожидания (pendingSurvivor).
+ * Использует то же качество/трейты/расу, что и генерация экипажа на станции,
+ * но уровень всегда 1.
  */
 const addSurvivorToCrew = (set: SetState, get: () => GameStore): void => {
-    const professions: Profession[] = [
-        "pilot",
-        "engineer",
-        "medic",
-        "scout",
-        "scientist",
-    ];
-    const newProfession =
-        professions[Math.floor(Math.random() * professions.length)];
-
-    // Get random race (excluding synthetic - they don't survive in distress)
-    const availableRaces: Exclude<RaceId, "synthetic">[] = [
-        "human",
-        "xenosymbiont",
-        "voidborn",
-        "crystalline",
-        "krylorian",
-    ];
-    const newRace =
-        availableRaces[Math.floor(Math.random() * availableRaces.length)];
-
     const lifesupportModule = get().ship.modules.find(
         (m) => m.type === "lifesupport",
     );
     const initialModuleId =
         lifesupportModule?.id || get().ship.modules[0]?.id || 1;
 
-    // Calculate stats for the new crew member
-    const stats = calculateCrewStats({
-        race: newRace,
-        traits: [],
+    const seed = Date.now();
+    const quality = rollQuality(Math.abs(Math.sin(seed) * 10000) % 1);
+
+    const newCrew: CrewMember = buildCrewMember({
+        race: "random",
+        excludeRaces: ["synthetic"],
+        profession: "random",
+        excludeProfessions: ["gunner"],
         level: 1,
+        traits: quality,
+        seed,
+        moduleId: initialModuleId,
     });
 
-    const newCrew: CrewMember = createCrewMember(
-        {
-            race: newRace,
-            profession: newProfession,
-            level: 1,
-            exp: 0,
-            traits: [],
-            price: 0, // Free survivor
-        },
-        stats,
-        initialModuleId,
-    );
-
-    set((s) => ({ crew: [...s.crew, newCrew] }));
+    set(() => ({ pendingSurvivor: newCrew }));
     get().addLog(
-        `Выживший ${newCrew.name} (${getRaceName(newRace)}) присоединился к команде!`,
+        `Выживший ${newCrew.name} (${getRaceName(newCrew.race)}) просит принять его на борт.`,
         "info",
     );
 };

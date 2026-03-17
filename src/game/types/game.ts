@@ -94,6 +94,7 @@ export interface GameState {
     activeEffects: ActiveEffect[]; // Active planet specialization effects
     planetCooldowns: Record<string, number>; // Track cooldowns per planet (planetId -> turnsRemaining)
     research: ResearchData; // Research system data
+    pendingSurvivor: CrewMember | null; // Survivor awaiting player accept/decline
     settings: {
         animationsEnabled: boolean; // Sector map animations toggle
     };
@@ -191,6 +192,8 @@ export interface GameCrew {
     isModuleAdjacent: (moduleId1: number, moduleId2: number) => boolean;
     getCrewInModule: (moduleId: number) => CrewMember[];
     gainExp: (crewMember: CrewMember, amount: number) => void;
+    acceptSurvivor: () => void;
+    declineSurvivor: () => void;
 }
 
 export interface GameContracts {

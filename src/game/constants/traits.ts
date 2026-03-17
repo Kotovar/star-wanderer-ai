@@ -1,6 +1,12 @@
-import type { CrewTraitType, MutationName, TraitDetails } from "../types";
+import type { CrewTraitType, MutationTraitId, TraitDetails } from "../types";
 
-export const MUTATION_TRAITS: MutationName[] = [
+export const MUTATION_TRAITS: MutationTraitId[] = [
+    "tentacles",
+    "third_eye",
+    "chitin",
+    "telepathy",
+    "regeneration",
+    "photosynthesis",
     "nightmares",
     "paranoid",
     "unstable",
@@ -13,6 +19,7 @@ export const CREW_TRAITS: Record<
     positive: [
         // Common positive traits (60% chance)
         {
+            id: "sharpshooter",
             name: "Меткий стрелок",
             desc: "+10% к урону",
             effect: { damageBonus: 0.1 },
@@ -20,6 +27,7 @@ export const CREW_TRAITS: Record<
             priceMod: 1.1,
         },
         {
+            id: "experienced",
             name: "Опытный",
             desc: "+15% эффективность",
             effect: { taskBonus: 0.15 },
@@ -27,6 +35,7 @@ export const CREW_TRAITS: Record<
             priceMod: 1.15,
         },
         {
+            id: "charismatic",
             name: "Харизматичный",
             desc: "+10 настроение команды в модуле",
             effect: { moduleMorale: 10 },
@@ -34,6 +43,7 @@ export const CREW_TRAITS: Record<
             priceMod: 1.1,
         },
         {
+            id: "resilient",
             name: "Выносливый",
             desc: "+20% здоровье",
             effect: { healthBonus: 0.2 },
@@ -41,6 +51,7 @@ export const CREW_TRAITS: Record<
             priceMod: 1.15,
         },
         {
+            id: "hardworking",
             name: "Трудолюбивый",
             desc: "+10% к опыту",
             effect: { expBonus: 0.1 },
@@ -50,6 +61,7 @@ export const CREW_TRAITS: Record<
 
         // Rare positive traits (30% chance)
         {
+            id: "veteran",
             name: "Ветеран",
             desc: "+25% к урону, +15% защита",
             effect: { damageBonus: 0.25, defenseBonus: 0.15 },
@@ -57,6 +69,7 @@ export const CREW_TRAITS: Record<
             priceMod: 1.4,
         },
         {
+            id: "genius",
             name: "Гений",
             desc: "+30% эффективность, +20% опыт",
             effect: { taskBonus: 0.3, expBonus: 0.2 },
@@ -64,6 +77,7 @@ export const CREW_TRAITS: Record<
             priceMod: 1.5,
         },
         {
+            id: "leader",
             name: "Лидер",
             desc: "+20 настроение команды, +10% эффективность",
             effect: { moduleMorale: 20, taskBonus: 0.1 },
@@ -71,6 +85,7 @@ export const CREW_TRAITS: Record<
             priceMod: 1.4,
         },
         {
+            id: "lucky",
             name: "Удачливый",
             desc: "+5% ко всем наградам",
             effect: { lootBonus: 0.05 },
@@ -78,6 +93,7 @@ export const CREW_TRAITS: Record<
             priceMod: 1.45,
         },
         {
+            id: "invincible",
             name: "Непобедимый",
             desc: "+40% здоровье, +10% регенерация",
             effect: { healthBonus: 0.4, regenBonus: 0.1 },
@@ -87,6 +103,7 @@ export const CREW_TRAITS: Record<
 
         // Legendary positive traits (10% chance)
         {
+            id: "legend",
             name: "Легенда",
             desc: "+50% к макс. здоровью и морали",
             effect: { healthBonus: 0.5, maxHappinessBonus: 50 },
@@ -94,6 +111,7 @@ export const CREW_TRAITS: Record<
             priceMod: 2.5,
         },
         {
+            id: "master",
             name: "Мастер",
             desc: "Двойной эффект от заданий",
             effect: { doubleTaskEffect: 1 },
@@ -104,6 +122,7 @@ export const CREW_TRAITS: Record<
     negative: [
         // Common negative traits (50% chance)
         {
+            id: "coward",
             name: "Трус",
             desc: "-10 морали в бою каждый ход",
             effect: { combatMoraleDrain: 10 },
@@ -111,6 +130,7 @@ export const CREW_TRAITS: Record<
             priceMod: 0.9,
         },
         {
+            id: "slob",
             name: "Неряха",
             desc: "-5 настроение других",
             effect: { teamMorale: -5 },
@@ -118,6 +138,7 @@ export const CREW_TRAITS: Record<
             priceMod: 0.9,
         },
         {
+            id: "sickly",
             name: "Болезненный",
             desc: "-15% здоровье",
             effect: { healthPenalty: 0.15 },
@@ -127,6 +148,7 @@ export const CREW_TRAITS: Record<
 
         // Rare negative traits (30% chance)
         {
+            id: "greedy",
             name: "Жадный",
             desc: "-1₢ за продажу за каждого юнита",
             effect: { sellPricePenalty: 1 },
@@ -134,6 +156,7 @@ export const CREW_TRAITS: Record<
             priceMod: 0.7,
         },
         {
+            id: "bad_shot",
             name: "Плохой стрелок",
             desc: "-10% точность оружия",
             effect: { accuracyPenalty: 0.1 },
@@ -141,6 +164,7 @@ export const CREW_TRAITS: Record<
             priceMod: 0.65,
         },
         {
+            id: "pessimist",
             name: "Пессимист",
             desc: "-20 морали в первый ход боя модулю",
             effect: { combatStartMoraleDrain: 20 },
@@ -148,6 +172,7 @@ export const CREW_TRAITS: Record<
             priceMod: 0.65,
         },
         {
+            id: "fragile",
             name: "Хрупкий",
             desc: "-30% здоровье",
             effect: { healthPenalty: 0.3 },
@@ -155,6 +180,7 @@ export const CREW_TRAITS: Record<
             priceMod: 0.6,
         },
         {
+            id: "rebel",
             name: "Бунтарь",
             desc: "-15 настроение, риск дезертирства",
             effect: { moralePenalty: 15, desertionRisk: 0.1 },
@@ -165,6 +191,7 @@ export const CREW_TRAITS: Record<
     // Mutation traits - from Ancient Biosphere curse
     mutation: [
         {
+            id: "tentacles",
             name: "Мутация: Щупальца",
             desc: "+20% урон",
             effect: { damageBonus: 0.2 },
@@ -172,6 +199,7 @@ export const CREW_TRAITS: Record<
             priceMod: 1.0,
         },
         {
+            id: "third_eye",
             name: "Мутация: Третий глаз",
             desc: "+15% крит, -10 счастья/ход",
             effect: { critBonus: 0.15, happinessDrain: 10 },
@@ -179,6 +207,7 @@ export const CREW_TRAITS: Record<
             priceMod: 1.0,
         },
         {
+            id: "chitin",
             name: "Мутация: Хитин",
             desc: "+25% защита, -20% эффективность",
             effect: { defenseBonus: 0.25, taskPenalty: 0.2 },
@@ -186,6 +215,7 @@ export const CREW_TRAITS: Record<
             priceMod: 1.0,
         },
         {
+            id: "telepathy",
             name: "Мутация: Телепатия",
             desc: "Видит намерения, -15 мораль команды",
             effect: { ambushAvoid: 0.5, teamMorale: -15 },
@@ -193,6 +223,7 @@ export const CREW_TRAITS: Record<
             priceMod: 1.0,
         },
         {
+            id: "regeneration",
             name: "Мутация: Регенерация",
             desc: "+5 здоровье/ход, -25% макс. здоровье",
             effect: { regenBonus: 0.5, healthPenalty: 0.25 },
@@ -200,11 +231,37 @@ export const CREW_TRAITS: Record<
             priceMod: 1.0,
         },
         {
+            id: "photosynthesis",
             name: "Мутация: Фотосинтез",
             desc: "Не ест, но нужен свет",
             effect: { foodFree: 1, needsLight: 1 },
             rarity: "mutation",
             priceMod: 1.0,
+        },
+        // Behavioral mutations (processed by processMutations each turn)
+        {
+            id: "nightmares",
+            name: "Мутация: Кошмары",
+            desc: "-10 счастья каждый ход",
+            effect: {},
+            rarity: "mutation",
+            priceMod: 0.7,
+        },
+        {
+            id: "paranoid",
+            name: "Мутация: Паранойя",
+            desc: "-15 морали, +10% уклонение",
+            effect: {},
+            rarity: "mutation",
+            priceMod: 0.7,
+        },
+        {
+            id: "unstable",
+            name: "Мутация: Нестабильность",
+            desc: "Случайные перепады настроения",
+            effect: {},
+            rarity: "mutation",
+            priceMod: 0.8,
         },
     ],
 };

@@ -12,7 +12,42 @@ export type Profession =
 
 export type Quality = "poor" | "average" | "good" | "excellent";
 
-export type MutationName = "nightmares" | "paranoid" | "unstable";
+export type PositiveTraitId =
+    | "sharpshooter"
+    | "experienced"
+    | "charismatic"
+    | "resilient"
+    | "hardworking"
+    | "veteran"
+    | "genius"
+    | "leader"
+    | "lucky"
+    | "invincible"
+    | "legend"
+    | "master";
+
+export type NegativeTraitId =
+    | "coward"
+    | "slob"
+    | "sickly"
+    | "greedy"
+    | "bad_shot"
+    | "pessimist"
+    | "fragile"
+    | "rebel";
+
+export type MutationTraitId =
+    | "tentacles"
+    | "third_eye"
+    | "chitin"
+    | "telepathy"
+    | "regeneration"
+    | "photosynthesis"
+    | "nightmares"
+    | "paranoid"
+    | "unstable";
+
+export type TraitId = PositiveTraitId | NegativeTraitId | MutationTraitId;
 
 export type CrewMemberAssignment =
     | "targeting"
@@ -107,6 +142,7 @@ export type CrewTraitEffect = {
 };
 
 export interface CrewTrait {
+    id?: TraitId;
     name: string;
     desc: string;
     effect: CrewTraitEffect;
@@ -114,6 +150,7 @@ export interface CrewTrait {
 }
 
 export type TraitDetails = {
+    id: TraitId;
     name: string;
     desc: string;
     effect: CrewTraitEffect;

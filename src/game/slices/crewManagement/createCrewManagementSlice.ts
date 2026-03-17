@@ -20,6 +20,10 @@ export interface CrewManagementSlice {
      * @param crewId - ID члена экипажа
      */
     fireCrewMember: (crewId: number) => void;
+    /** Принять ожидающего выжившего в экипаж */
+    acceptSurvivor: () => void;
+    /** Отказать ожидающему выжившему */
+    declineSurvivor: () => void;
 }
 
 /**
@@ -33,4 +37,21 @@ export const createCrewManagementSlice = (
         hireCrewAction(set, get, crewData, locationId),
 
     fireCrewMember: (crewId) => fireCrewMemberAction(set, get, crewId),
+
+    acceptSurvivor: () => {
+        const survivor = get().pendingSurvivor;
+        if (!survivor) return;
+        set((s) => ({ crew: [...s.crew, survivor], pendingSurvivor: null }));
+        get().addLog(
+            `${survivor.name} принят на борт и присоединился к экипажу!`,
+            "info",
+        );
+    },
+
+    declineSurvivor: () => {
+        const survivor = get().pendingSurvivor;
+        if (!survivor) return;
+        set(() => ({ pendingSurvivor: null }));
+        get().addLog(`${survivor.name} отказано в посадке на борт.`, "warning");
+    },
 });

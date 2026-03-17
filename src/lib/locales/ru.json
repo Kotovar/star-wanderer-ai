@@ -1069,6 +1069,17 @@
         "risk_text": "Вы не узнаете правду, пока не подойдёте ближе.",
         "respond": "ОТКЛИКНУТЬСЯ"
     },
+    "survivor_modal": {
+        "title": "Выживший просит убежища",
+        "subtitle": "Принять на борт?",
+        "profession_label": "Профессия",
+        "race_label": "Раса",
+        "level_label": "Уровень",
+        "traits_label": "Черты",
+        "no_traits": "Нет",
+        "accept": "ПРИНЯТЬ",
+        "decline": "ОТКАЗАТЬ"
+    },
     "events": {
         "anomaly": "Аномалия",
         "distress_signal": "Сигнал бедствия",

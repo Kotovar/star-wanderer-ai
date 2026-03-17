@@ -1,6 +1,23 @@
 import { useGameStore } from "@/game/store";
 import { CREW_TRAITS, RACE_LAST_NAMES } from "@/game/constants";
-import type { CrewTrait, Profession, Quality, RaceId } from "@/game/types";
+import type {
+    CrewTrait,
+    Profession,
+    Quality,
+    RaceId,
+    TraitId,
+} from "@/game/types";
+
+/**
+ * Конвертирует случайное число [0, 1) в Quality.
+ * Распределение: 25% poor / 35% average / 25% good / 15% excellent.
+ */
+export const rollQuality = (rand: number): Quality => {
+    if (rand < 0.25) return "poor";
+    if (rand < 0.6) return "average";
+    if (rand < 0.85) return "good";
+    return "excellent";
+};
 
 export const generateCrewTraits = (
     quality: Quality = "average",
@@ -50,6 +67,7 @@ export const generateCrewTraits = (
         if (pool.length > 0) {
             const trait = pool[Math.floor(seededRandom(102) * pool.length)];
             traits.push({
+                id: trait.id,
                 name: trait.name,
                 desc: trait.desc,
                 effect: trait.effect,
@@ -71,6 +89,7 @@ export const generateCrewTraits = (
         if (pool.length > 0) {
             const trait = pool[Math.floor(seededRandom(202) * pool.length)];
             traits.push({
+                id: trait.id,
                 name: trait.name,
                 desc: trait.desc,
                 effect: trait.effect,
@@ -154,3 +173,24 @@ export const getCrewByProfession = <T extends { profession: Profession }>(
     crew: T[],
     profession: Profession,
 ): T[] => crew.filter((c) => c.profession === profession);
+
+/** Реестр всех трейтов по ID, построенный из CREW_TRAITS. */
+const TRAIT_REGISTRY = new Map<TraitId, CrewTrait>(
+    (["positive", "negative", "mutation"] as const).flatMap((type) =>
+        CREW_TRAITS[type].map((t) => [
+            t.id,
+            { id: t.id, name: t.name, desc: t.desc, effect: t.effect, type },
+        ]),
+    ),
+);
+
+/**
+ * Возвращает CrewTrait по ID трейта.
+ * @example getTraitById("charismatic") // { id: "charismatic", name: "Харизматичный", ... }
+ * @example getTraitById("nightmares")  // { id: "nightmares", name: "Мутация: Кошмары", ... }
+ */
+export const getTraitById = (id: TraitId): CrewTrait => {
+    const trait = TRAIT_REGISTRY.get(id);
+    if (!trait) throw new Error(`Unknown trait id: "${id}"`);
+    return trait;
+};

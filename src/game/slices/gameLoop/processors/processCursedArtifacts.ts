@@ -5,7 +5,7 @@ import type {
     ArtifactNegativeType,
 } from "@/game/types";
 import { MUTATION_TRAITS } from "@/game/constants";
-import { getMutationTraitDesc, getMutationTraitName } from "@/game/traits";
+import { getTraitById } from "@/game/crew/utils";
 
 /**
  * Обработчик негативного эффекта проклятого артефакта
@@ -150,13 +150,7 @@ function applyCrewMutation(
                               ...c,
                               traits: [
                                   ...c.traits,
-                                  {
-                                      name: getMutationTraitName(newTrait),
-                                      desc: getMutationTraitDesc(newTrait),
-                                      effect: {},
-                                      type: "negative",
-                                      rarity: "mutation",
-                                  },
+                                  getTraitById(newTrait),
                               ],
                           }
                         : c,

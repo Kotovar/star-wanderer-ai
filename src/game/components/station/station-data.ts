@@ -8,8 +8,8 @@ import type {
     StationConfig,
 } from "@/game/types";
 import { CREW_BASE_PRICES } from "@/game/constants/crew";
-import { generateCrewTraits, getRandomName } from "@/game/crew/utils";
-import { RACES } from "@/game/constants/races";
+import { generateCrewTraits, getRandomName, rollQuality } from "@/game/crew/utils";
+import { buildCrewMember } from "@/game/crew/buildCrewMember";
 
 // Module pools by tier level
 // Tier 1: levels 1-2, Tier 2: levels 2-3, Tier 3: levels 3-4 (rare)
@@ -1059,12 +1059,7 @@ export function generateStationCrew(
             raceId = getRandomRace([], seed + i * 3000);
         }
 
-        const qualityRoll = rand2;
-        let quality: Quality;
-        if (qualityRoll < 0.25) quality = "poor";
-        else if (qualityRoll < 0.6) quality = "average";
-        else if (qualityRoll < 0.85) quality = "good";
-        else quality = "excellent";
+        const quality = rollQuality(rand2);
 
         // Use seeded random for traits generation
         const traitSeed = seed + i * 5000;
@@ -1080,67 +1075,20 @@ export function generateStationCrew(
 
         const name = getRandomName(profession, raceId, seed + i);
 
-        // Calculate maxHealth with race bonus and trait effects
-        const race = RACES[raceId];
-        const healthBonus = race?.crewBonuses?.health || 0;
-        let baseMaxHealth = 100 + healthBonus;
-
-        // Apply race special trait effects to maxHealth (e.g., crystalline: -15%, voidborn: -20%)
-        race?.specialTraits?.forEach((trait) => {
-            if (trait.effects.healthPenalty) {
-                baseMaxHealth = Math.floor(
-                    baseMaxHealth * (1 + Number(trait.effects.healthPenalty)),
-                );
-            }
-        });
-
-        // Apply crew trait effects to maxHealth
-        traits.forEach((trait) => {
-            if (trait.effect.healthPenalty) {
-                // Negative trait: reduce maxHealth by percentage
-                baseMaxHealth = Math.floor(
-                    baseMaxHealth * (1 - trait.effect.healthPenalty),
-                );
-            }
-            if (trait.effect.healthBonus) {
-                // Positive trait: increase maxHealth by percentage
-                baseMaxHealth = Math.floor(
-                    baseMaxHealth * (1 + trait.effect.healthBonus),
-                );
-            }
-        });
-
         // Calculate final price with safeguards against NaN
         const finalPrice = Math.round(
             basePrice * (priceModifier || 1) * levelMod,
         );
 
-        crewList.push({
-            member: {
-                name,
-                race: raceId,
-                profession,
-                level: level || 1,
-                exp: 0,
-                health: baseMaxHealth,
-                maxHealth: baseMaxHealth,
-                happiness: 80,
-                maxHappiness: 100,
-                assignment: null,
-                assignmentEffect: null,
-                combatAssignment: null,
-                combatAssignmentEffect: null,
-                traits,
-                moduleId: 1,
-                movedThisTurn: false,
-                turnsAtZeroHappiness: 0,
-                isMerged: false,
-                mergedModuleId: null,
-                firstaidActive: false,
-            },
-            price: finalPrice,
-            quality,
+        const { ...member } = buildCrewMember({
+            name,
+            race: raceId,
+            profession,
+            level,
+            traits,
         });
+
+        crewList.push({ member, price: finalPrice, quality });
     }
 
     return crewList;
