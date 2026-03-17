@@ -21,8 +21,10 @@ import {
     createArtifactsSlice,
     createPlanetEffectsSlice,
     createResearchSlice,
+    // createCraftingSlice,
 } from "@/game/slices";
 import type { GameStore } from "@/game/types";
+import { createCraftingSlice } from "./slices/crafting";
 
 export const useGameStore = create<GameStore>()(
     immer((set, get) => ({
@@ -46,5 +48,6 @@ export const useGameStore = create<GameStore>()(
         ...createArtifactsSlice(set, get),
         ...createPlanetEffectsSlice(set, get),
         ...createResearchSlice(set, get),
+        ...createCraftingSlice(set, get),
     })),
 );

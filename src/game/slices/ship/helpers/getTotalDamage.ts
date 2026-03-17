@@ -13,6 +13,10 @@ const INITIAL_DAMAGE: Record<WeaponTypeTotal, number> = {
     kinetic: 0,
     laser: 0,
     missile: 0,
+    plasma: 0,
+    drones: 0,
+    antimatter: 0,
+    quantum_torpedo: 0,
 };
 
 /**

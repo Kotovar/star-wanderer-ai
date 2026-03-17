@@ -14,7 +14,15 @@ export type ModuleType =
     | "ai_core"
     | "lab"; // Science laboratory for research
 
-export type WeaponType = "kinetic" | "laser" | "missile";
+export type WeaponType =
+    | "kinetic"
+    | "laser"
+    | "missile"
+    | "plasma"
+    | "drones"
+    | "antimatter"
+    | "quantum_torpedo";
+
 export type WeaponTypeTotal = WeaponType | "total";
 export type PartialModuleType = Exclude<ModuleType, "weaponShed">;
 export type WeaponCounts = {
@@ -61,4 +69,6 @@ export interface WeaponDetails {
     armorPenetration?: number;
     shieldBonus?: number;
     interceptChance?: number;
+    dualShot?: boolean; // Fires twice per weapon per attack (drones)
+    shieldBypass?: boolean; // Ignores shields entirely (quantum torpedoes)
 }

@@ -17,3 +17,4 @@ export * from "./crewManagement";
 export * from "./artifacts";
 export * from "./planetEffects";
 export * from "./research";
+export * from "./crafting";

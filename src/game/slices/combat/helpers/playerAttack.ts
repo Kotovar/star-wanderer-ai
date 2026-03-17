@@ -16,6 +16,10 @@ import {
     processLaserDamage,
     processKineticDamage,
     processMissileDamage,
+    processPlasmaDamage,
+    processDronesDamage,
+    processAntimatterDamage,
+    processQuantumTorpedoDamage,
 } from "./playerDamage";
 import { handleVictory } from "./playerVictory";
 import { handleEnemyCounterAttack } from "./enemyCounterAttack";
@@ -69,7 +73,7 @@ function getWeaponBayCrew(state: GameState) {
  * Counts weapons by type across all active weapon bays
  */
 function countWeapons(state: GameState): WeaponCounts {
-    const counts: WeaponCounts = { kinetic: 0, laser: 0, missile: 0 };
+    const counts: WeaponCounts = { kinetic: 0, laser: 0, missile: 0, plasma: 0, drones: 0, antimatter: 0, quantum_torpedo: 0 };
 
     state.ship.modules.forEach((m) => {
         if (m.type === "weaponbay" && m.weapons) {
@@ -244,7 +248,7 @@ function calculateAllDamage(
     let totalModuleDamage = 0;
     let kineticArmorPenetration = 0;
     const logs: string[] = [];
-    const missedShots: WeaponCounts = { kinetic: 0, laser: 0, missile: 0 };
+    const missedShots: WeaponCounts = { kinetic: 0, laser: 0, missile: 0, plasma: 0, drones: 0, antimatter: 0, quantum_torpedo: 0 };
 
     const getAccuracy = (type: WeaponType) =>
         getWeaponAccuracy(type, accuracyModifier);
@@ -301,6 +305,69 @@ function calculateAllDamage(
         missedShots.missile = result.missedShots;
     }
 
+    if (weaponCounts.plasma > 0) {
+        const result = processPlasmaDamage(
+            weaponCounts.plasma,
+            finalDamagePerWeapon,
+            damageMultiplier,
+            remainingShields,
+            enemyShields,
+            getAccuracy("plasma"),
+            WEAPON_TYPES.plasma.armorPenetration ?? 0.25,
+            WEAPON_TYPES.plasma.shieldBonus ?? 1.3,
+        );
+        totalShieldDamage += result.totalShieldDamage;
+        totalModuleDamage += result.totalModuleDamage;
+        remainingShields = result.remainingShields;
+        logs.push(...result.logs);
+        missedShots.plasma = result.missedShots;
+    }
+
+    if (weaponCounts.drones > 0) {
+        const result = processDronesDamage(
+            weaponCounts.drones,
+            finalDamagePerWeapon,
+            damageMultiplier,
+            remainingShields,
+            enemyShields,
+            getAccuracy("drones"),
+        );
+        totalShieldDamage += result.totalShieldDamage;
+        totalModuleDamage += result.totalModuleDamage;
+        remainingShields = result.remainingShields;
+        logs.push(...result.logs);
+        missedShots.drones = result.missedShots;
+    }
+
+    if (weaponCounts.antimatter > 0) {
+        const result = processAntimatterDamage(
+            weaponCounts.antimatter,
+            finalDamagePerWeapon,
+            damageMultiplier,
+            remainingShields,
+            enemyShields,
+            getAccuracy("antimatter"),
+            WEAPON_TYPES.antimatter.shieldBonus ?? 2.5,
+        );
+        totalShieldDamage += result.totalShieldDamage;
+        totalModuleDamage += result.totalModuleDamage;
+        remainingShields = result.remainingShields;
+        logs.push(...result.logs);
+        missedShots.antimatter = result.missedShots;
+    }
+
+    if (weaponCounts.quantum_torpedo > 0) {
+        const result = processQuantumTorpedoDamage(
+            weaponCounts.quantum_torpedo,
+            finalDamagePerWeapon,
+            damageMultiplier,
+            getAccuracy("quantum_torpedo"),
+        );
+        totalModuleDamage += result.totalModuleDamage;
+        logs.push(...result.logs);
+        missedShots.quantum_torpedo = result.missedShots;
+    }
+
     // Missed shot logs
     if (missedShots.laser > 0)
         logs.push(`❌ ${missedShots.laser} лазер(а) промахнул(ись)!`);
@@ -310,6 +377,14 @@ function calculateAllDamage(
         );
     if (missedShots.missile > 0)
         logs.push(`❌ ${missedShots.missile} ракета(ы) промахнул(ись)!`);
+    if (missedShots.plasma > 0)
+        logs.push(`❌ ${missedShots.plasma} плазмен(ных) выстр. промахнул(ись)!`);
+    if (missedShots.drones > 0)
+        logs.push(`❌ ${missedShots.drones} дрон(ов) промахнул(ись)!`);
+    if (missedShots.antimatter > 0)
+        logs.push(`❌ ${missedShots.antimatter} антиматер. выстр. промахнул(ись)!`);
+    if (missedShots.quantum_torpedo > 0)
+        logs.push(`❌ ${missedShots.quantum_torpedo} торпеда(ы) промахнул(ась)!`);
 
     return {
         totalShieldDamage,
@@ -456,7 +531,8 @@ export function executePlayerAttack(
     const weaponCounts = countWeapons(currentState);
 
     const totalWeapons =
-        weaponCounts.kinetic + weaponCounts.laser + weaponCounts.missile;
+        weaponCounts.kinetic + weaponCounts.laser + weaponCounts.missile +
+        weaponCounts.plasma + weaponCounts.drones + weaponCounts.antimatter + weaponCounts.quantum_torpedo;
     if (totalWeapons === 0) return;
 
     // 2. Target resolution

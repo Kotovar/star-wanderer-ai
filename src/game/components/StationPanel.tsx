@@ -15,6 +15,7 @@ import { ShopTab } from "./station/ShopTab";
 import { TradeTab } from "./station/TradeTab";
 import { CrewTab } from "./station/CrewTab";
 import { ServicesTab } from "./station/ServicesTab";
+import { CraftingTab } from "./station/CraftingTab";
 import { ModuleUpgradeModal } from "./station/ModuleUpgradeModal";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
@@ -50,6 +51,7 @@ export function StationPanel() {
     const installModuleFromCargo = useGameStore(
         (s) => s.installModuleFromCargo,
     );
+    const installCraftedWeapon = useGameStore((s) => s.installCraftedWeapon);
     const getRepairCost = useGameStore((s) => s.getRepairCost);
     const getHealCost = useGameStore((s) => s.getHealCost);
     const canRepairShip = useGameStore((s) => s.canRepairShip);
@@ -158,7 +160,7 @@ export function StationPanel() {
                 onValueChange={setActiveTab}
                 className="w-full mt-2"
             >
-                <TabsList className="grid w-full grid-cols-4 bg-[rgba(0,255,65,0.1)] border border-[#00ff41] h-auto">
+                <TabsList className="grid w-full grid-cols-5 bg-[rgba(0,255,65,0.1)] border border-[#00ff41] h-auto">
                     <TabsTrigger
                         value="shop"
                         className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
@@ -182,6 +184,12 @@ export function StationPanel() {
                         className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
                     >
                         {t("station.services_tab")}
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="crafting"
+                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
+                    >
+                        {t("station.craft")}
                     </TabsTrigger>
                 </TabsList>
 
@@ -260,6 +268,7 @@ export function StationPanel() {
                         healCrew={healCrew}
                         scrapModule={scrapModule}
                         installModuleFromCargo={installModuleFromCargo}
+                        installCraftedWeapon={installCraftedWeapon}
                         credits={credits}
                         ship={{
                             ...ship,
@@ -272,6 +281,9 @@ export function StationPanel() {
                         canRepair={canRepairShip()}
                         canHeal={canHealCrew()}
                     />
+                </TabsContent>
+                <TabsContent value="crafting" className="mt-4 min-h-[50vh]">
+                    <CraftingTab />
                 </TabsContent>
             </Tabs>
 

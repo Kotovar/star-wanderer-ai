@@ -3,6 +3,7 @@ import { generateGalaxy } from "@/game/galaxy/generateGalaxy";
 import { initialModules, STARTING_FUEL } from "@/game/modules/initial";
 import { initializeStationData } from "@/game/stations/initialize";
 import type { GameState, CrewMember, TechnologyId } from "@/game/types";
+// import { RESEARCH_TREE } from "../constants";
 
 /** Начальный номер хода */
 const INITIAL_TURN = 1;
@@ -26,7 +27,7 @@ const INITIAL_GAME_MODE = "galaxy_map" as const;
 /** Начальная раса, известная игроку */
 const INITIAL_KNOWN_RACE = "human" as const;
 
-/** НачальнЫЕ ТЕХНОЛОГИИ */
+/** Начальные технологии */
 const INITIAL_DISCOVERED_TECHS: TechnologyId[] = [
     "reinforced_hull",
     "efficient_reactor",
@@ -176,12 +177,26 @@ export const initialState: GameState = {
     activeEffects: [],
     planetCooldowns: {},
     research: {
+        // DEBUG: ресурсы для тестирования крафтинга
         resources: {},
+        // resources: {
+        //     energy_samples: 20,
+        //     tech_salvage: 20,
+        //     rare_minerals: 10,
+        //     quantum_crystals: 5,
+        //     ancient_data: 5,
+        //     alien_biology: 5,
+        // },
         // DEBUG: открываем все технологии для отладки
         // discoveredTechs: Object.keys(RESEARCH_TREE),
         discoveredTechs: INITIAL_DISCOVERED_TECHS,
+        // DEBUG: делаем все технологии изученными
+        // researchedTechs: Object.keys(RESEARCH_TREE),
         researchedTechs: [],
         activeResearch: null,
+        // DEBUG: разблокируем все рецепты крафтинга
+        unlockedRecipes: [],
+        // unlockedRecipes: ["plasma", "drones", "antimatter", "quantum_torpedo"],
     },
     settings: {
         animationsEnabled: true,

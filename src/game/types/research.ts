@@ -1,3 +1,5 @@
+import type { CraftingRecipeId } from "./crafting";
+
 /**
  * Research resource types - rare items needed for research
  */
@@ -121,6 +123,7 @@ export interface ResearchData {
     discoveredTechs: TechnologyId[]; // IDs of discovered technologies
     researchedTechs: TechnologyId[]; // IDs of completed researches
     activeResearch: ActiveResearch | null; // Currently active research project
+    unlockedRecipes: CraftingRecipeId[]; // IDs of crafting recipes unlocked by research
 }
 
 export interface ResearchBonus {

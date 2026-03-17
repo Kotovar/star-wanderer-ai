@@ -12,6 +12,10 @@ export const BASE_ACCURACY: Record<string, number> = {
     laser: 0.95,
     kinetic: 0.9,
     missile: 0.8,
+    plasma: 0.85,
+    drones: 0.85,
+    antimatter: 0.78,
+    quantum_torpedo: 0.62,
 };
 
 export const MIN_ACCURACY = 0.5; // Minimum 50% accuracy

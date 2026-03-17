@@ -3,6 +3,7 @@
 import { useGameStore } from "../store";
 import { TRADE_GOODS } from "../constants/goods";
 import { DELIVERY_GOODS } from "../constants/contracts";
+import { WEAPON_TYPES } from "../constants/weapons";
 import { useTranslation } from "@/lib/useTranslation";
 
 export function CargoDisplay() {
@@ -45,6 +46,30 @@ export function CargoDisplay() {
             ) : (
                 <div>
                     {ship.cargo.map((c, i) => {
+                        // Crafted weapons get special display
+                        if (c.isCraftedWeapon && c.weaponType) {
+                            const weapon = WEAPON_TYPES[c.weaponType];
+                            return (
+                                <div
+                                    key={i}
+                                    className="bg-[rgba(0,0,0,0.3)] border p-2 mb-1.5 text-xs"
+                                    style={{
+                                        borderColor: weapon?.color ?? "#00d4ff",
+                                    }}
+                                >
+                                    <span style={{ color: weapon?.color }}>
+                                        {weapon?.icon ?? "◆"}
+                                    </span>{" "}
+                                    <span style={{ color: weapon?.color }}>
+                                        {t(`weapon_types.${c.weaponType}`)}
+                                    </span>{" "}
+                                    <span className="text-[#888]">
+                                        {t("cargo.crafted_label")}
+                                    </span>
+                                </div>
+                            );
+                        }
+
                         // Try to get cargo name from DELIVERY_GOODS first, then TRADE_GOODS
                         const cargoKey = c.item as keyof typeof DELIVERY_GOODS;
                         const cargoName =

@@ -16,6 +16,7 @@ import type { Module, WeaponCounts } from "./modules";
 import type { RaceId } from "./races";
 import type { ShipMergeTrait } from "./ships";
 import type { ResearchData, TechnologyId } from "./research";
+import type { CraftingRecipeId } from "./crafting";
 import type { ShopItem } from "./shops";
 
 export type GameMode =
@@ -247,6 +248,11 @@ export interface GameResearch {
     processResearch: () => void;
 }
 
+export interface GameCrafting {
+    craftWeapon: (recipeId: CraftingRecipeId) => void;
+    installCraftedWeapon: (cargoIndex: number, weaponBayId: number) => void;
+}
+
 export interface GameScanContracts {
     processScanContracts: () => Contract[];
     completeScanContracts: () => void;
@@ -277,5 +283,6 @@ export type GameStore = GameState &
     GamePlanetSpecializations &
     GameFinish &
     GameResearch &
+    GameCrafting &
     GameScanContracts &
     GameManagement;

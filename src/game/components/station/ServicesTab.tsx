@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { MODULES_BY_LEVEL } from "@/game/components/station/station-data";
 import { MODULES_FROM_BOSSES } from "@/game/constants/modules";
-import type { ModuleType, Module } from "@/game/types";
+import type { ModuleType, Module, WeaponType } from "@/game/types";
+import { WEAPON_TYPES } from "@/game/constants/weapons";
 
 /**
  * Calculates scrap value for a module (70% of base price)
@@ -51,6 +52,7 @@ interface ServicesTabProps {
     healCrew: () => void;
     scrapModule: (moduleId: number) => void;
     installModuleFromCargo: (cargoIndex: number, x: number, y: number) => void;
+    installCraftedWeapon: (cargoIndex: number, weaponBayId: number) => void;
     credits: number;
     ship: {
         modules: Module[];
@@ -58,6 +60,8 @@ interface ServicesTabProps {
             item: string;
             quantity: number;
             isModule?: boolean;
+            isCraftedWeapon?: boolean;
+            weaponType?: WeaponType;
             module?: {
                 moduleType: string;
                 level?: number;
@@ -89,6 +93,7 @@ export function ServicesTab({
     healCrew,
     scrapModule,
     installModuleFromCargo,
+    installCraftedWeapon,
     credits,
     ship,
     crew,
@@ -127,6 +132,10 @@ export function ServicesTab({
             <InstallModuleSection
                 ship={ship}
                 onInstall={installModuleFromCargo}
+            />
+            <InstallWeaponSection
+                ship={ship}
+                onInstall={installCraftedWeapon}
             />
         </div>
     );
@@ -489,6 +498,91 @@ function InstallModuleSection({
                     {t("services.no_modules")}
                 </div>
             )}
+        </div>
+    );
+}
+
+function InstallWeaponSection({
+    ship,
+    onInstall,
+}: {
+    ship: ServicesTabProps["ship"];
+    onInstall: (cargoIndex: number, weaponBayId: number) => void;
+}) {
+    const { t } = useTranslation();
+
+    const craftedWeapons = ship.cargo
+        .map((item, idx) => ({ item, idx }))
+        .filter(({ item }) => item.isCraftedWeapon && item.weaponType);
+
+    if (craftedWeapons.length === 0) return null;
+
+    const weaponBays = ship.modules.filter(
+        (m) => m.type === "weaponbay" && !m.disabled && !m.manualDisabled,
+    );
+    const baysWithSlots = weaponBays.filter((bay) =>
+        bay.weapons?.some((w) => !w),
+    );
+
+    return (
+        <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-4">
+            <div className="text-[#00d4ff] font-bold mb-2">
+                ⚔️ {t("services.install_weapon_title")}
+            </div>
+            <div className="text-sm text-[#888] mb-3">
+                {t("services.install_weapon_desc")}
+            </div>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+                {craftedWeapons.map(({ item, idx }) => {
+                    const weaponType = item.weaponType;
+                    if (!weaponType) return;
+
+                    const weapon = WEAPON_TYPES[weaponType];
+                    return (
+                        <div
+                            key={idx}
+                            className="bg-[rgba(0,0,0,0.3)] border p-2"
+                            style={{ borderColor: weapon?.color ?? "#00d4ff" }}
+                        >
+                            <div className="flex items-center gap-2 mb-2 text-xs">
+                                <span style={{ color: weapon?.color }}>
+                                    {weapon?.icon}
+                                </span>
+                                <span
+                                    className="font-bold"
+                                    style={{ color: weapon?.color }}
+                                >
+                                    {t(`weapon_types.${weaponType}`)}
+                                </span>
+                                <span className="text-[#888]">
+                                    {weapon?.damage}{" "}
+                                    {t("services.damage_label")}
+                                </span>
+                            </div>
+                            {baysWithSlots.length === 0 ? (
+                                <div className="text-red-400 text-xs">
+                                    {t("services.no_weapon_bays")}
+                                </div>
+                            ) : (
+                                <div className="flex flex-wrap gap-2">
+                                    {baysWithSlots.map((bay) => (
+                                        <Button
+                                            key={bay.id}
+                                            onClick={() =>
+                                                onInstall(idx, bay.id)
+                                            }
+                                            className="bg-transparent border border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] text-xs px-2 py-1 cursor-pointer"
+                                        >
+                                            {t("services.install_in_bay")} #
+                                            {bay.id}
+                                        </Button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 }

@@ -63,7 +63,8 @@
         "no_module": "No cargo bay",
         "capacity_label": "Capacity",
         "hold_empty": "Hold is empty",
-        "contract_label": "[Contract]"
+        "contract_label": "[Contract]",
+        "crafted_label": "[Crafted]"
     },
     "modules": {
         "search_per_turn": "res/turn",
@@ -954,6 +955,7 @@
         "trade_tab": "TRADE",
         "crew_tab": "CREW",
         "services_tab": "SERVICES",
+        "craft": "CRAFT",
         "crew_profession": "Profession:",
         "crew_price": "💰 Price: {{price}}₢",
         "race_bonuses": "Race bonuses:",
@@ -1001,7 +1003,12 @@
         "no_modules": "No modules in cargo hold to install.",
         "size_label": "Size:",
         "position_label": "Position:",
-        "no_space": "No space"
+        "no_space": "No space",
+        "install_weapon_title": "Weapon Installation",
+        "install_weapon_desc": "Install crafted weapons from cargo hold into weapon bays",
+        "damage_label": "dmg",
+        "no_weapon_bays": "No free weapon bays",
+        "install_in_bay": "Install in bay"
     },
     "combat": {
         "no_weapon_bay": "⚠️ No weapon bay or weapons! Cannot attack.",
@@ -1357,7 +1364,11 @@
     "weapon_types": {
         "kinetic": "Kinetic",
         "laser": "Laser",
-        "missile": "Missile"
+        "missile": "Missile",
+        "plasma": "Plasma",
+        "drones": "Combat Drones",
+        "antimatter": "Antimatter",
+        "quantum_torpedo": "Quantum Torpedo"
     },
     "module_descriptions": {
         "reactor": "Generates energy for the ship",
@@ -1605,5 +1616,13 @@
             "name": "Crystal Resonator",
             "description": "Crystalline beings can tune ship energy systems to resonate with crystals."
         }
+    },
+    "crafting": {
+        "title": "Weapon Crafting",
+        "no_recipes": "No unlocked recipes.",
+        "no_recipes_hint": "Research Plasma Weapons, Combat Drones, Antimatter Weapons, or Quantum Torpedoes to unlock crafting recipes.",
+        "available_recipes": "Available recipes",
+        "craft_button": "Craft",
+        "damage_suffix": "dmg"
     }
 }

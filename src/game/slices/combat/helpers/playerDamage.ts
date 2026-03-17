@@ -301,3 +301,200 @@ export function processMissileDamage(
         missileInterceptedCount,
     };
 }
+
+/**
+ * Processes plasma weapon damage (hybrid: armor penetration + shield bonus)
+ */
+export function processPlasmaDamage(
+    weaponCount: number,
+    finalDamagePerWeapon: number,
+    damageMultiplier: number,
+    remainingShields: number,
+    enemyShields: number,
+    accuracy: number,
+    armorPenetration: number,
+    shieldBonus: number,
+): {
+    totalShieldDamage: number;
+    totalModuleDamage: number;
+    remainingShields: number;
+    logs: string[];
+    missedShots: number;
+    plasmaArmorPenetration: number;
+} {
+    let totalShieldDamage = 0;
+    let totalModuleDamage = 0;
+    const logs: string[] = [];
+    let missedShots = 0;
+
+    for (let i = 0; i < weaponCount; i++) {
+        if (Math.random() > accuracy) {
+            missedShots++;
+            continue;
+        }
+
+        const plasmaDmg = finalDamagePerWeapon * damageMultiplier;
+        const shieldDmg = Math.floor(plasmaDmg * shieldBonus);
+        const actualShieldDmg = Math.min(remainingShields, shieldDmg);
+        const overflow = plasmaDmg - Math.min(remainingShields, plasmaDmg);
+
+        remainingShields -= actualShieldDmg;
+        totalShieldDamage += actualShieldDmg;
+        totalModuleDamage += overflow;
+
+        if (enemyShields > 0) {
+            logs.push(`Плазма: -${actualShieldDmg} щитам`);
+            if (overflow > 0) logs.push(`(перелёт: ${overflow})`);
+        }
+    }
+
+    return {
+        totalShieldDamage,
+        totalModuleDamage,
+        remainingShields,
+        logs,
+        missedShots,
+        plasmaArmorPenetration: armorPenetration,
+    };
+}
+
+/**
+ * Processes drones weapon damage (fires twice per weapon)
+ */
+export function processDronesDamage(
+    weaponCount: number,
+    finalDamagePerWeapon: number,
+    damageMultiplier: number,
+    remainingShields: number,
+    enemyShields: number,
+    accuracy: number,
+): {
+    totalShieldDamage: number;
+    totalModuleDamage: number;
+    remainingShields: number;
+    logs: string[];
+    missedShots: number;
+} {
+    let totalShieldDamage = 0;
+    let totalModuleDamage = 0;
+    const logs: string[] = [];
+    let missedShots = 0;
+
+    // Drones fire twice per weapon
+    const totalShots = weaponCount * 2;
+
+    for (let i = 0; i < totalShots; i++) {
+        if (Math.random() > accuracy) {
+            missedShots++;
+            continue;
+        }
+
+        const droneDmg = finalDamagePerWeapon * damageMultiplier;
+        const shieldDmg = Math.min(remainingShields, droneDmg);
+        const overflow = droneDmg - shieldDmg;
+
+        remainingShields -= shieldDmg;
+        totalShieldDamage += shieldDmg;
+        totalModuleDamage += overflow;
+
+        if (enemyShields > 0 && shieldDmg > 0) {
+            logs.push(`Дрон: -${shieldDmg} щитам`);
+        }
+    }
+
+    return {
+        totalShieldDamage,
+        totalModuleDamage,
+        remainingShields,
+        logs,
+        missedShots,
+    };
+}
+
+/**
+ * Processes antimatter weapon damage (×2.5 shield damage)
+ */
+export function processAntimatterDamage(
+    weaponCount: number,
+    finalDamagePerWeapon: number,
+    damageMultiplier: number,
+    remainingShields: number,
+    enemyShields: number,
+    accuracy: number,
+    shieldBonus: number,
+): {
+    totalShieldDamage: number;
+    totalModuleDamage: number;
+    remainingShields: number;
+    logs: string[];
+    missedShots: number;
+} {
+    let totalShieldDamage = 0;
+    let totalModuleDamage = 0;
+    const logs: string[] = [];
+    let missedShots = 0;
+
+    for (let i = 0; i < weaponCount; i++) {
+        if (Math.random() > accuracy) {
+            missedShots++;
+            continue;
+        }
+
+        const antimatterDmg = finalDamagePerWeapon * damageMultiplier;
+        const shieldDmg = Math.floor(antimatterDmg * shieldBonus);
+        const actualShieldDmg = Math.min(remainingShields, shieldDmg);
+        const overflow = antimatterDmg - Math.min(remainingShields, antimatterDmg);
+
+        remainingShields -= actualShieldDmg;
+        totalShieldDamage += actualShieldDmg;
+        totalModuleDamage += overflow;
+
+        if (enemyShields > 0) {
+            logs.push(`Антиматерия: -${actualShieldDmg} щитам`);
+            if (overflow > 0) logs.push(`(перелёт: ${overflow})`);
+        }
+    }
+
+    return {
+        totalShieldDamage,
+        totalModuleDamage,
+        remainingShields,
+        logs,
+        missedShots,
+    };
+}
+
+/**
+ * Processes quantum torpedo damage (bypasses shields entirely)
+ */
+export function processQuantumTorpedoDamage(
+    weaponCount: number,
+    finalDamagePerWeapon: number,
+    damageMultiplier: number,
+    accuracy: number,
+): {
+    totalModuleDamage: number;
+    logs: string[];
+    missedShots: number;
+} {
+    let totalModuleDamage = 0;
+    const logs: string[] = [];
+    let missedShots = 0;
+
+    for (let i = 0; i < weaponCount; i++) {
+        if (Math.random() > accuracy) {
+            missedShots++;
+            continue;
+        }
+
+        const torpedoDmg = finalDamagePerWeapon * damageMultiplier;
+        totalModuleDamage += torpedoDmg;
+        logs.push(`Квант. торпеда: ${torpedoDmg} прямо по модулям!`);
+    }
+
+    return {
+        totalModuleDamage,
+        logs,
+        missedShots,
+    };
+}

@@ -9,6 +9,7 @@ import {
     getBonusLogMessages,
 } from "../helpers/researchHelpers";
 import type { GameStore, SetState, TechnologyId } from "@/game/types";
+import type { CraftingRecipeId } from "@/game/types/crafting";
 
 /**
  * Обрабатывает завершение исследования
@@ -31,6 +32,18 @@ const handleResearchCompletion = (
         techId,
     );
 
+    // Проверяем бонусы на новое оружие (крафтинг)
+    const newWeaponBonus = completedTech.bonuses.find(
+        (b: { type: string }) => b.type === "new_weapon",
+    );
+    const WEAPON_RECIPE_MAP: Record<string, string> = {
+        plasma_weapons: "plasma",
+        combat_drones: "drones",
+        antimatter_weapons: "antimatter",
+        quantum_torpedo: "quantum_torpedo",
+    };
+    const unlockedRecipeId = (WEAPON_RECIPE_MAP[techId] ?? null) as CraftingRecipeId | null;
+
     // Обновляем состояние с применёнными бонусами
     set((s) => ({
         ship: {
@@ -48,6 +61,9 @@ const handleResearchCompletion = (
                 ]),
             ],
             activeResearch: null,
+            unlockedRecipes: unlockedRecipeId && newWeaponBonus
+                ? [...(s.research.unlockedRecipes ?? []), unlockedRecipeId]
+                : (s.research.unlockedRecipes ?? []),
         },
     }));
 
