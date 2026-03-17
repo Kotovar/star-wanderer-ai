@@ -2,16 +2,24 @@
 
 import { getTotalEvasion } from "@/game/slices";
 import { useGameStore } from "@/game/store";
-import { getArtifactEffectValue } from "@/game/artifacts/utils";
+import {
+    findActiveArtifact,
+    getArtifactEffectValue,
+    getArtifactShieldRegen,
+} from "@/game/artifacts/utils";
 import { useTranslation } from "@/lib/useTranslation";
 import {
     BASE_CRIT_CHANCE,
     BASE_CRIT_MULTIPLIER,
     BASE_ACCURACY,
     CREW_ASSIGNMENT_BONUSES,
+    ARTIFACT_TYPES,
 } from "@/game/constants";
 import { useFuelEfficiency } from "@/game/hooks";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import { getTechBonusSum } from "@/game/research";
+import { getActiveModules } from "../modules";
+import { hasAssignment, hasCombatAssignment, hasProfession } from "../crew";
 
 export function ShipStats() {
     const ship = useGameStore((s) => s.ship);
@@ -25,6 +33,7 @@ export function ShipStats() {
     const captain = useGameStore((s) =>
         s.crew.find((c) => c.profession === "pilot"),
     );
+    const research = useGameStore((s) => s.research);
 
     const { t } = useTranslation();
 
@@ -33,9 +42,17 @@ export function ShipStats() {
     const scanRange = getEffectiveScanRange();
 
     // Регенерация щитов: сумма shieldRegen всех активных модулей щитов
-    const shieldRegenerator = artifacts.find(
-        (a) => a.effect.type === "shield_regen_boost" && a.effect.active,
+    // плюс бонус от артефакта "Тёмный Щит"
+    const shieldRegenerator = findActiveArtifact(
+        artifacts,
+        ARTIFACT_TYPES.SHIELD_REGENERATOR,
     );
+
+    const darkShield = findActiveArtifact(
+        artifacts,
+        ARTIFACT_TYPES.DARK_SHIELD,
+    );
+
     const mergeBonus = getMergeEffectsBonus(crew, ship.modules);
     const activeShieldModules = ship.modules.filter(
         (m) => m.type === "shield" && m.health > 0 && !m.disabled,
@@ -44,6 +61,14 @@ export function ShipStats() {
         (sum, m) => sum + (m.shieldRegen ?? 4),
         0,
     );
+    // Добавляем регенерацию от "Тёмного Щита" с учётом бонусов науки и ритуалов
+    if (darkShield) {
+        const artifactRegen = getArtifactShieldRegen(
+            darkShield,
+            useGameStore.getState(),
+        );
+        shieldRegen += artifactRegen;
+    }
     if (shieldRegen > 0) {
         if (shieldRegenerator) {
             const regenBoost = getArtifactEffectValue(
@@ -58,6 +83,27 @@ export function ShipStats() {
             );
         }
     }
+
+    // Ремонт модулей за ход: исследования + активные артефакты
+    const researchRepair = getTechBonusSum(research, "nanite_repair");
+    const gameState = useGameStore.getState();
+    const naniteArtifact = findActiveArtifact(
+        artifacts,
+        ARTIFACT_TYPES.NANITE_HULL,
+    );
+    const autoRepairArtifact = findActiveArtifact(
+        artifacts,
+        ARTIFACT_TYPES.PARASITIC_NANITES,
+    );
+
+    const artifactRepair =
+        (naniteArtifact
+            ? getArtifactEffectValue(naniteArtifact, gameState)
+            : 0) +
+        (autoRepairArtifact
+            ? getArtifactEffectValue(autoRepairArtifact, gameState)
+            : 0);
+    const moduleRepairPercent = researchRepair + artifactRepair;
 
     const totalPower = getTotalPower();
     const engineerBoost = crew.find((c) => c.assignment === "reactor_overload")
@@ -78,13 +124,7 @@ export function ShipStats() {
     const totalDefense = ship.armor || 0;
 
     // Get engine level from modules
-    const engines = ship.modules.filter(
-        (m) =>
-            m.type === "engine" &&
-            !m.disabled &&
-            !m.manualDisabled &&
-            m.health > 0,
-    );
+    const engines = getActiveModules(ship.modules, "engine");
     const engineLevel =
         engines.length > 0 ? Math.max(...engines.map((e) => e.level || 1)) : 1;
 
@@ -97,22 +137,24 @@ export function ShipStats() {
 
     // Calculate total crit chance (base + artifacts)
     let totalCritChance = BASE_CRIT_CHANCE;
-    const criticalMatrix = artifacts.find(
-        (a) => a.effect.type === "crit_chance" && a.effect.active,
+    const criticalMatrix = findActiveArtifact(
+        artifacts,
+        ARTIFACT_TYPES.CRITICAL_MATRIX,
     );
+
     if (criticalMatrix) {
-        const critChanceBonus = criticalMatrix.effect.value || 0;
-        totalCritChance += critChanceBonus;
+        totalCritChance += getArtifactEffectValue(criticalMatrix, gameState);
     }
 
     // Calculate crit damage multiplier (base + artifacts)
     let totalCritDamage = BASE_CRIT_MULTIPLIER;
-    const overloadMatrix = artifacts.find(
-        (a) => a.effect.type === "crit_damage_boost" && a.effect.active,
+    const overloadMatrix = findActiveArtifact(
+        artifacts,
+        ARTIFACT_TYPES.OVERLOAD_MATRIX,
     );
+
     if (overloadMatrix) {
-        const critDamageBonus = overloadMatrix.effect.value || 0;
-        totalCritDamage += critDamageBonus;
+        totalCritDamage += getArtifactEffectValue(overloadMatrix, gameState);
     }
 
     // Calculate base accuracy (average across all weapon types)
@@ -122,23 +164,21 @@ export function ShipStats() {
 
     // Calculate accuracy modifier from artifacts
     let accuracyModifier = 0;
-    const targetingCore = artifacts.find(
-        (a) => a.effect.type === "accuracy_boost" && a.effect.active,
+    const targetingCore = findActiveArtifact(
+        artifacts,
+        ARTIFACT_TYPES.TARGETING_CORE,
     );
+
     if (targetingCore) {
-        accuracyModifier += targetingCore.effect.value || 0;
+        accuracyModifier += getArtifactEffectValue(targetingCore, gameState);
     }
 
     // Crew assignment modifiers
-    const hasGunner = crew.some(
-        (c) => c.combatAssignment === "targeting" || c.profession === "gunner",
-    );
-    const hasTargeting = crew.some((c) => c.combatAssignment === "targeting");
-    const hasMaintenance = crew.some((c) => c.assignment === "maintenance");
-    const hasCalibration = crew.some(
-        (c) => c.combatAssignment === "calibration",
-    );
-    const hasEngineer = crew.some((c) => c.profession === "engineer");
+    const hasTargeting = hasCombatAssignment(crew, "targeting");
+    const hasCalibration = hasCombatAssignment(crew, "calibration");
+    const hasMaintenance = hasAssignment(crew, "maintenance");
+    const hasEngineer = hasProfession(crew, "engineer");
+    const hasGunner = hasProfession(crew, "gunner") || hasTargeting;
 
     if (!hasGunner) {
         accuracyModifier -= 0.2;
@@ -198,7 +238,15 @@ export function ShipStats() {
         (a) => a.effect.type === "damage_reflect" && a.effect.active,
     );
     const reflectChance = mirrorShield
-        ? (mirrorShield.effect.value || 0) * 100
+        ? getArtifactEffectValue(mirrorShield, gameState) * 100
+        : 0;
+
+    // ═══════════════════════════════════════════════════════════════
+    // CREDIT BONUS (Black Box artifact)
+    // ═══════════════════════════════════════════════════════════════
+    const blackBox = findActiveArtifact(artifacts, ARTIFACT_TYPES.BLACK_BOX);
+    const creditBonus = blackBox
+        ? Math.round(getArtifactEffectValue(blackBox, gameState) * 100)
         : 0;
 
     return (
@@ -382,13 +430,47 @@ export function ShipStats() {
                             {" "}
                             (+
                             {Math.round(
-                                (shieldRegenerator.effect.value ?? 0) * 100,
+                                getArtifactEffectValue(
+                                    shieldRegenerator,
+                                    gameState,
+                                ) * 100,
                             )}
                             %)
                         </span>
                     )}
                 </span>
             </div>
+
+            {/* Module repair per turn */}
+            {moduleRepairPercent > 0 && (
+                <div className="flex justify-between mb-2 text-sm">
+                    <span className="text-[#ffb000]">
+                        {t("ship_stats.module_repair")}:
+                    </span>
+                    <span
+                        className={
+                            moduleRepairPercent >= 10
+                                ? "text-[#00ff41]"
+                                : moduleRepairPercent >= 5
+                                  ? "text-[#ffb000]"
+                                  : "text-[#888]"
+                        }
+                    >
+                        {moduleRepairPercent % 1 === 0
+                            ? moduleRepairPercent
+                            : moduleRepairPercent.toFixed(1)}
+                        % {t("ship_stats.per_turn")}
+                    </span>
+                </div>
+            )}
+
+            {/* Credit bonus (Black Box artifact) */}
+            {creditBonus > 0 && (
+                <div className="flex justify-between mb-2 text-sm">
+                    <span className="text-[#ffb000]">💰 Бонус к наградам:</span>
+                    <span className="text-[#00ff41]">+{creditBonus}%</span>
+                </div>
+            )}
 
             {/* ═══════════════════════════════════════════════════════════════
                 COMBAT STATS - Critical hit chance, crit damage, accuracy

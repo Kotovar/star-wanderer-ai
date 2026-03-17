@@ -49,7 +49,7 @@ export const processArtifactEffects = (
             // === АВТО-РЕМОНТ ===
             case "nanite_repair": {
                 // Нанитовая Обшивка - ремонт модулей
-                const repairAmount = effectValue;
+                const repairAmount = getArtifactEffectValue(artifact, state);
                 set((s) => ({
                     ship: {
                         ...s.ship,

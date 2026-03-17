@@ -127,6 +127,7 @@
         "evasion": "🎯 Evasion",
         "reflection": "🛡️ Reflection",
         "shield_regen": "💚 Shield regen",
+        "module_repair": "🔧 Module repair",
         "crit_chance": "💥 Crit chance",
         "crit_damage": "💀 Crit damage",
         "accuracy": "🎯 Accuracy",
@@ -847,7 +848,7 @@
         "research_btn_dangerous": "⚠️ RESEARCH (DANGEROUS)",
         "deactivate_btn": "DEACTIVATE",
         "activate_btn": "ACTIVATE",
-        "active_neutralize_btn": "✓ ACTIVE (NEUTRALIZE)",
+        "active_neutralize_btn": "✓ ACTIVE (DISABLE)",
         "requires_scientist": "Requires scientist",
         "rarity": {
             "rare": "Rare",

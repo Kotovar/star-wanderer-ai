@@ -250,7 +250,7 @@ export function PlanetSpecializationPanel({
                             </div>
                         </button>
                         {artifacts
-                            .filter((a) => a.discovered && a.effect.active)
+                            .filter((a) => a.discovered && a.effect.active && a.canBoost !== false)
                             .map((artifact) => (
                                 <button
                                     key={artifact.id}

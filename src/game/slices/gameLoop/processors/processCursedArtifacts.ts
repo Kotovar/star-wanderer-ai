@@ -44,8 +44,9 @@ const CURSE_HANDLERS: Record<ArtifactNegativeType, CurseHandler | undefined> = {
         logMessage: (name) => `⚠️ ${name}: член экипажа мутировал`,
     },
     ambush_chance: undefined, // Обрабатывается в signals/utils.ts
-    self_damage: undefined, // Обрабатывается в store.ts после боя
-    health_drain: undefined, // Обрабатывается в store.ts при перемещении
+    self_damage: undefined, // Обрабатывается  после боя
+    health_drain: undefined, // Обрабатывается при перемещении
+    evasion_penalty: undefined, // снижение шанса на уворот
 };
 
 /**
@@ -138,20 +139,22 @@ function applyCrewMutation(
 ) {
     state.crew.forEach((crewMember) => {
         if (Math.random() * 100 < value) {
+            const existingIds = new Set(crewMember.traits.map((t) => t.id));
+            const available = MUTATION_TRAITS.filter(
+                (t) => !existingIds.has(t),
+            );
+
+            if (available.length === 0) return;
+
             const newTrait =
-                MUTATION_TRAITS[
-                    Math.floor(Math.random() * MUTATION_TRAITS.length)
-                ];
+                available[Math.floor(Math.random() * available.length)];
 
             set((s) => ({
                 crew: s.crew.map((c) =>
                     c.id === crewMember.id
                         ? {
                               ...c,
-                              traits: [
-                                  ...c.traits,
-                                  getTraitById(newTrait),
-                              ],
+                              traits: [...c.traits, getTraitById(newTrait)],
                           }
                         : c,
                 ),

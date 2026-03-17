@@ -1,11 +1,9 @@
 import type { GameStore, Artifact, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
-import {
-    getArtifactEffectValue,
-    getRandomUndiscoveredArtifact,
-} from "@/game/artifacts";
+import { getRandomUndiscoveredArtifact } from "@/game/artifacts";
 import { RACES } from "@/game/constants/races";
-import { ARTIFACT_FIND_BASE_CHANCE } from "../constants";
+import { ARTIFACT_FIND_BASE_CHANCE, ARTIFACT_BOOST_BONUS } from "../constants";
+import { getTechBonusSum } from "@/game/research";
 
 /**
  * Пытается найти артефакт (шанс зависит от тира сектора и бонусов)
@@ -82,7 +80,28 @@ const getBaseArtifactFinderBonus = (state: GameStore): number => {
     const artifactFinder = state.artifacts.find(
         (a) => a.effect.type === "artifact_finder" && a.effect.active,
     );
-    return artifactFinder ? getArtifactEffectValue(artifactFinder, state) : 1;
+    if (!artifactFinder) return 1;
+
+    // Use raw float multiplication (no Math.floor) so research/ritual bonuses
+    // are preserved and applied to the probability, not truncated
+    let value = artifactFinder.effect.value ?? 1;
+
+    const researchBoost = getTechBonusSum(state.research, "artifact_effect_boost");
+    if (researchBoost > 0) value *= 1 + researchBoost;
+
+    const boostEffect = state.activeEffects.find(
+        (e) =>
+            e.effects.some((ef) => ef.type === "artifact_boost") &&
+            e.targetArtifactId === artifactFinder.id,
+    );
+    if (boostEffect) {
+        const boostValue =
+            (boostEffect.effects.find((ef) => ef.type === "artifact_boost")
+                ?.value as number) ?? ARTIFACT_BOOST_BONUS;
+        value *= 1 + boostValue;
+    }
+
+    return value;
 };
 
 /**

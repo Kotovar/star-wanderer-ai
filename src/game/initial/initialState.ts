@@ -10,7 +10,7 @@ import { buildCrewMember } from "@/game/crew/buildCrewMember";
 const INITIAL_TURN = 1;
 
 /** Начальное количество кредитов игрока */
-const INITIAL_CREDITS = 100000;
+const INITIAL_CREDITS = 1000;
 
 /**
  * Начальная вместимость экипажа.
@@ -143,6 +143,7 @@ export const initialState: GameState = {
         discoveredTechs: INITIAL_DISCOVERED_TECHS,
         // DEBUG: делаем все технологии изученными
         // researchedTechs: Object.keys(RESEARCH_TREE),
+        // researchedTechs: ["relic_chamber"],
         researchedTechs: [],
         activeResearch: null,
         // DEBUG: разблокируем все рецепты крафтинга

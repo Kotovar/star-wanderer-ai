@@ -1,15 +1,33 @@
-import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
+import {
+    findActiveArtifact,
+    getArtifactEffectValue,
+    getArtifactShieldRegen,
+} from "@/game/artifacts";
 import { ARTIFACT_TYPES, RACES } from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type { GameState, GameStore, SetState } from "@/game/types";
 
 /**
  * Вычисляет базовую регенерацию щитов как сумму shieldRegen всех активных модулей щитов
+ * плюс бонус от артефакта "Тёмный Щит"
  */
-const getBaseShieldRegen = (state: GameState): number =>
-    state.ship.modules
+const getBaseShieldRegen = (state: GameState) => {
+    // Регенерация от модулей щитов
+    const moduleRegen = state.ship.modules
         .filter((m) => m.type === "shield" && m.health > 0 && !m.disabled)
         .reduce((sum, m) => sum + (m.shieldRegen ?? 4), 0);
+
+    // Регенерация от артефакта "Тёмный Щит" с учётом бонусов науки и ритуалов
+    const darkShield = findActiveArtifact(
+        state.artifacts,
+        ARTIFACT_TYPES.DARK_SHIELD,
+    );
+    const artifactRegen = darkShield
+        ? getArtifactShieldRegen(darkShield, state)
+        : 0;
+
+    return moduleRegen + artifactRegen;
+};
 
 /**
  * Собирает процентные бонусы регенерации от расовых traits
@@ -55,6 +73,18 @@ const getArtifactRegenBonus = (
         logs.push(
             `⚡ Регенератор Щитов: +${Math.round(regenBoost * 100)}% к регенерации`,
         );
+    }
+
+    // Тёмный Щит: базовая регенерация (уже добавлена в getBaseShieldRegen)
+    const darkShield = findActiveArtifact(
+        state.artifacts,
+        ARTIFACT_TYPES.DARK_SHIELD,
+    );
+    if (darkShield) {
+        const regenValue = getArtifactShieldRegen(darkShield, state);
+        if (regenValue > 0) {
+            logs.push(`🛡️ Тёмный Щит: +${regenValue} к регенерации`);
+        }
     }
 
     return { multiplier, logs };

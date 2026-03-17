@@ -123,13 +123,35 @@ function ArtifactCard({
                             ⚠ {artifact.negativeEffect.description}
                         </div>
                     )}
+                    {artifact.cursed &&
+                        artifact.negativeEffects?.map((neg, i) => (
+                            <div
+                                key={i}
+                                className="text-xs mt-1 leading-relaxed text-[#ff0040] bg-[rgba(255,0,64,0.1)] p-2 border-l-2 border-[#ff0040]"
+                            >
+                                ⚠ {neg.description}
+                            </div>
+                        ))}
 
                     {/* Active curse losses indicator */}
-                    {artifact.cursed && artifact.effect.active && artifact.negativeEffect && (
-                        <div className="text-xs mt-1 text-[#ff4444] bg-[rgba(255,0,0,0.15)] px-2 py-1 border border-[#ff0040] animate-pulse">
-                            ☠️ АКТИВНО — потери каждый ход: {artifact.negativeEffect.description}
-                        </div>
-                    )}
+                    {artifact.cursed &&
+                        artifact.effect.active &&
+                        artifact.negativeEffect && (
+                            <div className="text-xs mt-1 text-[#ff4444] bg-[rgba(255,0,0,0.15)] px-2 py-1 border border-[#ff0040] animate-pulse">
+                                ☠️ АКТИВНО — потери каждый ход:{" "}
+                                {artifact.negativeEffect.description}
+                            </div>
+                        )}
+                    {artifact.cursed &&
+                        artifact.effect.active &&
+                        artifact.negativeEffects?.map((neg, i) => (
+                            <div
+                                key={i}
+                                className="text-xs mt-1 text-[#ff4444] bg-[rgba(255,0,0,0.15)] px-2 py-1 border border-[#ff0040] animate-pulse"
+                            >
+                                ☠️ АКТИВНО: {neg.description}
+                            </div>
+                        ))}
 
                     <div className="text-xs mt-2">
                         <span className="text-[#888]">
@@ -165,13 +187,16 @@ function ArtifactCard({
                         <>
                             {!artifact.effect.active && slotsAtLimit && (
                                 <div className="text-xs mt-2 text-[#888] text-center">
-                                    Слоты заполнены. Деактивируйте другой артефакт.
+                                    Слоты заполнены. Деактивируйте другой
+                                    артефакт.
                                 </div>
                             )}
                             <Button
                                 onClick={onToggle}
-                                disabled={!artifact.effect.active && slotsAtLimit}
-                                className={`w-full mt-3 text-xs py-1 ${
+                                disabled={
+                                    !artifact.effect.active && slotsAtLimit
+                                }
+                                className={`cursor-pointer w-full mt-3 text-xs py-1 ${
                                     !artifact.effect.active && slotsAtLimit
                                         ? "bg-transparent border border-[#444] text-[#444] cursor-not-allowed opacity-50"
                                         : artifact.effect.active
@@ -222,8 +247,7 @@ export function ArtifactPanel() {
         (a) => a.cursed && a.effect.active,
     ).length;
     const maxSlots =
-        DEFAULT_ARTIFACT_SLOTS +
-        getTechBonusSum(research, "artifact_slots");
+        DEFAULT_ARTIFACT_SLOTS + getTechBonusSum(research, "artifact_slots");
     const slotsAtLimit = activeCount >= maxSlots;
 
     // Separate regular and cursed artifacts
@@ -248,15 +272,23 @@ export function ArtifactPanel() {
                 </div>
                 <div className="text-sm text-[#888]">
                     {t("artifacts.active_artifacts")}:{" "}
-                    <span className={slotsAtLimit ? "text-[#ff0040]" : "text-[#00d4ff]"}>
+                    <span
+                        className={
+                            slotsAtLimit ? "text-[#ff0040]" : "text-[#00d4ff]"
+                        }
+                    >
                         {activeCount}/{maxSlots}
                     </span>
                     {slotsAtLimit && (
-                        <span className="text-[#ff0040]"> — {t("artifacts.slots_full")}</span>
+                        <span className="text-[#ff0040]">
+                            {" "}
+                            — {t("artifacts.slots_full")}
+                        </span>
                     )}
                     {cursedActive > 0 && (
                         <span className="text-[#ff0040]">
-                            {" "}({cursedActive} ☠️ {t("artifacts.cursed_active")})
+                            {" "}
+                            ({cursedActive} ☠️ {t("artifacts.cursed_active")})
                         </span>
                     )}
                 </div>

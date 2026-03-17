@@ -127,6 +127,7 @@
         "evasion": "🎯 Уклонение",
         "reflection": "🛡️ Отражение",
         "shield_regen": "💚 Восстановление щитов",
+        "module_repair": "🔧 Ремонт модулей",
         "crit_chance": "💥 Шанс крита",
         "crit_damage": "💀 Крит. урон",
         "accuracy": "🎯 Точность",
@@ -847,7 +848,7 @@
         "research_btn_dangerous": "⚠️ ИЗУЧИТЬ (ОПАСНО)",
         "deactivate_btn": "ДЕАКТИВИРОВАТЬ",
         "activate_btn": "АКТИВИРОВАТЬ",
-        "active_neutralize_btn": "✓ АКТИВ (НЕЙТРАЛИЗОВАТЬ)",
+        "active_neutralize_btn": "✓ АКТИВНО (ОТКЛЮЧИТЬ)",
         "requires_scientist": "Требуется учёный",
         "rarity": {
             "rare": "Редкий",

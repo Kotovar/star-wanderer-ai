@@ -148,6 +148,44 @@ export const getArtifactEffectValue = (
 };
 
 /**
+ * Helper function to get artifact shieldRegen value with active boost bonus
+ * Applies research and ritual bonuses to shieldRegen (for artifacts like dark_shield_generator)
+ */
+export const getArtifactShieldRegen = (
+    artifact: Artifact | undefined,
+    state: GameState,
+): number => {
+    if (!artifact || !artifact.effect.shieldRegen) return 0;
+
+    let shieldRegen = artifact.effect.shieldRegen;
+
+    // Apply permanent research-based artifact effect boost
+    const researchBoost = getTechBonusSum(
+        state.research,
+        "artifact_effect_boost",
+    );
+    if (researchBoost > 0) {
+        shieldRegen = Math.floor(shieldRegen * (1 + researchBoost));
+    }
+
+    // Check if this artifact is boosted by voidborn ritual (stacks on top of research)
+    const boostEffect = state.activeEffects.find(
+        (e) =>
+            e.effects.some((ef) => ef.type === "artifact_boost") &&
+            e.targetArtifactId === artifact.id,
+    );
+
+    if (boostEffect) {
+        const boostValue =
+            (boostEffect.effects.find((ef) => ef.type === "artifact_boost")
+                ?.value as number) ?? ARTIFACT_BOOST_BONUS;
+        shieldRegen = Math.floor(shieldRegen * (1 + boostValue));
+    }
+
+    return shieldRegen;
+};
+
+/**
  * Находит активный артефакт по типу эффекта
  * @param artifacts - Список всех артефактов
  * @param effectType - Тип эффекта для поиска

@@ -459,18 +459,16 @@ export const selectSector = (
     const cockpit = getActiveModule(state.ship.modules, "cockpit");
     const pilotInCockpit = pilot && cockpit && pilot.moduleId === cockpit.id;
 
-    // Поиск артефактов
-    const voidEngine = findArtifactByEffect(state, [
-        "fuel_free",
-        "void_engine",
-    ]);
+    // Поиск артефактов отдельно
+    const fuelFree = findArtifactByEffect(state, ["fuel_free"]);
+    const voidEngine = findArtifactByEffect(state, ["void_engine"]);
 
     const warpCoil = findActiveArtifact(
         state.artifacts,
         ARTIFACT_TYPES.WARP_COIL,
     );
 
-    // Применение бонусов void_engine
+    // Применение бонусов void_engine (проклятый варп)
     if (voidEngine) {
         applyVoidEngineBonus(voidEngine, set, get);
     }
@@ -479,6 +477,7 @@ export const selectSector = (
     const { fuelCost, travelInstant } = calculateFuelCost(
         state,
         sector.id,
+        !!fuelFree,
         !!voidEngine,
         !!warpCoil,
         !!pilotInCockpit,

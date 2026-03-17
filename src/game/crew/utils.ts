@@ -1,6 +1,9 @@
 import { useGameStore } from "@/game/store";
 import { CREW_TRAITS, RACE_LAST_NAMES } from "@/game/constants";
 import type {
+    CrewMember,
+    CrewMemberAssignment,
+    CrewMemberCombatAssignment,
     CrewTrait,
     Profession,
     Quality,
@@ -194,3 +197,16 @@ export const getTraitById = (id: TraitId): CrewTrait => {
     if (!trait) throw new Error(`Unknown trait id: "${id}"`);
     return trait;
 };
+
+export const hasCombatAssignment = (
+    crew: CrewMember[],
+    assignment: CrewMemberCombatAssignment,
+) => crew.some((c) => c.combatAssignment === assignment);
+
+export const hasAssignment = (
+    crew: CrewMember[],
+    assignment: CrewMemberAssignment,
+) => crew.some((c) => c.assignment === assignment);
+
+export const hasProfession = (crew: CrewMember[], profession: Profession) =>
+    crew.some((c) => c.profession === profession);

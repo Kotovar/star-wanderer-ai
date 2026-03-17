@@ -19,7 +19,7 @@ import type {
     CargoItem,
     BattleResult,
 } from "@/game/types";
-import { findActiveArtifact } from "@/game/artifacts";
+import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import { completeBattleContracts } from "./completeBattleContracts";
 
 /**
@@ -77,7 +77,7 @@ export function handleVictory(
     );
 
     if (blackBox) {
-        const boostValue = blackBox.effect.value ?? 0;
+        const boostValue = getArtifactEffectValue(blackBox, state);
         creditsAmount = Math.floor(creditsAmount * (1 + boostValue));
     }
 
@@ -277,26 +277,30 @@ export function handleVictory(
         researchResources: combatResources,
     };
 
-    const criticalOverload = findActiveArtifact(
-        state.artifacts,
-        ARTIFACT_TYPES.CRITICAL_OVERLOAD,
-    );
+    // Handle self_damage negative effect (e.g., Overload Matrix)
+    state.artifacts.forEach((artifact) => {
+        if (
+            artifact.cursed &&
+            artifact.effect.active &&
+            artifact.negativeEffect?.type === "self_damage"
+        ) {
+            const damageValue = artifact.negativeEffect.value ?? 75;
+            if (state.ship.modules.length === 0) return;
 
-    if (criticalOverload && state.ship.modules.length > 0) {
-        const negativeValue = (criticalOverload.negativeEffect?.value as number) ?? 75;
-        const randomModuleIdx = Math.floor(
-            Math.random() * state.ship.modules.length,
-        );
-        set((s) => {
-            const mod = s.ship.modules[randomModuleIdx];
-            if (mod) mod.health = Math.max(1, mod.health - negativeValue);
-        });
-        const targetModule = state.ship.modules[randomModuleIdx];
-        get().addLog(
-            `⚠️ ${criticalOverload.name}: ${targetModule.name} повреждён на -${negativeValue}% после боя`,
-            "warning",
-        );
-    }
+            const randomModuleIdx = Math.floor(
+                Math.random() * state.ship.modules.length,
+            );
+            set((s) => {
+                const mod = s.ship.modules[randomModuleIdx];
+                if (mod) mod.health = Math.max(1, mod.health - damageValue);
+            });
+            const targetModule = state.ship.modules[randomModuleIdx];
+            get().addLog(
+                `⚠️ ${artifact.name}: ${targetModule.name} повреждён на -${damageValue}% после боя`,
+                "warning",
+            );
+        }
+    });
 
     set((s) => ({
         battleResult,

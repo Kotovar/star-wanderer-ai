@@ -113,21 +113,42 @@ const collectFuelModifiers = (state: GameState): number => {
 
 /**
  * Применяет модификаторы артефактов и штрафы
+ * @param fuelCost - Базовая стоимость топлива
+ * @param hasFuelFree - Есть ли активный fuel_free (обычный двигатель, только 2 соседних сектора)
+ * @param hasVoidEngine - Есть ли активный void_engine (проклятый варп, любые секторы)
+ * @param hasWarpCoil - Есть ли активный warp_coil
+ * @param pilotInCockpit - Находится ли пилот в кабине
+ * @param tierDistance - Расстояние по тирам между секторами
+ * @param angularDistance - Угловое расстояние между секторами (0-12)
+ * @returns Объект с итоговой стоимостью топлива и флагом мгновенного перелёта
  */
 const applyArtifactModifiers = (
     fuelCost: number,
+    hasFuelFree: boolean,
     hasVoidEngine: boolean,
     hasWarpCoil: boolean,
     pilotInCockpit: boolean,
+    tierDistance: number,
+    angularDistance: number,
 ): { fuelCost: number; travelInstant: boolean } => {
+    // Проклятый варп (void_engine) — бесплатно для любых секторов
     if (hasVoidEngine) {
         return { fuelCost: 0, travelInstant: false };
     }
 
+    // Обычный двигатель (fuel_free) — бесплатно только для 2 соседних секторов
+    // (тот же тир + угловое расстояние <= 1.5, т.е. слева или справа)
+    // Для 8 секторов на тир: угловое расстояние между соседями = 1.5
+    if (hasFuelFree && tierDistance === 0 && angularDistance <= 1.5) {
+        return { fuelCost: 0, travelInstant: false };
+    }
+
+    // Варп катушка (warp_coil) — мгновенный перелёт
     if (hasWarpCoil) {
         return { fuelCost: 0, travelInstant: true };
     }
 
+    // Штраф за отсутствие пилота
     if (!pilotInCockpit) {
         return {
             fuelCost: Math.floor(fuelCost * FUEL_PENALTY_NO_PILOT),
@@ -147,7 +168,8 @@ const applyArtifactModifiers = (
  *
  * @param state - Текущее состояние игры
  * @param targetSectorId - Целевой сектор для перелёта
- * @param hasVoidEngine - Есть ли активный void_engine
+ * @param hasFuelFree - Есть ли активный fuel_free (обычный двигатель)
+ * @param hasVoidEngine - Есть ли активный void_engine (проклятый варп)
  * @param hasWarpCoil - Есть ли активный warp_coil
  * @param pilotInCockpit - Находится ли пилот в кабине
  * @returns Объект с итоговой стоимостью топлива и флагом мгновенного перелёта
@@ -155,6 +177,7 @@ const applyArtifactModifiers = (
 export const calculateFuelCost = (
     state: GameState,
     targetSectorId: number,
+    hasFuelFree: boolean,
     hasVoidEngine: boolean,
     hasWarpCoil: boolean,
     pilotInCockpit: boolean,
@@ -191,9 +214,12 @@ export const calculateFuelCost = (
 
     return applyArtifactModifiers(
         fuelCost,
+        hasFuelFree,
         hasVoidEngine,
         hasWarpCoil,
         pilotInCockpit,
+        tierDistance,
+        angularDistance,
     );
 };
 
@@ -210,11 +236,9 @@ export const calculateFuelCostForUI = (
     state: GameState,
     targetSectorId: number,
 ): { fuelCost: number; travelInstant: boolean } => {
-    // Проверяем артефакты
-    const voidEngine = findArtifactByEffect(state, [
-        "fuel_free",
-        "void_engine",
-    ]);
+    // Проверяем артефакты отдельно
+    const fuelFree = findArtifactByEffect(state, ["fuel_free"]);
+    const voidEngine = findArtifactByEffect(state, ["void_engine"]);
     const warpCoil = findActiveArtifact(
         state.artifacts,
         ARTIFACT_TYPES.WARP_COIL,
@@ -228,6 +252,7 @@ export const calculateFuelCostForUI = (
     return calculateFuelCost(
         state,
         targetSectorId,
+        !!fuelFree,
         !!voidEngine,
         !!warpCoil,
         !!pilotInCockpit,

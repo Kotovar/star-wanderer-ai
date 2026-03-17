@@ -873,7 +873,7 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         id: "relic_chamber",
         name: "Реликварий",
         description:
-            "Специальная камера хранения усиливает взаимодействие с артефактами. +1 слот, +5% к эффектам артефактов.",
+            "Специальная камера хранения усиливает взаимодействие с артефактами. +1 слот, +10% к эффектам артефактов.",
         tier: 2,
         category: "artifacts",
         prerequisites: ["artifact_study"],
@@ -888,8 +888,8 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
             },
             {
                 type: "artifact_effect_boost",
-                value: 0.05,
-                description: "+5% к эффектам всех артефактов",
+                value: 0.1,
+                description: "+10% к эффектам всех артефактов",
             },
         ],
         icon: "🏺",
@@ -903,7 +903,7 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         id: "ancient_resonance",
         name: "Резонанс Древних",
         description:
-            "Резонансная настройка усиливает реликвии через корабельные системы. +1 слот, +10% к эффектам артефактов.",
+            "Резонансная настройка усиливает реликвии через корабельные системы. +1 слот, +15% к эффектам артефактов.",
         tier: 3,
         category: "artifacts",
         prerequisites: ["relic_chamber", "quantum_scanner"],
@@ -918,8 +918,8 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
             },
             {
                 type: "artifact_effect_boost",
-                value: 0.1,
-                description: "+10% к эффектам всех артефактов",
+                value: 0.15,
+                description: "+15% к эффектам всех артефактов",
             },
         ],
         icon: "✨",
@@ -933,7 +933,7 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         id: "artifact_mastery",
         name: "Мастерство Артефактов",
         description:
-            "Полное единение с наследием Древних. +2 слота, +15% к эффектам всех активных артефактов.",
+            "Полное единение с наследием Древних. +2 слота, +25% к эффектам всех активных артефактов.",
         tier: 4,
         category: "artifacts",
         prerequisites: ["ancient_resonance"],
@@ -952,8 +952,8 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
             },
             {
                 type: "artifact_effect_boost",
-                value: 0.15,
-                description: "+15% к эффектам всех артефактов",
+                value: 0.25,
+                description: "+25% к эффектам всех артефактов",
             },
         ],
         icon: "👁️",
