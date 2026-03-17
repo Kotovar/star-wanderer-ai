@@ -131,6 +131,7 @@ export interface GameActionsClick {
     selectSector: (sectorId: number) => void;
     selectLocation: (locationIdx: number) => void;
     travelThroughBlackHole: () => void;
+    emergencyJump: () => void;
     mineAsteroid: () => void;
     enterStorm: () => void;
 }

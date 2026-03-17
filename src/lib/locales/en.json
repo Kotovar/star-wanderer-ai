@@ -1185,6 +1185,11 @@
             "level_3": "3 LVL",
             "level_2": "2 LVL",
             "level_1": "1 LVL"
+        },
+        "black_hole": {
+            "title": "🕳️ BLACK HOLE",
+            "hint": "Click the center to teleport",
+            "emergency_jump": "⚡ EMERGENCY JUMP — all modules take damage"
         }
     },
     "turn_skip": "Turn skipped - tasks executing",

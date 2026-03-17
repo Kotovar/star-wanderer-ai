@@ -11,6 +11,7 @@ import {
     StarType,
     StormType,
 } from "@/game/types";
+import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
 import { PLANET_COLORS_IN_SECTOR } from "../constants";
 import { getScannerRangeLabel } from "./DistressSignalPanel";
 
@@ -482,6 +483,20 @@ export function SectorMap() {
     const travelThroughBlackHole = useGameStore(
         (s) => s.travelThroughBlackHole,
     );
+    const emergencyJump = useGameStore((s) => s.emergencyJump);
+    const isStuckInBlackHole = useGameStore((s) => {
+        if (s.currentSector?.star?.type !== "blackhole") return false;
+        const nonBH = s.galaxy.sectors.filter(
+            (sec) =>
+                sec.star?.type !== "blackhole" &&
+                sec.id !== s.currentSector?.id,
+        );
+        if (nonBH.length === 0) return true;
+        const minCost = Math.min(
+            ...nonBH.map((sec) => calculateFuelCostForUI(s, sec.id).fuelCost),
+        );
+        return s.ship.fuel < minCost;
+    });
     const completedLocations = useGameStore((s) => s.completedLocations);
     const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
     const canScanObject = useGameStore((s) => s.canScanObject);
@@ -1515,11 +1530,21 @@ export function SectorMap() {
             {currentSector?.star?.type === "blackhole" && (
                 <div className="bg-[rgba(255,0,255,0.1)] border border-[#ff00ff] p-2 mb-2 text-center text-sm">
                     <span className="text-[#ff00ff] font-bold">
-                        🕳️ ЧЁРНАЯ ДЫРА
+                        {t("galaxy.black_hole.title")}
                     </span>
                     <span className="text-[#ffb000] ml-2">
-                        - Нажмите на центр, чтобы телепортироваться
+                        - {t("galaxy.black_hole.hint")}
                     </span>
+                    {isStuckInBlackHole && (
+                        <div className="mt-1">
+                            <button
+                                onClick={emergencyJump}
+                                className="cursor-pointer bg-[rgba(255,50,50,0.2)] border border-[#ff3232] text-[#ff3232] px-3 py-1 text-xs font-bold hover:bg-[rgba(255,50,50,0.4)] transition-colors"
+                            >
+                                {t("galaxy.black_hole.emergency_jump")}
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 
