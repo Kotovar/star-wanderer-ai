@@ -15,6 +15,7 @@ import type {
 } from "@/game/types";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
 import { rollQuality } from "@/game/crew/utils";
+import { addTradeGood } from "@/game/slices/ship/helpers";
 import {
     SURVIVORS_REWARD,
     SURVIVOR_JOINS_CHANCE,
@@ -269,10 +270,7 @@ const handleAbandonedCargo = (set: SetState, get: () => GameStore): void => {
         credits: s.credits + creditsReward,
         ship: {
             ...s.ship,
-            tradeGoods: [
-                ...s.ship.tradeGoods,
-                { item: goodId, quantity, buyPrice: 0 },
-            ],
+            tradeGoods: addTradeGood(s.ship.tradeGoods, goodId, quantity),
         },
     }));
 

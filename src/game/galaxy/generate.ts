@@ -286,9 +286,9 @@ export const generateAsteroidBelt = (
     }
 
     const resources = {
-        minerals: (20 + Math.floor(Math.random() * 30)) * asteroidTier,
-        rare: Math.floor(Math.random() * 5) * asteroidTier,
-        credits: (50 + Math.floor(Math.random() * 100)) * asteroidTier,
+        minerals: (5 + Math.floor(Math.random() * 6)) * asteroidTier,
+        rare: Math.floor(Math.random() * 2) * asteroidTier,
+        credits: (20 + Math.floor(Math.random() * 30)) * asteroidTier,
     };
 
     return {

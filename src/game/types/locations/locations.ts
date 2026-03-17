@@ -74,6 +74,13 @@ export interface Location {
     asteroidTier?: AsteroidTier; // Higher = better resources, needs better drill (4 = ancient, requires ancient drill)
     resources?: { minerals: number; rare: number; credits: number };
     mined?: boolean;
+    miningResult?: {
+        minerals: number;
+        rare: number;
+        credits: number;
+        researchResources: string[]; // Pre-formatted display strings (icon + name + quantity)
+        cargoWarning?: string; // Warning message if cargo was limited
+    };
     // Storm fields
     stormType?: StormType;
     stormIntensity?: number; // 1-3, affects damage and loot quality

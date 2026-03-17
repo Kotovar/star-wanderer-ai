@@ -14,3 +14,4 @@ export * from "./updateShipStats";
 export * from "./toggleModule";
 export * from "./moveModule";
 export * from "./canPlaceModule";
+export * from "./addTradeGood";
