@@ -724,6 +724,7 @@
             "mining": "Mining",
             "research": "Research",
             "medical": "Medical",
+            "shipyard": "Shipyard",
             "industrial": "Industrial"
         }
     },
@@ -1464,6 +1465,7 @@
             "mining": "Mining",
             "research": "Research",
             "medical": "Medical",
+            "shipyard": "Shipyard",
             "industrial": "Industrial"
         },
         "scanner_upgrade": "Scanner Upgrade",

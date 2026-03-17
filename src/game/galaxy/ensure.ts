@@ -170,6 +170,51 @@ export const ensureStation = (sector: Sector): void => {
 };
 
 /**
+ * Обеспечивает наличие хотя бы одной верфи и одной медицинской станции
+ * в секторах заданного тира
+ */
+export const ensureStationTypes = (
+    sectors: Sector[],
+    tier: GalaxyTierAll,
+): void => {
+    const tierSectors = sectors.filter(
+        (s) => s.tier === tier && s.star?.type !== "blackhole",
+    );
+
+    const requiredTypes: Array<"shipyard" | "medical"> = ["shipyard", "medical"];
+
+    for (const requiredType of requiredTypes) {
+        const hasType = tierSectors.some((s) =>
+            s.locations.some(
+                (l) => l.type === "station" && l.stationType === requiredType,
+            ),
+        );
+
+        if (hasType) continue;
+
+        // Find a sector with a station that isn't already the required type
+        for (const sector of tierSectors) {
+            const stationIdx = sector.locations.findIndex(
+                (l) =>
+                    l.type === "station" &&
+                    l.stationType !== "shipyard" &&
+                    l.stationType !== "medical",
+            );
+
+            if (stationIdx >= 0) {
+                const existing = sector.locations[stationIdx];
+                sector.locations[stationIdx] = {
+                    ...existing,
+                    stationType: requiredType,
+                    stationConfig: STATION_CONFIG[requiredType],
+                };
+                break;
+            }
+        }
+    }
+};
+
+/**
  * Обеспечивает наличие минимального количества чёрных дыр
  * Ищет сектора без чёрных дыр, предпочитая tier 3
  * Гарантирует максимум 1 чёрная дыра на сектор

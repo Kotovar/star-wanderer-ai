@@ -151,6 +151,12 @@ function getStationTypeTranslation(
         Medical: "medical",
         Industrial: "industrial",
     };
+    // First try direct key (e.g. "shipyard", "medical", "trade")
+    const directTranslation = t(`locations.station_types.${stationType}`);
+    if (directTranslation !== `locations.station_types.${stationType}`) {
+        return directTranslation;
+    }
+    // Fall back to legacy name → key mapping
     const key = typeMap[stationType];
     if (key) {
         const translated = t(`locations.station_types.${key}`);
@@ -2306,6 +2312,16 @@ function drawStation(
             secondary: "#4a2a6a",
             accent: "#00d4ff",
         },
+        shipyard: {
+            primary: "#7a5a2a",
+            secondary: "#4a3a1a",
+            accent: "#ff8800",
+        },
+        medical: {
+            primary: "#2a7a5a",
+            secondary: "#1a4a3a",
+            accent: "#00ff88",
+        },
     };
 
     const colors = stationColors[stationType] || stationColors.trade;
@@ -2490,6 +2506,113 @@ function drawStation(
             ctx.beginPath();
             ctx.ellipse(x, y, 16, 8, Math.PI / 4, 0, Math.PI * 2);
             ctx.stroke();
+            break;
+
+        case "shipyard":
+            // Shipyard: dry-dock C-clamps on sides + ship skeleton inside
+            ctx.fillStyle = colors.secondary;
+            ctx.lineWidth = 2;
+
+            // Left dry-dock clamp (C-shape opening right)
+            ctx.strokeStyle = colors.primary;
+            ctx.beginPath();
+            ctx.moveTo(x - 18, y - 10);
+            ctx.lineTo(x - 10, y - 10);
+            ctx.lineTo(x - 10, y - 6);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x - 18, y + 10);
+            ctx.lineTo(x - 10, y + 10);
+            ctx.lineTo(x - 10, y + 6);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x - 18, y - 10);
+            ctx.lineTo(x - 18, y + 10);
+            ctx.stroke();
+
+            // Right dry-dock clamp (C-shape opening left)
+            ctx.beginPath();
+            ctx.moveTo(x + 18, y - 10);
+            ctx.lineTo(x + 10, y - 10);
+            ctx.lineTo(x + 10, y - 6);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x + 18, y + 10);
+            ctx.lineTo(x + 10, y + 10);
+            ctx.lineTo(x + 10, y + 6);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x + 18, y - 10);
+            ctx.lineTo(x + 18, y + 10);
+            ctx.stroke();
+
+            // Ship skeleton outline in dock
+            ctx.strokeStyle = colors.accent + "aa";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x - 8, y);
+            ctx.lineTo(x - 4, y - 4);
+            ctx.lineTo(x + 6, y - 4);
+            ctx.lineTo(x + 8, y);
+            ctx.lineTo(x + 6, y + 4);
+            ctx.lineTo(x - 4, y + 4);
+            ctx.closePath();
+            ctx.stroke();
+
+            // Orange accent lights on clamp tips
+            ctx.fillStyle = colors.accent;
+            ctx.beginPath();
+            ctx.arc(x - 18, y - 10, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x - 18, y + 10, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + 18, y - 10, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + 18, y + 10, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+        case "medical":
+            // Medical station: large cross + outer ring + accent dots
+            ctx.strokeStyle = colors.primary;
+            ctx.lineWidth = 2;
+
+            // Horizontal bar of cross
+            ctx.fillStyle = colors.secondary;
+            ctx.fillRect(x - 18, y - 4, 36, 8);
+            // Vertical bar of cross
+            ctx.fillRect(x - 4, y - 18, 8, 36);
+
+            // Cross outline
+            ctx.strokeStyle = colors.primary;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x - 18, y - 4, 36, 8);
+            ctx.strokeRect(x - 4, y - 18, 8, 36);
+
+            // Outer ring
+            ctx.strokeStyle = colors.accent + "88";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(x, y, 22, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Green accent dots at cross tips
+            ctx.fillStyle = colors.accent;
+            ctx.beginPath();
+            ctx.arc(x - 18, y, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + 18, y, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x, y - 18, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x, y + 18, 2, 0, Math.PI * 2);
+            ctx.fill();
             break;
     }
 

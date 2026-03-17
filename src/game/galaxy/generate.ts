@@ -401,7 +401,8 @@ export const generateAnomaly = (
 };
 
 /**
- * Добавляет босса The Eternal в сектор с чёрной дырой
+ * Добавляет уникального босса The Eternal в один сектор с чёрной дырой.
+ * Вызывается ровно один раз за генерацию галактики.
  */
 export const addEternalBoss = (sector: Sector): void => {
     const eternalBoss = ANCIENT_BOSSES.find((b) => b.id === "the_eternal");
@@ -415,6 +416,27 @@ export const addEternalBoss = (sector: Sector): void => {
         name: eternalBoss.name,
         bossId: eternalBoss.id,
         bossType: eternalBoss.bossType,
+        bossDefeated: false,
+    });
+};
+
+/**
+ * Добавляет случайного босса любого тира в сектор с чёрной дырой.
+ * Используется для ЧД-секторов, которые не получили The Eternal.
+ */
+export const addRandomBossToBlackHole = (sector: Sector): void => {
+    // tier 3 означает "любой тир ≤ 3" в getRandomBossForTier
+    const boss = bossDistribution.getRandomBossForTier(3);
+    if (!boss) return;
+
+    bossDistribution.markBossAsUsed(boss.id);
+
+    sector.locations.push({
+        id: `${sector.id}-boss-bh`,
+        type: "boss",
+        name: boss.name,
+        bossId: boss.id,
+        bossType: boss.bossType,
         bossDefeated: false,
     });
 };

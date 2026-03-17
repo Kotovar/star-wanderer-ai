@@ -78,6 +78,12 @@ export function StationPanel() {
     const sectorTier = currentSector?.tier || 1;
     const stationConfig = currentLocation?.stationConfig;
 
+    // Station service flags (default true for backwards compat with old saves)
+    const allowsTrade = stationConfig?.allowsTrade ?? true;
+    const allowsCraft = stationConfig?.allowsCraft ?? true;
+    const allowsModuleInstall = stationConfig?.allowsModuleInstall ?? true;
+    const allowsCrewHeal = stationConfig?.allowsCrewHeal ?? true;
+
     const stationItems = useMemo(
         () =>
             generateStationItems(
@@ -160,19 +166,26 @@ export function StationPanel() {
                 onValueChange={setActiveTab}
                 className="w-full mt-2"
             >
-                <TabsList className="grid w-full grid-cols-5 bg-[rgba(0,255,65,0.1)] border border-[#00ff41] h-auto">
+                <TabsList
+                    className="grid w-full bg-[rgba(0,255,65,0.1)] border border-[#00ff41] h-auto"
+                    style={{
+                        gridTemplateColumns: `repeat(${3 + (allowsTrade ? 1 : 0) + (allowsCraft ? 1 : 0)}, minmax(0, 1fr))`,
+                    }}
+                >
                     <TabsTrigger
                         value="shop"
                         className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
                     >
                         {t("station.modules_tab")}
                     </TabsTrigger>
-                    <TabsTrigger
-                        value="trade"
-                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
-                    >
-                        {t("station.trade_tab")}
-                    </TabsTrigger>
+                    {allowsTrade && (
+                        <TabsTrigger
+                            value="trade"
+                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
+                        >
+                            {t("station.trade_tab")}
+                        </TabsTrigger>
+                    )}
                     <TabsTrigger
                         value="crew"
                         className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
@@ -185,12 +198,14 @@ export function StationPanel() {
                     >
                         {t("station.services_tab")}
                     </TabsTrigger>
-                    <TabsTrigger
-                        value="crafting"
-                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
-                    >
-                        {t("station.craft")}
-                    </TabsTrigger>
+                    {allowsCraft && (
+                        <TabsTrigger
+                            value="crafting"
+                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
+                        >
+                            {t("station.craft")}
+                        </TabsTrigger>
+                    )}
                 </TabsList>
 
                 <TabsContent value="shop" className="mt-4 min-h-[50vh]">
@@ -209,17 +224,19 @@ export function StationPanel() {
                     />
                 </TabsContent>
 
-                <TabsContent value="trade" className="mt-4 min-h-[50vh]">
-                    <TradeTab
-                        stationId={stationId}
-                        stationPrices={stationPrices}
-                        stationStock={stationStock}
-                        credits={credits}
-                        ship={ship}
-                        buyTradeGood={buyTradeGood}
-                        sellTradeGood={sellTradeGood}
-                    />
-                </TabsContent>
+                {allowsTrade && (
+                    <TabsContent value="trade" className="mt-4 min-h-[50vh]">
+                        <TradeTab
+                            stationId={stationId}
+                            stationPrices={stationPrices}
+                            stationStock={stationStock}
+                            credits={credits}
+                            ship={ship}
+                            buyTradeGood={buyTradeGood}
+                            sellTradeGood={sellTradeGood}
+                        />
+                    </TabsContent>
+                )}
 
                 <TabsContent value="crew" className="mt-4 min-h-[50vh]">
                     <CrewTab
@@ -280,11 +297,15 @@ export function StationPanel() {
                         healCost={getHealCost().cost}
                         canRepair={canRepairShip()}
                         canHeal={canHealCrew()}
+                        allowsCrewHeal={allowsCrewHeal}
+                        allowsModuleInstall={allowsModuleInstall}
                     />
                 </TabsContent>
-                <TabsContent value="crafting" className="mt-4 min-h-[50vh]">
-                    <CraftingTab />
-                </TabsContent>
+                {allowsCraft && (
+                    <TabsContent value="crafting" className="mt-4 min-h-[50vh]">
+                        <CraftingTab />
+                    </TabsContent>
+                )}
             </Tabs>
 
             <ModuleUpgradeModal
