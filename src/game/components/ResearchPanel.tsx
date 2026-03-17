@@ -59,10 +59,15 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
     stellar_genetics: [3.5, 9],
     ancient_power: [3.5, 5.25],
     warp_drive: [4.5, 5.25],
+    // Artifact branch — col 0-3.5, row 11.5+
+    artifact_study: [0, 11.5],
+    relic_chamber: [1, 11.5],
+    ancient_resonance: [2, 11.5],
+    artifact_mastery: [3.5, 11.5],
 };
 
 const CANVAS_W = Math.ceil(PAD_X + 4.5 * COL_GAP + NODE_W / 2 + PAD_X);
-const CANVAS_H = Math.ceil(PAD_Y + 10 * ROW_GAP + NODE_H / 2 + PAD_Y);
+const CANVAS_H = Math.ceil(PAD_Y + 12.5 * ROW_GAP + NODE_H / 2 + PAD_Y);
 
 // ─── Category colors ───────────────────────────────────────────────────────────
 const CATEGORY_COLORS: Record<ResearchCategory, string> = {
@@ -72,6 +77,7 @@ const CATEGORY_COLORS: Record<ResearchCategory, string> = {
     engineering: "#ffb000",
     biology: "#00ff41",
     ancient_tech: "#ffd700",
+    artifacts: "#ff6600",
 };
 
 // ─── Edge helpers ─────────────────────────────────────────────────────────────
@@ -140,48 +146,34 @@ function TechNode({
     const [cx, cy] = getNodeCenter(tech.id);
     const catColor = CATEGORY_COLORS[tech.category];
 
-    let borderColor = "#2a2a2a";
+    // Бордер всегда цвет категории; для неизвестных — тёмный
+    const borderColor = isDiscovered || isOpened ? catColor : "#2a2a2a";
+
     let bgColor = "rgba(0,0,0,0.6)";
     let textOpacity = "opacity-40";
     let glowStyle = "";
 
     if (isResearched) {
-        borderColor = "#00ff41";
-        bgColor = "rgba(0,255,65,0.08)";
+        bgColor = `${catColor}14`; // ~8% opacity tint
         textOpacity = "opacity-100";
-        glowStyle = "0 0 8px rgba(0,255,65,0.4)";
+        glowStyle = `0 0 8px ${catColor}66`;
     } else if (isActive) {
-        borderColor = "#00d4ff";
         bgColor = "rgba(0,212,255,0.10)";
         textOpacity = "opacity-100";
         glowStyle = "0 0 12px rgba(0,212,255,0.5)";
     } else if (isReady) {
-        // Готово к исследованию — зелёный
-        borderColor = "#00ff41";
-        bgColor = "rgba(0,255,65,0.08)";
+        bgColor = `${catColor}0d`; // ~5% opacity tint
         textOpacity = "opacity-100";
-        glowStyle = `0 0 6px #00ff4166`;
     } else if (isOpened) {
-        // Открыто, но не готово — жёлтый
-        borderColor = "#ffb000";
-        bgColor = "rgba(255,176,0,0.08)";
+        bgColor = "rgba(0,0,0,0.5)";
         textOpacity = "opacity-100";
-        glowStyle = `0 0 6px #ffb00066`;
     } else if (isDiscovered) {
-        borderColor = "#333";
         bgColor = "rgba(0,0,0,0.5)";
         textOpacity = "opacity-60";
     }
 
     if (isSelected) {
-        const ring = isResearched
-            ? "#00ff41"
-            : isReady
-              ? "#00ff41"
-              : isOpened
-                ? "#ffb000"
-                : "#888";
-        glowStyle = `0 0 0 2px ${ring}${glowStyle ? `, ${glowStyle}` : ""}`;
+        glowStyle = `0 0 0 2px ${catColor}${glowStyle ? `, ${glowStyle}` : ""}`;
     }
 
     const translation = getTechTranslation(tech.id, lang);
@@ -211,10 +203,6 @@ function TechNode({
             }}
             className="border transition-all duration-200 select-none"
         >
-            <div
-                className="absolute top-0 left-0 right-0 h-0.5"
-                style={{ backgroundColor: isDiscovered ? catColor : "#333" }}
-            />
             <div
                 className={`flex items-start h-full px-2 pt-2 pb-1 gap-1.5 ${textOpacity}`}
             >
@@ -264,9 +252,13 @@ function TechNode({
                                     ◍ Открыто
                                 </span>
                             ) : isDiscovered ? (
-                                "⊘ Заблокировано"
+                                <span style={{ color: "#ff4444" }}>
+                                    ⊘ Заблокировано
+                                </span>
                             ) : (
-                                "? Неизвестно"
+                                <span style={{ color: "#444" }}>
+                                    ? Неизвестно
+                                </span>
                             )}
                         </div>
                     )}

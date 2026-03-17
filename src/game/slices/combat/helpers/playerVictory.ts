@@ -283,7 +283,7 @@ export function handleVictory(
     );
 
     if (criticalOverload && state.ship.modules.length > 0) {
-        const negativeValue = (criticalOverload.effect.value as number) ?? 0;
+        const negativeValue = (criticalOverload.negativeEffect?.value as number) ?? 75;
         const randomModuleIdx = Math.floor(
             Math.random() * state.ship.modules.length,
         );

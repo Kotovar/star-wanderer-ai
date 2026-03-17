@@ -40,7 +40,11 @@ export type TechnologyId =
     | "void_resonance"
     | "ancient_power"
     | "stellar_genetics"
-    | "warp_drive";
+    | "warp_drive"
+    | "artifact_study"
+    | "relic_chamber"
+    | "ancient_resonance"
+    | "artifact_mastery";
 
 /**
  * Research tier - technology level
@@ -67,7 +71,8 @@ export type ResearchCategory =
     | "science"
     | "engineering"
     | "biology"
-    | "ancient_tech";
+    | "ancient_tech"
+    | "artifacts";
 
 /**
  * Research bonus type
@@ -86,7 +91,9 @@ export type ResearchBonusType =
     | "new_module"
     | "new_weapon"
     | "special_ability"
-    | "nanite_repair";
+    | "nanite_repair"
+    | "artifact_slots"
+    | "artifact_effect_boost";
 
 /**
  * Research resource in cargo

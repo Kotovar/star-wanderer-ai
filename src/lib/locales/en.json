@@ -828,6 +828,8 @@
         "discovered": "Discovered",
         "researched": "Researched",
         "active": "Active",
+        "active_artifacts": "Active artifacts",
+        "slots_full": "full!",
         "cursed_active": "cursed",
         "scientists_onboard": "Scientists on board",
         "no_scientists": "none",

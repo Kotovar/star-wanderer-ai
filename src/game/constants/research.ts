@@ -841,6 +841,129 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         researched: false,
         researchProgress: 0,
     },
+
+    // ═══════════════════════════════════════════════════════════════
+    // ARTIFACT BRANCH - Technologies to master ancient relics
+    // ═══════════════════════════════════════════════════════════════
+
+    artifact_study: {
+        id: "artifact_study",
+        name: "Изучение Артефактов",
+        description:
+            "Базовые протоколы работы с реликвиями Древних. Открывает 4-й слот активного артефакта.",
+        tier: 1,
+        category: "artifacts",
+        prerequisites: [],
+        resources: { ancient_data: 5 },
+        credits: 300,
+        scienceCost: 100,
+        bonuses: [
+            {
+                type: "artifact_slots",
+                value: 1,
+                description: "+1 слот активного артефакта (итого 4)",
+            },
+        ],
+        icon: "🔮",
+        color: "#ff6600",
+        discovered: true,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    relic_chamber: {
+        id: "relic_chamber",
+        name: "Реликварий",
+        description:
+            "Специальная камера хранения усиливает взаимодействие с артефактами. +1 слот, +5% к эффектам артефактов.",
+        tier: 2,
+        category: "artifacts",
+        prerequisites: ["artifact_study"],
+        resources: { ancient_data: 10, quantum_crystals: 1 },
+        credits: 600,
+        scienceCost: 250,
+        bonuses: [
+            {
+                type: "artifact_slots",
+                value: 1,
+                description: "+1 слот активного артефакта (итого 5)",
+            },
+            {
+                type: "artifact_effect_boost",
+                value: 0.05,
+                description: "+5% к эффектам всех артефактов",
+            },
+        ],
+        icon: "🏺",
+        color: "#ff6600",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    ancient_resonance: {
+        id: "ancient_resonance",
+        name: "Резонанс Древних",
+        description:
+            "Резонансная настройка усиливает реликвии через корабельные системы. +1 слот, +10% к эффектам артефактов.",
+        tier: 3,
+        category: "artifacts",
+        prerequisites: ["relic_chamber"],
+        resources: { ancient_data: 20, quantum_crystals: 2, energy_samples: 8 },
+        credits: 1000,
+        scienceCost: 450,
+        bonuses: [
+            {
+                type: "artifact_slots",
+                value: 1,
+                description: "+1 слот активного артефакта (итого 6)",
+            },
+            {
+                type: "artifact_effect_boost",
+                value: 0.1,
+                description: "+10% к эффектам всех артефактов",
+            },
+        ],
+        icon: "✨",
+        color: "#ff6600",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    artifact_mastery: {
+        id: "artifact_mastery",
+        name: "Мастерство Артефактов",
+        description:
+            "Полное единение с наследием Древних. +2 слота, +15% к эффектам всех активных артефактов.",
+        tier: 4,
+        category: "artifacts",
+        prerequisites: ["ancient_resonance"],
+        resources: {
+            ancient_data: 30,
+            quantum_crystals: 5,
+            energy_samples: 15,
+        },
+        credits: 2000,
+        scienceCost: 800,
+        bonuses: [
+            {
+                type: "artifact_slots",
+                value: 2,
+                description: "+2 слота активных артефактов (итого 8)",
+            },
+            {
+                type: "artifact_effect_boost",
+                value: 0.15,
+                description: "+15% к эффектам всех артефактов",
+            },
+        ],
+        icon: "👁️",
+        color: "#ff6600",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
 };
 
 /**

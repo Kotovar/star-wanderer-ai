@@ -36,6 +36,7 @@ const INITIAL_DISCOVERED_TECHS: TechnologyId[] = [
     "scanner_mk2",
     "automated_repair",
     "medbay_upgrade",
+    "artifact_study",
 ];
 
 /** Счётчик загрузок игры (для предотвращения показа модалок после загрузки) */

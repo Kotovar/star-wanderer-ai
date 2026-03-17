@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { Artifact } from "../types";
 import { useTranslation } from "@/lib/useTranslation";
+import { getTechBonusSum } from "@/game/research";
+import { DEFAULT_ARTIFACT_SLOTS } from "@/game/slices/artifacts/constants";
 
 const RARITY_COLORS: Record<
     string,
@@ -60,10 +62,12 @@ function ArtifactCard({
     artifact,
     onResearch,
     onToggle,
+    slotsAtLimit,
 }: {
     artifact: Artifact;
     onResearch: () => void;
     onToggle: () => void;
+    slotsAtLimit: boolean;
 }) {
     const { t } = useTranslation();
     const colors = RARITY_COLORS[artifact.rarity];
@@ -120,6 +124,13 @@ function ArtifactCard({
                         </div>
                     )}
 
+                    {/* Active curse losses indicator */}
+                    {artifact.cursed && artifact.effect.active && artifact.negativeEffect && (
+                        <div className="text-xs mt-1 text-[#ff4444] bg-[rgba(255,0,0,0.15)] px-2 py-1 border border-[#ff0040] animate-pulse">
+                            ☠️ АКТИВНО — потери каждый ход: {artifact.negativeEffect.description}
+                        </div>
+                    )}
+
                     <div className="text-xs mt-2">
                         <span className="text-[#888]">
                             {t("artifacts.requires_scientist")}:{" "}
@@ -151,22 +162,32 @@ function ArtifactCard({
                     )}
 
                     {artifact.researched && (
-                        <Button
-                            onClick={onToggle}
-                            className={`w-full mt-3 text-xs py-1 ${
-                                artifact.effect.active
+                        <>
+                            {!artifact.effect.active && slotsAtLimit && (
+                                <div className="text-xs mt-2 text-[#888] text-center">
+                                    Слоты заполнены. Деактивируйте другой артефакт.
+                                </div>
+                            )}
+                            <Button
+                                onClick={onToggle}
+                                disabled={!artifact.effect.active && slotsAtLimit}
+                                className={`w-full mt-3 text-xs py-1 ${
+                                    !artifact.effect.active && slotsAtLimit
+                                        ? "bg-transparent border border-[#444] text-[#444] cursor-not-allowed opacity-50"
+                                        : artifact.effect.active
+                                          ? artifact.cursed
+                                              ? "bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
+                                              : "bg-transparent border border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810]"
+                                          : "bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
+                                }`}
+                            >
+                                {artifact.effect.active
                                     ? artifact.cursed
-                                        ? "bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
-                                        : "bg-transparent border border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810]"
-                                    : "bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
-                            }`}
-                        >
-                            {artifact.effect.active
-                                ? artifact.cursed
-                                    ? t("artifacts.active_neutralize_btn")
-                                    : t("artifacts.deactivate_btn")
-                                : t("artifacts.activate_btn")}
-                        </Button>
+                                        ? t("artifacts.active_neutralize_btn")
+                                        : t("artifacts.deactivate_btn")
+                                    : t("artifacts.activate_btn")}
+                            </Button>
+                        </>
                     )}
                 </>
             )}
@@ -185,6 +206,7 @@ export function ArtifactPanel() {
     const researchArtifact = useGameStore((s) => s.researchArtifact);
     const toggleArtifact = useGameStore((s) => s.toggleArtifact);
     const crew = useGameStore((s) => s.crew);
+    const research = useGameStore((s) => s.research);
     const { t } = useTranslation();
 
     const scientists = crew.filter((c) => c.profession === "scientist");
@@ -199,6 +221,10 @@ export function ArtifactPanel() {
     const cursedActive = artifacts.filter(
         (a) => a.cursed && a.effect.active,
     ).length;
+    const maxSlots =
+        DEFAULT_ARTIFACT_SLOTS +
+        getTechBonusSum(research, "artifact_slots");
+    const slotsAtLimit = activeCount >= maxSlots;
 
     // Separate regular and cursed artifacts
     const regularArtifacts = artifacts.filter((a) => !a.cursed);
@@ -219,13 +245,18 @@ export function ArtifactPanel() {
                     {" | "}
                     {t("artifacts.researched")}:{" "}
                     <span className="text-[#ffb000]">{researchedCount}</span>
-                    {" | "}
-                    {t("artifacts.active")}:{" "}
-                    <span className="text-[#00d4ff]">{activeCount}</span>
+                </div>
+                <div className="text-sm text-[#888]">
+                    {t("artifacts.active_artifacts")}:{" "}
+                    <span className={slotsAtLimit ? "text-[#ff0040]" : "text-[#00d4ff]"}>
+                        {activeCount}/{maxSlots}
+                    </span>
+                    {slotsAtLimit && (
+                        <span className="text-[#ff0040]"> — {t("artifacts.slots_full")}</span>
+                    )}
                     {cursedActive > 0 && (
                         <span className="text-[#ff0040]">
-                            {" "}
-                            ({cursedActive} {t("artifacts.cursed_active")})
+                            {" "}({cursedActive} ☠️ {t("artifacts.cursed_active")})
                         </span>
                     )}
                 </div>
@@ -274,6 +305,7 @@ export function ArtifactPanel() {
                                 artifact={artifact}
                                 onResearch={() => researchArtifact(artifact.id)}
                                 onToggle={() => toggleArtifact(artifact.id)}
+                                slotsAtLimit={slotsAtLimit}
                             />
                         ))}
                         {regularArtifacts.length === 0 && (
@@ -298,6 +330,7 @@ export function ArtifactPanel() {
                                         researchArtifact(artifact.id)
                                     }
                                     onToggle={() => toggleArtifact(artifact.id)}
+                                    slotsAtLimit={slotsAtLimit}
                                 />
                             ))}
                         </div>

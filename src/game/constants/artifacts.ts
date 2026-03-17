@@ -270,8 +270,8 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "overload_matrix",
         name: "💥 Матрица Перегрузки",
-        description: "+100% критический урон в бою. Мощность сжигает системы.",
-        effect: { type: "crit_damage_boost", value: 1.0, active: false },
+        description: "+60% критический урон в бою. Мощность сжигает системы.",
+        effect: { type: "crit_damage_boost", value: 0.6, active: false },
         negativeEffect: {
             type: "self_damage",
             value: 75,

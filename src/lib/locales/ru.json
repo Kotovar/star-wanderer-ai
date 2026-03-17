@@ -828,6 +828,8 @@
         "discovered": "Обнаружено",
         "researched": "Изучено",
         "active": "Активно",
+        "active_artifacts": "Активные артефакты",
+        "slots_full": "заполнено!",
         "cursed_active": "проклятых",
         "scientists_onboard": "Учёные на борту",
         "no_scientists": "нет",
