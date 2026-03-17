@@ -65,8 +65,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     {
         id: "warp_coil",
         name: "Варп-Катушка",
-        description:
-            "Мгновенное перемещение между локациями в секторе без трат хода.",
+        description: "Мгновенное перемещение между секторами без трат хода.",
         effect: { type: "sector_teleport", value: 1, active: false },
         discovered: false,
         researched: false,
@@ -122,7 +121,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
         id: "shield_regenerator",
         name: "⚡ Регенератор Щитов",
         description:
-            "+50% к скорости регенерации щитов. Щиты восстанавливаются быстрее в бою и вне боя.",
+            "+50% к скорости регенерации щитов. Щиты восстанавливаются быстрее.",
         effect: { type: "shield_regen_boost", value: 0.5, active: false },
         discovered: false,
         researched: false,

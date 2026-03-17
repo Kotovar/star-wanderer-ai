@@ -2,6 +2,7 @@
 
 import { getTotalEvasion } from "@/game/slices";
 import { useGameStore } from "@/game/store";
+import { getArtifactEffectValue } from "@/game/artifacts/utils";
 import { useTranslation } from "@/lib/useTranslation";
 import {
     BASE_CRIT_CHANCE,
@@ -31,25 +32,31 @@ export function ShipStats() {
 
     const scanRange = getEffectiveScanRange();
 
-    // Итоговая регенерация щита с бонусом
-    const BASE_SHIELD_REGEN = 7.5;
-    let shieldRegen = BASE_SHIELD_REGEN;
-    crew.forEach((c) => {
-        if (c.race === "xenosymbiont") shieldRegen += 2;
-    });
+    // Регенерация щитов: сумма shieldRegen всех активных модулей щитов
     const shieldRegenerator = artifacts.find(
         (a) => a.effect.type === "shield_regen_boost" && a.effect.active,
     );
-    if (shieldRegenerator) {
-        const regenBoost = shieldRegenerator.effect.value ?? 0;
-        shieldRegen = Math.floor(shieldRegen * (1 + regenBoost));
-    }
-    // Бонусы сращивания для регенерации
     const mergeBonus = getMergeEffectsBonus(crew, ship.modules);
-    if (mergeBonus.shieldRegenBonus) {
-        shieldRegen = Math.floor(
-            shieldRegen * (1 + mergeBonus.shieldRegenBonus / 100),
-        );
+    const activeShieldModules = ship.modules.filter(
+        (m) => m.type === "shield" && m.health > 0 && !m.disabled,
+    );
+    let shieldRegen = activeShieldModules.reduce(
+        (sum, m) => sum + (m.shieldRegen ?? 4),
+        0,
+    );
+    if (shieldRegen > 0) {
+        if (shieldRegenerator) {
+            const regenBoost = getArtifactEffectValue(
+                shieldRegenerator,
+                useGameStore.getState(),
+            );
+            shieldRegen = Math.floor(shieldRegen * (1 + regenBoost));
+        }
+        if (mergeBonus.shieldRegenBonus) {
+            shieldRegen = Math.floor(
+                shieldRegen * (1 + mergeBonus.shieldRegenBonus / 100),
+            );
+        }
     }
 
     const totalPower = getTotalPower();
@@ -369,7 +376,7 @@ export function ShipStats() {
                               : "text-[#888]"
                     }
                 >
-                    ~{Math.round(shieldRegen)} {t("ship_stats.per_turn")}
+                    {Math.round(shieldRegen)} {t("ship_stats.per_turn")}
                     {shieldRegenerator && (
                         <span className="text-[#00ff41] text-xs">
                             {" "}

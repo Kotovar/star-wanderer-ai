@@ -1,21 +1,15 @@
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
-import {
-    ARTIFACT_TYPES,
-    BASE_SHIELD_REGEN_MAX,
-    BASE_SHIELD_REGEN_MIN,
-    RACES,
-} from "@/game/constants";
+import { ARTIFACT_TYPES, RACES } from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type { GameState, GameStore, SetState } from "@/game/types";
 
 /**
- * Вычисляет базовую регенерацию щитов
+ * Вычисляет базовую регенерацию щитов как сумму shieldRegen всех активных модулей щитов
  */
-const getBaseShieldRegen = (): number =>
-    Math.floor(
-        Math.random() * (BASE_SHIELD_REGEN_MAX - BASE_SHIELD_REGEN_MIN + 1) +
-            BASE_SHIELD_REGEN_MIN,
-    );
+const getBaseShieldRegen = (state: GameState): number =>
+    state.ship.modules
+        .filter((m) => m.type === "shield" && m.health > 0 && !m.disabled)
+        .reduce((sum, m) => sum + (m.shieldRegen ?? 4), 0);
 
 /**
  * Собирает процентные бонусы регенерации от расовых traits
@@ -80,7 +74,7 @@ export const regenerateShields = (
     if (oldShields >= state.ship.maxShields) return;
 
     // Собираем все бонусы
-    const baseRegen = getBaseShieldRegen();
+    const baseRegen = getBaseShieldRegen(state);
     const raceMultiplier = getRaceRegenMultiplier(state);
     const { multiplier: artifactMultiplier, logs } =
         getArtifactRegenBonus(state);

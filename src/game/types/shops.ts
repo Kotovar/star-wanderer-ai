@@ -17,6 +17,7 @@ export interface ShopItem {
     consumption?: number;
     defense?: number;
     shields?: number; // For shield generator modules
+    shieldRegen?: number;
     scanRange?: number;
     oxygen?: number;
     healing?: number;

@@ -71,6 +71,7 @@ export const createModuleFromShopItem = (
         }),
         ...(item.moduleType === "shield" && {
             shields: item.shields || 20,
+            shieldRegen: item.shieldRegen || 4,
             consumption: item.consumption || 3,
         }),
         ...(item.moduleType === "scanner" && {
