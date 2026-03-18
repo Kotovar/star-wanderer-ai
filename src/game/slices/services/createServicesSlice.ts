@@ -6,6 +6,7 @@ import {
     healCrew as healCrewAction,
     installModuleFromCargo as installModuleFromCargoAction,
     scrapModule as scrapModuleAction,
+    removeWeapon as removeWeaponAction,
     type ServiceCostResult,
 } from "./helpers";
 
@@ -56,6 +57,13 @@ export interface ServicesSlice {
      * @param moduleId - ID модуля для уничтожения
      */
     scrapModule: (moduleId: number) => void;
+
+    /**
+     * Снимает оружие с боевой палубы и возвращает 50% его стоимости
+     * @param moduleId - ID модуля weaponbay
+     * @param weaponIndex - Индекс слота оружия
+     */
+    removeWeapon: (moduleId: number, weaponIndex: number) => void;
 }
 
 /**
@@ -87,4 +95,7 @@ export const createServicesSlice = (
     getHealCost: () => calculateHealCost(get()),
 
     scrapModule: (moduleId) => scrapModuleAction(moduleId, set, get),
+
+    removeWeapon: (moduleId, weaponIndex) =>
+        removeWeaponAction(moduleId, weaponIndex, set, get),
 });

@@ -206,6 +206,7 @@ export interface GameContracts {
 export interface GameModule {
     toggleModule: (moduleId: number) => void;
     scrapModule: (moduleId: number) => void;
+    removeWeapon: (moduleId: number, weaponIndex: number) => void;
     moveModule: (moduleId: number, x: number, y: number) => void;
     canPlaceModule: (module: Module, x: number, y: number) => boolean;
 }

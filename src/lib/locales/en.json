@@ -1017,7 +1017,11 @@
         "install_weapon_desc": "Install crafted weapons from cargo hold into weapon bays",
         "damage_label": "dmg",
         "no_weapon_bays": "No free weapon bays",
-        "install_in_bay": "Install in bay"
+        "install_in_bay": "Install in bay",
+        "remove_weapon_title": "Remove Weapon",
+        "remove_weapon_desc": "Remove a weapon from a weapon bay and recover 50% of its value",
+        "remove_weapon_button": "REMOVE",
+        "in_bay": "Bay"
     },
     "combat": {
         "no_weapon_bay": "⚠️ No weapon bay or weapons! Cannot attack.",

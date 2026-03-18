@@ -6,6 +6,7 @@ import { MODULES_BY_LEVEL } from "@/game/components/station/station-data";
 import { MODULES_FROM_BOSSES } from "@/game/constants/modules";
 import type { ModuleType, Module, WeaponType } from "@/game/types";
 import { WEAPON_TYPES } from "@/game/constants/weapons";
+import { WEAPON_SCRAP_VALUES } from "@/game/slices/services/helpers/removeWeapon";
 
 /**
  * Calculates scrap value for a module (70% of base price)
@@ -51,6 +52,7 @@ interface ServicesTabProps {
     repairShip: () => void;
     healCrew: () => void;
     scrapModule: (moduleId: number) => void;
+    removeWeapon: (moduleId: number, weaponIndex: number) => void;
     installModuleFromCargo: (cargoIndex: number, x: number, y: number) => void;
     installCraftedWeapon: (cargoIndex: number, weaponBayId: number) => void;
     credits: number;
@@ -95,6 +97,7 @@ export function ServicesTab({
     repairShip,
     healCrew,
     scrapModule,
+    removeWeapon,
     installModuleFromCargo,
     installCraftedWeapon,
     credits,
@@ -136,6 +139,7 @@ export function ServicesTab({
                 />
             )}
             <ScrapModuleSection ship={ship} crew={crew} onScrap={scrapModule} />
+            <RemoveWeaponSection ship={ship} onRemove={removeWeapon} />
             {allowsModuleInstall && (
                 <InstallModuleSection
                     ship={ship}
@@ -311,6 +315,78 @@ function HealSection({
                 >
                     {t("services.heal_button")}
                 </Button>
+            </div>
+        </div>
+    );
+}
+
+function RemoveWeaponSection({
+    ship,
+    onRemove,
+}: {
+    ship: ServicesTabProps["ship"];
+    onRemove: (moduleId: number, weaponIndex: number) => void;
+}) {
+    const { t } = useTranslation();
+
+    const weaponBays = ship.modules.filter(
+        (m) => m.type === "weaponbay" && !m.disabled && !m.manualDisabled,
+    );
+
+    const installedWeapons: { module: Module; weaponIndex: number; weaponType: WeaponType }[] = [];
+    weaponBays.forEach((bay) => {
+        bay.weapons?.forEach((w, idx) => {
+            if (w) installedWeapons.push({ module: bay, weaponIndex: idx, weaponType: w.type });
+        });
+    });
+
+    if (installedWeapons.length === 0) return null;
+
+    return (
+        <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-4">
+            <div className="text-[#ffb000] font-bold mb-2">
+                🔧 {t("services.remove_weapon_title")}
+            </div>
+            <div className="text-sm text-[#888] mb-3">
+                {t("services.remove_weapon_desc")}
+            </div>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+                {installedWeapons.map(({ module: bay, weaponIndex, weaponType }) => {
+                    const weapon = WEAPON_TYPES[weaponType];
+                    const scrapValue = WEAPON_SCRAP_VALUES[weaponType] ?? 0;
+                    return (
+                        <div
+                            key={`${bay.id}-${weaponIndex}`}
+                            className="flex justify-between items-center bg-[rgba(0,0,0,0.3)] border border-[#ffb000] p-2"
+                        >
+                            <div className="text-xs">
+                                <div className="flex items-center gap-1">
+                                    <span style={{ color: weapon?.color }}>
+                                        {weapon?.icon}
+                                    </span>
+                                    <span style={{ color: weapon?.color }} className="font-bold">
+                                        {t(`weapon_types.${weaponType}`)}
+                                    </span>
+                                    <span className="text-[#888]">
+                                        ({weapon?.damage} {t("services.damage_label")})
+                                    </span>
+                                </div>
+                                <div className="text-[#888]">
+                                    {t("services.in_bay")} #{bay.id}
+                                </div>
+                                <div className="text-[#00ff41]">
+                                    ♻️ +{scrapValue}₢
+                                </div>
+                            </div>
+                            <Button
+                                onClick={() => onRemove(bay.id, weaponIndex)}
+                                className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase text-xs"
+                            >
+                                {t("services.remove_weapon_button")}
+                            </Button>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

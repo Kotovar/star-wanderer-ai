@@ -48,6 +48,7 @@ export function StationPanel() {
     const repairShip = useGameStore((s) => s.repairShip);
     const healCrew = useGameStore((s) => s.healCrew);
     const scrapModule = useGameStore((s) => s.scrapModule);
+    const removeWeapon = useGameStore((s) => s.removeWeapon);
     const installModuleFromCargo = useGameStore(
         (s) => s.installModuleFromCargo,
     );
@@ -284,6 +285,7 @@ export function StationPanel() {
                         repairShip={repairShip}
                         healCrew={healCrew}
                         scrapModule={scrapModule}
+                        removeWeapon={removeWeapon}
                         installModuleFromCargo={installModuleFromCargo}
                         installCraftedWeapon={installCraftedWeapon}
                         credits={credits}
