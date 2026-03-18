@@ -70,6 +70,21 @@ export function CargoDisplay() {
                             );
                         }
 
+                        // Module cargo (boss drops)
+                        if (c.isModule) {
+                            return (
+                                <div
+                                    key={i}
+                                    className="bg-[rgba(0,0,0,0.3)] border border-[#00d4ff] p-2 mb-1.5 text-xs"
+                                >
+                                    📦 {c.item} x{c.quantity}т{" "}
+                                    <span className="text-[#00d4ff]">
+                                        {t("cargo.module_label")}
+                                    </span>
+                                </div>
+                            );
+                        }
+
                         // Try to get cargo name from DELIVERY_GOODS first, then TRADE_GOODS
                         const cargoKey = c.item as keyof typeof DELIVERY_GOODS;
                         const cargoName =

@@ -26,8 +26,8 @@ export function initializeBossCombat(
         specialEffect: m.specialEffect,
     }));
 
-    // Determine boss rewards (random tier 4 module + artifact)
-    const rewards = determineBossRewards(boss.id, get());
+    // Determine boss rewards (artifact rarity and module by tier)
+    const rewards = determineBossRewards(boss.id, boss.tier, get());
     const lootCredits = combatSetup.calculateBossLoot(boss.tier);
 
     set((s) => {

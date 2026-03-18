@@ -64,7 +64,8 @@
         "capacity_label": "Вместимость",
         "hold_empty": "Трюм пуст",
         "contract_label": "[Задание]",
-        "crafted_label": "[Крафт]"
+        "crafted_label": "[Крафт]",
+        "module_label": "[Модуль]"
     },
     "modules": {
         "search_per_turn": "иссл./ход",

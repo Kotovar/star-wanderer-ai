@@ -195,13 +195,9 @@ export function handleVictory(
 
     // Research resources
     const enemyTier = updatedCombat.enemy.threat || 1;
-    let combatResources = getCombatLootResources(enemyTier);
-    if (updatedCombat.enemy.isBoss) {
-        combatResources = [
-            ...combatResources,
-            ...getBossLootResources(enemyTier),
-        ];
-    }
+    const combatResources = updatedCombat.enemy.isBoss
+        ? getBossLootResources(enemyTier)
+        : getCombatLootResources(enemyTier);
 
     if (combatResources.length > 0) {
         set((s) => {

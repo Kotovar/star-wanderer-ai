@@ -29,14 +29,20 @@ export function ModuleInstallTab({ onClose }: ModuleInstallTabProps) {
     const handleCellClick = (x: number, y: number) => {
         if (selectedCargoIndex === null) return;
 
-        // Check if position is occupied
+        const selectedModule = moduleCargo[selectedCargoIndex];
+        const newW = selectedModule?.module?.width ?? 1;
+        const newH = selectedModule?.module?.height ?? 1;
+
+        // Check if any cell of the new module's footprint overlaps with existing modules
         const isOccupied = modules.some(
             (m) =>
                 !m.disabled &&
                 !m.manualDisabled &&
                 m.health > 0 &&
-                Math.abs(m.x - x) < (m.width || 2) &&
-                Math.abs(m.y - y) < (m.height || 2),
+                x < m.x + (m.width || 1) &&
+                x + newW > m.x &&
+                y < m.y + (m.height || 1) &&
+                y + newH > m.y,
         );
 
         if (isOccupied) {
@@ -64,8 +70,10 @@ export function ModuleInstallTab({ onClose }: ModuleInstallTabProps) {
                 !m.disabled &&
                 !m.manualDisabled &&
                 m.health > 0 &&
-                Math.abs(m.x - x) < (m.width || 2) &&
-                Math.abs(m.y - y) < (m.height || 2),
+                x >= m.x &&
+                x < m.x + (m.width || 1) &&
+                y >= m.y &&
+                y < m.y + (m.height || 1),
         );
     };
 
@@ -104,7 +112,7 @@ export function ModuleInstallTab({ onClose }: ModuleInstallTabProps) {
                                         {item.item}
                                     </span>
                                     <span className="text-xs text-[#888]">
-                                        Ур.{item.moduleLevel || 4} | 2x2
+                                        Ур.{item.moduleLevel || 4} | {item.module?.width ?? 1}x{item.module?.height ?? 1}
                                     </span>
                                 </div>
                             </div>
