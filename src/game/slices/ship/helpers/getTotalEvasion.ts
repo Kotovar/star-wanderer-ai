@@ -2,6 +2,11 @@ import type { GameState } from "@/game/types/game";
 import { CREW_ASSIGNMENT_BONUSES, RACES } from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getArtifactEffectValue } from "@/game/artifacts/utils";
+import {
+    ASSIGNMENT_BASES,
+    getTaskBonusMultiplier,
+} from "@/game/slices/gameLoop/processors/crewAssignments/constants";
+import { isModuleFunctional } from "../utils";
 
 /**
  * Вычисляет общий шанс уклонения корабля
@@ -74,6 +79,21 @@ export function getTotalEvasion(state: GameState): number {
     if (mergeBonus.evasionBonus) {
         evasion += mergeBonus.evasionBonus;
     }
+
+    // === Бонус от назначения "манёвры" (evasion) вне боя ===
+    // Считается динамически (не накапливается в state)
+    const engineIds = new Set(
+        ship.modules
+            .filter((m) => m.type === "engine" && isModuleFunctional(m))
+            .map((m) => m.id),
+    );
+    crew.filter(
+        (c) => c.assignment === "evasion" && engineIds.has(c.moduleId),
+    ).forEach((c) => {
+        evasion += Math.round(
+            ASSIGNMENT_BASES.EVADE_BONUS * getTaskBonusMultiplier(c),
+        );
+    });
 
     // Временные бонусы от эффектов планет (Krylorian dojo и др.)
     if (ship.bonusEvasion) {

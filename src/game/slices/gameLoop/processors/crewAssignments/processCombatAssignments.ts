@@ -2,6 +2,7 @@ import {
     BASE_EXP_REWARDS,
     ASSIGNMENT_BASES,
     ASSIGNMENT_MULTIPLIERS,
+    getTaskBonusMultiplier,
 } from "./constants";
 import type {
     CrewMember,
@@ -16,19 +17,6 @@ import type {
  * @param crewMember - Член экипажа
  * @returns Множитель бонуса (1 если нет бонуса)
  */
-const getTaskBonusMultiplier = (crewMember: CrewMember): number => {
-    let taskBonus = 0;
-    crewMember.traits?.forEach((trait) => {
-        if (trait.effect?.taskBonus) {
-            taskBonus += trait.effect.taskBonus;
-        }
-        if (trait.effect?.doubleTaskEffect) {
-            taskBonus = 1;
-        }
-    });
-    return taskBonus > 0 ? 1 + taskBonus : 1;
-};
-
 /**
  * Обрабатывает боевые назначения экипажа
  * @param crewMember - Член экипажа
@@ -55,7 +43,7 @@ export const processCombatAssignment = (
             processCombatRepair(crewMember, currentModule, crewRace, set, get);
             break;
         case "heal":
-            processCombatHeal(crewMember, crewInSameModule, set, get);
+            processCombatHeal(crewMember, crewInSameModule, crewRace, set, get);
             break;
         case "firstaid":
             processCombatFirstAid(crewMember, set, get);
@@ -129,7 +117,13 @@ const processCombatRepair = (
     const maxHealth =
         currentModule.maxHealth || ASSIGNMENT_MULTIPLIERS.MAX_HEALTH;
 
-    if (currentModule.health >= maxHealth) return;
+    if (currentModule.health >= maxHealth) {
+        get().addLog(
+            `${crewMember.name}: Модуль "${currentModule.name}" полностью цел`,
+            "combat",
+        );
+        return;
+    }
 
     set((s) => ({
         ship: {
@@ -157,6 +151,7 @@ const processCombatRepair = (
 const processCombatHeal = (
     crewMember: CrewMember,
     crewInSameModule: CrewMember[],
+    crewRace: Race | undefined,
     set: SetState,
     get: () => GameStore,
 ): void => {
@@ -166,6 +161,11 @@ const processCombatHeal = (
 
     // Бонус от трейтов
     healAmount = Math.floor(healAmount * getTaskBonusMultiplier(crewMember));
+
+    // Расовый бонус к лечению
+    if (crewRace?.crewBonuses.heal) {
+        healAmount = Math.floor(healAmount * (1 + crewRace.crewBonuses.heal));
+    }
 
     const crewNeedingHealing = get().crew.filter(
         (c) =>

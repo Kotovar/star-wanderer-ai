@@ -1,4 +1,5 @@
 import { CREW_ASSIGNMENT_BONUSES, RACES } from "@/game/constants";
+import { getTaskBonusMultiplier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import { isModuleFunctional } from "../utils";
 import type { GameState } from "@/game/types";
 
@@ -17,11 +18,26 @@ export function getTotalConsumption(state: GameState): number {
     const { ship, crew } = state;
     const { modules } = ship;
 
-    // === Бонус от назначения пилота "навигация" ===
-    // Пилот с назначением "navigation" снижает общее потребление на 1
-    const hasNavigation = crew.some((c) => c.assignment === "navigation");
-    const pilotRed = hasNavigation
-        ? CREW_ASSIGNMENT_BONUSES.NAVIGATION_REDUCED_CONSUMPTION
+    // === Бонус от назначения "навигация" ===
+    // Считается динамически (не накапливается в state), учитывает трейты
+    const engineIds = new Set(
+        modules
+            .filter((m) => m.type === "engine" && isModuleFunctional(m))
+            .map((m) => m.id),
+    );
+    const navCrewInEngine = crew.filter(
+        (c) => c.assignment === "navigation" && engineIds.has(c.moduleId),
+    );
+    const pilotRed = navCrewInEngine.length > 0
+        ? navCrewInEngine.reduce(
+              (sum, c) =>
+                  sum +
+                  Math.round(
+                      Math.abs(CREW_ASSIGNMENT_BONUSES.NAVIGATION_REDUCED_CONSUMPTION) *
+                          getTaskBonusMultiplier(c),
+                  ),
+              0,
+          )
         : 0;
 
     // === Базовое потребление модулей ===

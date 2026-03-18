@@ -7,6 +7,7 @@ import {
     ASSIGNMENT_BASES,
     ASSIGNMENT_MULTIPLIERS,
     BASE_EXP_REWARDS,
+    getTaskBonusMultiplier,
 } from "./constants";
 import { processCombatAssignment } from "./processCombatAssignments";
 import type {
@@ -181,21 +182,9 @@ const processRepairAssignment = (
     set: SetState,
     get: () => GameStore,
 ): void => {
-    let repairAmount: number = ASSIGNMENT_BASES.REPAIR_AMOUNT;
-
-    // Бонус от трейтов
-    let taskBonus = 0;
-    crewMember.traits?.forEach((trait) => {
-        if (trait.effect?.taskBonus) {
-            taskBonus += trait.effect.taskBonus;
-        }
-        if (trait.effect?.doubleTaskEffect) {
-            taskBonus = 1;
-        }
-    });
-    if (taskBonus > 0) {
-        repairAmount = Math.floor(repairAmount * (1 + taskBonus));
-    }
+    let repairAmount: number = Math.floor(
+        ASSIGNMENT_BASES.REPAIR_AMOUNT * getTaskBonusMultiplier(crewMember),
+    );
 
     // Расовый бонус
     if (crewRace?.crewBonuses.repair) {
@@ -283,14 +272,12 @@ const processPowerAssignment = (
         return;
     }
 
-    set((s) => ({
-        ship: {
-            ...s.ship,
-            bonusPower: (s.ship.bonusPower ?? 0) + ASSIGNMENT_BASES.POWER_BONUS,
-        },
-    }));
+    // Бонус считается динамически в getTotalPower — здесь только лог и опыт
+    const powerBonus = Math.round(
+        ASSIGNMENT_BASES.POWER_BONUS * getTaskBonusMultiplier(crewMember),
+    );
     get().addLog(
-        `⚡ ${crewMember.name}: Разгон реактора +${ASSIGNMENT_BASES.POWER_BONUS}⚡`,
+        `⚡ ${crewMember.name}: Разгон реактора +${powerBonus}⚡`,
         "info",
     );
     get().gainExp(crewMember, BASE_EXP_REWARDS.POWER);
@@ -315,15 +302,11 @@ const processNavigationAssignment = (
         return;
     }
 
-    set((s) => ({
-        ship: {
-            ...s.ship,
-            bonusPower:
-                (s.ship.bonusPower || 0) +
-                ASSIGNMENT_BASES.NAVIGATION_CONSUMPTION,
-        },
-    }));
-    get().addLog(`🧭 ${crewMember.name}: Навигация -1⚡ потребление`, "info");
+    // Бонус считается динамически в getTotalConsumption — здесь только лог и опыт
+    get().addLog(
+        `🧭 ${crewMember.name}: Навигация -${ASSIGNMENT_BASES.NAVIGATION_CONSUMPTION}⚡ потребление`,
+        "info",
+    );
     get().gainExp(crewMember, BASE_EXP_REWARDS.NAVIGATION);
 };
 
@@ -346,13 +329,7 @@ const processEvasionAssignment = (
         return;
     }
 
-    set((s) => ({
-        ship: {
-            ...s.ship,
-            bonusEvasion:
-                (s.ship.bonusEvasion ?? 0) + ASSIGNMENT_BASES.EVADE_BONUS,
-        },
-    }));
+    // Бонус считается динамически в getTotalEvasion — здесь только лог и опыт
     get().addLog(
         `💨 ${crewMember.name}: Манёвры +${ASSIGNMENT_BASES.EVADE_BONUS}% уклонение`,
         "info",
@@ -371,20 +348,13 @@ const processHealAssignment = (
     set: SetState,
     get: () => GameStore,
 ): void => {
-    let healAmount: number = ASSIGNMENT_BASES.HEAL_AMOUNT;
+    let healAmount: number = Math.floor(
+        ASSIGNMENT_BASES.HEAL_AMOUNT * getTaskBonusMultiplier(crewMember),
+    );
 
-    // Бонус от трейтов
-    let taskBonus = 0;
-    crewMember.traits?.forEach((trait) => {
-        if (trait.effect?.taskBonus) {
-            taskBonus += trait.effect.taskBonus;
-        }
-        if (trait.effect?.doubleTaskEffect) {
-            taskBonus = 1;
-        }
-    });
-    if (taskBonus > 0) {
-        healAmount = Math.floor(healAmount * (1 + taskBonus));
+    // Расовый бонус к лечению
+    if (crewRace?.crewBonuses.heal) {
+        healAmount = Math.floor(healAmount * (1 + crewRace.crewBonuses.heal));
     }
 
     const crewToHeal = get().crew.filter(
@@ -430,30 +400,14 @@ const processMoraleAssignment = (
     set: SetState,
     get: () => GameStore,
 ): void => {
-    let moraleAmount: number = ASSIGNMENT_BASES.MORALE_AMOUNT;
-
-    // Бонус от трейтов
-    let taskBonus = 0;
-    crewMember.traits?.forEach((trait) => {
-        if (trait.effect?.taskBonus) {
-            taskBonus += trait.effect.taskBonus;
-        }
-    });
-    if (taskBonus > 0) {
-        moraleAmount = Math.floor(moraleAmount * (1 + taskBonus));
-    }
-
-    // Расовый бонус
-    if (crewRace?.crewBonuses.happiness) {
-        moraleAmount = Math.floor(
-            moraleAmount * (1 + crewRace.crewBonuses.happiness),
-        );
-    }
+    const moraleAmount: number = Math.floor(
+        ASSIGNMENT_BASES.MORALE_AMOUNT * getTaskBonusMultiplier(crewMember),
+    );
 
     const crewToHelp = get().crew.filter(
         (c) =>
             c.moduleId === currentModule.id &&
-            c.happiness < ASSIGNMENT_MULTIPLIERS.MAX_HAPPINESS,
+            c.happiness < (c.maxHappiness || ASSIGNMENT_MULTIPLIERS.MAX_HAPPINESS),
     );
 
     if (crewToHelp.length === 0) {
@@ -467,7 +421,7 @@ const processMoraleAssignment = (
                 ? {
                       ...c,
                       happiness: Math.min(
-                          ASSIGNMENT_MULTIPLIERS.MAX_HAPPINESS,
+                          c.maxHappiness || ASSIGNMENT_MULTIPLIERS.MAX_HAPPINESS,
                           c.happiness + moraleAmount,
                       ),
                   }

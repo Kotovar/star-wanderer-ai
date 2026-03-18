@@ -133,6 +133,7 @@ export type CrewTraitEffect = {
     moduleMorale?: number;
     combatStartMoraleDrain?: number;
     accuracyPenalty?: number;
+    accuracyBonus?: number;
     lootBonus?: number;
     combatMoraleDrain?: number;
     sellPricePenalty?: number;

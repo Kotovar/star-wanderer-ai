@@ -32,6 +32,26 @@ export const createGameLoopSlice = (
         // Инициализация нового хода
         initNewTurn(set);
 
+        // Сбрасываем bonusPower/bonusEvasion до значений из активных планетарных эффектов.
+        // Это удаляет устаревшие накопленные значения от назначений экипажа
+        // (экипажные бонусы теперь считаются динамически в getTotalPower/getTotalEvasion).
+        const activeEffectsNow = get().activeEffects;
+        const planetBonusPower = activeEffectsNow
+            .flatMap((e) => e.effects)
+            .filter((ef) => ef.type === "power_boost")
+            .reduce((sum, ef) => sum + Number(ef.value), 0);
+        const planetBonusEvasion = activeEffectsNow
+            .flatMap((e) => e.effects)
+            .filter((ef) => ef.type === "evasion_bonus")
+            .reduce((sum, ef) => sum + Math.round(Number(ef.value) * 100), 0);
+        set((s) => ({
+            ship: {
+                ...s.ship,
+                bonusPower: planetBonusPower,
+                bonusEvasion: planetBonusEvasion,
+            },
+        }));
+
         // Пассивный опыт каждые 5 ходов
         processPassiveExperience(state, get);
 

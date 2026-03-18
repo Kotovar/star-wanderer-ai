@@ -62,6 +62,7 @@ const initialCrew: CrewMember[] = [
         profession: "engineer",
         moduleId: 103,
         level: 1,
+        traits: [],
     }),
     buildCrewMember({
         id: 3,

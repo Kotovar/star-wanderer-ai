@@ -12,7 +12,7 @@ import { getActiveAssignment } from "@/game/crew";
 import {
     getWeaponAccuracy,
     calculateFinalDamagePerWeapon,
-    calculateAccuracyModifier,
+    computeAccuracyModifier,
     processLaserDamage,
     processKineticDamage,
     processMissileDamage,
@@ -196,51 +196,46 @@ function rollCrit(state: GameState, get: () => GameStore): CritResult {
 
 /**
  * Builds the accuracy modifier from crew, modules, and artifacts.
+ * Uses computeAccuracyModifier for the calculation (shared with UI),
+ * then emits log messages for significant bonuses.
  */
 function resolveAccuracy(
     state: GameState,
     crewInWeaponBays: ReturnType<typeof getWeaponBayCrew>["crewInWeaponBays"],
-    combatFlags: CombatFlags,
+    _combatFlags: CombatFlags,
     get: () => GameStore,
 ): number {
-    const aiCoreModules = state.ship.modules.filter(
+    const modifier = computeAccuracyModifier(state);
+
+    // Logging (no effect on calculation)
+    const gunnerInBay = crewInWeaponBays.find((c) => c.profession === "gunner");
+    if (gunnerInBay) {
+        const gunnerLevel = gunnerInBay.level || 1;
+        const gunnerBonus = Math.min(0.2, gunnerLevel * 0.02);
+        get().addLog(
+            `🎯 Стрелок ${gunnerInBay.name} (Ур.${gunnerLevel}): +${Math.round(gunnerBonus * 100)}% точность`,
+            "info",
+        );
+    }
+    const aiCoreCount = state.ship.modules.filter(
         (m) => m.type === "ai_core" && isModuleActive(m),
     ).length;
-
+    if (aiCoreCount > 0) {
+        get().addLog(`🤖 ИИ Ядро: +${aiCoreCount * 5}% точность`, "info");
+    }
     const targetingCore = findActiveArtifact(
         state.artifacts,
         ARTIFACT_TYPES.TARGETING_CORE,
     );
-    const accuracyBonus = targetingCore
-        ? getArtifactEffectValue(targetingCore, state) / 100
-        : 0;
-
-    const crewAccuracyPenalties = state.crew.reduce((total, c) => {
-        return (
-            total +
-            (c.traits ?? []).reduce((sum, trait) => {
-                return (
-                    sum -
-                    (trait.effect?.accuracyPenalty
-                        ? Number(trait.effect.accuracyPenalty)
-                        : 0)
-                );
-            }, 0)
+    if (targetingCore) {
+        const bonus = getArtifactEffectValue(targetingCore, state);
+        get().addLog(
+            `🎯 Ядро Прицеливания: +${Math.round(bonus)}% точность`,
+            "info",
         );
-    }, 0);
+    }
 
-    return calculateAccuracyModifier(
-        combatFlags.hasGunner,
-        crewInWeaponBays,
-        combatFlags.hasTargeting,
-        combatFlags.hasRapidfire,
-        combatFlags.hasCalibration,
-        combatFlags.hasEngineer,
-        aiCoreModules,
-        accuracyBonus,
-        crewAccuracyPenalties,
-        get,
-    );
+    return modifier;
 }
 
 /**

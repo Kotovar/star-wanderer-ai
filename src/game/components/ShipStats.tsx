@@ -12,14 +12,14 @@ import {
     BASE_CRIT_CHANCE,
     BASE_CRIT_MULTIPLIER,
     BASE_ACCURACY,
-    CREW_ASSIGNMENT_BONUSES,
     ARTIFACT_TYPES,
 } from "@/game/constants";
+import { computeAccuracyModifier } from "@/game/slices/combat/helpers/playerDamage";
+import type { GameState } from "@/game/types";
 import { useFuelEfficiency } from "@/game/hooks";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getTechBonusSum } from "@/game/research";
 import { getActiveModules } from "../modules";
-import { hasAssignment, hasCombatAssignment, hasProfession } from "../crew";
 import { RACES } from "@/game/constants/races";
 
 export function ShipStats() {
@@ -109,11 +109,8 @@ export function ShipStats() {
     const moduleRepairPercent = researchRepair + artifactRepair;
 
     const totalPower = getTotalPower();
-    const engineerBoost = crew.find((c) => c.assignment === "reactor_overload")
-        ? CREW_ASSIGNMENT_BONUSES.REACTOR_OVERLOAD
-        : 0;
     const totalConsumption = getTotalConsumption();
-    const available = totalPower + engineerBoost - totalConsumption;
+    const available = totalPower - totalConsumption;
     const damage = getTotalDamage();
     const crewCapacity = getCrewCapacity();
 
@@ -170,80 +167,19 @@ export function ShipStats() {
         totalCritDamage += getArtifactEffectValue(overloadMatrix, gameState);
     }
 
-    // Calculate base accuracy (average across all weapon types)
+    // Accuracy — shared calculation with combat logic
     const baseAccuracy =
         (BASE_ACCURACY.laser + BASE_ACCURACY.kinetic + BASE_ACCURACY.missile) /
         3;
-
-    // Calculate accuracy modifier from artifacts
-    let accuracyModifier = 0;
-    const targetingCore = findActiveArtifact(
+    const accuracyModifier = computeAccuracyModifier({
+        ship,
+        crew,
         artifacts,
-        ARTIFACT_TYPES.TARGETING_CORE,
-    );
-
-    if (targetingCore) {
-        accuracyModifier += getArtifactEffectValue(targetingCore, gameState);
-    }
-
-    // Crew assignment modifiers
-    const hasTargeting = hasCombatAssignment(crew, "targeting");
-    const hasCalibration = hasCombatAssignment(crew, "calibration");
-    const hasMaintenance = hasAssignment(crew, "maintenance");
-    const hasEngineer = hasProfession(crew, "engineer");
-    const hasGunner = hasProfession(crew, "gunner") || hasTargeting;
-
-    if (!hasGunner) {
-        accuracyModifier -= 0.2;
-    } else {
-        const gunner = crew.find((c) => c.profession === "gunner");
-        if (gunner) {
-            const gunnerLevel = gunner.level || 1;
-            const gunnerAccuracyBonus = Math.min(0.2, gunnerLevel * 0.02);
-            accuracyModifier += gunnerAccuracyBonus;
-        }
-    }
-
-    if (hasTargeting) accuracyModifier += 0.05;
-    if (hasMaintenance) accuracyModifier += 0.05;
-    if (hasCalibration && hasEngineer) accuracyModifier += 0.1;
-
-    // AI Core module bonus
-    const aiCoreModules = ship.modules.filter(
-        (m) => m.type === "ai_core" && !m.disabled && m.health > 0,
-    ).length;
-    if (aiCoreModules > 0) {
-        accuracyModifier += aiCoreModules * 0.05;
-    }
-
-    // Crew trait modifiers
-    crew.forEach((c) => {
-        c.traits?.forEach((trait) => {
-            if (trait.effect?.accuracyPenalty) {
-                accuracyModifier -= Number(trait.effect.accuracyPenalty);
-            }
-        });
-    });
-
-    // Бонус от сращивания ксеноморфа с weaponbay
-    const xenosymbiontMerge = crew.find(
-        (c) => c.isMerged && c.mergedModuleId !== null,
-    );
-    if (xenosymbiontMerge) {
-        const mergedModule = ship.modules.find(
-            (m) => m.id === xenosymbiontMerge.mergedModuleId,
-        );
-        if (mergedModule?.type === "weaponbay") {
-            accuracyModifier += 0.05; // +5% accuracy
-        }
-    }
-
-    // Final accuracy (clamped)
+    } as GameState);
     const finalAccuracy = Math.max(
         0.5,
         Math.min(1.0, baseAccuracy + accuracyModifier),
     );
-
     // ═══════════════════════════════════════════════════════════════
     // REFLECT CHANCE (Mirror Shield)
     // ═══════════════════════════════════════════════════════════════
@@ -327,8 +263,7 @@ export function ShipStats() {
                         {t("ship_stats.power_generation")}:
                     </span>
                     <span className="text-[#00ff41]">
-                        {totalPower + engineerBoost}
-                        {engineerBoost > 0 ? ` (+${engineerBoost})` : ""}
+                        {totalPower}
                     </span>
                 </div>
                 <div className="flex justify-between mb-2 text-sm">

@@ -127,6 +127,7 @@ export const RACES: Record<RaceId, Race> = {
         },
         crewBonuses: {
             healthRegen: 10, // +10 HP/ход (регенеративная биология)
+            heal: 0.25, // +25% к эффективности лечения (симбиотическая биология)
         },
         specialTraits: [
             {

@@ -3,7 +3,6 @@ import { CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
 import { RACES } from "@/game/constants/races";
 
 /** Бонус к настроению от трейта морали */
-const MORALE_TRAIT_BONUS = 5;
 
 /** Штраф к настроению при нехватке энергии */
 const POWER_SHORTAGE_HAPPINESS_PENALTY = 5;
@@ -32,7 +31,8 @@ export const processMoraleTraits = (
 
     crew.forEach((crewMember) => {
         crewMember.traits?.forEach((trait: CrewTrait) => {
-            if (!trait.effect.moduleMorale) return;
+            const moraleBonus = trait.effect.moduleMorale;
+            if (!moraleBonus) return;
 
             // Находим экипаж в том же модуле с пониженным настроением
             const affectedCrew = crew.filter(
@@ -52,7 +52,7 @@ export const processMoraleTraits = (
                               ...c,
                               happiness: Math.min(
                                   c.maxHappiness || 100,
-                                  c.happiness + MORALE_TRAIT_BONUS,
+                                  c.happiness + moraleBonus,
                               ),
                           }
                         : c,
@@ -60,7 +60,7 @@ export const processMoraleTraits = (
             }));
 
             get().addLog(
-                `★ ${crewMember.name} (${trait.name}): +${MORALE_TRAIT_BONUS} настроения модулю`,
+                `★ ${crewMember.name} (${trait.name}): +${moraleBonus} настроения модулю`,
                 "info",
             );
         });

@@ -1,13 +1,10 @@
 import {
     calculateArtifactPowerBonus,
     isModuleFunctional,
-    isReactorModule,
 } from "../utils";
-import {
-    CREW_ASSIGNMENT_BONUSES,
-    CREW_IN_MODULE_BONUSES,
-} from "@/game/constants";
+import { CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import { getTaskBonusMultiplier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import type { GameState } from "@/game/types/game";
 
 /**
@@ -32,30 +29,23 @@ export function getTotalPower(state: GameState): number {
         .filter(isModuleFunctional)
         .reduce((sum, m) => sum + (m.power ?? 0), 0);
 
-    // === Бонус от назначения экипажа "разгон реактора" ===
-    // Инженер с назначением "reactor_overload" в реакторе даёт +5 к энергии
-    const hasReactorOverload = crew.some(
-        (c) => c.assignment === "reactor_overload",
+    // === Бонус от назначения "разгон реактора" (reactor_overload) ===
+    // Считается динамически (не накапливается в state)
+    const reactorIds = new Set(
+        modules
+            .filter((m) => m.type === "reactor" && isModuleFunctional(m))
+            .map((m) => m.id),
     );
-    if (hasReactorOverload) {
-        power += CREW_ASSIGNMENT_BONUSES.REACTOR_OVERLOAD;
-    }
+    crew.filter(
+        (c) => c.assignment === "reactor_overload" && reactorIds.has(c.moduleId),
+    ).forEach((c) => {
+        power += Math.round(
+            CREW_ASSIGNMENT_BONUSES.REACTOR_OVERLOAD *
+                getTaskBonusMultiplier(c),
+        );
+    });
 
-    // === Бонус от инженеров в реакторах ===
-    const engineersInReactors = crew.filter(
-        (c) =>
-            c.profession === "engineer" &&
-            c.moduleId !== undefined &&
-            isReactorModule(modules, c.moduleId),
-    ).length;
-
-    if (engineersInReactors > 0) {
-        // +3 к энергии за каждого инженера в реакторе
-        power +=
-            engineersInReactors * CREW_IN_MODULE_BONUSES.ENGINEER_IN_REACTOR;
-    }
-
-    // === Бонусы от артефактов ===
+// === Бонусы от артефактов ===
     const artifactBonus = calculateArtifactPowerBonus(artifacts, state);
     power += artifactBonus;
 

@@ -146,9 +146,11 @@ export function CrewList() {
                                 </div>
                                 {race?.hasHappiness && (
                                     <div>
-                                        {t("crew_member.mood")}
+                                        {t("crew_member.mood")}{" "}
+                                        {member.happiness}/
+                                        {member.maxHappiness || 100}
                                         <Progress
-                                            value={member.happiness}
+                                            value={(member.happiness / (member.maxHappiness || 100)) * 100}
                                             className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${member.happiness < 30 ? "[&>div]:bg-[#ff0040]" : member.happiness < 60 ? "[&>div]:bg-[#ffb000]" : "[&>div]:bg-[#00ff41]"}`}
                                         />
                                     </div>
@@ -767,91 +769,6 @@ export function CrewList() {
                                             </div>
                                         )}
 
-                                    {/* Бонусы от трейтов к характеристикам */}
-                                    {selectedCrew.traits &&
-                                        selectedCrew.traits.length > 0 && (
-                                            <div className="mt-2 pt-2 border-t border-[#00ff41]">
-                                                <span className="text-[#ffb000] text-xs">
-                                                    {t(
-                                                        "crew_member.trait_bonuses",
-                                                    )}
-                                                </span>
-                                                <div className="flex flex-wrap gap-1 mt-1">
-                                                    {selectedCrew.traits.some(
-                                                        (trait) =>
-                                                            trait.effect
-                                                                .healthBonus,
-                                                    ) && (
-                                                        <span className="text-xs bg-[#00ff4120] text-[#00ff41] px-1 rounded">
-                                                            ❤️ +
-                                                            {Math.round(
-                                                                selectedCrew.traits.reduce(
-                                                                    (
-                                                                        sum,
-                                                                        trait,
-                                                                    ) =>
-                                                                        sum +
-                                                                        (trait
-                                                                            .effect
-                                                                            .healthBonus ||
-                                                                            0),
-                                                                    0,
-                                                                ) * 100,
-                                                            )}
-                                                            % к здоровью
-                                                        </span>
-                                                    )}
-                                                    {selectedCrew.traits.some(
-                                                        (trait) =>
-                                                            trait.effect
-                                                                .healthPenalty,
-                                                    ) && (
-                                                        <span className="text-xs bg-[#ff004020] text-[#ff0040] px-1 rounded">
-                                                            ❤️ -
-                                                            {Math.round(
-                                                                selectedCrew.traits.reduce(
-                                                                    (
-                                                                        sum,
-                                                                        trait,
-                                                                    ) =>
-                                                                        sum +
-                                                                        (trait
-                                                                            .effect
-                                                                            .healthPenalty ||
-                                                                            0),
-                                                                    0,
-                                                                ) * 100,
-                                                            )}
-                                                            % к здоровью
-                                                        </span>
-                                                    )}
-                                                    {selectedCrew.traits.some(
-                                                        (trait) =>
-                                                            trait.effect
-                                                                .regenBonus,
-                                                    ) && (
-                                                        <span className="text-xs bg-[#00ff4120] text-[#00ff41] px-1 rounded">
-                                                            ⚙️ +
-                                                            {Math.round(
-                                                                selectedCrew.traits.reduce(
-                                                                    (
-                                                                        sum,
-                                                                        trait,
-                                                                    ) =>
-                                                                        sum +
-                                                                        (trait
-                                                                            .effect
-                                                                            .regenBonus ||
-                                                                            0),
-                                                                    0,
-                                                                ) * 100,
-                                                            )}
-                                                            % к регенерации
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
 
                                     <div>
                                         <span className="text-[#ffb000]">

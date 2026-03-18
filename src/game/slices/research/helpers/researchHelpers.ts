@@ -1,4 +1,5 @@
 import { getActiveModules, isModuleActive } from "@/game/modules";
+import { getTaskBonusMultiplier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import {
     BASE_CREW_HEALTH,
     RESEARCH_TREE,
@@ -68,21 +69,28 @@ export const calculateResearchOutput = (
     const labs = getActiveModules(state.ship.modules, "lab");
     const labOutput = labs.reduce((sum, m) => sum + (m.researchOutput ?? 0), 0);
 
-    // Бонус от учёных
+    // Бонус от учёных (не более одного учёного на лабораторию)
     let scientistBonus = 0;
-    const scientists = getCrewByProfession(state.crew, "scientist");
+    const allScientists = getCrewByProfession(state.crew, "scientist");
+
+    // Сортируем: сначала назначенные на исследование, потом по убыванию уровня
+    // Берём не больше учёных, чем активных лабораторий
+    const scientists = allScientists
+        .sort((a, b) => {
+            if ((a.assignment === "research") !== (b.assignment === "research"))
+                return a.assignment === "research" ? -1 : 1;
+            return (b.level ?? 1) - (a.level ?? 1);
+        })
+        .slice(0, labs.length);
 
     scientists.forEach((scientist) => {
-        // Базовый бонус учёного
-        let scientistContribution = SCIENTIST_BASE_BONUS;
+        // Базовый бонус + уровень (оба множатся назначением)
+        let scientistContribution = SCIENTIST_BASE_BONUS + (scientist.level ?? 1);
 
-        // Множитель за назначение на исследование
+        // Множитель за назначение на исследование (+100% = ×2)
         if (scientist.assignment === "research") {
             scientistContribution *= RESEARCH_ASSIGNMENT_MULTIPLIER;
         }
-
-        // Бонус за уровень
-        scientistContribution += scientist.level ?? 1;
 
         // Расовый бонус к науке (synthetic +25%, crystalline +20%)
         const raceScienceBonus =
@@ -92,6 +100,11 @@ export const calculateResearchOutput = (
                 scientistContribution * (1 + raceScienceBonus),
             );
         }
+
+        // Трейт бонус (experienced +15%, genius +30%, etc.)
+        scientistContribution = Math.floor(
+            scientistContribution * getTaskBonusMultiplier(scientist),
+        );
 
         scientistBonus += scientistContribution;
     });

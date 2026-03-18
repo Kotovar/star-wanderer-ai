@@ -67,6 +67,7 @@ export interface Race {
         happiness?: number; // Base happiness modifier
         health?: number; // Flat bonus to maxHealth at creation
         healthRegen?: number; // Flat HP regen per turn (passive)
+        heal?: number; // Heal efficiency modifier (multiplier, e.g. 0.25 = +25%)
         repair?: number; // Repair efficiency modifier
         science?: number; // Science/research modifier (multiplier, e.g. 0.25 = +25%)
         combat?: number; // Combat efficiency modifier

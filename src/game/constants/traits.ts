@@ -21,8 +21,8 @@ export const CREW_TRAITS: Record<
         {
             id: "sharpshooter",
             name: "Меткий стрелок",
-            desc: "+10% к урону",
-            effect: { damageBonus: 0.1 },
+            desc: "+5% к точности",
+            effect: { accuracyBonus: 0.05 },
             rarity: "common",
             priceMod: 1.1,
         },
@@ -60,6 +60,7 @@ export const CREW_TRAITS: Record<
         },
 
         // Rare positive traits (30% chance)
+        // TODO: Продолжить отсюда
         {
             id: "veteran",
             name: "Ветеран",

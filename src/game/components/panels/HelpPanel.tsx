@@ -321,6 +321,48 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                         </ul>
                     </section>
 
+                    {/* Research Tree */}
+                    <section>
+                        <h3 className="text-[#9933ff] font-bold text-lg mb-2">
+                            {t("help.research_tree_title")}
+                        </h3>
+                        <p className="text-[#aaa] text-xs mb-2">
+                            {t("help.research_tree_text")}
+                        </p>
+                        <ul className="text-[#888] text-xs space-y-1">
+                            <li>{t("help.research_tree_detail_1")}</li>
+                            <li>{t("help.research_tree_detail_2")}</li>
+                            <li>{t("help.research_tree_detail_3")}</li>
+                            <li>{t("help.research_tree_detail_4")}</li>
+                        </ul>
+                    </section>
+
+                    {/* Weapon Crafting */}
+                    <section>
+                        <h3 className="text-[#ff6600] font-bold text-lg mb-2">
+                            {t("help.crafting_title")}
+                        </h3>
+                        <p className="text-[#aaa] text-xs">
+                            {t("help.crafting_text")}
+                        </p>
+                    </section>
+
+                    {/* Artifacts */}
+                    <section>
+                        <h3 className="text-[#ffd700] font-bold text-lg mb-2">
+                            {t("help.artifacts_title")}
+                        </h3>
+                        <p className="text-[#aaa] text-xs mb-2">
+                            {t("help.artifacts_text")}
+                        </p>
+                        <ul className="text-[#888] text-xs space-y-1">
+                            <li>{t("help.artifacts_detail_1")}</li>
+                            <li>{t("help.artifacts_detail_2")}</li>
+                            <li>{t("help.artifacts_detail_3")}</li>
+                            <li>{t("help.artifacts_detail_4")}</li>
+                        </ul>
+                    </section>
+
                     {/* Tips */}
                     <section>
                         <h3 className="text-[#ffb000] font-bold text-lg mb-2">

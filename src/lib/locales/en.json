@@ -319,7 +319,7 @@
         },
         "sharpshooter": {
             "name": "Sharpshooter",
-            "description": "+10% damage"
+            "description": "+10% accuracy"
         },
         "tough": {
             "name": "Tough",
@@ -355,7 +355,7 @@
         },
         "experienced": {
             "name": "Experienced",
-            "description": "+15% efficiency"
+            "description": "+15% tasks efficiency"
         },
         "skilled": {
             "name": "Skilled",
@@ -745,6 +745,7 @@
         "lab_required": "❌ Lab required",
         "scientists": "👨‍🔬 Scientists",
         "no_scientists": "⚠️ No scientists",
+        "lab_status": "🔬 Lab active · Scientists: {{count}} · {{science}} ⚗/turn",
         "build_module": "Build module",
         "science": "🔬 Science",
         "per_turn": "/turn",
@@ -773,7 +774,13 @@
             "discovered": "★ Researched",
             "active": "🔬 Researching",
             "available": "Available",
-            "locked": "🔒 Requires research"
+            "locked": "🔒 Requires research",
+            "researched": "✓ Researched",
+            "ready": "● Available",
+            "opened": "◍ Need resources",
+            "no_lab": "⚗ Need lab/scientist",
+            "blocked": "⊘ Prerequisites",
+            "unknown": "? Unknown"
         },
         "tech_categories": {
             "ship_systems": "Ship Systems",
@@ -938,6 +945,39 @@
         "science_detail_2": "Research requires resources and time",
         "science_detail_3": "Scientists in crew speed up research process",
         "science_detail_4": "Some technologies require prior research of others",
+        "research_tree_title": "🧬 TECHNOLOGY TREE",
+        "research_tree_text": "5 technology tiers from basic to Precursor tech. Each technology may require prior research of others.",
+        "research_tree_detail_1": "Requires a laboratory and at least one scientist in it",
+        "research_tree_detail_2": "Only one technology researched at a time",
+        "research_tree_detail_3": "Some technologies unlock weapon blueprints",
+        "research_tree_detail_4": "Scientists contributing to speed capped at number of labs",
+        "crafting_title": "⚙️ WEAPON CRAFTING",
+        "crafting_text": "At a station, open the BLUEPRINTS tab. Blueprints are available only after researching the corresponding technology.",
+        "crafting_plasma": "Plasma Cannon",
+        "crafting_plasma_desc": "Pierces 25% armor, +30% damage to shields. Requires: energy samples + tech salvage",
+        "crafting_drones": "Combat Drones",
+        "crafting_drones_desc": "Attacks twice per shot. Requires: tech salvage + rare minerals",
+        "crafting_antimatter": "Antimatter Cannon",
+        "crafting_antimatter_desc": "×2.5 damage to shields. Requires: energy samples + quantum crystals + tech salvage",
+        "crafting_torpedo": "Quantum Torpedo",
+        "crafting_torpedo_desc": "Completely ignores shields. Requires: quantum crystals + tech salvage + energy samples",
+        "artifacts_title": "🏺 ARTIFACTS",
+        "artifacts_text": "Ancient objects found in anomalies. Require a scientist to research.",
+        "artifacts_detail_1": "Scientist level affects research success",
+        "artifacts_detail_2": "Active artifacts must be activated manually",
+        "artifacts_detail_3": "Passive artifacts work automatically",
+        "artifacts_detail_4": "Some artifacts can be boosted (Boost)",
+        "combat_assignments_title": "🎯 COMBAT ASSIGNMENTS",
+        "combat_assignments_text": "During combat, each crew member can be given a combat assignment:",
+        "combat_assignment_repair": "Emergency Repair — repairs current module",
+        "combat_assignment_heal": "Healing — restores crew health in module",
+        "combat_assignment_firstaid": "First Aid — passively reduces crew damage taken",
+        "combat_assignment_evasion": "Evasive Maneuvers — pilot increases evasion chance",
+        "combat_assignment_targeting": "Precision Fire — increases accuracy",
+        "combat_assignment_overclock": "Weapon Overclock — +25% damage",
+        "combat_assignment_rapidfire": "Rapid Fire — +25% damage",
+        "combat_assignment_analysis": "Vulnerability Analysis — reduces enemy defense",
+        "combat_assignment_sabotage": "Sabotage — reduces enemy accuracy",
         "tips_title": "💡 TIPS",
         "tip_1": "Without scanner, many objects in sector are hidden",
         "tip_2": "📡 Scanner with high scan range gives bonuses: signal discovery, reward detection, ambush warning",

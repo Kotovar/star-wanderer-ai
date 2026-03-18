@@ -1,5 +1,9 @@
 import { calculateCrewStats } from "@/game/slices/crewManagement/utils/hireCrew";
-import { generateCrewTraits, getRandomName, getTraitById } from "@/game/crew/utils";
+import {
+    generateCrewTraits,
+    getRandomName,
+    getTraitById,
+} from "@/game/crew/utils";
 import { getRandomRace } from "@/game/races";
 import { INITIAL_HAPPINESS_PERCENT } from "@/game/constants/crew";
 import type {

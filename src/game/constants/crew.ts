@@ -174,13 +174,6 @@ export const CREW_ASSIGNMENT_BONUSES = {
     ANALYSIS_DAMAGE: 0.1, // +10% damage to selected module
 } as const;
 
-/**
- * Бонусы от нахождения экипажа в модулях
- */
-export const CREW_IN_MODULE_BONUSES = {
-    ENGINEER_IN_REACTOR: 3,
-} as const;
-
 export const DEFAULT_MAX_HEALTH = 100;
 export const MIN_CREW_HEALTH = 0;
 export const MIN_HEALTH_WITH_IMMORTALITY = 1;
@@ -213,7 +206,7 @@ export const DEFAULT_MAX_HAPPINESS = 100;
 /**
  * Базовый бонус учёного за ход
  */
-export const SCIENTIST_BASE_BONUS = 5;
+export const SCIENTIST_BASE_BONUS = 3;
 
 /**
  * Множитель бонуса за назначение на исследование (100% = 2x)

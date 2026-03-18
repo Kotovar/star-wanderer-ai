@@ -3,6 +3,20 @@
  */
 
 import { CREW_ASSIGNMENT_EXP } from "@/game/constants/experience";
+import type { CrewMember } from "@/game/types/crew";
+
+/**
+ * Возвращает итоговый множитель задания с учётом трейтов (taskBonus, doubleTaskEffect).
+ * Используется всеми типами назначений.
+ */
+export function getTaskBonusMultiplier(crewMember: CrewMember): number {
+    let taskBonus = 0;
+    crewMember.traits?.forEach((trait) => {
+        if (trait.effect?.taskBonus) taskBonus += trait.effect.taskBonus;
+        if (trait.effect?.doubleTaskEffect) taskBonus = 1;
+    });
+    return taskBonus > 0 ? 1 + taskBonus : 1;
+}
 
 /** Базовое количество опыта за выполнение назначений */
 export const BASE_EXP_REWARDS = CREW_ASSIGNMENT_EXP;

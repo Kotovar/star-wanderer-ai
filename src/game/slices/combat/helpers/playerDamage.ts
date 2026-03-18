@@ -1,4 +1,4 @@
-import type { GameStore, WeaponType } from "@/game/types";
+import type { GameState, GameStore, WeaponType } from "@/game/types";
 import {
     BASE_ACCURACY,
     MIN_ACCURACY,
@@ -6,7 +6,13 @@ import {
     WEAPON_TYPES,
     COMBAT_ACCURACY_MODIFIERS,
     COMBAT_DAMAGE_MODIFIERS,
+    ARTIFACT_TYPES,
 } from "@/game/constants";
+import { isModuleActive } from "@/game/modules/utils";
+import {
+    findActiveArtifact,
+    getArtifactEffectValue,
+} from "@/game/artifacts/utils";
 
 /**
  * Calculates weapon accuracy with all modifiers
@@ -60,6 +66,91 @@ export function calculateFinalDamagePerWeapon(
     }
 
     return finalDamagePerWeapon;
+}
+
+/**
+ * Pure (no-logging) accuracy modifier computation from full game state.
+ * Single source of truth used by both combat logic and UI.
+ */
+export function computeAccuracyModifier(state: GameState): number {
+    const weaponBayIds = new Set(
+        state.ship.modules
+            .filter((m) => m.type === "weaponbay" && isModuleActive(m))
+            .map((m) => m.id),
+    );
+    const crewInWeaponBays = state.crew.filter((c) =>
+        weaponBayIds.has(c.moduleId),
+    );
+
+    let modifier = 0;
+
+    const hasGunner =
+        crewInWeaponBays.some((c) => c.profession === "gunner") ||
+        state.crew.some((c) => c.combatAssignment === "targeting");
+
+    if (!hasGunner) {
+        modifier += COMBAT_ACCURACY_MODIFIERS.NO_GUNNER_PENALTY;
+    } else {
+        const gunnerInBay = crewInWeaponBays.find(
+            (c) => c.profession === "gunner",
+        );
+        if (gunnerInBay) {
+            const gunnerLevel = gunnerInBay.level || 1;
+            modifier += Math.min(
+                COMBAT_ACCURACY_MODIFIERS.GUNNER_LEVEL_MAX_BONUS,
+                gunnerLevel * COMBAT_ACCURACY_MODIFIERS.GUNNER_LEVEL_BONUS,
+            );
+        }
+    }
+
+    if (state.crew.some((c) => c.combatAssignment === "targeting"))
+        modifier += COMBAT_ACCURACY_MODIFIERS.TARGETING_BONUS;
+    if (state.crew.some((c) => c.combatAssignment === "rapidfire"))
+        modifier += COMBAT_ACCURACY_MODIFIERS.RAPIDFIRE_PENALTY;
+
+    const hasCalibration = state.crew.some(
+        (c) => c.combatAssignment === "calibration",
+    );
+    const hasEngineer = crewInWeaponBays.some(
+        (c) => c.profession === "engineer",
+    );
+    if (hasCalibration && hasEngineer)
+        modifier += COMBAT_ACCURACY_MODIFIERS.CALIBRATION_BONUS;
+
+    const aiCoreCount = state.ship.modules.filter(
+        (m) => m.type === "ai_core" && isModuleActive(m),
+    ).length;
+    if (aiCoreCount > 0)
+        modifier += aiCoreCount * COMBAT_ACCURACY_MODIFIERS.AI_CORE_BONUS;
+
+    const targetingCore = findActiveArtifact(
+        state.artifacts,
+        ARTIFACT_TYPES.TARGETING_CORE,
+    );
+    if (targetingCore)
+        modifier += getArtifactEffectValue(targetingCore, state) / 100;
+
+    state.crew.forEach((c) => {
+        c.traits?.forEach((trait) => {
+            if (trait.effect?.accuracyPenalty)
+                modifier -= Number(trait.effect.accuracyPenalty);
+            if (trait.effect?.accuracyBonus)
+                modifier += Number(trait.effect.accuracyBonus);
+        });
+    });
+
+    // Xenosymbiont merge into weapon bay
+    const xenoMerge = state.crew.find(
+        (c) => c.isMerged && c.mergedModuleId !== null,
+    );
+    if (xenoMerge) {
+        const mergedModule = state.ship.modules.find(
+            (m) => m.id === xenoMerge.mergedModuleId,
+        );
+        if (mergedModule?.type === "weaponbay") modifier += 0.05;
+    }
+
+    return modifier;
 }
 
 /**
@@ -396,7 +487,9 @@ export function processDronesDamage(
     const stackBonus = 1 + droneStacks * 0.05;
 
     if (droneStacks > 0) {
-        logs.push(`🤖 Дроны разогнаны: x${stackBonus.toFixed(2)} урон (${droneStacks} стак.)`);
+        logs.push(
+            `🤖 Дроны разогнаны: x${stackBonus.toFixed(2)} урон (${droneStacks} стак.)`,
+        );
     }
 
     for (let i = 0; i < weaponCount; i++) {
@@ -406,7 +499,9 @@ export function processDronesDamage(
         }
 
         droneHitCount++;
-        const droneDmg = Math.floor(finalDamagePerWeapon * damageMultiplier * stackBonus);
+        const droneDmg = Math.floor(
+            finalDamagePerWeapon * damageMultiplier * stackBonus,
+        );
         const shieldDmg = Math.min(remainingShields, droneDmg);
         const overflow = droneDmg - shieldDmg;
 
@@ -461,7 +556,8 @@ export function processAntimatterDamage(
         const antimatterDmg = finalDamagePerWeapon * damageMultiplier;
         const shieldDmg = Math.floor(antimatterDmg * shieldBonus);
         const actualShieldDmg = Math.min(remainingShields, shieldDmg);
-        const overflow = antimatterDmg - Math.min(remainingShields, antimatterDmg);
+        const overflow =
+            antimatterDmg - Math.min(remainingShields, antimatterDmg);
 
         remainingShields -= actualShieldDmg;
         totalShieldDamage += actualShieldDmg;

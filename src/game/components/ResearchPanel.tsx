@@ -8,6 +8,7 @@ import {
     canResearchTech,
 } from "@/game/constants/research";
 import { RACES } from "@/game/constants/races";
+import { getTaskBonusMultiplier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import type {
     ResearchCategory,
     Module,
@@ -17,7 +18,7 @@ import type {
     TradeGood,
 } from "@/game/types";
 import { typedKeys } from "@/lib/utils";
-import { useTranslation } from "@/lib/useTranslation";
+import { useTranslation, store } from "@/lib/useTranslation";
 import { getTechTranslation } from "@/lib/techTranslations";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
@@ -128,6 +129,7 @@ interface TechNodeProps {
     isActive: boolean;
     isSelected: boolean;
     activeProgress: number;
+    canResearch: boolean; // Есть лаборатория и учёный
     lang: "ru" | "en";
     onClick: () => void;
 }
@@ -141,11 +143,13 @@ function TechNode({
     isActive,
     isSelected,
     activeProgress,
+    canResearch,
     lang,
     onClick,
 }: TechNodeProps) {
     const [cx, cy] = getNodeCenter(tech.id);
     const catColor = CATEGORY_COLORS[tech.category];
+    const t = (key: string) => store.t(key);
 
     // Бордер всегда цвет категории; для неизвестных — тёмный
     const borderColor = isDiscovered || isOpened ? catColor : "#2a2a2a";
@@ -242,23 +246,25 @@ function TechNode({
                         >
                             {isResearched ? (
                                 <span style={{ color: "#00ff41" }}>
-                                    ✓ Изучено
+                                    {t("research.tech_status.researched")}
                                 </span>
                             ) : isReady ? (
                                 <span style={{ color: "#00ff41" }}>
-                                    ● Доступно
+                                    {t("research.tech_status.ready")}
                                 </span>
                             ) : isOpened ? (
                                 <span style={{ color: "#ffb000" }}>
-                                    ◍ Открыто
+                                    {canResearch
+                                        ? t("research.tech_status.opened")
+                                        : t("research.tech_status.no_lab")}
                                 </span>
                             ) : isDiscovered ? (
                                 <span style={{ color: "#ff4444" }}>
-                                    ⊘ Заблокировано
+                                    {t("research.tech_status.blocked")}
                                 </span>
                             ) : (
                                 <span style={{ color: "#444" }}>
-                                    ? Неизвестно
+                                    {t("research.tech_status.unknown")}
                                 </span>
                             )}
                         </div>
@@ -331,6 +337,7 @@ interface TechCanvasProps {
     onSelectTech: (id: TechnologyId) => void;
     lang: "ru" | "en";
     canStartResearch: (tech: Technology) => boolean;
+    canResearch: boolean;
 }
 
 function TechCanvas({
@@ -341,6 +348,7 @@ function TechCanvas({
     onSelectTech,
     lang,
     canStartResearch,
+    canResearch,
 }: TechCanvasProps) {
     const TIER_LABELS = [
         "T1 — Базовые",
@@ -436,6 +444,7 @@ function TechCanvas({
                         isActive={isActive}
                         isSelected={isSelected}
                         activeProgress={activeProgress}
+                        canResearch={canResearch}
                         lang={lang}
                         onClick={() => onSelectTech(tech.id)}
                     />
@@ -705,7 +714,7 @@ export function ResearchPanel() {
     const crew = useGameStore((s) => s.crew);
     const ship = useGameStore((s) => s.ship);
     const startResearch = useGameStore((s) => s.startResearch);
-    const { currentLanguage } = useTranslation();
+    const { t, currentLanguage } = useTranslation();
 
     const [selectedTech, setSelectedTech] = useState<TechnologyId | null>(null);
 
@@ -756,9 +765,16 @@ export function ResearchPanel() {
             0,
         );
 
-        // Бонус от учёных
+        // Бонус от учёных (не более одного на лабораторию)
         let scientistBonus = 0;
-        scientists.forEach((s: CrewMember) => {
+        const cappedScientists = scientists
+            .sort((a: CrewMember, b: CrewMember) => {
+                if ((a.assignment === "research") !== (b.assignment === "research"))
+                    return a.assignment === "research" ? -1 : 1;
+                return (b.level ?? 1) - (a.level ?? 1);
+            })
+            .slice(0, labs.length);
+        cappedScientists.forEach((s: CrewMember) => {
             let scientistContribution = 5 + (s.level ?? 1);
             if (s.assignment === "research") {
                 scientistContribution *= 2;
@@ -769,6 +785,9 @@ export function ResearchPanel() {
                     scientistContribution * (1 + raceScienceBonus),
                 );
             }
+            scientistContribution = Math.floor(
+                scientistContribution * getTaskBonusMultiplier(s),
+            );
             scientistBonus += scientistContribution;
         });
 
@@ -811,9 +830,9 @@ export function ResearchPanel() {
                     >
                         {hasLab
                             ? scientists.length > 0
-                                ? `🔬 Лаб активна · Учёных: ${scientists.length} · ${sciencePerTurn}⚗/ход`
-                                : "⚠ Нет учёных"
-                            : "⚠ Нужна лаборатория"}
+                                ? t("research.lab_status", { count: scientists.length, science: sciencePerTurn })
+                                : t("research.no_scientists")
+                            : t("research.lab_required")}
                     </div>
                     {activeResearch && (
                         <div className="text-[10px] text-[#00d4ff] text-right">
@@ -875,6 +894,7 @@ export function ResearchPanel() {
                     }
                     lang={currentLanguage}
                     canStartResearch={canStartResearch}
+                    canResearch={canResearch}
                 />
             </PanZoomCanvas>
 
