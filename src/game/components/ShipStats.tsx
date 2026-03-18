@@ -368,6 +368,30 @@ export function ShipStats() {
                         <span>{damage.missile}</span>
                     </div>
                 )}
+                {damage.plasma > 0 && (
+                    <div className="flex justify-between text-sm text-[#c040ff]">
+                        <span>{t("ship_stats.plasma")}</span>
+                        <span>{damage.plasma}</span>
+                    </div>
+                )}
+                {damage.drones > 0 && (
+                    <div className="flex justify-between text-sm text-[#40c0ff]">
+                        <span>{t("ship_stats.drones")}</span>
+                        <span>{damage.drones}</span>
+                    </div>
+                )}
+                {damage.antimatter > 0 && (
+                    <div className="flex justify-between text-sm text-[#ff4040]">
+                        <span>{t("ship_stats.antimatter")}</span>
+                        <span>{damage.antimatter}</span>
+                    </div>
+                )}
+                {damage.quantum_torpedo > 0 && (
+                    <div className="flex justify-between text-sm text-[#40ffb0]">
+                        <span>{t("ship_stats.quantum_torpedo")}</span>
+                        <span>{damage.quantum_torpedo}</span>
+                    </div>
+                )}
             </div>
             <div className="flex justify-between mb-2 text-sm">
                 <span className="text-[#ffb000]">{t("ship_stats.hull")}:</span>

@@ -57,7 +57,7 @@ export function CombatPanel() {
     const canAttack = hasWeaponBay;
 
     const pDmg = getTotalDamage();
-    const actualDamage = hasGunner ? pDmg.total : Math.floor(pDmg.total * 0.5);
+    const actualDamage = pDmg.total;
     const isBoss = currentCombat?.enemy.isBoss || false;
 
     // Calculate evasion chance (in combat - includes combat assignment bonus)
@@ -134,7 +134,6 @@ export function CombatPanel() {
                     <div className="text-sm space-y-2">
                         <div className="text-[#00ff41]">
                             {t("ship_stats.damage")} {actualDamage}{" "}
-                            {!hasGunner && "(-50%)"}
                         </div>
                         <div>
                             {t("ship_stats.shields")} {ship.shields}/

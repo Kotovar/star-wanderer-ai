@@ -27,7 +27,7 @@ export const MAX_ACCURACY = 0.95; // Maximum 95% accuracy
 export const COMBAT_DAMAGE_MODIFIERS = {
     // Gunner presence bonus
     GUNNER_BONUS: 1.15, // +15% damage with gunner
-    NO_GUNNER_PENALTY: 0.75, // -25% damage without gunner
+    NO_GUNNER_PENALTY: 1.0, // no damage penalty without gunner (only accuracy penalty)
 
     // Combat assignments
     OVERCLOCK_BONUS: 1.25, // +25% damage

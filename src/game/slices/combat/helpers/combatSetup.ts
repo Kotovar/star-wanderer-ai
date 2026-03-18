@@ -80,11 +80,13 @@ export const generateEnemyModules = (
     const damageMultiplier = modifiers.damageMod;
 
     // Always add at least one weapon module first
+    const baseWeaponHealth = Math.floor(MODULE_HEALTH_BASE * healthMultiplier);
     modules.push({
         id: 0,
         type: "weapon",
         name: "Оружие",
-        health: Math.floor(MODULE_HEALTH_BASE * healthMultiplier),
+        health: baseWeaponHealth,
+        maxHealth: baseWeaponHealth,
         damage: Math.floor(
             threat * MODULE_DAMAGE_PER_THREAT * damageMultiplier,
         ),
@@ -112,11 +114,13 @@ export const generateEnemyModules = (
                   modifiers.shieldMod
                 : 0;
 
+        const moduleHealth = Math.floor(MODULE_HEALTH_BASE * healthMultiplier);
         modules.push({
             id: i,
             type,
             name: getModuleName(type),
-            health: Math.floor(MODULE_HEALTH_BASE * healthMultiplier),
+            health: moduleHealth,
+            maxHealth: moduleHealth,
             damage:
                 type === "weapon"
                     ? Math.floor(

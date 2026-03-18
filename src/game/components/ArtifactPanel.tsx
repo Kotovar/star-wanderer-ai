@@ -1,12 +1,12 @@
 "use client";
 
-import { useGameStore } from "../store";
+import { useGameStore } from "@/game/store";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import type { Artifact } from "../types";
 import { useTranslation } from "@/lib/useTranslation";
 import { getTechBonusSum } from "@/game/research";
 import { DEFAULT_ARTIFACT_SLOTS } from "@/game/slices/artifacts/constants";
+import type { Artifact, ArtifactType } from "@/game/types";
 
 const RARITY_COLORS: Record<
     string,
@@ -37,25 +37,30 @@ function getRarityName(rarity: string, t: (key: string) => string): string {
     return t(RARITY_NAMES[rarity] || `artifacts.rarity.${rarity}`);
 }
 
-const EFFECT_ICONS: Record<string, string> = {
+const EFFECT_ICONS: Record<ArtifactType, string> = {
     free_power: "⚡",
     damage_reflect: "🛡️",
     sector_teleport: "🌀",
-    shield_regen: "💚",
+    shield_regen_boost: "💚",
     fuel_free: "⛽",
     crew_immortal: "💖",
     crit_chance: "💥",
-    scan_boost: "📡",
+    crit_damage_boost: "🌟",
+    quantum_scan: "📡",
     artifact_finder: "🧭",
     damage_boost: "⚔️",
+    module_armor: "🔰",
+    nanite_repair: "🔩",
     abyss_power: "⚛️",
     all_seeing: "👁️",
     undying_crew: "🧬",
     credit_booster: "📦",
     auto_repair: "🔧",
-    crit_damage_boost: "💥",
-    dark_shield: "🛡️",
-    void_engine: "🌀",
+    dark_shield: "🌑",
+    ai_control: "🤖",
+    void_engine: "💫",
+    accuracy_boost: "🎯",
+    evasion_boost: "💨",
 };
 
 function ArtifactCard({
@@ -171,10 +176,10 @@ function ArtifactCard({
                     {!artifact.researched && (
                         <Button
                             onClick={onResearch}
-                            className={`w-full mt-3 text-xs py-1 ${
+                            className={`cursor-pointer w-full mt-3 text-xs py-1 bg-transparent border hover:text-[#050810] ${
                                 artifact.cursed
-                                    ? "bg-transparent border border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810]"
-                                    : "bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
+                                    ? "border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040]"
+                                    : "border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000]"
                             }`}
                         >
                             {artifact.cursed
@@ -187,8 +192,7 @@ function ArtifactCard({
                         <>
                             {!artifact.effect.active && slotsAtLimit && (
                                 <div className="text-xs mt-2 text-[#888] text-center">
-                                    Слоты заполнены. Деактивируйте другой
-                                    артефакт.
+                                    {t("artifacts.slots_full_hint")}
                                 </div>
                             )}
                             <Button

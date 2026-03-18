@@ -493,9 +493,12 @@ function applyDamageToEnemy(
         }
     }
 
-    // Apply module damage
-    if (damage.totalModuleDamage > 0 || weaponCounts.kinetic > 0) {
-        let moduleDefense = tgtMod.defense ?? 0;
+    // Apply module damage (only if there is actual overflow past shields)
+    if (damage.totalModuleDamage > 0) {
+        let moduleDefense =
+            get()
+                .currentCombat?.enemy.modules.filter((m) => m.health > 0)
+                .reduce((sum, m) => sum + (m.defense ?? 0), 0) ?? 0;
 
         if (weaponCounts.kinetic > 0 && damage.kineticArmorPenetration > 0) {
             const reduced = Math.floor(

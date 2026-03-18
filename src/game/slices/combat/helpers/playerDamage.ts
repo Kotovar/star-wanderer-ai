@@ -158,11 +158,16 @@ export function processLaserDamage(
             laserDmg * (WEAPON_TYPES.laser.shieldBonus ?? 1.2),
         );
         const actualShieldDmg = Math.min(remainingShields, shieldDmg);
-        const overflow = shieldDmg - actualShieldDmg;
-
         remainingShields -= actualShieldDmg;
         totalShieldDamage += actualShieldDmg;
-        totalModuleDamage += overflow;
+
+        // Overflow to modules uses base damage (no shield bonus for module hits)
+        let overflow = 0;
+        if (actualShieldDmg < shieldDmg) {
+            const fractionNotShielded = 1 - actualShieldDmg / shieldDmg;
+            overflow = Math.floor(laserDmg * fractionNotShielded);
+            totalModuleDamage += overflow;
+        }
 
         if (enemyShields > 0) {
             logs.push(`Лазер: -${actualShieldDmg} щитам`);
@@ -333,7 +338,6 @@ export function processPlasmaDamage(
             continue;
         }
 
-        plasmaHitCount++;
         const plasmaDmg = finalDamagePerWeapon * damageMultiplier;
         const shieldDmg = Math.floor(plasmaDmg * shieldBonus);
         const actualShieldDmg = Math.min(remainingShields, shieldDmg);
@@ -342,6 +346,9 @@ export function processPlasmaDamage(
         remainingShields -= actualShieldDmg;
         totalShieldDamage += actualShieldDmg;
         totalModuleDamage += overflow;
+
+        // Armor reduction only when plasma actually reaches the module
+        if (overflow > 0) plasmaHitCount++;
 
         if (enemyShields > 0) {
             logs.push(`Плазма: -${actualShieldDmg} щитам`);
@@ -399,7 +406,7 @@ export function processDronesDamage(
         }
 
         droneHitCount++;
-        const droneDmg = finalDamagePerWeapon * damageMultiplier * stackBonus;
+        const droneDmg = Math.floor(finalDamagePerWeapon * damageMultiplier * stackBonus);
         const shieldDmg = Math.min(remainingShields, droneDmg);
         const overflow = droneDmg - shieldDmg;
 
