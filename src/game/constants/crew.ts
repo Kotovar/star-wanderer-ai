@@ -167,7 +167,7 @@ export const CREW_ACTIONS: Record<
 export const CREW_ASSIGNMENT_BONUSES = {
     REACTOR_OVERLOAD: 5,
     NAVIGATION_REDUCED_CONSUMPTION: -1,
-    EVASION: 3, // 3% за уровень пилота
+    EVASION: 2, // 2% за уровень пилота (кап 30% достигается при ур.10 + задание уклонения)
     // Combat assignment damage bonuses (multipliers)
     OVERCLOCK_DAMAGE: 0.25, // +25% damage
     RAPIDFIRE_DAMAGE: 0.25, // +25% damage

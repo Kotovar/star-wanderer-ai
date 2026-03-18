@@ -50,7 +50,7 @@ export const createCombatSlice = (
     },
 
     attackEnemy: () => {
-        helpers.executePlayerAttack(get(), set, get);
+        helpers.executePlayerAttack(set, get);
     },
 
     executeAmbushAttack: () => {

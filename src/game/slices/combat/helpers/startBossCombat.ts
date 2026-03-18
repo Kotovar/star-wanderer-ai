@@ -49,6 +49,7 @@ export function initializeBossCombat(
                 guaranteedArtifact: rewards.artifactId,
                 module: rewards.module,
             },
+            droneStacks: 0,
             isAmbush: false,
             ambushAttackDone: false,
         };

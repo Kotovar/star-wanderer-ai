@@ -54,18 +54,21 @@ const initialCrew: CrewMember[] = [
         name: "Иванов",
         profession: "pilot",
         moduleId: 102,
+        level: 1,
     }),
     buildCrewMember({
         id: 2,
         name: "Петрова",
         profession: "engineer",
         moduleId: 103,
+        level: 1,
     }),
     buildCrewMember({
         id: 3,
         name: "Сидоров",
         profession: "medic",
         moduleId: 103,
+        level: 1,
     }),
 ];
 

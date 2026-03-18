@@ -3,6 +3,8 @@ import { ARTIFACT_TYPES } from "@/game/constants";
 import { RACES } from "@/game/constants/races";
 import { playSound } from "@/sounds";
 import * as enemyAttack from "./enemyAttack";
+import { getTotalEvasion } from "@/game/slices/ship/helpers/getTotalEvasion";
+import { PILOT_EVASION_COMBAT_EXP } from "@/game/constants/experience";
 import type { GameState, GameStore, Module, ModuleType } from "@/game/types";
 
 /**
@@ -67,6 +69,18 @@ export function executeEnemyAttack(
     const activeMods = state.ship.modules.filter((m) => m.health > 0);
     const targetModule = selectTargetModule(activeMods, get);
     if (!targetModule) return;
+
+    // Evasion check
+    const evasionChance = getTotalEvasion(state) / 100;
+    if (evasionChance > 0 && Math.random() < evasionChance) {
+        const pilot = state.crew.find((c) => c.profession === "pilot");
+        get().addLog(
+            `✈️ ${pilot ? `Пилот ${pilot.name} уклонился` : "Корабль уклонился"} от атаки! (${Math.round(evasionChance * 100)}% шанс)`,
+            "info",
+        );
+        if (pilot) get().gainExp(pilot, PILOT_EVASION_COMBAT_EXP);
+        return;
+    }
 
     // Check for Mirror Shield reflection
     if (processMirrorShield(state, set, get, eDmg, combat)) return;

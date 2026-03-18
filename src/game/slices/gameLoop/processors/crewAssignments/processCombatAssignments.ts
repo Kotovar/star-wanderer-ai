@@ -234,22 +234,10 @@ const processCombatFirstAid = (
  */
 const processCombatEvasion = (
     crewMember: CrewMember,
-    set: SetState,
+    _set: SetState,
     get: () => GameStore,
 ): void => {
-    const pilotLevel = crewMember.level || 1;
-    const evasionBonus = pilotLevel; // +1% за уровень пилота
-
-    set((s) => ({
-        ship: {
-            ...s.ship,
-            bonusEvasion: (s.ship.bonusEvasion || 0) + evasionBonus,
-        },
-    }));
-
-    get().addLog(
-        `${crewMember.name}: Маневры уклонения +${evasionBonus}%`,
-        "combat",
-    );
+    // Evasion bonus is computed dynamically in getTotalEvasion() when
+    // combatAssignment === "evasion" — no state mutation needed here.
     get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
 };

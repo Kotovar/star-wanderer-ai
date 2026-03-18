@@ -7,6 +7,7 @@ export type EnemyModule = {
     health: number;
     damage?: number;
     defense?: number;
+    baseDefense?: number; // Original defense, set on first plasma hit (for armor reduction calculation)
     // Boss-specific module features
     maxHealth?: number;
     isAncient?: boolean; // Module not available to player

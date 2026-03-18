@@ -64,12 +64,6 @@ export function applyModuleDamage(
         if (mod) mod.health = Math.max(0, mod.health - reducedDamage);
     });
 
-    if (artifactDefense > 0) {
-        get().addLog(
-            `💎 Кристаллическая Броня: -${artifactDefense} урона (артефакт)`,
-            "info",
-        );
-    }
     if (moduleDefense > 0 && reducedDamage < damageAfterArtifact) {
         get().addLog(
             `💎 Кристаллическая раса: -${damageAfterArtifact - reducedDamage} урона (%)`,

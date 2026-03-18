@@ -7,26 +7,34 @@ import { getArtifactEffectValue } from "@/game/artifacts/utils";
  * Вычисляет общий шанс уклонения корабля
  *
  * Учитывает:
- * - Базовое уклонение от уровня пилота (3% за уровень)
- * - Бонус от боевой задачи "evasion" (+3% за уровень пилота)
+ * - Базовое уклонение: 3% за уровень самого высокоуровневого пилота в кабине
+ * - Задание "уклонение": +1% за уровень пилота в кабине
  * - Бонусы от артефактов (например, Evasion Matrix)
  * - Бонусы от расовых трейтов (например, Krylorian intimidation)
+ * - Кап: 30%
  *
  * @param state - Текущее состояние игры
  * @returns Шанс уклонения в процентах
  */
 export function getTotalEvasion(state: GameState): number {
     const { crew, artifacts, ship } = state;
-    const captain = crew.find((c) => c.profession === "pilot");
-    const captainLevel = captain?.level ?? 1;
 
-    // Базовое уклонение от уровня пилота
-    let evasion = captainLevel * CREW_ASSIGNMENT_BONUSES.EVASION;
+    // Берём самого высокоуровневого пилота в модуле типа "cockpit"
+    const cockpitIds = new Set(
+        ship.modules.filter((m) => m.type === "cockpit").map((m) => m.id),
+    );
+    const pilotsInCockpit = crew
+        .filter((c) => c.profession === "pilot" && cockpitIds.has(c.moduleId))
+        .sort((a, b) => (b.level ?? 1) - (a.level ?? 1));
+    const cockpitPilot = pilotsInCockpit[0];
+    const pilotLevel = cockpitPilot?.level ?? 0;
 
-    // Бонус от боевой задачи "evasion" (только в бою)
-    const hasCombatEvasion = crew.some((c) => c.combatAssignment === "evasion");
-    if (hasCombatEvasion) {
-        evasion += captainLevel * CREW_ASSIGNMENT_BONUSES.EVASION;
+    // Базовое уклонение: 3% за уровень пилота в кабине
+    let evasion = pilotLevel * CREW_ASSIGNMENT_BONUSES.EVASION;
+
+    // Бонус от боевой задачи "evasion": +1% за уровень (только пилот в кабине)
+    if (cockpitPilot?.combatAssignment === "evasion") {
+        evasion += pilotLevel;
     }
 
     // Бонусы от артефактов
@@ -72,5 +80,5 @@ export function getTotalEvasion(state: GameState): number {
         evasion += ship.bonusEvasion;
     }
 
-    return Math.max(0, Math.round(evasion));
+    return Math.max(0, Math.min(30, Math.round(evasion)));
 }

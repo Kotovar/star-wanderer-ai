@@ -312,7 +312,6 @@ export function processPlasmaDamage(
     remainingShields: number,
     enemyShields: number,
     accuracy: number,
-    armorPenetration: number,
     shieldBonus: number,
 ): {
     totalShieldDamage: number;
@@ -320,12 +319,13 @@ export function processPlasmaDamage(
     remainingShields: number;
     logs: string[];
     missedShots: number;
-    plasmaArmorPenetration: number;
+    plasmaHitCount: number;
 } {
     let totalShieldDamage = 0;
     let totalModuleDamage = 0;
     const logs: string[] = [];
     let missedShots = 0;
+    let plasmaHitCount = 0;
 
     for (let i = 0; i < weaponCount; i++) {
         if (Math.random() > accuracy) {
@@ -333,6 +333,7 @@ export function processPlasmaDamage(
             continue;
         }
 
+        plasmaHitCount++;
         const plasmaDmg = finalDamagePerWeapon * damageMultiplier;
         const shieldDmg = Math.floor(plasmaDmg * shieldBonus);
         const actualShieldDmg = Math.min(remainingShields, shieldDmg);
@@ -344,7 +345,7 @@ export function processPlasmaDamage(
 
         if (enemyShields > 0) {
             logs.push(`Плазма: -${actualShieldDmg} щитам`);
-            if (overflow > 0) logs.push(`(перелёт: ${overflow})`);
+            if (overflow > 0) logs.push(`(перелёт: ${Math.floor(overflow)})`);
         }
     }
 
@@ -354,12 +355,14 @@ export function processPlasmaDamage(
         remainingShields,
         logs,
         missedShots,
-        plasmaArmorPenetration: armorPenetration,
+        plasmaHitCount,
     };
 }
 
 /**
- * Processes drones weapon damage (fires twice per weapon)
+ * Processes drones weapon damage.
+ * Fires once per weapon. Each hit grants +5% damage stack (max 20 stacks = +100%).
+ * Stack is tracked externally in currentCombat.droneStacks.
  */
 export function processDronesDamage(
     weaponCount: number,
@@ -368,28 +371,35 @@ export function processDronesDamage(
     remainingShields: number,
     enemyShields: number,
     accuracy: number,
+    droneStacks: number,
 ): {
     totalShieldDamage: number;
     totalModuleDamage: number;
     remainingShields: number;
     logs: string[];
     missedShots: number;
+    droneHitCount: number;
 } {
     let totalShieldDamage = 0;
     let totalModuleDamage = 0;
     const logs: string[] = [];
     let missedShots = 0;
+    let droneHitCount = 0;
 
-    // Drones fire twice per weapon
-    const totalShots = weaponCount * 2;
+    const stackBonus = 1 + droneStacks * 0.05;
 
-    for (let i = 0; i < totalShots; i++) {
+    if (droneStacks > 0) {
+        logs.push(`🤖 Дроны разогнаны: x${stackBonus.toFixed(2)} урон (${droneStacks} стак.)`);
+    }
+
+    for (let i = 0; i < weaponCount; i++) {
         if (Math.random() > accuracy) {
             missedShots++;
             continue;
         }
 
-        const droneDmg = finalDamagePerWeapon * damageMultiplier;
+        droneHitCount++;
+        const droneDmg = finalDamagePerWeapon * damageMultiplier * stackBonus;
         const shieldDmg = Math.min(remainingShields, droneDmg);
         const overflow = droneDmg - shieldDmg;
 
@@ -398,7 +408,7 @@ export function processDronesDamage(
         totalModuleDamage += overflow;
 
         if (enemyShields > 0 && shieldDmg > 0) {
-            logs.push(`Дрон: -${shieldDmg} щитам`);
+            logs.push(`Дрон: -${Math.floor(shieldDmg)} щитам`);
         }
     }
 
@@ -408,6 +418,7 @@ export function processDronesDamage(
         remainingShields,
         logs,
         missedShots,
+        droneHitCount,
     };
 }
 

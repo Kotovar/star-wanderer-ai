@@ -18,6 +18,8 @@ export interface CombatState {
         threat?: number;
     };
     loot: Loot;
+    // Drone stack counter: +5% damage per hit, resets after combat (max 20 stacks = +100%)
+    droneStacks: number;
     // Ambush - enemy attacks first (when no scanner and approaching unknown enemy ship)
     isAmbush?: boolean;
     ambushAttackDone?: boolean; // Track if ambush attack was already executed
