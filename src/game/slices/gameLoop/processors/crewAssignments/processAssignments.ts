@@ -387,11 +387,6 @@ const processHealAssignment = (
         healAmount = Math.floor(healAmount * (1 + taskBonus));
     }
 
-    // Расовый бонус
-    if (crewRace?.crewBonuses.health) {
-        healAmount = Math.floor(healAmount * (1 + crewRace.crewBonuses.health));
-    }
-
     const crewToHeal = get().crew.filter(
         (c) =>
             c.moduleId === currentModule.id &&

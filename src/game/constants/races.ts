@@ -1,55 +1,9 @@
-import type { Race, RaceId } from "@/game/types";
-import type { ModuleType } from "@/game/types";
-
-/**
- * Эффекты сращивания ксеноморфа-симбионта с модулем корабля
- */
-export interface XenosymbiontMergeEffect {
-    /** ID модуля, с которым произошло сращивание */
-    moduleId: number;
-    /** Тип модуля */
-    moduleType: ModuleType;
-    /** Бонус к регенерации щитов (%) */
-    shieldRegenBonus?: number;
-    /** Бонус к ёмкости щита (%) */
-    shieldCapacity?: number;
-    /** Бонус к ремонту модулей (%) */
-    repairBonus?: number;
-    /** Снижение потребления энергии (%) */
-    energyReduction?: number;
-    /** Бонус к выработке энергии (%) */
-    powerOutput?: number;
-    /** Бонус к уклонению корабля (%) */
-    evasionBonus?: number;
-    /** Бонус к инициативе (%) */
-    initiativeBonus?: number;
-    /** Эффективность кислорода (%) */
-    oxygenEfficiency?: number;
-    /** Регенерация здоровья экипажа */
-    crewHealthRegen?: number;
-    /** Вместимость груза (%) */
-    cargoCapacity?: number;
-    /** Эффективность топлива (%) */
-    fuelEfficiency?: number;
-    /** Вместимость топлива (%) */
-    fuelCapacity?: number;
-    /** Дальность сканирования (%) */
-    scanRange?: number;
-    /** Скорость исследований (%) */
-    researchSpeed?: number;
-    /** Урон оружия (%) */
-    weaponDamage?: number;
-    /** Точность оружия (%) */
-    weaponAccuracy?: number;
-    /** Скорость лечения (%) */
-    healing?: number;
-    /** Скорость добычи (%) */
-    miningSpeed?: number;
-    /** Выход ресурсов (%) */
-    resourceYield?: number;
-    /** Сопротивление сбоям ИИ (%) */
-    glitchResistance?: number;
-}
+import type {
+    Race,
+    RaceId,
+    XenosymbiontMergeEffect,
+    ModuleType,
+} from "@/game/types";
 
 export const RACES: Record<RaceId, Race> = {
     human: {
@@ -73,7 +27,7 @@ export const RACES: Record<RaceId, Race> = {
         },
         crewBonuses: {
             happiness: 10, // +10% base happiness (morale boost)
-            health: 5, // +5 health regen per turn when resting
+            healthRegen: 5, // +5 HP regen per turn (passive)
         },
         specialTraits: [
             {
@@ -172,8 +126,7 @@ export const RACES: Record<RaceId, Race> = {
             ],
         },
         crewBonuses: {
-            energy: -0.25, // -25% energy consumption by modules
-            health: 10, // +10 health (regenerative biology)
+            healthRegen: 10, // +10 HP/ход (регенеративная биология)
         },
         specialTraits: [
             {
@@ -224,8 +177,8 @@ export const RACES: Record<RaceId, Race> = {
             ],
         },
         crewBonuses: {
-            combat: 0.35,
-            health: 15,
+            combat: 0.05,
+            health: 15, // +15 к maxHealth при создании
         },
         specialTraits: [
             {
@@ -269,7 +222,7 @@ export const RACES: Record<RaceId, Race> = {
             hostile: ["Лесная", "Океаническая", "Тропическая", "Радиоактивная"],
         },
         crewBonuses: {
-            fuelEfficiency: 0.2, // +20% fuel efficiency (increased)
+            fuelEfficiency: 0.03, // +3% fuel efficiency per crew member (с убывающим эффектом)
             happiness: -10, // Lower base happiness (don't care)
         },
         specialTraits: [
@@ -335,9 +288,10 @@ export const RACES: Record<RaceId, Race> = {
             {
                 id: "crystal_armor",
                 name: "Кристаллическая броня",
-                description: "+5% к защите модулей корабля",
+                description:
+                    "+0.5 защиты модулей за каждого кристаллоида в экипаже",
                 type: "positive",
-                effects: { moduleDefense: 0.05 },
+                effects: { moduleDefense: 0.5 },
             },
             {
                 id: "resonance",

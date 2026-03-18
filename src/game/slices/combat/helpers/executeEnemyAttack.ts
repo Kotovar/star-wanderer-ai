@@ -269,7 +269,7 @@ function applyModuleDamage(
         );
     }
 
-    // Crystalline race percentage reduction
+    // Crystalline race flat defense bonus (+0.5 per crew member)
     let crystallineDefense = 0;
     state.crew
         .filter((c) => c.race === "crystalline")
@@ -283,8 +283,9 @@ function applyModuleDamage(
             }
         });
 
-    const reducedDamage = Math.floor(
-        damageAfterArmor * (1 - crystallineDefense),
+    const reducedDamage = Math.max(
+        0,
+        damageAfterArmor - Math.floor(crystallineDefense),
     );
     const wasDestroyed = targetModule.health <= reducedDamage;
 

@@ -1,5 +1,6 @@
 import type { CrewTrait, GameStore, SetState } from "@/game/types";
 import { CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
+import { RACES } from "@/game/constants/races";
 
 /** Бонус к настроению от трейта морали */
 const MORALE_TRAIT_BONUS = 5;
@@ -77,7 +78,9 @@ export const processUnhappyCrew = (
     set: SetState,
     get: () => GameStore,
 ): void => {
-    const unhappyCrew = get().crew.filter((c) => c.happiness === 0);
+    const unhappyCrew = get().crew.filter(
+        (c) => c.happiness === 0 && RACES[c.race]?.hasHappiness !== false,
+    );
 
     unhappyCrew.forEach((crewMember) => {
         get().addLog(`${crewMember.name} покинул корабль!`, "error");

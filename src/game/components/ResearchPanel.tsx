@@ -7,6 +7,7 @@ import {
     RESEARCH_RESOURCES,
     canResearchTech,
 } from "@/game/constants/research";
+import { RACES } from "@/game/constants/races";
 import type {
     ResearchCategory,
     Module,
@@ -761,6 +762,12 @@ export function ResearchPanel() {
             let scientistContribution = 5 + (s.level ?? 1);
             if (s.assignment === "research") {
                 scientistContribution *= 2;
+            }
+            const raceScienceBonus = RACES[s.race]?.crewBonuses?.science || 0;
+            if (raceScienceBonus > 0) {
+                scientistContribution = Math.floor(
+                    scientistContribution * (1 + raceScienceBonus),
+                );
             }
             scientistBonus += scientistContribution;
         });

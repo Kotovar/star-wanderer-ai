@@ -1,8 +1,5 @@
-// ═══════════════════════════════════════════════════════════════
-// RACES - Galactic species system
-// ═══════════════════════════════════════════════════════════════
-
 import type { CrewTraitType } from "./crew";
+import type { ModuleType } from "./modules";
 import type { PlanetType } from "./planets";
 
 export type RaceId =
@@ -68,9 +65,10 @@ export interface Race {
     // Crew bonuses
     crewBonuses: {
         happiness?: number; // Base happiness modifier
-        health?: number; // Health regen modifier
+        health?: number; // Flat bonus to maxHealth at creation
+        healthRegen?: number; // Flat HP regen per turn (passive)
         repair?: number; // Repair efficiency modifier
-        science?: number; // Science/research modifier
+        science?: number; // Science/research modifier (multiplier, e.g. 0.25 = +25%)
         combat?: number; // Combat efficiency modifier
         energy?: number; // Energy consumption modifier (negative = less consumption)
         fuelEfficiency?: number; // Fuel efficiency modifier
@@ -92,4 +90,51 @@ export interface Race {
     color: string; // Theme color for UI
     icon: string; // Emoji or symbol
     homeworld?: string;
+}
+
+export interface XenosymbiontMergeEffect {
+    /** ID модуля, с которым произошло сращивание */
+    moduleId: number;
+    /** Тип модуля */
+    moduleType: ModuleType;
+    /** Бонус к регенерации щитов (%) */
+    shieldRegenBonus?: number;
+    /** Бонус к ёмкости щита (%) */
+    shieldCapacity?: number;
+    /** Бонус к ремонту модулей (%) */
+    repairBonus?: number;
+    /** Снижение потребления энергии (%) */
+    energyReduction?: number;
+    /** Бонус к выработке энергии (%) */
+    powerOutput?: number;
+    /** Бонус к уклонению корабля (%) */
+    evasionBonus?: number;
+    /** Бонус к инициативе (%) */
+    initiativeBonus?: number;
+    /** Эффективность кислорода (%) */
+    oxygenEfficiency?: number;
+    /** Регенерация здоровья экипажа */
+    crewHealthRegen?: number;
+    /** Вместимость груза (%) */
+    cargoCapacity?: number;
+    /** Эффективность топлива (%) */
+    fuelEfficiency?: number;
+    /** Вместимость топлива (%) */
+    fuelCapacity?: number;
+    /** Дальность сканирования (%) */
+    scanRange?: number;
+    /** Скорость исследований (%) */
+    researchSpeed?: number;
+    /** Урон оружия (%) */
+    weaponDamage?: number;
+    /** Точность оружия (%) */
+    weaponAccuracy?: number;
+    /** Скорость лечения (%) */
+    healing?: number;
+    /** Скорость добычи (%) */
+    miningSpeed?: number;
+    /** Выход ресурсов (%) */
+    resourceYield?: number;
+    /** Сопротивление сбоям ИИ (%) */
+    glitchResistance?: number;
 }

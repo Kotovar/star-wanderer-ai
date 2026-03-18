@@ -45,7 +45,7 @@ const INITIAL_GAME_LOADED_COUNT = 0;
 const sectors = generateGalaxy();
 const { prices, stock } = initializeStationData(sectors);
 
-// Mark the starting sector (sectors[0]) as visited
+// Первый сектор отмечаем посещённым
 sectors[0].visited = true;
 
 const initialCrew: CrewMember[] = [

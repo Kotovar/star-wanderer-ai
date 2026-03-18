@@ -1,6 +1,7 @@
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { ARTIFACT_BOOST_BONUS } from "@/game/slices/artifacts/constants";
 import { getTechBonusSum } from "@/game/research";
+import { RACES } from "@/game/constants/races";
 import type {
     ActiveEffect,
     Artifact,
@@ -125,6 +126,23 @@ export const getArtifactEffectValue = (
             value < 1
                 ? value * (1 + researchBoost)
                 : Math.floor(value * (1 + researchBoost));
+    }
+
+    // Crystalline resonance: +15% per crystalline crew member (стакается)
+    let crystallineBonus = 0;
+    state.crew.forEach((c) => {
+        const resonanceTrait = RACES[c.race]?.specialTraits?.find(
+            (t) => t.id === "resonance",
+        );
+        if (resonanceTrait?.effects.artifactBonus) {
+            crystallineBonus += Number(resonanceTrait.effects.artifactBonus);
+        }
+    });
+    if (crystallineBonus > 0) {
+        value =
+            value < 1
+                ? value * (1 + crystallineBonus)
+                : Math.floor(value * (1 + crystallineBonus));
     }
 
     // Check if this artifact is boosted by voidborn ritual (stacks on top of research)

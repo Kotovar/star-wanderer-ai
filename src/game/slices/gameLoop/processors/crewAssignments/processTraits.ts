@@ -81,36 +81,35 @@ const processRaceNegativeEffects = (
         }
     }
 
-    // Кристаллоиды: чужое присутствие снижает настроение не-кристаллоидам
-    if (crewRace.id === "crystalline") {
-        const alienPresenceTrait = crewRace.specialTraits.find(
-            (t) => (t.effects as Record<string, number>).alienPresence,
+    // Расы с alienPresencePenalty снижают настроение органикам в том же модуле каждый ход
+    const alienTrait = crewRace.specialTraits.find(
+        (t) => t.effects.alienPresencePenalty,
+    );
+    if (alienTrait) {
+        const penalty = Math.abs(
+            Number(alienTrait.effects.alienPresencePenalty),
         );
-        if (alienPresenceTrait) {
-            const penalty = Number(
-                (alienPresenceTrait.effects as Record<string, number>)
-                    .alienPresence,
-            );
-            const affectedCrew = get().crew.filter(
-                (c) =>
-                    c.moduleId === crewMember.moduleId &&
-                    c.race !== "crystalline" &&
-                    c.id !== crewMember.id,
-            );
+        const alienRaceId = crewRace.id;
+        const affectedCrew = get().crew.filter(
+            (c) =>
+                c.moduleId === crewMember.moduleId &&
+                c.race !== alienRaceId &&
+                c.id !== crewMember.id &&
+                RACES[c.race]?.hasHappiness !== false,
+        );
 
-            if (affectedCrew.length > 0) {
-                set((s) => ({
-                    crew: s.crew.map((c) =>
-                        c.moduleId === crewMember.moduleId &&
-                        c.race !== "crystalline"
-                            ? {
-                                  ...c,
-                                  happiness: Math.max(0, c.happiness - penalty),
-                              }
-                            : c,
-                    ),
-                }));
-            }
+        if (affectedCrew.length > 0) {
+            const affectedIds = new Set(affectedCrew.map((c) => c.id));
+            set((s) => ({
+                crew: s.crew.map((c) =>
+                    affectedIds.has(c.id)
+                        ? {
+                              ...c,
+                              happiness: Math.max(0, c.happiness - penalty),
+                          }
+                        : c,
+                ),
+            }));
         }
     }
 };

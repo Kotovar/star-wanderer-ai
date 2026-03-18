@@ -20,6 +20,7 @@ import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getTechBonusSum } from "@/game/research";
 import { getActiveModules } from "../modules";
 import { hasAssignment, hasCombatAssignment, hasProfession } from "../crew";
+import { RACES } from "@/game/constants/races";
 
 export function ShipStats() {
     const ship = useGameStore((s) => s.ship);
@@ -123,7 +124,17 @@ export function ShipStats() {
     );
     const currentHull = ship.modules.reduce((s, m) => s + m.health, 0);
     // Use ship.armor which includes Crystal Armor artifact bonus
-    const totalDefense = ship.armor || 0;
+    // Add crystalline crew flat defense bonus (+0.5 per crew member)
+    let crystallineDefense = 0;
+    crew.filter((c) => c.race === "crystalline").forEach((c) => {
+        const armorTrait = RACES[c.race]?.specialTraits?.find(
+            (trait) => trait.id === "crystal_armor",
+        );
+        if (armorTrait?.effects.moduleDefense) {
+            crystallineDefense += Number(armorTrait.effects.moduleDefense);
+        }
+    });
+    const totalDefense = (ship.armor || 0) + Math.floor(crystallineDefense);
 
     // Get engine level from modules
     const engines = getActiveModules(ship.modules, "engine");

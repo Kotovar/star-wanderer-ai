@@ -5,6 +5,7 @@ import {
     SCIENTIST_BASE_BONUS,
     RESEARCH_ASSIGNMENT_MULTIPLIER,
 } from "@/game/constants";
+import { RACES } from "@/game/constants/races";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { typedKeys } from "@/lib/utils";
 import {
@@ -83,6 +84,15 @@ export const calculateResearchOutput = (
         // Бонус за уровень
         scientistContribution += scientist.level ?? 1;
 
+        // Расовый бонус к науке (synthetic +25%, crystalline +20%)
+        const raceScienceBonus =
+            RACES[scientist.race]?.crewBonuses?.science ?? 0;
+        if (raceScienceBonus > 0) {
+            scientistContribution = Math.floor(
+                scientistContribution * (1 + raceScienceBonus),
+            );
+        }
+
         scientistBonus += scientistContribution;
     });
 
@@ -97,7 +107,9 @@ export const calculateResearchOutput = (
             return (
                 sum +
                 tech.bonuses
-                    .filter((b: { type: string }) => b.type === "research_speed")
+                    .filter(
+                        (b: { type: string }) => b.type === "research_speed",
+                    )
                     .reduce((s: number, b: { value: number }) => s + b.value, 0)
             );
         },

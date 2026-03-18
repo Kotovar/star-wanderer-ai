@@ -28,9 +28,9 @@ export const calculateHealthRegen = (
     // Базовая регенерация: 0 HP
     let regenAmount = 0;
 
-    // Бонус расы (фиксированное число)
-    const raceHealthBonus = race?.crewBonuses?.health || 0;
-    regenAmount += raceHealthBonus;
+    // Пассивная регенерация от расы (healthRegen)
+    const raceHealthRegen = race?.crewBonuses?.healthRegen ?? 0;
+    regenAmount += raceHealthRegen;
 
     // Процентные бонусы от трейтов (например, "Регенерация" +50%)
     crewMember.traits.forEach((trait) => {

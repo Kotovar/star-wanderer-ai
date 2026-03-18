@@ -54,8 +54,9 @@ export function applyModuleDamage(
             crystallineDefense += armorTrait?.effects.moduleDefense ?? 0;
         });
 
-    const reducedDamage = Math.floor(
-        damageAfterArtifact * (1 - crystallineDefense),
+    const reducedDamage = Math.max(
+        0,
+        damageAfterArtifact - Math.floor(crystallineDefense),
     );
     const wasDestroyed = targetModule.health <= reducedDamage;
 

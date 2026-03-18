@@ -81,8 +81,9 @@ export const calculateCrewStats = (options: CrewStatsOptions): CrewStats => {
     });
 
     // Добавляем фиксированный бонус расы ПОСЛЕ процентных модификаторов
-    // Это даёт: (базовое * проценты) + фиксированный бонус
-    baseMaxHealth += raceHealthBonus;
+    // Умножаем на level, чтобы совпадать с естественным ростом (бонус добавляется каждый уровень)
+    // Формула: (базовое * проценты) + фиксированный_бонус * level
+    baseMaxHealth += raceHealthBonus * level;
 
     // === СЧАСТЬЕ ===
 
