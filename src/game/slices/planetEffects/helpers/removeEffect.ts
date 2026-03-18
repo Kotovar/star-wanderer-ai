@@ -17,6 +17,8 @@ export const removeExpiredEffects = (set: SetState, get: () => GameStore) => {
         let bonusPowerToRemove = 0;
         let bonusShieldsToRemove = 0;
         let bonusEvasionToRemove = 0;
+        let bonusDamageToRemove = 0;
+        let bonusShieldRegenToRemove = 0;
 
         // Находим артефакты для снятия усиления
         const artifactsToUnboost: string[] = [];
@@ -44,8 +46,17 @@ export const removeExpiredEffects = (set: SetState, get: () => GameStore) => {
                         // Конвертируем из десятичной дроби (0.1) в проценты (10)
                         bonusEvasionToRemove += Math.round(value * 100);
                         break;
+
+                    case "combat_bonus":
+                        bonusDamageToRemove += value;
+                        break;
                 }
             });
+
+            // Crystalline shield regen bonus (fixed value, not stored in effect.effects)
+            if (effect.raceId === "crystalline") {
+                bonusShieldRegenToRemove += 3;
+            }
         });
 
         // Уменьшаем счётчик ходов и фильтруем истёкшие эффекты
@@ -81,6 +92,14 @@ export const removeExpiredEffects = (set: SetState, get: () => GameStore) => {
                 bonusEvasion: Math.max(
                     0,
                     (s.ship.bonusEvasion || 0) - bonusEvasionToRemove,
+                ),
+                bonusDamage: Math.max(
+                    0,
+                    (s.ship.bonusDamage || 0) - bonusDamageToRemove,
+                ),
+                bonusShieldRegen: Math.max(
+                    0,
+                    (s.ship.bonusShieldRegen || 0) - bonusShieldRegenToRemove,
                 ),
                 maxShields: Math.max(
                     0,

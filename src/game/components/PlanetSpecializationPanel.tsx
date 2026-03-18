@@ -67,10 +67,12 @@ export function PlanetSpecializationPanel({
 
         if (!raceId) return;
 
-        // Set cooldown first using Zustand's set directly
-        useGameStore.setState((s) => ({
-            planetCooldowns: { ...s.planetCooldowns, [planetId]: 999 },
-        }));
+        // Set cooldown (skip for human_academy — unlimited uses)
+        if (spec.id !== "human_academy") {
+            useGameStore.setState((s) => ({
+                planetCooldowns: { ...s.planetCooldowns, [planetId]: 999 },
+            }));
+        }
 
         // Handle special cases that need selection
         if (spec.id === "human_academy") {

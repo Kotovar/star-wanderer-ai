@@ -60,6 +60,8 @@ export interface GameState {
         bonusPower?: number; // Temporary power bonus from planet effects
         bonusShields?: number; // Temporary shield bonus from planet effects
         bonusEvasion?: number; // Temporary evasion bonus from planet effects (as percentage)
+        bonusDamage?: number; // Temporary damage bonus from planet effects (as multiplier, e.g. 0.15 = +15%)
+        bonusShieldRegen?: number; // Temporary shield regen bonus from planet effects (per turn)
         mergeTraits?: ShipMergeTrait[]; // Traits from xenosymbiont merging with ship
     };
     crew: CrewMember[];

@@ -61,6 +61,8 @@ export function ShipStats() {
         (sum, m) => sum + (m.shieldRegen ?? 4),
         0,
     );
+    // Бонус регенерации от планетарных эффектов (Кристаллины)
+    shieldRegen += ship.bonusShieldRegen ?? 0;
     // Добавляем регенерацию от "Тёмного Щита" с учётом бонусов науки и ритуалов
     if (darkShield) {
         const artifactRegen = getArtifactShieldRegen(

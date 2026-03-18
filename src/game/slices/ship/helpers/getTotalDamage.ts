@@ -133,6 +133,11 @@ export function getTotalDamage(state: GameState) {
     const combatBonus = getMaxRaceCombatBonus(crew);
     damage.total = applyDamageBonus(damage.total, combatBonus);
 
+    // === Временный бонус от планетарных эффектов (Крилориане) ===
+    if (ship.bonusDamage && ship.bonusDamage > 0) {
+        damage.total = applyDamageBonus(damage.total, ship.bonusDamage);
+    }
+
     // === Бонусы от трейтов экипажа ===
     const traitBonus = getMaxTraitDamageBonus(crew);
     damage.total = applyDamageBonus(damage.total, traitBonus);

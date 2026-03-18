@@ -4,7 +4,7 @@ import { playSound } from "@/sounds";
 
 /**
  * Сканирует сектор и открывает все локации (эффект архивов синтетиков)
- * Также находит 3 подсказки о артефактах
+ * Также добавляет в лог подсказки о ближайших боссах и аномалиях с артефактами
  *
  * @param set - Функция обновления состояния
  * @param get - Функция получения текущего состояния
@@ -19,7 +19,7 @@ export const scanSector = (set: SetState, get: () => GameStore): boolean => {
         return false;
     }
 
-    // Открываем все локации в текущем секторе
+    // Открываем все локации в текущем секторе и сохраняем в galaxy.sectors
     set((s) => ({
         credits: s.credits - cost,
         currentSector: s.currentSector
@@ -31,6 +31,22 @@ export const scanSector = (set: SetState, get: () => GameStore): boolean => {
                   })),
               }
             : null,
+        galaxy: s.currentSector
+            ? {
+                  ...s.galaxy,
+                  sectors: s.galaxy.sectors.map((sec) =>
+                      sec.id === s.currentSector?.id
+                          ? {
+                                ...sec,
+                                locations: sec.locations.map((loc) => ({
+                                    ...loc,
+                                    signalRevealed: true,
+                                })),
+                            }
+                          : sec,
+                  ),
+              }
+            : s.galaxy,
     }));
 
     get().addLog(
@@ -38,29 +54,44 @@ export const scanSector = (set: SetState, get: () => GameStore): boolean => {
         "info",
     );
 
-    // Находим 3 случайных артефакта и показываем их общее местоположение
-    // TODO: реализовать
-    const undiscoveredArtifacts = state.artifacts.filter(
-        (a) => !a.discovered && a.id !== "ai_core",
-    );
+    // Ищем секторы с боссами (гарантированные артефакты) и аномалиями
+    const allSectors = state.galaxy.sectors;
 
-    if (undiscoveredArtifacts.length > 0) {
-        const hintsCount = Math.min(3, undiscoveredArtifacts.length);
-        const hints: string[] = [];
+    // Ближайший сектор с боссом (не побеждённым)
+    const bossHint = allSectors
+        .filter((sec) =>
+            sec.locations.some((l) => l.type === "boss" && !l.bossDefeated),
+        )
+        .sort((a, b) => a.danger - b.danger)[0];
 
-        for (let i = 0; i < hintsCount; i++) {
-            const artifact = undiscoveredArtifacts[i];
-            hints.push(`${artifact.name}`);
+    // Ближайший сектор с аномалиями
+    const anomalyHint = allSectors
+        .filter((sec) => sec.locations.some((l) => l.type === "anomaly"))
+        .filter((sec) => sec.id !== state.currentSector?.id)
+        .sort((a, b) => a.danger - b.danger)[0];
 
-            // Отмечаем как "подсказано" (не открыто, но игрок знает о нём)
-            set((s) => ({
-                artifacts: s.artifacts.map((a) =>
-                    a.id === artifact.id ? { ...a, hinted: true } : a,
-                ),
-            }));
-        }
+    if (bossHint) {
+        const bossLoc = bossHint.locations.find(
+            (l) => l.type === "boss" && !l.bossDefeated,
+        );
+        get().addLog(
+            `🔍 Разведданные: в секторе "${bossHint.name}" обнаружен мощный сигнал (${bossLoc?.name ?? "неизвестный объект"}) — возможно наличие ценных артефактов`,
+            "warning",
+        );
+    }
 
-        get().addLog(`💡 Подсказки об артефактах: ${hints.join(", ")}`, "info");
+    if (anomalyHint) {
+        get().addLog(
+            `🔍 Разведданные: в секторе "${anomalyHint.name}" зафиксированы аномальные сигналы — рекомендуется исследование`,
+            "warning",
+        );
+    }
+
+    if (!bossHint && !anomalyHint) {
+        get().addLog(
+            `🔍 Разведданные: необычных сигналов в близлежащих секторах не обнаружено`,
+            "info",
+        );
     }
 
     playSound("success");

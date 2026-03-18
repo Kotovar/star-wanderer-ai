@@ -148,19 +148,22 @@ const applyXenosymbiontEffect = (
 
 /**
  * Применяет эффект крилориан
- * +15% к урону, +10% к уклонению
- * TODO: +15% к урону - нужно реализовать или заменить
+ * +15% к урону (bonusDamage), +10% к уклонению
  */
 const applyKrylorianEffect = (spec: PlanetSpecialization, set: SetState) => {
     const evasionEffect = spec.effects.find((e) => e.type === "evasion_bonus");
+    const combatEffect = spec.effects.find((e) => e.type === "combat_bonus");
 
     const evasionBonus =
         typeof evasionEffect?.value === "number" ? evasionEffect.value : 0.1;
+    const damageBonus =
+        typeof combatEffect?.value === "number" ? combatEffect.value : 0.15;
 
     set((s) => ({
         ship: {
             ...s.ship,
             bonusEvasion: (s.ship.bonusEvasion ?? 0) + evasionBonus * 100,
+            bonusDamage: (s.ship.bonusDamage ?? 0) + damageBonus,
         },
     }));
 };
@@ -169,6 +172,8 @@ const applyKrylorianEffect = (spec: PlanetSpecialization, set: SetState) => {
  * Применяет эффект кристаллических существ
  * +10 к энергии, +25 к щитам
  */
+const CRYSTALLINE_BASE_SHIELD_REGEN = 3; // per turn, active even without shield modules
+
 const applyCrystallineEffect = (spec: PlanetSpecialization, set: SetState) => {
     const powerEffect = spec.effects.find((e) => e.type === "power_boost");
     const shieldEffect = spec.effects.find((e) => e.type === "shield_boost");
@@ -185,6 +190,8 @@ const applyCrystallineEffect = (spec: PlanetSpecialization, set: SetState) => {
             shields: s.ship.shields + shieldValue,
             bonusPower: (s.ship.bonusPower || 0) + powerValue,
             bonusShields: (s.ship.bonusShields || 0) + shieldValue,
+            bonusShieldRegen:
+                (s.ship.bonusShieldRegen || 0) + CRYSTALLINE_BASE_SHIELD_REGEN,
         },
     }));
 };

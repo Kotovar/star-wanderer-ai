@@ -128,7 +128,7 @@ export const PLANET_SPECIALIZATIONS: Record<RaceId, PlanetSpecialization> = {
         icon: "🎓",
         cost: 500,
         duration: 0, // Permanent
-        cooldown: 999, // Once per planet
+        cooldown: 0, // Unlimited uses
         requirements: {
             minLevel: 1,
             maxLevel: 3,
@@ -160,7 +160,7 @@ export const PLANET_SPECIALIZATIONS: Record<RaceId, PlanetSpecialization> = {
             {
                 type: "artifact_hints",
                 value: 3,
-                description: "3 подсказки о местонахождении артефактов",
+                description: "Подсказки о местонахождении артефактов",
             },
         ],
     },

@@ -26,7 +26,10 @@ const getBaseShieldRegen = (state: GameState) => {
         ? getArtifactShieldRegen(darkShield, state)
         : 0;
 
-    return moduleRegen + artifactRegen;
+    // Временный бонус регенерации от планетарных эффектов (Кристаллины)
+    const planetRegen = state.ship.bonusShieldRegen ?? 0;
+
+    return moduleRegen + artifactRegen + planetRegen;
 };
 
 /**
