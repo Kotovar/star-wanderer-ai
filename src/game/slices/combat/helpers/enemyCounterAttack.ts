@@ -1,6 +1,7 @@
 import type { GameState, GameStore, Module } from "@/game/types";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
+import { COMBAT_ACCURACY_MODIFIERS } from "@/game/constants/combat";
 import { PILOT_EVASION_COMBAT_EXP } from "@/game/constants/experience";
 import { getTotalEvasion } from "@/game/slices/ship/helpers/getTotalEvasion";
 import { applyModuleDamage } from "./moduleDamage";
@@ -51,6 +52,20 @@ export function handleEnemyCounterAttack(
         );
         if (pilot) get().gainExp(pilot, PILOT_EVASION_COMBAT_EXP);
         return;
+    }
+
+    // Sabotage check (scales with scout level)
+    const scoutWithSabotage = state.crew.find(
+        (c) => c.combatAssignment === "sabotage",
+    );
+    if (scoutWithSabotage) {
+        const sabotageChance =
+            Math.abs(COMBAT_ACCURACY_MODIFIERS.SABOTAGE_PENALTY) +
+            (scoutWithSabotage.level ?? 1) * 0.01;
+        if (Math.random() < sabotageChance) {
+            get().addLog(`🔧 Диверсия! Враг промахнулся!`, "info");
+            return;
+        }
     }
 
     // Select target module

@@ -47,22 +47,30 @@ export function calculateFinalDamagePerWeapon(
               baseWeaponDamage * COMBAT_DAMAGE_MODIFIERS.NO_GUNNER_PENALTY,
           );
 
-    // Combat assignment bonuses
-    if (hasOverclock)
+    // Combat assignment bonuses (scale with crew level: base + level * 1%)
+    if (hasOverclock) {
+        const engineerLevel =
+            get().crew.find((c) => c.combatAssignment === "overclock")?.level ?? 1;
         finalDamagePerWeapon = Math.floor(
-            finalDamagePerWeapon * COMBAT_DAMAGE_MODIFIERS.OVERCLOCK_BONUS,
+            finalDamagePerWeapon * (1 + 0.15 + engineerLevel * 0.01),
         );
-    if (hasRapidfire)
+    }
+    if (hasRapidfire) {
+        const gunnerLevel =
+            get().crew.find((c) => c.combatAssignment === "rapidfire")?.level ?? 1;
         finalDamagePerWeapon = Math.floor(
-            finalDamagePerWeapon * COMBAT_DAMAGE_MODIFIERS.RAPIDFIRE_BONUS,
+            finalDamagePerWeapon * (1 + 0.25 + gunnerLevel * 0.01),
         );
+    }
 
-    // Analysis bonus (requires gunner with targeting)
+    // Analysis bonus (requires gunner with targeting, scales with scientist level)
     if (hasAnalysis && hasGunnerWithTargeting) {
+        const scientistLevel =
+            get().crew.find((c) => c.combatAssignment === "analysis")?.level ?? 1;
         finalDamagePerWeapon = Math.floor(
-            finalDamagePerWeapon * COMBAT_DAMAGE_MODIFIERS.ANALYSIS_BONUS,
+            finalDamagePerWeapon * (1 + 0.10 + scientistLevel * 0.01),
         );
-        get().addLog(`🔬 Анализ уязвимостей: +10% урон по цели`, "info");
+        get().addLog(`🔬 Анализ уязвимостей: +${10 + scientistLevel}% урон по цели`, "info");
     }
 
     return finalDamagePerWeapon;
@@ -108,14 +116,13 @@ export function computeAccuracyModifier(state: GameState): number {
     if (state.crew.some((c) => c.combatAssignment === "rapidfire"))
         modifier += COMBAT_ACCURACY_MODIFIERS.RAPIDFIRE_PENALTY;
 
-    const hasCalibration = state.crew.some(
-        (c) => c.combatAssignment === "calibration",
+    const engineerWithCalibration = crewInWeaponBays.find(
+        (c) => c.profession === "engineer" && c.combatAssignment === "calibration",
     );
-    const hasEngineer = crewInWeaponBays.some(
-        (c) => c.profession === "engineer",
-    );
-    if (hasCalibration && hasEngineer)
-        modifier += COMBAT_ACCURACY_MODIFIERS.CALIBRATION_BONUS;
+    if (engineerWithCalibration)
+        modifier +=
+            COMBAT_ACCURACY_MODIFIERS.CALIBRATION_BONUS +
+            (engineerWithCalibration.level ?? 1) * 0.01;
 
     const aiCoreCount = state.ship.modules.filter(
         (m) => m.type === "ai_core" && isModuleActive(m),

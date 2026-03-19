@@ -145,21 +145,27 @@ export function getTotalDamage(state: GameState) {
     };
 
     if (combatBonuses.overclock) {
+        const engineerLevel =
+            crew.find((c) => c.combatAssignment === "overclock")?.level ?? 1;
         damage.total = applyDamageBonus(
             damage.total,
-            CREW_ASSIGNMENT_BONUSES.OVERCLOCK_DAMAGE,
+            CREW_ASSIGNMENT_BONUSES.OVERCLOCK_DAMAGE + engineerLevel * 0.01,
         );
     }
     if (combatBonuses.rapidfire) {
+        const gunnerLevel =
+            crew.find((c) => c.combatAssignment === "rapidfire")?.level ?? 1;
         damage.total = applyDamageBonus(
             damage.total,
-            CREW_ASSIGNMENT_BONUSES.RAPIDFIRE_DAMAGE,
+            CREW_ASSIGNMENT_BONUSES.RAPIDFIRE_DAMAGE + gunnerLevel * 0.01,
         );
     }
     if (combatBonuses.analysis) {
+        const scientistLevel =
+            crew.find((c) => c.combatAssignment === "analysis")?.level ?? 1;
         damage.total = applyDamageBonus(
             damage.total,
-            CREW_ASSIGNMENT_BONUSES.ANALYSIS_DAMAGE,
+            CREW_ASSIGNMENT_BONUSES.ANALYSIS_DAMAGE + scientistLevel * 0.01,
         );
     }
 

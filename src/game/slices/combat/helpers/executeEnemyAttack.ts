@@ -1,5 +1,5 @@
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
-import { ARTIFACT_TYPES } from "@/game/constants";
+import { ARTIFACT_TYPES, COMBAT_ACCURACY_MODIFIERS } from "@/game/constants";
 import { RACES } from "@/game/constants/races";
 import { playSound } from "@/sounds";
 import * as enemyAttack from "./enemyAttack";
@@ -80,6 +80,20 @@ export function executeEnemyAttack(
         );
         if (pilot) get().gainExp(pilot, PILOT_EVASION_COMBAT_EXP);
         return;
+    }
+
+    // Sabotage check — scout's sabotage gives enemy a miss chance (scales with level)
+    const scoutWithSabotage = state.crew.find(
+        (c) => c.combatAssignment === "sabotage",
+    );
+    if (scoutWithSabotage) {
+        const sabotageChance =
+            Math.abs(COMBAT_ACCURACY_MODIFIERS.SABOTAGE_PENALTY) +
+            (scoutWithSabotage.level ?? 1) * 0.01;
+        if (Math.random() < sabotageChance) {
+            get().addLog(`🔧 Диверсия! Враг промахнулся!`, "info");
+            return;
+        }
     }
 
     // Check for Mirror Shield reflection
@@ -245,7 +259,17 @@ function applyModuleDamage(
     damage: number,
     targetModule: Module,
 ) {
-    const moduleDefense = targetModule.defense ?? 0;
+    // Overclock removes armor of the weaponbay the engineer is in
+    const hasOverclockInModule = state.crew.some(
+        (c) => c.moduleId === targetModule.id && c.combatAssignment === "overclock",
+    );
+    const moduleDefense = hasOverclockInModule ? 0 : (targetModule.defense ?? 0);
+    if (hasOverclockInModule && (targetModule.defense ?? 0) > 0) {
+        get().addLog(
+            `⚠️ Перегрузка: броня "${targetModule.name}" отключена!`,
+            "warning",
+        );
+    }
     let damageAfterArmor = Math.max(1, damage - moduleDefense);
 
     if (moduleDefense > 0 && damageAfterArmor < damage) {

@@ -57,20 +57,20 @@ export const processCombatAssignment = (
             break;
         case "overclock":
             get().addLog(
-                `${crewMember.name}: Перегрузка оружия (+25% урон)`,
+                `${crewMember.name}: Перегрузка оружия (+15% урон, броня модуля = 0)`,
                 "combat",
             );
             get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
             break;
         case "rapidfire":
             get().addLog(
-                `${crewMember.name}: Учащённая стрельба (+25% урон)`,
+                `${crewMember.name}: Учащённая стрельба (+25% урон, -10% точность)`,
                 "combat",
             );
             get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
             break;
         case "calibration":
-            get().addLog(`${crewMember.name}: Калибровка оружия`, "combat");
+            get().addLog(`${crewMember.name}: Калибровка оружия (+10% точность)`, "combat");
             get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
             break;
         case "analysis":
@@ -100,11 +100,9 @@ const processCombatRepair = (
     set: SetState,
     get: () => GameStore,
 ): void => {
-    let repairAmount: number = ASSIGNMENT_BASES.REPAIR_AMOUNT;
-
-    // Бонус от трейтов
-    repairAmount = Math.floor(
-        repairAmount * getTaskBonusMultiplier(crewMember),
+    let repairAmount: number = Math.floor(
+        (ASSIGNMENT_BASES.REPAIR_AMOUNT + (crewMember.level ?? 1)) *
+            getTaskBonusMultiplier(crewMember),
     );
 
     // Расовый бонус
@@ -157,10 +155,10 @@ const processCombatHeal = (
 ): void => {
     if (crewInSameModule.length === 0 && !crewMember.moduleId) return;
 
-    let healAmount: number = ASSIGNMENT_BASES.HEAL_AMOUNT;
-
-    // Бонус от трейтов
-    healAmount = Math.floor(healAmount * getTaskBonusMultiplier(crewMember));
+    let healAmount: number = Math.floor(
+        (ASSIGNMENT_BASES.HEAL_AMOUNT + (crewMember.level ?? 1)) *
+            getTaskBonusMultiplier(crewMember),
+    );
 
     // Расовый бонус к лечению
     if (crewRace?.crewBonuses.heal) {

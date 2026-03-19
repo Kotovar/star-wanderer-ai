@@ -63,13 +63,7 @@ export const COMBAT_ACTIONS: Record<
         {
             value: "overclock",
             label: "Перегрузка",
-            effect: "+25% урон, -10% броня",
-            moduleType: "weaponbay",
-        },
-        {
-            value: "maintenance",
-            label: "Обслуживание",
-            effect: "+5% точность",
+            effect: "+15% урон, -броня модуля",
             moduleType: "weaponbay",
         },
     ],
@@ -176,7 +170,7 @@ export const CREW_ASSIGNMENT_BONUSES = {
     NAVIGATION_REDUCED_CONSUMPTION: -1,
     EVASION: 2, // 2% за уровень пилота (кап 30% достигается при ур.10 + задание уклонения)
     // Combat assignment damage bonuses (multipliers)
-    OVERCLOCK_DAMAGE: 0.25, // +25% damage
+    OVERCLOCK_DAMAGE: 0.15, // +15% damage
     RAPIDFIRE_DAMAGE: 0.25, // +25% damage
     ANALYSIS_DAMAGE: 0.1, // +10% damage to selected module
 } as const;

@@ -32,7 +32,7 @@ export const COMBAT_DAMAGE_MODIFIERS = {
     NO_GUNNER_PENALTY: 1.0, // no damage penalty without gunner (only accuracy penalty)
 
     // Combat assignments
-    OVERCLOCK_BONUS: 1.25, // +25% damage
+    OVERCLOCK_BONUS: 1.15, // +15% damage
     RAPIDFIRE_BONUS: 1.25, // +25% damage
     ANALYSIS_BONUS: 1.1, // +10% damage (requires gunner with targeting)
 };
@@ -50,7 +50,7 @@ export const COMBAT_ACCURACY_MODIFIERS = {
 
     // Combat assignments
     TARGETING_BONUS: 0.05, // +5% accuracy
-    RAPIDFIRE_PENALTY: -0.05, // -5% accuracy
+    RAPIDFIRE_PENALTY: -0.1, // -10% accuracy
     CALIBRATION_BONUS: 0.1, // +10% accuracy (with engineer)
 
     // Module bonuses

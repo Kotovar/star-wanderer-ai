@@ -280,10 +280,12 @@ function getActionDescription(
         scout: {
             "": "profession_actions.scout.waiting",
             patrol: "profession_actions.scout.patrol",
+            sabotage: "profession_actions.scout.sabotage",
         },
         scientist: {
             "": "profession_actions.scientist.waiting",
             research: "profession_actions.scientist.research",
+            analysis: "profession_actions.scientist.analysis",
         },
         gunner: {
             "": "profession_actions.gunner.waiting",

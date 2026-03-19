@@ -268,7 +268,7 @@ export function CombatPanel() {
                                   }
                                 : selectEnemyModule
                         }
-                        canSelectTarget={hasGunner}
+                        canSelectTarget={hasTargetingGunner}
                         title=""
                     />
                 </div>

@@ -1348,8 +1348,8 @@
             "waiting": "Waiting - inactive",
             "power": "Power - +5 generation",
             "repair": "Repair - +15% module health",
-            "overclock": "Overclock - +25% damage, -10% armor",
-            "calibration": "+10% accuracy"
+            "overclock": "Overclock - +15% damage, weapon bay armor = 0",
+            "calibration": "Calibration - +10% firing accuracy"
         },
         "medic": {
             "waiting": "Waiting - inactive",
@@ -1359,16 +1359,18 @@
         },
         "scout": {
             "waiting": "Waiting - inactive",
-            "patrol": "Patrol - sector information"
+            "patrol": "Patrol - sector information",
+            "sabotage": "Sabotage - 5% chance enemy misses"
         },
         "scientist": {
             "waiting": "Waiting - inactive",
-            "research": "Anomaly research"
+            "research": "Anomaly research",
+            "analysis": "Vulnerability analysis - +10% damage if gunner is targeting"
         },
         "gunner": {
             "waiting": "Waiting - inactive",
-            "targeting": "Targeting - target selection",
-            "rapidfire": "Rapid fire - +25% damage, -5% accuracy"
+            "targeting": "Targeting - target selection, +5% accuracy",
+            "rapidfire": "Rapid fire - +25% damage, -10% accuracy, random target"
         }
     },
     "module_list": {
