@@ -335,7 +335,7 @@
         },
         "lucky": {
             "name": "Lucky",
-            "description": "+5% to all rewards"
+            "description": "+5% to credits for winning a battle"
         },
         "hardworking": {
             "name": "Hardworking",
@@ -347,7 +347,7 @@
         },
         "veteran": {
             "name": "Veteran",
-            "description": "+25% damage, +15% defense"
+            "description": "+10% accuracy (gunner in weapon bay), -40% crew damage taken"
         },
         "leader": {
             "name": "Leader",
@@ -367,7 +367,7 @@
         },
         "genius": {
             "name": "Genius",
-            "description": "+50% science"
+            "description": "+30% efficiency, +20% experience"
         },
         "prodigy": {
             "name": "Prodigy",

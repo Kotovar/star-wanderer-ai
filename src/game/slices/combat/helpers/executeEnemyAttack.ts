@@ -355,12 +355,16 @@ function damageCrewInModule(
     set((s) => {
         s.crew.forEach((c) => {
             if (c.moduleId !== moduleId) return;
-            let newHealth = c.health - actualDamage;
-            if (hasFirstAid) {
-                newHealth =
-                    c.health -
-                    Math.floor(actualDamage * (1 - firstAidReduction));
-            }
+            const veteranReduction =
+                c.traits?.reduce((max, trait) => {
+                    return Math.max(max, trait.effect?.combatDamageReduction ?? 0);
+                }, 0) ?? 0;
+            const totalReduction = Math.min(
+                0.9,
+                firstAidReduction + veteranReduction,
+            );
+            const dmg = Math.floor(actualDamage * (1 - totalReduction));
+            let newHealth = c.health - dmg;
             if (hasImmortality && newHealth < 1) newHealth = 1;
             c.health = Math.max(0, newHealth);
         });

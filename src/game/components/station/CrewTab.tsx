@@ -9,8 +9,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { RACES } from "../../constants/races";
-import type { Profession, RaceId } from "../../types";
+import { RACES } from "@/game/constants/races";
+import type { CrewTrait, Profession, RaceId } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
 
 interface CrewTabProps {
@@ -20,7 +20,7 @@ interface CrewTabProps {
             race: RaceId;
             profession: Profession;
             level?: number;
-            traits: Array<{ name: string; desc: string; type: string }>;
+            traits: CrewTrait[];
         };
         price: number;
         quality: string;
@@ -102,7 +102,7 @@ interface CrewCardProps {
             race: RaceId;
             profession: Profession;
             level?: number;
-            traits: Array<{ name: string; desc: string; type: string }>;
+            traits: CrewTrait[];
         };
         price: number;
         quality: string;
@@ -234,11 +234,7 @@ function CrewBonuses({
     );
 }
 
-function CrewTraits({
-    traits,
-}: {
-    traits: Array<{ name: string; desc: string; type: string }>;
-}) {
+function CrewTraits({ traits }: { traits: CrewTrait[] }) {
     const { t } = useTranslation();
 
     // Map Russian trait names to translation keys
@@ -344,7 +340,7 @@ interface CrewDetailDialogProps {
             race: RaceId;
             profession: Profession;
             level?: number;
-            traits: Array<{ name: string; desc: string; type: string }>;
+            traits: CrewTrait[];
         };
         price: number;
         quality: string;

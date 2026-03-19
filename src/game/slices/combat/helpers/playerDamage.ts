@@ -134,8 +134,12 @@ export function computeAccuracyModifier(state: GameState): number {
         c.traits?.forEach((trait) => {
             if (trait.effect?.accuracyPenalty)
                 modifier -= Number(trait.effect.accuracyPenalty);
-            if (trait.effect?.accuracyBonus)
-                modifier += Number(trait.effect.accuracyBonus);
+            if (trait.effect?.accuracyBonus) {
+                const isGunnerInWeaponBay =
+                    c.profession === "gunner" && weaponBayIds.has(c.moduleId);
+                if (isGunnerInWeaponBay)
+                    modifier += Number(trait.effect.accuracyBonus);
+            }
         });
     });
 

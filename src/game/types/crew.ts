@@ -115,7 +115,7 @@ export interface CrewMember {
 
 export type CrewTraitEffect = {
     damageBonus?: number;
-    defenseBonus?: number;
+    combatDamageReduction?: number;
     desertionRisk?: number;
     critBonus?: number;
     happinessDrain?: number;

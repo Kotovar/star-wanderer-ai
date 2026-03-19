@@ -10,6 +10,7 @@ import type {
     ShopItem,
     CrewMember,
     Profession,
+    CrewTrait,
 } from "@/game/types";
 import { ShopTab } from "./station/ShopTab";
 import { TradeTab } from "./station/TradeTab";
@@ -248,11 +249,7 @@ export function StationPanel() {
                                     race: RaceId;
                                     profession: Profession;
                                     level?: number;
-                                    traits: Array<{
-                                        name: string;
-                                        desc: string;
-                                        type: string;
-                                    }>;
+                                    traits: CrewTrait[];
                                 };
                                 price: number;
                                 quality: string;

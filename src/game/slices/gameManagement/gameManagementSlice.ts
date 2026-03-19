@@ -1,6 +1,7 @@
 import type { GameStore, SetState } from "@/game/types";
 import { checkGameOver, triggerVictory, restartGame } from "./helpers";
 import { loadFromLocalStorage, saveToLocalStorage } from "@/game/saves/utils";
+import { CREW_TRAITS } from "@/game/constants/traits";
 
 /**
  * Интерфейс GameManagementSlice
@@ -60,6 +61,17 @@ export const createGameManagementSlice = (
 
         // Увеличиваем счётчик загрузок для предотвращения повторного показа модальных окон
         saved.gameLoadedCount += 1;
+
+        // Миграция: синхронизируем данные трейтов экипажа с актуальными константами
+        const allTraits = Object.values(CREW_TRAITS).flat();
+        saved.crew = saved.crew.map((c) => ({
+            ...c,
+            traits: c.traits?.map((t) => {
+                const current = allTraits.find((d) => d.id === t.id);
+                if (!current) return t;
+                return { ...t, name: current.name, desc: current.desc, effect: current.effect };
+            }),
+        }));
 
         set({ ...saved });
         get().addLog("Игра загружена", "info");

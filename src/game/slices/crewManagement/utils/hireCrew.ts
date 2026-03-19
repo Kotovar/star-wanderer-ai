@@ -90,11 +90,14 @@ export const calculateCrewStats = (options: CrewStatsOptions): CrewStats => {
     // Бонус счастья от расы (human +10, voidborn -10)
     const raceHappinessBonus = raceData?.crewBonuses?.happiness || 0;
 
-    // Бонусы от трейтов
-    let traitsHappinessBonus = 0;
+    // Бонусы от трейтов (процентный множитель, как healthBonus)
+    const baseMaxHappiness = DEFAULT_MAX_HAPPINESS + raceHappinessBonus;
+    let maxHappiness = baseMaxHappiness;
     traits.forEach((trait) => {
         if (trait.effect.maxHappinessBonus) {
-            traitsHappinessBonus += trait.effect.maxHappinessBonus;
+            maxHappiness = Math.floor(
+                maxHappiness * (1 + trait.effect.maxHappinessBonus),
+            );
         }
     });
 
@@ -103,9 +106,7 @@ export const calculateCrewStats = (options: CrewStatsOptions): CrewStats => {
 
     return {
         maxHealth: baseMaxHealth,
-        maxHappiness: hasHappiness
-            ? DEFAULT_MAX_HAPPINESS + raceHappinessBonus + traitsHappinessBonus
-            : 0,
+        maxHappiness: hasHappiness ? maxHappiness : 0,
         hasHappiness,
     };
 };

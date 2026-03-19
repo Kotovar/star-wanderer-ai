@@ -11,10 +11,12 @@ import type { CrewMember } from "@/game/types/crew";
  */
 export function getTaskBonusMultiplier(crewMember: CrewMember): number {
     let taskBonus = 0;
+    let hasDoubleEffect = false;
     crewMember.traits?.forEach((trait) => {
         if (trait.effect?.taskBonus) taskBonus += trait.effect.taskBonus;
-        if (trait.effect?.doubleTaskEffect) taskBonus = 1;
+        if (trait.effect?.doubleTaskEffect) hasDoubleEffect = true;
     });
+    if (hasDoubleEffect) taskBonus = Math.max(taskBonus, 1);
     return taskBonus > 0 ? 1 + taskBonus : 1;
 }
 

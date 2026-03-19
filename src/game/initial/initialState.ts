@@ -62,7 +62,8 @@ const initialCrew: CrewMember[] = [
         profession: "engineer",
         moduleId: 103,
         level: 1,
-        traits: [],
+        // race: "crystalline",
+        // traits: ["coward"],
     }),
     buildCrewMember({
         id: 3,
@@ -71,6 +72,14 @@ const initialCrew: CrewMember[] = [
         moduleId: 103,
         level: 1,
     }),
+    // buildCrewMember({
+    //     id: 4,
+    //     name: "Ловкач",
+    //     profession: "gunner",
+    //     moduleId: 103,
+    //     level: 1,
+    //     traits: ["veteran"],
+    // }),
 ];
 
 /**

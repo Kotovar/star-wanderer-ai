@@ -21,7 +21,7 @@ export const CREW_TRAITS: Record<
         {
             id: "sharpshooter",
             name: "Меткий стрелок",
-            desc: "+5% к точности",
+            desc: "+5% к точности (стрелок в орудийном отсеке)",
             effect: { accuracyBonus: 0.05 },
             rarity: "common",
             priceMod: 1.1,
@@ -60,12 +60,11 @@ export const CREW_TRAITS: Record<
         },
 
         // Rare positive traits (30% chance)
-        // TODO: Продолжить отсюда
         {
             id: "veteran",
             name: "Ветеран",
-            desc: "+25% к урону, +15% защита",
-            effect: { damageBonus: 0.25, defenseBonus: 0.15 },
+            desc: "+10% точности (стрелок в орудийном отсеке), -40% урона по экипажу",
+            effect: { accuracyBonus: 0.1, combatDamageReduction: 0.4 },
             rarity: "rare",
             priceMod: 1.4,
         },
@@ -88,7 +87,7 @@ export const CREW_TRAITS: Record<
         {
             id: "lucky",
             name: "Удачливый",
-            desc: "+5% ко всем наградам",
+            desc: "+5% к кредитам за победу в бою",
             effect: { lootBonus: 0.05 },
             rarity: "rare",
             priceMod: 1.45,
@@ -101,13 +100,12 @@ export const CREW_TRAITS: Record<
             rarity: "rare",
             priceMod: 1.5,
         },
-
         // Legendary positive traits (10% chance)
         {
             id: "legend",
             name: "Легенда",
             desc: "+50% к макс. здоровью и морали",
-            effect: { healthBonus: 0.5, maxHappinessBonus: 50 },
+            effect: { healthBonus: 0.5, maxHappinessBonus: 0.5 },
             rarity: "legendary",
             priceMod: 2.5,
         },
@@ -122,6 +120,7 @@ export const CREW_TRAITS: Record<
     ],
     negative: [
         // Common negative traits (50% chance)
+        // TODO: Продолжить отсюда
         {
             id: "coward",
             name: "Трус",
@@ -210,8 +209,8 @@ export const CREW_TRAITS: Record<
         {
             id: "chitin",
             name: "Мутация: Хитин",
-            desc: "+25% защита, -20% эффективность",
-            effect: { defenseBonus: 0.25, taskPenalty: 0.2 },
+            desc: "-25% урона по экипажу, -20% эффективность",
+            effect: { combatDamageReduction: 0.25, taskPenalty: 0.2 },
             rarity: "mutation",
             priceMod: 1.0,
         },
