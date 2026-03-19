@@ -372,5 +372,9 @@ export const processTravel = (
         get().addLog(`Прибытие в ${destinationSector.name}`, "info");
         get().updateShipStats();
         set(() => ({ gameMode: "sector_map" }));
+
+        if (destinationSector.tier === 4) {
+            get().triggerVictory();
+        }
     }
 };

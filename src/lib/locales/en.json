@@ -680,6 +680,7 @@
         "cosmic_storm": "Cosmic storm",
         "anomaly_beneficial": "✓ Beneficial",
         "anomaly_dangerous": "⚠ Dangerous",
+        "anomaly_unknown": "? Unknown anomaly",
         "planet": "Planet",
         "deserted": "Deserted",
         "station": "Station",

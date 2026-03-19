@@ -199,9 +199,10 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                         <div className="pt-2">
                             <Button
                                 onClick={() => {
+                                    useGameStore.setState({ gameVictory: false, gameVictoryReason: null });
                                     useGameStore.getState().showGalaxyMap();
                                 }}
-                                className="w-full bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-lg py-6"
+                                className="cursor-pointer w-full bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-lg py-6"
                             >
                                 🚀 {t("game_end.continue_exploration")}
                             </Button>

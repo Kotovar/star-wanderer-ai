@@ -129,6 +129,7 @@ export const initialState: GameState = {
     gameOverReason: null,
     gameVictory: false,
     gameVictoryReason: null,
+    victoryTriggered: false,
     activeEffects: [],
     planetCooldowns: {},
     research: {

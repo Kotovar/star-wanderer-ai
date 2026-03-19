@@ -205,11 +205,15 @@ function getScannerInfo(
         } else if (loc.type === "storm") {
             info.push(`🌪️ ${t("locations.cosmic_storm")}`);
         } else if (loc.type === "anomaly") {
-            const type =
-                loc.anomalyType === "good"
-                    ? t("locations.anomaly_beneficial")
-                    : t("locations.anomaly_dangerous");
-            info.push(`🔮 ${type}`);
+            if (scanRange >= 8) {
+                const type =
+                    loc.anomalyType === "good"
+                        ? t("locations.anomaly_beneficial")
+                        : t("locations.anomaly_dangerous");
+                info.push(`🔮 ${type}`);
+            } else {
+                info.push(`🔮 ${t("locations.anomaly_unknown")}`);
+            }
         } else if (loc.type === "planet") {
             info.push(`🪐 ${t("locations.planet")}`);
             info.push(
@@ -422,12 +426,14 @@ function getScannerInfo(
 
     // Anomaly info
     if (loc.type === "anomaly") {
-        if (scanRange >= 15) {
+        if (scanRange >= 8) {
             const type =
                 loc.anomalyType === "good"
                     ? t("locations.anomaly_beneficial")
                     : t("locations.anomaly_dangerous");
             info.push(`🔮 ${type}`);
+        } else {
+            info.push(`🔮 ${t("locations.anomaly_unknown")}`);
         }
         info.push(
             `${t("locations.scientist_required")}: LV${loc.requiresScientistLevel || 1}`,
@@ -2962,7 +2968,7 @@ function drawEnemy(
     ctx.globalAlpha = 1;
 }
 
-// Draw anomaly
+// Draw anomaly — shape varies by tier
 function drawAnomaly(
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -2975,32 +2981,151 @@ function drawAnomaly(
     }
 
     const color = loc.anomalyColor || "#00ff41";
+    const tier = loc.anomalyTier ?? 1;
 
-    // Energy swirl
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-
-    for (let i = 0; i < 3; i++) {
-        ctx.beginPath();
-        ctx.arc(x, y, 8 + i * 4, 0, Math.PI * 1.5);
-        ctx.stroke();
-    }
-
-    // Central energy
-    const gradient = ctx.createRadialGradient(x, y, 0, x, y, 10);
-    gradient.addColorStop(0, "#fff");
-    gradient.addColorStop(0.3, color);
-    gradient.addColorStop(1, "transparent");
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(x, y, 10, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Question mark for mystery
-    ctx.font = "bold 12px Share Tech Mono";
     ctx.fillStyle = color;
-    ctx.textAlign = "center";
-    ctx.fillText("?", x, y + 5);
+
+    if (tier === 1) {
+        // Tier 1: simple pulsing circle + "?"
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(x, y, 10, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.globalAlpha = completed ? 0.1 : 0.15;
+        ctx.beginPath();
+        ctx.arc(x, y, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = completed ? 0.3 : 1;
+
+        ctx.font = "bold 13px Share Tech Mono";
+        ctx.fillStyle = color;
+        ctx.textAlign = "center";
+        ctx.fillText("?", x, y + 5);
+    } else if (tier === 2) {
+        // Tier 2: diamond (rotated square)
+        const r = 11;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, y - r);
+        ctx.lineTo(x + r, y);
+        ctx.lineTo(x, y + r);
+        ctx.lineTo(x - r, y);
+        ctx.closePath();
+        ctx.stroke();
+
+        ctx.globalAlpha = completed ? 0.1 : 0.18;
+        ctx.beginPath();
+        ctx.moveTo(x, y - r);
+        ctx.lineTo(x + r, y);
+        ctx.lineTo(x, y + r);
+        ctx.lineTo(x - r, y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = completed ? 0.3 : 1;
+
+        // inner dot
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (tier === 3) {
+        // Tier 3: 6-pointed star
+        const outerR = 13;
+        const innerR = 6;
+        const points = 6;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < points * 2; i++) {
+            const angle = (i * Math.PI) / points - Math.PI / 2;
+            const r = i % 2 === 0 ? outerR : innerR;
+            const px = x + Math.cos(angle) * r;
+            const py = y + Math.sin(angle) * r;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.stroke();
+
+        ctx.globalAlpha = completed ? 0.1 : 0.2;
+        ctx.beginPath();
+        for (let i = 0; i < points * 2; i++) {
+            const angle = (i * Math.PI) / points - Math.PI / 2;
+            const r = i % 2 === 0 ? outerR : innerR;
+            const px = x + Math.cos(angle) * r;
+            const py = y + Math.sin(angle) * r;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = completed ? 0.3 : 1;
+
+        // center glow
+        const grad3 = ctx.createRadialGradient(x, y, 0, x, y, 5);
+        grad3.addColorStop(0, "#fff");
+        grad3.addColorStop(1, color);
+        ctx.fillStyle = grad3;
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+    } else {
+        // Tier 4: 4-pointed star + two orbital rings
+        const outerR = 14;
+        const innerR = 5;
+        const points = 4;
+        ctx.lineWidth = 2;
+
+        // Outer orbital ring
+        ctx.globalAlpha = completed ? 0.15 : 0.4;
+        ctx.beginPath();
+        ctx.arc(x, y, 18, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Inner orbital ring
+        ctx.beginPath();
+        ctx.arc(x, y, 14, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = completed ? 0.3 : 1;
+
+        // 4-pointed star
+        ctx.beginPath();
+        for (let i = 0; i < points * 2; i++) {
+            const angle = (i * Math.PI) / points - Math.PI / 4;
+            const r = i % 2 === 0 ? outerR : innerR;
+            const px = x + Math.cos(angle) * r;
+            const py = y + Math.sin(angle) * r;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.stroke();
+
+        ctx.globalAlpha = completed ? 0.1 : 0.25;
+        ctx.beginPath();
+        for (let i = 0; i < points * 2; i++) {
+            const angle = (i * Math.PI) / points - Math.PI / 4;
+            const r = i % 2 === 0 ? outerR : innerR;
+            const px = x + Math.cos(angle) * r;
+            const py = y + Math.sin(angle) * r;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = completed ? 0.3 : 1;
+
+        // Bright core
+        const grad4 = ctx.createRadialGradient(x, y, 0, x, y, 6);
+        grad4.addColorStop(0, "#fff");
+        grad4.addColorStop(0.5, color);
+        grad4.addColorStop(1, "transparent");
+        ctx.fillStyle = grad4;
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fill();
+    }
 
     ctx.globalAlpha = 1;
 }

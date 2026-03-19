@@ -285,11 +285,19 @@ export const generateAsteroidBelt = (
         asteroidTier = 4;
     }
 
-    const resources = {
-        minerals: (5 + Math.floor(Math.random() * 6)) * asteroidTier,
-        rare: Math.floor(Math.random() * 2) * asteroidTier,
-        credits: (20 + Math.floor(Math.random() * 30)) * asteroidTier,
-    };
+    const resources =
+        asteroidTier === 4
+            ? {
+                  // Ancient belt: significantly richer rewards
+                  minerals: 50 + Math.floor(Math.random() * 51),   // 50–100
+                  rare: 8 + Math.floor(Math.random() * 9),          // 8–16
+                  credits: 400 + Math.floor(Math.random() * 401),   // 400–800₢
+              }
+            : {
+                  minerals: (5 + Math.floor(Math.random() * 6)) * asteroidTier,
+                  rare: Math.floor(Math.random() * 2) * asteroidTier,
+                  credits: (20 + Math.floor(Math.random() * 30)) * asteroidTier,
+              };
 
     return {
         id: `${sectorIdx}-${locIdx}`,

@@ -10,6 +10,7 @@ import {
     canSeeTier4,
     getSectorRadius,
 } from "@/game/galaxy/galaxy-map-utils";
+import { getEffectiveScanRange } from "@/game/slices/scanner/helpers/getEffectiveScanRange";
 import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
 
 // Animation constants
@@ -181,6 +182,7 @@ export function GalaxyMap() {
             c.traits?.some((trait) => trait.effect?.seeHostility),
         ),
     );
+    const scanRange = useGameStore((s) => getEffectiveScanRange(s));
 
     // Calculate fuel cost with all modifiers for UI display
     const calculateFuelCost = useCallback((sectorId: number) => {
@@ -352,6 +354,7 @@ export function GalaxyMap() {
             modules,
             captainLevel,
             artifacts,
+            scanRange,
         );
         drawSectors(
             ctx,
@@ -368,6 +371,7 @@ export function GalaxyMap() {
             currentSector,
             artifacts,
             updateSectorPosition,
+            scanRange,
         );
 
         ctx.restore();
@@ -382,6 +386,7 @@ export function GalaxyMap() {
         modules,
         offset.x,
         offset.y,
+        scanRange,
         sectors,
         seeHostility,
         t,
@@ -741,8 +746,9 @@ function drawSectors(
     currentSector: ReturnType<typeof useGameStore.getState>["currentSector"],
     artifacts: ReturnType<typeof useGameStore.getState>["artifacts"],
     updateSectorPosition: (sectorId: number, x: number, y: number) => void,
+    scanRange?: number,
 ) {
-    const canSeeT4 = canSeeTier4(modules, artifacts);
+    const canSeeT4 = canSeeTier4(modules, artifacts, scanRange);
 
     sectors.forEach((sector) => {
         // Hide tier 4 sectors until scanner level 4 or all-seeing artifact

@@ -337,6 +337,10 @@ const handleTravelCompletion = (
     }
 
     set((s) => ({ ...s, gameMode: "sector_map" as GameMode }));
+
+    if (sector.tier === 4) {
+        get().triggerVictory();
+    }
 };
 
 /**
@@ -387,6 +391,9 @@ const handleTravelStart = (
             gameMode: "sector_map" as GameMode,
         }));
         get().addLog(`⚡ Мгновенный перелёт в ${sector.name}!`, "info");
+        if (sector.tier === 4) {
+            get().triggerVictory();
+        }
     } else {
         get().addLog(
             `Начато путешествие в ${sector.name} (${distance} ходов)`,
@@ -445,12 +452,6 @@ export const selectSector = (
     if (accessError) {
         get().addLog(accessError, "error");
         playSound("error");
-        return;
-    }
-
-    // Проверка на победу (Тир 4)
-    if (sector.tier === 4) {
-        get().triggerVictory();
         return;
     }
 

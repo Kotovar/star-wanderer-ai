@@ -93,6 +93,7 @@ export interface GameState {
     gameOverReason: string | null; // Reason for game over
     gameVictory: boolean; // Victory state (reached tier 4)
     gameVictoryReason: string | null; // Reason for victory
+    victoryTriggered: boolean; // Persistent flag — prevents re-triggering after "Continue"
     activeEffects: ActiveEffect[]; // Active planet specialization effects
     planetCooldowns: Record<string, number>; // Track cooldowns per planet (planetId -> turnsRemaining)
     research: ResearchData; // Research system data

@@ -64,11 +64,12 @@ export function getScannerLevel(modules: Module[]): number {
     return Math.max(...scanners.map((s) => s.level || 1));
 }
 
-// Check if player can see tier 4 sectors (scanner level 4 or special artifact)
-export function canSeeTier4(modules: Module[], artifacts: Artifact[]): boolean {
-    // Check for scanner level 4
+// Check if player can see tier 4 sectors (scanner level 4, scan range >= 25, or special artifact)
+export function canSeeTier4(modules: Module[], artifacts: Artifact[], scanRange?: number): boolean {
     const scannerLevel = getScannerLevel(modules);
     if (scannerLevel >= 4) return true;
+
+    if (scanRange !== undefined && scanRange >= 25) return true;
 
     const allSeeing = findActiveArtifact(
         artifacts,
@@ -265,6 +266,7 @@ export function drawTierRings(
     modules: Module[],
     captainLevel: number,
     artifacts: Artifact[],
+    scanRange?: number,
 ) {
     const tierRadius = [
         maxRadius * 0.5,
@@ -273,7 +275,7 @@ export function drawTierRings(
         maxRadius * 1.15,
     ];
 
-    const canSeeT4 = canSeeTier4(modules, artifacts);
+    const canSeeT4 = canSeeTier4(modules, artifacts, scanRange);
 
     tierRadius.forEach((radius, idx) => {
         const tier = (idx + 1) as GalaxyTierAll;

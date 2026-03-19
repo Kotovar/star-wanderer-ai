@@ -680,6 +680,7 @@
         "cosmic_storm": "Космический шторм",
         "anomaly_beneficial": "✓ Благоприятная",
         "anomaly_dangerous": "⚠ Опасная",
+        "anomaly_unknown": "? Неизвестная аномалия",
         "planet": "Планета",
         "deserted": "Безлюдная",
         "station": "Станция",

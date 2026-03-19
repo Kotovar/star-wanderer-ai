@@ -9,6 +9,7 @@ import {
 import { calculateScienceBonus } from "./calculateScienceBonus";
 import { getCrewByProfession, giveRandomMutation } from "@/game/crew";
 import { MUTATION_CHANCES } from "@/game/constants";
+import { getRandomUndiscoveredArtifact } from "@/game/artifacts";
 
 /**
  * Применяет эффект аномалии (награда или урон)
@@ -79,7 +80,7 @@ const applyGoodAnomaly = (
 };
 
 /**
- * Применяет эффект плохой аномалии (повреждение случайного модуля)
+ * Применяет эффект плохой аномалии (повреждение случайного модуля + редкая награда)
  */
 const applyBadAnomaly = (
     anomalyLevel: number,
@@ -116,4 +117,64 @@ const applyBadAnomaly = (
     }));
 
     get().addLog(`Аномалия: "${randomModule.name}" -${damage}%`, "warning");
+
+    // Редкая награда за риск (60% кредиты, 30% ресурсы, 10% артефакт)
+    applyBadAnomalyBonus(anomalyLevel, set, get);
+};
+
+/**
+ * Выдаёт редкую награду за исследование опасной аномалии
+ */
+const applyBadAnomalyBonus = (
+    anomalyLevel: number,
+    set: SetState,
+    get: () => GameStore,
+): void => {
+    const roll = Math.random();
+
+    if (roll < 0.6) {
+        // 60%: большая кредитная награда (больше чем у хорошей)
+        const base = ANOMALY_BASE_REWARD_PER_LEVEL * anomalyLevel * 1.5;
+        const bonus = Math.floor(Math.random() * ANOMALY_RANDOM_REWARD_MAX);
+        const reward = Math.floor(base + bonus);
+        set((s) => ({ credits: s.credits + reward }));
+        get().addLog(`💰 Редкая находка в аномалии: +${reward}₢`, "info");
+    } else if (roll < 0.9) {
+        // 30%: редкие научные ресурсы
+        const quantumCount = Math.floor(Math.random() * anomalyLevel) + 1;
+        const ancientCount = Math.floor(Math.random() * anomalyLevel * 2) + 1;
+        set((s) => ({
+            research: {
+                ...s.research,
+                resources: {
+                    ...s.research.resources,
+                    quantum_crystals: (s.research.resources.quantum_crystals ?? 0) + quantumCount,
+                    ancient_data: (s.research.resources.ancient_data ?? 0) + ancientCount,
+                },
+            },
+        }));
+        get().addLog(
+            `🔬 Редкие образцы из аномалии: Квантовые кристаллы x${quantumCount}, Древние данные x${ancientCount}`,
+            "info",
+        );
+    } else {
+        // 10%: артефакт
+        const artifact = getRandomUndiscoveredArtifact(get().artifacts);
+        if (artifact) {
+            set((s) => ({
+                artifacts: s.artifacts.map((a) =>
+                    a.id === artifact.id ? { ...a, discovered: true } : a,
+                ),
+            }));
+            get().addLog(
+                `✨ Аномалия скрывала артефакт: "${artifact.name}"!`,
+                "info",
+            );
+        } else {
+            // Все артефакты уже найдены — компенсация кредитами
+            const reward = Math.floor(ANOMALY_BASE_REWARD_PER_LEVEL * anomalyLevel * 2);
+            set((s) => ({ credits: s.credits + reward }));
+            get().addLog(`💰 Редкая находка в аномалии: +${reward}₢`, "info");
+        }
+    }
 };

@@ -34,7 +34,7 @@ const getVictoryMessage = (
 export const triggerVictory = (set: SetState, get: () => GameStore): void => {
     const state = get();
 
-    if (state.gameVictory) {
+    if (state.victoryTriggered) {
         return;
     }
 
@@ -49,6 +49,7 @@ export const triggerVictory = (set: SetState, get: () => GameStore): void => {
 
     set({
         gameVictory: true,
+        victoryTriggered: true,
         gameVictoryReason: getVictoryMessage(
             state.turn,
             captainLevel,

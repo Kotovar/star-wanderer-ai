@@ -223,7 +223,7 @@ export function DistressSignalPanel() {
 
                 <Button
                     onClick={showSectorMap}
-                    className="bg-transparent border-2 border-[#666] text-[#666] hover:bg-[#666] hover:text-[#050810] uppercase tracking-wider"
+                    className="cursor-pointer bg-transparent border-2 border-[#666] text-[#666] hover:bg-[#666] hover:text-[#050810] uppercase tracking-wider"
                 >
                     {t("distress_signal.ignore")}
                 </Button>
@@ -318,7 +318,7 @@ export function DistressSignalPanel() {
 
                 <Button
                     onClick={showSectorMap}
-                    className=" cursor-pointer bg-transparent border-2 border-[#666] text-[#666] hover:bg-[#666] hover:text-[#050810] uppercase tracking-wider"
+                    className="cursor-pointer bg-transparent border-2 border-[#666] text-[#666] hover:bg-[#666] hover:text-[#050810] uppercase tracking-wider"
                 >
                     {t("distress_signal.ignore")}
                 </Button>
