@@ -14,23 +14,42 @@ import {
 import { CREW_ACTIONS, PROFESSION_NAMES } from "@/game/constants/crew";
 import { getAvailableTasksForModule } from "@/game/slices/crew/helpers";
 import { CrewMemberAssignment } from "@/game/types";
+import { useTranslation } from "@/lib/useTranslation";
 
 export function AssignmentsPanel() {
     const crew = useGameStore((s) => s.crew);
     const modules = useGameStore((s) => s.ship.modules);
-
     const assignCrewTask = useGameStore((s) => s.assignCrewTask);
+    const moveCrewMember = useGameStore((s) => s.moveCrewMember);
+    const isModuleAdjacent = useGameStore((s) => s.isModuleAdjacent);
     const showGalaxyMap = useGameStore((s) => s.showGalaxyMap);
+    const { t } = useTranslation();
+
     const [assignments, setAssignments] = useState<
         Record<
             number,
             { task: CrewMemberAssignment | "none"; effect: string | null }
         >
     >({});
+    // crewId → targetModuleId (undefined = stay)
+    const [moves, setMoves] = useState<Record<number, number>>({});
+
+    const getModuleName = (moduleId: number) => {
+        const mod = modules.find((m) => m.id === moduleId);
+        if (!mod) return "?";
+        const translated = t(`module_names.${mod.type}`);
+        return translated !== `module_names.${mod.type}`
+            ? translated
+            : mod.name;
+    };
 
     const handleApply = () => {
+        // 1. Move first — moving clears the assignment in store
+        Object.entries(moves).forEach(([crewId, targetModuleId]) => {
+            moveCrewMember(Number(crewId), targetModuleId);
+        });
+        // 2. Then assign tasks
         Object.entries(assignments).forEach(([crewId, { task, effect }]) => {
-            // Convert 'none' back to empty string for the store
             const actualTask = task === "none" ? "" : task;
             assignCrewTask(Number(crewId), actualTask, effect);
         });
@@ -43,13 +62,24 @@ export function AssignmentsPanel() {
                 ▸ ЭКИПАЖ
             </div>
             <div className="text-sm">
-                Назначьте задачи. Эффект в следующем ходу.
+                Назначьте задачи и перемещения. Эффект в следующем ходу.
             </div>
 
             <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-4 mt-2.5">
                 {crew.map((c) => {
-                    const currentModule = modules.find(
-                        (m) => m.id === c.moduleId,
+                    const pendingModuleId = moves[c.id];
+                    const effectiveModuleId = pendingModuleId ?? c.moduleId;
+                    const effectiveModule = modules.find(
+                        (m) => m.id === effectiveModuleId,
+                    );
+
+                    // Adjacent modules available to move into
+                    const adjacentModules = modules.filter(
+                        (m) =>
+                            m.id !== c.moduleId &&
+                            !m.disabled &&
+                            !m.manualDisabled &&
+                            isModuleAdjacent(c.moduleId, m.id),
                     );
 
                     // Получаем все задачи для профессии
@@ -69,32 +99,113 @@ export function AssignmentsPanel() {
                         ];
                     }
 
-                    // Фильтруем задачи по модулю
+                    // Фильтруем задачи по целевому модулю (с учётом запланированного перемещения)
                     const actions = getAvailableTasksForModule(
-                        currentModule,
+                        effectiveModule,
                         allActions,
                     );
 
-                    // Convert empty string to 'none' for Select value
-                    const currentValue: string =
-                        assignments[c.id]?.task || c.assignment || "none";
-                    const displayValue =
-                        currentValue === "" || currentValue === null
-                            ? "none"
-                            : currentValue;
+                    // При смене модуля сбрасываем задачу если она недоступна
+                    const currentAssignment = assignments[c.id]?.task;
+                    const taskStillValid =
+                        !currentAssignment ||
+                        currentAssignment === "none" ||
+                        actions.some(
+                            (a) =>
+                                (a.value === "" ? "none" : a.value) ===
+                                currentAssignment,
+                        );
+
+                    const displayValue = taskStillValid
+                        ? (currentAssignment ?? c.assignment ?? "none") ||
+                          "none"
+                        : "none";
 
                     const profName =
                         PROFESSION_NAMES[c.profession] || c.profession;
+                    const isMoving = pendingModuleId !== undefined;
 
                     return (
                         <div key={c.id} className="mb-5 last:mb-0">
-                            <div className="flex justify-between items-start gap-2">
-                                <div>
-                                    <div className="text-[#00d4ff] font-bold mb-1.5">
-                                        {c.name} ({profName} LV{c.level || 1})
-                                    </div>
+                            {/* Name + current location */}
+                            <div className="flex items-baseline justify-between gap-2 mb-1.5">
+                                <div className="text-[#00d4ff] font-bold">
+                                    {c.name}{" "}
+                                    <span className="font-normal text-[#888] text-xs">
+                                        ({profName} LV{c.level || 1})
+                                    </span>
+                                </div>
+                                <div className="text-[10px] text-[#555] shrink-0">
+                                    📍 {getModuleName(c.moduleId)}
+                                    {isMoving && (
+                                        <span className="text-[#ffb000]">
+                                            {" "}
+                                            → {getModuleName(pendingModuleId)}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
+
+                            {/* Module move select */}
+                            {adjacentModules.length > 0 && (
+                                <Select
+                                    value={
+                                        pendingModuleId !== undefined
+                                            ? String(pendingModuleId)
+                                            : "stay"
+                                    }
+                                    onValueChange={(value) => {
+                                        if (value === "stay") {
+                                            setMoves((prev) => {
+                                                const next = { ...prev };
+                                                delete next[c.id];
+                                                return next;
+                                            });
+                                        } else {
+                                            setMoves((prev) => ({
+                                                ...prev,
+                                                [c.id]: Number(value),
+                                            }));
+                                        }
+                                        // Reset task on module change
+                                        setAssignments((prev) => {
+                                            const next = { ...prev };
+                                            delete next[c.id];
+                                            return next;
+                                        });
+                                    }}
+                                >
+                                    <SelectTrigger
+                                        className={`bg-[#050810] border text-xs mb-1.5 ${
+                                            isMoving
+                                                ? "border-[#ffb000] text-[#ffb000]"
+                                                : "border-[#333] text-[#555]"
+                                        }`}
+                                    >
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-[#050810] border border-[#ffb000] text-[#ffb000]">
+                                        <SelectItem
+                                            value="stay"
+                                            className="hover:bg-[rgba(255,176,0,0.1)]"
+                                        >
+                                            ↩ Остаться (
+                                            {getModuleName(c.moduleId)})
+                                        </SelectItem>
+                                        {adjacentModules.map((mod) => (
+                                            <SelectItem
+                                                key={mod.id}
+                                                value={String(mod.id)}
+                                                className="hover:bg-[rgba(255,176,0,0.1)]"
+                                            >
+                                                → {getModuleName(mod.id)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
+
+                            {/* Task select */}
                             <Select
                                 value={displayValue}
                                 onValueChange={(value) => {
