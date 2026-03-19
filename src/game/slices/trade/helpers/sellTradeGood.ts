@@ -33,19 +33,29 @@ const validateSellTradeGood = (
     const pricePer5 = pricesFromTrade[goodId].sell;
     let price = Math.floor(pricePer5 * (quantity / 5));
 
-    // Проверка жадного экипажа
+    // Штраф от жадных
     let greedyCrewCount = 0;
     state.crew.forEach((c) => {
         c.traits?.forEach((trait) => {
-            if (trait.effect.sellPricePenalty) {
-                greedyCrewCount++;
-            }
+            if (trait.effect.sellPricePenalty) greedyCrewCount++;
         });
     });
-
     if (greedyCrewCount > 0) {
-        const penalty = greedyCrewCount;
-        price = Math.max(0, price - penalty);
+        price = Math.max(0, price - greedyCrewCount);
+    }
+
+    // Бонус от торговцев
+    const traderBonus = state.crew.reduce((sum, c) => {
+        return (
+            sum +
+            (c.traits?.reduce(
+                (s, t) => s + (t.effect.sellPriceBonus ?? 0),
+                0,
+            ) ?? 0)
+        );
+    }, 0);
+    if (traderBonus > 0) {
+        price = Math.floor(price * (1 + traderBonus));
     }
 
     return { canSell: true, price, greedyCrewCount };

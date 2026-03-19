@@ -22,6 +22,24 @@ export const rollQuality = (rand: number): Quality => {
     return "excellent";
 };
 
+// Пары трейтов, которые не могут быть у одного персонажа одновременно
+const CONFLICTING_TRAITS: Partial<Record<TraitId, TraitId[]>> = {
+    resilient:    ["sickly"],
+    invincible:   ["sickly"],
+    legend:       ["sickly"],
+    sharpshooter: ["bad_shot"],
+    veteran:      ["bad_shot"],
+    trader:       ["greedy"],
+    charismatic:  ["coward"],
+};
+
+const conflictsWithExisting = (candidateId: TraitId, existing: CrewTrait[]): boolean => {
+    const existingIds = existing.map((t) => t.id as TraitId);
+    if (existingIds.some((id) => CONFLICTING_TRAITS[id]?.includes(candidateId))) return true;
+    if (CONFLICTING_TRAITS[candidateId]?.some((id) => existingIds.includes(id))) return true;
+    return false;
+};
+
 export const generateCrewTraits = (
     quality: Quality = "average",
     seed: number = 0,
@@ -89,6 +107,7 @@ export const generateCrewTraits = (
         } else {
             pool = CREW_TRAITS.negative.filter((t) => t.rarity === "common");
         }
+        pool = pool.filter((t) => !conflictsWithExisting(t.id as TraitId, traits));
         if (pool.length > 0) {
             const trait = pool[Math.floor(seededRandom(202) * pool.length)];
             traits.push({

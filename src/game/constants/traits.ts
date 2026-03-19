@@ -61,6 +61,14 @@ export const CREW_TRAITS: Record<
 
         // Rare positive traits (30% chance)
         {
+            id: "trader",
+            name: "Торговец",
+            desc: "+10% к цене продажи товаров",
+            effect: { sellPriceBonus: 0.1 },
+            rarity: "rare",
+            priceMod: 1.3,
+        },
+        {
             id: "veteran",
             name: "Ветеран",
             desc: "+10% точности (стрелок в орудийном отсеке), -40% урона по экипажу",
@@ -120,7 +128,6 @@ export const CREW_TRAITS: Record<
     ],
     negative: [
         // Common negative traits (50% chance)
-        // TODO: Продолжить отсюда
         {
             id: "coward",
             name: "Трус",
@@ -145,12 +152,11 @@ export const CREW_TRAITS: Record<
             rarity: "common",
             priceMod: 0.85,
         },
-
         // Rare negative traits (30% chance)
         {
             id: "greedy",
             name: "Жадный",
-            desc: "-1₢ за продажу за каждого юнита",
+            desc: "-1₢ к цене продажи за каждого жадного в экипаже",
             effect: { sellPricePenalty: 1 },
             rarity: "rare",
             priceMod: 0.7,
@@ -158,7 +164,7 @@ export const CREW_TRAITS: Record<
         {
             id: "bad_shot",
             name: "Плохой стрелок",
-            desc: "-10% точность оружия",
+            desc: "-10% точности (стрелок в орудийном отсеке)",
             effect: { accuracyPenalty: 0.1 },
             rarity: "rare",
             priceMod: 0.65,
@@ -166,8 +172,8 @@ export const CREW_TRAITS: Record<
         {
             id: "pessimist",
             name: "Пессимист",
-            desc: "-20 морали в первый ход боя модулю",
-            effect: { combatStartMoraleDrain: 20 },
+            desc: "Теряет -30 морали в начале боя",
+            effect: { combatStartMoraleDrain: 30 },
             rarity: "rare",
             priceMod: 0.65,
         },
@@ -182,14 +188,15 @@ export const CREW_TRAITS: Record<
         {
             id: "rebel",
             name: "Бунтарь",
-            desc: "-15 настроение, риск дезертирства",
-            effect: { moralePenalty: 15, desertionRisk: 0.1 },
+            desc: "-5 морали себе каждый ход, 5% шанс сбежать в начале боя",
+            effect: { moralePenalty: 5, desertionRisk: 0.05 },
             rarity: "rare",
             priceMod: 0.55,
         },
     ],
     // Mutation traits - from Ancient Biosphere curse
     mutation: [
+        // TODO: Продолжить отсюда
         {
             id: "tentacles",
             name: "Мутация: Щупальца",

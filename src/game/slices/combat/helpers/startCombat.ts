@@ -1,3 +1,4 @@
+import { RACES } from "@/game/constants";
 import type { GameState, GameStore, Location } from "@/game/types";
 import * as combatSetup from "./combatSetup";
 
@@ -50,12 +51,41 @@ export function initializeCombat(
 
     // Apply combatStartMoraleDrain trait
     applyPessimistTrait(get, set);
+
+    // Apply desertionRisk trait
+    applyRebelTrait(get, set);
 }
 
 /**
  * Применяет трейт Пессимист в начале боя
  */
-function applyPessimistTrait(
+export function applyRebelTrait(
+    get: () => GameStore,
+    set: (fn: (s: GameState) => void) => void,
+) {
+    const rebels = get().crew.filter((c) =>
+        RACES[c.race]?.hasHappiness !== false &&
+        c.traits?.some((t) => t.effect.desertionRisk),
+    );
+
+    rebels.forEach((crewMember) => {
+        const trait = crewMember.traits?.find((t) => t.effect.desertionRisk);
+        if (!trait) return;
+
+        const risk = trait.effect.desertionRisk as number;
+        if (Math.random() < risk) {
+            set((s) => {
+                s.crew = s.crew.filter((c) => c.id !== crewMember.id);
+            });
+            get().addLog(
+                `😤 ${crewMember.name} (Бунтарь) испугался и сбежал с корабля!`,
+                "error",
+            );
+        }
+    });
+}
+
+export function applyPessimistTrait(
     get: () => GameStore,
     set: (fn: (s: GameState) => void) => void,
 ) {
@@ -70,24 +100,13 @@ function applyPessimistTrait(
         if (!trait) return;
 
         const moraleDrain = trait.effect.combatStartMoraleDrain as number;
-        const crewInSameModule = get().crew.filter(
-            (c) =>
-                c.moduleId === crewMember.moduleId &&
-                c.id !== crewMember.id &&
-                c.happiness > 0,
+        set((s) => {
+            const c = s.crew.find((x) => x.id === crewMember.id);
+            if (c) c.happiness = Math.max(0, c.happiness - moraleDrain);
+        });
+        get().addLog(
+            `😟 ${crewMember.name} (Пессимист): -${moraleDrain} морали`,
+            "warning",
         );
-
-        if (crewInSameModule.length > 0) {
-            set((s) => {
-                s.crew.forEach((c) => {
-                    if (
-                        c.moduleId === crewMember.moduleId &&
-                        c.id !== crewMember.id
-                    ) {
-                        c.happiness = Math.max(0, c.happiness - moraleDrain);
-                    }
-                });
-            });
-        }
     });
 }

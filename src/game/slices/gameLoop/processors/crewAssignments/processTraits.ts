@@ -32,6 +32,54 @@ export const processNegativeTraits = (
             set,
             get,
         );
+
+        // moralePenalty: снижает мораль самому себе каждый ход
+        const selfMoralePenalty = crewMember.traits?.reduce(
+            (sum, t) => sum + (t.effect?.moralePenalty ?? 0),
+            0,
+        ) ?? 0;
+        if (selfMoralePenalty > 0 && crewMember.happiness > 0) {
+            set((s) => ({
+                crew: s.crew.map((c) =>
+                    c.id === crewMember.id
+                        ? { ...c, happiness: Math.max(0, c.happiness - selfMoralePenalty) }
+                        : c,
+                ),
+            }));
+        }
+
+        // teamMorale: снижает мораль всех в том же модуле (включая синтетиков)
+        const teamMoralePenalty = crewMember.traits?.reduce(
+            (sum, t) => sum + (t.effect?.teamMorale ? -t.effect.teamMorale : 0),
+            0,
+        ) ?? 0;
+        if (teamMoralePenalty > 0) {
+            const affectedIds = new Set(
+                crew
+                    .filter(
+                        (c) =>
+                            c.moduleId === crewMember.moduleId &&
+                            c.id !== crewMember.id &&
+                            RACES[c.race]?.hasHappiness !== false,
+                    )
+                    .map((c) => c.id),
+            );
+            if (affectedIds.size > 0) {
+                set((s) => ({
+                    crew: s.crew.map((c) =>
+                        affectedIds.has(c.id)
+                            ? {
+                                  ...c,
+                                  happiness: Math.max(
+                                      0,
+                                      c.happiness - teamMoralePenalty,
+                                  ),
+                              }
+                            : c,
+                    ),
+                }));
+            }
+        }
     });
 };
 

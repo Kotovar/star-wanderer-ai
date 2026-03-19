@@ -1,6 +1,7 @@
 import { getBossById } from "@/game/bosses";
 import { determineBossRewards } from "./bossRewards";
 import * as combatSetup from "./combatSetup";
+import { applyPessimistTrait, applyRebelTrait } from "./startCombat";
 import type { GameState, GameStore, Location } from "@/game/types";
 
 /**
@@ -58,4 +59,7 @@ export function initializeBossCombat(
 
     get().addLog(`Щиты восстановлены: ${get().ship.shields}`, "combat");
     get().addLog(`⚠️ БОСС: ${boss.name}!`, "error");
+
+    applyPessimistTrait(get, set);
+    applyRebelTrait(get, set);
 }

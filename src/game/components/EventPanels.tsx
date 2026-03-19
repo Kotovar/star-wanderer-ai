@@ -89,7 +89,7 @@ export function EventDisplay() {
             return (
                 <div className="flex flex-col h-full">
                     <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mb-2 uppercase">
-                        ▸ {t("galaxy.tiers.tier4")}
+                        ▸ {t(`galaxy.tiers.tier${currentSector?.tier ?? 1}`)}
                     </div>
                     <div className="grid grid-cols-2 gap-2 shrink-0">
                         <Button

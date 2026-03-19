@@ -16,7 +16,6 @@ export function applyModuleDamage(
     get: () => GameStore,
     damage: number,
     targetModule: Module,
-    noShields: boolean,
 ) {
     const moduleDefense = targetModule.defense ?? 0;
     const damageAfterArmor = Math.max(1, damage - moduleDefense);
@@ -99,33 +98,6 @@ export function applyModuleDamage(
         get,
         state,
     );
-
-    // Combat morale drain
-    if (!noShields) {
-        const crewInDamagedModule = get().crew.filter(
-            (c) => c.moduleId === targetModule.id,
-        );
-        crewInDamagedModule.forEach((c) => {
-            c.traits?.forEach((trait) => {
-                if (trait.effect.combatMoraleDrain) {
-                    const moraleDrain = trait.effect.combatMoraleDrain;
-
-                    set((s) => {
-                        const cr = s.crew.find((x) => x.id === c.id);
-                        if (cr)
-                            cr.happiness = Math.max(
-                                0,
-                                cr.happiness - moraleDrain,
-                            );
-                    });
-                    get().addLog(
-                        `⚠️ ${c.name} (${trait.name}): -${moraleDrain} морали от урона`,
-                        "warning",
-                    );
-                }
-            });
-        });
-    }
 }
 
 /**

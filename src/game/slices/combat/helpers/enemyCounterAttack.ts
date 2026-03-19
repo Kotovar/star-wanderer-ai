@@ -186,7 +186,7 @@ export function applyDamageWithShields(
 
     const overflow = eDmg - sDmg;
     if (overflow > 0) {
-        applyModuleDamage(state, set, get, overflow, tgt, false);
+        applyModuleDamage(state, set, get, overflow, tgt);
     }
 }
 
@@ -200,5 +200,5 @@ export function applyDamageNoShields(
     eDmg: number,
     tgt: Module,
 ) {
-    applyModuleDamage(state, set, get, eDmg, tgt, true);
+    applyModuleDamage(state, set, get, eDmg, tgt);
 }

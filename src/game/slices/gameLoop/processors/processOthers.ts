@@ -28,6 +28,31 @@ export const processMoraleTraits = (
     get: () => GameStore,
 ): void => {
     const crew = get().crew;
+    const inCombat = !!get().currentCombat;
+
+    // Боевой дренаж морали от трейтов (напр. "Трус": -10 за ход)
+    if (inCombat) {
+        crew.forEach((crewMember) => {
+            const drain =
+                crewMember.traits?.reduce(
+                    (sum, t) => sum + (t.effect?.combatMoraleDrain ?? 0),
+                    0,
+                ) ?? 0;
+            if (drain <= 0 || crewMember.happiness <= 0) return;
+
+            set((s) => ({
+                crew: s.crew.map((c) =>
+                    c.id === crewMember.id
+                        ? { ...c, happiness: Math.max(0, c.happiness - drain) }
+                        : c,
+                ),
+            }));
+            get().addLog(
+                `😨 ${crewMember.name} (Трус): -${drain} морали`,
+                "warning",
+            );
+        });
+    }
 
     crew.forEach((crewMember) => {
         crewMember.traits?.forEach((trait: CrewTrait) => {

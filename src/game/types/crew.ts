@@ -24,7 +24,8 @@ export type PositiveTraitId =
     | "lucky"
     | "invincible"
     | "legend"
-    | "master";
+    | "master"
+    | "trader";
 
 export type NegativeTraitId =
     | "coward"
@@ -137,6 +138,7 @@ export type CrewTraitEffect = {
     lootBonus?: number;
     combatMoraleDrain?: number;
     sellPricePenalty?: number;
+    sellPriceBonus?: number;
     healthPenalty?: number;
     healthBonus?: number;
     maxHappinessBonus?: number;

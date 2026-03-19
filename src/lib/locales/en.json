@@ -315,7 +315,7 @@
         },
         "rebel": {
             "name": "Rebel",
-            "description": "-15 mood, desertion risk"
+            "description": "-5 morale per turn, 5% chance to flee at combat start"
         },
         "sharpshooter": {
             "name": "Sharpshooter",
@@ -344,6 +344,10 @@
         "sickly": {
             "name": "Sickly",
             "description": "-15% health"
+        },
+        "trader": {
+            "name": "Trader",
+            "description": "+10% to trade goods sell price"
         },
         "veteran": {
             "name": "Veteran",
@@ -411,7 +415,7 @@
         },
         "pessimist": {
             "name": "Pessimist",
-            "description": "-5 morale"
+            "description": "-30 morale to self at combat start"
         },
         "friendly": {
             "name": "Friendly",
@@ -1206,9 +1210,9 @@
     },
     "galaxy": {
         "tiers": {
-            "tier1": "Tier 1 - Safe",
-            "tier2": "Tier 2 - Medium",
-            "tier3": "Tier 3 - Dangerous",
+            "tier1": "Tier 1 - Inner Frontier",
+            "tier2": "Tier 2 - Outer Frontier",
+            "tier3": "Tier 3 - Deep Space",
             "tier4": "Tier 4 - Galaxy Edge"
         },
         "legend": {
