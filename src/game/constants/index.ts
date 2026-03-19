@@ -15,3 +15,4 @@ export * from "./crafting";
 export * from "./traits";
 export * from "./fuel";
 export * from "./experience";
+export * from "./mutationChances";

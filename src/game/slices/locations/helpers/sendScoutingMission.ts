@@ -4,7 +4,7 @@ import type {
     Location,
     ScoutingOutcome,
 } from "@/game/types";
-import { TRADE_GOODS } from "@/game/constants";
+import { TRADE_GOODS, MUTATION_CHANCES } from "@/game/constants";
 import {
     SCOUTING_TRADE_GOOD_QUANTITY,
     SCOUTING_REQUIRED_VISITS,
@@ -12,6 +12,7 @@ import {
 import { SCOUT_BASE_EXP } from "@/game/constants/experience";
 import { addTradeGood } from "@/game/slices/ship/helpers";
 import { determineScoutingOutcome } from "./determineScoutingOutcome";
+import { giveRandomMutation } from "@/game/crew";
 import { typedKeys } from "@/lib";
 
 /**
@@ -44,6 +45,17 @@ export const sendScoutingMission = (
 
     // Apply scouting result
     applyScoutingResult(result, set, get);
+
+    // Шанс заражения чужеродными организмами при разведке
+    if (Math.random() < MUTATION_CHANCES.SCOUT_INFECTION) {
+        const mutationName = giveRandomMutation(scout, set);
+        if (mutationName) {
+            get().addLog(
+                `☣️ ${scout.name} заразился чужеродными организмами при разведке: ${mutationName}!`,
+                "error",
+            );
+        }
+    }
 
     // Update exploration progress
     const newScoutedTimes = getScoutedTimes(state, planetId) + 1;

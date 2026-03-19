@@ -7,7 +7,8 @@ import {
     ANOMALY_MIN_MODULE_HEALTH,
 } from "../constants";
 import { calculateScienceBonus } from "./calculateScienceBonus";
-import { getCrewByProfession } from "@/game/crew";
+import { getCrewByProfession, giveRandomMutation } from "@/game/crew";
+import { MUTATION_CHANCES } from "@/game/constants";
 
 /**
  * Применяет эффект аномалии (награда или урон)
@@ -28,9 +29,28 @@ export const applyAnomalyEffect = (
     const rewardMultiplier = 1 + scienceBonus;
 
     if (anomalyType === "good") {
-        applyGoodAnomaly(anomalyLevel, rewardMultiplier, scienceBonus, set, get);
+        applyGoodAnomaly(
+            anomalyLevel,
+            rewardMultiplier,
+            scienceBonus,
+            set,
+            get,
+        );
     } else {
         applyBadAnomaly(anomalyLevel, set, get);
+        // Шанс мутации для учёных: ANOMALY_PER_LEVEL * уровень аномалии (макс ANOMALY_MAX)
+        const mutationChance = Math.min(MUTATION_CHANCES.ANOMALY_MAX, MUTATION_CHANCES.ANOMALY_PER_LEVEL * anomalyLevel);
+        scientists.forEach((scientist) => {
+            if (Math.random() < mutationChance) {
+                const mutationName = giveRandomMutation(scientist, set);
+                if (mutationName) {
+                    get().addLog(
+                        `☣️ ${scientist.name} заразился мутацией от аномалии: ${mutationName}!`,
+                        "error",
+                    );
+                }
+            }
+        });
     }
 };
 
@@ -50,9 +70,10 @@ const applyGoodAnomaly = (
 
     set((s) => ({ credits: s.credits + reward }));
 
-    const bonusText = scienceBonus > 0
-        ? ` (бонус науки: +${Math.round(scienceBonus * 100)}%)`
-        : "";
+    const bonusText =
+        scienceBonus > 0
+            ? ` (бонус науки: +${Math.round(scienceBonus * 100)}%)`
+            : "";
 
     get().addLog(`Аномалия: +${reward}₢${bonusText}`, "info");
 };
@@ -84,7 +105,10 @@ const applyBadAnomaly = (
                 m.id === randomModule.id
                     ? {
                           ...m,
-                          health: Math.max(ANOMALY_MIN_MODULE_HEALTH, m.health - damage),
+                          health: Math.max(
+                              ANOMALY_MIN_MODULE_HEALTH,
+                              m.health - damage,
+                          ),
                       }
                     : m,
             ),

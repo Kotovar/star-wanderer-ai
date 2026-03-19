@@ -1,6 +1,6 @@
 import type { GameState, GameStore, SetState } from "@/game/types";
-import { CONTRACT_REWARDS } from "@/game/constants";
-import { giveCrewExperience } from "@/game/crew";
+import { CONTRACT_REWARDS, MUTATION_CHANCES } from "@/game/constants";
+import { giveCrewExperience, giveRandomMutation } from "@/game/crew";
 
 /** Вероятность случайного события в пути */
 const TRAVEL_EVENT_CHANCE = 0.3;
@@ -349,6 +349,25 @@ export const processTravel = (
                 : s.completedContractIds,
             activeContracts: patrolResult.newActiveContracts,
         }));
+
+        // Радиационная мутация при прибытии в сектор с нейтронной звездой
+        if (destinationSector.star.type === "neutron_star") {
+            const isHighTier = destinationSector.tier >= 3;
+            const chance = isHighTier
+                ? MUTATION_CHANCES.NEUTRON_STAR_HIGH_TIER
+                : MUTATION_CHANCES.NEUTRON_STAR;
+            get().crew.forEach((crewMember) => {
+                if (Math.random() < chance) {
+                    const mutationName = giveRandomMutation(crewMember, set);
+                    if (mutationName) {
+                        get().addLog(
+                            `☢️ ${crewMember.name} получил мутацию от радиации нейтронной звезды: ${mutationName}!`,
+                            "error",
+                        );
+                    }
+                }
+            });
+        }
 
         get().addLog(`Прибытие в ${destinationSector.name}`, "info");
         get().updateShipStats();

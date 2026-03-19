@@ -2,6 +2,7 @@ import {
     ARTIFACT_TYPES,
     CONTRACT_REWARDS,
     RESEARCH_RESOURCES,
+    MUTATION_CHANCES,
 } from "@/game/constants";
 import {
     BASE_GUNNER_COMBAT_EXP,
@@ -12,7 +13,11 @@ import {
     getCombatLootResources,
     getBossLootResources,
 } from "@/game/research/utils";
-import { giveCrewExperience, getActiveAssignment } from "@/game/crew";
+import {
+    giveCrewExperience,
+    getActiveAssignment,
+    giveRandomMutation,
+} from "@/game/crew";
 import type {
     GameState,
     GameStore,
@@ -241,6 +246,22 @@ export function handleVictory(
             c.id !== gunner?.id,
     );
     weaponBayCrew.forEach((c) => get().gainExp(c, WEAPON_BAY_CREW_EXP));
+
+    // Мутация от босса: шанс BOSS_PER_TIER * тир босса для каждого члена экипажа
+    if (updatedCombat.enemy.isBoss && enemyTier >= 2) {
+        const mutationChance = Math.min(MUTATION_CHANCES.BOSS_MAX, MUTATION_CHANCES.BOSS_PER_TIER * enemyTier);
+        state.crew.forEach((crewMember) => {
+            if (Math.random() < mutationChance) {
+                const mutationName = giveRandomMutation(crewMember, set);
+                if (mutationName) {
+                    get().addLog(
+                        `☣️ ${crewMember.name} получил мутацию от контакта с боссом: ${mutationName}!`,
+                        "error",
+                    );
+                }
+            }
+        });
+    }
 
     // Mark location as completed
     if (get().currentLocation) {

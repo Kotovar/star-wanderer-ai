@@ -1,5 +1,5 @@
 import { useGameStore } from "@/game/store";
-import { CREW_TRAITS, RACE_LAST_NAMES } from "@/game/constants";
+import { CREW_TRAITS, MUTATION_TRAITS, RACE_LAST_NAMES } from "@/game/constants";
 import type {
     CrewMember,
     CrewMemberAssignment,
@@ -215,6 +215,29 @@ export const getTraitById = (id: TraitId): CrewTrait => {
     const trait = TRAIT_REGISTRY.get(id);
     if (!trait) throw new Error(`Unknown trait id: "${id}"`);
     return trait;
+};
+
+/**
+ * Даёт случайную мутацию члену экипажа (если у него ещё нет всех мутаций).
+ * Возвращает название мутации или null если добавить некуда.
+ */
+export const giveRandomMutation = (
+    crewMember: CrewMember,
+    set: (fn: (s: { crew: CrewMember[] }) => Partial<{ crew: CrewMember[] }>) => void,
+): string | null => {
+    const existingIds = new Set(crewMember.traits.map((t) => t.id));
+    const available = MUTATION_TRAITS.filter((id) => !existingIds.has(id));
+    if (available.length === 0) return null;
+    const newTraitId = available[Math.floor(Math.random() * available.length)];
+    const newTrait = getTraitById(newTraitId);
+    set((s) => ({
+        crew: s.crew.map((c) =>
+            c.id === crewMember.id
+                ? { ...c, traits: [...c.traits, newTrait] }
+                : c,
+        ),
+    }));
+    return newTrait.name;
 };
 
 export const hasCombatAssignment = (
