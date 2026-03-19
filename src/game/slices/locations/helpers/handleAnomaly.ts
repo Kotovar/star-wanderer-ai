@@ -40,6 +40,20 @@ export const handleAnomaly = (
     // Get research resources from anomaly
     addResearchResources(set, get);
 
+    // Bonus resources if any scientist has "analyzing" assignment
+    const analyzingScientists = scientists.filter(
+        (s) => s.assignment === "analyzing",
+    );
+    if (analyzingScientists.length > 0) {
+        addResearchResources(set, get);
+        analyzingScientists.forEach((s) => {
+            get().addLog(
+                `🔬 ${s.name}: Углублённый анализ — дополнительные ресурсы!`,
+                "info",
+            );
+        });
+    }
+
     // Give experience to scientists
     giveScientistsExp(scientists, requiredLevel, get().gainExp);
 

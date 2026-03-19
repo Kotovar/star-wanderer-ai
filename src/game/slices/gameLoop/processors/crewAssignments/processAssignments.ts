@@ -17,6 +17,7 @@ import type {
     Module,
     Race,
     SetState,
+    LocationType,
 } from "@/game/types";
 import { getActiveModules, isModuleActive } from "@/game/modules/utils";
 
@@ -169,6 +170,15 @@ const processNonCombatAssignment = (
         case "research":
             processResearchAssignment(crewMember, currentModule, get);
             break;
+        case "patrol":
+            processPatrolAssignment(crewMember, set, get);
+            break;
+        // analyzing обрабатывается в handleAnomaly при посещении аномалии
+        case "analyzing":
+            break;
+        case "training":
+            processTrainingAssignment(crewMember, currentModule, get);
+            break;
     }
 };
 
@@ -183,7 +193,8 @@ const processRepairAssignment = (
     get: () => GameStore,
 ): void => {
     let repairAmount: number = Math.floor(
-        ASSIGNMENT_BASES.REPAIR_AMOUNT * getTaskBonusMultiplier(crewMember),
+        (ASSIGNMENT_BASES.REPAIR_AMOUNT + (crewMember.level ?? 1)) *
+            getTaskBonusMultiplier(crewMember),
     );
 
     // Расовый бонус
@@ -285,7 +296,7 @@ const processPowerAssignment = (
 
 /**
  * Назначение на навигацию (-1 к потреблению)
- * Работает только в двигателе
+ * Работает только в кабине
  */
 const processNavigationAssignment = (
     crewMember: CrewMember,
@@ -293,10 +304,9 @@ const processNavigationAssignment = (
     set: SetState,
     get: () => GameStore,
 ): void => {
-    // Проверяем что экипаж в двигателе
-    if (currentModule.type !== "engine") {
+    if (currentModule.type !== "cockpit") {
         get().addLog(
-            `${crewMember.name}: Навигация возможна только в двигателе`,
+            `${crewMember.name}: Навигация возможна только в кабине`,
             "warning",
         );
         return;
@@ -311,7 +321,7 @@ const processNavigationAssignment = (
 };
 
 /**
- * Назначение на уклонение (+3%)
+ * Назначение на уклонение
  * Работает только в двигателе
  */
 const processEvasionAssignment = (
@@ -349,7 +359,8 @@ const processHealAssignment = (
     get: () => GameStore,
 ): void => {
     let healAmount: number = Math.floor(
-        ASSIGNMENT_BASES.HEAL_AMOUNT * getTaskBonusMultiplier(crewMember),
+        (ASSIGNMENT_BASES.HEAL_AMOUNT + (crewMember.level ?? 1)) *
+            getTaskBonusMultiplier(crewMember),
     );
 
     // Расовый бонус к лечению
@@ -401,13 +412,15 @@ const processMoraleAssignment = (
     get: () => GameStore,
 ): void => {
     const moraleAmount: number = Math.floor(
-        ASSIGNMENT_BASES.MORALE_AMOUNT * getTaskBonusMultiplier(crewMember),
+        (ASSIGNMENT_BASES.MORALE_AMOUNT + (crewMember.level ?? 1)) *
+            getTaskBonusMultiplier(crewMember),
     );
 
     const crewToHelp = get().crew.filter(
         (c) =>
             c.moduleId === currentModule.id &&
-            c.happiness < (c.maxHappiness || ASSIGNMENT_MULTIPLIERS.MAX_HAPPINESS),
+            c.happiness <
+                (c.maxHappiness || ASSIGNMENT_MULTIPLIERS.MAX_HAPPINESS),
     );
 
     if (crewToHelp.length === 0) {
@@ -421,7 +434,8 @@ const processMoraleAssignment = (
                 ? {
                       ...c,
                       happiness: Math.min(
-                          c.maxHappiness || ASSIGNMENT_MULTIPLIERS.MAX_HAPPINESS,
+                          c.maxHappiness ||
+                              ASSIGNMENT_MULTIPLIERS.MAX_HAPPINESS,
                           c.happiness + moraleAmount,
                       ),
                   }
@@ -456,6 +470,73 @@ const processResearchAssignment = (
 
     // Начисляем опыт учёному
     get().gainExp(crewMember, BASE_EXP_REWARDS.MORALE);
+};
+
+/**
+ * Шанс найти кредиты при патруле зависит от типа локации
+ */
+const PATROL_LOCATION_CONFIG: Record<
+    LocationType | "_default",
+    { chance: number; min: number; max: number }
+> = {
+    asteroid_belt: { chance: 0.25, min: 10, max: 35 },
+    planet: { chance: 0.2, min: 5, max: 25 },
+    anomaly: { chance: 0.15, min: 10, max: 25 },
+    station: { chance: 0.12, min: 10, max: 30 },
+    friendly_ship: { chance: 0.1, min: 5, max: 15 },
+    enemy: { chance: 0.05, min: 5, max: 10 },
+    boss: { chance: 0.05, min: 5, max: 10 },
+    storm: { chance: 0.05, min: 5, max: 10 },
+    distress_signal: { chance: 0.08, min: 5, max: 15 },
+    _default: { chance: 0.05, min: 5, max: 10 },
+};
+
+/**
+ * Патруль разведчика — случайный шанс найти кредиты, зависит от локации
+ */
+const processPatrolAssignment = (
+    crewMember: CrewMember,
+    set: SetState,
+    get: () => GameStore,
+): void => {
+    const isTraveling = !!get().traveling;
+    const locationType = isTraveling
+        ? "_default"
+        : (get().currentLocation?.type ?? "_default");
+    const config =
+        PATROL_LOCATION_CONFIG[locationType] ?? PATROL_LOCATION_CONFIG._default;
+
+    if (Math.random() >= config.chance) {
+        return; // Ничего не найдено — без лога, чтобы не спамить
+    }
+
+    const credits =
+        Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+    set((s) => ({ credits: s.credits + credits }));
+    get().addLog(
+        `🔍 ${crewMember.name}: Патруль — найдены ресурсы +${credits}₢`,
+        "info",
+    );
+    get().gainExp(crewMember, BASE_EXP_REWARDS.PATROL);
+};
+
+/**
+ * Тренировка стрелка — даёт опыт за ход, требует оружейную палубу
+ */
+const processTrainingAssignment = (
+    crewMember: CrewMember,
+    currentModule: Module,
+    get: () => GameStore,
+): void => {
+    if (currentModule.type !== "weaponbay") {
+        get().addLog(
+            `${crewMember.name}: Тренировка возможна только в оружейной палубе`,
+            "warning",
+        );
+        return;
+    }
+    get().addLog(`🎯 ${crewMember.name}: Тренировка — получен опыт`, "info");
+    get().gainExp(crewMember, BASE_EXP_REWARDS.TRAINING);
 };
 
 /**

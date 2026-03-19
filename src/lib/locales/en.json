@@ -208,7 +208,7 @@
         "firstaid": "Medkits",
         "firstaid_effect": "Protection on damage",
         "patrol": "Patrol",
-        "patrol_effect": "+info about enemy",
+        "patrol_effect": "+chance to find money",
         "research": "Research",
         "research_effect": "+100% science",
         "analyzing": "Anomaly analysis",

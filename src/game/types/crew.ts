@@ -68,6 +68,7 @@ export type CrewMemberAssignment =
     | "analysis"
     | "sabotage"
     | "merge"
+    | "training"
     | ""
     | null;
 

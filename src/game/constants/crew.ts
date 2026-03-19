@@ -143,7 +143,7 @@ export const CREW_ACTIONS: Record<
     ],
     scout: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
-        { value: "patrol", label: "Патруль", effect: "+инфо о враге" },
+        { value: "patrol", label: "Патруль", effect: "+шанс найти кредиты" },
     ],
     scientist: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
@@ -158,7 +158,14 @@ export const CREW_ACTIONS: Record<
             effect: "+данные с аномалий",
         },
     ],
-    gunner: [{ value: "", label: "ОЖИДАНИЕ", effect: null }],
+    gunner: [
+        { value: "", label: "ОЖИДАНИЕ", effect: null },
+        {
+            value: "training",
+            label: "Тренировка",
+            effect: "+1 опыт за ход",
+        },
+    ],
 };
 
 /**

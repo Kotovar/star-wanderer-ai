@@ -33,6 +33,7 @@ export const ASSIGNMENT_BASES = {
     POWER_BONUS: 5,
     NAVIGATION_CONSUMPTION: 1,
     EVADE_BONUS: 3,
+    PATROL_CREDITS_PER_LEVEL: 5,
 } as const;
 
 /** Множители и лимиты */

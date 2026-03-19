@@ -20,13 +20,14 @@ export function getTotalConsumption(state: GameState): number {
 
     // === Бонус от назначения "навигация" ===
     // Считается динамически (не накапливается в state), учитывает трейты
-    const engineIds = new Set(
+    // Навигация работает в кабине (cockpit)
+    const cockpitIds = new Set(
         modules
-            .filter((m) => m.type === "engine" && isModuleFunctional(m))
+            .filter((m) => m.type === "cockpit" && isModuleFunctional(m))
             .map((m) => m.id),
     );
     const navCrewInEngine = crew.filter(
-        (c) => c.assignment === "navigation" && engineIds.has(c.moduleId),
+        (c) => c.assignment === "navigation" && cockpitIds.has(c.moduleId),
     );
     const pilotRed = navCrewInEngine.length > 0
         ? navCrewInEngine.reduce(

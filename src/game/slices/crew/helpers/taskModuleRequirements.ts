@@ -36,6 +36,7 @@ export const TASK_MODULE_REQUIREMENTS: Record<
     // Стрелок
     targeting: ["weaponbay"],
     rapidfire: ["weaponbay"],
+    training: ["weaponbay"],
 
     // Ксеноморфы
     merge: [],
