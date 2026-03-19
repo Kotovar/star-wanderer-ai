@@ -9,6 +9,7 @@ import { PlanetSpecializationPanel } from "./PlanetSpecializationPanel";
 import { DELIVERY_GOODS } from "@/game/constants/contracts";
 import type { DeliveryGoods } from "@/game/types/contracts";
 import { TRADE_GOODS } from "@/game/constants/goods";
+import { RESEARCH_RESOURCES } from "@/game/constants";
 import type { Goods } from "@/game/types/goods";
 import { PlanetVisual } from "./PlanetVisual";
 import { getPlanetBackgroundClass } from "@/game/planets";
@@ -125,12 +126,31 @@ export function PlanetPanel() {
                                     <div className="text-[#00ff41] text-sm">
                                         {t("planet_panel.found_goods", {
                                             name: lastScoutResult.itemName,
+                                            quantity: lastScoutResult.quantity ?? 1,
                                         })}
                                     </div>
                                 )}
-                            {lastScoutResult.type === "nothing" && (
-                                <div className="text-[#888] text-sm">
-                                    {t("planet_panel.found_nothing")}
+                            {lastScoutResult.type === "nothing" &&
+                                !lastScoutResult.researchResources?.length &&
+                                !lastScoutResult.mutationName && (
+                                    <div className="text-[#888] text-sm">
+                                        {t("planet_panel.found_nothing")}
+                                    </div>
+                                )}
+                            {lastScoutResult.researchResources &&
+                                lastScoutResult.researchResources.length > 0 && (
+                                    <div className="text-[#4488ff] text-sm">
+                                        {lastScoutResult.researchResources.map((res) => {
+                                            const rd = RESEARCH_RESOURCES[res.type];
+                                            return `🔬 ${rd?.icon ?? ""} ${rd?.name ?? res.type} x${res.quantity}`;
+                                        }).join(", ")}
+                                    </div>
+                                )}
+                            {lastScoutResult.mutationName && (
+                                <div className="text-[#cc44ff] text-sm">
+                                    {t("planet_panel.scout_mutation", {
+                                        name: lastScoutResult.mutationName,
+                                    })}
                                 </div>
                             )}
                             {lastScoutResult.type === "enemy" &&

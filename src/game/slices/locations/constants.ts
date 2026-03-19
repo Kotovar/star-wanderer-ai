@@ -189,9 +189,10 @@ export const SCOUTING_CREDIT_REWARD = {
 };
 
 /**
- * Количество найденного товара при разведке
+ * Количество найденного товара при разведке: 1–3 + уровень разведчика
  */
-export const SCOUTING_TRADE_GOOD_QUANTITY = 5;
+export const SCOUTING_TRADE_GOOD_BASE_MIN = 1;
+export const SCOUTING_TRADE_GOOD_BASE_MAX = 3;
 
 // ============================================================================
 // Константы для сигналов бедствия

@@ -44,8 +44,8 @@ export const CREW_ASSIGNMENT_EXP = {
     HEAL: 10,
     /** Поддержка морали */
     MORALE: 6,
-    /** Управление энергией */
-    POWER: 5,
+    /** Разгон реактора */
+    REACTOR_OVERLOAD: 3,
     /** Навигация */
     NAVIGATION: 5,
     /** Уклонение */
@@ -62,6 +62,8 @@ export const CREW_ASSIGNMENT_EXP = {
     ANALYZING: 10,
     /** Тренировка стрелка */
     TRAINING: 3,
+    /** Научные исследования */
+    RESEARCH: 3,
 } as const;
 
 // ============================================================================

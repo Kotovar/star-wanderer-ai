@@ -62,6 +62,28 @@ export function getAnomalyResources(): {
 }
 
 /**
+ * Get research resources from scouting planets
+ */
+export function getScoutingPlanetResources(): {
+    type: ResearchResourceType;
+    quantity: number;
+}[] {
+    const resources: { type: ResearchResourceType; quantity: number }[] = [];
+
+    const roll = Math.random();
+
+    if (roll < 0.2) {
+        // 20% - Alien biology (primary find on alien planets)
+        resources.push({ type: "alien_biology", quantity: 1 });
+    } else if (roll < 0.3) {
+        // 10% - Ancient data
+        resources.push({ type: "ancient_data", quantity: 1 });
+    }
+
+    return resources;
+}
+
+/**
  * Get research resources from defeating enemies
  */
 export function getCombatLootResources(

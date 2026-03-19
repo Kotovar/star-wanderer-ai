@@ -291,7 +291,7 @@ const processPowerAssignment = (
         `⚡ ${crewMember.name}: Разгон реактора +${powerBonus}⚡`,
         "info",
     );
-    get().gainExp(crewMember, BASE_EXP_REWARDS.POWER);
+    get().gainExp(crewMember, BASE_EXP_REWARDS.REACTOR_OVERLOAD);
 };
 
 /**
@@ -312,12 +312,11 @@ const processNavigationAssignment = (
         return;
     }
 
-    // Бонус считается динамически в getTotalConsumption — здесь только лог и опыт
+    // Бонус считается динамически в getTotalConsumption — здесь только лог
     get().addLog(
         `🧭 ${crewMember.name}: Навигация -${ASSIGNMENT_BASES.NAVIGATION_CONSUMPTION}⚡ потребление`,
         "info",
     );
-    get().gainExp(crewMember, BASE_EXP_REWARDS.NAVIGATION);
 };
 
 /**
@@ -468,8 +467,10 @@ const processResearchAssignment = (
         return;
     }
 
-    // Начисляем опыт учёному
-    get().gainExp(crewMember, BASE_EXP_REWARDS.MORALE);
+    // Опыт только если идёт активное исследование
+    if (get().research.activeResearch) {
+        get().gainExp(crewMember, BASE_EXP_REWARDS.RESEARCH);
+    }
 };
 
 /**

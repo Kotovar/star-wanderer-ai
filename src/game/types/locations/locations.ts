@@ -4,6 +4,7 @@ import type { RaceId } from "../races";
 import type { StationConfig, StationName } from "../stations";
 import type { EnemyShip } from "../enemy";
 import type { BossType } from "../bosses";
+import type { ResearchResourceType } from "../research";
 
 export type AsteroidTier = 1 | 2 | 3 | 4;
 
@@ -50,7 +51,10 @@ export interface Location {
         type: "credits" | "tradeGood" | "nothing" | "enemy";
         value?: number; // For credits
         itemName?: string; // For trade goods
+        quantity?: number; // For trade goods quantity
         enemyThreat?: number; // For enemy encounter
+        mutationName?: string; // Mutation received during scouting
+        researchResources?: { type: ResearchResourceType; quantity: number }[]; // Research resources found
     }; // Result of the last scouting mission
     contracts?: Contract[];
     scoutingAvailable?: boolean;

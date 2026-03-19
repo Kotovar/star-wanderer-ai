@@ -1,3 +1,5 @@
+import type { ResearchResourceType } from "@/game/types/research";
+
 export type ScoutResult = "credits" | "enemy" | "tradeGood" | "nothing";
 
 /**
@@ -10,4 +12,10 @@ export interface ScoutingOutcome {
     value?: number;
     /** Название предмета (товар) */
     itemName?: string;
+    /** Количество найденного товара */
+    quantity?: number;
+    /** Мутация, полученная при разведке */
+    mutationName?: string;
+    /** Найденные научные ресурсы */
+    researchResources?: { type: ResearchResourceType; quantity: number }[];
 }

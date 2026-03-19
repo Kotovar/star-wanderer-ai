@@ -3,16 +3,19 @@ import type {
     GameStore,
     Location,
     ScoutingOutcome,
+    ResearchResourceType,
 } from "@/game/types";
-import { TRADE_GOODS, MUTATION_CHANCES } from "@/game/constants";
+import { TRADE_GOODS, MUTATION_CHANCES, RESEARCH_RESOURCES } from "@/game/constants";
 import {
-    SCOUTING_TRADE_GOOD_QUANTITY,
+    SCOUTING_TRADE_GOOD_BASE_MIN,
+    SCOUTING_TRADE_GOOD_BASE_MAX,
     SCOUTING_REQUIRED_VISITS,
 } from "../constants";
 import { SCOUT_BASE_EXP } from "@/game/constants/experience";
 import { addTradeGood } from "@/game/slices/ship/helpers";
 import { determineScoutingOutcome } from "./determineScoutingOutcome";
 import { giveRandomMutation } from "@/game/crew";
+import { getScoutingPlanetResources } from "@/game/research/utils";
 import { typedKeys } from "@/lib";
 
 /**
@@ -29,16 +32,30 @@ export const sendScoutingMission = (
 ): void => {
     const state = get();
 
-    // Find scout
-    const scout = state.crew.find((c) => c.profession === "scout");
-    if (!scout) {
+    // Find the highest-level scout
+    const scouts = state.crew.filter((c) => c.profession === "scout");
+    if (scouts.length === 0) {
         get().addLog("Нет разведчика!", "error");
         return;
     }
+    const scout = scouts.reduce((best, c) =>
+        (c.level ?? 1) > (best.level ?? 1) ? c : best,
+    );
 
     // Instant scouting - resolve immediately (takes 1 turn)
     const outcome = Math.random();
     const result = determineScoutingOutcome(outcome);
+
+    // Pre-compute trade good quantity so it's available for both apply and lastScoutResult
+    if (result.type === "tradeGood") {
+        result.quantity =
+            Math.floor(
+                Math.random() *
+                    (SCOUTING_TRADE_GOOD_BASE_MAX - SCOUTING_TRADE_GOOD_BASE_MIN + 1),
+            ) +
+            SCOUTING_TRADE_GOOD_BASE_MIN +
+            (scout.level ?? 1);
+    }
 
     // Give experience to scout
     get().gainExp(scout, SCOUT_BASE_EXP);
@@ -46,10 +63,17 @@ export const sendScoutingMission = (
     // Apply scouting result
     applyScoutingResult(result, set, get);
 
+    // Small chance to find research resources
+    const foundResources = applyScoutingResources(set, get);
+    if (foundResources.length > 0) {
+        result.researchResources = foundResources;
+    }
+
     // Шанс заражения чужеродными организмами при разведке
     if (Math.random() < MUTATION_CHANCES.SCOUT_INFECTION) {
         const mutationName = giveRandomMutation(scout, set);
         if (mutationName) {
+            result.mutationName = mutationName;
             get().addLog(
                 `☣️ ${scout.name} заразился чужеродными организмами при разведке: ${mutationName}!`,
                 "error",
@@ -93,7 +117,7 @@ const applyScoutingResult = (
             applyCreditReward(result.value, scoutName, set, get);
             break;
         case "tradeGood":
-            applyTradeGoodReward(result.itemName, scoutName, set, get);
+            applyTradeGoodReward(result.itemName, result.quantity ?? 1, scoutName, set, get);
             break;
         default:
             get().addLog(`Разведка: ${scoutName} ничего не нашёл`, "info");
@@ -117,9 +141,11 @@ const applyCreditReward = (
 
 /**
  * Применяет награду в виде товара
+ * Количество: 1–3 + уровень разведчика (вычислено заранее)
  */
 const applyTradeGoodReward = (
     itemName: string | undefined,
+    quantity: number,
     scoutName: string,
     set: SetState,
     get: () => GameStore,
@@ -134,10 +160,47 @@ const applyTradeGoodReward = (
     set((s) => ({
         ship: {
             ...s.ship,
-            tradeGoods: addTradeGood(s.ship.tradeGoods, goodId, SCOUTING_TRADE_GOOD_QUANTITY),
+            tradeGoods: addTradeGood(s.ship.tradeGoods, goodId, quantity),
         },
     }));
-    get().addLog(`Разведка: ${scoutName} нашёл ${itemName}!`, "info");
+    get().addLog(`Разведка: ${scoutName} нашёл ${itemName} x${quantity}!`, "info");
+};
+
+/**
+ * Применяет научные ресурсы, найденные при разведке планеты
+ */
+const applyScoutingResources = (
+    set: SetState,
+    get: () => GameStore,
+): { type: ResearchResourceType; quantity: number }[] => {
+    const resources = getScoutingPlanetResources();
+    if (resources.length === 0) return [];
+
+    set((s) => ({
+        research: {
+            ...s.research,
+            resources: {
+                ...s.research.resources,
+                ...resources.reduce(
+                    (acc, res) => ({
+                        ...acc,
+                        [res.type]: (s.research.resources[res.type] || 0) + res.quantity,
+                    }),
+                    {},
+                ),
+            },
+        },
+    }));
+
+    resources.forEach((res) => {
+        const resourceData = RESEARCH_RESOURCES[res.type];
+        get().addLog(
+            `🔬 Разведка: обнаружены образцы ${resourceData.icon} ${resourceData.name} x${res.quantity}`,
+            "info",
+        );
+    });
+
+    return resources;
 };
 
 /**
@@ -154,6 +217,9 @@ const createScoutResult = (result: ScoutingOutcome): ScoutingOutcome => ({
     type: result.type,
     value: result.type === "credits" ? result.value : undefined,
     itemName: result.type === "tradeGood" ? result.itemName : undefined,
+    quantity: result.type === "tradeGood" ? result.quantity : undefined,
+    mutationName: result.mutationName,
+    researchResources: result.researchResources,
 });
 
 /**
