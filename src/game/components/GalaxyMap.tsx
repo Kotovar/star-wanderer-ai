@@ -120,7 +120,7 @@ const DRAG_THRESHOLD = 5; // Minimum pixels to move before considering it a drag
 export function GalaxyMap() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const { t, currentLanguage } = useTranslation();
+    const { t } = useTranslation();
     const starsRef = useRef<Array<{
         x: number;
         y: number;
@@ -176,6 +176,11 @@ export function GalaxyMap() {
     );
     const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
     const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
+    const seeHostility = useGameStore((s) =>
+        s.crew.some((c) =>
+            c.traits?.some((trait) => trait.effect?.seeHostility),
+        ),
+    );
 
     // Calculate fuel cost with all modifiers for UI display
     const calculateFuelCost = useCallback((sectorId: number) => {
@@ -372,13 +377,13 @@ export function GalaxyMap() {
         artifacts,
         calculateFuelCost,
         captainLevel,
-        currentLanguage,
         currentSector,
         fuel,
         modules,
         offset.x,
         offset.y,
         sectors,
+        seeHostility,
         t,
         updateSectorPosition,
         zoom,

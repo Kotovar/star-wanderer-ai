@@ -42,6 +42,15 @@ export function getTotalEvasion(state: GameState): number {
         evasion += pilotLevel;
     }
 
+    // Бонус от трейта pilotEvasionBonus (Паранойя): только пилот в кабине
+    if (cockpitPilot) {
+        cockpitPilot.traits?.forEach((trait) => {
+            if (trait.effect?.pilotEvasionBonus) {
+                evasion += trait.effect.pilotEvasionBonus * 100;
+            }
+        });
+    }
+
     // Бонусы от артефактов
     artifacts.forEach((artifact) => {
         if (

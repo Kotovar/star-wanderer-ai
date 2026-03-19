@@ -57,18 +57,6 @@ const getMaxRaceCombatBonus = (crew: GameState["crew"]) =>
     }, 0);
 
 /**
- * Вычисляет максимальный бонус от трейтов экипажа
- */
-const getMaxTraitDamageBonus = (crew: GameState["crew"]) =>
-    crew.reduce((maxBonus, c) => {
-        const traitBonus =
-            c.traits?.reduce((traitMax, trait) => {
-                return Math.max(traitMax, trait.effect?.damageBonus || 0);
-            }, 0) || 0;
-        return Math.max(maxBonus, traitBonus);
-    }, 0);
-
-/**
  * Вычисляет бонус от артефактов на урон
  */
 const getArtifactDamageBonus = (
@@ -137,10 +125,6 @@ export function getTotalDamage(state: GameState) {
     if (ship.bonusDamage && ship.bonusDamage > 0) {
         damage.total = applyDamageBonus(damage.total, ship.bonusDamage);
     }
-
-    // === Бонусы от трейтов экипажа ===
-    const traitBonus = getMaxTraitDamageBonus(crew);
-    damage.total = applyDamageBonus(damage.total, traitBonus);
 
     // === Бонусы от артефактов ===
     const artifactBonus = getArtifactDamageBonus(artifacts, state);

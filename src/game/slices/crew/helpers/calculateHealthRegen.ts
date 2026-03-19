@@ -35,9 +35,10 @@ export const calculateHealthRegen = (
     // Процентные бонусы от трейтов (например, "Регенерация" +50%)
     crewMember.traits.forEach((trait) => {
         if (trait.effect.regenBonus) {
-            regenAmount = Math.floor(
-                regenAmount * (1 + trait.effect.regenBonus),
-            );
+            regenAmount = Math.floor(regenAmount * (1 + trait.effect.regenBonus));
+        }
+        if (trait.effect.flatRegen) {
+            regenAmount += trait.effect.flatRegen;
         }
     });
 

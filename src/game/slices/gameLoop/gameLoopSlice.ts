@@ -82,9 +82,6 @@ export const createGameLoopSlice = (
         // Обработка положительных эффектов артефактов
         processors.processArtifactEffects(state, set, get);
 
-        // Обработка мутаций
-        processors.processMutations(state, set, get);
-
         // Дезертирство экипажа
         processors.processDesertion(set, get);
 

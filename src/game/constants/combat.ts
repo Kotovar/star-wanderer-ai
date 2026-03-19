@@ -2,13 +2,15 @@
 // COMBAT MODIFIERS - Combat assignment and crew bonuses
 // ═══════════════════════════════════════════════════════════════
 
+import type { WeaponType } from "@/game/types";
+
 /**
  * Base combat constants
  */
 export const BASE_CRIT_CHANCE = 0.05; // 5% base crit chance
 export const BASE_CRIT_MULTIPLIER = 1.5; // 1.5x base crit damage
 
-export const BASE_ACCURACY: Record<string, number> = {
+export const BASE_ACCURACY: Record<WeaponType, number> = {
     laser: 0.95,
     kinetic: 0.9,
     missile: 0.8,

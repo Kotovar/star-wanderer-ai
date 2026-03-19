@@ -33,16 +33,26 @@ export const processNegativeTraits = (
             get,
         );
 
-        // moralePenalty: снижает мораль самому себе каждый ход
-        const selfMoralePenalty = crewMember.traits?.reduce(
-            (sum, t) => sum + (t.effect?.moralePenalty ?? 0),
-            0,
-        ) ?? 0;
-        if (selfMoralePenalty > 0 && crewMember.happiness > 0) {
+        // moralePenalty: снижает (или случайно меняет) мораль самому себе каждый ход
+        // number → фиксированный дрейн; [maxDrain, maxGain] → случайный диапазон
+        let selfMoraleChange = 0;
+        crewMember.traits?.forEach((t) => {
+            const mp = t.effect?.moralePenalty;
+            if (mp === undefined) return;
+            if (Array.isArray(mp)) {
+                const [maxDrain, maxGain] = mp;
+                // случайное значение от -maxGain до +maxDrain (penalty = положительное → drain)
+                const penalty = Math.floor(Math.random() * (maxDrain + maxGain + 1)) - maxGain;
+                selfMoraleChange += penalty;
+            } else {
+                selfMoraleChange += mp;
+            }
+        });
+        if (selfMoraleChange !== 0) {
             set((s) => ({
                 crew: s.crew.map((c) =>
                     c.id === crewMember.id
-                        ? { ...c, happiness: Math.max(0, c.happiness - selfMoralePenalty) }
+                        ? { ...c, happiness: Math.max(0, Math.min(c.maxHappiness ?? 100, c.happiness - selfMoraleChange)) }
                         : c,
                 ),
             }));
@@ -73,6 +83,38 @@ export const processNegativeTraits = (
                                   happiness: Math.max(
                                       0,
                                       c.happiness - teamMoralePenalty,
+                                  ),
+                              }
+                            : c,
+                    ),
+                }));
+            }
+        }
+
+        // shipMorale: снижает мораль всему экипажу корабля (кроме себя и синтетиков)
+        const shipMoralePenalty = crewMember.traits?.reduce(
+            (sum, t) => sum + (t.effect?.shipMorale ? -t.effect.shipMorale : 0),
+            0,
+        ) ?? 0;
+        if (shipMoralePenalty > 0) {
+            const shipCrewIds = new Set(
+                crew
+                    .filter(
+                        (c) =>
+                            c.id !== crewMember.id &&
+                            RACES[c.race]?.hasHappiness !== false,
+                    )
+                    .map((c) => c.id),
+            );
+            if (shipCrewIds.size > 0) {
+                set((s) => ({
+                    crew: s.crew.map((c) =>
+                        shipCrewIds.has(c.id)
+                            ? {
+                                  ...c,
+                                  happiness: Math.max(
+                                      0,
+                                      c.happiness - shipMoralePenalty,
                                   ),
                               }
                             : c,

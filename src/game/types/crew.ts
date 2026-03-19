@@ -43,7 +43,6 @@ export type MutationTraitId =
     | "chitin"
     | "telepathy"
     | "regeneration"
-    | "photosynthesis"
     | "nightmares"
     | "paranoid"
     | "unstable";
@@ -115,22 +114,20 @@ export interface CrewMember {
 }
 
 export type CrewTraitEffect = {
-    damageBonus?: number;
     combatDamageReduction?: number;
     desertionRisk?: number;
     critBonus?: number;
-    happinessDrain?: number;
     taskPenalty?: number;
-    ambushAvoid?: number;
-    foodFree?: number;
-    needsLight?: number;
     fuelConsumption?: number;
     expBonus?: number;
     regenBonus?: number;
+    flatRegen?: number;
     taskBonus?: number;
     doubleTaskEffect?: number;
     teamMorale?: number;
-    moralePenalty?: number;
+    adjacentMorale?: number;
+    shipMorale?: number;
+    moralePenalty?: number | [number, number];
     moduleMorale?: number;
     combatStartMoraleDrain?: number;
     accuracyPenalty?: number;
@@ -142,6 +139,8 @@ export type CrewTraitEffect = {
     healthPenalty?: number;
     healthBonus?: number;
     maxHappinessBonus?: number;
+    seeHostility?: number;
+    pilotEvasionBonus?: number;
 };
 
 export interface CrewTrait {

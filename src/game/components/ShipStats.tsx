@@ -13,9 +13,10 @@ import {
     BASE_CRIT_MULTIPLIER,
     BASE_ACCURACY,
     ARTIFACT_TYPES,
+    COMBAT_DAMAGE_MODIFIERS,
 } from "@/game/constants";
 import { computeAccuracyModifier } from "@/game/slices/combat/helpers/playerDamage";
-import type { GameState } from "@/game/types";
+import type { GameState, WeaponType } from "@/game/types";
 import { useFuelEfficiency } from "@/game/hooks";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getTechBonusSum } from "@/game/research";
@@ -112,6 +113,18 @@ export function ShipStats() {
     const totalConsumption = getTotalConsumption();
     const available = totalPower - totalConsumption;
     const damage = getTotalDamage();
+    // Применяем бонус стрелка для отображения (как в реальной атаке)
+    const hasGunnerInBay =
+        crew.some(
+            (c) =>
+                c.profession === "gunner" &&
+                ship.modules.some(
+                    (m) => m.type === "weaponbay" && m.id === c.moduleId,
+                ),
+        ) || crew.some((c) => c.combatAssignment === "targeting");
+    const displayDamageTotal = hasGunnerInBay
+        ? Math.floor(damage.total * COMBAT_DAMAGE_MODIFIERS.GUNNER_BONUS)
+        : damage.total;
     const crewCapacity = getCrewCapacity();
 
     // Calculate hull stats
@@ -145,7 +158,7 @@ export function ShipStats() {
     // COMBAT STATS CALCULATION
     // ═══════════════════════════════════════════════════════════════
 
-    // Calculate total crit chance (base + artifacts)
+    // Calculate total crit chance (base + artifacts + traits)
     let totalCritChance = BASE_CRIT_CHANCE;
     const criticalMatrix = findActiveArtifact(
         artifacts,
@@ -155,6 +168,18 @@ export function ShipStats() {
     if (criticalMatrix) {
         totalCritChance += getArtifactEffectValue(criticalMatrix, gameState);
     }
+
+    // critBonus от трейтов: только стрелок в оружейном отсеке
+    const weaponBayIds = new Set(
+        ship.modules.filter((m) => m.type === "weaponbay").map((m) => m.id),
+    );
+    crew.forEach((c) => {
+        if (c.profession === "gunner" && weaponBayIds.has(c.moduleId)) {
+            c.traits?.forEach((trait) => {
+                totalCritChance += trait.effect?.critBonus ?? 0;
+            });
+        }
+    });
 
     // Calculate crit damage multiplier (base + artifacts)
     let totalCritDamage = BASE_CRIT_MULTIPLIER;
@@ -168,9 +193,31 @@ export function ShipStats() {
     }
 
     // Accuracy — shared calculation with combat logic
+    // Base accuracy: average over actually equipped weapon types
+    const equippedWeaponTypes = new Set(
+        ship.modules
+            .filter(
+                (m) =>
+                    m.type === "weaponbay" &&
+                    !m.disabled &&
+                    !m.manualDisabled &&
+                    m.health > 0,
+            )
+            .flatMap((m) => m.weapons ?? [])
+            .filter(Boolean)
+            .map((w) => w.type),
+    );
+    const relevantAccuracies = (
+        Object.entries(BASE_ACCURACY) as [WeaponType, number][]
+    ).filter(([type]) => equippedWeaponTypes.has(type));
     const baseAccuracy =
-        (BASE_ACCURACY.laser + BASE_ACCURACY.kinetic + BASE_ACCURACY.missile) /
-        3;
+        relevantAccuracies.length > 0
+            ? relevantAccuracies.reduce((s, [, v]) => s + v, 0) /
+              relevantAccuracies.length
+            : (BASE_ACCURACY.laser +
+                  BASE_ACCURACY.kinetic +
+                  BASE_ACCURACY.missile) /
+              3;
     const accuracyModifier = computeAccuracyModifier({
         ship,
         crew,
@@ -262,9 +309,7 @@ export function ShipStats() {
                     <span className="text-[#ffb000]">
                         {t("ship_stats.power_generation")}:
                     </span>
-                    <span className="text-[#00ff41]">
-                        {totalPower}
-                    </span>
+                    <span className="text-[#00ff41]">{totalPower}</span>
                 </div>
                 <div className="flex justify-between mb-2 text-sm">
                     <span className="text-[#ffb000]">
@@ -296,7 +341,7 @@ export function ShipStats() {
                     <span className="text-[#ffb000]">
                         {t("ship_stats.damage")}:
                     </span>
-                    <span className="text-[#00ff41]">{damage.total}</span>
+                    <span className="text-[#00ff41]">{displayDamageTotal}</span>
                 </div>
                 {damage.kinetic > 0 && (
                     <div className="flex justify-between text-sm text-[#888]">

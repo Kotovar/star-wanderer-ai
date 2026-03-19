@@ -506,6 +506,9 @@ export function SectorMap() {
     const completedLocations = useGameStore((s) => s.completedLocations);
     const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
     const canScanObject = useGameStore((s) => s.canScanObject);
+    const hasTelepathy = useGameStore((s) =>
+        s.crew.some((c) => c.traits?.some((t) => t.effect?.seeHostility)),
+    );
     const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
     const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
     const { t } = useTranslation();
@@ -644,8 +647,8 @@ export function SectorMap() {
             } else if (loc.type === "planet") {
                 drawPlanet(ctx, x, y, loc, completed);
             } else if (loc.type === "enemy") {
-                // Without scanner AND not revealed - show as unknown
-                if (!canScan && !isRevealed) {
+                // Without scanner AND not revealed - show as unknown (unless telepathy)
+                if (!canScan && !isRevealed && !hasTelepathy) {
                     drawUnknownShip(ctx, x, y, completed);
                 } else {
                     drawEnemy(ctx, x, y, loc, completed);
@@ -657,8 +660,8 @@ export function SectorMap() {
                     drawUnknown(ctx, x, y, completed);
                 }
             } else if (loc.type === "friendly_ship") {
-                // Without scanner AND not revealed - show as unknown
-                if (!canScan && !isRevealed) {
+                // Without scanner AND not revealed - show as unknown (unless telepathy)
+                if (!canScan && !isRevealed && !hasTelepathy) {
                     drawUnknownShip(ctx, x, y, completed);
                 } else {
                     drawFriendlyShip(ctx, x, y, loc, completed);
@@ -675,7 +678,7 @@ export function SectorMap() {
                 // Distress signals are always visible (SOS beacon)
                 drawDistressSignal(ctx, x, y, loc, completed);
             } else if (loc.type === "boss") {
-                if (canScan || isRevealed) {
+                if (canScan || isRevealed || hasTelepathy) {
                     drawAncientBoss(ctx, x, y, loc, completed);
                 } else {
                     drawUnknownShip(ctx, x, y, completed);
@@ -690,7 +693,7 @@ export function SectorMap() {
 
             // Boss shows as "Unknown ship" (not "Unknown object") because it uses ship icon
             const isUnknownBoss =
-                loc.type === "boss" && !canScan && !isRevealed && !completed;
+                loc.type === "boss" && !canScan && !isRevealed && !completed && !hasTelepathy;
 
             const displayName = isUnknownBoss
                 ? t("sector_map.unknown_ship")
@@ -698,12 +701,13 @@ export function SectorMap() {
                   ? t("sector_map.unknown_object")
                   : getLocationName(loc.name, t);
 
-            // Also hide enemy/friendly ship names without scanner and not revealed
+            // Also hide enemy/friendly ship names without scanner and not revealed (unless telepathy)
             const isUnknownShip =
                 ["enemy", "friendly_ship"].includes(loc.type) &&
                 !canScan &&
                 !isRevealed &&
-                !completed;
+                !completed &&
+                !hasTelepathy;
 
             // Check for fully explored empty planet
             const isExploredEmptyPlanet =
@@ -746,7 +750,7 @@ export function SectorMap() {
         });
 
         ctx.restore();
-    }, [canScanObject, completedLocations, currentSector, offset, t, zoom]);
+    }, [canScanObject, completedLocations, currentSector, hasTelepathy, offset, t, zoom]);
 
     // Initialize canvas and background
     useEffect(() => {

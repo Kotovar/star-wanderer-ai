@@ -167,6 +167,22 @@ function rollCrit(state: GameState, get: () => GameStore): CritResult {
         critMultiplier += getArtifactEffectValue(overloadMatrix, state);
     }
 
+    // critBonus от трейта: только стрелок в оружейном отсеке
+    const weaponBayIds = new Set(
+        state.ship.modules
+            .filter((m) => m.type === "weaponbay")
+            .map((m) => m.id),
+    );
+    state.crew.forEach((c) => {
+        if (c.profession === "gunner" && weaponBayIds.has(c.moduleId)) {
+            c.traits?.forEach((trait) => {
+                if (trait.effect?.critBonus) {
+                    critChance += trait.effect.critBonus;
+                }
+            });
+        }
+    });
+
     const isCrit = Math.random() < critChance;
 
     if (isCrit) {
