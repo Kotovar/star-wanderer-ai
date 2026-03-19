@@ -1066,7 +1066,11 @@
         "remove_weapon_title": "Remove Weapon",
         "remove_weapon_desc": "Remove a weapon from a weapon bay and recover 50% of its value",
         "remove_weapon_button": "REMOVE",
-        "in_bay": "Bay"
+        "in_bay": "Bay",
+        "mutation_cure_title": "🧬 Mutation Treatment",
+        "mutation_cure_no_mutations": "✓ No mutations in crew members",
+        "mutation_cure_cost": "Cost: {{cost}}₢ per mutation",
+        "mutation_cure_button": "CURE"
     },
     "combat": {
         "no_weapon_bay": "⚠️ No weapon bay or weapons! Cannot attack.",

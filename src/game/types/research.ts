@@ -44,7 +44,8 @@ export type TechnologyId =
     | "artifact_study"
     | "relic_chamber"
     | "ancient_resonance"
-    | "artifact_mastery";
+    | "artifact_mastery"
+    | "xenobiology";
 
 /**
  * Research tier - technology level

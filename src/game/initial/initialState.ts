@@ -10,7 +10,7 @@ import { buildCrewMember } from "@/game/crew/buildCrewMember";
 const INITIAL_TURN = 1;
 
 /** Начальное количество кредитов игрока */
-const INITIAL_CREDITS = 1000;
+const INITIAL_CREDITS = 10000;
 
 /**
  * Начальная вместимость экипажа.

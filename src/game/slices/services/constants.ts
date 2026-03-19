@@ -13,6 +13,12 @@ export const REPAIR_CONFIG = {
 } as const;
 
 /**
+ * Стоимость лечения одной мутации на медицинской станции
+ * Требуется технология "Ксенобиология"
+ */
+export const MUTATION_CURE_PRICE = 5000;
+
+/**
  * Параметры лечения экипажа
  */
 export const HEAL_CONFIG = {

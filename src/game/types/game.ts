@@ -161,6 +161,7 @@ export interface GameStationAndPlanets {
     buyItem: (item: ShopItem, targetModuleId?: number) => void;
     repairShip: () => void;
     healCrew: () => void;
+    cureMutation: (crewId: number, traitId: string) => void;
     buyTradeGood: (goodId: Goods, quantity?: number) => void;
     sellTradeGood: (goodId: Goods, quantity?: number) => void;
     installModuleFromCargo: (cargoIndex: number, x: number, y: number) => void;

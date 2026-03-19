@@ -27,9 +27,11 @@ export const TraitRow = ({ name, desc, type, bold, itemKey }: TraitRowProps) => 
     const color =
         type === "negative"
             ? "text-[#ff0040]"
-            : type === "neutral"
-              ? "text-[#888]"
-              : "text-[#00ff41]";
+            : type === "mutation"
+              ? "text-[#cc44ff]"
+              : type === "neutral"
+                ? "text-[#888]"
+                : "text-[#00ff41]";
     return (
         <div key={itemKey} className={`text-[10px] ${color}`}>
             {bold ? <span className="font-bold">{name}</span> : name}: {desc}

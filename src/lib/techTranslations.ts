@@ -47,6 +47,11 @@ export const TECH_TRANSLATIONS: Record<
         // ═══════════════════════════════════════════════════════════════
         // TIER 2 - Advanced Technologies
         // ═══════════════════════════════════════════════════════════════
+        xenobiology: {
+            name: "Ксенобиология",
+            description:
+                "Изучение инопланетной биологии позволяет лечить мутации экипажа на медицинских станциях.",
+        },
         ion_drive: {
             name: "Ионная пропульсия",
             description:
@@ -219,6 +224,11 @@ export const TECH_TRANSLATIONS: Record<
         // ═══════════════════════════════════════════════════════════════
         // TIER 2 - Advanced Technologies
         // ═══════════════════════════════════════════════════════════════
+        xenobiology: {
+            name: "Xenobiology",
+            description:
+                "Study of alien biology enables treating crew mutations at medical stations.",
+        },
         ion_drive: {
             name: "Ion Propulsion",
             description:

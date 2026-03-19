@@ -7,6 +7,7 @@ import {
     installModuleFromCargo as installModuleFromCargoAction,
     scrapModule as scrapModuleAction,
     removeWeapon as removeWeaponAction,
+    cureMutation as cureMutationAction,
     type ServiceCostResult,
 } from "./helpers";
 
@@ -64,6 +65,13 @@ export interface ServicesSlice {
      * @param weaponIndex - Индекс слота оружия
      */
     removeWeapon: (moduleId: number, weaponIndex: number) => void;
+
+    /**
+     * Лечит мутацию у члена экипажа (требует технологию "Ксенобиология")
+     * @param crewId - ID члена экипажа
+     * @param traitId - ID мутации для лечения
+     */
+    cureMutation: (crewId: number, traitId: string) => void;
 }
 
 /**
@@ -98,4 +106,7 @@ export const createServicesSlice = (
 
     removeWeapon: (moduleId, weaponIndex) =>
         removeWeaponAction(moduleId, weaponIndex, set, get),
+
+    cureMutation: (crewId, traitId) =>
+        cureMutationAction(crewId, traitId, set, get),
 });

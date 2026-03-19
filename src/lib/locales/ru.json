@@ -1066,7 +1066,11 @@
         "remove_weapon_title": "Снятие оружия",
         "remove_weapon_desc": "Снимите оружие с боевой палубы и получите 50% его стоимости",
         "remove_weapon_button": "СНЯТЬ",
-        "in_bay": "Палуба"
+        "in_bay": "Палуба",
+        "mutation_cure_title": "🧬 Лечение мутаций",
+        "mutation_cure_no_mutations": "✓ Нет мутаций у членов экипажа",
+        "mutation_cure_cost": "Стоимость: {{cost}}₢ за мутацию",
+        "mutation_cure_button": "ВЫЛЕЧИТЬ"
     },
     "combat": {
         "no_weapon_bay": "⚠️ Нет оружейной палубы или оружия! Невозможно атаковать.",

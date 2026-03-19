@@ -108,7 +108,7 @@ export function EventDisplay() {
                             <Button
                                 onClick={handleSkipTurn}
                                 disabled={isSkipping}
-                                className={`bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${
+                                className={` bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${
                                     isSkipping
                                         ? "scale-95 bg-[#00ff41] text-[#050810]"
                                         : ""
@@ -157,7 +157,7 @@ export function EventDisplay() {
                             <Button
                                 onClick={handleSkipTurn}
                                 disabled={isSkipping}
-                                className={`bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                className={`cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
                                     isSkipping
                                         ? "scale-95 bg-[#00ff41] text-[#050810]"
                                         : ""

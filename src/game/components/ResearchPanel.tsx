@@ -39,6 +39,7 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
     artifact_study: [0, 8],
     automated_repair: [0, 9.5], // shifted +2 to make room for artifact branch
     medbay_upgrade: [0, 11.5],
+    xenobiology: [1, 12.5],
     // T2 — col 1
     shield_booster: [1, 0],
     ion_drive: [1, 1.75],
@@ -57,12 +58,12 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
     deep_scan: [2, 6.8],
     ancient_resonance: [2, 8],
     nanite_hull: [2, 9.5],
-    neural_interface: [2, 10.9],
-    genetic_enhancement: [2, 12.2],
+    neural_interface: [2, 11.5],
+    genetic_enhancement: [2, 12.5],
     // T4 — col 3.5
     void_resonance: [3, 1],
     artifact_mastery: [3, 8],
-    stellar_genetics: [3, 11.6],
+    stellar_genetics: [3, 12],
     // T5 — col 4.5 / 5.5
     ancient_power: [4, 5.25],
     warp_drive: [5, 5.25],
@@ -769,7 +770,10 @@ export function ResearchPanel() {
         let scientistBonus = 0;
         const cappedScientists = scientists
             .sort((a: CrewMember, b: CrewMember) => {
-                if ((a.assignment === "research") !== (b.assignment === "research"))
+                if (
+                    (a.assignment === "research") !==
+                    (b.assignment === "research")
+                )
                     return a.assignment === "research" ? -1 : 1;
                 return (b.level ?? 1) - (a.level ?? 1);
             })
@@ -830,7 +834,10 @@ export function ResearchPanel() {
                     >
                         {hasLab
                             ? scientists.length > 0
-                                ? t("research.lab_status", { count: scientists.length, science: sciencePerTurn })
+                                ? t("research.lab_status", {
+                                      count: scientists.length,
+                                      science: sciencePerTurn,
+                                  })
                                 : t("research.no_scientists")
                             : t("research.lab_required")}
                     </div>

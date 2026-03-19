@@ -43,6 +43,12 @@ const getScrapValue = (moduleType: ModuleType, moduleLevel: number): number => {
     return Math.floor(Math.min(price, 5000) * 0.7);
 };
 
+interface MutationCrewMember {
+    id: number;
+    name: string;
+    mutations: Array<{ id: string; name: string }>;
+}
+
 interface ServicesTabProps {
     fuel: number;
     maxFuel: number;
@@ -55,6 +61,7 @@ interface ServicesTabProps {
     removeWeapon: (moduleId: number, weaponIndex: number) => void;
     installModuleFromCargo: (cargoIndex: number, x: number, y: number) => void;
     installCraftedWeapon: (cargoIndex: number, weaponBayId: number) => void;
+    cureMutation: (crewId: number, traitId: string) => void;
     credits: number;
     ship: {
         modules: Module[];
@@ -81,11 +88,14 @@ interface ServicesTabProps {
     // Dynamic service costs
     repairCost: number;
     healCost: number;
+    mutationCureCost: number;
     canRepair: boolean;
     canHeal: boolean;
     // Station type flags
     allowsCrewHeal: boolean;
     allowsModuleInstall: boolean;
+    allowsMutationCure: boolean;
+    crewWithMutations: MutationCrewMember[];
 }
 
 export function ServicesTab({
@@ -100,15 +110,19 @@ export function ServicesTab({
     removeWeapon,
     installModuleFromCargo,
     installCraftedWeapon,
+    cureMutation,
     credits,
     ship,
     crew,
     repairCost,
     healCost,
+    mutationCureCost,
     canRepair,
     canHeal,
     allowsCrewHeal,
     allowsModuleInstall,
+    allowsMutationCure,
+    crewWithMutations,
 }: ServicesTabProps) {
     const fuelNeeded = maxFuel - fuel;
 
@@ -136,6 +150,14 @@ export function ServicesTab({
                     healCost={healCost}
                     canHeal={canHeal}
                     onHeal={healCrew}
+                />
+            )}
+            {allowsMutationCure && (
+                <MutationCureSection
+                    credits={credits}
+                    mutationCureCost={mutationCureCost}
+                    crewWithMutations={crewWithMutations}
+                    onCure={cureMutation}
                 />
             )}
             <ScrapModuleSection ship={ship} crew={crew} onScrap={scrapModule} />
@@ -315,6 +337,72 @@ function HealSection({
                 >
                     {t("services.heal_button")}
                 </Button>
+            </div>
+        </div>
+    );
+}
+
+function MutationCureSection({
+    credits,
+    mutationCureCost,
+    crewWithMutations,
+    onCure,
+}: {
+    credits: number;
+    mutationCureCost: number;
+    crewWithMutations: MutationCrewMember[];
+    onCure: (crewId: number, traitId: string) => void;
+}) {
+    const { t } = useTranslation();
+
+    if (crewWithMutations.length === 0) {
+        return (
+            <div className="bg-[rgba(0,255,136,0.05)] border border-[#00ff88] p-4">
+                <div className="text-[#00ff88] font-bold mb-2">
+                    {t("services.mutation_cure_title")}
+                </div>
+                <div className="text-sm text-[#888]">
+                    {t("services.mutation_cure_no_mutations")}
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="bg-[rgba(0,255,136,0.05)] border border-[#00ff88] p-4">
+            <div className="text-[#00ff88] font-bold mb-1">
+                {t("services.mutation_cure_title")}
+            </div>
+            <div className="text-xs text-[#888] mb-3">
+                {t("services.mutation_cure_cost", { cost: mutationCureCost })}
+            </div>
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+                {crewWithMutations.map((member) => (
+                    <div key={member.id}>
+                        <div className="text-xs text-[#00d4ff] font-bold mb-1">
+                            {member.name}
+                        </div>
+                        <div className="space-y-1">
+                            {member.mutations.map((mutation) => (
+                                <div
+                                    key={mutation.id}
+                                    className="flex justify-between items-center bg-[rgba(0,0,0,0.3)] border border-[#00ff88] p-2"
+                                >
+                                    <span className="text-xs text-[#ffb000]">
+                                        ☣️ {mutation.name}
+                                    </span>
+                                    <Button
+                                        disabled={credits < mutationCureCost}
+                                        onClick={() => onCure(member.id, mutation.id)}
+                                        className="bg-transparent border-2 border-[#00ff88] text-[#00ff88] hover:bg-[#00ff88] hover:text-[#050810] uppercase text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {t("services.mutation_cure_button")}
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );

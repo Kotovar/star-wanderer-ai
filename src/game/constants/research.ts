@@ -227,6 +227,33 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
     // TIER 2 - Advanced Technologies (scienceCost: 150-250)
     // ═══════════════════════════════════════════════════════════════
 
+    // Biology
+    xenobiology: {
+        id: "xenobiology",
+        name: "Ксенобиология",
+        description:
+            "Изучение инопланетной биологии позволяет лечить мутации экипажа на медицинских станциях.",
+        tier: 2,
+        category: "biology",
+        prerequisites: ["medbay_upgrade"],
+        resources: { alien_biology: 5, rare_minerals: 3 },
+        credits: 500,
+        scienceCost: 200,
+        bonuses: [
+            {
+                type: "special_ability",
+                value: 1,
+                description:
+                    "Разблокирует лечение мутаций на медицинских станциях",
+            },
+        ],
+        icon: "🧬",
+        color: "#00ff88",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
     ion_drive: {
         id: "ion_drive",
         name: "Ионный двигатель",
@@ -665,7 +692,7 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
             "Биологические улучшения увеличивают здоровье экипажа на 30%.",
         tier: 3,
         category: "biology",
-        prerequisites: ["crew_training"],
+        prerequisites: ["xenobiology"],
         resources: { alien_biology: 15, quantum_crystals: 1 },
         credits: 750,
         scienceCost: 400,

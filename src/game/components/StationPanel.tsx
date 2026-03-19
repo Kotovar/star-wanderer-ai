@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useGameStore } from "../store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RACES } from "../constants/races";
+import { MUTATION_CURE_PRICE } from "../slices/services/constants";
 import type {
     RaceId,
     Contract,
@@ -48,6 +49,8 @@ export function StationPanel() {
     const buyItem = useGameStore((s) => s.buyItem);
     const repairShip = useGameStore((s) => s.repairShip);
     const healCrew = useGameStore((s) => s.healCrew);
+    const cureMutation = useGameStore((s) => s.cureMutation);
+    const researchedTechs = useGameStore((s) => s.research.researchedTechs);
     const scrapModule = useGameStore((s) => s.scrapModule);
     const removeWeapon = useGameStore((s) => s.removeWeapon);
     const installModuleFromCargo = useGameStore(
@@ -85,6 +88,8 @@ export function StationPanel() {
     const allowsCraft = stationConfig?.allowsCraft ?? true;
     const allowsModuleInstall = stationConfig?.allowsModuleInstall ?? true;
     const allowsCrewHeal = stationConfig?.allowsCrewHeal ?? true;
+    const allowsMutationCure =
+        allowsCrewHeal && researchedTechs.includes("xenobiology");
 
     const stationItems = useMemo(
         () =>
@@ -94,6 +99,26 @@ export function StationPanel() {
                 currentLocation?.stationConfig,
             ),
         [stationId, sectorTier, currentLocation?.stationConfig],
+    );
+
+    const crewWithMutations = useMemo(
+        () =>
+            crew
+                .map((c) => ({
+                    id: c.id,
+                    name: c.name,
+                    mutations: (c.traits ?? [])
+                        .filter(
+                            (trait: CrewTrait) =>
+                                trait.type === "mutation" && trait.id !== null,
+                        )
+                        .map((trait: CrewTrait) => ({
+                            id: trait.id ?? "",
+                            name: trait.name,
+                        })),
+                }))
+                .filter((c) => c.mutations.length > 0),
+        [crew],
     );
 
     const dominantRace = currentLocation?.dominantRace;
@@ -285,6 +310,7 @@ export function StationPanel() {
                         removeWeapon={removeWeapon}
                         installModuleFromCargo={installModuleFromCargo}
                         installCraftedWeapon={installCraftedWeapon}
+                        cureMutation={cureMutation}
                         credits={credits}
                         ship={{
                             ...ship,
@@ -294,10 +320,13 @@ export function StationPanel() {
                         crew={crew}
                         repairCost={getRepairCost().cost}
                         healCost={getHealCost().cost}
+                        mutationCureCost={MUTATION_CURE_PRICE}
                         canRepair={canRepairShip()}
                         canHeal={canHealCrew()}
                         allowsCrewHeal={allowsCrewHeal}
                         allowsModuleInstall={allowsModuleInstall}
+                        allowsMutationCure={allowsMutationCure}
+                        crewWithMutations={crewWithMutations}
                     />
                 </TabsContent>
                 {allowsCraft && (
