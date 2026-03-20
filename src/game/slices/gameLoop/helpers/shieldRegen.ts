@@ -93,16 +93,17 @@ const getArtifactRegenBonus = (
     return { multiplier, logs };
 };
 
+/** Множитель регенерации щитов во время боя (замедлено вдвое) */
+const COMBAT_SHIELD_REGEN_MULTIPLIER = 0.5;
+
 /**
- * Регенерация щитов (только вне боя)
+ * Регенерация щитов (и в бою, и вне боя; в бою — вдвое медленнее)
  */
 export const regenerateShields = (
     state: GameState,
     get: () => GameStore,
     set: SetState,
 ): void => {
-    if (state.currentCombat) return;
-
     const oldShields = state.ship.shields;
     if (oldShields >= state.ship.maxShields) return;
 
@@ -123,9 +124,12 @@ export const regenerateShields = (
           )
         : state.ship.maxShields;
 
+    // В бою регенерация вдвое медленнее
+    const combatPenalty = state.currentCombat ? COMBAT_SHIELD_REGEN_MULTIPLIER : 1;
+
     // Применяем процентные бонусы к базовой регенерации
     const totalMultiplier =
-        1 + raceMultiplier + artifactMultiplier + mergeMultiplier;
+        (1 + raceMultiplier + artifactMultiplier + mergeMultiplier) * combatPenalty;
     const totalRegen = Math.floor(baseRegen * totalMultiplier);
 
     // Применяем регенерацию
