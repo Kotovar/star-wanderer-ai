@@ -31,6 +31,7 @@ export function ShipStats() {
     const getTotalConsumption = useGameStore((s) => s.getTotalConsumption);
     const getTotalDamage = useGameStore((s) => s.getTotalDamage);
     const getCrewCapacity = useGameStore((s) => s.getCrewCapacity);
+    const getOxygenCapacity = useGameStore((s) => s.getOxygenCapacity);
     const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
     const captain = useGameStore((s) =>
         s.crew.find((c) => c.profession === "pilot"),
@@ -294,6 +295,20 @@ export function ShipStats() {
                     }
                 >
                     {crew.length}/{crewCapacity}
+                </span>
+            </div>
+            <div className="flex justify-between mb-2 text-sm">
+                <span className="text-[#ffb000]">
+                    {t("ship_stats.oxygen")}:
+                </span>
+                <span
+                    className={
+                        crew.filter((c) => RACES[c.race]?.requiresOxygen !== false).length <= getOxygenCapacity()
+                            ? "text-[#00ff41]"
+                            : "text-[#ff0040]"
+                    }
+                >
+                    {crew.filter((c) => RACES[c.race]?.requiresOxygen !== false).length}/{getOxygenCapacity()}
                 </span>
             </div>
             <div className="flex justify-between mb-2 text-sm">
@@ -564,20 +579,6 @@ export function ShipStats() {
                 </div>
             </div>
 
-            <div className="flex justify-between text-sm">
-                <span className="text-[#ffb000]">
-                    {t("ship_stats.oxygen")}:
-                </span>
-                <span
-                    className={
-                        crew.length <= crewCapacity
-                            ? "text-[#00ff41]"
-                            : "text-[#ff0040]"
-                    }
-                >
-                    {crew.length}/{crewCapacity}
-                </span>
-            </div>
         </div>
     );
 }

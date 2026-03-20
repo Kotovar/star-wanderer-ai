@@ -112,6 +112,7 @@ export interface GameActions {
         total: number;
     };
     getCrewCapacity: () => number;
+    getOxygenCapacity: () => number;
     getFuelCapacity: () => number;
     getFuelEfficiency: () => number;
     getDrillLevel: () => number;

@@ -1,25 +1,12 @@
 import type { GameState } from "@/game/types/game";
-import { getActiveModules } from "@/game/modules/utils";
-import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 
 /**
  * Вычисляет максимальную вместимость экипажа корабля
- * Суммирует oxygen всех активных модулей жизнеобеспечения
+ * Равно числу модулей на корабле: каждый модуль — 1 место в команде
  *
  * @param state - Текущее состояние игры
- * @returns Общая вместимость экипажа
+ * @returns Количество мест для экипажа
  */
 export const getCrewCapacity = (state: GameState) => {
-    const lifesupport = getActiveModules(state.ship.modules, "lifesupport");
-    let capacity = lifesupport.reduce((sum, m) => sum + (m.oxygen ?? 0), 0);
-
-    // === Бонус от сращивания ксеноморфов ===
-    const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);
-    if (mergeBonus.oxygenEfficiency) {
-        capacity = Math.floor(
-            capacity * (1 + mergeBonus.oxygenEfficiency / 100),
-        );
-    }
-
-    return capacity;
+    return state.ship.modules.length;
 };

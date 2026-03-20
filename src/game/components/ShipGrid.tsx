@@ -11,6 +11,17 @@ import { getModuleTranslation } from "@/lib/moduleTranslations";
 
 const CELL_SIZE = 100;
 
+// Health bar geometry (shared between HealthBar and CrewIcons)
+const HEALTH_BAR_BOTTOM_OFFSET = 15; // px from module bottom to health bar top
+const HEALTH_BAR_HEIGHT = 5;
+const HEALTH_BAR_SIDE_PADDING = 10; // x offset from module edge
+
+// Crew icon layout
+const CREW_ICON_SIZE = 16;
+const CREW_ICON_GAP = 3;
+const CREW_ICON_PADDING = 8; // horizontal padding inside module
+const CREW_ICON_HEALTH_BAR_MARGIN = 3; // gap between icon rows and health bar
+
 export function ShipGrid() {
     const ship = useGameStore((s) => s.ship);
     const modules = useGameStore((s) => s.ship.modules);
@@ -292,7 +303,7 @@ function ModuleRenderer({
             {module.health < 30 && <DamageOverlay x={x} y={y} w={w} h={h} />}
 
             {crewInModule.length > 0 && (
-                <CrewIcons crew={crewInModule} x={x} y={y} h={h} />
+                <CrewIcons crew={crewInModule} x={x} y={y} w={w} h={h} />
             )}
         </g>
     );
@@ -362,24 +373,24 @@ function HealthBar({
     w: number;
     h: number;
 }) {
-    const healthBarWidth = w - 20;
+    const healthBarWidth = w - HEALTH_BAR_SIDE_PADDING * 2;
     const healthWidth =
         (module.health / (module.maxHealth || 100)) * healthBarWidth;
 
     return (
         <>
             <rect
-                x={x + 10}
-                y={y + h - 15}
+                x={x + HEALTH_BAR_SIDE_PADDING}
+                y={y + h - HEALTH_BAR_BOTTOM_OFFSET}
                 width={healthBarWidth}
-                height={5}
+                height={HEALTH_BAR_HEIGHT}
                 fill="#ff0040"
             />
             <rect
-                x={x + 10}
-                y={y + h - 15}
+                x={x + HEALTH_BAR_SIDE_PADDING}
+                y={y + h - HEALTH_BAR_BOTTOM_OFFSET}
                 width={healthWidth}
-                height={5}
+                height={HEALTH_BAR_HEIGHT}
                 fill={module.health > 50 ? "#00ff41" : "#ffb000"}
             />
         </>
@@ -460,29 +471,37 @@ function CrewIcons({
     crew,
     x,
     y,
+    w,
     h,
 }: {
     crew: CrewMember[];
     x: number;
     y: number;
+    w: number;
     h: number;
 }) {
-    const iconSize = 18;
-    const startX = x + 10; // Same offset as health bar
-    // Position above health bar (health bar is at y + h - 15)
-    const startY = y + h - iconSize - 20;
+    const iconsPerRow = Math.max(1, Math.floor((w - CREW_ICON_PADDING * 2) / (CREW_ICON_SIZE + CREW_ICON_GAP)));
+    const healthBarOffset = HEALTH_BAR_BOTTOM_OFFSET + CREW_ICON_HEALTH_BAR_MARGIN;
+    const rowHeight = CREW_ICON_SIZE + CREW_ICON_GAP;
+    const rows = Math.ceil(crew.length / iconsPerRow);
 
     return (
         <>
-            {crew.map((c, idx) => (
-                <CrewIcon
-                    key={c.id}
-                    crewMember={c}
-                    x={startX + idx * (iconSize + 4)}
-                    y={startY}
-                    size={iconSize}
-                />
-            ))}
+            {crew.map((c, idx) => {
+                const col = idx % iconsPerRow;
+                const row = Math.floor(idx / iconsPerRow);
+                const iconX = x + CREW_ICON_PADDING + col * (CREW_ICON_SIZE + CREW_ICON_GAP);
+                const iconY = y + h - healthBarOffset - rowHeight * (rows - row);
+                return (
+                    <CrewIcon
+                        key={c.id}
+                        crewMember={c}
+                        x={iconX}
+                        y={iconY}
+                        size={CREW_ICON_SIZE}
+                    />
+                );
+            })}
         </>
     );
 }

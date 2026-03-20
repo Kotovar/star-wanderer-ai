@@ -3,6 +3,7 @@ export * from "./getTotalEvasion";
 export * from "./getTotalConsumption";
 export * from "./getTotalPower";
 export * from "./getCrewCapacity";
+export * from "./getOxygenCapacity";
 export * from "./getFuelCapacity";
 export * from "./getFuelEfficiency";
 export * from "./getDrillLevel";

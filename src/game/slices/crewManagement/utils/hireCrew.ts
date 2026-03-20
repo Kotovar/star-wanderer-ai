@@ -137,11 +137,6 @@ const validateHireCrew = (state: GameStore, price: number): HireValidation => {
         return { canHire: false, error: "Недостаточно кредитов!" };
     }
 
-    // Проверка места
-    if (state.crew.length >= state.getCrewCapacity()) {
-        return { canHire: false, error: "Нет места!" };
-    }
-
     return { canHire: true };
 };
 

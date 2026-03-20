@@ -47,8 +47,8 @@ export function CrewTab({
         <>
             <div className="flex flex-col gap-2.5 max-h-[55vh] overflow-y-auto pr-1">
                 {!hasSpace && (
-                    <div className="text-[#ff0040] text-sm p-3 border border-[#ff0040] bg-[rgba(255,0,64,0.1)]">
-                        ⚠ {t("station.no_space")}
+                    <div className="text-[#ffb000] text-sm p-3 border border-[#ffb000] bg-[rgba(255,176,0,0.1)]">
+                        {t("station.overcrowded_warning")}
                     </div>
                 )}
 
@@ -116,7 +116,6 @@ interface CrewCardProps {
 
 function CrewCard({
     crew,
-    hasSpace,
     credits,
     locationId,
     onHire,
@@ -141,7 +140,7 @@ function CrewCard({
                     )}
                 </div>
                 <Button
-                    disabled={!hasSpace || credits < crew.price}
+                    disabled={credits < crew.price}
                     onClick={() => onHire(crew.member, crew.price, locationId)}
                     className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs ml-2"
                 >
@@ -354,14 +353,13 @@ interface CrewDetailDialogProps {
 
 function CrewDetailDialog({
     crew,
-    hasSpace,
     credits,
     locationId,
     onHire,
     onClose,
 }: CrewDetailDialogProps) {
     const race = RACES[crew.member.race];
-    const canHire = hasSpace && credits >= crew.price;
+    const canHire = credits >= crew.price;
     const { t } = useTranslation();
 
     return (

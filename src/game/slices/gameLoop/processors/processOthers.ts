@@ -7,6 +7,12 @@ import { RACES } from "@/game/constants/races";
 /** Штраф к настроению при нехватке энергии */
 const POWER_SHORTAGE_HAPPINESS_PENALTY = 5;
 
+/** Штраф к настроению при перенаселённости корабля (за каждый ход) */
+const OVERCROWDING_HAPPINESS_PENALTY = 5;
+
+/** Урон здоровью синтетиков/нечувствительных рас при перенаселённости (перегрев, помехи) */
+const OVERCROWDING_HARDWARE_DAMAGE = 5;
+
 /** Шанс повреждения модуля при нехватке энергии */
 const POWER_OVERLOAD_CHANCE = 0.4;
 
@@ -90,6 +96,62 @@ export const processMoraleTraits = (
             );
         });
     });
+};
+
+/**
+ * Штраф к морали при перенаселённости корабля
+ * Если экипажа больше, чем модулей, органики теряют мораль
+ */
+export const processOvercrowding = (
+    set: SetState,
+    get: () => GameStore,
+): void => {
+    const crewCount = get().crew.length;
+    const crewCapacity = get().getCrewCapacity();
+
+    if (crewCount <= crewCapacity) return;
+
+    const affectedOrganic: string[] = [];
+    const affectedSynthetic: string[] = [];
+
+    set((s) => ({
+        crew: s.crew.map((c) => {
+            const race = RACES[c.race];
+            if (race?.hasHappiness === false) {
+                // Синтетики и нечувствительные: перегрев/помехи → урон здоровью
+                affectedSynthetic.push(c.name);
+                return {
+                    ...c,
+                    health: Math.max(
+                        0,
+                        c.health - OVERCROWDING_HARDWARE_DAMAGE,
+                    ),
+                };
+            }
+            // Органики: штраф морали
+            affectedOrganic.push(c.name);
+            return {
+                ...c,
+                happiness: Math.max(
+                    0,
+                    c.happiness - OVERCROWDING_HAPPINESS_PENALTY,
+                ),
+            };
+        }),
+    }));
+
+    if (affectedOrganic.length > 0) {
+        get().addLog(
+            `😤 Перенаселённость: ${crewCount}/${crewCapacity}. Мораль экипажа -${OVERCROWDING_HAPPINESS_PENALTY}`,
+            "warning",
+        );
+    }
+    if (affectedSynthetic.length > 0) {
+        get().addLog(
+            `🤖 Перегрев систем от скученности: синтетики -${OVERCROWDING_HARDWARE_DAMAGE} HP`,
+            "warning",
+        );
+    }
 };
 
 /**

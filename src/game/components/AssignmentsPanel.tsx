@@ -65,7 +65,7 @@ export function AssignmentsPanel() {
                 Назначьте задачи и перемещения. Эффект в следующем ходу.
             </div>
 
-            <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-4 mt-2.5">
+            <div className="overflow-y-auto max-h-[55vh] bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-4">
                 {crew.map((c) => {
                     const pendingModuleId = moves[c.id];
                     const effectiveModuleId = pendingModuleId ?? c.moduleId;
@@ -176,7 +176,7 @@ export function AssignmentsPanel() {
                                     }}
                                 >
                                     <SelectTrigger
-                                        className={`bg-[#050810] border text-xs mb-1.5 ${
+                                        className={`cursor-pointer bg-[#050810] border text-xs mb-1.5 ${
                                             isMoving
                                                 ? "border-[#ffb000] text-[#ffb000]"
                                                 : "border-[#333] text-[#555]"
@@ -187,7 +187,7 @@ export function AssignmentsPanel() {
                                     <SelectContent className="bg-[#050810] border border-[#ffb000] text-[#ffb000]">
                                         <SelectItem
                                             value="stay"
-                                            className="hover:bg-[rgba(255,176,0,0.1)]"
+                                            className="hover:bg-[rgba(255,176,0,0.1)] cursor-pointer"
                                         >
                                             ↩ Остаться (
                                             {getModuleName(c.moduleId)})
@@ -196,7 +196,7 @@ export function AssignmentsPanel() {
                                             <SelectItem
                                                 key={mod.id}
                                                 value={String(mod.id)}
-                                                className="hover:bg-[rgba(255,176,0,0.1)]"
+                                                className="hover:bg-[rgba(255,176,0,0.1)] cursor-pointer"
                                             >
                                                 → {getModuleName(mod.id)}
                                             </SelectItem>
@@ -226,7 +226,7 @@ export function AssignmentsPanel() {
                                     }));
                                 }}
                             >
-                                <SelectTrigger className="bg-[#050810] border border-[#00ff41] text-[#00ff41]">
+                                <SelectTrigger className="cursor-pointer bg-[#050810] border border-[#00ff41] text-[#00ff41]">
                                     <SelectValue placeholder="Выберите задачу" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-[#050810] border border-[#00ff41] text-[#00ff41]">
@@ -237,7 +237,7 @@ export function AssignmentsPanel() {
                                             <SelectItem
                                                 key={itemValue}
                                                 value={itemValue}
-                                                className="hover:bg-[rgba(0,255,65,0.1)]"
+                                                className="hover:bg-[rgba(0,255,65,0.1)] cursor-pointer"
                                             >
                                                 {a.label}{" "}
                                                 {a.effect
@@ -253,16 +253,16 @@ export function AssignmentsPanel() {
                 })}
             </div>
 
-            <div className="flex gap-2.5 flex-wrap mt-5">
+            <div className="flex gap-2.5 flex-wrap">
                 <Button
                     onClick={handleApply}
-                    className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
+                    className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
                 >
                     ПРИМЕНИТЬ
                 </Button>
                 <Button
                     onClick={showGalaxyMap}
-                    className="bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider"
+                    className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider"
                 >
                     ОТМЕНА
                 </Button>

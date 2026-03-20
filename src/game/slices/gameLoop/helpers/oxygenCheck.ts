@@ -1,5 +1,6 @@
 import { findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES, MIN_HEALTH_WITH_IMMORTALITY } from "@/game/constants";
+import { RACES } from "@/game/constants/races";
 import type { GameState, GameStore, SetState } from "@/game/types";
 import { handleDeadCrew } from "./crewUtils";
 
@@ -22,6 +23,7 @@ const checkArtifacts = (state: GameState) => ({
 
 /**
  * Применяет урон от нехватки кислорода и логирует событие
+ * Только члены экипажа с requiresOxygen=true получают урон
  */
 const applyOxygenDamage = (
     hasImmortality: boolean,
@@ -31,15 +33,18 @@ const applyOxygenDamage = (
     get: () => GameStore,
 ): void => {
     set((s) => ({
-        crew: s.crew.map((c) => ({
-            ...c,
-            health: hasImmortality
-                ? Math.max(
-                      MIN_HEALTH_WITH_IMMORTALITY,
-                      c.health - OXYGEN_DAMAGE_PERCENT,
-                  )
-                : c.health - OXYGEN_DAMAGE_PERCENT,
-        })),
+        crew: s.crew.map((c) => {
+            if (!RACES[c.race]?.requiresOxygen) return c;
+            return {
+                ...c,
+                health: hasImmortality
+                    ? Math.max(
+                          MIN_HEALTH_WITH_IMMORTALITY,
+                          c.health - OXYGEN_DAMAGE_PERCENT,
+                      )
+                    : c.health - OXYGEN_DAMAGE_PERCENT,
+            };
+        }),
     }));
 
     get().addLog(
@@ -64,8 +69,12 @@ export const checkOxygen = (
     get: () => GameStore,
     set: SetState,
 ): boolean => {
-    const crewCount = get().crew.length;
-    const oxygenCapacity = get().getCrewCapacity();
+    // Только члены экипажа, которым нужен кислород
+    const breathingCrew = get().crew.filter(
+        (c) => RACES[c.race]?.requiresOxygen !== false,
+    );
+    const crewCount = breathingCrew.length;
+    const oxygenCapacity = get().getOxygenCapacity();
 
     // Если кислорода достаточно — проверка не требуется
     if (crewCount <= oxygenCapacity) return false;

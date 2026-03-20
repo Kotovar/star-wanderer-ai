@@ -1,7 +1,6 @@
 import {
     calculateAverageDefense,
     calculateTotalShields,
-    calculateTotalOxygen,
     calculateTotalFuelCapacity,
 } from "../utils";
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
@@ -48,8 +47,7 @@ export const updateShipStats = (state: GameState): void => {
     const bonusShields = ship.bonusShields || 0;
     let maxShieldsWithBonus = totalShields + bonusShields;
 
-    // === Расчёт кислорода и топлива ===
-    const totalOxygen = calculateTotalOxygen(modules);
+    // === Расчёт топлива и вместимости экипажа ===
     let totalFuelCapacity = calculateTotalFuelCapacity(modules);
 
     // === Бонусы от сращивания ксеноморфов ===
@@ -72,7 +70,7 @@ export const updateShipStats = (state: GameState): void => {
     ship.armor = finalDefense;
     ship.maxShields = maxShieldsWithBonus;
     ship.shields = Math.min(ship.shields, maxShieldsWithBonus);
-    ship.crewCapacity = totalOxygen;
+    ship.crewCapacity = modules.length;
     ship.maxFuel = totalFuelCapacity;
     ship.fuel = Math.min(currentFuel, totalFuelCapacity);
 };

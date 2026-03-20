@@ -86,6 +86,7 @@ export interface Race {
     hasHappiness: boolean; // Does this race have happiness?
     hasFatigue: boolean; // Does this race get tired?
     canGetSick: boolean; // Can this race get diseases?
+    requiresOxygen: boolean; // Does this race need oxygen to survive?
 
     // Visual
     color: string; // Theme color for UI

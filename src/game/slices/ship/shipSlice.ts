@@ -4,6 +4,7 @@ import {
     getTotalConsumption,
     getTotalPower,
     getCrewCapacity,
+    getOxygenCapacity,
     getFuelCapacity,
     getFuelEfficiency,
     getDrillLevel,
@@ -54,10 +55,17 @@ interface ShipSlice {
 
     /**
      * Вычисляет максимальную вместимость экипажа корабля
-     * Суммирует oxygen всех активных модулей жизнеобеспечения
-     * @returns Общая вместимость экипажа
+     * Равно числу модулей: каждый модуль — 1 место для члена экипажа
+     * @returns Количество мест для экипажа
      */
     getCrewCapacity: () => number;
+
+    /**
+     * Вычисляет суммарную кислородную ёмкость корабля
+     * Суммирует oxygen всех активных модулей жизнеобеспечения
+     * @returns Общая кислородная ёмкость
+     */
+    getOxygenCapacity: () => number;
 
     /**
      * Вычисляет максимальную вместимость топливного бака
@@ -198,6 +206,11 @@ export const createShipSlice = (
     getCrewCapacity: () => {
         const state = get();
         return getCrewCapacity(state);
+    },
+
+    getOxygenCapacity: () => {
+        const state = get();
+        return getOxygenCapacity(state);
     },
 
     getFuelCapacity: () => {

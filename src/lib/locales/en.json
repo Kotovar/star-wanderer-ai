@@ -1017,6 +1017,7 @@
         "features": "Features:",
         "station_stock": "At station: {{stock}}t",
         "no_space": "⚠ No space for crew. Build a life support module.",
+        "overcrowded_warning": "⚠ Ship is overcrowded! Crew will lose morale every turn.",
         "hire_button": "HIRE",
         "close": "Close",
         "energy_consumption": "consumption"
