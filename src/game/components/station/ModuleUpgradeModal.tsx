@@ -48,6 +48,7 @@ function getTranslatedUpgradeName(
         fueltank: "station_upgrades.tank_upgrade",
         lifesupport: "station_upgrades.lifesupport_upgrade",
         engine: "station_upgrades.engine_tuning",
+        weaponbay: "station_upgrades.weaponbay_upgrade",
     };
     const key = nameMap[item.targetType];
     return key ? t(key) : item.name;
@@ -73,7 +74,7 @@ function getUpgradeEffect(
         return t("station_upgrades.oxygen", { value: item.effect.oxygen });
     }
     if (item.effect?.healing) {
-        return t("station_upgrades.oxygen", { value: item.effect.healing });
+        return t("station_upgrades.healing", { value: item.effect.healing });
     }
     if (item.effect?.fuelEfficiency) {
         return t("station_upgrades.efficiency", {
@@ -212,6 +213,35 @@ function ModuleSelectionList({
                 const currentHealing = module.healing ?? 0;
                 const nextHealing = nextModuleTemplate?.healing ?? 0;
                 const healingDiff = nextHealing - currentHealing;
+                const healingAfter = nextHealing > 0 ? nextHealing : undefined;
+
+                const powerAfter = nextModuleTemplate?.power;
+                const capacityAfter = nextModuleTemplate?.capacity;
+                const shieldsAfter = nextModuleTemplate?.shields;
+                const shieldRegenAfter = nextModuleTemplate?.shieldRegen;
+                const scanRangeAfter = nextModuleTemplate?.scanRange;
+                const oxygenAfter = nextModuleTemplate?.oxygen;
+                const researchOutputAfter = nextModuleTemplate?.researchOutput;
+
+                const fuelEfficiencyAfter =
+                    module.fuelEfficiency !== undefined
+                        ? Math.max(
+                              1,
+                              (module.fuelEfficiency || 10) +
+                                  (pendingUpgrade.effect?.fuelEfficiency || 0),
+                          )
+                        : undefined;
+
+                const defenseAfter = nextModuleTemplate?.defense ?? nextLevel;
+
+                const newWidth = nextModuleTemplate?.width ?? module.width;
+                const newHeight = nextModuleTemplate?.height ?? module.height;
+
+                const consumptionAfter =
+                    targetType === "engine"
+                        ? nextLevel
+                        : (nextModuleTemplate?.consumption ??
+                          currentConsumption);
 
                 // Calculate upgrade price based on module's current level
                 // Find the correct upgrade item for this module's level from station items
@@ -246,7 +276,20 @@ function ModuleSelectionList({
                         onClose={onClose}
                         consumptionDiff={consumptionDiff}
                         healingDiff={healingDiff}
+                        healingAfter={healingAfter}
                         nextLevel={nextLevel}
+                        powerAfter={powerAfter}
+                        fuelEfficiencyAfter={fuelEfficiencyAfter}
+                        defenseAfter={defenseAfter}
+                        consumptionAfter={consumptionAfter}
+                        capacityAfter={capacityAfter}
+                        shieldsAfter={shieldsAfter}
+                        shieldRegenAfter={shieldRegenAfter}
+                        scanRangeAfter={scanRangeAfter}
+                        oxygenAfter={oxygenAfter}
+                        researchOutputAfter={researchOutputAfter}
+                        newWidth={newWidth}
+                        newHeight={newHeight}
                     />
                 );
             })}
@@ -266,6 +309,19 @@ interface ModuleUpgradeCardProps {
     consumptionDiff: number;
     nextLevel: number;
     healingDiff?: number;
+    healingAfter?: number;
+    powerAfter?: number;
+    fuelEfficiencyAfter?: number;
+    defenseAfter?: number;
+    consumptionAfter?: number;
+    capacityAfter?: number;
+    shieldsAfter?: number;
+    shieldRegenAfter?: number;
+    scanRangeAfter?: number;
+    oxygenAfter?: number;
+    researchOutputAfter?: number;
+    newWidth?: number;
+    newHeight?: number;
 }
 
 function ModuleUpgradeCard({
@@ -277,9 +333,20 @@ function ModuleUpgradeCard({
     upgradePrice,
     buyItem,
     onClose,
-    consumptionDiff,
     nextLevel,
-    healingDiff,
+    healingAfter,
+    powerAfter,
+    fuelEfficiencyAfter,
+    defenseAfter,
+    consumptionAfter,
+    capacityAfter,
+    shieldsAfter,
+    shieldRegenAfter,
+    scanRangeAfter,
+    oxygenAfter,
+    researchOutputAfter,
+    newWidth,
+    newHeight,
 }: ModuleUpgradeCardProps) {
     const { t } = useTranslation();
     const isDisabled = isMaxLevel || !isUpgradeAvailable;
@@ -314,55 +381,169 @@ function ModuleUpgradeCard({
             </div>
             <div className="text-xs text-[#00ff41] mt-1 flex gap-4">
                 {module.power !== undefined && module.power > 0 && (
-                    <span>⚡ {module.power}</span>
+                    <span>
+                        ⚡ {module.power}
+                        {powerAfter !== undefined &&
+                            powerAfter !== module.power && (
+                                <span className="text-[#ffb000]">
+                                    {" "}
+                                    → {powerAfter}
+                                </span>
+                            )}
+                    </span>
                 )}
                 {module.capacity !== undefined && module.capacity > 0 && (
-                    <span>📦 {module.capacity}т</span>
+                    <span>
+                        {module.type === "fueltank" ? "⛽" : "📦"}{" "}
+                        {module.capacity}
+                        {module.type === "cargo" && "т"}
+                        {capacityAfter !== undefined &&
+                            capacityAfter !== module.capacity && (
+                                <span className="text-[#ffb000]">
+                                    {" "}
+                                    → {capacityAfter}
+                                    {module.type === "cargo" && "т"}
+                                </span>
+                            )}
+                    </span>
                 )}
                 {module.fuelEfficiency !== undefined && (
-                    <span>⛽эф. {module.fuelEfficiency}</span>
+                    <span>
+                        ⛽эф. {module.fuelEfficiency}
+                        {fuelEfficiencyAfter !== undefined &&
+                            fuelEfficiencyAfter !== module.fuelEfficiency && (
+                                <span className="text-[#ffb000]">
+                                    {" "}
+                                    → {fuelEfficiencyAfter}
+                                </span>
+                            )}
+                    </span>
                 )}
-                {module.oxygen !== undefined && <span>💨 {module.oxygen}</span>}
+                {module.oxygen !== undefined && (
+                    <span>
+                        💨 {module.oxygen}
+                        {oxygenAfter !== undefined &&
+                            oxygenAfter !== module.oxygen && (
+                                <span className="text-[#ffb000]">
+                                    {" "}
+                                    → {oxygenAfter}
+                                </span>
+                            )}
+                    </span>
+                )}
+                {module.researchOutput !== undefined &&
+                    module.researchOutput > 0 && (
+                    <span>
+                        🔬 {module.researchOutput}
+                        {researchOutputAfter !== undefined &&
+                            researchOutputAfter !== module.researchOutput && (
+                                <span className="text-[#ffb000]">
+                                    {" "}
+                                    → {researchOutputAfter}
+                                </span>
+                            )}
+                    </span>
+                )}
+                {module.type === "drill" && (
+                    <span>
+                        ⛏ {module.level ?? 1}
+                        <span className="text-[#ffb000]"> → {nextLevel}</span>
+                    </span>
+                )}
                 {module.shields !== undefined && module.shields > 0 && (
                     <span>
                         {t("module_list.shields")}: {module.shields}
+                        {shieldsAfter !== undefined &&
+                            shieldsAfter !== module.shields && (
+                                <span className="text-[#ffb000]">
+                                    {" "}
+                                    → {shieldsAfter}
+                                </span>
+                            )}
+                    </span>
+                )}
+                {module.shieldRegen !== undefined && module.shieldRegen > 0 && (
+                    <span>
+                        🔄 {module.shieldRegen}
+                        {shieldRegenAfter !== undefined &&
+                            shieldRegenAfter !== module.shieldRegen && (
+                                <span className="text-[#ffb000]">
+                                    {" "}
+                                    → {shieldRegenAfter}
+                                </span>
+                            )}
                     </span>
                 )}
                 {module.defense !== undefined && module.defense > 0 && (
                     <span>
-                        {t("module_list.armor")}:{" "}
-                        {module.type === "shield"
-                            ? module.level
-                            : module.defense}
+                        {t("module_list.armor")}: {module.defense}
+                        {defenseAfter !== undefined &&
+                            defenseAfter !== module.defense && (
+                                <span className="text-[#ffb000]">
+                                    {" "}
+                                    → {defenseAfter}
+                                </span>
+                            )}
                     </span>
                 )}
                 {module.scanRange !== undefined && (
-                    <span>📡 {module.scanRange}</span>
+                    <span>
+                        📡 {module.scanRange}
+                        {scanRangeAfter !== undefined &&
+                            scanRangeAfter !== module.scanRange && (
+                                <span className="text-[#ffb000]">
+                                    {" "}
+                                    → {scanRangeAfter}
+                                </span>
+                            )}</span>
                 )}
                 {module.consumption !== undefined && module.consumption > 0 && (
-                    <span>⚡ -{module.consumption}</span>
+                    <span>
+                        ⚡ -{module.consumption}
+                        {consumptionAfter !== undefined &&
+                            consumptionAfter !== module.consumption && (
+                                <span className="text-[#ff6644]">
+                                    {" "}
+                                    → -{consumptionAfter}
+                                </span>
+                            )}
+                    </span>
                 )}
                 {module.healing !== undefined && module.healing > 0 && (
-                    <span>🏥 {module.healing} HP</span>
+                    <span>
+                        🏥 {module.healing} HP
+                        {healingAfter !== undefined &&
+                            healingAfter !== module.healing && (
+                                <span className="text-[#ffb000]">
+                                    {" "}
+                                    → {healingAfter} HP
+                                </span>
+                            )}
+                    </span>
+                )}
+                {module.type === "weaponbay" && (
+                    <span>
+                        ⚔ +{((module.level ?? 1) - 1) * 10}%
+                        <span className="text-[#ffb000]">
+                            {" "}
+                            → +{(nextLevel - 1) * 10}%
+                        </span>
+                    </span>
                 )}
             </div>
-            <div className="text-[10px] text-[#ffb000] mt-1 flex justify-between flex-col">
+            <div className="text-[10px] text-[#ffb000] mt-1 flex gap-3">
                 <span>
                     {t("station_upgrades.level")}: {module.level} → {nextLevel}
                 </span>
-
-                {consumptionDiff > 0 && (
-                    <span className="text-[#ff0040]">
-                        ⚡ {t("station_upgrades.consumption")}: +
-                        {consumptionDiff}
-                    </span>
-                )}
-
-                {healingDiff !== undefined && healingDiff > 0 && (
-                    <span className="text-[#00ff41]">
-                        {t("modules.healing")}: +{healingDiff}
-                    </span>
-                )}
+                {newWidth !== undefined &&
+                    newHeight !== undefined &&
+                    (newWidth !== module.width ||
+                        newHeight !== module.height) && (
+                        <span>
+                            📐 {module.width}×{module.height} → {newWidth}×
+                            {newHeight}
+                        </span>
+                    )}
             </div>
             <div className="text-sm text-[#ffb000] mt-2 font-bold">
                 💰 {t("station_upgrades.price")}: {upgradePrice}₢

@@ -1422,7 +1422,8 @@
         "scanner_mk1": "Сканер МК-1",
         "scanner_default": "Сканер",
         "off": "⚠ ВЫКЛ",
-        "info_title": "Информация о модуле корабля"
+        "info_title": "Информация о модуле корабля",
+        "damage_bonus": "⚔ Бонус к урону"
     },
     "game_log": {
         "turn_label": "ХОД"
@@ -1496,12 +1497,14 @@
         "tank_upgrade": "Улучшение бака",
         "lifesupport_upgrade": "Улучшение жизнеобеспечения",
         "engine_tuning": "Настройка двигателя",
+        "weaponbay_upgrade": "Улучшение оружейной палубы",
         "available": "ДОСТУПНО",
         "energy": "+{{value}} энергии",
         "capacity": "+{{value}} вместимости",
         "fuel": "+{{value}} топлива",
         "oxygen": "+{{value}} кислорода",
         "efficiency": "{{value}} потребления топлива",
+        "healing": "+{{value}} скорости лечения",
         "upgrade": "УЛУЧШИТЬ",
         "select_module": "Выберите модуль для улучшения",
         "select_module_desc": "Выбор модуля для улучшения",

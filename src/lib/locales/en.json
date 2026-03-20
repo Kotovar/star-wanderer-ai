@@ -1422,7 +1422,8 @@
         "scanner_mk1": "Scanner MK-1",
         "scanner_default": "Scanner",
         "off": "⚠ OFF",
-        "info_title": "Ship module information"
+        "info_title": "Ship module information",
+        "damage_bonus": "⚔ Damage bonus"
     },
     "game_log": {
         "turn_label": "TURN"
@@ -1496,12 +1497,14 @@
         "tank_upgrade": "Fuel Tank Upgrade",
         "lifesupport_upgrade": "Life Support Upgrade",
         "engine_tuning": "Engine Tuning",
+        "weaponbay_upgrade": "Weapon Bay Upgrade",
         "available": "AVAILABLE",
         "energy": "+{{value}} energy",
         "capacity": "+{{value}} capacity",
         "fuel": "+{{value}} fuel",
         "oxygen": "+{{value}} oxygen",
         "efficiency": "{{value}} fuel consumption",
+        "healing": "+{{value}} healing speed",
         "upgrade": "UPGRADE",
         "select_module": "Select module to upgrade",
         "select_module_desc": "Module selection for upgrade",

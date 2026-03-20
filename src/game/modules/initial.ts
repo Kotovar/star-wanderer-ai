@@ -21,7 +21,7 @@ export const initialModules: Module[] = [
         health: 100,
         maxHealth: 100,
         level: 1,
-        defense: 1,
+        defense: 2,
     },
     {
         id: INITIAL_MODULE_BASE_ID + 2,
@@ -35,7 +35,7 @@ export const initialModules: Module[] = [
         health: 100,
         maxHealth: 100,
         level: 1,
-        defense: 1,
+        defense: 2,
     },
     {
         id: INITIAL_MODULE_BASE_ID + 3,

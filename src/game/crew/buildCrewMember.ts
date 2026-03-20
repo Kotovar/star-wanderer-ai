@@ -6,6 +6,7 @@ import {
 } from "@/game/crew/utils";
 import { getRandomRace } from "@/game/races";
 import { INITIAL_HAPPINESS_PERCENT } from "@/game/constants/crew";
+import { RACES } from "@/game/constants/races";
 import type {
     CrewMember,
     CrewTrait,
@@ -122,7 +123,8 @@ export function buildCrewMember(options: CrewBuildOptions = {}): CrewMember {
     let traits: CrewTrait[];
     if (typeof traitsOpt === "string") {
         // Quality string — random generation
-        traits = generateCrewTraits(traitsOpt as Quality, seed ?? 0).traits;
+        const hasHappiness = RACES[race]?.hasHappiness ?? true;
+        traits = generateCrewTraits(traitsOpt, seed ?? 0, hasHappiness).traits;
     } else if (
         Array.isArray(traitsOpt) &&
         (traitsOpt.length === 0 || typeof traitsOpt[0] === "string")

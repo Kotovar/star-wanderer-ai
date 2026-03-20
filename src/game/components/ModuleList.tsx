@@ -171,8 +171,8 @@ function ModuleStats({ module }: ModuleStatsProps) {
                 module.type !== "fueltank" &&
                 module.consumption &&
                 module.consumption > 0 && <span>⚡ -{module.consumption}</span>}
-            {module.type === "fueltank" && (
-                <FuelStats mergeBonus={mergeBonus} />
+            {module.type === "fueltank" && module.capacity && (
+                <FuelStats capacity={module.capacity} mergeBonus={mergeBonus} />
             )}
             {module.type === "cargo" &&
                 module.capacity &&
@@ -215,7 +215,7 @@ function ModuleStats({ module }: ModuleStatsProps) {
             {module.defense !== undefined && module.defense > 0 && (
                 <span>
                     {t("module_list.armor")}:{" "}
-                    {module.type === "shield" ? module.level : module.defense}
+                    {module.defense}
                     {artifactArmor > 0 && ` (+${artifactArmor})`}
                 </span>
             )}
@@ -256,16 +256,15 @@ function ModuleStats({ module }: ModuleStatsProps) {
 }
 
 function FuelStats({
+    capacity,
     mergeBonus,
 }: {
+    capacity: number;
     mergeBonus?: ReturnType<typeof getMergeEffectsBonus>;
 }) {
-    const fuel = useGameStore((s) => s.ship.fuel);
-    const maxFuel = useGameStore((s) => s.ship.maxFuel);
-
     return (
         <span>
-            ⛽ {fuel}/{maxFuel}
+            ⛽ {capacity}
             {mergeBonus?.fuelCapacity && mergeBonus.fuelCapacity > 0 && (
                 <span className="text-[#00d4ff]">
                     {" "}
@@ -332,24 +331,12 @@ export function ModuleDetailDialog({
     const crew = useGameStore((s) => s.crew);
     const shipModules = useGameStore((s) => s.ship.modules);
     const mergeBonus = getMergeEffectsBonus(crew, shipModules);
-    const fuel = useGameStore((s) => s.ship.fuel);
-    const maxFuel = useGameStore((s) => s.ship.maxFuel);
     const toggleModule = useGameStore((s) => s.toggleModule);
 
     if (!module) return null;
 
     // Check if level is valid (not NaN)
     const isValidLevel = module.level && !isNaN(module.level);
-
-    // For station items (fueltank), use capacity instead of ship fuel
-    const displayFuel =
-        isStationItem && module.type === "fueltank"
-            ? module.capacity || 0
-            : fuel;
-    const displayMaxFuel =
-        isStationItem && module.type === "fueltank"
-            ? module.capacity || 0
-            : maxFuel;
 
     return (
         <Dialog open={!!module} onOpenChange={onClose}>
@@ -382,11 +369,7 @@ export function ModuleDetailDialog({
                 </DialogHeader>
 
                 <div className="space-y-4">
-                    <ModuleDetailedStats
-                        module={module}
-                        fuel={displayFuel}
-                        maxFuel={displayMaxFuel}
-                    />
+                    <ModuleDetailedStats module={module} />
 
                     {module.type === "scanner" && (
                         <ScannerDescription scanRange={module.scanRange} />
@@ -473,14 +456,10 @@ export function ModuleDetailDialog({
 
 interface ModuleDetailedStatsProps {
     module: Module;
-    fuel: number;
-    maxFuel: number;
 }
 
 function ModuleDetailedStats({
     module,
-    fuel,
-    maxFuel,
 }: ModuleDetailedStatsProps) {
     const { t } = useTranslation();
     const descriptionKey = getModuleDescription(module);
@@ -518,12 +497,12 @@ function ModuleDetailedStats({
                         -{module.consumption}
                     </div>
                 )}
-            {module.type === "fueltank" && (
+            {module.type === "fueltank" && module.capacity && (
                 <div>
                     <span className="text-[#ffb000]">
                         {t("module_list.fuel")}:
                     </span>{" "}
-                    {fuel}/{maxFuel}
+                    ⛽ {module.capacity}
                 </div>
             )}
             {module.type === "cargo" &&
@@ -609,13 +588,21 @@ function ModuleDetailedStats({
                         {module.oxygen} {t("module_list.creatures")}
                     </div>
                 )}
+            {module.type === "weaponbay" && (
+                <div>
+                    <span className="text-[#ffb000]">
+                        {t("module_list.damage_bonus")}:
+                    </span>{" "}
+                    +{((module.level ?? 1) - 1) * 10}%
+                </div>
+            )}
             {/* Defense/Armor for all modules - for shields use level */}
             {module.defense !== undefined && module.defense > 0 && (
                 <div>
                     <span className="text-[#ffb000]">
                         {t("module_list.armor")}:
                     </span>{" "}
-                    {module.type === "shield" ? module.level : module.defense}
+                    {module.defense}
                     {artifactArmor > 0 && (
                         <span className="text-[#00d4ff]">
                             {" "}

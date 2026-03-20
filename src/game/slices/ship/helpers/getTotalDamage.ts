@@ -35,9 +35,11 @@ function getBaseWeaponDamage(modules: GameState["ship"]["modules"]) {
                 m.health > 0,
         )
         .forEach((m) => {
+            // +10% damage bonus per level above 1 (lv1=0%, lv2=+10%, lv3=+20%, lv4=+30%)
+            const bayLevelBonus = 1 + ((m.level ?? 1) - 1) * 0.1;
             m.weapons?.forEach((w) => {
                 if (w && WEAPON_TYPES[w.type]) {
-                    const weaponDamage = WEAPON_TYPES[w.type].damage;
+                    const weaponDamage = Math.floor(WEAPON_TYPES[w.type].damage * bayLevelBonus);
                     damage.total += weaponDamage;
                     damage[w.type] += weaponDamage;
                 }

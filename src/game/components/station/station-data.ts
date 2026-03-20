@@ -10,6 +10,7 @@ import type {
 import { CREW_BASE_PRICES } from "@/game/constants/crew";
 import { generateCrewTraits, getRandomName, rollQuality } from "@/game/crew/utils";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
+import { RACES } from "@/game/constants/races";
 
 // Module pools by tier level
 // Tier 1: levels 1-2, Tier 2: levels 2-3, Tier 3: levels 3-4 (rare)
@@ -54,6 +55,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             height: 1,
             power: 10,
             consumption: 0,
+            defense: 2,
             price: 450,
             stock: 2,
             description: "Генерирует энергию для корабля",
@@ -84,7 +86,8 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             height: 1,
             shields: 20,
             shieldRegen: 4,
-            consumption: 3,
+            consumption: 6,
+            defense: 2,
             price: 500,
             stock: 2,
             description: "Создаёт защитное поле вокруг корабля",
@@ -102,6 +105,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             price: 500,
             stock: 2,
             description: "Размещает оружие корабля",
+            defense: 1,
         },
         {
             id: "scanner-1",
@@ -143,6 +147,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             width: 1,
             height: 1,
             consumption: 2,
+            defense: 0,
             price: 450,
             stock: 1,
             healing: 5,
@@ -157,8 +162,9 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             maxHealth: 100,
             width: 2,
             height: 2,
-            consumption: 3,
+            consumption: 8,
             researchOutput: 5,
+            defense: 0,
             price: 800,
             stock: 1,
             description: "Проводит научные исследования технологий",
@@ -204,6 +210,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             height: 1,
             power: 15,
             consumption: 0,
+            defense: 3,
             price: 800,
             stock: 1,
             description: "Усиленный реактор повышенной мощности",
@@ -234,7 +241,8 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             height: 1,
             shields: 35,
             shieldRegen: 7,
-            consumption: 4,
+            consumption: 10,
+            defense: 3,
             price: 900,
             stock: 1,
             description: "Усиленный генератор защитного поля",
@@ -246,12 +254,13 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             moduleType: "weaponbay",
             level: 2,
             maxHealth: 120,
-            width: 2,
+            width: 1,
             height: 1,
-            consumption: 3,
+            consumption: 4,
+            defense: 2,
             price: 800,
             stock: 2,
-            description: "Двойная оружейная палуба",
+            description: "Усиленная оружейная палуба. +10% к урону установленного оружия",
         },
         {
             id: "scanner-2",
@@ -293,6 +302,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             width: 1,
             height: 1,
             consumption: 3,
+            defense: 1,
             price: 800,
             stock: 1,
             healing: 8,
@@ -307,8 +317,9 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             maxHealth: 120,
             width: 2,
             height: 2,
-            consumption: 8,
+            consumption: 12,
             researchOutput: 8,
+            defense: 1,
             price: 1600,
             stock: 1,
             description:
@@ -355,6 +366,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             height: 1,
             power: 20,
             consumption: 0,
+            defense: 4,
             price: 1500,
             stock: 1,
             description: "Мощный энергетический реактор",
@@ -385,7 +397,8 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             height: 1,
             shields: 50,
             shieldRegen: 11,
-            consumption: 5,
+            consumption: 14,
+            defense: 4,
             price: 1400,
             stock: 1,
             description: "Усиленный щит последнего поколения",
@@ -430,6 +443,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             width: 1,
             height: 1,
             consumption: 4,
+            defense: 1,
             price: 1200,
             stock: 1,
             healing: 11,
@@ -444,12 +458,28 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
             maxHealth: 140,
             width: 2,
             height: 2,
-            consumption: 14,
+            consumption: 16,
             researchOutput: 12,
+            defense: 1,
             price: 3200,
             stock: 1,
             description:
                 "Проводит научные исследования технологий очень быстро",
+        },
+        {
+            id: "weaponbay-3",
+            name: "Оружейная палуба",
+            type: "module",
+            moduleType: "weaponbay",
+            level: 3,
+            maxHealth: 140,
+            width: 2,
+            height: 1,
+            consumption: 8,
+            defense: 3,
+            price: 1600,
+            stock: 1,
+            description: "Усиленная двойная оружейная палуба. +20% к урону установленного оружия",
         },
     ],
 };
@@ -557,6 +587,17 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             stock: 2,
             moduleType: "medical",
             description: "Увеличивает скорость лечения экипажа на 4 единицы",
+        },
+        {
+            id: "weaponbay-upgrade-1",
+            name: "Улучшение оружейной палубы",
+            type: "upgrade",
+            targetType: "weaponbay",
+            price: 1500,
+            effect: { level: 1 },
+            stock: 2,
+            moduleType: "weaponbay",
+            description: "Повышает уровень палубы. +10% к урону установленного оружия",
         },
         {
             id: "lab-upgrade-1",
@@ -683,6 +724,17 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             description: "Увеличивает скорость лечения экипажа на 6 единиц",
         },
         {
+            id: "weaponbay-upgrade-2",
+            name: "Улучшение оружейной палубы",
+            type: "upgrade",
+            targetType: "weaponbay",
+            price: 2500,
+            effect: { level: 1 },
+            stock: 1,
+            moduleType: "weaponbay",
+            description: "Расширяет и усиливает палубу до 2×1. +10% к урону (итого +20%)",
+        },
+        {
             id: "lab-upgrade-2",
             name: "Улучшение лаборатории",
             type: "upgrade",
@@ -794,6 +846,17 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             stock: 1,
             moduleType: "medical",
             description: "Увеличивает скорость лечения экипажа на 8 единиц",
+        },
+        {
+            id: "weaponbay-upgrade-3",
+            name: "Улучшение оружейной палубы",
+            type: "upgrade",
+            targetType: "weaponbay",
+            price: 3500,
+            effect: { level: 1 },
+            stock: 1,
+            moduleType: "weaponbay",
+            description: "Расширяет и усиливает палубу до 2×1. +10% к урону (итого +20%)",
         },
         {
             id: "lab-upgrade-3",
@@ -952,20 +1015,6 @@ export function generateStationItems(
         }
     }
 
-    // Additional chance for tier 4 modules at tier 3+ stations
-    if (sectorTier >= 3) {
-        const uniqueChance = Math.abs(hash % 100);
-        if (uniqueChance < 25) {
-            // 25% chance for additional tier 4 module
-            const uniqueModules = MODULES_BY_LEVEL[4];
-            const uniqueModule =
-                uniqueModules[Math.abs(hash >> 8) % uniqueModules.length];
-            items.push({
-                ...uniqueModule,
-                id: `${uniqueModule.id}-${stationId}`,
-            });
-        }
-    }
 
     // Weapons - use guaranteedWeapons from station config
     const guaranteedWeapons = stationConfig?.guaranteedWeapons || [];
@@ -1066,9 +1115,11 @@ export function generateStationCrew(
 
         // Use seeded random for traits generation
         const traitSeed = seed + i * 5000;
+        const hasHappiness = RACES[raceId]?.hasHappiness ?? true;
         const { traits, priceModifier } = generateCrewTraits(
             quality,
             traitSeed,
+            hasHappiness,
         );
 
         const basePrice = CREW_BASE_PRICES[profession];

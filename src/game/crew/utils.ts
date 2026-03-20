@@ -1,5 +1,9 @@
 import { useGameStore } from "@/game/store";
-import { CREW_TRAITS, MUTATION_TRAITS, RACE_LAST_NAMES } from "@/game/constants";
+import {
+    CREW_TRAITS,
+    MUTATION_TRAITS,
+    RACE_LAST_NAMES,
+} from "@/game/constants";
 import type {
     CrewMember,
     CrewMemberAssignment,
@@ -24,25 +28,38 @@ export const rollQuality = (rand: number): Quality => {
 
 // Пары трейтов, которые не могут быть у одного персонажа одновременно
 const CONFLICTING_TRAITS: Partial<Record<TraitId, TraitId[]>> = {
-    resilient:    ["sickly"],
-    invincible:   ["sickly"],
-    legend:       ["sickly"],
+    resilient: ["sickly"],
+    invincible: ["sickly"],
+    legend: ["sickly"],
     sharpshooter: ["bad_shot"],
-    veteran:      ["bad_shot"],
-    trader:       ["greedy"],
-    charismatic:  ["coward"],
+    veteran: ["bad_shot"],
+    trader: ["greedy"],
+    charismatic: ["coward"],
 };
 
-const conflictsWithExisting = (candidateId: TraitId, existing: CrewTrait[]): boolean => {
+const conflictsWithExisting = (
+    candidateId: TraitId,
+    existing: CrewTrait[],
+): boolean => {
     const existingIds = existing.map((t) => t.id as TraitId);
-    if (existingIds.some((id) => CONFLICTING_TRAITS[id]?.includes(candidateId))) return true;
-    if (CONFLICTING_TRAITS[candidateId]?.some((id) => existingIds.includes(id))) return true;
+    if (existingIds.some((id) => CONFLICTING_TRAITS[id]?.includes(candidateId)))
+        return true;
+    if (CONFLICTING_TRAITS[candidateId]?.some((id) => existingIds.includes(id)))
+        return true;
     return false;
 };
+
+/** Трейты с эффектами на личную мораль персонажа. Нельзя выдавать расам без счастья. */
+const hasPersonalMoraleEffect = (effect: CrewTrait["effect"]): boolean =>
+    effect.moralePenalty !== undefined ||
+    effect.combatMoraleDrain !== undefined ||
+    effect.combatStartMoraleDrain !== undefined ||
+    effect.maxHappinessBonus !== undefined;
 
 export const generateCrewTraits = (
     quality: Quality = "average",
     seed: number = 0,
+    hasHappiness: boolean = true,
 ): { traits: CrewTrait[]; priceModifier: number } => {
     const traits: CrewTrait[] = [];
     let priceModifier = 1;
@@ -74,16 +91,25 @@ export const generateCrewTraits = (
         return Math.abs(Math.sin(seed + offset) * 10000) % 1;
     };
 
+    const moraleFilter = (t: { effect: CrewTrait["effect"] }) =>
+        hasHappiness || !hasPersonalMoraleEffect(t.effect);
+
     // Add positive trait
     if (seededRandom(100) < positiveChance) {
         const roll = seededRandom(101);
         let pool;
         if (roll < legendaryChance) {
-            pool = CREW_TRAITS.positive.filter((t) => t.rarity === "legendary");
+            pool = CREW_TRAITS.positive.filter(
+                (t) => t.rarity === "legendary" && moraleFilter(t),
+            );
         } else if (roll < rareChance) {
-            pool = CREW_TRAITS.positive.filter((t) => t.rarity === "rare");
+            pool = CREW_TRAITS.positive.filter(
+                (t) => t.rarity === "rare" && moraleFilter(t),
+            );
         } else {
-            pool = CREW_TRAITS.positive.filter((t) => t.rarity === "common");
+            pool = CREW_TRAITS.positive.filter(
+                (t) => t.rarity === "common" && moraleFilter(t),
+            );
         }
         if (pool.length > 0) {
             const trait = pool[Math.floor(seededRandom(102) * pool.length)];
@@ -103,11 +129,15 @@ export const generateCrewTraits = (
         const roll = seededRandom(201);
         let pool;
         if (roll < 0.2) {
-            pool = CREW_TRAITS.negative.filter((t) => t.rarity === "rare");
+            pool = CREW_TRAITS.negative.filter(
+                (t) => t.rarity === "rare" && moraleFilter(t),
+            );
         } else {
-            pool = CREW_TRAITS.negative.filter((t) => t.rarity === "common");
+            pool = CREW_TRAITS.negative.filter(
+                (t) => t.rarity === "common" && moraleFilter(t),
+            );
         }
-        pool = pool.filter((t) => !conflictsWithExisting(t.id as TraitId, traits));
+        pool = pool.filter((t) => !conflictsWithExisting(t.id, traits));
         if (pool.length > 0) {
             const trait = pool[Math.floor(seededRandom(202) * pool.length)];
             traits.push({
@@ -115,7 +145,7 @@ export const generateCrewTraits = (
                 name: trait.name,
                 desc: trait.desc,
                 effect: trait.effect,
-                type: "negative" as const,
+                type: "negative",
             });
             priceModifier *= trait.priceMod;
         }
@@ -223,7 +253,9 @@ export const getTraitById = (id: TraitId): CrewTrait => {
  */
 export const giveRandomMutation = (
     crewMember: CrewMember,
-    set: (fn: (s: { crew: CrewMember[] }) => Partial<{ crew: CrewMember[] }>) => void,
+    set: (
+        fn: (s: { crew: CrewMember[] }) => Partial<{ crew: CrewMember[] }>,
+    ) => void,
 ): string | null => {
     const existingIds = new Set(crewMember.traits.map((t) => t.id));
     const available = MUTATION_TRAITS.filter((id) => !existingIds.has(id));

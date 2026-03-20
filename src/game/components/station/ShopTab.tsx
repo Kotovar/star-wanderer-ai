@@ -56,6 +56,7 @@ function getTranslatedUpgradeName(
         shield: "station_upgrades.shield_upgrade",
         lab: "station_upgrades.lab_upgrade",
         medical: "station_upgrades.medical_upgrade",
+        weaponbay: "station_upgrades.weaponbay_upgrade",
     };
     const key = nameMap[item.targetType];
     return key ? t(key) : item.name;
@@ -99,7 +100,7 @@ export function ShopTab({
 
     // Filter items - hide upgrades for modules we don't own
     const filteredItems = useMemo(() => {
-        return stationItems.filter((item) => {
+        const filtered = stationItems.filter((item) => {
             // Always show non-upgrade items
             if (item.type !== "upgrade") return true;
             // Only show upgrades for modules we own
@@ -107,21 +108,9 @@ export function ShopTab({
                 return false;
             }
 
-            // For all upgrades, check if any module can use it
-            // Extract upgrade level from ID (e.g., "reactor-upgrade-1-stationId" → 1)
-            const upgradeMatch = item.id.match(/-upgrade-(\d+)-/);
-            if (!upgradeMatch) return true;
-
-            const upgradeLevel = parseInt(upgradeMatch[1], 10);
-
             const modulesOfType = ship.modules.filter(
                 (m) =>
                     m.type === item.targetType && !m.disabled && m.health > 0,
-            );
-
-            // Check if any module matches this upgrade level
-            const hasMatchingModule = modulesOfType.some(
-                (m) => (m.level || 1) === upgradeLevel,
             );
 
             // Hide upgrade if all modules are at max level (3)
@@ -130,8 +119,24 @@ export function ShopTab({
             );
             if (allAtMaxLevel) return false;
 
-            // Show upgrade if any module can use it
-            return hasMatchingModule;
+            // For all upgrades, check if any module can use it
+            // Extract upgrade level from ID (e.g., "reactor-upgrade-1-stationId" → 1)
+            const upgradeMatch = item.id.match(/-upgrade-(\d+)-/);
+            if (!upgradeMatch) return true;
+
+            const upgradeLevel = parseInt(upgradeMatch[1], 10);
+
+            // Show upgrade if any module matches this upgrade level
+            return modulesOfType.some((m) => (m.level || 1) === upgradeLevel);
+        });
+
+        // Deduplicate: one upgrade card per targetType (modal handles all modules)
+        const seenUpgradeTypes = new Set<string>();
+        return filtered.filter((item) => {
+            if (item.type !== "upgrade" || !item.targetType) return true;
+            if (seenUpgradeTypes.has(item.targetType)) return false;
+            seenUpgradeTypes.add(item.targetType);
+            return true;
         });
     }, [stationItems, ownedModuleTypes, ship.modules]);
 
@@ -327,6 +332,11 @@ function ShopItemCard({
                 >
                     {isUnique && "★ "}
                     {displayName}
+                    {item.type === "module" && item.level && (
+                        <span className="ml-1.5 text-[10px] font-normal text-[#888] bg-[rgba(255,255,255,0.08)] px-1.5 py-0.5 rounded">
+                            Ур.{item.level}
+                        </span>
+                    )}
                 </div>
                 <ItemPriceAndStock
                     price={item.price}

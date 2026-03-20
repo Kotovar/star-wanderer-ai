@@ -101,6 +101,7 @@ const upgradeEngine = (
                               (m.fuelEfficiency || 10) +
                                   fuelEfficiencyImprovement,
                           ),
+                          consumption: nextLevel, // lv2=2, lv3=3
                           level: nextLevel,
                           defense: nextLevel,
                           maxHealth:
@@ -123,49 +124,58 @@ const upgradeEngine = (
 };
 
 /**
- * Проверяет, можно ли разместить модуль с новыми размерами на корабле
- * @param module - Модуль для улучшения
- * @param newWidth - Новая ширина
- * @param newHeight - Новая высота
- * @param state - Текущее состояние игры
- * @param canPlaceModule - Функция проверки возможности размещения
- * @returns true если место есть
+ * Находит лучшую позицию для размещения модуля с новыми размерами.
+ * Приоритет: текущая позиция (вправо/вниз) → влево → вверх → любое место на сетке.
+ * @returns координаты {x, y} или null если места нет
  */
-const hasSpaceForUpgrade = (
+const findUpgradePosition = (
     module: Module,
     newWidth: number,
     newHeight: number,
     state: GameState,
     canPlaceModule: (mod: Module, x: number, y: number) => boolean,
-): boolean => {
-    // Если размеры не изменились или уменьшились - место есть
+): { x: number; y: number } | null => {
+    // Если размеры не изменились или уменьшились — позиция не меняется
     if (newWidth <= module.width && newHeight <= module.height) {
-        return true;
+        return { x: module.x, y: module.y };
     }
 
-    // Создаём временный модуль с новыми размерами для проверки
-    const tempModule: Module = {
-        ...module,
-        width: newWidth,
-        height: newHeight,
-    };
+    const tempModule: Module = { ...module, width: newWidth, height: newHeight };
 
-    // Проверяем, можно ли разместить модуль с новыми размерами на текущей позиции
+    // 1. Текущая позиция (расширение вправо/вниз)
     if (canPlaceModule(tempModule, module.x, module.y)) {
-        return true;
+        return { x: module.x, y: module.y };
     }
 
-    // Если на текущей позиции нельзя, ищем другое место
+    // 2. Расширение влево
+    const deltaW = newWidth - module.width;
+    if (deltaW > 0) {
+        const leftX = module.x - deltaW;
+        if (leftX >= 0 && canPlaceModule(tempModule, leftX, module.y)) {
+            return { x: leftX, y: module.y };
+        }
+    }
+
+    // 3. Расширение вверх
+    const deltaH = newHeight - module.height;
+    if (deltaH > 0) {
+        const upY = module.y - deltaH;
+        if (upY >= 0 && canPlaceModule(tempModule, module.x, upY)) {
+            return { x: module.x, y: upY };
+        }
+    }
+
+    // 4. Полный перебор сетки
     const gridSize = state.ship.gridSize;
     for (let y = 0; y < gridSize; y++) {
         for (let x = 0; x < gridSize; x++) {
             if (canPlaceModule(tempModule, x, y)) {
-                return true;
+                return { x, y };
             }
         }
     }
 
-    return false;
+    return null;
 };
 
 /**
@@ -195,23 +205,25 @@ const upgradeModule = (
     const newWidth = targetModuleTemplate.width || module.width;
     const newHeight = targetModuleTemplate.height || module.height;
 
-    // Проверка места на корабле
+    // Поиск места на корабле (с учётом расширения)
     const state = get();
-    if (
-        !hasSpaceForUpgrade(
-            module,
-            newWidth,
-            newHeight,
-            state,
-            state.canPlaceModule,
-        )
-    ) {
+    const newPos = findUpgradePosition(
+        module,
+        newWidth,
+        newHeight,
+        state,
+        state.canPlaceModule,
+    );
+
+    if (!newPos) {
         get().addLog(
             `⚠ Недостаточно места для улучшения! Модуль станет ${newWidth}x${newHeight}, но на корабле нет подходящего места.`,
             "error",
         );
         return;
     }
+
+    const moved = newPos.x !== module.x || newPos.y !== module.y;
 
     set((s) => ({
         ship: {
@@ -239,10 +251,29 @@ const upgradeModule = (
                           ...(targetModuleTemplate.shields && {
                               shields: targetModuleTemplate.shields,
                           }),
-                          x: m.x,
-                          y: m.y,
+                          ...(targetModuleTemplate.shieldRegen && {
+                              shieldRegen: targetModuleTemplate.shieldRegen,
+                          }),
+                          x: newPos.x,
+                          y: newPos.y,
+                          ...(item.targetType === "weaponbay" &&
+                              m.weapons !== undefined && {
+                                  weapons: [
+                                      ...m.weapons.slice(
+                                          0,
+                                          newWidth * newHeight,
+                                      ),
+                                      ...Array(
+                                          Math.max(
+                                              0,
+                                              newWidth * newHeight -
+                                                  m.weapons.length,
+                                          ),
+                                      ).fill(null),
+                                  ],
+                              }),
                           level: nextLevel,
-                          defense: nextLevel,
+                          defense: targetModuleTemplate.defense ?? nextLevel,
                           maxHealth: MODULE_HEALTH_BY_LEVEL[nextLevel] || 100,
                           health: MODULE_HEALTH_BY_LEVEL[nextLevel] || 100,
                       }
@@ -260,6 +291,12 @@ const upgradeModule = (
         `Модуль "${updatedModule?.name}" улучшен до LV${updatedModule?.level}`,
         "info",
     );
+    if (moved) {
+        get().addLog(
+            `⚠ Модуль перемещён на позицию (${newPos.x}, ${newPos.y}) из-за увеличения размера`,
+            "warning",
+        );
+    }
     get().updateShipStats();
     playSound("upgrade");
 };

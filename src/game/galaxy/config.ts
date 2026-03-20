@@ -155,7 +155,7 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
     medical: {
         guaranteedProfessions: ["medic"],
         guaranteedWeapons: [],
-        guaranteedModules: ["lifesupport"],
+        guaranteedModules: ["lifesupport", "medical"],
         allowsTrade: false,
         allowsCraft: false,
         allowsModuleInstall: false,
