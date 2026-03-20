@@ -7,6 +7,7 @@ import {
     managePower,
     regenerateShields,
     processNaniteRepair,
+    processRepairBay,
 } from "./helpers";
 import * as processors from "./processors";
 import { processTravel } from "@/game/slices/travel/helpers";
@@ -75,6 +76,9 @@ export const createGameLoopSlice = (
 
         // Ремонт нанитами (automated_repair / nanite_hull)
         processNaniteRepair(get, set);
+
+        // Ремонтные дроны (repair_bay модули)
+        processRepairBay(get, set);
 
         // Обработка проклятых артефактов
         processors.processCursedArtifacts(state, set, get);

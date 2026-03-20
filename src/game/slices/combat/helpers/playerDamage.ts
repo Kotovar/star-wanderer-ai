@@ -13,6 +13,7 @@ import {
     findActiveArtifact,
     getArtifactEffectValue,
 } from "@/game/artifacts/utils";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 
 /**
  * Calculates weapon accuracy with all modifiers
@@ -149,14 +150,9 @@ export function computeAccuracyModifier(state: GameState): number {
     });
 
     // Xenosymbiont merge into weapon bay
-    const xenoMerge = state.crew.find(
-        (c) => c.isMerged && c.mergedModuleId !== null,
-    );
-    if (xenoMerge) {
-        const mergedModule = state.ship.modules.find(
-            (m) => m.id === xenoMerge.mergedModuleId,
-        );
-        if (mergedModule?.type === "weaponbay") modifier += 0.05;
+    const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);
+    if (mergeBonus.weaponAccuracy) {
+        modifier += mergeBonus.weaponAccuracy / 100;
     }
 
     return modifier;

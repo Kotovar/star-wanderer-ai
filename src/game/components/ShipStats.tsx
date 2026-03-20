@@ -303,12 +303,19 @@ export function ShipStats() {
                 </span>
                 <span
                     className={
-                        crew.filter((c) => RACES[c.race]?.requiresOxygen !== false).length <= getOxygenCapacity()
+                        crew.filter(
+                            (c) => RACES[c.race]?.requiresOxygen !== false,
+                        ).length <= getOxygenCapacity()
                             ? "text-[#00ff41]"
                             : "text-[#ff0040]"
                     }
                 >
-                    {crew.filter((c) => RACES[c.race]?.requiresOxygen !== false).length}/{getOxygenCapacity()}
+                    {
+                        crew.filter(
+                            (c) => RACES[c.race]?.requiresOxygen !== false,
+                        ).length
+                    }
+                    /{getOxygenCapacity()}
                 </span>
             </div>
             <div className="flex justify-between mb-2 text-sm">
@@ -548,7 +555,7 @@ export function ShipStats() {
                         )}
                     </span>
                 </div>
-                <div className="flex justify-between mb-2 text-sm">
+                <div className="flex justify-between text-sm">
                     <span className="text-[#ffb000]">
                         {t("ship_stats.accuracy")}:
                     </span>
@@ -578,7 +585,6 @@ export function ShipStats() {
                     </span>
                 </div>
             </div>
-
         </div>
     );
 }

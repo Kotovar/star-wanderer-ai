@@ -66,6 +66,7 @@ export function StationPanel() {
     const hireCrew = useGameStore((s) => s.hireCrew);
     const refuel = useGameStore((s) => s.refuel);
     const getCrewCapacity = useGameStore((s) => s.getCrewCapacity);
+    const getCargoCapacity = useGameStore((s) => s.getCargoCapacity);
     const crew = useGameStore((s) => s.crew);
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const discoverRace = useGameStore((s) => s.discoverRace);
@@ -259,6 +260,7 @@ export function StationPanel() {
                             stationStock={stationStock}
                             credits={credits}
                             ship={ship}
+                            cargoCapacity={getCargoCapacity()}
                             buyTradeGood={buyTradeGood}
                             sellTradeGood={sellTradeGood}
                         />

@@ -35,7 +35,7 @@ export function CrewList() {
     const [selectedCrew, setSelectedCrew] = useState<CrewMember | null>(null);
 
     const getModuleNameById = (moduleId: number) => getModuleName(modules, t, moduleId);
-    const getCrewRegen = (member: CrewMember) => getRegen(member, activeEffects);
+    const getCrewRegen = (member: CrewMember) => getRegen(member, activeEffects, crew, modules);
     const getAdjacentToModule = (moduleId: number) => getAdjacentModules(modules, isModuleAdjacent, moduleId);
 
     // Check if we're in combat

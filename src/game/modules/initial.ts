@@ -123,7 +123,7 @@ export const initialModules: Module[] = [
     //     maxHealth: 100,
     //     level: 1,
     //     defense: 1,
-    //     weapons: [{ type: "quantum_torpedo" }],
+    //     weapons: [{ type: "laser" }],
     // },
     // {
     //     id: INITIAL_MODULE_BASE_ID + 7,

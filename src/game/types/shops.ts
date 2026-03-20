@@ -24,6 +24,8 @@ export interface ShopItem {
     capacity?: number; // For cargo, fuel tanks
     fuelEfficiency?: number; // For engine modules
     researchOutput?: number; // For lab modules
+    repairAmount?: number;  // For repair_bay modules
+    repairTargets?: number; // For repair_bay modules
     level?: number; // Module level (1-4)
     maxHealth?: number; // Module health at purchase
     effect?: {
@@ -38,6 +40,7 @@ export interface ShopItem {
         consumption?: number;
         shields?: number;
         researchOutput?: number;
+        repairAmount?: number;
     };
     weaponType?: WeaponType;
     requiresWeaponBay?: boolean;

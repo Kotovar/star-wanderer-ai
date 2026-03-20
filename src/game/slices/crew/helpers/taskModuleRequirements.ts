@@ -61,5 +61,7 @@ export const MODULE_TYPE_NAMES: Record<ModuleType, string> = {
     lifesupport: "системах жизнеобеспечения",
     medical: "медотсеке",
     ai_core: "ИИ ядре",
+    quarters: "жилом модуле",
+    repair_bay: "ремонтном отсеке",
     weaponShed: "ячейка оружия",
 };

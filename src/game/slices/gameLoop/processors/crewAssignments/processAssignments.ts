@@ -568,8 +568,14 @@ export const processMedicalModule = (
 
         if (crewInMedical.length === 0) return;
 
-        // Лечение от модуля
-        const healAmount = medicalModule.healing ?? 5;
+        // Лечение от модуля (с бонусом от сращивания ксеноморфа)
+        let healAmount = medicalModule.healing ?? 5;
+        const hasXenoMerged = crew.some(
+            (c) => c.isMerged && c.mergedModuleId === medicalModule.id && c.race === "xenosymbiont",
+        );
+        if (hasXenoMerged) {
+            healAmount = Math.floor(healAmount * 1.25);
+        }
 
         crewInMedical.forEach((crewMember) => {
             const maxHealth =
@@ -607,6 +613,9 @@ export const processPassiveHealthRegen = (
 
     if (crew.length === 0) return;
 
+    const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);
+    const crewHealthRegenBonus = mergeBonus.crewHealthRegen ?? 0;
+
     crew.forEach((crewMember) => {
         const maxHealth = crewMember.maxHealth;
 
@@ -614,7 +623,7 @@ export const processPassiveHealthRegen = (
         if (crewMember.health >= maxHealth) return;
 
         // Используем общую функцию расчёта пассивной регенерации
-        const regenAmount = calculateHealthRegen(crewMember, get());
+        const regenAmount = calculateHealthRegen(crewMember, get()) + crewHealthRegenBonus;
 
         // Применяем лечение
         if (regenAmount > 0) {

@@ -91,6 +91,15 @@ export const createModuleFromShopItem = (
             consumption: item.consumption || 2,
         }),
         ...(item.moduleType === "cockpit" && { consumption: 1 }),
+        ...(item.moduleType === "quarters" && {
+            capacity: item.capacity || 2,
+            consumption: item.consumption || 1,
+        }),
+        ...(item.moduleType === "repair_bay" && {
+            repairAmount: item.repairAmount || 3,
+            repairTargets: item.repairTargets || 1,
+            consumption: item.consumption || 8,
+        }),
         // Дополнительные свойства
         ...(item.power !== undefined && { power: item.power }),
         ...(item.consumption !== undefined && {

@@ -30,6 +30,8 @@ function getTranslatedModuleName(
         drill: "module_names.drill",
         ai_core: "module_names.ai_core",
         lab: "module_names.lab",
+        quarters: "module_names.quarters",
+        repair_bay: "module_names.repair_bay",
     };
     const key = nameMap[moduleType];
     return key ? t(key) : moduleType;
@@ -49,6 +51,8 @@ function getTranslatedUpgradeName(
         lifesupport: "station_upgrades.lifesupport_upgrade",
         engine: "station_upgrades.engine_tuning",
         weaponbay: "station_upgrades.weaponbay_upgrade",
+        quarters: "station_upgrades.quarters_upgrade",
+        repair_bay: "station_upgrades.repair_bay_upgrade",
     };
     const key = nameMap[item.targetType];
     return key ? t(key) : item.name;
@@ -80,6 +84,12 @@ function getUpgradeEffect(
         return t("station_upgrades.efficiency", {
             value: item.effect.fuelEfficiency,
         });
+    }
+    if (item.effect?.capacity && item.targetType === "quarters") {
+        return t("station_upgrades.crew_slots", { value: item.effect.capacity });
+    }
+    if (item.effect?.repairAmount) {
+        return t("station_upgrades.repair_amount", { value: item.effect.repairAmount });
     }
     return "";
 }
@@ -222,6 +232,7 @@ function ModuleSelectionList({
                 const scanRangeAfter = nextModuleTemplate?.scanRange;
                 const oxygenAfter = nextModuleTemplate?.oxygen;
                 const researchOutputAfter = nextModuleTemplate?.researchOutput;
+                const repairAmountAfter = nextModuleTemplate?.repairAmount;
 
                 const fuelEfficiencyAfter =
                     module.fuelEfficiency !== undefined
@@ -288,6 +299,7 @@ function ModuleSelectionList({
                         scanRangeAfter={scanRangeAfter}
                         oxygenAfter={oxygenAfter}
                         researchOutputAfter={researchOutputAfter}
+                        repairAmountAfter={repairAmountAfter}
                         newWidth={newWidth}
                         newHeight={newHeight}
                     />
@@ -320,6 +332,7 @@ interface ModuleUpgradeCardProps {
     scanRangeAfter?: number;
     oxygenAfter?: number;
     researchOutputAfter?: number;
+    repairAmountAfter?: number;
     newWidth?: number;
     newHeight?: number;
 }
@@ -345,6 +358,7 @@ function ModuleUpgradeCard({
     scanRangeAfter,
     oxygenAfter,
     researchOutputAfter,
+    repairAmountAfter,
     newWidth,
     newHeight,
 }: ModuleUpgradeCardProps) {
@@ -394,7 +408,11 @@ function ModuleUpgradeCard({
                 )}
                 {module.capacity !== undefined && module.capacity > 0 && (
                     <span>
-                        {module.type === "fueltank" ? "⛽" : "📦"}{" "}
+                        {module.type === "fueltank"
+                            ? "⛽"
+                            : module.type === "quarters"
+                              ? "👥"
+                              : "📦"}{" "}
                         {module.capacity}
                         {module.type === "cargo" && "т"}
                         {capacityAfter !== undefined &&
@@ -530,10 +548,24 @@ function ModuleUpgradeCard({
                         </span>
                     </span>
                 )}
+                {module.type === "repair_bay" &&
+                    module.repairAmount !== undefined &&
+                    module.repairAmount > 0 && (
+                        <span>
+                            🔧 {module.repairAmount} HP
+                            {repairAmountAfter !== undefined &&
+                                repairAmountAfter !== module.repairAmount && (
+                                    <span className="text-[#ffb000]">
+                                        {" "}
+                                        → {repairAmountAfter} HP
+                                    </span>
+                                )}
+                        </span>
+                    )}
             </div>
             <div className="text-[10px] text-[#ffb000] mt-1 flex gap-3">
                 <span>
-                    {t("station_upgrades.level")}: {module.level} → {nextLevel}
+                    {t("station_upgrades.level")}: {module.level ?? 1} → {nextLevel}
                 </span>
                 {newWidth !== undefined &&
                     newHeight !== undefined &&

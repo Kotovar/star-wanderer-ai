@@ -12,7 +12,9 @@ export type ModuleType =
     | "fueltank"
     | "drill"
     | "ai_core"
-    | "lab"; // Science laboratory for research
+    | "lab"
+    | "quarters"    // Living quarters — extra crew slots
+    | "repair_bay"; // Repair bay — drones repair damaged modules each turn
 
 export type WeaponType =
     | "kinetic"
@@ -54,6 +56,8 @@ export interface Module {
     manualDisabled?: boolean; // Manually disabled by player
     weapons?: Weapon[];
     healing?: number;
+    repairAmount?: number;  // HP restored per drone (repair_bay)
+    repairTargets?: number; // Number of modules repaired per turn (repair_bay)
     movedThisTurn?: boolean; // Whether the module has been moved this turn
 }
 

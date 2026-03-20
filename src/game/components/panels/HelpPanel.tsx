@@ -146,6 +146,22 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                                     {t("help.medical_desc")}
                                 </p>
                             </div>
+                            <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
+                                <span className="text-[#00ff41] font-bold">
+                                    {t("help.quarters")}
+                                </span>
+                                <p className="text-[#888]">
+                                    {t("help.quarters_desc")}
+                                </p>
+                            </div>
+                            <div className="p-2 bg-[rgba(0,212,255,0.1)] border border-[#00d4ff]">
+                                <span className="text-[#00d4ff] font-bold">
+                                    {t("help.repair_bay")}
+                                </span>
+                                <p className="text-[#888]">
+                                    {t("help.repair_bay_desc")}
+                                </p>
+                            </div>
                         </div>
                         <div className="mt-3 p-3 bg-[rgba(255,176,0,0.1)] border border-[#ffb000] text-xs">
                             <div className="text-[#ffb000] font-bold mb-1">

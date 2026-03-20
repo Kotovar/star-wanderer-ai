@@ -65,7 +65,8 @@
         "hold_empty": "Hold is empty",
         "contract_label": "[Contract]",
         "crafted_label": "[Crafted]",
-        "module_label": "[Module]"
+        "module_label": "[Module]",
+        "overflow": "[OVERFLOW]"
     },
     "modules": {
         "search_per_turn": "res/turn",
@@ -912,6 +913,10 @@
         "shield_desc": "Protection from damage",
         "lab": "Laboratory",
         "lab_desc": "Research technologies",
+        "quarters": "Living Quarters",
+        "quarters_desc": "Additional crew slots",
+        "repair_bay": "Repair Bay",
+        "repair_bay_desc": "Drones repair damaged modules",
         "drill": "Drill",
         "drill_desc": "Mine resources from asteroids",
         "medical": "Medical Bay",
@@ -1424,7 +1429,10 @@
         "scanner_default": "Scanner",
         "off": "⚠ OFF",
         "info_title": "Ship module information",
-        "damage_bonus": "⚔ Damage bonus"
+        "damage_bonus": "⚔ Damage bonus",
+        "crew_slots": "Crew slots",
+        "repair_per_turn": "🔧 Repair per turn",
+        "modules": "modules"
     },
     "game_log": {
         "turn_label": "TURN"
@@ -1443,6 +1451,8 @@
         "drill": "Drill",
         "ai_core": "AI Core",
         "lab": "Laboratory",
+        "quarters": "Living Quarters",
+        "repair_bay": "Repair Bay",
         "weaponShed": "Shed"
     },
     "weapon_types": {
@@ -1467,7 +1477,9 @@
         "fueltank": "Fuel storage",
         "drill": "Mine resources from asteroids",
         "ai_core": "Improved system control",
-        "lab": "Research technologies"
+        "lab": "Research technologies",
+        "quarters": "Additional crew slots",
+        "repair_bay": "Automatic module repair"
     },
     "weapon_info": {
         "damage": "Damage",
@@ -1541,7 +1553,11 @@
         "drill_upgrade": "Drill Upgrade",
         "shield_upgrade": "Shields Upgrade",
         "lab_upgrade": "Laboratory Upgrade",
-        "medical_upgrade": "Medical Bay Upgrade"
+        "medical_upgrade": "Medical Bay Upgrade",
+        "quarters_upgrade": "Quarters Upgrade",
+        "repair_bay_upgrade": "Repair Bay Upgrade",
+        "crew_slots": "+{{value}} crew slot",
+        "repair_amount": "+{{value}} HP repair"
     },
     "race_names": {
         "human": "Humans",

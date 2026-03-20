@@ -25,6 +25,8 @@ export const MODULE_TRANSLATIONS: Record<
         drill: { name: "Бур" },
         ai_core: { name: "ИИ Ядро" },
         lab: { name: "Лаборатория" },
+        quarters: { name: "Жилой модуль" },
+        repair_bay: { name: "Ремонтный отсек" },
         // Boss modules
         ancient_core: { name: "Древнее ядро" },
         plasma_cannon: { name: "Плазменная пушка" },
@@ -63,6 +65,8 @@ export const MODULE_TRANSLATIONS: Record<
         drill: { name: "Drill" },
         ai_core: { name: "AI Core" },
         lab: { name: "Laboratory" },
+        quarters: { name: "Quarters" },
+        repair_bay: { name: "Repair Bay" },
         // Boss modules
         ancient_core: { name: "Ancient Core" },
         plasma_cannon: { name: "Plasma Cannon" },

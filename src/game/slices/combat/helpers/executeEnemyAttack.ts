@@ -25,6 +25,8 @@ const MODULE_TARGET_PRIORITY: Record<ModuleType, number> = {
     drill: 5,
     lab: 5,
     ai_core: 5,
+    quarters: 5,
+    repair_bay: 10,
     weaponShed: 0,
 };
 

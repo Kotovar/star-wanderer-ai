@@ -612,6 +612,16 @@ export const XENOSYMBIONT_MERGE_EFFECTS: Record<
         },
     },
 
+    quarters: {
+        name: "Симбиоз с жилым модулем",
+        description: "Ксеноморф срастается с жилыми помещениями, улучшая регенерацию экипажа",
+        effects: { crewHealthRegen: 5 },
+    },
+    repair_bay: {
+        name: "Симбиоз с ремонтным отсеком",
+        description: "Ксеноморф улучшает эффективность ремонтных дронов (+50% HP к ремонту)",
+        effects: { repairBonus: 50 },
+    },
     // weaponShed не поддерживает сращивание
     weaponShed: {
         name: "",

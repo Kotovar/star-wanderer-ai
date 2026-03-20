@@ -6,6 +6,7 @@ import {
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import { getActiveModules } from "@/game/modules/utils";
 import type { GameState } from "@/game/types";
 
 /**
@@ -70,7 +71,11 @@ export const updateShipStats = (state: GameState): void => {
     ship.armor = finalDefense;
     ship.maxShields = maxShieldsWithBonus;
     ship.shields = Math.min(ship.shields, maxShieldsWithBonus);
-    ship.crewCapacity = modules.length;
+    const quartersBonus = getActiveModules(modules, "quarters").reduce(
+        (sum, m) => sum + (m.capacity ?? 0),
+        0,
+    );
+    ship.crewCapacity = modules.filter((m) => m.type !== "quarters").length + quartersBonus;
     ship.maxFuel = totalFuelCapacity;
     ship.fuel = Math.min(currentFuel, totalFuelCapacity);
 };

@@ -1,4 +1,4 @@
-import { calculateHealthRegen } from "@/game/slices/crew/helpers";
+import { calculateHealthRegen, getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type { ActiveEffect, CrewMember, Module } from "@/game/types";
 
 export type TFn = (key: string) => string;
@@ -49,7 +49,16 @@ export const getModuleName = (modules: Module[], t: TFn, moduleId: number) => {
 export const getRegen = (
     member: CrewMember,
     activeEffects: ActiveEffect[],
-) => calculateHealthRegen(member, { activeEffects });
+    crew?: CrewMember[],
+    modules?: Module[],
+) => {
+    const base = calculateHealthRegen(member, { activeEffects });
+    if (crew && modules) {
+        const bonus = getMergeEffectsBonus(crew, modules);
+        return base + (bonus.crewHealthRegen ?? 0);
+    }
+    return base;
+};
 
 export const getAdjacentModules = (
     modules: Module[],

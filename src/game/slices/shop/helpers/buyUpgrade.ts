@@ -254,6 +254,12 @@ const upgradeModule = (
                           ...(targetModuleTemplate.shieldRegen && {
                               shieldRegen: targetModuleTemplate.shieldRegen,
                           }),
+                          ...(targetModuleTemplate.repairAmount !== undefined && {
+                              repairAmount: targetModuleTemplate.repairAmount,
+                          }),
+                          ...(targetModuleTemplate.repairTargets !== undefined && {
+                              repairTargets: targetModuleTemplate.repairTargets,
+                          }),
                           x: newPos.x,
                           y: newPos.y,
                           ...(item.targetType === "weaponbay" &&

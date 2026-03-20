@@ -35,9 +35,14 @@ export function CargoDisplay() {
         <div>
             <div className="mb-2.5 text-xs">
                 {t("cargo.capacity_label")}:{" "}
-                <span className="text-[#ffb000]">
+                <span className={totalCargo > totalCapacity ? "text-[#ff0040]" : "text-[#ffb000]"}>
                     {totalCargo}/{totalCapacity}т
                 </span>
+                {totalCargo > totalCapacity && (
+                    <span className="text-[#ff0040] ml-1 text-[10px]">
+                        {t("cargo.overflow")}
+                    </span>
+                )}
             </div>
             {totalCargo === 0 ? (
                 <div className="text-[11px] text-[#888]">

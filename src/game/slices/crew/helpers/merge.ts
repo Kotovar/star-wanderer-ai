@@ -1,5 +1,6 @@
 import { RACES, XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants/races";
 import type { GameState, GameStore, CrewMember } from "@/game/types";
+import { getCargoCapacity } from "@/game/slices/ship/helpers/getCargoCapacity";
 
 /**
  * Проверяет, может ли член экипажа срастись с модулем
@@ -92,6 +93,26 @@ export const unmergeFromModule = (
     const moduleShip = get().ship.modules.find(
         (m) => m.id === crewMember.mergedModuleId,
     );
+
+    // Предупредить если груз переполнится после отмены сращивания
+    if (moduleShip?.type === "cargo") {
+        const state = get();
+        const currentCargo =
+            state.ship.cargo.reduce((s, c) => s + c.quantity, 0) +
+            state.ship.tradeGoods.reduce((s, g) => s + g.quantity, 0);
+        const capacityAfter = getCargoCapacity({
+            ...state,
+            crew: state.crew.map((c) =>
+                c.id === crewMemberId ? { ...c, isMerged: false, mergedModuleId: null } : c,
+            ),
+        });
+        if (currentCargo > capacityAfter) {
+            get().addLog(
+                `⚠️ Груз (${currentCargo}т) превышает вместимость после отмены сращивания (${capacityAfter}т). Продайте излишки!`,
+                "warning",
+            );
+        }
+    }
 
     set((s) => ({
         crew: s.crew.map((c) =>

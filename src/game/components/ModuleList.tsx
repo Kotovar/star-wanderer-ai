@@ -34,6 +34,8 @@ function getTranslatedModuleName(
         drill: t("module_names.drill"),
         ai_core: t("module_names.ai_core"),
         lab: t("module_names.lab"),
+        quarters: t("module_names.quarters"),
+        repair_bay: t("module_names.repair_bay"),
     };
     return nameMap[moduleType] || moduleType;
 }
@@ -57,6 +59,8 @@ function getModuleDescription(module: Module): string {
         drill: "module_descriptions.drill",
         ai_core: "module_descriptions.ai_core",
         lab: "module_descriptions.lab",
+        quarters: "module_descriptions.quarters",
+        repair_bay: "module_descriptions.repair_bay",
     };
 
     return descriptionMap[moduleType] || "";
@@ -214,8 +218,7 @@ function ModuleStats({ module }: ModuleStatsProps) {
             {/* Defense for all modules (not just shield) - for shields use level */}
             {module.defense !== undefined && module.defense > 0 && (
                 <span>
-                    {t("module_list.armor")}:{" "}
-                    {module.defense}
+                    {t("module_list.armor")}: {module.defense}
                     {artifactArmor > 0 && ` (+${artifactArmor})`}
                 </span>
             )}
@@ -458,9 +461,7 @@ interface ModuleDetailedStatsProps {
     module: Module;
 }
 
-function ModuleDetailedStats({
-    module,
-}: ModuleDetailedStatsProps) {
+function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
     const { t } = useTranslation();
     const descriptionKey = getModuleDescription(module);
     const artifactArmor = useGameStore((s) => {
@@ -586,6 +587,27 @@ function ModuleDetailedStats({
                             {t("module_list.oxygen")}:
                         </span>{" "}
                         {module.oxygen} {t("module_list.creatures")}
+                    </div>
+                )}
+            {module.type === "quarters" &&
+                module.capacity !== undefined &&
+                module.capacity > 0 && (
+                    <div>
+                        <span className="text-[#ffb000]">
+                            👥 {t("module_list.crew_slots")}:
+                        </span>{" "}
+                        +{module.capacity}
+                    </div>
+                )}
+            {module.type === "repair_bay" &&
+                module.repairAmount !== undefined &&
+                module.repairAmount > 0 && (
+                    <div>
+                        <span className="text-[#ffb000]">
+                            {t("module_list.repair_per_turn")}:
+                        </span>{" "}
+                        {module.repairAmount} HP × {module.repairTargets ?? 1}{" "}
+                        {t("module_list.modules")}
                     </div>
                 )}
             {module.type === "weaponbay" && (

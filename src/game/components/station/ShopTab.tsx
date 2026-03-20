@@ -33,6 +33,8 @@ function getTranslatedModuleName(
         drill: "module_names.drill",
         ai_core: "module_names.ai_core",
         lab: "module_names.lab",
+        quarters: "module_names.quarters",
+        repair_bay: "module_names.repair_bay",
     };
     const key = nameMap[moduleType];
     return key ? t(key) : moduleType;
@@ -57,6 +59,8 @@ function getTranslatedUpgradeName(
         lab: "station_upgrades.lab_upgrade",
         medical: "station_upgrades.medical_upgrade",
         weaponbay: "station_upgrades.weaponbay_upgrade",
+        quarters: "station_upgrades.quarters_upgrade",
+        repair_bay: "station_upgrades.repair_bay_upgrade",
     };
     const key = nameMap[item.targetType];
     return key ? t(key) : item.name;
@@ -250,14 +254,13 @@ export function ShopTab({
                         oxygen: selectedItem.oxygen || 0,
                         scanRange: selectedItem.scanRange || 0,
                         fuelEfficiency: selectedItem.fuelEfficiency || 0,
+                        repairAmount: selectedItem.repairAmount || 0,
+                        repairTargets: selectedItem.repairTargets || 1,
                         width: selectedItem.width || 1,
                         height: selectedItem.height || 1,
                         x: 0,
                         y: 0,
-                        level: parseInt(
-                            selectedItem.id.split("-")[1] || "1",
-                            10,
-                        ),
+                        level: selectedItem.level ?? 1,
                         weapons: [],
                         disabled: false,
                         movedThisTurn: false,
