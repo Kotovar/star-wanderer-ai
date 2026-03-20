@@ -18,6 +18,7 @@ import { useTranslation } from "@/lib/useTranslation";
 export function ContractsList() {
     const activeContracts = useGameStore((s) => s.activeContracts);
     const cancelContract = useGameStore((s) => s.cancelContract);
+    const get = useGameStore.getState;
     const { t } = useTranslation();
     const [selectedContract, setSelectedContract] = useState<Contract | null>(
         null,
@@ -207,6 +208,13 @@ export function ContractsList() {
 
                 const cargoName = TRADE_GOODS[contract.cargo as Goods]?.name;
 
+                // Calculate how much cargo the player currently has
+                const state = get();
+                const cargoOwned =
+                    state.ship.tradeGoods.find((g) => g.item === contract.cargo)
+                        ?.quantity ?? 0;
+                const progress = `${cargoOwned}/${contract.quantity}`;
+
                 return {
                     type: t("contracts.type_supply"),
                     tasks: [
@@ -218,6 +226,10 @@ export function ContractsList() {
                                     "{{quantity}}",
                                     String(contract.quantity),
                                 ),
+                        },
+                        {
+                            label: t("contracts.task_progress"),
+                            value: `${progress}т`,
                         },
                         {
                             label: t("contracts.task_where"),

@@ -629,7 +629,7 @@
         "details_title": "Contract Details",
         "reward_label": "💰 Reward:",
         "desc_scan": "📡 Scanning: {{planetType}}",
-        "desc_supply": "📦 Supply: {{cargo}} x{{quantity}}t",
+        "desc_supply": "📦 Supply: {{cargo}} ({{progress}}/{{quantity}}t)",
         "desc_delivery": "📦 Deliver \"{{cargo}}\" (10t)",
         "desc_combat": "⚔ Destroy all enemies in sector {{sector}}",
         "desc_bounty": "🎯 Destroy enemy (threat {{threat}}) in sector {{sector}}",

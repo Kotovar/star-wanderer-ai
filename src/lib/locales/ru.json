@@ -629,7 +629,7 @@
         "details_title": "Детали задания",
         "reward_label": "💰 Награда:",
         "desc_scan": "📡 Сканирование: {{planetType}}",
-        "desc_supply": "📦 Поставка: {{cargo}} x{{quantity}}т",
+        "desc_supply": "📦 Поставка: {{cargo}} ({{progress}}/{{quantity}}т)",
         "desc_delivery": "📦 Доставить \"{{cargo}}\" (10т)",
         "desc_combat": "⚔ Уничтожить всех врагов в секторе {{sector}}",
         "desc_bounty": "🎯 Уничтожить врага (угроза {{threat}}) в секторе {{sector}}",

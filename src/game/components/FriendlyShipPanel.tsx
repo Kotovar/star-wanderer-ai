@@ -140,7 +140,11 @@ export function FriendlyShipPanel() {
         else if (qualityRoll < 0.85) quality = "good";
         else quality = "excellent";
 
-        const { traits, priceModifier } = generateCrewTraits(quality, 0, crewRace.hasHappiness);
+        const { traits, priceModifier } = generateCrewTraits(
+            quality,
+            0,
+            crewRace.hasHappiness,
+        );
         const basePrice = CREW_BASE_PRICES[availableProfession];
         const levelMod = availableLevel ? 1 + (availableLevel - 1) * 0.2 : 1;
         const crewPrice = Math.round(basePrice * priceModifier * levelMod);
@@ -312,6 +316,7 @@ export function FriendlyShipPanel() {
                 desc: t("contracts.desc_supply", {
                     cargo: cargo.name,
                     quantity,
+                    progress: 0,
                 }),
                 cargo: cargoKey,
                 quantity,

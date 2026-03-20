@@ -263,7 +263,7 @@ export const generatePlanetContracts = (
                 return {
                     id: `c-${planetId}-supply-${Date.now()}-${Math.random()}`,
                     type: "supply_run",
-                    desc: `📦 Поставка: ${cargo.name} x${quantity}т`,
+                    desc: `📦 Поставка: ${cargo.name}`,
                     cargo: cargoKey,
                     quantity,
                     sourcePlanetId: planetId,

@@ -26,6 +26,7 @@ export function PlanetPanel() {
     const credits = useGameStore((s) => s.credits);
     const activeContracts = useGameStore((s) => s.activeContracts);
     const completedContractIds = useGameStore((s) => s.completedContractIds);
+    const get = useGameStore.getState;
 
     const { t } = useTranslation();
 
@@ -126,7 +127,8 @@ export function PlanetPanel() {
                                     <div className="text-[#00ff41] text-sm">
                                         {t("planet_panel.found_goods", {
                                             name: lastScoutResult.itemName,
-                                            quantity: lastScoutResult.quantity ?? 1,
+                                            quantity:
+                                                lastScoutResult.quantity ?? 1,
                                         })}
                                     </div>
                                 )}
@@ -138,12 +140,17 @@ export function PlanetPanel() {
                                     </div>
                                 )}
                             {lastScoutResult.researchResources &&
-                                lastScoutResult.researchResources.length > 0 && (
+                                lastScoutResult.researchResources.length >
+                                    0 && (
                                     <div className="text-[#4488ff] text-sm">
-                                        {lastScoutResult.researchResources.map((res) => {
-                                            const rd = RESEARCH_RESOURCES[res.type];
-                                            return `🔬 ${rd?.icon ?? ""} ${rd?.name ?? res.type} x${res.quantity}`;
-                                        }).join(", ")}
+                                        {lastScoutResult.researchResources
+                                            .map((res) => {
+                                                const id = res.type;
+                                                const rd =
+                                                    RESEARCH_RESOURCES[id];
+                                                return `🔬 ${rd?.icon ?? ""} ${rd?.name ?? res.type} x${res.quantity}`;
+                                            })
+                                            .join(", ")}
                                     </div>
                                 )}
                             {lastScoutResult.mutationName && (
@@ -536,18 +543,33 @@ export function PlanetPanel() {
                                                     })}
                                                 {c.type === "supply_run" &&
                                                     c.cargo &&
-                                                    t("contracts.desc_supply", {
-                                                        cargo:
-                                                            TRADE_GOODS[
-                                                                c.cargo as Goods
-                                                            ]?.name || "",
-                                                        quantity:
-                                                            c.quantity || 0,
-                                                        destination:
-                                                            c.sourceName ||
-                                                            c.sourceSectorName ||
-                                                            "",
-                                                    })}
+                                                    (() => {
+                                                        const cargoOwned =
+                                                            get().ship.tradeGoods.find(
+                                                                (g) =>
+                                                                    g.item ===
+                                                                    c.cargo,
+                                                            )?.quantity ?? 0;
+                                                        return t(
+                                                            "contracts.desc_supply",
+                                                            {
+                                                                cargo:
+                                                                    TRADE_GOODS[
+                                                                        c.cargo as Goods
+                                                                    ]?.name ||
+                                                                    "",
+                                                                quantity:
+                                                                    c.quantity ||
+                                                                    0,
+                                                                progress:
+                                                                    cargoOwned,
+                                                                destination:
+                                                                    c.sourceName ||
+                                                                    c.sourceSectorName ||
+                                                                    "",
+                                                            },
+                                                        );
+                                                    })()}
                                             </div>
 
                                             {/* Where to turn in */}
