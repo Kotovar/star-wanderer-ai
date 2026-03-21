@@ -222,6 +222,8 @@ export interface GameAnomaly {
 
 export interface GameScouting {
     sendScoutingMission: (planetId: string) => void;
+    planetaryDrill: (planetId: string) => void;
+    atmosphericAnalysis: (planetId: string) => void;
 }
 
 export interface GameDistressSignal {

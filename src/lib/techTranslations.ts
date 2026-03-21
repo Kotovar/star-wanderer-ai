@@ -184,6 +184,31 @@ export const TECH_TRANSLATIONS: Record<
             description:
                 "Полное единение с наследием Древних: +2 слота активных артефактов и +15% ко всем их эффектам.",
         },
+        planetary_drill: {
+            name: "Планетарный бур",
+            description:
+                "Адаптирует буровой модуль для работы на поверхности планет. Тип планеты определяет добычу: лёд — вода, вулканы — энергия, джунгли — биоматериалы и т.д.",
+        },
+        atmospheric_analysis: {
+            name: "Атмосферный анализ",
+            description:
+                "Учёный может однократно собрать атмосферные образцы с любой пустой планеты. Тип атмосферы определяет полученные исследовательские ресурсы.",
+        },
+        storm_shields: {
+            name: "Штормовые щиты",
+            description:
+                "Специальные экранирующие поля снижают урон от всех типов штормов на 50%.",
+        },
+        modular_arsenal: {
+            name: "Модульный арсенал",
+            description:
+                "Переработка конструкции оружейных палуб позволяет разместить на 1 орудие больше в каждом отсеке. Двойные палубы вмещают 3 орудия вместо 2.",
+        },
+        ion_cannon: {
+            name: "Ионная пушка",
+            description:
+                "Разработка ионного орудия, которое наносит огромный урон щитам (×4), но не повреждает корпус. Незаменимо для снятия щитов перед добивающим залпом.",
+        },
     },
 
     en: {
@@ -360,6 +385,31 @@ export const TECH_TRANSLATIONS: Record<
             name: "Relic Mastery",
             description:
                 "Complete unity with the Ancient heritage: +2 active artifact slots and +15% to all their effects.",
+        },
+        planetary_drill: {
+            name: "Planetary Drill",
+            description:
+                "Adapts the drill module for planetary surface operations. Resource yield depends on planet type: ice worlds yield water, volcanic worlds yield energy, jungles yield biomatter, and so on.",
+        },
+        atmospheric_analysis: {
+            name: "Atmospheric Analysis",
+            description:
+                "A scientist can collect atmospheric samples from any empty planet once. Planet type determines which research resources are gathered.",
+        },
+        storm_shields: {
+            name: "Storm Shields",
+            description:
+                "Specialized shielding fields reduce damage from all storm types by 50%.",
+        },
+        modular_arsenal: {
+            name: "Modular Arsenal",
+            description:
+                "Redesigned weapon bay architecture allows one additional weapon per bay. Double bays hold 3 weapons instead of 2.",
+        },
+        ion_cannon: {
+            name: "Ion Cannon",
+            description:
+                "Develops an ion weapon that deals massive shield damage (×4) but cannot damage the hull. Essential for stripping shields before a finishing volley.",
         },
     },
 };

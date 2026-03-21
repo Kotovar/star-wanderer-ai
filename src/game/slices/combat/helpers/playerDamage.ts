@@ -617,3 +617,57 @@ export function processQuantumTorpedoDamage(
         missedShots,
     };
 }
+
+/**
+ * Processes ion cannon damage (massive shield damage, 1 hull damage when shields are down)
+ */
+export function processIonCannonDamage(
+    weaponCount: number,
+    finalDamagePerWeapon: number,
+    damageMultiplier: number,
+    remainingShields: number,
+    enemyShields: number,
+    accuracy: number,
+    shieldBonus: number,
+): {
+    totalShieldDamage: number;
+    totalModuleDamage: number;
+    remainingShields: number;
+    logs: string[];
+    missedShots: number;
+} {
+    let totalShieldDamage = 0;
+    let totalModuleDamage = 0;
+    const logs: string[] = [];
+    let missedShots = 0;
+
+    for (let i = 0; i < weaponCount; i++) {
+        if (Math.random() > accuracy) {
+            missedShots++;
+            continue;
+        }
+
+        const ionDmg = finalDamagePerWeapon * damageMultiplier;
+        const shieldDmg = Math.floor(ionDmg * shieldBonus);
+        const actualShieldDmg = Math.min(remainingShields, shieldDmg);
+
+        remainingShields -= actualShieldDmg;
+        totalShieldDamage += actualShieldDmg;
+
+        if (enemyShields > 0) {
+            logs.push(`⚡ Ионная пушка: -${actualShieldDmg} щитам`);
+        } else {
+            // Ионизация наносит минимальный урон корпусу даже без щитов
+            totalModuleDamage += 1;
+            logs.push(`⚡ Ионная пушка: щиты сняты, ионизация -1 корпусу`);
+        }
+    }
+
+    return {
+        totalShieldDamage,
+        totalModuleDamage,
+        remainingShields,
+        logs,
+        missedShots,
+    };
+}

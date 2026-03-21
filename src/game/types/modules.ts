@@ -23,7 +23,8 @@ export type WeaponType =
     | "plasma"
     | "drones"
     | "antimatter"
-    | "quantum_torpedo";
+    | "quantum_torpedo"
+    | "ion_cannon";
 
 export type WeaponTypeTotal = WeaponType | "total";
 export type PartialModuleType = Exclude<ModuleType, "weaponShed">;
@@ -76,4 +77,5 @@ export interface WeaponDetails {
     interceptChance?: number;
     dualShot?: boolean; // Fires twice per weapon per attack (drones)
     shieldBypass?: boolean; // Ignores shields entirely (quantum torpedoes)
+    shieldOnly?: boolean; // Deals damage ONLY to shields, never overflows to hull (ion cannon)
 }

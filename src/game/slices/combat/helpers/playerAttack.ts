@@ -20,6 +20,7 @@ import {
     processDronesDamage,
     processAntimatterDamage,
     processQuantumTorpedoDamage,
+    processIonCannonDamage,
 } from "./playerDamage";
 import { handleVictory } from "./playerVictory";
 import { handleEnemyCounterAttack } from "./enemyCounterAttack";
@@ -83,6 +84,7 @@ function countWeapons(state: GameState): WeaponCounts {
         drones: 0,
         antimatter: 0,
         quantum_torpedo: 0,
+        ion_cannon: 0,
     };
 
     state.ship.modules.forEach((m) => {
@@ -280,6 +282,7 @@ function calculateAllDamage(
         drones: 0,
         antimatter: 0,
         quantum_torpedo: 0,
+        ion_cannon: 0,
     };
 
     const getAccuracy = (type: WeaponType) =>
@@ -402,6 +405,23 @@ function calculateAllDamage(
         missedShots.quantum_torpedo = result.missedShots;
     }
 
+    if (weaponCounts.ion_cannon > 0) {
+        const result = processIonCannonDamage(
+            weaponCounts.ion_cannon,
+            finalDamagePerWeapon,
+            damageMultiplier,
+            remainingShields,
+            enemyShields,
+            getAccuracy("ion_cannon"),
+            WEAPON_TYPES.ion_cannon.shieldBonus ?? 4.0,
+        );
+        totalShieldDamage += result.totalShieldDamage;
+        totalModuleDamage += result.totalModuleDamage;
+        remainingShields = result.remainingShields;
+        logs.push(...result.logs);
+        missedShots.ion_cannon = result.missedShots;
+    }
+
     // Missed shot logs
     if (missedShots.laser > 0)
         logs.push(`❌ ${missedShots.laser} лазер(а) промахнул(ись)!`);
@@ -425,6 +445,8 @@ function calculateAllDamage(
         logs.push(
             `❌ ${missedShots.quantum_torpedo} торпеда(ы) промахнул(ась)!`,
         );
+    if (missedShots.ion_cannon > 0)
+        logs.push(`❌ ${missedShots.ion_cannon} ион. выстр. промахнул(ись)!`);
 
     return {
         totalShieldDamage,
@@ -622,7 +644,8 @@ export function executePlayerAttack(
         weaponCounts.plasma +
         weaponCounts.drones +
         weaponCounts.antimatter +
-        weaponCounts.quantum_torpedo;
+        weaponCounts.quantum_torpedo +
+        weaponCounts.ion_cannon;
     if (totalWeapons === 0) return;
 
     // 2. Target resolution

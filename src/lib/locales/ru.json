@@ -1477,7 +1477,8 @@
         "plasma": "Плазменное",
         "drones": "Боевые дроны",
         "antimatter": "Антиматериальное",
-        "quantum_torpedo": "Квантовая торпеда"
+        "quantum_torpedo": "Квантовая торпеда",
+        "ion_cannon": "Ионная пушка"
     },
     "module_descriptions": {
         "reactor": "Генерирует энергию для корабля",

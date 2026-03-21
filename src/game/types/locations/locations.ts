@@ -46,6 +46,8 @@ export interface Location {
     planetType?: PlanetType;
     isEmpty?: boolean;
     explored?: boolean; // Fully explored empty planet (after 3 scout missions)
+    planetaryDrilled?: boolean; // Planetary drill has been used on this planet
+    atmosphereAnalyzed?: boolean; // Atmospheric analysis has been performed
     visited?: boolean; // Player has visited this location (opened its panel)
     lastScoutResult?: {
         type: "credits" | "tradeGood" | "nothing" | "enemy";

@@ -36,6 +36,9 @@ export function PlanetPanel() {
         (s) => s.completeDeliveryContract,
     );
     const sendScoutingMission = useGameStore((s) => s.sendScoutingMission);
+    const planetaryDrill = useGameStore((s) => s.planetaryDrill);
+    const atmosphericAnalysis = useGameStore((s) => s.atmosphericAnalysis);
+    const researchedTechs = useGameStore((s) => s.research.researchedTechs);
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const discoverRace = useGameStore((s) => s.discoverRace);
     const knownRaces = useGameStore((s) => s.knownRaces);
@@ -66,6 +69,16 @@ export function PlanetPanel() {
         const canScout = scoutedTimes < 3;
         const lastScoutResult = currentLocation.lastScoutResult;
         const currentLocationPlanetType = currentLocation.planetType;
+
+        const hasDrillTech = researchedTechs.includes("planetary_drill");
+        const hasDrillModule = ship.modules.some(
+            (m) => m.type === "drill" && m.health > 0 && !m.disabled && !m.manualDisabled,
+        );
+        const canDrill = hasDrillTech && hasDrillModule && !currentLocation.planetaryDrilled;
+
+        const hasAtmoTech = researchedTechs.includes("atmospheric_analysis");
+        const hasScientist = crew.some((c) => c.profession === "scientist");
+        const canAnalyze = hasAtmoTech && hasScientist && !currentLocation.atmosphereAnalyzed;
         const planetBgClass = getPlanetBackgroundClass(
             currentLocationPlanetType,
         );
@@ -201,6 +214,74 @@ export function PlanetPanel() {
                         <div className="text-[#ff0040] text-sm mt-4 p-3 border border-[#ff0040] bg-[rgba(255,0,64,0.1)]">
                             Для разведки требуется член экипажа с профессией
                             &quot;Разведчик&quot;.
+                        </div>
+                    )}
+
+                    {/* Planetary Drill */}
+                    {hasDrillTech && (
+                        <div className="mt-4">
+                            <div className="font-['Orbitron'] font-bold text-base text-[#ffb000]">
+                                ⛏️ Планетарный бур
+                            </div>
+                            {canDrill ? (
+                                <>
+                                    <div className="text-sm text-[#888] mt-1">
+                                        Добыча ресурсов зависит от типа планеты.
+                                        Однократно.
+                                    </div>
+                                    <Button
+                                        onClick={() =>
+                                            planetaryDrill(currentLocation.id)
+                                        }
+                                        className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider mt-2"
+                                    >
+                                        Начать бурение
+                                    </Button>
+                                </>
+                            ) : currentLocation.planetaryDrilled ? (
+                                <div className="text-[#555] text-sm mt-1">
+                                    Планета уже пробурена.
+                                </div>
+                            ) : (
+                                <div className="text-[#ff0040] text-sm mt-1 p-2 border border-[#ff0040] bg-[rgba(255,0,64,0.1)]">
+                                    Требуется активный модуль дрели.
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Atmospheric Analysis */}
+                    {hasAtmoTech && (
+                        <div className="mt-4">
+                            <div className="font-['Orbitron'] font-bold text-base text-[#00d4ff]">
+                                🌫️ Атмосферный анализ
+                            </div>
+                            {canAnalyze ? (
+                                <>
+                                    <div className="text-sm text-[#888] mt-1">
+                                        Учёный соберёт исследовательские
+                                        образцы. Однократно.
+                                    </div>
+                                    <Button
+                                        onClick={() =>
+                                            atmosphericAnalysis(
+                                                currentLocation.id,
+                                            )
+                                        }
+                                        className="cursor-pointer bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider mt-2"
+                                    >
+                                        Провести анализ
+                                    </Button>
+                                </>
+                            ) : currentLocation.atmosphereAnalyzed ? (
+                                <div className="text-[#555] text-sm mt-1">
+                                    Атмосфера уже проанализирована.
+                                </div>
+                            ) : (
+                                <div className="text-[#ff0040] text-sm mt-1 p-2 border border-[#ff0040] bg-[rgba(255,0,64,0.1)]">
+                                    Требуется учёный в экипаже.
+                                </div>
+                            )}
                         </div>
                     )}
 

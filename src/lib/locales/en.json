@@ -1477,7 +1477,8 @@
         "plasma": "Plasma",
         "drones": "Combat Drones",
         "antimatter": "Antimatter",
-        "quantum_torpedo": "Quantum Torpedo"
+        "quantum_torpedo": "Quantum Torpedo",
+        "ion_cannon": "Ion Cannon"
     },
     "module_descriptions": {
         "reactor": "Generates energy for the ship",

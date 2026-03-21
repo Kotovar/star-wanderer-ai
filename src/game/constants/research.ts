@@ -312,7 +312,7 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         id: "combat_drones",
         name: "Боевые дроны",
         description:
-            "Автономные дроны патрулируют корабль и атакуют цели, давая +15% к урону.",
+            "Боевые дроны атакуют дважды за выстрел, давая +15% к урону.",
         tier: 2,
         category: "weapons",
         prerequisites: ["targeting_matrix"],
@@ -342,10 +342,10 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         id: "plasma_weapons",
         name: "Плазменное оружие",
         description:
-            "Открывает доступ к плазменным орудиям, игнорирующим 25% брони.",
+            "Плазменные орудия пробивают 25% брони и наносят +30% урона по щитам. +15% к общему урону.",
         tier: 2,
         category: "weapons",
-        prerequisites: ["targeting_matrix"],
+        prerequisites: ["targeting_matrix", "ion_cannon"],
         resources: { energy_samples: 5, tech_salvage: 8 },
         credits: 500,
         scienceCost: 220,
@@ -505,7 +505,7 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         id: "quantum_torpedo",
         name: "Квантовая торпеда",
         description:
-            "Торпеды с квантовым зарядом пробивают щиты и наносят +30% урона.",
+            "Квантовые торпеды полностью игнорируют щиты и атакуют модули напрямую. +30% к урону.",
         tier: 3,
         category: "weapons",
         prerequisites: ["plasma_weapons", "combat_drones"],
@@ -631,7 +631,7 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
     antimatter_weapons: {
         id: "antimatter_weapons",
         name: "Антивещественное оружие",
-        description: "Орудия на антиматерии наносят двойной урон по щитам.",
+        description: "Орудия на антиматерии наносят ×2.5 урона по щитам. +25% к общему урону.",
         tier: 3,
         category: "weapons",
         prerequisites: ["plasma_weapons"],
@@ -796,7 +796,7 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         id: "ancient_power",
         name: "Сила Древних",
         description:
-            "Технологии Древних дают +50% ко всем характеристикам корабля.",
+            "Технологии Древних дают +50% к корпусу, щитам, энергии и урону, -50% к расходу топлива и +3 к дальности сканирования.",
         tier: 5,
         category: "ancient_tech",
         prerequisites: [
@@ -825,6 +825,8 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
                 description: "+50% к щитам",
             },
             { type: "weapon_damage", value: 0.5, description: "+50% к урону" },
+            { type: "scan_range", value: 3, description: "+3 к дальности сканирования" },
+            { type: "fuel_efficiency", value: 0.5, description: "-50% расход топлива" },
         ],
         icon: "👁️",
         color: "#ffd700",
@@ -837,7 +839,7 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         id: "warp_drive",
         name: "Варп-двигатель",
         description:
-            "Двигатель Древних позволяет перемещаться без затрат топлива.",
+            "Двигатель Древних позволяет мгновенно прыгать в любой сектор галактики без затрат топлива.",
         tier: 5,
         category: "ancient_tech",
         prerequisites: ["ancient_power"],
@@ -985,6 +987,139 @@ export const RESEARCH_TREE: Record<TechnologyId, Technology> = {
         ],
         icon: "👁️",
         color: "#ff6600",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // PLANET EXPLORATION & SURVIVAL - Tier 3
+    // ═══════════════════════════════════════════════════════════════
+
+    planetary_drill: {
+        id: "planetary_drill",
+        name: "Планетарный бур",
+        description:
+            "Адаптирует буровой модуль для работы на поверхности планет. Тип планеты определяет добываемые ресурсы: лёд — вода и минералы, вулканы — энергия, джунгли — биоматериалы и т.д.",
+        tier: 3,
+        category: "engineering",
+        prerequisites: ["cargo_expansion"],
+        resources: { tech_salvage: 12, rare_minerals: 8, energy_samples: 5 },
+        credits: 900,
+        scienceCost: 450,
+        bonuses: [
+            {
+                type: "special_ability",
+                value: 1,
+                description: "Разблокирует добычу на поверхности пустых планет",
+            },
+        ],
+        icon: "⛏️",
+        color: "#ffb000",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    atmospheric_analysis: {
+        id: "atmospheric_analysis",
+        name: "Атмосферный анализ",
+        description:
+            "Учёный может провести однократный забор атмосферных образцов с любой пустой планеты. Тип атмосферы определяет исследовательские ресурсы.",
+        tier: 3,
+        category: "science",
+        prerequisites: ["lab_network", "quantum_scanner"],
+        resources: { ancient_data: 10, alien_biology: 8, quantum_crystals: 1 },
+        credits: 800,
+        scienceCost: 400,
+        bonuses: [
+            {
+                type: "special_ability",
+                value: 1,
+                description: "Разблокирует атмосферный анализ пустых планет",
+            },
+        ],
+        icon: "🌫️",
+        color: "#00d4ff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    storm_shields: {
+        id: "storm_shields",
+        name: "Штормовые щиты",
+        description:
+            "Специальные экранирующие поля снижают урон от всех типов штормов на 50%.",
+        tier: 3,
+        category: "ship_systems",
+        prerequisites: ["shield_booster"],
+        resources: { quantum_crystals: 3, energy_samples: 10, rare_minerals: 8 },
+        credits: 850,
+        scienceCost: 420,
+        bonuses: [
+            {
+                type: "special_ability",
+                value: 0.5,
+                description: "-50% урон от штормов",
+            },
+        ],
+        icon: "🌪️",
+        color: "#00aaff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // ADVANCED WEAPONS - Tier 4
+    // ═══════════════════════════════════════════════════════════════
+
+    ion_cannon: {
+        id: "ion_cannon",
+        name: "Ионная пушка",
+        description:
+            "Базовое ионное орудие — наносит огромный урон щитам (×4), но не повреждает корпус. Открывает путь к плазменному оружию.",
+        tier: 1,
+        category: "weapons",
+        prerequisites: [],
+        resources: { tech_salvage: 4, energy_samples: 4 },
+        credits: 450,
+        scienceCost: 180,
+        bonuses: [
+            {
+                type: "new_weapon",
+                value: 1,
+                description: "Разблокирует крафт ионной пушки",
+            },
+        ],
+        icon: "⚡",
+        color: "#4488ff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
+    modular_arsenal: {
+        id: "modular_arsenal",
+        name: "Модульный арсенал",
+        description:
+            "Переработка конструкции оружейных палуб позволяет разместить на 1 орудие больше в каждом отсеке. Двойные палубы вмещают 3 орудия вместо 2.",
+        tier: 4,
+        category: "weapons",
+        prerequisites: ["antimatter_weapons", "quantum_torpedo"],
+        resources: { tech_salvage: 15, rare_minerals: 10, quantum_crystals: 3 },
+        credits: 1200,
+        scienceCost: 600,
+        bonuses: [
+            {
+                type: "weapon_slots",
+                value: 1,
+                description: "+1 слот оружия в каждой оружейной палубе",
+            },
+        ],
+        icon: "🔫",
+        color: "#ff4444",
         discovered: false,
         researched: false,
         researchProgress: 0,

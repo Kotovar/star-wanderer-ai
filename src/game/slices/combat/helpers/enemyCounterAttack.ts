@@ -86,6 +86,18 @@ export function handleEnemyCounterAttack(
         return;
     }
 
+    // Phase Shield: 20% chance to nullify attack if shields >= 20% of max
+    if (
+        state.research.researchedTechs.includes("phase_shield") &&
+        state.ship.shields > 0 &&
+        state.ship.maxShields > 0 &&
+        state.ship.shields >= state.ship.maxShields * 0.2 &&
+        Math.random() < 0.2
+    ) {
+        get().addLog(`🔷 Фазовый щит! Атака полностью поглощена! (20% шанс)`, "info");
+        return;
+    }
+
     // Apply damage
     if (state.ship.shields > 0) {
         applyDamageWithShields(state, set, get, eDmg, tgt);

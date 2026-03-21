@@ -504,17 +504,21 @@ export const selectSector = (
     const engineLevel = getEngineLevel(state);
     const captainLevel = getCaptainLevel(state);
 
-    // Проверка доступа к тиру
-    const accessError = checkTierAccess(
-        state,
-        sector,
-        engineLevel,
-        captainLevel,
-    );
-    if (accessError) {
-        get().addLog(accessError, "error");
-        playSound("error");
-        return;
+    // Варп-двигатель обходит все ограничения доступа к тирам
+    const hasWarpDrive = state.research.researchedTechs.includes("warp_drive");
+
+    if (!hasWarpDrive) {
+        const accessError = checkTierAccess(
+            state,
+            sector,
+            engineLevel,
+            captainLevel,
+        );
+        if (accessError) {
+            get().addLog(accessError, "error");
+            playSound("error");
+            return;
+        }
     }
 
     // Поиск пилота
@@ -537,7 +541,7 @@ export const selectSector = (
     }
 
     // Расчёт стоимости топлива
-    const { fuelCost, travelInstant } = calculateFuelCost(
+    const fuelResult = calculateFuelCost(
         state,
         sector.id,
         !!fuelFree,
@@ -545,9 +549,14 @@ export const selectSector = (
         !!warpCoil,
         !!pilotInCockpit,
     );
+    const fuelCost = fuelResult.fuelCost;
+    // Варп-двигатель делает перелёт мгновенным
+    const travelInstant = fuelResult.travelInstant || hasWarpDrive;
 
     // Логирование бонусов артефактов
-    if (warpCoil) {
+    if (hasWarpDrive) {
+        get().addLog(`🚀 Варп-двигатель! Мгновенный прыжок в любой сектор!`, "info");
+    } else if (warpCoil) {
         get().addLog(
             `⚡ Варп-Катушка! Мгновенный межсекторный перелёт!`,
             "info",

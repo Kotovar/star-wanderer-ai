@@ -45,7 +45,12 @@ export type TechnologyId =
     | "relic_chamber"
     | "ancient_resonance"
     | "artifact_mastery"
-    | "xenobiology";
+    | "xenobiology"
+    | "planetary_drill"
+    | "atmospheric_analysis"
+    | "storm_shields"
+    | "modular_arsenal"
+    | "ion_cannon";
 
 /**
  * Research tier - technology level
@@ -94,7 +99,8 @@ export type ResearchBonusType =
     | "special_ability"
     | "nanite_repair"
     | "artifact_slots"
-    | "artifact_effect_boost";
+    | "artifact_effect_boost"
+    | "weapon_slots";
 
 /**
  * Research resource in cargo
