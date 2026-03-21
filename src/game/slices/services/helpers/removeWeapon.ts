@@ -10,6 +10,7 @@ export const WEAPON_SCRAP_VALUES: Record<WeaponType, number> = {
     drones: 250,
     antimatter: 600,
     quantum_torpedo: 800,
+    ion_cannon: 350,
 };
 
 /**

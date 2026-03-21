@@ -1,6 +1,7 @@
 import type { GameStore, SetState, Module, CargoItem } from "@/game/types";
 import { playSound } from "@/sounds";
 import { createModuleFromShopItem } from "@/game/modules/createModuleFromShopItem";
+import { RESEARCH_TREE } from "@/game/constants/research";
 
 /**
  * Результат проверки позиции
@@ -51,10 +52,22 @@ const checkPositionOccupied = (
  * @param y - Координата Y
  * @returns Новый модуль или null если нет данных
  */
+const getExtraWeaponSlots = (state: GameStore): number =>
+    state.research.researchedTechs.reduce((sum, techId) => {
+        const tech = RESEARCH_TREE[techId];
+        return (
+            sum +
+            tech.bonuses
+                .filter((b: { type: string }) => b.type === "weapon_slots")
+                .reduce((s: number, b: { value: number }) => s + b.value, 0)
+        );
+    }, 0);
+
 const createModuleFromCargo = (
     cargoItem: CargoItem,
     x: number,
     y: number,
+    extraWeaponSlots: number,
 ): Module | null => {
     const shopItem = cargoItem.module;
 
@@ -65,6 +78,7 @@ const createModuleFromCargo = (
     return createModuleFromShopItem(shopItem, {
         x,
         y,
+        extraWeaponSlots,
         generateId: () => Date.now(),
     });
 };
@@ -113,7 +127,7 @@ export const installModuleFromCargo = (
     }
 
     // Создание модуля
-    const newModule = createModuleFromCargo(cargoItem, x, y);
+    const newModule = createModuleFromCargo(cargoItem, x, y, getExtraWeaponSlots(state));
 
     // Установка модуля
     if (newModule) {

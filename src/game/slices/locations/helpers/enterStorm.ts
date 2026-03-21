@@ -302,11 +302,22 @@ export const handleStormEntry = (set: SetState, get: () => GameStore): void => {
     const intensity = loc.stormIntensity ?? 1;
 
     // Рассчитываем эффекты шторма
-    const effects = calculateStormEffects(
+    let effects = calculateStormEffects(
         stormType,
         intensity,
         state.ship.shields,
     );
+
+    // Штормовые щиты снижают весь урон на 50%
+    if (state.research.researchedTechs.includes("storm_shields")) {
+        effects = {
+            ...effects,
+            shieldDamage: effects.shieldDamage * 0.5,
+            moduleDamage: effects.moduleDamage * 0.5,
+            crewDamage: effects.crewDamage * 0.5,
+        };
+        get().addLog(`🌪️ Штормовые щиты: урон снижен на 50%`, "info");
+    }
 
     // Применяем урон по щитам
     const newShields = Math.max(0, state.ship.shields - effects.shieldDamage);

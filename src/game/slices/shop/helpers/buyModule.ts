@@ -8,6 +8,7 @@ import type {
 import { playSound } from "@/sounds";
 import { isPositionAdjacentToModules } from "@/game/modules/adjacency";
 import { createModuleFromShopItem } from "@/game/modules/createModuleFromShopItem";
+import { RESEARCH_TREE } from "@/game/constants/research";
 import { UNIQUE_MODULE_TYPES } from "../constants";
 
 /**
@@ -47,6 +48,17 @@ const isUniqueModuleRestricted = (
  * @param cargoBonus - Бонус грузового отсека от станции
  * @returns Новый модуль
  */
+const getExtraWeaponSlots = (state: GameState): number =>
+    state.research.researchedTechs.reduce((sum, techId) => {
+        const tech = RESEARCH_TREE[techId];
+        return (
+            sum +
+            tech.bonuses
+                .filter((b: { type: string }) => b.type === "weapon_slots")
+                .reduce((s: number, b: { value: number }) => s + b.value, 0)
+        );
+    }, 0);
+
 const createModuleFromItem = (
     item: ShopItem,
     state: GameState,
@@ -56,6 +68,7 @@ const createModuleFromItem = (
         x: 0,
         y: 0,
         cargoBonus,
+        extraWeaponSlots: getExtraWeaponSlots(state),
         generateId: () => state.ship.modules.length + 1,
     });
 };

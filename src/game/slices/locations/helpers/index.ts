@@ -9,3 +9,5 @@ export * from "./applyAnomalyEffect";
 export * from "./sendScoutingMission";
 export * from "./determineScoutingOutcome";
 export * from "./respondToDistressSignal";
+export * from "./planetaryDrill";
+export * from "./atmosphericAnalysis";

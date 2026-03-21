@@ -504,17 +504,21 @@ export const selectSector = (
     const engineLevel = getEngineLevel(state);
     const captainLevel = getCaptainLevel(state);
 
-    // Проверка доступа к тиру
-    const accessError = checkTierAccess(
-        state,
-        sector,
-        engineLevel,
-        captainLevel,
-    );
-    if (accessError) {
-        get().addLog(accessError, "error");
-        playSound("error");
-        return;
+    // Варп-двигатель обходит все ограничения доступа к тирам
+    const hasWarpDrive = state.research.researchedTechs.includes("warp_drive");
+
+    if (!hasWarpDrive) {
+        const accessError = checkTierAccess(
+            state,
+            sector,
+            engineLevel,
+            captainLevel,
+        );
+        if (accessError) {
+            get().addLog(accessError, "error");
+            playSound("error");
+            return;
+        }
     }
 
     // Поиск пилота
@@ -537,7 +541,7 @@ export const selectSector = (
     }
 
     // Расчёт стоимости топлива
-    const { fuelCost, travelInstant } = calculateFuelCost(
+    const fuelResult = calculateFuelCost(
         state,
         sector.id,
         !!fuelFree,
@@ -545,9 +549,14 @@ export const selectSector = (
         !!warpCoil,
         !!pilotInCockpit,
     );
+    const fuelCost = fuelResult.fuelCost;
+    // Варп-двигатель делает перелёт мгновенным
+    const travelInstant = fuelResult.travelInstant || hasWarpDrive;
 
     // Логирование бонусов артефактов
-    if (warpCoil) {
+    if (hasWarpDrive) {
+        get().addLog(`🚀 Варп-двигатель! Мгновенный прыжок в любой сектор!`, "info");
+    } else if (warpCoil) {
         get().addLog(
             `⚡ Варп-Катушка! Мгновенный межсекторный перелёт!`,
             "info",
@@ -565,6 +574,10 @@ export const selectSector = (
     // Расчёт расстояния
     const distance = Math.abs(sector.tier - (state.currentSector?.tier ?? 1));
 
+    // Ионный двигатель сокращает время межтирового перелёта на 1 ход (минимум 1)
+    const hasIonDrive = state.research.researchedTechs.includes("ion_drive");
+    const travelTurns = hasIonDrive && distance > 0 ? Math.max(1, distance - 1) : distance;
+
     // Обработка навигационной ошибки
     handleNavigationError(state, distance, !!pilotInCockpit, set, get);
 
@@ -578,6 +591,9 @@ export const selectSector = (
         }
         handleTravelCompletion(sector, travelInstant, set, get);
     } else {
-        handleTravelStart(sector, distance, travelInstant, pilot, set, get);
+        if (hasIonDrive && distance > 1) {
+            get().addLog(`🚀 Ионный двигатель: перелёт на 1 ход быстрее!`, "info");
+        }
+        handleTravelStart(sector, travelTurns, travelInstant, pilot, set, get);
     }
 };

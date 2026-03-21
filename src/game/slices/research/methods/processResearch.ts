@@ -43,6 +43,7 @@ const handleResearchCompletion = (
         combat_drones: "drones",
         antimatter_weapons: "antimatter",
         quantum_torpedo: "quantum_torpedo",
+        ion_cannon: "ion_cannon",
     };
     const unlockedRecipeId = (WEAPON_RECIPE_MAP[techId] ?? null) as CraftingRecipeId | null;
 

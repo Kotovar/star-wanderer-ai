@@ -1357,7 +1357,11 @@
         "bonus_hp_turn": "HP/turn",
         "bonus_energy": "% energy consumption",
         "bonus_adaptation": "% adaptation",
-        "bonus_fuel": "% fuel consumption"
+        "bonus_fuel": "% fuel consumption",
+        "damage_reduction": "Damage reduction:",
+        "trait_short": "trait",
+        "tech_short": "tech",
+        "exp_bonus": "Experience bonus:"
     },
     "profession_actions": {
         "pilot": {
@@ -1477,7 +1481,8 @@
         "plasma": "Plasma",
         "drones": "Combat Drones",
         "antimatter": "Antimatter",
-        "quantum_torpedo": "Quantum Torpedo"
+        "quantum_torpedo": "Quantum Torpedo",
+        "ion_cannon": "Ion Cannon"
     },
     "module_descriptions": {
         "reactor": "Generates energy for the ship",

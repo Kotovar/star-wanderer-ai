@@ -93,6 +93,16 @@ export const BASE_ENGINEER_EXP = 15;
 export const SCOUT_BASE_EXP = 12;
 
 /**
+ * Опыт инженеру за планетарное бурение
+ */
+export const ENGINEER_DRILL_EXP = 15;
+
+/**
+ * Опыт учёному за атмосферный анализ планеты
+ */
+export const SCIENTIST_ATMOSPHERE_EXP = 15;
+
+/**
  * Награда учёному за изучение чёрной дыры
  */
 export const SCIENTIST_BLACK_HOLE_EXP = 50;

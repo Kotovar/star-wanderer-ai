@@ -5,6 +5,8 @@ import { handleStormEntry } from "./helpers/enterStorm";
 import { handleAnomaly as handleAnomalyHelper } from "./helpers";
 import { sendScoutingMission as sendScoutingMissionHelper } from "./helpers";
 import { respondToDistressSignal as respondToDistressSignalHelper } from "./helpers";
+import { planetaryDrill as planetaryDrillHelper } from "./helpers";
+import { atmosphericAnalysis as atmosphericAnalysisHelper } from "./helpers";
 
 /**
  * Интерфейс LocationsSlice
@@ -37,6 +39,18 @@ export interface LocationsSlice {
      * Обрабатывает сигнал бедствия
      */
     respondToDistressSignal: () => void;
+
+    /**
+     * Планетарное бурение — однократная добыча с поверхности пустой планеты
+     * @param planetId - ID планеты
+     */
+    planetaryDrill: (planetId: string) => void;
+
+    /**
+     * Атмосферный анализ — однократный сбор исследовательских ресурсов
+     * @param planetId - ID планеты
+     */
+    atmosphericAnalysis: (planetId: string) => void;
 
     /**
      * Открывает новую расу
@@ -74,6 +88,14 @@ export const createLocationsSlice = (
 
     respondToDistressSignal: () => {
         respondToDistressSignalHelper(set, get);
+    },
+
+    planetaryDrill: (planetId) => {
+        planetaryDrillHelper(planetId, set, get);
+    },
+
+    atmosphericAnalysis: (planetId) => {
+        atmosphericAnalysisHelper(planetId, set, get);
     },
 
     discoverRace: (raceId) => {

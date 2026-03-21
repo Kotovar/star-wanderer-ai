@@ -5,6 +5,7 @@ import {
     MODULE_HEALTH_THRESHOLDS,
     RACES,
 } from "@/game/constants";
+import { RESEARCH_TREE } from "@/game/constants/research";
 import type { GameState, GameStore, Module } from "@/game/types";
 
 /**
@@ -151,15 +152,27 @@ export function damageCrewInModule(
     );
     const firstAidReduction = hasFirstAid ? 0.5 : 0;
 
+    // === Бонус от stellar_genetics: -30% урон по экипажу ===
+    const geneticsReduction = state.research.researchedTechs.reduce((sum, techId) => {
+        const tech = RESEARCH_TREE[techId];
+        return sum + tech.bonuses
+            .filter((b) => b.type === "crew_damage_reduction")
+            .reduce((s, b) => s + b.value, 0);
+    }, 0);
+
     set((s) => {
         s.crew.forEach((c) => {
             if (c.moduleId !== moduleId) return;
-            let newHealth = c.health - actualDamage;
-            if (hasFirstAid) {
-                newHealth =
-                    c.health -
-                    Math.floor(actualDamage * (1 - firstAidReduction));
-            }
+            const veteranReduction =
+                c.traits?.reduce((max, trait) => {
+                    return Math.max(max, trait.effect?.combatDamageReduction ?? 0);
+                }, 0) ?? 0;
+            const totalReduction = Math.min(
+                0.9,
+                firstAidReduction + veteranReduction + geneticsReduction,
+            );
+            const dmg = Math.floor(actualDamage * (1 - totalReduction));
+            let newHealth = c.health - dmg;
             if (hasImmortality && newHealth < 1) newHealth = 1;
             c.health = Math.max(0, newHealth);
         });
@@ -179,6 +192,9 @@ export function damageCrewInModule(
 
     if (hasFirstAid) {
         get().addLog(`🩹 Первая помощь: урон снижен на 50%!`, "info");
+    }
+    if (geneticsReduction > 0) {
+        get().addLog(`⭐ Звёздная генетика: урон по экипажу снижен на ${Math.round(geneticsReduction * 100)}%`, "info");
     }
     if (hasImmortality) {
         get().addLog(`✨ Экипаж выжил благодаря артефакту бессмертия!`, "info");

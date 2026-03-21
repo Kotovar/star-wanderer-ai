@@ -369,6 +369,17 @@ export const applyModuleBonus = (
                 }
                 break;
             }
+
+            case "weapon_slots": {
+                if (m.type === "weaponbay" && m.weapons) {
+                    const extraSlots = Array(bonusValue).fill(null);
+                    newModule = {
+                        ...newModule,
+                        weapons: [...m.weapons, ...extraSlots],
+                    };
+                }
+                break;
+            }
         }
 
         return newModule;
@@ -412,6 +423,7 @@ export interface AppliedBonuses {
     powerBonus: boolean;
     shieldBonus: boolean;
     weaponDamageBonus: boolean;
+    weaponSlotsBonus: boolean;
     scanRangeBonus: boolean;
     cargoCapacityBonus: boolean;
     crewHealthBonus: boolean;
@@ -438,6 +450,7 @@ export const applyTechnologyBonuses = (
         powerBonus: false,
         shieldBonus: false,
         weaponDamageBonus: false,
+        weaponSlotsBonus: false,
         scanRangeBonus: false,
         cargoCapacityBonus: false,
         crewHealthBonus: false,
@@ -461,27 +474,29 @@ export const applyTechnologyBonuses = (
             }
 
             case "module_power": {
-                newModules = applyModuleBonus(
-                    newModules,
-                    bonus.type,
-                    bonus.value,
-                );
+                // Runtime multiplier via getTotalPower — no one-time module modification
                 appliedBonuses.powerBonus = true;
                 break;
             }
 
             case "shield_strength": {
-                newModules = applyModuleBonus(
-                    newModules,
-                    bonus.type,
-                    bonus.value,
-                );
+                // Runtime multiplier via updateShipStats — no one-time module modification
                 appliedBonuses.shieldBonus = true;
                 break;
             }
 
             case "weapon_damage": {
                 appliedBonuses.weaponDamageBonus = true;
+                break;
+            }
+
+            case "weapon_slots": {
+                newModules = applyModuleBonus(
+                    newModules,
+                    bonus.type,
+                    bonus.value,
+                );
+                appliedBonuses.weaponSlotsBonus = true;
                 break;
             }
 
@@ -496,11 +511,7 @@ export const applyTechnologyBonuses = (
             }
 
             case "cargo_capacity": {
-                newModules = applyModuleBonus(
-                    newModules,
-                    bonus.type,
-                    bonus.value,
-                );
+                // Runtime multiplier via getCargoCapacity — no one-time module modification
                 appliedBonuses.cargoCapacityBonus = true;
                 break;
             }
@@ -564,6 +575,13 @@ export const getBonusLogMessages = (
     if (appliedBonuses.weaponDamageBonus) {
         messages.push({
             message: "🔴 Урон оружия увеличен",
+            needsShipStatsUpdate: true,
+        });
+    }
+
+    if (appliedBonuses.weaponSlotsBonus) {
+        messages.push({
+            message: "🔫 Слоты оружейных палуб расширены",
             needsShipStatsUpdate: true,
         });
     }

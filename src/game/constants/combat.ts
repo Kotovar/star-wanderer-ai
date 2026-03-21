@@ -18,6 +18,7 @@ export const BASE_ACCURACY: Record<WeaponType, number> = {
     drones: 0.85,
     antimatter: 0.78,
     quantum_torpedo: 0.62,
+    ion_cannon: 0.88,
 };
 
 export const MIN_ACCURACY = 0.5; // Minimum 50% accuracy

@@ -46,4 +46,17 @@ export const CRAFTING_RECIPES: Record<CraftingWeapon, CraftingRecipe> = {
         description:
             "Полностью игнорирует щиты, наносит урон напрямую по модулям",
     },
+    ion_cannon: {
+        id: "ion_cannon",
+        name: "Ионная пушка",
+        icon: "⚡",
+        weaponType: "ion_cannon",
+        resources: {
+            energy_samples: 8,
+            tech_salvage: 6,
+        },
+        credits: 700,
+        unlockedBy: "ion_cannon",
+        description: "×4 урона по щитам, не повреждает корпус — снимает щиты мгновенно",
+    },
 };

@@ -14,6 +14,8 @@ interface CreateModuleOptions {
     y: number;
     /** Бонус грузового отсека (для cargo модулей) */
     cargoBonus?: number;
+    /** Дополнительные слоты оружия (от технологий) */
+    extraWeaponSlots?: number;
     /** Генерация ID (по умолчанию Date.now()) */
     generateId?: () => number;
 }
@@ -32,6 +34,7 @@ export const createModuleFromShopItem = (
         x = 0,
         y = 0,
         cargoBonus = 1,
+        extraWeaponSlots = 0,
         generateId = () => Date.now(),
     } = options;
 
@@ -87,7 +90,9 @@ export const createModuleFromShopItem = (
             consumption: item.consumption || 2,
         }),
         ...(item.moduleType === "weaponbay" && {
-            weapons: Array((item.width || 1) * (item.height || 1)).fill(null),
+            weapons: Array(
+                (item.width || 1) * (item.height || 1) + extraWeaponSlots,
+            ).fill(null),
             consumption: item.consumption || 2,
         }),
         ...(item.moduleType === "cockpit" && { consumption: 1 }),

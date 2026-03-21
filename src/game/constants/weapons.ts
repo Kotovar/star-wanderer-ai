@@ -62,4 +62,13 @@ export const WEAPON_TYPES: Record<Weapon["type"], WeaponDetails> = {
         description: "Полностью игнорирует щиты, атакует модули напрямую",
         shieldBypass: true,
     },
+    ion_cannon: {
+        name: "Ионная пушка",
+        damage: 20,
+        color: "#4488ff",
+        icon: "⚡",
+        description: "×4 урона по щитам, не наносит урон корпусу — идеально для сноса щитов",
+        shieldBonus: 4.0,
+        shieldOnly: true,
+    },
 };

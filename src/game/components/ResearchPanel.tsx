@@ -5,9 +5,9 @@ import { useGameStore } from "@/game/store";
 import {
     RESEARCH_TREE,
     RESEARCH_RESOURCES,
+    RACES,
     canResearchTech,
-} from "@/game/constants/research";
-import { RACES } from "@/game/constants/races";
+} from "@/game/constants";
 import { getTaskBonusMultiplier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import type {
     ResearchCategory,
@@ -33,8 +33,9 @@ const PAD_Y = 50;
 const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
     // T1 — col 0
     reinforced_hull: [0, 0],
-    efficient_reactor: [0, 1.75],
-    targeting_matrix: [0, 3.4],
+    efficient_reactor: [0, 2.2],
+    ion_cannon: [0, 3.4], // no prereqs → plasma_weapons
+    targeting_matrix: [0, 4.5],
     scanner_mk2: [0, 5.75],
     artifact_study: [0, 8],
     automated_repair: [0, 9.5], // shifted +2 to make room for artifact branch
@@ -42,35 +43,39 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
     xenobiology: [1, 12.5],
     // T2 — col 1
     shield_booster: [1, 0],
-    ion_drive: [1, 1.75],
+    ion_drive: [1, 2.2],
     plasma_weapons: [1, 3.4],
     combat_drones: [1, 4.5],
     quantum_scanner: [1, 6.8],
     lab_network: [1, 5.75],
     relic_chamber: [1, 8],
-    cargo_expansion: [1, 10.3],
+    cargo_expansion: [1, 10.5],
     crew_training: [1, 11.5],
     // T3 — col 2
     phase_shield: [2, 0],
-    singularity_reactor: [2, 1.75],
+    storm_shields: [2, 1.1], // shield_booster → storm_shields
+    singularity_reactor: [2, 2.2],
     antimatter_weapons: [2, 3.4],
     quantum_torpedo: [2, 4.5],
+    atmospheric_analysis: [2, 5.75], // lab_network + quantum_scanner → here
     deep_scan: [2, 6.8],
     ancient_resonance: [2, 8],
     nanite_hull: [2, 9.5],
+    planetary_drill: [2, 10.5], // cargo_expansion → here
     neural_interface: [2, 11.5],
     genetic_enhancement: [2, 12.5],
-    // T4 — col 3.5
-    void_resonance: [3, 1],
+    // T4 — col 3
+    void_resonance: [3, 1.1],
+    modular_arsenal: [3, 4], // antimatter_weapons + quantum_torpedo → here
     artifact_mastery: [3, 8],
     stellar_genetics: [3, 12],
-    // T5 — col 4.5 / 5.5
+    // T5 — col 4 / 5
     ancient_power: [4, 5.25],
     warp_drive: [5, 5.25],
 };
 
 const CANVAS_W = Math.ceil(PAD_X + 5.5 * COL_GAP + NODE_W / 2 + PAD_X);
-const CANVAS_H = Math.ceil(PAD_Y + 12.25 * ROW_GAP + NODE_H / 2 + PAD_Y);
+const CANVAS_H = Math.ceil(PAD_Y + 13.5 * ROW_GAP + NODE_H / 2 + PAD_Y);
 
 // ─── Category colors ───────────────────────────────────────────────────────────
 const CATEGORY_COLORS: Record<ResearchCategory, string> = {
@@ -109,8 +114,8 @@ function buildAllEdges(): EdgeInfo[] {
     for (const tech of Object.values(RESEARCH_TREE)) {
         for (const prereqId of tech.prerequisites) {
             edges.push({
-                path: buildEdgePath(prereqId as TechnologyId, tech.id),
-                fromId: prereqId as TechnologyId,
+                path: buildEdgePath(prereqId, tech.id),
+                fromId: prereqId,
                 toId: tech.id,
             });
         }
@@ -331,7 +336,7 @@ function PanZoomCanvas({ children }: { children: React.ReactNode }) {
 
 // ─── SVG + nodes canvas ───────────────────────────────────────────────────────
 interface TechCanvasProps {
-    researchedTechs: string[];
+    researchedTechs: TechnologyId[];
     discoveredTechs: string[];
     activeResearch: { techId: TechnologyId; progress: number } | null;
     selectedTech: TechnologyId | null;
@@ -420,10 +425,7 @@ function TechCanvas({
                 const isDiscovered =
                     discoveredTechs.includes(tech.id) || isResearched;
                 // Требования (предварительные технологии) выполнены
-                const prereqsMet = canResearchTech(
-                    tech.id as TechnologyId,
-                    researchedTechs,
-                );
+                const prereqsMet = canResearchTech(tech.id, researchedTechs);
                 const isActive = activeResearch?.techId === tech.id;
                 const isSelected = selectedTech === tech.id;
                 const activeProgress = isActive
@@ -462,7 +464,7 @@ function TechCanvas({
 // ─── Tech detail modal ────────────────────────────────────────────────────────
 interface TechModalProps {
     tech: Technology | null;
-    researchedTechs: string[];
+    researchedTechs: TechnologyId[];
     getResourceQty: (type: string) => number;
     credits: number;
     canResearch: boolean;
@@ -862,8 +864,7 @@ export function ResearchPanel() {
                                             ?.scienceCost || 1)) *
                                         100,
                                 )}
-                                % ·{" "}
-                                {activeResearch.turnsRemaining} ходов
+                                % · {activeResearch.turnsRemaining} ходов
                             </div>
                         </div>
                     )}

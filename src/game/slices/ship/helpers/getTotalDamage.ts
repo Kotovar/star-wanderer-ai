@@ -6,7 +6,7 @@ import {
     WEAPON_TYPES,
 } from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
-import type { GameState, TechnologyId, WeaponTypeTotal } from "@/game/types";
+import type { GameState, WeaponTypeTotal } from "@/game/types";
 
 const INITIAL_DAMAGE: Record<WeaponTypeTotal, number> = {
     total: 0,
@@ -17,6 +17,7 @@ const INITIAL_DAMAGE: Record<WeaponTypeTotal, number> = {
     drones: 0,
     antimatter: 0,
     quantum_torpedo: 0,
+    ion_cannon: 0,
 };
 
 /**
@@ -39,7 +40,9 @@ function getBaseWeaponDamage(modules: GameState["ship"]["modules"]) {
             const bayLevelBonus = 1 + ((m.level ?? 1) - 1) * 0.1;
             m.weapons?.forEach((w) => {
                 if (w && WEAPON_TYPES[w.type]) {
-                    const weaponDamage = Math.floor(WEAPON_TYPES[w.type].damage * bayLevelBonus);
+                    const weaponDamage = Math.floor(
+                        WEAPON_TYPES[w.type].damage * bayLevelBonus,
+                    );
                     damage.total += weaponDamage;
                     damage[w.type] += weaponDamage;
                 }
@@ -77,17 +80,16 @@ const getArtifactDamageBonus = (
  * Вычисляет бонус от технологий на урон
  */
 const getTechDamageBonus = (research: GameState["research"]) =>
-    research.researchedTechs.reduce((maxBonus, techId) => {
-        const tech = RESEARCH_TREE[techId as TechnologyId];
+    research.researchedTechs.reduce((totalBonus, techId) => {
+        const tech = RESEARCH_TREE[techId];
         const techBonus =
             tech.bonuses
                 .filter((b: { type: string }) => b.type === "weapon_damage")
                 .reduce(
-                    (bonusMax: number, b: { value: number }) =>
-                        Math.max(bonusMax, b.value),
+                    (sum: number, b: { value: number }) => sum + b.value,
                     0,
                 ) || 0;
-        return Math.max(maxBonus, techBonus);
+        return totalBonus + techBonus;
     }, 0);
 
 /**

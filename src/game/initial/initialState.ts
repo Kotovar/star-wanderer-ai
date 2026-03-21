@@ -1,10 +1,11 @@
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
+import { RESEARCH_TREE } from "@/game/constants";
 import { generateGalaxy } from "@/game/galaxy/generateGalaxy";
 import { initialModules, STARTING_FUEL } from "@/game/modules/initial";
 import { initializeStationData } from "@/game/stations/initialize";
 import type { GameState, CrewMember, TechnologyId } from "@/game/types";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
-// import { RESEARCH_TREE } from "../constants";
+import { applyResearchedTechs } from "@/game/research/applyResearchedTechs";
 
 /** Начальный номер хода */
 const INITIAL_TURN = 1;
@@ -28,16 +29,10 @@ const INITIAL_GAME_MODE = "galaxy_map" as const;
 /** Начальная раса, известная игроку */
 const INITIAL_KNOWN_RACE = "human" as const;
 
-/** Начальные технологии */
-const INITIAL_DISCOVERED_TECHS: TechnologyId[] = [
-    "reinforced_hull",
-    "efficient_reactor",
-    "targeting_matrix",
-    "scanner_mk2",
-    "automated_repair",
-    "medbay_upgrade",
-    "artifact_study",
-];
+/** Начальные технологии — все с флагом discovered: true в константах */
+const INITIAL_DISCOVERED_TECHS: TechnologyId[] = Object.values(RESEARCH_TREE)
+    .filter((tech) => tech.discovered)
+    .map((tech) => tech.id);
 
 /** Счётчик загрузок игры (для предотвращения показа модалок после загрузки) */
 const INITIAL_GAME_LOADED_COUNT = 0;
@@ -67,10 +62,54 @@ const initialCrew: CrewMember[] = [
     buildCrewMember({
         id: 3,
         name: "Сидоров",
-        profession: "medic",
+        profession: "scientist",
+        // profession: "medic",
         moduleId: 103,
         level: 1,
     }),
+];
+
+/**
+ * DEBUG: Технологии, которые будут применены при старте игры.
+ * Бонусы применяются корректно (module_health, shield_strength и т.д.).
+ */
+const DEBUG_RESEARCHED_TECHS: TechnologyId[] = [
+    // "reinforced_hull",
+    // "efficient_reactor",
+    // "targeting_matrix",
+    // "shield_booster",
+    // "phase_shield",
+    // "singularity_reactor",
+    // "ion_drive",
+    // "plasma_weapons",
+    // "combat_drones",
+    // "quantum_torpedo",
+    // "antimatter_weapons",
+    // "void_resonance",
+    // "ancient_power",
+    // "warp_drive",
+    // "nanite_hull",
+    // "medbay_upgrade",
+    // "automated_repair",
+    // "cargo_expansion",
+    // "lab_network",
+    // "xenobiology",
+    // "crew_training",
+    // "neural_interface",
+    // "genetic_enhancement",
+    // "stellar_genetics",
+    // "scanner_mk2",
+    // "quantum_scanner",
+    // "deep_scan",
+    // "artifact_study",
+    // "relic_chamber",
+    // "ancient_resonance",
+    // "artifact_mastery",
+    // "planetary_drill",
+    // "atmospheric_analysis",
+    // "storm_shields",
+    // "modular_arsenal",
+    // "ion_cannon",
 ];
 
 /**
@@ -84,7 +123,7 @@ const initialCrew: CrewMember[] = [
  * - Трекеры прогресса (контракты, квесты, артефакты)
  * - Состояния игры (боевая система, cooldown'ы, эффекты)
  */
-export const initialState: GameState = {
+const baseState: GameState = {
     turn: INITIAL_TURN,
     credits: INITIAL_CREDITS,
     currentSector: sectors[0],
@@ -144,18 +183,27 @@ export const initialState: GameState = {
         //     alien_biology: 5,
         // },
         // DEBUG: открываем все технологии для отладки
-        // discoveredTechs: Object.keys(RESEARCH_TREE),
+        // discoveredTechs: Object.keys(RESEARCH_TREE) as TechnologyId[],
         discoveredTechs: INITIAL_DISCOVERED_TECHS,
-        // DEBUG: делаем все технологии изученными
-        // researchedTechs: Object.keys(RESEARCH_TREE),
         researchedTechs: [],
         activeResearch: null,
-        // DEBUG: разблокируем все рецепты крафтинга
         unlockedRecipes: [],
-        // unlockedRecipes: ["plasma", "drones", "antimatter", "quantum_torpedo"],
     },
     pendingSurvivor: null,
     settings: {
         animationsEnabled: true,
     },
 };
+
+/**
+ * Финальное начальное состояние.
+ * Если DEBUG_RESEARCHED_TECHS не пустой — применяет технологии корректно
+ * (включая module_health, shield_strength и другие разовые бонусы).
+ */
+export const initialState: GameState =
+    DEBUG_RESEARCHED_TECHS.length > 0
+        ? {
+              ...baseState,
+              ...applyResearchedTechs(baseState, DEBUG_RESEARCHED_TECHS),
+          }
+        : baseState;
