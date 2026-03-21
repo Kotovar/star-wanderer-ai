@@ -226,7 +226,7 @@ const handleRandomEvent = (
  * @param getState - Функция получения состояния
  * @returns Объект с результатом обработки
  */
-const handlePatrolContracts = (
+export const handlePatrolContracts = (
     contracts: GameState["activeContracts"],
     destinationSector: GameState["currentSector"],
     state: GameState,
@@ -248,12 +248,16 @@ const handlePatrolContracts = (
     }
 
     contracts.forEach((c) => {
+        const targetSectors = c.targetSectors || [];
         const visitedSectors = [
             ...new Set([...(c.visitedSectors || []), destinationSector.id]),
         ];
-        const targetSectors = c.targetSectors || [];
+        // Count only sectors that are actually in the target list
+        const visitedTargetCount = visitedSectors.filter((id) =>
+            targetSectors.includes(id),
+        ).length;
 
-        if (visitedSectors.length >= targetSectors.length) {
+        if (visitedTargetCount >= targetSectors.length) {
             contractCompleted = true;
             completedContractId = c.id;
             reward = c.reward;
@@ -277,7 +281,7 @@ const handlePatrolContracts = (
                 ac.id === c.id ? { ...ac, visitedSectors } : ac,
             );
             getState().addLog(
-                `Биообразцы: ${visitedSectors.length}/${targetSectors.length} секторов`,
+                `Биообразцы: ${visitedTargetCount}/${targetSectors.length} секторов`,
                 "info",
             );
         }

@@ -176,6 +176,10 @@ export const selectLocation = (
             break;
 
         case "enemy": {
+            if (loc.defeated) {
+                get().addLog(`${loc.name} уже побеждён`, "info");
+                break;
+            }
             const enemyTier = loc.threat ?? 1;
             const canScan = isObjectScanned(loc, get);
 

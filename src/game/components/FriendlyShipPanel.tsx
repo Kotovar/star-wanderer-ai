@@ -3,7 +3,6 @@
 import { useMemo, useEffect } from "react";
 import { useGameStore } from "@/game/store";
 import { TRADE_GOODS } from "@/game/constants/goods";
-import { DELIVERY_GOODS } from "@/game/constants/contracts";
 import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
 import type { Quality } from "@/game/types";
@@ -11,10 +10,8 @@ import { getRandomName } from "@/game/crew/utils";
 import { generateCrewTraits } from "@/game/crew/utils";
 import { PROFESSION_NAMES, CREW_BASE_PRICES } from "@/game/constants/crew";
 import { Goods } from "@/game/types/goods";
-import { Contract } from "@/game/types/contracts";
 import { Profession } from "@/game/types/crew";
 import { RaceId } from "../types/races";
-import { typedKeys } from "@/lib/utils";
 import { useTranslation } from "@/lib/useTranslation";
 
 const INITIAL_STOCK: Goods[] = ["water", "food", "medicine"];
@@ -34,7 +31,7 @@ export function FriendlyShipPanel() {
         (s) => s.completeDeliveryContract,
     );
     const activeContracts = useGameStore((s) => s.activeContracts);
-    const currentSector = useGameStore((s) => s.currentSector);
+
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const shipQuestsTaken = useGameStore((s) => s.shipQuestsTaken);
     const hiredCrewFromShips = useGameStore((s) => s.hiredCrewFromShips);
@@ -163,13 +160,14 @@ export function FriendlyShipPanel() {
 
     if (!currentLocation) return null;
 
+    const shipQuest = currentLocation.pregeneratedQuest ?? null;
+
     const {
         crewRaceId,
         crewRace,
         crewName,
         availableProfession,
         availableLevel,
-        quality,
         traits,
         crewPrice,
     } = crewData;
@@ -197,195 +195,16 @@ export function FriendlyShipPanel() {
         stock: getShipStock(gid),
     }));
 
-    const getQualityColor = (q: Quality) => {
-        switch (q) {
-            case "poor":
-                return "#888";
-            case "average":
-                return "#00ff41";
-            case "good":
-                return "#00d4ff";
-            case "excellent":
-                return "#ffb000";
-            default:
-                return "#00ff41";
-        }
-    };
-
-    const getQualityLabel = (q: Quality) => {
-        switch (q) {
-            case "poor":
-                return "Низкое";
-            case "average":
-                return "Обычное";
-            case "good":
-                return "Хорошее";
-            case "excellent":
-                return "Отличное";
-            default:
-                return "";
-        }
-    };
-
-    // Generate quest with specific destination (not back to this ship!)
-    const generateQuest = (): Contract | null => {
-        const currentSectorId = currentSector?.id;
-        const galaxy = useGameStore.getState().galaxy;
-
-        // Randomly choose quest type
-        const questType =
-            Math.random() < 0.5
-                ? "delivery"
-                : Math.random() < 0.5
-                  ? "supply_run"
-                  : "scan_planet";
-
-        // Find sectors that are NOT the current sector
-        const otherSectors = galaxy.sectors.filter(
-            (s) => s.id !== currentSectorId,
-        );
-        if (otherSectors.length === 0) return null;
-
-        const targetSector =
-            otherSectors[Math.floor(Math.random() * otherSectors.length)];
-
-        // Scan planet quest
-        if (questType === "scan_planet") {
-            const planetTypes = [
-                "Пустынная",
-                "Ледяная",
-                "Лесная",
-                "Вулканическая",
-                "Океаническая",
-                "Тропическая",
-                "Арктическая",
-            ];
-            const targetType =
-                planetTypes[Math.floor(Math.random() * planetTypes.length)];
-
-            // Find sectors with this planet type
-            const targetSectors = otherSectors.filter((s) =>
-                s.locations.some(
-                    (l) => l.type === "planet" && l.planetType === targetType,
-                ),
-            );
-            if (targetSectors.length === 0) return null;
-
-            const tgt =
-                targetSectors[Math.floor(Math.random() * targetSectors.length)];
-            const targetPlanet = tgt.locations.find(
-                (l) => l.type === "planet" && l.planetType === targetType,
-            );
-
-            return {
-                id: `ship-${currentLocation.id}-scan-${Date.now()}`,
-                type: "scan_planet" as const,
-                desc: t("contracts.desc_scan", { planetType: targetType }),
-                planetType: targetType,
-                targetSector: tgt.id,
-                targetSectorName: tgt.name,
-                targetPlanetId: targetPlanet?.id,
-                targetPlanetName: targetPlanet?.name,
-                sourcePlanetId: currentLocation.id,
-                sourceName: currentLocation.name,
-                sourceType: "ship" as const,
-                sourceSectorName: currentSector?.name,
-                requiresVisit: 1,
-                visited: 0,
-                requiresScanner: true,
-                reward: 400 + Math.floor(Math.random() * 200),
-            };
-        }
-
-        // Supply run quest - deliver goods TO the ship
-        if (questType === "supply_run") {
-            const goodsKeys = typedKeys(TRADE_GOODS);
-            const cargoKey =
-                goodsKeys[Math.floor(Math.random() * goodsKeys.length)];
-            const cargo = TRADE_GOODS[cargoKey];
-            const quantity = [10, 15, 20][Math.floor(Math.random() * 3)];
-
-            // Calculate reward based on station prices (not basePrice)
-            const stationBuyPrice = Math.floor(cargo.basePrice * 0.4);
-            const baseValue = stationBuyPrice * quantity;
-            const reward = Math.floor(baseValue * 1.3);
-
-            return {
-                id: `ship-${currentLocation.id}-supply-${Date.now()}`,
-                type: "supply_run" as const,
-                desc: t("contracts.desc_supply", {
-                    cargo: cargo.name,
-                    quantity,
-                    progress: 0,
-                }),
-                cargo: cargoKey,
-                quantity,
-                sourcePlanetId: currentLocation.id,
-                sourceName: currentLocation.name,
-                sourceType: "ship" as const,
-                sourceSectorName: currentSector?.name,
-                reward,
-            };
-        }
-
-        // Delivery quest (default) - uses DELIVERY_GOODS (special quest items)
-        const deliveryGoodsKeys = typedKeys(DELIVERY_GOODS);
-        const cargoKey =
-            deliveryGoodsKeys[
-                Math.floor(Math.random() * deliveryGoodsKeys.length)
-            ];
-        const cargo = DELIVERY_GOODS[cargoKey].name;
-
-        // Pick a specific destination in the target sector
-        const validDestinations = targetSector.locations.filter(
-            (l) =>
-                (l.type === "planet" && !l.isEmpty) ||
-                l.type === "station" ||
-                l.type === "friendly_ship",
-        );
-
-        if (validDestinations.length === 0) return null;
-
-        const dest =
-            validDestinations[
-                Math.floor(Math.random() * validDestinations.length)
-            ];
-        const destType =
-            dest.type === "planet"
-                ? "planet"
-                : dest.type === "station"
-                  ? "station"
-                  : "ship";
-
-        return {
-            id: `ship-${currentLocation.id}-${Date.now()}`,
-            type: "delivery" as const,
-            desc: `📦 Доставка: ${cargo}`,
-            cargo: cargoKey,
-            reward: 400 + Math.floor(Math.random() * 200),
-            targetSector: targetSector.id,
-            targetSectorName: targetSector.name,
-            targetLocationId: dest.id,
-            targetLocationName: dest.name,
-            targetLocationType: destType,
-            sourcePlanetId: currentLocation.id,
-            sourceName: currentLocation.name,
-            sourceType: "ship" as const,
-            sourceSectorName: currentSector?.name,
-        };
-    };
-
     // Handle accepting quest from ship
     const handleAcceptQuest = () => {
-        const quest = generateQuest();
-        if (!quest) return;
+        if (!shipQuest) return;
 
         // Mark this ship as having its quest taken
         useGameStore.setState((s) => ({
             shipQuestsTaken: [...s.shipQuestsTaken, currentLocation.id],
         }));
 
-        acceptContract(quest);
+        acceptContract(shipQuest);
     };
 
     return (
@@ -448,20 +267,6 @@ export function FriendlyShipPanel() {
                                                 g.stock < 1
                                             }
                                             onClick={() => {
-                                                const existing =
-                                                    ship.tradeGoods.find(
-                                                        (tg) =>
-                                                            tg.item === g.id,
-                                                    );
-                                                if (existing) {
-                                                    existing.quantity += 1;
-                                                } else {
-                                                    ship.tradeGoods.push({
-                                                        item: g.id,
-                                                        quantity: 1,
-                                                        buyPrice: g.price,
-                                                    });
-                                                }
                                                 useGameStore.setState((s) => ({
                                                     friendlyShipStock: {
                                                         ...s.friendlyShipStock,
@@ -481,7 +286,37 @@ export function FriendlyShipPanel() {
                                                     credits:
                                                         s.credits -
                                                         buyPricePerUnit,
-                                                    ship: { ...s.ship },
+                                                    ship: {
+                                                        ...s.ship,
+                                                        tradeGoods:
+                                                            s.ship.tradeGoods.some(
+                                                                (tg) =>
+                                                                    tg.item ===
+                                                                    g.id,
+                                                            )
+                                                                ? s.ship.tradeGoods.map(
+                                                                      (tg) =>
+                                                                          tg.item ===
+                                                                          g.id
+                                                                              ? {
+                                                                                    ...tg,
+                                                                                    quantity:
+                                                                                        tg.quantity +
+                                                                                        1,
+                                                                                }
+                                                                              : tg,
+                                                                  )
+                                                                : [
+                                                                      ...s.ship
+                                                                          .tradeGoods,
+                                                                      {
+                                                                          item: g.id,
+                                                                          quantity: 1,
+                                                                          buyPrice:
+                                                                              g.price,
+                                                                      },
+                                                                  ],
+                                                    },
                                                 }));
                                             }}
                                             className=" bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] px-1.5 cursor-pointer disabled:cursor-not-allowed"
@@ -495,20 +330,6 @@ export function FriendlyShipPanel() {
                                                 g.stock < 5
                                             }
                                             onClick={() => {
-                                                const existing =
-                                                    ship.tradeGoods.find(
-                                                        (tg) =>
-                                                            tg.item === g.id,
-                                                    );
-                                                if (existing) {
-                                                    existing.quantity += 5;
-                                                } else {
-                                                    ship.tradeGoods.push({
-                                                        item: g.id,
-                                                        quantity: 5,
-                                                        buyPrice: g.price,
-                                                    });
-                                                }
                                                 useGameStore.setState((s) => ({
                                                     friendlyShipStock: {
                                                         ...s.friendlyShipStock,
@@ -527,7 +348,37 @@ export function FriendlyShipPanel() {
                                                     },
                                                     credits:
                                                         s.credits - g.price,
-                                                    ship: { ...s.ship },
+                                                    ship: {
+                                                        ...s.ship,
+                                                        tradeGoods:
+                                                            s.ship.tradeGoods.some(
+                                                                (tg) =>
+                                                                    tg.item ===
+                                                                    g.id,
+                                                            )
+                                                                ? s.ship.tradeGoods.map(
+                                                                      (tg) =>
+                                                                          tg.item ===
+                                                                          g.id
+                                                                              ? {
+                                                                                    ...tg,
+                                                                                    quantity:
+                                                                                        tg.quantity +
+                                                                                        5,
+                                                                                }
+                                                                              : tg,
+                                                                  )
+                                                                : [
+                                                                      ...s.ship
+                                                                          .tradeGoods,
+                                                                      {
+                                                                          item: g.id,
+                                                                          quantity: 5,
+                                                                          buyPrice:
+                                                                              g.price,
+                                                                      },
+                                                                  ],
+                                                    },
                                                 }));
                                             }}
                                             className="bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] px-1.5 cursor-pointer disabled:cursor-not-allowed"
@@ -541,20 +392,6 @@ export function FriendlyShipPanel() {
                                                 g.stock < 15
                                             }
                                             onClick={() => {
-                                                const existing =
-                                                    ship.tradeGoods.find(
-                                                        (tg) =>
-                                                            tg.item === g.id,
-                                                    );
-                                                if (existing) {
-                                                    existing.quantity += 15;
-                                                } else {
-                                                    ship.tradeGoods.push({
-                                                        item: g.id,
-                                                        quantity: 15,
-                                                        buyPrice: g.price,
-                                                    });
-                                                }
                                                 useGameStore.setState((s) => ({
                                                     friendlyShipStock: {
                                                         ...s.friendlyShipStock,
@@ -573,7 +410,37 @@ export function FriendlyShipPanel() {
                                                     },
                                                     credits:
                                                         s.credits - g.price * 3,
-                                                    ship: { ...s.ship },
+                                                    ship: {
+                                                        ...s.ship,
+                                                        tradeGoods:
+                                                            s.ship.tradeGoods.some(
+                                                                (tg) =>
+                                                                    tg.item ===
+                                                                    g.id,
+                                                            )
+                                                                ? s.ship.tradeGoods.map(
+                                                                      (tg) =>
+                                                                          tg.item ===
+                                                                          g.id
+                                                                              ? {
+                                                                                    ...tg,
+                                                                                    quantity:
+                                                                                        tg.quantity +
+                                                                                        15,
+                                                                                }
+                                                                              : tg,
+                                                                  )
+                                                                : [
+                                                                      ...s.ship
+                                                                          .tradeGoods,
+                                                                      {
+                                                                          item: g.id,
+                                                                          quantity: 15,
+                                                                          buyPrice:
+                                                                              g.price,
+                                                                      },
+                                                                  ],
+                                                    },
                                                 }));
                                             }}
                                             className="bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] px-1.5 cursor-pointer disabled:cursor-not-allowed"
@@ -786,12 +653,7 @@ export function FriendlyShipPanel() {
                                 </span>
                             </div>
                             <div className="text-xs mt-1">
-                                <span
-                                    style={{ color: getQualityColor(quality) }}
-                                >
-                                    ★ {getQualityLabel(quality)}
-                                </span>
-                                <span className="text-[#ffb000] ml-3">
+                                <span className="text-[#ffb000]">
                                     💰 {crewPrice}₢
                                 </span>
                             </div>
@@ -944,19 +806,29 @@ export function FriendlyShipPanel() {
                         {t("friendly_ship.contract")}
                     </div>
                     <div className="text-sm p-2.5">
-                        <div className="mb-2">
-                            {t("contracts.quest_delivery_desc")}
-                        </div>
-                        <div className="text-[11px] text-[#888]">
-                            {t("contracts.quest_delivery_cargo")}
-                        </div>
-                        <div className="text-[#ffb000] text-xs mt-2">
-                            {t("contracts.reward_label")} 400₢
-                        </div>
+                        {shipQuest ? (
+                            <>
+                                <div className="mb-2">{shipQuest.desc}</div>
+                                {shipQuest.type === "delivery" && (
+                                    <div className="text-[11px] text-[#888]">
+                                        {t("contracts.quest_delivery_cargo")}
+                                    </div>
+                                )}
+                                <div className="text-[#ffb000] text-xs mt-2">
+                                    {t("contracts.reward_label")}{" "}
+                                    {shipQuest.reward}₢
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-[#888] text-xs">
+                                {t("contracts.no_quests")}
+                            </div>
+                        )}
                     </div>
                     <Button
                         onClick={handleAcceptQuest}
-                        className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
+                        disabled={!shipQuest}
+                        className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {t("contracts.accept")}
                     </Button>

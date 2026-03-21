@@ -30,8 +30,8 @@ export const completeScanContracts = (
         (c) =>
             c.type === "scan_planet" &&
             c.sourcePlanetId === location.id &&
-            c.visited &&
-            c.visited >= 1,
+            c.visited !== undefined &&
+            c.visited >= (c.requiresVisit ?? 1),
     );
 
     if (scanComplete.length === 0) {

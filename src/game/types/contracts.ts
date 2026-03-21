@@ -1,5 +1,6 @@
 import type { RaceId } from "./races";
 import type { EnemyShip } from "./enemy";
+import type { ArtifactRarity } from "./artifacts";
 
 export type ContactSourceType = "planet" | "station" | "ship";
 
@@ -50,8 +51,13 @@ export interface Contract {
     enemyType?: EnemyShip;
     // For storm/rescue quests
     stormName?: string;
+    requiredStormIntensity?: number; // Minimum storm intensity required
     // For mining quests (crystalline)
     bossDefeated?: boolean; // Track if boss has been defeated for artifact hunt
+    requiredRarities?: ArtifactRarity[]; // Required artifact rarities for mining quest
+    // For synthetic race quest
+    requiresTechResearch?: boolean; // Complete by researching any technology
+    requiredTechTier?: number; // Minimum tech tier required (1 = any, 2 = tier 2+, 3 = tier 3+)
 }
 
 export type ContractType =

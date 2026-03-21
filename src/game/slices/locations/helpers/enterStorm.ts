@@ -391,7 +391,8 @@ export const handleStormEntry = (set: SetState, get: () => GameStore): void => {
         (c) =>
             c.type === "rescue" &&
             c.isRaceQuest &&
-            c.sectorId === state.currentSector?.id,
+            c.sectorId === state.currentSector?.id &&
+            intensity >= (c.requiredStormIntensity ?? 1),
     );
 
     if (rescueContract) {

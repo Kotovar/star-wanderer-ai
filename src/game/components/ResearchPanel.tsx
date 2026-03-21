@@ -426,7 +426,11 @@ function TechCanvas({
                 );
                 const isActive = activeResearch?.techId === tech.id;
                 const isSelected = selectedTech === tech.id;
-                const activeProgress = isActive ? activeResearch.progress : 0;
+                const activeProgress = isActive
+                    ? Math.round(
+                          (activeResearch.progress / tech.scienceCost) * 100,
+                      )
+                    : 0;
 
                 // Технология открыта (требования выполнены), но может не хватать условий
                 const isOpened = prereqsMet && !isResearched;
@@ -852,7 +856,13 @@ export function ResearchPanel() {
                                 }
                             </div>
                             <div className="text-[#555]">
-                                {activeResearch.progress}% ·{" "}
+                                {Math.round(
+                                    (activeResearch.progress /
+                                        (RESEARCH_TREE[activeResearch.techId]
+                                            ?.scienceCost || 1)) *
+                                        100,
+                                )}
+                                % ·{" "}
                                 {activeResearch.turnsRemaining} ходов
                             </div>
                         </div>

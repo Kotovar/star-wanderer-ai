@@ -11,13 +11,16 @@ export function completeBattleContracts(
     enemyThreat: number,
     isBoss: boolean,
 ) {
-    // Combat contracts (defeat any enemy in target sector)
+    // Standard combat contracts (defeat any enemy in target sector)
     const completedCombat = get().activeContracts.filter(
-        (c) => c.type === "combat" && c.sectorId === get().currentSector?.id,
+        (c) =>
+            c.type === "combat" &&
+            !c.isRaceQuest &&
+            c.sectorId === get().currentSector?.id,
     );
     completedCombat.forEach((c) => {
         set((s) => ({ credits: s.credits + c.reward }));
-        get().addLog(`Задача "${c.desc}" выполнена! +${c.reward}₢`, "info");
+        get().addLog(`Задача выполнена! +${c.reward}₢`, "info");
         const rewardConfig = CONTRACT_REWARDS.combat;
         const expReward =
             rewardConfig.baseExp +
@@ -28,6 +31,49 @@ export function completeBattleContracts(
             activeContracts: s.activeContracts.filter((ac) => ac.id !== c.id),
         }));
     });
+
+    // Krylorian race combat contracts (defeat ALL non-boss enemies in target sector)
+    const raceCombat = get().activeContracts.filter(
+        (c) =>
+            c.type === "combat" &&
+            c.isRaceQuest &&
+            c.sectorId === get().currentSector?.id,
+    );
+    if (raceCombat.length > 0 && !isBoss) {
+        const remainingEnemies =
+            get().currentSector?.locations.filter(
+                (l) => l.type === "enemy" && !l.defeated,
+            ) ?? [];
+
+        raceCombat.forEach((c) => {
+            if (remainingEnemies.length === 0) {
+                set((s) => ({ credits: s.credits + c.reward }));
+                get().addLog(`🦎 Дуэль чести завершена! +${c.reward}₢`, "info");
+                const rewardConfig = CONTRACT_REWARDS.combat;
+                const expReward =
+                    rewardConfig.baseExp +
+                    enemyThreat * (rewardConfig.threatBonus ?? 0);
+                giveCrewExperience(
+                    expReward,
+                    `Экипаж получил опыт: +${expReward} ед.`,
+                );
+                set((s) => ({
+                    completedContractIds: [
+                        ...s.completedContractIds,
+                        c.id,
+                    ],
+                    activeContracts: s.activeContracts.filter(
+                        (ac) => ac.id !== c.id,
+                    ),
+                }));
+            } else {
+                get().addLog(
+                    `🦎 Осталось врагов в секторе: ${remainingEnemies.length}`,
+                    "info",
+                );
+            }
+        });
+    }
 
     // Bounty contracts (defeat enemy with required threat in target sector)
     const completedBounty = get().activeContracts.filter(
@@ -50,19 +96,24 @@ export function completeBattleContracts(
         }));
     });
 
-    // Mining contract (Crystalline race quest - mark boss as defeated)
+    // Mining contract (Crystalline race quest - boss defeat completes the quest)
     const miningContract = get().activeContracts.find(
         (c) => c.type === "mining" && c.isRaceQuest,
     );
     if (miningContract && isBoss) {
-        set((s) => {
-            s.activeContracts.forEach((ac) => {
-                if (ac.id === miningContract.id) ac.bossDefeated = true;
-            });
-        });
-        get().addLog(
-            `Босс побеждён! Кристалл будет получен после исследования`,
-            "info",
+        const reward = miningContract.reward || 0;
+        set((s) => ({
+            credits: s.credits + reward,
+            completedContractIds: [...s.completedContractIds, miningContract.id],
+            activeContracts: s.activeContracts.filter(
+                (ac) => ac.id !== miningContract.id,
+            ),
+        }));
+        const expReward = CONTRACT_REWARDS.mining.baseExp;
+        giveCrewExperience(
+            expReward,
+            `Экипаж получил опыт: +${expReward} ед.`,
         );
+        get().addLog(`Артефакт для задания найден! +${reward}₢`, "info");
     }
 }

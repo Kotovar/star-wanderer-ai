@@ -27,7 +27,7 @@ export function AnomalyPanel() {
     const anomalyCompleted = completedLocations.includes(currentLocation.id);
 
     // Get recent anomaly-related log entries (including research resources found)
-    const recentAnomalyLogs = log
+    const allAnomalyLogs = log
         .slice(0, 15)
         .filter(
             (entry) =>
@@ -38,6 +38,14 @@ export function AnomalyPanel() {
                 entry.message.includes("Найдены исследовательские ресурсы") ||
                 entry.message.includes("Найденные дополнительные ресурсы"),
         );
+    // Cut off at the second "Аномалия:" entry to avoid showing results from previous anomalies
+    const secondAnomalyIdx = allAnomalyLogs.findIndex(
+        (entry, i) => i > 0 && entry.message.startsWith("Аномалия:"),
+    );
+    const recentAnomalyLogs =
+        secondAnomalyIdx > 0
+            ? allAnomalyLogs.slice(0, secondAnomalyIdx)
+            : allAnomalyLogs;
 
     // Already processed - show results
     if (anomalyCompleted) {
@@ -138,13 +146,13 @@ export function AnomalyPanel() {
             <div className="flex gap-3">
                 <Button
                     onClick={() => handleAnomaly(currentLocation)}
-                    className="flex-1 bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
+                    className="cursor-pointer flex-1 bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
                 >
                     {t("anomaly.investigate")}
                 </Button>
                 <Button
                     onClick={showSectorMap}
-                    className="bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)] uppercase tracking-wider"
+                    className="cursor-pointer bg-transparent border-2 border-[#666] text-[#888] hover:bg-[rgba(100,100,100,0.2)] uppercase tracking-wider"
                 >
                     {t("anomaly.retreat")}
                 </Button>

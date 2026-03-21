@@ -7,7 +7,8 @@ import {
 import { getActiveModule, getActiveModules } from "@/game/modules";
 import { playSound } from "@/sounds";
 import { calculateFuelCost } from "./calculateFuelCost";
-import type { GameState, GameStore, GameMode, Artifact } from "@/game/types";
+import { handlePatrolContracts } from "./processTravel";
+import type { GameState, GameStore, GameMode, Artifact, SetState } from "@/game/types";
 
 // ============================================================================
 // Константы
@@ -332,6 +333,37 @@ const handleTravelCompletion = (
     markSectorVisited(sector, set);
     get().addLog(`Перелёт в ${sector.name}`, "info");
 
+    // Same-tier travel (distance=0) never goes through processTravel,
+    // so patrol contracts must be checked here for ALL same-tier arrivals.
+    const patrolState = get();
+    const patrolContracts = patrolState.activeContracts.filter(
+        (c) =>
+            c.type === "patrol" &&
+            c.isRaceQuest &&
+            c.targetSectors?.includes(sector.id),
+    );
+    if (patrolContracts.length > 0) {
+        const patrolResult = handlePatrolContracts(
+            patrolContracts,
+            sector,
+            patrolState,
+            set as Parameters<typeof handlePatrolContracts>[3],
+            get,
+        );
+        set((s) => ({
+            credits: patrolResult.contractCompleted
+                ? s.credits + patrolResult.reward
+                : s.credits,
+            completedContractIds: patrolResult.contractCompleted
+                ? [
+                      ...s.completedContractIds,
+                      patrolResult.completedContractId,
+                  ]
+                : s.completedContractIds,
+            activeContracts: patrolResult.newActiveContracts,
+        }));
+    }
+
     if (!travelInstant) {
         get().nextTurn();
     }
@@ -391,6 +423,36 @@ const handleTravelStart = (
             gameMode: "sector_map" as GameMode,
         }));
         get().addLog(`⚡ Мгновенный перелёт в ${sector.name}!`, "info");
+
+        const warpPatrolState = get();
+        const warpPatrolContracts = warpPatrolState.activeContracts.filter(
+            (c) =>
+                c.type === "patrol" &&
+                c.isRaceQuest &&
+                c.targetSectors?.includes(sector.id),
+        );
+        if (warpPatrolContracts.length > 0) {
+            const patrolResult = handlePatrolContracts(
+                warpPatrolContracts,
+                sector,
+                warpPatrolState,
+                set as SetState,
+                get,
+            );
+            set((s) => ({
+                credits: patrolResult.contractCompleted
+                    ? s.credits + patrolResult.reward
+                    : s.credits,
+                completedContractIds: patrolResult.contractCompleted
+                    ? [
+                          ...s.completedContractIds,
+                          patrolResult.completedContractId,
+                      ]
+                    : s.completedContractIds,
+                activeContracts: patrolResult.newActiveContracts,
+            }));
+        }
+
         if (sector.tier === 4) {
             get().triggerVictory();
         }

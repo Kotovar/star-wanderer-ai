@@ -189,6 +189,17 @@ export function handleVictory(
         });
     }
 
+    // Mark regular enemy as defeated
+    if (!updatedCombat.enemy.isBoss && get().currentLocation) {
+        set((s) => {
+            if (!s.currentSector) return;
+            s.currentSector.locations.forEach((loc) => {
+                if (loc.id === get().currentLocation?.id)
+                    loc.defeated = true;
+            });
+        });
+    }
+
     // Complete contracts
     const enemyThreat = updatedCombat.enemy.threat ?? 1;
     completeBattleContracts(

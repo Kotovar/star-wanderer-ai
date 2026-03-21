@@ -8,6 +8,8 @@ import {
     getTechnologyBonusesDescription,
     getBonusLogMessages,
 } from "../helpers/researchHelpers";
+import { CONTRACT_REWARDS } from "@/game/constants";
+import { giveCrewExperience } from "@/game/crew";
 import type { GameStore, SetState, TechnologyId } from "@/game/types";
 import type { CraftingRecipeId } from "@/game/types/crafting";
 
@@ -84,6 +86,33 @@ const handleResearchCompletion = (
     });
 
     playSound("success");
+
+    // Завершаем квест синтетиков (исследование технологии нужного тира)
+    const synthContract = get().activeContracts.find((c) => {
+        if (!(c.type === "research" && c.isRaceQuest && c.requiresTechResearch))
+            return false;
+        const minTier = c.requiredTechTier ?? 1;
+        return completedTech.tier >= minTier;
+    });
+    if (synthContract) {
+        const reward = synthContract.reward || 0;
+        set((s) => ({
+            credits: s.credits + reward,
+            completedContractIds: [
+                ...s.completedContractIds,
+                synthContract.id,
+            ],
+            activeContracts: s.activeContracts.filter(
+                (ac) => ac.id !== synthContract.id,
+            ),
+        }));
+        const expReward = CONTRACT_REWARDS.research.baseExp;
+        giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+        get().addLog(
+            `🤖 Исследование для задания завершено! +${reward}₢`,
+            "info",
+        );
+    }
 
     // Логирование открытия новых технологий
     const adjacent = getAdjacentTechs(techId);

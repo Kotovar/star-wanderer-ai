@@ -36,6 +36,8 @@ import {
     generateStationItems,
     generateStationCrew,
 } from "./station/station-data";
+import { DELIVERY_GOODS } from "@/game/constants";
+import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "@/game/slices/contracts/constants";
 
 export function StationPanel() {
     const { t } = useTranslation();
@@ -474,7 +476,15 @@ function DeliveryContracts({
                                 {c.desc}
                             </div>
                             <div className="text-[11px] mt-1 text-[#00ff41]">
-                                📦 Груз &quot;{c.cargo}&quot; (10т)
+                                📦 Груз &quot;
+                                {c.cargo
+                                    ? (DELIVERY_GOODS[
+                                          c.cargo as keyof typeof DELIVERY_GOODS
+                                      ]?.name ?? c.cargo)
+                                    : ""}
+                                &quot; (
+                                {c.quantity ?? DELIVERY_CONTRACT_CARGO_AMOUNT}
+                                т)
                             </div>
                             <div className="text-[#ffb000] text-xs mt-1">
                                 💰 {c.reward}₢

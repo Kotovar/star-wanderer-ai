@@ -38,7 +38,7 @@ export const tryFindArtifact = (
     }));
 
     // Завершаем контракт на добычу (кристаллический квест)
-    completeMiningContractIfActive(set, get);
+    completeMiningContractIfActive(set, get, artifact);
 
     playSound("success");
     return artifact;
@@ -113,12 +113,20 @@ const getBaseArtifactFinderBonus = (state: GameStore): number => {
 const completeMiningContractIfActive = (
     set: SetState,
     get: () => GameStore,
+    artifact: Artifact,
 ): void => {
     const miningContract = get().activeContracts.find(
         (c) => c.type === "mining" && c.isRaceQuest,
     );
 
     if (!miningContract) return;
+
+    // Проверяем, подходит ли редкость артефакта для задания
+    if (
+        miningContract.requiredRarities &&
+        !miningContract.requiredRarities.includes(artifact.rarity)
+    )
+        return;
 
     const reward = miningContract.reward || 0;
 
@@ -130,5 +138,5 @@ const completeMiningContractIfActive = (
         ),
     }));
 
-    get().addLog(`Кристалл Древних найден! +${reward}₢`, "info");
+    get().addLog(`Артефакт для задания найден! +${reward}₢`, "info");
 };

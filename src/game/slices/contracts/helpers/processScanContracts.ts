@@ -48,8 +48,10 @@ export const processScanContracts = (state: GameState) => {
     const logs: { message: string; type: LogEntry["type"] }[] = [];
 
     scanContracts.forEach((c) => {
-        // Проверяем, не было ли уже посещения этой планеты по этому контракту
-        if (c.visited && c.visited >= 1) {
+        const required = c.requiresVisit ?? 1;
+
+        // Проверяем, не выполнен ли уже контракт
+        if (c.visited && c.visited >= required) {
             logs.push({
                 message: "планета уже отсканирована по этому контракту",
                 type: "info",
@@ -57,20 +59,28 @@ export const processScanContracts = (state: GameState) => {
             return;
         }
 
-        const updated = { ...c, visited: (c.visited || 0) + 1 };
+        const newVisited = (c.visited || 0) + 1;
+        const updated = { ...c, visited: newVisited };
         newActiveContracts = newActiveContracts.map((ac) =>
             ac.id === c.id ? updated : ac,
         );
 
-        // Формируем название планеты для возврата
-        const returnLocation = c.sourcePlanetName
-            ? `${c.sourceSectorName}, ${c.sourcePlanetName}`
-            : c.sourceSectorName || "базу";
-
-        logs.push({
-            message: `${location.planetType} отсканирована! Возвращайтесь на ${returnLocation}`,
-            type: "info",
-        });
+        if (newVisited >= required) {
+            // Все планеты отсканированы — возвращаемся
+            const returnLocation = c.sourcePlanetName
+                ? `${c.sourceSectorName}, ${c.sourcePlanetName}`
+                : c.sourceSectorName || "базу";
+            logs.push({
+                message: `${location.planetType} отсканирована! Возвращайтесь на ${returnLocation}`,
+                type: "info",
+            });
+        } else {
+            // Ещё нужно сканировать
+            logs.push({
+                message: `${location.planetType} отсканирована (${newVisited}/${required}). Найдите ещё ${required - newVisited} планет${required - newVisited > 1 ? "ы" : "у"} типа "${c.planetType}"`,
+                type: "info",
+            });
+        }
     });
 
     return {

@@ -61,6 +61,7 @@ export interface Location {
     scoutedTimes?: number;
     enemyType?: EnemyShip; // Type of enemy ship (pirate, raider, mercenary, marauder)
     threat?: number;
+    defeated?: boolean; // Whether this enemy has been defeated
     anomalyType?: "good" | "bad";
     anomalyTier?: number;
     anomalyColor?: string;
@@ -104,6 +105,8 @@ export interface Location {
     bossId?: string;
     bossType?: BossType; // Type of ancient boss
     bossDefeated?: boolean;
+    // Friendly ship pregenerated quest
+    pregeneratedQuest?: Contract;
     // Race fields
 
     population?: number; // Population in thousands

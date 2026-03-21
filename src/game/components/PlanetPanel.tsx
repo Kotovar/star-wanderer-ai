@@ -7,6 +7,7 @@ import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
 import { PlanetSpecializationPanel } from "./PlanetSpecializationPanel";
 import { DELIVERY_GOODS } from "@/game/constants/contracts";
+import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "@/game/slices/contracts/constants";
 import type { DeliveryGoods } from "@/game/types/contracts";
 import { TRADE_GOODS } from "@/game/constants/goods";
 import { RESEARCH_RESOURCES } from "@/game/constants";
@@ -343,7 +344,7 @@ export function PlanetPanel() {
                                                         c.cargo as DeliveryGoods
                                                     ]?.name
                                                 }
-                                                &quot; ({c.quantity ?? 10}т)
+                                                &quot; ({c.quantity ?? DELIVERY_CONTRACT_CARGO_AMOUNT}т)
                                             </div>
                                         )}
                                         <div className="text-[#ffb000] text-xs mt-1">
@@ -466,6 +467,10 @@ export function PlanetPanel() {
                                                             cargo: DELIVERY_GOODS[
                                                                 c.cargo as DeliveryGoods
                                                             ].name,
+                                                            amount: String(
+                                                                c.quantity ??
+                                                                    DELIVERY_CONTRACT_CARGO_AMOUNT,
+                                                            ),
                                                             destination:
                                                                 getDestText(
                                                                     c,
@@ -473,19 +478,29 @@ export function PlanetPanel() {
                                                         },
                                                     )}
                                                 {c.type === "combat" &&
-                                                    t("contracts.desc_combat", {
-                                                        sector:
-                                                            c.sectorName || "",
-                                                    })}
-                                                {c.type === "research" &&
                                                     t(
-                                                        "contracts.desc_research",
+                                                        c.isRaceQuest
+                                                            ? "contracts.desc_combat_race"
+                                                            : "contracts.desc_combat",
                                                         {
-                                                            count:
-                                                                c.requiresAnomalies ||
-                                                                0,
+                                                            sector:
+                                                                c.sectorName ||
+                                                                "",
                                                         },
                                                     )}
+                                                {c.type === "research" &&
+                                                    (c.requiresTechResearch
+                                                        ? t(
+                                                              "contracts.desc_research_synth",
+                                                          )
+                                                        : t(
+                                                              "contracts.desc_research",
+                                                              {
+                                                                  count:
+                                                                      c.requiresAnomalies ||
+                                                                      0,
+                                                              },
+                                                          ))}
                                                 {c.type === "bounty" &&
                                                     t("contracts.desc_bounty", {
                                                         threat:
@@ -521,26 +536,53 @@ export function PlanetPanel() {
                                                             c.targetSectors
                                                                 ?.length || 0,
                                                     })}
-                                                {c.type === "rescue" &&
-                                                    t("contracts.desc_rescue", {
-                                                        stormName:
-                                                            c.stormName ||
-                                                            t(
-                                                                "storm.radiation_cloud",
-                                                            ),
-                                                        sectorName:
-                                                            c.sectorName || "",
-                                                    })}
+                                                {c.type === "rescue" && (
+                                                    <>
+                                                        {t("contracts.desc_rescue", {
+                                                            stormName:
+                                                                c.stormName ||
+                                                                t(
+                                                                    "storm.radiation_cloud",
+                                                                ),
+                                                            sectorName:
+                                                                c.sectorName || "",
+                                                        })}
+                                                        {(c.requiredStormIntensity ?? 1) > 1 && (
+                                                            <span className="ml-1 text-yellow-400">
+                                                                {t("contracts.rescue_intensity").replace(
+                                                                    "{{intensity}}",
+                                                                    String(c.requiredStormIntensity),
+                                                                )}
+                                                            </span>
+                                                        )}
+                                                    </>
+                                                )}
                                                 {c.type === "mining" &&
                                                     t("contracts.desc_mining")}
                                                 {c.type === "scan_planet" &&
-                                                    t("contracts.desc_scan", {
-                                                        planetType:
-                                                            c.planetType || "",
-                                                        sector:
-                                                            c.targetSectorName ||
-                                                            "",
-                                                    })}
+                                                    ((c.requiresVisit ?? 1) > 1
+                                                        ? t(
+                                                              "contracts.desc_scan_multi",
+                                                              {
+                                                                  count: String(
+                                                                      c.requiresVisit,
+                                                                  ),
+                                                                  planetType:
+                                                                      c.planetType ||
+                                                                      "",
+                                                              },
+                                                          )
+                                                        : t(
+                                                              "contracts.desc_scan",
+                                                              {
+                                                                  planetType:
+                                                                      c.planetType ||
+                                                                      "",
+                                                                  sector:
+                                                                      c.targetSectorName ||
+                                                                      "",
+                                                              },
+                                                          ))}
                                                 {c.type === "supply_run" &&
                                                     c.cargo &&
                                                     (() => {

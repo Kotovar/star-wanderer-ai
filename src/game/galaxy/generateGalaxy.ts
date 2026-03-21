@@ -1,4 +1,4 @@
-import { populateContracts } from "../contracts";
+import { populateContracts, populateShipQuests } from "../contracts";
 import { assignGridPositions } from "../sectorGrid";
 import type { Sector } from "../types";
 import { TIER_CONFIG } from "./config";
@@ -119,6 +119,7 @@ export const generateGalaxy = (): Sector[] => {
 
     // Постобработка
     populateContracts(sectors);
+    populateShipQuests(sectors);
     ensureBlackHoles(sectors);
 
     return sectors;

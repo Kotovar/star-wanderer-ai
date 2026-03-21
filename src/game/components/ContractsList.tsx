@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useGameStore } from "../store";
-import type { Contract, Goods } from "../types";
+import { useGameStore } from "@/game/store";
+import type { ArtifactRarity, Contract, Goods } from "@/game/types";
 import {
     Dialog,
     DialogContent,
@@ -11,8 +11,8 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { TRADE_GOODS } from "../constants/goods";
-import { DELIVERY_GOODS } from "../constants/contracts";
+import { TRADE_GOODS, DELIVERY_GOODS } from "@/game/constants";
+import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "@/game/slices/contracts/constants";
 import { useTranslation } from "@/lib/useTranslation";
 
 export function ContractsList() {
@@ -46,20 +46,32 @@ export function ContractsList() {
                             : contract.targetLocationType === "station"
                               ? "станции"
                               : "кораблю";
-                    return `📦 Доставить на ${typeText} "${contract.targetLocationName}" (${contract.targetSectorName})`;
+                    const rawName = contract.targetLocationName || "";
+                    const displayName = rawName.startsWith("station_name.")
+                        ? `${t("events.station")} ${rawName.replace("station_name.", "")}`
+                        : rawName;
+                    return `📦 Доставить на ${typeText} "${displayName}" (${contract.targetSectorName})`;
                 }
                 return t("contracts.deliver_to").replace(
                     "{{sector}}",
                     contract.targetSectorName || t("contracts.unknown"),
                 );
-            case "scan_planet":
-                return t("contracts.scan_sector");
+            case "scan_planet": {
+                const req = contract.requiresVisit ?? 1;
+                const vis = contract.visited ?? 0;
+                return req > 1
+                    ? `${t("contracts.scan_sector")} (${vis}/${req})`
+                    : t("contracts.scan_sector");
+            }
             case "combat":
                 return t("contracts.clear_sector").replace(
                     "{{sector}}",
                     contract.sectorName || t("contracts.unknown"),
                 );
             case "research":
+                if (contract.requiresTechResearch) {
+                    return t("contracts.research_tech");
+                }
                 return t("contracts.research_count")
                     .replace("{{count}}", String(contract.requiresAnomalies))
                     .replace(
@@ -86,14 +98,25 @@ export function ContractsList() {
                 return t("contracts.name_delivery", {
                     cargo: t("contracts.cargo"),
                 });
-            case "scan_planet":
-                return t("contracts.name_scan", {
-                    planetType: contract.planetType || t("contracts.unknown"),
-                });
+            case "scan_planet": {
+                const scanReq = contract.requiresVisit ?? 1;
+                return scanReq > 1
+                    ? t("contracts.name_scan_multi", {
+                          count: String(scanReq),
+                          planetType:
+                              contract.planetType || t("contracts.unknown"),
+                      })
+                    : t("contracts.name_scan", {
+                          planetType:
+                              contract.planetType || t("contracts.unknown"),
+                      });
+            }
             case "combat":
                 return t("contracts.name_combat");
             case "research":
-                return t("contracts.name_research");
+                return contract.requiresTechResearch
+                    ? t("contracts.name_research_tech")
+                    : t("contracts.name_research");
             case "bounty":
                 return t("contracts.name_bounty");
             case "diplomacy":
@@ -101,7 +124,9 @@ export function ContractsList() {
             case "patrol":
                 return t("contracts.name_patrol");
             case "rescue":
-                return t("contracts.name_rescue");
+                return contract.isRaceQuest && contract.requiredRace === "voidborn"
+                    ? t("contracts.name_rescue_void")
+                    : t("contracts.name_rescue");
             case "mining":
                 return t("contracts.name_mining");
             case "supply_run":
@@ -121,6 +146,13 @@ export function ContractsList() {
 
     const getContractDetails = (contract: Contract) => {
         // Determine destination text
+        const resolveLocationName = (name: string | undefined) => {
+            if (!name) return t("contracts.unknown");
+            if (name.startsWith("station_name.")) {
+                return `${t("events.station")} ${name.replace("station_name.", "")}`;
+            }
+            return name;
+        };
         const getDestText = () => {
             if (!contract.targetLocationType)
                 return contract.targetSectorName || t("contracts.unknown");
@@ -130,7 +162,7 @@ export function ContractsList() {
                     : contract.targetLocationType === "station"
                       ? "станции"
                       : "кораблю";
-            return `${contract.targetLocationName} (${typeText}), сектор ${contract.targetSectorName}`;
+            return `${resolveLocationName(contract.targetLocationName)} (${typeText}), сектор ${contract.targetSectorName}`;
         };
 
         switch (contract.type) {
@@ -159,6 +191,10 @@ export function ContractsList() {
                             label: t("contracts.task_what"),
                             value: t("contracts.delivery_cargo")
                                 .replace("{{cargo}}", deliveryCargoName)
+                                .replace(
+                                    "{{amount}}",
+                                    String(DELIVERY_CONTRACT_CARGO_AMOUNT),
+                                )
                                 .replace("{{destination}}", getDestText()),
                         },
                         {
@@ -167,17 +203,31 @@ export function ContractsList() {
                         },
                         {
                             label: t("contracts.task_where"),
-                            value: t("contracts.scan_auto"),
+                            value: t("contracts.delivery_turn_in"),
                         },
                     ],
                 };
-            case "scan_planet":
+            case "scan_planet": {
+                const scanVisited = contract.visited ?? 0;
+                const scanRequired = contract.requiresVisit ?? 1;
                 return {
                     type: t("contracts.type_scan"),
                     tasks: [
                         {
                             label: t("contracts.task_what"),
-                            value: t("contracts.scan_planet"),
+                            value:
+                                scanRequired > 1
+                                    ? t("contracts.scan_planet_multi")
+                                          .replace(
+                                              "{{count}}",
+                                              String(scanRequired),
+                                          )
+                                          .replace(
+                                              "{{type}}",
+                                              contract.planetType?.toLowerCase() ||
+                                                  "",
+                                          )
+                                    : t("contracts.scan_planet"),
                         },
                         {
                             label: t("contracts.task_target"),
@@ -197,12 +247,13 @@ export function ContractsList() {
                         {
                             label: t("contracts.task_status"),
                             value:
-                                contract.visited && contract.visited >= 1
+                                scanVisited >= scanRequired
                                     ? t("contracts.completed")
-                                    : t("contracts.in_progress"),
+                                    : `${t("contracts.in_progress")} (${scanVisited}/${scanRequired})`,
                         },
                     ],
                 };
+            }
             case "supply_run":
                 if (!contract.cargo) return;
 
@@ -247,10 +298,12 @@ export function ContractsList() {
                     tasks: [
                         {
                             label: t("contracts.task_what"),
-                            value: t("contracts.combat_destroy"),
+                            value: contract.isRaceQuest
+                                ? t("contracts.combat_destroy_race")
+                                : t("contracts.combat_destroy"),
                         },
                         {
-                            label: t("contracts.task_target"),
+                            label: t("contracts.task_sector"),
                             value:
                                 contract.sectorName || t("contracts.unknown"),
                         },
@@ -261,6 +314,27 @@ export function ContractsList() {
                     ],
                 };
             case "research":
+                if (contract.requiresTechResearch) {
+                    const minTier = contract.requiredTechTier ?? 1;
+                    return {
+                        type: t("contracts.type_research"),
+                        tasks: [
+                            {
+                                label: t("contracts.task_what"),
+                                value:
+                                    minTier > 1
+                                        ? t(
+                                              "contracts.research_tech_tier",
+                                          ).replace("{{tier}}", String(minTier))
+                                        : t("contracts.research_tech"),
+                            },
+                            {
+                                label: t("contracts.task_where"),
+                                value: t("contracts.research_tech_auto"),
+                            },
+                        ],
+                    };
+                }
                 return {
                     type: t("contracts.type_research"),
                     tasks: [
@@ -289,31 +363,51 @@ export function ContractsList() {
                         },
                     ],
                 };
-            case "rescue":
+            case "rescue": {
+                const rescueTasks: { label: string; value: string }[] = [
+                    {
+                        label: t("contracts.task_what"),
+                        value: t("contracts.rescue_enter")
+                            .replace(
+                                "{{stormName}}",
+                                contract.stormName || t("contracts.unknown"),
+                            )
+                            .replace(
+                                "{{sectorName}}",
+                                contract.sectorName || t("contracts.unknown"),
+                            ),
+                    },
+                ];
+                if (contract.requiredStormIntensity && contract.requiredStormIntensity > 1) {
+                    rescueTasks.push({
+                        label: t("contracts.task_requirements"),
+                        value: t("contracts.rescue_intensity").replace(
+                            "{{intensity}}",
+                            String(contract.requiredStormIntensity),
+                        ),
+                    });
+                }
+                rescueTasks.push({
+                    label: t("contracts.task_where"),
+                    value: t("contracts.rescue_auto"),
+                });
                 return {
                     type: t("contracts.type_rescue"),
-                    tasks: [
-                        {
-                            label: t("contracts.task_what"),
-                            value: t("contracts.rescue_enter")
-                                .replace(
-                                    "{{stormName}}",
-                                    contract.stormName ||
-                                        t("contracts.unknown"),
-                                )
-                                .replace(
-                                    "{{sectorName}}",
-                                    contract.sectorName ||
-                                        t("contracts.unknown"),
-                                ),
-                        },
-                        {
-                            label: t("contracts.task_where"),
-                            value: t("contracts.rescue_auto"),
-                        },
-                    ],
+                    tasks: rescueTasks,
                 };
-            case "mining":
+            }
+            case "mining": {
+                const rarityLabels: Record<ArtifactRarity, string> = {
+                    rare: t("artifacts.rarity.rare"),
+                    legendary: t("artifacts.rarity.legendary"),
+                    mythic: t("artifacts.rarity.mythic"),
+                    cursed: t("artifacts.rarity.cursed"),
+                };
+                const rarityStr = contract.requiredRarities
+                    ? contract.requiredRarities
+                          .map((r) => rarityLabels[r] ?? r)
+                          .join(" / ")
+                    : null;
                 return {
                     type: t("contracts.type_mining"),
                     tasks: [
@@ -321,6 +415,16 @@ export function ContractsList() {
                             label: t("contracts.task_what"),
                             value: t("contracts.mining_find"),
                         },
+                        ...(rarityStr
+                            ? [
+                                  {
+                                      label: t(
+                                          "contracts.mining_required_rarity",
+                                      ),
+                                      value: rarityStr,
+                                  },
+                              ]
+                            : []),
                         {
                             label: t("contracts.task_progress"),
                             value: contract.bossDefeated
@@ -333,22 +437,26 @@ export function ContractsList() {
                         },
                     ],
                 };
-            case "patrol":
-                const visitedCount = contract.visitedSectors?.length || 0;
+            }
+            case "patrol": {
                 const targetCount = contract.targetSectors?.length || 0;
+                const visitedTargetCount = (contract.visitedSectors || []).filter(
+                    (id) => (contract.targetSectors || []).includes(id),
+                ).length;
                 return {
                     type: t("contracts.type_patrol"),
                     tasks: [
                         {
                             label: t("contracts.task_what"),
-                            value: t("contracts.patrol_visit")
-                                .replace(
-                                    "{{sectors}}",
-                                    contract.targetSectorNames ||
-                                        t("contracts.unknown"),
-                                )
-                                .replace("{{visited}}", String(visitedCount))
-                                .replace("{{target}}", String(targetCount)),
+                            value: t("contracts.patrol_visit").replace(
+                                "{{sectors}}",
+                                contract.targetSectorNames ||
+                                    t("contracts.unknown"),
+                            ),
+                        },
+                        {
+                            label: t("contracts.task_progress"),
+                            value: `${visitedTargetCount} / ${targetCount} ${t("contracts.patrol_sectors")}`,
                         },
                         {
                             label: t("contracts.task_where"),
@@ -356,6 +464,7 @@ export function ContractsList() {
                         },
                     ],
                 };
+            }
             case "bounty":
                 return {
                     type: t("contracts.type_bounty"),
@@ -519,7 +628,7 @@ export function ContractsList() {
                                                 );
                                                 setSelectedContract(null);
                                             }}
-                                            className="bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810]"
+                                            className="cursor-pointer bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810]"
                                         >
                                             {t("contracts.cancel")}
                                         </Button>

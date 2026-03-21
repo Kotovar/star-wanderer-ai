@@ -38,6 +38,7 @@ export const acceptContract = (
             return;
         }
 
+        const cargoAmount = contract.quantity ?? DELIVERY_CONTRACT_CARGO_AMOUNT;
         set((s) => ({
             ship: {
                 ...s.ship,
@@ -45,13 +46,13 @@ export const acceptContract = (
                     ...s.ship.cargo,
                     {
                         item: cargoKey,
-                        quantity: DELIVERY_CONTRACT_CARGO_AMOUNT,
+                        quantity: cargoAmount,
                         contractId: contract.id,
                     },
                 ],
             },
         }));
-        get().addLog(`Загружен: ${cargoName} (${DELIVERY_CONTRACT_CARGO_AMOUNT}т)`, "info");
+        get().addLog(`Загружен: ${cargoName} (${cargoAmount}т)`, "info");
     }
 
     set((s) => ({
