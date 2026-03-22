@@ -3,6 +3,7 @@ import {
     isModuleFunctional,
 } from "../utils";
 import { CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
+import { RESEARCH_TREE } from "@/game/constants/research";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getTaskBonusMultiplier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import type { GameState } from "@/game/types/game";
@@ -45,7 +46,18 @@ export function getTotalPower(state: GameState): number {
         );
     });
 
-// === Бонусы от артефактов ===
+    // === Бонус от исследований (module_power) — runtime ===
+    const techPowerBonus = state.research.researchedTechs.reduce((sum, techId) => {
+        const tech = RESEARCH_TREE[techId];
+        return sum + tech.bonuses
+            .filter((b) => b.type === "module_power")
+            .reduce((s, b) => s + b.value, 0);
+    }, 0);
+    if (techPowerBonus > 0) {
+        power = Math.floor(power * (1 + techPowerBonus));
+    }
+
+    // === Бонусы от артефактов ===
     const artifactBonus = calculateArtifactPowerBonus(artifacts, state);
     power += artifactBonus;
 

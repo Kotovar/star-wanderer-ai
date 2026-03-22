@@ -20,6 +20,8 @@ import {
     getModuleName,
     getRegen,
     getAdjacentModules,
+    CrewDamageReductionRow,
+    CrewExpBonusRow,
 } from "./CrewListHelpers";
 
 export function CrewList() {
@@ -32,11 +34,15 @@ export function CrewList() {
     const isModuleAdjacent = useGameStore((s) => s.isModuleAdjacent);
     const fireCrewMember = useGameStore((s) => s.fireCrewMember);
     const currentCombat = useGameStore((s) => s.currentCombat);
+    const researchedTechs = useGameStore((s) => s.research.researchedTechs);
     const [selectedCrew, setSelectedCrew] = useState<CrewMember | null>(null);
 
-    const getModuleNameById = (moduleId: number) => getModuleName(modules, t, moduleId);
-    const getCrewRegen = (member: CrewMember) => getRegen(member, activeEffects, crew, modules);
-    const getAdjacentToModule = (moduleId: number) => getAdjacentModules(modules, isModuleAdjacent, moduleId);
+    const getModuleNameById = (moduleId: number) =>
+        getModuleName(modules, t, moduleId);
+    const getCrewRegen = (member: CrewMember) =>
+        getRegen(member, activeEffects, crew, modules);
+    const getAdjacentToModule = (moduleId: number) =>
+        getAdjacentModules(modules, isModuleAdjacent, moduleId);
 
     // Check if we're in combat
     const isCombat = !!currentCombat;
@@ -276,6 +282,8 @@ export function CrewList() {
                                         {getCrewRegen(selectedCrew)}/
                                         {t("crew.turn")}
                                     </div>
+                                    <CrewDamageReductionRow member={selectedCrew} researchedTechs={researchedTechs} t={t} />
+                                    <CrewExpBonusRow member={selectedCrew} researchedTechs={researchedTechs} t={t} />
                                     {race?.hasHappiness ? (
                                         <div>
                                             <span className="text-[#ffb000]">

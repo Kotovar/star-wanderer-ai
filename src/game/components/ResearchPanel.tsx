@@ -5,9 +5,9 @@ import { useGameStore } from "@/game/store";
 import {
     RESEARCH_TREE,
     RESEARCH_RESOURCES,
+    RACES,
     canResearchTech,
-} from "@/game/constants/research";
-import { RACES } from "@/game/constants/races";
+} from "@/game/constants";
 import { getTaskBonusMultiplier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import type {
     ResearchCategory,
@@ -49,7 +49,7 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
     quantum_scanner: [1, 6.8],
     lab_network: [1, 5.75],
     relic_chamber: [1, 8],
-    cargo_expansion: [1, 10.3],
+    cargo_expansion: [1, 10.5],
     crew_training: [1, 11.5],
     // T3 — col 2
     phase_shield: [2, 0],
@@ -57,7 +57,7 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
     singularity_reactor: [2, 2.2],
     antimatter_weapons: [2, 3.4],
     quantum_torpedo: [2, 4.5],
-    atmospheric_analysis: [2, 5.65], // lab_network + quantum_scanner → here
+    atmospheric_analysis: [2, 5.75], // lab_network + quantum_scanner → here
     deep_scan: [2, 6.8],
     ancient_resonance: [2, 8],
     nanite_hull: [2, 9.5],
@@ -65,7 +65,8 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
     neural_interface: [2, 11.5],
     genetic_enhancement: [2, 12.5],
     // T4 — col 3
-    void_resonance: [3, 1],
+
+    void_resonance: [3, 1.1],
     modular_arsenal: [3, 4], // antimatter_weapons + quantum_torpedo → here
     artifact_mastery: [3, 8],
     stellar_genetics: [3, 12],
@@ -114,8 +115,8 @@ function buildAllEdges(): EdgeInfo[] {
     for (const tech of Object.values(RESEARCH_TREE)) {
         for (const prereqId of tech.prerequisites) {
             edges.push({
-                path: buildEdgePath(prereqId as TechnologyId, tech.id),
-                fromId: prereqId as TechnologyId,
+                path: buildEdgePath(prereqId, tech.id),
+                fromId: prereqId,
                 toId: tech.id,
             });
         }
@@ -336,7 +337,7 @@ function PanZoomCanvas({ children }: { children: React.ReactNode }) {
 
 // ─── SVG + nodes canvas ───────────────────────────────────────────────────────
 interface TechCanvasProps {
-    researchedTechs: string[];
+    researchedTechs: TechnologyId[];
     discoveredTechs: string[];
     activeResearch: { techId: TechnologyId; progress: number } | null;
     selectedTech: TechnologyId | null;
@@ -425,10 +426,7 @@ function TechCanvas({
                 const isDiscovered =
                     discoveredTechs.includes(tech.id) || isResearched;
                 // Требования (предварительные технологии) выполнены
-                const prereqsMet = canResearchTech(
-                    tech.id as TechnologyId,
-                    researchedTechs,
-                );
+                const prereqsMet = canResearchTech(tech.id, researchedTechs);
                 const isActive = activeResearch?.techId === tech.id;
                 const isSelected = selectedTech === tech.id;
                 const activeProgress = isActive
@@ -467,7 +465,7 @@ function TechCanvas({
 // ─── Tech detail modal ────────────────────────────────────────────────────────
 interface TechModalProps {
     tech: Technology | null;
-    researchedTechs: string[];
+    researchedTechs: TechnologyId[];
     getResourceQty: (type: string) => number;
     credits: number;
     canResearch: boolean;

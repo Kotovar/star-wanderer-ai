@@ -10,7 +10,7 @@ export * from "./goods";
 export * from "./weapons";
 export * from "./contracts";
 export * from "./localStorage";
-export * from "./research";
+export * from "./research/index";
 export * from "./crafting";
 export * from "./traits";
 export * from "./fuel";

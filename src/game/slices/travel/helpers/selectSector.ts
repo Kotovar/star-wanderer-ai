@@ -574,6 +574,10 @@ export const selectSector = (
     // Расчёт расстояния
     const distance = Math.abs(sector.tier - (state.currentSector?.tier ?? 1));
 
+    // Ионный двигатель сокращает время межтирового перелёта на 1 ход (минимум 1)
+    const hasIonDrive = state.research.researchedTechs.includes("ion_drive");
+    const travelTurns = hasIonDrive && distance > 0 ? Math.max(1, distance - 1) : distance;
+
     // Обработка навигационной ошибки
     handleNavigationError(state, distance, !!pilotInCockpit, set, get);
 
@@ -587,6 +591,9 @@ export const selectSector = (
         }
         handleTravelCompletion(sector, travelInstant, set, get);
     } else {
-        handleTravelStart(sector, distance, travelInstant, pilot, set, get);
+        if (hasIonDrive && distance > 1) {
+            get().addLog(`🚀 Ионный двигатель: перелёт на 1 ход быстрее!`, "info");
+        }
+        handleTravelStart(sector, travelTurns, travelInstant, pilot, set, get);
     }
 };

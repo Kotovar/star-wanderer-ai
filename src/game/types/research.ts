@@ -100,7 +100,8 @@ export type ResearchBonusType =
     | "nanite_repair"
     | "artifact_slots"
     | "artifact_effect_boost"
-    | "weapon_slots";
+    | "weapon_slots"
+    | "crew_damage_reduction";
 
 /**
  * Research resource in cargo

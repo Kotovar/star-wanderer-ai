@@ -474,21 +474,13 @@ export const applyTechnologyBonuses = (
             }
 
             case "module_power": {
-                newModules = applyModuleBonus(
-                    newModules,
-                    bonus.type,
-                    bonus.value,
-                );
+                // Runtime multiplier via getTotalPower — no one-time module modification
                 appliedBonuses.powerBonus = true;
                 break;
             }
 
             case "shield_strength": {
-                newModules = applyModuleBonus(
-                    newModules,
-                    bonus.type,
-                    bonus.value,
-                );
+                // Runtime multiplier via updateShipStats — no one-time module modification
                 appliedBonuses.shieldBonus = true;
                 break;
             }
@@ -519,11 +511,7 @@ export const applyTechnologyBonuses = (
             }
 
             case "cargo_capacity": {
-                newModules = applyModuleBonus(
-                    newModules,
-                    bonus.type,
-                    bonus.value,
-                );
+                // Runtime multiplier via getCargoCapacity — no one-time module modification
                 appliedBonuses.cargoCapacityBonus = true;
                 break;
             }

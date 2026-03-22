@@ -1,11 +1,11 @@
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
+import { RESEARCH_TREE } from "@/game/constants";
 import { generateGalaxy } from "@/game/galaxy/generateGalaxy";
 import { initialModules, STARTING_FUEL } from "@/game/modules/initial";
 import { initializeStationData } from "@/game/stations/initialize";
 import type { GameState, CrewMember, TechnologyId } from "@/game/types";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
 import { applyResearchedTechs } from "@/game/research/applyResearchedTechs";
-// import { RESEARCH_TREE } from "../constants";
 
 /** Начальный номер хода */
 const INITIAL_TURN = 1;
@@ -29,17 +29,10 @@ const INITIAL_GAME_MODE = "galaxy_map" as const;
 /** Начальная раса, известная игроку */
 const INITIAL_KNOWN_RACE = "human" as const;
 
-/** Начальные технологии */
-const INITIAL_DISCOVERED_TECHS: TechnologyId[] = [
-    "reinforced_hull",
-    "efficient_reactor",
-    "targeting_matrix",
-    "ion_cannon",
-    "scanner_mk2",
-    "automated_repair",
-    "medbay_upgrade",
-    "artifact_study",
-];
+/** Начальные технологии — все с флагом discovered: true в константах */
+const INITIAL_DISCOVERED_TECHS: TechnologyId[] = Object.values(RESEARCH_TREE)
+    .filter((tech) => tech.discovered)
+    .map((tech) => tech.id);
 
 /** Счётчик загрузок игры (для предотвращения показа модалок после загрузки) */
 const INITIAL_GAME_LOADED_COUNT = 0;
@@ -69,8 +62,7 @@ const initialCrew: CrewMember[] = [
     buildCrewMember({
         id: 3,
         name: "Сидоров",
-        profession: "scientist",
-        // profession: "medic",
+        profession: "medic",
         moduleId: 103,
         level: 1,
     }),
@@ -114,7 +106,7 @@ const DEBUG_RESEARCHED_TECHS: TechnologyId[] = [
     // "artifact_mastery",
     // "planetary_drill",
     // "atmospheric_analysis",
-    // "storm_shields"
+    // "storm_shields",
     // "modular_arsenal",
     // "ion_cannon",
 ];
@@ -180,17 +172,15 @@ const baseState: GameState = {
     planetCooldowns: {},
     research: {
         // DEBUG: ресурсы для тестирования крафтинга
-        // resources: {},
-        resources: {
-            energy_samples: 20,
-            tech_salvage: 20,
-            rare_minerals: 10,
-            quantum_crystals: 5,
-            ancient_data: 5,
-            alien_biology: 5,
-        },
-        // DEBUG: открываем все технологии для отладки
-        // discoveredTechs: Object.keys(RESEARCH_TREE) as TechnologyId[],
+        resources: {},
+        // resources: {
+        //     energy_samples: 20,
+        //     tech_salvage: 20,
+        //     rare_minerals: 10,
+        //     quantum_crystals: 5,
+        //     ancient_data: 5,
+        //     alien_biology: 5,
+        // },
         discoveredTechs: INITIAL_DISCOVERED_TECHS,
         researchedTechs: [],
         activeResearch: null,

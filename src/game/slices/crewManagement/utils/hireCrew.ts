@@ -1,5 +1,6 @@
 import type { GameStore, CrewMember, RaceId, SetState } from "@/game/types";
 import { RACES } from "@/game/constants/races";
+import { RESEARCH_TREE } from "@/game/constants/research";
 import { playSound } from "@/sounds";
 import {
     BASE_CREW_HEALTH_PER_LEVEL,
@@ -180,6 +181,17 @@ export const hireCrew = (
         exp: crewData.exp,
         moduleId: initialModuleId,
     });
+
+    // Применяем crew_health бонус от исследований к новому члену экипажа
+    const crewHealthBonus = state.research.researchedTechs.reduce((sum, techId) => {
+        const tech = RESEARCH_TREE[techId];
+        return sum + tech.bonuses
+            .filter((b) => b.type === "crew_health")
+            .reduce((s, b) => s + b.value, 0);
+    }, 0);
+    if (crewHealthBonus > 0) {
+        newCrew.maxHealth = Math.floor(newCrew.maxHealth * (1 + crewHealthBonus));
+    }
 
     // Обновление состояния
     const hiredCrewKey = locationId || "unknown";

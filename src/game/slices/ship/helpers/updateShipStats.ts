@@ -5,6 +5,7 @@ import {
 } from "../utils";
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
+import { RESEARCH_TREE } from "@/game/constants/research";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getActiveModules } from "@/game/modules/utils";
 import type { GameState } from "@/game/types";
@@ -35,6 +36,17 @@ export const updateShipStats = (state: GameState): void => {
 
     // === Расчёт щитов ===
     let totalShields = calculateTotalShields(modules);
+
+    // === Бонус от исследований (shield_strength) — runtime ===
+    const techShieldBonus = state.research.researchedTechs.reduce((sum, techId) => {
+        const tech = RESEARCH_TREE[techId];
+        return sum + tech.bonuses
+            .filter((b) => b.type === "shield_strength")
+            .reduce((s, b) => s + b.value, 0);
+    }, 0);
+    if (techShieldBonus > 0) {
+        totalShields = Math.floor(totalShields * (1 + techShieldBonus));
+    }
 
     const darkShield = findActiveArtifact(
         artifacts,

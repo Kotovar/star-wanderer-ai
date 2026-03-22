@@ -1,4 +1,5 @@
 import { MODULES_BY_LEVEL } from "@/game/components/station";
+import { RESEARCH_TREE } from "@/game/constants/research";
 import type { GameState } from "@/game/types/game";
 import { getActiveModules } from "@/game/modules/utils";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
@@ -20,6 +21,17 @@ export const getCargoCapacity = (state: GameState) => {
         (sum, m) => sum + (m.capacity ?? capacityDefault),
         0,
     );
+
+    // === Бонус от исследований (cargo_capacity) — runtime ===
+    const techCargoBonus = state.research.researchedTechs.reduce((sum, techId) => {
+        const tech = RESEARCH_TREE[techId];
+        return sum + tech.bonuses
+            .filter((b) => b.type === "cargo_capacity")
+            .reduce((s, b) => s + b.value, 0);
+    }, 0);
+    if (techCargoBonus > 0) {
+        capacity = Math.floor(capacity * (1 + techCargoBonus));
+    }
 
     // === Бонус от сращивания ксеноморфов ===
     const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);

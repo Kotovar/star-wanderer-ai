@@ -1,11 +1,15 @@
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
-import { ARTIFACT_TYPES, COMBAT_ACCURACY_MODIFIERS } from "@/game/constants";
-import { RACES } from "@/game/constants/races";
+import {
+    ARTIFACT_TYPES,
+    COMBAT_ACCURACY_MODIFIERS,
+    RESEARCH_TREE,
+    RACES,
+    PILOT_EVASION_COMBAT_EXP,
+} from "@/game/constants";
 import { playSound } from "@/sounds";
-import * as enemyAttack from "./enemyAttack";
 import { getTotalEvasion } from "@/game/slices/ship/helpers/getTotalEvasion";
-import { PILOT_EVASION_COMBAT_EXP } from "@/game/constants/experience";
 import type { GameState, GameStore, Module, ModuleType } from "@/game/types";
+import * as enemyAttack from "./enemyAttack";
 
 /**
  * Priority values for enemy AI targeting
@@ -109,7 +113,10 @@ export function executeEnemyAttack(
         state.ship.shields >= state.ship.maxShields * 0.2 &&
         Math.random() < 0.2
     ) {
-        get().addLog(`🔷 Фазовый щит! Атака полностью поглощена! (20% шанс)`, "info");
+        get().addLog(
+            `🔷 Фазовый щит! Атака полностью поглощена! (20% шанс)`,
+            "info",
+        );
         return;
     }
 
@@ -275,9 +282,13 @@ function applyModuleDamage(
 ) {
     // Overclock removes armor of the weaponbay the engineer is in
     const hasOverclockInModule = state.crew.some(
-        (c) => c.moduleId === targetModule.id && c.combatAssignment === "overclock",
+        (c) =>
+            c.moduleId === targetModule.id &&
+            c.combatAssignment === "overclock",
     );
-    const moduleDefense = hasOverclockInModule ? 0 : (targetModule.defense ?? 0);
+    const moduleDefense = hasOverclockInModule
+        ? 0
+        : (targetModule.defense ?? 0);
     if (hasOverclockInModule && (targetModule.defense ?? 0) > 0) {
         get().addLog(
             `⚠️ Перегрузка: броня "${targetModule.name}" отключена!`,
@@ -390,16 +401,33 @@ function damageCrewInModule(
     );
     const firstAidReduction = hasFirstAid ? 0.5 : 0;
 
+    // Tech-based crew damage reduction (e.g. stellar_genetics)
+    const techCrewReduction = state.research.researchedTechs.reduce(
+        (sum, techId) => {
+            const tech = RESEARCH_TREE[techId];
+            return (
+                sum +
+                tech.bonuses
+                    .filter((b) => b.type === "crew_damage_reduction")
+                    .reduce((s, b) => s + b.value, 0)
+            );
+        },
+        0,
+    );
+
     set((s) => {
         s.crew.forEach((c) => {
             if (c.moduleId !== moduleId) return;
             const veteranReduction =
                 c.traits?.reduce((max, trait) => {
-                    return Math.max(max, trait.effect?.combatDamageReduction ?? 0);
+                    return Math.max(
+                        max,
+                        trait.effect?.combatDamageReduction ?? 0,
+                    );
                 }, 0) ?? 0;
             const totalReduction = Math.min(
                 0.9,
-                firstAidReduction + veteranReduction,
+                firstAidReduction + veteranReduction + techCrewReduction,
             );
             const dmg = Math.floor(actualDamage * (1 - totalReduction));
             let newHealth = c.health - dmg;

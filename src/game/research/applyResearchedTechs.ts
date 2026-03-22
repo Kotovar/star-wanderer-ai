@@ -51,12 +51,13 @@ export const applyResearchedTechs = (
 
             switch (bonus.type) {
                 case "module_health":
-                case "module_power":
-                case "shield_strength":
                 case "scan_range":
-                case "cargo_capacity":
                 case "weapon_slots":
-                    modules = applyModuleBonus(modules, bonus.type, bonus.value);
+                    modules = applyModuleBonus(
+                        modules,
+                        bonus.type,
+                        bonus.value,
+                    );
                     break;
 
                 case "crew_health":

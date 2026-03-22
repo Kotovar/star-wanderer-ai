@@ -1357,7 +1357,11 @@
         "bonus_hp_turn": "HP/ход",
         "bonus_energy": "% расход энергии",
         "bonus_adaptation": "% адаптация",
-        "bonus_fuel": "% расход топлива"
+        "bonus_fuel": "% расход топлива",
+        "damage_reduction": "Защита от урона:",
+        "trait_short": "трейт",
+        "tech_short": "технология",
+        "exp_bonus": "Бонус к опыту:"
     },
     "profession_actions": {
         "pilot": {
