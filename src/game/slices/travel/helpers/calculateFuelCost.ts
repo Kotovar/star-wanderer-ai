@@ -20,6 +20,9 @@ import type { GameState, Sector } from "@/game/types";
  */
 const FUEL_PENALTY_NO_PILOT = 1.5;
 
+// Максимальный бонус эффективности топлива от технологий (90%)
+const MAX_FUEL_EFFICIENCY_BONUS = 0.9;
+
 // ============================================================================
 // Вспомогательные функции
 // ============================================================================
@@ -74,7 +77,8 @@ const calculateDistanceMultiplier = (
 };
 
 /**
- * Собирает все модификаторы топлива
+ * Собирает все модификаторы топлива (расы, пилот, планета, сращивание)
+ * Технологический бонус считается отдельно
  */
 const collectFuelModifiers = (state: GameState): number => {
     const raceModifier = getRaceFuelEfficiencyModifier(state.crew);
@@ -87,9 +91,19 @@ const collectFuelModifiers = (state: GameState): number => {
         ? 1 - mergeBonus.fuelEfficiency / 100
         : 1;
 
-    // Бонус от технологий (fuel_efficiency)
+    return raceModifier * pilotModifier * planetModifier * mergeFuelModifier;
+};
+
+/**
+ * Вычисляет суммарный бонус эффективности топлива от технологий
+ * @returns Суммарный бонус от 0 до MAX_FUEL_EFFICIENCY_BONUS
+ */
+const getTechFuelBonus = (state: GameState): number => {
     const techFuelBonus = state.research.researchedTechs.reduce(
         (sum, techId) => {
+            // warp_drive обрабатывается отдельно (бесплатные прыжки)
+            if (techId === "warp_drive") return sum;
+
             const tech = RESEARCH_TREE[techId];
             return (
                 sum +
@@ -100,15 +114,9 @@ const collectFuelModifiers = (state: GameState): number => {
         },
         0,
     );
-    const techFuelModifier = 1 - techFuelBonus;
 
-    return (
-        raceModifier *
-        pilotModifier *
-        planetModifier *
-        mergeFuelModifier *
-        techFuelModifier
-    );
+    // Ограничиваем максимальный бонус технологий
+    return Math.min(techFuelBonus, MAX_FUEL_EFFICIENCY_BONUS);
 };
 
 /**
@@ -191,6 +199,12 @@ export const calculateFuelCost = (
         return { fuelCost: DEFAULT_FUEL_COST, travelInstant: false };
     }
 
+    // Варп-драйв — бесплатные прыжки в любой сектор
+    const hasWarpDrive = state.research.researchedTechs.includes("warp_drive");
+    if (hasWarpDrive) {
+        return { fuelCost: 0, travelInstant: true };
+    }
+
     const tierDistance = Math.abs(targetSector.tier - currentTier);
     const angularDistance = calculateAngularDistance(
         state.currentSector,
@@ -205,8 +219,14 @@ export const calculateFuelCost = (
     const fuelEfficiency = getFuelEfficiency(state);
     const baseCost = distanceMultiplier * fuelEfficiency;
 
-    const totalModifier = collectFuelModifiers(state);
-    let fuelCost = Math.ceil(baseCost * totalModifier);
+    // Собираем модификаторы (расы, пилот, планета, сращивание)
+    const otherModifiers = collectFuelModifiers(state);
+
+    // Получаем технологический бонус (0-90%)
+    const techBonus = getTechFuelBonus(state);
+
+    // Применяем модификаторы: сначала другие, затем технологический бонус
+    let fuelCost = Math.ceil(baseCost * otherModifiers * (1 - techBonus));
 
     if (Number.isNaN(fuelCost)) {
         fuelCost = DEFAULT_FUEL_COST;

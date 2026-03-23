@@ -1208,6 +1208,14 @@
         "traits_none": "None",
         "description_label": "Description"
     },
+    "technology_discovery": {
+        "title": "Technology Researched",
+        "description": "Technology details",
+        "bonuses": "Bonuses",
+        "description_label": "Description",
+        "tier_label": "Tier",
+        "category_label": "Category"
+    },
     "sector_map": {
         "visited": "(visited)",
         "explored": "(explored)",
@@ -1739,6 +1747,224 @@
         "crystalline_resonator": {
             "name": "Crystal Resonator",
             "description": "Crystalline beings can tune ship energy systems to resonate with crystals."
+        }
+    },
+    "tech": {
+        "reinforced_hull": {
+            "name": "Alloy Metallurgy",
+            "description": "Next-generation exotic alloys increase durability of all modules by 10%.",
+            "tier_label": "Tier",
+            "category_label": "Ship Systems"
+        },
+        "efficient_reactor": {
+            "name": "Fusion Engineering",
+            "description": "Improved fusion chambers increase reactor power output by 15%.",
+            "tier_label": "Tier",
+            "category_label": "Ship Systems"
+        },
+        "targeting_matrix": {
+            "name": "Ballistic Computing",
+            "description": "Advanced targeting algorithms improve weapon accuracy and damage by 10%.",
+            "tier_label": "Tier",
+            "category_label": "Weapons"
+        },
+        "scanner_mk2": {
+            "name": "Remote Sensing",
+            "description": "Next-gen sensor technology extends scan range by +1 sector.",
+            "tier_label": "Tier",
+            "category_label": "Science"
+        },
+        "automated_repair": {
+            "name": "Nanorobotics",
+            "description": "A nanite swarm continuously repairs damage — restoring 2% module health per turn.",
+            "tier_label": "Tier",
+            "category_label": "Engineering"
+        },
+        "medbay_upgrade": {
+            "name": "Exobiology",
+            "description": "Study of alien organisms improves medical protocols, increasing crew health by 15%.",
+            "tier_label": "Tier",
+            "category_label": "Biology"
+        },
+        "xenobiology": {
+            "name": "Xenobiology",
+            "description": "Study of alien biology enables treating crew mutations at medical stations.",
+            "tier_label": "Tier",
+            "category_label": "Biology"
+        },
+        "ion_drive": {
+            "name": "Ion Propulsion",
+            "description": "Ion engines reduce fuel consumption by 30% and improve power efficiency by 10%.",
+            "tier_label": "Tier",
+            "category_label": "Ship Systems"
+        },
+        "shield_booster": {
+            "name": "Electromagnetic Fields",
+            "description": "Mastery of new electromagnetic field types increases shield power by 25%.",
+            "tier_label": "Tier",
+            "category_label": "Ship Systems"
+        },
+        "combat_drones": {
+            "name": "Autonomous Systems",
+            "description": "Autonomous combat drones attack targets without crew input, providing +15% damage.",
+            "tier_label": "Tier",
+            "category_label": "Weapons"
+        },
+        "plasma_weapons": {
+            "name": "Plasma Physics",
+            "description": "Weaponized plasma discharges unlock new armaments and provide +15% damage.",
+            "tier_label": "Tier",
+            "category_label": "Weapons"
+        },
+        "lab_network": {
+            "name": "Network Science",
+            "description": "Networking all laboratories accelerates data sharing and all research by 25%.",
+            "tier_label": "Tier",
+            "category_label": "Science"
+        },
+        "quantum_scanner": {
+            "name": "Quantum Optics",
+            "description": "Quantum-entangled sensors scan space, extending detection range by +2 sectors.",
+            "tier_label": "Tier",
+            "category_label": "Science"
+        },
+        "cargo_expansion": {
+            "name": "Modular Architecture",
+            "description": "Compact cargo bay design principles increase cargo capacity by 30%.",
+            "tier_label": "Tier",
+            "category_label": "Engineering"
+        },
+        "crew_training": {
+            "name": "Cognitive Technology",
+            "description": "Neural programs and simulators accelerate crew learning, providing +25% experience gain.",
+            "tier_label": "Tier",
+            "category_label": "Biology"
+        },
+        "singularity_reactor": {
+            "name": "Gravitational Compression",
+            "description": "Harnessing a micro-singularity provides an inexhaustible energy source: +50% power to all systems.",
+            "tier_label": "Tier",
+            "category_label": "Ship Systems"
+        },
+        "phase_shield": {
+            "name": "Phase Engineering",
+            "description": "Phase shields deflect attacks into another dimension: 20% chance to fully absorb a hit, +50% power.",
+            "tier_label": "Tier",
+            "category_label": "Ship Systems"
+        },
+        "quantum_torpedo": {
+            "name": "Quantum Entanglement",
+            "description": "Entangled warheads teleport through enemy shields, dealing +30% damage.",
+            "tier_label": "Tier",
+            "category_label": "Weapons"
+        },
+        "antimatter_weapons": {
+            "name": "Antimatter Physics",
+            "description": "Matter-antimatter annihilation deals double damage to shields and +25% overall damage.",
+            "tier_label": "Tier",
+            "category_label": "Weapons"
+        },
+        "deep_scan": {
+            "name": "Neutrino Tomography",
+            "description": "Neutrino detectors see through matter, extending scan range by +3 sectors.",
+            "tier_label": "Tier",
+            "category_label": "Science"
+        },
+        "nanite_hull": {
+            "name": "Molecular Assembly",
+            "description": "Molecular machines in the hull continuously regenerate 5% of all module health per turn.",
+            "tier_label": "Tier",
+            "category_label": "Engineering"
+        },
+        "neural_interface": {
+            "name": "Neurocybernetics",
+            "description": "Direct brain-ship interface accelerates reaction: +30% crew exp and research speed.",
+            "tier_label": "Tier",
+            "category_label": "Biology"
+        },
+        "genetic_enhancement": {
+            "name": "Genetic Engineering",
+            "description": "Targeted DNA modification strengthens crew biology: +30% health and +15% experience.",
+            "tier_label": "Tier",
+            "category_label": "Biology"
+        },
+        "void_resonance": {
+            "name": "Void Resonance",
+            "description": "Void-space harmonics amplify shields by 40% and increase all weapon damage by 20%.",
+            "tier_label": "Tier",
+            "category_label": "Ancient Tech"
+        },
+        "ancient_power": {
+            "name": "Theory of the Ancients",
+            "description": "Full decipherment of Ancient technology reveals principles granting +50% to all ship parameters.",
+            "tier_label": "Tier",
+            "category_label": "Ancient Tech"
+        },
+        "stellar_genetics": {
+            "name": "Stellar Genetics",
+            "description": "Studying the DNA of stellar entities unlocks evolutionary paths: +50% health, +40% crew exp, +20% research speed.",
+            "tier_label": "Tier",
+            "category_label": "Biology"
+        },
+        "warp_drive": {
+            "name": "Warp Metrics",
+            "description": "Mastery of spacetime metrics enables sector jumps without any fuel consumption.",
+            "tier_label": "Tier",
+            "category_label": "Ancient Tech"
+        },
+        "artifact_study": {
+            "name": "Relic Science",
+            "description": "Basic protocols for working with Ancient relics allow activating one additional artifact.",
+            "tier_label": "Tier",
+            "category_label": "Artifacts"
+        },
+        "relic_chamber": {
+            "name": "Relic Chamber",
+            "description": "Specialized storage enhances interaction with artifacts: +1 slot and +5% to their effects.",
+            "tier_label": "Tier",
+            "category_label": "Artifacts"
+        },
+        "ancient_resonance": {
+            "name": "Ancient Resonance",
+            "description": "Tuning ship systems to relic frequencies: +1 slot and +10% to artifact effects.",
+            "tier_label": "Tier",
+            "category_label": "Artifacts"
+        },
+        "artifact_mastery": {
+            "name": "Relic Mastery",
+            "description": "Complete unity with the Ancient heritage: +2 active artifact slots and +15% to all their effects.",
+            "tier_label": "Tier",
+            "category_label": "Artifacts"
+        },
+        "planetary_drill": {
+            "name": "Planetary Drill",
+            "description": "Adapts the drill module for planetary surface operations. Resource yield depends on planet type: ice worlds yield water, volcanic worlds yield energy, jungles yield biomatter, and so on.",
+            "tier_label": "Tier",
+            "category_label": "Artifacts"
+        },
+        "atmospheric_analysis": {
+            "name": "Atmospheric Analysis",
+            "description": "A scientist can collect atmospheric samples from any empty planet once. Planet type determines which research resources are gathered.",
+            "tier_label": "Tier",
+            "category_label": "Artifacts"
+        },
+        "storm_shields": {
+            "name": "Storm Shields",
+            "description": "Specialized shielding fields reduce damage from all storm types by 50%.",
+            "tier_label": "Tier",
+            "category_label": "Artifacts"
+        },
+        "modular_arsenal": {
+            "name": "Modular Arsenal",
+            "description": "Redesigned weapon bay architecture allows one additional weapon per bay. Double bays hold 3 weapons instead of 2.",
+            "tier_label": "Tier",
+            "category_label": "Weapons"
+        },
+        "ion_cannon": {
+            "name": "Ion Cannon",
+            "description": "Develops an ion weapon that deals massive shield damage (×4) but cannot damage the hull. Essential for stripping shields before a finishing volley.",
+            "tier_label": "Tier",
+            "category_label": "Weapons"
         }
     },
     "crafting": {

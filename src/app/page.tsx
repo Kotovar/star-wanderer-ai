@@ -13,6 +13,7 @@ import { EventDisplay } from "@/game/components/EventPanels";
 import { GameEndPanel } from "@/game/components/panels";
 import { useGameStore } from "@/game/store";
 import { RaceDiscoveryModal } from "@/game/components/RaceDiscoveryModal";
+import { TechnologyDiscoveryModal } from "@/game/components/TechnologyDiscoveryModal";
 import { SurvivorModal } from "@/game/components/SurvivorModal";
 import {
     Accordion,
@@ -230,6 +231,7 @@ export default function Home() {
             </main>
 
             <RaceDiscoveryModal />
+            <TechnologyDiscoveryModal />
             <SurvivorModal />
         </div>
     );
