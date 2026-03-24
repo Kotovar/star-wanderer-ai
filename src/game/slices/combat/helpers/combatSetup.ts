@@ -9,11 +9,19 @@ import type {
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════
 
-const ENEMY_MODULE_TYPES: EnemyModuleType[] = ["weapon", "shield", "reactor"];
+// Random module pool — reactor is always added separately, not random
+const ENEMY_RANDOM_MODULE_TYPES: EnemyModuleType[] = ["weapon", "shield"];
 
 const MODULE_HEALTH_BASE = 100;
 const MODULE_DAMAGE_PER_THREAT = 8;
-const MODULE_SHIELD_DEFENSE_MAX = 3;
+
+// Reactor: always present, tankiest module — destroying it = instant win
+const REACTOR_HP_MULTIPLIER = 2.0;
+const REACTOR_DEFENSE = 4;
+
+// Shield module: contributes to enemy shield pool instead of armor
+const SHIELD_CONTRIBUTION_PER_THREAT = 15; // max shields per shield module = threat * this
+const SHIELD_REGEN_PER_THREAT = 2;         // regen per turn per shield module = ceil(threat * this)
 
 const LOOT_BASE_THREAT = 300;
 const LOOT_VARIATION_MIN = 0.8;
@@ -73,63 +81,72 @@ export const generateEnemyModules = (
           };
 
     const modules: EnemyModule[] = [];
-    const moduleCount = threat + 2 + modifiers.weaponCountMod;
+    // Total random modules after reactor + first weapon = threat + weaponCountMod
+    const randomModuleCount = threat + modifiers.weaponCountMod;
 
-    // Calculate base stats with modifiers
     const healthMultiplier = modifiers.healthMod;
     const damageMultiplier = modifiers.damageMod;
 
-    // Always add at least one weapon module first
-    const baseWeaponHealth = Math.floor(MODULE_HEALTH_BASE * healthMultiplier);
+    // id=0: Reactor — always present, high HP, high armor, destroying it = instant win
+    const reactorHealth = Math.floor(MODULE_HEALTH_BASE * healthMultiplier * REACTOR_HP_MULTIPLIER);
     modules.push({
         id: 0,
+        type: "reactor",
+        name: "Реактор",
+        health: reactorHealth,
+        maxHealth: reactorHealth,
+        damage: 0,
+        defense: REACTOR_DEFENSE,
+    });
+
+    // id=1: Weapon — always at least one weapon
+    const baseWeaponHealth = Math.floor(MODULE_HEALTH_BASE * healthMultiplier);
+    modules.push({
+        id: 1,
         type: "weapon",
         name: "Оружие",
         health: baseWeaponHealth,
         maxHealth: baseWeaponHealth,
-        damage: Math.floor(
-            threat * MODULE_DAMAGE_PER_THREAT * damageMultiplier,
-        ),
+        damage: Math.floor(threat * MODULE_DAMAGE_PER_THREAT * damageMultiplier),
         defense: 0,
     });
 
-    // Add remaining modules
-    for (let i = 1; i < moduleCount; i++) {
+    // id=2+: Random modules — weapon or shield only
+    for (let i = 0; i < randomModuleCount; i++) {
         const type =
-            ENEMY_MODULE_TYPES[
-                Math.floor(Math.random() * ENEMY_MODULE_TYPES.length)
+            ENEMY_RANDOM_MODULE_TYPES[
+                Math.floor(Math.random() * ENEMY_RANDOM_MODULE_TYPES.length)
             ];
 
-        // Marauders have unstable weapons (random damage variation)
+        // Marauders have unstable weapons (random damage variation ±30%)
         let damageMultiplierWithVar = damageMultiplier;
         if (enemyType === "marauder" && type === "weapon") {
-            // ±30% variation for marauder weapons
-            damageMultiplierWithVar =
-                damageMultiplier * (0.7 + Math.random() * 0.6);
+            damageMultiplierWithVar = damageMultiplier * (0.7 + Math.random() * 0.6);
         }
 
-        const defenseValue =
-            type === "shield"
-                ? Math.min(MODULE_SHIELD_DEFENSE_MAX, Math.ceil(threat / 2)) +
-                  modifiers.shieldMod
-                : 0;
-
         const moduleHealth = Math.floor(MODULE_HEALTH_BASE * healthMultiplier);
+        const shieldContribution =
+            type === "shield"
+                ? Math.floor(threat * SHIELD_CONTRIBUTION_PER_THREAT) + modifiers.shieldMod * 10
+                : undefined;
+        const regenContribution =
+            type === "shield"
+                ? Math.ceil(threat * SHIELD_REGEN_PER_THREAT) + modifiers.shieldMod
+                : undefined;
+
         modules.push({
-            id: i,
+            id: i + 2,
             type,
             name: getModuleName(type),
             health: moduleHealth,
             maxHealth: moduleHealth,
             damage:
                 type === "weapon"
-                    ? Math.floor(
-                          threat *
-                              MODULE_DAMAGE_PER_THREAT *
-                              damageMultiplierWithVar,
-                      )
+                    ? Math.floor(threat * MODULE_DAMAGE_PER_THREAT * damageMultiplierWithVar)
                     : 0,
-            defense: defenseValue,
+            defense: 0,
+            shieldContribution,
+            regenContribution,
         });
     }
 
@@ -148,6 +165,17 @@ const getModuleName = (type: EnemyModuleType) => {
         case "reactor":
             return "Реактор";
     }
+};
+
+/**
+ * Computes initial shield pool and regen rate from generated enemy modules.
+ * Shield modules drive enemy shields — no shield modules = no shields.
+ */
+export const calculateShieldsFromModules = (modules: EnemyModule[]) => {
+    const shieldModules = modules.filter((m) => m.type === "shield");
+    const maxShields = shieldModules.reduce((sum, m) => sum + (m.shieldContribution ?? 0), 0);
+    const shieldRegenRate = shieldModules.reduce((sum, m) => sum + (m.regenContribution ?? 0), 0);
+    return { maxShields, shieldRegenRate };
 };
 
 /**

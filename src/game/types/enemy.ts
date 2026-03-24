@@ -8,6 +8,9 @@ export type EnemyModule = {
     damage?: number;
     defense?: number;
     baseDefense?: number; // Original defense, set on first plasma hit (for armor reduction calculation)
+    // Shield module: contribution to enemy shield pool
+    shieldContribution?: number; // Max shields this module adds
+    regenContribution?: number;  // Shield regen per turn this module adds
     // Boss-specific module features
     maxHealth?: number;
     isAncient?: boolean; // Module not available to player

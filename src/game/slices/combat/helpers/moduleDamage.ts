@@ -17,6 +17,7 @@ export function applyModuleDamage(
     get: () => GameStore,
     damage: number,
     targetModule: Module,
+    ignoreDefense = false,
 ) {
     // Overclock removes armor of the weaponbay the engineer is in
     const hasOverclockInModule = state.crew.some(
@@ -24,10 +25,16 @@ export function applyModuleDamage(
             c.moduleId === targetModule.id &&
             c.combatAssignment === "overclock",
     );
-    const moduleDefense = hasOverclockInModule
-        ? 0
-        : (targetModule.defense ?? 0);
-    if (hasOverclockInModule && (targetModule.defense ?? 0) > 0) {
+    const moduleDefense =
+        ignoreDefense || hasOverclockInModule
+            ? 0
+            : (targetModule.defense ?? 0);
+    if (ignoreDefense && (targetModule.defense ?? 0) > 0) {
+        get().addLog(
+            `💀 Игнорирование брони: "${targetModule.name}" - броня пробита!`,
+            "error",
+        );
+    } else if (hasOverclockInModule && (targetModule.defense ?? 0) > 0) {
         get().addLog(
             `⚠️ Перегрузка: броня "${targetModule.name}" отключена!`,
             "warning",

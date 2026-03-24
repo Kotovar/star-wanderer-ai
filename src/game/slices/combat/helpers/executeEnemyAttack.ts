@@ -10,6 +10,7 @@ import { playSound } from "@/sounds";
 import { getTotalEvasion } from "@/game/slices/ship/helpers/getTotalEvasion";
 import type { GameState, GameStore, Module, ModuleType } from "@/game/types";
 import * as enemyAttack from "./enemyAttack";
+import { getBossAttackModifiers, processBossRegeneration } from "./bossAbilities";
 
 /**
  * Priority values for enemy AI targeting
@@ -71,6 +72,24 @@ export function executeEnemyAttack(
         return;
     }
 
+    // Boss attack modifiers (from alive passive modules)
+    const aliveBossMods = combat.enemy.isBoss
+        ? combat.enemy.modules.filter((m) => m.health > 0)
+        : [];
+    const bossModifiers = combat.enemy.isBoss
+        ? getBossAttackModifiers(aliveBossMods, combat.enemy.bossAttackCount ?? 0)
+        : null;
+
+    // Apply guaranteed crit and multi_hit multipliers
+    let finalDamage = eDmg;
+    if (bossModifiers) {
+        if (bossModifiers.isGuaranteedCrit) {
+            finalDamage = Math.floor(finalDamage * 1.5);
+            get().addLog(`💥 Гарантированный крит босса!`, "error");
+        }
+        finalDamage = Math.floor(finalDamage * bossModifiers.multiHitCount);
+    }
+
     // Select target module by priority
     const activeMods = state.ship.modules.filter((m) => m.health > 0);
     const targetModule = selectTargetModule(activeMods, get);
@@ -121,7 +140,60 @@ export function executeEnemyAttack(
     }
 
     // Apply damage to ship
-    applyDamageToShip(state, set, get, eDmg, targetModule);
+    applyDamageToShip(
+        state,
+        set,
+        get,
+        finalDamage,
+        targetModule,
+        bossModifiers?.shieldPiercePercent ?? 0,
+        bossModifiers?.ignoreDefense ?? false,
+    );
+
+    // Increment boss attack count
+    if (combat.enemy.isBoss) {
+        set((s) => {
+            if (!s.currentCombat) return;
+            s.currentCombat.enemy.bossAttackCount =
+                (s.currentCombat.enemy.bossAttackCount ?? 0) + 1;
+        });
+    }
+
+    // Shield break: strip extra shields after attack
+    if (bossModifiers && bossModifiers.shieldBreakAmount > 0 && get().ship.shields > 0) {
+        set((s) => {
+            s.ship.shields = Math.max(0, s.ship.shields - bossModifiers.shieldBreakAmount);
+        });
+        get().addLog(`⚡ Разрушение щитов: -${bossModifiers.shieldBreakAmount}`, "warning");
+    }
+
+    // Heal on damage
+    if (bossModifiers && bossModifiers.healOnDamagePercent > 0) {
+        const healAmount = Math.floor((finalDamage * bossModifiers.healOnDamagePercent) / 100);
+        if (healAmount > 0) {
+            set((s) => {
+                if (!s.currentCombat) return;
+                s.currentCombat.enemy.modules.forEach((m) => {
+                    if (m.health > 0)
+                        m.health = Math.min(m.maxHealth ?? 100, m.health + healAmount);
+                });
+            });
+            get().addLog(`🩸 Вампиризм модуля: +${healAmount} HP`, "warning");
+        }
+    }
+
+    // Turn skip
+    if (
+        bossModifiers &&
+        bossModifiers.turnSkipChance > 0 &&
+        Math.random() * 100 < bossModifiers.turnSkipChance
+    ) {
+        set((s) => {
+            if (!s.currentCombat) return;
+            s.currentCombat.skipPlayerTurn = true;
+        });
+        get().addLog(`⏭️ Пропуск хода! Следующая атака будет пропущена!`, "error");
+    }
 
     // Check for dead crew
     const deadCrew = get().crew.filter((c) => c.health <= 0);
@@ -134,7 +206,7 @@ export function executeEnemyAttack(
     }
 
     // Boss regeneration and special abilities
-    processBossAbilities(state, set, get);
+    processBossRegeneration(state, set, get);
 
     // Check defeat
     get().checkGameOver();
@@ -246,6 +318,8 @@ function processMirrorShield(
 
 /**
  * Applies damage to player ship
+ * @param shieldPiercePercent - % of damage that bypasses shields entirely
+ * @param ignoreDefense - if true, module armor is bypassed
  */
 function applyDamageToShip(
     state: GameState,
@@ -253,25 +327,43 @@ function applyDamageToShip(
     get: () => GameStore,
     enemyDamage: number,
     targetModule: Module,
+    shieldPiercePercent = 0,
+    ignoreDefense = false,
 ) {
-    if (state.ship.shields > 0) {
-        const sDmg = Math.min(state.ship.shields, enemyDamage);
-        set((s) => {
-            s.ship.shields -= sDmg;
-        });
-        get().addLog(`Враг по щитам: -${sDmg}`, "warning");
+    // Split damage: piercing portion bypasses shields
+    const piercingDamage = shieldPiercePercent > 0
+        ? Math.floor((enemyDamage * shieldPiercePercent) / 100)
+        : 0;
+    const normalDamage = enemyDamage - piercingDamage;
 
-        const overflow = enemyDamage - sDmg;
-        if (overflow > 0) {
-            applyModuleDamage(state, set, get, overflow, targetModule);
+    // Apply piercing damage directly to module
+    if (piercingDamage > 0) {
+        get().addLog(`🔱 Пробитие щитов: ${piercingDamage} урона игнорирует щиты`, "warning");
+        applyModuleDamage(state, set, get, piercingDamage, targetModule, ignoreDefense);
+    }
+
+    // Apply normal damage through shields
+    if (normalDamage > 0) {
+        if (state.ship.shields > 0) {
+            const sDmg = Math.min(state.ship.shields, normalDamage);
+            set((s) => {
+                s.ship.shields -= sDmg;
+            });
+            get().addLog(`Враг по щитам: -${sDmg}`, "warning");
+
+            const overflow = normalDamage - sDmg;
+            if (overflow > 0) {
+                applyModuleDamage(state, set, get, overflow, targetModule, ignoreDefense);
+            }
+        } else {
+            applyModuleDamage(state, set, get, normalDamage, targetModule, ignoreDefense);
         }
-    } else {
-        applyModuleDamage(state, set, get, enemyDamage, targetModule);
     }
 }
 
 /**
  * Applies damage to module and crew
+ * @param forceIgnoreDefense - bypass all module armor (boss ignore_defense passive)
  */
 function applyModuleDamage(
     state: GameState,
@@ -279,6 +371,7 @@ function applyModuleDamage(
     get: () => GameStore,
     damage: number,
     targetModule: Module,
+    forceIgnoreDefense = false,
 ) {
     // Overclock removes armor of the weaponbay the engineer is in
     const hasOverclockInModule = state.crew.some(
@@ -286,10 +379,16 @@ function applyModuleDamage(
             c.moduleId === targetModule.id &&
             c.combatAssignment === "overclock",
     );
-    const moduleDefense = hasOverclockInModule
-        ? 0
-        : (targetModule.defense ?? 0);
-    if (hasOverclockInModule && (targetModule.defense ?? 0) > 0) {
+    const moduleDefense =
+        forceIgnoreDefense || hasOverclockInModule
+            ? 0
+            : (targetModule.defense ?? 0);
+    if (forceIgnoreDefense && (targetModule.defense ?? 0) > 0) {
+        get().addLog(
+            `💀 Игнорирование брони: "${targetModule.name}" - броня пробита!`,
+            "error",
+        );
+    } else if (hasOverclockInModule && (targetModule.defense ?? 0) > 0) {
         get().addLog(
             `⚠️ Перегрузка: броня "${targetModule.name}" отключена!`,
             "warning",
@@ -459,59 +558,3 @@ function damageCrewInModule(
     }
 }
 
-/**
- * Processes boss regeneration and special abilities
- */
-function processBossAbilities(
-    state: GameState,
-    set: (fn: (s: GameState) => void) => void,
-    get: () => GameStore,
-) {
-    const combat = state.currentCombat;
-    if (!combat?.enemy.isBoss) return;
-
-    const boss = combat.enemy;
-
-    // Regeneration
-    if (boss.regenRate && boss.regenRate > 0) {
-        const aliveModules = boss.modules.filter((m) => m.health > 0);
-        if (aliveModules.length > 0) {
-            const regenAmount = boss.regenRate;
-            set((s) => {
-                if (!s.currentCombat) return;
-                s.currentCombat.enemy.modules.forEach((m) => {
-                    if (m.health > 0 && m.health < (m.maxHealth ?? 100)) {
-                        m.health = Math.min(
-                            m.maxHealth ?? 100,
-                            m.health + regenAmount,
-                        );
-                    }
-                });
-            });
-            get().addLog(`⚙️ Регенерация босса: +${regenAmount}%`, "warning");
-        }
-    }
-
-    // Special ability: every_turn
-    if (
-        boss.specialAbility?.trigger === "every_turn" &&
-        boss.specialAbility.effect === "heal_all"
-    ) {
-        const healAmount = boss.specialAbility.value ?? 10;
-        set((s) => {
-            if (!s.currentCombat) return;
-            s.currentCombat.enemy.modules.forEach((m) => {
-                if (m.health > 0) {
-                    m.health = Math.min(
-                        m.maxHealth ?? 100,
-                        m.health + healAmount,
-                    );
-                }
-            });
-        });
-        get().addLog(
-            `★ ${boss.specialAbility.name}: +${healAmount}% ко всем модулям`,
-            "warning",
-        );
-    }
-}

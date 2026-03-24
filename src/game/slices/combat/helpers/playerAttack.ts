@@ -26,6 +26,13 @@ import { handleVictory } from "./playerVictory";
 import { handleEnemyCounterAttack } from "./enemyCounterAttack";
 import { applyAlienPresencePenalty } from "./alienPresence";
 import { BASE_CRIT_CHANCE, BASE_CRIT_MULTIPLIER } from "@/game/constants";
+import {
+    checkBossEvasionBoost,
+    checkBossModuleDodge,
+    checkBossPhaseShift,
+    applyBossTakeDamageEffects,
+    checkBossResurrect,
+} from "./bossAbilities";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -632,6 +639,16 @@ export function executePlayerAttack(
     const currentState = get();
     if (!currentState.currentCombat) return;
 
+    // 0. Skip turn check (boss turn_skip effect)
+    if (currentState.currentCombat.skipPlayerTurn) {
+        set((s) => {
+            if (!s.currentCombat) return;
+            s.currentCombat.skipPlayerTurn = false;
+        });
+        get().addLog(`⏭️ Ваш ход пропущен! Эффект оглушения босса.`, "error");
+        return;
+    }
+
     // 1. Crew & weapon setup
     const { weaponBays, crewInWeaponBays } = getWeaponBayCrew(currentState);
     const combatFlags = resolveCombatFlags(currentState, crewInWeaponBays);
@@ -652,9 +669,30 @@ export function executePlayerAttack(
     const tgtMod = resolveTarget(currentState, crewInWeaponBays, get);
     if (!tgtMod) return;
 
+    // 2a. Boss evasion_boost: entire attack evaded
+    if (checkBossEvasionBoost(currentState, get)) {
+        handleEnemyCounterAttack(currentState, set, get);
+        return;
+    }
+
+    // 2b. Boss module dodge passive
+    const aliveBossMods = currentState.currentCombat.enemy.isBoss
+        ? currentState.currentCombat.enemy.modules.filter((m) => m.health > 0)
+        : [];
+    if (currentState.currentCombat.enemy.isBoss && checkBossModuleDodge(aliveBossMods, get)) {
+        get().addLog(`⚡ Модуль "${tgtMod.name}" уклонился от атаки!`, "warning");
+        handleEnemyCounterAttack(currentState, set, get);
+        return;
+    }
+
     // 3. Crit roll
     const crit = rollCrit(currentState, get);
-    const damageMultiplier = crit.isCrit ? crit.multiplier : 1;
+    let damageMultiplier = crit.isCrit ? crit.multiplier : 1;
+
+    // 3a. Boss phase_shift: negate critical hit
+    if (crit.isCrit && currentState.currentCombat.enemy.isBoss && checkBossPhaseShift(aliveBossMods, get)) {
+        damageMultiplier = 1;
+    }
 
     // 4. Accuracy
     const accuracyModifier = resolveAccuracy(
@@ -708,14 +746,66 @@ export function executePlayerAttack(
         weaponCounts,
     );
 
+    // 7a. Boss take-damage passives (damage_absorb, damage_mirror)
+    if (currentState.currentCombat.enemy.isBoss && damage.totalModuleDamage > 0) {
+        applyBossTakeDamageEffects(get(), set, get, damage.totalModuleDamage);
+    }
+
     // 8. Flush logs
     damage.logs.forEach((log) => get().addLog(log, "combat"));
 
-    // 9. Victory check
+    // 8a. If a shield module was just destroyed, recalculate enemy shield pool
+    if (damage.totalModuleDamage > 0 && tgtMod.type === "shield" && tgtMod.health > 0) {
+        const updatedTgtMod = get().currentCombat?.enemy.modules.find((m) => m.id === tgtMod.id);
+        if (updatedTgtMod && updatedTgtMod.health <= 0) {
+            const aliveShields = get().currentCombat?.enemy.modules.filter(
+                (m) => m.type === "shield" && m.health > 0,
+            ) ?? [];
+            if (aliveShields.length === 0) {
+                set((s) => {
+                    if (!s.currentCombat) return;
+                    s.currentCombat.enemy.shields = 0;
+                    s.currentCombat.enemy.maxShields = 0;
+                    s.currentCombat.enemy.shieldRegenRate = undefined;
+                });
+                get().addLog("💥 Последний щитовой модуль уничтожен! Щиты врага обнулены!", "combat");
+            } else {
+                const newMax = aliveShields.reduce((sum, m) => sum + (m.shieldContribution ?? 0), 0);
+                const newRegen = aliveShields.reduce((sum, m) => sum + (m.regenContribution ?? 0), 0);
+                set((s) => {
+                    if (!s.currentCombat) return;
+                    s.currentCombat.enemy.maxShields = newMax;
+                    if (s.currentCombat.enemy.shields > newMax)
+                        s.currentCombat.enemy.shields = newMax;
+                    s.currentCombat.enemy.shieldRegenRate = newRegen > 0 ? newRegen : undefined;
+                });
+                get().addLog(
+                    `🛡 Щитовой модуль уничтожен! Макс. щиты врага: ${newMax}, регенерация: ${newRegen}/ход`,
+                    "combat",
+                );
+            }
+        }
+    }
+
+    // 9. Victory check — reactor destroyed = instant win; fallback: all modules dead
     const updatedCombat = get().currentCombat;
-    if (updatedCombat?.enemy.modules.every((m) => m.health <= 0)) {
-        handleVictory(currentState, set, get, updatedCombat, weaponBays);
-        return;
+    const reactorModule = updatedCombat?.enemy.modules.find((m) => m.type === "reactor");
+    const isVictory = reactorModule
+        ? reactorModule.health <= 0
+        : updatedCombat?.enemy.modules.every((m) => m.health <= 0) ?? false;
+    if (isVictory) {
+        // Boss resurrect_chance: one-time chance to come back from defeat
+        if (updatedCombat?.enemy.isBoss && checkBossResurrect(set, get)) {
+            // Boss resurrected — continue combat (no victory yet)
+        } else {
+            if (reactorModule && reactorModule.health <= 0) {
+                get().addLog("💥 РЕАКТОР ВРАГА УНИЧТОЖЕН! Корабль разрушен!", "combat");
+            }
+            if (updatedCombat) {
+                handleVictory(currentState, set, get, updatedCombat, weaponBays);
+            }
+            return;
+        }
     }
 
     // 10. Enemy counter-attack

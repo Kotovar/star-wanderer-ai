@@ -5,7 +5,7 @@ import { COMBAT_ACCURACY_MODIFIERS } from "@/game/constants/combat";
 import { PILOT_EVASION_COMBAT_EXP } from "@/game/constants/experience";
 import { getTotalEvasion } from "@/game/slices/ship/helpers/getTotalEvasion";
 import { applyModuleDamage } from "./moduleDamage";
-import { processBossRegeneration } from "./bossAbilities";
+import { getBossAttackModifiers, processBossRegeneration } from "./bossAbilities";
 import {
     DEFAULT_MODULE_PRIORITY,
     MODULE_HEALTH_PRIORITY,
@@ -34,6 +34,24 @@ export function handleEnemyCounterAttack(
             "info",
         );
         return;
+    }
+
+    // Boss attack modifiers (from alive passive modules)
+    const aliveBossMods = combat.enemy.isBoss
+        ? combat.enemy.modules.filter((m) => m.health > 0)
+        : [];
+    const bossModifiers = combat.enemy.isBoss
+        ? getBossAttackModifiers(aliveBossMods, combat.enemy.bossAttackCount ?? 0)
+        : null;
+
+    // Apply guaranteed crit and multi_hit
+    let finalDamage = eDmg;
+    if (bossModifiers) {
+        if (bossModifiers.isGuaranteedCrit) {
+            finalDamage = Math.floor(finalDamage * 1.5);
+            get().addLog(`💥 Гарантированный крит босса!`, "error");
+        }
+        finalDamage = Math.floor(finalDamage * bossModifiers.multiHitCount);
     }
 
     // Evasion check
@@ -99,10 +117,57 @@ export function handleEnemyCounterAttack(
     }
 
     // Apply damage
+    const shieldPierce = bossModifiers?.shieldPiercePercent ?? 0;
+    const ignoreDefense = bossModifiers?.ignoreDefense ?? false;
     if (state.ship.shields > 0) {
-        applyDamageWithShields(state, set, get, eDmg, tgt);
+        applyDamageWithShields(state, set, get, finalDamage, tgt, shieldPierce, ignoreDefense);
     } else {
-        applyDamageNoShields(state, set, get, eDmg, tgt);
+        applyDamageNoShields(state, set, get, finalDamage, tgt, ignoreDefense);
+    }
+
+    // Increment boss attack count
+    if (combat.enemy.isBoss) {
+        set((s) => {
+            if (!s.currentCombat) return;
+            s.currentCombat.enemy.bossAttackCount =
+                (s.currentCombat.enemy.bossAttackCount ?? 0) + 1;
+        });
+    }
+
+    // Shield break
+    if (bossModifiers && bossModifiers.shieldBreakAmount > 0 && get().ship.shields > 0) {
+        set((s) => {
+            s.ship.shields = Math.max(0, s.ship.shields - bossModifiers.shieldBreakAmount);
+        });
+        get().addLog(`⚡ Разрушение щитов: -${bossModifiers.shieldBreakAmount}`, "warning");
+    }
+
+    // Heal on damage
+    if (bossModifiers && bossModifiers.healOnDamagePercent > 0) {
+        const healAmount = Math.floor((finalDamage * bossModifiers.healOnDamagePercent) / 100);
+        if (healAmount > 0) {
+            set((s) => {
+                if (!s.currentCombat) return;
+                s.currentCombat.enemy.modules.forEach((m) => {
+                    if (m.health > 0)
+                        m.health = Math.min(m.maxHealth ?? 100, m.health + healAmount);
+                });
+            });
+            get().addLog(`🩸 Вампиризм модуля: +${healAmount} HP`, "warning");
+        }
+    }
+
+    // Turn skip
+    if (
+        bossModifiers &&
+        bossModifiers.turnSkipChance > 0 &&
+        Math.random() * 100 < bossModifiers.turnSkipChance
+    ) {
+        set((s) => {
+            if (!s.currentCombat) return;
+            s.currentCombat.skipPlayerTurn = true;
+        });
+        get().addLog(`⏭️ Пропуск хода! Следующая атака будет пропущена!`, "error");
     }
 
     // Remove dead crew
@@ -117,6 +182,9 @@ export function handleEnemyCounterAttack(
 
     // Boss regeneration
     processBossRegeneration(state, set, get);
+
+    // Enemy shield regeneration (regular enemies only — driven by alive shield modules)
+    processEnemyShieldRegen(set, get);
 
     get().checkGameOver();
 }
@@ -199,6 +267,8 @@ export function reflectAttack(
 
 /**
  * Applies damage with shields
+ * @param shieldPiercePercent - % of damage that bypasses shields
+ * @param ignoreDefense - bypass module armor
  */
 export function applyDamageWithShields(
     state: GameState,
@@ -206,15 +276,57 @@ export function applyDamageWithShields(
     get: () => GameStore,
     eDmg: number,
     tgt: Module,
+    shieldPiercePercent = 0,
+    ignoreDefense = false,
 ) {
-    const sDmg = Math.min(get().ship.shields, eDmg);
-    set((s) => ({ ship: { ...s.ship, shields: s.ship.shields - sDmg } }));
-    get().addLog(`Враг по щитам: -${sDmg}`, "warning");
+    // Split damage: piercing portion bypasses shields
+    const piercingDamage = shieldPiercePercent > 0
+        ? Math.floor((eDmg * shieldPiercePercent) / 100)
+        : 0;
+    const normalDamage = eDmg - piercingDamage;
 
-    const overflow = eDmg - sDmg;
-    if (overflow > 0) {
-        applyModuleDamage(state, set, get, overflow, tgt);
+    if (piercingDamage > 0) {
+        get().addLog(`🔱 Пробитие щитов: ${piercingDamage} урона игнорирует щиты`, "warning");
+        applyModuleDamage(state, set, get, piercingDamage, tgt);
     }
+
+    if (normalDamage > 0) {
+        const sDmg = Math.min(get().ship.shields, normalDamage);
+        set((s) => ({ ship: { ...s.ship, shields: s.ship.shields - sDmg } }));
+        get().addLog(`Враг по щитам: -${sDmg}`, "warning");
+
+        const overflow = normalDamage - sDmg;
+        if (overflow > 0) {
+            applyModuleDamage(state, set, get, overflow, tgt, ignoreDefense);
+        }
+    }
+}
+
+/**
+ * Regenerates enemy shields each turn based on alive shield modules.
+ * Skips bosses (they have their own ability-based shield mechanics).
+ */
+function processEnemyShieldRegen(
+    set: (fn: (s: GameState) => void) => void,
+    get: () => GameStore,
+) {
+    const combat = get().currentCombat;
+    if (!combat) return;
+    const regenRate = combat.enemy.shieldRegenRate;
+    if (!regenRate || regenRate <= 0) return;
+    const current = combat.enemy.shields;
+    const max = combat.enemy.maxShields;
+    if (current >= max) return;
+
+    const restored = Math.min(regenRate, max - current);
+    set((s) => {
+        if (!s.currentCombat) return;
+        s.currentCombat.enemy.shields = current + restored;
+    });
+    get().addLog(
+        `🛡 Щиты врага восстановились: +${restored} (${current + restored}/${max})`,
+        "info",
+    );
 }
 
 /**
@@ -226,6 +338,7 @@ export function applyDamageNoShields(
     get: () => GameStore,
     eDmg: number,
     tgt: Module,
+    ignoreDefense = false,
 ) {
-    applyModuleDamage(state, set, get, eDmg, tgt);
+    applyModuleDamage(state, set, get, eDmg, tgt, ignoreDefense);
 }

@@ -9,11 +9,13 @@ export interface CombatState {
         selectedModule: number | null;
         shields: number;
         maxShields: number;
+        shieldRegenRate?: number; // Shields regenerated per turn (driven by alive shield modules)
         // Boss-specific fields
         isBoss?: boolean;
         bossId?: string;
         regenRate?: number; // HP regenerated per turn
         specialAbility?: BossAbility;
+        bossAttackCount?: number; // Incremented each boss attack (for guaranteed_crit)
         // For bounty contracts
         threat?: number;
     };
@@ -23,6 +25,9 @@ export interface CombatState {
     // Ambush - enemy attacks first (when no scanner and approaching unknown enemy ship)
     isAmbush?: boolean;
     ambushAttackDone?: boolean; // Track if ambush attack was already executed
+    skipPlayerTurn?: boolean;        // Boss turn_skip effect: player loses next turn
+    bossResurrected?: boolean;       // Track if resurrect_chance was already used
+    bossOneShotAbilityFired?: boolean; // Track if one-shot low_health ability (shield_restore, emergency_repair) has fired
     // Battle results (filled after victory)
     battleResults?: {
         damagedModules: { name: string; damage: number }[];

@@ -1,6 +1,7 @@
 import { RACES } from "@/game/constants";
 import type { GameState, GameStore, Location } from "@/game/types";
 import * as combatSetup from "./combatSetup";
+import { calculateShieldsFromModules } from "./combatSetup";
 
 /**
  * Инициализирует обычный бой
@@ -20,6 +21,7 @@ export function initializeCombat(
         threat,
         enemy.enemyType,
     );
+    const { maxShields, shieldRegenRate } = calculateShieldsFromModules(enemyModules);
 
     set((s) => {
         s.ship.shields = s.ship.maxShields;
@@ -28,8 +30,9 @@ export function initializeCombat(
                 name: enemy.name,
                 modules: enemyModules,
                 selectedModule: null,
-                shields: threat * 20,
-                maxShields: threat * 20,
+                shields: maxShields,
+                maxShields,
+                shieldRegenRate: shieldRegenRate > 0 ? shieldRegenRate : undefined,
                 threat,
             },
             loot: { credits: lootCredits },

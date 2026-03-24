@@ -89,6 +89,9 @@ export interface BossModule {
     health: number;
     damage?: number;
     defense?: number;
+    // Shield module fields (type === "shield") — same logic as regular enemies
+    shieldContribution?: number; // Max shields this module adds to boss
+    regenContribution?: number;  // Shield regen per turn this module adds
 }
 
 export type BossAbilityTrigger = "every_turn" | "low_health" | "on_damage";

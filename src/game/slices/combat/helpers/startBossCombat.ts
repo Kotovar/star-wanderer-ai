@@ -1,6 +1,7 @@
 import { getBossById } from "@/game/bosses";
 import { determineBossRewards } from "./bossRewards";
 import * as combatSetup from "./combatSetup";
+import { calculateShieldsFromModules } from "./combatSetup";
 import { applyPessimistTrait, applyRebelTrait } from "./startCombat";
 import type { GameState, GameStore, Location } from "@/game/types";
 
@@ -25,7 +26,13 @@ export function initializeBossCombat(
         defense: m.defense ?? 0,
         isAncient: m.isAncient,
         specialEffect: m.specialEffect,
+        shieldContribution: m.shieldContribution,
+        regenContribution: m.regenContribution,
     }));
+
+    // Shields driven by shield modules — same logic as regular enemies, but bosses are mightier
+    const { maxShields: moduleShields, shieldRegenRate } = calculateShieldsFromModules(bossModules);
+    const initialShields = moduleShields > 0 ? moduleShields : boss.shields;
 
     // Determine boss rewards (artifact rarity and module by tier)
     const rewards = determineBossRewards(boss.id, boss.tier, get());
@@ -38,12 +45,14 @@ export function initializeBossCombat(
                 name: boss.name,
                 modules: bossModules,
                 selectedModule: null,
-                shields: boss.shields,
-                maxShields: boss.shields,
+                shields: initialShields,
+                maxShields: initialShields,
+                shieldRegenRate: shieldRegenRate > 0 ? shieldRegenRate : undefined,
                 isBoss: true,
                 bossId: boss.id,
                 regenRate: boss.regenRate,
                 specialAbility: boss.specialAbility,
+                bossAttackCount: 0,
             },
             loot: {
                 credits: lootCredits,
@@ -53,6 +62,9 @@ export function initializeBossCombat(
             droneStacks: 0,
             isAmbush: false,
             ambushAttackDone: false,
+            skipPlayerTurn: false,
+            bossResurrected: false,
+            bossOneShotAbilityFired: false,
         };
         s.gameMode = "combat";
     });
