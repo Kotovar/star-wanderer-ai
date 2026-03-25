@@ -42,7 +42,7 @@ export const TIER2_TECHS: Partial<Record<TechnologyId, Technology>> = {
         id: "ion_drive",
         name: "Ионный двигатель",
         description:
-            "Ионная тяга снижает расход топлива на 20% и сокращает время межтирового перелёта на 1 ход.",
+            "Ионная тяга снижает расход топлива на 20% и сокращает время межтирового перелёта на 1 ход (прыжки в соседний тир становятся моментальными).",
         tier: 2,
         category: "ship_systems",
         prerequisites: ["efficient_reactor"],
@@ -54,11 +54,6 @@ export const TIER2_TECHS: Partial<Record<TechnologyId, Technology>> = {
                 type: "fuel_efficiency",
                 value: 0.2,
                 description: "-20% расход топлива",
-            },
-            {
-                type: "module_power",
-                value: 0.1,
-                description: "+10% к энергии систем",
             },
         ],
         icon: "🚀",

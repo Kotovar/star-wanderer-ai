@@ -167,7 +167,7 @@ export const TIER1_TECHS: Partial<Record<TechnologyId, Technology>> = {
         tier: 1,
         category: "biology",
         prerequisites: [],
-        resources: { alien_biology: 3 },
+        resources: { alien_biology: 5 },
         credits: 200,
         scienceCost: 80,
         bonuses: [

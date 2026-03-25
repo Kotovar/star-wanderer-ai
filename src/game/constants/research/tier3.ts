@@ -10,7 +10,7 @@ export const TIER3_TECHS: Partial<Record<TechnologyId, Technology>> = {
         id: "singularity_reactor",
         name: "Реактор сингулярности",
         description:
-            "Реактор на основе микросингулярности даёт +50% к мощности всех систем корабля.",
+            "Реактор на основе микросингулярности даёт +30% к мощности всех систем корабля.",
         tier: 3,
         category: "ship_systems",
         prerequisites: ["ion_drive"],
@@ -20,8 +20,8 @@ export const TIER3_TECHS: Partial<Record<TechnologyId, Technology>> = {
         bonuses: [
             {
                 type: "module_power",
-                value: 0.5,
-                description: "+50% к мощности систем",
+                value: 0.3,
+                description: "+30% к мощности систем",
             },
             {
                 type: "fuel_efficiency",
@@ -220,11 +220,6 @@ export const TIER3_TECHS: Partial<Record<TechnologyId, Technology>> = {
                 type: "crew_health",
                 value: 0.3,
                 description: "+30% к здоровью экипажа",
-            },
-            {
-                type: "crew_exp",
-                value: 0.15,
-                description: "+15% к опыту экипажа",
             },
         ],
         icon: "🧬",

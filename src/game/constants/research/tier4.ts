@@ -10,7 +10,7 @@ export const TIER4_TECHS: Partial<Record<TechnologyId, Technology>> = {
         id: "void_resonance",
         name: "Резонанс Пустоты",
         description:
-            "Гармоники пространства Пустоты усиливают щиты на 40% и увеличивают урон всего оружия на 20%.",
+            "Гармоники пространства Пустоты усиливают щиты на 30% и увеличивают урон всего оружия на 15%.",
         tier: 4,
         category: "ship_systems",
         prerequisites: ["phase_shield", "antimatter_weapons"],

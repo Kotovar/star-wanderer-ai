@@ -158,6 +158,20 @@ export const planetaryDrill = (
         get().gainExp(engineer, ENGINEER_DRILL_EXP);
     }
 
+    // Формируем результат для отображения в UI
+    const drillResult = {
+        tradeGood: yields.tradeGood
+            ? {
+                  name: TRADE_GOODS[yields.tradeGood.id]?.name ?? yields.tradeGood.id,
+                  quantity: yields.tradeGood.qty,
+              }
+            : undefined,
+        researchResources: yields.researchResources.map((res) => ({
+            type: res.type,
+            quantity: res.qty,
+        })),
+    };
+
     // Помечаем планету как пробурённую, продвигаем ход
     set((s) => ({
         turn: s.turn + 1,
@@ -165,13 +179,15 @@ export const planetaryDrill = (
             ? {
                   ...s.currentSector,
                   locations: s.currentSector.locations.map((l) =>
-                      l.id === planetId ? { ...l, planetaryDrilled: true } : l,
+                      l.id === planetId
+                          ? { ...l, planetaryDrilled: true, lastDrillResult: drillResult }
+                          : l,
                   ),
               }
             : s.currentSector,
         currentLocation:
             s.currentLocation?.id === planetId
-                ? { ...s.currentLocation, planetaryDrilled: true }
+                ? { ...s.currentLocation, planetaryDrilled: true, lastDrillResult: drillResult }
                 : s.currentLocation,
     }));
 

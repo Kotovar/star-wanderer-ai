@@ -110,6 +110,14 @@ export const atmosphericAnalysis = (
     // Опыт учёному
     get().gainExp(scientist, SCIENTIST_ATMOSPHERE_EXP);
 
+    // Формируем результат для отображения в UI
+    const atmoResult = {
+        researchResources: resources.map((res) => ({
+            type: res.type,
+            quantity: res.qty,
+        })),
+    };
+
     // Помечаем как проанализированную, продвигаем ход
     set((s) => ({
         turn: s.turn + 1,
@@ -118,14 +126,14 @@ export const atmosphericAnalysis = (
                   ...s.currentSector,
                   locations: s.currentSector.locations.map((l) =>
                       l.id === planetId
-                          ? { ...l, atmosphereAnalyzed: true }
+                          ? { ...l, atmosphereAnalyzed: true, lastAtmosphericResult: atmoResult }
                           : l,
                   ),
               }
             : s.currentSector,
         currentLocation:
             s.currentLocation?.id === planetId
-                ? { ...s.currentLocation, atmosphereAnalyzed: true }
+                ? { ...s.currentLocation, atmosphereAnalyzed: true, lastAtmosphericResult: atmoResult }
                 : s.currentLocation,
     }));
 

@@ -1842,13 +1842,13 @@
         },
         "singularity_reactor": {
             "name": "Gravitational Compression",
-            "description": "Harnessing a micro-singularity provides an inexhaustible energy source: +50% power to all systems.",
+            "description": "Harnessing a micro-singularity provides an inexhaustible energy source: +30% power to all systems.",
             "tier_label": "Tier",
             "category_label": "Ship Systems"
         },
         "phase_shield": {
             "name": "Phase Engineering",
-            "description": "Phase shields deflect attacks into another dimension: 20% chance to fully absorb a hit, +50% power.",
+            "description": "Phase shields deflect attacks into another dimension: 20% chance to fully absorb a hit.",
             "tier_label": "Tier",
             "category_label": "Ship Systems"
         },
@@ -1890,7 +1890,7 @@
         },
         "void_resonance": {
             "name": "Void Resonance",
-            "description": "Void-space harmonics amplify shields by 40% and increase all weapon damage by 20%.",
+            "description": "Void-space harmonics amplify shields by 30% and increase all weapon damage by 15%.",
             "tier_label": "Tier",
             "category_label": "Ancient Tech"
         },
@@ -1970,7 +1970,7 @@
     "crafting": {
         "title": "Weapon Crafting",
         "no_recipes": "No unlocked recipes.",
-        "no_recipes_hint": "Research Plasma Weapons, Combat Drones, Antimatter Weapons, or Quantum Torpedoes to unlock crafting recipes.",
+        "no_recipes_hint": "Research technologies to unlock blueprints.",
         "available_recipes": "Available recipes",
         "craft_button": "Craft",
         "damage_suffix": "dmg"

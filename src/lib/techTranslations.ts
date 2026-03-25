@@ -99,12 +99,12 @@ export const TECH_TRANSLATIONS: Record<
         singularity_reactor: {
             name: "Гравитационная компрессия",
             description:
-                "Управление микросингулярностью даёт неисчерпаемый источник энергии: +50% к мощности всех систем.",
+                "Управление микросингулярностью даёт неисчерпаемый источник энергии: +30% к мощности всех систем.",
         },
         phase_shield: {
             name: "Фазовая инженерия",
             description:
-                "Фазовые щиты смещают атаки в другое измерение: 20% шанс полностью поглотить удар, +50% к мощности.",
+                "Фазовые щиты смещают атаки в другое измерение: 20% шанс полностью поглотить удар.",
         },
         quantum_torpedo: {
             name: "Квантовая запутанность",
@@ -143,7 +143,7 @@ export const TECH_TRANSLATIONS: Record<
         void_resonance: {
             name: "Резонанс Пустоты",
             description:
-                "Гармоники пространства Пустоты усиливают щиты на 40% и увеличивают урон всего оружия на 20%.",
+                "Гармоники пространства Пустоты усиливают щиты на 30% и увеличивают урон всего оружия на 15%.",
         },
         ancient_power: {
             name: "Теория Древних",
@@ -301,12 +301,12 @@ export const TECH_TRANSLATIONS: Record<
         singularity_reactor: {
             name: "Gravitational Compression",
             description:
-                "Harnessing a micro-singularity provides an inexhaustible energy source: +50% power to all systems.",
+                "Harnessing a micro-singularity provides an inexhaustible energy source: +30% power to all systems.",
         },
         phase_shield: {
             name: "Phase Engineering",
             description:
-                "Phase shields deflect attacks into another dimension: 20% chance to fully absorb a hit, +50% power.",
+                "Phase shields deflect attacks into another dimension: 20% chance to fully absorb a hit.",
         },
         quantum_torpedo: {
             name: "Quantum Entanglement",
@@ -345,7 +345,7 @@ export const TECH_TRANSLATIONS: Record<
         void_resonance: {
             name: "Void Resonance",
             description:
-                "Void-space harmonics amplify shields by 40% and increase all weapon damage by 20%.",
+                "Void-space harmonics amplify shields by 30% and increase all weapon damage by 15%.",
         },
         ancient_power: {
             name: "Theory of the Ancients",

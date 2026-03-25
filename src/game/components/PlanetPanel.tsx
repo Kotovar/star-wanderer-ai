@@ -239,9 +239,31 @@ export function PlanetPanel() {
                                     </Button>
                                 </>
                             ) : currentLocation.planetaryDrilled ? (
-                                <div className="text-[#555] text-sm mt-1">
-                                    Планета уже пробурена.
-                                </div>
+                                <>
+                                    <div className="text-[#555] text-sm mt-1">
+                                        Планета уже пробурена.
+                                    </div>
+                                    {currentLocation.lastDrillResult && (
+                                        <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 mt-2">
+                                            <div className="text-[#ffb000] font-bold text-sm mb-1">
+                                                Результат бурения:
+                                            </div>
+                                            {currentLocation.lastDrillResult.tradeGood && (
+                                                <div className="text-[#00ff41] text-sm">
+                                                    📦 {currentLocation.lastDrillResult.tradeGood.name} x{currentLocation.lastDrillResult.tradeGood.quantity}
+                                                </div>
+                                            )}
+                                            {currentLocation.lastDrillResult.researchResources.map((res) => {
+                                                const rd = RESEARCH_RESOURCES[res.type];
+                                                return (
+                                                    <div key={res.type} className="text-[#4488ff] text-sm">
+                                                        🔬 {rd?.icon ?? ""} {rd?.name ?? res.type} x{res.quantity}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </>
                             ) : (
                                 <div className="text-[#ff0040] text-sm mt-1 p-2 border border-[#ff0040] bg-[rgba(255,0,64,0.1)]">
                                     Требуется активный модуль дрели.
@@ -274,9 +296,26 @@ export function PlanetPanel() {
                                     </Button>
                                 </>
                             ) : currentLocation.atmosphereAnalyzed ? (
-                                <div className="text-[#555] text-sm mt-1">
-                                    Атмосфера уже проанализирована.
-                                </div>
+                                <>
+                                    <div className="text-[#555] text-sm mt-1">
+                                        Атмосфера уже проанализирована.
+                                    </div>
+                                    {currentLocation.lastAtmosphericResult && (
+                                        <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-3 mt-2">
+                                            <div className="text-[#00d4ff] font-bold text-sm mb-1">
+                                                Результат анализа:
+                                            </div>
+                                            {currentLocation.lastAtmosphericResult.researchResources.map((res) => {
+                                                const rd = RESEARCH_RESOURCES[res.type];
+                                                return (
+                                                    <div key={res.type} className="text-[#4488ff] text-sm">
+                                                        🔬 {rd?.icon ?? ""} {rd?.name ?? res.type} x{res.quantity}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </>
                             ) : (
                                 <div className="text-[#ff0040] text-sm mt-1 p-2 border border-[#ff0040] bg-[rgba(255,0,64,0.1)]">
                                     Требуется учёный в экипаже.

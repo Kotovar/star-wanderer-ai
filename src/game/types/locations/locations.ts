@@ -48,6 +48,13 @@ export interface Location {
     explored?: boolean; // Fully explored empty planet (after 3 scout missions)
     planetaryDrilled?: boolean; // Planetary drill has been used on this planet
     atmosphereAnalyzed?: boolean; // Atmospheric analysis has been performed
+    lastDrillResult?: {
+        tradeGood?: { name: string; quantity: number };
+        researchResources: { type: ResearchResourceType; quantity: number }[];
+    };
+    lastAtmosphericResult?: {
+        researchResources: { type: ResearchResourceType; quantity: number }[];
+    };
     visited?: boolean; // Player has visited this location (opened its panel)
     lastScoutResult?: {
         type: "credits" | "tradeGood" | "nothing" | "enemy";
