@@ -682,7 +682,7 @@ export function SectorMap() {
                 }
             } else if (loc.type === "distress_signal") {
                 // Distress signals are always visible (SOS beacon)
-                drawDistressSignal(ctx, x, y, loc, completed);
+                drawDistressSignal(ctx, x, y, loc, completed, animationStateRef.current.time);
             } else if (loc.type === "boss") {
                 if (canScan || isRevealed || hasTelepathy) {
                     drawAncientBoss(ctx, x, y, loc, completed);
@@ -3738,41 +3738,89 @@ function drawDistressSignal(
     y: number,
     loc: Location,
     completed: boolean,
+    time: number = 0,
 ) {
-    if (completed || loc.signalResolved) {
-        ctx.globalAlpha = 0.4;
+    const isResolved = completed || loc.signalResolved;
+    const baseAlpha = isResolved ? 0.35 : 1;
+    const t = time / 1000; // секунды
+
+    // Цвет зависит от раскрытого типа сигнала
+    let color = "#ffaa00"; // неизвестно
+    if (loc.signalRevealed && loc.signalType) {
+        if (loc.signalType === "pirate_ambush") color = "#ff0040";
+        else if (loc.signalType === "survivors") color = "#00ff41";
+        else if (loc.signalType === "abandoned_cargo") color = "#00d4ff";
+    }
+    if (isResolved) color = "#666666";
+
+    // Разбиваем hex-цвет на RGB для rgba()
+    const hexToRgb = (hex: string) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `${r}, ${g}, ${b}`;
+    };
+    const rgb = hexToRgb(color);
+
+    // ── Одно медленное кольцо ─────────────────────────────────────────
+    if (!isResolved) {
+        const phase = (t * 0.18) % 1; // очень медленное расширение
+        const ringRadius = 10 + phase * 14;
+        const ringAlpha = (1 - phase) * 0.18;
+        ctx.globalAlpha = ringAlpha;
+        ctx.strokeStyle = `rgba(${rgb}, 1)`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(x, y, ringRadius, 0, Math.PI * 2);
+        ctx.stroke();
     }
 
-    // Pulsing beacon glow
-    const gradient = ctx.createRadialGradient(x, y, 0, x, y, 25);
-    gradient.addColorStop(0, "rgba(255, 170, 0, 0.5)");
-    gradient.addColorStop(0.5, "rgba(255, 170, 0, 0.2)");
+    // ── Фоновое свечение ──────────────────────────────────────────────
+    const glowPulse = isResolved
+        ? 0.12
+        : 0.18 + 0.05 * Math.sin(t * Math.PI * 0.6); // очень медленная пульсация
+    ctx.globalAlpha = baseAlpha;
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, 16);
+    gradient.addColorStop(0, `rgba(${rgb}, ${glowPulse})`);
+    gradient.addColorStop(0.6, `rgba(${rgb}, ${glowPulse * 0.3})`);
     gradient.addColorStop(1, "transparent");
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(x, y, 25, 0, Math.PI * 2);
+    ctx.arc(x, y, 16, 0, Math.PI * 2);
     ctx.fill();
 
-    // Signal waves
-    ctx.strokeStyle = "#ffaa00";
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 3; i++) {
-        const radius = 6 + i * 6;
-        ctx.beginPath();
-        ctx.arc(x, y, radius, -Math.PI * 0.3, Math.PI * 0.3);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(x, y, radius, Math.PI * 0.7, Math.PI * 1.3);
-        ctx.stroke();
-    }
+    // ── Ромбовидный корпус маяка ──────────────────────────────────────
+    const corePulse = isResolved
+        ? 1
+        : 1 + 0.03 * Math.sin(t * Math.PI * 0.6); // едва заметная пульсация
+    const s = 7 * corePulse;
+    ctx.globalAlpha = baseAlpha;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(Math.PI / 4); // 45° → ромб
+    ctx.fillStyle = isResolved ? "#111" : "#100500";
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.rect(-s, -s, s * 2, s * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
 
-    // SOS text
-    ctx.font = "bold 10px Share Tech Mono";
-    ctx.fillStyle = "#ffaa00";
+    // ── Текст SOS ─────────────────────────────────────────────────────
+    const textBlink = isResolved
+        ? 0.6
+        : 0.88 + 0.12 * Math.sin(t * Math.PI * 0.6); // синхронно с glow
+    ctx.globalAlpha = baseAlpha * textBlink;
+    ctx.font = "bold 8px 'Share Tech Mono', monospace";
+    ctx.fillStyle = isResolved ? "#666" : color;
     ctx.textAlign = "center";
-    ctx.fillText("SOS", x, y + 4);
+    ctx.textBaseline = "middle";
+    ctx.fillText("SOS", x, y);
 
+    // Сброс
     ctx.globalAlpha = 1;
+    ctx.textBaseline = "alphabetic";
 }
 
 // Draw Ancient Boss - Relict of lost civilization
