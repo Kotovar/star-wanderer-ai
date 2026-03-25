@@ -168,7 +168,7 @@ export function StationPanel() {
     if (!currentLocation) return null;
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 h-full">
             <StationHeader
                 location={currentLocation}
                 sectorTier={sectorTier}
@@ -194,7 +194,7 @@ export function StationPanel() {
             <Tabs
                 value={activeTab}
                 onValueChange={setActiveTab}
-                className="w-full mt-2"
+                className="w-full mt-2 flex-1 min-h-0"
             >
                 <TabsList
                     className="grid w-full bg-[rgba(0,255,65,0.1)] border border-[#00ff41] h-auto"
@@ -238,7 +238,7 @@ export function StationPanel() {
                     )}
                 </TabsList>
 
-                <TabsContent value="shop" className="mt-4 min-h-[50vh]">
+                <TabsContent value="shop" className="mt-4 min-h-0 overflow-hidden flex flex-col">
                     <ShopTab
                         stationId={stationId}
                         stationItems={stationItems}
@@ -255,7 +255,7 @@ export function StationPanel() {
                 </TabsContent>
 
                 {allowsTrade && (
-                    <TabsContent value="trade" className="mt-4 min-h-[50vh]">
+                    <TabsContent value="trade" className="mt-4 min-h-0 overflow-hidden flex flex-col">
                         <TradeTab
                             stationId={stationId}
                             stationPrices={stationPrices}
@@ -269,7 +269,7 @@ export function StationPanel() {
                     </TabsContent>
                 )}
 
-                <TabsContent value="crew" className="mt-4 min-h-[50vh]">
+                <TabsContent value="crew" className="mt-4 min-h-0 overflow-hidden flex flex-col">
                     <CrewTab
                         availableCrew={
                             availableCrew as Array<{
@@ -301,7 +301,7 @@ export function StationPanel() {
                     />
                 </TabsContent>
 
-                <TabsContent value="services" className="mt-4 pb-8">
+                <TabsContent value="services" className="mt-4 min-h-0 overflow-hidden flex flex-col">
                     <ServicesTab
                         fuel={fuel}
                         maxFuel={maxFuel}
@@ -334,7 +334,7 @@ export function StationPanel() {
                     />
                 </TabsContent>
                 {allowsCraft && (
-                    <TabsContent value="crafting" className="mt-4 min-h-[50vh]">
+                    <TabsContent value="crafting" className="mt-4 min-h-0 overflow-hidden flex flex-col">
                         <CraftingTab />
                     </TabsContent>
                 )}

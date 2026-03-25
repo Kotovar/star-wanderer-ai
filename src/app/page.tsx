@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { GameHeader } from "@/game/components/header";
 import { ShipGrid } from "@/game/components/ShipGrid";
 import { ModuleList } from "@/game/components/ModuleList";
@@ -15,13 +15,9 @@ import { useGameStore } from "@/game/store";
 import { RaceDiscoveryModal } from "@/game/components/RaceDiscoveryModal";
 import { TechnologyDiscoveryModal } from "@/game/components/TechnologyDiscoveryModal";
 import { SurvivorModal } from "@/game/components/SurvivorModal";
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/components/ui/accordion";
 import { useTranslation } from "@/lib/useTranslation";
+
+type LeftTab = "ship" | "stats" | "crew" | "modules" | "cargo" | "contracts" | "log";
 
 export default function Home() {
     const gameOver = useGameStore((s) => s.gameOver);
@@ -32,6 +28,7 @@ export default function Home() {
     const loadGame = useGameStore((s) => s.loadGame);
     const gameMode = useGameStore((s) => s.gameMode);
     const { t } = useTranslation();
+    const [activeTab, setActiveTab] = useState<LeftTab>("ship");
 
     useEffect(() => {
         loadGame();
@@ -126,106 +123,98 @@ export default function Home() {
 
             <main className="flex-1 flex flex-col lg:flex-row overflow-hidden max-w-full min-w-0 px-2 lg:px-4 py-4 gap-4">
                 {/* Left Panel */}
-                <div className="panel flex-1 lg:w-95 flex flex-col gap-4 overflow-y-auto min-w-0 lg:h-[calc(100vh-100px)] border-2 border-[#00ff41] bg-[rgba(0,255,65,0.02)] rounded-lg p-2 scrollbar-gutter-stable">
-                    <Accordion type="multiple" className="w-full">
-                        <AccordionItem
-                            value="ship"
-                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
-                        >
-                            <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
-                                {t("ship.title")}{" "}
-                                {moduleMovedThisTurn && t("ship.locked")}
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                <ShipGrid />
-                            </AccordionContent>
-                        </AccordionItem>
+                <div className="panel flex-1 lg:w-95 flex flex-col min-w-0 lg:h-[calc(100vh-100px)] border-2 border-[#00ff41] bg-[rgba(0,255,65,0.02)] rounded-lg overflow-hidden">
+                    {/* Tab bar */}
+                    <div className="flex shrink-0 border-b-2 border-[#00ff41]">
+                        {(
+                            [
+                                {
+                                    id: "ship",
+                                    icon: "🚀",
+                                    label: t("ship.title"),
+                                },
+                                {
+                                    id: "stats",
+                                    icon: "📊",
+                                    label: t("ship.ship_state"),
+                                },
+                                {
+                                    id: "crew",
+                                    icon: "👥",
+                                    label: t("ship.crew"),
+                                },
+                                {
+                                    id: "modules",
+                                    icon: "⚙️",
+                                    label: t("ship.modules"),
+                                },
+                                {
+                                    id: "cargo",
+                                    icon: "📦",
+                                    label: t("ship.cargo"),
+                                },
+                                {
+                                    id: "contracts",
+                                    icon: "📋",
+                                    label: t("ship.contracts"),
+                                },
+                                {
+                                    id: "log",
+                                    icon: "📜",
+                                    label: t("ship.event_log"),
+                                },
+                            ] as { id: LeftTab; icon: string; label: string }[]
+                        ).map((tab, idx) => {
+                            const isActive = activeTab === tab.id;
+                            const hasAlert =
+                                tab.id === "ship" && moduleMovedThisTurn;
+                            return (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    title={tab.label}
+                                    className={`relative flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-[9px] font-['Orbitron'] font-bold transition-colors cursor-pointer select-none
+                                        ${idx < 5 ? "border-r border-[#1a3320]" : ""}
+                                        ${
+                                            isActive
+                                                ? "text-[#ffb000] bg-[rgba(255,176,0,0.07)]"
+                                                : "text-[#445544] hover:text-[#00ff41] hover:bg-[rgba(0,255,65,0.04)]"
+                                        }`}
+                                >
+                                    {/* Active indicator line */}
+                                    {isActive && (
+                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ffb000]" />
+                                    )}
+                                    <span className="text-sm leading-none">
+                                        {tab.icon}
+                                    </span>
+                                    <span className="hidden sm:block truncate w-full text-center px-0.5 leading-tight">
+                                        {tab.label}
+                                    </span>
+                                    {hasAlert && (
+                                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[#ff0040]" />
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
 
-                        <AccordionItem
-                            value="ship_stats"
-                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
-                        >
-                            <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
-                                {t("ship.ship_state")}
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                <ShipStats />
-                            </AccordionContent>
-                        </AccordionItem>
-
-                        <AccordionItem
-                            value="crew"
-                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
-                        >
-                            <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
-                                {t("ship.crew")}
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                <CrewList />
-                            </AccordionContent>
-                        </AccordionItem>
-
-                        <AccordionItem
-                            value="modules"
-                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
-                        >
-                            <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
-                                {t("ship.modules")}
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                <ModuleList />
-                            </AccordionContent>
-                        </AccordionItem>
-
-                        <AccordionItem
-                            value="cargo"
-                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
-                        >
-                            <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
-                                {t("ship.cargo")}
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                <CargoDisplay />
-                            </AccordionContent>
-                        </AccordionItem>
-
-                        <AccordionItem
-                            value="contracts"
-                            className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5"
-                        >
-                            <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer">
-                                {t("ship.contracts")}
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                <ContractsList />
-                            </AccordionContent>
-                        </AccordionItem>
-                    </Accordion>
+                    {/* Tab content */}
+                    <div className="flex-1 overflow-y-auto p-2 scrollbar-gutter-stable">
+                        {activeTab === "ship" && <ShipGrid />}
+                        {activeTab === "stats" && <ShipStats />}
+                        {activeTab === "crew" && <CrewList />}
+                        {activeTab === "modules" && <ModuleList />}
+                        {activeTab === "cargo" && <CargoDisplay />}
+                        {activeTab === "contracts" && <ContractsList />}
+                        {activeTab === "log"       && <GameLog />}
+                    </div>
                 </div>
 
                 {/* Right Panel */}
-                <div className="panel flex-1 lg:flex-1 flex flex-col min-w-0 h-[calc(100vh-200px)] lg:h-[calc(100vh-100px)] relative border-2 border-[#00ff41] bg-[rgba(0,255,65,0.02)] rounded-lg p-2">
-                    <div className="flex-1 overflow-hidden min-h-0 pb-14">
+                <div className="panel flex-1 lg:flex-1 flex flex-col min-w-0 h-[calc(100vh-200px)] lg:h-[calc(100vh-100px)] border-2 border-[#00ff41] bg-[rgba(0,255,65,0.02)] rounded-lg p-2">
+                    <div className="flex-1 overflow-hidden min-h-0">
                         <EventDisplay />
-                    </div>
-
-                    {/* Event Journal - at the bottom */}
-                    <div className="absolute bottom-0 left-0 right-0 z-10 px-2 md:px-5 pb-2">
-                        <Accordion type="multiple" className="w-full">
-                            <AccordionItem
-                                value="log"
-                                className="border border-[#00ff41] bg-[rgba(0,255,65,0.03)] px-2 md:px-2.5 overflow-hidden"
-                            >
-                                <AccordionTrigger className="font-['Orbitron'] font-bold text-sm md:text-base text-[#ffb000] hover:text-[#00ff41] py-2 px-1 md:py-2.5 cursor-pointer truncate">
-                                    {t("ship.event_log")}
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                    <div className="max-h-50 overflow-y-scroll">
-                                        <GameLog />
-                                    </div>
-                                </AccordionContent>
-                            </AccordionItem>
-                        </Accordion>
                     </div>
                 </div>
             </main>

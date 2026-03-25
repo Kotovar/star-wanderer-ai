@@ -26,7 +26,7 @@ export function CraftingTab() {
     }
 
     return (
-        <div className="flex flex-col gap-4 pb-8">
+        <div className="flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto pb-2">
             <div className="text-[#00ff41] font-['Orbitron'] font-bold text-base">
                 {t("crafting.title")}
             </div>

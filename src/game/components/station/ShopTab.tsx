@@ -146,7 +146,7 @@ export function ShopTab({
 
     return (
         <>
-            <div className="flex flex-col gap-2.5 max-h-[55vh] overflow-y-auto pr-1">
+            <div className="flex flex-col gap-2.5 flex-1 min-h-0 overflow-y-auto pr-1 pb-2">
                 {filteredItems.map((item) => {
                     const stockLeft =
                         inv[item.id] !== undefined

@@ -45,7 +45,7 @@ export function CrewTab({
 
     return (
         <>
-            <div className="flex flex-col gap-2.5 max-h-[55vh] overflow-y-auto pr-1">
+            <div className="flex flex-col gap-2.5 flex-1 min-h-0 overflow-y-auto pr-1 pb-2">
                 {!hasSpace && (
                     <div className="text-[#ffb000] text-sm p-3 border border-[#ffb000] bg-[rgba(255,176,0,0.1)]">
                         {t("station.overcrowded_warning")}
