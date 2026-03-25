@@ -1140,7 +1140,7 @@
         "approach": "APPROACH",
         "ignore": "IGNORE",
         "warning_detected": "⚠ Emergency beacon detected!",
-        "static_message": "Ship is sending distress signals. Only static on the line.",
+        "static_message": "An unidentified vessel is transmitting a distress signal. The connection is unstable — only static fills the channel.",
         "possible_scenarios": "Possible scenarios:",
         "survivors_waiting": "• Survivors awaiting rescue",
         "abandoned_cargo_item": "• Abandoned cargo",
@@ -1149,9 +1149,15 @@
         "scanner_label": "📡 Scanner {{label}}:",
         "reveal_chance": "Chance to determine signal type:",
         "scanner_failed": "📡 Scanner failed to determine signal type.",
-        "risk_title": "⚠ Risk:",
+        "risk_title": "Risk:",
         "risk_text": "You won't know the truth until you approach.",
-        "respond": "RESPOND"
+        "respond": "RESPOND",
+        "signal_deactivated": "◈ SIGNAL DEACTIVATED",
+        "scanner_identified": "◈ SCANNER: TARGET IDENTIFIED",
+        "scan_result": "SCAN RESULT",
+        "incoming_signal": "◈ INCOMING SIGNAL · SOURCE UNKNOWN",
+        "intercepted": "SIGNAL INTERCEPTED",
+        "scanner_active": "ACTIVE SCANNER: {{label}}"
     },
     "survivor_modal": {
         "title": "Survivor Requests Asylum",

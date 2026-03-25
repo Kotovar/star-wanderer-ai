@@ -75,6 +75,20 @@ export function ShipStats() {
         shieldRegen += artifactRegen;
     }
     if (shieldRegen > 0) {
+        // Расовый трейт void_shield (+5% за каждого члена экипажа Рождённых в Пустоте)
+        let raceMultiplier = 0;
+        crew.forEach((c) => {
+            const race = RACES[c.race];
+            const shieldTrait = race?.specialTraits?.find(
+                (trait) => trait.effects.shieldRegen,
+            );
+            if (shieldTrait?.effects.shieldRegen) {
+                raceMultiplier += Number(shieldTrait.effects.shieldRegen) / 100;
+            }
+        });
+        if (raceMultiplier > 0) {
+            shieldRegen = Math.floor(shieldRegen * (1 + raceMultiplier));
+        }
         if (shieldRegenerator) {
             const regenBoost = getArtifactEffectValue(
                 shieldRegenerator,

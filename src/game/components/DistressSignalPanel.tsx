@@ -40,6 +40,51 @@ const OUTCOME_INFO = {
     },
 };
 
+function SOSBeacon({
+    color = "#ffaa00",
+    size = 72,
+}: {
+    color?: string;
+    size?: number;
+}) {
+    const innerSize = Math.round(size * 0.56);
+    return (
+        <div
+            className="relative flex items-center justify-center shrink-0"
+            style={{ width: size, height: size }}
+        >
+            {[0, 1, 2].map((i) => (
+                <div
+                    key={i}
+                    className="absolute rounded-full border animate-ping"
+                    style={{
+                        width: size,
+                        height: size,
+                        borderColor: color,
+                        animationDelay: `${i * 0.65}s`,
+                        animationDuration: "2s",
+                    }}
+                />
+            ))}
+            <div
+                className="relative z-10 flex items-center justify-center rounded-full border-2 font-['Share_Tech_Mono'] font-bold animate-pulse"
+                style={{
+                    width: innerSize,
+                    height: innerSize,
+                    fontSize: Math.round(innerSize * 0.27),
+                    borderColor: color,
+                    color: color,
+                    backgroundColor: `${color}18`,
+                    boxShadow: `0 0 ${Math.round(innerSize * 0.45)}px ${color}55, inset 0 0 ${Math.round(innerSize * 0.22)}px ${color}22`,
+                    animationDuration: "1.8s",
+                }}
+            >
+                SOS
+            </div>
+        </div>
+    );
+}
+
 export function DistressSignalPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
     const respondToDistressSignal = useGameStore(
@@ -59,108 +104,138 @@ export function DistressSignalPanel() {
     const isRevealed = currentLocation.signalRevealed;
     const revealChecked = currentLocation.signalRevealChecked;
 
-    // Check if this is already completed
-
-    // If signal is resolved and we know the outcome - show results
+    // ── RESOLVED ──────────────────────────────────────────────────────────
     if (isResolved && outcome) {
         const info = OUTCOME_INFO[outcome];
 
         return (
             <div className="flex flex-col gap-4">
-                <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                    {t("distress_signal.title_investigated")}
+                {/* Header */}
+                <div className="flex items-center gap-3">
+                    <SOSBeacon color="#555" size={56} />
+                    <div>
+                        <div className="font-['Orbitron'] font-bold text-lg text-[#666]">
+                            {t("distress_signal.title_investigated")}
+                        </div>
+                        <div className="text-[#555] text-xs font-['Share_Tech_Mono'] mt-0.5">
+                            {t("distress_signal.signal_deactivated")}
+                        </div>
+                    </div>
                 </div>
 
+                {/* Outcome result card */}
                 <div
-                    className={`${info.bgClass} border p-3 text-sm`}
+                    className={`${info.bgClass} border p-4 relative overflow-hidden`}
                     style={{ borderColor: info.color }}
                 >
-                    <span style={{ color: info.color }} className="font-bold">
-                        {info.icon} {t(info.nameKey)}!
-                    </span>
-                    <br />
-                    <br />
-                    <span className="text-[#888]">{t(info.descKey)}</span>
-                    {outcome === "pirate_ambush" && (
-                        <>
-                            <br />
-                            <br />
-                            <span className="text-[#ffb000]">
-                                {t("distress_signal.enemy_found")}
-                            </span>
-                        </>
-                    )}
-                    {outcome === "survivors" && (
-                        <>
-                            <br />
-                            <br />
-                            <span className="text-[#00ff41]">
-                                {t("distress_signal.survivors_saved")}
-                            </span>
-                        </>
-                    )}
-                    {outcome === "abandoned_cargo" && (
-                        <>
-                            <br />
-                            <br />
-                            <span className="text-[#00d4ff]">
-                                {t("distress_signal.abandoned_ship")}
-                            </span>
-                            {/* Show loot details */}
-                            {currentLocation.signalLoot && (
-                                <>
-                                    <br />
-                                    <br />
-                                    <div className="border-t border-[#00d4ff] pt-2 mt-2">
-                                        <span className="text-[#ffb000] font-bold">
-                                            {t("distress_signal.found")}
-                                        </span>
-                                        {currentLocation.signalLoot.credits && (
-                                            <div className="text-[#00ff41] text-xs mt-1">
-                                                💰{" "}
-                                                {
-                                                    currentLocation.signalLoot
-                                                        .credits
-                                                }
-                                                ₢
-                                            </div>
-                                        )}
-                                        {currentLocation.signalLoot
-                                            .tradeGood && (
-                                            <div className="text-[#00d4ff] text-xs">
-                                                📦{" "}
-                                                {
-                                                    currentLocation.signalLoot
-                                                        .tradeGood.name
-                                                }{" "}
-                                                (
-                                                {
-                                                    currentLocation.signalLoot
-                                                        .tradeGood.quantity
-                                                }
-                                                т)
-                                            </div>
-                                        )}
-                                        {currentLocation.signalLoot
-                                            .artifact && (
-                                            <div className="text-[#ff00ff] text-xs">
-                                                ★{" "}
-                                                {
-                                                    currentLocation.signalLoot
-                                                        .artifact
-                                                }
-                                            </div>
-                                        )}
-                                    </div>
-                                </>
+                    {/* background glow */}
+                    <div
+                        className="absolute inset-0 opacity-5"
+                        style={{
+                            background: `radial-gradient(ellipse at 20% 50%, ${info.color} 0%, transparent 70%)`,
+                        }}
+                    />
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-3 mb-3">
+                            <span className="text-3xl">{info.icon}</span>
+                            <div>
+                                <div
+                                    className="font-['Orbitron'] font-bold text-base"
+                                    style={{ color: info.color }}
+                                >
+                                    {t(info.nameKey)}
+                                </div>
+                                <div className="text-[#888] text-xs mt-0.5">
+                                    {t(info.descKey)}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            className="border-t pt-3 mt-1 text-sm"
+                            style={{ borderColor: `${info.color}40` }}
+                        >
+                            {outcome === "pirate_ambush" && (
+                                <span className="text-[#ffb000]">
+                                    {t("distress_signal.enemy_found")}
+                                </span>
                             )}
-                        </>
-                    )}
+                            {outcome === "survivors" && (
+                                <span style={{ color: info.color }}>
+                                    {t("distress_signal.survivors_saved")}
+                                </span>
+                            )}
+                            {outcome === "abandoned_cargo" && (
+                                <div>
+                                    <span style={{ color: info.color }}>
+                                        {t("distress_signal.abandoned_ship")}
+                                    </span>
+                                    {currentLocation.signalLoot && (
+                                        <div className="mt-3 space-y-1">
+                                            <div
+                                                className="text-xs font-bold uppercase tracking-widest mb-2"
+                                                style={{ color: info.color }}
+                                            >
+                                                {t("distress_signal.found")}
+                                            </div>
+                                            {currentLocation.signalLoot
+                                                .credits && (
+                                                <div className="flex items-center gap-2 text-[#00ff41] text-sm">
+                                                    <span>💰</span>
+                                                    <span>
+                                                        {
+                                                            currentLocation
+                                                                .signalLoot
+                                                                .credits
+                                                        }
+                                                        ₢
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {currentLocation.signalLoot
+                                                .tradeGood && (
+                                                <div className="flex items-center gap-2 text-[#00d4ff] text-sm">
+                                                    <span>📦</span>
+                                                    <span>
+                                                        {
+                                                            currentLocation
+                                                                .signalLoot
+                                                                .tradeGood.name
+                                                        }{" "}
+                                                        ×
+                                                        {
+                                                            currentLocation
+                                                                .signalLoot
+                                                                .tradeGood
+                                                                .quantity
+                                                        }
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {currentLocation.signalLoot
+                                                .artifact && (
+                                                <div className="flex items-center gap-2 text-[#ff00ff] text-sm">
+                                                    <span>★</span>
+                                                    <span>
+                                                        {
+                                                            currentLocation
+                                                                .signalLoot
+                                                                .artifact
+                                                        }
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 <Button
                     onClick={showSectorMap}
-                    className="cursor-pointer bg-transparent border-2 border-[#666] text-[#666] hover:bg-[#666] hover:text-[#050810] uppercase tracking-wider mt-3"
+                    className="cursor-pointer bg-transparent border-2 border-[#444] text-[#666] hover:bg-[#444] hover:text-[#050810] uppercase tracking-wider mt-1"
                 >
                     {t("distress_signal.leave_signal")}
                 </Button>
@@ -168,52 +243,73 @@ export function DistressSignalPanel() {
         );
     }
 
-    // If scanner revealed the outcome (but not yet resolved)
+    // ── REVEALED ──────────────────────────────────────────────────────────
     if (isRevealed && outcome && !isResolved) {
         const info = OUTCOME_INFO[outcome];
 
         return (
             <div className="flex flex-col gap-4">
-                <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                    {t("distress_signal.title")}
+                {/* Header */}
+                <div className="flex items-center gap-3">
+                    <SOSBeacon color={info.color} size={64} />
+                    <div>
+                        <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
+                            {t("distress_signal.title")}
+                        </div>
+                        <div
+                            className="text-xs font-['Share_Tech_Mono'] mt-0.5 animate-pulse"
+                            style={{ color: info.color }}
+                        >
+                            {t("distress_signal.scanner_identified")}
+                        </div>
+                    </div>
                 </div>
 
-                <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3 text-sm">
-                    <span className="text-[#00ff41]">
-                        {t("distress_signal.scanner_detected")}
-                    </span>
-                    <br />
-                    <span style={{ color: info.color }} className="font-bold">
-                        {info.icon} {t(info.nameKey)}
-                    </span>
-                    <br />
-                    <span className="text-[#888]">{t(info.descKey)}</span>
+                {/* Detected outcome */}
+                <div
+                    className={`${info.bgClass} border p-4 relative overflow-hidden`}
+                    style={{ borderColor: info.color }}
+                >
+                    <div
+                        className="absolute inset-0 opacity-5"
+                        style={{
+                            background: `radial-gradient(ellipse at 80% 50%, ${info.color} 0%, transparent 70%)`,
+                        }}
+                    />
+                    <div className="relative z-10">
+                        <div
+                            className="text-xs font-['Share_Tech_Mono'] mb-3"
+                            style={{ color: `${info.color}99` }}
+                        >
+                            {t("distress_signal.scan_result")}
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="text-4xl">{info.icon}</span>
+                            <div>
+                                <div
+                                    className="font-['Orbitron'] font-bold text-base"
+                                    style={{ color: info.color }}
+                                >
+                                    {t(info.nameKey)}
+                                </div>
+                                <div className="text-[#888] text-xs mt-1">
+                                    {t(info.descKey)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="text-sm leading-relaxed">
-                    <span className="text-[#ffb000]">
-                        {t("distress_signal.scanner_analyzed")}
-                    </span>
+                <div className="text-sm text-[#888] leading-relaxed">
+                    {t("distress_signal.scanner_analyzed")}
                 </div>
 
                 <Button
-                    onClick={() => {
-                        respondToDistressSignal();
-                    }}
-                    className={`cursor-pointer bg-transparent border-2 uppercase tracking-wider mt-3`}
+                    onClick={() => respondToDistressSignal()}
+                    className="cursor-pointer bg-transparent border-2 uppercase tracking-wider"
                     style={{
-                        borderColor:
-                            outcome === "pirate_ambush"
-                                ? "#ff0040"
-                                : outcome === "survivors"
-                                  ? "#00ff41"
-                                  : "#00d4ff",
-                        color:
-                            outcome === "pirate_ambush"
-                                ? "#ff0040"
-                                : outcome === "survivors"
-                                  ? "#00ff41"
-                                  : "#00d4ff",
+                        borderColor: info.color,
+                        color: info.color,
                     }}
                 >
                     {outcome === "pirate_ambush"
@@ -231,94 +327,115 @@ export function DistressSignalPanel() {
         );
     }
 
-    // Unknown signal - offer to investigate
-    // Show scanner chance if available and not yet checked
+    // ── UNKNOWN SIGNAL ────────────────────────────────────────────────────
     const scannerLabel = getScannerRangeLabel(scanRange, t);
 
     return (
         <div className="flex flex-col gap-4">
-            <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                {t("distress_signal.title")}
+            {/* Header with animated beacon */}
+            <div className="flex items-center gap-3">
+                <SOSBeacon color="#ffaa00" size={72} />
+                <div>
+                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] animate-pulse">
+                        {t("distress_signal.title")}
+                    </div>
+                    <div className="text-[#ffaa00] text-xs font-['Share_Tech_Mono'] mt-0.5">
+                        {t("distress_signal.incoming_signal")}
+                    </div>
+                </div>
             </div>
 
-            <div className="text-sm leading-relaxed">
-                <span className="text-[#ffaa00]">
-                    {t("distress_signal.warning_detected")}
-                </span>
-                <br />
-                <br />
-                {t("distress_signal.static_message")}
-                <br />
-                <br />
-                <span className="text-[#888]">
+            {/* Intercepted signal block */}
+            <div className="bg-[rgba(255,170,0,0.05)] border border-[#ffaa00] p-3 font-['Share_Tech_Mono'] text-xs">
+                <div className="text-[#ffaa00] mb-1">{t("distress_signal.intercepted")}</div>
+                <div className="text-[#666] mb-1">
+                    ━━━━━━╱╲━━━╱╲╱╲━━━━╱╲━━━━━━
+                </div>
+                <div className="text-[#888]">
+                    {t("distress_signal.static_message")}
+                </div>
+            </div>
+
+            {/* Possible outcomes grid */}
+            <div>
+                <div className="text-[#666] text-xs uppercase tracking-widest mb-2 font-['Share_Tech_Mono']">
                     {t("distress_signal.possible_scenarios")}
-                </span>
-                <br />
-                <span className="text-[#00ff41]">
-                    {t("distress_signal.survivors_waiting")}
-                </span>
-                <br />
-                <span className="text-[#00d4ff]">
-                    {t("distress_signal.abandoned_cargo_item")}
-                </span>
-                <br />
-                <span className="text-[#ff0040]">
-                    {t("distress_signal.pirate_ambush_item")}
-                </span>
-                <br />
-                <br />
-                <span className="text-[#ffb000]">
-                    {t("distress_signal.risk_warning")}
-                </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                    <div className="border border-[#00ff41] bg-[rgba(0,255,65,0.04)] p-2 text-center">
+                        <div className="text-2xl mb-1">💚</div>
+                        <div className="text-[#00ff41] text-xs font-bold font-['Share_Tech_Mono']">
+                            30%
+                        </div>
+                        <div className="text-[#888] text-xs mt-0.5">
+                            {t("distress_signal.survivors")}
+                        </div>
+                    </div>
+                    <div className="border border-[#00d4ff] bg-[rgba(0,212,255,0.04)] p-2 text-center">
+                        <div className="text-2xl mb-1">📦</div>
+                        <div className="text-[#00d4ff] text-xs font-bold font-['Share_Tech_Mono']">
+                            35%
+                        </div>
+                        <div className="text-[#888] text-xs mt-0.5">
+                            {t("distress_signal.abandoned_cargo")}
+                        </div>
+                    </div>
+                    <div className="border border-[#ff0040] bg-[rgba(255,0,64,0.04)] p-2 text-center">
+                        <div className="text-2xl mb-1">🚨</div>
+                        <div className="text-[#ff0040] text-xs font-bold font-['Share_Tech_Mono']">
+                            35%
+                        </div>
+                        <div className="text-[#888] text-xs mt-0.5">
+                            {t("distress_signal.pirate_ambush")}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Scanner info */}
             {scanRange > 0 && !revealChecked && (
                 <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3 text-sm">
-                    <span className="text-[#00ff41]">
-                        {t("distress_signal.scanner_label").replace(
-                            "{{label}}",
-                            scannerLabel,
-                        )}
-                    </span>
-                    <br />
-                    <span className="text-[#888]">
+                    <div className="text-[#00ff41] text-xs font-['Share_Tech_Mono'] mb-1">
+                        {t("distress_signal.scanner_active").replace("{{label}}", scannerLabel)}
+                    </div>
+                    <span className="text-[#888] text-xs">
                         {t("distress_signal.reveal_chance")}{" "}
                     </span>
-                    <span className="text-[#ffb000]">{revealChance}%</span>
+                    <span className="text-[#ffb000] text-xs font-bold">
+                        {revealChance}%
+                    </span>
                 </div>
             )}
 
             {scanRange > 0 && revealChecked && !isRevealed && (
-                <div className="bg-[rgba(100,100,100,0.1)] border border-[#666] p-3 text-sm">
-                    <span className="text-[#888]">
+                <div className="bg-[rgba(100,100,100,0.08)] border border-[#444] p-3 text-xs font-['Share_Tech_Mono']">
+                    <span className="text-[#555]">
                         {t("distress_signal.scanner_failed")}
                     </span>
                 </div>
             )}
 
-            <div className="bg-[rgba(255,176,0,0.1)] border border-[#ffb000] p-3 text-sm">
-                <span className="text-[#ffb000]">
-                    {t("distress_signal.risk_title")}{" "}
+            {/* Risk warning */}
+            <div className="bg-[rgba(255,176,0,0.08)] border border-[#ffb000] p-3 text-sm">
+                <span className="text-[#ffb000] font-bold">
+                    ⚠ {t("distress_signal.risk_title")}{" "}
                 </span>
-                <span className="text-white">
+                <span className="text-[#888]">
                     {t("distress_signal.risk_text")}
                 </span>
             </div>
 
-            <div className="flex items-center gap-4 justify-center-safe">
+            {/* Action buttons */}
+            <div className="flex items-center gap-3">
                 <Button
-                    onClick={() => {
-                        respondToDistressSignal();
-                    }}
-                    className=" cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider "
+                    onClick={() => respondToDistressSignal()}
+                    className="cursor-pointer bg-transparent border-2 border-[#ffaa00] text-[#ffaa00] hover:bg-[#ffaa00] hover:text-[#050810] uppercase tracking-wider flex-1"
                 >
                     {t("distress_signal.respond")}
                 </Button>
-
                 <Button
                     onClick={showSectorMap}
-                    className="cursor-pointer bg-transparent border-2 border-[#666] text-[#666] hover:bg-[#666] hover:text-[#050810] uppercase tracking-wider"
+                    className="cursor-pointer bg-transparent border-2 border-[#444] text-[#666] hover:bg-[#444] hover:text-[#050810] uppercase tracking-wider"
                 >
                     {t("distress_signal.ignore")}
                 </Button>
