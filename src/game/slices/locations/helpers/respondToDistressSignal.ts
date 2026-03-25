@@ -23,6 +23,7 @@ import {
     ABANDONED_CARGO_QUANTITY,
     ABANDONED_CARGO_ARTIFACT_CHANCE,
 } from "../constants";
+import { RESEARCH_RESOURCES } from "@/game/constants/research/resources";
 
 /**
  * Обрабатывает сигнал бедствия
@@ -192,13 +193,27 @@ const handleSurvivors = (set: SetState, get: () => GameStore): void => {
     const reward = getRandomReward(SURVIVORS_REWARD);
     const hasCapacity = get().crew.length < get().getCrewCapacity();
 
+    // Биологические образцы от выживших (50% шанс)
+    const alienBioQty = Math.random() < 0.5 ? Math.floor(Math.random() * 2) + 1 : 0;
+
     // Выдаём награду сразу
-    set((s) => ({
-        credits: s.credits + reward,
-    }));
+    set((s) => {
+        const updatedResources = { ...s.research.resources };
+        if (alienBioQty > 0) {
+            updatedResources.alien_biology = (updatedResources.alien_biology || 0) + alienBioQty;
+        }
+        return {
+            credits: s.credits + reward,
+            research: { ...s.research, resources: updatedResources },
+        };
+    });
 
     get().addLog("✓ Выжившие спасены!", "info");
     get().addLog(`Награда за спасение: +${reward}₢`, "info");
+    if (alienBioQty > 0) {
+        const rd = RESEARCH_RESOURCES["alien_biology"];
+        get().addLog(`🔬 ${rd.icon} ${rd.name} x${alienBioQty}`, "info");
+    }
 
     // Иногда выживший присоединяется к экипажу
     if (hasCapacity && Math.random() < SURVIVOR_JOINS_CHANCE) {
@@ -266,17 +281,27 @@ const handleAbandonedCargo = (set: SetState, get: () => GameStore): void => {
     const quantity = getRandomQuantity(ABANDONED_CARGO_QUANTITY);
     const goodName = TRADE_GOODS[goodId].name;
 
-    set((s) => ({
-        credits: s.credits + creditsReward,
-        ship: {
-            ...s.ship,
-            tradeGoods: addTradeGood(s.ship.tradeGoods, goodId, quantity),
-        },
-    }));
+    // Технологический лом из заброшенного груза (гарантировано 1–3)
+    const techSalvageQty = Math.floor(Math.random() * 3) + 1;
+
+    set((s) => {
+        const updatedResources = { ...s.research.resources };
+        updatedResources.tech_salvage = (updatedResources.tech_salvage || 0) + techSalvageQty;
+        return {
+            credits: s.credits + creditsReward,
+            ship: {
+                ...s.ship,
+                tradeGoods: addTradeGood(s.ship.tradeGoods, goodId, quantity),
+            },
+            research: { ...s.research, resources: updatedResources },
+        };
+    });
 
     get().addLog("📦 Найден заброшенный груз!", "info");
     get().addLog(`Кредиты: +${creditsReward}₢`, "info");
     get().addLog(`${goodName}: +${quantity}`, "info");
+    const rdSalvage = RESEARCH_RESOURCES["tech_salvage"];
+    get().addLog(`🔬 ${rdSalvage.icon} ${rdSalvage.name} x${techSalvageQty}`, "info");
 
     // Chance to find artifact
     const artifact = get().tryFindArtifact();

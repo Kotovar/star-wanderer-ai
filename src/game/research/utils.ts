@@ -50,8 +50,8 @@ export function getAnomalyResources(): {
             type: "energy_samples",
             quantity: Math.floor(Math.random() * 2) + 1,
         });
-    } else if (roll < 0.80) {
-        // 15% - Quantum crystals (increased from 10%)
+    } else if (roll < 0.90) {
+        // 25% - Quantum crystals (increased from 15%)
         resources.push({
             type: "quantum_crystals",
             quantity: 1,
@@ -97,7 +97,7 @@ export function getCombatLootResources(
         quantity: Math.floor(Math.random() * 3) + enemyTier,
     });
 
-    // Chance for energy samples from higher tier enemies
+    // Energy samples only from tier 2+ enemies (not guaranteed)
     if (enemyTier >= 2 && Math.random() < 0.3) {
         resources.push({
             type: "energy_samples",
@@ -105,11 +105,28 @@ export function getCombatLootResources(
         });
     }
 
-    // Small chance for alien biology from biological enemies
-    if (Math.random() < 0.2) {
+    // Alien biology: scales with tier
+    const alienBioChance = 0.1 + enemyTier * 0.05; // tier1: 15%, tier2: 20%, tier3: 25%, tier4: 30%
+    if (Math.random() < alienBioChance) {
         resources.push({
             type: "alien_biology",
             quantity: Math.floor(Math.random() * 2) + 1,
+        });
+    }
+
+    // Rare minerals from high-tier enemies
+    if (enemyTier >= 3 && Math.random() < 0.25) {
+        resources.push({
+            type: "rare_minerals",
+            quantity: Math.floor(Math.random() * 2) + 1,
+        });
+    }
+
+    // Quantum crystals from tier 4 enemies
+    if (enemyTier >= 4 && Math.random() < 0.15) {
+        resources.push({
+            type: "quantum_crystals",
+            quantity: 1,
         });
     }
 

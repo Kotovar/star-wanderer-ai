@@ -102,16 +102,28 @@ export const STORM_RESOURCES: Record<
 > = {
     gravitational: {
         type: "quantum_crystals",
-        amount: { min: 1, max: 2 },
+        amount: { min: 2, max: 3 },
     },
     temporal: {
         type: "ancient_data",
         amount: { min: 2, max: 4 },
     },
-    radiation: undefined,
-    ionic: undefined,
-    plasma: undefined,
-    nanite: undefined,
+    radiation: {
+        type: "energy_samples",
+        amount: { min: 1, max: 2 },
+    },
+    ionic: {
+        type: "tech_salvage",
+        amount: { min: 2, max: 3 },
+    },
+    plasma: {
+        type: "rare_minerals",
+        amount: { min: 1, max: 2 },
+    },
+    nanite: {
+        type: "tech_salvage",
+        amount: { min: 3, max: 4 },
+    },
 };
 
 /** Общие константы для штормов */
