@@ -49,115 +49,76 @@ export function CrewList() {
 
     return (
         <>
-            <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-2 gap-1.5">
                 {crew.map((member) => {
                     const expNeeded = (member.level || 1) * 100;
                     const expPercent = Math.min(
                         100,
                         ((member.exp || 0) / expNeeded) * 100,
                     );
-                    // Use combat assignment during combat, civilian assignment otherwise
+                    const healthPct = (member.health / (member.maxHealth || 100)) * 100;
                     const currentAssignment = isCombat
                         ? member.combatAssignment
                         : member.assignment;
-                    const assignText = currentAssignment
-                        ? `[${currentAssignment.toUpperCase()}]`
-                        : t("crew_member.waiting_short");
                     const race = RACES[member.race];
-                    const moduleName = getModuleNameById(member.moduleId);
+                    const hpColor =
+                        member.health < 30
+                            ? "bg-[#ff0040]"
+                            : member.health < 60
+                              ? "bg-[#ffb000]"
+                              : "bg-[#00ff41]";
 
                     return (
                         <div
                             key={member.id}
-                            className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-2.5 text-xs cursor-pointer transition-all hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_10px_rgba(0,255,65,0.5)]"
+                            className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-1.5 text-xs cursor-pointer transition-all hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_8px_rgba(0,255,65,0.4)] flex flex-col gap-1"
                             onClick={() => setSelectedCrew(member)}
                         >
-                            <div className="flex flex-col gap-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    {race && (
-                                        <span style={{ color: race.color }}>
-                                            {race.icon}
-                                        </span>
-                                    )}
-                                    <span className="text-[#00d4ff] font-bold">
-                                        {member.name}
+                            {/* Name row */}
+                            <div className="flex items-center gap-1 min-w-0">
+                                {race && (
+                                    <span className="flex-shrink-0" style={{ color: race.color }}>
+                                        {race.icon}
                                     </span>
-                                    {race && (
-                                        <span
-                                            className="text-[10px] px-1.5 py-0.5 rounded border"
-                                            style={{
-                                                borderColor: race.color,
-                                                color: race.color,
-                                            }}
-                                        >
-                                            {t(`races.${member.race}.name`)}
-                                        </span>
-                                    )}
-                                    {member.movedThisTurn && (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded border border-[#ff0040] text-[#ff0040]">
-                                            {t("crew_member.moved")}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="text-[#ffb000] text-[11px]">
-                                    {t(`professions.${member.profession}`)}
-                                    {member.level
-                                        ? ` LV${member.level}`
-                                        : ""}{" "}
-                                    <span className="text-[#00d4ff]">
-                                        {assignText}
-                                    </span>
-                                </div>
+                                )}
+                                <span className="text-[#00d4ff] font-bold truncate leading-tight">
+                                    {member.name}
+                                </span>
+                                {member.movedThisTurn && (
+                                    <span className="text-[#ff0040] flex-shrink-0 text-[9px]">●</span>
+                                )}
                             </div>
-                            <div className="text-[#888] text-[10px] mt-1">
-                                📍 {moduleName}
+
+                            {/* Profession + level + assignment */}
+                            <div className="text-[#ffb000] text-[10px] truncate leading-tight">
+                                {t(`professions.${member.profession}`)}
+                                {member.level ? ` LV${member.level}` : ""}
+                                {currentAssignment && (
+                                    <span className="text-[#555]"> · {currentAssignment}</span>
+                                )}
                             </div>
-                            <div className="grid grid-cols-1 gap-1 mt-1">
-                                <div>
-                                    {t("crew_member.experience")} {member.exp}/
-                                    {expNeeded}
-                                    <Progress
-                                        value={expPercent}
-                                        className="h-2 mt-1 bg-[rgba(0,0,0,0.5)] [&>div]:bg-[#00d4ff]"
+
+                            {/* HP bar */}
+                            <div className="flex items-center gap-1">
+                                <div className="flex-1 h-1 bg-[rgba(0,0,0,0.6)] rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full ${hpColor}`}
+                                        style={{ width: `${healthPct}%` }}
                                     />
                                 </div>
-                                <div>
-                                    {t("crew_member.health")} {member.health}/
-                                    {member.maxHealth || 100}
-                                    <Progress
-                                        value={
-                                            (member.health /
-                                                (member.maxHealth || 100)) *
-                                            100
-                                        }
-                                        className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${member.health < 30 ? "[&>div]:bg-[#ff0040]" : member.health < 60 ? "[&>div]:bg-[#ffb000]" : "[&>div]:bg-[#00ff41]"}`}
+                                <span className="text-[#555] text-[9px] flex-shrink-0 tabular-nums">
+                                    {member.health}
+                                </span>
+                            </div>
+
+                            {/* EXP bar */}
+                            <div className="flex items-center gap-1">
+                                <div className="flex-1 h-0.5 bg-[rgba(0,0,0,0.6)] rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full rounded-full bg-[#00d4ff]"
+                                        style={{ width: `${expPercent}%` }}
                                     />
                                 </div>
-                                <div className="text-[10px] text-[#00ff41]">
-                                    {t("crew_member.regen_short")}
-                                    {getCrewRegen(member)}/{t("crew.turn")}
-                                </div>
-                                {race?.hasHappiness && (
-                                    <div>
-                                        {t("crew_member.mood")}{" "}
-                                        {member.happiness}/
-                                        {member.maxHappiness || 100}
-                                        <Progress
-                                            value={
-                                                (member.happiness /
-                                                    (member.maxHappiness ||
-                                                        100)) *
-                                                100
-                                            }
-                                            className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${member.happiness < 30 ? "[&>div]:bg-[#ff0040]" : member.happiness < 60 ? "[&>div]:bg-[#ffb000]" : "[&>div]:bg-[#00ff41]"}`}
-                                        />
-                                    </div>
-                                )}
-                                {!race?.hasHappiness && (
-                                    <div className="text-gray-500 text-[10px]">
-                                        {t("crew_member.no_happiness")}
-                                    </div>
-                                )}
                             </div>
                         </div>
                     );

@@ -72,7 +72,7 @@ export function ModuleList() {
 
     return (
         <>
-            <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-2 gap-1.5">
                 {modules.map((module) => (
                     <ModuleCard
                         key={module.id}
@@ -95,226 +95,105 @@ interface ModuleCardProps {
     onClick: () => void;
 }
 
+function CompactModuleStat({ module }: { module: Module }) {
+    const { t } = useTranslation();
+    if (module.type === "reactor" && module.power)
+        return <span>⚡ +{module.power}</span>;
+    if (module.type === "shield" && module.shields)
+        return <span>🛡 {module.shields}</span>;
+    if (module.type === "fueltank" && module.capacity)
+        return <span>⛽ {module.capacity}</span>;
+    if (module.type === "cargo" && module.capacity)
+        return <span>📦 {module.capacity}т</span>;
+    if (module.type === "engine")
+        return <span>⛽ {module.fuelEfficiency}</span>;
+    if (module.type === "drill") return <span>⛏ LV{module.level || 1}</span>;
+    if (module.type === "scanner" && module.scanRange)
+        return <span>📡 {module.scanRange}</span>;
+    if (module.type === "medical" && module.healing)
+        return <span>🏥 +{module.healing}</span>;
+    if (module.type === "lab" && module.researchOutput)
+        return <span>🔬 {module.researchOutput}</span>;
+    if (module.type === "weaponbay" && module.weapons) {
+        const activeWeapons = module.weapons.filter((w) => w !== null).length;
+        return (
+            <span>
+                ⚔ {activeWeapons}/{module.weapons.length}
+            </span>
+        );
+    }
+    if (module.consumption && module.consumption > 0)
+        return <span>⚡ -{module.consumption}</span>;
+    if (module.type === "lifesupport" && module.oxygen)
+        return <span>🫁 {module.oxygen}</span>;
+    return <span className="text-[#555]">{t("module_list.condition")} —</span>;
+}
+
 function ModuleCard({ module, onClick }: ModuleCardProps) {
     const { t } = useTranslation();
 
-    // Get module tier name (МК-1, МК-2, etc.)
     const getModuleTier = () => {
-        // Special handling for scanner - determine level by scanRange
         if (module.type === "scanner") {
             const scanRange = module.scanRange || 0;
-            if (scanRange >= 15) return ` (${t("module_list.quantum")})`;
-            if (scanRange >= 8) return ` (${t("module_list.mk_3")})`;
-            if (scanRange >= 5) return ` (${t("module_list.mk_2")})`;
-            if (scanRange >= 3) return ` (${t("module_list.mk_1")})`;
+            if (scanRange >= 15) return t("module_list.quantum");
+            if (scanRange >= 8) return t("module_list.mk_3");
+            if (scanRange >= 5) return t("module_list.mk_2");
+            if (scanRange >= 3) return t("module_list.mk_1");
             return "";
         }
-
         if (!module.level) return "";
-        // Cap display at level 4 (ancient)
         const displayLevel = Math.min(module.level, 4);
-        if (displayLevel >= 4) return ` (${t("module_list.ancient")})`;
-        return ` (МК-${displayLevel})`;
+        if (displayLevel >= 4) return t("module_list.ancient");
+        return `МК-${displayLevel}`;
     };
+
+    const tier = getModuleTier();
+    const healthPct = Math.min(
+        100,
+        Math.round((module.health / (module.maxHealth || 100)) * 100),
+    );
+    const hpColor =
+        healthPct < 30
+            ? "bg-[#ff0040]"
+            : healthPct < 60
+              ? "bg-[#ffb000]"
+              : "bg-[#00ff41]";
+    const isOff = module.disabled || module.manualDisabled;
+    const isBroken = module.health <= 0;
+    const borderClass =
+        isOff || isBroken ? "border-[#ff0040]" : "border-[#00ff41]";
 
     return (
         <div
-            className={`bg-[rgba(0,255,65,0.05)] border p-2.5 text-xs cursor-pointer transition-all hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_10px_rgba(0,255,65,0.5)] ${
-                module.disabled || module.manualDisabled
-                    ? "opacity-50 border-[#ff0040]"
-                    : module.health <= 0
-                      ? "border-[#ff0040] border-2"
-                      : "border-[#00ff41]"
-            }`}
+            className={`bg-[rgba(0,255,65,0.05)] border ${borderClass} p-1.5 text-xs cursor-pointer transition-all hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_8px_rgba(0,255,65,0.4)] flex flex-col gap-1 ${isOff ? "opacity-50" : ""}`}
             onClick={onClick}
         >
-            <div className="text-[#00d4ff] font-bold">
+            {/* Name + tier */}
+            <div className="text-[#00d4ff] font-bold text-[10px] truncate leading-tight">
                 {getTranslatedModuleName(module.type, t)}
-                {getModuleTier()}{" "}
-                {module.width > 1 || module.height > 1
-                    ? `[${module.width}x${module.height}]`
-                    : ""}
+                {tier && (
+                    <span className="text-[#555] font-normal"> {tier}</span>
+                )}
             </div>
 
-            <div className="text-[#00ff41] mt-1 flex gap-4 flex-wrap">
-                <ModuleStats module={module} />
+            {/* Key stat */}
+            <div className="text-[#00ff41] text-[10px] leading-tight">
+                <CompactModuleStat module={module} />
+                {isOff && <span className="text-[#ff0040] ml-1">OFF</span>}
             </div>
 
-            {module.type === "weaponbay" && module.weapons && (
-                <WeaponsList weapons={module.weapons} />
-            )}
-        </div>
-    );
-}
-
-interface ModuleStatsProps {
-    module: Module;
-}
-
-function ModuleStats({ module }: ModuleStatsProps) {
-    const { t } = useTranslation();
-    const crew = useGameStore((s) => s.crew);
-    const shipModules = useGameStore((s) => s.ship.modules);
-
-    const mergeBonus = getMergeEffectsBonus(crew, shipModules);
-
-    const artifactArmor = useGameStore((s) => {
-        const artifact = s.artifacts.find(
-            (a) => a.effect.type === "module_armor" && a.effect.active,
-        );
-        if (!artifact) return 0;
-        return artifact.effect.value || 0;
-    });
-
-    return (
-        <>
-            {module.type === "reactor" && module.power && module.power > 0 && (
-                <span>⚡ +{module.power}</span>
-            )}
-            {module.type !== "reactor" &&
-                module.type !== "fueltank" &&
-                module.consumption &&
-                module.consumption > 0 && <span>⚡ -{module.consumption}</span>}
-            {module.type === "fueltank" && module.capacity && (
-                <FuelStats capacity={module.capacity} mergeBonus={mergeBonus} />
-            )}
-            {module.type === "cargo" &&
-                module.capacity &&
-                module.capacity > 0 && (
-                    <span>
-                        📦 {module.capacity}т
-                        {mergeBonus.cargoCapacity &&
-                            mergeBonus.cargoCapacity > 0 && (
-                                <span className="text-[#00d4ff]">
-                                    {" "}
-                                    (+{mergeBonus.cargoCapacity}%)
-                                </span>
-                            )}
-                    </span>
-                )}
-            {module.type === "engine" && (
-                <span>
-                    ⛽ {module.fuelEfficiency}
-                    {mergeBonus.fuelEfficiency &&
-                        mergeBonus.fuelEfficiency > 0 && (
-                            <span className="text-[#00d4ff]">
-                                {" "}
-                                (-{mergeBonus.fuelEfficiency}%)
-                            </span>
-                        )}
-                </span>
-            )}
-            {module.type === "drill" && <span>⛏ Ур.{module.level || 1}</span>}
-            {module.type === "scanner" &&
-                module.scanRange &&
-                module.scanRange > 0 && <span>📡 {module.scanRange}</span>}
-            {module.type === "shield" &&
-                module.shields &&
-                module.shields > 0 && (
-                    <span>
-                        {t("module_list.shields")}: {module.shields}
-                    </span>
-                )}
-            {/* Defense for all modules (not just shield) - for shields use level */}
-            {module.defense !== undefined && module.defense > 0 && (
-                <span>
-                    {t("module_list.armor")}: {module.defense}
-                    {artifactArmor > 0 && ` (+${artifactArmor})`}
-                </span>
-            )}
-            {module.type === "lifesupport" &&
-                module.oxygen &&
-                module.oxygen > 0 && (
-                    <span>
-                        {t("module_list.oxygen")}: {module.oxygen}{" "}
-                        {t("module_list.creatures")}
-                    </span>
-                )}
-            {module.type === "lab" &&
-                module.researchOutput &&
-                module.researchOutput > 0 && (
-                    <span>
-                        {t("module_list.research")}: {module.researchOutput}{" "}
-                        {t("module_list.search_per_turn")}
-                    </span>
-                )}
-            {module.type === "medical" &&
-                module.healing &&
-                module.healing > 0 && <span>🏥 +{module.healing} HP</span>}
-            <span>
-                {t("module_list.condition")}:{" "}
-                {Math.min(
-                    100,
-                    Math.round(
-                        (module.health / (module.maxHealth || 100)) * 100,
-                    ),
-                )}
-                %
-            </span>
-            {(module.disabled || module.manualDisabled) && (
-                <span className="text-[#ff0040]">{t("module_list.off")}</span>
-            )}
-        </>
-    );
-}
-
-function FuelStats({
-    capacity,
-    mergeBonus,
-}: {
-    capacity: number;
-    mergeBonus?: ReturnType<typeof getMergeEffectsBonus>;
-}) {
-    return (
-        <span>
-            ⛽ {capacity}
-            {mergeBonus?.fuelCapacity && mergeBonus.fuelCapacity > 0 && (
-                <span className="text-[#00d4ff]">
-                    {" "}
-                    (+{mergeBonus.fuelCapacity}%)
-                </span>
-            )}
-            {mergeBonus?.fuelEfficiency && mergeBonus.fuelEfficiency > 0 && (
-                <span className="text-[#00d4ff]">
-                    {" "}
-                    (-{mergeBonus.fuelEfficiency}%)
-                </span>
-            )}
-        </span>
-    );
-}
-
-interface WeaponsListProps {
-    weapons: (Weapon | null)[];
-}
-
-function WeaponsList({ weapons }: WeaponsListProps) {
-    const { t } = useTranslation();
-
-    return (
-        <div className="mt-2 pt-2 border-t border-[#00ff41]">
-            {weapons.map((weapon, i) =>
-                weapon ? (
+            {/* Condition bar */}
+            <div className="flex items-center gap-1">
+                <div className="flex-1 h-1 bg-[rgba(0,0,0,0.6)] rounded-full overflow-hidden">
                     <div
-                        key={i}
-                        className="bg-[rgba(0,0,0,0.3)] border p-1.5 mt-1.5 text-[11px]"
-                        style={{
-                            borderColor: WEAPON_TYPES[weapon.type].color,
-                        }}
-                    >
-                        {WEAPON_TYPES[weapon.type].icon}{" "}
-                        {t(`weapon_types.${weapon.type}`)} (
-                        {WEAPON_TYPES[weapon.type].damage})
-                    </div>
-                ) : (
-                    <div
-                        key={i}
-                        className="bg-[rgba(0,0,0,0.3)] border border-[#666] p-1.5 mt-1.5 text-[11px] text-[#888]"
-                    >
-                        {t("module_list.empty_slot", { number: i + 1 })}
-                    </div>
-                ),
-            )}
+                        className={`h-full rounded-full ${hpColor}`}
+                        style={{ width: `${healthPct}%` }}
+                    />
+                </div>
+                <span className="text-[#555] text-[9px] shrink-0 tabular-nums">
+                    {healthPct}%
+                </span>
+            </div>
         </div>
     );
 }
