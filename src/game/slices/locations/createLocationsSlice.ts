@@ -8,6 +8,12 @@ import { respondToDistressSignal as respondToDistressSignalHelper } from "./help
 import { planetaryDrill as planetaryDrillHelper } from "./helpers";
 import { atmosphericAnalysis as atmosphericAnalysisHelper } from "./helpers";
 import { exploreDerelictShip as exploreDerelictShipHelper } from "./helpers";
+import {
+    startExpedition as startExpeditionHelper,
+    revealExpeditionTile as revealExpeditionTileHelper,
+    resolveRuinsChoice as resolveRuinsChoiceHelper,
+    endExpedition as endExpeditionHelper,
+} from "./helpers/expedition";
 
 /**
  * Интерфейс LocationsSlice
@@ -64,6 +70,18 @@ export interface LocationsSlice {
      * @param raceId - ID расы
      */
     discoverRace: (raceId: RaceId) => void;
+
+    /** Начинает экспедицию на поверхность населённой планеты */
+    startExpedition: (planetId: string, crewIds: number[]) => void;
+
+    /** Открывает тайл экспедиции */
+    revealExpeditionTile: (tileIndex: number) => void;
+
+    /** Обрабатывает выбор игрока в событии руин */
+    resolveRuinsChoice: (choiceIndex: number) => void;
+
+    /** Завершает экспедицию, применяет награды и тратит 1 ход */
+    endExpedition: () => void;
 }
 
 /**
@@ -107,6 +125,22 @@ export const createLocationsSlice = (
 
     exploreDerelictShip: (locationId) => {
         exploreDerelictShipHelper(locationId, set, get);
+    },
+
+    startExpedition: (planetId, crewIds) => {
+        startExpeditionHelper(planetId, crewIds, set, get);
+    },
+
+    revealExpeditionTile: (tileIndex) => {
+        revealExpeditionTileHelper(tileIndex, set, get);
+    },
+
+    resolveRuinsChoice: (choiceIndex) => {
+        resolveRuinsChoiceHelper(choiceIndex, set, get);
+    },
+
+    endExpedition: () => {
+        endExpeditionHelper(set, get);
     },
 
     discoverRace: (raceId) => {

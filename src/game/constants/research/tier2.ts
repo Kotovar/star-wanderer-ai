@@ -281,4 +281,28 @@ export const TIER2_TECHS: Partial<Record<TechnologyId, Technology>> = {
         researched: false,
         researchProgress: 0,
     },
+    expedition_kits: {
+        id: "expedition_kits",
+        name: "Комплекты эксипедиции",
+        description:
+            "Стимпаки, ручные дроны и разведывательные зонды расширяют возможности экспедиций на поверхности планет. Каждая экспедиция получает +2 очка действий.",
+        tier: 2,
+        category: "engineering",
+        prerequisites: ["automated_repair"],
+        resources: { tech_salvage: 6, rare_minerals: 4, alien_biology: 3 },
+        credits: 700,
+        scienceCost: 300,
+        bonuses: [
+            {
+                type: "expedition_ap",
+                value: 2,
+                description: "+2 очка действий к каждой экспедиции",
+            },
+        ],
+        icon: "🎒",
+        color: "#00d4ff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
 };

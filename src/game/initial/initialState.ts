@@ -110,6 +110,7 @@ const DEBUG_RESEARCHED_TECHS: TechnologyId[] = [
     // "ancient_power",
     // "warp_drive",
     // "cybernetic_augmentation",
+    // "expedition_kits",
 ];
 
 /**
@@ -195,6 +196,7 @@ const baseState: GameState = {
     },
     moduleRecipes: [],
     pendingSurvivor: null,
+    activeExpedition: null,
     settings: {
         animationsEnabled: true,
     },

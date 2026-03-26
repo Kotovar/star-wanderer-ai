@@ -113,6 +113,8 @@ export interface CrewMember {
     firstaidActive: boolean;
     // Cybernetic augmentation (max 1 per crew member)
     augmentation: AugmentationId | null;
+    // Expedition fatigue — turns remaining before crew can join another expedition
+    expeditionFatigue?: number;
 }
 
 export type CrewTraitEffect = {

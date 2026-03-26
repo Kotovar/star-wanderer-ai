@@ -13,6 +13,8 @@ import { TRADE_GOODS } from "@/game/constants/goods";
 import { RESEARCH_RESOURCES } from "@/game/constants";
 import type { Goods } from "@/game/types/goods";
 import { PlanetVisual } from "./PlanetVisual";
+import { PlanetExpeditionSetup } from "./PlanetExpeditionSetup";
+import { PlanetExplorationPanel } from "./PlanetExplorationPanel";
 import { getPlanetBackgroundClass } from "@/game/planets";
 import { useTranslation } from "@/lib/useTranslation";
 import {
@@ -46,6 +48,8 @@ export function PlanetPanel() {
     const ship = useGameStore((s) => s.ship);
 
     const [showSpecialization, setShowSpecialization] = useState(false);
+    const [showExpeditionSetup, setShowExpeditionSetup] = useState(false);
+    const activeExpedition = useGameStore((s) => s.activeExpedition);
     const planetId = currentLocation?.id;
     const isOnCooldown = useGameStore(
         (s) => !!(planetId && s.planetCooldowns[planetId]),
@@ -343,6 +347,21 @@ export function PlanetPanel() {
         );
     }
 
+    // Inhabited planet — show expedition if active for this planet
+    if (activeExpedition && activeExpedition.planetId === currentLocation.id) {
+        const currentLocationPlanetTypePlanet = currentLocation.planetType;
+        const planetBgClassPlanet = getPlanetBackgroundClass(currentLocationPlanetTypePlanet);
+        return (
+            <div
+                className={`flex flex-col h-full min-h-0 rounded-lg border border-[#333] ${planetBgClassPlanet}`}
+            >
+                <div className="relative z-10 bg-[rgba(5,8,16,0.85)] rounded border border-[#333] flex-1 overflow-y-auto p-4 min-h-0">
+                    <PlanetExplorationPanel />
+                </div>
+            </div>
+        );
+    }
+
     // Inhabited planet
     // Check for delivery contracts that target THIS specific location
     const deliveryContracts = activeContracts.filter(
@@ -432,6 +451,22 @@ export function PlanetPanel() {
                             </Button>
                         )}
                 </div>
+
+                {/* Expedition button */}
+                {currentLocation.dominantRace && (
+                    currentLocation.expeditionCompleted ? (
+                        <div className="mt-2 text-xs text-[#444] border border-[#222] px-3 py-1.5 inline-block">
+                            🗺️ Поверхность исследована
+                        </div>
+                    ) : (
+                        <Button
+                            onClick={() => setShowExpeditionSetup(true)}
+                            className="mt-2 bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider text-xs px-3 py-1.5 cursor-pointer"
+                        >
+                            🗺️ {t("planet_panel.explore_planet")}
+                        </Button>
+                    )
+                )}
 
                 {/* Planet Visual */}
                 <PlanetVisual planetType={currentLocationPlanetType} />
@@ -810,6 +845,18 @@ export function PlanetPanel() {
                         {t("planet_panel.leave_planet")}
                     </Button>
                 </div>
+
+                {/* Expedition Setup Modal */}
+                {showExpeditionSetup && planetId && (
+                    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                        <div className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00d4ff] p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+                            <PlanetExpeditionSetup
+                                planetId={planetId}
+                                onClose={() => setShowExpeditionSetup(false)}
+                            />
+                        </div>
+                    </div>
+                )}
 
                 {/* Planet Specialization Modal */}
                 {showSpecialization && (

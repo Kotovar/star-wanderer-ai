@@ -48,6 +48,7 @@ export type TechnologyId =
     | "xenobiology"
     | "planetary_drill"
     | "atmospheric_analysis"
+    | "expedition_kits"
     | "storm_shields"
     | "modular_arsenal"
     | "ion_cannon"
@@ -102,7 +103,8 @@ export type ResearchBonusType =
     | "artifact_slots"
     | "artifact_effect_boost"
     | "weapon_slots"
-    | "crew_damage_reduction";
+    | "crew_damage_reduction"
+    | "expedition_ap";
 
 /**
  * Research resource in cargo

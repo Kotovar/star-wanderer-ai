@@ -4,3 +4,4 @@ export * from "./processRandomEvents";
 export * from "./processCrewAssignments";
 export * from "./processArtifactEffects";
 export * from "./processOthers";
+export * from "./processExpeditionFatigue";

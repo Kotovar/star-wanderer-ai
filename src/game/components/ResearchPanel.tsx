@@ -51,6 +51,7 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
     quantum_scanner: [1, 6.8],
     lab_network: [1, 5.75],
     relic_chamber: [1, 8],
+    expedition_kits: [1, 9.5], // atmospheric_analysis → here
     cargo_expansion: [1, 10.5],
     crew_training: [1, 11.5],
     // T3 — col 2
@@ -750,9 +751,8 @@ export function ResearchPanel() {
     const getResourceQty = useCallback(
         (type: string): number => {
             let qty =
-                research?.resources[
-                    type as keyof typeof research.resources
-                ] ?? 0;
+                research?.resources[type as keyof typeof research.resources] ??
+                0;
             if (type === "rare_minerals") {
                 const tg = (ship.tradeGoods as TradeGood[]).find(
                     (g) => g.item === "rare_minerals",

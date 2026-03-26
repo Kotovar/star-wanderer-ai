@@ -237,7 +237,7 @@ export const TIER3_TECHS: Partial<Record<TechnologyId, Technology>> = {
             "Наниты в корпусе восстанавливают 5% здоровья всех модулей каждый ход.",
         tier: 3,
         category: "engineering",
-        prerequisites: ["automated_repair", "shield_booster"],
+        prerequisites: ["shield_booster", "cargo_expansion"],
         resources: {
             quantum_crystals: 2,
             rare_minerals: 15,

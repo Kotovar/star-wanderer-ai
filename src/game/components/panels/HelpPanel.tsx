@@ -394,6 +394,30 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                         </ul>
                     </section>
 
+                    {/* Expeditions */}
+                    <section>
+                        <h3 className="text-[#00d4ff] font-bold text-lg mb-2">
+                            {t("help.expedition_title")}
+                        </h3>
+                        <p className="text-[#aaa] text-xs mb-2">
+                            {t("help.expedition_help_text")}
+                        </p>
+                        <div className="mb-2 p-2 bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] text-xs">
+                            <div className="text-[#00d4ff] font-bold mb-1">
+                                {t("help.expedition_help_ap_title")}
+                            </div>
+                            <ul className="text-[#888] space-y-0.5">
+                                <li>{t("help.expedition_help_ap_1")}</li>
+                                <li>{t("help.expedition_help_ap_2")}</li>
+                                <li>{t("help.expedition_help_ap_3")}</li>
+                            </ul>
+                        </div>
+                        <ul className="text-[#888] text-xs space-y-1">
+                            <li>{t("help.expedition_help_tiles")}</li>
+                            <li>{t("help.expedition_help_fatigue")}</li>
+                        </ul>
+                    </section>
+
                     {/* Hybrid Modules */}
                     <section>
                         <h3 className="text-[#00d4ff] font-bold text-lg mb-2">

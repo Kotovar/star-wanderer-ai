@@ -106,6 +106,7 @@ export const createGameLoopSlice = (
         processors.processOvercrowding(set, get);
         processors.processUnhappyCrew(set, get);
         processors.processPowerCheck(set, get);
+        processors.processExpeditionFatigue(set);
 
         // Сохранение
         get().updateShipStats();

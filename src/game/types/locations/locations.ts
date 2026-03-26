@@ -128,6 +128,9 @@ export interface Location {
 
     population?: number; // Population in thousands
 
+    // Expedition fields
+    expeditionCompleted?: boolean; // Surface expedition has been completed (once per planet)
+
     // Derelict ship fields
     derelictExplored?: boolean; // Whether this derelict ship has been explored
     derelictLoot?: {

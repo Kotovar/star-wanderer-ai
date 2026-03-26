@@ -19,6 +19,7 @@ import type { ResearchData, TechnologyId } from "./research";
 import type { CraftingRecipeId, ModuleRecipeId } from "./crafting";
 import type { ShopItem } from "./shops";
 import type { AugmentationId } from "./augmentations";
+import type { ExpeditionState } from "./exploration";
 
 export type GameMode =
     | "galaxy_map"
@@ -101,6 +102,7 @@ export interface GameState {
     research: ResearchData; // Research system data
     moduleRecipes: ModuleRecipeId[]; // One-time module blueprint recipes found by Scout
     pendingSurvivor: CrewMember | null; // Survivor awaiting player accept/decline
+    activeExpedition: ExpeditionState | null; // Active planet surface expedition
     settings: {
         animationsEnabled: boolean; // Sector map animations toggle
     };
@@ -228,6 +230,10 @@ export interface GameScouting {
     planetaryDrill: (planetId: string) => void;
     atmosphericAnalysis: (planetId: string) => void;
     exploreDerelictShip: (locationId: string) => void;
+    startExpedition: (planetId: string, crewIds: number[]) => void;
+    revealExpeditionTile: (tileIndex: number) => void;
+    resolveRuinsChoice: (choiceIndex: number) => void;
+    endExpedition: () => void;
 }
 
 export interface GameDistressSignal {

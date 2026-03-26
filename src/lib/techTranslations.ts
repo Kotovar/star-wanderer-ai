@@ -194,6 +194,11 @@ export const TECH_TRANSLATIONS: Record<
             description:
                 "Учёный может однократно собрать атмосферные образцы с любой пустой планеты. Тип атмосферы определяет полученные исследовательские ресурсы.",
         },
+        expedition_kits: {
+            name: "Комплекты эксипедиции",
+            description:
+                "Стимпаки, ручные дроны и разведывательные зонды увеличивают охват экспедиции. +2 очка действий к каждой наземной экспедиции.",
+        },
         storm_shields: {
             name: "Штормовые щиты",
             description:
@@ -400,6 +405,11 @@ export const TECH_TRANSLATIONS: Record<
             name: "Atmospheric Analysis",
             description:
                 "A scientist can collect atmospheric samples from any empty planet once. Planet type determines which research resources are gathered.",
+        },
+        expedition_kits: {
+            name: "Expedition Kits",
+            description:
+                "Stimpacks, handheld drones, and recon probes extend expedition coverage. +2 action points for every ground expedition.",
         },
         storm_shields: {
             name: "Storm Shields",
