@@ -52,7 +52,8 @@ function DetailsPanel({
                 </span>
                 <ResourceList resources={resources} t={t} />
                 <span className="text-[#aaa] ml-1">
-                    · <span className="text-[#ffb000] font-bold">{credits}₢</span>
+                    ·{" "}
+                    <span className="text-[#ffb000] font-bold">{credits}₢</span>
                 </span>
             </div>
             <div>
@@ -69,20 +70,19 @@ function DetailsPanel({
 
 export function BlueprintsTab() {
     const { t } = useTranslation();
-    const unlockedRecipes = useGameStore((s) => s.research.unlockedRecipes ?? []);
+    const unlockedRecipes = useGameStore(
+        (s) => s.research.unlockedRecipes ?? [],
+    );
     const moduleRecipes = useGameStore((s) => s.moduleRecipes);
     const [expandedId, setExpandedId] = useState<ExpandedId>(null);
 
     const hasAnything = unlockedRecipes.length > 0 || moduleRecipes.length > 0;
 
-    const toggle = (id: string) => setExpandedId((prev) => (prev === id ? null : id));
+    const toggle = (id: string) =>
+        setExpandedId((prev) => (prev === id ? null : id));
 
     return (
         <div className="flex flex-col gap-3 pb-2">
-            <div className="text-[#00ff41] font-['Orbitron'] font-bold text-sm uppercase tracking-wider">
-                📐 {t("blueprints.title")}
-            </div>
-
             {!hasAnything && (
                 <div className="text-[#555] text-xs p-3 border border-[#222]">
                     <div className="mb-1">{t("blueprints.no_blueprints")}</div>
@@ -99,7 +99,8 @@ export function BlueprintsTab() {
             {unlockedRecipes.length > 0 && (
                 <div className="flex flex-col gap-2">
                     <div className="text-[#888] text-xs uppercase tracking-wider border-b border-[#222] pb-1">
-                        {t("blueprints.section_weapons")} ({unlockedRecipes.length})
+                        {t("blueprints.section_weapons")} (
+                        {unlockedRecipes.length})
                     </div>
                     {unlockedRecipes.map((recipeId) => {
                         const recipe = CRAFTING_RECIPES[recipeId];
@@ -112,18 +113,28 @@ export function BlueprintsTab() {
                                     className="flex items-center gap-2 p-2 border border-[#222] bg-[rgba(0,0,0,0.2)] text-xs cursor-pointer hover:border-[#333] hover:bg-[rgba(255,255,255,0.02)] transition-colors"
                                     onClick={() => toggle(recipeId)}
                                 >
-                                    <span style={{ color: weaponDetails?.color ?? "#fff" }}>
+                                    <span
+                                        style={{
+                                            color:
+                                                weaponDetails?.color ?? "#fff",
+                                        }}
+                                    >
                                         {recipe.icon}
                                     </span>
                                     <div className="flex-1">
                                         <div
                                             className="font-bold"
-                                            style={{ color: weaponDetails?.color ?? "#fff" }}
+                                            style={{
+                                                color:
+                                                    weaponDetails?.color ??
+                                                    "#fff",
+                                            }}
                                         >
                                             {recipe.name}
                                         </div>
                                         <div className="text-[#555] text-[10px]">
-                                            {t("blueprints.craft_hint")} · {recipe.credits}₢
+                                            {t("blueprints.craft_hint")} ·{" "}
+                                            {recipe.credits}₢
                                         </div>
                                     </div>
                                     <span className="text-[#444] text-[10px]">
@@ -148,7 +159,8 @@ export function BlueprintsTab() {
             {moduleRecipes.length > 0 && (
                 <div className="flex flex-col gap-2">
                     <div className="text-[#888] text-xs uppercase tracking-wider border-b border-[#222] pb-1">
-                        {t("blueprints.section_modules")} ({moduleRecipes.length})
+                        {t("blueprints.section_modules")} (
+                        {moduleRecipes.length})
                     </div>
                     {moduleRecipes.map((recipeId) => {
                         const recipe = MODULE_RECIPES[recipeId];
@@ -166,7 +178,9 @@ export function BlueprintsTab() {
                                             {recipe.name}
                                         </div>
                                         <div className="text-[#555] text-[10px]">
-                                            {t("blueprints.craft_hint")} · {recipe.credits}₢ · {t("blueprints.one_time")}
+                                            {t("blueprints.craft_hint")} ·{" "}
+                                            {recipe.credits}₢ ·{" "}
+                                            {t("blueprints.one_time")}
                                         </div>
                                     </div>
                                     <span className="text-[#ffb000] text-[10px]">
