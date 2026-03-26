@@ -794,17 +794,6 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             description: "Увеличивает производство кислорода на 4 единицы",
         },
         {
-            id: "engine-upgrade-1",
-            name: "Настройка двигателя",
-            type: "upgrade",
-            targetType: "engine",
-            price: 3000,
-            effect: { fuelEfficiency: -2 },
-            stock: 2,
-            moduleType: "engine",
-            description: "Снижает расход топлива на 2 единицы за прыжок",
-        },
-        {
             id: "engine-upgrade-2",
             name: "Настройка двигателя",
             type: "upgrade",
@@ -883,153 +872,8 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
             description: "Улучшает дроны. +2 HP к восстановлению за ход",
         },
     ],
-    3: [
-        {
-            id: "reactor-upgrade-3",
-            name: "Улучшение реактора",
-            type: "upgrade",
-            targetType: "reactor",
-            price: 2500,
-            effect: { power: 5 },
-            stock: 1,
-            moduleType: "reactor",
-            description: "Увеличивает мощность реактора на 5 единиц",
-        },
-        {
-            id: "cargo-upgrade-3",
-            name: "Расширение грузого отсека",
-            type: "upgrade",
-            targetType: "cargo",
-            price: 2000,
-            effect: { capacity: 60 },
-            stock: 1,
-            moduleType: "cargo",
-            description: "Увеличивает вместимость груза на 60 единиц",
-        },
-        {
-            id: "fueltank-upgrade-3",
-            name: "Улучшение бака",
-            type: "upgrade",
-            targetType: "fueltank",
-            price: 1900,
-            effect: { capacity: 80 },
-            stock: 1,
-            moduleType: "fueltank",
-            description: "Увеличивает ёмкость топливного бака на 80 единиц",
-        },
-        {
-            id: "shield-upgrade-3",
-            name: "Улучшение щита",
-            type: "upgrade",
-            targetType: "shield",
-            price: 2400,
-            effect: { shields: 35 },
-            stock: 1,
-            moduleType: "shield",
-            description: "Увеличивает защиту щита на 35 единиц",
-        },
-        {
-            id: "scanner-upgrade-3",
-            name: "Улучшение сканера",
-            type: "upgrade",
-            targetType: "scanner",
-            price: 1900,
-            effect: { scanRange: 4 },
-            stock: 1,
-            moduleType: "scanner",
-            description: "Увеличивает радиус сканирования на 4 единицы",
-        },
-        {
-            id: "lifesupport-upgrade-3",
-            name: "Улучшение жизнеобеспечения",
-            type: "upgrade",
-            targetType: "lifesupport",
-            price: 1900,
-            effect: { oxygen: 5 },
-            stock: 1,
-            moduleType: "lifesupport",
-            description: "Увеличивает производство кислорода на 5 единиц",
-        },
-        {
-            id: "engine-upgrade-3",
-            name: "Настройка двигателя",
-            type: "upgrade",
-            targetType: "engine",
-            price: 9000,
-            effect: { fuelEfficiency: -4 },
-            stock: 1,
-            moduleType: "engine",
-            description: "Снижает расход топлива на 4 единицы за прыжок",
-        },
-        {
-            id: "drill-upgrade-3",
-            name: "Улучшение бура",
-            type: "upgrade",
-            targetType: "drill",
-            price: 2200,
-            effect: { level: 1 },
-            stock: 1,
-            moduleType: "drill",
-            description:
-                "Повышает уровень бура для добычи более ценных ресурсов",
-        },
-        {
-            id: "medical-upgrade-3",
-            name: "Улучшение медотсека",
-            type: "upgrade",
-            targetType: "medical",
-            price: 2000,
-            effect: { healing: 4 },
-            stock: 1,
-            moduleType: "medical",
-            description: "Увеличивает скорость лечения экипажа на 8 единиц",
-        },
-        {
-            id: "weaponbay-upgrade-3",
-            name: "Улучшение оружейной палубы",
-            type: "upgrade",
-            targetType: "weaponbay",
-            price: 3500,
-            effect: { level: 1 },
-            stock: 1,
-            moduleType: "weaponbay",
-            description: "Расширяет и усиливает палубу до 2×1. +10% к урону (итого +20%)",
-        },
-        {
-            id: "lab-upgrade-3",
-            name: "Улучшение лаборатории",
-            type: "upgrade",
-            targetType: "lab",
-            price: 1200,
-            effect: { researchOutput: 3 },
-            stock: 2,
-            moduleType: "lab",
-            description: "Увеличивает научную производительность на 3 единицы",
-        },
-        {
-            id: "quarters-upgrade-3",
-            name: "Улучшение жилого модуля",
-            type: "upgrade",
-            targetType: "quarters",
-            price: 2000,
-            effect: { capacity: 1 },
-            stock: 1,
-            moduleType: "quarters",
-            description: "Расширяет жилые помещения. +1 место для экипажа",
-        },
-        {
-            id: "repair-bay-upgrade-3",
-            name: "Улучшение ремонтного отсека",
-            type: "upgrade",
-            targetType: "repair_bay",
-            price: 2500,
-            effect: { repairAmount: 2 },
-            stock: 1,
-            moduleType: "repair_bay",
-            description: "Улучшает дроны. +2 HP к восстановлению за ход",
-        },
-    ],
 };
+
 
 // Weapons - available at all stations
 export const WEAPONS: ShopItem[] = [
@@ -1107,18 +951,15 @@ export function generateStationItems(
     }
 
     // Get upgrades for this tier and lower tiers
-    // - Tier 1: only tier 1 upgrades (1→2)
-    // - Tier 2: tier 1 and tier 2 upgrades (1→2, 2→3)
-    // - Tier 3+: all upgrades (1→2, 2→3, 3→4)
+    // - Tier 1: tier 1 upgrades only (1→2)
+    // - Tier 2+: tier 1 and tier 2 upgrades (1→2, 2→3)
+    // Level 4 modules are boss rewards only — no tier 3 upgrades exist
     const upgradesToAdd: ShopItem[] = [];
     if (sectorTier >= 1) {
         upgradesToAdd.push(...(UPGRADES_BY_TIER[1] || []));
     }
     if (sectorTier >= 2) {
         upgradesToAdd.push(...(UPGRADES_BY_TIER[2] || []));
-    }
-    if (sectorTier >= 3) {
-        upgradesToAdd.push(...(UPGRADES_BY_TIER[3] || []));
     }
 
     upgradesToAdd.forEach((upgrade) => {

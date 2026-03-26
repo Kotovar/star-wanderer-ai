@@ -78,24 +78,19 @@ const handleAsteroidDamage = (
  */
 const handleAnomaly = (
     setState: SetState,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _getState: () => GameStore,
+    getState: () => GameStore,
 ): number => {
-    let damagedCount = 0;
+    const damagedCount = getState().ship.modules.filter(
+        (m) => m.health > MIN_MODULE_HEALTH,
+    ).length;
 
     setState((s) => ({
         ship: {
             ...s.ship,
-            modules: s.ship.modules.map((m) => {
-                const newHealth = Math.max(
-                    MIN_MODULE_HEALTH,
-                    m.health - ANOMALY_DAMAGE,
-                );
-                if (newHealth < m.health) {
-                    damagedCount++;
-                }
-                return { ...m, health: newHealth };
-            }),
+            modules: s.ship.modules.map((m) => ({
+                ...m,
+                health: Math.max(MIN_MODULE_HEALTH, m.health - ANOMALY_DAMAGE),
+            })),
         },
     }));
 
@@ -161,11 +156,6 @@ const handleRandomEvent = (
 ): void => {
     const event = randomElement(TRAVEL_EVENTS);
 
-    getState().addLog(
-        `Во время перелёта в другой сектор произошло событие`,
-        "warning",
-    );
-
     switch (event) {
         case "астероиды": {
             const damage = handleAsteroidDamage(setState, getState);
@@ -209,7 +199,7 @@ const handleRandomEvent = (
             } else {
                 getState().addLog(
                     `⚡Корабль ощутил ${event}! Он прошёл без последствий`,
-                    "warning",
+                    "info",
                 );
             }
             break;
