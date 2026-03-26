@@ -36,6 +36,10 @@ function getTranslatedModuleName(
         lab: t("module_names.lab"),
         quarters: t("module_names.quarters"),
         repair_bay: t("module_names.repair_bay"),
+        bio_research_lab: t("module_names.bio_research_lab"),
+        pulse_drive: t("module_names.pulse_drive"),
+        habitat_module: t("module_names.medical_corps"),
+        deep_survey_array: t("module_names.deep_survey_array"),
     };
     return nameMap[moduleType] || moduleType;
 }
@@ -61,6 +65,10 @@ function getModuleDescription(module: Module): string {
         lab: "module_descriptions.lab",
         quarters: "module_descriptions.quarters",
         repair_bay: "module_descriptions.repair_bay",
+        bio_research_lab: "module_descriptions.bio_research_lab",
+        pulse_drive: "module_descriptions.pulse_drive",
+        habitat_module: "module_descriptions.medical_corps",
+        deep_survey_array: "module_descriptions.deep_survey_array",
     };
 
     return descriptionMap[moduleType] || "";
@@ -97,35 +105,62 @@ interface ModuleCardProps {
 
 function CompactModuleStat({ module }: { module: Module }) {
     const { t } = useTranslation();
+    const cons = module.consumption && module.consumption > 0
+        ? <span className="text-[#888]"> ⚡-{module.consumption}</span>
+        : null;
+
     if (module.type === "reactor" && module.power)
-        return <span>⚡ +{module.power}</span>;
+        return <><span>⚡ +{module.power}</span></>;
     if (module.type === "shield" && module.shields)
-        return <span>🛡 {module.shields}</span>;
+        return <><span>🛡 {module.shields}</span>{cons}</>;
     if (module.type === "fueltank" && module.capacity)
-        return <span>⛽ {module.capacity}</span>;
+        return <><span>⛽ {module.capacity}</span></>;
     if (module.type === "cargo" && module.capacity)
-        return <span>📦 {module.capacity}т</span>;
+        return <><span>📦 {module.capacity}т</span>{cons}</>;
     if (module.type === "engine")
-        return <span>⛽ {module.fuelEfficiency}</span>;
-    if (module.type === "drill") return <span>⛏ LV{module.level || 1}</span>;
+        return <><span>⛽ {module.fuelEfficiency}</span>{cons}</>;
+    if (module.type === "drill")
+        return <><span>⛏ LV{module.level || 1}</span>{cons}</>;
     if (module.type === "scanner" && module.scanRange)
-        return <span>📡 {module.scanRange}</span>;
+        return <><span>📡 {module.scanRange}</span>{cons}</>;
     if (module.type === "medical" && module.healing)
-        return <span>🏥 +{module.healing}</span>;
+        return <><span>🏥 +{module.healing}</span>{cons}</>;
     if (module.type === "lab" && module.researchOutput)
-        return <span>🔬 {module.researchOutput}</span>;
+        return <><span>🔬 {module.researchOutput}</span>{cons}</>;
     if (module.type === "weaponbay" && module.weapons) {
         const activeWeapons = module.weapons.filter((w) => w !== null).length;
-        return (
-            <span>
-                ⚔ {activeWeapons}/{module.weapons.length}
-            </span>
-        );
+        return <><span>⚔ {activeWeapons}/{module.weapons.length}</span>{cons}</>;
     }
+    if (module.type === "lifesupport" && module.oxygen)
+        return <><span>🫁 {module.oxygen}</span>{cons}</>;
+    if (module.type === "quarters" && module.capacity)
+        return <><span>👥 +{module.capacity}</span>{cons}</>;
+    if (module.type === "bio_research_lab")
+        return <>
+            {module.researchOutput ? <span>🔬 {module.researchOutput}</span> : null}
+            {module.healing ? <span> 🏥+{module.healing}</span> : null}
+            {cons}
+        </>;
+    if (module.type === "deep_survey_array")
+        return <>
+            {module.scanRange ? <span>📡 {module.scanRange}</span> : null}
+            {module.researchOutput ? <span> 🔬{module.researchOutput}</span> : null}
+            {cons}
+        </>;
+    if (module.type === "pulse_drive")
+        return <>
+            {module.power ? <span>⚡ +{module.power}</span> : null}
+            {module.fuelEfficiency ? <span> ⛽{module.fuelEfficiency}</span> : null}
+            {cons}
+        </>;
+    if (module.type === "habitat_module")
+        return <>
+            {module.capacity ? <span>👥 +{module.capacity}</span> : null}
+            {module.healing ? <span> 🏥+{module.healing}</span> : null}
+            {cons}
+        </>;
     if (module.consumption && module.consumption > 0)
         return <span>⚡ -{module.consumption}</span>;
-    if (module.type === "lifesupport" && module.oxygen)
-        return <span>🫁 {module.oxygen}</span>;
     return <span className="text-[#555]">{t("module_list.condition")} —</span>;
 }
 
@@ -495,6 +530,49 @@ function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
                         {t("module_list.damage_bonus")}:
                     </span>{" "}
                     +{((module.level ?? 1) - 1) * 10}%
+                </div>
+            )}
+            {module.type === "habitat_module" && module.capacity !== undefined && module.capacity > 0 && (
+                <div>
+                    <span className="text-[#ffb000]">
+                        👥 {t("module_list.crew_slots")}:
+                    </span>{" "}
+                    +{module.capacity}
+                </div>
+            )}
+            {module.type === "habitat_module" && module.healing && module.healing > 0 && (
+                <div>🏥 +{module.healing} HP</div>
+            )}
+            {(module.type === "bio_research_lab" || module.type === "deep_survey_array") && module.researchOutput && module.researchOutput > 0 && (
+                <div>
+                    <span className="text-[#ffb000]">
+                        {t("module_list.research")}:
+                    </span>{" "}
+                    {module.researchOutput} {t("module_list.search_per_turn")}
+                </div>
+            )}
+            {module.type === "deep_survey_array" && module.scanRange && module.scanRange > 0 && (
+                <div>
+                    <span className="text-[#ffb000]">
+                        {t("module_list.scan_range")}:
+                    </span>{" "}
+                    {module.scanRange}
+                </div>
+            )}
+            {module.type === "pulse_drive" && module.power && module.power > 0 && (
+                <div>
+                    <span className="text-[#ffb000]">
+                        {t("module_list.generation")}:
+                    </span>{" "}
+                    +{module.power}
+                </div>
+            )}
+            {module.type === "pulse_drive" && module.fuelEfficiency && (
+                <div>
+                    <span className="text-[#ffb000]">
+                        {t("module_list.efficiency")}:
+                    </span>{" "}
+                    {module.fuelEfficiency} {t("module_list.efficiency_note")}
                 </div>
             )}
             {/* Defense/Armor for all modules - for shields use level */}

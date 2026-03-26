@@ -1,4 +1,7 @@
-import type { PartialModuleType, ShopItem } from "../types";
+import type { ModuleType, PartialModuleType, ShopItem } from "../types";
+
+/** Все типы модулей, считающихся лабораторией для целей исследования */
+export const LAB_MODULE_TYPES: ModuleType[] = ["lab", "bio_research_lab", "deep_survey_array"];
 
 export const MODULE_TYPES: Record<
     PartialModuleType,
@@ -19,6 +22,11 @@ export const MODULE_TYPES: Record<
     lab: { color: "#00ff4133", borderColor: "#00ff41" },
     quarters: { color: "#ffa50033", borderColor: "#ffa500" },
     repair_bay: { color: "#c0c0c033", borderColor: "#c0c0c0" },
+    // Hybrid modules
+    bio_research_lab: { color: "#00ffaa33", borderColor: "#00ffaa" },
+    pulse_drive: { color: "#ff660033", borderColor: "#ff6600" },
+    habitat_module: { color: "#ffa50033", borderColor: "#ffa500" },
+    deep_survey_array: { color: "#ffff0033", borderColor: "#ffff00" },
 };
 
 export const MODULES_BY_PRIOTITY = [
@@ -36,6 +44,11 @@ export const MODULES_BY_PRIOTITY = [
     { type: "engine", name: "Двигатель" },
     { type: "quarters", name: "Жилой модуль" },
     { type: "repair_bay", name: "Ремонтный отсек" },
+    // Гибридные модули (средний приоритет)
+    { type: "bio_research_lab", name: "Биоисследовательская лаборатория" },
+    { type: "pulse_drive", name: "Пульс-ускоритель" },
+    { type: "habitat_module", name: "Жилой модуль" },
+    { type: "deep_survey_array", name: "Массив глубинного сканирования" },
     // Высокий приоритет (отключаются последними)
     { type: "lifesupport", name: "Системы жизнеобеспечения" },
     { type: "cockpit", name: "Кокпит" },
@@ -260,7 +273,8 @@ export const MODULES_FROM_BOSSES: ShopItem[] = [
         defense: 1,
         price: 7000,
         stock: 1,
-        description: "Исследовательская лаборатория на технологиях древней цивилизации",
+        description:
+            "Исследовательская лаборатория на технологиях древней цивилизации",
     },
     {
         id: "quarters-ancient",
@@ -291,7 +305,8 @@ export const MODULES_FROM_BOSSES: ShopItem[] = [
         consumption: 20,
         price: 6000,
         stock: 1,
-        description: "Дроны древних. Восстанавливает 10 HP трём случайным модулям за ход",
+        description:
+            "Дроны древних. Восстанавливает 10 HP трём случайным модулям за ход",
     },
     {
         id: "quantum-engine",

@@ -99,7 +99,7 @@ export const initialModules: Module[] = [
     // {
     //     id: INITIAL_MODULE_BASE_ID + 9,
     //     type: "lab",
-    //     name: "Лаборатория",
+    //     name: "scanner",
     //     x: 1,
     //     y: 0,
     //     width: 1,
@@ -109,6 +109,7 @@ export const initialModules: Module[] = [
     //     maxHealth: 100,
     //     level: 1,
     //     defense: 1,
+    //     researchOutput: 10,
     // },
     // {
     //     id: INITIAL_MODULE_BASE_ID + 7,
@@ -123,7 +124,7 @@ export const initialModules: Module[] = [
     //     maxHealth: 100,
     //     level: 1,
     //     defense: 1,
-    //     weapons: [{ type: "quantum_torpedo" }],
+    //     weapons: [{ type: "laser" }],
     // },
     // {
     //     id: INITIAL_MODULE_BASE_ID + 8,

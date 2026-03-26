@@ -8,6 +8,8 @@ import {
     RACES,
     canResearchTech,
 } from "@/game/constants";
+import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import { LAB_MODULE_TYPES } from "@/game/constants/modules";
 import { getTaskBonusMultiplier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import type {
     ResearchCategory,
@@ -64,15 +66,17 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
     planetary_drill: [2, 10.5], // cargo_expansion → here
     neural_interface: [2, 11.5],
     genetic_enhancement: [2, 12.5],
+
     // T4 — col 3
 
     void_resonance: [3, 1.1],
     modular_arsenal: [3, 4], // antimatter_weapons + quantum_torpedo → here
     artifact_mastery: [3, 8],
-    stellar_genetics: [3, 12],
+    stellar_genetics: [3, 11.5],
+    cybernetic_augmentation: [3, 12.5],
     // T5 — col 4 / 5
-    ancient_power: [4, 5.25],
-    warp_drive: [5, 5.25],
+    ancient_power: [4, 2.2],
+    warp_drive: [4, 3.4],
 };
 
 const CANVAS_W = Math.ceil(PAD_X + 5.5 * COL_GAP + NODE_W / 2 + PAD_X);
@@ -730,7 +734,11 @@ export function ResearchPanel() {
         (c: CrewMember) => c.profession === "scientist",
     );
     const hasLab = ship.modules.some(
-        (m: Module) => m.type === "lab" && m.health > 0 && !m.disabled,
+        (m: Module) =>
+            LAB_MODULE_TYPES.includes(m.type) &&
+            m.health > 0 &&
+            !m.disabled &&
+            !m.manualDisabled,
     );
     const canResearch = hasLab && scientists.length > 0;
 
@@ -766,7 +774,11 @@ export function ResearchPanel() {
         // Используем функцию calculateResearchOutput для правильного расчёта
         // с учётом бонусов от технологий (research_speed)
         const labs = ship.modules.filter(
-            (m: Module) => m.type === "lab" && m.health > 0 && !m.disabled,
+            (m: Module) =>
+                LAB_MODULE_TYPES.includes(m.type) &&
+                m.health > 0 &&
+                !m.disabled &&
+                !m.manualDisabled,
         );
         const labOutput = labs.reduce(
             (s: number, m: Module) => s + (m.researchOutput ?? 0),
@@ -817,6 +829,16 @@ export function ResearchPanel() {
         if (techSpeedBonus > 0) {
             totalOutput += Math.floor(totalOutput * techSpeedBonus);
         }
+
+        // Бонус аугментации memory_core (+20% для учёного)
+        cappedScientists.forEach((s: CrewMember) => {
+            if (s.augmentation) {
+                const augEffect = AUGMENTATIONS[s.augmentation]?.effect;
+                if (augEffect?.researchSpeedBonus) {
+                    totalOutput += Math.floor(totalOutput * augEffect.researchSpeedBonus);
+                }
+            }
+        });
 
         return totalOutput;
     })();

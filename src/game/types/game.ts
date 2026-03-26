@@ -16,8 +16,9 @@ import type { Module, WeaponCounts } from "./modules";
 import type { RaceId } from "./races";
 import type { ShipMergeTrait } from "./ships";
 import type { ResearchData, TechnologyId } from "./research";
-import type { CraftingRecipeId } from "./crafting";
+import type { CraftingRecipeId, ModuleRecipeId } from "./crafting";
 import type { ShopItem } from "./shops";
+import type { AugmentationId } from "./augmentations";
 
 export type GameMode =
     | "galaxy_map"
@@ -35,7 +36,8 @@ export type GameMode =
     | "unknown_ship"
     | "battle_results"
     | "storm_results"
-    | "research";
+    | "research"
+    | "derelict_ship";
 
 export interface GameState {
     turn: number;
@@ -97,6 +99,7 @@ export interface GameState {
     activeEffects: ActiveEffect[]; // Active planet specialization effects
     planetCooldowns: Record<string, number>; // Track cooldowns per planet (planetId -> turnsRemaining)
     research: ResearchData; // Research system data
+    moduleRecipes: ModuleRecipeId[]; // One-time module blueprint recipes found by Scout
     pendingSurvivor: CrewMember | null; // Survivor awaiting player accept/decline
     settings: {
         animationsEnabled: boolean; // Sector map animations toggle
@@ -224,6 +227,7 @@ export interface GameScouting {
     sendScoutingMission: (planetId: string) => void;
     planetaryDrill: (planetId: string) => void;
     atmosphericAnalysis: (planetId: string) => void;
+    exploreDerelictShip: (locationId: string) => void;
 }
 
 export interface GameDistressSignal {
@@ -263,6 +267,12 @@ export interface GameResearch {
 export interface GameCrafting {
     craftWeapon: (recipeId: CraftingRecipeId) => void;
     installCraftedWeapon: (cargoIndex: number, weaponBayId: number) => void;
+    craftModule: (recipeId: ModuleRecipeId) => void;
+}
+
+export interface GameAugmentations {
+    installAugmentation: (crewId: number, augmentationId: AugmentationId) => void;
+    removeAugmentation: (crewId: number) => void;
 }
 
 export interface GameScanContracts {
@@ -296,5 +306,6 @@ export type GameStore = GameState &
     GameFinish &
     GameResearch &
     GameCrafting &
+    GameAugmentations &
     GameScanContracts &
     GameManagement;

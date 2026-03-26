@@ -20,6 +20,7 @@ import {
     getPlanetDescription,
     getPlanetTypeName,
 } from "@/lib/translationHelpers";
+import { AUGMENTATIONS } from "@/game/constants/augmentations";
 
 export function PlanetPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
@@ -66,7 +67,12 @@ export function PlanetPanel() {
     if (currentLocation.isEmpty) {
         const hasScout = crew.some((c) => c.profession === "scout");
         const scoutedTimes = currentLocation.scoutedTimes || 0;
-        const canScout = scoutedTimes < 3;
+        const bestScout = crew.filter((c) => c.profession === "scout").sort((a, b) => (b.level ?? 1) - (a.level ?? 1))[0];
+        const scoutHasOptical = bestScout?.augmentation
+            ? (AUGMENTATIONS[bestScout.augmentation]?.effect?.extraScoutAttempts ?? 0) > 0
+            : false;
+        const maxScoutAttempts = 3 + (scoutHasOptical ? 1 : 0);
+        const canScout = scoutedTimes < maxScoutAttempts;
         const lastScoutResult = currentLocation.lastScoutResult;
         const currentLocationPlanetType = currentLocation.planetType;
 
@@ -113,11 +119,11 @@ export function PlanetPanel() {
                         {canScout ? (
                             <span className="text-[#ffb000]">
                                 {t("planet_panel.can_scout")} ({scoutedTimes}
-                                /3).
+                                /{maxScoutAttempts}).
                             </span>
                         ) : (
                             <span className="text-[#00ff41]">
-                                {t("planet_panel.fully_explored")} (3/3).
+                                {t("planet_panel.fully_explored")} ({maxScoutAttempts}/{maxScoutAttempts}).
                             </span>
                         )}
                     </div>

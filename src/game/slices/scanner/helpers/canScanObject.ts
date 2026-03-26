@@ -33,6 +33,7 @@ export const canScanObject = (
 
     switch (objectType) {
         case "friendly_ship":
+        case "derelict_ship":
             // Tier 1 - requires scanRange >= 3
             return scanRange >= 3 || hasAllSeeing;
 

@@ -41,6 +41,31 @@ export const TIER4_TECHS: Partial<Record<TechnologyId, Technology>> = {
     },
 
     // Biology
+    cybernetic_augmentation: {
+        id: "cybernetic_augmentation",
+        name: "Кибернетические аугментации",
+        description:
+            "Кибернетические импланты усиливают способности экипажа. Открывает установку аугментаций на медицинских станциях.",
+        tier: 4,
+        category: "biology",
+        prerequisites: ["genetic_enhancement"],
+        resources: { alien_biology: 12, quantum_crystals: 4, tech_salvage: 15 },
+        credits: 1200,
+        scienceCost: 600,
+        bonuses: [
+            {
+                type: "special_ability",
+                value: 1,
+                description: "Разблокирует установку аугментаций экипажу",
+            },
+        ],
+        icon: "🦾",
+        color: "#00d4ff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
     stellar_genetics: {
         id: "stellar_genetics",
         name: "Звёздная генетика",
@@ -48,7 +73,7 @@ export const TIER4_TECHS: Partial<Record<TechnologyId, Technology>> = {
             "Изучение ДНК звёздных сущностей открывает путь к эволюции: +50% здоровья, +40% опыта, +20% скорость науки, -30% урон по экипажу в модулях.",
         tier: 4,
         category: "biology",
-        prerequisites: ["genetic_enhancement", "neural_interface"],
+        prerequisites: ["neural_interface"],
         resources: {
             alien_biology: 20,
             quantum_crystals: 6,

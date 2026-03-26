@@ -1,4 +1,5 @@
 import type { CrewMemberAssignment, ModuleType } from "@/game/types";
+import { LAB_MODULE_TYPES } from "@/game/constants/modules";
 
 /**
  * Требования к модулям для конкретных задач
@@ -28,7 +29,7 @@ export const TASK_MODULE_REQUIREMENTS: Record<
     sabotage: [],
 
     // Учёный
-    research: ["lab"],
+    research: LAB_MODULE_TYPES,
     analyzing: [],
     analysis: [],
 
@@ -64,4 +65,8 @@ export const MODULE_TYPE_NAMES: Record<ModuleType, string> = {
     quarters: "жилом модуле",
     repair_bay: "ремонтном отсеке",
     weaponShed: "ячейка оружия",
+    bio_research_lab: "биолаборатории",
+    pulse_drive: "пульс-двигателе",
+    habitat_module: "медицинском корпусе",
+    deep_survey_array: "сканер-массиве",
 };

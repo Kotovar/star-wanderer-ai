@@ -15,13 +15,13 @@ import { getActiveModules } from "@/game/modules/utils";
  */
 export const getCrewCapacity = (state: GameState) => {
     const baseSlots = state.ship.modules.filter(
-        (m) => m.type !== "quarters",
+        (m) => m.type !== "quarters" && m.type !== "habitat_module",
     ).length;
 
-    const quartersBonus = getActiveModules(state.ship.modules, "quarters").reduce(
-        (sum, m) => sum + (m.capacity ?? 0),
-        0,
-    );
+    const quartersBonus = [
+        ...getActiveModules(state.ship.modules, "quarters"),
+        ...getActiveModules(state.ship.modules, "habitat_module"),
+    ].reduce((sum, m) => sum + (m.capacity ?? 0), 0);
 
     return baseSlots + quartersBonus;
 };

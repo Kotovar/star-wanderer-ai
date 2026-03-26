@@ -109,10 +109,12 @@ export function ModuleInstallTab({ onClose }: ModuleInstallTabProps) {
                             >
                                 <div className="flex justify-between items-center">
                                     <span className="text-[#00ff41]">
-                                        {item.item}
+                                        {item.module?.name ?? item.item}
                                     </span>
                                     <span className="text-xs text-[#888]">
-                                        Ур.{item.moduleLevel || 4} | {item.module?.width ?? 1}x{item.module?.height ?? 1}
+                                        Ур.{item.moduleLevel || 4} |{" "}
+                                        {item.module?.width ?? 1}x
+                                        {item.module?.height ?? 1}
                                     </span>
                                 </div>
                             </div>

@@ -11,7 +11,7 @@ import {
     StarType,
     StormType,
 } from "@/game/types";
-import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
+import { SHIP_LOCATION_TYPES } from "@/game/types/locations/locations";
 import { PLANET_COLORS_IN_SECTOR } from "../constants";
 import { getScannerRangeLabel } from "./DistressSignalPanel";
 
@@ -256,12 +256,8 @@ function getScannerInfo(
 
     if (!canDetect) {
         // No scanner detection - show as unknown
-        // Ships (enemy, friendly, boss) show as "Unknown ship" because they use ship icon
-        if (
-            loc.type === "boss" ||
-            loc.type === "enemy" ||
-            loc.type === "friendly_ship"
-        ) {
+        // Ships (enemy, friendly, boss, derelict) show as "Unknown ship" because they use ship icon
+        if (SHIP_LOCATION_TYPES.includes(loc.type)) {
             info.push(`❓ ${t("locations.unknown_ship")}`);
         } else if (loc.type === "planet") {
             info.push(`🌏 ${t("locations.planet")}`);
@@ -315,6 +311,15 @@ function getScannerInfo(
             if (Math.random() * 100 < detectionChance) {
                 info.push(`★ Древние артефакты!`);
             }
+        }
+        return info;
+    }
+    if (loc.type === "derelict_ship") {
+        info.push(`🛸 ${t("locations.derelict_ship")}`);
+        if (loc.derelictExplored) {
+            info.push(`✓ Исследовано`);
+        } else {
+            info.push(`📐 Возможен чертёж модуля`);
         }
         return info;
     }
@@ -468,6 +473,7 @@ function canDetectObject(
 ): boolean {
     switch (objectType) {
         case "friendly_ship":
+        case "derelict_ship":
             return scanRange >= 3;
         case "enemy":
             if (tier === 1) return scanRange >= 3;
@@ -495,20 +501,6 @@ export function SectorMap() {
     const travelThroughBlackHole = useGameStore(
         (s) => s.travelThroughBlackHole,
     );
-    const emergencyJump = useGameStore((s) => s.emergencyJump);
-    const isStuckInBlackHole = useGameStore((s) => {
-        if (s.currentSector?.star?.type !== "blackhole") return false;
-        const nonBH = s.galaxy.sectors.filter(
-            (sec) =>
-                sec.star?.type !== "blackhole" &&
-                sec.id !== s.currentSector?.id,
-        );
-        if (nonBH.length === 0) return true;
-        const minCost = Math.min(
-            ...nonBH.map((sec) => calculateFuelCostForUI(s, sec.id).fuelCost),
-        );
-        return s.ship.fuel < minCost;
-    });
     const completedLocations = useGameStore((s) => s.completedLocations);
     const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
     const canScanObject = useGameStore((s) => s.canScanObject);
@@ -682,7 +674,20 @@ export function SectorMap() {
                 }
             } else if (loc.type === "distress_signal") {
                 // Distress signals are always visible (SOS beacon)
-                drawDistressSignal(ctx, x, y, loc, completed, animationStateRef.current.time);
+                drawDistressSignal(
+                    ctx,
+                    x,
+                    y,
+                    loc,
+                    completed,
+                    animationStateRef.current.time,
+                );
+            } else if (loc.type === "derelict_ship") {
+                if (!canScan && !isRevealed && !hasTelepathy) {
+                    drawUnknownShip(ctx, x, y, completed);
+                } else {
+                    drawDerelictShip(ctx, x, y, loc, completed);
+                }
             } else if (loc.type === "boss") {
                 if (canScan || isRevealed || hasTelepathy) {
                     drawAncientBoss(ctx, x, y, loc, completed);
@@ -699,7 +704,11 @@ export function SectorMap() {
 
             // Boss shows as "Unknown ship" (not "Unknown object") because it uses ship icon
             const isUnknownBoss =
-                loc.type === "boss" && !canScan && !isRevealed && !completed && !hasTelepathy;
+                loc.type === "boss" &&
+                !canScan &&
+                !isRevealed &&
+                !completed &&
+                !hasTelepathy;
 
             const displayName = isUnknownBoss
                 ? t("sector_map.unknown_ship")
@@ -756,7 +765,15 @@ export function SectorMap() {
         });
 
         ctx.restore();
-    }, [canScanObject, completedLocations, currentSector, hasTelepathy, offset, t, zoom]);
+    }, [
+        canScanObject,
+        completedLocations,
+        currentSector,
+        hasTelepathy,
+        offset,
+        t,
+        zoom,
+    ]);
 
     // Initialize canvas and background
     useEffect(() => {
@@ -1543,27 +1560,6 @@ export function SectorMap() {
 
     return (
         <div ref={containerRef} className="w-full h-full relative">
-            {currentSector?.star?.type === "blackhole" && (
-                <div className="bg-[rgba(255,0,255,0.1)] border border-[#ff00ff] p-2 mb-2 text-center text-sm">
-                    <span className="text-[#ff00ff] font-bold">
-                        {t("galaxy.black_hole.title")}
-                    </span>
-                    <span className="text-[#ffb000] ml-2">
-                        - {t("galaxy.black_hole.hint")}
-                    </span>
-                    {isStuckInBlackHole && (
-                        <div className="mt-1">
-                            <button
-                                onClick={emergencyJump}
-                                className="cursor-pointer bg-[rgba(255,50,50,0.2)] border border-[#ff3232] text-[#ff3232] px-3 py-1 text-xs font-bold hover:bg-[rgba(255,50,50,0.4)] transition-colors"
-                            >
-                                {t("galaxy.black_hole.emergency_jump")}
-                            </button>
-                        </div>
-                    )}
-                </div>
-            )}
-
             {/* Scanner range indicator */}
             {scanRange >= 0 && (
                 <div className="absolute top-2 right-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-2 py-1 text-xs text-[#00ff41] z-10">
@@ -3790,9 +3786,7 @@ function drawDistressSignal(
     ctx.fill();
 
     // ── Ромбовидный корпус маяка ──────────────────────────────────────
-    const corePulse = isResolved
-        ? 1
-        : 1 + 0.03 * Math.sin(t * Math.PI * 0.6); // едва заметная пульсация
+    const corePulse = isResolved ? 1 : 1 + 0.03 * Math.sin(t * Math.PI * 0.6); // едва заметная пульсация
     const s = 7 * corePulse;
     ctx.globalAlpha = baseAlpha;
     ctx.save();
@@ -4208,4 +4202,60 @@ function drawTwinklingStars(
         ctx.arc(x, y, star.size, 0, Math.PI * 2);
         ctx.fill();
     });
+}
+
+// Draw derelict ship
+function drawDerelictShip(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    loc: Location,
+    completed: boolean,
+) {
+    const isExplored = completed || loc.derelictExplored;
+    ctx.globalAlpha = isExplored ? 0.35 : 1;
+
+    const color = "#555577";
+    const accentColor = "#00d4ff";
+    const r = 16;
+
+    // Hexagonal hull outline
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i - Math.PI / 6;
+        const px = x + r * Math.cos(angle);
+        const py = y + r * Math.sin(angle);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.stroke();
+
+    // Fill with dim color
+    ctx.fillStyle = "rgba(40, 40, 60, 0.6)";
+    ctx.fill();
+
+    // Broken/dashed cross lines to indicate derelict
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x - 10, y);
+    ctx.lineTo(x + 10, y);
+    ctx.moveTo(x, y - 8);
+    ctx.lineTo(x, y + 8);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Small accent dot if not explored
+    if (!isExplored) {
+        ctx.fillStyle = accentColor;
+        ctx.beginPath();
+        ctx.arc(x + r - 3, y - r + 3, 3, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
 }

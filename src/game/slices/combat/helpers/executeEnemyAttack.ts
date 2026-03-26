@@ -6,6 +6,7 @@ import {
     RACES,
     PILOT_EVASION_COMBAT_EXP,
 } from "@/game/constants";
+import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import { playSound } from "@/sounds";
 import { getTotalEvasion } from "@/game/slices/ship/helpers/getTotalEvasion";
 import type { GameState, GameStore, Module, ModuleType } from "@/game/types";
@@ -33,6 +34,10 @@ const MODULE_TARGET_PRIORITY: Record<ModuleType, number> = {
     quarters: 5,
     repair_bay: 10,
     weaponShed: 0,
+    bio_research_lab: 5,
+    pulse_drive: 50,
+    habitat_module: 30,
+    deep_survey_array: 10,
 };
 
 const DEFAULT_MODULE_PRIORITY = 30;
@@ -106,6 +111,8 @@ export function executeEnemyAttack(
         if (pilot) get().gainExp(pilot, PILOT_EVASION_COMBAT_EXP);
         return;
     }
+
+    // phase_step: handled per-crew-member below in the damage loop
 
     // Sabotage check — scout's sabotage gives enemy a miss chance (scales with level)
     const scoutWithSabotage = state.crew.find(
@@ -514,9 +521,20 @@ function damageCrewInModule(
         0,
     );
 
+    // phase_step: pre-roll dodge for each crew member in the module
+    const phaseStepDodgers = new Set<number>();
+    state.crew.forEach((c) => {
+        if (c.moduleId !== moduleId || !c.augmentation) return;
+        const dodgeChance = AUGMENTATIONS[c.augmentation]?.effect?.fullDodgeChance ?? 0;
+        if (dodgeChance > 0 && Math.random() < dodgeChance) {
+            phaseStepDodgers.add(c.id);
+        }
+    });
+
     set((s) => {
         s.crew.forEach((c) => {
             if (c.moduleId !== moduleId) return;
+            if (phaseStepDodgers.has(c.id)) return;
             const veteranReduction =
                 c.traits?.reduce((max, trait) => {
                     return Math.max(
@@ -533,6 +551,16 @@ function damageCrewInModule(
             if (hasImmortality && newHealth < 1) newHealth = 1;
             c.health = Math.max(0, newHealth);
         });
+    });
+
+    phaseStepDodgers.forEach((id) => {
+        const member = get().crew.find((c) => c.id === id);
+        if (member) {
+            get().addLog(
+                `👻 ${member.name}: Фазовый шаг! Урон поглощён`,
+                "info",
+            );
+        }
     });
 
     if (isDestruction) {

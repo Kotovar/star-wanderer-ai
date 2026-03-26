@@ -63,7 +63,7 @@ export const TIER5_TECHS: Partial<Record<TechnologyId, Technology>> = {
             "Двигатель Древних позволяет мгновенно прыгать в любой сектор галактики без затрат топлива.",
         tier: 5,
         category: "ancient_tech",
-        prerequisites: ["ancient_power", "singularity_reactor"],
+        prerequisites: ["singularity_reactor"],
         resources: {
             quantum_crystals: 15,
             energy_samples: 25,

@@ -50,7 +50,8 @@ export type TechnologyId =
     | "atmospheric_analysis"
     | "storm_shields"
     | "modular_arsenal"
-    | "ion_cannon";
+    | "ion_cannon"
+    | "cybernetic_augmentation";
 
 /**
  * Research tier - technology level

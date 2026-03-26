@@ -4,6 +4,7 @@ import {
     generateAnomaly,
     generateAsteroidBelt,
     generateBossOrAnomaly,
+    generateDerelictShip,
     generateDistressSignal,
     generateEnemyShip,
     generateFriendlyShip,
@@ -28,7 +29,7 @@ const getLocationType = (
     }
 
     const chances = LOCATION_CHANCES[`tier${tier}`];
-    const { planet, asteroidBelt, distressSignal } = LOCATION_TYPE_CHANCES;
+    const { planet, asteroidBelt, distressSignal, derelictShip } = LOCATION_TYPE_CHANCES;
 
     const thresholds = {
         station: chances.station,
@@ -57,6 +58,15 @@ const getLocationType = (
             asteroidBelt +
             chances.storm +
             distressSignal,
+        derelictShip:
+            chances.station +
+            chances.friendlyShip +
+            planet +
+            chances.enemyShip +
+            asteroidBelt +
+            chances.storm +
+            distressSignal +
+            derelictShip,
         boss:
             chances.station +
             chances.friendlyShip +
@@ -65,6 +75,7 @@ const getLocationType = (
             asteroidBelt +
             chances.storm +
             distressSignal +
+            derelictShip +
             chances.boss,
     };
 
@@ -75,6 +86,7 @@ const getLocationType = (
     if (roll < thresholds.asteroidBelt) return "asteroid_belt";
     if (roll < thresholds.storm) return "storm";
     if (roll < thresholds.distressSignal) return "distress_signal";
+    if (roll < thresholds.derelictShip) return "derelict_ship";
     if (roll < thresholds.boss) return "boss";
     return "anomaly";
 };
@@ -112,6 +124,8 @@ export const generateLocation = (
             return generateStorm(sectorIdx, locIdx, tier);
         case "distress_signal":
             return generateDistressSignal(sectorIdx, locIdx);
+        case "derelict_ship":
+            return generateDerelictShip(sectorIdx, locIdx);
         case "boss":
             return generateBossOrAnomaly(sectorIdx, locIdx, tier, isBlackHole);
         case "anomaly":

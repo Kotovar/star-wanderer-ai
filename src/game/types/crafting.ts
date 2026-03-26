@@ -1,5 +1,6 @@
 import type { TechnologyId, ResearchResourceType } from "./research";
-import type { WeaponType } from "./modules";
+import type { WeaponType, HybridModuleType } from "./modules";
+import type { Goods } from "./goods";
 
 export interface CraftingRecipe {
     id: CraftingRecipeId;
@@ -18,3 +19,15 @@ export type CraftingWeapon = Exclude<
 >;
 
 export type CraftingRecipeId = CraftingWeapon;
+
+// One-time module recipes found by Scout at derelict ships
+export type ModuleRecipeId = HybridModuleType;
+
+export interface ModuleRecipe {
+    id: ModuleRecipeId;
+    name: string;
+    icon: string;
+    description: string;
+    goods: Partial<Record<Goods, number>>;
+    credits: number;
+}

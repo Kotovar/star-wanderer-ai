@@ -156,7 +156,7 @@ const processCombatHeal = (
     if (crewInSameModule.length === 0 && !crewMember.moduleId) return;
 
     let healAmount: number = Math.floor(
-        (ASSIGNMENT_BASES.HEAL_AMOUNT + (crewMember.level ?? 1)) *
+        (ASSIGNMENT_BASES.HEAL_AMOUNT + (crewMember.level ?? 1) - 1) *
             getTaskBonusMultiplier(crewMember),
     );
 

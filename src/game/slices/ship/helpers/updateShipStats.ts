@@ -83,11 +83,11 @@ export const updateShipStats = (state: GameState): void => {
     ship.armor = finalDefense;
     ship.maxShields = maxShieldsWithBonus;
     ship.shields = Math.min(ship.shields, maxShieldsWithBonus);
-    const quartersBonus = getActiveModules(modules, "quarters").reduce(
+    const quartersBonus = [...getActiveModules(modules, "quarters"), ...getActiveModules(modules, "habitat_module")].reduce(
         (sum, m) => sum + (m.capacity ?? 0),
         0,
     );
-    ship.crewCapacity = modules.filter((m) => m.type !== "quarters").length + quartersBonus;
+    ship.crewCapacity = modules.filter((m) => m.type !== "quarters" && m.type !== "habitat_module").length + quartersBonus;
     ship.maxFuel = totalFuelCapacity;
     ship.fuel = Math.min(currentFuel, totalFuelCapacity);
 };

@@ -22,6 +22,7 @@ import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getTechBonusSum } from "@/game/research";
 import { getActiveModules } from "../modules";
 import { RACES } from "@/game/constants/races";
+import { AUGMENTATIONS } from "@/game/constants/augmentations";
 
 export function ShipStats() {
     const ship = useGameStore((s) => s.ship);
@@ -128,6 +129,17 @@ export function ShipStats() {
     const totalConsumption = getTotalConsumption();
     const available = totalPower - totalConsumption;
     const damage = getTotalDamage();
+    // prismatic_lens: лазерный бонус от любого члена экипажа с аугментацией
+    const laserDamageBonus = crew.reduce((bonus, c) => {
+        if (c.augmentation) {
+            const augEffect = AUGMENTATIONS[c.augmentation]?.effect;
+            if (augEffect?.laserDamageBonus) return bonus + augEffect.laserDamageBonus;
+        }
+        return bonus;
+    }, 0);
+    const displayLaserDamage = laserDamageBonus > 0
+        ? Math.floor(damage.laser * (1 + laserDamageBonus))
+        : damage.laser;
     // Применяем бонус стрелка для отображения (как в реальной атаке)
     const hasGunnerInBay =
         crew.some(
@@ -137,9 +149,10 @@ export function ShipStats() {
                     (m) => m.type === "weaponbay" && m.id === c.moduleId,
                 ),
         ) || crew.some((c) => c.combatAssignment === "targeting");
+    const laserBonusDelta = displayLaserDamage - damage.laser;
     const displayDamageTotal = hasGunnerInBay
-        ? Math.floor(damage.total * COMBAT_DAMAGE_MODIFIERS.GUNNER_BONUS)
-        : damage.total;
+        ? Math.floor((damage.total + laserBonusDelta) * COMBAT_DAMAGE_MODIFIERS.GUNNER_BONUS)
+        : damage.total + laserBonusDelta;
     const crewCapacity = getCrewCapacity();
 
     // Calculate hull stats
@@ -184,7 +197,7 @@ export function ShipStats() {
         totalCritChance += getArtifactEffectValue(criticalMatrix, gameState);
     }
 
-    // critBonus от трейтов: только стрелок в оружейном отсеке
+    // critBonus от трейтов и аугментаций: только стрелок в оружейном отсеке
     const weaponBayIds = new Set(
         ship.modules.filter((m) => m.type === "weaponbay").map((m) => m.id),
     );
@@ -193,6 +206,9 @@ export function ShipStats() {
             c.traits?.forEach((trait) => {
                 totalCritChance += trait.effect?.critBonus ?? 0;
             });
+            if (c.augmentation) {
+                totalCritChance += AUGMENTATIONS[c.augmentation]?.effect?.critBonus ?? 0;
+            }
         }
     });
 
@@ -388,7 +404,7 @@ export function ShipStats() {
                 {damage.laser > 0 && (
                     <div className="flex justify-between text-sm text-[#f00]">
                         <span>{t("ship_stats.laser")}</span>
-                        <span>{damage.laser}</span>
+                        <span>{displayLaserDamage}</span>
                     </div>
                 )}
                 {damage.missile > 0 && (

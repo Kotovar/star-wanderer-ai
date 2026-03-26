@@ -139,7 +139,7 @@ export const installModuleFromCargo = (
             },
         }));
         get().addLog(
-            `✅ Модуль "${cargoItem.item}" установлен на позицию (${x}, ${y})!`,
+            `✅ Модуль "${cargoItem.module?.name || cargoItem.item}" установлен на позицию (${x}, ${y})!`,
             "info",
         );
         playSound("success");

@@ -166,5 +166,6 @@ export function buildCrewMember(options: CrewBuildOptions = {}): CrewMember {
         isMerged: false,
         mergedModuleId: null,
         firstaidActive: false,
+        augmentation: null,
     };
 }

@@ -409,6 +409,19 @@ export const generateAnomaly = (
 };
 
 /**
+ * Генерирует покинутый корабль
+ */
+export const generateDerelictShip = (
+    sectorIdx: number,
+    locIdx: number,
+): Location => ({
+    id: `${sectorIdx}-${locIdx}`,
+    type: "derelict_ship",
+    name: "location_types.derelict_ship",
+    derelictExplored: false,
+});
+
+/**
  * Добавляет уникального босса The Eternal в один сектор с чёрной дырой.
  * Вызывается ровно один раз за генерацию галактики.
  */

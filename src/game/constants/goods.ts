@@ -7,4 +7,5 @@ export const TRADE_GOODS: Record<Goods, { name: string; basePrice: number }> = {
     electronics: { name: "Электроника", basePrice: 200 },
     minerals: { name: "Минералы", basePrice: 100 },
     rare_minerals: { name: "Редкие минералы", basePrice: 500 },
+    spares: { name: "Запчасти", basePrice: 120 },
 };

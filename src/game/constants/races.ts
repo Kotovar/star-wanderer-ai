@@ -628,4 +628,25 @@ export const XENOSYMBIONT_MERGE_EFFECTS: Record<
         description: "",
         effects: {},
     },
+    // Гибридные модули — базовый эффект сращивания
+    bio_research_lab: {
+        name: "Симбиоз с биолабораторией",
+        description: "Ксеноморф ускоряет биологические исследования (+25% скорость науки)",
+        effects: { researchSpeed: 25 },
+    },
+    pulse_drive: {
+        name: "Симбиоз с пульс-двигателем",
+        description: "Ксеноморф снижает расход топлива (-10%)",
+        effects: {},
+    },
+    habitat_module: {
+        name: "Симбиоз с жилым модулем",
+        description: "Ксеноморф восстанавливает здоровье соседей",
+        effects: {},
+    },
+    deep_survey_array: {
+        name: "Симбиоз с сканером",
+        description: "Ксеноморф расширяет дальность сканирования (+1 клетка)",
+        effects: {},
+    },
 };

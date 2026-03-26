@@ -1,6 +1,5 @@
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
-import { getActiveModules } from "@/game/modules/utils";
 import { getMaxCrewTraitBonus } from "@/game/traits";
 import { getTechBonusSum } from "@/game/research";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
@@ -20,8 +19,18 @@ import type { GameState } from "@/game/types";
  * @returns Эффективный диапазон сканирования (0 если нет сканеров)
  */
 export const getEffectiveScanRange = (state: GameState) => {
-    const scanners = getActiveModules(state.ship.modules, "scanner");
-    if (scanners.length === 0) {
+    const isActive = (m: { health: number; disabled?: boolean; manualDisabled?: boolean }) =>
+        m.health > 0 && !m.disabled && !m.manualDisabled;
+
+    const regularScanners = state.ship.modules.filter(
+        (m) => m.type === "scanner" && isActive(m),
+    );
+    const surveyScanners = state.ship.modules.filter(
+        (m) => m.type === "deep_survey_array" && isActive(m),
+    );
+    const surveyBonus = surveyScanners.reduce((sum, m) => sum + (m.scanRange ?? 0), 0);
+
+    if (regularScanners.length === 0 && surveyBonus === 0) {
         const eyeOfSingularity = findActiveArtifact(
             state.artifacts,
             ARTIFACT_TYPES.EYE_OF_SINGULARITY,
@@ -33,7 +42,10 @@ export const getEffectiveScanRange = (state: GameState) => {
         return 0;
     }
 
-    let maxRange = Math.max(...scanners.map((s) => s.scanRange ?? 0));
+    const baseRange = regularScanners.length > 0
+        ? Math.max(...regularScanners.map((s) => s.scanRange ?? 0))
+        : 0;
+    let maxRange = baseRange + surveyBonus;
     const quantumScanner = findActiveArtifact(
         state.artifacts,
         ARTIFACT_TYPES.QUANTUM_SCANNER,

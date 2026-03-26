@@ -1,9 +1,11 @@
 import type { GameStore, SetState, CraftingWeapon } from "@/game/types";
-import { CRAFTING_RECIPES } from "@/game/constants/crafting";
+import { CRAFTING_RECIPES, MODULE_RECIPES, HYBRID_MODULE_SHOP_ITEMS } from "@/game/constants/crafting";
+import type { ModuleRecipeId } from "@/game/types/crafting";
 
 export interface CraftingSlice {
     craftWeapon: (recipeId: CraftingWeapon) => void;
     installCraftedWeapon: (cargoIndex: number, weaponBayId: number) => void;
+    craftModule: (recipeId: ModuleRecipeId) => void;
 }
 
 export const createCraftingSlice = (
@@ -143,5 +145,67 @@ export const createCraftingSlice = (
             "info",
         );
         get().updateShipStats();
+    },
+
+    craftModule: (recipeId) => {
+        const state = get();
+        const recipe = MODULE_RECIPES[recipeId];
+        const moduleTemplate = HYBRID_MODULE_SHOP_ITEMS[recipeId];
+
+        if (!recipe || !moduleTemplate) {
+            get().addLog(`Рецепт "${recipeId}" не найден`, "error");
+            return;
+        }
+
+        if (!state.moduleRecipes.includes(recipeId)) {
+            get().addLog("Чертёж не найден в инвентаре", "error");
+            return;
+        }
+
+        if (state.credits < recipe.credits) {
+            get().addLog(`Недостаточно кредитов: нужно ${recipe.credits}₢`, "error");
+            return;
+        }
+
+        // Проверяем наличие торговых ресурсов
+        for (const [goodId, required] of Object.entries(recipe.goods)) {
+            const available = state.ship.tradeGoods.find((g) => g.item === goodId)?.quantity ?? 0;
+            if (available < (required ?? 0)) {
+                const goodName = goodId;
+                get().addLog(`Недостаточно ресурса "${goodName}": нужно ${required}, есть ${available}`, "error");
+                return;
+            }
+        }
+
+        set((s) => {
+            // Списываем торговые ресурсы
+            const newTradeGoods = s.ship.tradeGoods.map((g) => {
+                const cost = recipe.goods[g.item as keyof typeof recipe.goods] ?? 0;
+                return cost > 0 ? { ...g, quantity: g.quantity - cost } : g;
+            }).filter((g) => g.quantity > 0);
+
+            // Удаляем использованный рецепт (одноразовый)
+            const newModuleRecipes = s.moduleRecipes.filter((id) => id !== recipeId);
+
+            return {
+                credits: s.credits - recipe.credits,
+                moduleRecipes: newModuleRecipes,
+                ship: {
+                    ...s.ship,
+                    tradeGoods: newTradeGoods,
+                    cargo: [
+                        ...s.ship.cargo,
+                        {
+                            item: `crafted_module_${recipeId}`,
+                            quantity: 1,
+                            isModule: true as const,
+                            module: moduleTemplate,
+                        },
+                    ],
+                },
+            };
+        });
+
+        get().addLog(`🔧 Собран модуль: ${recipe.icon} ${recipe.name} — добавлен в грузовой отсек`, "info");
     },
 });

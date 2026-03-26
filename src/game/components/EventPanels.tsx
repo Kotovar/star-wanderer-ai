@@ -6,6 +6,7 @@ import { GalaxyMap } from "./GalaxyMap";
 import { SectorMap } from "./SectorMap";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
+import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
 
 import { CombatPanel } from "./CombatPanel";
 import { AssignmentsPanel } from "./AssignmentsPanel";
@@ -21,6 +22,7 @@ import { UnknownShipPanel } from "./UnknownShipPanel";
 import { BattleResultsPanel } from "./BattleResultsPanel";
 import { StormResultsPanel } from "./StormResultsPanel";
 import { ResearchPanel } from "./ResearchPanel";
+import { DerelictShipPanel } from "./DerelictShipPanel";
 
 export function EventDisplay() {
     const gameMode = useGameStore((s) => s.gameMode);
@@ -30,6 +32,20 @@ export function EventDisplay() {
     const showAssignments = useGameStore((s) => s.showAssignments);
     const skipTurn = useGameStore((s) => s.skipTurn);
     const currentSector = useGameStore((s) => s.currentSector);
+    const emergencyJump = useGameStore((s) => s.emergencyJump);
+    const isStuckInBlackHole = useGameStore((s) => {
+        if (s.currentSector?.star?.type !== "blackhole") return false;
+        const nonBH = s.galaxy.sectors.filter(
+            (sec) =>
+                sec.star?.type !== "blackhole" &&
+                sec.id !== s.currentSector?.id,
+        );
+        if (nonBH.length === 0) return true;
+        const minCost = Math.min(
+            ...nonBH.map((sec) => calculateFuelCostForUI(s, sec.id).fuelCost),
+        );
+        return s.ship.fuel < minCost;
+    });
     const { t } = useTranslation();
 
     const [isSkipping, setIsSkipping] = useState(false);
@@ -175,9 +191,30 @@ export function EventDisplay() {
                     <div className="h-80 md:h-auto md:flex-1 relative shrink-0">
                         <SectorMap />
                     </div>
-                    <div className="text-[11px] text-center text-[#00ff41] py-2 shrink-0">
-                        {t("galaxy.labels.click_object")}
-                    </div>
+                    {currentSector?.star?.type === "blackhole" ? (
+                        <div className="text-[11px] text-center py-2 shrink-0">
+                            <span className="text-[#ff00ff] font-bold">
+                                {t("galaxy.black_hole.title")}
+                            </span>
+                            <span className="text-[#ffb000] ml-1">
+                                — {t("galaxy.black_hole.hint")}
+                            </span>
+                            {isStuckInBlackHole && (
+                                <div className="mt-1">
+                                    <button
+                                        onClick={emergencyJump}
+                                        className="cursor-pointer bg-[rgba(255,50,50,0.2)] border border-[#ff3232] text-[#ff3232] px-3 py-1 text-xs font-bold hover:bg-[rgba(255,50,50,0.4)] transition-colors"
+                                    >
+                                        {t("galaxy.black_hole.emergency_jump")}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="text-[11px] text-center text-[#00ff41] py-2 shrink-0">
+                            {t("galaxy.labels.click_object")}
+                        </div>
+                    )}
                 </div>
             );
 
@@ -204,6 +241,9 @@ export function EventDisplay() {
 
         case "distress_signal":
             return <DistressSignalPanel />;
+
+        case "derelict_ship":
+            return <DerelictShipPanel />;
 
         case "artifacts":
             return (

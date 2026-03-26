@@ -63,6 +63,7 @@ export const LOCATION_TYPE_CHANCES = {
     planet: 0.35,
     asteroidBelt: 0.1,
     distressSignal: 0.07,
+    derelictShip: 0.05,
 };
 
 /** Вероятность пустой планеты по уровням */

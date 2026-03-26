@@ -18,6 +18,7 @@
         "modules": "MODULES",
         "cargo": "CARGO BAY",
         "contracts": "ACTIVE CONTRACTS",
+        "craft": "CRAFT",
         "event_log": "EVENT LOG",
         "cannot_move_combat": "⚠️ Cannot move modules during combat!",
         "confirm_restart_title": "Restart?",
@@ -708,6 +709,7 @@
         "population": "Population",
         "minerals": "Minerals",
         "rare": "Rare",
+        "derelict_ship": "Derelict ship",
         "distress_signal": "Distress signal",
         "pirate_ambush": "Pirate ambush",
         "survivors": "Survivors",
@@ -1010,7 +1012,30 @@
         "tip_4": "Hiring crew at stations is cheaper than at friendly ships",
         "tip_5": "Artifacts provide unique abilities",
         "tip_6": "Black holes teleport to random sector",
-        "tip_7": "Crew levels increase effectiveness of their abilities"
+        "tip_7": "Crew levels increase effectiveness of their abilities",
+        "augmentations_title": "🔧 AUGMENTATIONS",
+        "augmentations_text": "At stations with the appropriate service, you can install an augmentation on a crew member. Each person can have only one augmentation. Profession augmentations require a specific profession; racial augmentations require a specific race.",
+        "augmentation_neural_reflex": "⚡ Neural Reflex (pilot) — +10% ship evasion",
+        "augmentation_nano_hands": "🔩 Nano Hands (engineer) — +15% repair efficiency",
+        "augmentation_accelerated_regen": "💉 Accelerated Regen (medic) — +15% healing efficiency",
+        "augmentation_optical_implant": "👁️ Optical Implant (scout) — 4 sorties per turn instead of 3",
+        "augmentation_memory_core": "🧬 Memory Core (scientist) — +50% research speed",
+        "augmentation_targeting_eye": "🎯 Targeting Eye (gunner) — +10% accuracy, +5% crit chance",
+        "augmentation_overclock_core": "⚙️ Overclock Core (synthetic) — +50% to task effects, 5% AI glitch chance",
+        "augmentation_symbiotic_armor": "🦠 Symbiotic Armor (xenosymbiont) — 5% of damage dealt restored as HP",
+        "augmentation_phase_step": "👻 Phase Step (voidborn) — 50% chance to avoid damage when module is hit",
+        "augmentation_prismatic_lens": "💎 Prismatic Lens (crystalline) — +5% laser weapon damage",
+        "derelict_title": "🚀 DERELICT SHIPS",
+        "derelict_text": "Derelict ships can be found in sectors. Send a scout on a sortie — they may find spares, electronics, rare minerals, or a blueprint for a unique module.",
+        "derelict_detail_1": "Blueprints appear in the BLUEPRINTS section on the left panel",
+        "derelict_detail_2": "Each blueprint is one-time use (can only be crafted once)",
+        "derelict_detail_3": "Click a blueprint to view its requirements and effects",
+        "hybrid_modules_title": "★ HYBRID MODULES",
+        "hybrid_modules_text": "Unique 2×2 modules that combine multiple functions. Crafted at the station shipyard using found blueprints.",
+        "hybrid_module_bio_lab": "🧬 Bio Research Lab — lab + medical: +10 science/turn, +8 HP/turn",
+        "hybrid_module_pulse_drive": "⚡ Pulse Drive — reactor + engine: +8 energy, reduced fuel consumption",
+        "hybrid_module_medical_corps": "🏥 Medical Corps — medical + quarters: +8 HP/turn, +6 crew slots",
+        "hybrid_module_deep_survey": "🔭 Deep Survey Array — lab + scanner: +8 science/turn, +3 scan range"
     },
     "station": {
         "shop": "Shop",
@@ -1092,7 +1117,14 @@
         "mutation_cure_title": "🧬 Mutation Treatment",
         "mutation_cure_no_mutations": "✓ No mutations in crew members",
         "mutation_cure_cost": "Cost: {{cost}}₢ per mutation",
-        "mutation_cure_button": "CURE"
+        "mutation_cure_button": "CURE",
+        "aug_title": "🦾 Cybernetic Augmentations",
+        "aug_subtitle": "Max 1 augmentation per crew member. Replacing destroys the old one.",
+        "aug_none": "no augmentation",
+        "aug_current": "Current:",
+        "aug_remove": "Remove",
+        "aug_install": "Install",
+        "aug_no_available": "No augmentations available"
     },
     "combat": {
         "no_weapon_bay": "⚠️ No weapon bay or weapons! Cannot attack.",
@@ -1309,7 +1341,24 @@
         "error": "Error",
         "success": "Success",
         "warning": "Warning",
-        "info": "Info"
+        "info": "Info",
+        "leave": "Leave"
+    },
+    "derelict_ship": {
+        "title": "Derelict Ship",
+        "subtitle": "A silent hulk drifting in the void",
+        "description": "The old ship has long been abandoned. Inside you may find spare parts, electronics, and possibly intact blueprints.",
+        "hint_scout": "Scout will search the wreck (1 turn)",
+        "hint_loot": "Possible loot: Spare Parts, Electronics, Rare Minerals",
+        "hint_blueprint": "10% chance: find a hybrid module blueprint",
+        "requires_scout": "Requires a scout in the crew",
+        "explore_button": "Search the Wreck",
+        "explored_results": "Wreck searched — found:",
+        "explored_empty": "Wreck already searched — nothing remains",
+        "loot_spares": "Spare Parts",
+        "loot_electronics": "Electronics",
+        "loot_rare_minerals": "Rare Minerals",
+        "loot_blueprint": "Module Blueprint"
     },
     "anomaly": {
         "title": "▸ ANOMALY LV{{level}}",
@@ -1375,7 +1424,8 @@
         "damage_reduction": "Damage reduction:",
         "trait_short": "trait",
         "tech_short": "tech",
-        "exp_bonus": "Experience bonus:"
+        "exp_bonus": "Experience bonus:",
+        "augmentation": "🔧 Augmentation:"
     },
     "profession_actions": {
         "pilot": {
@@ -1486,6 +1536,10 @@
         "lab": "Laboratory",
         "quarters": "Living Quarters",
         "repair_bay": "Repair Bay",
+        "bio_research_lab": "★ Bio Research Lab",
+        "pulse_drive": "★ Pulse Drive",
+        "medical_corps": "★ Medical Corps",
+        "deep_survey_array": "★ Deep Survey Array",
         "weaponShed": "Shed"
     },
     "weapon_types": {
@@ -1513,7 +1567,11 @@
         "ai_core": "Improved system control",
         "lab": "Research technologies",
         "quarters": "Additional crew slots",
-        "repair_bay": "Automatic module repair"
+        "repair_bay": "Automatic module repair",
+        "bio_research_lab": "Hybrid module: research + crew healing",
+        "pulse_drive": "Hybrid module: reactor + fuel efficiency",
+        "medical_corps": "Hybrid module: healing + crew capacity",
+        "deep_survey_array": "Hybrid module: deep scanning + research"
     },
     "weapon_info": {
         "damage": "Damage",
@@ -1710,6 +1768,7 @@
         "enemy_ship": "Enemy Ship",
         "friendly_ship": "Friendly Ship",
         "distress_signal": "Distress Signal",
+        "derelict_ship": "Derelict Ship",
         "cosmic_storm": "Cosmic Storm"
     },
     "asteroid_belt_names": {
@@ -1973,12 +2032,43 @@
             "category_label": "Weapons"
         }
     },
+    "blueprints": {
+        "title": "BLUEPRINTS",
+        "no_blueprints": "No unlocked blueprints",
+        "no_blueprints_weapons": "— Weapons: research technologies",
+        "no_blueprints_modules": "— Modules: scout finds them on derelict ships",
+        "section_weapons": "Weapons",
+        "section_modules": "Modules — one-time",
+        "craft_hint": "Craft at shipyard",
+        "one_time": "one-time",
+        "details_effects": "Effects",
+        "details_requires": "Requires",
+        "details_where": "Build at",
+        "details_shipyard": "Station Shipyard",
+        "resources": {
+            "energy_samples": "Energy Samples",
+            "tech_salvage": "Tech Salvage",
+            "rare_minerals": "Rare Minerals",
+            "quantum_crystals": "Quantum Crystals",
+            "ancient_data": "Ancient Data",
+            "alien_biology": "Alien Biology",
+            "electronics": "Electronics",
+            "spares": "Spares"
+        }
+    },
     "crafting": {
         "title": "Weapon Crafting",
         "no_recipes": "No unlocked recipes.",
         "no_recipes_hint": "Research technologies to unlock blueprints.",
+        "no_recipes_modules_hint": "Scout finds module blueprints on derelict ships.",
         "available_recipes": "Available recipes",
         "craft_button": "Craft",
-        "damage_suffix": "dmg"
+        "assemble_button": "Assemble",
+        "damage_suffix": "dmg",
+        "tab_weapons": "Weapons",
+        "tab_modules": "Modules",
+        "no_weapon_recipes": "Research technologies to unlock weapon blueprints",
+        "no_module_recipes": "Scout finds module blueprints on derelict ships",
+        "one_time_use": "One-time"
     }
 }

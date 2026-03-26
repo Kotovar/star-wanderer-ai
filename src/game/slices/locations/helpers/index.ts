@@ -11,3 +11,4 @@ export * from "./determineScoutingOutcome";
 export * from "./respondToDistressSignal";
 export * from "./planetaryDrill";
 export * from "./atmosphericAnalysis";
+export * from "./exploreDerelictShip";

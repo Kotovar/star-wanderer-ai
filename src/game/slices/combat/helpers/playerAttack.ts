@@ -33,6 +33,7 @@ import {
     applyBossTakeDamageEffects,
     checkBossResurrect,
 } from "./bossAbilities";
+import { AUGMENTATIONS } from "@/game/constants/augmentations";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -189,6 +190,13 @@ function rollCrit(state: GameState, get: () => GameStore): CritResult {
                     critChance += trait.effect.critBonus;
                 }
             });
+            // Бонус аугментации targeting_eye (+5% крит для стрелка)
+            if (c.augmentation) {
+                const augEffect = AUGMENTATIONS[c.augmentation]?.effect;
+                if (augEffect?.critBonus) {
+                    critChance += augEffect.critBonus;
+                }
+            }
         }
     });
 
@@ -273,6 +281,7 @@ function calculateAllDamage(
     enemyShields: number,
     accuracyModifier: number,
     droneStacks: number,
+    laserDamageBonus = 0,
 ): DamageResult {
     let remainingShields = enemyShields;
     let totalShieldDamage = 0;
@@ -296,9 +305,12 @@ function calculateAllDamage(
         getWeaponAccuracy(type, accuracyModifier);
 
     if (weaponCounts.laser > 0) {
+        const laserDmgPerWeapon = laserDamageBonus > 0
+            ? Math.floor(finalDamagePerWeapon * (1 + laserDamageBonus))
+            : finalDamagePerWeapon;
         const result = processLaserDamage(
             weaponCounts.laser,
-            finalDamagePerWeapon,
+            laserDmgPerWeapon,
             damageMultiplier,
             remainingShields,
             enemyShields,
@@ -718,6 +730,16 @@ export function executePlayerAttack(
     // 6. Calculate all damage
     const enemyShields = currentState.currentCombat.enemy.shields;
     const droneStacks = currentState.currentCombat.droneStacks;
+
+    // prismatic_lens: +5% laser damage for any crew member with this augmentation
+    const laserDamageBonus = currentState.crew.reduce((bonus, c) => {
+        if (c.augmentation) {
+            const augEffect = AUGMENTATIONS[c.augmentation]?.effect;
+            if (augEffect?.laserDamageBonus) return bonus + augEffect.laserDamageBonus;
+        }
+        return bonus;
+    }, 0);
+
     const damage = calculateAllDamage(
         weaponCounts,
         finalDamagePerWeapon,
@@ -725,6 +747,7 @@ export function executePlayerAttack(
         enemyShields,
         accuracyModifier,
         droneStacks,
+        laserDamageBonus,
     );
 
     // Early return if everything missed
@@ -753,6 +776,26 @@ export function executePlayerAttack(
 
     // 8. Flush logs
     damage.logs.forEach((log) => get().addLog(log, "combat"));
+
+    // 8b. symbiotic_armor: xenosymbiont crew heal for 5% of total damage dealt
+    const totalDamageDealt = damage.totalShieldDamage + damage.totalModuleDamage;
+    if (totalDamageDealt > 0) {
+        currentState.crew.forEach((c) => {
+            if (c.race === "xenosymbiont" && c.augmentation) {
+                const augEffect = AUGMENTATIONS[c.augmentation]?.effect;
+                if (augEffect?.damageToHp) {
+                    const healAmount = Math.floor(totalDamageDealt * augEffect.damageToHp);
+                    if (healAmount > 0) {
+                        set((s) => {
+                            const member = s.crew.find((m) => m.id === c.id);
+                            if (member) member.health = Math.min(100, member.health + healAmount);
+                        });
+                        get().addLog(`🧬 ${c.name} симбиоз: +${healAmount} HP`, "info");
+                    }
+                }
+            }
+        });
+    }
 
     // 8a. If a shield module was just destroyed, recalculate enemy shield pool
     if (damage.totalModuleDamage > 0 && tgtMod.type === "shield" && tgtMod.health > 0) {

@@ -33,7 +33,15 @@ export type LocationType =
     | "asteroid_belt"
     | "storm"
     | "distress_signal"
-    | "boss";
+    | "boss"
+    | "derelict_ship";
+
+export const SHIP_LOCATION_TYPES: LocationType[] = [
+    "boss",
+    "enemy",
+    "friendly_ship",
+    "derelict_ship",
+];
 
 export interface Location {
     id: string;
@@ -119,4 +127,13 @@ export interface Location {
     // Race fields
 
     population?: number; // Population in thousands
+
+    // Derelict ship fields
+    derelictExplored?: boolean; // Whether this derelict ship has been explored
+    derelictLoot?: {
+        spares?: number;
+        electronics?: number;
+        rare_minerals?: number;
+        moduleRecipeId?: string; // ID of module recipe found (if any)
+    };
 }

@@ -379,6 +379,59 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                         </ul>
                     </section>
 
+                    {/* Derelict Ships */}
+                    <section>
+                        <h3 className="text-[#00d4ff] font-bold text-lg mb-2">
+                            {t("help.derelict_title")}
+                        </h3>
+                        <p className="text-[#aaa] text-xs mb-2">
+                            {t("help.derelict_text")}
+                        </p>
+                        <ul className="text-[#888] text-xs space-y-1">
+                            <li>{t("help.derelict_detail_1")}</li>
+                            <li>{t("help.derelict_detail_2")}</li>
+                            <li>{t("help.derelict_detail_3")}</li>
+                        </ul>
+                    </section>
+
+                    {/* Hybrid Modules */}
+                    <section>
+                        <h3 className="text-[#00d4ff] font-bold text-lg mb-2">
+                            {t("help.hybrid_modules_title")}
+                        </h3>
+                        <p className="text-[#aaa] text-xs mb-2">
+                            {t("help.hybrid_modules_text")}
+                        </p>
+                        <ul className="text-[#888] text-xs space-y-1">
+                            <li>{t("help.hybrid_module_bio_lab")}</li>
+                            <li>{t("help.hybrid_module_pulse_drive")}</li>
+                            <li>{t("help.hybrid_module_medical_corps")}</li>
+                            <li>{t("help.hybrid_module_deep_survey")}</li>
+                        </ul>
+                    </section>
+
+                    {/* Augmentations */}
+                    <section>
+                        <h3 className="text-[#9933ff] font-bold text-lg mb-2">
+                            {t("help.augmentations_title")}
+                        </h3>
+                        <p className="text-[#aaa] text-xs mb-2">
+                            {t("help.augmentations_text")}
+                        </p>
+                        <ul className="text-[#888] text-xs space-y-1">
+                            <li>{t("help.augmentation_neural_reflex")}</li>
+                            <li>{t("help.augmentation_nano_hands")}</li>
+                            <li>{t("help.augmentation_accelerated_regen")}</li>
+                            <li>{t("help.augmentation_optical_implant")}</li>
+                            <li>{t("help.augmentation_memory_core")}</li>
+                            <li>{t("help.augmentation_targeting_eye")}</li>
+                            <li>{t("help.augmentation_overclock_core")}</li>
+                            <li>{t("help.augmentation_symbiotic_armor")}</li>
+                            <li>{t("help.augmentation_phase_step")}</li>
+                            <li>{t("help.augmentation_prismatic_lens")}</li>
+                        </ul>
+                    </section>
+
                     {/* Tips */}
                     <section>
                         <h3 className="text-[#ffb000] font-bold text-lg mb-2">

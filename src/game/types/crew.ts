@@ -1,4 +1,5 @@
 import type { RaceId } from "./races";
+import type { AugmentationId } from "./augmentations";
 
 export type CrewTraitType = "positive" | "negative" | "neutral" | "mutation";
 
@@ -110,6 +111,8 @@ export interface CrewMember {
     mergedModuleId: number | null; // ID of the module the crew member is merged with
     // First aid protection (reduces damage to crew in same module)
     firstaidActive: boolean;
+    // Cybernetic augmentation (max 1 per crew member)
+    augmentation: AugmentationId | null;
 }
 
 export type CrewTraitEffect = {

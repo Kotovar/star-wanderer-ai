@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { MODULES_BY_LEVEL } from "@/game/components/station/station-data";
@@ -7,6 +8,10 @@ import { MODULES_FROM_BOSSES } from "@/game/constants/modules";
 import type { ModuleType, Module, WeaponType } from "@/game/types";
 import { WEAPON_TYPES } from "@/game/constants/weapons";
 import { WEAPON_SCRAP_VALUES } from "@/game/slices/services/helpers/removeWeapon";
+import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import type { AugmentationId } from "@/game/types/augmentations";
+import type { Profession } from "@/game/types/crew";
+import type { RaceId } from "@/game/types/races";
 
 /**
  * Calculates scrap value for a module (70% of base price)
@@ -72,6 +77,7 @@ interface ServicesTabProps {
             isCraftedWeapon?: boolean;
             weaponType?: WeaponType;
             module?: {
+                name?: string;
                 moduleType: string;
                 level?: number;
                 width?: number;
@@ -84,6 +90,9 @@ interface ServicesTabProps {
         id: number;
         name: string;
         moduleId: number;
+        profession?: Profession;
+        race?: RaceId;
+        augmentation?: AugmentationId | null;
     }>;
     // Dynamic service costs
     repairCost: number;
@@ -95,7 +104,10 @@ interface ServicesTabProps {
     allowsCrewHeal: boolean;
     allowsModuleInstall: boolean;
     allowsMutationCure: boolean;
+    allowsAugmentation: boolean;
     crewWithMutations: MutationCrewMember[];
+    onInstallAugmentation: (crewId: number, augId: AugmentationId) => void;
+    onRemoveAugmentation: (crewId: number) => void;
 }
 
 export function ServicesTab({
@@ -122,7 +134,10 @@ export function ServicesTab({
     allowsCrewHeal,
     allowsModuleInstall,
     allowsMutationCure,
+    allowsAugmentation,
     crewWithMutations,
+    onInstallAugmentation,
+    onRemoveAugmentation,
 }: ServicesTabProps) {
     const fuelNeeded = maxFuel - fuel;
 
@@ -158,6 +173,14 @@ export function ServicesTab({
                     mutationCureCost={mutationCureCost}
                     crewWithMutations={crewWithMutations}
                     onCure={cureMutation}
+                />
+            )}
+            {allowsAugmentation && (
+                <AugmentationSection
+                    crew={crew}
+                    credits={credits}
+                    onInstall={onInstallAugmentation}
+                    onRemove={onRemoveAugmentation}
                 />
             )}
             <ScrapModuleSection ship={ship} crew={crew} onScrap={scrapModule} />
@@ -393,7 +416,9 @@ function MutationCureSection({
                                     </span>
                                     <Button
                                         disabled={credits < mutationCureCost}
-                                        onClick={() => onCure(member.id, mutation.id)}
+                                        onClick={() =>
+                                            onCure(member.id, mutation.id)
+                                        }
                                         className="bg-transparent border-2 border-[#00ff88] text-[#00ff88] hover:bg-[#00ff88] hover:text-[#050810] uppercase text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {t("services.mutation_cure_button")}
@@ -421,10 +446,19 @@ function RemoveWeaponSection({
         (m) => m.type === "weaponbay" && !m.disabled && !m.manualDisabled,
     );
 
-    const installedWeapons: { module: Module; weaponIndex: number; weaponType: WeaponType }[] = [];
+    const installedWeapons: {
+        module: Module;
+        weaponIndex: number;
+        weaponType: WeaponType;
+    }[] = [];
     weaponBays.forEach((bay) => {
         bay.weapons?.forEach((w, idx) => {
-            if (w) installedWeapons.push({ module: bay, weaponIndex: idx, weaponType: w.type });
+            if (w)
+                installedWeapons.push({
+                    module: bay,
+                    weaponIndex: idx,
+                    weaponType: w.type,
+                });
         });
     });
 
@@ -439,42 +473,50 @@ function RemoveWeaponSection({
                 {t("services.remove_weapon_desc")}
             </div>
             <div className="space-y-2 max-h-48 overflow-y-auto">
-                {installedWeapons.map(({ module: bay, weaponIndex, weaponType }) => {
-                    const weapon = WEAPON_TYPES[weaponType];
-                    const scrapValue = WEAPON_SCRAP_VALUES[weaponType] ?? 0;
-                    return (
-                        <div
-                            key={`${bay.id}-${weaponIndex}`}
-                            className="flex justify-between items-center bg-[rgba(0,0,0,0.3)] border border-[#ffb000] p-2"
-                        >
-                            <div className="text-xs">
-                                <div className="flex items-center gap-1">
-                                    <span style={{ color: weapon?.color }}>
-                                        {weapon?.icon}
-                                    </span>
-                                    <span style={{ color: weapon?.color }} className="font-bold">
-                                        {t(`weapon_types.${weaponType}`)}
-                                    </span>
-                                    <span className="text-[#888]">
-                                        ({weapon?.damage} {t("services.damage_label")})
-                                    </span>
-                                </div>
-                                <div className="text-[#888]">
-                                    {t("services.in_bay")} #{bay.id}
-                                </div>
-                                <div className="text-[#00ff41]">
-                                    ♻️ +{scrapValue}₢
-                                </div>
-                            </div>
-                            <Button
-                                onClick={() => onRemove(bay.id, weaponIndex)}
-                                className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase text-xs"
+                {installedWeapons.map(
+                    ({ module: bay, weaponIndex, weaponType }) => {
+                        const weapon = WEAPON_TYPES[weaponType];
+                        const scrapValue = WEAPON_SCRAP_VALUES[weaponType] ?? 0;
+                        return (
+                            <div
+                                key={`${bay.id}-${weaponIndex}`}
+                                className="flex justify-between items-center bg-[rgba(0,0,0,0.3)] border border-[#ffb000] p-2"
                             >
-                                {t("services.remove_weapon_button")}
-                            </Button>
-                        </div>
-                    );
-                })}
+                                <div className="text-xs">
+                                    <div className="flex items-center gap-1">
+                                        <span style={{ color: weapon?.color }}>
+                                            {weapon?.icon}
+                                        </span>
+                                        <span
+                                            style={{ color: weapon?.color }}
+                                            className="font-bold"
+                                        >
+                                            {t(`weapon_types.${weaponType}`)}
+                                        </span>
+                                        <span className="text-[#888]">
+                                            ({weapon?.damage}{" "}
+                                            {t("services.damage_label")})
+                                        </span>
+                                    </div>
+                                    <div className="text-[#888]">
+                                        {t("services.in_bay")} #{bay.id}
+                                    </div>
+                                    <div className="text-[#00ff41]">
+                                        ♻️ +{scrapValue}₢
+                                    </div>
+                                </div>
+                                <Button
+                                    onClick={() =>
+                                        onRemove(bay.id, weaponIndex)
+                                    }
+                                    className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase text-xs"
+                                >
+                                    {t("services.remove_weapon_button")}
+                                </Button>
+                            </div>
+                        );
+                    },
+                )}
             </div>
         </div>
     );
@@ -636,8 +678,8 @@ function InstallModuleSection({
                                                 : "text-[#888]"
                                         }
                                     >
-                                        {item.item} (Ур.
-                                        {item.module?.level || 4})
+                                        {item.module?.name ?? item.item} (Ур.
+                                        {item.module?.level ?? 4})
                                     </div>
                                     <div className="text-[#888]">
                                         {t("services.size_label")} 2x2 |{" "}
@@ -752,6 +794,156 @@ function InstallWeaponSection({
                                             {bay.id}
                                         </Button>
                                     ))}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+function AugmentationSection({
+    crew,
+    credits,
+    onInstall,
+    onRemove,
+}: {
+    crew: ServicesTabProps["crew"];
+    credits: number;
+    onInstall: (crewId: number, augId: AugmentationId) => void;
+    onRemove: (crewId: number) => void;
+}) {
+    const { t } = useTranslation();
+    const [selectedCrew, setSelectedCrew] = useState<number | null>(null);
+    const allAugmentations = Object.values(AUGMENTATIONS);
+
+    return (
+        <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-4">
+            <div className="text-[#00d4ff] font-bold mb-1">
+                {t("services.aug_title")}
+            </div>
+            <div className="text-xs text-[#888] mb-3">
+                {t("services.aug_subtitle")}
+            </div>
+            <div className="space-y-2 max-h-72 overflow-y-auto">
+                {crew.map((member) => {
+                    const currentAug = member.augmentation
+                        ? AUGMENTATIONS[member.augmentation]
+                        : null;
+                    const isExpanded = selectedCrew === member.id;
+                    const available = allAugmentations.filter((aug) => {
+                        if (
+                            aug.forProfession &&
+                            aug.forProfession !== member.profession
+                        )
+                            return false;
+                        if (aug.forRace && aug.forRace !== member.race)
+                            return false;
+                        return true;
+                    });
+                    return (
+                        <div
+                            key={member.id}
+                            className="border border-[#00d4ff33] bg-[rgba(0,0,0,0.3)]"
+                        >
+                            <button
+                                onClick={() =>
+                                    setSelectedCrew(
+                                        isExpanded ? null : member.id,
+                                    )
+                                }
+                                className="w-full flex items-center justify-between p-2 text-xs cursor-pointer hover:bg-[rgba(0,212,255,0.05)]"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[#00d4ff] font-bold">
+                                        {member.name}
+                                    </span>
+                                    {currentAug ? (
+                                        <span className="text-[#ffb000]">
+                                            {currentAug.icon} {currentAug.name}
+                                        </span>
+                                    ) : (
+                                        <span className="text-[#555]">
+                                            {t("services.aug_none")}
+                                        </span>
+                                    )}
+                                </div>
+                                <span className="text-[#555]">
+                                    {isExpanded ? "▲" : "▼"}
+                                </span>
+                            </button>
+                            {isExpanded && (
+                                <div className="border-t border-[#00d4ff22] p-2 space-y-2">
+                                    {currentAug && (
+                                        <div className="flex justify-between items-center p-1.5 bg-[rgba(255,176,0,0.07)] border border-[#ffb00033] text-xs">
+                                            <span className="text-[#ffb000]">
+                                                {currentAug.icon}{" "}
+                                                {t("services.aug_current")}{" "}
+                                                {currentAug.name}
+                                            </span>
+                                            <Button
+                                                onClick={() =>
+                                                    onRemove(member.id)
+                                                }
+                                                className="bg-transparent border border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-white text-[10px] px-2 py-0.5 cursor-pointer h-auto"
+                                            >
+                                                {t("services.aug_remove")}
+                                            </Button>
+                                        </div>
+                                    )}
+                                    {available.length === 0 && (
+                                        <div className="text-[#555] text-xs">
+                                            {t("services.aug_no_available")}
+                                        </div>
+                                    )}
+                                    {available.map((aug) => {
+                                        const isCurrent =
+                                            member.augmentation === aug.id;
+                                        const canAfford =
+                                            credits >= aug.installCost;
+                                        return (
+                                            <div
+                                                key={aug.id}
+                                                className={`flex items-start gap-2 p-1.5 border text-xs ${isCurrent ? "border-[#ffb000] bg-[rgba(255,176,0,0.05)]" : "border-[#333]"}`}
+                                            >
+                                                <span className="text-base leading-none mt-0.5">
+                                                    {aug.icon}
+                                                </span>
+                                                <div className="flex-1">
+                                                    <div className="font-bold text-[#00d4ff]">
+                                                        {aug.name}
+                                                    </div>
+                                                    <div className="text-[#888] text-[10px]">
+                                                        {aug.description}
+                                                    </div>
+                                                    <div
+                                                        className={`mt-0.5 ${canAfford ? "text-[#ffb000]" : "text-red-400"}`}
+                                                    >
+                                                        💰 {aug.installCost}₢
+                                                    </div>
+                                                </div>
+                                                {!isCurrent && (
+                                                    <Button
+                                                        disabled={!canAfford}
+                                                        onClick={() => {
+                                                            onInstall(
+                                                                member.id,
+                                                                aug.id,
+                                                            );
+                                                            setSelectedCrew(
+                                                                null,
+                                                            );
+                                                        }}
+                                                        className="bg-transparent border border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] text-[10px] px-2 py-0.5 cursor-pointer h-auto disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                                                    >
+                                                        {t("services.aug_install")}
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>

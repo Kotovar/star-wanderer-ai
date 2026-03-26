@@ -1,4 +1,5 @@
-import { getActiveModules, isModuleActive } from "@/game/modules";
+import { isModuleActive } from "@/game/modules";
+import { LAB_MODULE_TYPES } from "@/game/constants/modules";
 import { getTaskBonusMultiplier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import {
     BASE_CREW_HEALTH,
@@ -8,6 +9,7 @@ import {
 } from "@/game/constants";
 import { RACES } from "@/game/constants/races";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import { typedKeys } from "@/lib/utils";
 import {
     DEFAULT_MODULE_HEALTH,
@@ -65,8 +67,10 @@ export interface ResearchOutputData {
 export const calculateResearchOutput = (
     state: GameStore,
 ): ResearchOutputData => {
-    // Производительность от лабораторий
-    const labs = getActiveModules(state.ship.modules, "lab");
+    // Производительность от лабораторий (включая гибридные модули с researchOutput)
+    const labs = state.ship.modules.filter(
+        (m) => LAB_MODULE_TYPES.includes(m.type) && isModuleActive(m),
+    );
     const labOutput = labs.reduce((sum, m) => sum + (m.researchOutput ?? 0), 0);
 
     // Бонус от учёных (не более одного учёного на лабораторию)
@@ -133,6 +137,21 @@ export const calculateResearchOutput = (
         const bonus = Math.floor(totalOutput * researchSpeedMultiplier);
         totalOutput += bonus;
         techSpeedBonus = bonus;
+    }
+
+    // Бонус аугментации memory_core (+20% скорость исследований для учёного)
+    let augSpeedBonus = 0;
+    scientists.forEach((scientist) => {
+        if (scientist.augmentation) {
+            const augEffect = AUGMENTATIONS[scientist.augmentation]?.effect;
+            if (augEffect?.researchSpeedBonus) {
+                const bonus = Math.floor(totalOutput * augEffect.researchSpeedBonus);
+                augSpeedBonus += bonus;
+            }
+        }
+    });
+    if (augSpeedBonus > 0) {
+        totalOutput += augSpeedBonus;
     }
 
     // Бонус от сращивания ксеноморфа с лабораторией
@@ -284,7 +303,7 @@ export const deductResearchResources = (
  */
 export const hasLabAndScientist = (state: GameStore): boolean => {
     const hasLab = state.ship.modules.some(
-        (m) => isModuleActive(m) && m.type === "lab",
+        (m) => isModuleActive(m) && LAB_MODULE_TYPES.includes(m.type),
     );
 
     const hasScientist = state.crew.some((c) => c.profession === "scientist");

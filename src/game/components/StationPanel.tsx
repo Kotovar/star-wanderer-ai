@@ -59,6 +59,8 @@ export function StationPanel() {
         (s) => s.installModuleFromCargo,
     );
     const installCraftedWeapon = useGameStore((s) => s.installCraftedWeapon);
+    const installAugmentation = useGameStore((s) => s.installAugmentation);
+    const removeAugmentation = useGameStore((s) => s.removeAugmentation);
     const getRepairCost = useGameStore((s) => s.getRepairCost);
     const getHealCost = useGameStore((s) => s.getHealCost);
     const canRepairShip = useGameStore((s) => s.canRepairShip);
@@ -93,6 +95,8 @@ export function StationPanel() {
     const allowsCrewHeal = stationConfig?.allowsCrewHeal ?? true;
     const allowsMutationCure =
         allowsCrewHeal && researchedTechs.includes("xenobiology");
+    const allowsAugmentation =
+        allowsCrewHeal && researchedTechs.includes("cybernetic_augmentation");
 
     const stationItems = useMemo(
         () =>
@@ -330,7 +334,10 @@ export function StationPanel() {
                         allowsCrewHeal={allowsCrewHeal}
                         allowsModuleInstall={allowsModuleInstall}
                         allowsMutationCure={allowsMutationCure}
+                        allowsAugmentation={allowsAugmentation}
                         crewWithMutations={crewWithMutations}
+                        onInstallAugmentation={installAugmentation}
+                        onRemoveAugmentation={removeAugmentation}
                     />
                 </TabsContent>
                 {allowsCraft && (

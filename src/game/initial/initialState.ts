@@ -109,6 +109,7 @@ const DEBUG_RESEARCHED_TECHS: TechnologyId[] = [
     // "modular_arsenal",
     // "ancient_power",
     // "warp_drive",
+    // "cybernetic_augmentation",
 ];
 
 /**
@@ -138,6 +139,12 @@ const baseState: GameState = {
         modules: initialModules,
         gridSize: INITIAL_GRID_SIZE,
         cargo: [],
+        // DEBUG: 10 единиц каждого крафтингового ресурса
+        // tradeGoods: [
+        //     { item: "electronics", quantity: 10, buyPrice: 0 },
+        //     { item: "rare_minerals", quantity: 10, buyPrice: 0 },
+        //     { item: "spares", quantity: 10, buyPrice: 0 },
+        // ],
         tradeGoods: [],
         fuel: STARTING_FUEL,
         maxFuel: STARTING_FUEL,
@@ -186,6 +193,7 @@ const baseState: GameState = {
         activeResearch: null,
         unlockedRecipes: [],
     },
+    moduleRecipes: [],
     pendingSurvivor: null,
     settings: {
         animationsEnabled: true,

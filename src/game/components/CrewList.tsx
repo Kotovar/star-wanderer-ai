@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useGameStore } from "@/game/store";
 import { RACES } from "@/game/constants/races";
+import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import type { CrewMember } from "@/game/types";
 import {
     Dialog,
@@ -56,7 +57,8 @@ export function CrewList() {
                         100,
                         ((member.exp || 0) / expNeeded) * 100,
                     );
-                    const healthPct = (member.health / (member.maxHealth || 100)) * 100;
+                    const healthPct =
+                        (member.health / (member.maxHealth || 100)) * 100;
                     const currentAssignment = isCombat
                         ? member.combatAssignment
                         : member.assignment;
@@ -77,7 +79,10 @@ export function CrewList() {
                             {/* Name row */}
                             <div className="flex items-center gap-1 min-w-0">
                                 {race && (
-                                    <span className="flex-shrink-0" style={{ color: race.color }}>
+                                    <span
+                                        className="`shrink-0"
+                                        style={{ color: race.color }}
+                                    >
                                         {race.icon}
                                     </span>
                                 )}
@@ -85,7 +90,21 @@ export function CrewList() {
                                     {member.name}
                                 </span>
                                 {member.movedThisTurn && (
-                                    <span className="text-[#ff0040] flex-shrink-0 text-[9px]">●</span>
+                                    <span className="text-[#ff0040] `shrink-0 text-[9px]">
+                                        ●
+                                    </span>
+                                )}
+                                {member.augmentation && (
+                                    <span
+                                        className="`shrink-0 text-[9px]"
+                                        title={
+                                            AUGMENTATIONS[member.augmentation]
+                                                ?.name
+                                        }
+                                    >
+                                        {AUGMENTATIONS[member.augmentation]
+                                            ?.icon ?? "🔧"}
+                                    </span>
                                 )}
                             </div>
 
@@ -94,7 +113,10 @@ export function CrewList() {
                                 {t(`professions.${member.profession}`)}
                                 {member.level ? ` LV${member.level}` : ""}
                                 {currentAssignment && (
-                                    <span className="text-[#555]"> · {currentAssignment}</span>
+                                    <span className="text-[#555]">
+                                        {" "}
+                                        · {currentAssignment}
+                                    </span>
                                 )}
                             </div>
 
@@ -106,7 +128,7 @@ export function CrewList() {
                                         style={{ width: `${healthPct}%` }}
                                     />
                                 </div>
-                                <span className="text-[#555] text-[9px] flex-shrink-0 tabular-nums">
+                                <span className="text-[#555] text-[9px] `shrink-0 tabular-nums">
                                     {member.health}
                                 </span>
                             </div>
@@ -243,8 +265,16 @@ export function CrewList() {
                                         {getCrewRegen(selectedCrew)}/
                                         {t("crew.turn")}
                                     </div>
-                                    <CrewDamageReductionRow member={selectedCrew} researchedTechs={researchedTechs} t={t} />
-                                    <CrewExpBonusRow member={selectedCrew} researchedTechs={researchedTechs} t={t} />
+                                    <CrewDamageReductionRow
+                                        member={selectedCrew}
+                                        researchedTechs={researchedTechs}
+                                        t={t}
+                                    />
+                                    <CrewExpBonusRow
+                                        member={selectedCrew}
+                                        researchedTechs={researchedTechs}
+                                        t={t}
+                                    />
                                     {race?.hasHappiness ? (
                                         <div>
                                             <span className="text-[#ffb000]">
@@ -559,6 +589,38 @@ export function CrewList() {
                                                 )}
                                             </div>
                                         )}
+
+                                    {selectedCrew.augmentation &&
+                                        (() => {
+                                            const aug =
+                                                AUGMENTATIONS[
+                                                    selectedCrew.augmentation
+                                                ];
+                                            return aug ? (
+                                                <div className="p-2 border border-[#9933ff55] bg-[rgba(153,51,255,0.05)] rounded">
+                                                    <div className="text-[#ffb000] text-xs mb-1">
+                                                        {t(
+                                                            "crew_member.augmentation",
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-lg">
+                                                            {aug.icon}
+                                                        </span>
+                                                        <div>
+                                                            <div className="font-bold text-[#9933ff] text-xs">
+                                                                {aug.name}
+                                                            </div>
+                                                            <div className="text-[#888] text-[10px]">
+                                                                {
+                                                                    aug.description
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : null;
+                                        })()}
 
                                     <div>
                                         <span className="text-[#ffb000]">

@@ -16,7 +16,7 @@ export function UnknownShipPanel() {
 
     if (!currentLocation) return null;
 
-    const isShip = ["enemy", "friendly_ship"].includes(currentLocation.type);
+    const isShip = ["enemy", "friendly_ship", "derelict_ship"].includes(currentLocation.type);
     const canScan = canScanObject(
         currentLocation.type,
         currentLocation.threat || currentLocation.anomalyTier,
@@ -61,6 +61,8 @@ export function UnknownShipPanel() {
             useGameStore.setState({ gameMode: "anomaly" });
         } else if (currentLocation.type === "storm") {
             useGameStore.setState({ gameMode: "storm" });
+        } else if (currentLocation.type === "derelict_ship") {
+            useGameStore.setState({ gameMode: "derelict_ship" });
         }
     };
 
@@ -72,7 +74,9 @@ export function UnknownShipPanel() {
         }
         if (
             currentLocation.type === "friendly_ship" ||
-            currentLocation.type === "enemy"
+            currentLocation.type === "enemy" ||
+            currentLocation.type === "boss" ||
+            currentLocation.type === "derelict_ship"
         ) {
             return t("locations.unknown_ship");
         }

@@ -209,6 +209,11 @@ export const TECH_TRANSLATIONS: Record<
             description:
                 "Разработка ионного орудия, которое наносит огромный урон щитам (×4), но не повреждает корпус. Незаменимо для снятия щитов перед добивающим залпом.",
         },
+        cybernetic_augmentation: {
+            name: "Кибернетические аугментации",
+            description:
+                "Кибернетические импланты нового поколения усиливают способности каждого члена экипажа. Открывает установку профессиональных и расовых аугментаций на медицинских станциях.",
+        },
     },
 
     en: {
@@ -410,6 +415,11 @@ export const TECH_TRANSLATIONS: Record<
             name: "Ion Cannon",
             description:
                 "Develops an ion weapon that deals massive shield damage (×4) but cannot damage the hull. Essential for stripping shields before a finishing volley.",
+        },
+        cybernetic_augmentation: {
+            name: "Cybernetic Augmentations",
+            description:
+                "Next-generation cybernetic implants enhance the abilities of each crew member. Unlocks installation of profession and racial augmentations at medical stations.",
         },
     },
 };

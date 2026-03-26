@@ -7,6 +7,7 @@ import { sendScoutingMission as sendScoutingMissionHelper } from "./helpers";
 import { respondToDistressSignal as respondToDistressSignalHelper } from "./helpers";
 import { planetaryDrill as planetaryDrillHelper } from "./helpers";
 import { atmosphericAnalysis as atmosphericAnalysisHelper } from "./helpers";
+import { exploreDerelictShip as exploreDerelictShipHelper } from "./helpers";
 
 /**
  * Интерфейс LocationsSlice
@@ -53,6 +54,12 @@ export interface LocationsSlice {
     atmosphericAnalysis: (planetId: string) => void;
 
     /**
+     * Исследует покинутый корабль разведчиком
+     * @param locationId - ID локации с обломками
+     */
+    exploreDerelictShip: (locationId: string) => void;
+
+    /**
      * Открывает новую расу
      * @param raceId - ID расы
      */
@@ -96,6 +103,10 @@ export const createLocationsSlice = (
 
     atmosphericAnalysis: (planetId) => {
         atmosphericAnalysisHelper(planetId, set, get);
+    },
+
+    exploreDerelictShip: (locationId) => {
+        exploreDerelictShipHelper(locationId, set, get);
     },
 
     discoverRace: (raceId) => {

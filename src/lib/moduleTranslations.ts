@@ -27,6 +27,11 @@ export const MODULE_TRANSLATIONS: Record<
         lab: { name: "Лаборатория" },
         quarters: { name: "Жилой модуль" },
         repair_bay: { name: "Ремонтный отсек" },
+        // Hybrid modules
+        bio_research_lab: { name: "★ Биолаборатория" },
+        pulse_drive: { name: "★ Пульс-ускоритель" },
+        habitat_module: { name: "★ Медицинский корпус" },
+        deep_survey_array: { name: "★ Сканер-массив" },
         // Boss modules
         ancient_core: { name: "Древнее ядро" },
         plasma_cannon: { name: "Плазменная пушка" },
@@ -67,6 +72,11 @@ export const MODULE_TRANSLATIONS: Record<
         lab: { name: "Laboratory" },
         quarters: { name: "Quarters" },
         repair_bay: { name: "Repair Bay" },
+        // Hybrid modules
+        bio_research_lab: { name: "★ Bio Research Lab" },
+        pulse_drive: { name: "★ Pulse Drive" },
+        habitat_module: { name: "★ Medical Corps" },
+        deep_survey_array: { name: "★ Deep Survey Array" },
         // Boss modules
         ancient_core: { name: "Ancient Core" },
         plasma_cannon: { name: "Plasma Cannon" },

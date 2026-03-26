@@ -105,6 +105,27 @@ export const createModuleFromShopItem = (
             repairTargets: item.repairTargets || 1,
             consumption: item.consumption || 8,
         }),
+        // Hybrid modules
+        ...(item.moduleType === "bio_research_lab" && {
+            consumption: item.consumption || 4,
+            researchOutput: item.researchOutput || 10,
+            healing: item.healing || 8,
+        }),
+        ...(item.moduleType === "pulse_drive" && {
+            power: item.power || 8,
+            fuelEfficiency: item.fuelEfficiency || 6,
+            consumption: item.consumption || 5,
+        }),
+        ...(item.moduleType === "habitat_module" && {
+            consumption: item.consumption || 3,
+            healing: item.healing || 8,
+            capacity: item.capacity || 6,
+        }),
+        ...(item.moduleType === "deep_survey_array" && {
+            consumption: item.consumption || 4,
+            researchOutput: item.researchOutput || 8,
+            scanRange: item.scanRange || 3,
+        }),
         // Дополнительные свойства
         ...(item.power !== undefined && { power: item.power }),
         ...(item.consumption !== undefined && {

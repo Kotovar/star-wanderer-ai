@@ -94,6 +94,9 @@ const isObjectScanned = (loc: Location, get: () => GameStore): boolean => {
     if (loc.type === "friendly_ship") {
         return get().canScanObject("friendly_ship");
     }
+    if (loc.type === "derelict_ship") {
+        return get().canScanObject("derelict_ship");
+    }
     if (loc.type === "storm") {
         return get().canScanObject("storm");
     }
@@ -189,7 +192,9 @@ export const selectLocation = (
                         "📡 Сканер обнаружил засаду! Вы готовы к бою.",
                         "info",
                     );
-                    get().startCombat(loc);
+                    const revealedLoc = { ...loc, signalRevealed: true };
+                    updateLocationInSector(revealedLoc, set);
+                    get().startCombat(revealedLoc);
                 } else {
                     set({ gameMode: "unknown_ship" });
                 }
@@ -212,7 +217,9 @@ export const selectLocation = (
                         "📡 Сканер обнаружил ДРЕВНЮЮ УГРОЗУ! Готовьтесь к бою.",
                         "warning",
                     );
-                    get().startBossCombat(loc);
+                    const revealedLoc = { ...loc, signalRevealed: true };
+                    updateLocationInSector(revealedLoc, set);
+                    get().startBossCombat(revealedLoc);
                 } else {
                     set({ gameMode: "unknown_ship" });
                 }
@@ -289,6 +296,15 @@ export const selectLocation = (
                 }
             }
             set({ gameMode: "distress_signal" });
+            break;
+        }
+
+        case "derelict_ship": {
+            const canScan = isObjectScanned(loc, get);
+            set({
+                gameMode:
+                    canScan || loc.signalRevealed ? "derelict_ship" : "unknown_ship",
+            });
             break;
         }
     }

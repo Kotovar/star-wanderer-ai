@@ -1,4 +1,5 @@
 import type { GameState, GameStore, WeaponType } from "@/game/types";
+import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import {
     BASE_ACCURACY,
     MIN_ACCURACY,
@@ -154,6 +155,16 @@ export function computeAccuracyModifier(state: GameState): number {
     if (mergeBonus.weaponAccuracy) {
         modifier += mergeBonus.weaponAccuracy / 100;
     }
+
+    // Бонус аугментации targeting_eye (+10% точность для стрелка в оружейном отсеке)
+    state.crew.forEach((c) => {
+        if (c.profession === "gunner" && weaponBayIds.has(c.moduleId) && c.augmentation) {
+            const augEffect = AUGMENTATIONS[c.augmentation]?.effect;
+            if (augEffect?.accuracyBonus) {
+                modifier += augEffect.accuracyBonus;
+            }
+        }
+    });
 
     return modifier;
 }

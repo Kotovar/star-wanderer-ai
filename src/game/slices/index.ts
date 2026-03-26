@@ -18,3 +18,4 @@ export * from "./artifacts";
 export * from "./planetEffects";
 export * from "./research";
 export * from "./crafting";
+export * from "./augmentations";

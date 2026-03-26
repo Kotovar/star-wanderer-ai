@@ -35,7 +35,13 @@ export function CargoDisplay() {
         <div>
             <div className="mb-2.5 text-xs">
                 {t("cargo.capacity_label")}:{" "}
-                <span className={totalCargo > totalCapacity ? "text-[#ff0040]" : "text-[#ffb000]"}>
+                <span
+                    className={
+                        totalCargo > totalCapacity
+                            ? "text-[#ff0040]"
+                            : "text-[#ffb000]"
+                    }
+                >
                     {totalCargo}/{totalCapacity}т
                 </span>
                 {totalCargo > totalCapacity && (
@@ -82,7 +88,7 @@ export function CargoDisplay() {
                                     key={i}
                                     className="bg-[rgba(0,0,0,0.3)] border border-[#00d4ff] p-2 mb-1.5 text-xs"
                                 >
-                                    📦 {c.item} x{c.quantity}т{" "}
+                                    📦 {c.module?.name ?? c.item} x{c.quantity}т{" "}
                                     <span className="text-[#00d4ff]">
                                         {t("cargo.module_label")}
                                     </span>

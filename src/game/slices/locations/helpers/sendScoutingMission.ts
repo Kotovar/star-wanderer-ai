@@ -11,6 +11,7 @@ import {
     SCOUTING_TRADE_GOOD_BASE_MAX,
     SCOUTING_REQUIRED_VISITS,
 } from "../constants";
+import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import { SCOUT_BASE_EXP } from "@/game/constants/experience";
 import { addTradeGood } from "@/game/slices/ship/helpers";
 import { determineScoutingOutcome } from "./determineScoutingOutcome";
@@ -81,9 +82,13 @@ export const sendScoutingMission = (
         }
     }
 
-    // Update exploration progress
+    // Update exploration progress (optical_implant augmentation gives +1 attempt)
     const newScoutedTimes = getScoutedTimes(state, planetId) + 1;
-    const isFullyExplored = newScoutedTimes >= SCOUTING_REQUIRED_VISITS;
+    const scoutHasOptical = scout.augmentation
+        ? (AUGMENTATIONS[scout.augmentation]?.effect?.extraScoutAttempts ?? 0) > 0
+        : false;
+    const maxScoutAttempts = SCOUTING_REQUIRED_VISITS + (scoutHasOptical ? 1 : 0);
+    const isFullyExplored = newScoutedTimes >= maxScoutAttempts;
 
     // Update state
     updateScoutingState(
@@ -95,7 +100,7 @@ export const sendScoutingMission = (
     );
 
     get().addLog(
-        `Разведка завершена: ${newScoutedTimes}/${SCOUTING_REQUIRED_VISITS}`,
+        `Разведка завершена: ${newScoutedTimes}/${maxScoutAttempts}`,
         "info",
     );
     get().updateShipStats();

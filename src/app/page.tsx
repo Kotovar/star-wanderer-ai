@@ -9,6 +9,7 @@ import { ShipStats } from "@/game/components/ShipStats";
 import { CargoDisplay } from "@/game/components/CargoDisplay";
 import { GameLog } from "@/game/components/GameLog";
 import { ContractsList } from "@/game/components/ContractsList";
+import { BlueprintsTab } from "@/game/components/BlueprintsTab";
 import { EventDisplay } from "@/game/components/EventPanels";
 import { GameEndPanel } from "@/game/components/panels";
 import { useGameStore } from "@/game/store";
@@ -17,7 +18,15 @@ import { TechnologyDiscoveryModal } from "@/game/components/TechnologyDiscoveryM
 import { SurvivorModal } from "@/game/components/SurvivorModal";
 import { useTranslation } from "@/lib/useTranslation";
 
-type LeftTab = "ship" | "stats" | "crew" | "modules" | "cargo" | "contracts" | "log";
+type LeftTab =
+    | "ship"
+    | "stats"
+    | "crew"
+    | "modules"
+    | "cargo"
+    | "contracts"
+    | "blueprints"
+    | "log";
 
 export default function Home() {
     const gameOver = useGameStore((s) => s.gameOver);
@@ -43,6 +52,17 @@ export default function Home() {
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     }, [gameMode]);
+
+    const leftTabs: { id: LeftTab; icon: string; label: string }[] = [
+        { id: "ship",       icon: "🚀", label: t("ship.title") },
+        { id: "stats",      icon: "📊", label: t("ship.ship_state") },
+        { id: "crew",       icon: "👥", label: t("ship.crew") },
+        { id: "modules",    icon: "⚙️", label: t("ship.modules") },
+        { id: "cargo",      icon: "📦", label: t("ship.cargo") },
+        { id: "contracts",  icon: "📋", label: t("ship.contracts") },
+        { id: "blueprints", icon: "📐", label: t("ship.craft") },
+        { id: "log",        icon: "📜", label: t("ship.event_log") },
+    ];
 
     return (
         <div className="min-h-screen flex flex-col bg-[#050810] font-['Share_Tech_Mono'] text-[#00ff41]">
@@ -126,45 +146,7 @@ export default function Home() {
                 <div className="panel flex-1 lg:w-95 flex flex-col min-w-0 lg:h-[calc(100vh-100px)] border-2 border-[#00ff41] bg-[rgba(0,255,65,0.02)] rounded-lg overflow-hidden">
                     {/* Tab bar */}
                     <div className="flex shrink-0 border-b-2 border-[#00ff41]">
-                        {(
-                            [
-                                {
-                                    id: "ship",
-                                    icon: "🚀",
-                                    label: t("ship.title"),
-                                },
-                                {
-                                    id: "stats",
-                                    icon: "📊",
-                                    label: t("ship.ship_state"),
-                                },
-                                {
-                                    id: "crew",
-                                    icon: "👥",
-                                    label: t("ship.crew"),
-                                },
-                                {
-                                    id: "modules",
-                                    icon: "⚙️",
-                                    label: t("ship.modules"),
-                                },
-                                {
-                                    id: "cargo",
-                                    icon: "📦",
-                                    label: t("ship.cargo"),
-                                },
-                                {
-                                    id: "contracts",
-                                    icon: "📋",
-                                    label: t("ship.contracts"),
-                                },
-                                {
-                                    id: "log",
-                                    icon: "📜",
-                                    label: t("ship.event_log"),
-                                },
-                            ] as { id: LeftTab; icon: string; label: string }[]
-                        ).map((tab, idx) => {
+                        {leftTabs.map((tab, idx) => {
                             const isActive = activeTab === tab.id;
                             const hasAlert =
                                 tab.id === "ship" && moduleMovedThisTurn;
@@ -174,7 +156,7 @@ export default function Home() {
                                     onClick={() => setActiveTab(tab.id)}
                                     title={tab.label}
                                     className={`relative flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-[9px] font-['Orbitron'] font-bold transition-colors cursor-pointer select-none
-                                        ${idx < 5 ? "border-r border-[#1a3320]" : ""}
+                                        ${idx < leftTabs.length - 1 ? "border-r border-[#1a3320]" : ""}
                                         ${
                                             isActive
                                                 ? "text-[#ffb000] bg-[rgba(255,176,0,0.07)]"
@@ -207,7 +189,8 @@ export default function Home() {
                         {activeTab === "modules" && <ModuleList />}
                         {activeTab === "cargo" && <CargoDisplay />}
                         {activeTab === "contracts" && <ContractsList />}
-                        {activeTab === "log"       && <GameLog />}
+                        {activeTab === "blueprints" && <BlueprintsTab />}
+                        {activeTab === "log" && <GameLog />}
                     </div>
                 </div>
 

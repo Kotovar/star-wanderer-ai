@@ -1,4 +1,6 @@
 import { RACES, XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants";
+import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import { LAB_MODULE_TYPES } from "@/game/constants/modules";
 import {
     getMergeEffectsBonus,
     calculateHealthRegen,
@@ -19,7 +21,7 @@ import type {
     SetState,
     LocationType,
 } from "@/game/types";
-import { getActiveModules, isModuleActive } from "@/game/modules/utils";
+import { isModuleActive } from "@/game/modules/utils";
 
 /**
  * Обрабатывает все назначения экипажа
@@ -91,6 +93,14 @@ const checkAiGlitch = (
     if (!glitchTrait?.effects.glitchChance) return false;
 
     let glitchChance = Number(glitchTrait.effects.glitchChance);
+
+    // Дополнительный шанс сбоя от аугментации overclock_core (+5%)
+    if (crewMember.augmentation) {
+        const augEffect = AUGMENTATIONS[crewMember.augmentation]?.effect;
+        if (augEffect?.aiGlitchChance) {
+            glitchChance += augEffect.aiGlitchChance;
+        }
+    }
 
     // Бонус от сращивания ксеноморфа с ai_core (-50% шанс сбоя)
     const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);
@@ -202,6 +212,14 @@ const processRepairAssignment = (
         repairAmount = Math.floor(
             repairAmount * (1 + crewRace.crewBonuses.repair),
         );
+    }
+
+    // Бонус аугментации nano_hands (+15% ремонт для инженера)
+    if (crewMember.augmentation) {
+        const augEffect = AUGMENTATIONS[crewMember.augmentation]?.effect;
+        if (augEffect?.repairBonus) {
+            repairAmount = Math.floor(repairAmount * (1 + augEffect.repairBonus));
+        }
     }
 
     const maxHealth =
@@ -358,13 +376,21 @@ const processHealAssignment = (
     get: () => GameStore,
 ): void => {
     let healAmount: number = Math.floor(
-        (ASSIGNMENT_BASES.HEAL_AMOUNT + (crewMember.level ?? 1)) *
+        (ASSIGNMENT_BASES.HEAL_AMOUNT + (crewMember.level ?? 1) - 1) *
             getTaskBonusMultiplier(crewMember),
     );
 
     // Расовый бонус к лечению
     if (crewRace?.crewBonuses.heal) {
         healAmount = Math.floor(healAmount * (1 + crewRace.crewBonuses.heal));
+    }
+
+    // Бонус аугментации accelerated_regen (+15% лечение для медика)
+    if (crewMember.augmentation) {
+        const augEffect = AUGMENTATIONS[crewMember.augmentation]?.effect;
+        if (augEffect?.healingBonus) {
+            healAmount = Math.floor(healAmount * (1 + augEffect.healingBonus));
+        }
     }
 
     const crewToHeal = get().crew.filter(
@@ -458,8 +484,8 @@ const processResearchAssignment = (
     currentModule: Module,
     get: () => GameStore,
 ): void => {
-    // Проверяем есть ли лаборатория в модуле
-    if (currentModule.type !== "lab") {
+    // Проверяем есть ли лаборатория в модуле (включая гибридные)
+    if (!LAB_MODULE_TYPES.includes(currentModule.type)) {
         get().addLog(
             `${crewMember.name}: Для исследований нужна лаборатория`,
             "warning",
@@ -489,6 +515,7 @@ const PATROL_LOCATION_CONFIG: Record<
     boss: { chance: 0.05, min: 5, max: 10 },
     storm: { chance: 0.05, min: 5, max: 10 },
     distress_signal: { chance: 0.08, min: 5, max: 15 },
+    derelict_ship: { chance: 0.15, min: 10, max: 30 },
     _default: { chance: 0.05, min: 5, max: 10 },
 };
 
@@ -552,8 +579,10 @@ export const processMedicalModule = (
     const crew = get().crew;
     const modules = get().ship.modules;
 
-    // Находим все АКТИВНЫЕ медотсеки (отфильтрованы отключенные)
-    const medicalModules = getActiveModules(modules, "medical");
+    // Находим все АКТИВНЫЕ медотсеки (включая гибридные модули с лечением)
+    const medicalModules = modules.filter(
+        (m) => (m.type === "medical" || m.type === "bio_research_lab" || m.type === "habitat_module") && isModuleActive(m),
+    );
 
     if (medicalModules.length === 0) return;
 

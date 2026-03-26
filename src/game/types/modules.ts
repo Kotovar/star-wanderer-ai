@@ -13,8 +13,13 @@ export type ModuleType =
     | "drill"
     | "ai_core"
     | "lab"
-    | "quarters"    // Living quarters — extra crew slots
-    | "repair_bay"; // Repair bay — drones repair damaged modules each turn
+    | "quarters"         // Living quarters — extra crew slots
+    | "repair_bay"       // Repair bay — drones repair damaged modules each turn
+    // Hybrid modules (craftable via blueprints from derelict ships)
+    | "bio_research_lab" // Lab + Medical: research output + passive healing
+    | "pulse_drive"      // Reactor + Engine: power output + fuel efficiency
+    | "habitat_module"   // Medical + Quarters: healing + crew capacity
+    | "deep_survey_array"; // Lab + Scanner: research output + scan range
 
 export type WeaponType =
     | "kinetic"
@@ -28,6 +33,7 @@ export type WeaponType =
 
 export type WeaponTypeTotal = WeaponType | "total";
 export type PartialModuleType = Exclude<ModuleType, "weaponShed">;
+export type HybridModuleType = "bio_research_lab" | "pulse_drive" | "habitat_module" | "deep_survey_array";
 export type WeaponCounts = {
     [K in WeaponType]: number;
 };
