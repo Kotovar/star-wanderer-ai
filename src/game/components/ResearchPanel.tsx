@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useGameStore } from "@/game/store";
 import {
     RESEARCH_TREE,
@@ -730,49 +730,60 @@ export function ResearchPanel() {
 
     const [selectedTech, setSelectedTech] = useState<TechnologyId | null>(null);
 
-    const scientists = crew.filter(
-        (c: CrewMember) => c.profession === "scientist",
+    const scientists = useMemo(
+        () => crew.filter((c: CrewMember) => c.profession === "scientist"),
+        [crew],
     );
-    const hasLab = ship.modules.some(
-        (m: Module) =>
-            LAB_MODULE_TYPES.includes(m.type) &&
-            m.health > 0 &&
-            !m.disabled &&
-            !m.manualDisabled,
+    const hasLab = useMemo(
+        () =>
+            ship.modules.some(
+                (m: Module) =>
+                    LAB_MODULE_TYPES.includes(m.type) &&
+                    m.health > 0 &&
+                    !m.disabled &&
+                    !m.manualDisabled,
+            ),
+        [ship],
     );
     const canResearch = hasLab && scientists.length > 0;
 
-    const getResourceQty = (type: string): number => {
-        let qty =
-            research?.resources[type as keyof typeof research.resources] ?? 0;
-        if (type === "rare_minerals") {
-            const tg = (ship.tradeGoods as TradeGood[]).find(
-                (g) => g.item === "rare_minerals",
-            );
-            qty += tg?.quantity ?? 0;
-        }
-        return qty;
-    };
+    const getResourceQty = useCallback(
+        (type: string): number => {
+            let qty =
+                research?.resources[
+                    type as keyof typeof research.resources
+                ] ?? 0;
+            if (type === "rare_minerals") {
+                const tg = (ship.tradeGoods as TradeGood[]).find(
+                    (g) => g.item === "rare_minerals",
+                );
+                qty += tg?.quantity ?? 0;
+            }
+            return qty;
+        },
+        [research, ship],
+    );
 
-    const researchedTechs = research?.researchedTechs ?? [];
+    const researchedTechs = useMemo(
+        () => research?.researchedTechs ?? [],
+        [research],
+    );
     const discoveredTechs = research?.discoveredTechs ?? [];
     const activeResearch = research?.activeResearch ?? null;
 
-    // Проверка, можно ли начать исследование конкретной технологии
-    const canStartResearch = (tech: Technology): boolean => {
-        if (!canResearch) return false;
-        // Проверка кредитов
-        if (credits < tech.credits) return false;
-        // Проверка ресурсов
-        for (const [type, needed] of Object.entries(tech.resources)) {
-            if (getResourceQty(type) < (needed ?? 0)) return false;
-        }
-        return true;
-    };
+    const canStartResearch = useCallback(
+        (tech: Technology): boolean => {
+            if (!canResearch) return false;
+            if (credits < tech.credits) return false;
+            for (const [type, needed] of Object.entries(tech.resources)) {
+                if (getResourceQty(type) < (needed ?? 0)) return false;
+            }
+            return true;
+        },
+        [canResearch, credits, getResourceQty],
+    );
 
-    const sciencePerTurn = (() => {
-        // Используем функцию calculateResearchOutput для правильного расчёта
-        // с учётом бонусов от технологий (research_speed)
+    const sciencePerTurn = useMemo(() => {
         const labs = ship.modules.filter(
             (m: Module) =>
                 LAB_MODULE_TYPES.includes(m.type) &&
@@ -785,9 +796,8 @@ export function ResearchPanel() {
             0,
         );
 
-        // Бонус от учёных (не более одного на лабораторию)
         let scientistBonus = 0;
-        const cappedScientists = scientists
+        const cappedScientists = [...scientists]
             .sort((a: CrewMember, b: CrewMember) => {
                 if (
                     (a.assignment === "research") !==
@@ -814,7 +824,6 @@ export function ResearchPanel() {
             scientistBonus += scientistContribution;
         });
 
-        // Бонус от технологий (research_speed)
         const techSpeedBonus = researchedTechs.reduce((sum, techId) => {
             const tech = RESEARCH_TREE[techId];
             return (
@@ -830,18 +839,19 @@ export function ResearchPanel() {
             totalOutput += Math.floor(totalOutput * techSpeedBonus);
         }
 
-        // Бонус аугментации memory_core (+20% для учёного)
         cappedScientists.forEach((s: CrewMember) => {
             if (s.augmentation) {
                 const augEffect = AUGMENTATIONS[s.augmentation]?.effect;
                 if (augEffect?.researchSpeedBonus) {
-                    totalOutput += Math.floor(totalOutput * augEffect.researchSpeedBonus);
+                    totalOutput += Math.floor(
+                        totalOutput * augEffect.researchSpeedBonus,
+                    );
                 }
             }
         });
 
         return totalOutput;
-    })();
+    }, [ship, scientists, researchedTechs]);
 
     const selectedTechnology = selectedTech
         ? RESEARCH_TREE[selectedTech]

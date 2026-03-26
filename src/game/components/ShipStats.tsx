@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { getTotalEvasion } from "@/game/slices";
 import { useGameStore } from "@/game/store";
 import {
@@ -57,122 +58,142 @@ export function ShipStats() {
         ARTIFACT_TYPES.DARK_SHIELD,
     );
 
-    const mergeBonus = getMergeEffectsBonus(crew, ship.modules);
-    const activeShieldModules = ship.modules.filter(
-        (m) => m.type === "shield" && m.health > 0 && !m.disabled,
+    const mergeBonus = useMemo(
+        () => getMergeEffectsBonus(crew, ship.modules),
+        [crew, ship],
     );
-    let shieldRegen = activeShieldModules.reduce(
-        (sum, m) => sum + (m.shieldRegen ?? 4),
-        0,
-    );
-    // Бонус регенерации от планетарных эффектов (Кристаллины)
-    shieldRegen += ship.bonusShieldRegen ?? 0;
-    // Добавляем регенерацию от "Тёмного Щита" с учётом бонусов науки и ритуалов
-    if (darkShield) {
-        const artifactRegen = getArtifactShieldRegen(
-            darkShield,
-            useGameStore.getState(),
+    const shieldRegen = useMemo(() => {
+        const activeShieldModules = ship.modules.filter(
+            (m) => m.type === "shield" && m.health > 0 && !m.disabled,
         );
-        shieldRegen += artifactRegen;
-    }
-    if (shieldRegen > 0) {
-        // Расовый трейт void_shield (+5% за каждого члена экипажа Рождённых в Пустоте)
-        let raceMultiplier = 0;
-        crew.forEach((c) => {
-            const race = RACES[c.race];
-            const shieldTrait = race?.specialTraits?.find(
-                (trait) => trait.effects.shieldRegen,
-            );
-            if (shieldTrait?.effects.shieldRegen) {
-                raceMultiplier += Number(shieldTrait.effects.shieldRegen) / 100;
+        let regen = activeShieldModules.reduce(
+            (sum, m) => sum + (m.shieldRegen ?? 4),
+            0,
+        );
+        regen += ship.bonusShieldRegen ?? 0;
+        if (darkShield) {
+            regen += getArtifactShieldRegen(darkShield, useGameStore.getState());
+        }
+        if (regen > 0) {
+            let raceMultiplier = 0;
+            crew.forEach((c) => {
+                const race = RACES[c.race];
+                const shieldTrait = race?.specialTraits?.find(
+                    (trait) => trait.effects.shieldRegen,
+                );
+                if (shieldTrait?.effects.shieldRegen) {
+                    raceMultiplier +=
+                        Number(shieldTrait.effects.shieldRegen) / 100;
+                }
+            });
+            if (raceMultiplier > 0) {
+                regen = Math.floor(regen * (1 + raceMultiplier));
             }
-        });
-        if (raceMultiplier > 0) {
-            shieldRegen = Math.floor(shieldRegen * (1 + raceMultiplier));
+            if (shieldRegenerator) {
+                const regenBoost = getArtifactEffectValue(
+                    shieldRegenerator,
+                    useGameStore.getState(),
+                );
+                regen = Math.floor(regen * (1 + regenBoost));
+            }
+            if (mergeBonus.shieldRegenBonus) {
+                regen = Math.floor(
+                    regen * (1 + mergeBonus.shieldRegenBonus / 100),
+                );
+            }
         }
-        if (shieldRegenerator) {
-            const regenBoost = getArtifactEffectValue(
-                shieldRegenerator,
-                useGameStore.getState(),
-            );
-            shieldRegen = Math.floor(shieldRegen * (1 + regenBoost));
-        }
-        if (mergeBonus.shieldRegenBonus) {
-            shieldRegen = Math.floor(
-                shieldRegen * (1 + mergeBonus.shieldRegenBonus / 100),
-            );
-        }
-    }
+        return regen;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ship, crew, artifacts, research, mergeBonus]);
 
     // Ремонт модулей за ход: исследования + активные артефакты
     const researchRepair = getTechBonusSum(research, "nanite_repair");
-    const gameState = useGameStore.getState();
-    const naniteArtifact = findActiveArtifact(
-        artifacts,
-        ARTIFACT_TYPES.NANITE_HULL,
-    );
-    const autoRepairArtifact = findActiveArtifact(
-        artifacts,
-        ARTIFACT_TYPES.PARASITIC_NANITES,
-    );
-
-    const artifactRepair =
-        (naniteArtifact
-            ? getArtifactEffectValue(naniteArtifact, gameState)
-            : 0) +
-        (autoRepairArtifact
-            ? getArtifactEffectValue(autoRepairArtifact, gameState)
-            : 0);
-    const moduleRepairPercent = researchRepair + artifactRepair;
+    const moduleRepairPercent = useMemo(() => {
+        const gs = useGameStore.getState();
+        const naniteArtifact = findActiveArtifact(
+            artifacts,
+            ARTIFACT_TYPES.NANITE_HULL,
+        );
+        const autoRepairArtifact = findActiveArtifact(
+            artifacts,
+            ARTIFACT_TYPES.PARASITIC_NANITES,
+        );
+        const artifactRepair =
+            (naniteArtifact ? getArtifactEffectValue(naniteArtifact, gs) : 0) +
+            (autoRepairArtifact
+                ? getArtifactEffectValue(autoRepairArtifact, gs)
+                : 0);
+        return researchRepair + artifactRepair;
+    }, [artifacts, researchRepair]);
 
     const totalPower = getTotalPower();
     const totalConsumption = getTotalConsumption();
     const available = totalPower - totalConsumption;
-    const damage = getTotalDamage();
-    // prismatic_lens: лазерный бонус от любого члена экипажа с аугментацией
-    const laserDamageBonus = crew.reduce((bonus, c) => {
-        if (c.augmentation) {
-            const augEffect = AUGMENTATIONS[c.augmentation]?.effect;
-            if (augEffect?.laserDamageBonus) return bonus + augEffect.laserDamageBonus;
-        }
-        return bonus;
-    }, 0);
-    const displayLaserDamage = laserDamageBonus > 0
-        ? Math.floor(damage.laser * (1 + laserDamageBonus))
-        : damage.laser;
-    // Применяем бонус стрелка для отображения (как в реальной атаке)
-    const hasGunnerInBay =
-        crew.some(
-            (c) =>
-                c.profession === "gunner" &&
-                ship.modules.some(
-                    (m) => m.type === "weaponbay" && m.id === c.moduleId,
-                ),
-        ) || crew.some((c) => c.combatAssignment === "targeting");
-    const laserBonusDelta = displayLaserDamage - damage.laser;
-    const displayDamageTotal = hasGunnerInBay
-        ? Math.floor((damage.total + laserBonusDelta) * COMBAT_DAMAGE_MODIFIERS.GUNNER_BONUS)
-        : damage.total + laserBonusDelta;
+    const { displayLaserDamage, displayDamageTotal, damage } = useMemo(() => {
+        const dmg = getTotalDamage();
+        const laserDamageBonus = crew.reduce((bonus, c) => {
+            if (c.augmentation) {
+                const augEffect = AUGMENTATIONS[c.augmentation]?.effect;
+                if (augEffect?.laserDamageBonus)
+                    return bonus + augEffect.laserDamageBonus;
+            }
+            return bonus;
+        }, 0);
+        const laserDisplay =
+            laserDamageBonus > 0
+                ? Math.floor(dmg.laser * (1 + laserDamageBonus))
+                : dmg.laser;
+        const hasGunnerInBay =
+            crew.some(
+                (c) =>
+                    c.profession === "gunner" &&
+                    ship.modules.some(
+                        (m) => m.type === "weaponbay" && m.id === c.moduleId,
+                    ),
+            ) || crew.some((c) => c.combatAssignment === "targeting");
+        const laserBonusDelta = laserDisplay - dmg.laser;
+        const damageTotal = hasGunnerInBay
+            ? Math.floor(
+                  (dmg.total + laserBonusDelta) *
+                      COMBAT_DAMAGE_MODIFIERS.GUNNER_BONUS,
+              )
+            : dmg.total + laserBonusDelta;
+        return {
+            damage: dmg,
+            displayLaserDamage: laserDisplay,
+            displayDamageTotal: damageTotal,
+        };
+    }, [crew, ship, getTotalDamage]);
     const crewCapacity = getCrewCapacity();
+    const oxygenRequiredCount = useMemo(
+        () =>
+            crew.filter((c) => RACES[c.race]?.requiresOxygen !== false).length,
+        [crew],
+    );
 
     // Calculate hull stats
-    const maxHull = ship.modules.reduce(
-        (s, m) => s + (m.maxHealth || m.health),
-        0,
+    const { maxHull, currentHull } = useMemo(
+        () => ({
+            maxHull: ship.modules.reduce(
+                (s, m) => s + (m.maxHealth || m.health),
+                0,
+            ),
+            currentHull: ship.modules.reduce((s, m) => s + m.health, 0),
+        }),
+        [ship],
     );
-    const currentHull = ship.modules.reduce((s, m) => s + m.health, 0);
-    // Use ship.armor which includes Crystal Armor artifact bonus
-    // Add crystalline crew flat defense bonus (+0.5 per crew member)
-    let crystallineDefense = 0;
-    crew.filter((c) => c.race === "crystalline").forEach((c) => {
-        const armorTrait = RACES[c.race]?.specialTraits?.find(
-            (trait) => trait.id === "crystal_armor",
-        );
-        if (armorTrait?.effects.moduleDefense) {
-            crystallineDefense += Number(armorTrait.effects.moduleDefense);
-        }
-    });
-    const totalDefense = (ship.armor || 0) + Math.floor(crystallineDefense);
+    const totalDefense = useMemo(() => {
+        let crystallineDefense = 0;
+        crew.filter((c) => c.race === "crystalline").forEach((c) => {
+            const armorTrait = RACES[c.race]?.specialTraits?.find(
+                (trait) => trait.id === "crystal_armor",
+            );
+            if (armorTrait?.effects.moduleDefense) {
+                crystallineDefense += Number(armorTrait.effects.moduleDefense);
+            }
+        });
+        return (ship.armor || 0) + Math.floor(crystallineDefense);
+    }, [ship, crew]);
 
     // Get engine level from modules
     const engines = getActiveModules(ship.modules, "engine");
@@ -186,95 +207,97 @@ export function ShipStats() {
     // COMBAT STATS CALCULATION
     // ═══════════════════════════════════════════════════════════════
 
-    // Calculate total crit chance (base + artifacts + traits)
-    let totalCritChance = BASE_CRIT_CHANCE;
-    const criticalMatrix = findActiveArtifact(
-        artifacts,
-        ARTIFACT_TYPES.CRITICAL_MATRIX,
-    );
-
-    if (criticalMatrix) {
-        totalCritChance += getArtifactEffectValue(criticalMatrix, gameState);
-    }
-
-    // critBonus от трейтов и аугментаций: только стрелок в оружейном отсеке
-    const weaponBayIds = new Set(
-        ship.modules.filter((m) => m.type === "weaponbay").map((m) => m.id),
-    );
-    crew.forEach((c) => {
-        if (c.profession === "gunner" && weaponBayIds.has(c.moduleId)) {
-            c.traits?.forEach((trait) => {
-                totalCritChance += trait.effect?.critBonus ?? 0;
-            });
-            if (c.augmentation) {
-                totalCritChance += AUGMENTATIONS[c.augmentation]?.effect?.critBonus ?? 0;
-            }
+    const { totalCritChance, totalCritDamage } = useMemo(() => {
+        const gs = useGameStore.getState();
+        let critChance = BASE_CRIT_CHANCE;
+        const criticalMatrix = findActiveArtifact(
+            artifacts,
+            ARTIFACT_TYPES.CRITICAL_MATRIX,
+        );
+        if (criticalMatrix) {
+            critChance += getArtifactEffectValue(criticalMatrix, gs);
         }
-    });
+        const weaponBayIds = new Set(
+            ship.modules
+                .filter((m) => m.type === "weaponbay")
+                .map((m) => m.id),
+        );
+        crew.forEach((c) => {
+            if (c.profession === "gunner" && weaponBayIds.has(c.moduleId)) {
+                c.traits?.forEach((trait) => {
+                    critChance += trait.effect?.critBonus ?? 0;
+                });
+                if (c.augmentation) {
+                    critChance +=
+                        AUGMENTATIONS[c.augmentation]?.effect?.critBonus ?? 0;
+                }
+            }
+        });
 
-    // Calculate crit damage multiplier (base + artifacts)
-    let totalCritDamage = BASE_CRIT_MULTIPLIER;
-    const overloadMatrix = findActiveArtifact(
-        artifacts,
-        ARTIFACT_TYPES.OVERLOAD_MATRIX,
-    );
+        let critDmg = BASE_CRIT_MULTIPLIER;
+        const overloadMatrix = findActiveArtifact(
+            artifacts,
+            ARTIFACT_TYPES.OVERLOAD_MATRIX,
+        );
+        if (overloadMatrix) {
+            critDmg += getArtifactEffectValue(overloadMatrix, gs);
+        }
+        return { totalCritChance: critChance, totalCritDamage: critDmg };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ship, crew, artifacts, research]); // research: getArtifactEffectValue reads state.research internally
 
-    if (overloadMatrix) {
-        totalCritDamage += getArtifactEffectValue(overloadMatrix, gameState);
-    }
+    const { finalAccuracy, accuracyModifier } = useMemo(() => {
+        const equippedWeaponTypes = new Set(
+            ship.modules
+                .filter(
+                    (m) =>
+                        m.type === "weaponbay" &&
+                        !m.disabled &&
+                        !m.manualDisabled &&
+                        m.health > 0,
+                )
+                .flatMap((m) => m.weapons ?? [])
+                .filter(Boolean)
+                .map((w) => w.type),
+        );
+        const relevantAccuracies = (
+            Object.entries(BASE_ACCURACY) as [WeaponType, number][]
+        ).filter(([type]) => equippedWeaponTypes.has(type));
+        const baseAccuracy =
+            relevantAccuracies.length > 0
+                ? relevantAccuracies.reduce((s, [, v]) => s + v, 0) /
+                  relevantAccuracies.length
+                : (BASE_ACCURACY.laser +
+                      BASE_ACCURACY.kinetic +
+                      BASE_ACCURACY.missile) /
+                  3;
+        const modifier = computeAccuracyModifier({
+            ship,
+            crew,
+            artifacts,
+        } as GameState);
+        return {
+            finalAccuracy: Math.max(0.5, Math.min(1.0, baseAccuracy + modifier)),
+            accuracyModifier: modifier,
+        };
+    }, [ship, crew, artifacts]);
 
-    // Accuracy — shared calculation with combat logic
-    // Base accuracy: average over actually equipped weapon types
-    const equippedWeaponTypes = new Set(
-        ship.modules
-            .filter(
-                (m) =>
-                    m.type === "weaponbay" &&
-                    !m.disabled &&
-                    !m.manualDisabled &&
-                    m.health > 0,
-            )
-            .flatMap((m) => m.weapons ?? [])
-            .filter(Boolean)
-            .map((w) => w.type),
-    );
-    const relevantAccuracies = (
-        Object.entries(BASE_ACCURACY) as [WeaponType, number][]
-    ).filter(([type]) => equippedWeaponTypes.has(type));
-    const baseAccuracy =
-        relevantAccuracies.length > 0
-            ? relevantAccuracies.reduce((s, [, v]) => s + v, 0) /
-              relevantAccuracies.length
-            : (BASE_ACCURACY.laser +
-                  BASE_ACCURACY.kinetic +
-                  BASE_ACCURACY.missile) /
-              3;
-    const accuracyModifier = computeAccuracyModifier({
-        ship,
-        crew,
-        artifacts,
-    } as GameState);
-    const finalAccuracy = Math.max(
-        0.5,
-        Math.min(1.0, baseAccuracy + accuracyModifier),
-    );
-    // ═══════════════════════════════════════════════════════════════
-    // REFLECT CHANCE (Mirror Shield)
-    // ═══════════════════════════════════════════════════════════════
-    const mirrorShield = artifacts.find(
-        (a) => a.effect.type === "damage_reflect" && a.effect.active,
-    );
-    const reflectChance = mirrorShield
-        ? getArtifactEffectValue(mirrorShield, gameState) * 100
-        : 0;
-
-    // ═══════════════════════════════════════════════════════════════
-    // CREDIT BONUS (Black Box artifact)
-    // ═══════════════════════════════════════════════════════════════
-    const blackBox = findActiveArtifact(artifacts, ARTIFACT_TYPES.BLACK_BOX);
-    const creditBonus = blackBox
-        ? Math.round(getArtifactEffectValue(blackBox, gameState) * 100)
-        : 0;
+    const { reflectChance, creditBonus } = useMemo(() => {
+        const gs = useGameStore.getState();
+        const mirrorShield = artifacts.find(
+            (a) => a.effect.type === "damage_reflect" && a.effect.active,
+        );
+        const blackBox = findActiveArtifact(artifacts, ARTIFACT_TYPES.BLACK_BOX);
+        return {
+            reflectChance: mirrorShield
+                ? getArtifactEffectValue(mirrorShield, gs) * 100
+                : 0,
+            creditBonus: blackBox
+                ? Math.round(getArtifactEffectValue(blackBox, gs) * 100)
+                : 0,
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [artifacts, research]); // research: getArtifactEffectValue reads state.research internally
 
     return (
         <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4 mt-2.5">
@@ -333,19 +356,12 @@ export function ShipStats() {
                 </span>
                 <span
                     className={
-                        crew.filter(
-                            (c) => RACES[c.race]?.requiresOxygen !== false,
-                        ).length <= getOxygenCapacity()
+                        oxygenRequiredCount <= getOxygenCapacity()
                             ? "text-[#00ff41]"
                             : "text-[#ff0040]"
                     }
                 >
-                    {
-                        crew.filter(
-                            (c) => RACES[c.race]?.requiresOxygen !== false,
-                        ).length
-                    }
-                    /{getOxygenCapacity()}
+                    {oxygenRequiredCount}/{getOxygenCapacity()}
                 </span>
             </div>
             <div className="flex justify-between mb-2 text-sm">
@@ -501,7 +517,7 @@ export function ShipStats() {
                             {Math.round(
                                 getArtifactEffectValue(
                                     shieldRegenerator,
-                                    gameState,
+                                    useGameStore.getState(),
                                 ) * 100,
                             )}
                             %)
