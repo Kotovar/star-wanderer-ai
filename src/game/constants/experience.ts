@@ -14,6 +14,7 @@ export const CONTRACT_REWARDS = {
     diplomacy: { baseExp: 15 },
     rescueSurvivors: { baseExp: 15 },
     research: { baseExp: 20 },
+    gas_dive: { baseExp: 22 },
 } as const;
 
 // ============================================================================

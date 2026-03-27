@@ -175,6 +175,7 @@ export const selectLocation = (
                 get().completeScanContracts();
                 get().handleDiplomacyContracts(locationIdx);
                 get().handleSupplyRunContracts(locationIdx);
+                get().handleGasDiveContracts(locationIdx);
             }
             break;
 

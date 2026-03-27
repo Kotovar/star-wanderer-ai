@@ -294,6 +294,7 @@ export interface GameScanContracts {
     completeScanContracts: () => void;
     handleDiplomacyContracts: (locationIdx: number) => void;
     handleSupplyRunContracts: (locationIdx: number) => void;
+    handleGasDiveContracts: (locationIdx: number) => void;
 }
 
 export interface GameManagement {

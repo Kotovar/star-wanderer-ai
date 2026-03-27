@@ -58,6 +58,8 @@ export function surfaceDive(set: SetState, get: () => GameStore): void {
         }
     }
 
+    const membranesCollected = boostedRewards.void_membrane;
+
     set((s) => {
         // Add research resources to player inventory
         const newResources = { ...s.research.resources };
@@ -65,6 +67,21 @@ export function surfaceDive(set: SetState, get: () => GameStore): void {
             newResources[type as keyof typeof newResources] =
                 (newResources[type as keyof typeof newResources] ?? 0) + qty;
         }
+
+        // Track void_membrane progress toward active gas_dive contracts
+        const updatedContracts =
+            membranesCollected > 0
+                ? s.activeContracts.map((c) =>
+                      c.type === "gas_dive"
+                          ? {
+                                ...c,
+                                collectedMembranes:
+                                    (c.collectedMembranes ?? 0) +
+                                    membranesCollected,
+                            }
+                          : c,
+                  )
+                : s.activeContracts;
 
         // Update location with cooldown
         const updateLocations = (locs: NonNullable<typeof s.currentSector>["locations"]) =>
@@ -77,6 +94,7 @@ export function surfaceDive(set: SetState, get: () => GameStore): void {
         return {
             activeDive: null,
             turn: s.turn + 1,
+            activeContracts: updatedContracts,
             research: {
                 ...s.research,
                 resources: newResources,

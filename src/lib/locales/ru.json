@@ -586,6 +586,7 @@
         "type_bounty": "Охота за головой",
         "type_diplomacy": "Дипломатия",
         "type_rescue_survivors": "Спасение выживших",
+        "type_gas_dive": "Глубинный зондаж",
         "task_what": "Что сделать",
         "task_where": "Где сдать",
         "task_destination": "Куда доставить",
@@ -677,6 +678,9 @@
         "name_rescue_void": "👁️ Путешествие в Пустоту",
         "name_mining": "💎 Поиск артефактов",
         "name_supply": "📦 Поставка: {{cargo}}",
+        "name_gas_dive": "🪸 Сбор мембран пустоты",
+        "gas_dive_progress": "Собрано: {{current}}/{{total}} мембран",
+        "gas_dive_task": "Погрузиться в газовые планеты и собрать {{count}} мембран пустоты",
         "reward_short": "💰 Награда: {{reward}}₢",
         "cargo": "Груз",
         "desc_bounty_kryl": "🦎 Дуэль чести",
@@ -687,7 +691,8 @@
         "desc_patrol_xeno": "🦠 Сбор биообразцов",
         "desc_combat_generic": "⚔ Зачистка сектора",
         "desc_research_generic": "🔬 Исследование аномалий",
-        "desc_bounty_generic": "🎯 Охота на пирата"
+        "desc_bounty_generic": "🎯 Охота на пирата",
+        "desc_gas_dive": "🪸 Сбор мембран пустоты"
     },
     "locations": {
         "enemy_ship": "Вражеский корабль",

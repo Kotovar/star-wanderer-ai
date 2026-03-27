@@ -79,6 +79,11 @@ export function ContractsList() {
                         String(contract.visitedAnomalies || 0),
                     )
                     .replace("{{total}}", String(contract.requiresAnomalies));
+            case "gas_dive": {
+                const collected = contract.collectedMembranes ?? 0;
+                const required = contract.requiredMembranes ?? 1;
+                return `🪸 ${t("contracts.gas_dive_progress", { current: String(collected), total: String(required) })}`;
+            }
             default:
                 return t("contracts.default");
         }
@@ -139,6 +144,8 @@ export function ContractsList() {
                 return t("contracts.name_supply", {
                     cargo: t("contracts.cargo"),
                 });
+            case "gas_dive":
+                return t("contracts.name_gas_dive");
             default:
                 return contract.desc;
         }
@@ -488,6 +495,35 @@ export function ContractsList() {
                         },
                     ],
                 };
+            case "gas_dive": {
+                const gdCollected = contract.collectedMembranes ?? 0;
+                const gdRequired = contract.requiredMembranes ?? 1;
+                const gdDone = gdCollected >= gdRequired;
+                return {
+                    type: t("contracts.type_gas_dive"),
+                    tasks: [
+                        {
+                            label: t("contracts.task_what"),
+                            value: t("contracts.gas_dive_task").replace(
+                                "{{count}}",
+                                String(gdRequired),
+                            ),
+                        },
+                        {
+                            label: t("contracts.task_progress"),
+                            value: gdDone
+                                ? t("contracts.completed")
+                                : `${gdCollected} / ${gdRequired}`,
+                        },
+                        {
+                            label: t("contracts.task_where"),
+                            value: contract.sourcePlanetName
+                                ? `${contract.sourceSectorName}, ${contract.sourcePlanetName}`
+                                : contract.sourceSectorName ?? t("contracts.unknown"),
+                        },
+                    ],
+                };
+            }
             case "diplomacy":
                 return {
                     type: t("contracts.type_diplomacy"),

@@ -19,6 +19,13 @@ const REWARD = {
     combat:      { base: 600,                range: 300 },
     bounty:      { threatMult: 300,          baseFlat: 300 },
     delivery:    { base: [200, 400, 700],    range: [200, 300, 400] },
+    gas_dive:    { base: [600, 1000, 1500],  range: [200, 300, 500] },
+} as const;
+
+/** Кол-во мембран для gas_dive по тирам */
+const GAS_DIVE_MEMBRANES = {
+    min:   [2, 4, 7],
+    range: [2, 3, 4],
 } as const;
 
 /** Количество тонн груза для delivery по тирам */
@@ -483,6 +490,40 @@ export const generatePlanetContracts = (
                         REWARD.bounty.baseFlat +
                         threat * REWARD.bounty.threatMult +
                         Math.floor(Math.random() * (threat * REWARD.bounty.threatMult)),
+                };
+            },
+        },
+        {
+            type: "gas_dive" as const,
+            gen: (): Contract | null => {
+                // Only generate if there are gas planets anywhere in reachable sectors
+                const hasGasPlanets = [...allSectors.filter((s) => s.tier < 4)].some((s) =>
+                    s.locations.some((l) => l.type === "gas_giant"),
+                );
+                if (!hasGasPlanets) return null;
+
+                const tier = sector.tier ?? 1;
+                const requiredMembranes =
+                    GAS_DIVE_MEMBRANES.min[tier - 1] +
+                    Math.floor(Math.random() * GAS_DIVE_MEMBRANES.range[tier - 1]);
+                const rewardBase = REWARD.gas_dive.base[tier - 1];
+                const rewardRange = REWARD.gas_dive.range[tier - 1];
+
+                const sourcePlanet = sector.locations.find(
+                    (l) => l.type === "planet" && l.id === planetId,
+                );
+
+                return {
+                    id: `c-${planetId}-gdive-${Date.now()}-${Math.random()}`,
+                    type: "gas_dive",
+                    desc: "contracts.desc_gas_dive",
+                    sourcePlanetId: planetId,
+                    sourcePlanetName: sourcePlanet?.name,
+                    sourceSectorName: sector.name,
+                    sourceType: "planet",
+                    requiredMembranes,
+                    collectedMembranes: 0,
+                    reward: rewardBase + Math.floor(Math.random() * rewardRange),
                 };
             },
         },

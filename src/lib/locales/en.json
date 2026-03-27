@@ -586,6 +586,7 @@
         "type_bounty": "Bounty Hunt",
         "type_diplomacy": "Diplomacy",
         "type_rescue_survivors": "Rescue Survivors",
+        "type_gas_dive": "Deep Probe Survey",
         "task_what": "What to do",
         "task_where": "Where to complete",
         "task_destination": "Destination",
@@ -677,6 +678,9 @@
         "name_rescue_void": "👁️ Journey to the Void",
         "name_mining": "💎 Artifact Hunt",
         "name_supply": "📦 Supply: {{cargo}}",
+        "name_gas_dive": "🪸 Void Membrane Collection",
+        "gas_dive_progress": "Collected: {{current}}/{{total}} membranes",
+        "gas_dive_task": "Dive into gas planets and collect {{count}} void membranes",
         "reward_short": "💰 Reward: {{reward}}₢",
         "cargo": "Cargo",
         "desc_bounty_kryl": "🦎 Duel of Honor",
@@ -687,7 +691,8 @@
         "desc_patrol_xeno": "🦠 Bio-Sample Collection",
         "desc_combat_generic": "⚔ Sector Clearance",
         "desc_research_generic": "🔬 Anomaly Research",
-        "desc_bounty_generic": "🎯 Pirate Hunt"
+        "desc_bounty_generic": "🎯 Pirate Hunt",
+        "desc_gas_dive": "🪸 Void Membrane Collection"
     },
     "locations": {
         "enemy_ship": "Enemy ship",

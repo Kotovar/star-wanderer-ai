@@ -58,6 +58,9 @@ export interface Contract {
     // For synthetic race quest
     requiresTechResearch?: boolean; // Complete by researching any technology
     requiredTechTier?: number; // Minimum tech tier required (1 = any, 2 = tier 2+, 3 = tier 3+)
+    // For gas dive quest
+    requiredMembranes?: number; // Total void_membrane to collect across dives
+    collectedMembranes?: number; // Progress: void_membrane accumulated since accepting
 }
 
 export type ContractType =
@@ -71,7 +74,8 @@ export type ContractType =
     | "supply_run"
     | "diplomacy"
     | "rescueSurvivors"
-    | "research";
+    | "research"
+    | "gas_dive";
 
 // Special delivery goods (quest items - given to player, not trade goods)
 export type DeliveryGoods =
