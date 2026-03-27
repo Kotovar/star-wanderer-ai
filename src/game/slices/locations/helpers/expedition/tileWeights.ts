@@ -3,14 +3,13 @@ import type { ExploreTileType } from "@/game/types/exploration";
 
 type TileWeightMap = Record<ExploreTileType, number>;
 
-// exit tile is always exactly 1, inserted after weighted generation
+// Base weights for tile types (exit removed - player can end expedition manually)
 const DEFAULT_WEIGHTS: TileWeightMap = {
     market: 5,
     lab: 4,
     ruins: 4,
     incident: 3,
     artifact: 2,
-    exit: 0,
 };
 
 const RACE_WEIGHTS: Record<RaceId, TileWeightMap> = {
@@ -20,7 +19,6 @@ const RACE_WEIGHTS: Record<RaceId, TileWeightMap> = {
         ruins: 4,
         incident: 2,
         artifact: 2,
-        exit: 0,
     },
     synthetic: {
         market: 3,
@@ -28,7 +26,6 @@ const RACE_WEIGHTS: Record<RaceId, TileWeightMap> = {
         ruins: 3,
         incident: 1,
         artifact: 4,
-        exit: 0,
     },
     xenosymbiont: {
         market: 3,
@@ -36,7 +33,6 @@ const RACE_WEIGHTS: Record<RaceId, TileWeightMap> = {
         ruins: 3,
         incident: 5, // mutagenic hazards
         artifact: 2,
-        exit: 0,
     },
     krylorian: {
         market: 4,
@@ -44,7 +40,6 @@ const RACE_WEIGHTS: Record<RaceId, TileWeightMap> = {
         ruins: 6,
         incident: 6, // combat drills and dangers
         artifact: 2,
-        exit: 0,
     },
     voidborn: {
         market: 2,
@@ -52,7 +47,6 @@ const RACE_WEIGHTS: Record<RaceId, TileWeightMap> = {
         ruins: 6,
         incident: 3,
         artifact: 6, // mystic artifacts
-        exit: 0,
     },
     crystalline: {
         market: 4,
@@ -60,7 +54,6 @@ const RACE_WEIGHTS: Record<RaceId, TileWeightMap> = {
         ruins: 3,
         incident: 2,
         artifact: 4,
-        exit: 0,
     },
 };
 
@@ -73,8 +66,9 @@ export function pickWeightedTile(
     weights: TileWeightMap,
     exclude?: ExploreTileType[],
 ): ExploreTileType {
-    const entries = (Object.entries(weights) as [ExploreTileType, number][])
-        .filter(([type, w]) => w > 0 && (!exclude || !exclude.includes(type)));
+    const entries = (
+        Object.entries(weights) as [ExploreTileType, number][]
+    ).filter(([type, w]) => w > 0 && (!exclude || !exclude.includes(type)));
 
     const total = entries.reduce((sum, [, w]) => sum + w, 0);
     let roll = Math.random() * total;

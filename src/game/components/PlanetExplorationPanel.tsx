@@ -6,17 +6,22 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useTranslation } from "@/lib/useTranslation";
 import type { ExploreTileType } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES, TRADE_GOODS } from "@/game/constants";
+import { ExpeditionMapCanvas } from "./ExpeditionMapCanvas";
 
-const TILE_COLORS: Record<
-    ExploreTileType,
-    { border: string; bg: string; icon: string }
-> = {
-    market: { border: "#00ff41", bg: "rgba(0,255,65,0.08)", icon: "🏪" },
-    lab: { border: "#4488ff", bg: "rgba(68,136,255,0.08)", icon: "🔬" },
-    ruins: { border: "#ffb000", bg: "rgba(255,176,0,0.08)", icon: "🏚️" },
-    incident: { border: "#ff0040", bg: "rgba(255,0,64,0.08)", icon: "⚠️" },
-    artifact: { border: "#9933ff", bg: "rgba(153,51,255,0.08)", icon: "✨" },
-    exit: { border: "#00d4ff", bg: "rgba(0,212,255,0.08)", icon: "🚪" },
+const TILE_COLORS: Record<ExploreTileType, { border: string; bg: string }> = {
+    market: { border: "#00ff41", bg: "rgba(0,255,65,0.08)" },
+    lab: { border: "#4488ff", bg: "rgba(68,136,255,0.08)" },
+    ruins: { border: "#ffb000", bg: "rgba(255,176,0,0.08)" },
+    incident: { border: "#ff0040", bg: "rgba(255,0,64,0.08)" },
+    artifact: { border: "#9933ff", bg: "rgba(153,51,255,0.08)" },
+};
+
+const TILE_ICONS: Record<ExploreTileType, string> = {
+    market: "🏪",
+    lab: "🔬",
+    ruins: "🏚️",
+    incident: "⚠️",
+    artifact: "✨",
 };
 
 export function PlanetExplorationPanel() {
@@ -93,64 +98,19 @@ export function PlanetExplorationPanel() {
                 </DialogContent>
             </Dialog>
 
-            {/* Grid — квадратные клетки через padding-bottom трюк */}
-            <div className="max-w-150 mx-auto w-full">
-                <div className="grid grid-cols-5 gap-0.5">
-                    {grid.map((tile, idx) => {
-                        if (!tile.revealed) {
-                            return (
-                                <div
-                                    key={idx}
-                                    className="relative w-full"
-                                    style={{ paddingBottom: "100%" }}
-                                >
-                                    <button
-                                        onClick={() =>
-                                            canReveal &&
-                                            revealExpeditionTile(idx)
-                                        }
-                                        disabled={!canReveal}
-                                        className={`absolute inset-0 flex items-center justify-center border transition-all ${
-                                            canReveal
-                                                ? "border-[#333] bg-[rgba(255,255,255,0.02)] hover:border-[#555] hover:bg-[rgba(255,255,255,0.05)] cursor-pointer"
-                                                : "border-[#222] bg-[rgba(0,0,0,0.3)] cursor-default opacity-50"
-                                        }`}
-                                    >
-                                        <span className="text-[#333] text-xs font-bold">
-                                            ?
-                                        </span>
-                                    </button>
-                                </div>
-                            );
-                        }
-
-                        const style = TILE_COLORS[tile.type];
-                        return (
-                            <div
-                                key={idx}
-                                className="relative w-full"
-                                style={{ paddingBottom: "100%" }}
-                            >
-                                <div
-                                    className="absolute inset-0 flex items-center justify-center border"
-                                    style={{
-                                        borderColor: style.border,
-                                        backgroundColor: style.bg,
-                                    }}
-                                    title={t(`planet_panel.tile_${tile.type}`)}
-                                >
-                                    <span className="text-base leading-none">
-                                        {style.icon}
-                                    </span>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
+            {/* Grid - Canvas-based planet map */}
+            <div className="flex justify-center">
+                <ExpeditionMapCanvas
+                    grid={grid}
+                    apRemaining={apRemaining}
+                    apTotal={apTotal}
+                    canReveal={canReveal}
+                    onTileClick={(idx) => revealExpeditionTile(idx)}
+                />
             </div>
 
             {/* Tile legend */}
-            <div className="flex flex-wrap gap-2 text-xs">
+            <div className="flex flex-wrap gap-2 text-xs justify-center">
                 {(
                     Object.entries(TILE_COLORS) as [
                         ExploreTileType,
@@ -162,7 +122,7 @@ export function PlanetExplorationPanel() {
                         style={{ color: style.border }}
                         className="flex items-center gap-0.5"
                     >
-                        {style.icon} {t(`planet_panel.tile_${type}`)}
+                        {TILE_ICONS[type]} {t(`planet_panel.tile_${type}`)}
                     </span>
                 ))}
             </div>

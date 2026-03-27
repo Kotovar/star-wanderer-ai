@@ -7,15 +7,6 @@ import {
 } from "./constants";
 import { getWeightsForRace, pickWeightedTile } from "./tileWeights";
 
-function shuffle<T>(arr: T[]): T[] {
-    const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-}
-
 export function generateExpeditionGrid(
     raceId: RaceId | undefined,
 ): ExploreTile[] {
@@ -23,9 +14,9 @@ export function generateExpeditionGrid(
     const types: ExploreTileType[] = [];
     let artifactCount = 0;
 
-    // Fill 24 tiles with weighted random types (tile 24 reserved for exit)
-    for (let i = 0; i < EXPEDITION_TILE_COUNT - 1; i++) {
-        const exclude: ExploreTileType[] = ["exit"];
+    // Fill all 25 tiles with weighted random types (exit tile removed)
+    for (let i = 0; i < EXPEDITION_TILE_COUNT; i++) {
+        const exclude: ExploreTileType[] = [];
         if (artifactCount >= EXPEDITION_MAX_ARTIFACTS) exclude.push("artifact");
 
         const type = pickWeightedTile(weights, exclude);
@@ -33,14 +24,8 @@ export function generateExpeditionGrid(
         types.push(type);
     }
 
-    // Add exactly one exit tile
-    types.push("exit");
-
-    // Shuffle so exit is not always last
-    const shuffled = shuffle(types);
-
     // Build grid
-    return shuffled.map((type, i) => ({
+    return types.map((type, i) => ({
         type,
         revealed: false,
         x: i % EXPEDITION_GRID_SIZE,

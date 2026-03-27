@@ -8,7 +8,7 @@ export type DiveDepth = 1 | 2 | 3 | 4;
 export interface DiveEventChoice {
     labelKey: string;
     rewards: { type: ResearchResourceType; quantity: number }[];
-    damageChance?: number;  // 0–100 %
+    damageChance?: number; // 0–100 %
     damageMin?: number;
     damageMax?: number;
     probeLossChance?: number; // 0–100 % chance the probe is destroyed, ending the dive
@@ -39,8 +39,7 @@ export type ExploreTileType =
     | "lab"
     | "ruins"
     | "incident"
-    | "artifact"
-    | "exit";
+    | "artifact";
 
 export interface ExploreTile {
     type: ExploreTileType;

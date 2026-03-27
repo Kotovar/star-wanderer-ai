@@ -270,16 +270,6 @@ export function revealExpeditionTile(
             }
             break;
         }
-
-        case "exit": {
-            set((s) => ({
-                activeExpedition: s.activeExpedition
-                    ? { ...s.activeExpedition, finished: true }
-                    : null,
-            }));
-            get().addLog("🚪 Найден выход. Экспедиция завершается.", "info");
-            break;
-        }
     }
 
     // Auto-end if AP ran out and no ruins pending
