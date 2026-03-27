@@ -5,6 +5,7 @@ import {
     handleDiplomacyContracts as handleDiplomacyContractsFn,
     handleSupplyRunContracts as handleSupplyRunContractsFn,
     handleGasDiveContracts as handleGasDiveContractsFn,
+    handleExpeditionSurveyContracts as handleExpeditionSurveyContractsFn,
     acceptContract as acceptContractFn,
     completeDeliveryContract as completeDeliveryContractFn,
     cancelContract as cancelContractFn,
@@ -59,6 +60,11 @@ export interface ContractsSlice {
      * Завершает контракты на сбор мембран при возврате на исходную планету
      */
     handleGasDiveContracts: (locationIdx: number) => void;
+
+    /**
+     * Завершает контракты на планетарное исследование при возврате на исходную планету
+     */
+    handleExpeditionSurveyContracts: (locationIdx: number) => void;
 }
 
 /**
@@ -117,6 +123,14 @@ export const createContractsSlice = (
         if (!loc || loc.type !== "planet") return;
 
         handleGasDiveContractsFn(loc, set, get);
+    },
+
+    handleExpeditionSurveyContracts: (locationIdx: number) => {
+        const state = get();
+        const loc = state.currentSector?.locations[locationIdx];
+        if (!loc || loc.type !== "planet") return;
+
+        handleExpeditionSurveyContractsFn(loc, set, get);
     },
 
     acceptContract: (contract) => {

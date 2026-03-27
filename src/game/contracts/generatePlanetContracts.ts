@@ -19,7 +19,8 @@ const REWARD = {
     combat:      { base: 600,                range: 300 },
     bounty:      { threatMult: 300,          baseFlat: 300 },
     delivery:    { base: [200, 400, 700],    range: [200, 300, 400] },
-    gas_dive:    { base: [600, 1000, 1500],  range: [200, 300, 500] },
+    gas_dive:          { base: [600, 1000, 1500],  range: [200, 300, 500] },
+    expedition_survey: { base: [700, 1100, 1700],  range: [300, 400, 500] },
 } as const;
 
 /** Кол-во мембран для gas_dive по тирам */
@@ -27,6 +28,9 @@ const GAS_DIVE_MEMBRANES = {
     min:   [2, 4, 7],
     range: [2, 3, 4],
 } as const;
+
+/** Мин. значимых клеток (руины+лаб+артефакт) для expedition_survey по тирам */
+const EXPEDITION_DISCOVERIES = [3, 5, 7] as const;
 
 /** Количество тонн груза для delivery по тирам */
 const DELIVERY_QTY_BY_TIER = [10, 20, 30] as const;
@@ -490,6 +494,44 @@ export const generatePlanetContracts = (
                         REWARD.bounty.baseFlat +
                         threat * REWARD.bounty.threatMult +
                         Math.floor(Math.random() * (threat * REWARD.bounty.threatMult)),
+                };
+            },
+        },
+        {
+            type: "expedition_survey" as const,
+            gen: (): Contract | null => {
+                // Find sectors that have inhabited (non-empty) planets other than the source
+                const candidatePlanets = availableSectors.flatMap((s) =>
+                    s.locations
+                        .filter((l) => l.type === "planet" && !l.isEmpty)
+                        .map((l) => ({ planet: l, sector: s })),
+                );
+                if (candidatePlanets.length === 0) return null;
+
+                const pick = candidatePlanets[Math.floor(Math.random() * candidatePlanets.length)];
+                const tier = sector.tier ?? 1;
+                const requiredDiscoveries = EXPEDITION_DISCOVERIES[tier - 1];
+                const sourcePlanet = sector.locations.find(
+                    (l) => l.type === "planet" && l.id === planetId,
+                );
+
+                return {
+                    id: `c-${planetId}-exped-${Date.now()}-${Math.random()}`,
+                    type: "expedition_survey",
+                    desc: "contracts.desc_expedition_survey",
+                    sourcePlanetId: planetId,
+                    sourcePlanetName: sourcePlanet?.name,
+                    sourceSectorName: sector.name,
+                    sourceType: "planet",
+                    targetPlanetId: pick.planet.id,
+                    targetPlanetName: pick.planet.name,
+                    targetSector: pick.sector.id,
+                    targetSectorName: pick.sector.name,
+                    requiredDiscoveries,
+                    expeditionDone: false,
+                    reward:
+                        REWARD.expedition_survey.base[tier - 1] +
+                        Math.floor(Math.random() * REWARD.expedition_survey.range[tier - 1]),
                 };
             },
         },

@@ -128,10 +128,33 @@ export function CrewList() {
                                         style={{ width: `${healthPct}%` }}
                                     />
                                 </div>
-                                <span className="text-[#555] text-[9px] `shrink-0 tabular-nums">
-                                    {member.health}
+                                <span className="text-[#555] text-[9px] shrink-0 tabular-nums">
+                                    ♥{member.health}
                                 </span>
                             </div>
+
+                            {/* Morale bar */}
+                            {race?.hasHappiness !== false && (
+                                <div className="flex items-center gap-1">
+                                    <div className="flex-1 h-1 bg-[rgba(0,0,0,0.6)] rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full ${
+                                                member.happiness < 30
+                                                    ? "bg-[#ff0040]"
+                                                    : member.happiness < 60
+                                                      ? "bg-[#ffb000]"
+                                                      : "bg-[#00ff41]"
+                                            }`}
+                                            style={{
+                                                width: `${(member.happiness / (member.maxHappiness || 100)) * 100}%`,
+                                            }}
+                                        />
+                                    </div>
+                                    <span className="text-[#555] text-[9px] shrink-0 tabular-nums">
+                                        ☺{member.happiness}
+                                    </span>
+                                </div>
+                            )}
 
                             {/* EXP bar */}
                             <div className="flex items-center gap-1">

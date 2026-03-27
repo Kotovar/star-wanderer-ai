@@ -84,6 +84,16 @@ export function ContractsList() {
                 const required = contract.requiredMembranes ?? 1;
                 return `🪸 ${t("contracts.gas_dive_progress", { current: String(collected), total: String(required) })}`;
             }
+            case "expedition_survey": {
+                const revealed = contract.tilesRevealed ?? 0;
+                const required = contract.requiredDiscoveries ?? 1;
+                if (contract.expeditionDone) {
+                    return `🗺️ ${t("contracts.expedition_done")}`;
+                }
+                return revealed > 0
+                    ? `🗺️ ${t("contracts.expedition_tiles_progress", { current: String(revealed), total: String(required) })}`
+                    : `🗺️ ${t("contracts.expedition_pending", { planet: contract.targetPlanetName ?? "?", sector: contract.targetSectorName ?? "?" })}`;
+            }
             default:
                 return t("contracts.default");
         }
@@ -146,6 +156,8 @@ export function ContractsList() {
                 });
             case "gas_dive":
                 return t("contracts.name_gas_dive");
+            case "expedition_survey":
+                return t("contracts.name_expedition_survey");
             default:
                 return contract.desc;
         }
@@ -514,6 +526,39 @@ export function ContractsList() {
                             value: gdDone
                                 ? t("contracts.completed")
                                 : `${gdCollected} / ${gdRequired}`,
+                        },
+                        {
+                            label: t("contracts.task_where"),
+                            value: contract.sourcePlanetName
+                                ? `${contract.sourceSectorName}, ${contract.sourcePlanetName}`
+                                : contract.sourceSectorName ?? t("contracts.unknown"),
+                        },
+                    ],
+                };
+            }
+            case "expedition_survey": {
+                const expRequired = contract.requiredDiscoveries ?? 1;
+                return {
+                    type: t("contracts.type_expedition_survey"),
+                    tasks: [
+                        {
+                            label: t("contracts.task_what"),
+                            value: t("contracts.expedition_survey_task").replace(
+                                "{{count}}",
+                                String(expRequired),
+                            ),
+                        },
+                        {
+                            label: t("contracts.task_target"),
+                            value: contract.targetPlanetName
+                                ? `${contract.targetPlanetName} (${contract.targetSectorName})`
+                                : contract.targetSectorName ?? t("contracts.unknown"),
+                        },
+                        {
+                            label: t("contracts.task_progress"),
+                            value: contract.expeditionDone
+                                ? t("contracts.completed")
+                                : `${contract.tilesRevealed ?? 0} / ${contract.requiredDiscoveries ?? 1}`,
                         },
                         {
                             label: t("contracts.task_where"),

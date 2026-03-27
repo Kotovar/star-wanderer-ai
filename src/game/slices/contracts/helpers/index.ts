@@ -3,6 +3,7 @@ export * from "./completeScanContracts";
 export * from "./handleDiplomacyContracts";
 export * from "./handleSupplyRunContracts";
 export * from "./handleGasDiveContracts";
+export * from "./handleExpeditionSurveyContracts";
 export * from "./acceptContract";
 export * from "./completeDeliveryContract";
 export * from "./cancelContract";

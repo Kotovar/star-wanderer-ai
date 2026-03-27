@@ -63,17 +63,49 @@ export function revealExpeditionTile(
     const newApRemaining = expedition.apRemaining - 1;
     const newRevealedCount = expedition.revealedCount + 1;
 
-    // Update grid/ap first
-    set((s) => ({
-        activeExpedition: s.activeExpedition
-            ? {
-                  ...s.activeExpedition,
-                  grid: newGrid,
-                  apRemaining: newApRemaining,
-                  revealedCount: newRevealedCount,
-              }
-            : null,
-    }));
+    // Update grid/ap and track expedition_survey contract progress
+    const expeditionPlanetId = expedition.planetId;
+    set((s) => {
+        const updatedContracts = s.activeContracts.map((c) => {
+            if (
+                c.type === "expedition_survey" &&
+                c.targetPlanetId === expeditionPlanetId &&
+                !c.expeditionDone
+            ) {
+                const newTiles = (c.tilesRevealed ?? 0) + 1;
+                const done = newTiles >= (c.requiredDiscoveries ?? 1);
+                return { ...c, tilesRevealed: newTiles, expeditionDone: done };
+            }
+            return c;
+        });
+
+        return {
+            activeExpedition: s.activeExpedition
+                ? {
+                      ...s.activeExpedition,
+                      grid: newGrid,
+                      apRemaining: newApRemaining,
+                      revealedCount: newRevealedCount,
+                  }
+                : null,
+            activeContracts: updatedContracts,
+        };
+    });
+
+    // Log when a contract just became fulfilled
+    const justFulfilled = get().activeContracts.filter(
+        (c) =>
+            c.type === "expedition_survey" &&
+            c.targetPlanetId === expeditionPlanetId &&
+            c.expeditionDone &&
+            (c.tilesRevealed ?? 0) === (c.requiredDiscoveries ?? 1),
+    );
+    for (const c of justFulfilled) {
+        get().addLog(
+            `📋 Данные собраны (${c.tilesRevealed}/${c.requiredDiscoveries} клеток). Вернитесь на ${c.sourceSectorName} для сдачи задания.`,
+            "info",
+        );
+    }
 
     const planet = state.currentSector?.locations.find(
         (l) => l.id === expedition.planetId,

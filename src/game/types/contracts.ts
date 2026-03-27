@@ -61,6 +61,10 @@ export interface Contract {
     // For gas dive quest
     requiredMembranes?: number; // Total void_membrane to collect across dives
     collectedMembranes?: number; // Progress: void_membrane accumulated since accepting
+    // For expedition survey quest
+    requiredDiscoveries?: number; // Total tiles to reveal on target planet
+    tilesRevealed?: number;       // Progress: tiles revealed so far
+    expeditionDone?: boolean;     // Set when tilesRevealed >= requiredDiscoveries
 }
 
 export type ContractType =
@@ -75,7 +79,8 @@ export type ContractType =
     | "diplomacy"
     | "rescueSurvivors"
     | "research"
-    | "gas_dive";
+    | "gas_dive"
+    | "expedition_survey";
 
 // Special delivery goods (quest items - given to player, not trade goods)
 export type DeliveryGoods =

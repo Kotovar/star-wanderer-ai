@@ -773,6 +773,16 @@ export function PlanetPanel() {
                                                             },
                                                         );
                                                     })()}
+                                                {c.type === "expedition_survey" &&
+                                                    t("contracts.desc_expedition_survey_offer", {
+                                                        planet: c.targetPlanetName ?? "",
+                                                        sector: c.targetSectorName ?? "",
+                                                        count: String(c.requiredDiscoveries ?? 1),
+                                                    })}
+                                                {c.type === "gas_dive" &&
+                                                    t("contracts.desc_gas_dive_offer", {
+                                                        count: String(c.requiredMembranes ?? 1),
+                                                    })}
                                             </div>
 
                                             {/* Where to turn in */}
@@ -815,6 +825,8 @@ export function PlanetPanel() {
                                                     t(
                                                         "contracts.turn_in_supply",
                                                     )}
+                                                {(c.type === "expedition_survey" || c.type === "gas_dive") &&
+                                                    t("contracts.turn_in_here")}
                                             </div>
 
                                             {/* Reward */}
