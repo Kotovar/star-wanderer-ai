@@ -914,7 +914,8 @@
         "no_effects": "No active effects",
         "close": "CLOSE",
         "description": "Effects last several turns and expire automatically",
-        "turns": "turn(s)"
+        "turns": "turn(s)",
+        "level_short": "Lv"
     },
     "help": {
         "title": "📖 LOGBOOK",
@@ -1059,7 +1060,15 @@
         "hybrid_module_bio_lab": "🧬 Bio Research Lab — lab + medical: +10 science/turn, +8 HP/turn",
         "hybrid_module_pulse_drive": "⚡ Pulse Drive — reactor + engine: +8 energy, reduced fuel consumption",
         "hybrid_module_medical_corps": "🏥 Medical Corps — medical + quarters: +8 HP/turn, +6 crew slots",
-        "hybrid_module_deep_survey": "🔭 Deep Survey Array — lab + scanner: +8 science/turn, +3 scan range"
+        "hybrid_module_deep_survey": "🔭 Deep Survey Array — lab + scanner: +8 science/turn, +3 scan range",
+        "gas_giant_dive_title": "🪸 Gas Giant Dive",
+        "gas_giant_dive_1": "Send a probe into the gas giant's atmosphere to collect resources",
+        "gas_giant_dive_2": "4 depth levels: the deeper you go, the more valuable the resources, but higher the risk",
+        "gas_giant_dive_3": "Collect void membranes to complete contracts and research",
+        "gas_giant_dive_4": "Random events can reward resources or damage the probe",
+        "gas_giant_depths": "Depths: Upper Atmosphere → Cloud Belt → Abyssal Zone → Core",
+        "gas_giant_events": "Events: bioluminescent organisms, thermal pockets, gas currents, electrical discharges",
+        "gas_giant_cooldown": "After retrieval, the probe requires time to recharge"
     },
     "station": {
         "shop": "Shop",

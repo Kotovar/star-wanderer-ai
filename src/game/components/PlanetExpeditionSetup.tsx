@@ -85,10 +85,12 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                                     {member.name}
                                 </div>
                                 <div className="text-xs opacity-70">
-                                    {member.profession} · Lv{member.level} ·{" "}
-                                    {member.health}/{member.maxHealth} HP
+                                    {t(`professions.${member.profession}`)} ·{" "}
+                                    {t("effects.level_short")}
+                                    {member.level} · {member.health}/
+                                    {member.maxHealth} HP
                                     {fatigued &&
-                                        ` · 😴 ${member.expeditionFatigue} ходов`}
+                                        ` · 😴 ${member.expeditionFatigue} ${t("effects.turns")}`}
                                 </div>
                             </div>
                             {selected && !fatigued && (

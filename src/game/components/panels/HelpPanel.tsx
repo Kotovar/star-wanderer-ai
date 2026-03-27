@@ -434,6 +434,32 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                         </ul>
                     </section>
 
+                    {/* Gas Giants */}
+                    <section>
+                        <h3 className="text-[#00ff41] font-bold text-lg mb-2">
+                            {t("locations.gas_giant")}
+                        </h3>
+                        <p className="text-[#aaa] text-xs mb-2">
+                            {t("gas_giant.description")}
+                        </p>
+                        <div className="mb-2 p-2 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] text-xs">
+                            <div className="text-[#00ff41] font-bold mb-1">
+                                {t("help.gas_giant_dive_title")}
+                            </div>
+                            <ul className="text-[#888] space-y-0.5">
+                                <li>{t("help.gas_giant_dive_1")}</li>
+                                <li>{t("help.gas_giant_dive_2")}</li>
+                                <li>{t("help.gas_giant_dive_3")}</li>
+                                <li>{t("help.gas_giant_dive_4")}</li>
+                            </ul>
+                        </div>
+                        <ul className="text-[#888] text-xs space-y-1">
+                            <li>{t("help.gas_giant_depths")}</li>
+                            <li>{t("help.gas_giant_events")}</li>
+                            <li>{t("help.gas_giant_cooldown")}</li>
+                        </ul>
+                    </section>
+
                     {/* Augmentations */}
                     <section>
                         <h3 className="text-[#9933ff] font-bold text-lg mb-2">

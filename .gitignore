@@ -32,7 +32,7 @@ next-env.d.ts
 Thumbs.db
 
 .vscode/*
-
+.qwen/*
 .idea/
 
 *.pem
