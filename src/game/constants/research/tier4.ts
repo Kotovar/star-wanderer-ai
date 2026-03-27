@@ -18,14 +18,20 @@ export const TIER4_TECHS: Partial<Record<TechnologyId, Technology>> = {
             quantum_crystals: 8,
             energy_samples: 20,
             ancient_data: 15,
+            void_membrane: 15,
         },
-        credits: 1800,
+        credits: 2000,
         scienceCost: 900,
         bonuses: [
             {
                 type: "shield_strength",
                 value: 0.3,
                 description: "+30% к мощности щитов",
+            },
+            {
+                type: "shield_regen",
+                value: 0.25,
+                description: "+25% к регенерации щитов",
             },
             {
                 type: "weapon_damage",

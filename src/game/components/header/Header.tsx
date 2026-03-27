@@ -22,6 +22,7 @@ export function GameHeader() {
     const [showResearchModal, setShowResearchModal] = useState(false);
     const turn = useGameStore((s) => s.turn);
     const credits = useGameStore((s) => s.credits);
+    const probes = useGameStore((s) => s.probes);
     const currentSector = useGameStore((s) => s.currentSector);
     const artifacts = useGameStore((s) => s.artifacts);
     const activeEffects = useGameStore((s) => s.activeEffects);
@@ -147,6 +148,12 @@ export function GameHeader() {
                             {isNaN(credits) ? 0 : credits}
                         </span>
                     </div>
+                    {probes > 0 && (
+                        <div className="flex items-center gap-1 md:gap-2" title="Исследовательские зонды">
+                            <span className="text-[#7b4fff]">🔬</span>
+                            <span className="font-bold text-[#7b4fff]">{probes}</span>
+                        </div>
+                    )}
                     <div className="flex items-center gap-1 md:gap-2">
                         <span className="text-[#ffb000] hidden md:inline">
                             {t("game.sector")}:

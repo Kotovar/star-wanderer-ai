@@ -9,7 +9,8 @@ export type ResearchResourceType =
     | "alien_biology"
     | "energy_samples"
     | "quantum_crystals"
-    | "tech_salvage";
+    | "tech_salvage"
+    | "void_membrane";
 
 /**
  * Technology ID - unique identifier for each technology in the research tree
@@ -52,7 +53,8 @@ export type TechnologyId =
     | "storm_shields"
     | "modular_arsenal"
     | "ion_cannon"
-    | "cybernetic_augmentation";
+    | "cybernetic_augmentation"
+    | "bio_membrane_shield";
 
 /**
  * Research tier - technology level
@@ -104,7 +106,8 @@ export type ResearchBonusType =
     | "artifact_effect_boost"
     | "weapon_slots"
     | "crew_damage_reduction"
-    | "expedition_ap";
+    | "expedition_ap"
+    | "shield_regen";
 
 /**
  * Research resource in cargo

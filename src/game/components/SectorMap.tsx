@@ -235,6 +235,8 @@ function getScannerInfo(
         } else if (loc.type === "asteroid_belt") {
             info.push(`⛏️ ${t("locations.asteroid_belt")}`);
             info.push(`🏷️ ${t("locations.tier")}: ${loc.asteroidTier || 1}`);
+        } else if (loc.type === "gas_giant") {
+            info.push(`🪸 ${t("locations.gas_giant")}`);
         }
 
         return info;
@@ -263,6 +265,8 @@ function getScannerInfo(
             info.push(`🌏 ${t("locations.planet")}`);
         } else if (loc.type === "asteroid_belt") {
             info.push(`🪨 ${t("locations.asteroid_belt")}`);
+        } else if (loc.type === "gas_giant") {
+            info.push(`🪸 ${t("locations.gas_giant")}`);
         } else {
             info.push(`❓ ${t("locations.unknown_object")}`);
         }
@@ -320,6 +324,15 @@ function getScannerInfo(
             info.push(`✓ Исследовано`);
         } else {
             info.push(`📐 Возможен чертёж модуля`);
+        }
+        return info;
+    }
+    if (loc.type === "gas_giant") {
+        info.push(`🪸 ${getLocationName(loc.name, t)}`);
+        if (loc.gasGiantLastDiveAt !== undefined) {
+            info.push(`✓ ${t("locations.gas_giant")}`);
+        } else {
+            info.push(`🔬 ${t("gas_giant.start_dive")}`);
         }
         return info;
     }
@@ -688,6 +701,8 @@ export function SectorMap() {
                 } else {
                     drawDerelictShip(ctx, x, y, loc, completed);
                 }
+            } else if (loc.type === "gas_giant") {
+                drawGasGiant(ctx, x, y, loc, completed);
             } else if (loc.type === "boss") {
                 if (canScan || isRevealed || hasTelepathy) {
                     drawAncientBoss(ctx, x, y, loc, completed);
@@ -735,12 +750,16 @@ export function SectorMap() {
             // Check for visited station (opened station panel at least once)
             const isVisitedStation = loc.type === "station" && loc.visited;
 
+            // Check for dived gas planet
+            const isDivedGasPlanet =
+                loc.type === "gas_giant" && loc.gasGiantLastDiveAt !== undefined;
+
             const translatedName = getLocationName(loc.name, t);
             const finalDisplayName = isUnknownShip
                 ? t("sector_map.unknown_ship")
                 : isExploredEmptyPlanet
                   ? `${translatedName} ${t("sector_map.explored")}`
-                  : isVisitedColonizedPlanet || isVisitedStation
+                  : isVisitedColonizedPlanet || isVisitedStation || isDivedGasPlanet
                     ? `${translatedName} ${t("sector_map.visited")}`
                     : displayName;
 
@@ -750,11 +769,14 @@ export function SectorMap() {
                 ? "#888"
                 : isExploredEmptyPlanet ||
                     isVisitedColonizedPlanet ||
-                    isVisitedStation
+                    isVisitedStation ||
+                    isDivedGasPlanet
                   ? "#00ff41"
                   : loc.type === "planet" && !loc.isEmpty
                     ? "#ffb000"
-                    : "#00ff41";
+                    : loc.type === "gas_giant"
+                      ? "#cc88ff"
+                      : "#00ff41";
             ctx.fillText(finalDisplayName, x, y + 28);
 
             if (completed) {
@@ -4254,6 +4276,77 @@ function drawDerelictShip(
         ctx.fillStyle = accentColor;
         ctx.beginPath();
         ctx.arc(x + r - 3, y - r + 3, 3, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
+}
+
+function drawGasGiant(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    loc: Location,
+    completed: boolean,
+) {
+    const isDived = !!loc.gasGiantLastDiveAt;
+    ctx.globalAlpha = completed || isDived ? 0.45 : 1;
+
+    const r = 18;
+    const atmosphere = loc.gasGiantAtmosphere ?? "hydrogen";
+
+    const coreColor =
+        atmosphere === "hydrogen"
+            ? "#cc88ff"
+            : atmosphere === "methane"
+              ? "#88ddbb"
+              : atmosphere === "ammonia"
+                ? "#ffdd88"
+                : "#aaddff";
+    const bandColor =
+        atmosphere === "hydrogen"
+            ? "#7b4fff"
+            : atmosphere === "methane"
+              ? "#228855"
+              : atmosphere === "ammonia"
+                ? "#cc8800"
+                : "#3399cc";
+
+    // Sphere gradient
+    const grad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
+    grad.addColorStop(0, coreColor);
+    grad.addColorStop(0.5, bandColor);
+    grad.addColorStop(1, "rgba(5,8,16,0.9)");
+
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Cloud bands clipped to circle
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.fillStyle = `${bandColor}55`;
+    ctx.fillRect(x - r, y - r * 0.55, r * 2, r * 0.28);
+    ctx.fillRect(x - r, y + r * 0.12, r * 2, r * 0.22);
+    ctx.restore();
+
+    // Outer glow ring
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.strokeStyle = coreColor;
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = (completed || isDived ? 0.45 : 1) * 0.6;
+    ctx.stroke();
+
+    // Accent dot if not yet dived
+    if (!isDived && !completed) {
+        ctx.fillStyle = "#ffffff";
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.arc(x + r - 4, y - r + 4, 2.5, 0, Math.PI * 2);
         ctx.fill();
     }
 

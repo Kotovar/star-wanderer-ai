@@ -54,6 +54,11 @@ export const TIER3_TECHS: Partial<Record<TechnologyId, Technology>> = {
                 description: "+30% к щитам",
             },
             {
+                type: "shield_regen",
+                value: 0.15,
+                description: "+15% к регенерации щитов",
+            },
+            {
                 type: "special_ability",
                 value: 0.2,
                 description: "20% шанс поглотить атаку",
@@ -78,8 +83,9 @@ export const TIER3_TECHS: Partial<Record<TechnologyId, Technology>> = {
             quantum_crystals: 3,
             energy_samples: 10,
             rare_minerals: 8,
+            void_membrane: 5,
         },
-        credits: 850,
+        credits: 950,
         scienceCost: 420,
         bonuses: [
             {
@@ -91,6 +97,11 @@ export const TIER3_TECHS: Partial<Record<TechnologyId, Technology>> = {
                 type: "module_health",
                 value: 0.1,
                 description: "+10% к здоровью модулей",
+            },
+            {
+                type: "shield_regen",
+                value: 0.1,
+                description: "+10% к регенерации щитов",
             },
         ],
         icon: "🌪️",
@@ -242,8 +253,9 @@ export const TIER3_TECHS: Partial<Record<TechnologyId, Technology>> = {
             quantum_crystals: 2,
             rare_minerals: 15,
             energy_samples: 8,
+            void_membrane: 10,
         },
-        credits: 800,
+        credits: 900,
         scienceCost: 400,
         bonuses: [
             {

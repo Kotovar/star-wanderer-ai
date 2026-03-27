@@ -68,6 +68,7 @@ export const TIER5_TECHS: Partial<Record<TechnologyId, Technology>> = {
             quantum_crystals: 15,
             energy_samples: 25,
             ancient_data: 30,
+            void_membrane: 25,
         },
         credits: 3000,
         scienceCost: 1000,

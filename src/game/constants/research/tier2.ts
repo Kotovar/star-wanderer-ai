@@ -281,6 +281,36 @@ export const TIER2_TECHS: Partial<Record<TechnologyId, Technology>> = {
         researched: false,
         researchProgress: 0,
     },
+    bio_membrane_shield: {
+        id: "bio_membrane_shield",
+        name: "Биомембранный щит",
+        description:
+            "Живые мембраны газовых гигантов обволакивают генератор щита и отсеки экипажа: +25% к регенерации щитов, −15% урона по экипажу в бою.",
+        tier: 2,
+        category: "biology",
+        prerequisites: ["medbay_upgrade"],
+        resources: { void_membrane: 3, alien_biology: 4 },
+        credits: 700,
+        scienceCost: 280,
+        bonuses: [
+            {
+                type: "shield_regen",
+                value: 0.25,
+                description: "+25% к скорости регенерации щитов",
+            },
+            {
+                type: "crew_damage_reduction",
+                value: 0.15,
+                description: "−15% урона по экипажу в модулях",
+            },
+        ],
+        icon: "🫧",
+        color: "#7b4fff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
     expedition_kits: {
         id: "expedition_kits",
         name: "Комплекты эксипедиции",

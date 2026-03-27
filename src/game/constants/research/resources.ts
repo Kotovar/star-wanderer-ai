@@ -52,4 +52,12 @@ export const RESEARCH_RESOURCES: Record<
         color: "#ff00ff",
         rarity: "common",
     },
+    void_membrane: {
+        id: "void_membrane",
+        name: "Мембрана Пустоты",
+        description: "Органическая мембрана биолюминесцентных существ из глубин газовых гигантов",
+        icon: "🫧",
+        color: "#7b4fff",
+        rarity: "rare",
+    },
 };

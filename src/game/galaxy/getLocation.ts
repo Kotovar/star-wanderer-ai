@@ -1,4 +1,4 @@
-import type { GalaxyTierAll, LocationType, Location } from "@/game/types";
+import type { GalaxyTierAll, LocationType, Location, StarType } from "@/game/types";
 import { LOCATION_CHANCES, LOCATION_TYPE_CHANCES } from "./config";
 import {
     generateAnomaly,
@@ -8,6 +8,7 @@ import {
     generateDistressSignal,
     generateEnemyShip,
     generateFriendlyShip,
+    generateGasGiant,
     generatePlanet,
     generateStation,
     generateStorm,
@@ -20,6 +21,7 @@ const getLocationType = (
     roll: number,
     tier: GalaxyTierAll,
     isBlackHole: boolean,
+    starType?: StarType,
 ): LocationType => {
     if (isBlackHole) {
         // В ЧД-секторах: только аномалии и враги (станций/планет/кораблей нет)
@@ -29,7 +31,7 @@ const getLocationType = (
     }
 
     const chances = LOCATION_CHANCES[`tier${tier}`];
-    const { planet, asteroidBelt, distressSignal, derelictShip } = LOCATION_TYPE_CHANCES;
+    const { planet, asteroidBelt, distressSignal, derelictShip, gasGiant } = LOCATION_TYPE_CHANCES;
 
     const thresholds = {
         station: chances.station,
@@ -67,6 +69,16 @@ const getLocationType = (
             chances.storm +
             distressSignal +
             derelictShip,
+        gasGiant:
+            chances.station +
+            chances.friendlyShip +
+            planet +
+            chances.enemyShip +
+            asteroidBelt +
+            chances.storm +
+            distressSignal +
+            derelictShip +
+            gasGiant,
         boss:
             chances.station +
             chances.friendlyShip +
@@ -76,6 +88,7 @@ const getLocationType = (
             chances.storm +
             distressSignal +
             derelictShip +
+            gasGiant +
             chances.boss,
     };
 
@@ -87,6 +100,8 @@ const getLocationType = (
     if (roll < thresholds.storm) return "storm";
     if (roll < thresholds.distressSignal) return "distress_signal";
     if (roll < thresholds.derelictShip) return "derelict_ship";
+    // Don't spawn a gas_giant location in a sector whose star is already a gas_giant
+    if (roll < thresholds.gasGiant) return starType === "gas_giant" ? "derelict_ship" : "gas_giant";
     if (roll < thresholds.boss) return "boss";
     return "anomaly";
 };
@@ -100,9 +115,10 @@ export const generateLocation = (
     tier: GalaxyTierAll,
     baseDanger: number,
     isBlackHole: boolean,
+    starType?: StarType,
 ): Location => {
     const locType = Math.random();
-    const type = getLocationType(locType, tier, isBlackHole);
+    const type = getLocationType(locType, tier, isBlackHole, starType);
 
     switch (type) {
         case "station":
@@ -126,6 +142,8 @@ export const generateLocation = (
             return generateDistressSignal(sectorIdx, locIdx);
         case "derelict_ship":
             return generateDerelictShip(sectorIdx, locIdx);
+        case "gas_giant":
+            return generateGasGiant(sectorIdx, locIdx);
         case "boss":
             return generateBossOrAnomaly(sectorIdx, locIdx, tier, isBlackHole);
         case "anomaly":

@@ -19,7 +19,7 @@ import type { ResearchData, TechnologyId } from "./research";
 import type { CraftingRecipeId, ModuleRecipeId } from "./crafting";
 import type { ShopItem } from "./shops";
 import type { AugmentationId } from "./augmentations";
-import type { ExpeditionState } from "./exploration";
+import type { DiveState, ExpeditionState } from "./exploration";
 
 export type GameMode =
     | "galaxy_map"
@@ -38,11 +38,13 @@ export type GameMode =
     | "battle_results"
     | "storm_results"
     | "research"
-    | "derelict_ship";
+    | "derelict_ship"
+    | "gas_giant";
 
 export interface GameState {
     turn: number;
     credits: number;
+    probes: number;
     currentSector: Sector | null;
     currentLocation: Location | null;
     gameMode: GameMode;
@@ -103,6 +105,7 @@ export interface GameState {
     moduleRecipes: ModuleRecipeId[]; // One-time module blueprint recipes found by Scout
     pendingSurvivor: CrewMember | null; // Survivor awaiting player accept/decline
     activeExpedition: ExpeditionState | null; // Active planet surface expedition
+    activeDive: DiveState | null; // Active gas giant dive
     settings: {
         animationsEnabled: boolean; // Sector map animations toggle
     };
@@ -234,6 +237,11 @@ export interface GameScouting {
     revealExpeditionTile: (tileIndex: number) => void;
     resolveRuinsChoice: (choiceIndex: number) => void;
     endExpedition: () => void;
+    startDive: (locationId: string) => void;
+    resolveDiveEvent: (choiceIndex: number) => void;
+    diveDeeper: () => void;
+    surfaceDive: () => void;
+    buyProbe: (count: number) => void;
 }
 
 export interface GameDistressSignal {

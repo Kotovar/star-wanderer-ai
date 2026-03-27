@@ -101,6 +101,10 @@ export function ShipStats() {
                     regen * (1 + mergeBonus.shieldRegenBonus / 100),
                 );
             }
+            const techRegenMultiplier = getTechBonusSum(research, "shield_regen");
+            if (techRegenMultiplier > 0) {
+                regen = Math.floor(regen * (1 + techRegenMultiplier));
+            }
         }
         return regen;
         // eslint-disable-next-line react-hooks/exhaustive-deps

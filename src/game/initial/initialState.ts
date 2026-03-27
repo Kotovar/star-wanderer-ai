@@ -111,6 +111,7 @@ const DEBUG_RESEARCHED_TECHS: TechnologyId[] = [
     // "warp_drive",
     // "cybernetic_augmentation",
     // "expedition_kits",
+    // "bio_membrane_shield",
 ];
 
 /**
@@ -127,6 +128,7 @@ const DEBUG_RESEARCHED_TECHS: TechnologyId[] = [
 const baseState: GameState = {
     turn: INITIAL_TURN,
     credits: INITIAL_CREDITS,
+    probes: 1,
     currentSector: sectors[0],
     currentLocation: null,
     gameMode: INITIAL_GAME_MODE,
@@ -197,6 +199,7 @@ const baseState: GameState = {
     moduleRecipes: [],
     pendingSurvivor: null,
     activeExpedition: null,
+    activeDive: null,
     settings: {
         animationsEnabled: true,
     },

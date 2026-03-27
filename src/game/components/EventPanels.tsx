@@ -23,6 +23,7 @@ import { BattleResultsPanel } from "./BattleResultsPanel";
 import { StormResultsPanel } from "./StormResultsPanel";
 import { ResearchPanel } from "./ResearchPanel";
 import { DerelictShipPanel } from "./DerelictShipPanel";
+import { GasGiantPanel } from "./GasGiantPanel";
 
 export function EventDisplay() {
     const gameMode = useGameStore((s) => s.gameMode);
@@ -244,6 +245,9 @@ export function EventDisplay() {
 
         case "derelict_ship":
             return <DerelictShipPanel />;
+
+        case "gas_giant":
+            return <GasGiantPanel />;
 
         case "artifacts":
             return (

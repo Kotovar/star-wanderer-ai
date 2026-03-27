@@ -1,6 +1,39 @@
 import type { Goods } from "./goods";
 import type { ResearchResourceType } from "./research";
 
+// ─── Gas Giant Dive ───────────────────────────────────────────────────────────
+
+export type DiveDepth = 1 | 2 | 3 | 4;
+
+export interface DiveEventChoice {
+    labelKey: string;
+    rewards: { type: ResearchResourceType; quantity: number }[];
+    damageChance?: number;  // 0–100 %
+    damageMin?: number;
+    damageMax?: number;
+    probeLossChance?: number; // 0–100 % chance the probe is destroyed, ending the dive
+}
+
+export interface DiveEvent {
+    titleKey: string;
+    descKey: string;
+    choices: DiveEventChoice[];
+}
+
+export interface DiveRewards {
+    alien_biology: number;
+    rare_minerals: number;
+    void_membrane: number;
+}
+
+export interface DiveState {
+    locationId: string;
+    currentDepth: DiveDepth;
+    rewards: DiveRewards;
+    currentEvent: DiveEvent | null;
+    finished: boolean;
+}
+
 export type ExploreTileType =
     | "market"
     | "lab"

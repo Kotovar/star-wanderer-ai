@@ -69,6 +69,8 @@ export function StationPanel() {
     const sellTradeGood = useGameStore((s) => s.sellTradeGood);
     const hireCrew = useGameStore((s) => s.hireCrew);
     const refuel = useGameStore((s) => s.refuel);
+    const probes = useGameStore((s) => s.probes);
+    const buyProbe = useGameStore((s) => s.buyProbe);
     const getCrewCapacity = useGameStore((s) => s.getCrewCapacity);
     const getCargoCapacity = useGameStore((s) => s.getCargoCapacity);
     const crew = useGameStore((s) => s.crew);
@@ -338,6 +340,8 @@ export function StationPanel() {
                         crewWithMutations={crewWithMutations}
                         onInstallAugmentation={installAugmentation}
                         onRemoveAugmentation={removeAugmentation}
+                        probes={probes}
+                        onBuyProbe={buyProbe}
                     />
                 </TabsContent>
                 {allowsCraft && (

@@ -34,7 +34,8 @@ export type LocationType =
     | "storm"
     | "distress_signal"
     | "boss"
-    | "derelict_ship";
+    | "derelict_ship"
+    | "gas_giant";
 
 export const SHIP_LOCATION_TYPES: LocationType[] = [
     "boss",
@@ -130,6 +131,10 @@ export interface Location {
 
     // Expedition fields
     expeditionCompleted?: boolean; // Surface expedition has been completed (once per planet)
+
+    // Gas giant fields
+    gasGiantAtmosphere?: "hydrogen" | "methane" | "ammonia" | "nitrogen";
+    gasGiantLastDiveAt?: number; // turn when last dive was completed (for cooldown)
 
     // Derelict ship fields
     derelictExplored?: boolean; // Whether this derelict ship has been explored

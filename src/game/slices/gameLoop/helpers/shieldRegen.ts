@@ -3,7 +3,7 @@ import {
     getArtifactEffectValue,
     getArtifactShieldRegen,
 } from "@/game/artifacts";
-import { ARTIFACT_TYPES, RACES } from "@/game/constants";
+import { ARTIFACT_TYPES, RACES, RESEARCH_TREE } from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type { GameState, GameStore, SetState } from "@/game/types";
 
@@ -117,6 +117,14 @@ export const regenerateShields = (
     const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);
     const mergeMultiplier = (mergeBonus.shieldRegenBonus ?? 0) / 100;
 
+    // Бонус от технологий (shield_regen)
+    const techRegenMultiplier = state.research.researchedTechs.reduce((sum, techId) => {
+        const tech = RESEARCH_TREE[techId];
+        return sum + tech.bonuses
+            .filter((b) => b.type === "shield_regen")
+            .reduce((s, b) => s + b.value, 0);
+    }, 0);
+
     // Итоговая ёмкость щита с бонусом от сращивания
     const maxShieldsWithBonus = mergeBonus.shieldCapacity
         ? Math.floor(
@@ -129,7 +137,7 @@ export const regenerateShields = (
 
     // Применяем процентные бонусы к базовой регенерации
     const totalMultiplier =
-        (1 + raceMultiplier + artifactMultiplier + mergeMultiplier) * combatPenalty;
+        (1 + raceMultiplier + artifactMultiplier + mergeMultiplier + techRegenMultiplier) * combatPenalty;
     const totalRegen = Math.floor(baseRegen * totalMultiplier);
 
     // Применяем регенерацию

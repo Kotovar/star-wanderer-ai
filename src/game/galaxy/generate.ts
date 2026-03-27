@@ -409,6 +409,30 @@ export const generateAnomaly = (
 };
 
 /**
+ * Генерирует живой газовый гигант
+ */
+export const generateGasGiant = (
+    sectorIdx: number,
+    locIdx: number,
+): Location => {
+    const atmospheres = [
+        "hydrogen",
+        "methane",
+        "ammonia",
+        "nitrogen",
+    ] as const;
+    const atmosphere =
+        atmospheres[Math.floor(Math.random() * atmospheres.length)];
+
+    return {
+        id: `${sectorIdx}-${locIdx}`,
+        type: "gas_giant",
+        name: `gas_giant_names.${atmosphere}`,
+        gasGiantAtmosphere: atmosphere,
+    };
+};
+
+/**
  * Генерирует покинутый корабль
  */
 export const generateDerelictShip = (

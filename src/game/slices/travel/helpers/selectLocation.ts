@@ -307,5 +307,9 @@ export const selectLocation = (
             });
             break;
         }
+
+        case "gas_giant":
+            set({ gameMode: "gas_giant" });
+            break;
     }
 };

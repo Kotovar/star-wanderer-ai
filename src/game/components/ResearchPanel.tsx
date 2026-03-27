@@ -42,7 +42,6 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
     artifact_study: [0, 8],
     automated_repair: [0, 9.5], // shifted +2 to make room for artifact branch
     medbay_upgrade: [0, 11.5],
-    xenobiology: [1, 12.5],
     // T2 — col 1
     shield_booster: [1, 0],
     ion_drive: [1, 2.2],
@@ -54,6 +53,8 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
     expedition_kits: [1, 9.5], // atmospheric_analysis → here
     cargo_expansion: [1, 10.5],
     crew_training: [1, 11.5],
+    xenobiology: [1, 12.5],
+    bio_membrane_shield: [1, 13.5],
     // T3 — col 2
     phase_shield: [2, 0],
     storm_shields: [2, 1.1], // shield_booster → storm_shields

@@ -194,6 +194,11 @@ export const TECH_TRANSLATIONS: Record<
             description:
                 "Учёный может однократно собрать атмосферные образцы с любой пустой планеты. Тип атмосферы определяет полученные исследовательские ресурсы.",
         },
+        bio_membrane_shield: {
+            name: "Биомембранный щит",
+            description:
+                "Живые мембраны газовых гигантов резонируют с генератором щита и ускоряют его восстановление. +20% к регенерации щитов за ход.",
+        },
         expedition_kits: {
             name: "Комплекты эксипедиции",
             description:
@@ -405,6 +410,11 @@ export const TECH_TRANSLATIONS: Record<
             name: "Atmospheric Analysis",
             description:
                 "A scientist can collect atmospheric samples from any empty planet once. Planet type determines which research resources are gathered.",
+        },
+        bio_membrane_shield: {
+            name: "Bio-Membrane Shield",
+            description:
+                "Living membranes from gas giant depths resonate with the shield generator, accelerating its recovery. +20% to shield regeneration per turn.",
         },
         expedition_kits: {
             name: "Expedition Kits",

@@ -108,6 +108,8 @@ interface ServicesTabProps {
     crewWithMutations: MutationCrewMember[];
     onInstallAugmentation: (crewId: number, augId: AugmentationId) => void;
     onRemoveAugmentation: (crewId: number) => void;
+    probes: number;
+    onBuyProbe: (count: number) => void;
 }
 
 export function ServicesTab({
@@ -138,6 +140,8 @@ export function ServicesTab({
     crewWithMutations,
     onInstallAugmentation,
     onRemoveAugmentation,
+    probes,
+    onBuyProbe,
 }: ServicesTabProps) {
     const fuelNeeded = maxFuel - fuel;
 
@@ -151,6 +155,12 @@ export function ServicesTab({
                 fullRefuelPrice={fullRefuelPrice}
                 credits={credits}
                 onRefuel={refuel}
+            />
+
+            <ProbeSection
+                probes={probes}
+                credits={credits}
+                onBuyProbe={onBuyProbe}
             />
 
             <RepairSection
@@ -197,6 +207,44 @@ export function ServicesTab({
                     onInstall={installCraftedWeapon}
                 />
             )}
+        </div>
+    );
+}
+
+const PROBE_PRICE = 150;
+
+function ProbeSection({
+    probes,
+    credits,
+    onBuyProbe,
+}: {
+    probes: number;
+    credits: number;
+    onBuyProbe: (count: number) => void;
+}) {
+    return (
+        <div className="bg-[rgba(123,79,255,0.05)] border border-[#7b4fff] p-4">
+            <div className="text-[#7b4fff] font-bold mb-2">
+                🔬 Исследовательские зонды
+            </div>
+            <div className="text-sm text-[#00ff41] mb-1">
+                На борту: <span className="font-bold">{probes}</span>
+            </div>
+            <div className="text-xs text-[#888] mb-3">
+                {PROBE_PRICE}₢ за зонд · расходуется при погружении в газовый гигант
+            </div>
+            <div className="flex gap-2">
+                {[1, 3, 5].map((count) => (
+                    <Button
+                        key={count}
+                        onClick={() => onBuyProbe(count)}
+                        disabled={credits < PROBE_PRICE * count}
+                        className="bg-transparent border border-[#7b4fff] text-[#7b4fff] hover:bg-[#7b4fff] hover:text-[#050810] text-xs cursor-pointer disabled:opacity-40 disabled:cursor-default"
+                    >
+                        ×{count} ({PROBE_PRICE * count}₢)
+                    </Button>
+                ))}
+            </div>
         </div>
     );
 }

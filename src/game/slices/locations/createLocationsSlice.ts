@@ -14,6 +14,12 @@ import {
     resolveRuinsChoice as resolveRuinsChoiceHelper,
     endExpedition as endExpeditionHelper,
 } from "./helpers/expedition";
+import {
+    startDive as startDiveHelper,
+    resolveDiveEvent as resolveDiveEventHelper,
+    diveDeeper as diveDeeperHelper,
+    surfaceDive as surfaceDiveHelper,
+} from "./helpers/gasGiant";
 
 /**
  * Интерфейс LocationsSlice
@@ -82,6 +88,21 @@ export interface LocationsSlice {
 
     /** Завершает экспедицию, применяет награды и тратит 1 ход */
     endExpedition: () => void;
+
+    /** Начинает погружение зонда в газовый гигант */
+    startDive: (locationId: string) => void;
+
+    /** Обрабатывает выбор игрока в событии погружения */
+    resolveDiveEvent: (choiceIndex: number) => void;
+
+    /** Погружается на следующий слой */
+    diveDeeper: () => void;
+
+    /** Всплывает и применяет собранные ресурсы */
+    surfaceDive: () => void;
+
+    /** Покупает исследовательские зонды на станции */
+    buyProbe: (count: number) => void;
 }
 
 /**
@@ -141,6 +162,37 @@ export const createLocationsSlice = (
 
     endExpedition: () => {
         endExpeditionHelper(set, get);
+    },
+
+    startDive: (locationId) => {
+        startDiveHelper(locationId, set, get);
+    },
+
+    resolveDiveEvent: (choiceIndex) => {
+        resolveDiveEventHelper(choiceIndex, set, get);
+    },
+
+    diveDeeper: () => {
+        diveDeeperHelper(set, get);
+    },
+
+    surfaceDive: () => {
+        surfaceDiveHelper(set, get);
+    },
+
+    buyProbe: (count: number) => {
+        const PROBE_PRICE = 150;
+        const state = get();
+        const total = PROBE_PRICE * count;
+        if (state.credits < total) {
+            get().addLog("Недостаточно кредитов для покупки зонда.", "warning");
+            return;
+        }
+        set((s) => ({ credits: s.credits - total, probes: s.probes + count }));
+        get().addLog(
+            `🔬 Куплено зондов: ${count} (−${total}₢). Всего: ${state.probes + count}`,
+            "info",
+        );
     },
 
     discoverRace: (raceId) => {
