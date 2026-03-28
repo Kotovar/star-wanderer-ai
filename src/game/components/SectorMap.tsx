@@ -811,7 +811,12 @@ export function SectorMap() {
 
         const rect = container.getBoundingClientRect();
         const newWidth = Math.round(Math.max(rect.width, 500));
-        const newHeight = Math.round(Math.max(rect.width * 0.65, 350));
+        // Mobile: use aspect ratio for compact display
+        // Desktop: use square canvas to prevent circle distortion
+        const isMobile = rect.width < 768;
+        const newHeight = isMobile
+            ? Math.round(Math.max(rect.width * 0.65, 350))
+            : newWidth;
 
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
@@ -1336,9 +1341,11 @@ export function SectorMap() {
         (e: React.TouchEvent<HTMLCanvasElement>) => {
             const touch = e.touches[0];
             setIsDragging(true);
+            isDraggingRef.current = true;
             hasMovedRef.current = false;
             dragStartRef.current = { x: touch.clientX, y: touch.clientY };
             offsetStartRef.current = { ...offsetRef.current };
+            dragStartTimeRef.current = animationStateRef.current.time;
         },
         [],
     );
@@ -1620,6 +1627,18 @@ export function SectorMap() {
                 </div>
             )}
 
+            {/* Current sector indicator */}
+            <div
+                className={`absolute left-2 bg-[rgba(255,176,0,0.15)] border-2 border-[#ffb000] px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm font-['Orbitron'] font-bold text-[#ffb000] z-20 shadow-[0_0_15px_rgba(255,176,0,0.3)] ${!hintDismissed ? "top-12" : "top-2"}`}
+            >
+                <span className="text-[10px] md:text-xs opacity-70 mr-1">
+                    {t("game.sector")}:
+                </span>
+                <span className="text-[#00ff41]">
+                    {currentSector?.name ?? "START"}
+                </span>
+            </div>
+
             {/* Scanner range indicator */}
             {scanRange >= 0 && (
                 <div
@@ -1704,18 +1723,20 @@ export function SectorMap() {
             {/* Star info panel */}
             {starInfoOpen && currentSector?.star && (
                 <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-                    <div
-                        className="pointer-events-auto bg-[#080d18] border-2 border-[#00d4ff] max-w-sm w-full mx-4 font-['Share_Tech_Mono'] shadow-[0_0_40px_rgba(0,212,255,0.2)]"
-                    >
+                    <div className="pointer-events-auto bg-[#080d18] border-2 border-[#00d4ff] max-w-sm w-full mx-4 font-['Share_Tech_Mono'] shadow-[0_0_40px_rgba(0,212,255,0.2)]">
                         {/* Header */}
                         <div className="flex justify-between items-center px-4 py-3 border-b border-[#00d4ff] bg-[rgba(0,212,255,0.04)]">
                             <div className="flex items-center gap-2">
                                 <span className="text-xl">
-                                    {(t(`star_info.${currentSector.star.type}.icon`) as string) || "★"}
+                                    {(t(
+                                        `star_info.${currentSector.star.type}.icon`,
+                                    ) as string) || "★"}
                                 </span>
                                 <div>
                                     <div className="font-['Orbitron'] text-sm font-bold text-[#00d4ff]">
-                                        {t(`star_types.${currentSector.star.type}`)}
+                                        {t(
+                                            `star_types.${currentSector.star.type}`,
+                                        )}
                                     </div>
                                     <div className="text-[#445] text-xs">
                                         {currentSector.name}
@@ -1733,14 +1754,38 @@ export function SectorMap() {
                         {/* Stats */}
                         <div className="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs border-b border-[#111a22]">
                             {[
-                                { label: t("star_info.class"),       val: t(`star_info.${currentSector.star.type}.class`) },
-                                { label: t("star_info.temperature"),  val: t(`star_info.${currentSector.star.type}.temp`) },
-                                { label: t("star_info.mass"),         val: t(`star_info.${currentSector.star.type}.mass`) },
-                                { label: t("star_info.hazard"),       val: t(`star_info.${currentSector.star.type}.hazard`) },
+                                {
+                                    label: t("star_info.class"),
+                                    val: t(
+                                        `star_info.${currentSector.star.type}.class`,
+                                    ),
+                                },
+                                {
+                                    label: t("star_info.temperature"),
+                                    val: t(
+                                        `star_info.${currentSector.star.type}.temp`,
+                                    ),
+                                },
+                                {
+                                    label: t("star_info.mass"),
+                                    val: t(
+                                        `star_info.${currentSector.star.type}.mass`,
+                                    ),
+                                },
+                                {
+                                    label: t("star_info.hazard"),
+                                    val: t(
+                                        `star_info.${currentSector.star.type}.hazard`,
+                                    ),
+                                },
                             ].map(({ label, val }) => (
                                 <div key={label}>
-                                    <span className="text-[#445]">{label}: </span>
-                                    <span className="text-[#00ff41]">{val}</span>
+                                    <span className="text-[#445]">
+                                        {label}:{" "}
+                                    </span>
+                                    <span className="text-[#00ff41]">
+                                        {val}
+                                    </span>
                                 </div>
                             ))}
                         </div>
@@ -1749,7 +1794,6 @@ export function SectorMap() {
                         <div className="px-4 py-3 text-xs text-[#99a] leading-relaxed border-b border-[#111a22]">
                             {t(`star_info.${currentSector.star.type}.desc`)}
                         </div>
-
                     </div>
                 </div>
             )}

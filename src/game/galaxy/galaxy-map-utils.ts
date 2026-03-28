@@ -114,12 +114,19 @@ export function drawStaticLegend(
     captainLevel: number,
     fuel: number,
     t: (key: string) => string,
+    canvasWidth: number,
+    canvasHeight: number,
 ) {
     const legendX = 10;
     const legendY = 10;
     const engineLevel = getEngineLevel(modules);
 
-    ctx.font = "13px Share Tech Mono";
+    const minDim = Math.min(canvasWidth, canvasHeight);
+    const scale = Math.min(1, minDim / 500);
+    const fontSize = Math.max(10, Math.round(13 * scale));
+    const lineH = Math.round(fontSize * 1.5);
+
+    ctx.font = `${fontSize}px Share Tech Mono`;
     ctx.textAlign = "left";
 
     // Safeguard against NaN or undefined fuel
@@ -128,25 +135,25 @@ export function drawStaticLegend(
     ctx.fillText(
         `${t("galaxy.legend.fuel")}: ${displayFuel}`,
         legendX,
-        legendY + 16,
+        legendY + lineH,
     );
 
     ctx.fillStyle = "#00ff41";
     ctx.fillText(
         `${t("galaxy.legend.engine")}: Ур.${engineLevel}`,
         legendX,
-        legendY + 32,
+        legendY + lineH * 2,
     );
 
     ctx.fillStyle = "#888";
     ctx.fillText(
         `${t("galaxy.legend.captain")}: Ур.${captainLevel}`,
         legendX,
-        legendY + 48,
+        legendY + lineH * 3,
     );
-    ctx.fillText(t("galaxy.legend.sector_info_1"), legendX, legendY + 68);
-    ctx.fillText(t("galaxy.legend.sector_info_2"), legendX, legendY + 84);
-    ctx.fillText(t("galaxy.legend.sector_info_3"), legendX, legendY + 100);
+    ctx.fillText(t("galaxy.legend.sector_info_1"), legendX, legendY + lineH * 4.3);
+    ctx.fillText(t("galaxy.legend.sector_info_2"), legendX, legendY + lineH * 5.3);
+    ctx.fillText(t("galaxy.legend.sector_info_3"), legendX, legendY + lineH * 6.3);
 }
 
 // Draw a sector on the galaxy map
@@ -165,6 +172,8 @@ export function drawSector(
     isCurrentSector: boolean,
     // Optional callbacks to update sector position in store
     updateSectorPosition?: (sectorId: number, x: number, y: number) => void,
+    canvasWidth?: number,
+    canvasHeight?: number,
 ) {
     const tier = sector.tier;
     const isAccessible =
@@ -180,7 +189,7 @@ export function drawSector(
     const radius = getSectorRadius(maxRadius, tier);
 
     const x = centerX + Math.cos(angle) * radius;
-    const y = centerY + 10 + Math.sin(angle) * radius;
+    const y = centerY + Math.sin(angle) * radius;
 
     // Update sector position in store if callback provided
     if (updateSectorPosition && (sector.mapX !== x || sector.mapY !== y)) {
@@ -200,9 +209,11 @@ export function drawSector(
         isCurrentSector,
         canAffordFuel,
         fuelCost,
+        canvasWidth,
+        canvasHeight,
     );
 
-    drawStar(ctx, x, y, sector.star, isCurrentSector, isAccessible, sector.id);
+    drawStar(ctx, x, y, sector.star, isCurrentSector, isAccessible, sector.id, canvasWidth, canvasHeight);
 }
 
 function drawSectorGlow(ctx: CanvasRenderingContext2D, x: number, y: number) {
@@ -224,36 +235,48 @@ function drawSectorText(
     isCurrent: boolean,
     canAffordFuel: boolean,
     fuelCost: number,
+    canvasWidth?: number,
+    canvasHeight?: number,
 ) {
+    const minDim = Math.min(canvasWidth ?? 600, canvasHeight ?? 600);
+    const isMobile = minDim < 450;
+    const nameFontSize = isMobile ? 5 : 10;
+    const fuelFontSize = isMobile ? 3 : 8;
+    const rocketFontSize = isMobile ? 8 : 16;
+
+    const rocketOffsetY = isMobile ? 12 : 24;
+    const checkOffsetY  = isMobile ? 13 : 26;
+    const nameOffsetY   = isMobile ? 7  : 18;
+    const fuelOffsetY   = isMobile ? 3  : 10;
+
     if (sector.visited || isCurrent) {
-        ctx.font = "10px Share Tech Mono";
         ctx.textAlign = "center";
         ctx.fillStyle = isCurrent ? "#ffb000" : "#00ff41";
 
         if (isCurrent) {
             // Draw spaceship icon for current sector
-            ctx.font = "16px Arial";
-            ctx.fillText("🚀", x, y - 24);
+            ctx.font = `${rocketFontSize}px Arial`;
+            ctx.fillText("🚀", x, y - rocketOffsetY);
         } else {
             // Draw checkmark for visited sectors
-            ctx.font = "10px Share Tech Mono";
-            ctx.fillText("✓", x, y - 26);
+            ctx.font = `${nameFontSize}px Share Tech Mono`;
+            ctx.fillText("✓", x, y - checkOffsetY);
         }
     }
 
-    ctx.font = `${isCurrent ? "bold " : ""}10px Share Tech Mono`;
+    ctx.font = `${isCurrent ? "bold " : ""}${nameFontSize}px Share Tech Mono`;
     ctx.fillStyle = isAccessible
         ? isCurrent
             ? "#ffb000"
             : TIER_COLORS[sector.tier].ring
         : "#555";
     ctx.textAlign = "center";
-    ctx.fillText(sector.name, x, y - 18);
+    ctx.fillText(sector.name, x, y - nameOffsetY);
 
     if (isAccessible && !isCurrent) {
-        ctx.font = "8px Share Tech Mono";
+        ctx.font = `${fuelFontSize}px Share Tech Mono`;
         ctx.fillStyle = canAffordFuel ? "#9933ff" : "#ff0040";
-        ctx.fillText(`⛽${fuelCost}`, x, y - 10);
+        ctx.fillText(`⛽${fuelCost}`, x, y - fuelOffsetY);
     }
 }
 
@@ -267,13 +290,24 @@ export function drawTierRings(
     captainLevel: number,
     artifacts: Artifact[],
     scanRange?: number,
+    canvasWidth?: number,
+    canvasHeight?: number,
 ) {
-    const tierRadius = [
-        maxRadius * 0.5,
-        maxRadius * 0.75,
-        maxRadius * 0.95,
-        maxRadius * 1.15,
-    ];
+    const minDim = Math.min(canvasWidth ?? 600, canvasHeight ?? 600);
+    const isMobile = minDim < 450;
+    const tierRadius = isMobile
+        ? [
+            maxRadius * 0.46,
+            maxRadius * 0.76,
+            maxRadius * 1.04,
+            maxRadius * 1.30,
+          ]
+        : [
+            maxRadius * 0.5,
+            maxRadius * 0.75,
+            maxRadius * 0.95,
+            maxRadius * 1.15,
+          ];
 
     const canSeeT4 = canSeeTier4(modules, artifacts, scanRange);
 
@@ -286,7 +320,7 @@ export function drawTierRings(
         if (tier === 4 && !canSeeT4) return;
 
         drawTierGlow(ctx, centerX, centerY, radius, colors, isAccessible);
-        drawTierRing(ctx, centerX, centerY, radius, colors, isAccessible, tier);
+        drawTierRing(ctx, centerX, centerY, radius, colors, isAccessible, tier, isMobile);
     });
 }
 
@@ -326,9 +360,10 @@ function drawTierRing(
     colors: TierDetails,
     isAccessible: boolean,
     tier: number,
+    thin = false,
 ) {
     ctx.strokeStyle = isAccessible ? colors.ring : "#444";
-    ctx.lineWidth = tier === 2 ? 2 : 1.5;
+    ctx.lineWidth = thin ? 0.75 : (tier === 2 ? 2 : 1.5);
     ctx.setLineDash(tier === 2 ? [5, 5] : []);
     ctx.globalAlpha = isAccessible ? 0.6 : 0.3;
     ctx.beginPath();
@@ -347,8 +382,13 @@ export function drawStar(
     isActive: boolean,
     isAccessible: boolean,
     seed?: number,
+    canvasWidth?: number,
+    canvasHeight?: number,
 ) {
-    const size = isActive ? 8 : 6;
+    const minDim = Math.min(canvasWidth ?? 600, canvasHeight ?? 600);
+    const size = minDim < 450
+        ? (isActive ? 3 : 2)
+        : (isActive ? 8 : 6);
 
     if (!isAccessible) {
         ctx.globalAlpha = 0.5;

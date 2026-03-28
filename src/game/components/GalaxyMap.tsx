@@ -212,8 +212,13 @@ export function GalaxyMap() {
         if (!container || initializedRef.current) return;
 
         const rect = container.getBoundingClientRect();
-        const width = Math.round(rect.width);
-        const height = Math.round(rect.height);
+        const width = Math.round(Math.max(rect.width, 500));
+        // Mobile: use aspect ratio for compact display
+        // Desktop: use square canvas to prevent circle distortion
+        const isMobile = rect.width < 768;
+        const height = isMobile
+            ? Math.round(Math.max(rect.width * 0.65, 350))
+            : width;
 
         canvasSizeRef.current = { width, height };
         initializedRef.current = true;
@@ -292,7 +297,8 @@ export function GalaxyMap() {
 
         const centerX = width / 2;
         const centerY = height / 2;
-        const baseMaxRadius = Math.min(width, height) * 0.42;
+        const minDim = Math.min(width, height);
+        const baseMaxRadius = minDim * (minDim < 450 ? 0.65 : 0.42);
 
         // Clear canvas FIRST (before any transform)
         ctx.fillStyle = "#050810";
@@ -337,7 +343,7 @@ export function GalaxyMap() {
         }
 
         // Draw static legend (fuel, engine, captain info) BEFORE transform
-        drawStaticLegend(ctx, modules, captainLevel, fuel, t);
+        drawStaticLegend(ctx, modules, captainLevel, fuel, t, width, height);
 
         // Apply transform for zoom and pan
         ctx.save();
@@ -355,6 +361,8 @@ export function GalaxyMap() {
             captainLevel,
             artifacts,
             scanRange,
+            width,
+            height,
         );
         drawSectors(
             ctx,
@@ -372,6 +380,8 @@ export function GalaxyMap() {
             artifacts,
             updateSectorPosition,
             scanRange,
+            width,
+            height,
         );
 
         ctx.restore();
@@ -635,7 +645,8 @@ export function GalaxyMap() {
         const worldClickY = (clickY - centerY - offset.y) / zoom + centerY;
 
         // Calculate sector positions using the same formula as drawSector
-        const baseMaxRadius = Math.min(canvas.width, canvas.height) * 0.42;
+        const minDim = Math.min(canvas.width, canvas.height);
+        const baseMaxRadius = minDim * (minDim < 450 ? 0.65 : 0.42);
 
         for (const sector of sectors) {
             if (sector.mapAngle === undefined) continue;
@@ -643,7 +654,7 @@ export function GalaxyMap() {
             // Same calculation as in drawSector
             const radius = getSectorRadius(baseMaxRadius, sector.tier);
             const sectorX = centerX + Math.cos(sector.mapAngle) * radius;
-            const sectorY = centerY + 10 + Math.sin(sector.mapAngle) * radius;
+            const sectorY = centerY + Math.sin(sector.mapAngle) * radius;
 
             const dist = Math.sqrt(
                 (worldClickX - sectorX) ** 2 + (worldClickY - sectorY) ** 2,
@@ -747,6 +758,8 @@ function drawSectors(
     artifacts: ReturnType<typeof useGameStore.getState>["artifacts"],
     updateSectorPosition: (sectorId: number, x: number, y: number) => void,
     scanRange?: number,
+    canvasWidth?: number,
+    canvasHeight?: number,
 ) {
     const canSeeT4 = canSeeTier4(modules, artifacts, scanRange);
 
@@ -768,6 +781,8 @@ function drawSectors(
             areFuelTanksFunctional,
             sector.id === currentSector?.id,
             updateSectorPosition,
+            canvasWidth,
+            canvasHeight,
         );
     });
 }
