@@ -154,7 +154,8 @@
         "tooltip_effects": "Active effects",
         "tooltip_artifacts": "Ancient artifacts",
         "tooltip_research": "Research",
-        "tooltip_restart": "Restart game"
+        "tooltip_restart": "Restart game",
+        "tooltip_probes": "Research probes"
     },
     "professions": {
         "pilot": "Pilot",
@@ -2240,5 +2241,39 @@
         "no_weapon_recipes": "Research technologies to unlock weapon blueprints",
         "no_module_recipes": "Scout finds module blueprints on derelict ships",
         "one_time_use": "One-time"
+    },
+    "tutorial": {
+        "title": "WELCOME, CAPTAIN",
+        "skip": "Skip",
+        "next": "NEXT",
+        "start": "LAUNCH",
+        "step1_title": "Your Ship",
+        "step1_desc": "The left panel is your ship control. Switch tabs: ship grid, status, crew, modules, cargo, contracts, blueprints and event log.",
+        "step1_highlight": "Click 📊 STATUS to see your ship's combat stats",
+        "step2_title": "Map & Navigation",
+        "step2_desc": "The right panel shows the game world. Click SECTOR MAP to see all available locations. Click any object — your ship will fly there.",
+        "step2_highlight": "Mouse wheel to zoom, click and drag to pan the map",
+        "step3_title": "Visit a Station",
+        "step3_desc": "Find and visit a station (🏪 on the map). Buy ship modules, hire crew, repair hull damage and take on contracts for rewards.",
+        "step3_highlight": "Without a reactor and engine your ship won't fly — check their condition!",
+        "step4_title": "Crew is Your Power",
+        "step4_desc": "Hire specialists: Pilot improves evasion, Engineer repairs per turn, Medic heals crew, Scout explores planets, Scientist boosts research output.",
+        "step5_title": "Path to Victory",
+        "step5_desc": "Victory through research! The 🔬 SCIENCE button opens the tech tree. Gather resources, analyze anomalies, mine asteroids. Reach Tier 4 to win!",
+        "step5_highlight": "Watch the event log 📜 — important hints appear there"
+    },
+    "travel": {
+        "title": "TRAVELING",
+        "heading": "Ship heading to",
+        "turns_left": "Turns remaining",
+        "skipping": "SKIPPING..."
+    },
+    "sector_map_ui": {
+        "zoom_in": "Zoom in",
+        "zoom_out": "Zoom out",
+        "reset_view": "Reset view",
+        "animations_off": "Disable animations",
+        "animations_on": "Enable animations",
+        "hint": "Click a location to fly there. Click and drag to pan. Mouse wheel to zoom."
     }
 }

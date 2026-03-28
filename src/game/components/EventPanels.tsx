@@ -62,16 +62,16 @@ export function EventDisplay() {
         return (
             <div className="flex flex-col gap-4">
                 <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mb-4">
-                    ▸ ПУТЕШЕСТВИЕ
+                    ▸ {t("travel.title")}
                 </div>
                 <div className="text-sm leading-relaxed">
-                    Корабль движется к{" "}
+                    {t("travel.heading")}{" "}
                     <span className="text-[#ffb000]">
                         {traveling.destination.name}
                     </span>
                     <br />
                     <br />
-                    Осталось ходов:{" "}
+                    {t("travel.turns_left")}:{" "}
                     <span className="text-[#00d4ff]">
                         {traveling.turnsLeft}
                     </span>
@@ -87,7 +87,7 @@ export function EventDisplay() {
                         }`}
                     >
                         {isSkipping
-                            ? "⏱️ ПРОПУСКАЕМ..."
+                            ? `⏱️ ${t("travel.skipping")}`
                             : t("galaxy.buttons.next_turn")}
                     </Button>
                     <Button

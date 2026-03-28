@@ -16,6 +16,7 @@ import { useGameStore } from "@/game/store";
 import { RaceDiscoveryModal } from "@/game/components/RaceDiscoveryModal";
 import { TechnologyDiscoveryModal } from "@/game/components/TechnologyDiscoveryModal";
 import { SurvivorModal } from "@/game/components/SurvivorModal";
+import { WelcomeTutorial } from "@/game/components/WelcomeTutorial";
 import { useTranslation } from "@/lib/useTranslation";
 
 type LeftTab =
@@ -155,17 +156,18 @@ export default function Home() {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     title={tab.label}
-                                    className={`relative flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-[9px] font-['Orbitron'] font-bold transition-colors cursor-pointer select-none
+                                    className={`relative flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-[9px] font-['Orbitron'] font-bold transition-all duration-150 cursor-pointer select-none
                                         ${idx < leftTabs.length - 1 ? "border-r border-[#1a3320]" : ""}
                                         ${
                                             isActive
-                                                ? "text-[#ffb000] bg-[rgba(255,176,0,0.07)]"
-                                                : "text-[#445544] hover:text-[#00ff41] hover:bg-[rgba(0,255,65,0.04)]"
+                                                ? "text-[#ffb000] bg-[rgba(255,176,0,0.1)]"
+                                                : "text-[#445544] hover:text-[#00ff41] hover:bg-[rgba(0,255,65,0.05)]"
                                         }`}
+                                    style={isActive ? { boxShadow: "inset 0 -2px 0 #ffb000" } : {}}
                                 >
                                     {/* Active indicator line */}
                                     {isActive && (
-                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ffb000]" />
+                                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#ffb000] opacity-50" />
                                     )}
                                     <span className="text-sm leading-none">
                                         {tab.icon}
@@ -205,6 +207,7 @@ export default function Home() {
             <RaceDiscoveryModal />
             <TechnologyDiscoveryModal />
             <SurvivorModal />
+            <WelcomeTutorial />
         </div>
     );
 }

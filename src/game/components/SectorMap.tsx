@@ -752,14 +752,17 @@ export function SectorMap() {
 
             // Check for dived gas planet
             const isDivedGasPlanet =
-                loc.type === "gas_giant" && loc.gasGiantLastDiveAt !== undefined;
+                loc.type === "gas_giant" &&
+                loc.gasGiantLastDiveAt !== undefined;
 
             const translatedName = getLocationName(loc.name, t);
             const finalDisplayName = isUnknownShip
                 ? t("sector_map.unknown_ship")
                 : isExploredEmptyPlanet
                   ? `${translatedName} ${t("sector_map.explored")}`
-                  : isVisitedColonizedPlanet || isVisitedStation || isDivedGasPlanet
+                  : isVisitedColonizedPlanet ||
+                      isVisitedStation ||
+                      isDivedGasPlanet
                     ? `${translatedName} ${t("sector_map.visited")}`
                     : displayName;
 
@@ -1580,11 +1583,41 @@ export function SectorMap() {
         });
     };
 
+    const [hintDismissed, setHintDismissed] = useState(() => {
+        if (typeof window !== "undefined") {
+            return !!localStorage.getItem("sw_map_hint_done");
+        }
+        return true;
+    });
+
+    const dismissHint = () => {
+        if (typeof window !== "undefined") {
+            localStorage.setItem("sw_map_hint_done", "1");
+        }
+        setHintDismissed(true);
+    };
+
     return (
         <div ref={containerRef} className="w-full h-full relative">
+            {/* First-visit navigation hint */}
+            {!hintDismissed && (
+                <div className="absolute top-2 left-2 right-2 bg-[rgba(0,212,255,0.08)] border border-[#00d4ff] px-3 py-2 text-xs text-[#00d4ff] z-20 flex items-center justify-between gap-2">
+                    <span>💡 {t("sector_map_ui.hint")}</span>
+                    <button
+                        onClick={dismissHint}
+                        className="text-[#00d4ff] hover:text-white cursor-pointer shrink-0 opacity-70 hover:opacity-100 transition-opacity"
+                        title={t("effects.close")}
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
+
             {/* Scanner range indicator */}
             {scanRange >= 0 && (
-                <div className="absolute top-2 right-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-2 py-1 text-xs text-[#00ff41] z-10">
+                <div
+                    className={`absolute right-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-2 py-1 text-xs text-[#00ff41] z-10 ${!hintDismissed ? "top-12" : "top-2"}`}
+                >
                     {t("galaxy.labels.scanner")}:{" "}
                     {getScannerRangeLabel(scanRange, t)}
                 </div>
@@ -1627,8 +1660,8 @@ export function SectorMap() {
                     className="w-10 h-10 bg-[#050810] border-2 border-[#00ff41] text-[#00ff41] text-xs font-bold hover:bg-[#0a1a20] transition-colors flex items-center justify-center cursor-pointer"
                     title={
                         animationsEnabled
-                            ? "Выключить анимации"
-                            : "Включить анимации"
+                            ? t("sector_map_ui.animations_off")
+                            : t("sector_map_ui.animations_on")
                     }
                 >
                     {animationsEnabled ? "✨" : "⊘"}
@@ -1636,21 +1669,21 @@ export function SectorMap() {
                 <button
                     onClick={handleZoomIn}
                     className="w-10 h-10 bg-[#050810] border-2 border-[#00ff41] text-[#00ff41] text-xl font-bold hover:bg-[#0a1a20] transition-colors flex items-center justify-center cursor-pointer"
-                    title="Приблизить"
+                    title={t("sector_map_ui.zoom_in")}
                 >
                     +
                 </button>
                 <button
                     onClick={handleZoomOut}
                     className="w-10 h-10 bg-[#050810] border-2 border-[#00ff41] text-[#00ff41] text-xl font-bold hover:bg-[#0a1a20] transition-colors flex items-center justify-center cursor-pointer"
-                    title="Отдалить"
+                    title={t("sector_map_ui.zoom_out")}
                 >
                     −
                 </button>
                 <button
                     onClick={handleReset}
                     className="w-10 h-10 bg-[#050810] border-2 border-[#00ff41] text-[#00ff41] text-xs font-bold hover:bg-[#0a1a20] transition-colors flex items-center justify-center cursor-pointer"
-                    title="Сбросить вид"
+                    title={t("sector_map_ui.reset_view")}
                 >
                     RST
                 </button>
@@ -4313,7 +4346,14 @@ function drawGasGiant(
                 : "#3399cc";
 
     // Sphere gradient
-    const grad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
+    const grad = ctx.createRadialGradient(
+        x - r * 0.3,
+        y - r * 0.3,
+        r * 0.1,
+        x,
+        y,
+        r,
+    );
     grad.addColorStop(0, coreColor);
     grad.addColorStop(0.5, bandColor);
     grad.addColorStop(1, "rgba(5,8,16,0.9)");

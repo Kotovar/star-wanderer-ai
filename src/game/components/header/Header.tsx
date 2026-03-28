@@ -149,9 +149,14 @@ export function GameHeader() {
                         </span>
                     </div>
                     {probes > 0 && (
-                        <div className="flex items-center gap-1 md:gap-2" title="Исследовательские зонды">
+                        <div
+                            className="flex items-center gap-1 md:gap-2"
+                            title={t("header.tooltip_probes")}
+                        >
                             <span className="text-[#7b4fff]">🔬</span>
-                            <span className="font-bold text-[#7b4fff]">{probes}</span>
+                            <span className="font-bold text-[#7b4fff]">
+                                {probes}
+                            </span>
                         </div>
                     )}
                     <div className="flex items-center gap-1 md:gap-2">
