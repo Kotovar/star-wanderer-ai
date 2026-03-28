@@ -2478,130 +2478,177 @@ function drawStation(
 
     const stationType = loc.stationType || "trade";
 
-    // Color schemes for different station types
-    const stationColors: Record<
-        string,
-        { primary: string; secondary: string; accent: string }
-    > = {
-        trade: { primary: "#4a90a4", secondary: "#2a5a6a", accent: "#00ff88" },
-        military: {
-            primary: "#5a4a6a",
-            secondary: "#3a2a4a",
-            accent: "#ff4444",
-        },
-        mining: { primary: "#a48a4a", secondary: "#6a5a2a", accent: "#ffaa00" },
-        research: {
-            primary: "#6a4a9a",
-            secondary: "#4a2a6a",
-            accent: "#00d4ff",
-        },
-        shipyard: {
-            primary: "#7a5a2a",
-            secondary: "#4a3a1a",
-            accent: "#ff8800",
-        },
-        medical: {
-            primary: "#2a7a5a",
-            secondary: "#1a4a3a",
-            accent: "#00ff88",
-        },
+    const stationColors: Record<string, { primary: string; secondary: string; accent: string }> = {
+        trade:    { primary: "#5ab8d4", secondary: "#2a5a6a", accent: "#00ff88" },
+        military: { primary: "#8a7aaa", secondary: "#3a2a4a", accent: "#ff4444" },
+        mining:   { primary: "#c4a85a", secondary: "#6a5a2a", accent: "#ffaa00" },
+        research: { primary: "#8a6aca", secondary: "#4a2a6a", accent: "#00d4ff" },
+        shipyard: { primary: "#aa7a4a", secondary: "#4a3a1a", accent: "#ff8800" },
+        medical:  { primary: "#4aaa7a", secondary: "#1a4a3a", accent: "#00ff88" },
     };
 
     const colors = stationColors[stationType] || stationColors.trade;
 
-    // Central hub (common to all stations)
-    ctx.fillStyle = colors.primary;
-    ctx.strokeStyle = colors.secondary;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(x, y, 6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-
-    // Type-specific station designs
     switch (stationType) {
-        case "trade":
-            // Trade station: large solar panels, commercial look
-            ctx.fillStyle = colors.secondary;
-            ctx.fillRect(x - 18, y - 3, 10, 6);
-            ctx.fillRect(x + 8, y - 3, 10, 6);
-
-            // Panel grid lines
-            ctx.strokeStyle = colors.primary;
-            ctx.lineWidth = 0.5;
-            for (let i = 0; i < 3; i++) {
-                ctx.beginPath();
-                ctx.moveTo(x - 18 + i * 3.5, y - 3);
-                ctx.lineTo(x - 18 + i * 3.5, y + 3);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(x + 8 + i * 3.5, y - 3);
-                ctx.lineTo(x + 8 + i * 3.5, y + 3);
-                ctx.stroke();
+        case "trade": {
+            // ТОРГОВАЯ: Гексагональное кольцо + 3 стыковочных рукава + огни доков
+            const hexR = 12;
+            // Hexagon fill
+            ctx.fillStyle = colors.secondary + "66";
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                const a = (i * Math.PI) / 3 - Math.PI / 6;
+                const hx = x + hexR * Math.cos(a);
+                const hy = y + hexR * Math.sin(a);
+                if (i === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
             }
-
-            // Antenna with green light
-            ctx.strokeStyle = colors.secondary;
-            ctx.lineWidth = 1;
+            ctx.closePath();
+            ctx.fill();
+            // Hexagon stroke
+            ctx.strokeStyle = colors.primary;
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.moveTo(x, y - 6);
-            ctx.lineTo(x, y - 12);
+            for (let i = 0; i < 6; i++) {
+                const a = (i * Math.PI) / 3 - Math.PI / 6;
+                const hx = x + hexR * Math.cos(a);
+                const hy = y + hexR * Math.sin(a);
+                if (i === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+            }
+            ctx.closePath();
             ctx.stroke();
+            // 3 docking arms at 90°, 210°, 330°
+            for (let i = 0; i < 3; i++) {
+                const a = (i * 2 * Math.PI) / 3 - Math.PI / 2;
+                const sx = x + hexR * Math.cos(a);
+                const sy = y + hexR * Math.sin(a);
+                const ex = x + 21 * Math.cos(a);
+                const ey = y + 21 * Math.sin(a);
+                ctx.strokeStyle = colors.secondary;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(sx, sy);
+                ctx.lineTo(ex, ey);
+                ctx.stroke();
+                // Docking port ring
+                ctx.strokeStyle = colors.accent;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(ex, ey, 3, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.fillStyle = colors.accent + "88";
+                ctx.beginPath();
+                ctx.arc(ex, ey, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            // Central hub
+            ctx.fillStyle = colors.primary;
             ctx.beginPath();
-            ctx.arc(x, y - 13, 2, 0, Math.PI * 2);
-            ctx.stroke();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fill();
             ctx.fillStyle = colors.accent;
             ctx.beginPath();
-            ctx.arc(x, y - 13, 1, 0, Math.PI * 2);
+            ctx.arc(x, y, 1.5, 0, Math.PI * 2);
             ctx.fill();
             break;
+        }
 
-        case "military":
-            // Military station: angular, defensive platforms, weapons
+        case "military": {
+            // ВОЕННАЯ: Внешнее бронекольцо + 4 орудийные платформы + прицел
+            // Outer armor ring
+            ctx.strokeStyle = colors.primary + "55";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(x, y, 21, 0, Math.PI * 2);
+            ctx.stroke();
+            // Struts to platforms
+            ctx.strokeStyle = colors.secondary;
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i < 4; i++) {
+                const a = (i * Math.PI) / 2;
+                ctx.beginPath();
+                ctx.moveTo(x + 8 * Math.cos(a), y + 8 * Math.sin(a));
+                ctx.lineTo(x + 15 * Math.cos(a), y + 15 * Math.sin(a));
+                ctx.stroke();
+            }
+            // 4 weapon platforms at N/S/E/W
+            for (let i = 0; i < 4; i++) {
+                const a = (i * Math.PI) / 2;
+                const px = x + 15 * Math.cos(a);
+                const py = y + 15 * Math.sin(a);
+                ctx.save();
+                ctx.translate(px, py);
+                ctx.rotate(a);
+                // Platform body
+                ctx.fillStyle = colors.secondary;
+                ctx.beginPath();
+                ctx.moveTo(-4, -4);
+                ctx.lineTo(4, -4);
+                ctx.lineTo(5, 0);
+                ctx.lineTo(4, 4);
+                ctx.lineTo(-4, 4);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = colors.primary;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                // Twin gun barrels pointing outward
+                ctx.strokeStyle = colors.primary;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(4, -2);
+                ctx.lineTo(9, -2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(4, 2);
+                ctx.lineTo(9, 2);
+                ctx.stroke();
+                // Warning light
+                ctx.fillStyle = colors.accent;
+                ctx.beginPath();
+                ctx.arc(-3, 0, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+            // Central fortified hex command center
             ctx.fillStyle = colors.secondary;
-            // Weapon platforms on sides
-            ctx.beginPath();
-            ctx.moveTo(x - 16, y - 4);
-            ctx.lineTo(x - 8, y - 4);
-            ctx.lineTo(x - 8, y - 8);
-            ctx.lineTo(x - 4, y - 4);
-            ctx.lineTo(x - 4, y + 4);
-            ctx.lineTo(x - 8, y + 8);
-            ctx.lineTo(x - 8, y + 4);
-            ctx.lineTo(x - 16, y + 4);
-            ctx.closePath();
-            ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo(x + 16, y - 4);
-            ctx.lineTo(x + 8, y - 4);
-            ctx.lineTo(x + 8, y - 8);
-            ctx.lineTo(x + 4, y - 4);
-            ctx.lineTo(x + 4, y + 4);
-            ctx.lineTo(x + 8, y + 8);
-            ctx.lineTo(x + 8, y + 4);
-            ctx.lineTo(x + 16, y + 4);
-            ctx.closePath();
-            ctx.fill();
-
-            // Red warning lights
-            ctx.fillStyle = colors.accent;
-            ctx.beginPath();
-            ctx.arc(x - 12, y - 6, 1.5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(x + 12, y - 6, 1.5, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Central tower
             ctx.strokeStyle = colors.primary;
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(x, y - 6);
-            ctx.lineTo(x, y - 14);
+            for (let i = 0; i < 6; i++) {
+                const a = (i * Math.PI) / 3;
+                const hx = x + 7 * Math.cos(a);
+                const hy = y + 7 * Math.sin(a);
+                if (i === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            // Targeting reticle
+            ctx.strokeStyle = colors.accent;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.strokeStyle = colors.accent + "99";
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            ctx.moveTo(x - 6, y); ctx.lineTo(x - 4, y);
+            ctx.moveTo(x + 4, y); ctx.lineTo(x + 6, y);
+            ctx.moveTo(x, y - 6); ctx.lineTo(x, y - 4);
+            ctx.moveTo(x, y + 4); ctx.lineTo(x, y + 6);
             ctx.stroke();
             break;
+        }
 
         case "mining":
+            // Central hub
+            ctx.fillStyle = colors.primary;
+            ctx.strokeStyle = colors.secondary;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x, y, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
             // Mining station: industrial, drills, cargo containers
             ctx.fillStyle = colors.secondary;
             // Mining arms with drills (centered)
@@ -2609,7 +2656,6 @@ function drawStation(
             ctx.fillRect(x + 8, y - 2, 12, 4); // Right arm
             ctx.fillRect(x - 2, y - 20, 4, 12); // Top arm
             ctx.fillRect(x - 2, y + 8, 4, 12); // Bottom arm
-
             // Drill heads (centered on arms)
             ctx.fillStyle = colors.accent;
             ctx.beginPath();
@@ -2624,7 +2670,6 @@ function drawStation(
             ctx.beginPath();
             ctx.arc(x, y + 20, 3, 0, Math.PI * 2); // Bottom drill
             ctx.fill();
-
             // Cargo containers around
             ctx.strokeStyle = colors.primary;
             ctx.lineWidth = 1;
@@ -2634,68 +2679,97 @@ function drawStation(
             ctx.strokeRect(x + 4, y + 8, 6, 6);
             break;
 
-        case "research":
-            // Research station: sleek, satellite dishes, scientific equipment
-            ctx.fillStyle = colors.secondary;
-            // Satellite dishes
-            ctx.beginPath();
-            ctx.arc(x - 12, y - 8, 5, 0, Math.PI, false);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(x + 12, y - 8, 5, 0, Math.PI, false);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(x - 12, y + 8, 5, Math.PI, 0, false);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(x + 12, y + 8, 5, Math.PI, 0, false);
-            ctx.stroke();
-
-            // Dish supports
-            ctx.strokeStyle = colors.primary;
+        case "research": {
+            // ИССЛЕДОВАТЕЛЬСКАЯ: Сенсорная мачта + 2 тарелки + атомные орбитальные кольца
+            // Orbital rings (behind everything)
+            ctx.strokeStyle = colors.accent + "44";
             ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(x - 12, y - 8);
-            ctx.lineTo(x - 12, y - 3);
+            ctx.ellipse(x, y, 21, 9, Math.PI / 4, 0, Math.PI * 2);
             ctx.stroke();
             ctx.beginPath();
-            ctx.moveTo(x + 12, y - 8);
-            ctx.lineTo(x + 12, y - 3);
+            ctx.ellipse(x, y, 21, 9, -Math.PI / 4, 0, Math.PI * 2);
+            ctx.stroke();
+            // Main sensor mast (spine)
+            ctx.strokeStyle = colors.primary;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x, y + 16);
+            ctx.lineTo(x, y - 22);
+            ctx.stroke();
+            // Cross bars
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(x - 9, y + 5); ctx.lineTo(x + 9, y + 5);
             ctx.stroke();
             ctx.beginPath();
-            ctx.moveTo(x - 12, y + 8);
-            ctx.lineTo(x - 12, y + 3);
+            ctx.moveTo(x - 6, y - 5); ctx.lineTo(x + 6, y - 5);
             ctx.stroke();
+            // Upper satellite dish — bowl opens LEFT (at y-12 on mast)
+            // arm from mast to dish center
+            ctx.strokeStyle = colors.secondary;
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(x + 12, y + 8);
-            ctx.lineTo(x + 12, y + 3);
+            ctx.moveTo(x, y - 12);
+            ctx.lineTo(x - 8, y - 12);
             ctx.stroke();
-
-            // Central antenna with blue glow
+            // bowl arc: left semicircle
+            ctx.strokeStyle = colors.primary;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(x - 8, y - 12, 6, Math.PI / 2, Math.PI * 1.5);
+            ctx.stroke();
+            // feed point light
             ctx.fillStyle = colors.accent;
             ctx.beginPath();
-            ctx.arc(x, y - 14, 2, 0, Math.PI * 2);
+            ctx.arc(x - 14, y - 12, 1.5, 0, Math.PI * 2);
             ctx.fill();
-            ctx.strokeStyle = colors.accent;
+            // Lower satellite dish — bowl opens RIGHT (at y+8 on mast)
+            ctx.strokeStyle = colors.secondary;
             ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(x, y - 6);
-            ctx.lineTo(x, y - 14);
+            ctx.moveTo(x, y + 8);
+            ctx.lineTo(x + 8, y + 8);
             ctx.stroke();
-
-            // Scientific rings
-            ctx.strokeStyle = colors.primary + "60";
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = colors.primary;
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.ellipse(x, y, 16, 8, Math.PI / 4, 0, Math.PI * 2);
+            ctx.arc(x + 8, y + 8, 6, Math.PI * 1.5, Math.PI / 2);
             ctx.stroke();
+            ctx.fillStyle = colors.accent;
+            ctx.beginPath();
+            ctx.arc(x + 14, y + 8, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            // Central science module
+            ctx.fillStyle = colors.secondary;
+            ctx.fillRect(x - 4, y - 1, 8, 7);
+            ctx.strokeStyle = colors.primary;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x - 4, y - 1, 8, 7);
+            // Antenna tip light
+            ctx.fillStyle = colors.accent;
+            ctx.beginPath();
+            ctx.arc(x, y - 22, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(x, y - 22, 1, 0, Math.PI * 2);
+            ctx.fill();
             break;
+        }
 
         case "shipyard":
+            // Central hub
+            ctx.fillStyle = colors.primary;
+            ctx.strokeStyle = colors.secondary;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x, y, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
             // Shipyard: dry-dock C-clamps on sides + ship skeleton inside
             ctx.fillStyle = colors.secondary;
             ctx.lineWidth = 2;
-
             // Left dry-dock clamp (C-shape opening right)
             ctx.strokeStyle = colors.primary;
             ctx.beginPath();
@@ -2712,7 +2786,6 @@ function drawStation(
             ctx.moveTo(x - 18, y - 10);
             ctx.lineTo(x - 18, y + 10);
             ctx.stroke();
-
             // Right dry-dock clamp (C-shape opening left)
             ctx.beginPath();
             ctx.moveTo(x + 18, y - 10);
@@ -2728,7 +2801,6 @@ function drawStation(
             ctx.moveTo(x + 18, y - 10);
             ctx.lineTo(x + 18, y + 10);
             ctx.stroke();
-
             // Ship skeleton outline in dock
             ctx.strokeStyle = colors.accent + "aa";
             ctx.lineWidth = 1;
@@ -2741,7 +2813,6 @@ function drawStation(
             ctx.lineTo(x - 4, y + 4);
             ctx.closePath();
             ctx.stroke();
-
             // Orange accent lights on clamp tips
             ctx.fillStyle = colors.accent;
             ctx.beginPath();
@@ -2758,45 +2829,61 @@ function drawStation(
             ctx.fill();
             break;
 
-        case "medical":
-            // Medical station: large cross + outer ring + accent dots
-            ctx.strokeStyle = colors.primary;
-            ctx.lineWidth = 2;
-
-            // Horizontal bar of cross
+        case "medical": {
+            // МЕДИЦИНСКАЯ: Кольцо жизнеобеспечения + медицинский крест + яркое ядро
+            // Outer life support ring
+            ctx.strokeStyle = colors.primary + "88";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(x, y, 19, 0, Math.PI * 2);
+            ctx.stroke();
+            // 4 life support module pods on ring (at 45°, 135°, 225°, 315°)
             ctx.fillStyle = colors.secondary;
-            ctx.fillRect(x - 18, y - 4, 36, 8);
-            // Vertical bar of cross
-            ctx.fillRect(x - 4, y - 18, 8, 36);
-
-            // Cross outline
             ctx.strokeStyle = colors.primary;
             ctx.lineWidth = 1;
-            ctx.strokeRect(x - 18, y - 4, 36, 8);
-            ctx.strokeRect(x - 4, y - 18, 8, 36);
-
-            // Outer ring
-            ctx.strokeStyle = colors.accent + "88";
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.arc(x, y, 22, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // Green accent dots at cross tips
+            for (let i = 0; i < 4; i++) {
+                const a = (i * Math.PI) / 2 + Math.PI / 4;
+                const mx = x + 19 * Math.cos(a);
+                const my = y + 19 * Math.sin(a);
+                ctx.save();
+                ctx.translate(mx, my);
+                ctx.rotate(a);
+                ctx.fillRect(-3.5, -2.5, 7, 5);
+                ctx.strokeRect(-3.5, -2.5, 7, 5);
+                ctx.restore();
+            }
+            // Medical cross — vertical bar
+            ctx.fillStyle = colors.secondary;
+            ctx.fillRect(x - 4, y - 14, 8, 28);
+            ctx.strokeStyle = colors.primary;
+            ctx.lineWidth = 1.2;
+            ctx.strokeRect(x - 4, y - 14, 8, 28);
+            // Medical cross — horizontal bar
+            ctx.fillStyle = colors.secondary;
+            ctx.fillRect(x - 14, y - 4, 28, 8);
+            ctx.strokeStyle = colors.primary;
+            ctx.strokeRect(x - 14, y - 4, 28, 8);
+            // Bright central core
             ctx.fillStyle = colors.accent;
             ctx.beginPath();
-            ctx.arc(x - 18, y, 2, 0, Math.PI * 2);
+            ctx.arc(x, y, 5.5, 0, Math.PI * 2);
             ctx.fill();
+            ctx.fillStyle = "#ffffff";
             ctx.beginPath();
-            ctx.arc(x + 18, y, 2, 0, Math.PI * 2);
+            ctx.arc(x, y, 2.5, 0, Math.PI * 2);
             ctx.fill();
-            ctx.beginPath();
-            ctx.arc(x, y - 18, 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(x, y + 18, 2, 0, Math.PI * 2);
-            ctx.fill();
+            // Accent lights at cross tips
+            ctx.fillStyle = colors.accent;
+            const medLights: [number, number][] = [
+                [x, y - 14], [x, y + 14], [x - 14, y], [x + 14, y],
+            ];
+            for (const [lx, ly] of medLights) {
+                ctx.beginPath();
+                ctx.arc(lx, ly, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
             break;
+        }
     }
 
     ctx.globalAlpha = 1;
