@@ -31,9 +31,39 @@ export interface UiSlice {
  * Создаёт ui слайс для управления игровыми режимами и UI-панелями
  */
 export const createUiSlice = (set: SetState): UiSlice => ({
-    showGalaxyMap: () => set({ gameMode: GAME_MODES.NAVIGATION.GALAXY_MAP }),
+    showGalaxyMap: () =>
+        set((state) => {
+            // Сохраняем текущий зум и offset сектора перед переключением
+            const sectorZoom = state.sectorZoom ?? 1;
+            const sectorOffset = state.sectorOffset ?? { x: 0, y: 0 };
+            // Восстанавливаем зум и offset галактики (или используем значения по умолчанию)
+            const galaxyZoom = state.galaxyZoom ?? 1;
+            const galaxyOffset = state.galaxyOffset ?? { x: 0, y: 0 };
+            return {
+                galaxyZoom,
+                galaxyOffset,
+                sectorZoom,
+                sectorOffset,
+                gameMode: GAME_MODES.NAVIGATION.GALAXY_MAP,
+            };
+        }),
 
-    showSectorMap: () => set({ gameMode: GAME_MODES.NAVIGATION.SECTOR_MAP }),
+    showSectorMap: () =>
+        set((state) => {
+            // Сохраняем текущий зум и offset галактики перед переключением
+            const galaxyZoom = state.galaxyZoom ?? 1;
+            const galaxyOffset = state.galaxyOffset ?? { x: 0, y: 0 };
+            // Восстанавливаем зум и offset сектора (или используем значения по умолчанию)
+            const sectorZoom = state.sectorZoom ?? 1;
+            const sectorOffset = state.sectorOffset ?? { x: 0, y: 0 };
+            return {
+                galaxyZoom,
+                galaxyOffset,
+                sectorZoom,
+                sectorOffset,
+                gameMode: GAME_MODES.NAVIGATION.SECTOR_MAP,
+            };
+        }),
 
     showAssignments: () => set({ gameMode: GAME_MODES.MANAGEMENT.ASSIGNMENTS }),
 

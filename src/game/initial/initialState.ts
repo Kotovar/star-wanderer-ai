@@ -203,6 +203,10 @@ const baseState: GameState = {
     settings: {
         animationsEnabled: true,
     },
+    galaxyZoom: 1,
+    sectorZoom: 1,
+    galaxyOffset: { x: 0, y: 0 },
+    sectorOffset: { x: 0, y: 0 },
 };
 
 /**

@@ -153,11 +153,15 @@ export function GalaxyMap() {
     // Animation canvas ref
     const animCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
-    // Zoom and pan state
-    const [zoom, setZoom] = useState(1);
+    // Zoom and pan state - use store for persistence
+    const galaxyZoom = useGameStore((s) => s.galaxyZoom);
+    const galaxyOffset = useGameStore((s) => s.galaxyOffset);
+    const setZoomState = useGameStore((s) => s.setGalaxyZoom);
+    const setOffsetState = useGameStore((s) => s.setGalaxyOffset);
+    const [zoom, setZoom] = useState(galaxyZoom);
+    const [offset, setOffset] = useState(galaxyOffset);
     const [targetZoom, setTargetZoom] = useState<number | null>(null);
     const zoomAnimationRef = useRef<number | null>(null);
-    const [offset, setOffset] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
     const dragStartRef = useRef({ x: 0, y: 0 });
     const offsetStartRef = useRef({ x: 0, y: 0 });
@@ -236,6 +240,7 @@ export function GalaxyMap() {
                 if (Math.abs(diff) < 0.001) {
                     setZoom(targetZoom);
                     setTargetZoom(null);
+                    setZoomState(targetZoom);
                     return targetZoom;
                 }
 
@@ -251,7 +256,7 @@ export function GalaxyMap() {
                 cancelAnimationFrame(zoomAnimationRef.current);
             }
         };
-    }, [targetZoom]);
+    }, [targetZoom, setZoomState]);
 
     // Reset zoom on new game only (when galaxy is regenerated)
     const prevGalaxySignatureRef = useRef<string>("");
@@ -554,13 +559,19 @@ export function GalaxyMap() {
 
     // Handle mouse up to stop dragging
     const handleMouseUp = useCallback(() => {
+        if (isDragging) {
+            setOffsetState(offset);
+        }
         setIsDragging(false);
-    }, []);
+    }, [isDragging, offset, setOffsetState]);
 
     // Handle mouse leave to stop dragging
     const handleMouseLeave = useCallback(() => {
+        if (isDragging) {
+            setOffsetState(offset);
+        }
         setIsDragging(false);
-    }, []);
+    }, [isDragging, offset, setOffsetState]);
 
     // Touch handlers for mobile
     const handleTouchStart = useCallback(
@@ -598,29 +609,39 @@ export function GalaxyMap() {
     );
 
     const handleTouchEnd = useCallback(() => {
+        if (isDragging) {
+            setOffsetState(offset);
+        }
         setIsDragging(false);
-    }, []);
+    }, [isDragging, offset, setOffsetState]);
 
     // Zoom in/out buttons
     const handleZoomIn = useCallback(() => {
         setTargetZoom((prev) => {
             const currentZoom = prev !== null ? prev : zoom;
-            return Math.min(MAX_ZOOM, currentZoom * 1.3);
+            const newZoom = Math.min(MAX_ZOOM, currentZoom * 1.3);
+            setZoomState(newZoom);
+            return newZoom;
         });
-    }, [zoom]);
+    }, [zoom, setZoomState]);
 
     const handleZoomOut = useCallback(() => {
         setTargetZoom((prev) => {
             const currentZoom = prev !== null ? prev : zoom;
-            return Math.max(MIN_ZOOM, currentZoom / 1.3);
+            const newZoom = Math.max(MIN_ZOOM, currentZoom / 1.3);
+            setZoomState(newZoom);
+            return newZoom;
         });
-    }, [zoom]);
+    }, [zoom, setZoomState]);
 
     // Reset zoom and pan
     const handleReset = useCallback(() => {
         setTargetZoom(1);
-        setOffset({ x: 0, y: 0 });
-    }, []);
+        setZoomState(1);
+        const resetOffset = { x: 0, y: 0 };
+        setOffset(resetOffset);
+        setOffsetState(resetOffset);
+    }, [setZoomState, setOffsetState]);
 
     const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
         // Don't click if we were dragging (moved mouse)

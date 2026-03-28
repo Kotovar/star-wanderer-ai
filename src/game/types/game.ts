@@ -109,6 +109,11 @@ export interface GameState {
     settings: {
         animationsEnabled: boolean; // Sector map animations toggle
     };
+    // Map zoom state (persisted between map switches)
+    galaxyZoom: number; // Galaxy map zoom level (default 1)
+    sectorZoom: number; // Sector map zoom level (default 1)
+    galaxyOffset: { x: number; y: number }; // Galaxy map pan offset
+    sectorOffset: { x: number; y: number }; // Sector map pan offset
 }
 
 export interface GameActions {
@@ -135,6 +140,10 @@ export interface GameActions {
     refuel: (amount: number, price: number) => void;
     gainExp: (crewMember: CrewMember | undefined, amount: number) => void;
     setAnimationsEnabled: (enabled: boolean) => void;
+    setGalaxyZoom: (zoom: number) => void;
+    setSectorZoom: (zoom: number) => void;
+    setGalaxyOffset: (offset: { x: number; y: number }) => void;
+    setSectorOffset: (offset: { x: number; y: number }) => void;
 }
 
 export interface GameActionsClick {
@@ -285,7 +294,10 @@ export interface GameCrafting {
 }
 
 export interface GameAugmentations {
-    installAugmentation: (crewId: number, augmentationId: AugmentationId) => void;
+    installAugmentation: (
+        crewId: number,
+        augmentationId: AugmentationId,
+    ) => void;
     removeAugmentation: (crewId: number) => void;
 }
 
