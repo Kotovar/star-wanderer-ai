@@ -105,47 +105,36 @@ export function EventDisplay() {
         case "galaxy_map":
             return (
                 <div className="flex flex-col h-full">
-                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mb-2 uppercase">
-                        ▸ {t(`galaxy.tiers.tier${currentSector?.tier ?? 1}`)}
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 shrink-0">
+                    <div className="grid grid-cols-3 gap-2 shrink-0 mb-1">
                         <Button
                             onClick={showSectorMap}
                             className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                         >
                             {t("galaxy.buttons.sector_map")}
                         </Button>
-                        <div className="grid grid-rows-2 gap-2">
-                            <Button
-                                onClick={showAssignments}
-                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                            >
-                                {t("galaxy.buttons.crew_tasks")}
-                            </Button>
-                            <Button
-                                onClick={handleSkipTurn}
-                                disabled={isSkipping}
-                                className={` bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${
-                                    isSkipping
-                                        ? "scale-95 bg-[#00ff41] text-[#050810]"
-                                        : ""
-                                }`}
-                            >
-                                {isSkipping ? "⏱️ " : ""}
-                                {t("galaxy.buttons.skip_turn")}
-                            </Button>
-                        </div>
+                        <Button
+                            onClick={showAssignments}
+                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                        >
+                            {t("galaxy.buttons.crew_tasks")}
+                        </Button>
+                        <Button
+                            onClick={handleSkipTurn}
+                            disabled={isSkipping}
+                            className={`bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${
+                                isSkipping
+                                    ? "scale-95 bg-[#00ff41] text-[#050810]"
+                                    : ""
+                            }`}
+                        >
+                            {isSkipping ? "⏱️ " : ""}
+                            {t("galaxy.buttons.skip_turn")}
+                        </Button>
                     </div>
-                    <div className="text-sm text-center shrink-0 h-6 flex items-center justify-center">
-                        {t("galaxy.labels.sector")}:{" "}
-                        <span className="text-[#ffb000]">
-                            {currentSector?.name}
-                        </span>
-                    </div>
-                    <div className="h-80 md:h-auto md:flex-1 relative shrink-0">
+                    <div className="flex-1 relative min-h-0">
                         <GalaxyMap />
                     </div>
-                    <div className="text-[11px] text-center text-[#00ff41] py-2 shrink-0">
+                    <div className="text-[11px] text-center text-[#00ff41] h-6 flex items-center justify-center shrink-0">
                         {t("galaxy.labels.click_sector")}
                     </div>
                 </div>
@@ -154,46 +143,37 @@ export function EventDisplay() {
         case "sector_map":
             return (
                 <div className="flex flex-col h-full">
-                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mb-2">
-                        ▸ {currentSector?.name}
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 shrink-0">
+                    <div className="grid grid-cols-3 gap-2 shrink-0 mb-1">
                         <Button
                             onClick={showGalaxyMap}
                             className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                         >
                             {t("galaxy.buttons.galaxy_map")}
                         </Button>
-                        <div className="grid grid-rows-2 gap-2">
-                            <Button
-                                onClick={showAssignments}
-                                className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                            >
-                                {t("galaxy.buttons.crew_tasks")}
-                            </Button>
-                            <Button
-                                onClick={handleSkipTurn}
-                                disabled={isSkipping}
-                                className={`cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                    isSkipping
-                                        ? "scale-95 bg-[#00ff41] text-[#050810]"
-                                        : ""
-                                }`}
-                            >
-                                {isSkipping ? "⏱️ " : ""}
-                                {t("galaxy.buttons.skip_turn")}
-                            </Button>
-                        </div>
+                        <Button
+                            onClick={showAssignments}
+                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                        >
+                            {t("galaxy.buttons.crew_tasks")}
+                        </Button>
+                        <Button
+                            onClick={handleSkipTurn}
+                            disabled={isSkipping}
+                            className={`cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider text-xs transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                isSkipping
+                                    ? "scale-95 bg-[#00ff41] text-[#050810]"
+                                    : ""
+                            }`}
+                        >
+                            {isSkipping ? "⏱️ " : ""}
+                            {t("galaxy.buttons.skip_turn")}
+                        </Button>
                     </div>
-                    <div className="text-sm text-center shrink-0 h-6 flex items-center justify-center">
-                        {t("galaxy.labels.threat_level")}:{" "}
-                        {currentSector?.danger}
-                    </div>
-                    <div className="h-80 md:h-auto md:flex-1 relative shrink-0">
+                    <div className="flex-1 relative min-h-0">
                         <SectorMap />
                     </div>
                     {currentSector?.star?.type === "blackhole" ? (
-                        <div className="text-[11px] text-center py-2 shrink-0">
+                        <div className="text-[11px] text-center h-6 flex items-center justify-center shrink-0">
                             <span className="text-[#ff00ff] font-bold">
                                 {t("galaxy.black_hole.title")}
                             </span>
@@ -201,18 +181,16 @@ export function EventDisplay() {
                                 — {t("galaxy.black_hole.hint")}
                             </span>
                             {isStuckInBlackHole && (
-                                <div className="mt-1">
-                                    <button
-                                        onClick={emergencyJump}
-                                        className="cursor-pointer bg-[rgba(255,50,50,0.2)] border border-[#ff3232] text-[#ff3232] px-3 py-1 text-xs font-bold hover:bg-[rgba(255,50,50,0.4)] transition-colors"
-                                    >
-                                        {t("galaxy.black_hole.emergency_jump")}
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={emergencyJump}
+                                    className="cursor-pointer bg-[rgba(255,50,50,0.2)] border border-[#ff3232] text-[#ff3232] px-3 text-xs font-bold hover:bg-[rgba(255,50,50,0.4)] transition-colors ml-2"
+                                >
+                                    {t("galaxy.black_hole.emergency_jump")}
+                                </button>
                             )}
                         </div>
                     ) : (
-                        <div className="text-[11px] text-center text-[#00ff41] py-2 shrink-0">
+                        <div className="text-[11px] text-center text-[#00ff41] h-6 flex items-center justify-center shrink-0">
                             {t("galaxy.labels.click_object")}
                         </div>
                     )}
