@@ -120,6 +120,16 @@ export const getSlotMeta = (id: SaveSlotId): SaveSlotMeta | null => {
     }
 };
 
+export const deleteSlot = (id: ManualSlotId): void => {
+    if (typeof window === "undefined") return;
+    try {
+        localStorage.removeItem(SLOT_KEYS[id]);
+        localStorage.removeItem(META_KEYS[id]);
+    } catch (e) {
+        console.error(`Failed to delete slot ${id}:`, e);
+    }
+};
+
 export const getAllSlotMeta = (): Record<SaveSlotId, SaveSlotMeta | null> => ({
     auto:    getSlotMeta("auto"),
     manual1: getSlotMeta("manual1"),

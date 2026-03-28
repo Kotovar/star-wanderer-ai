@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useGameStore } from "@/game/store";
-import { getAllSlotMeta } from "@/game/saves/utils";
+import { getAllSlotMeta, deleteSlot } from "@/game/saves/utils";
 import type { SaveSlotMeta, SaveSlotId, ManualSlotId } from "@/game/saves/utils";
 import { useTranslation } from "@/lib/useTranslation";
 
@@ -29,6 +29,7 @@ interface SlotCardProps {
     isManual: boolean;
     onSave?: () => void;
     onLoad: () => void;
+    onDelete?: () => void;
     confirmOverwrite: SaveSlotId | null;
     setConfirmOverwrite: (id: SaveSlotId | null) => void;
 }
@@ -40,6 +41,7 @@ function SlotCard({
     isManual,
     onSave,
     onLoad,
+    onDelete,
     confirmOverwrite,
     setConfirmOverwrite,
 }: SlotCardProps) {
@@ -70,11 +72,22 @@ function SlotCard({
                         </span>
                     )}
                 </div>
-                {!isEmpty && (
-                    <span className="text-[10px] text-[#444]">
-                        {formatDate(meta.timestamp, currentLanguage)}
-                    </span>
-                )}
+                <div className="flex items-center gap-2">
+                    {!isEmpty && (
+                        <span className="text-[10px] text-[#444]">
+                            {formatDate(meta.timestamp, currentLanguage)}
+                        </span>
+                    )}
+                    {isManual && onDelete && !isEmpty && (
+                        <button
+                            onClick={onDelete}
+                            className="text-[#333] hover:text-[#ff0040] text-[12px] leading-none cursor-pointer transition-colors"
+                            title="Delete save"
+                        >
+                            ✕
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Save info */}
@@ -150,6 +163,11 @@ export function SaveLoadPanel({ onClose }: Props) {
     const handleSave = (slotId: ManualSlotId) => {
         saveToSlot(slotId);
         setConfirmOverwrite(null);
+        setTimeout(refreshMeta, 50);
+    };
+
+    const handleDelete = (slotId: ManualSlotId) => {
+        deleteSlot(slotId);
         setTimeout(refreshMeta, 50);
     };
 
@@ -243,6 +261,7 @@ export function SaveLoadPanel({ onClose }: Props) {
                                                 ? handleLoad(id)
                                                 : setLoadConfirm(id)
                                         }
+                                        onDelete={() => handleDelete(id)}
                                         confirmOverwrite={confirmOverwrite}
                                         setConfirmOverwrite={setConfirmOverwrite}
                                     />
