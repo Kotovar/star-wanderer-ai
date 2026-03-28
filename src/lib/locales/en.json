@@ -2382,5 +2382,20 @@
         "animations_off": "Disable animations",
         "animations_on": "Enable animations",
         "hint": "Click a location to fly there. Click and drag to pan. Mouse wheel to zoom."
+    },
+    "save_load": {
+        "title": "SAVES",
+        "autosave": "Auto-save",
+        "autosave_label": "Auto",
+        "manual_slots": "Manual saves",
+        "hint": "Auto-save is created every turn. On page refresh the latest auto-save is loaded.",
+        "empty": "— empty —",
+        "turn_label": "TURN",
+        "slot_label": "Slot {{n}}",
+        "btn_save": "💾 Save",
+        "btn_load": "📂 Load",
+        "btn_overwrite": "Overwrite",
+        "btn_cancel": "Cancel",
+        "btn_confirm_load": "Confirm load"
     }
 }

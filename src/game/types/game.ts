@@ -302,6 +302,8 @@ export interface GameManagement {
     restartGame: () => void;
     saveGame: () => void;
     loadGame: () => boolean;
+    saveToSlot: (slotId: "manual1" | "manual2" | "manual3") => void;
+    loadFromSlot: (slotId: "auto" | "manual1" | "manual2" | "manual3") => void;
 }
 
 export type GameStore = GameState &

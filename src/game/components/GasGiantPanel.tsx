@@ -175,6 +175,33 @@ export function GasGiantPanel() {
             : 0;
     const canDive = cooldownRemaining === 0 && !activeDive && probes > 0;
 
+    // Mirror the bonus logic from surfaceDive.ts so the panel shows final amounts
+    const ATMOSPHERE_BONUS_KEY: Record<string, "alien_biology" | "rare_minerals" | "void_membrane"> = {
+        hydrogen: "alien_biology",
+        methane:  "rare_minerals",
+        ammonia:  "void_membrane",
+    };
+
+    function getBoostedQty(
+        key: "alien_biology" | "rare_minerals" | "void_membrane",
+        raw: number,
+    ): number {
+        if (raw === 0) return 0;
+        if (atmosphere === "nitrogen") return Math.ceil(raw * 1.25);
+        if (ATMOSPHERE_BONUS_KEY[atmosphere] === key) return Math.ceil(raw * 1.5);
+        return raw;
+    }
+
+    // Bonus label shown next to the section header
+    const atmosphereBonusLabel = (() => {
+        if (!activeDive) return null;
+        if (atmosphere === "nitrogen") return "× все ресурсы +25%";
+        const bonusKey = ATMOSPHERE_BONUS_KEY[atmosphere];
+        if (!bonusKey) return null;
+        const rd = RESEARCH_RESOURCES[bonusKey];
+        return `${rd?.icon} ${rd?.name} +50%`;
+    })();
+
     const rewardEntries =
         activeDive
             ? (
@@ -185,11 +212,17 @@ export function GasGiantPanel() {
                   ] as const
               )
                   .filter((k) => activeDive.rewards[k] > 0)
-                  .map((k) => ({
-                      key: k,
-                      qty: activeDive.rewards[k],
-                      rd: RESEARCH_RESOURCES[k],
-                  }))
+                  .map((k) => {
+                      const raw = activeDive.rewards[k];
+                      const boosted = getBoostedQty(k, raw);
+                      return {
+                          key: k,
+                          qty: raw,
+                          boosted,
+                          isBoosted: boosted !== raw,
+                          rd: RESEARCH_RESOURCES[k],
+                      };
+                  })
             : [];
 
     const depthColor = activeDive ? DEPTH_COLORS[activeDive.currentDepth] : "#7b4fff";
@@ -246,11 +279,18 @@ export function GasGiantPanel() {
                     {/* Accumulated rewards */}
                     {rewardEntries.length > 0 && (
                         <div className="border border-[#1a1a2e] p-2 bg-[rgba(0,0,0,0.3)] shrink-0">
-                            <div className="text-[10px] text-[#888] uppercase tracking-wider mb-1.5">
-                                {t("gas_giant.collected")}
+                            <div className="flex items-center justify-between mb-1.5">
+                                <div className="text-[10px] text-[#888] uppercase tracking-wider">
+                                    {t("gas_giant.collected")}
+                                </div>
+                                {atmosphereBonusLabel && (
+                                    <div className="text-[10px] text-[#ffb000] opacity-80">
+                                        ✦ {atmosphereBonusLabel}
+                                    </div>
+                                )}
                             </div>
                             <div className="flex flex-wrap gap-x-3 gap-y-1">
-                                {rewardEntries.map(({ key, qty, rd }) => (
+                                {rewardEntries.map(({ key, boosted, isBoosted, rd }) => (
                                     <span
                                         key={key}
                                         className="text-xs flex items-center gap-1"
@@ -258,7 +298,10 @@ export function GasGiantPanel() {
                                     >
                                         <span>{rd?.icon}</span>
                                         <span>{rd?.name}</span>
-                                        <span className="font-bold">×{qty}</span>
+                                        <span className="font-bold">×{boosted}</span>
+                                        {isBoosted && (
+                                            <span className="text-[#ffb000] text-[10px]">✦</span>
+                                        )}
                                     </span>
                                 ))}
                             </div>

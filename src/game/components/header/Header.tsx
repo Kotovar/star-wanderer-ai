@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useGameStore } from "@/game/store";
 import { HelpPanel, ActiveEffectsPanel } from "../panels";
 import { ResearchPanel } from "../ResearchPanel";
+import { SaveLoadPanel } from "../SaveLoadPanel";
 import {
     Dialog,
     DialogContent,
@@ -20,6 +21,7 @@ export function GameHeader() {
     const [showEffects, setShowEffects] = useState(false);
     const [showRestartDialog, setShowRestartDialog] = useState(false);
     const [showResearchModal, setShowResearchModal] = useState(false);
+    const [showSaveLoad, setShowSaveLoad] = useState(false);
     const turn = useGameStore((s) => s.turn);
     const credits = useGameStore((s) => s.credits);
     const probes = useGameStore((s) => s.probes);
@@ -169,6 +171,16 @@ export function GameHeader() {
                         </span>
                     </div>
                     <button
+                        onClick={() => setShowSaveLoad(true)}
+                        className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
+                        title={t("save_load.title")}
+                    >
+                        <span className="text-[#00d4ff]">💾</span>
+                        <span className="text-[#00d4ff] hidden md:inline text-xs">
+                            {t("save_load.title")}
+                        </span>
+                    </button>
+                    <button
                         onClick={handleRestartClick}
                         className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#ff4444] hover:bg-[rgba(255,68,68,0.2)] transition-colors cursor-pointer"
                         title={t("header.tooltip_restart")}
@@ -198,6 +210,7 @@ export function GameHeader() {
             </header>
 
             {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
+            {showSaveLoad && <SaveLoadPanel onClose={() => setShowSaveLoad(false)} />}
             {showEffects && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                     <div className="bg-[rgba(10,20,30,0.95)] border-2 border-[#9933ff] p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
