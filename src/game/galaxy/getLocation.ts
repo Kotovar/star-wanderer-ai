@@ -1,5 +1,10 @@
 import type { GalaxyTierAll, LocationType, Location, StarType } from "@/game/types";
-import { LOCATION_CHANCES, LOCATION_TYPE_CHANCES } from "./config";
+import {
+    LOCATION_CHANCES,
+    LOCATION_TYPE_CHANCES_BY_TIER,
+    BLACK_HOLE_LOCATION_CHANCES,
+    STAR_TYPE_LOCATION_MODIFIERS,
+} from "./config";
 import {
     generateAnomaly,
     generateAsteroidBelt,
@@ -15,7 +20,9 @@ import {
 } from "./generate";
 
 /**
- * Выбирает тип локации на основе вероятностей
+ * Выбирает тип локации на основе вероятностей.
+ * Веса нормализуются до суммы 1.0, остаток уходит в "anomaly".
+ * Тип звезды применяет мультипликаторы к базовым весам.
  */
 const getLocationType = (
     roll: number,
@@ -24,85 +31,57 @@ const getLocationType = (
     starType?: StarType,
 ): LocationType => {
     if (isBlackHole) {
-        // В ЧД-секторах: только аномалии и враги (станций/планет/кораблей нет)
-        // Боссы добавляются гарантированно в пост-обработке generateGalaxy
-        const bhRoll = Math.random();
-        return bhRoll < 0.7 ? "anomaly" : "enemy";
+        // ЧД: шторма, аномалии, враги, руины — но не планеты/станции/мирные корабли.
+        // Боссы добавляются отдельно в постобработке generateGalaxy.
+        const bh = BLACK_HOLE_LOCATION_CHANCES;
+        let c = 0;
+        if (roll < (c += bh.anomaly)) return "anomaly";
+        if (roll < (c += bh.enemy)) return "enemy";
+        if (roll < (c += bh.storm)) return "storm";
+        if (roll < (c += bh.derelictShip)) return "derelict_ship";
+        if (roll < (c += bh.distressSignal)) return "distress_signal";
+        return "anomaly"; // запас
     }
 
     const chances = LOCATION_CHANCES[`tier${tier}`];
-    const { planet, asteroidBelt, distressSignal, derelictShip, gasGiant } = LOCATION_TYPE_CHANCES;
+    const { planet, asteroidBelt, distressSignal, derelictShip, gasGiant } =
+        LOCATION_TYPE_CHANCES_BY_TIER[tier];
+    const mods = starType ? (STAR_TYPE_LOCATION_MODIFIERS[starType] ?? {}) : {};
+    const m = (base: number, key: keyof typeof mods): number =>
+        base * (mods[key] ?? 1);
 
-    const thresholds = {
-        station: chances.station,
-        friendlyShip: chances.station + chances.friendlyShip,
-        planet: chances.station + chances.friendlyShip + planet,
-        enemy:
-            chances.station + chances.friendlyShip + planet + chances.enemyShip,
-        asteroidBelt:
-            chances.station +
-            chances.friendlyShip +
-            planet +
-            chances.enemyShip +
-            asteroidBelt,
-        storm:
-            chances.station +
-            chances.friendlyShip +
-            planet +
-            chances.enemyShip +
-            asteroidBelt +
-            chances.storm,
-        distressSignal:
-            chances.station +
-            chances.friendlyShip +
-            planet +
-            chances.enemyShip +
-            asteroidBelt +
-            chances.storm +
-            distressSignal,
-        derelictShip:
-            chances.station +
-            chances.friendlyShip +
-            planet +
-            chances.enemyShip +
-            asteroidBelt +
-            chances.storm +
-            distressSignal +
-            derelictShip,
-        gasGiant:
-            chances.station +
-            chances.friendlyShip +
-            planet +
-            chances.enemyShip +
-            asteroidBelt +
-            chances.storm +
-            distressSignal +
-            derelictShip +
-            gasGiant,
-        boss:
-            chances.station +
-            chances.friendlyShip +
-            planet +
-            chances.enemyShip +
-            asteroidBelt +
-            chances.storm +
-            distressSignal +
-            derelictShip +
-            gasGiant +
-            chances.boss,
+    // Базовые веса с применением модификаторов звезды
+    const w = {
+        station: m(chances.station, "station"),
+        friendlyShip: m(chances.friendlyShip, "friendlyShip"),
+        planet: m(planet, "planet"),
+        enemy: m(chances.enemyShip, "enemy"),
+        asteroidBelt: m(asteroidBelt, "asteroidBelt"),
+        storm: m(chances.storm, "storm"),
+        distressSignal: m(distressSignal, "distressSignal"),
+        derelictShip: m(derelictShip, "derelictShip"),
+        // Газовый гигант как локация не спавнится в системе газового гиганта-звезды
+        gasGiant: starType === "gas_giant" ? 0 : m(gasGiant, "gasGiant"),
+        boss: m(chances.boss, "boss"),
+        // Аномалия: явный базовый вес 6%, усиливается модификатором звезды
+        anomaly: 0.06 * (mods.anomaly ?? 1),
     };
 
-    if (roll < thresholds.station) return "station";
-    if (roll < thresholds.friendlyShip) return "friendly_ship";
-    if (roll < thresholds.planet) return "planet";
-    if (roll < thresholds.enemy) return "enemy";
-    if (roll < thresholds.asteroidBelt) return "asteroid_belt";
-    if (roll < thresholds.storm) return "storm";
-    if (roll < thresholds.distressSignal) return "distress_signal";
-    if (roll < thresholds.derelictShip) return "derelict_ship";
-    // Don't spawn a gas_giant location in a sector whose star is already a gas_giant
-    if (roll < thresholds.gasGiant) return starType === "gas_giant" ? "derelict_ship" : "gas_giant";
-    if (roll < thresholds.boss) return "boss";
+    // Нормализация: сумма весов → 1.0
+    const total = Object.values(w).reduce((a, b) => a + b, 0);
+    const n = 1 / total;
+
+    let c = 0;
+    if (roll < (c += w.station * n)) return "station";
+    if (roll < (c += w.friendlyShip * n)) return "friendly_ship";
+    if (roll < (c += w.planet * n)) return "planet";
+    if (roll < (c += w.enemy * n)) return "enemy";
+    if (roll < (c += w.asteroidBelt * n)) return "asteroid_belt";
+    if (roll < (c += w.storm * n)) return "storm";
+    if (roll < (c += w.distressSignal * n)) return "distress_signal";
+    if (roll < (c += w.derelictShip * n)) return "derelict_ship";
+    if (roll < (c += w.gasGiant * n)) return "gas_giant";
+    if (roll < (c += w.boss * n)) return "boss";
     return "anomaly";
 };
 

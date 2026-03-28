@@ -1,4 +1,4 @@
-import type { GalaxyTierAll, StationConfig, StormType } from "../types";
+import type { GalaxyTierAll, StationConfig, StormType, StarType } from "../types";
 
 // ============================================================================
 // Константы конфигурации галактики
@@ -58,13 +58,34 @@ export const LOCATION_CHANCES = {
     },
 };
 
-/** Вероятности типов локаций (общие) */
-export const LOCATION_TYPE_CHANCES = {
-    planet: 0.35,
-    asteroidBelt: 0.1,
-    distressSignal: 0.07,
-    derelictShip: 0.05,
-    gasGiant: 0.05,
+/**
+ * Вероятности типов локаций по тирам.
+ * Tier 1: много планет и освоенного пространства, мало руин.
+ * Tier 2: базовый баланс.
+ * Tier 3: опасный фронтир — больше поясов и руин, меньше планет.
+ * Tier 4: древние глубины — развалины, обломки, почти нет колоний.
+ */
+export const LOCATION_TYPE_CHANCES_BY_TIER: Record<
+    GalaxyTierAll,
+    { planet: number; asteroidBelt: number; distressSignal: number; derelictShip: number; gasGiant: number }
+> = {
+    1: { planet: 0.42, asteroidBelt: 0.07, distressSignal: 0.04, derelictShip: 0.03, gasGiant: 0.04 },
+    2: { planet: 0.35, asteroidBelt: 0.10, distressSignal: 0.07, derelictShip: 0.05, gasGiant: 0.05 },
+    3: { planet: 0.28, asteroidBelt: 0.13, distressSignal: 0.09, derelictShip: 0.08, gasGiant: 0.06 },
+    4: { planet: 0.20, asteroidBelt: 0.15, distressSignal: 0.10, derelictShip: 0.12, gasGiant: 0.08 },
+};
+
+/**
+ * Распределение локаций в секторах с чёрной дырой (тир не влияет — всё одинаково опасно).
+ * Нет: планет, станций, мирных кораблей, поясов астероидов, газовых гигантов.
+ * Боссы добавляются отдельно в постобработке generateGalaxy.
+ */
+export const BLACK_HOLE_LOCATION_CHANCES = {
+    anomaly: 0.40,       // аномальная физика рядом с сингулярностью
+    enemy: 0.22,         // пираты используют ЧД как убежище
+    storm: 0.20,         // гравитационные и радиационные шторма
+    derelictShip: 0.12,  // корабли, не переживших притяжение
+    distressSignal: 0.06,// кто-то всё ещё застрял
 };
 
 /** Вероятность пустой планеты по уровням */
@@ -162,6 +183,112 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
         allowsCraft: false,
         allowsModuleInstall: false,
         allowsCrewHeal: true,
+    },
+};
+
+/**
+ * Модификаторы весов локаций для каждого типа звезды.
+ * Значение = множитель базового шанса (2.0 = вдвое чаще, 0.3 = втрое реже).
+ * Ключи соответствуют полям в объекте весов в getLocation.ts.
+ */
+type LocationWeightKey =
+    | "station" | "friendlyShip" | "planet" | "enemy"
+    | "asteroidBelt" | "storm" | "distressSignal" | "derelictShip"
+    | "gasGiant" | "boss" | "anomaly";
+
+export const STAR_TYPE_LOCATION_MODIFIERS: Partial<
+    Record<StarType, Partial<Record<LocationWeightKey, number>>>
+> = {
+    // Красный карлик: тесная обитаемая зона, много мелких тел, старые системы
+    red_dwarf: {
+        planet: 1.5,
+        asteroidBelt: 1.4,
+        station: 0.9,
+        gasGiant: 0.6,
+    },
+    // Жёлтый карлик: стабильная система, много жизни и торговли
+    yellow_dwarf: {
+        planet: 1.3,
+        station: 1.4,
+        friendlyShip: 1.4,
+    },
+    // Белый карлик: мёртвая звезда — руины, обломки, странные явления
+    white_dwarf: {
+        derelictShip: 2.5,
+        asteroidBelt: 1.8,
+        anomaly: 2.0,
+        planet: 0.3,
+        station: 0.4,
+        friendlyShip: 0.3,
+        gasGiant: 0.5,
+    },
+    // Голубой гигант: горячий, энергичный, опасный — шторма и пираты
+    blue_giant: {
+        storm: 2.5,
+        enemy: 1.5,
+        asteroidBelt: 1.3,
+        planet: 0.5,
+        station: 0.6,
+        friendlyShip: 0.5,
+    },
+    // Красный сверхгигант: умирающая звезда — ветер, аномалии, запустение
+    red_supergiant: {
+        storm: 2.0,
+        anomaly: 1.6,
+        station: 0.4,
+        friendlyShip: 0.4,
+        planet: 0.6,
+    },
+    // Нейтронная звезда: пульсар — смертельная радиация, мощные аномалии
+    neutron_star: {
+        storm: 3.0,
+        anomaly: 2.5,
+        enemy: 1.4,
+        planet: 0.2,
+        station: 0.15,
+        friendlyShip: 0.15,
+        gasGiant: 0.3,
+    },
+    // Двойная система: гравитационный хаос — пояса астероидов и ресурсы
+    double: {
+        asteroidBelt: 1.8,
+        gasGiant: 1.4,
+        enemy: 1.2,
+        planet: 0.8,
+    },
+    // Тройная система: крайняя нестабильность орбит
+    triple: {
+        asteroidBelt: 2.2,
+        storm: 1.6,
+        enemy: 1.4,
+        station: 0.4,
+        friendlyShip: 0.4,
+        planet: 0.5,
+    },
+    // Газовый гигант (звезда): несостоявшаяся звезда, забытый угол галактики
+    gas_giant: {
+        derelictShip: 2.0,
+        anomaly: 1.4,
+        station: 0.5,
+        friendlyShip: 0.3,
+    },
+    // Переменная звезда: непредсказуемые вспышки — шторма и сигналы бедствия
+    variable_star: {
+        storm: 2.5,
+        anomaly: 1.8,
+        distressSignal: 1.5,
+        station: 0.5,
+        friendlyShip: 0.5,
+    },
+    // Звёздный остаток: остывающие угли — руины, обломки, аномалии
+    stellar_remnant: {
+        derelictShip: 2.5,
+        asteroidBelt: 1.8,
+        anomaly: 2.0,
+        planet: 0.3,
+        station: 0.25,
+        friendlyShip: 0.25,
+        gasGiant: 0.4,
     },
 };
 
