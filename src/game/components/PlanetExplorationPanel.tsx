@@ -41,25 +41,28 @@ export function PlanetExplorationPanel() {
     return (
         <div className="flex flex-col gap-2">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="font-['Orbitron'] font-bold text-[#00d4ff] uppercase tracking-wider text-sm">
+            <div className="flex items-center justify-between gap-2">
+                <div className="font-['Orbitron'] font-bold text-[#00d4ff] uppercase tracking-wider text-sm shrink-0">
                     🗺️ {t("planet_panel.expedition_setup_title")}
                 </div>
-                <div className="flex items-center gap-1">
-                    {Array.from({ length: apTotal }).map((_, i) => (
+                <div className="flex items-center gap-2 min-w-0">
+                    {/* AP progress bar */}
+                    <div className="flex-1 min-w-[60px] h-2 rounded-full bg-[#1a1a2e] overflow-hidden">
                         <div
-                            key={i}
-                            className={`w-3 h-3 rounded-full border ${
-                                i < apRemaining
-                                    ? "bg-[#00d4ff] border-[#00d4ff]"
-                                    : "bg-transparent border-[#333]"
-                            }`}
+                            className="h-full rounded-full transition-all"
+                            style={{
+                                width: apTotal > 0 ? `${(apRemaining / apTotal) * 100}%` : "0%",
+                                background: apRemaining > apTotal * 0.5
+                                    ? "#00d4ff"
+                                    : apRemaining > apTotal * 0.25
+                                    ? "#ffb000"
+                                    : "#ff0040",
+                                boxShadow: apRemaining > 0 ? "0 0 6px #00d4ff88" : "none",
+                            }}
                         />
-                    ))}
-                    <span className="text-xs text-[#888] ml-1">
-                        {t("planet_panel.expedition_ap_remaining", {
-                            ap: apRemaining,
-                        })}
+                    </div>
+                    <span className="text-xs text-[#00d4ff] font-bold whitespace-nowrap">
+                        {apRemaining}/{apTotal} AP
                     </span>
                 </div>
             </div>
@@ -67,18 +70,24 @@ export function PlanetExplorationPanel() {
             {/* Ruins event modal */}
             <Dialog open={!!activeRuinsEvent}>
                 <DialogContent
-                    className="max-w-sm border border-[#ffb000] bg-[#050810] p-0"
+                    className="max-w-sm bg-[#050810] p-0"
+                    style={{ border: "2px solid #ffb00066" }}
                     onInteractOutside={(e) => e.preventDefault()}
                     showCloseButton={false}
                 >
-                    <div className="flex flex-col gap-3 p-4">
+                    {/* Amber header strip */}
+                    <div className="px-4 pt-4 pb-3 border-b border-[#ffb00033] bg-[rgba(255,176,0,0.04)]">
+                        <div className="text-[10px] text-[#ffb000] uppercase tracking-widest font-['Orbitron'] mb-1 opacity-60">
+                            🏚️ {t("planet_panel.tile_ruins")}
+                        </div>
                         <DialogTitle className="text-[#ffb000] font-bold text-sm font-['Orbitron'] uppercase tracking-wider">
-                            🏚️{" "}
                             {activeRuinsEvent
                                 ? t(`planet_panel.${activeRuinsEvent.titleKey}`)
                                 : ""}
                         </DialogTitle>
-                        <div className="text-xs text-[#888] leading-relaxed">
+                    </div>
+                    <div className="flex flex-col gap-3 p-4">
+                        <div className="text-xs text-[#aaa] leading-relaxed border-l-2 border-[#ffb00044] pl-3">
                             {activeRuinsEvent
                                 ? t(`planet_panel.${activeRuinsEvent.descKey}`)
                                 : ""}
@@ -88,7 +97,7 @@ export function PlanetExplorationPanel() {
                                 <Button
                                     key={idx}
                                     onClick={() => resolveRuinsChoice(idx)}
-                                    className="bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] text-xs py-1.5 cursor-pointer text-left justify-start"
+                                    className="bg-transparent border border-[#ffb00066] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] text-xs py-1.5 cursor-pointer text-left justify-start"
                                 >
                                     {t(`planet_panel.${choice.labelKey}`)}
                                 </Button>
@@ -132,35 +141,33 @@ export function PlanetExplorationPanel() {
                 rewards.tradeGoods.length > 0 ||
                 rewards.researchResources.length > 0 ||
                 rewards.artifactFound) && (
-                <div className="border border-[#333] p-2 bg-[rgba(0,0,0,0.3)]">
-                    <div className="text-xs text-[#888] uppercase tracking-wider mb-1">
+                <div className="border border-[#1a2a1a] p-2 bg-[rgba(0,255,65,0.03)]">
+                    <div className="text-[10px] text-[#888] uppercase tracking-wider mb-1.5">
                         {t("planet_panel.expedition_rewards_title")}
                     </div>
-                    <div className="flex flex-col gap-0.5 text-xs">
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
                         {rewards.credits > 0 && (
-                            <div className="text-[#00ff41]">
+                            <span className="text-[#00ff41] font-bold">
                                 +{rewards.credits}₢
-                            </div>
+                            </span>
                         )}
                         {rewards.tradeGoods.map((tg) => (
-                            <div key={tg.id} className="text-[#ffb000]">
-                                {TRADE_GOODS[tg.id]?.name ?? tg.id} x
-                                {tg.quantity}
-                            </div>
+                            <span key={tg.id} className="text-[#ffb000]">
+                                📦 {TRADE_GOODS[tg.id]?.name ?? tg.id} ×{tg.quantity}
+                            </span>
                         ))}
                         {rewards.researchResources.map((res) => {
                             const rd = RESEARCH_RESOURCES[res.type];
                             return (
-                                <div key={res.type} className="text-[#4488ff]">
-                                    {rd?.icon ?? ""} {rd?.name ?? res.type} x
-                                    {res.quantity}
-                                </div>
+                                <span key={res.type} style={{ color: rd?.color ?? "#4488ff" }}>
+                                    {rd?.icon ?? ""} {rd?.name ?? res.type} ×{res.quantity}
+                                </span>
                             );
                         })}
                         {rewards.artifactFound && (
-                            <div className="text-[#9933ff]">
-                                ✨ Артефакт найден
-                            </div>
+                            <span className="text-[#9933ff] font-bold">
+                                {t("planet_panel.expedition_artifact_found")}
+                            </span>
                         )}
                     </div>
                 </div>

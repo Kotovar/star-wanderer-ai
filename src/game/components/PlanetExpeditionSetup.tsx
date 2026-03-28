@@ -64,6 +64,8 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                 {crew.map((member) => {
                     const selected = selectedIds.includes(member.id);
                     const fatigued = (member.expeditionFatigue ?? 0) > 0;
+                    const hpPct = member.maxHealth > 0 ? (member.health / member.maxHealth) * 100 : 0;
+                    const hpColor = hpPct > 60 ? "#00ff41" : hpPct > 30 ? "#ffb000" : "#ff0040";
                     return (
                         <button
                             key={member.id}
@@ -77,47 +79,59 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                                       : "border-[#333] text-[#888] hover:border-[#555] hover:text-[#ccc] cursor-pointer"
                             }`}
                         >
-                            <span className="text-lg">
+                            <span className="text-lg shrink-0">
                                 {PROFESSION_ICONS[member.profession] ?? "👤"}
                             </span>
-                            <div className="flex-1">
-                                <div className="text-sm font-bold">
+                            <div className="flex-1 min-w-0">
+                                <div className="text-sm font-bold truncate">
                                     {member.name}
                                 </div>
-                                <div className="text-xs opacity-70">
+                                <div className="text-xs opacity-70 mb-1">
                                     {t(`professions.${member.profession}`)} ·{" "}
                                     {t("effects.level_short")}
-                                    {member.level} · {member.health}/
-                                    {member.maxHealth} HP
+                                    {member.level}
                                     {fatigued &&
                                         ` · 😴 ${member.expeditionFatigue} ${t("effects.turns")}`}
                                 </div>
+                                {/* HP bar */}
+                                <div className="flex items-center gap-1.5">
+                                    <div className="flex-1 h-1 rounded-full bg-[#1a1a1a] overflow-hidden">
+                                        <div
+                                            className="h-full rounded-full transition-all"
+                                            style={{
+                                                width: `${hpPct}%`,
+                                                backgroundColor: hpColor,
+                                            }}
+                                        />
+                                    </div>
+                                    <span className="text-[10px] opacity-50 whitespace-nowrap">
+                                        {member.health}/{member.maxHealth}
+                                    </span>
+                                </div>
                             </div>
                             {selected && !fatigued && (
-                                <span className="text-[#00d4ff] text-xs">
-                                    ✓
-                                </span>
+                                <span className="text-[#00d4ff] text-base shrink-0">✓</span>
                             )}
                         </button>
                     );
                 })}
             </div>
 
-            <div className="items-center text-sm text-[#888] flex flex-wrap gap-x-3 gap-y-1 ali">
-                <span>
-                    <span className="text-[#00d4ff] font-bold">
-                        {t("planet_panel.expedition_ap_label")}:
-                    </span>{" "}
-                    <span className="text-white font-bold">{totalAP}</span>
-                </span>
+            {/* AP breakdown */}
+            <div className="flex items-center gap-2 flex-wrap text-xs">
+                <div className="flex items-center gap-1.5 border border-[#00d4ff44] px-2 py-1 bg-[rgba(0,212,255,0.05)]">
+                    <span className="text-[#888]">{t("planet_panel.expedition_ap_label")}:</span>
+                    <span className="text-white font-bold text-sm">{totalAP}</span>
+                </div>
+                <span className="text-[#555]">= {selectedIds.length} 👤</span>
                 {syntheticBonus > 0 && (
-                    <span className="text-xs text-[#4488ff]">
-                        +{syntheticBonus} синтетики
+                    <span className="text-[#4488ff]">
+                        {t("planet_panel.expedition_synthetic_bonus", { count: syntheticBonus })}
                     </span>
                 )}
                 {techBonus > 0 && (
-                    <span className="text-xs text-[#00d4ff]">
-                        +{techBonus} 🎒 комплекты
+                    <span className="text-[#00d4ff]">
+                        {t("planet_panel.expedition_kit_bonus", { count: techBonus })}
                     </span>
                 )}
             </div>

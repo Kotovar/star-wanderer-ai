@@ -58,6 +58,9 @@ export function PlanetPanel() {
     // Discover race when visiting (useEffect to avoid setState during render)
     const dominantRace = currentLocation?.dominantRace;
     const race = dominantRace ? RACES[dominantRace] : null;
+    const raceAccent = race?.color ?? "#ffb000";
+    const raceBg = race ? `${race.color}12` : "rgba(0,0,0,0)";
+    const raceBorder = race ? `${race.color}55` : "#333";
 
     useEffect(() => {
         if (dominantRace && race && !knownRaces.includes(dominantRace)) {
@@ -353,9 +356,10 @@ export function PlanetPanel() {
         const planetBgClassPlanet = getPlanetBackgroundClass(currentLocationPlanetTypePlanet);
         return (
             <div
-                className={`flex flex-col h-full min-h-0 rounded-lg border border-[#333] ${planetBgClassPlanet}`}
+                className={`flex flex-col h-full min-h-0 rounded-lg border ${planetBgClassPlanet}`}
+                style={{ borderColor: raceBorder }}
             >
-                <div className="relative z-10 bg-[rgba(5,8,16,0.85)] rounded border border-[#333] flex-1 overflow-y-auto p-4 min-h-0">
+                <div className="relative z-10 bg-[rgba(5,8,16,0.85)] rounded border flex-1 overflow-y-auto p-4 min-h-0" style={{ borderColor: raceBorder }}>
                     <PlanetExplorationPanel />
                 </div>
             </div>
@@ -382,11 +386,18 @@ export function PlanetPanel() {
     const planetBgClass = getPlanetBackgroundClass(currentLocationPlanetType);
     return (
         <div
-            className={`flex flex-col gap-4 p-4 rounded-lg border border-[#333] ${planetBgClass}`}
+            className={`flex flex-col gap-4 p-4 rounded-lg border ${planetBgClass}`}
+            style={{ borderColor: raceAccent + "88" }}
         >
             {/* Content overlay for readability */}
-            <div className="relative z-10 bg-[rgba(5,8,16,0.85)] p-4 rounded border border-[#333]">
-                <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
+            <div className="relative z-10 p-4 rounded border" style={{ borderColor: raceBorder, backgroundColor: "rgba(5,8,16,0.9)" }}>
+                {race && (
+                    <div
+                        className="h-0.5 -mx-4 -mt-4 mb-4"
+                        style={{ background: `linear-gradient(90deg, ${race.color}cc 0%, ${race.color}22 100%)` }}
+                    />
+                )}
+                <div className="font-['Orbitron'] font-bold text-lg" style={{ color: raceAccent }}>
                     ▸ {getLocationName(currentLocation.name, t)} -{" "}
                     {currentLocationPlanetType
                         ? getPlanetTypeName(currentLocationPlanetType, t)
@@ -439,11 +450,12 @@ export function PlanetPanel() {
                             <Button
                                 onClick={() => setShowSpecialization(true)}
                                 disabled={isOnCooldown}
-                                className={`bg-transparent border-2 text-xs px-3 py-1.5 uppercase ${
+                                className="bg-transparent border-2 text-xs px-3 py-1.5 uppercase"
+                                style={
                                     isOnCooldown
-                                        ? "border-[#444] text-[#444] cursor-not-allowed"
-                                        : "border-[#9933ff] text-[#9933ff] hover:bg-[#9933ff] hover:text-[#050810] cursor-pointer"
-                                }`}
+                                        ? { borderColor: "#444", color: "#444", cursor: "not-allowed" }
+                                        : { borderColor: raceAccent, color: raceAccent, cursor: "pointer" }
+                                }
                             >
                                 {isOnCooldown
                                     ? t("planet_panel.on_cooldown")
@@ -461,7 +473,8 @@ export function PlanetPanel() {
                     ) : (
                         <Button
                             onClick={() => setShowExpeditionSetup(true)}
-                            className="mt-2 bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider text-xs px-3 py-1.5 cursor-pointer"
+                            className="mt-2 bg-transparent border-2 uppercase tracking-wider text-xs px-3 py-1.5 cursor-pointer"
+                            style={{ borderColor: raceAccent, color: raceAccent }}
                         >
                             🗺️ {t("planet_panel.explore_planet")}
                         </Button>
@@ -529,7 +542,7 @@ export function PlanetPanel() {
                 {/* Available contracts */}
                 {availableContracts.length > 0 && (
                     <>
-                        <div className="font-['Orbitron'] font-bold text-base text-[#ffb000] mt-4">
+                        <div className="font-['Orbitron'] font-bold text-base mt-4" style={{ color: raceAccent }}>
                             {t("planet_panel.available_tasks")}
                         </div>
                         <div className="flex flex-col gap-2 max-h-75 overflow-y-auto">
@@ -566,7 +579,11 @@ export function PlanetPanel() {
                                 return (
                                     <div
                                         key={c.id}
-                                        className={`bg-[rgba(0,255,65,0.05)] border p-3 ${isActive ? "opacity-40" : ""} ${c.isRaceQuest ? "border-[#9933ff]" : "border-[#00ff41]"}`}
+                                        className={`border p-3 ${isActive ? "opacity-40" : ""} ${c.isRaceQuest ? "border-[#9933ff]" : ""}`}
+                                        style={{
+                                            background: raceBg,
+                                            ...(c.isRaceQuest ? {} : { borderColor: raceBorder }),
+                                        }}
                                     >
                                         <div className="flex justify-between items-start">
                                             <div className="flex-1">
@@ -861,7 +878,7 @@ export function PlanetPanel() {
                 {/* Expedition Setup Modal */}
                 {showExpeditionSetup && planetId && (
                     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                        <div className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00d4ff] p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+                        <div className="bg-[rgba(10,20,30,0.95)] border-2 p-6 max-w-md w-full max-h-[80vh] overflow-y-auto" style={{ borderColor: raceAccent }}>
                             <PlanetExpeditionSetup
                                 planetId={planetId}
                                 onClose={() => setShowExpeditionSetup(false)}

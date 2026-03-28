@@ -1283,6 +1283,9 @@
         "expedition_end_btn": "END EXPEDITION",
         "expedition_rewards_title": "Collected:",
         "expedition_finished": "Expedition complete!",
+        "expedition_artifact_found": "✨ Artifact found",
+        "expedition_synthetic_bonus": "+{{count}} synthetic",
+        "expedition_kit_bonus": "+{{count}} 🎒 kits",
         "tile_market": "Marketplace",
         "tile_lab": "Research Lab",
         "tile_ruins": "Ancient Ruins",
@@ -1844,6 +1847,109 @@
         "variable_star": "Variable Star",
         "stellar_remnant": "Stellar Remnant"
     },
+    "star_info": {
+        "class": "Spectral class",
+        "temperature": "Temperature",
+        "mass": "Mass",
+        "hazard": "Hazard",
+        "close": "Close",
+        "red_dwarf": {
+            "icon": "🔴",
+            "class": "Class M",
+            "temp": "~3,000 K",
+            "mass": "0.1–0.6 M☉",
+            "hazard": "low",
+            "desc": "The most common type of star. Stable and long-lived but dim and cold. Planets can only be habitable in the very inner zone."
+        },
+        "yellow_dwarf": {
+            "icon": "🌟",
+            "class": "Class G",
+            "temp": "~5,800 K",
+            "mass": "0.8–1.2 M☉",
+            "hazard": "low",
+            "desc": "A star similar to our Sun. Stable, warm, and surrounded by planets suitable for colonisation. The most welcoming type of system."
+        },
+        "white_dwarf": {
+            "icon": "⚪",
+            "class": "Class D",
+            "temp": "10,000–100,000 K",
+            "mass": "0.5–1.4 M☉",
+            "hazard": "medium",
+            "desc": "The remnant of a dead star, slowly cooling over millennia. Debris from old planets may still orbit it."
+        },
+        "blue_giant": {
+            "icon": "🔵",
+            "class": "Class O/B",
+            "temp": "~25,000 K",
+            "mass": "10–100 M☉",
+            "hazard": "high",
+            "desc": "A rare and massive star that burns its fuel thousands of times faster than the Sun. Its short life ends in a supernova."
+        },
+        "red_supergiant": {
+            "icon": "🟠",
+            "class": "Class M-I",
+            "temp": "~3,500 K",
+            "mass": "10–40 M☉",
+            "hazard": "high",
+            "desc": "A dying giant star in its final evolutionary stage. Instability can cause sudden flares and mass ejections."
+        },
+        "neutron_star": {
+            "icon": "💜",
+            "class": "Pulsar",
+            "temp": ">1,000,000 K",
+            "mass": "1.4–3 M☉",
+            "hazard": "very high",
+            "desc": "An ultra-dense stellar remnant left by a supernova. Spins rapidly, emitting pulses of hard radiation. Even close approach is dangerous."
+        },
+        "double": {
+            "icon": "🌠",
+            "class": "Binary",
+            "temp": "variable",
+            "mass": "2× M☉",
+            "hazard": "medium",
+            "desc": "Two stars orbiting a common centre of mass. Their gravitational interplay creates complex planetary orbits."
+        },
+        "triple": {
+            "icon": "✨",
+            "class": "Trinary",
+            "temp": "variable",
+            "mass": "3× M☉",
+            "hazard": "medium",
+            "desc": "Three stars in a complex gravitational dance. Unpredictable but beautiful — and rich in rare resources."
+        },
+        "blackhole": {
+            "icon": "⚫",
+            "class": "Singularity",
+            "temp": "→∞",
+            "mass": ">3 M☉",
+            "hazard": "extreme",
+            "desc": "A gravitational trap from which not even light escapes. With enough courage, it can be used to jump to another system."
+        },
+        "gas_giant": {
+            "icon": "🟣",
+            "class": "Brown Dwarf",
+            "temp": "~1,000 K",
+            "mass": "13–80 MJ",
+            "hazard": "low",
+            "desc": "A 'failed star' — too massive for a planet but too light to sustain fusion. Rich in deuterium and exotic gases."
+        },
+        "variable_star": {
+            "icon": "⭐",
+            "class": "Variable",
+            "temp": "~5,500 K",
+            "mass": "~M☉",
+            "hazard": "low",
+            "desc": "A star whose brightness changes periodically. Pulsations create beautiful light waves but can cause navigation interference."
+        },
+        "stellar_remnant": {
+            "icon": "🌫️",
+            "class": "Remnant",
+            "temp": "<500 K",
+            "mass": "<0.5 M☉",
+            "hazard": "low",
+            "desc": "The cold, dark remnant of a long-dead star. Quiet surroundings — only dust and debris. An ideal hiding spot."
+        }
+    },
     "location_types": {
         "asteroid_belt": "Asteroid Belt",
         "anomaly": "Anomaly",
@@ -2201,7 +2307,8 @@
         "choice_catch_discharge": "Catch a discharge",
         "choice_analysis_from_distance": "Analysis from a distance",
         "probes_available": "Probes on board: {{count}}",
-        "no_probes": "No probes — buy at a station"
+        "no_probes": "No probes — buy at a station",
+        "probe_loss_chance": "💥 probe {{chance}}%"
     },
     "blueprints": {
         "title": "BLUEPRINTS",

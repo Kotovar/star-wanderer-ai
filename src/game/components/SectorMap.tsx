@@ -530,6 +530,8 @@ export function SectorMap() {
         y: number;
     } | null>(null);
 
+    const [starInfoOpen, setStarInfoOpen] = useState(false);
+
     // Zoom and pan state
     const [zoom, setZoom] = useState(1);
     const [targetZoom, setTargetZoom] = useState<number | null>(null);
@@ -1547,13 +1549,18 @@ export function SectorMap() {
         const worldClickY =
             (clickY - centerY - currentOffset.y) / zoom + centerY;
 
-        // Check if clicked on central star (black hole)
+        // Check if clicked on central star
         const distFromCenter = Math.sqrt(
             (worldClickX - centerX) ** 2 + (worldClickY - centerY) ** 2,
         );
+        const starHitRadius = 45 / zoom;
 
-        if (currentSector.star?.type === "blackhole" && distFromCenter < 40) {
-            travelThroughBlackHole();
+        if (distFromCenter < starHitRadius) {
+            if (currentSector.star?.type === "blackhole") {
+                travelThroughBlackHole();
+            } else {
+                setStarInfoOpen(true);
+            }
             return;
         }
 
@@ -1693,6 +1700,59 @@ export function SectorMap() {
             <div className="absolute bottom-4 left-4 bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-3 py-1 text-xs text-[#00ff41] select-none pointer-events-none">
                 🔍 {(zoom * 100).toFixed(0)}%
             </div>
+
+            {/* Star info panel */}
+            {starInfoOpen && currentSector?.star && (
+                <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+                    <div
+                        className="pointer-events-auto bg-[#080d18] border-2 border-[#00d4ff] max-w-sm w-full mx-4 font-['Share_Tech_Mono'] shadow-[0_0_40px_rgba(0,212,255,0.2)]"
+                    >
+                        {/* Header */}
+                        <div className="flex justify-between items-center px-4 py-3 border-b border-[#00d4ff] bg-[rgba(0,212,255,0.04)]">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xl">
+                                    {(t(`star_info.${currentSector.star.type}.icon`) as string) || "★"}
+                                </span>
+                                <div>
+                                    <div className="font-['Orbitron'] text-sm font-bold text-[#00d4ff]">
+                                        {t(`star_types.${currentSector.star.type}`)}
+                                    </div>
+                                    <div className="text-[#445] text-xs">
+                                        {currentSector.name}
+                                    </div>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setStarInfoOpen(false)}
+                                className="text-[#00d4ff] hover:text-white cursor-pointer opacity-70 hover:opacity-100 transition-opacity px-1"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Stats */}
+                        <div className="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs border-b border-[#111a22]">
+                            {[
+                                { label: t("star_info.class"),       val: t(`star_info.${currentSector.star.type}.class`) },
+                                { label: t("star_info.temperature"),  val: t(`star_info.${currentSector.star.type}.temp`) },
+                                { label: t("star_info.mass"),         val: t(`star_info.${currentSector.star.type}.mass`) },
+                                { label: t("star_info.hazard"),       val: t(`star_info.${currentSector.star.type}.hazard`) },
+                            ].map(({ label, val }) => (
+                                <div key={label}>
+                                    <span className="text-[#445]">{label}: </span>
+                                    <span className="text-[#00ff41]">{val}</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Description */}
+                        <div className="px-4 py-3 text-xs text-[#99a] leading-relaxed border-b border-[#111a22]">
+                            {t(`star_info.${currentSector.star.type}.desc`)}
+                        </div>
+
+                    </div>
+                </div>
+            )}
 
             {/* Tooltip */}
             {hoveredLocation && (
