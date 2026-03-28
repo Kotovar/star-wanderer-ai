@@ -2,6 +2,7 @@ import type { SetState, GameStore, PlanetType } from "@/game/types";
 import type { ResearchResourceType } from "@/game/types/research";
 import { RESEARCH_RESOURCES } from "@/game/constants";
 import { SCIENTIST_ATMOSPHERE_EXP } from "@/game/constants/experience";
+import { addTradeGood } from "@/game/slices/ship/helpers";
 
 type ResourceYield = { type: ResearchResourceType; qty: number };
 
@@ -90,19 +91,39 @@ export const atmosphericAnalysis = (
 
     const resources = getAtmosphereResources(planet?.planetType);
 
-    // Применяем ресурсы
+    // Применяем ресурсы: rare_minerals → трюм (торговый ресурс), остальные → исследования
+    const cargoCapacity = get().getCargoCapacity();
+
     set((s) => {
         const updated = { ...s.research.resources };
+        const cargoUsed =
+            s.ship.cargo.reduce((sum, c) => sum + c.quantity, 0) +
+            s.ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0);
+        let availableSpace = Math.max(0, cargoCapacity - cargoUsed);
+        let newTradeGoods = [...s.ship.tradeGoods];
+
         for (const res of resources) {
-            updated[res.type] = (updated[res.type] || 0) + res.qty;
+            if (res.type === "rare_minerals") {
+                const actual = Math.min(res.qty, availableSpace);
+                if (actual > 0) {
+                    newTradeGoods = addTradeGood(newTradeGoods, "rare_minerals", actual);
+                    availableSpace -= actual;
+                }
+            } else {
+                updated[res.type] = (updated[res.type] || 0) + res.qty;
+            }
         }
-        return { research: { ...s.research, resources: updated } };
+        return {
+            ship: { ...s.ship, tradeGoods: newTradeGoods },
+            research: { ...s.research, resources: updated },
+        };
     });
 
     resources.forEach((res) => {
         const rd = RESEARCH_RESOURCES[res.type];
+        const destination = res.type === "rare_minerals" ? " → трюм" : "";
         get().addLog(
-            `🌫️ Атмосферный анализ: ${rd?.icon ?? ""} ${rd?.name ?? res.type} x${res.qty}`,
+            `🌫️ Атмосферный анализ: ${rd?.icon ?? ""} ${rd?.name ?? res.type} x${res.qty}${destination}`,
             "info",
         );
     });

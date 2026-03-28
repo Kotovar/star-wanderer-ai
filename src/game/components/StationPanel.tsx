@@ -71,6 +71,8 @@ export function StationPanel() {
     const refuel = useGameStore((s) => s.refuel);
     const probes = useGameStore((s) => s.probes);
     const buyProbe = useGameStore((s) => s.buyProbe);
+    const research = useGameStore((s) => s.research);
+    const addLog = useGameStore((s) => s.addLog);
     const getCrewCapacity = useGameStore((s) => s.getCrewCapacity);
     const getCargoCapacity = useGameStore((s) => s.getCargoCapacity);
     const crew = useGameStore((s) => s.crew);
@@ -89,6 +91,7 @@ export function StationPanel() {
     const stationId = currentLocation?.stationId || "";
     const sectorTier = currentSector?.tier || 1;
     const stationConfig = currentLocation?.stationConfig;
+    const isResearchStation = currentLocation?.stationType === "research";
 
     // Station service flags (default true for backwards compat with old saves)
     const allowsTrade = stationConfig?.allowsTrade ?? true;
@@ -342,6 +345,38 @@ export function StationPanel() {
                         onRemoveAugmentation={removeAugmentation}
                         probes={probes}
                         onBuyProbe={buyProbe}
+                        isResearchStation={isResearchStation}
+                        researchResources={research.resources}
+                        onSellResearchResource={(type, qty) => {
+                            const price = {
+                                tech_salvage: 50,
+                                rare_minerals: 80,
+                                alien_biology: 120,
+                                ancient_data: 150,
+                                energy_samples: 200,
+                                void_membrane: 300,
+                                quantum_crystals: 500,
+                            }[type] ?? 0;
+                            const earned = price * qty;
+                            useGameStore.setState((s) => ({
+                                credits: s.credits + earned,
+                                research: {
+                                    ...s.research,
+                                    resources: {
+                                        ...s.research.resources,
+                                        [type]: Math.max(
+                                            0,
+                                            (s.research.resources[type] ?? 0) -
+                                                qty,
+                                        ),
+                                    },
+                                },
+                            }));
+                            addLog(
+                                `📊 Проданы исследовательские данные: ${qty}× → +${earned}₢`,
+                                "info",
+                            );
+                        }}
                     />
                 </TabsContent>
                 {allowsCraft && (

@@ -24,6 +24,7 @@ type ShipType = {
     hasTrader: boolean;
     hasCrew: boolean;
     hasQuest: boolean;
+    hasDistress?: boolean;
 };
 
 export const SHIP_TYPES: ShipType[] = [
@@ -70,6 +71,15 @@ export const SHIP_TYPES: ShipType[] = [
         hasTrader: false,
         hasCrew: true,
         hasQuest: true,
+    },
+    {
+        name: "Аварийный Транспорт",
+        greeting:
+            "⚠️ СИГНАЛ БЕДСТВИЯ: Корабль получил критические повреждения и запрашивает помощь.",
+        hasTrader: false,
+        hasCrew: false,
+        hasQuest: false,
+        hasDistress: true,
     },
 ];
 

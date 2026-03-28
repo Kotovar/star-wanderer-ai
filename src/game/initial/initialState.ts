@@ -168,6 +168,7 @@ const baseState: GameState = {
     randomEventCooldown: 0,
     hiredCrew: {},
     hiredCrewFromShips: [],
+    distressRespondedShips: [],
     artifacts: ANCIENT_ARTIFACTS.map((a) => ({ ...a })),
     knownRaces: [INITIAL_KNOWN_RACE],
     gameLoadedCount: INITIAL_GAME_LOADED_COUNT,

@@ -737,9 +737,9 @@ export function SectorMap() {
                   ? t("sector_map.unknown_object")
                   : getLocationName(loc.name, t);
 
-            // Also hide enemy/friendly ship names without scanner and not revealed (unless telepathy)
+            // Also hide enemy/friendly/derelict ship names without scanner and not revealed (unless telepathy)
             const isUnknownShip =
-                ["enemy", "friendly_ship"].includes(loc.type) &&
+                ["enemy", "friendly_ship", "derelict_ship"].includes(loc.type) &&
                 !canScan &&
                 !isRevealed &&
                 !completed &&
@@ -4477,47 +4477,106 @@ function drawDerelictShip(
     completed: boolean,
 ) {
     const isExplored = completed || loc.derelictExplored;
-    ctx.globalAlpha = isExplored ? 0.35 : 1;
+    ctx.globalAlpha = isExplored ? 0.3 : 1;
 
-    const color = "#555577";
-    const accentColor = "#00d4ff";
-    const r = 16;
-
-    // Hexagonal hull outline
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
+    // Dim residual heat glow (no power)
+    const dimGlow = ctx.createRadialGradient(x, y, 0, x, y, 18);
+    dimGlow.addColorStop(0, "rgba(50, 65, 85, 0.3)");
+    dimGlow.addColorStop(1, "transparent");
+    ctx.fillStyle = dimGlow;
     ctx.beginPath();
-    for (let i = 0; i < 6; i++) {
-        const angle = (Math.PI / 3) * i - Math.PI / 6;
-        const px = x + r * Math.cos(angle);
-        const py = y + r * Math.sin(angle);
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-    }
-    ctx.closePath();
-    ctx.stroke();
-
-    // Fill with dim color
-    ctx.fillStyle = "rgba(40, 40, 60, 0.6)";
+    ctx.arc(x, y, 18, 0, Math.PI * 2);
     ctx.fill();
 
-    // Broken/dashed cross lines to indicate derelict
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1;
-    ctx.setLineDash([2, 3]);
+    // Floating debris pieces
+    ctx.fillStyle = "#3a4a5a";
+    const debrisPieces: [number, number, number, number][] = [
+        [14, -10, 2, 2],
+        [-13, 9, 2, 2],
+        [8, 13, 1, 2],
+        [-16, -4, 2, 1],
+    ];
+    for (const [dx, dy, w, h] of debrisPieces) {
+        ctx.fillRect(x + dx, y + dy, w, h);
+    }
+
+    // Draw ship hull tilted ~22° (listing/drifting)
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(0.38);
+
+    // Main hull body
+    ctx.fillStyle = "#1e2d3d";
+    ctx.strokeStyle = "#4a5f72";
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(x - 10, y);
-    ctx.lineTo(x + 10, y);
-    ctx.moveTo(x, y - 8);
-    ctx.lineTo(x, y + 8);
+    ctx.moveTo(0, -14);   // nose
+    ctx.lineTo(-11, 7);   // left wing tip
+    ctx.lineTo(-4, 3);    // left engine notch
+    ctx.lineTo(0, 9);     // center rear
+    ctx.lineTo(4, 3);     // right engine notch
+    ctx.lineTo(9, 7);     // right wing tip (shorter — damaged)
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Dark cockpit (no power)
+    ctx.fillStyle = "#111827";
+    ctx.beginPath();
+    ctx.moveTo(0, -7);
+    ctx.lineTo(-3, 1);
+    ctx.lineTo(3, 1);
+    ctx.closePath();
+    ctx.fill();
+
+    // Hull damage crack
+    ctx.strokeStyle = "#cc4400";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-1, -5);
+    ctx.lineTo(3, 0);
+    ctx.lineTo(1, 4);
+    ctx.stroke();
+
+    // Dead engine nozzles (no glow)
+    ctx.fillStyle = "#252535";
+    ctx.strokeStyle = "#3a3a50";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(-3, 6, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(3, 6, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Broken right wing structural fragment
+    ctx.strokeStyle = "#4a5f72";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([1, 2]);
+    ctx.beginPath();
+    ctx.moveTo(8, 6);
+    ctx.lineTo(13, 4);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Small accent dot if not explored
+    ctx.restore();
+
+    // Emergency distress beacon (amber) — only if not yet explored
     if (!isExplored) {
-        ctx.fillStyle = accentColor;
+        const bx = x + 12;
+        const by = y - 12;
+        const beaconGlow = ctx.createRadialGradient(bx, by, 0, bx, by, 6);
+        beaconGlow.addColorStop(0, "rgba(255, 140, 0, 0.45)");
+        beaconGlow.addColorStop(1, "transparent");
+        ctx.fillStyle = beaconGlow;
         ctx.beginPath();
-        ctx.arc(x + r - 3, y - r + 3, 3, 0, Math.PI * 2);
+        ctx.arc(bx, by, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ff8800";
+        ctx.beginPath();
+        ctx.arc(bx, by, 2.5, 0, Math.PI * 2);
         ctx.fill();
     }
 

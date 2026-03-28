@@ -204,6 +204,7 @@ export const generateFriendlyShip = (
         hasTrader: shipType.hasTrader,
         hasCrew: shipType.hasCrew,
         hasQuest: shipType.hasQuest,
+        hasDistress: shipType.hasDistress,
         dominantRace: shipRace,
         shipRace,
     };

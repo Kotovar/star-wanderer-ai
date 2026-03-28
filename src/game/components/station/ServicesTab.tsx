@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
+import { RESEARCH_RESOURCES } from "@/game/constants/research/resources";
+import type { ResearchResourceType } from "@/game/types/research";
 import { MODULES_BY_LEVEL } from "@/game/components/station/station-data";
 import { MODULES_FROM_BOSSES } from "@/game/constants/modules";
 import type { ModuleType, Module, WeaponType } from "@/game/types";
@@ -110,6 +112,9 @@ interface ServicesTabProps {
     onRemoveAugmentation: (crewId: number) => void;
     probes: number;
     onBuyProbe: (count: number) => void;
+    isResearchStation?: boolean;
+    researchResources?: Partial<Record<ResearchResourceType, number>>;
+    onSellResearchResource?: (type: ResearchResourceType, qty: number) => void;
 }
 
 export function ServicesTab({
@@ -142,6 +147,9 @@ export function ServicesTab({
     onRemoveAugmentation,
     probes,
     onBuyProbe,
+    isResearchStation,
+    researchResources,
+    onSellResearchResource,
 }: ServicesTabProps) {
     const fuelNeeded = maxFuel - fuel;
 
@@ -205,6 +213,13 @@ export function ServicesTab({
                 <InstallWeaponSection
                     ship={ship}
                     onInstall={installCraftedWeapon}
+                />
+            )}
+            {isResearchStation && onSellResearchResource && (
+                <SellResearchSection
+                    credits={credits}
+                    researchResources={researchResources ?? {}}
+                    onSell={onSellResearchResource}
                 />
             )}
         </div>
@@ -998,6 +1013,95 @@ function AugmentationSection({
                     );
                 })}
             </div>
+        </div>
+    );
+}
+
+const RESEARCH_SELL_PRICES: Record<ResearchResourceType, number> = {
+    tech_salvage: 50,
+    rare_minerals: 80,
+    alien_biology: 120,
+    ancient_data: 150,
+    energy_samples: 200,
+    void_membrane: 300,
+    quantum_crystals: 500,
+};
+
+function SellResearchSection({
+    credits,
+    researchResources,
+    onSell,
+}: {
+    credits: number;
+    researchResources: Partial<Record<ResearchResourceType, number>>;
+    onSell: (type: ResearchResourceType, qty: number) => void;
+}) {
+    void credits;
+    const resourceTypes = Object.keys(
+        RESEARCH_RESOURCES,
+    ) as ResearchResourceType[];
+    const ownedResources = resourceTypes.filter(
+        (t) => (researchResources[t] ?? 0) > 0,
+    );
+
+    return (
+        <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-4">
+            <div className="text-[#00d4ff] font-bold mb-1">
+                📊 Продажа исследовательских данных
+            </div>
+            <div className="text-xs text-[#888] mb-3">
+                Исследовательская станция скупает редкие научные материалы
+            </div>
+            {ownedResources.length === 0 ? (
+                <div className="text-sm text-[#555]">
+                    Нет исследовательских ресурсов для продажи
+                </div>
+            ) : (
+                <div className="flex flex-col gap-2">
+                    {ownedResources.map((type) => {
+                        const res = RESEARCH_RESOURCES[type];
+                        const qty = researchResources[type] ?? 0;
+                        const price = RESEARCH_SELL_PRICES[type];
+                        return (
+                            <div
+                                key={type}
+                                className="flex items-center justify-between bg-[rgba(0,212,255,0.05)] border border-[#00d4ff33] px-3 py-2"
+                            >
+                                <div className="flex-1">
+                                    <span style={{ color: res.color }}>
+                                        {res.icon}
+                                    </span>{" "}
+                                    <span className="text-sm text-[#ccc]">
+                                        {res.name}
+                                    </span>
+                                    <span className="text-xs text-[#888] ml-2">
+                                        ×{qty}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-[#ffb000]">
+                                        {price}₢/ед.
+                                    </span>
+                                    <Button
+                                        disabled={qty < 1}
+                                        onClick={() => onSell(type, 1)}
+                                        className="cursor-pointer bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase text-[9px] px-2 py-1 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        -1
+                                    </Button>
+                                    <Button
+                                        disabled={qty < 1}
+                                        onClick={() => onSell(type, qty)}
+                                        className="cursor-pointer bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase text-[9px] px-2 py-1 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        ВСЁ
+                                    </Button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }

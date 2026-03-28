@@ -36,6 +36,10 @@ export function FriendlyShipPanel() {
     const shipQuestsTaken = useGameStore((s) => s.shipQuestsTaken);
     const hiredCrewFromShips = useGameStore((s) => s.hiredCrewFromShips);
     const friendlyShipStock = useGameStore((s) => s.friendlyShipStock);
+    const distressRespondedShips = useGameStore(
+        (s) => s.distressRespondedShips,
+    );
+    const addLog = useGameStore((s) => s.addLog);
 
     const seedRandom = (seed: number) => {
         const x = Math.sin(seed) * 10000;
@@ -841,6 +845,168 @@ export function FriendlyShipPanel() {
                     Задание с этого корабля уже взято.
                 </div>
             )}
+
+            {/* Distress Signal */}
+            {currentLocation.hasDistress &&
+                (() => {
+                    const distressNeedTypes = ["fuel", "medicine"] as const;
+                    type DistressNeed = (typeof distressNeedTypes)[number];
+                    const needType: DistressNeed =
+                        distressNeedTypes[
+                            Math.floor(
+                                seedRandom(seed + 200) *
+                                    distressNeedTypes.length,
+                            )
+                        ];
+                    const fuelAmount =
+                        10 + Math.floor(seedRandom(seed + 201) * 16); // 10-25
+                    const medicineAmount =
+                        2 + Math.floor(seedRandom(seed + 202) * 5); // 2-6
+                    const amount =
+                        needType === "fuel" ? fuelAmount : medicineAmount;
+                    const creditReward =
+                        needType === "fuel"
+                            ? fuelAmount * 8
+                            : medicineAmount * 40;
+                    const researchRewardRoll = seedRandom(seed + 203);
+                    const hasResearchReward = researchRewardRoll < 0.45;
+                    const researchRewardType =
+                        researchRewardRoll < 0.25
+                            ? ("tech_salvage" as const)
+                            : ("alien_biology" as const);
+                    const researchRewardAmount =
+                        1 + Math.floor(seedRandom(seed + 204) * 2); // 1-2
+
+                    const distressAlreadyHelped =
+                        distressRespondedShips.includes(currentLocation.id);
+
+                    const playerFuel = ship.fuel;
+                    const playerMedicine =
+                        needType === "medicine"
+                            ? (ship.cargo.find((c) => c.item === "medicine")
+                                  ?.quantity ?? 0)
+                            : 0;
+
+                    const canHelp =
+                        !distressAlreadyHelped &&
+                        (needType === "fuel"
+                            ? playerFuel >= amount
+                            : playerMedicine >= amount);
+
+                    const handleHelp = () => {
+                        useGameStore.setState((s) => {
+                            const newResources = {
+                                ...s.research.resources,
+                            };
+                            if (hasResearchReward) {
+                                newResources[researchRewardType] =
+                                    (newResources[researchRewardType] ?? 0) +
+                                    researchRewardAmount;
+                            }
+
+                            let newCargo = s.ship.cargo;
+                            let newFuel = s.ship.fuel;
+                            if (needType === "fuel") {
+                                newFuel = s.ship.fuel - amount;
+                            } else {
+                                newCargo = s.ship.cargo
+                                    .map((c) =>
+                                        c.item === "medicine"
+                                            ? {
+                                                  ...c,
+                                                  quantity: c.quantity - amount,
+                                              }
+                                            : c,
+                                    )
+                                    .filter((c) => c.quantity > 0);
+                            }
+
+                            return {
+                                distressRespondedShips: [
+                                    ...s.distressRespondedShips,
+                                    currentLocation.id,
+                                ],
+                                credits: s.credits + creditReward,
+                                ship: {
+                                    ...s.ship,
+                                    fuel: newFuel,
+                                    cargo: newCargo,
+                                },
+                                research: {
+                                    ...s.research,
+                                    resources: newResources,
+                                },
+                            };
+                        });
+                        addLog(
+                            `🆘 Помогли кораблю в бедствии. Получено: ${creditReward}₢${hasResearchReward ? ` + ${researchRewardAmount}× исследовательский ресурс` : ""}`,
+                            "info",
+                        );
+                    };
+
+                    const needLabel =
+                        needType === "fuel"
+                            ? `⛽ Топливо: ${amount} ед.`
+                            : `💊 Медикаменты: ${amount} ед.`;
+
+                    const playerHasLabel =
+                        needType === "fuel"
+                            ? `На борту: ${playerFuel} ед.`
+                            : `На борту: ${playerMedicine} ед.`;
+
+                    return (
+                        <div className="border border-[#ff6600] bg-[rgba(255,102,0,0.05)] p-3 mt-2">
+                            <div className="font-['Orbitron'] font-bold text-base text-[#ff6600] mb-2">
+                                ⚠️ Сигнал бедствия
+                            </div>
+                            {distressAlreadyHelped ? (
+                                <div className="text-sm text-[#888]">
+                                    Вы уже оказали помощь этому кораблю.
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="text-sm text-[#ccc] mb-2">
+                                        Повреждённый корабль запрашивает ресурсы
+                                        для аварийного ремонта.
+                                    </div>
+                                    <div className="flex flex-col gap-1 text-xs mb-3">
+                                        <div className="text-[#ffb000]">
+                                            Требуется: {needLabel}
+                                        </div>
+                                        <div
+                                            className={
+                                                canHelp
+                                                    ? "text-[#00ff41]"
+                                                    : "text-[#ff4444]"
+                                            }
+                                        >
+                                            {playerHasLabel}
+                                        </div>
+                                        <div className="text-[#00d4ff] mt-1">
+                                            Награда: {creditReward}₢
+                                            {hasResearchReward && (
+                                                <span className="ml-2">
+                                                    +{researchRewardAmount}×{" "}
+                                                    {researchRewardType ===
+                                                    "tech_salvage"
+                                                        ? "🔧 Технологический лом"
+                                                        : "🧬 Чужеродная биология"}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <Button
+                                        disabled={!canHelp}
+                                        onClick={handleHelp}
+                                        className="cursor-pointer bg-transparent border-2 border-[#ff6600] text-[#ff6600] hover:bg-[#ff6600] hover:text-[#050810] uppercase text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        ПОМОЧЬ
+                                    </Button>
+                                </>
+                            )}
+                        </div>
+                    );
+                })()}
 
             <div className="flex gap-2.5 flex-wrap mt-5">
                 <Button

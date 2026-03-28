@@ -88,6 +88,7 @@ export interface Location {
     hasTrader?: boolean;
     hasCrew?: boolean;
     hasQuest?: boolean;
+    hasDistress?: boolean;
     shipRace?: RaceId; // Race of the friendly ship
     x?: number;
     y?: number;

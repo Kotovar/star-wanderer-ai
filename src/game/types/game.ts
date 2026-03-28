@@ -77,6 +77,7 @@ export interface GameState {
     completedContractIds: string[]; // IDs of completed contracts to prevent retaking
     shipQuestsTaken: string[]; // IDs of ships where quest was taken
     hiredCrewFromShips: string[]; // IDs of friendly ships where crew was hired
+    distressRespondedShips: string[]; // IDs of distress ships that have been helped
     completedLocations: string[];
     stationInventory: Record<string, Record<string, number>>;
     stationPrices: Record<

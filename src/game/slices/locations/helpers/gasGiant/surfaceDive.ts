@@ -1,6 +1,7 @@
 import type { SetState, GameStore } from "@/game/types";
 import type { DiveRewards } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES } from "@/game/constants";
+import { addTradeGood } from "@/game/slices/ship/helpers";
 
 type DiveResourceKey = keyof DiveRewards;
 
@@ -60,12 +61,29 @@ export function surfaceDive(set: SetState, get: () => GameStore): void {
 
     const membranesCollected = boostedRewards.void_membrane;
 
+    const cargoCapacity = get().getCargoCapacity();
+
     set((s) => {
         // Add research resources to player inventory
+        // rare_minerals goes to cargo (it's also a trade good); others go to research
         const newResources = { ...s.research.resources };
+        const cargoUsed =
+            s.ship.cargo.reduce((sum, c) => sum + c.quantity, 0) +
+            s.ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0);
+        let availableSpace = Math.max(0, cargoCapacity - cargoUsed);
+        let newTradeGoods = [...s.ship.tradeGoods];
+
         for (const [type, qty] of Object.entries(resourceUpdates)) {
-            newResources[type as keyof typeof newResources] =
-                (newResources[type as keyof typeof newResources] ?? 0) + qty;
+            if (type === "rare_minerals") {
+                const actual = Math.min(qty, availableSpace);
+                if (actual > 0) {
+                    newTradeGoods = addTradeGood(newTradeGoods, "rare_minerals", actual);
+                    availableSpace -= actual;
+                }
+            } else {
+                newResources[type as keyof typeof newResources] =
+                    (newResources[type as keyof typeof newResources] ?? 0) + qty;
+            }
         }
 
         // Track void_membrane progress toward active gas_dive contracts
@@ -95,6 +113,7 @@ export function surfaceDive(set: SetState, get: () => GameStore): void {
             activeDive: null,
             turn: s.turn + 1,
             activeContracts: updatedContracts,
+            ship: { ...s.ship, tradeGoods: newTradeGoods },
             research: {
                 ...s.research,
                 resources: newResources,
