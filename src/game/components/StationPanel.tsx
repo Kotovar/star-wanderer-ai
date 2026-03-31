@@ -284,10 +284,7 @@ export function StationPanel() {
                             value="diplomacy"
                             className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
                         >
-                            <span className="hidden sm:inline">
-                                {t("station.diplomacy_tab")}
-                            </span>
-                            <span className="sm:hidden">🤝</span>
+                            <span>{t("station.diplomacy_tab")}</span>
                         </TabsTrigger>
                     )}
                 </TabsList>
