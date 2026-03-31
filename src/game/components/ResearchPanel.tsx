@@ -730,6 +730,9 @@ export function ResearchPanel() {
     const startResearch = useGameStore((s) => s.startResearch);
     const { t, currentLanguage } = useTranslation();
 
+    // Ensure credits are always displayed as integers
+    const displayCredits = Math.floor(credits);
+
     const [selectedTech, setSelectedTech] = useState<TechnologyId | null>(null);
 
     const scientists = useMemo(
@@ -926,10 +929,10 @@ export function ResearchPanel() {
                     })}
                     <div className="flex items-center gap-1 px-1.5 py-0.5 border border-[#ffb00066] bg-[#ffb00010] text-[10px] text-[#ffb000]">
                         <span>₢</span>
-                        <span className="font-bold">{credits}</span>
+                        <span className="font-bold">{displayCredits}</span>
                     </div>
                     <div className="flex items-center gap-1 px-1.5 py-0.5 border border-[#33333366] bg-[#33333310] text-[10px] text-[#555]">
-                        <span>🖱 перетащи / колесо мыши = масштаб</span>
+                        <span>{t("research.pan_zoom_hint")}</span>
                     </div>
                 </div>
             </div>
@@ -955,7 +958,7 @@ export function ResearchPanel() {
                 tech={selectedTechnology}
                 researchedTechs={researchedTechs}
                 getResourceQty={getResourceQty}
-                credits={credits}
+                credits={displayCredits}
                 canResearch={canResearch}
                 activeResearchId={activeResearch?.techId ?? null}
                 activeProgress={activeResearch?.progress ?? 0}

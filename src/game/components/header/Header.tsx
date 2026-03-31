@@ -30,6 +30,8 @@ export function GameHeader() {
     const activeEffects = useGameStore((s) => s.activeEffects);
     const showArtifacts = useGameStore((s) => s.showArtifacts);
     const showResearch = useGameStore((s) => s.showResearch);
+    const showReputation = useGameStore((s) => s.showReputation);
+    const closeReputationPanel = useGameStore((s) => s.closeReputationPanel);
     const gameMode = useGameStore((s) => s.gameMode);
     const restartGame = useGameStore((s) => s.restartGame);
     const { t, changeLanguage, currentLanguage } = useTranslation();
@@ -74,11 +76,14 @@ export function GameHeader() {
         const handleResize = () => {
             if (window.innerWidth >= 1024) {
                 setShowResearchModal(false);
+                if (gameMode === "reputation") {
+                    closeReputationPanel();
+                }
             }
         };
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
-    }, []);
+    }, [gameMode, closeReputationPanel]);
 
     return (
         <>
@@ -137,6 +142,22 @@ export function GameHeader() {
                             {t("game.science")}
                         </span>
                     </button>
+                    <button
+                        onClick={() => {
+                            if (gameMode === "reputation") {
+                                closeReputationPanel();
+                            } else {
+                                showReputation();
+                            }
+                        }}
+                        className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
+                        title={t("reputation.button_tooltip")}
+                    >
+                        <span className="text-[#9933ff] lg:hidden">🤝</span>
+                        <span className="text-[#9933ff] hidden lg:inline">
+                            {t("reputation.button")}
+                        </span>
+                    </button>
                     <div className="flex items-center gap-1 md:gap-2">
                         <span className="text-[#ffb000] hidden md:inline">
                             {t("game.turn")}:
@@ -147,7 +168,7 @@ export function GameHeader() {
                     <div className="flex items-center gap-1 md:gap-2">
                         <span className="text-[#ffb000]">₢</span>
                         <span className="font-bold text-[#00ff41]">
-                            {isNaN(credits) ? 0 : credits}
+                            {isNaN(credits) ? 0 : Math.floor(credits)}
                         </span>
                     </div>
                     {probes > 0 && (
@@ -210,7 +231,9 @@ export function GameHeader() {
             </header>
 
             {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
-            {showSaveLoad && <SaveLoadPanel onClose={() => setShowSaveLoad(false)} />}
+            {showSaveLoad && (
+                <SaveLoadPanel onClose={() => setShowSaveLoad(false)} />
+            )}
             {showEffects && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                     <div className="bg-[rgba(10,20,30,0.95)] border-2 border-[#9933ff] p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">

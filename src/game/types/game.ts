@@ -14,6 +14,7 @@ import type { Location, LocationType } from "./locations/locations";
 import type { LogEntry } from "./logs";
 import type { Module, WeaponCounts } from "./modules";
 import type { RaceId } from "./races";
+import type { ReputationLevel } from "./reputation";
 import type { ShipMergeTrait } from "./ships";
 import type { ResearchData, TechnologyId } from "./research";
 import type { CraftingRecipeId, ModuleRecipeId } from "./crafting";
@@ -38,8 +39,10 @@ export type GameMode =
     | "battle_results"
     | "storm_results"
     | "research"
+    | "reputation"
     | "derelict_ship"
-    | "gas_giant";
+    | "gas_giant"
+    | "hostile_approach_warning";
 
 export interface GameState {
     turn: number;
@@ -92,6 +95,7 @@ export interface GameState {
     hiredCrew: Record<string, string[]>;
     artifacts: Artifact[]; // Ancient artifacts discovered by player
     knownRaces: RaceId[]; // Races discovered by player
+    raceReputation: Record<RaceId, number>; // Reputation with each race (-100 to 100)
     gameLoadedCount: number; // Counter to track game loads (prevents modal re-show)
     battleResult: BattleResult | null; // Results of last battle
     stormResult: StormResult | null; // Results of last storm entry
@@ -115,6 +119,7 @@ export interface GameState {
     sectorZoom: number; // Sector map zoom level (default 1)
     galaxyOffset: { x: number; y: number }; // Galaxy map pan offset
     sectorOffset: { x: number; y: number }; // Sector map pan offset
+    bannedPlanets: string[]; // Planet location IDs permanently hostile (guard killed there)
 }
 
 export interface GameActions {
@@ -175,6 +180,9 @@ export interface GameCombat {
     executeAmbushAttack: () => void; // Execute enemy attack for ambush (first strike)
     processEnemyAttack: () => void; // Process enemy counter-attack during combat
     retreat: () => void;
+    attackFriendlyShip: () => void; // Player-initiated attack on a friendly ship (-20 rep)
+    confirmHostileApproach: () => void; // Confirm approaching a hostile location (start combat)
+    cancelHostileApproach: () => void; // Cancel approaching a hostile location (return to sector map)
 }
 
 export interface GameStationAndPlanets {
@@ -264,10 +272,22 @@ export interface GameArtifacts {
     tryFindArtifact: () => Artifact | null;
     showArtifacts: () => void;
     showResearch: () => void;
+    closeArtifactsPanel: () => void;
 }
 
 export interface GameRaces {
     discoverRace: (raceId: RaceId) => void;
+}
+
+export interface GameReputation {
+    changeReputation: (raceId: RaceId, amount: number) => void;
+    setReputation: (raceId: RaceId, value: number) => void;
+    getReputation: (raceId: RaceId) => number;
+    getReputationLevel: (raceId: RaceId) => ReputationLevel;
+    showReputation: () => void;
+    closeReputationPanel: () => void;
+    sendDiplomaticGift: (raceId: RaceId, amount: number) => void; // Pay variable credits to improve rep (diplomatic station)
+    removePlanetBan: (locationId: string) => void; // Pay to lift a permanent planet ban (diplomatic station)
 }
 
 export interface GamePlanetSpecializations {
@@ -333,6 +353,7 @@ export type GameStore = GameState &
     GameDistressSignal &
     GameArtifacts &
     GameRaces &
+    GameReputation &
     GamePlanetSpecializations &
     GameFinish &
     GameResearch &

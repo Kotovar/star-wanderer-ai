@@ -23,6 +23,16 @@ import {
     getPlanetTypeName,
 } from "@/lib/translationHelpers";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import {
+    getRaceReputation,
+    getRaceReputationLevel,
+    isRaceContractAvailable,
+} from "@/game/reputation/utils";
+import {
+    REPUTATION_COLORS,
+    REPUTATION_ICONS,
+    getReputationLevel,
+} from "@/game/types/reputation";
 
 export function PlanetPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
@@ -30,6 +40,7 @@ export function PlanetPanel() {
     const credits = useGameStore((s) => s.credits);
     const activeContracts = useGameStore((s) => s.activeContracts);
     const completedContractIds = useGameStore((s) => s.completedContractIds);
+    const raceReputation = useGameStore((s) => s.raceReputation);
     const get = useGameStore.getState;
 
     const { t } = useTranslation();
@@ -74,9 +85,12 @@ export function PlanetPanel() {
     if (currentLocation.isEmpty) {
         const hasScout = crew.some((c) => c.profession === "scout");
         const scoutedTimes = currentLocation.scoutedTimes || 0;
-        const bestScout = crew.filter((c) => c.profession === "scout").sort((a, b) => (b.level ?? 1) - (a.level ?? 1))[0];
+        const bestScout = crew
+            .filter((c) => c.profession === "scout")
+            .sort((a, b) => (b.level ?? 1) - (a.level ?? 1))[0];
         const scoutHasOptical = bestScout?.augmentation
-            ? (AUGMENTATIONS[bestScout.augmentation]?.effect?.extraScoutAttempts ?? 0) > 0
+            ? (AUGMENTATIONS[bestScout.augmentation]?.effect
+                  ?.extraScoutAttempts ?? 0) > 0
             : false;
         const maxScoutAttempts = 3 + (scoutHasOptical ? 1 : 0);
         const canScout = scoutedTimes < maxScoutAttempts;
@@ -85,13 +99,19 @@ export function PlanetPanel() {
 
         const hasDrillTech = researchedTechs.includes("planetary_drill");
         const hasDrillModule = ship.modules.some(
-            (m) => m.type === "drill" && m.health > 0 && !m.disabled && !m.manualDisabled,
+            (m) =>
+                m.type === "drill" &&
+                m.health > 0 &&
+                !m.disabled &&
+                !m.manualDisabled,
         );
-        const canDrill = hasDrillTech && hasDrillModule && !currentLocation.planetaryDrilled;
+        const canDrill =
+            hasDrillTech && hasDrillModule && !currentLocation.planetaryDrilled;
 
         const hasAtmoTech = researchedTechs.includes("atmospheric_analysis");
         const hasScientist = crew.some((c) => c.profession === "scientist");
-        const canAnalyze = hasAtmoTech && hasScientist && !currentLocation.atmosphereAnalyzed;
+        const canAnalyze =
+            hasAtmoTech && hasScientist && !currentLocation.atmosphereAnalyzed;
         const planetBgClass = getPlanetBackgroundClass(
             currentLocationPlanetType,
         );
@@ -125,12 +145,13 @@ export function PlanetPanel() {
                         <br />
                         {canScout ? (
                             <span className="text-[#ffb000]">
-                                {t("planet_panel.can_scout")} ({scoutedTimes}
-                                /{maxScoutAttempts}).
+                                {t("planet_panel.can_scout")} ({scoutedTimes}/
+                                {maxScoutAttempts}).
                             </span>
                         ) : (
                             <span className="text-[#00ff41]">
-                                {t("planet_panel.fully_explored")} ({maxScoutAttempts}/{maxScoutAttempts}).
+                                {t("planet_panel.fully_explored")} (
+                                {maxScoutAttempts}/{maxScoutAttempts}).
                             </span>
                         )}
                     </div>
@@ -218,15 +239,14 @@ export function PlanetPanel() {
                                 }
                                 className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider mt-3"
                             >
-                                Изучить поверхность
+                                {t("planet.scout_surface")}
                             </Button>
                         </>
                     )}
 
                     {!hasScout && canScout && (
                         <div className="text-[#ff0040] text-sm mt-4 p-3 border border-[#ff0040] bg-[rgba(255,0,64,0.1)]">
-                            Для разведки требуется член экипажа с профессией
-                            &quot;Разведчик&quot;.
+                            {t("planet.scout_requires_scout")}
                         </div>
                     )}
 
@@ -234,13 +254,12 @@ export function PlanetPanel() {
                     {hasDrillTech && (
                         <div className="mt-4">
                             <div className="font-['Orbitron'] font-bold text-base text-[#ffb000]">
-                                ⛏️ Планетарный бур
+                                {t("planet.drill_title")}
                             </div>
                             {canDrill ? (
                                 <>
                                     <div className="text-sm text-[#888] mt-1">
-                                        Добыча ресурсов зависит от типа планеты.
-                                        Однократно.
+                                        {t("planet.drill_desc")}
                                     </div>
                                     <Button
                                         onClick={() =>
@@ -248,38 +267,61 @@ export function PlanetPanel() {
                                         }
                                         className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider mt-2"
                                     >
-                                        Начать бурение
+                                        {t("planet.drill_button")}
                                     </Button>
                                 </>
                             ) : currentLocation.planetaryDrilled ? (
                                 <>
                                     <div className="text-[#555] text-sm mt-1">
-                                        Планета уже пробурена.
+                                        {t("planet.drill_done")}
                                     </div>
                                     {currentLocation.lastDrillResult && (
                                         <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 mt-2">
                                             <div className="text-[#ffb000] font-bold text-sm mb-1">
-                                                Результат бурения:
+                                                {t("planet.drill_result")}
                                             </div>
-                                            {currentLocation.lastDrillResult.tradeGood && (
+                                            {currentLocation.lastDrillResult
+                                                .tradeGood && (
                                                 <div className="text-[#00ff41] text-sm">
-                                                    📦 {currentLocation.lastDrillResult.tradeGood.name} x{currentLocation.lastDrillResult.tradeGood.quantity}
+                                                    📦{" "}
+                                                    {
+                                                        currentLocation
+                                                            .lastDrillResult
+                                                            .tradeGood.name
+                                                    }{" "}
+                                                    x
+                                                    {
+                                                        currentLocation
+                                                            .lastDrillResult
+                                                            .tradeGood.quantity
+                                                    }
                                                 </div>
                                             )}
-                                            {currentLocation.lastDrillResult.researchResources.map((res) => {
-                                                const rd = RESEARCH_RESOURCES[res.type];
-                                                return (
-                                                    <div key={res.type} className="text-[#4488ff] text-sm">
-                                                        🔬 {rd?.icon ?? ""} {rd?.name ?? res.type} x{res.quantity}
-                                                    </div>
-                                                );
-                                            })}
+                                            {currentLocation.lastDrillResult.researchResources.map(
+                                                (res) => {
+                                                    const rd =
+                                                        RESEARCH_RESOURCES[
+                                                            res.type
+                                                        ];
+                                                    return (
+                                                        <div
+                                                            key={res.type}
+                                                            className="text-[#4488ff] text-sm"
+                                                        >
+                                                            🔬 {rd?.icon ?? ""}{" "}
+                                                            {rd?.name ??
+                                                                res.type}{" "}
+                                                            x{res.quantity}
+                                                        </div>
+                                                    );
+                                                },
+                                            )}
                                         </div>
                                     )}
                                 </>
                             ) : (
                                 <div className="text-[#ff0040] text-sm mt-1 p-2 border border-[#ff0040] bg-[rgba(255,0,64,0.1)]">
-                                    Требуется активный модуль дрели.
+                                    {t("planet.drill_requires_drill")}
                                 </div>
                             )}
                         </div>
@@ -289,13 +331,12 @@ export function PlanetPanel() {
                     {hasAtmoTech && (
                         <div className="mt-4">
                             <div className="font-['Orbitron'] font-bold text-base text-[#00d4ff]">
-                                🌫️ Атмосферный анализ
+                                {t("planet.analysis_title")}
                             </div>
                             {canAnalyze ? (
                                 <>
                                     <div className="text-sm text-[#888] mt-1">
-                                        Учёный соберёт исследовательские
-                                        образцы. Однократно.
+                                        {t("planet.analysis_desc")}
                                     </div>
                                     <Button
                                         onClick={() =>
@@ -305,33 +346,44 @@ export function PlanetPanel() {
                                         }
                                         className="cursor-pointer bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider mt-2"
                                     >
-                                        Провести анализ
+                                        {t("planet.analysis_button")}
                                     </Button>
                                 </>
                             ) : currentLocation.atmosphereAnalyzed ? (
                                 <>
                                     <div className="text-[#555] text-sm mt-1">
-                                        Атмосфера уже проанализирована.
+                                        {t("planet.analysis_done")}
                                     </div>
                                     {currentLocation.lastAtmosphericResult && (
                                         <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-3 mt-2">
                                             <div className="text-[#00d4ff] font-bold text-sm mb-1">
-                                                Результат анализа:
+                                                {t("planet.analysis_result")}
                                             </div>
-                                            {currentLocation.lastAtmosphericResult.researchResources.map((res) => {
-                                                const rd = RESEARCH_RESOURCES[res.type];
-                                                return (
-                                                    <div key={res.type} className="text-[#4488ff] text-sm">
-                                                        🔬 {rd?.icon ?? ""} {rd?.name ?? res.type} x{res.quantity}
-                                                    </div>
-                                                );
-                                            })}
+                                            {currentLocation.lastAtmosphericResult.researchResources.map(
+                                                (res) => {
+                                                    const rd =
+                                                        RESEARCH_RESOURCES[
+                                                            res.type
+                                                        ];
+                                                    return (
+                                                        <div
+                                                            key={res.type}
+                                                            className="text-[#4488ff] text-sm"
+                                                        >
+                                                            🔬 {rd?.icon ?? ""}{" "}
+                                                            {rd?.name ??
+                                                                res.type}{" "}
+                                                            x{res.quantity}
+                                                        </div>
+                                                    );
+                                                },
+                                            )}
                                         </div>
                                     )}
                                 </>
                             ) : (
                                 <div className="text-[#ff0040] text-sm mt-1 p-2 border border-[#ff0040] bg-[rgba(255,0,64,0.1)]">
-                                    Требуется учёный в экипаже.
+                                    {t("planet.drill_requires_scientist")}
                                 </div>
                             )}
                         </div>
@@ -353,13 +405,18 @@ export function PlanetPanel() {
     // Inhabited planet — show expedition if active for this planet
     if (activeExpedition && activeExpedition.planetId === currentLocation.id) {
         const currentLocationPlanetTypePlanet = currentLocation.planetType;
-        const planetBgClassPlanet = getPlanetBackgroundClass(currentLocationPlanetTypePlanet);
+        const planetBgClassPlanet = getPlanetBackgroundClass(
+            currentLocationPlanetTypePlanet,
+        );
         return (
             <div
                 className={`flex flex-col h-full min-h-0 rounded-lg border ${planetBgClassPlanet}`}
                 style={{ borderColor: raceBorder }}
             >
-                <div className="relative z-10 bg-[rgba(5,8,16,0.85)] rounded border flex-1 overflow-y-auto p-4 min-h-0" style={{ borderColor: raceBorder }}>
+                <div
+                    className="relative z-10 bg-[rgba(5,8,16,0.85)] rounded border flex-1 overflow-y-auto p-4 min-h-0"
+                    style={{ borderColor: raceBorder }}
+                >
                     <PlanetExplorationPanel />
                 </div>
             </div>
@@ -375,11 +432,16 @@ export function PlanetPanel() {
             ship.cargo.some((cargo) => cargo.contractId === c.id), // Must have the cargo
     );
 
-    // Filter available contracts - exclude completed ones
+    // Filter available contracts - exclude completed ones and race quests with insufficient reputation
     const availableContracts = (currentLocation.contracts || []).filter(
         (c) =>
             !completedContractIds.includes(c.id) &&
-            !activeContracts.some((ac) => ac.id === c.id),
+            !activeContracts.some((ac) => ac.id === c.id) &&
+            !(
+                c.isRaceQuest &&
+                c.requiredRace &&
+                !isRaceContractAvailable(raceReputation, c.requiredRace)
+            ),
     );
 
     const currentLocationPlanetType = currentLocation.planetType;
@@ -390,14 +452,25 @@ export function PlanetPanel() {
             style={{ borderColor: raceAccent + "88" }}
         >
             {/* Content overlay for readability */}
-            <div className="relative z-10 p-4 rounded border" style={{ borderColor: raceBorder, backgroundColor: "rgba(5,8,16,0.9)" }}>
+            <div
+                className="relative z-10 p-4 rounded border"
+                style={{
+                    borderColor: raceBorder,
+                    backgroundColor: "rgba(5,8,16,0.9)",
+                }}
+            >
                 {race && (
                     <div
                         className="h-0.5 -mx-4 -mt-4 mb-4"
-                        style={{ background: `linear-gradient(90deg, ${race.color}cc 0%, ${race.color}22 100%)` }}
+                        style={{
+                            background: `linear-gradient(90deg, ${race.color}cc 0%, ${race.color}22 100%)`,
+                        }}
                     />
                 )}
-                <div className="font-['Orbitron'] font-bold text-lg" style={{ color: raceAccent }}>
+                <div
+                    className="font-['Orbitron'] font-bold text-lg"
+                    style={{ color: raceAccent }}
+                >
                     ▸ {getLocationName(currentLocation.name, t)} -{" "}
                     {currentLocationPlanetType
                         ? getPlanetTypeName(currentLocationPlanetType, t)
@@ -441,6 +514,77 @@ export function PlanetPanel() {
                             </div>
                         </div>
                     )}
+
+                    {/* Reputation badge */}
+                    {raceReputation && currentLocation.dominantRace && (
+                        <div
+                            className="flex items-center gap-2 px-3 py-1.5 rounded border text-xs"
+                            style={{
+                                borderColor:
+                                    REPUTATION_COLORS[
+                                        getReputationLevel(
+                                            getRaceReputation(
+                                                raceReputation,
+                                                currentLocation.dominantRace,
+                                            ),
+                                        )
+                                    ],
+                                backgroundColor: `${
+                                    REPUTATION_COLORS[
+                                        getReputationLevel(
+                                            getRaceReputation(
+                                                raceReputation,
+                                                currentLocation.dominantRace,
+                                            ),
+                                        )
+                                    ]
+                                }15`,
+                            }}
+                        >
+                            <span>
+                                {
+                                    REPUTATION_ICONS[
+                                        getReputationLevel(
+                                            getRaceReputation(
+                                                raceReputation,
+                                                currentLocation.dominantRace,
+                                            ),
+                                        )
+                                    ]
+                                }
+                            </span>
+                            <span
+                                style={{
+                                    color: REPUTATION_COLORS[
+                                        getReputationLevel(
+                                            getRaceReputation(
+                                                raceReputation,
+                                                currentLocation.dominantRace,
+                                            ),
+                                        )
+                                    ],
+                                }}
+                            >
+                                {t(
+                                    `reputation.levels.${getRaceReputationLevel(raceReputation, currentLocation.dominantRace)}`,
+                                )}
+                            </span>
+                            <span className="text-gray-400">
+                                (
+                                {getRaceReputation(
+                                    raceReputation,
+                                    currentLocation.dominantRace,
+                                ) > 0
+                                    ? "+"
+                                    : ""}
+                                {getRaceReputation(
+                                    raceReputation,
+                                    currentLocation.dominantRace,
+                                )}
+                                )
+                            </span>
+                        </div>
+                    )}
                     {/* Planet Specialization Button */}
                     {race &&
                         currentLocation.dominantRace &&
@@ -453,8 +597,16 @@ export function PlanetPanel() {
                                 className="bg-transparent border-2 text-xs px-3 py-1.5 uppercase"
                                 style={
                                     isOnCooldown
-                                        ? { borderColor: "#444", color: "#444", cursor: "not-allowed" }
-                                        : { borderColor: raceAccent, color: raceAccent, cursor: "pointer" }
+                                        ? {
+                                              borderColor: "#444",
+                                              color: "#444",
+                                              cursor: "not-allowed",
+                                          }
+                                        : {
+                                              borderColor: raceAccent,
+                                              color: raceAccent,
+                                              cursor: "pointer",
+                                          }
                                 }
                             >
                                 {isOnCooldown
@@ -465,21 +617,23 @@ export function PlanetPanel() {
                 </div>
 
                 {/* Expedition button */}
-                {currentLocation.dominantRace && (
-                    currentLocation.expeditionCompleted ? (
+                {currentLocation.dominantRace &&
+                    (currentLocation.expeditionCompleted ? (
                         <div className="mt-2 text-xs text-[#444] border border-[#222] px-3 py-1.5 inline-block">
-                            🗺️ Поверхность исследована
+                            {t("planet.surface_explored")}
                         </div>
                     ) : (
                         <Button
                             onClick={() => setShowExpeditionSetup(true)}
                             className="mt-2 bg-transparent border-2 uppercase tracking-wider text-xs px-3 py-1.5 cursor-pointer"
-                            style={{ borderColor: raceAccent, color: raceAccent }}
+                            style={{
+                                borderColor: raceAccent,
+                                color: raceAccent,
+                            }}
                         >
                             🗺️ {t("planet_panel.explore_planet")}
                         </Button>
-                    )
-                )}
+                    ))}
 
                 {/* Planet Visual */}
                 <PlanetVisual planetType={currentLocationPlanetType} />
@@ -518,7 +672,10 @@ export function PlanetPanel() {
                                                         c.cargo as DeliveryGoods
                                                     ]?.name
                                                 }
-                                                &quot; ({c.quantity ?? DELIVERY_CONTRACT_CARGO_AMOUNT}т)
+                                                &quot; (
+                                                {c.quantity ??
+                                                    DELIVERY_CONTRACT_CARGO_AMOUNT}
+                                                т)
                                             </div>
                                         )}
                                         <div className="text-[#ffb000] text-xs mt-1">
@@ -542,7 +699,10 @@ export function PlanetPanel() {
                 {/* Available contracts */}
                 {availableContracts.length > 0 && (
                     <>
-                        <div className="font-['Orbitron'] font-bold text-base mt-4" style={{ color: raceAccent }}>
+                        <div
+                            className="font-['Orbitron'] font-bold text-base mt-4"
+                            style={{ color: raceAccent }}
+                        >
                             {t("planet_panel.available_tasks")}
                         </div>
                         <div className="flex flex-col gap-2 max-h-75 overflow-y-auto">
@@ -582,7 +742,9 @@ export function PlanetPanel() {
                                         className={`border p-3 ${isActive ? "opacity-40" : ""} ${c.isRaceQuest ? "border-[#9933ff]" : ""}`}
                                         style={{
                                             background: raceBg,
-                                            ...(c.isRaceQuest ? {} : { borderColor: raceBorder }),
+                                            ...(c.isRaceQuest
+                                                ? {}
+                                                : { borderColor: raceBorder }),
                                         }}
                                     >
                                         <div className="flex justify-between items-start">
@@ -716,20 +878,29 @@ export function PlanetPanel() {
                                                     })}
                                                 {c.type === "rescue" && (
                                                     <>
-                                                        {t("contracts.desc_rescue", {
-                                                            stormName:
-                                                                c.stormName ||
-                                                                t(
-                                                                    "storm.radiation_cloud",
-                                                                ),
-                                                            sectorName:
-                                                                c.sectorName || "",
-                                                        })}
-                                                        {(c.requiredStormIntensity ?? 1) > 1 && (
+                                                        {t(
+                                                            "contracts.desc_rescue",
+                                                            {
+                                                                stormName:
+                                                                    c.stormName ||
+                                                                    t(
+                                                                        "storm.radiation_cloud",
+                                                                    ),
+                                                                sectorName:
+                                                                    c.sectorName ||
+                                                                    "",
+                                                            },
+                                                        )}
+                                                        {(c.requiredStormIntensity ??
+                                                            1) > 1 && (
                                                             <span className="ml-1 text-yellow-400">
-                                                                {t("contracts.rescue_intensity").replace(
+                                                                {t(
+                                                                    "contracts.rescue_intensity",
+                                                                ).replace(
                                                                     "{{intensity}}",
-                                                                    String(c.requiredStormIntensity),
+                                                                    String(
+                                                                        c.requiredStormIntensity,
+                                                                    ),
                                                                 )}
                                                             </span>
                                                         )}
@@ -790,16 +961,33 @@ export function PlanetPanel() {
                                                             },
                                                         );
                                                     })()}
-                                                {c.type === "expedition_survey" &&
-                                                    t("contracts.desc_expedition_survey_offer", {
-                                                        planet: c.targetPlanetName ?? "",
-                                                        sector: c.targetSectorName ?? "",
-                                                        count: String(c.requiredDiscoveries ?? 1),
-                                                    })}
+                                                {c.type ===
+                                                    "expedition_survey" &&
+                                                    t(
+                                                        "contracts.desc_expedition_survey_offer",
+                                                        {
+                                                            planet:
+                                                                c.targetPlanetName ??
+                                                                "",
+                                                            sector:
+                                                                c.targetSectorName ??
+                                                                "",
+                                                            count: String(
+                                                                c.requiredDiscoveries ??
+                                                                    1,
+                                                            ),
+                                                        },
+                                                    )}
                                                 {c.type === "gas_dive" &&
-                                                    t("contracts.desc_gas_dive_offer", {
-                                                        count: String(c.requiredMembranes ?? 1),
-                                                    })}
+                                                    t(
+                                                        "contracts.desc_gas_dive_offer",
+                                                        {
+                                                            count: String(
+                                                                c.requiredMembranes ??
+                                                                    1,
+                                                            ),
+                                                        },
+                                                    )}
                                             </div>
 
                                             {/* Where to turn in */}
@@ -842,7 +1030,9 @@ export function PlanetPanel() {
                                                     t(
                                                         "contracts.turn_in_supply",
                                                     )}
-                                                {(c.type === "expedition_survey" || c.type === "gas_dive") &&
+                                                {(c.type ===
+                                                    "expedition_survey" ||
+                                                    c.type === "gas_dive") &&
                                                     t("contracts.turn_in_here")}
                                             </div>
 
@@ -878,7 +1068,10 @@ export function PlanetPanel() {
                 {/* Expedition Setup Modal */}
                 {showExpeditionSetup && planetId && (
                     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                        <div className="bg-[rgba(10,20,30,0.95)] border-2 p-6 max-w-md w-full max-h-[80vh] overflow-y-auto" style={{ borderColor: raceAccent }}>
+                        <div
+                            className="bg-[rgba(10,20,30,0.95)] border-2 p-6 max-w-md w-full max-h-[80vh] overflow-y-auto"
+                            style={{ borderColor: raceAccent }}
+                        >
                             <PlanetExpeditionSetup
                                 planetId={planetId}
                                 onClose={() => setShowExpeditionSetup(false)}

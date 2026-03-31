@@ -19,7 +19,17 @@ export type EnemyModule = {
 };
 
 export type EnemyModuleType = "weapon" | "shield" | "reactor";
-export type EnemyShip = "pirate" | "raider" | "mercenary" | "marauder";
+export type EnemyShip =
+    | "pirate"
+    | "raider"
+    | "mercenary"
+    | "marauder"
+    | "human_guard"
+    | "synthetic_guard"
+    | "xenosymbiont_guard"
+    | "krylorian_guard"
+    | "voidborn_guard"
+    | "crystalline_guard";
 export type EnemyStats = {
     healthMod: number;
     damageMod: number;

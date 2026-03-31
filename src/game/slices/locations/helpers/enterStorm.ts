@@ -428,6 +428,7 @@ export const handleStormEntry = (set: SetState, get: () => GameStore): void => {
                 (ac) => ac.id !== rescueContract.id,
             ),
         }));
+        get().changeReputation("voidborn", 10);
     }
 
     // Обновляем статистику корабля и переходим к следующему ходу

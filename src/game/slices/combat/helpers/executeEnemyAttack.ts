@@ -11,7 +11,10 @@ import { playSound } from "@/sounds";
 import { getTotalEvasion } from "@/game/slices/ship/helpers/getTotalEvasion";
 import type { GameState, GameStore, Module, ModuleType } from "@/game/types";
 import * as enemyAttack from "./enemyAttack";
-import { getBossAttackModifiers, processBossRegeneration } from "./bossAbilities";
+import {
+    getBossAttackModifiers,
+    processBossRegeneration,
+} from "./bossAbilities";
 
 /**
  * Priority values for enemy AI targeting
@@ -82,7 +85,10 @@ export function executeEnemyAttack(
         ? combat.enemy.modules.filter((m) => m.health > 0)
         : [];
     const bossModifiers = combat.enemy.isBoss
-        ? getBossAttackModifiers(aliveBossMods, combat.enemy.bossAttackCount ?? 0)
+        ? getBossAttackModifiers(
+              aliveBossMods,
+              combat.enemy.bossAttackCount ?? 0,
+          )
         : null;
 
     // Apply guaranteed crit and multi_hit multipliers
@@ -167,22 +173,37 @@ export function executeEnemyAttack(
     }
 
     // Shield break: strip extra shields after attack
-    if (bossModifiers && bossModifiers.shieldBreakAmount > 0 && get().ship.shields > 0) {
+    if (
+        bossModifiers &&
+        bossModifiers.shieldBreakAmount > 0 &&
+        get().ship.shields > 0
+    ) {
         set((s) => {
-            s.ship.shields = Math.max(0, s.ship.shields - bossModifiers.shieldBreakAmount);
+            s.ship.shields = Math.max(
+                0,
+                s.ship.shields - bossModifiers.shieldBreakAmount,
+            );
         });
-        get().addLog(`⚡ Разрушение щитов: -${bossModifiers.shieldBreakAmount}`, "warning");
+        get().addLog(
+            `⚡ Разрушение щитов: -${bossModifiers.shieldBreakAmount}`,
+            "warning",
+        );
     }
 
     // Heal on damage
     if (bossModifiers && bossModifiers.healOnDamagePercent > 0) {
-        const healAmount = Math.floor((finalDamage * bossModifiers.healOnDamagePercent) / 100);
+        const healAmount = Math.floor(
+            (finalDamage * bossModifiers.healOnDamagePercent) / 100,
+        );
         if (healAmount > 0) {
             set((s) => {
                 if (!s.currentCombat) return;
                 s.currentCombat.enemy.modules.forEach((m) => {
                     if (m.health > 0)
-                        m.health = Math.min(m.maxHealth ?? 100, m.health + healAmount);
+                        m.health = Math.min(
+                            m.maxHealth ?? 100,
+                            m.health + healAmount,
+                        );
                 });
             });
             get().addLog(`🩸 Вампиризм модуля: +${healAmount} HP`, "warning");
@@ -199,7 +220,10 @@ export function executeEnemyAttack(
             if (!s.currentCombat) return;
             s.currentCombat.skipPlayerTurn = true;
         });
-        get().addLog(`⏭️ Пропуск хода! Следующая атака будет пропущена!`, "error");
+        get().addLog(
+            `⏭️ Пропуск хода! Следующая атака будет пропущена!`,
+            "error",
+        );
     }
 
     // Check for dead crew
@@ -338,15 +362,26 @@ function applyDamageToShip(
     ignoreDefense = false,
 ) {
     // Split damage: piercing portion bypasses shields
-    const piercingDamage = shieldPiercePercent > 0
-        ? Math.floor((enemyDamage * shieldPiercePercent) / 100)
-        : 0;
+    const piercingDamage =
+        shieldPiercePercent > 0
+            ? Math.floor((enemyDamage * shieldPiercePercent) / 100)
+            : 0;
     const normalDamage = enemyDamage - piercingDamage;
 
     // Apply piercing damage directly to module
     if (piercingDamage > 0) {
-        get().addLog(`🔱 Пробитие щитов: ${piercingDamage} урона игнорирует щиты`, "warning");
-        applyModuleDamage(state, set, get, piercingDamage, targetModule, ignoreDefense);
+        get().addLog(
+            `🔱 Пробитие щитов: ${piercingDamage} урона игнорирует щиты`,
+            "warning",
+        );
+        applyModuleDamage(
+            state,
+            set,
+            get,
+            piercingDamage,
+            targetModule,
+            ignoreDefense,
+        );
     }
 
     // Apply normal damage through shields
@@ -360,10 +395,24 @@ function applyDamageToShip(
 
             const overflow = normalDamage - sDmg;
             if (overflow > 0) {
-                applyModuleDamage(state, set, get, overflow, targetModule, ignoreDefense);
+                applyModuleDamage(
+                    state,
+                    set,
+                    get,
+                    overflow,
+                    targetModule,
+                    ignoreDefense,
+                );
             }
         } else {
-            applyModuleDamage(state, set, get, normalDamage, targetModule, ignoreDefense);
+            applyModuleDamage(
+                state,
+                set,
+                get,
+                normalDamage,
+                targetModule,
+                ignoreDefense,
+            );
         }
     }
 }
@@ -525,7 +574,8 @@ function damageCrewInModule(
     const phaseStepDodgers = new Set<number>();
     state.crew.forEach((c) => {
         if (c.moduleId !== moduleId || !c.augmentation) return;
-        const dodgeChance = AUGMENTATIONS[c.augmentation]?.effect?.fullDodgeChance ?? 0;
+        const dodgeChance =
+            AUGMENTATIONS[c.augmentation]?.effect?.fullDodgeChance ?? 0;
         if (dodgeChance > 0 && Math.random() < dodgeChance) {
             phaseStepDodgers.add(c.id);
         }
@@ -585,4 +635,3 @@ function damageCrewInModule(
         }));
     }
 }
-

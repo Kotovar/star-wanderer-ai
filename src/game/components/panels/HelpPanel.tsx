@@ -482,6 +482,39 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                         </ul>
                     </section>
 
+                    {/* Reputation */}
+                    <section>
+                        <h3 className="text-[#9933ff] font-bold text-lg mb-2">
+                            {t("help.reputation_title")}
+                        </h3>
+                        <p className="text-[#aaa] text-xs mb-2">
+                            {t("help.reputation_text")}
+                        </p>
+                        <div className="mb-2 p-2 bg-[rgba(153,51,255,0.05)] border border-[#9933ff] text-xs">
+                            <div className="text-[#9933ff] font-bold mb-1">
+                                {t("help.reputation_levels")}
+                            </div>
+                            <ul className="text-[#888] space-y-0.5">
+                                <li>{t("help.reputation_hostile")}</li>
+                                <li>{t("help.reputation_unfriendly")}</li>
+                                <li>{t("help.reputation_neutral")}</li>
+                                <li>{t("help.reputation_friendly")}</li>
+                                <li>{t("help.reputation_allied")}</li>
+                            </ul>
+                        </div>
+                        <div className="p-2 bg-[rgba(153,51,255,0.05)] border border-[#9933ff] text-xs">
+                            <div className="text-[#9933ff] font-bold mb-1">
+                                {t("help.reputation_change")}
+                            </div>
+                            <ul className="text-[#888] space-y-0.5">
+                                <li>{t("help.reputation_trade")}</li>
+                                <li>{t("help.reputation_diplomacy")}</li>
+                                <li>{t("help.reputation_combat")}</li>
+                                <li>{t("help.reputation_relations")}</li>
+                            </ul>
+                        </div>
+                    </section>
+
                     {/* Tips */}
                     <section>
                         <h3 className="text-[#ffb000] font-bold text-lg mb-2">

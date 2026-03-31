@@ -3,9 +3,9 @@ import { RESEARCH_TREE } from "@/game/constants";
 import { generateGalaxy } from "@/game/galaxy/generateGalaxy";
 import { initialModules, STARTING_FUEL } from "@/game/modules/initial";
 import { initializeStationData } from "@/game/stations/initialize";
-import type { GameState, CrewMember, TechnologyId } from "@/game/types";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
 import { applyResearchedTechs } from "@/game/research/applyResearchedTechs";
+import type { GameState, CrewMember, TechnologyId, RaceId } from "@/game/types";
 
 /** Начальный номер хода */
 const INITIAL_TURN = 1;
@@ -28,6 +28,16 @@ const INITIAL_GAME_MODE = "galaxy_map" as const;
 
 /** Начальная раса, известная игроку */
 const INITIAL_KNOWN_RACE = "human" as const;
+
+/** Начальная репутация со всеми расами (0 = нейтрал) */
+const INITIAL_RACE_REPUTATION: Record<RaceId, number> = {
+    human: 0,
+    synthetic: 0,
+    xenosymbiont: 0,
+    krylorian: 0,
+    voidborn: 0,
+    crystalline: 0,
+};
 
 /** Начальные технологии — все с флагом discovered: true в константах */
 const INITIAL_DISCOVERED_TECHS: TechnologyId[] = Object.values(RESEARCH_TREE)
@@ -171,6 +181,15 @@ const baseState: GameState = {
     distressRespondedShips: [],
     artifacts: ANCIENT_ARTIFACTS.map((a) => ({ ...a })),
     knownRaces: [INITIAL_KNOWN_RACE],
+    // knownRaces: [
+    //     "human",
+    //     "crystalline",
+    //     "krylorian",
+    //     "voidborn",
+    //     "xenosymbiont",
+    //     "synthetic",
+    // ],
+    raceReputation: INITIAL_RACE_REPUTATION,
     gameLoadedCount: INITIAL_GAME_LOADED_COUNT,
     battleResult: null,
     stormResult: null,
@@ -208,6 +227,7 @@ const baseState: GameState = {
     sectorZoom: 1,
     galaxyOffset: { x: 0, y: 0 },
     sectorOffset: { x: 0, y: 0 },
+    bannedPlanets: [],
 };
 
 /**

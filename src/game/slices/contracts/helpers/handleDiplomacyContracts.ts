@@ -38,6 +38,7 @@ export const handleDiplomacyContracts = (
         `Дипломатическая миссия выполнена! +${diplomacyContract.reward}₢`,
         "info",
     );
+    get().changeReputation("human", 10);
 
     // Give experience to all crew members
     const expReward = CONTRACT_REWARDS.diplomacy.baseExp;

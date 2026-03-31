@@ -31,6 +31,16 @@ const LOOT_BOSS_BASE = 900;
 const LOOT_BOSS_VARIATION_MIN = 0.75;
 const LOOT_BOSS_VARIATION_RANGE = 0.5; // 0.75 - 1.25 (±25%)
 
+// Defender ships: low loot (0.3), balanced stats, each race has a flavour
+export const DEFENDER_CONFIGS: Record<string, { stats: EnemyStats; name: string }> = {
+    human_guard:        { stats: { healthMod: 1.0, damageMod: 1.0, shieldMod: 1, weaponCountMod: 0, lootMod: 0.3 }, name: "Страж людей" },
+    synthetic_guard:    { stats: { healthMod: 1.2, damageMod: 0.9, shieldMod: 2, weaponCountMod: 0, lootMod: 0.3 }, name: "Синтетический страж" },
+    xenosymbiont_guard: { stats: { healthMod: 0.9, damageMod: 1.1, shieldMod: 0, weaponCountMod: 1, lootMod: 0.3 }, name: "Биологический страж" },
+    krylorian_guard:    { stats: { healthMod: 0.8, damageMod: 1.3, shieldMod: 0, weaponCountMod: 1, lootMod: 0.3 }, name: "Крилорианский воитель" },
+    voidborn_guard:     { stats: { healthMod: 1.0, damageMod: 1.0, shieldMod: 1, weaponCountMod: 0, lootMod: 0.3 }, name: "Страж Пустоты" },
+    crystalline_guard:  { stats: { healthMod: 1.3, damageMod: 0.8, shieldMod: 2, weaponCountMod: 0, lootMod: 0.3 }, name: "Кристаллический страж" },
+};
+
 // Enemy type modifiers
 const ENEMY_TYPE_MODIFIERS: Record<EnemyShip, EnemyStats> = {
     pirate: {
@@ -61,6 +71,13 @@ const ENEMY_TYPE_MODIFIERS: Record<EnemyShip, EnemyStats> = {
         weaponCountMod: 0, // обычное оружие (но с вариацией)
         lootMod: 0.85, // -15% лута (дешёвое оборудование)
     },
+    // Defenders — pulled from DEFENDER_CONFIGS
+    human_guard:        DEFENDER_CONFIGS.human_guard.stats,
+    synthetic_guard:    DEFENDER_CONFIGS.synthetic_guard.stats,
+    xenosymbiont_guard: DEFENDER_CONFIGS.xenosymbiont_guard.stats,
+    krylorian_guard:    DEFENDER_CONFIGS.krylorian_guard.stats,
+    voidborn_guard:     DEFENDER_CONFIGS.voidborn_guard.stats,
+    crystalline_guard:  DEFENDER_CONFIGS.crystalline_guard.stats,
 };
 
 /**

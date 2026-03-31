@@ -4,6 +4,8 @@ import { useGameStore } from "@/game/store";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { ShipStatsPanel } from "./ShipStatsPanel";
+import { getRaceReputationLevel } from "@/game/reputation/utils";
+import type { RaceId } from "@/game/types";
 
 export function UnknownShipPanel() {
     const { t } = useTranslation();
@@ -21,6 +23,7 @@ export function UnknownShipPanel() {
         currentLocation.type,
         currentLocation.threat || currentLocation.anomalyTier,
     );
+    const isRevealed = canScan || !!currentLocation.signalRevealed;
 
     const handleApproach = () => {
         // Mark location as revealed - we discovered what it is by approaching
@@ -56,7 +59,14 @@ export function UnknownShipPanel() {
         } else if (currentLocation.type === "boss") {
             startBossCombat(currentLocation);
         } else if (currentLocation.type === "friendly_ship") {
-            useGameStore.setState({ gameMode: "friendly_ship" });
+            // After revealing, check if the ship belongs to a hostile race
+            const state = useGameStore.getState();
+            const shipRace = currentLocation.dominantRace as RaceId | undefined;
+            if (shipRace && getRaceReputationLevel(state.raceReputation, shipRace) === "hostile") {
+                useGameStore.setState({ gameMode: "hostile_approach_warning" });
+            } else {
+                useGameStore.setState({ gameMode: "friendly_ship" });
+            }
         } else if (currentLocation.type === "anomaly") {
             useGameStore.setState({ gameMode: "anomaly" });
         } else if (currentLocation.type === "storm") {
@@ -68,8 +78,7 @@ export function UnknownShipPanel() {
 
     // Get appropriate title and description
     const getTitle = () => {
-        if (canScan) {
-            // Scanner reveals the true identity
+        if (isRevealed) {
             return currentLocation.name;
         }
         if (
@@ -84,8 +93,7 @@ export function UnknownShipPanel() {
     };
 
     const getDescription = () => {
-        if (canScan) {
-            // Show actual type info
+        if (isRevealed) {
             if (currentLocation.type === "enemy") {
                 return t("unknown_ship.enemy_ship").replace(
                     "{{threat}}",
@@ -118,7 +126,7 @@ export function UnknownShipPanel() {
 
             <div className="bg-[rgba(0,0,0,0.4)] p-3 mb-4 border border-[#666]">
                 <p className="text-[#888] mb-2">{getDescription()}</p>
-                {!canScan && (
+                {!isRevealed && (
                     <p className="text-[#ffb000]">
                         {t("unknown_ship.scanner_required")}
                     </p>

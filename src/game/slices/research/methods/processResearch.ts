@@ -113,6 +113,7 @@ const handleResearchCompletion = (
             `🤖 Исследование для задания завершено! +${reward}₢`,
             "info",
         );
+        get().changeReputation("synthetic", 10);
     }
 
     // Логирование открытия новых технологий

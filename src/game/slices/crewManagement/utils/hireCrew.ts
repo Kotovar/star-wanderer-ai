@@ -183,14 +183,22 @@ export const hireCrew = (
     });
 
     // Применяем crew_health бонус от исследований к новому члену экипажа
-    const crewHealthBonus = state.research.researchedTechs.reduce((sum, techId) => {
-        const tech = RESEARCH_TREE[techId];
-        return sum + tech.bonuses
-            .filter((b) => b.type === "crew_health")
-            .reduce((s, b) => s + b.value, 0);
-    }, 0);
+    const crewHealthBonus = state.research.researchedTechs.reduce(
+        (sum, techId) => {
+            const tech = RESEARCH_TREE[techId];
+            return (
+                sum +
+                tech.bonuses
+                    .filter((b) => b.type === "crew_health")
+                    .reduce((s, b) => s + b.value, 0)
+            );
+        },
+        0,
+    );
     if (crewHealthBonus > 0) {
-        newCrew.maxHealth = Math.floor(newCrew.maxHealth * (1 + crewHealthBonus));
+        newCrew.maxHealth = Math.floor(
+            newCrew.maxHealth * (1 + crewHealthBonus),
+        );
     }
 
     // Обновление состояния
@@ -211,6 +219,31 @@ export const hireCrew = (
         },
     }));
 
+    // Повышение репутации с расой за найм экипажа (+1~3 в зависимости от уровня)
+    if (newCrew.race) {
+        const reputationGain = Math.min(3, Math.max(1, newCrew.level || 1)); // +1~3 за уровень
+        get().changeReputation(newCrew.race, reputationGain);
+        get().addLog(
+            `Репутация с ${getRaceName(newCrew.race)}: +${reputationGain} (наём экипажа)`,
+            "info",
+        );
+    }
+
     get().addLog(`Нанят: ${newCrew.name} за ${crewData.price}₢`, "info");
     playSound("success");
 };
+
+/**
+ * Получить название расы
+ */
+function getRaceName(raceId: string): string {
+    const names: Record<string, string> = {
+        human: "Людьми",
+        synthetic: "Синтетиками",
+        xenosymbiont: "Ксеноморфами",
+        krylorian: "Крилорианцами",
+        voidborn: "Порождёнными Пустотой",
+        crystalline: "Кристаллоидами",
+    };
+    return names[raceId] || raceId;
+}

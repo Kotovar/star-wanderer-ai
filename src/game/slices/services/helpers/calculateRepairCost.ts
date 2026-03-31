@@ -1,13 +1,19 @@
 import { REPAIR_CONFIG } from "../constants";
 import type { GameState } from "@/game/types";
+import type { RaceId } from "@/game/types/races";
 import type { ServiceCostResult } from "./types";
+import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
 
 /**
  * Рассчитывает стоимость ремонта корабля
  * @param state - Текущее состояние игры
+ * @param raceId - ID расы для применения модификатора репутации (опционально)
  * @returns Стоимость ремонта и статус доступности
  */
-export const calculateRepairCost = (state: GameState): ServiceCostResult => {
+export const calculateRepairCost = (
+    state: GameState,
+    raceId?: RaceId,
+): ServiceCostResult => {
     const modules = state.ship.modules;
 
     if (modules.length === 0) {
@@ -30,11 +36,20 @@ export const calculateRepairCost = (state: GameState): ServiceCostResult => {
         Math.min(1, 1 - totalCurrentHP / totalMaxHP),
     );
 
-    // Цена = недостающее HP × цена за 1 HP
-    const cost = Math.floor(missingHP * REPAIR_CONFIG.pricePerHp);
+    // Базовая цена = недостающее HP × цена за 1 HP
+    let baseCost = Math.floor(missingHP * REPAIR_CONFIG.pricePerHp);
+
+    // Применяем модификатор репутации если указана раса
+    if (raceId) {
+        baseCost = applyReputationPriceModifier(
+            state.raceReputation,
+            raceId,
+            baseCost,
+        );
+    }
 
     // Можно ремонтировать, если есть повреждения (> 0 HP)
     const canUse = missingHP > 0;
 
-    return { cost, damagePercent, canUse };
+    return { cost: baseCost, damagePercent, canUse };
 };

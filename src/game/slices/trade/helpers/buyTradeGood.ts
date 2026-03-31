@@ -10,6 +10,8 @@ import type {
     StationStock,
 } from "@/game/types";
 import type { BuyValidation } from "./types";
+import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
+import { REPUTATION_BUY_THRESHOLD } from "../constants";
 
 /**
  * Проверяет возможность покупки товара
@@ -37,7 +39,24 @@ const validateBuyTradeGood = (
     }
 
     const pricePer5 = pricesFromStation[goodId].buy;
-    const price = Math.floor(pricePer5 * (quantity / 5));
+
+    // Применяем модификатор репутации если есть доминирующая раса
+    const raceId = state.currentLocation?.dominantRace;
+    const sellPrice = pricesFromStation[goodId].sell;
+    let price: number;
+    if (raceId) {
+        price = applyReputationPriceModifier(
+            state.raceReputation,
+            raceId,
+            pricePer5,
+            "buy",
+            sellPrice, // Anti-arbitrage: ensure buy > sell
+            quantity,
+        );
+    } else {
+        price = Math.floor(pricePer5 * (quantity / 5));
+    }
+
     const available = stockFromStation[goodId] || 0;
 
     if (available < quantity) {
@@ -66,7 +85,7 @@ const validateBuyTradeGood = (
         return { canBuy: false, error: "Недостаточно места!" };
     }
 
-    return { canBuy: true, price };
+    return { canBuy: true, price: Math.floor(price) };
 };
 
 /**
@@ -146,6 +165,13 @@ export const buyTradeGood = (
             },
         },
     }));
+
+    // Повышение репутации с расой за крупную торговлю (+1 за 20+ единиц)
+    const dominantRace = state.currentLocation?.dominantRace;
+    if (dominantRace && quantity >= REPUTATION_BUY_THRESHOLD) {
+        const reputationGain = Math.floor(quantity / REPUTATION_BUY_THRESHOLD);
+        get().changeReputation(dominantRace, reputationGain);
+    }
 
     get().addLog(
         `Куплено: ${TRADE_GOODS[goodId].name} ${quantity}т за ${validation.price}₢`,

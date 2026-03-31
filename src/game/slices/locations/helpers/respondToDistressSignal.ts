@@ -215,6 +215,14 @@ const handleSurvivors = (set: SetState, get: () => GameStore): void => {
         get().addLog(`🔬 ${rd.icon} ${rd.name} x${alienBioQty}`, "info");
     }
 
+    // +3 репутации с доминирующей расой сектора за спасение
+    const dominantRace = get().currentSector?.locations
+        .find((l) => l.type === "planet" && !l.isEmpty && l.dominantRace)
+        ?.dominantRace;
+    if (dominantRace) {
+        get().changeReputation(dominantRace, 3);
+    }
+
     // Иногда выживший присоединяется к экипажу
     if (hasCapacity && Math.random() < SURVIVOR_JOINS_CHANCE) {
         addSurvivorToCrew(set, get);

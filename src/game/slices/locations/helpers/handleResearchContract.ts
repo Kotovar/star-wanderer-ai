@@ -75,6 +75,9 @@ export const handleResearchContract = (
             expReward,
             `Экипаж получил опыт: +${expReward} ед.`,
         );
+        if (contract.sourceDominantRace) {
+            get().changeReputation(contract.sourceDominantRace, 2);
+        }
         return true;
     }
 

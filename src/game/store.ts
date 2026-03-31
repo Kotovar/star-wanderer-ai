@@ -22,7 +22,7 @@ import {
     createPlanetEffectsSlice,
     createResearchSlice,
     createAugmentationsSlice,
-    // createCraftingSlice,
+    createReputationSlice,
 } from "@/game/slices";
 import type { GameStore } from "@/game/types";
 import { createCraftingSlice } from "./slices/crafting";
@@ -51,5 +51,6 @@ export const useGameStore = create<GameStore>()(
         ...createResearchSlice(set, get),
         ...createCraftingSlice(set, get),
         ...createAugmentationsSlice(set, get),
+        ...createReputationSlice(set, get),
     })),
 );

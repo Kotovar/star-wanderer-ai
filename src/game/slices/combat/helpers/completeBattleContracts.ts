@@ -26,6 +26,9 @@ export function completeBattleContracts(
             rewardConfig.baseExp +
             enemyThreat * (rewardConfig.threatBonus ?? 0);
         giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+        if (c.sourceDominantRace) {
+            get().changeReputation(c.sourceDominantRace, 2);
+        }
         set((s) => ({
             completedContractIds: [...s.completedContractIds, c.id],
             activeContracts: s.activeContracts.filter((ac) => ac.id !== c.id),
@@ -57,11 +60,13 @@ export function completeBattleContracts(
                     expReward,
                     `Экипаж получил опыт: +${expReward} ед.`,
                 );
+
+                if (c.requiredRace) {
+                    get().changeReputation(c.requiredRace, 10);
+                }
+
                 set((s) => ({
-                    completedContractIds: [
-                        ...s.completedContractIds,
-                        c.id,
-                    ],
+                    completedContractIds: [...s.completedContractIds, c.id],
                     activeContracts: s.activeContracts.filter(
                         (ac) => ac.id !== c.id,
                     ),
@@ -90,6 +95,9 @@ export function completeBattleContracts(
             rewardConfig.baseExp +
             enemyThreat * (rewardConfig.threatBonus ?? 0);
         giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+        if (c.sourceDominantRace) {
+            get().changeReputation(c.sourceDominantRace, 2);
+        }
         set((s) => ({
             completedContractIds: [...s.completedContractIds, c.id],
             activeContracts: s.activeContracts.filter((ac) => ac.id !== c.id),
@@ -104,16 +112,19 @@ export function completeBattleContracts(
         const reward = miningContract.reward || 0;
         set((s) => ({
             credits: s.credits + reward,
-            completedContractIds: [...s.completedContractIds, miningContract.id],
+            completedContractIds: [
+                ...s.completedContractIds,
+                miningContract.id,
+            ],
             activeContracts: s.activeContracts.filter(
                 (ac) => ac.id !== miningContract.id,
             ),
         }));
         const expReward = CONTRACT_REWARDS.mining.baseExp;
-        giveCrewExperience(
-            expReward,
-            `Экипаж получил опыт: +${expReward} ед.`,
-        );
+        giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
         get().addLog(`Артефакт для задания найден! +${reward}₢`, "info");
+        if (miningContract.requiredRace) {
+            get().changeReputation(miningContract.requiredRace, 10);
+        }
     }
 }

@@ -2,6 +2,8 @@ import { TRADE_GOODS } from "@/game/constants";
 import { playSound } from "@/sounds";
 import type { GameStore, SetState, Goods, StationPrices } from "@/game/types";
 import type { SellValidation } from "./types";
+import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
+import { REPUTATION_SELL_THRESHOLD } from "../constants";
 
 /**
  * Проверяет возможность продажи товара
@@ -31,7 +33,23 @@ const validateSellTradeGood = (
     }
 
     const pricePer5 = pricesFromTrade[goodId].sell;
-    let price = Math.floor(pricePer5 * (quantity / 5));
+
+    // Применяем модификатор репутации если есть доминирующая раса
+    const raceId = state.currentLocation?.dominantRace;
+    const buyPrice = pricesFromTrade[goodId].buy;
+    let price: number;
+    if (raceId) {
+        price = applyReputationPriceModifier(
+            state.raceReputation,
+            raceId,
+            pricePer5,
+            "sell",
+            buyPrice, // Anti-arbitrage: ensure sell < buy
+            quantity,
+        );
+    } else {
+        price = Math.floor(pricePer5 * (quantity / 5));
+    }
 
     // Штраф от жадных
     let greedyCrewCount = 0;
@@ -58,7 +76,7 @@ const validateSellTradeGood = (
         price = Math.floor(price * (1 + traderBonus));
     }
 
-    return { canSell: true, price, greedyCrewCount };
+    return { canSell: true, price: Math.floor(price), greedyCrewCount };
 };
 
 /**
@@ -128,6 +146,13 @@ export const sellTradeGood = (
 
     // Обновление кредитов
     set((s) => ({ credits: s.credits + (validation.price ?? 0) }));
+
+    // Повышение репутации с расой за крупную торговлю (+1 за 20+ единиц)
+    const dominantRace = get().currentLocation?.dominantRace;
+    if (dominantRace && quantity >= REPUTATION_SELL_THRESHOLD) {
+        const reputationGain = Math.floor(quantity / REPUTATION_SELL_THRESHOLD);
+        get().changeReputation(dominantRace, reputationGain);
+    }
 
     // Логирование
     get().addLog(

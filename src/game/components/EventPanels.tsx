@@ -22,8 +22,10 @@ import { UnknownShipPanel } from "./UnknownShipPanel";
 import { BattleResultsPanel } from "./BattleResultsPanel";
 import { StormResultsPanel } from "./StormResultsPanel";
 import { ResearchPanel } from "./ResearchPanel";
+import { ReputationPanel } from "./ReputationPanel";
 import { DerelictShipPanel } from "./DerelictShipPanel";
 import { GasGiantPanel } from "./GasGiantPanel";
+import { HostileApproachWarningPanel } from "./HostileApproachWarningPanel";
 
 export function EventDisplay() {
     const gameMode = useGameStore((s) => s.gameMode);
@@ -227,6 +229,9 @@ export function EventDisplay() {
         case "gas_giant":
             return <GasGiantPanel />;
 
+        case "hostile_approach_warning":
+            return <HostileApproachWarningPanel />;
+
         case "artifacts":
             return (
                 <>
@@ -282,6 +287,20 @@ export function EventDisplay() {
                     {/* Mobile: show button that triggers modal in ResearchPanel */}
                     <div className="md:hidden p-4">
                         <ResearchPanel />
+                    </div>
+                </>
+            );
+
+        case "reputation":
+            return (
+                <>
+                    {/* Desktop: full panel */}
+                    <div className="hidden md:block h-full overflow-hidden">
+                        <ReputationPanel />
+                    </div>
+                    {/* Mobile: modal via Header */}
+                    <div className="md:hidden p-4 h-full overflow-y-auto">
+                        <ReputationPanel />
                     </div>
                 </>
             );

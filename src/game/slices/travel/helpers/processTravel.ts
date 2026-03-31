@@ -263,6 +263,10 @@ export const handlePatrolContracts = (
                 `Экипаж получил опыт: +${expReward} ед.`,
             );
 
+            if (c.isRaceQuest && c.requiredRace) {
+                getState().changeReputation(c.requiredRace, 10);
+            }
+
             newActiveContracts = newActiveContracts.filter(
                 (ac) => ac.id !== c.id,
             );

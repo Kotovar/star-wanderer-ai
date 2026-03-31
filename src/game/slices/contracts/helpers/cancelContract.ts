@@ -28,5 +28,10 @@ export const cancelContract = (
         activeContracts: s.activeContracts.filter((c) => c.id !== contractId),
     }));
     get().addLog(`Задача отменёна: ${contract.desc}`, "warning");
+
+    if (contract.isRaceQuest && contract.requiredRace) {
+        get().changeReputation(contract.requiredRace, -5);
+    }
+
     playSound("error");
 };

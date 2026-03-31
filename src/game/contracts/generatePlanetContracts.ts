@@ -112,6 +112,7 @@ export const generatePlanetContracts = (
                 sourceSectorName: sector.name,
                 requiredRace: "human",
                 isRaceQuest: true,
+                timeLimit: 15,
                 reward:
                     REWARD.human.base[tier - 1] +
                     Math.floor(Math.random() * REWARD.human.range[tier - 1]),
@@ -133,6 +134,7 @@ export const generatePlanetContracts = (
                 requiredTechTier,
                 requiredRace: "synthetic",
                 isRaceQuest: true,
+                timeLimit: 15,
                 reward:
                     REWARD.synthetic.base[tier - 1] +
                     Math.floor(Math.random() * REWARD.synthetic.range[tier - 1]),
@@ -157,6 +159,7 @@ export const generatePlanetContracts = (
                 sourceSectorName: sector.name,
                 requiredRace: "xenosymbiont",
                 isRaceQuest: true,
+                timeLimit: 15,
                 reward:
                     REWARD.xenosymbiont.base[tier - 1] +
                     Math.floor(Math.random() * REWARD.xenosymbiont.range[tier - 1]),
@@ -190,6 +193,7 @@ export const generatePlanetContracts = (
                 sourceSectorName: sector.name,
                 requiredRace: "krylorian",
                 isRaceQuest: true,
+                timeLimit: 15,
                 reward,
             };
         },
@@ -228,6 +232,7 @@ export const generatePlanetContracts = (
                 visited: 0,
                 requiredRace: "voidborn",
                 isRaceQuest: true,
+                timeLimit: 15,
                 requiredStormIntensity,
                 reward: rewardBase + Math.floor(Math.random() * rewardRange),
             };
@@ -250,6 +255,7 @@ export const generatePlanetContracts = (
                 sourceSectorName: sector.name,
                 requiredRace: "crystalline",
                 isRaceQuest: true,
+                timeLimit: 15,
                 reward:
                     REWARD.crystalline.base[tier - 1] +
                     Math.floor(Math.random() * REWARD.crystalline.range[tier - 1]),
@@ -575,7 +581,7 @@ export const generatePlanetContracts = (
     const numNeeded = Math.max(1, numContracts - contracts.length);
     for (let i = 0; i < Math.min(numNeeded, shuffled.length); i++) {
         const q = shuffled[i].gen();
-        if (q) contracts.push(q);
+        if (q) contracts.push(dominantRace ? { ...q, sourceDominantRace: dominantRace } : q);
     }
 
     return contracts;

@@ -5,14 +5,15 @@ import { useGameStore } from "@/game/store";
 import { TRADE_GOODS } from "@/game/constants/goods";
 import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
-import type { Quality } from "@/game/types";
 import { getRandomName } from "@/game/crew/utils";
 import { generateCrewTraits } from "@/game/crew/utils";
 import { PROFESSION_NAMES, CREW_BASE_PRICES } from "@/game/constants/crew";
 import { Goods } from "@/game/types/goods";
 import { Profession } from "@/game/types/crew";
-import { RaceId } from "../types/races";
 import { useTranslation } from "@/lib/useTranslation";
+import { getRaceReputationLevel } from "@/game/reputation/utils";
+import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
+import type { Quality, RaceId } from "@/game/types";
 
 const INITIAL_STOCK: Goods[] = ["water", "food", "medicine"];
 
@@ -21,6 +22,11 @@ export function FriendlyShipPanel() {
     const credits = useGameStore((s) => s.credits);
     const ship = useGameStore((s) => s.ship);
     const crew = useGameStore((s) => s.crew);
+    const knownRaces = useGameStore((s) => s.knownRaces);
+    const discoverRace = useGameStore((s) => s.discoverRace);
+
+    // Ensure credits are always displayed as integers
+    const displayCredits = Math.floor(credits);
 
     const { t } = useTranslation();
 
@@ -33,6 +39,8 @@ export function FriendlyShipPanel() {
     const activeContracts = useGameStore((s) => s.activeContracts);
 
     const showSectorMap = useGameStore((s) => s.showSectorMap);
+    const attackFriendlyShip = useGameStore((s) => s.attackFriendlyShip);
+    const raceReputation = useGameStore((s) => s.raceReputation);
     const shipQuestsTaken = useGameStore((s) => s.shipQuestsTaken);
     const hiredCrewFromShips = useGameStore((s) => s.hiredCrewFromShips);
     const friendlyShipStock = useGameStore((s) => s.friendlyShipStock);
@@ -40,6 +48,16 @@ export function FriendlyShipPanel() {
         (s) => s.distressRespondedShips,
     );
     const addLog = useGameStore((s) => s.addLog);
+
+    const dominantRace = currentLocation?.dominantRace;
+    const race = dominantRace ? RACES[dominantRace] : null;
+
+    // Discover race when encountering a friendly ship
+    useEffect(() => {
+        if (dominantRace && race && !knownRaces.includes(dominantRace)) {
+            discoverRace(dominantRace);
+        }
+    }, [dominantRace, race, knownRaces, discoverRace]);
 
     const seedRandom = (seed: number) => {
         const x = Math.sin(seed) * 10000;
@@ -232,10 +250,52 @@ export function FriendlyShipPanel() {
                             const playerGood = ship.tradeGoods.find(
                                 (tg) => tg.item === g.id,
                             );
-                            const buyPricePerUnit = Math.floor(g.price / 5);
-                            const sellPricePerUnit = Math.floor(
-                                (g.price * 0.6) / 5,
+                            // Base prices (for 5 tons)
+                            const baseBuyPrice = g.price;
+                            const baseSellPrice = Math.floor(g.price * 0.6);
+
+                            // Apply reputation modifier with anti-arbitrage protection (for 5 tons)
+                            const buyPriceFor5 = dominantRace
+                                ? applyReputationPriceModifier(
+                                      raceReputation,
+                                      dominantRace,
+                                      baseBuyPrice,
+                                      "buy",
+                                      baseSellPrice,
+                                      5, // quantity = 5 for base price
+                                  )
+                                : baseBuyPrice;
+                            const sellPriceFor5 = dominantRace
+                                ? applyReputationPriceModifier(
+                                      raceReputation,
+                                      dominantRace,
+                                      baseSellPrice,
+                                      "sell",
+                                      baseBuyPrice,
+                                      5, // quantity = 5 for base price
+                                  )
+                                : baseSellPrice;
+
+                            const buyPriceWithRep = buyPriceFor5;
+                            const sellPriceWithRep = sellPriceFor5;
+
+                            const buyPricePerUnit = Math.floor(
+                                buyPriceWithRep / 5,
                             );
+                            const sellPricePerUnit = Math.floor(
+                                sellPriceWithRep / 5,
+                            );
+                            const baseBuyPricePerUnit = Math.floor(
+                                baseBuyPrice / 5,
+                            );
+                            const baseSellPricePerUnit = Math.floor(
+                                baseSellPrice / 5,
+                            );
+
+                            const buyModified =
+                                buyPricePerUnit !== baseBuyPricePerUnit;
+                            const sellModified =
+                                sellPricePerUnit !== baseSellPricePerUnit;
 
                             return (
                                 <div
@@ -247,8 +307,37 @@ export function FriendlyShipPanel() {
                                             {g.name}
                                         </div>
                                         <div className="text-[#ffb000] text-xs mt-1">
-                                            Купить: {buyPricePerUnit}₢/т |
-                                            Продать: {sellPricePerUnit}₢/т
+                                            Купить:{" "}
+                                            <span
+                                                className={
+                                                    buyModified
+                                                        ? "text-[#00ff41] font-bold"
+                                                        : ""
+                                                }
+                                            >
+                                                {buyPricePerUnit}₢/т
+                                            </span>
+                                            {buyModified && (
+                                                <span className="text-[#888] ml-1">
+                                                    ({baseBuyPricePerUnit}₢/т)
+                                                </span>
+                                            )}
+                                            {" | "}
+                                            Продать:{" "}
+                                            <span
+                                                className={
+                                                    sellModified
+                                                        ? "text-[#00ff41] font-bold"
+                                                        : ""
+                                                }
+                                            >
+                                                {sellPricePerUnit}₢/т
+                                            </span>
+                                            {sellModified && (
+                                                <span className="text-[#888] ml-1">
+                                                    ({baseSellPricePerUnit}₢/т)
+                                                </span>
+                                            )}
                                         </div>
                                         <div className="text-[11px] mt-1">
                                             <span className="text-[#00ff41]">
@@ -267,7 +356,8 @@ export function FriendlyShipPanel() {
                                         <Button
                                             disabled={
                                                 availSpace < 1 ||
-                                                credits < buyPricePerUnit ||
+                                                displayCredits <
+                                                    buyPricePerUnit ||
                                                 g.stock < 1
                                             }
                                             onClick={() => {
@@ -330,7 +420,7 @@ export function FriendlyShipPanel() {
                                         <Button
                                             disabled={
                                                 availSpace < 5 ||
-                                                credits < g.price ||
+                                                displayCredits < g.price ||
                                                 g.stock < 5
                                             }
                                             onClick={() => {
@@ -392,7 +482,7 @@ export function FriendlyShipPanel() {
                                         <Button
                                             disabled={
                                                 availSpace < 15 ||
-                                                credits < g.price * 3 ||
+                                                displayCredits < g.price * 3 ||
                                                 g.stock < 15
                                             }
                                             onClick={() => {
@@ -738,7 +828,7 @@ export function FriendlyShipPanel() {
                         </div>
                         <Button
                             disabled={
-                                credits < crewPrice ||
+                                displayCredits < crewPrice ||
                                 crew.length >= getCrewCapacity()
                             }
                             onClick={() =>
@@ -1013,8 +1103,20 @@ export function FriendlyShipPanel() {
                     onClick={showSectorMap}
                     className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
                 >
-                    ПОКИНУТЬ
+                    {t("friendly_ship.leave")}
                 </Button>
+                {currentLocation.dominantRace &&
+                    getRaceReputationLevel(
+                        raceReputation,
+                        currentLocation.dominantRace,
+                    ) !== "hostile" && (
+                        <Button
+                            onClick={attackFriendlyShip}
+                            className="cursor-pointer bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-white uppercase tracking-wider"
+                        >
+                            {t("friendly_ship.attack")}
+                        </Button>
+                    )}
             </div>
         </div>
     );

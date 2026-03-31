@@ -34,5 +34,8 @@ export const handleExpeditionSurveyContracts = (
         );
         const expReward = CONTRACT_REWARDS.expedition_survey.baseExp;
         giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+        if (c.sourceDominantRace) {
+            get().changeReputation(c.sourceDominantRace, 2);
+        }
     });
 };

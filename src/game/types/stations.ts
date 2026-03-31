@@ -7,7 +7,8 @@ export type StationName =
     | "research"
     | "mining"
     | "shipyard"
-    | "medical";
+    | "medical"
+    | "diplomatic";
 
 export type StationConfig = {
     cargoBonus?: number; // Множитель вместимости грузового отсека (1.5 = +50%)

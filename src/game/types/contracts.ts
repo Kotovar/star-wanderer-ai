@@ -47,6 +47,8 @@ export interface Contract {
     // Race-specific contracts
     requiredRace?: RaceId;
     isRaceQuest?: boolean;
+    // Dominant race of the source planet (for normal contract rep gain)
+    sourceDominantRace?: RaceId;
     // For specific enemy type quests
     enemyType?: EnemyShip;
     // For storm/rescue quests

@@ -184,6 +184,15 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
         allowsModuleInstall: false,
         allowsCrewHeal: true,
     },
+    diplomatic: {
+        guaranteedProfessions: ["pilot"],
+        guaranteedWeapons: [],
+        guaranteedModules: ["scanner"],
+        allowsTrade: false,
+        allowsCraft: false,
+        allowsModuleInstall: false,
+        allowsCrewHeal: false,
+    },
 };
 
 /**

@@ -51,6 +51,9 @@ export const createGameManagementSlice = (
             saved.gameLoadedCount = 0;
         }
         saved.gameLoadedCount += 1;
+        if (!saved.bannedPlanets) {
+            saved.bannedPlanets = [];
+        }
 
         // Синхронизация трейтов экипажа
         const allTraits = Object.values(CREW_TRAITS).flat();
@@ -90,6 +93,9 @@ export const createGameManagementSlice = (
             saved.gameLoadedCount = 0;
         }
         saved.gameLoadedCount += 1;
+        if (!saved.bannedPlanets) {
+            saved.bannedPlanets = [];
+        }
 
         // Синхронизация трейтов
         const allTraits = Object.values(CREW_TRAITS).flat();

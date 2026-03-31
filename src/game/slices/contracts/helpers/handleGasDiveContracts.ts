@@ -51,5 +51,8 @@ export const handleGasDiveContracts = (
         );
         const expReward = CONTRACT_REWARDS.gas_dive.baseExp;
         giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+        if (c.sourceDominantRace) {
+            get().changeReputation(c.sourceDominantRace, 2);
+        }
     });
 };

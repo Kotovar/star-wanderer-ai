@@ -30,6 +30,12 @@ const ENEMY_TYPE_NAMES: Record<EnemyShip, string> = {
     raider: "Рейдеры",
     mercenary: "Наёмники",
     marauder: "Мародёры",
+    human_guard: "Страж людей",
+    synthetic_guard: "Синтетический страж",
+    xenosymbiont_guard: "Биологический страж",
+    krylorian_guard: "Крилорианский воитель",
+    voidborn_guard: "Страж Пустоты",
+    crystalline_guard: "Кристаллический страж",
 };
 
 /**

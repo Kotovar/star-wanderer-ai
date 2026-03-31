@@ -2479,12 +2479,13 @@ function drawStation(
     const stationType = loc.stationType || "trade";
 
     const stationColors: Record<string, { primary: string; secondary: string; accent: string }> = {
-        trade:    { primary: "#5ab8d4", secondary: "#2a5a6a", accent: "#00ff88" },
-        military: { primary: "#8a7aaa", secondary: "#3a2a4a", accent: "#ff4444" },
-        mining:   { primary: "#c4a85a", secondary: "#6a5a2a", accent: "#ffaa00" },
-        research: { primary: "#8a6aca", secondary: "#4a2a6a", accent: "#00d4ff" },
-        shipyard: { primary: "#aa7a4a", secondary: "#4a3a1a", accent: "#ff8800" },
-        medical:  { primary: "#4aaa7a", secondary: "#1a4a3a", accent: "#00ff88" },
+        trade:      { primary: "#5ab8d4", secondary: "#2a5a6a", accent: "#00ff88" },
+        military:   { primary: "#8a7aaa", secondary: "#3a2a4a", accent: "#ff4444" },
+        mining:     { primary: "#c4a85a", secondary: "#6a5a2a", accent: "#ffaa00" },
+        research:   { primary: "#8a6aca", secondary: "#4a2a6a", accent: "#00d4ff" },
+        shipyard:   { primary: "#aa7a4a", secondary: "#4a3a1a", accent: "#ff8800" },
+        medical:    { primary: "#4aaa7a", secondary: "#1a4a3a", accent: "#00ff88" },
+        diplomatic: { primary: "#d4af37", secondary: "#5a4a10", accent: "#ffffff" },
     };
 
     const colors = stationColors[stationType] || stationColors.trade;
@@ -2882,6 +2883,45 @@ function drawStation(
                 ctx.arc(lx, ly, 2.5, 0, Math.PI * 2);
                 ctx.fill();
             }
+            break;
+        }
+
+        case "diplomatic": {
+            // ДИПЛОМАТИЧЕСКАЯ: Два кольца + звезда мира в центре
+            // Outer glow
+            const dipGlow = ctx.createRadialGradient(x, y, 0, x, y, 22);
+            dipGlow.addColorStop(0, colors.primary + "44");
+            dipGlow.addColorStop(1, "transparent");
+            ctx.fillStyle = dipGlow;
+            ctx.beginPath();
+            ctx.arc(x, y, 22, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Left ring
+            ctx.strokeStyle = colors.primary;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x - 5, y, 7, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Right ring
+            ctx.strokeStyle = colors.accent;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x + 5, y, 7, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Center overlap fill (golden)
+            ctx.fillStyle = colors.primary + "cc";
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Star symbol
+            ctx.fillStyle = colors.secondary;
+            ctx.font = "bold 6px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("★", x, y + 2);
             break;
         }
     }

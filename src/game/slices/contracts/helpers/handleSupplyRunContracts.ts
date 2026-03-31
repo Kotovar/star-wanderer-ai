@@ -59,5 +59,8 @@ export const handleSupplyRunContracts = (
         // Give experience to all crew members
         const expReward = CONTRACT_REWARDS.supply_run.baseExp;
         giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+        if (c.sourceDominantRace) {
+            get().changeReputation(c.sourceDominantRace, 2);
+        }
     });
 };

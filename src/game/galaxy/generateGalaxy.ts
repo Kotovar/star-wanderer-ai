@@ -7,6 +7,7 @@ import {
     ensureBlackHoles,
     ensureBoss,
     ensureColonizedPlanet,
+    ensureDiplomaticStation,
     ensureMinAnomalies,
     ensureStation,
     ensureStationTypes,
@@ -117,6 +118,9 @@ export const generateGalaxy = (): Sector[] => {
     ensureStationTypes(sectors, 1);
     ensureStationTypes(sectors, 2);
     ensureStationTypes(sectors, 3);
+
+    // Гарантируем одну дипломатическую станцию в тире 1
+    ensureDiplomaticStation(sectors);
 
     // Постобработка
     populateContracts(sectors);

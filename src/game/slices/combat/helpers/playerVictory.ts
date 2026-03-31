@@ -194,8 +194,7 @@ export function handleVictory(
         set((s) => {
             if (!s.currentSector) return;
             s.currentSector.locations.forEach((loc) => {
-                if (loc.id === get().currentLocation?.id)
-                    loc.defeated = true;
+                if (loc.id === get().currentLocation?.id) loc.defeated = true;
             });
         });
     }
@@ -260,7 +259,10 @@ export function handleVictory(
 
     // Мутация от босса: шанс BOSS_PER_TIER * тир босса для каждого члена экипажа
     if (updatedCombat.enemy.isBoss && enemyTier >= 2) {
-        const mutationChance = Math.min(MUTATION_CHANCES.BOSS_MAX, MUTATION_CHANCES.BOSS_PER_TIER * enemyTier);
+        const mutationChance = Math.min(
+            MUTATION_CHANCES.BOSS_MAX,
+            MUTATION_CHANCES.BOSS_PER_TIER * enemyTier,
+        );
         state.crew.forEach((crewMember) => {
             if (Math.random() < mutationChance) {
                 const mutationName = giveRandomMutation(crewMember, set);
@@ -329,6 +331,56 @@ export function handleVictory(
             );
         }
     });
+
+    // Defender combat victory: +60 rep with the defending race (enough to leave hostile range)
+    // But NOT if player attacked a friendly ship (combatTargetLocationId is set)
+    if (updatedCombat.defenderRace && !updatedCombat.combatTargetLocationId) {
+        get().changeReputation(updatedCombat.defenderRace, 60);
+        get().addLog(
+            `⚔️ Защитники повержены! Репутация с расой улучшена`,
+            "info",
+        );
+        // If the defended location was a planet, permanently ban it
+        const defLoc = get().currentLocation;
+        if (defLoc?.type === "planet") {
+            const planetId = defLoc.id;
+            set((s) => {
+                if (!s.bannedPlanets.includes(planetId)) {
+                    s.bannedPlanets.push(planetId);
+                }
+            });
+            get().addLog(
+                `⛔ ${defLoc.name}: вас здесь больше не рады`,
+                "warning",
+            );
+        }
+    }
+
+    // Player attacked a friendly ship — remove that ship's location
+    if (updatedCombat.combatTargetLocationId) {
+        const targetId = updatedCombat.combatTargetLocationId;
+        const sectorId = get().currentSector?.id;
+        set((s) => {
+            if (s.currentSector) {
+                s.currentSector.locations = s.currentSector.locations.filter(
+                    (l) => l.id !== targetId,
+                );
+            }
+            if (sectorId !== undefined) {
+                s.galaxy.sectors = s.galaxy.sectors.map((sec) =>
+                    sec.id === sectorId
+                        ? {
+                              ...sec,
+                              locations: sec.locations.filter(
+                                  (l) => l.id !== targetId,
+                              ),
+                          }
+                        : sec,
+                );
+            }
+        });
+        get().addLog(`💥 Мирный корабль уничтожен`, "warning");
+    }
 
     set((s) => ({
         battleResult,

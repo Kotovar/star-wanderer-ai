@@ -1,6 +1,7 @@
 import type { BossAbility } from "./bosses";
 import type { ShopItem } from "./shops";
 import type { EnemyModule } from "./enemy";
+import type { RaceId } from "./races";
 
 export interface CombatState {
     enemy: {
@@ -28,6 +29,10 @@ export interface CombatState {
     skipPlayerTurn?: boolean;        // Boss turn_skip effect: player loses next turn
     bossResurrected?: boolean;       // Track if resurrect_chance was already used
     bossOneShotAbilityFired?: boolean; // Track if one-shot low_health ability (shield_restore, emergency_repair) has fired
+    // Set when combat is triggered by entering a hostile race's location
+    defenderRace?: RaceId;
+    // Set when player actively attacks a friendly ship (location will be removed on victory)
+    combatTargetLocationId?: string;
     // Battle results (filled after victory)
     battleResults?: {
         damagedModules: { name: string; damage: number }[];

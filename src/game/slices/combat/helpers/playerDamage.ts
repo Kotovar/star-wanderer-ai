@@ -52,14 +52,16 @@ export function calculateFinalDamagePerWeapon(
     // Combat assignment bonuses (scale with crew level: base + level * 1%)
     if (hasOverclock) {
         const engineerLevel =
-            get().crew.find((c) => c.combatAssignment === "overclock")?.level ?? 1;
+            get().crew.find((c) => c.combatAssignment === "overclock")?.level ??
+            1;
         finalDamagePerWeapon = Math.floor(
             finalDamagePerWeapon * (1 + 0.15 + engineerLevel * 0.01),
         );
     }
     if (hasRapidfire) {
         const gunnerLevel =
-            get().crew.find((c) => c.combatAssignment === "rapidfire")?.level ?? 1;
+            get().crew.find((c) => c.combatAssignment === "rapidfire")?.level ??
+            1;
         finalDamagePerWeapon = Math.floor(
             finalDamagePerWeapon * (1 + 0.25 + gunnerLevel * 0.01),
         );
@@ -68,11 +70,15 @@ export function calculateFinalDamagePerWeapon(
     // Analysis bonus (requires gunner with targeting, scales with scientist level)
     if (hasAnalysis && hasGunnerWithTargeting) {
         const scientistLevel =
-            get().crew.find((c) => c.combatAssignment === "analysis")?.level ?? 1;
+            get().crew.find((c) => c.combatAssignment === "analysis")?.level ??
+            1;
         finalDamagePerWeapon = Math.floor(
-            finalDamagePerWeapon * (1 + 0.10 + scientistLevel * 0.01),
+            finalDamagePerWeapon * (1 + 0.1 + scientistLevel * 0.01),
         );
-        get().addLog(`🔬 Анализ уязвимостей: +${10 + scientistLevel}% урон по цели`, "info");
+        get().addLog(
+            `🔬 Анализ уязвимостей: +${10 + scientistLevel}% урон по цели`,
+            "info",
+        );
     }
 
     return finalDamagePerWeapon;
@@ -119,7 +125,8 @@ export function computeAccuracyModifier(state: GameState): number {
         modifier += COMBAT_ACCURACY_MODIFIERS.RAPIDFIRE_PENALTY;
 
     const engineerWithCalibration = crewInWeaponBays.find(
-        (c) => c.profession === "engineer" && c.combatAssignment === "calibration",
+        (c) =>
+            c.profession === "engineer" && c.combatAssignment === "calibration",
     );
     if (engineerWithCalibration)
         modifier +=
@@ -158,7 +165,11 @@ export function computeAccuracyModifier(state: GameState): number {
 
     // Бонус аугментации targeting_eye (+10% точность для стрелка в оружейном отсеке)
     state.crew.forEach((c) => {
-        if (c.profession === "gunner" && weaponBayIds.has(c.moduleId) && c.augmentation) {
+        if (
+            c.profession === "gunner" &&
+            weaponBayIds.has(c.moduleId) &&
+            c.augmentation
+        ) {
             const augEffect = AUGMENTATIONS[c.augmentation]?.effect;
             if (augEffect?.accuracyBonus) {
                 modifier += augEffect.accuracyBonus;

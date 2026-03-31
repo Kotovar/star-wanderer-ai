@@ -5,6 +5,8 @@ import { TRADE_GOODS } from "../../constants";
 import { typedKeys } from "@/lib/utils";
 import type { Goods } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
+import { useGameStore } from "@/game/store";
+import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
 
 interface TradeTabProps {
     stationId: string;
@@ -39,6 +41,9 @@ export function TradeTab({
     const availSpace = cargoCapacity - currentCargo;
 
     const tradeGoodsKeys = typedKeys(TRADE_GOODS);
+    const raceReputation = useGameStore((s) => s.raceReputation);
+    const currentLocation = useGameStore((s) => s.currentLocation);
+    const dominantRace = currentLocation?.dominantRace;
 
     return (
         <div className="flex flex-col gap-2.5 flex-1 min-h-0 overflow-y-auto pr-1 pb-2">
@@ -53,11 +58,41 @@ export function TradeTab({
 
                     if (!prices) return null;
 
+                    // Calculate reputation-modified prices with anti-arbitrage protection
+                    // Prices are for 5 tons, we need per-ton prices for display
+                    const buyPriceFor5 = dominantRace
+                        ? applyReputationPriceModifier(
+                              raceReputation,
+                              dominantRace,
+                              prices.buy,
+                              "buy",
+                              prices.sell,
+                              5, // quantity = 5 for base price
+                          )
+                        : prices.buy;
+                    const sellPriceFor5 = dominantRace
+                        ? applyReputationPriceModifier(
+                              raceReputation,
+                              dominantRace,
+                              prices.sell,
+                              "sell",
+                              prices.buy,
+                              5, // quantity = 5 for base price
+                          )
+                        : prices.sell;
+
+                    const buyPriceWithRep = buyPriceFor5;
+                    const sellPriceWithRep = sellPriceFor5;
+
                     return (
                         <TradeGoodRow
                             key={goodId}
                             good={good}
                             prices={prices}
+                            pricesWithRep={{
+                                buy: buyPriceWithRep,
+                                sell: sellPriceWithRep,
+                            }}
                             stock={stock}
                             playerGood={playerGood}
                             credits={credits}
@@ -74,6 +109,7 @@ export function TradeTab({
 interface TradeGoodRowProps {
     good: { id: Goods; name: string };
     prices: { buy: number; sell: number };
+    pricesWithRep: { buy: number; sell: number };
     stock: number;
     playerGood: { item: string; quantity: number } | undefined;
     credits: number;
@@ -85,6 +121,7 @@ interface TradeGoodRowProps {
 function TradeGoodRow({
     good,
     prices,
+    pricesWithRep,
     stock,
     playerGood,
     credits,
@@ -97,12 +134,13 @@ function TradeGoodRow({
             <TradeGoodInfo
                 good={good}
                 prices={prices}
+                pricesWithRep={pricesWithRep}
                 stock={stock}
                 playerGood={playerGood}
             />
             <TradeButtons
                 goodId={good.id}
-                prices={prices}
+                prices={pricesWithRep}
                 stock={stock}
                 playerGood={playerGood}
                 credits={credits}
@@ -117,18 +155,26 @@ function TradeGoodRow({
 function TradeGoodInfo({
     good,
     prices,
+    pricesWithRep,
     stock,
     playerGood,
 }: {
     good: { id: string; name: string };
     prices: { buy: number; sell: number };
+    pricesWithRep: { buy: number; sell: number };
     stock: number;
     playerGood: { item: string; quantity: number } | undefined;
 }) {
     const { t } = useTranslation();
     // Calculate per-unit price (prices are stored as 5-ton batches)
-    const buyPerUnit = Math.floor(prices.buy / 5);
-    const sellPerUnit = Math.floor(prices.sell / 5);
+    const buyPerUnit = Math.floor(pricesWithRep.buy / 5);
+    const sellPerUnit = Math.floor(pricesWithRep.sell / 5);
+    const baseBuyPerUnit = Math.floor(prices.buy / 5);
+    const baseSellPerUnit = Math.floor(prices.sell / 5);
+
+    // Check if prices are modified by reputation
+    const buyModified = buyPerUnit !== baseBuyPerUnit;
+    const sellModified = sellPerUnit !== baseSellPerUnit;
 
     // Get translated name from trade.goods key
     const translatedName =
@@ -141,9 +187,28 @@ function TradeGoodInfo({
             <div className="text-[#00d4ff] font-bold">{translatedName}</div>
             <div className="text-[#ffb000] text-xs mt-1">
                 {t("trade.buy_label")}{" "}
-                {t("trade.per_ton", { price: buyPerUnit })} |{" "}
+                <span className={buyModified ? "text-[#00ff41] font-bold" : ""}>
+                    {t("trade.per_ton", { price: buyPerUnit })}
+                </span>
+                {!buyModified && " | "}
+                {buyModified && (
+                    <span className="text-[#888] ml-1">
+                        ({t("trade.per_ton", { price: baseBuyPerUnit })})
+                    </span>
+                )}
+                {" | "}
                 {t("trade.sell_label")}{" "}
-                {t("trade.per_ton", { price: sellPerUnit })}
+                <span
+                    className={sellModified ? "text-[#00ff41] font-bold" : ""}
+                >
+                    {t("trade.per_ton", { price: sellPerUnit })}
+                </span>
+                {!sellModified && " | "}
+                {sellModified && (
+                    <span className="text-[#888] ml-1">
+                        ({t("trade.per_ton", { price: baseSellPerUnit })})
+                    </span>
+                )}
             </div>
             <div className="text-[11px] mt-1">
                 <span className="text-[#00ff41]">

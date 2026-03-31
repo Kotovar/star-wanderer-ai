@@ -181,7 +181,10 @@ export const ensureStationTypes = (
         (s) => s.tier === tier && s.star?.type !== "blackhole",
     );
 
-    const requiredTypes: Array<"shipyard" | "medical"> = ["shipyard", "medical"];
+    const requiredTypes: Array<"shipyard" | "medical"> = [
+        "shipyard",
+        "medical",
+    ];
 
     for (const requiredType of requiredTypes) {
         const hasType = tierSectors.some((s) =>
@@ -211,6 +214,63 @@ export const ensureStationTypes = (
                 break;
             }
         }
+    }
+};
+
+/**
+ * Обеспечивает наличие ровно одной дипломатической станции в tier-1 секторах.
+ * Станция уникальна в галактике и всегда нейтральной расы.
+ */
+export const ensureDiplomaticStation = (sectors: Sector[]): void => {
+    const hasDiplomatic = sectors.some((s) =>
+        s.locations.some(
+            (l) => l.type === "station" && l.stationType === "diplomatic",
+        ),
+    );
+    if (hasDiplomatic) return;
+
+    // Find a tier-1 sector with an existing station to replace
+    const tier1Sectors = sectors.filter(
+        (s) => s.tier === 1 && s.star?.type !== "blackhole",
+    );
+
+    for (const sector of tier1Sectors) {
+        const stationIdx = sector.locations.findIndex(
+            (l) =>
+                l.type === "station" &&
+                l.stationType !== "shipyard" &&
+                l.stationType !== "medical",
+        );
+
+        if (stationIdx >= 0) {
+            const existing = sector.locations[stationIdx];
+            // Generate a random letter for the station name (like station_name.A)
+            const letter = String.fromCharCode(
+                65 + Math.floor(Math.random() * 26),
+            );
+            sector.locations[stationIdx] = {
+                ...existing,
+                stationType: "diplomatic",
+                stationConfig: STATION_CONFIG["diplomatic"],
+                name: `station_name.${letter}`,
+                dominantRace: getRandomRace([]),
+            };
+            return;
+        }
+    }
+
+    // Fallback: add a new diplomatic station to first tier-1 sector
+    if (tier1Sectors.length > 0) {
+        const sector = tier1Sectors[0];
+        sector.locations.push({
+            id: `${sector.id}-diplomatic`,
+            stationId: `station-${sector.id}-diplomatic`,
+            type: "station",
+            name: `station_name.${String.fromCharCode(65 + (sector.id % 26))}`,
+            stationType: "diplomatic",
+            stationConfig: STATION_CONFIG["diplomatic"],
+            dominantRace: getRandomRace([]),
+        });
     }
 };
 

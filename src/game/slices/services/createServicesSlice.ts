@@ -89,18 +89,30 @@ export const createServicesSlice = (
         installModuleFromCargoAction(set, get, cargoIndex, x, y),
 
     canRepairShip: () => {
-        const { canUse } = calculateRepairCost(get());
+        const state = get();
+        const raceId = state.currentLocation?.dominantRace;
+        const { canUse } = calculateRepairCost(state, raceId);
         return canUse;
     },
 
     canHealCrew: () => {
-        const { canUse } = calculateHealCost(get());
+        const state = get();
+        const raceId = state.currentLocation?.dominantRace;
+        const { canUse } = calculateHealCost(state, raceId);
         return canUse;
     },
 
-    getRepairCost: () => calculateRepairCost(get()),
+    getRepairCost: () => {
+        const state = get();
+        const raceId = state.currentLocation?.dominantRace;
+        return calculateRepairCost(state, raceId);
+    },
 
-    getHealCost: () => calculateHealCost(get()),
+    getHealCost: () => {
+        const state = get();
+        const raceId = state.currentLocation?.dominantRace;
+        return calculateHealCost(state, raceId);
+    },
 
     scrapModule: (moduleId) => scrapModuleAction(moduleId, set, get),
 

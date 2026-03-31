@@ -11,6 +11,7 @@ import {
 } from "./helpers";
 import * as processors from "./processors";
 import { processTravel } from "@/game/slices/travel/helpers";
+import { checkContractExpiry } from "@/game/slices/contracts/helpers/checkContractExpiry";
 
 /**
  * Интерфейс GameLoopSlice
@@ -91,6 +92,9 @@ export const createGameLoopSlice = (
 
         // Проверка конца игры после ухода экипажа
         get().checkGameOver();
+
+        // Проверка истечения расовых контрактов
+        checkContractExpiry(set, get);
 
         // Путешествия
         processTravel(state, set, get);

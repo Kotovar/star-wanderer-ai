@@ -50,24 +50,29 @@ export const completeScanContracts = (
     }));
 
     // Обновляем состояние для каждого завершённого контракта
-    completed.forEach((contract) => {
+    scanComplete.forEach((c) => {
+        const expReward = CONTRACT_REWARDS.scan_planet.baseExp;
         set((s) => ({
-            credits: s.credits + contract.reward,
-            completedContractIds: [...s.completedContractIds, contract.id],
+            credits: s.credits + (c.reward || 0),
+            completedContractIds: [...s.completedContractIds, c.id],
             activeContracts: s.activeContracts.filter(
-                (ac) => ac.id !== contract.id,
+                (ac) => ac.id !== c.id,
             ),
         }));
 
         get().addLog(
-            `📡 Контракт выполнен: ${contract.desc} +${contract.reward}₢`,
+            `📡 Контракт выполнен: ${c.desc} +${c.reward}₢`,
             "info",
         );
 
         giveCrewExperience(
-            contract.expReward,
-            `Экипаж получил опыт: +${contract.expReward} ед.`,
+            expReward,
+            `Экипаж получил опыт: +${expReward} ед.`,
         );
+
+        if (c.sourceDominantRace) {
+            get().changeReputation(c.sourceDominantRace, 2);
+        }
     });
 
     return {

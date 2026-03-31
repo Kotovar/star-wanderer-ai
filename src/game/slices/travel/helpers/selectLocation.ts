@@ -2,6 +2,7 @@ import { findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { determineSignalOutcome } from "@/game/signals";
 import type { GameStore, Location, SetState } from "@/game/types";
+import { getRaceReputationLevel } from "@/game/reputation/utils";
 
 // ============================================================================
 // Константы
@@ -164,11 +165,30 @@ export const selectLocation = (
 
     // Обработка по типу локации
     switch (loc.type) {
-        case "station":
+        case "station": {
+            const stationRace = loc.dominantRace;
+            if (
+                stationRace &&
+                getRaceReputationLevel(state.raceReputation, stationRace) === "hostile"
+            ) {
+                set({ gameMode: "hostile_approach_warning" });
+                break;
+            }
             set({ gameMode: "station" });
             break;
+        }
 
-        case "planet":
+        case "planet": {
+            const planetRace = loc.dominantRace;
+            const isBanned = state.bannedPlanets?.includes(loc.id);
+            if (
+                !loc.isEmpty &&
+                planetRace &&
+                (getRaceReputationLevel(state.raceReputation, planetRace) === "hostile" || isBanned)
+            ) {
+                set({ gameMode: "hostile_approach_warning" });
+                break;
+            }
             set({ gameMode: "planet" });
             if (!loc.isEmpty) {
                 get().processScanContracts();
@@ -179,6 +199,7 @@ export const selectLocation = (
                 get().handleExpeditionSurveyContracts(locationIdx);
             }
             break;
+        }
 
         case "enemy": {
             if (loc.defeated) {
@@ -191,15 +212,13 @@ export const selectLocation = (
             if (!canScan && !loc.signalRevealed) {
                 if (checkEarlyWarning(enemyTier, get)) {
                     get().addLog(
-                        "📡 Сканер обнаружил засаду! Вы готовы к бою.",
-                        "info",
+                        "📡 Сканер обнаружил засаду! Будьте осторожны.",
+                        "warning",
                     );
                     const revealedLoc = { ...loc, signalRevealed: true };
                     updateLocationInSector(revealedLoc, set);
-                    get().startCombat(revealedLoc);
-                } else {
-                    set({ gameMode: "unknown_ship" });
                 }
+                set({ gameMode: "unknown_ship" });
             } else {
                 get().startCombat(loc);
             }
@@ -242,12 +261,21 @@ export const selectLocation = (
 
         case "friendly_ship": {
             const canScan = isObjectScanned(loc, get);
-            set({
-                gameMode:
-                    canScan || loc.signalRevealed
-                        ? "friendly_ship"
-                        : "unknown_ship",
-            });
+            // Unknown ship: player doesn't know which race it is yet — let them decide first
+            if (!canScan && !loc.signalRevealed) {
+                set({ gameMode: "unknown_ship" });
+                break;
+            }
+            // Ship is identified — now check if the race is hostile
+            const shipRace = loc.dominantRace;
+            if (
+                shipRace &&
+                getRaceReputationLevel(state.raceReputation, shipRace) === "hostile"
+            ) {
+                set({ gameMode: "hostile_approach_warning" });
+                break;
+            }
+            set({ gameMode: "friendly_ship" });
             break;
         }
 

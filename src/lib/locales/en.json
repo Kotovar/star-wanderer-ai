@@ -27,7 +27,9 @@
         "confirm": "Confirm"
     },
     "friendly_ship": {
-        "contract": "Contract"
+        "contract": "Contract",
+        "leave": "LEAVE",
+        "attack": "⚔️ ATTACK (-20 REP)"
     },
     "crew": {
         "unknown": "Unknown",
@@ -771,7 +773,8 @@
             "research": "Research",
             "medical": "Medical",
             "shipyard": "Shipyard",
-            "industrial": "Industrial"
+            "industrial": "Industrial",
+            "diplomatic": "Diplomatic"
         }
     },
     "research": {
@@ -830,6 +833,7 @@
             "biology": "Biotechnology",
             "ancient_tech": "Ancient Technologies"
         },
+        "pan_zoom_hint": "🖱 drag / scroll = zoom",
         "no_tech_in_category": "No technologies in this category",
         "select_tech": "Select technology",
         "tech_details": "Technology details",
@@ -1043,6 +1047,19 @@
         "augmentation_symbiotic_armor": "🦠 Symbiotic Armor (xenosymbiont) — 5% of damage dealt restored as HP",
         "augmentation_phase_step": "👻 Phase Step (voidborn) — 50% chance to avoid damage when module is hit",
         "augmentation_prismatic_lens": "💎 Prismatic Lens (crystalline) — +5% laser weapon damage",
+        "reputation_title": "🤝 RACE REPUTATION",
+        "reputation_text": "Relations with races affect trade, available contracts, and behavior in space.",
+        "reputation_levels": "Reputation levels:",
+        "reputation_hostile": "⚔️ Hostile (-100 to -51) — attack on sight, prices ×2.0",
+        "reputation_unfriendly": "😠 Unfriendly (-50 to -11) — high prices, no contracts",
+        "reputation_neutral": "😐 Neutral (-10 to 10) — normal relations",
+        "reputation_friendly": "😊 Friendly (11 to 50) — discounts, contracts available",
+        "reputation_allied": "🤝 Allied (51 to 100) — maximum discounts, all contracts",
+        "reputation_change": "Changing reputation:",
+        "reputation_trade": "• Trade: buying/selling goods affects relations",
+        "reputation_diplomacy": "• Diplomacy: improve relations at Diplomatic Station for credits",
+        "reputation_combat": "• Combat: attacking civilian ships lowers reputation (-20)",
+        "reputation_relations": "• Race relations: helping one race may improve or worsen relations with others",
         "derelict_title": "🚀 DERELICT SHIPS",
         "derelict_text": "Derelict ships can be found in sectors. Send a scout on a sortie — they may find spares, electronics, rare minerals, or a blueprint for a unique module.",
         "derelict_detail_1": "Blueprints appear in the BLUEPRINTS section on the left panel",
@@ -1099,7 +1116,17 @@
         "overcrowded_warning": "⚠ Ship is overcrowded! Crew will lose morale every turn.",
         "hire_button": "HIRE",
         "close": "Close",
-        "energy_consumption": "consumption"
+        "energy_consumption": "consumption",
+        "diplomacy_tab": "DIPLOMACY",
+        "diplomacy_title": "Diplomatic Relations",
+        "diplomacy_buy_rep": "Buy +{{amount}} reputation",
+        "diplomacy_cost": "Cost: {{cost}}₢",
+        "diplomacy_current": "Current: {{rep}}",
+        "diplomacy_max_reached": "Maximum diplomatic reputation reached",
+        "diplomacy_banned_planets": "Banned Planets",
+        "diplomacy_no_banned": "No banned planets",
+        "diplomacy_lift_ban": "Lift ban — 2000₢",
+        "diplomacy_insufficient_credits": "Insufficient credits"
     },
     "trade": {
         "buy_label": "Buy:",
@@ -1432,6 +1459,23 @@
         "info": "Info",
         "leave": "Leave"
     },
+    "planet": {
+        "scout_surface": "Scout Surface",
+        "scout_requires_scout": "Scouting requires a crew member with the Scout profession.",
+        "drill_title": "⛏️ Planetary Drill",
+        "drill_desc": "Resource yield depends on planet type. One-time only.",
+        "drill_button": "Start Drilling",
+        "drill_done": "Planet already drilled.",
+        "drill_result": "Drilling result:",
+        "drill_requires_drill": "Requires an active drill module.",
+        "drill_requires_scientist": "Requires a scientist in the crew.",
+        "analysis_title": "🌫️ Atmospheric Analysis",
+        "analysis_desc": "A scientist will collect research samples. One-time only.",
+        "analysis_button": "Conduct Analysis",
+        "analysis_done": "Atmosphere already analyzed.",
+        "analysis_result": "Analysis result:",
+        "surface_explored": "🗺️ Surface explored"
+    },
     "derelict_ship": {
         "title": "Derelict Ship",
         "subtitle": "A silent hulk drifting in the void",
@@ -1727,7 +1771,8 @@
             "research": "Research",
             "medical": "Medical",
             "shipyard": "Shipyard",
-            "industrial": "Industrial"
+            "industrial": "Industrial",
+            "diplomatic": "Diplomatic"
         },
         "scanner_upgrade": "Scanner Upgrade",
         "drill_upgrade": "Drill Upgrade",
@@ -1746,6 +1791,43 @@
         "krylorian": "Krylorians",
         "voidborn": "Voidborn",
         "crystalline": "Crystallines"
+    },
+    "reputation": {
+        "title": "RACE REPUTATION",
+        "button": "REPUTATION",
+        "button_tooltip": "Race reputation",
+        "bar_min": "Hostile",
+        "bar_max": "Allied",
+        "out_of": "of 100",
+        "trade_label": "Trade",
+        "levels": {
+            "hostile": "Hostile",
+            "unfriendly": "Unfriendly",
+            "neutral": "Neutral",
+            "friendly": "Friendly",
+            "allied": "Allied"
+        },
+        "descriptions": {
+            "hostile": "Hostile — attack on sight",
+            "unfriendly": "Unfriendly — high prices, no contracts",
+            "neutral": "Neutral — normal relations",
+            "friendly": "Friendly — discounts, contracts available",
+            "allied": "Allied — maximum discounts, all contracts"
+        },
+        "effects": {
+            "price_modifier": "Trade: {{value}}",
+            "combat_modifier": "Combat: {{value}}"
+        },
+        "hostile_territory": "⚠ DANGER ZONE",
+        "hostile_ship_warning": "opens fire — you are enemies!",
+        "approach_combat": "⚔ Approach — engage in combat",
+        "retreat": "↩ Retreat",
+        "access_denied": {
+            "station": "Station representatives refuse to deal with you. Entry denied.",
+            "planet": "Planet inhabitants refuse to receive you. Landing denied.",
+            "banned": "This planet hasn't forgotten you. Any landing attempt will be met with force.",
+            "return": "↩ Return"
+        }
     },
     "planet_effects": {
         "human_academy": {
