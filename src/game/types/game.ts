@@ -259,6 +259,7 @@ export interface GameScouting {
     resolveDiveEvent: (choiceIndex: number) => void;
     diveDeeper: () => void;
     surfaceDive: () => void;
+    abandonDive: () => void;
     buyProbe: (count: number) => void;
 }
 

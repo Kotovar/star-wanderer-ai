@@ -19,6 +19,7 @@ import {
     resolveDiveEvent as resolveDiveEventHelper,
     diveDeeper as diveDeeperHelper,
     surfaceDive as surfaceDiveHelper,
+    abandonDive as abandonDiveHelper,
 } from "./helpers/gasGiant";
 
 /**
@@ -101,6 +102,9 @@ export interface LocationsSlice {
     /** Всплывает и применяет собранные ресурсы */
     surfaceDive: () => void;
 
+    /** Прерывает погружение: зонд утерян, ресурсы не получены, ход не тратится */
+    abandonDive: () => void;
+
     /** Покупает исследовательские зонды на станции */
     buyProbe: (count: number) => void;
 }
@@ -178,6 +182,10 @@ export const createLocationsSlice = (
 
     surfaceDive: () => {
         surfaceDiveHelper(set, get);
+    },
+
+    abandonDive: () => {
+        abandonDiveHelper(set, get);
     },
 
     buyProbe: (count: number) => {
