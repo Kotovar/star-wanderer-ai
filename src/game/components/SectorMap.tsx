@@ -237,6 +237,10 @@ function getScannerInfo(
             info.push(`🏷️ ${t("locations.tier")}: ${loc.asteroidTier || 1}`);
         } else if (loc.type === "gas_giant") {
             info.push(`🪸 ${t("locations.gas_giant")}`);
+        } else if (loc.type === "wreck_field") {
+            const tier = loc.wreckTier ?? 1;
+            info.push(`💀 Поле обломков (тир ${tier})`);
+            info.push(`☢ Радиационный фон`);
         }
 
         return info;
@@ -267,6 +271,8 @@ function getScannerInfo(
             info.push(`🪨 ${t("locations.asteroid_belt")}`);
         } else if (loc.type === "gas_giant") {
             info.push(`🪸 ${t("locations.gas_giant")}`);
+        } else if (loc.type === "wreck_field") {
+            info.push(`💀 Поле обломков`);
         } else {
             info.push(`❓ ${t("locations.unknown_object")}`);
         }
@@ -333,6 +339,20 @@ function getScannerInfo(
             info.push(`✓ ${t("locations.gas_giant")}`);
         } else {
             info.push(`🔬 ${t("gas_giant.start_dive")}`);
+        }
+        return info;
+    }
+    if (loc.type === "wreck_field") {
+        info.push(`💀 ${getLocationName(loc.name, t)}`);
+        const tier = loc.wreckTier ?? 1;
+        info.push(`🏷️ Тир: ${tier}`);
+        if (loc.wreckExhausted) {
+            info.push(`✓ Обыскано`);
+        } else {
+            const done = loc.wreckPassesDone ?? 0;
+            const total = loc.wreckPassesTotal ?? 2;
+            info.push(`🔩 Проходов: ${done}/${total}`);
+            info.push(`☢ Радиационный фон`);
         }
         return info;
     }
@@ -709,6 +729,8 @@ export function SectorMap() {
                 }
             } else if (loc.type === "gas_giant") {
                 drawGasGiant(ctx, x, y, loc, completed);
+            } else if (loc.type === "wreck_field") {
+                drawWreckField(ctx, x, y, loc, completed);
             } else if (loc.type === "boss") {
                 if (canScan || isRevealed || hasTelepathy) {
                     drawAncientBoss(ctx, x, y, loc, completed);
@@ -4696,6 +4718,87 @@ function drawGasGiant(
         ctx.beginPath();
         ctx.arc(x + r - 4, y - r + 4, 2.5, 0, Math.PI * 2);
         ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
+}
+
+function drawWreckField(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    loc: Location,
+    completed: boolean,
+) {
+    const exhausted = loc.wreckExhausted ?? false;
+    const tier = (loc.wreckTier ?? 1) as 1 | 2 | 3;
+    ctx.globalAlpha = completed || exhausted ? 0.4 : 1;
+
+    const color = tier === 3 ? "#c8832a" : tier === 2 ? "#a0785a" : "#8b7355";
+
+    // Radiation glow
+    const glow = ctx.createRadialGradient(x, y, 2, x, y, 22);
+    glow.addColorStop(0, `${color}33`);
+    glow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(x, y, 22, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Scattered debris fragments — deterministic positions per tier
+    type Frag = { dx: number; dy: number; w: number; h: number; rot: number };
+    const frags: Frag[][] = [
+        [
+            { dx: -6, dy: -4, w: 9, h: 3, rot: -22 },
+            { dx:  5, dy: -6, w: 6, h: 2, rot:  40 },
+            { dx: -2, dy:  5, w: 7, h: 2, rot:  15 },
+            { dx:  6, dy:  4, w: 5, h: 2, rot: -55 },
+            { dx: -7, dy:  3, w: 5, h: 2, rot:  30 },
+        ],
+        [
+            { dx: -7, dy: -5, w: 11, h: 3, rot: -18 },
+            { dx:  6, dy: -7, w:  8, h: 2, rot:  45 },
+            { dx: -2, dy:  6, w:  9, h: 3, rot:  12 },
+            { dx:  7, dy:  3, w:  6, h: 2, rot: -60 },
+            { dx: -8, dy:  4, w:  7, h: 2, rot:  28 },
+            { dx:  3, dy:  8, w:  5, h: 2, rot: -35 },
+            { dx: -4, dy: -9, w:  5, h: 2, rot:  55 },
+            { dx:  9, dy:  6, w:  4, h: 2, rot:  20 },
+        ],
+        [
+            { dx: -8, dy: -6, w: 13, h: 4, rot: -15 },
+            { dx:  7, dy: -8, w: 10, h: 3, rot:  42 },
+            { dx: -3, dy:  7, w: 11, h: 3, rot:  10 },
+            { dx:  8, dy:  3, w:  8, h: 3, rot: -58 },
+            { dx: -9, dy:  5, w:  8, h: 2, rot:  25 },
+            { dx:  4, dy:  9, w:  7, h: 2, rot: -32 },
+            { dx: -5, dy:-10, w:  6, h: 2, rot:  52 },
+            { dx: 10, dy:  7, w:  5, h: 2, rot:  18 },
+            { dx: -1, dy:  0, w:  4, h: 2, rot: -70 },
+            { dx:  5, dy: -2, w:  5, h: 2, rot:  35 },
+            { dx: -7, dy:  9, w:  4, h: 2, rot: -10 },
+        ],
+    ];
+
+    ctx.fillStyle = color;
+    for (const f of frags[tier - 1]) {
+        ctx.save();
+        ctx.translate(x + f.dx, y + f.dy);
+        ctx.rotate((f.rot * Math.PI) / 180);
+        ctx.fillRect(-f.w / 2, -f.h / 2, f.w, f.h);
+        ctx.restore();
+    }
+
+    // Radiation ring for tier 3
+    if (tier === 3 && !exhausted) {
+        ctx.beginPath();
+        ctx.arc(x, y, 17, 0, Math.PI * 2);
+        ctx.strokeStyle = "#ff6600";
+        ctx.lineWidth = 0.5;
+        ctx.globalAlpha = 0.35;
+        ctx.setLineDash([3, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
     }
 
     ctx.globalAlpha = 1;

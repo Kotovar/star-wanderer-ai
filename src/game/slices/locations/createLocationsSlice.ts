@@ -21,6 +21,7 @@ import {
     surfaceDive as surfaceDiveHelper,
     abandonDive as abandonDiveHelper,
 } from "./helpers/gasGiant";
+import { salvageWreckField as salvageWreckFieldHelper } from "./helpers/salvageWreckField";
 
 /**
  * Интерфейс LocationsSlice
@@ -105,6 +106,9 @@ export interface LocationsSlice {
     /** Прерывает погружение: зонд утерян, ресурсы не получены, ход не тратится */
     abandonDive: () => void;
 
+    /** Один проход по полю обломков: лут + урон щитам */
+    salvageWreckField: () => void;
+
     /** Покупает исследовательские зонды на станции */
     buyProbe: (count: number) => void;
 }
@@ -186,6 +190,10 @@ export const createLocationsSlice = (
 
     abandonDive: () => {
         abandonDiveHelper(set, get);
+    },
+
+    salvageWreckField: () => {
+        salvageWreckFieldHelper(set, get);
     },
 
     buyProbe: (count: number) => {

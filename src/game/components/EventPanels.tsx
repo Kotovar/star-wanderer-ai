@@ -25,6 +25,7 @@ import { ResearchPanel } from "./ResearchPanel";
 import { ReputationPanel } from "./ReputationPanel";
 import { DerelictShipPanel } from "./DerelictShipPanel";
 import { GasGiantPanel } from "./GasGiantPanel";
+import { WreckFieldPanel } from "./WreckFieldPanel";
 import { HostileApproachWarningPanel } from "./HostileApproachWarningPanel";
 
 export function EventDisplay() {
@@ -91,12 +92,6 @@ export function EventDisplay() {
                         {isSkipping
                             ? `⏱️ ${t("travel.skipping")}`
                             : t("galaxy.buttons.next_turn")}
-                    </Button>
-                    <Button
-                        onClick={showAssignments}
-                        className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                    >
-                        {t("galaxy.buttons.crew_tasks")}
                     </Button>
                 </div>
             </div>
@@ -228,6 +223,9 @@ export function EventDisplay() {
 
         case "gas_giant":
             return <GasGiantPanel />;
+
+        case "wreck_field":
+            return <WreckFieldPanel />;
 
         case "hostile_approach_warning":
             return <HostileApproachWarningPanel />;

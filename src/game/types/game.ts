@@ -42,6 +42,7 @@ export type GameMode =
     | "reputation"
     | "derelict_ship"
     | "gas_giant"
+    | "wreck_field"
     | "hostile_approach_warning";
 
 export interface GameState {
@@ -260,6 +261,7 @@ export interface GameScouting {
     diveDeeper: () => void;
     surfaceDive: () => void;
     abandonDive: () => void;
+    salvageWreckField: () => void;
     buyProbe: (count: number) => void;
 }
 

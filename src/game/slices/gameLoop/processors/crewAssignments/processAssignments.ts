@@ -517,6 +517,7 @@ const PATROL_LOCATION_CONFIG: Record<
     distress_signal: { chance: 0.08, min: 5, max: 15 },
     derelict_ship: { chance: 0.15, min: 10, max: 30 },
     gas_giant: { chance: 0.05, min: 5, max: 10 },
+    wreck_field: { chance: 0.15, min: 10, max: 30 },
     _default: { chance: 0.05, min: 5, max: 10 },
 };
 

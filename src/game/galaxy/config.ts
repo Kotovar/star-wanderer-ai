@@ -67,12 +67,12 @@ export const LOCATION_CHANCES = {
  */
 export const LOCATION_TYPE_CHANCES_BY_TIER: Record<
     GalaxyTierAll,
-    { planet: number; asteroidBelt: number; distressSignal: number; derelictShip: number; gasGiant: number }
+    { planet: number; asteroidBelt: number; distressSignal: number; derelictShip: number; gasGiant: number; wreckField: number }
 > = {
-    1: { planet: 0.42, asteroidBelt: 0.07, distressSignal: 0.04, derelictShip: 0.03, gasGiant: 0.04 },
-    2: { planet: 0.35, asteroidBelt: 0.10, distressSignal: 0.07, derelictShip: 0.05, gasGiant: 0.05 },
-    3: { planet: 0.28, asteroidBelt: 0.13, distressSignal: 0.09, derelictShip: 0.08, gasGiant: 0.06 },
-    4: { planet: 0.20, asteroidBelt: 0.15, distressSignal: 0.10, derelictShip: 0.12, gasGiant: 0.08 },
+    1: { planet: 0.42, asteroidBelt: 0.07, distressSignal: 0.04, derelictShip: 0.03, gasGiant: 0.04, wreckField: 0.02 },
+    2: { planet: 0.35, asteroidBelt: 0.10, distressSignal: 0.07, derelictShip: 0.05, gasGiant: 0.05, wreckField: 0.04 },
+    3: { planet: 0.28, asteroidBelt: 0.13, distressSignal: 0.09, derelictShip: 0.08, gasGiant: 0.06, wreckField: 0.06 },
+    4: { planet: 0.20, asteroidBelt: 0.15, distressSignal: 0.10, derelictShip: 0.12, gasGiant: 0.08, wreckField: 0.08 },
 };
 
 /**
@@ -81,11 +81,12 @@ export const LOCATION_TYPE_CHANCES_BY_TIER: Record<
  * Боссы добавляются отдельно в постобработке generateGalaxy.
  */
 export const BLACK_HOLE_LOCATION_CHANCES = {
-    anomaly: 0.40,       // аномальная физика рядом с сингулярностью
+    anomaly: 0.38,       // аномальная физика рядом с сингулярностью
     enemy: 0.22,         // пираты используют ЧД как убежище
-    storm: 0.20,         // гравитационные и радиационные шторма
+    storm: 0.18,         // гравитационные и радиационные шторма
     derelictShip: 0.12,  // корабли, не переживших притяжение
     distressSignal: 0.06,// кто-то всё ещё застрял
+    wreckField: 0.04,    // поля обломков затянутых гравитацией
 };
 
 /** Вероятность пустой планеты по уровням */
@@ -203,7 +204,7 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
 type LocationWeightKey =
     | "station" | "friendlyShip" | "planet" | "enemy"
     | "asteroidBelt" | "storm" | "distressSignal" | "derelictShip"
-    | "gasGiant" | "boss" | "anomaly";
+    | "gasGiant" | "boss" | "anomaly" | "wreckField";
 
 export const STAR_TYPE_LOCATION_MODIFIERS: Partial<
     Record<StarType, Partial<Record<LocationWeightKey, number>>>

@@ -341,5 +341,9 @@ export const selectLocation = (
         case "gas_giant":
             set({ gameMode: "gas_giant" });
             break;
+
+        case "wreck_field":
+            set({ gameMode: "wreck_field" });
+            break;
     }
 };

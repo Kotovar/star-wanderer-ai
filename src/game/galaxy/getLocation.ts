@@ -17,6 +17,7 @@ import {
     generatePlanet,
     generateStation,
     generateStorm,
+    generateWreckField,
 } from "./generate";
 
 /**
@@ -40,11 +41,12 @@ const getLocationType = (
         if (roll < (c += bh.storm)) return "storm";
         if (roll < (c += bh.derelictShip)) return "derelict_ship";
         if (roll < (c += bh.distressSignal)) return "distress_signal";
+        if (roll < (c += bh.wreckField)) return "wreck_field";
         return "anomaly"; // запас
     }
 
     const chances = LOCATION_CHANCES[`tier${tier}`];
-    const { planet, asteroidBelt, distressSignal, derelictShip, gasGiant } =
+    const { planet, asteroidBelt, distressSignal, derelictShip, gasGiant, wreckField } =
         LOCATION_TYPE_CHANCES_BY_TIER[tier];
     const mods = starType ? (STAR_TYPE_LOCATION_MODIFIERS[starType] ?? {}) : {};
     const m = (base: number, key: keyof typeof mods): number =>
@@ -65,6 +67,7 @@ const getLocationType = (
         boss: m(chances.boss, "boss"),
         // Аномалия: явный базовый вес 6%, усиливается модификатором звезды
         anomaly: 0.06 * (mods.anomaly ?? 1),
+        wreckField: m(wreckField, "wreckField"),
     };
 
     // Нормализация: сумма весов → 1.0
@@ -82,6 +85,7 @@ const getLocationType = (
     if (roll < (c += w.derelictShip * n)) return "derelict_ship";
     if (roll < (c += w.gasGiant * n)) return "gas_giant";
     if (roll < (c += w.boss * n)) return "boss";
+    if (roll < (c += w.wreckField * n)) return "wreck_field";
     return "anomaly";
 };
 
@@ -123,6 +127,8 @@ export const generateLocation = (
             return generateDerelictShip(sectorIdx, locIdx);
         case "gas_giant":
             return generateGasGiant(sectorIdx, locIdx);
+        case "wreck_field":
+            return generateWreckField(sectorIdx, locIdx, tier);
         case "boss":
             return generateBossOrAnomaly(sectorIdx, locIdx, tier, isBlackHole);
         case "anomaly":

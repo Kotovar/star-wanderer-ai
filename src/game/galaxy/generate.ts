@@ -439,6 +439,42 @@ export const generateGasGiant = (
     };
 };
 
+const WRECK_FIELD_NAMES = [
+    "Поле обломков",
+    "Братская могила флота",
+    "Эхо сражения",
+    "Место гибели армады",
+    "Кладбище кораблей",
+    "Обломки неизвестной битвы",
+];
+
+/**
+ * Генерирует поле обломков — остатки космического сражения.
+ * Тир определяет масштаб, количество проходов и качество лута.
+ */
+export const generateWreckField = (
+    sectorIdx: number,
+    locIdx: number,
+    tier: GalaxyTierAll,
+): Location => {
+    const wreckTier = Math.min(3, tier) as 1 | 2 | 3;
+    const passesTotal = wreckTier === 1 ? 2 : wreckTier === 2
+        ? (Math.random() < 0.5 ? 2 : 3)
+        : 3;
+    const name = WRECK_FIELD_NAMES[
+        Math.floor(Math.random() * WRECK_FIELD_NAMES.length)
+    ];
+    return {
+        id: `${sectorIdx}-${locIdx}`,
+        type: "wreck_field",
+        name,
+        wreckTier,
+        wreckPassesTotal: passesTotal,
+        wreckPassesDone: 0,
+        wreckExhausted: false,
+    };
+};
+
 /**
  * Генерирует покинутый корабль
  */

@@ -11,7 +11,7 @@ import type { GameState, CrewMember, TechnologyId, RaceId } from "@/game/types";
 const INITIAL_TURN = 1;
 
 /** Начальное количество кредитов игрока */
-const INITIAL_CREDITS = 1000;
+const INITIAL_CREDITS = 100000;
 
 /**
  * Начальная вместимость экипажа.
@@ -59,7 +59,7 @@ const initialCrew: CrewMember[] = [
     name: "Арктурий Зорин",
     profession: "pilot",
     moduleId: 102,
-    level: 1,
+    level: 3,
   }),
   buildCrewMember({
     id: 2,

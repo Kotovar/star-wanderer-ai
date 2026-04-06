@@ -35,7 +35,8 @@ export type LocationType =
     | "distress_signal"
     | "boss"
     | "derelict_ship"
-    | "gas_giant";
+    | "gas_giant"
+    | "wreck_field";
 
 export const SHIP_LOCATION_TYPES: LocationType[] = [
     "boss",
@@ -136,6 +137,20 @@ export interface Location {
     // Gas giant fields
     gasGiantAtmosphere?: "hydrogen" | "methane" | "ammonia" | "nitrogen";
     gasGiantLastDiveAt?: number; // turn when last dive was completed (for cooldown)
+
+    // Wreck field fields
+    wreckTier?: 1 | 2 | 3;           // 1=small debris, 2=battle site, 3=ancient battlefield
+    wreckPassesTotal?: number;         // total salvage passes available (2–3)
+    wreckPassesDone?: number;          // passes already completed
+    wreckExhausted?: boolean;          // all passes done, nothing left
+    wreckLastPassLoot?: {              // loot from last pass (for display)
+        spares?: number;
+        electronics?: number;
+        rare_minerals?: number;
+        tech_salvage?: number;
+        ancient_data?: number;
+        shieldDamage?: number;
+    };
 
     // Derelict ship fields
     derelictExplored?: boolean; // Whether this derelict ship has been explored
