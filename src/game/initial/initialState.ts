@@ -11,7 +11,7 @@ import type { GameState, CrewMember, TechnologyId, RaceId } from "@/game/types";
 const INITIAL_TURN = 1;
 
 /** Начальное количество кредитов игрока */
-const INITIAL_CREDITS = 100000;
+const INITIAL_CREDITS = 1000;
 
 /**
  * Начальная вместимость экипажа.
@@ -154,9 +154,9 @@ const baseState: GameState = {
     cargo: [],
     // DEBUG: 10 единиц каждого крафтингового ресурса
     // tradeGoods: [
-    //     { item: "electronics", quantity: 10, buyPrice: 0 },
-    //     { item: "rare_minerals", quantity: 10, buyPrice: 0 },
-    //     { item: "spares", quantity: 10, buyPrice: 0 },
+    //   { item: "electronics", quantity: 10, buyPrice: 0 },
+    //   { item: "rare_minerals", quantity: 10, buyPrice: 0 },
+    //   { item: 'spares', quantity: 10, buyPrice: 0 },
     // ],
     tradeGoods: [],
     fuel: STARTING_FUEL,

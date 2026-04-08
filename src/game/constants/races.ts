@@ -1,652 +1,652 @@
 import type {
-    Race,
-    RaceId,
-    XenosymbiontMergeEffect,
-    ModuleType,
+  Race,
+  RaceId,
+  XenosymbiontMergeEffect,
+  ModuleType,
 } from "@/game/types";
 
 export const RACES: Record<RaceId, Race> = {
-    human: {
-        id: "human",
-        name: "Человек",
-        pluralName: "Люди",
-        adjective: "Человеческий",
-        description:
-            "Универсальная раса, освоившая космос. Быстро обучаются и адаптируются.",
-        homeworld: "Земля",
-        environmentPreference: {
-            ideal: ["Лесная", "Океаническая", "Тропическая"],
-            acceptable: ["Пустынная", "Арктическая", "Планета-кольцо"],
-            hostile: [
-                "Вулканическая",
-                "Ледяная",
-                "Радиоактивная",
-                "Разрушенная войной",
-                "Приливная",
-            ],
-        },
-        crewBonuses: {
-            happiness: 10, // +10% base happiness (morale boost)
-            healthRegen: 5, // +5 HP regen per turn (passive)
-        },
-        specialTraits: [
-            {
-                id: "quick_learner",
-                name: "Быстрый ученик",
-                description: "+15% к получаемому опыту",
-                type: "positive",
-                effects: { expBonus: 0.15 },
-            },
-        ],
-        relations: {
-            synthetic: -10, // Some distrust of AI
-            xenosymbiont: 5, // Friendly curiosity
-        },
-        hasHappiness: true,
-        hasFatigue: true,
-        canGetSick: true,
-        requiresOxygen: true,
-        color: "#4a90d9",
-        icon: "👤",
+  human: {
+    id: "human",
+    name: "Человек",
+    pluralName: "Люди",
+    adjective: "Человеческий",
+    description:
+      "Универсальная раса, освоившая космос. Быстро обучаются и адаптируются.",
+    homeworld: "Земля",
+    environmentPreference: {
+      ideal: ["Лесная", "Океаническая", "Тропическая"],
+      acceptable: ["Пустынная", "Арктическая", "Планета-кольцо"],
+      hostile: [
+        "Вулканическая",
+        "Ледяная",
+        "Радиоактивная",
+        "Разрушенная войной",
+        "Приливная",
+      ],
     },
+    crewBonuses: {
+      happiness: 10, // +10% base happiness (morale boost)
+      healthRegen: 5, // +5 HP regen per turn (passive)
+    },
+    specialTraits: [
+      {
+        id: "quick_learner",
+        name: "Быстрый ученик",
+        description: "+15% к получаемому опыту",
+        type: "positive",
+        effects: { expBonus: 0.15 },
+      },
+    ],
+    relations: {
+      synthetic: -10, // Some distrust of AI
+      xenosymbiont: 5, // Friendly curiosity
+    },
+    hasHappiness: true,
+    hasFatigue: true,
+    canGetSick: true,
+    requiresOxygen: true,
+    color: "#4a90d9",
+    icon: "👤",
+  },
 
-    synthetic: {
-        id: "synthetic",
-        name: "Синтетик",
-        pluralName: "Синтетики",
-        adjective: "Синтетический",
-        description:
-            "Искусственный разум, созданный древней цивилизацией или людьми. Не имеют эмоций, но обладают безупречной логикой.",
-        homeworld: "Неизвестно",
-        environmentPreference: {
-            ideal: ["Вулканическая", "Радиоактивная"],
-            acceptable: [
-                "Пустынная",
-                "Ледяная",
-                "Арктическая",
-                "Планета-кольцо",
-                "Приливная",
-            ],
-            hostile: [
-                "Лесная",
-                "Океаническая",
-                "Тропическая",
-                "Разрушенная войной",
-            ],
-        },
-        crewBonuses: {
-            repair: 0.25, // +25% repair efficiency
-            science: 0.25, // +25% research speed
-        },
-        specialTraits: [
-            {
-                id: "no_happiness",
-                name: "Отсутствие эмоций",
-                description:
-                    "Не имеют счастья - иммунитет к моральным эффектам",
-                type: "neutral",
-                effects: { noHappiness: 1 },
-            },
-            {
-                id: "ai_glitch",
-                name: "Сбой ИИ",
-                description: "Иногда принимают нелогичные решения",
-                type: "negative",
-                effects: { glitchChance: 0.05 },
-            },
-        ],
-        relations: {
-            human: -10,
-            xenosymbiont: -20,
-        },
-        hasHappiness: false,
-        hasFatigue: false,
-        canGetSick: false,
-        requiresOxygen: false,
-        color: "#00d4ff",
-        icon: "🤖",
+  synthetic: {
+    id: "synthetic",
+    name: "Синтетик",
+    pluralName: "Синтетики",
+    adjective: "Синтетический",
+    description:
+      "Искусственный разум, созданный древней цивилизацией или людьми. Не имеют эмоций, но обладают безупречной логикой.",
+    homeworld: "Неизвестно",
+    environmentPreference: {
+      ideal: ["Вулканическая", "Радиоактивная"],
+      acceptable: [
+        "Пустынная",
+        "Ледяная",
+        "Арктическая",
+        "Планета-кольцо",
+        "Приливная",
+      ],
+      hostile: [
+        "Лесная",
+        "Океаническая",
+        "Тропическая",
+        "Разрушенная войной",
+      ],
     },
+    crewBonuses: {
+      repair: 0.25, // +25% repair efficiency
+      science: 0.25, // +25% research speed
+    },
+    specialTraits: [
+      {
+        id: "no_happiness",
+        name: "Отсутствие эмоций",
+        description:
+          "Не имеют счастья - иммунитет к моральным эффектам",
+        type: "neutral",
+        effects: { noHappiness: 1 },
+      },
+      {
+        id: "ai_glitch",
+        name: "Сбой ИИ",
+        description: "Иногда принимают нелогичные решения",
+        type: "negative",
+        effects: { glitchChance: 0.05 },
+      },
+    ],
+    relations: {
+      human: -10,
+      xenosymbiont: -20,
+    },
+    hasHappiness: false,
+    hasFatigue: false,
+    canGetSick: false,
+    requiresOxygen: false,
+    color: "#00d4ff",
+    icon: "🤖",
+  },
 
-    xenosymbiont: {
-        id: "xenosymbiont",
-        name: "Ксеноморф-симбионт",
-        pluralName: "Ксеноморфы-симбионты",
-        adjective: "Симбионтский",
-        description:
-            'Полуорганические существа, живущие в симбиозе с технологиями. Могут "сращиваться" с кораблём.',
-        homeworld: "Неизвестная планета в Тире 3",
-        environmentPreference: {
-            ideal: ["Океаническая", "Тропическая"],
-            acceptable: ["Лесная", "Ледяная", "Планета-кольцо"],
-            hostile: [
-                "Пустынная",
-                "Вулканическая",
-                "Арктическая",
-                "Радиоактивная",
-                "Разрушенная войной",
-                "Приливная",
-            ],
-        },
-        crewBonuses: {
-            healthRegen: 10, // +10 HP/ход (регенеративная биология)
-            heal: 0.25, // +25% к эффективности лечения (симбиотическая биология)
-        },
-        specialTraits: [
-            {
-                id: "symbiosis",
-                name: "Техно-симбиоз",
-                description:
-                    "Могут сращиваться с кораблём, получая уникальные трейты",
-                type: "positive",
-                effects: { canMerge: 1 },
-            },
-            {
-                id: "disturbing_presence",
-                name: "Беспокоящее присутствие",
-                description: "Снижают счастье органиков в экипаже на -5",
-                type: "negative",
-                effects: { alienPresencePenalty: -5 },
-            },
-        ],
-        relations: {
-            human: 5,
-            synthetic: -20,
-            crystalline: 15,
-        },
-        hasHappiness: true,
-        hasFatigue: true,
-        canGetSick: true,
-        requiresOxygen: true,
-        color: "#aa55ff",
-        icon: "🦠",
+  xenosymbiont: {
+    id: "xenosymbiont",
+    name: "Ксеноморф-симбионт",
+    pluralName: "Ксеноморфы-симбионты",
+    adjective: "Симбионтский",
+    description:
+      'Полуорганические существа, живущие в симбиозе с технологиями. Могут "сращиваться" с кораблём.',
+    homeworld: "Неизвестная планета в Тире 3",
+    environmentPreference: {
+      ideal: ["Океаническая", "Тропическая"],
+      acceptable: ["Лесная", "Ледяная", "Планета-кольцо"],
+      hostile: [
+        "Пустынная",
+        "Вулканическая",
+        "Арктическая",
+        "Радиоактивная",
+        "Разрушенная войной",
+        "Приливная",
+      ],
     },
+    crewBonuses: {
+      healthRegen: 10, // +10 HP/ход (регенеративная биология)
+      heal: 0.25, // +25% к эффективности лечения (симбиотическая биология)
+    },
+    specialTraits: [
+      {
+        id: "symbiosis",
+        name: "Техно-симбиоз",
+        description:
+          "Могут сращиваться с кораблём, получая уникальные трейты",
+        type: "positive",
+        effects: { canMerge: 1 },
+      },
+      {
+        id: "disturbing_presence",
+        name: "Беспокоящее присутствие",
+        description: "Снижают счастье органиков в экипаже на -5",
+        type: "negative",
+        effects: { alienPresencePenalty: -5 },
+      },
+    ],
+    relations: {
+      human: 5,
+      synthetic: -20,
+      crystalline: 15,
+    },
+    hasHappiness: true,
+    hasFatigue: true,
+    canGetSick: true,
+    requiresOxygen: true,
+    color: "#aa55ff",
+    icon: "🦠",
+  },
 
-    krylorian: {
-        id: "krylorian",
-        name: "Крилорианец",
-        pluralName: "Крилорианцы",
-        adjective: "Крилорианский",
-        description:
-            "Воинственная рептилоидная раса с сильным чувством чести. Превосходные бойцы.",
-        homeworld: "Крилор Прайм",
-        environmentPreference: {
-            ideal: ["Пустынная", "Тропическая", "Приливная"],
-            acceptable: ["Вулканическая", "Лесная", "Разрушенная войной"],
-            hostile: [
-                "Ледяная",
-                "Океаническая",
-                "Арктическая",
-                "Радиоактивная",
-                "Планета-кольцо",
-            ],
-        },
-        crewBonuses: {
-            combat: 0.05,
-            health: 15, // +15 к maxHealth при создании
-        },
-        specialTraits: [
-            {
-                id: "intimidation",
-                name: "Устрашение",
-                description:
-                    "Враги чаще промахиваются (-2% шанс попадания по кораблю)",
-                type: "positive",
-                effects: { evasionBonus: 0.02 },
-            },
-        ],
-        relations: {
-            human: 0,
-            synthetic: -15,
-            voidborn: 20,
-        },
-        hasHappiness: true,
-        hasFatigue: true,
-        canGetSick: true,
-        requiresOxygen: true,
-        color: "#ff6600",
-        icon: "🦎",
+  krylorian: {
+    id: "krylorian",
+    name: "Крилорианец",
+    pluralName: "Крилорианцы",
+    adjective: "Крилорианский",
+    description:
+      "Воинственная рептилоидная раса с сильным чувством чести. Превосходные бойцы.",
+    homeworld: "Крилор Прайм",
+    environmentPreference: {
+      ideal: ["Пустынная", "Тропическая", "Приливная"],
+      acceptable: ["Вулканическая", "Лесная", "Разрушенная войной"],
+      hostile: [
+        "Ледяная",
+        "Океаническая",
+        "Арктическая",
+        "Радиоактивная",
+        "Планета-кольцо",
+      ],
     },
+    crewBonuses: {
+      combat: 0.05,
+      health: 15, // +15 к maxHealth при создании
+    },
+    specialTraits: [
+      {
+        id: "intimidation",
+        name: "Устрашение",
+        description:
+          "Враги чаще промахиваются (-2% шанс попадания по кораблю)",
+        type: "positive",
+        effects: { evasionBonus: 0.02 },
+      },
+    ],
+    relations: {
+      human: 0,
+      synthetic: -15,
+      voidborn: 20,
+    },
+    hasHappiness: true,
+    hasFatigue: true,
+    canGetSick: true,
+    requiresOxygen: true,
+    color: "#ff6600",
+    icon: "🦎",
+  },
 
-    voidborn: {
-        id: "voidborn",
-        name: "Порождённый Пустотой",
-        pluralName: "Порождённые Пустотой",
-        adjective: "Пустотный",
-        description:
-            "Существа, рождённые в глубинах космоса. Не нуждаются в атмосфере и комфорте.",
-        homeworld: "Неизвестно",
-        environmentPreference: {
-            ideal: ["Планета-кольцо", "Приливная"],
-            acceptable: [
-                "Пустынная",
-                "Ледяная",
-                "Вулканическая",
-                "Арктическая",
-                "Разрушенная войной",
-            ],
-            hostile: ["Лесная", "Океаническая", "Тропическая", "Радиоактивная"],
-        },
-        crewBonuses: {
-            fuelEfficiency: 0.03, // +3% fuel efficiency per crew member (с убывающим эффектом)
-            happiness: -10, // Lower base happiness (don't care)
-        },
-        specialTraits: [
-            {
-                id: "void_shield",
-                name: "Пустотная защита",
-                description:
-                    "Щиты корабля восстанавливаются на 5% больше за ход",
-                type: "positive",
-                effects: { shieldRegen: 5 },
-            },
-            {
-                id: "unnerving",
-                name: "Беспокойство",
-                description: "Их присутствие тревожит органиков на -10",
-                type: "negative",
-                effects: { alienPresencePenalty: -10 },
-            },
-            {
-                id: "low_health",
-                name: "Эфирное тело",
-                description: "-20% к максимальному здоровью",
-                type: "negative",
-                effects: { healthPenalty: -0.2 },
-            },
-        ],
-        relations: {
-            human: -5,
-            krylorian: 20,
-            crystalline: 10,
-        },
-        hasHappiness: true,
-        hasFatigue: false,
-        canGetSick: false,
-        requiresOxygen: false,
-        color: "#9933ff",
-        icon: "👁️",
+  voidborn: {
+    id: "voidborn",
+    name: "Порождённый Пустотой",
+    pluralName: "Порождённые Пустотой",
+    adjective: "Пустотный",
+    description:
+      "Существа, рождённые в глубинах космоса. Не нуждаются в атмосфере и комфорте.",
+    homeworld: "Неизвестно",
+    environmentPreference: {
+      ideal: ["Планета-кольцо", "Приливная"],
+      acceptable: [
+        "Пустынная",
+        "Ледяная",
+        "Вулканическая",
+        "Арктическая",
+        "Разрушенная войной",
+      ],
+      hostile: ["Лесная", "Океаническая", "Тропическая", "Радиоактивная"],
     },
+    crewBonuses: {
+      fuelEfficiency: 0.03, // +3% fuel efficiency per crew member (с убывающим эффектом)
+      happiness: -10, // Lower base happiness (don't care)
+    },
+    specialTraits: [
+      {
+        id: "void_shield",
+        name: "Пустотная защита",
+        description:
+          "Щиты корабля восстанавливаются на 5% больше за ход",
+        type: "positive",
+        effects: { shieldRegen: 5 },
+      },
+      {
+        id: "unnerving",
+        name: "Беспокойство",
+        description: "Их присутствие тревожит органиков на -10",
+        type: "negative",
+        effects: { alienPresencePenalty: -10 },
+      },
+      {
+        id: "low_health",
+        name: "Эфирное тело",
+        description: "-20% к максимальному здоровью",
+        type: "negative",
+        effects: { healthPenalty: -0.2 },
+      },
+    ],
+    relations: {
+      human: -5,
+      krylorian: 20,
+      crystalline: 10,
+    },
+    hasHappiness: true,
+    hasFatigue: false,
+    canGetSick: false,
+    requiresOxygen: false,
+    color: "#9933ff",
+    icon: "👁️",
+  },
 
-    crystalline: {
-        id: "crystalline",
-        name: "Кристаллоид",
-        pluralName: "Кристаллоиды",
-        adjective: "Кристаллический",
-        description:
-            "Разумные кристаллические существа. Медленно думают, но обладают огромной мудростью.",
-        homeworld: "Геода Прайм",
-        environmentPreference: {
-            ideal: ["Ледяная", "Арктическая", "Планета-кольцо"],
-            acceptable: ["Пустынная", "Приливная"],
-            hostile: [
-                "Лесная",
-                "Океаническая",
-                "Вулканическая",
-                "Тропическая",
-                "Радиоактивная",
-                "Разрушенная войной",
-            ],
-        },
-        crewBonuses: {
-            science: 0.2, // +20% research speed (increased)
-        },
-        specialTraits: [
-            {
-                id: "crystal_armor",
-                name: "Кристаллическая броня",
-                description:
-                    "+0.5 защиты модулей за каждого кристаллоида в экипаже",
-                type: "positive",
-                effects: { moduleDefense: 0.5 },
-            },
-            {
-                id: "resonance",
-                name: "Кристаллический резонанс",
-                description: "Может усиливать артефакты Древних на 15%",
-                type: "positive",
-                effects: { artifactBonus: 0.15 },
-            },
-            {
-                id: "brittle_crystal",
-                name: "Хрупкость",
-                description: "-15% к максимальному здоровью",
-                type: "negative",
-                effects: { healthPenalty: -0.15 },
-            },
-        ],
-        relations: {
-            human: 10,
-            synthetic: 5,
-            xenosymbiont: 15,
-            voidborn: 10,
-        },
-        hasHappiness: true,
-        hasFatigue: true,
-        canGetSick: false,
-        requiresOxygen: true,
-        color: "#00ffaa",
-        icon: "💎",
+  crystalline: {
+    id: "crystalline",
+    name: "Кристаллоид",
+    pluralName: "Кристаллоиды",
+    adjective: "Кристаллический",
+    description:
+      "Разумные кристаллические существа. Медленно думают, но обладают огромной мудростью.",
+    homeworld: "Геода Прайм",
+    environmentPreference: {
+      ideal: ["Ледяная", "Арктическая", "Планета-кольцо"],
+      acceptable: ["Пустынная", "Приливная"],
+      hostile: [
+        "Лесная",
+        "Океаническая",
+        "Вулканическая",
+        "Тропическая",
+        "Радиоактивная",
+        "Разрушенная войной",
+      ],
     },
+    crewBonuses: {
+      science: 0.2, // +20% research speed (increased)
+    },
+    specialTraits: [
+      {
+        id: "crystal_armor",
+        name: "Кристаллическая броня",
+        description:
+          "+0.5 защиты модулей за каждого кристаллоида в экипаже",
+        type: "positive",
+        effects: { moduleDefense: 0.5 },
+      },
+      {
+        id: "resonance",
+        name: "Кристаллический резонанс",
+        description: "Может усиливать артефакты Древних на 15%",
+        type: "positive",
+        effects: { artifactBonus: 0.15 },
+      },
+      {
+        id: "brittle_crystal",
+        name: "Хрупкость",
+        description: "-15% к максимальному здоровью",
+        type: "negative",
+        effects: { healthPenalty: -0.15 },
+      },
+    ],
+    relations: {
+      human: 10,
+      synthetic: 5,
+      xenosymbiont: 15,
+      voidborn: 10,
+    },
+    hasHappiness: true,
+    hasFatigue: true,
+    canGetSick: false,
+    requiresOxygen: true,
+    color: "#00ffaa",
+    icon: "💎",
+  },
 };
 
 export const RACE_LAST_NAMES: Record<RaceId, readonly string[]> = {
-    human: [
-        // Русские и славянские
-        "Смирнов",
-        "Иванов",
-        "Петров",
-        "Соколов",
-        "Лебедев",
-        "Кузнецов",
-        "Новак",
-        "Ковальский",
-        "Димитров",
-        "Попеску",
+  human: [
+    // Русские и славянские
+    "Смирнов",
+    "Иванов",
+    "Петров",
+    "Соколов",
+    "Лебедев",
+    "Кузнецов",
+    "Новак",
+    "Ковальский",
+    "Димитров",
+    "Попеску",
 
-        // Немецкие
-        "Шмидт",
-        "Мюллер",
-        "Шнайдер",
-        "Фишер",
-        "Вебер",
+    // Немецкие
+    "Шмидт",
+    "Мюллер",
+    "Шнайдер",
+    "Фишер",
+    "Вебер",
 
-        // Французские
-        "Дюпон",
-        "Лефевр",
-        "Моро",
-        "Жирар",
-        "Блан",
+    // Французские
+    "Дюпон",
+    "Лефевр",
+    "Моро",
+    "Жирар",
+    "Блан",
 
-        // Английские
-        "Смит",
-        "Джонсон",
-        "Браун",
-        "Тейлор",
-        "Андерсон",
+    // Английские
+    "Смит",
+    "Джонсон",
+    "Браун",
+    "Тейлор",
+    "Андерсон",
 
-        // Испанские / Латиноамериканские
-        "Гарсия",
-        "Мартинес",
-        "Родригес",
-        "Лопес",
-        "Эрнандес",
+    // Испанские / Латиноамериканские
+    "Гарсия",
+    "Мартинес",
+    "Родригес",
+    "Лопес",
+    "Эрнандес",
 
-        // Итальянские
-        "Россини",
-        "Бьянки",
-        "Романо",
-        "Греко",
-        "Феррари",
+    // Итальянские
+    "Россини",
+    "Бьянки",
+    "Романо",
+    "Греко",
+    "Феррари",
 
-        // Скандинавские
-        "Андерсен",
-        "Нильсен",
-        "Хансен",
-        "Йоханссон",
-        "Карлссон",
+    // Скандинавские
+    "Андерсен",
+    "Нильсен",
+    "Хансен",
+    "Йоханссон",
+    "Карлссон",
 
-        // Ближний Восток
-        "Хаддад",
-        "Нассер",
-        "Аль-Фарук",
-        "Каримов",
-        "Саиди",
+    // Ближний Восток
+    "Хаддад",
+    "Нассер",
+    "Аль-Фарук",
+    "Каримов",
+    "Саиди",
 
-        // Восточная Европа / Балканы
-        "Йованович",
-        "Стоянов",
-        "Ковач",
-        "Мазур",
-        "Ткаченко",
-    ],
+    // Восточная Европа / Балканы
+    "Йованович",
+    "Стоянов",
+    "Ковач",
+    "Мазур",
+    "Ткаченко",
+  ],
 
-    synthetic: [
-        "АЛЬФА",
-        "БЕТА",
-        "ГАММА",
-        "ДЕЛЬТА",
-        "ОМЕГА",
-        "СИГМА",
-        "ТЕТА",
-        "ЗЕТА",
-        "XR-17",
-        "MK-ULTRA",
-        "CORE-Δ",
-        "НЕЙРОН-5",
-        "МОДУЛЬ-9",
-        "АРХОН-3",
-    ],
+  synthetic: [
+    "АЛЬФА",
+    "БЕТА",
+    "ГАММА",
+    "ДЕЛЬТА",
+    "ОМЕГА",
+    "СИГМА",
+    "ТЕТА",
+    "ЗЕТА",
+    "XR-17",
+    "MK-ULTRA",
+    "CORE-Δ",
+    "НЕЙРОН-5",
+    "МОДУЛЬ-9",
+    "АРХОН-3",
+  ],
 
-    xenosymbiont: [
-        "Шшшииррр",
-        "Ксссаррр",
-        "Зззиттт",
-        "Вввааассс",
-        "Тттаннн",
-        "Хххоррр",
-        "Жжжууулл",
-        "Ррраассх",
-        "Кккзииит",
-        "Шааа'ллл",
-    ],
+  xenosymbiont: [
+    "Шшшииррр",
+    "Ксссаррр",
+    "Зззиттт",
+    "Вввааассс",
+    "Тттаннн",
+    "Хххоррр",
+    "Жжжууулл",
+    "Ррраассх",
+    "Кккзииит",
+    "Шааа'ллл",
+  ],
 
-    krylorian: [
-        "Кр'асс",
-        "З'орк",
-        "Т'арк",
-        "В'рас",
-        "Г'орм",
-        "К'итор",
-        "Д'раан",
-        "С'келл",
-        "М'зир",
-        "В'торрак",
-    ],
+  krylorian: [
+    "Кр'асс",
+    "З'орк",
+    "Т'арк",
+    "В'рас",
+    "Г'орм",
+    "К'итор",
+    "Д'раан",
+    "С'келл",
+    "М'зир",
+    "В'торрак",
+  ],
 
-    voidborn: [
-        "Эхо-7",
-        "Тень-3",
-        "Провал-12",
-        "Бездна-5",
-        "Мрак-9",
-        "Сумрак-2",
-        "Горизонт-0",
-        "Пульсар-8",
-        "Нуль-13",
-        "Сингулярность-4",
-    ],
+  voidborn: [
+    "Эхо-7",
+    "Тень-3",
+    "Провал-12",
+    "Бездна-5",
+    "Мрак-9",
+    "Сумрак-2",
+    "Горизонт-0",
+    "Пульсар-8",
+    "Нуль-13",
+    "Сингулярность-4",
+  ],
 
-    crystalline: [
-        "Геода-Примус",
-        "Кварц-Секундус",
-        "Аметист-Терция",
-        "Топаз-Кварта",
-        "Обсидиан-Прайм",
-        "Цитрин-Люкс",
-        "Оникс-Нова",
-        "Гранит-Максимус",
-        "Базальт-Итера",
-    ],
+  crystalline: [
+    "Геода-Примус",
+    "Кварц-Секундус",
+    "Аметист-Терция",
+    "Топаз-Кварта",
+    "Обсидиан-Прайм",
+    "Цитрин-Люкс",
+    "Оникс-Нова",
+    "Гранит-Максимус",
+    "Базальт-Итера",
+  ],
 } as const;
 
 // ═══════════════════════════════════════════════════════════════
 // XENOSYMBIONT MERGE EFFECTS
 // ═══════════════════════════════════════════════════════════════
 export const XENOSYMBIONT_MERGE_EFFECTS: Record<
-    ModuleType,
-    {
-        name: string;
-        description: string;
-        effects: Omit<XenosymbiontMergeEffect, "moduleId" | "moduleType">;
-    }
+  ModuleType,
+  {
+    name: string;
+    description: string;
+    effects: Omit<XenosymbiontMergeEffect, "moduleId" | "moduleType">;
+  }
 > = {
-    // ═══════════════════════════════════════════════════════════
-    // ЭНЕРГЕТИКА И ИНФРАСТРУКТУРА
-    // ═══════════════════════════════════════════════════════════
-    reactor: {
-        name: "Симбиоз с реактором",
-        description:
-            "Ксеноморф срастается с реактором, оптимизируя энергопотоки",
-        effects: {
-            powerOutput: 10,
-        },
+  // ═══════════════════════════════════════════════════════════
+  // ЭНЕРГЕТИКА И ИНФРАСТРУКТУРА
+  // ═══════════════════════════════════════════════════════════
+  reactor: {
+    name: "Симбиоз с реактором",
+    description:
+      "Ксеноморф срастается с реактором, оптимизируя энергопотоки",
+    effects: {
+      powerOutput: 10,
     },
+  },
 
-    cockpit: {
-        name: "Нейронная связь с мостиком",
-        description:
-            "Симбионт улучшает управление кораблём через нейронную связь",
-        effects: {
-            evasionBonus: 5,
-        },
+  cockpit: {
+    name: "Нейронная связь с мостиком",
+    description:
+      "Симбионт улучшает управление кораблём через нейронную связь",
+    effects: {
+      evasionBonus: 5,
     },
+  },
 
-    lifesupport: {
-        name: "Био-усиление систем жизнеобеспечения",
-        description:
-            "Ксеноморф улучшает циркуляцию кислорода и питательных веществ",
-        effects: {
-            oxygenEfficiency: 20,
-            crewHealthRegen: 2,
-        },
+  lifesupport: {
+    name: "Био-усиление систем жизнеобеспечения",
+    description:
+      "Ксеноморф улучшает циркуляцию кислорода и питательных веществ",
+    effects: {
+      oxygenEfficiency: 20,
+      crewHealthRegen: 2,
     },
+  },
 
-    // ═══════════════════════════════════════════════════════════
-    // ОБОРУДОВАНИЕ И ХРАНЕНИЕ
-    // ═══════════════════════════════════════════════════════════
-    cargo: {
-        name: "Органическая упаковка",
-        description: "Груз оптимизирован биологическими структурами",
-        effects: {
-            cargoCapacity: 10,
-        },
+  // ═══════════════════════════════════════════════════════════
+  // ОБОРУДОВАНИЕ И ХРАНЕНИЕ
+  // ═══════════════════════════════════════════════════════════
+  cargo: {
+    name: "Органическая упаковка",
+    description: "Груз оптимизирован биологическими структурами",
+    effects: {
+      cargoCapacity: 10,
     },
+  },
 
-    fueltank: {
-        name: "Био-мембрана хранения",
-        description: "Топливо хранится в органических резервуарах",
-        effects: {
-            fuelEfficiency: 15,
-            fuelCapacity: 10,
-        },
+  fueltank: {
+    name: "Био-мембрана хранения",
+    description: "Топливо хранится в органических резервуарах",
+    effects: {
+      fuelEfficiency: 15,
+      fuelCapacity: 10,
     },
+  },
 
-    // ═══════════════════════════════════════════════════════════
-    // НАУКА И РАЗВЕДКА
-    // ═══════════════════════════════════════════════════════════
-    scanner: {
-        name: "Органическое сканирование",
-        description: "Био-сенсоры расширяют диапазон сканирования",
-        effects: {
-            scanRange: 20,
-        },
+  // ═══════════════════════════════════════════════════════════
+  // НАУКА И РАЗВЕДКА
+  // ═══════════════════════════════════════════════════════════
+  scanner: {
+    name: "Органическое сканирование",
+    description: "Био-сенсоры расширяют диапазон сканирования",
+    effects: {
+      scanRange: 3,
     },
+  },
 
-    lab: {
-        name: "Био-лаборатория",
-        description: "Живые структуры ускоряют исследования",
-        effects: {
-            researchSpeed: 15,
-        },
+  lab: {
+    name: "Био-лаборатория",
+    description: "Живые структуры ускоряют исследования",
+    effects: {
+      researchSpeed: 15,
     },
+  },
 
-    // ═══════════════════════════════════════════════════════════
-    // БОЕВЫЕ СИСТЕМЫ
-    // ═══════════════════════════════════════════════════════════
-    weaponbay: {
-        name: "Живое оружие",
-        description: "Оружейные системы усилены био-усилителями",
-        effects: {
-            weaponDamage: 10,
-            weaponAccuracy: 5,
-        },
+  // ═══════════════════════════════════════════════════════════
+  // БОЕВЫЕ СИСТЕМЫ
+  // ═══════════════════════════════════════════════════════════
+  weaponbay: {
+    name: "Живое оружие",
+    description: "Оружейные системы усилены био-усилителями",
+    effects: {
+      weaponDamage: 10,
+      weaponAccuracy: 5,
     },
+  },
 
-    shield: {
-        name: "Щитовой симбиоз",
-        description: "Био-поле усиливает генератор щита",
-        effects: {
-            shieldRegenBonus: 15,
-            shieldCapacity: 10,
-        },
+  shield: {
+    name: "Щитовой симбиоз",
+    description: "Био-поле усиливает генератор щита",
+    effects: {
+      shieldRegenBonus: 15,
+      shieldCapacity: 10,
     },
+  },
 
-    // ═══════════════════════════════════════════════════════════
-    // МЕДИЦИНА И ПОДДЕРЖКА
-    // ═══════════════════════════════════════════════════════════
-    medical: {
-        name: "Регенеративная камера",
-        description: "Живые ткани увеличивают эффективность лечения",
-        effects: {
-            healing: 25,
-        },
+  // ═══════════════════════════════════════════════════════════
+  // МЕДИЦИНА И ПОДДЕРЖКА
+  // ═══════════════════════════════════════════════════════════
+  medical: {
+    name: "Регенеративная камера",
+    description: "Живые ткани увеличивают эффективность лечения",
+    effects: {
+      healing: 25,
     },
+  },
 
-    // ═══════════════════════════════════════════════════════════
-    // ДВИЖЕНИЕ И ДОБЫЧА
-    // ═══════════════════════════════════════════════════════════
-    engine: {
-        name: "Био-двигатель",
-        description: "Органические компоненты улучшают тягу",
-        effects: {
-            fuelEfficiency: 10,
-        },
+  // ═══════════════════════════════════════════════════════════
+  // ДВИЖЕНИЕ И ДОБЫЧА
+  // ═══════════════════════════════════════════════════════════
+  engine: {
+    name: "Био-двигатель",
+    description: "Органические компоненты улучшают тягу",
+    effects: {
+      fuelEfficiency: 10,
     },
+  },
 
-    drill: {
-        name: "Живой бур",
-        description: "Био-минеральные структуры улучшают добычу",
-        effects: {
-            resourceYield: 10,
-        },
+  drill: {
+    name: "Живой бур",
+    description: "Био-минеральные структуры улучшают добычу",
+    effects: {
+      resourceYield: 10,
     },
+  },
 
-    // ═══════════════════════════════════════════════════════════
-    // ИСКУССТВЕННЫЙ ИНТЕЛЛЕКТ
-    // ═══════════════════════════════════════════════════════════
-    ai_core: {
-        name: "Нейро-синтез",
-        description: "Симбиоз органического и искусственного интеллекта",
-        effects: {
-            glitchResistance: 50,
-        },
+  // ═══════════════════════════════════════════════════════════
+  // ИСКУССТВЕННЫЙ ИНТЕЛЛЕКТ
+  // ═══════════════════════════════════════════════════════════
+  ai_core: {
+    name: "Нейро-синтез",
+    description: "Симбиоз органического и искусственного интеллекта",
+    effects: {
+      glitchResistance: 50,
     },
+  },
 
-    quarters: {
-        name: "Симбиоз с жилым модулем",
-        description: "Ксеноморф срастается с жилыми помещениями, улучшая регенерацию экипажа",
-        effects: { crewHealthRegen: 5 },
-    },
-    repair_bay: {
-        name: "Симбиоз с ремонтным отсеком",
-        description: "Ксеноморф улучшает эффективность ремонтных дронов (+50% HP к ремонту)",
-        effects: { repairBonus: 50 },
-    },
-    // weaponShed не поддерживает сращивание
-    weaponShed: {
-        name: "",
-        description: "",
-        effects: {},
-    },
-    // Гибридные модули — базовый эффект сращивания
-    bio_research_lab: {
-        name: "Симбиоз с биолабораторией",
-        description: "Ксеноморф ускоряет биологические исследования (+25% скорость науки)",
-        effects: { researchSpeed: 25 },
-    },
-    pulse_drive: {
-        name: "Симбиоз с пульс-двигателем",
-        description: "Ксеноморф снижает расход топлива (-10%)",
-        effects: {},
-    },
-    habitat_module: {
-        name: "Симбиоз с жилым модулем",
-        description: "Ксеноморф восстанавливает здоровье соседей",
-        effects: {},
-    },
-    deep_survey_array: {
-        name: "Симбиоз с сканером",
-        description: "Ксеноморф расширяет дальность сканирования (+1 клетка)",
-        effects: {},
-    },
+  quarters: {
+    name: "Симбиоз с жилым модулем",
+    description: "Ксеноморф срастается с жилыми помещениями, улучшая регенерацию экипажа",
+    effects: { crewHealthRegen: 5 },
+  },
+  repair_bay: {
+    name: "Симбиоз с ремонтным отсеком",
+    description: "Ксеноморф улучшает эффективность ремонтных дронов (+50% HP к ремонту)",
+    effects: { repairBonus: 50 },
+  },
+  // weaponShed не поддерживает сращивание
+  weaponShed: {
+    name: "",
+    description: "",
+    effects: {},
+  },
+  // Гибридные модули — базовый эффект сращивания
+  bio_research_lab: {
+    name: "Симбиоз с биолабораторией",
+    description: "Ксеноморф ускоряет биологические исследования (+25% скорость науки)",
+    effects: { researchSpeed: 25 },
+  },
+  pulse_drive: {
+    name: "Симбиоз с пульс-двигателем",
+    description: "Ксеноморф снижает расход топлива (-10%)",
+    effects: { fuelEfficiency: 10 },
+  },
+  habitat_module: {
+    name: "Симбиоз с жилым модулем",
+    description: "Ксеноморф восстанавливает здоровье соседей",
+    effects: { healing: 10 },
+  },
+  deep_survey_array: {
+    name: "Симбиоз с сканером",
+    description: "Ксеноморф расширяет дальность сканирования (+1 клетка)",
+    effects: { scanRange: 1 },
+  },
 };
