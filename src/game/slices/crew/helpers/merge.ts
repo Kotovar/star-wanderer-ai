@@ -99,7 +99,8 @@ export const unmergeFromModule = (
         const state = get();
         const currentCargo =
             state.ship.cargo.reduce((s, c) => s + c.quantity, 0) +
-            state.ship.tradeGoods.reduce((s, g) => s + g.quantity, 0);
+            state.ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
+            state.probes;
         const capacityAfter = getCargoCapacity({
             ...state,
             crew: state.crew.map((c) =>

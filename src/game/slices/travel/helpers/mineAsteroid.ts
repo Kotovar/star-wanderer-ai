@@ -190,10 +190,9 @@ const allocateCargoSpace = (
     state: GameState,
     get: () => GameStore,
 ): { addedMinerals: number; addedRare: number } => {
-    const currentCargo = state.ship.tradeGoods.reduce(
-        (sum, tg) => sum + tg.quantity,
-        0,
-    );
+    const currentCargo =
+        state.ship.tradeGoods.reduce((sum, tg) => sum + tg.quantity, 0) +
+        state.probes;
     const cargoCapacity = get().getCargoCapacity();
     const cargoSpaceLeft = Math.max(0, cargoCapacity - currentCargo);
 

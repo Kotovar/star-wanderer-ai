@@ -69,7 +69,16 @@
     "contract_label": "[Contract]",
     "crafted_label": "[Crafted]",
     "module_label": "[Module]",
-    "overflow": "[OVERFLOW]"
+    "overflow": "[OVERFLOW]",
+    "section_weapons": "Weapons [Crafted]",
+    "section_modules": "Modules",
+    "section_contracts": "Contracts",
+    "section_trade": "Trade Goods",
+    "install": "Install",
+    "install_in_bay": "Bay",
+    "no_free_bays": "No free weapon bays",
+    "no_free_slots": "No space on ship grid",
+    "section_probes": "Probes"
   },
   "modules": {
     "search_per_turn": "res/turn",
@@ -149,7 +158,8 @@
     "antimatter": "├ Antimatter:",
     "quantum_torpedo": "└ Q. torpedo:",
     "per_turn": "per turn",
-    "units": "pts"
+    "units": "pts",
+    "ion_cannon": "Ion Cannon"
   },
   "header": {
     "tooltip_logbook": "Ship's logbook",

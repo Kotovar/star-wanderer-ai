@@ -69,7 +69,16 @@
     "contract_label": "[Задание]",
     "crafted_label": "[Крафт]",
     "module_label": "[Модуль]",
-    "overflow": "[ПЕРЕГРУЗ]"
+    "overflow": "[ПЕРЕГРУЗ]",
+    "section_weapons": "Оружие [Крафт]",
+    "section_modules": "Модули",
+    "section_contracts": "Задания",
+    "section_trade": "Торговые товары",
+    "install": "Установить",
+    "install_in_bay": "В отсек",
+    "no_free_bays": "Нет свободных орудийных отсеков",
+    "no_free_slots": "Нет места на схеме",
+    "section_probes": "Зонды"
   },
   "modules": {
     "search_per_turn": "иссл./ход",
@@ -149,7 +158,8 @@
     "antimatter": "├ Антиматер.:",
     "quantum_torpedo": "└ Кв. торпеда:",
     "per_turn": "за ход",
-    "units": "ед."
+    "units": "ед.",
+    "ion_cannon": "Ионная пушка"
   },
   "header": {
     "tooltip_logbook": "Руководство",

@@ -52,7 +52,8 @@ export const acceptContract = (
 
         const cur =
             get().ship.cargo.reduce((s, c) => s + c.quantity, 0) +
-            get().ship.tradeGoods.reduce((s, g) => s + g.quantity, 0);
+            get().ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
+            get().probes;
 
         if (
             cargoMod.capacity &&

@@ -77,7 +77,8 @@ const validateBuyTradeGood = (
     // Проверка места в грузовом отсеке
     const currentCargo =
         state.ship.cargo.reduce((s, c) => s + c.quantity, 0) +
-        state.ship.tradeGoods.reduce((s, g) => s + g.quantity, 0);
+        state.ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
+        state.probes;
 
     const cargoCapacity = getCargoCapacity(state);
 

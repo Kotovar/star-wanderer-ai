@@ -109,9 +109,11 @@ export function FriendlyShipPanel() {
         (sum, m) => sum + (m.capacity || 0),
         0,
     );
+    const probes = useGameStore((s) => s.probes);
     const currentCargo =
         ship.cargo.reduce((s, c) => s + c.quantity, 0) +
-        ship.tradeGoods.reduce((s, g) => s + g.quantity, 0);
+        ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
+        probes;
     const availSpace = totalCargoCapacity - currentCargo;
 
     // Memoize crew data to prevent regeneration on every render

@@ -35,9 +35,11 @@ export function TradeTab({
     buyTradeGood,
     sellTradeGood,
 }: TradeTabProps) {
+    const probes = useGameStore((s) => s.probes);
     const currentCargo =
         ship.cargo.reduce((s, c) => s + c.quantity, 0) +
-        ship.tradeGoods.reduce((s, g) => s + g.quantity, 0);
+        ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
+        probes;
     const availSpace = cargoCapacity - currentCargo;
 
     const tradeGoodsKeys = typedKeys(TRADE_GOODS);

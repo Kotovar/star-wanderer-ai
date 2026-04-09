@@ -204,6 +204,15 @@ export const createLocationsSlice = (
             get().addLog("Недостаточно кредитов для покупки зонда.", "warning");
             return;
         }
+        const currentCargo =
+            state.ship.cargo.reduce((s, c) => s + c.quantity, 0) +
+            state.ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
+            state.probes;
+        const cargoCapacity = get().getCargoCapacity();
+        if (currentCargo + count > cargoCapacity) {
+            get().addLog("Недостаточно места в грузовом отсеке!", "warning");
+            return;
+        }
         set((s) => ({ credits: s.credits - total, probes: s.probes + count }));
         get().addLog(
             `🔬 Куплено зондов: ${count} (−${total}₢). Всего: ${state.probes + count}`,

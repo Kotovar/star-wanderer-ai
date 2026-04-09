@@ -145,20 +145,18 @@ const baseState: GameState = {
   previousGameMode: null,
   traveling: null,
   ship: {
-    armor: 1, // Average defense: all starting modules have defense: 1
+    armor: 1,
     shields: 0,
     maxShields: 0,
     crewCapacity: INITIAL_CREW_CAPACITY,
     modules: initialModules,
     gridSize: INITIAL_GRID_SIZE,
     cargo: [],
-    // DEBUG: 10 единиц каждого крафтингового ресурса
-    // tradeGoods: [
-    //   { item: "electronics", quantity: 10, buyPrice: 0 },
-    //   { item: "rare_minerals", quantity: 10, buyPrice: 0 },
-    //   { item: 'spares', quantity: 10, buyPrice: 0 },
-    // ],
-    tradeGoods: [],
+    tradeGoods: [
+      // { item: "electronics", quantity: 10, buyPrice: 0 },
+      // { item: "rare_minerals", quantity: 10, buyPrice: 0 },
+      // { item: 'spares', quantity: 10, buyPrice: 0 },
+    ],
     fuel: STARTING_FUEL,
     maxFuel: STARTING_FUEL,
     mergeTraits: [],
@@ -201,22 +199,22 @@ const baseState: GameState = {
   activeEffects: [],
   planetCooldowns: {},
   research: {
-    // DEBUG: ресурсы для тестирования крафтинга
-    resources: {},
-    // resources: {
-    //     energy_samples: 20,
-    //     tech_salvage: 20,
-    //     rare_minerals: 10,
-    //     quantum_crystals: 5,
-    //     ancient_data: 5,
-    //     alien_biology: 5,
-    // },
+    resources: {
+      // energy_samples: 20,
+      // tech_salvage: 20,
+      // rare_minerals: 10,
+      // quantum_crystals: 5,
+      // ancient_data: 5,
+      // alien_biology: 5,
+    },
     discoveredTechs: INITIAL_DISCOVERED_TECHS,
     researchedTechs: [],
     activeResearch: null,
     unlockedRecipes: [],
   },
-  moduleRecipes: [],
+  moduleRecipes: [
+    // 'deep_survey_array'
+  ],
   pendingSurvivor: null,
   activeExpedition: null,
   activeDive: null,

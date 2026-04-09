@@ -81,11 +81,14 @@ export function ShipStats() {
     const oxygenCapacity = getOxygenCapacity();
     const crewCapacity = getCrewCapacity();
 
+    const probes = useGameStore((s) => s.probes);
+
     const currentCargo = useMemo(
         () =>
             ship.cargo.reduce((sum, c) => sum + c.quantity, 0) +
-            ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0),
-        [ship.cargo, ship.tradeGoods],
+            ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0) +
+            probes,
+        [ship.cargo, ship.tradeGoods, probes],
     );
 
     const shieldRegenerator = findActiveArtifact(
@@ -650,6 +653,15 @@ export function ShipStats() {
                             >
                                 <span>{t("ship_stats.antimatter")}</span>
                                 <span>{damage.antimatter}</span>
+                            </div>
+                        )}
+                        {damage.ion_cannon > 0 && (
+                            <div
+                                className="flex justify-between text-xs"
+                                style={{ color: "#40c8ff" }}
+                            >
+                                <span>{t("ship_stats.ion_cannon")}</span>
+                                <span>{damage.ion_cannon}</span>
                             </div>
                         )}
                         {damage.quantum_torpedo > 0 && (
