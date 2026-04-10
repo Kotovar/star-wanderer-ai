@@ -37,27 +37,43 @@ export function PlanetExplorationPanel() {
         expedition;
 
     const canReveal = apRemaining > 0 && !activeRuinsEvent && !finished;
+    const revealedCount = grid.filter((tile) => tile.revealed).length;
+    const totalTiles = grid.length;
+    const apExhausted = apRemaining === 0 && !finished;
+
+    const hasRewards =
+        rewards.credits > 0 ||
+        rewards.tradeGoods.length > 0 ||
+        rewards.researchResources.length > 0 ||
+        rewards.artifactFound;
 
     return (
         <div className="flex flex-col gap-2">
             {/* Header */}
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
                 <div className="font-['Orbitron'] font-bold text-[#00d4ff] uppercase tracking-wider text-sm shrink-0">
-                    🗺️ {t("planet_panel.expedition_setup_title")}
+                    🗺️ {t("planet_panel.expedition_active_title")}
                 </div>
-                <div className="flex items-center gap-2 min-w-0">
-                    {/* AP progress bar */}
-                    <div className="flex-1 min-w-[60px] h-2 rounded-full bg-[#1a1a2e] overflow-hidden">
+                {/* Tile counter */}
+                <span className="text-xs font-mono text-[#00d4ff66] shrink-0">
+                    {revealedCount}/{totalTiles}
+                </span>
+                <div className="flex-1" />
+                {/* AP bar */}
+                <div className="flex items-center gap-1.5">
+                    <div className="w-20 h-1.5 rounded-full bg-[#1a1a2e] overflow-hidden">
                         <div
                             className="h-full rounded-full transition-all"
                             style={{
                                 width: apTotal > 0 ? `${(apRemaining / apTotal) * 100}%` : "0%",
-                                background: apRemaining > apTotal * 0.5
-                                    ? "#00d4ff"
-                                    : apRemaining > apTotal * 0.25
-                                    ? "#ffb000"
-                                    : "#ff0040",
-                                boxShadow: apRemaining > 0 ? "0 0 6px #00d4ff88" : "none",
+                                background:
+                                    apRemaining > apTotal * 0.5
+                                        ? "#00d4ff"
+                                        : apRemaining > apTotal * 0.25
+                                          ? "#ffb000"
+                                          : "#ff0040",
+                                boxShadow:
+                                    apRemaining > 0 ? "0 0 6px #00d4ff88" : "none",
                             }}
                         />
                     </div>
@@ -65,6 +81,15 @@ export function PlanetExplorationPanel() {
                         {apRemaining}/{apTotal} AP
                     </span>
                 </div>
+                {/* Small abort link — only when not yet finished and AP remains */}
+                {!finished && !apExhausted && (
+                    <button
+                        onClick={endExpedition}
+                        className="text-[10px] text-[#ff004055] hover:text-[#ff0040] transition-colors cursor-pointer uppercase tracking-wider shrink-0"
+                    >
+                        ✕ {t("planet_panel.expedition_abort_btn")}
+                    </button>
+                )}
             </div>
 
             {/* Ruins event modal */}
@@ -107,7 +132,7 @@ export function PlanetExplorationPanel() {
                 </DialogContent>
             </Dialog>
 
-            {/* Grid - Canvas-based planet map */}
+            {/* Grid */}
             <div className="flex justify-center">
                 <ExpeditionMapCanvas
                     grid={grid}
@@ -118,8 +143,8 @@ export function PlanetExplorationPanel() {
                 />
             </div>
 
-            {/* Tile legend */}
-            <div className="flex flex-wrap gap-2 text-xs justify-center">
+            {/* Tile legend — compact, dimmed */}
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5 justify-center opacity-60">
                 {(
                     Object.entries(TILE_COLORS) as [
                         ExploreTileType,
@@ -129,18 +154,30 @@ export function PlanetExplorationPanel() {
                     <span
                         key={type}
                         style={{ color: style.border }}
-                        className="flex items-center gap-0.5"
+                        className="flex items-center gap-0.5 text-[10px]"
                     >
                         {TILE_ICONS[type]} {t(`planet_panel.tile_${type}`)}
                     </span>
                 ))}
             </div>
 
+            {/* AP exhausted hint + end button */}
+            {apExhausted && (
+                <div className="flex items-center gap-2 px-2 py-1.5 border border-[#ffb00033] bg-[rgba(255,176,0,0.04)]">
+                    <span className="text-xs text-[#ffb000]">
+                        {t("planet_panel.expedition_no_ap_hint")}
+                    </span>
+                    <Button
+                        onClick={endExpedition}
+                        className="ml-auto bg-transparent border border-[#ffb00066] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] text-xs py-1 px-3 cursor-pointer uppercase tracking-wider"
+                    >
+                        {t("planet_panel.expedition_end_btn")}
+                    </Button>
+                </div>
+            )}
+
             {/* Rewards preview */}
-            {(rewards.credits > 0 ||
-                rewards.tradeGoods.length > 0 ||
-                rewards.researchResources.length > 0 ||
-                rewards.artifactFound) && (
+            {hasRewards && (
                 <div className="border border-[#1a2a1a] p-2 bg-[rgba(0,255,65,0.03)]">
                     <div className="text-[10px] text-[#888] uppercase tracking-wider mb-1.5">
                         {t("planet_panel.expedition_rewards_title")}
@@ -173,11 +210,17 @@ export function PlanetExplorationPanel() {
                 </div>
             )}
 
-            {/* Finish / End button */}
-            {finished ? (
+            {/* Finished state */}
+            {finished && (
                 <div className="flex flex-col gap-2">
-                    <div className="text-sm text-[#00ff41] text-center">
-                        ✓ {t("planet_panel.expedition_finished")}
+                    <div className="flex items-center gap-2 px-3 py-2 border border-[#00ff4133] bg-[rgba(0,255,65,0.04)]">
+                        <span className="text-[#00ff41] text-base">✓</span>
+                        <span className="text-sm text-[#00ff41] font-bold font-['Orbitron'] uppercase tracking-wider">
+                            {t("planet_panel.expedition_finished")}
+                        </span>
+                        <span className="text-xs text-[#00ff4155] font-mono ml-auto">
+                            {revealedCount}/{totalTiles}
+                        </span>
                     </div>
                     <Button
                         onClick={endExpedition}
@@ -186,13 +229,6 @@ export function PlanetExplorationPanel() {
                         {t("planet_panel.expedition_end_btn")}
                     </Button>
                 </div>
-            ) : (
-                <Button
-                    onClick={endExpedition}
-                    className="w-full bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase tracking-wider text-xs cursor-pointer"
-                >
-                    {t("planet_panel.expedition_end_btn")}
-                </Button>
             )}
         </div>
     );
