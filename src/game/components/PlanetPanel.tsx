@@ -139,21 +139,32 @@ export function PlanetPanel() {
                               ) || t("planet_panel.empty_description")
                             : t("planet_panel.empty_description")}
                     </div>
-                    <div className="text-sm leading-relaxed">
+                    <div className="text-sm text-[#aaa]">
                         {t("planet_panel.empty_planet")}
-                        <br />
-                        <br />
-                        {canScout ? (
-                            <span className="text-[#ffb000]">
-                                {t("planet_panel.can_scout")} ({scoutedTimes}/
-                                {maxScoutAttempts}).
-                            </span>
-                        ) : (
-                            <span className="text-[#00ff41]">
-                                {t("planet_panel.fully_explored")} (
-                                {maxScoutAttempts}/{maxScoutAttempts}).
-                            </span>
-                        )}
+                    </div>
+                    <div className="flex items-center gap-3 mt-2">
+                        <div className="flex gap-1.5">
+                            {Array.from({ length: maxScoutAttempts }).map(
+                                (_, i) => (
+                                    <div
+                                        key={i}
+                                        className={`w-2.5 h-2.5 rounded-full border ${
+                                            i < scoutedTimes
+                                                ? "bg-[#00ff41] border-[#00ff41]"
+                                                : "bg-transparent border-[#444]"
+                                        }`}
+                                    />
+                                ),
+                            )}
+                        </div>
+                        <span
+                            className={`text-xs ${canScout ? "text-[#ffb000]" : "text-[#00ff41]"}`}
+                        >
+                            {canScout
+                                ? t("planet_panel.can_scout")
+                                : t("planet_panel.fully_explored")}{" "}
+                            ({scoutedTimes}/{maxScoutAttempts})
+                        </span>
                     </div>
 
                     {/* Last scouting result */}
@@ -220,28 +231,14 @@ export function PlanetPanel() {
                     )}
 
                     {hasScout && canScout && (
-                        <>
-                            <div className="font-['Orbitron'] font-bold text-base text-[#ffb000] mt-4">
-                                {t("planet_panel.scouting")}
-                            </div>
-                            <div className="text-sm leading-relaxed">
-                                {t("planet_panel.scouting_desc_1")}
-                                <br />
-                                {t("planet_panel.scouting_credits")}
-                                <br />
-                                {t("planet_panel.scouting_goods")}
-                                <br />
-                                {t("planet_panel.scouting_enemies")}
-                            </div>
-                            <Button
-                                onClick={() =>
-                                    sendScoutingMission(currentLocation.id)
-                                }
-                                className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider mt-3"
-                            >
-                                {t("planet.scout_surface")}
-                            </Button>
-                        </>
+                        <Button
+                            onClick={() =>
+                                sendScoutingMission(currentLocation.id)
+                            }
+                            className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider mt-3"
+                        >
+                            🔭 {t("planet.scout_surface")}
+                        </Button>
                     )}
 
                     {!hasScout && canScout && (
@@ -252,138 +249,118 @@ export function PlanetPanel() {
 
                     {/* Planetary Drill */}
                     {hasDrillTech && (
-                        <div className="mt-4">
-                            <div className="font-['Orbitron'] font-bold text-base text-[#ffb000]">
-                                {t("planet.drill_title")}
-                            </div>
+                        <div className="mt-3">
+                            <div className="flex items-center gap-3">
+                                <span className="font-['Orbitron'] font-bold text-sm text-[#ffb000]">
+                                    {t("planet.drill_title")}
+                                </span>
                             {canDrill ? (
                                 <>
-                                    <div className="text-sm text-[#888] mt-1">
-                                        {t("planet.drill_desc")}
-                                    </div>
                                     <Button
                                         onClick={() =>
                                             planetaryDrill(currentLocation.id)
                                         }
-                                        className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider mt-2"
+                                        className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider text-xs px-3 py-1"
                                     >
                                         {t("planet.drill_button")}
                                     </Button>
                                 </>
                             ) : currentLocation.planetaryDrilled ? (
-                                <>
-                                    <div className="text-[#555] text-sm mt-1">
-                                        {t("planet.drill_done")}
-                                    </div>
-                                    {currentLocation.lastDrillResult && (
-                                        <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 mt-2">
-                                            <div className="text-[#ffb000] font-bold text-sm mb-1">
-                                                {t("planet.drill_result")}
-                                            </div>
-                                            {currentLocation.lastDrillResult
-                                                .tradeGood && (
-                                                <div className="text-[#00ff41] text-sm">
-                                                    📦{" "}
-                                                    {
-                                                        currentLocation
-                                                            .lastDrillResult
-                                                            .tradeGood.name
-                                                    }{" "}
-                                                    x
-                                                    {
-                                                        currentLocation
-                                                            .lastDrillResult
-                                                            .tradeGood.quantity
-                                                    }
-                                                </div>
-                                            )}
-                                            {currentLocation.lastDrillResult.researchResources.map(
-                                                (res) => {
-                                                    const rd =
-                                                        RESEARCH_RESOURCES[
-                                                            res.type
-                                                        ];
-                                                    return (
-                                                        <div
-                                                            key={res.type}
-                                                            className="text-[#4488ff] text-sm"
-                                                        >
-                                                            🔬 {rd?.icon ?? ""}{" "}
-                                                            {rd?.name ??
-                                                                res.type}{" "}
-                                                            x{res.quantity}
-                                                        </div>
-                                                    );
-                                                },
-                                            )}
-                                        </div>
-                                    )}
-                                </>
+                                <span className="text-[#555] text-xs">
+                                    {t("planet.drill_done")}
+                                </span>
                             ) : (
-                                <div className="text-[#ff0040] text-sm mt-1 p-2 border border-[#ff0040] bg-[rgba(255,0,64,0.1)]">
+                                <span className="text-[#ff0040] text-xs">
                                     {t("planet.drill_requires_drill")}
-                                </div>
+                                </span>
                             )}
                         </div>
+                        {currentLocation.lastDrillResult && (
+                            <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-2 mt-2 text-xs">
+                                <div className="text-[#ffb000] font-bold mb-1">
+                                    {t("planet.drill_result")}
+                                </div>
+                                {currentLocation.lastDrillResult.tradeGood && (
+                                    <div className="text-[#00ff41]">
+                                        📦{" "}
+                                        {
+                                            currentLocation.lastDrillResult
+                                                .tradeGood.name
+                                        }{" "}
+                                        x
+                                        {
+                                            currentLocation.lastDrillResult
+                                                .tradeGood.quantity
+                                        }
+                                    </div>
+                                )}
+                                {currentLocation.lastDrillResult.researchResources.map(
+                                    (res) => {
+                                        const rd = RESEARCH_RESOURCES[res.type];
+                                        return (
+                                            <div
+                                                key={res.type}
+                                                className="text-[#4488ff]"
+                                            >
+                                                🔬 {rd?.icon ?? ""}{" "}
+                                                {rd?.name ?? res.type} x
+                                                {res.quantity}
+                                            </div>
+                                        );
+                                    },
+                                )}
+                            </div>
+                        )}
+                    </div>
                     )}
 
                     {/* Atmospheric Analysis */}
                     {hasAtmoTech && (
-                        <div className="mt-4">
-                            <div className="font-['Orbitron'] font-bold text-base text-[#00d4ff]">
-                                {t("planet.analysis_title")}
-                            </div>
+                        <div className="mt-3">
+                            <div className="flex items-center gap-3">
+                                <span className="font-['Orbitron'] font-bold text-sm text-[#00d4ff]">
+                                    {t("planet.analysis_title")}
+                                </span>
                             {canAnalyze ? (
-                                <>
-                                    <div className="text-sm text-[#888] mt-1">
-                                        {t("planet.analysis_desc")}
-                                    </div>
-                                    <Button
-                                        onClick={() =>
-                                            atmosphericAnalysis(
-                                                currentLocation.id,
-                                            )
-                                        }
-                                        className="cursor-pointer bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider mt-2"
-                                    >
-                                        {t("planet.analysis_button")}
-                                    </Button>
-                                </>
+                                <Button
+                                    onClick={() =>
+                                        atmosphericAnalysis(currentLocation.id)
+                                    }
+                                    className="cursor-pointer bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider text-xs px-3 py-1"
+                                >
+                                    {t("planet.analysis_button")}
+                                </Button>
                             ) : currentLocation.atmosphereAnalyzed ? (
-                                <>
-                                    <div className="text-[#555] text-sm mt-1">
-                                        {t("planet.analysis_done")}
-                                    </div>
-                                    {currentLocation.lastAtmosphericResult && (
-                                        <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-3 mt-2">
-                                            <div className="text-[#00d4ff] font-bold text-sm mb-1">
-                                                {t("planet.analysis_result")}
-                                            </div>
-                                            {currentLocation.lastAtmosphericResult.researchResources.map(
-                                                (res) => {
-                                                    const rd =
-                                                        RESEARCH_RESOURCES[
-                                                            res.type
-                                                        ];
-                                                    return (
-                                                        <div
-                                                            key={res.type}
-                                                            className="text-[#4488ff] text-sm"
-                                                        >
-                                                            🔬 {rd?.icon ?? ""}{" "}
-                                                            {rd?.name ??
-                                                                res.type}{" "}
-                                                            x{res.quantity}
-                                                        </div>
-                                                    );
-                                                },
-                                            )}
-                                        </div>
-                                    )}
-                                </>
+                                <span className="text-[#555] text-xs">
+                                    {t("planet.analysis_done")}
+                                </span>
                             ) : (
-                                <div className="text-[#ff0040] text-sm mt-1 p-2 border border-[#ff0040] bg-[rgba(255,0,64,0.1)]">
+                                <span className="text-[#ff0040] text-xs">
                                     {t("planet.drill_requires_scientist")}
+                                </span>
+                            )}
+                            </div>
+                            {currentLocation.lastAtmosphericResult && (
+                                <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-2 mt-2 text-xs">
+                                    <div className="text-[#00d4ff] font-bold mb-1">
+                                        {t("planet.analysis_result")}
+                                    </div>
+                                    {currentLocation.lastAtmosphericResult.researchResources.map(
+                                        (res) => {
+                                            const rd =
+                                                RESEARCH_RESOURCES[res.type];
+                                            return (
+                                                <div
+                                                    key={res.type}
+                                                    className="text-[#4488ff]"
+                                                >
+                                                    🔬 {rd?.icon ?? ""}{" "}
+                                                    {rd?.name ?? res.type} x
+                                                    {res.quantity}
+                                                </div>
+                                            );
+                                        },
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -585,55 +562,56 @@ export function PlanetPanel() {
                             </span>
                         </div>
                     )}
-                    {/* Planet Specialization Button */}
-                    {race &&
-                        currentLocation.dominantRace &&
-                        PLANET_SPECIALIZATIONS[
-                            currentLocation.dominantRace
-                        ] && (
-                            <Button
-                                onClick={() => setShowSpecialization(true)}
-                                disabled={isOnCooldown}
-                                className="bg-transparent border-2 text-xs px-3 py-1.5 uppercase"
-                                style={
-                                    isOnCooldown
-                                        ? {
-                                              borderColor: "#444",
-                                              color: "#444",
-                                              cursor: "not-allowed",
-                                          }
-                                        : {
-                                              borderColor: raceAccent,
-                                              color: raceAccent,
-                                              cursor: "pointer",
-                                          }
-                                }
-                            >
-                                {isOnCooldown
-                                    ? t("planet_panel.on_cooldown")
-                                    : t("planet_panel.activity")}
-                            </Button>
-                        )}
                 </div>
 
-                {/* Expedition button */}
-                {currentLocation.dominantRace &&
-                    (currentLocation.expeditionCompleted ? (
-                        <div className="mt-2 text-xs text-[#444] border border-[#222] px-3 py-1.5 inline-block">
-                            {t("planet.surface_explored")}
-                        </div>
-                    ) : (
-                        <Button
-                            onClick={() => setShowExpeditionSetup(true)}
-                            className="mt-2 bg-transparent border-2 uppercase tracking-wider text-xs px-3 py-1.5 cursor-pointer"
-                            style={{
-                                borderColor: raceAccent,
-                                color: raceAccent,
-                            }}
-                        >
-                            🗺️ {t("planet_panel.explore_planet")}
-                        </Button>
-                    ))}
+                {/* Action buttons: Expedition + Specialization */}
+                {currentLocation.dominantRace && (
+                    <div className="flex gap-2 flex-wrap mt-2">
+                        {currentLocation.expeditionCompleted ? (
+                            <div className="text-xs text-[#444] border border-[#222] px-3 py-1.5">
+                                {t("planet.surface_explored")}
+                            </div>
+                        ) : (
+                            <Button
+                                onClick={() => setShowExpeditionSetup(true)}
+                                className="bg-transparent border-2 uppercase tracking-wider text-xs px-3 py-1.5 cursor-pointer"
+                                style={{
+                                    borderColor: raceAccent,
+                                    color: raceAccent,
+                                }}
+                            >
+                                🗺️ {t("planet_panel.explore_planet")}
+                            </Button>
+                        )}
+                        {race &&
+                            PLANET_SPECIALIZATIONS[
+                                currentLocation.dominantRace
+                            ] && (
+                                <Button
+                                    onClick={() => setShowSpecialization(true)}
+                                    disabled={isOnCooldown}
+                                    className="bg-transparent border-2 text-xs px-3 py-1.5 uppercase"
+                                    style={
+                                        isOnCooldown
+                                            ? {
+                                                  borderColor: "#444",
+                                                  color: "#444",
+                                                  cursor: "not-allowed",
+                                              }
+                                            : {
+                                                  borderColor: raceAccent,
+                                                  color: raceAccent,
+                                                  cursor: "pointer",
+                                              }
+                                    }
+                                >
+                                    {isOnCooldown
+                                        ? t("planet_panel.on_cooldown")
+                                        : t("planet_panel.activity")}
+                                </Button>
+                            )}
+                    </div>
+                )}
 
                 {/* Planet Visual */}
                 <PlanetVisual planetType={currentLocationPlanetType} />
@@ -666,13 +644,10 @@ export function PlanetPanel() {
                                         </div>
                                         {c.cargo && (
                                             <div className="text-[11px] mt-1 text-[#00ff41]">
-                                                📦 Груз &quot;
-                                                {
-                                                    DELIVERY_GOODS[
-                                                        c.cargo as DeliveryGoods
-                                                    ]?.name
-                                                }
-                                                &quot; (
+                                                📦 {t("contracts.cargo")}:{" "}
+                                                {DELIVERY_GOODS[
+                                                    c.cargo as DeliveryGoods
+                                                ]?.name} (
                                                 {c.quantity ??
                                                     DELIVERY_CONTRACT_CARGO_AMOUNT}
                                                 т)
@@ -747,9 +722,9 @@ export function PlanetPanel() {
                                                 : { borderColor: raceBorder }),
                                         }}
                                     >
-                                        <div className="flex justify-between items-start">
-                                            <div className="flex-1">
-                                                <div className="text-[#00d4ff] font-bold flex items-center gap-2">
+                                        <div className="flex justify-between items-start gap-2">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-[#00d4ff] font-bold flex items-center gap-2 flex-wrap">
                                                     {c.desc.startsWith(
                                                         "contracts.",
                                                     )
@@ -796,7 +771,7 @@ export function PlanetPanel() {
                                         </div>
 
                                         {/* Quest details */}
-                                        <div className="text-[11px] mt-2 space-y-1">
+                                        <div className="text-[11px] mt-1.5 space-y-0.5">
                                             {/* What to do */}
                                             <div className="text-[#00ff41]">
                                                 {c.type === "delivery" &&
@@ -990,56 +965,9 @@ export function PlanetPanel() {
                                                     )}
                                             </div>
 
-                                            {/* Where to turn in */}
-                                            <div className="text-[#ffb000]">
-                                                {c.type === "delivery" &&
-                                                    t(
-                                                        "contracts.turn_in_delivery",
-                                                    )}
-                                                {c.type === "combat" &&
-                                                    t(
-                                                        "contracts.turn_in_combat",
-                                                    )}
-                                                {c.type === "research" &&
-                                                    t(
-                                                        "contracts.turn_in_research",
-                                                    )}
-                                                {c.type === "bounty" &&
-                                                    t(
-                                                        "contracts.turn_in_bounty",
-                                                    )}
-                                                {c.type === "diplomacy" &&
-                                                    t(
-                                                        "contracts.turn_in_diplomacy",
-                                                    )}
-                                                {c.type === "patrol" &&
-                                                    t(
-                                                        "contracts.turn_in_patrol",
-                                                    )}
-                                                {c.type === "rescue" &&
-                                                    t(
-                                                        "contracts.turn_in_rescue",
-                                                    )}
-                                                {c.type === "mining" &&
-                                                    t(
-                                                        "contracts.turn_in_mining",
-                                                    )}
-                                                {c.type === "scan_planet" &&
-                                                    t("contracts.turn_in_scan")}
-                                                {c.type === "supply_run" &&
-                                                    t(
-                                                        "contracts.turn_in_supply",
-                                                    )}
-                                                {(c.type ===
-                                                    "expedition_survey" ||
-                                                    c.type === "gas_dive") &&
-                                                    t("contracts.turn_in_here")}
-                                            </div>
-
                                             {/* Reward */}
                                             <div className="text-[#ffaa00] font-bold">
-                                                {t("contracts.reward_label")}{" "}
-                                                {c.reward}₢
+                                                💰 {c.reward}₢
                                             </div>
                                         </div>
                                     </div>
@@ -1092,16 +1020,6 @@ export function PlanetPanel() {
                 )}
             </div>
 
-            {/* Planet Specialization Modal */}
-            {showSpecialization && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                    <div className="bg-[rgba(10,20,30,0.95)] border-2 border-[#9933ff] p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
-                        <PlanetSpecializationPanel
-                            onClose={() => setShowSpecialization(false)}
-                        />
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

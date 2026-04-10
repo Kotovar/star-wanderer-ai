@@ -78,7 +78,7 @@ export const initialModules: Module[] = [
     consumption: 1,
     health: 100,
     maxHealth: 100,
-    level: 3,
+    level: 1,
     fuelEfficiency: 10,
     defense: 1,
   },

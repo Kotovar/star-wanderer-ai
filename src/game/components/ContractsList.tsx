@@ -15,6 +15,18 @@ import { TRADE_GOODS, DELIVERY_GOODS } from "@/game/constants";
 import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "@/game/slices/contracts/constants";
 import { useTranslation } from "@/lib/useTranslation";
 
+function ProgressBar({ current, total }: { current: number; total: number }) {
+    const pct = total > 0 ? Math.min(1, current / total) : 0;
+    return (
+        <div className="mt-1.5 h-1 bg-[rgba(0,255,65,0.15)] rounded-sm overflow-hidden">
+            <div
+                className="h-full bg-[#00ff41] transition-all duration-300"
+                style={{ width: `${pct * 100}%` }}
+            />
+        </div>
+    );
+}
+
 export function ContractsList() {
     const activeContracts = useGameStore((s) => s.activeContracts);
     const cancelContract = useGameStore((s) => s.cancelContract);
@@ -32,25 +44,89 @@ export function ContractsList() {
         );
     }
 
+    const locationTypeText = (type: string | undefined): string =>
+        type === "planet"
+            ? t("contracts.location_planet")
+            : type === "station"
+              ? t("contracts.location_station")
+              : t("contracts.location_ship");
+
+    const getProgress = (
+        contract: Contract,
+    ): { current: number; total: number } | null => {
+        switch (contract.type) {
+            case "scan_planet": {
+                const req = contract.requiresVisit ?? 1;
+                return req > 1 ? { current: contract.visited ?? 0, total: req } : null;
+            }
+            case "supply_run": {
+                if (!contract.quantity) return null;
+                const state = get();
+                const cargoOwned =
+                    state.ship.tradeGoods.find((g) => g.item === contract.cargo)
+                        ?.quantity ?? 0;
+                return {
+                    current: Math.min(cargoOwned, contract.quantity),
+                    total: contract.quantity,
+                };
+            }
+            case "gas_dive":
+                return {
+                    current: contract.collectedMembranes ?? 0,
+                    total: contract.requiredMembranes ?? 1,
+                };
+            case "patrol": {
+                const targetCount = contract.targetSectors?.length || 0;
+                const visitedCount = (contract.visitedSectors || []).filter(
+                    (id) => (contract.targetSectors || []).includes(id),
+                ).length;
+                return targetCount > 0
+                    ? { current: visitedCount, total: targetCount }
+                    : null;
+            }
+            case "expedition_survey":
+                return {
+                    current: contract.tilesRevealed ?? 0,
+                    total: contract.requiredDiscoveries ?? 1,
+                };
+            case "research":
+                if (!contract.requiresTechResearch && contract.requiresAnomalies) {
+                    return {
+                        current: contract.visitedAnomalies ?? 0,
+                        total: contract.requiresAnomalies,
+                    };
+                }
+                return null;
+            default:
+                return null;
+        }
+    };
+
+    const isContractReady = (contract: Contract): boolean => {
+        if (contract.type === "expedition_survey" && contract.expeditionDone) {
+            return true;
+        }
+        const progress = getProgress(contract);
+        return progress !== null && progress.current >= progress.total;
+    };
+
     const getStatusText = (contract: Contract): string => {
         switch (contract.type) {
             case "delivery":
-                // Show specific destination
                 if (
                     contract.targetLocationName &&
                     contract.targetLocationType
                 ) {
-                    const typeText =
-                        contract.targetLocationType === "planet"
-                            ? "планете"
-                            : contract.targetLocationType === "station"
-                              ? "станции"
-                              : "кораблю";
+                    const typeText = locationTypeText(contract.targetLocationType);
                     const rawName = contract.targetLocationName || "";
                     const displayName = rawName.startsWith("station_name.")
                         ? `${t("events.station")} ${rawName.replace("station_name.", "")}`
                         : rawName;
-                    return `📦 Доставить на ${typeText} "${displayName}" (${contract.targetSectorName})`;
+                    return t("contracts.deliver_to_named", {
+                        type: typeText,
+                        name: displayName,
+                        sector: contract.targetSectorName ?? "",
+                    });
                 }
                 return t("contracts.deliver_to").replace(
                     "{{sector}}",
@@ -175,13 +251,11 @@ export function ContractsList() {
         const getDestText = () => {
             if (!contract.targetLocationType)
                 return contract.targetSectorName || t("contracts.unknown");
-            const typeText =
-                contract.targetLocationType === "planet"
-                    ? "планете"
-                    : contract.targetLocationType === "station"
-                      ? "станции"
-                      : "кораблю";
-            return `${resolveLocationName(contract.targetLocationName)} (${typeText}), сектор ${contract.targetSectorName}`;
+            return t("contracts.destination_full", {
+                name: resolveLocationName(contract.targetLocationName),
+                type: locationTypeText(contract.targetLocationType),
+                sector: contract.targetSectorName ?? "",
+            });
         };
 
         switch (contract.type) {
@@ -250,7 +324,9 @@ export function ContractsList() {
                         },
                         {
                             label: t("contracts.task_target"),
-                            value: `Планета типа: ${contract.planetType?.toLowerCase() || ""}`,
+                            value: t("contracts.task_planet_type_value", {
+                                type: contract.planetType?.toLowerCase() || "",
+                            }),
                         },
                         {
                             label: t("contracts.task_requirements"),
@@ -619,25 +695,46 @@ export function ContractsList() {
     return (
         <>
             <div className="flex flex-col gap-2.5">
-                {activeContracts.map((contract) => (
-                    <div
-                        key={contract.id}
-                        className="bg-[rgba(0,255,65,0.03)] border border-[#00ff41] p-3 cursor-pointer hover:bg-[rgba(0,255,65,0.1)]"
-                        onClick={() => setSelectedContract(contract)}
-                    >
-                        <div className="text-[#00d4ff] font-bold">
-                            {getContractName(contract)}
+                {activeContracts.map((contract) => {
+                    const progress = getProgress(contract);
+                    const ready = isContractReady(contract);
+                    return (
+                        <div
+                            key={contract.id}
+                            className={`border p-3 cursor-pointer transition-colors ${
+                                ready
+                                    ? "bg-[rgba(0,255,65,0.08)] border-[#00ff41] hover:bg-[rgba(0,255,65,0.15)]"
+                                    : "bg-[rgba(0,255,65,0.03)] border-[#00ff41] hover:bg-[rgba(0,255,65,0.1)]"
+                            }`}
+                            onClick={() => setSelectedContract(contract)}
+                        >
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="text-[#00d4ff] font-bold leading-tight">
+                                    {getContractName(contract)}
+                                </div>
+                                {ready && (
+                                    <span className="shrink-0 text-[10px] font-bold text-[#050810] bg-[#00ff41] px-1.5 py-0.5 rounded-sm">
+                                        {t("contracts.ready_badge")}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="text-[11px] mt-1">
+                                {getStatusText(contract)}
+                            </div>
+                            {progress && (
+                                <ProgressBar
+                                    current={progress.current}
+                                    total={progress.total}
+                                />
+                            )}
+                            <div className="text-[#ffb000] text-xs mt-1">
+                                {t("contracts.reward_short", {
+                                    reward: contract.reward,
+                                })}
+                            </div>
                         </div>
-                        <div className="text-[11px] mt-1">
-                            {getStatusText(contract)}
-                        </div>
-                        <div className="text-[#ffb000] text-xs mt-1">
-                            {t("contracts.reward_short", {
-                                reward: contract.reward,
-                            })}
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             <Dialog
@@ -701,6 +798,15 @@ export function ContractsList() {
                                     </div>
 
                                     <div className="flex gap-2 justify-center">
+                                        <Button
+                                            variant="outline"
+                                            onClick={() =>
+                                                setSelectedContract(null)
+                                            }
+                                            className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[rgba(0,255,65,0.1)] hover:text-[#00ff41]"
+                                        >
+                                            {t("contracts.close")}
+                                        </Button>
                                         <Button
                                             variant="destructive"
                                             onClick={() => {

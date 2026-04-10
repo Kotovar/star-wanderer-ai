@@ -59,7 +59,7 @@ const initialCrew: CrewMember[] = [
     name: "Арктурий Зорин",
     profession: "pilot",
     moduleId: 102,
-    level: 3,
+    level: 1,
   }),
   buildCrewMember({
     id: 2,
