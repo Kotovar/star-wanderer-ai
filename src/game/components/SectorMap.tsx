@@ -14,6 +14,15 @@ import {
 import { SHIP_LOCATION_TYPES } from "@/game/types/locations/locations";
 import { PLANET_COLORS_IN_SECTOR } from "../constants";
 import { getScannerRangeLabel } from "./DistressSignalPanel";
+import { ANCIENT_BOSSES } from "@/game/constants/bosses";
+import { RACES } from "@/game/constants/races";
+import {
+  ENEMY_TYPE_MODIFIERS,
+  MODULE_DAMAGE_PER_THREAT,
+  MODULE_HEALTH_BASE,
+  REACTOR_HP_MULTIPLIER,
+  SHIELD_CONTRIBUTION_PER_THREAT,
+} from "@/game/slices/combat/helpers/combatSetup";
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
@@ -376,9 +385,45 @@ function getScannerInfo(
     return info;
   }
 
-  // Show name for scanned objects (except storms)
-  if (loc.type !== "storm") {
+  // Show name for scanned objects (except storms; friendly ships handle their own name below)
+  if (loc.type !== "storm" && loc.type !== "friendly_ship") {
     info.push(`📍 ${getLocationName(loc.name, t)}`);
+  }
+
+  // Friendly ship progressive scanner info
+  if (loc.type === "friendly_ship") {
+    // Strip race adjective from the name (e.g. "Человеческий Торговец" → "Торговец")
+    let displayName = loc.name;
+    if (loc.shipRace) {
+      const raceInfo = RACES[loc.shipRace];
+      const prefix = raceInfo?.adjective || raceInfo?.name;
+      if (prefix && displayName.startsWith(prefix + " ")) {
+        displayName = displayName.slice(prefix.length + 1);
+      }
+    }
+    info.push(`📍 ${displayName}`);
+    if (loc.shipRace) {
+      info.push(`🧬 ${raceNames[loc.shipRace] || loc.shipRace}`);
+    }
+    if (scanRange >= 5) {
+      const services: string[] = [];
+      if (loc.hasTrader) services.push(t("locations.scan_ship_trader"));
+      if (loc.hasCrew)   services.push(t("locations.scan_ship_crew"));
+      if (loc.hasQuest)  services.push(t("locations.scan_ship_quest"));
+      if (services.length > 0) {
+        info.push(`🛎 ${services.join(" · ")}`);
+      }
+    }
+    if (scanRange >= 8 && loc.hasDistress) {
+      info.push(`⚠️ ${t("locations.scan_ship_distress")}`);
+    }
+    if (scanRange >= 15 && loc.greeting) {
+      const snippet = loc.greeting.length > 60
+        ? loc.greeting.slice(0, 57) + "..."
+        : loc.greeting;
+      info.push(`📡 "${snippet}"`);
+    }
+    return info;
   }
 
   // Storm info
@@ -459,7 +504,43 @@ function getScannerInfo(
 
   // Enemy info
   if (loc.type === "enemy") {
-    info.push(`⚔️ ${t("locations.threat")}: ${loc.threat || 1}`);
+    const threat = loc.threat || 1;
+    info.push(`⚔️ ${t("locations.threat")}: ${threat}`);
+
+    const mods = loc.enemyType ? ENEMY_TYPE_MODIFIERS[loc.enemyType] : null;
+
+    if (scanRange >= 5) {
+      // Module count: reactor + first weapon + threat + weaponCountMod random
+      const modCount = 2 + threat + (mods?.weaponCountMod ?? 0);
+      info.push(`🔩 ${t("locations.scan_modules")}: ~${modCount}`);
+    }
+
+    if (scanRange >= 8) {
+      const healthMod = mods?.healthMod ?? 1;
+      const damageMod = mods?.damageMod ?? 1;
+      const modCount = 2 + threat + (mods?.weaponCountMod ?? 0);
+      // Total HP estimate: reactor (base*2) + rest (base each)
+      const totalHp = Math.round(
+        (MODULE_HEALTH_BASE * REACTOR_HP_MULTIPLIER + (modCount - 1) * MODULE_HEALTH_BASE) * healthMod / 50,
+      ) * 50;
+      // Damage per turn: each weapon module fires once
+      const weaponsEstimate = 1 + Math.ceil(threat / 2);
+      const dmgPerTurn = Math.round(threat * MODULE_DAMAGE_PER_THREAT * damageMod) * weaponsEstimate;
+      info.push(`💀 ${t("locations.scan_total_hp")}${totalHp}`);
+      info.push(`⚔️ ${t("locations.scan_dmg_per_turn")}${dmgPerTurn}`);
+      const shieldMod = mods?.shieldMod ?? 0;
+      if (shieldMod > 0) {
+        const shieldEst = Math.round(threat * SHIELD_CONTRIBUTION_PER_THREAT * shieldMod);
+        info.push(`🛡 ${t("locations.scan_has_shields")} ~${shieldEst}`);
+      }
+    }
+
+    if (scanRange >= 15) {
+      const lootBase = 300;
+      const lootMod = mods?.lootMod ?? 1;
+      const lootEst = Math.round(lootBase * threat * lootMod / 100) * 100;
+      info.push(`₢ ${t("locations.scan_loot_est")}${lootEst}₢`);
+    }
   }
 
   // Anomaly info
@@ -478,11 +559,38 @@ function getScannerInfo(
     );
   }
 
-  // Hidden rewards for ancient bosses
-  if (loc.type === "boss" && !loc.bossDefeated && scanRange >= 8) {
-    const detectionChance = Math.min(100, 50 + (scanRange - 8) * 5);
-    if (Math.random() * 100 < detectionChance) {
-      info.push(`★ Древний артефакт!`);
+  // Boss detailed info
+  if (loc.type === "boss" && !loc.bossDefeated) {
+    const boss = loc.bossId ? ANCIENT_BOSSES.find((b) => b.id === loc.bossId) : null;
+
+    if (scanRange >= 5 && boss) {
+      info.push(`🛸 ${boss.name}`);
+      info.push(`🔩 ${t("locations.scan_modules")}: ${boss.modules.length}`);
+      info.push(`🛡 ${t("locations.scan_has_shields")} ${boss.shields}`);
+    }
+
+    if (scanRange >= 8 && boss) {
+      const totalHp = boss.modules.reduce((sum, m) => sum + m.health, 0);
+      const totalDmg = boss.modules.reduce((sum, m) => sum + (m.damage ?? 0), 0);
+      info.push(`💀 ${t("locations.scan_total_hp")}${totalHp}`);
+      if (totalDmg > 0) info.push(`⚔️ ${t("locations.scan_dmg_per_turn")}${totalDmg}`);
+      if (boss.regenRate > 0) {
+        info.push(`💚 ${t("locations.scan_regen")}: +${boss.regenRate}${t("locations.scan_per_turn")}`);
+      }
+      const moduleNames = boss.modules.map((m) => m.name).join(", ");
+      info.push(`📋 ${moduleNames}`);
+    }
+
+    if (scanRange >= 8 && !loc.bossDefeated) {
+      const detectionChance = Math.min(100, 50 + (scanRange - 8) * 5);
+      if (Math.random() * 100 < detectionChance) {
+        info.push(`★ Древний артефакт!`);
+      }
+    }
+
+    if (scanRange >= 15 && boss) {
+      info.push(`${t("locations.scan_ability")}: ${boss.specialAbility.name}`);
+      info.push(`  → ${boss.specialAbility.description}`);
     }
   }
 
@@ -783,16 +891,24 @@ export function SectorMap() {
         loc.type === "gas_giant" &&
         loc.gasGiantLastDiveAt !== undefined;
 
-      const translatedName = getLocationName(loc.name, t);
+      // Strip race adjective from friendly ship labels (e.g. "Человеческий Торговец" → "Торговец")
+      let baseName = displayName;
+      if (loc.type === "friendly_ship" && loc.shipRace) {
+        const raceInfo = RACES[loc.shipRace];
+        const prefix = raceInfo?.adjective || raceInfo?.name;
+        if (prefix && baseName.startsWith(prefix + " ")) {
+          baseName = baseName.slice(prefix.length + 1);
+        }
+      }
       const finalDisplayName = isUnknownShip
         ? t("sector_map.unknown_ship")
         : isExploredEmptyPlanet
-          ? `${translatedName} ${t("sector_map.explored")}`
+          ? `${baseName} ${t("sector_map.explored")}`
           : isVisitedColonizedPlanet ||
             isVisitedStation ||
             isDivedGasPlanet
-            ? `${translatedName} ${t("sector_map.visited")}`
-            : displayName;
+            ? `${baseName} ${t("sector_map.visited")}`
+            : baseName;
 
       ctx.font = "11px Share Tech Mono";
       ctx.textAlign = "center";

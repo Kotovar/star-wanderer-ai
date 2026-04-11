@@ -12,16 +12,16 @@ import type {
 // Random module pool — reactor is always added separately, not random
 const ENEMY_RANDOM_MODULE_TYPES: EnemyModuleType[] = ["weapon", "shield"];
 
-const MODULE_HEALTH_BASE = 100;
-const MODULE_DAMAGE_PER_THREAT = 8;
+export const MODULE_HEALTH_BASE = 100;
+export const MODULE_DAMAGE_PER_THREAT = 8;
 
 // Reactor: always present, tankiest module — destroying it = instant win
-const REACTOR_HP_MULTIPLIER = 2.0;
+export const REACTOR_HP_MULTIPLIER = 2.0;
 const REACTOR_DEFENSE = 4;
 
 // Shield module: contributes to enemy shield pool instead of armor
-const SHIELD_CONTRIBUTION_PER_THREAT = 15; // max shields per shield module = threat * this
-const SHIELD_REGEN_PER_THREAT = 2;         // regen per turn per shield module = ceil(threat * this)
+export const SHIELD_CONTRIBUTION_PER_THREAT = 15; // max shields per shield module = threat * this
+const SHIELD_REGEN_PER_THREAT = 2;                // regen per turn per shield module = ceil(threat * this)
 
 const LOOT_BASE_THREAT = 300;
 const LOOT_VARIATION_MIN = 0.8;
@@ -42,7 +42,7 @@ export const DEFENDER_CONFIGS: Record<string, { stats: EnemyStats; name: string 
 };
 
 // Enemy type modifiers
-const ENEMY_TYPE_MODIFIERS: Record<EnemyShip, EnemyStats> = {
+export const ENEMY_TYPE_MODIFIERS: Record<EnemyShip, EnemyStats> = {
     pirate: {
         healthMod: 0.8, // -20% здоровья (хрупкие)
         damageMod: 1.0, // обычный урон

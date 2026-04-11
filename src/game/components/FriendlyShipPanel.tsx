@@ -52,6 +52,14 @@ export function FriendlyShipPanel() {
   const dominantRace = currentLocation?.dominantRace;
   const race = dominantRace ? RACES[dominantRace] : null;
 
+  // Strip race adjective from ship name (e.g. "Человеческий Торговец" → "Торговец")
+  const shipDisplayName = (() => {
+    const name = currentLocation?.name ?? "";
+    if (!race) return name;
+    const prefix = race.adjective || race.name;
+    return name.startsWith(prefix + " ") ? name.slice(prefix.length + 1) : name;
+  })();
+
   // Discover race when encountering a friendly ship
   useEffect(() => {
     if (dominantRace && race && !knownRaces.includes(dominantRace)) {
@@ -238,7 +246,7 @@ export function FriendlyShipPanel() {
       {/* Header */}
       <div>
         <div className="font-['Orbitron'] font-bold text-lg" style={{ color: raceAccent }}>
-          ▸ {currentLocation.name}
+          ▸ {shipDisplayName}
         </div>
         {race && (
           <div
@@ -611,8 +619,8 @@ export function FriendlyShipPanel() {
           const playerFuel = ship.fuel;
           const playerMedicine =
             needType === "medicine"
-              ? (ship.cargo.find((c) => c.item === "medicine")
-                ?.quantity ?? 0)
+              ? (ship.cargo.find((c) => c.item === "medicine")?.quantity ?? 0) +
+                (ship.tradeGoods.find((tg) => tg.item === "medicine")?.quantity ?? 0)
               : 0;
 
           const canHelp =
@@ -633,20 +641,35 @@ export function FriendlyShipPanel() {
               }
 
               let newCargo = s.ship.cargo;
+              let newTradeGoods = s.ship.tradeGoods;
               let newFuel = s.ship.fuel;
               if (needType === "fuel") {
                 newFuel = s.ship.fuel - amount;
               } else {
-                newCargo = s.ship.cargo
-                  .map((c) =>
-                    c.item === "medicine"
-                      ? {
-                        ...c,
-                        quantity: c.quantity - amount,
-                      }
-                      : c,
-                  )
-                  .filter((c) => c.quantity > 0);
+                // Deduct from cargo first, then tradeGoods for the remainder
+                const fromCargo = Math.min(
+                  amount,
+                  s.ship.cargo.find((c) => c.item === "medicine")?.quantity ?? 0,
+                );
+                const fromTrade = amount - fromCargo;
+                if (fromCargo > 0) {
+                  newCargo = s.ship.cargo
+                    .map((c) =>
+                      c.item === "medicine"
+                        ? { ...c, quantity: c.quantity - fromCargo }
+                        : c,
+                    )
+                    .filter((c) => c.quantity > 0);
+                }
+                if (fromTrade > 0) {
+                  newTradeGoods = s.ship.tradeGoods
+                    .map((tg) =>
+                      tg.item === "medicine"
+                        ? { ...tg, quantity: tg.quantity - fromTrade }
+                        : tg,
+                    )
+                    .filter((tg) => tg.quantity > 0);
+                }
               }
 
               return {
@@ -659,6 +682,7 @@ export function FriendlyShipPanel() {
                   ...s.ship,
                   fuel: newFuel,
                   cargo: newCargo,
+                  tradeGoods: newTradeGoods,
                 },
                 research: {
                   ...s.research,
