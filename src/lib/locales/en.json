@@ -2140,12 +2140,15 @@
     "anomaly": "Anomaly",
     "blackhole": "Black Hole",
     "planet": "Planet",
+    "gas_giant": "Gas Giant",
     "station": "Station",
     "enemy_ship": "Enemy Ship",
     "friendly_ship": "Friendly Ship",
     "distress_signal": "Distress Signal",
     "derelict_ship": "Derelict Ship",
-    "cosmic_storm": "Cosmic Storm"
+    "cosmic_storm": "Cosmic Storm",
+    "wreck_field": "Wreck Field",
+    "boss": "Ancient Boss"
   },
   "asteroid_belt_names": {
     "regular": "Asteroid Belt",
@@ -2566,7 +2569,8 @@
     "reset_view": "Reset view",
     "animations_off": "Disable animations",
     "animations_on": "Enable animations",
-    "hint": "Click a location to fly there. Click and drag to pan. Mouse wheel to zoom."
+    "hint": "Click a location to fly there. Click and drag to pan. Mouse wheel to zoom.",
+    "legend": "LEGEND"
   },
   "save_load": {
     "title": "SAVES",
