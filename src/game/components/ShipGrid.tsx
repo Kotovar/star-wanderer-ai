@@ -11,7 +11,6 @@ import { getModuleTranslation } from "@/lib/moduleTranslations";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
@@ -135,8 +134,7 @@ export function ShipGrid() {
         }`}
     >
       {!isCombatMode && (
-        <TooltipProvider>
-          <div className="mb-2 px-1 text-[10px] text-[#666] space-y-1">
+        <div className="mb-2 px-1 text-[10px] text-[#666] space-y-1">
             <div className="flex flex-wrap gap-x-3 gap-y-0.5">
               {[
                 { type: "reactor", color: "#ffb000" },
@@ -155,14 +153,14 @@ export function ShipGrid() {
                 { type: "ai_core", color: "#00ffff" },
                 { type: "drill", color: "#cd853f" },
               ].map(({ type, color }) => (
-                <Tooltip key={type}>
+                <Tooltip key={type} delayDuration={600}>
                   <TooltipTrigger asChild>
                     <span className="flex items-center gap-0.5 cursor-help">
                       <span style={{ color }}>■</span>
                       <span>{getModuleTranslation(type, currentLanguage).name}</span>
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent>{t(`module_descriptions.${type}`)}</TooltipContent>
+                  <TooltipContent side="bottom">{t(`module_descriptions.${type}`)}</TooltipContent>
                 </Tooltip>
               ))}
             </div>
@@ -173,19 +171,18 @@ export function ShipGrid() {
                 { type: "habitat_module", color: "#ffa500" },
                 { type: "deep_survey_array", color: "#ffff00" },
               ].map(({ type, color }) => (
-                <Tooltip key={type}>
+                <Tooltip key={type} delayDuration={600}>
                   <TooltipTrigger asChild>
                     <span className="flex items-center gap-0.5 cursor-help">
                       <span style={{ color }}>■</span>
                       <span>{getModuleTranslation(type, currentLanguage).name}</span>
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent>{t(`module_descriptions.${type}`)}</TooltipContent>
+                  <TooltipContent side="bottom">{t(`module_descriptions.${type}`)}</TooltipContent>
                 </Tooltip>
               ))}
             </div>
           </div>
-        </TooltipProvider>
       )}
 
       <svg

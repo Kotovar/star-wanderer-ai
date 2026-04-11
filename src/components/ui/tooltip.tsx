@@ -2,7 +2,6 @@
 
 import type { ComponentProps } from "react";
 import {
-    Arrow,
     Content,
     Portal,
     Provider,
@@ -25,9 +24,9 @@ function TooltipProvider({
     );
 }
 
-function Tooltip({ ...props }: ComponentProps<typeof Root>) {
+function Tooltip({ delayDuration, ...props }: ComponentProps<typeof Root> & { delayDuration?: number }) {
     return (
-        <TooltipProvider>
+        <TooltipProvider delayDuration={delayDuration}>
             <Root data-slot="tooltip" {...props} />
         </TooltipProvider>
     );
@@ -55,7 +54,6 @@ function TooltipContent({
                 {...props}
             >
                 {children}
-                <Arrow className="fill-[#2a3a4a] z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-xs" />
             </Content>
         </Portal>
     );
