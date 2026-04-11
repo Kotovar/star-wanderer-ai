@@ -1490,7 +1490,16 @@
       "captain": "Капитан",
       "sector_info_1": "Сектор 1: Двиг.Ур1 + Кап.Ур1",
       "sector_info_2": "Сектор 2: Двиг.Ур2 + Кап.Ур2",
-      "sector_info_3": "Сектор 3: Двиг.Ур3 + Кап.Ур3"
+      "sector_info_3": "Сектор 3: Двиг.Ур3 + Кап.Ур3",
+      "legend_title": "ЛЕГЕНДА",
+      "tiers_section": "ТИРЫ",
+      "markers_section": "ОБОЗНАЧЕНИЯ",
+      "stars_section": "ТИПЫ ЗВЁЗД",
+      "fuel_enough": "топлива хватит",
+      "fuel_low": "мало топлива",
+      "visited": "посещён",
+      "current_sector": "текущий сектор",
+      "tier_unknown": "а вдруг есть что-то ещё?.."
     },
     "buttons": {
       "sector_map": "КАРТА СЕКТОРА",

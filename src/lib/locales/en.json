@@ -1490,7 +1490,16 @@
       "captain": "Captain",
       "sector_info_1": "Sector 1: Eng.Lvl1 + Capt.Lvl1",
       "sector_info_2": "Sector 2: Eng.Lvl2 + Capt.Lvl2",
-      "sector_info_3": "Sector 3: Eng.Lvl3 + Capt.Lvl3"
+      "sector_info_3": "Sector 3: Eng.Lvl3 + Capt.Lvl3",
+      "legend_title": "LEGEND",
+      "tiers_section": "TIERS",
+      "markers_section": "MARKERS",
+      "stars_section": "STAR TYPES",
+      "fuel_enough": "enough fuel",
+      "fuel_low": "low fuel",
+      "visited": "visited",
+      "current_sector": "current sector",
+      "tier_unknown": "what if there's more out there?.."
     },
     "buttons": {
       "sector_map": "SECTOR MAP",

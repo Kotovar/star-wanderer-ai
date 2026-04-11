@@ -118,6 +118,51 @@ const MAX_ZOOM = 3;
 const ZOOM_SENSITIVITY = 0.001;
 const DRAG_THRESHOLD = 5; // Minimum pixels to move before considering it a drag
 
+const STAR_TYPES = [
+    "red_dwarf", "yellow_dwarf", "white_dwarf", "blue_giant",
+    "red_supergiant", "neutron_star", "gas_giant", "double",
+    "triple", "blackhole", "variable_star", "stellar_remnant",
+] as const;
+
+function GalaxyStarIcon({ type }: { type: string }) {
+    switch (type) {
+        case "red_dwarf":
+            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" fill="#cc3311" /><circle cx="8" cy="8" r="3" fill="#ff6644" /></svg>;
+        case "yellow_dwarf":
+            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" fill="#ffaa00" opacity="0.35" /><circle cx="8" cy="8" r="4.5" fill="#ffdd44" /></svg>;
+        case "white_dwarf":
+            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="4" fill="#aaddff" /><circle cx="8" cy="8" r="2" fill="#ffffff" /></svg>;
+        case "blue_giant":
+            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#114488" opacity="0.6" /><circle cx="8" cy="8" r="5" fill="#2266aa" /><circle cx="8" cy="8" r="2.5" fill="#66aaff" /></svg>;
+        case "red_supergiant":
+            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#660000" opacity="0.7" /><circle cx="8" cy="8" r="5.5" fill="#aa1100" /><circle cx="8" cy="8" r="3" fill="#ff4422" /></svg>;
+        case "neutron_star":
+            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#6688ff" strokeWidth="1" opacity="0.6" /><circle cx="8" cy="8" r="3" fill="#4466cc" /><circle cx="8" cy="8" r="1.5" fill="#ffffff" /></svg>;
+        case "gas_giant":
+            return (
+                <svg width="16" height="16" viewBox="0 0 16 16">
+                    <defs><clipPath id="gm-gg-clip"><circle cx="8" cy="8" r="6" /></clipPath></defs>
+                    <circle cx="8" cy="8" r="6" fill="#009933" />
+                    <circle cx="8" cy="8" r="4.5" fill="#00cc55" />
+                    <rect x="2" y="6.5" width="12" height="1.5" fill="#00ff66" opacity="0.55" clipPath="url(#gm-gg-clip)" />
+                    <rect x="2" y="9.5" width="12" height="1.5" fill="#006622" opacity="0.6" clipPath="url(#gm-gg-clip)" />
+                </svg>
+            );
+        case "double":
+            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="5" cy="8" r="4" fill="#ffdd44" /><circle cx="11" cy="8" r="4" fill="#ffaa00" /></svg>;
+        case "triple":
+            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="4" r="3" fill="#ffdd44" /><circle cx="4" cy="12" r="3" fill="#ffaa00" /><circle cx="12" cy="12" r="3" fill="#ff6600" /></svg>;
+        case "blackhole":
+            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="#ff00ff" strokeWidth="1.5" /><circle cx="8" cy="8" r="5" fill="#000" /></svg>;
+        case "variable_star":
+            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#ffc864" opacity="0.3" /><circle cx="8" cy="8" r="4.5" fill="#ffc864" /><circle cx="8" cy="8" r="2" fill="#ffffc8" /></svg>;
+        case "stellar_remnant":
+            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#333" /><circle cx="8" cy="8" r="2.5" fill="#555" /></svg>;
+        default:
+            return null;
+    }
+}
+
 export function GalaxyMap() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -159,6 +204,7 @@ export function GalaxyMap() {
     const setZoomState = useGameStore((s) => s.setGalaxyZoom);
     const setOffsetState = useGameStore((s) => s.setGalaxyOffset);
     const [zoom, setZoom] = useState(galaxyZoom);
+    const [legendOpen, setLegendOpen] = useState(false);
     const [offset, setOffset] = useState(galaxyOffset);
     const [targetZoom, setTargetZoom] = useState<number | null>(null);
     const zoomAnimationRef = useRef<number | null>(null);
@@ -755,9 +801,94 @@ export function GalaxyMap() {
                 </button>
             </div>
 
-            {/* Zoom level indicator */}
-            <div className="absolute bottom-4 left-4 bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-3 py-1 text-xs text-[#00ff41] select-none pointer-events-none">
-                🔍 {(zoom * 100).toFixed(0)}%
+            {/* Legend + Zoom level indicator */}
+            <div className="absolute bottom-4 left-4 flex flex-col gap-2 items-start z-20">
+                <div className="bg-[rgba(5,8,16,0.75)] border border-[#00ff41] text-[#00ff41] text-xs select-none backdrop-blur-sm">
+                    <button
+                        onClick={() => setLegendOpen(!legendOpen)}
+                        className="w-full px-3 py-1 flex items-center gap-3 cursor-pointer hover:bg-[rgba(0,255,65,0.07)] transition-colors"
+                    >
+                        <span className="font-['Orbitron'] tracking-wider">{t("galaxy.legend.legend_title")}</span>
+                        <span className="ml-auto opacity-60">{legendOpen ? "▲" : "▼"}</span>
+                    </button>
+                    {legendOpen && (
+                        <div className="border-t border-[#00ff4133] px-3 py-2 space-y-2 text-[10px] text-[#aaa] max-h-[60vh] overflow-y-auto">
+                            {/* Tiers */}
+                            <div>
+                                <div className="text-[#00ff41] font-['Orbitron'] text-[9px] tracking-widest mb-1 opacity-70">{t("galaxy.legend.tiers_section")}</div>
+                                {([1, 2, 3] as const).map((tier) => {
+                                    const colors = { 1: "#00ff41", 2: "#ffaa00", 3: "#ff0040" };
+                                    const color = colors[tier];
+                                    return (
+                                        <div key={tier} className="flex items-center gap-1.5 mb-0.5">
+                                            <svg width="14" height="14" viewBox="0 0 14 14">
+                                                <circle cx="7" cy="7" r="6" fill="none" stroke={color} strokeWidth="1.5" />
+                                            </svg>
+                                            <span style={{ color }}>{t(`galaxy.tiers.tier${tier}`)}</span>
+                                        </div>
+                                    );
+                                })}
+                                {canSeeTier4(modules, artifacts, scanRange) ? (
+                                    <div className="flex items-center gap-1.5 mb-0.5">
+                                        <svg width="14" height="14" viewBox="0 0 14 14">
+                                            <circle cx="7" cy="7" r="6" fill="none" stroke="#ff00ff" strokeWidth="1.5" />
+                                        </svg>
+                                        <span style={{ color: "#ff00ff" }}>{t("galaxy.tiers.tier4")}</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-1.5 mt-0.5 opacity-50">
+                                        <svg width="14" height="14" viewBox="0 0 14 14">
+                                            <circle cx="7" cy="7" r="6" fill="none" stroke="#555" strokeWidth="1" strokeDasharray="2 2" />
+                                            <text x="7" y="10.5" textAnchor="middle" fill="#555" fontSize="7" fontFamily="monospace">?</text>
+                                        </svg>
+                                        <span className="text-[#555] italic">{t("galaxy.legend.tier_unknown")}</span>
+                                    </div>
+                                )}
+                            </div>
+                            {/* Markers */}
+                            <div>
+                                <div className="text-[#00ff41] font-['Orbitron'] text-[9px] tracking-widest mb-1 opacity-70">{t("galaxy.legend.markers_section")}</div>
+                                <div className="grid grid-cols-2 gap-x-4">
+                                    <div className="space-y-0.5">
+                                        <div className="flex items-center gap-1.5">
+                                            <span style={{ color: "#9933ff" }} className="font-mono font-bold">⛽12</span>
+                                            <span>{t("galaxy.legend.fuel_enough")}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span style={{ color: "#ff0040" }} className="font-mono font-bold">⛽12</span>
+                                            <span>{t("galaxy.legend.fuel_low")}</span>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        <div className="flex items-center gap-1.5">
+                                            <span style={{ color: "#00ff41" }} className="font-mono font-bold">✓</span>
+                                            <span>{t("galaxy.legend.visited")}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="font-mono">🚀</span>
+                                            <span>{t("galaxy.legend.current_sector")}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {/* Star types */}
+                            <div>
+                                <div className="text-[#00ff41] font-['Orbitron'] text-[9px] tracking-widest mb-1 opacity-70">{t("galaxy.legend.stars_section")}</div>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                                    {STAR_TYPES.map((type) => (
+                                        <div key={type} className="flex items-center gap-1.5 whitespace-nowrap">
+                                            <GalaxyStarIcon type={type} />
+                                            <span>{t(`star_types.${type}`)}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                <div className="bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-3 py-1 text-xs text-[#00ff41] select-none pointer-events-none">
+                    🔍 {(zoom * 100).toFixed(0)}%
+                </div>
             </div>
         </div>
     );
