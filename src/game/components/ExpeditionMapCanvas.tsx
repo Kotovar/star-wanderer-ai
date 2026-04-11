@@ -590,9 +590,8 @@ export function ExpeditionMapCanvas({
         const clickX = e.clientX - rect.left;
         const clickY = e.clientY - rect.top;
 
-        const size = canvas.width;
         const gridSize = 5;
-        const cellSize = size / gridSize;
+        const cellSize = rect.width / gridSize;
 
         const col = Math.floor(clickX / cellSize);
         const row = Math.floor(clickY / cellSize);
@@ -619,9 +618,8 @@ export function ExpeditionMapCanvas({
         const clickX = e.clientX - rect.left;
         const clickY = e.clientY - rect.top;
 
-        const size = canvas.width;
         const gridSize = 5;
-        const cellSize = size / gridSize;
+        const cellSize = rect.width / gridSize;
 
         const col = Math.floor(clickX / cellSize);
         const row = Math.floor(clickY / cellSize);

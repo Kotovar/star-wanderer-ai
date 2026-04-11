@@ -673,7 +673,7 @@ export function SectorMap() {
   const isDraggingRef = useRef(false); // Ref for sync access in animation loop
   const dragStartRef = useRef({ x: 0, y: 0 });
   const offsetStartRef = useRef({ x: 0, y: 0 });
-  const offsetRef = useRef({ x: 0, y: 0 }); // Ref for smooth dragging without re-renders
+  const offsetRef = useRef(sectorOffset); // Ref for smooth dragging — initialized from store
   const hasMovedRef = useRef(false);
   const animationFrameRef = useRef<number | null>(null);
   const dragStartTimeRef = useRef<number>(0); // Store animation time when drag starts
@@ -1679,6 +1679,13 @@ export function SectorMap() {
     setOffset(resetOffset);
     setOffsetState(resetOffset);
   }, [setZoomState, setOffsetState]);
+
+  // Keep offsetRef in sync with offset state so drag always starts from the correct position
+  useEffect(() => {
+    if (!isDraggingRef.current) {
+      offsetRef.current = offset;
+    }
+  }, [offset]);
 
   // Redraw canvas when zoom or offset changes
   useEffect(() => {
