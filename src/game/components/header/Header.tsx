@@ -24,7 +24,6 @@ export function GameHeader() {
     const [showSaveLoad, setShowSaveLoad] = useState(false);
     const turn = useGameStore((s) => s.turn);
     const credits = useGameStore((s) => s.credits);
-    const probes = useGameStore((s) => s.probes);
     const currentSector = useGameStore((s) => s.currentSector);
     const artifacts = useGameStore((s) => s.artifacts);
     const activeEffects = useGameStore((s) => s.activeEffects);
@@ -91,142 +90,122 @@ export function GameHeader() {
                 <h1 className="font-['Orbitron'] font-black text-lg md:text-2xl tracking-[2px] md:tracking-[3px] text-[#00ff41] animate-pulse drop-shadow-[0_0_10px_#00ff41] text-center md:text-left">
                     ◆ {t("game.title")} ◆
                 </h1>
-                <div className="flex gap-2 md:gap-5 text-xs md:text-sm items-center flex-wrap justify-center md:justify-normal">
-                    <button
-                        onClick={() => setShowHelp(true)}
-                        className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
-                        title={t("header.tooltip_logbook")}
-                    >
-                        <span className="text-[#00d4ff]">📖</span>
-                        <span className="text-[#00d4ff] hidden md:inline">
-                            {t("game.logbook")}
-                        </span>
-                    </button>
-                    <button
-                        onClick={() => setShowEffects(true)}
-                        className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer relative"
-                        title={t("header.tooltip_effects")}
-                    >
-                        <span className="text-[#9933ff]">⚡</span>
-                        <span className="text-[#9933ff] hidden md:inline">
-                            {t("game.effects")}
-                        </span>
-                        {activeEffects.length > 0 && (
-                            <span className="absolute -top-1 -right-1 bg-[#9933ff] text-[#050810] text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                                {activeEffects.length}
-                            </span>
-                        )}
-                    </button>
-                    <button
-                        onClick={handleArtifactsClick}
-                        className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#ff00ff] hover:bg-[rgba(255,0,255,0.2)] transition-colors cursor-pointer"
-                        title={t("header.tooltip_artifacts")}
-                    >
-                        <span className="text-[#ff00ff]">★</span>
-                        <span className="text-[#ff00ff]">
-                            {discoveredArtifacts}
-                        </span>
-                        {activeArtifacts > 0 && (
-                            <span className="text-[#00ff41] text-xs">
-                                ({activeArtifacts})
-                            </span>
-                        )}
-                    </button>
-                    <button
-                        onClick={handleResearchClick}
-                        className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
-                        title={t("header.tooltip_research")}
-                    >
-                        <span className="text-[#9933ff]">🔬</span>
-                        <span className="text-[#9933ff] hidden lg:inline">
-                            {t("game.science")}
-                        </span>
-                    </button>
-                    <button
-                        onClick={() => {
-                            if (gameMode === "reputation") {
-                                closeReputationPanel();
-                            } else {
-                                showReputation();
-                            }
-                        }}
-                        className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
-                        title={t("reputation.button_tooltip")}
-                    >
-                        <span className="text-[#9933ff] lg:hidden">🤝</span>
-                        <span className="text-[#9933ff] hidden lg:inline">
-                            {t("reputation.button")}
-                        </span>
-                    </button>
-                    <div className="flex items-center gap-1 md:gap-2">
-                        <span className="text-[#ffb000] hidden md:inline">
-                            {t("game.turn")}:
-                        </span>
-                        <span className="text-[#ffb000] md:hidden">🔢</span>
-                        <span className="font-bold text-[#00ff41]">{turn}</span>
-                    </div>
-                    <div className="flex items-center gap-1 md:gap-2">
-                        <span className="text-[#ffb000]">₢</span>
-                        <span className="font-bold text-[#00ff41]">
-                            {isNaN(credits) ? 0 : Math.floor(credits)}
-                        </span>
-                    </div>
-                    {probes > 0 && (
-                        <div
-                            className="flex items-center gap-1 md:gap-2"
-                            title={t("header.tooltip_probes")}
-                        >
-                            <span className="text-[#7b4fff]">🔬</span>
-                            <span className="font-bold text-[#7b4fff]">
-                                {probes}
+                <div className="flex gap-2 md:gap-4 text-xs md:text-sm items-center flex-wrap justify-center md:justify-normal">
+
+                    {/* ── Статистика ── */}
+                    <div className="flex items-center gap-2 md:gap-3">
+                        <div className="flex items-center gap-1 md:gap-2">
+                            <span className="text-[#ffb000] hidden md:inline">{t("game.turn")}:</span>
+                            <span className="text-[#ffb000] md:hidden">🔢</span>
+                            <span className="font-bold text-[#00ff41]">{turn}</span>
+                        </div>
+                        <div className="flex items-center gap-1 md:gap-2">
+                            <span className="text-[#ffb000] hidden md:inline">{t("game.sector")}:</span>
+                            <span className="text-[#ffb000] md:hidden">📍</span>
+                            <span className="font-bold text-[#00ff41] text-xs md:text-base">
+                                {currentSector?.name || "START"}
                             </span>
                         </div>
-                    )}
-                    <div className="flex items-center gap-1 md:gap-2">
-                        <span className="text-[#ffb000] hidden md:inline">
-                            {t("game.sector")}:
-                        </span>
-                        <span className="text-[#ffb000] md:hidden">📍</span>
-                        <span className="font-bold text-[#00ff41] text-xs md:text-base">
-                            {currentSector?.name || "START"}
-                        </span>
+                        <div className="flex items-center gap-1 md:gap-2">
+                            <span className="text-[#ffb000]">₢</span>
+                            <span className="font-bold text-[#00ff41]">
+                                {isNaN(credits) ? 0 : Math.floor(credits)}
+                            </span>
+                        </div>
                     </div>
-                    <button
-                        onClick={() => setShowSaveLoad(true)}
-                        className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
-                        title={t("save_load.title")}
-                    >
-                        <span className="text-[#00d4ff]">💾</span>
-                        <span className="text-[#00d4ff] hidden md:inline text-xs">
-                            {t("save_load.title")}
-                        </span>
-                    </button>
-                    <button
-                        onClick={handleRestartClick}
-                        className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#ff4444] hover:bg-[rgba(255,68,68,0.2)] transition-colors cursor-pointer"
-                        title={t("header.tooltip_restart")}
-                    >
-                        <span className="text-[#ff4444]">🔄</span>
-                        <span className="text-[#ff4444] hidden md:inline">
-                            {t("game.restart")}
-                        </span>
-                    </button>
-                    <button
-                        onClick={() =>
-                            changeLanguage(
-                                currentLanguage === "ru" ? "en" : "ru",
-                            )
-                        }
-                        className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00ff41] hover:bg-[rgba(0,255,65,0.2)] transition-colors cursor-pointer font-bold"
-                        title={t("language.switch")}
-                    >
-                        <span className="text-[#00ff41]">🌐</span>
-                        <span className="text-[#00ff41]">
-                            {currentLanguage === "ru"
-                                ? t("language.ru")
-                                : t("language.en")}
-                        </span>
-                    </button>
+
+                    <div className="w-px h-5 bg-[rgba(0,255,65,0.3)] hidden md:block" />
+
+                    {/* ── Панели ── */}
+                    <div className="flex items-center gap-1 md:gap-2">
+                        <button
+                            onClick={() => setShowHelp(true)}
+                            className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
+                            title={t("header.tooltip_logbook")}
+                        >
+                            <span className="text-[#00d4ff]">📖</span>
+                            <span className="text-[#00d4ff] hidden md:inline">{t("game.logbook")}</span>
+                        </button>
+                        <button
+                            onClick={() => setShowEffects(true)}
+                            className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer relative"
+                            title={t("header.tooltip_effects")}
+                        >
+                            <span className="text-[#9933ff]">⚡</span>
+                            <span className="text-[#9933ff] hidden md:inline">{t("game.effects")}</span>
+                            {activeEffects.length > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-[#9933ff] text-[#050810] text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                                    {activeEffects.length}
+                                </span>
+                            )}
+                        </button>
+                        <button
+                            onClick={handleArtifactsClick}
+                            className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#ff00ff] hover:bg-[rgba(255,0,255,0.2)] transition-colors cursor-pointer"
+                            title={t("header.tooltip_artifacts")}
+                        >
+                            <span className="text-[#ff00ff]">★</span>
+                            <span className="text-[#ff00ff]">{discoveredArtifacts}</span>
+                            {activeArtifacts > 0 && (
+                                <span className="text-[#00ff41] text-xs">({activeArtifacts})</span>
+                            )}
+                        </button>
+                        <button
+                            onClick={handleResearchClick}
+                            className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
+                            title={t("header.tooltip_research")}
+                        >
+                            <span className="text-[#9933ff]">🔬</span>
+                            <span className="text-[#9933ff] hidden lg:inline">{t("game.science")}</span>
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (gameMode === "reputation") {
+                                    closeReputationPanel();
+                                } else {
+                                    showReputation();
+                                }
+                            }}
+                            className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
+                            title={t("reputation.button_tooltip")}
+                        >
+                            <span className="text-[#9933ff] lg:hidden">🤝</span>
+                            <span className="text-[#9933ff] hidden lg:inline">{t("reputation.button")}</span>
+                        </button>
+                    </div>
+
+                    <div className="w-px h-5 bg-[rgba(0,255,65,0.3)] hidden md:block" />
+
+                    {/* ── Система ── */}
+                    <div className="flex items-center gap-1 md:gap-2">
+                        <button
+                            onClick={() => setShowSaveLoad(true)}
+                            className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
+                            title={t("save_load.title")}
+                        >
+                            <span className="text-[#00d4ff]">💾</span>
+                            <span className="text-[#00d4ff] hidden md:inline text-xs">{t("save_load.title")}</span>
+                        </button>
+                        <button
+                            onClick={handleRestartClick}
+                            className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#ff4444] hover:bg-[rgba(255,68,68,0.2)] transition-colors cursor-pointer"
+                            title={t("header.tooltip_restart")}
+                        >
+                            <span className="text-[#ff4444]">🔄</span>
+                            <span className="text-[#ff4444] hidden md:inline">{t("game.restart")}</span>
+                        </button>
+                        <button
+                            onClick={() => changeLanguage(currentLanguage === "ru" ? "en" : "ru")}
+                            className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00ff41] hover:bg-[rgba(0,255,65,0.2)] transition-colors cursor-pointer font-bold"
+                            title={t("language.switch")}
+                        >
+                            <span className="text-[#00ff41]">🌐</span>
+                            <span className="text-[#00ff41]">
+                                {currentLanguage === "ru" ? t("language.ru") : t("language.en")}
+                            </span>
+                        </button>
+                    </div>
+
                 </div>
             </header>
 

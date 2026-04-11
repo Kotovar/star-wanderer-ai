@@ -148,7 +148,7 @@ export function CargoDisplay() {
                     <span className="text-[#888]">
                         {t("cargo.capacity_label")}
                     </span>
-                    <span style={{ color: barColor }}>
+                    <span style={{ color: barColor }} title={t("cargo.tons_title")}>
                         {totalCargo}/{totalCapacity}т
                         {isOverflow && (
                             <span className="ml-1 text-[10px] animate-pulse">

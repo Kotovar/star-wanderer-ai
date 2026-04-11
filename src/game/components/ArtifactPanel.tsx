@@ -222,8 +222,14 @@ function ArtifactCard({
             )}
 
             {!artifact.discovered && (
-                <div className="text-xs text-[#666] mt-2 italic">
-                    {t("artifacts.undiscovered")}
+                <div className="mt-2 space-y-1">
+                    <div className="text-xs text-[#666] italic">
+                        {t("artifacts.undiscovered")}
+                    </div>
+                    <div className="text-[10px] text-[#444] flex items-center gap-1">
+                        <span>📍</span>
+                        <span>{t("artifacts.undiscovered_hint")}</span>
+                    </div>
                 </div>
             )}
         </div>

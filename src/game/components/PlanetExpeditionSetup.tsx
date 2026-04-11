@@ -5,6 +5,12 @@ import { useGameStore } from "@/game/store";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { getTechBonusSum } from "@/game/research";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Props {
     planetId: string;
@@ -119,10 +125,20 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
 
             {/* AP breakdown */}
             <div className="flex items-center gap-2 flex-wrap text-xs">
-                <div className="flex items-center gap-1.5 border border-[#00d4ff44] px-2 py-1 bg-[rgba(0,212,255,0.05)]">
-                    <span className="text-[#888]">{t("planet_panel.expedition_ap_label")}:</span>
-                    <span className="text-white font-bold text-sm">{totalAP}</span>
-                </div>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div className="flex items-center gap-1.5 border border-[#00d4ff44] px-2 py-1 bg-[rgba(0,212,255,0.05)] cursor-help">
+                                <span className="text-[#888]">{t("planet_panel.expedition_ap_label")}:</span>
+                                <span className="text-white font-bold text-sm">{totalAP}</span>
+                                <span className="text-[#555] text-[9px]">?</span>
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-60 text-xs">
+                            {t("planet_panel.expedition_ap_tooltip")}
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
                 <span className="text-[#555]">= {selectedIds.length} 👤</span>
                 {syntheticBonus > 0 && (
                     <span className="text-[#4488ff]">

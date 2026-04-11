@@ -10,18 +10,7 @@ import { CrewMemberCard } from "./CrewMemberCard";
 import type { CrewMember, CrewMemberCombatAssignment } from "../types";
 import { getTotalEvasion } from "@/game/slices";
 import { useTranslation } from "@/lib/useTranslation";
-import { WEAPON_TYPES } from "@/game/constants";
-
-const WEAPON_SHORT_NAMES: Record<string, string> = {
-  kinetic: "Кинетическое",
-  laser: "Лазер",
-  missile: "Ракета",
-  plasma: "Плазма",
-  drones: "Дроны",
-  antimatter: "Антиматерия",
-  quantum_torpedo: "Кв. торпеда",
-  ion_cannon: "Ион. пушка",
-};
+import { WEAPON_TYPES, DRONE_MAX_STACKS, DRONE_STACK_BONUS } from "@/game/constants";
 
 interface WeaponHint {
   text: string;
@@ -47,9 +36,9 @@ function getWeaponHints(type: string): WeaponHint[] {
     if (w.interceptChance && w.interceptChance > 0)
       hints.push({ text: `${Math.round(w.interceptChance * 100)}% перехват`, color: "#ff6600" });
   }
-  // drones: stack mechanic (+5% per hit, max ×2)
+  // drones: stack mechanic
   if (type === "drones")
-    hints.push({ text: "+5%/стак (макс ×2)", color: "#00ff41" });
+    hints.push({ text: `+${DRONE_STACK_BONUS * 100}%/стак (макс ${DRONE_MAX_STACKS} = ×2)`, color: "#00ff41" });
   return hints;
 }
 
@@ -343,7 +332,7 @@ export function CombatPanel() {
                       const wdef = WEAPON_TYPES[g.type as keyof typeof WEAPON_TYPES];
                       const color = wdef?.color ?? "#888";
                       const icon = wdef?.icon ?? "?";
-                      const name = WEAPON_SHORT_NAMES[g.type] ?? g.type;
+                      const name = t(`weapon_types.${g.type}`) || g.type;
                       const bayLevelBonus = 1 + ((bay.level ?? 1) - 1) * 0.1;
                       const dmg = Math.floor(
                         Math.floor((wdef?.damage ?? 0) * bayLevelBonus) * g.count * dmgMultiplier,

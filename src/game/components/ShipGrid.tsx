@@ -129,6 +129,26 @@ export function ShipGrid() {
                     : "bg-[#050810] border border-[#00ff41]"
             }`}
         >
+            {!isCombatMode && (
+                <div className="flex flex-wrap gap-x-3 gap-y-0.5 mb-2 px-1 text-[10px] text-[#666]">
+                    {[
+                        { type: "reactor",     color: "#ffb000" },
+                        { type: "cockpit",     color: "#00d4ff" },
+                        { type: "weaponbay",   color: "#ff00ff" },
+                        { type: "shield",      color: "#0080ff" },
+                        { type: "engine",      color: "#ff6600" },
+                        { type: "lifesupport", color: "#00ff41" },
+                        { type: "cargo",       color: "#ff0040" },
+                        { type: "fueltank",    color: "#9933ff" },
+                    ].map(({ type, color }) => (
+                        <span key={type} className="flex items-center gap-0.5">
+                            <span style={{ color }}>■</span>
+                            <span>{getModuleTranslation(type, currentLanguage).name}</span>
+                        </span>
+                    ))}
+                </div>
+            )}
+
             <svg
                 width={gridSize * CELL_SIZE}
                 height={gridSize * CELL_SIZE}
