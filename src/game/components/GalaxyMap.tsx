@@ -803,16 +803,9 @@ export function GalaxyMap() {
 
             {/* Legend + Zoom level indicator */}
             <div className="absolute bottom-4 left-4 flex flex-col gap-2 items-start z-20">
-                <div className="bg-[rgba(5,8,16,0.75)] border border-[#00ff41] text-[#00ff41] text-xs select-none backdrop-blur-sm">
-                    <button
-                        onClick={() => setLegendOpen(!legendOpen)}
-                        className="w-full px-3 py-1 flex items-center gap-3 cursor-pointer hover:bg-[rgba(0,255,65,0.07)] transition-colors"
-                    >
-                        <span className="font-['Orbitron'] tracking-wider">{t("galaxy.legend.legend_title")}</span>
-                        <span className="ml-auto opacity-60">{legendOpen ? "▲" : "▼"}</span>
-                    </button>
+                <div className="bg-[rgba(5,8,16,0.75)] border border-[#00ff41] text-[#00ff41] text-xs select-none backdrop-blur-sm flex flex-col max-w-[calc(100vw-2rem)]">
                     {legendOpen && (
-                        <div className="border-t border-[#00ff4133] px-3 py-2 space-y-2 text-[10px] text-[#aaa] max-h-[60vh] overflow-y-auto">
+                        <div className="border-b border-[#00ff4133] px-2 py-2 space-y-2 text-[10px] text-[#aaa] max-h-[18vh] sm:max-h-[45vh] md:max-h-[60vh] overflow-y-auto">
                             {/* Tiers */}
                             <div>
                                 <div className="text-[#00ff41] font-['Orbitron'] text-[9px] tracking-widest mb-1 opacity-70">{t("galaxy.legend.tiers_section")}</div>
@@ -848,7 +841,7 @@ export function GalaxyMap() {
                             {/* Markers */}
                             <div>
                                 <div className="text-[#00ff41] font-['Orbitron'] text-[9px] tracking-widest mb-1 opacity-70">{t("galaxy.legend.markers_section")}</div>
-                                <div className="grid grid-cols-2 gap-x-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
                                     <div className="space-y-0.5">
                                         <div className="flex items-center gap-1.5">
                                             <span style={{ color: "#9933ff" }} className="font-mono font-bold">⛽12</span>
@@ -874,17 +867,24 @@ export function GalaxyMap() {
                             {/* Star types */}
                             <div>
                                 <div className="text-[#00ff41] font-['Orbitron'] text-[9px] tracking-widest mb-1 opacity-70">{t("galaxy.legend.stars_section")}</div>
-                                <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-0.5">
                                     {STAR_TYPES.map((type) => (
-                                        <div key={type} className="flex items-center gap-1.5 whitespace-nowrap">
+                                        <div key={type} className="flex items-center gap-1.5 min-w-0">
                                             <GalaxyStarIcon type={type} />
-                                            <span>{t(`star_types.${type}`)}</span>
+                                            <span className="truncate">{t(`star_types.${type}`)}</span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         </div>
                     )}
+                    <button
+                        onClick={() => setLegendOpen(!legendOpen)}
+                        className="w-full px-3 py-1 flex items-center gap-3 cursor-pointer hover:bg-[rgba(0,255,65,0.07)] transition-colors"
+                    >
+                        <span className="font-['Orbitron'] tracking-wider">{t("galaxy.legend.legend_title")}</span>
+                        <span className="ml-auto opacity-60">{legendOpen ? "▼" : "▲"}</span>
+                    </button>
                 </div>
                 <div className="bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-3 py-1 text-xs text-[#00ff41] select-none pointer-events-none">
                     🔍 {(zoom * 100).toFixed(0)}%

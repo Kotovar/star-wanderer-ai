@@ -2055,24 +2055,24 @@ export function SectorMap() {
 
       {/* Legend + Zoom level indicator */}
       <div className="absolute bottom-4 left-4 flex flex-col gap-2 items-start z-20">
-        <div className="bg-[rgba(5,8,16,0.75)] border border-[#00ff41] text-[#00ff41] text-xs select-none backdrop-blur-sm">
+        <div className="bg-[rgba(5,8,16,0.75)] border border-[#00ff41] text-[#00ff41] text-xs select-none backdrop-blur-sm flex flex-col max-w-[calc(100vw-2rem)]">
+          {legendOpen && (
+            <div className="border-b border-[#00ff4133] px-2 py-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px] text-[#aaa] max-h-[40vh] md:max-h-[55vh] overflow-y-auto">
+              {(["planet", "gas_giant", "station", "enemy_ship", "friendly_ship", "boss", "anomaly", "cosmic_storm", "distress_signal", "derelict_ship", "wreck_field", "asteroid_belt"] as const).map((key) => (
+                <span key={key} className="flex items-center gap-1 min-w-0">
+                  <LegendIcon type={key} />
+                  <span className="truncate">{t(`location_types.${key}`)}</span>
+                </span>
+              ))}
+            </div>
+          )}
           <button
             onClick={() => setLegendOpen(!legendOpen)}
             className="w-full px-3 py-1 flex items-center gap-3 cursor-pointer hover:bg-[rgba(0,255,65,0.07)] transition-colors"
           >
             <span className="font-['Orbitron'] tracking-wider">{t("sector_map_ui.legend")}</span>
-            <span className="ml-auto opacity-60">{legendOpen ? "▲" : "▼"}</span>
+            <span className="ml-auto opacity-60">{legendOpen ? "▼" : "▲"}</span>
           </button>
-          {legendOpen && (
-            <div className="border-t border-[#00ff4133] px-3 py-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[10px] text-[#aaa]">
-              {(["planet", "gas_giant", "station", "enemy_ship", "friendly_ship", "boss", "anomaly", "cosmic_storm", "distress_signal", "derelict_ship", "wreck_field", "asteroid_belt"] as const).map((key) => (
-                <span key={key} className="flex items-center gap-1.5 whitespace-nowrap">
-                  <LegendIcon type={key} />
-                  <span>{t(`location_types.${key}`)}</span>
-                </span>
-              ))}
-            </div>
-          )}
         </div>
         <div className="bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-3 py-1 text-xs text-[#00ff41] select-none pointer-events-none">
           🔍 {(zoom * 100).toFixed(0)}%
