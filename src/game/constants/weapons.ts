@@ -43,8 +43,7 @@ export const WEAPON_TYPES: Record<Weapon["type"], WeaponDetails> = {
         damage: 18,
         color: "#00ff41",
         icon: "⬡",
-        description: "Атакует дважды за выстрел",
-        dualShot: true,
+        description: "Каждое попадание даёт +5% к урону (макс. 20 стаков = ×2)",
     },
     antimatter: {
         name: "Антиматерия",

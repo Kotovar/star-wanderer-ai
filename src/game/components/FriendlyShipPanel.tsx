@@ -249,9 +249,11 @@ export function FriendlyShipPanel() {
             <span className="font-bold">{t(`races.${dominantRace}.plural`)}</span>
           </div>
         )}
-        <div className="text-sm text-[#aaa] mt-2">
-          {currentLocation.greeting || t("friendly_ship.default_greeting")}
-        </div>
+        {!currentLocation.hasDistress && (
+          <div className="text-sm text-[#aaa] mt-2">
+            {currentLocation.greeting || t("friendly_ship.default_greeting")}
+          </div>
+        )}
       </div>
 
       {/* Trader */}
@@ -671,7 +673,7 @@ export function FriendlyShipPanel() {
           };
 
           const needIcon = needType === "fuel" ? "⛽" : "💊";
-          const needName = needType === "fuel" ? t("ship.fuel") : t("professions.medic");
+          const needName = needType === "fuel" ? t("ship_stats.fuel") : t("trade.goods.medicine");
           const playerHas = needType === "fuel" ? playerFuel : playerMedicine;
 
           return (

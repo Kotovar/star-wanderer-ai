@@ -29,10 +29,25 @@ export interface CombatState {
     skipPlayerTurn?: boolean;        // Boss turn_skip effect: player loses next turn
     bossResurrected?: boolean;       // Track if resurrect_chance was already used
     bossOneShotAbilityFired?: boolean; // Track if one-shot low_health ability (shield_restore, emergency_repair) has fired
+    // Set when player's attack brings enemy shields to 0 this turn (suppresses regen on counter-attack)
+    enemyShieldsJustBroken?: boolean;
     // Set when combat is triggered by entering a hostile race's location
     defenderRace?: RaceId;
     // Set when player actively attacks a friendly ship (location will be removed on victory)
     combatTargetLocationId?: string;
+    // Last hit tracking for UI animations
+    lastEnemyHit?: {
+        moduleId: number;
+        moduleName: string;
+        shieldDamage: number;
+        hullDamage: number;
+    } | null;
+    lastPlayerHit?: {
+        moduleId: number;
+        moduleName: string;
+        shieldDamage: number;
+        hullDamage: number;
+    } | null;
     // Battle results (filled after victory)
     battleResults?: {
         damagedModules: { name: string; damage: number }[];

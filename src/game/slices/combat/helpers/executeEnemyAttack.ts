@@ -385,9 +385,13 @@ function applyDamageToShip(
     }
 
     // Apply normal damage through shields
+    let shieldDmgDealt = 0;
+    let hullDmgDealt = 0;
+
     if (normalDamage > 0) {
         if (state.ship.shields > 0) {
             const sDmg = Math.min(state.ship.shields, normalDamage);
+            shieldDmgDealt = sDmg;
             set((s) => {
                 s.ship.shields -= sDmg;
             });
@@ -395,6 +399,7 @@ function applyDamageToShip(
 
             const overflow = normalDamage - sDmg;
             if (overflow > 0) {
+                hullDmgDealt = overflow;
                 applyModuleDamage(
                     state,
                     set,
@@ -405,6 +410,7 @@ function applyDamageToShip(
                 );
             }
         } else {
+            hullDmgDealt = normalDamage;
             applyModuleDamage(
                 state,
                 set,
@@ -415,6 +421,17 @@ function applyDamageToShip(
             );
         }
     }
+
+    // Record hit for UI animations
+    set((s) => {
+        if (!s.currentCombat) return;
+        s.currentCombat.lastPlayerHit = {
+            moduleId: targetModule.id,
+            moduleName: targetModule.name,
+            shieldDamage: shieldDmgDealt,
+            hullDamage: hullDmgDealt,
+        };
+    });
 }
 
 /**

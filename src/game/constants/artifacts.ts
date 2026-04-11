@@ -30,9 +30,9 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
     },
     {
         id: "quantum_scanner",
-        name: "Квантовый Сканер",
+        name: "Реликт Наблюдателей",
         description:
-            "Сканер с квантовым процессором. +3 к дальности сканирования и показывает скрытые объекты.",
+            "Древний артефакт неизвестного происхождения. +3 к дальности сканирования и раскрывает скрытые объекты в секторе.",
         effect: { type: "quantum_scan", value: 3, active: false },
         discovered: false,
         researched: false,

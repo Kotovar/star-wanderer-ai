@@ -15,6 +15,7 @@ export interface CombatSlice {
     startBossCombat: (bossLocation: Location) => void;
     selectEnemyModule: (moduleId: number) => void;
     attackEnemy: () => void;
+    attackEnemyWithBayTargets: (bayTargets: Record<number, number | null>) => void;
     executeAmbushAttack: () => void;
     retreat: () => void;
     attackFriendlyShip: () => void;
@@ -58,6 +59,10 @@ export const createCombatSlice = (
 
     attackEnemy: () => {
         helpers.executePlayerAttack(set, get);
+    },
+
+    attackEnemyWithBayTargets: (bayTargets) => {
+        helpers.executePlayerAttackWithBayTargets(bayTargets, set, get);
     },
 
     executeAmbushAttack: () => {

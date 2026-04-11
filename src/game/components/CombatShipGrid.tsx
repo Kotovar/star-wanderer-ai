@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useGameStore } from "@/game/store";
 import { RACES } from "@/game/constants/races";
 import type { Module, CrewMember, Weapon } from "@/game/types";
@@ -22,9 +23,27 @@ export function CombatShipGrid({
     const modules = useGameStore((s) => s.ship.modules);
     const crew = useGameStore((s) => s.crew);
     const currentCombat = useGameStore((s) => s.currentCombat);
+    const lastPlayerHit = useGameStore((s) => s.currentCombat?.lastPlayerHit);
     const { currentLanguage } = useTranslation();
 
+    const [flashType, setFlashType] = useState<"shield" | "hull" | null>(null);
+
+    useEffect(() => {
+        if (!lastPlayerHit) return;
+        const type = lastPlayerHit.shieldDamage > 0 ? "shield" : "hull";
+        const raf = requestAnimationFrame(() => setFlashType(type));
+        const endTimer = setTimeout(() => setFlashType(null), 600);
+        return () => {
+            cancelAnimationFrame(raf);
+            clearTimeout(endTimer);
+        };
+    }, [lastPlayerHit]);
+
     const isCombatMode = !!currentCombat;
+    const hasShields = ship.shields > 0;
+    const shieldGlow = hasShields
+        ? "0 0 18px 6px rgba(30,120,255,0.7), 0 0 40px 12px rgba(0,80,220,0.35)"
+        : "none";
 
     // Calculate bounding box of all modules
     let minX = Infinity,
@@ -58,6 +77,22 @@ export function CombatShipGrid({
     const baseSvgHeight = gridHeight * BASE_CELL_SIZE;
 
     return (
+        <div
+            className="relative"
+            style={{ boxShadow: shieldGlow, transition: "box-shadow 0.4s ease" }}
+        >
+        {flashType && (
+            <div
+                className="absolute inset-0 pointer-events-none z-10"
+                style={{
+                    backgroundColor:
+                        flashType === "shield"
+                            ? "rgba(30,120,255,0.45)"
+                            : "rgba(255,0,64,0.45)",
+                    animation: "combatHitFlash 0.5s ease-out forwards",
+                }}
+            />
+        )}
         <div
             className={`select-none transition-colors overflow-hidden max-w-full w-full ${
                 ship?.moduleMovedThisTurn
@@ -97,6 +132,7 @@ export function CombatShipGrid({
                     </g>
                 ))}
             </svg>
+        </div>
         </div>
     );
 }
@@ -207,7 +243,7 @@ function ModuleRenderer({
                 className="select-none"
                 style={{ userSelect: "none", WebkitUserSelect: "none" }}
             >
-                {getModuleTranslation(module.type, currentLanguage).name}
+                {getModuleTranslation(module.type, currentLanguage, module.name).name}
             </text>
 
             {module.type === "weaponbay" && module.weapons && (

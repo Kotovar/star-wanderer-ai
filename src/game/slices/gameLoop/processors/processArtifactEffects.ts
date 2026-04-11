@@ -130,7 +130,7 @@ export const processArtifactEffects = (
                 // Квантовый сканер (обрабатывается в getEffectiveScanRange)
                 const scanBonus = effectValue;
                 get().addLog(
-                    `📡 Квантовый Сканер: +${scanBonus} к дальности`,
+                    `📡 Реликт Наблюдателей: +${scanBonus} к дальности`,
                     "info",
                 );
                 break;

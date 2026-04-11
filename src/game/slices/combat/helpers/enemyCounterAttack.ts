@@ -23,6 +23,10 @@ export function handleEnemyCounterAttack(
     const combat = state.currentCombat;
     if (!combat) return;
 
+    // Shield regen at the START of enemy's turn, before they attack.
+    // Skipped if player broke shields to 0 this round (see enemyShieldsJustBroken flag).
+    processEnemyShieldRegen(set, get);
+
     const eDmg = combat.enemy.modules.reduce(
         (s, m) => s + (m.health > 0 ? (m.damage ?? 0) : 0),
         0,
@@ -183,9 +187,6 @@ export function handleEnemyCounterAttack(
     // Boss regeneration
     processBossRegeneration(state, set, get);
 
-    // Enemy shield regeneration (regular enemies only — driven by alive shield modules)
-    processEnemyShieldRegen(set, get);
-
     get().checkGameOver();
 }
 
@@ -303,7 +304,8 @@ export function applyDamageWithShields(
 }
 
 /**
- * Regenerates enemy shields each turn based on alive shield modules.
+ * Regenerates enemy shields at the START of each enemy turn.
+ * Skipped if player broke shields to 0 this round (flag cleared here).
  * Skips bosses (they have their own ability-based shield mechanics).
  */
 function processEnemyShieldRegen(
@@ -312,6 +314,16 @@ function processEnemyShieldRegen(
 ) {
     const combat = get().currentCombat;
     if (!combat) return;
+
+    // If player just broke shields this turn — skip regen, clear flag
+    if (combat.enemyShieldsJustBroken) {
+        set((s) => {
+            if (!s.currentCombat) return;
+            s.currentCombat.enemyShieldsJustBroken = false;
+        });
+        return;
+    }
+
     const regenRate = combat.enemy.shieldRegenRate;
     if (!regenRate || regenRate <= 0) return;
     const current = combat.enemy.shields;

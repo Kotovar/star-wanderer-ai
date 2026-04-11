@@ -178,6 +178,7 @@ export interface GameCombat {
     startBossCombat: (bossLocation: Location) => void;
     selectEnemyModule: (moduleId: number) => void;
     attackEnemy: () => void;
+    attackEnemyWithBayTargets: (bayTargets: Record<number, number | null>) => void;
     executeAmbushAttack: () => void; // Execute enemy attack for ambush (first strike)
     processEnemyAttack: () => void; // Process enemy counter-attack during combat
     retreat: () => void;

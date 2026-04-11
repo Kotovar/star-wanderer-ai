@@ -181,6 +181,75 @@ export function computeAccuracyModifier(state: GameState): number {
 }
 
 /**
+ * Per-bay accuracy modifier: gunner/calibration bonuses scoped to specific bay,
+ * global bonuses (AI cores, targeting artifact/assignment, rapidfire) apply to all bays.
+ */
+export function computeBayAccuracyModifier(state: GameState, bayId: number): number {
+    const crewInBay = state.crew.filter((c) => c.moduleId === bayId);
+    const gunnerInBay = crewInBay.find((c) => c.profession === "gunner");
+    const hasGlobalTargeting = state.crew.some((c) => c.combatAssignment === "targeting");
+
+    let modifier = 0;
+
+    // Gunner in THIS bay (or global targeting assignment counts as having a gunner)
+    if (!gunnerInBay && !hasGlobalTargeting) {
+        modifier += COMBAT_ACCURACY_MODIFIERS.NO_GUNNER_PENALTY;
+    } else if (gunnerInBay) {
+        const gunnerLevel = gunnerInBay.level || 1;
+        modifier += Math.min(
+            COMBAT_ACCURACY_MODIFIERS.GUNNER_LEVEL_MAX_BONUS,
+            gunnerLevel * COMBAT_ACCURACY_MODIFIERS.GUNNER_LEVEL_BONUS,
+        );
+        // Augmentation bonus on this gunner
+        if (gunnerInBay.augmentation) {
+            const augEffect = AUGMENTATIONS[gunnerInBay.augmentation]?.effect;
+            if (augEffect?.accuracyBonus) modifier += augEffect.accuracyBonus;
+        }
+        // Trait bonuses/penalties on this gunner
+        gunnerInBay.traits?.forEach((trait) => {
+            if (trait.effect?.accuracyPenalty) modifier -= Number(trait.effect.accuracyPenalty);
+            if (trait.effect?.accuracyBonus) modifier += Number(trait.effect.accuracyBonus);
+        });
+    }
+
+    // Global: targeting assignment (pilot)
+    if (hasGlobalTargeting)
+        modifier += COMBAT_ACCURACY_MODIFIERS.TARGETING_BONUS;
+
+    // Global: rapidfire penalty
+    if (state.crew.some((c) => c.combatAssignment === "rapidfire"))
+        modifier += COMBAT_ACCURACY_MODIFIERS.RAPIDFIRE_PENALTY;
+
+    // Engineer with calibration in THIS bay
+    const engineerWithCalibration = crewInBay.find(
+        (c) => c.profession === "engineer" && c.combatAssignment === "calibration",
+    );
+    if (engineerWithCalibration)
+        modifier +=
+            COMBAT_ACCURACY_MODIFIERS.CALIBRATION_BONUS +
+            (engineerWithCalibration.level ?? 1) * 0.01;
+
+    // Global: AI cores
+    const aiCoreCount = state.ship.modules.filter(
+        (m) => m.type === "ai_core" && isModuleActive(m),
+    ).length;
+    if (aiCoreCount > 0)
+        modifier += aiCoreCount * COMBAT_ACCURACY_MODIFIERS.AI_CORE_BONUS;
+
+    // Global: targeting artifact
+    const targetingCore = findActiveArtifact(state.artifacts, ARTIFACT_TYPES.TARGETING_CORE);
+    if (targetingCore)
+        modifier += getArtifactEffectValue(targetingCore, state) / 100;
+
+    // Global: xenosymbiont merge bonus
+    const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);
+    if (mergeBonus.weaponAccuracy)
+        modifier += mergeBonus.weaponAccuracy / 100;
+
+    return modifier;
+}
+
+/**
  * Calculates accuracy modifier from all sources
  */
 export function calculateAccuracyModifier(

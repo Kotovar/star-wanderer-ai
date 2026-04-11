@@ -105,10 +105,11 @@ export const MODULE_TRANSLATIONS: Record<
 export function getModuleTranslation(
     moduleType: string,
     lang: "ru" | "en" = "ru",
+    fallbackName?: string,
 ): ModuleTranslation {
     return (
         MODULE_TRANSLATIONS[lang][moduleType] || {
-            name: moduleType,
+            name: fallbackName ?? moduleType,
         }
     );
 }
