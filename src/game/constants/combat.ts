@@ -10,10 +10,13 @@ import type { WeaponType } from "@/game/types";
 export const BASE_CRIT_CHANCE = 0.05; // 5% base crit chance
 export const BASE_CRIT_MULTIPLIER = 1.5; // 1.5x base crit damage
 
+export const DRONE_MAX_STACKS = 10;
+export const DRONE_STACK_BONUS = 0.1; // +10% damage per stack
+
 export const BASE_ACCURACY: Record<WeaponType, number> = {
     laser: 0.95,
     kinetic: 0.9,
-    missile: 0.8,
+    missile: 0.85,
     plasma: 0.85,
     drones: 0.85,
     antimatter: 0.78,

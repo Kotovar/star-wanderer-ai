@@ -26,7 +26,7 @@ import {
 import { handleVictory } from "./playerVictory";
 import { handleEnemyCounterAttack } from "./enemyCounterAttack";
 import { applyAlienPresencePenalty } from "./alienPresence";
-import { BASE_CRIT_CHANCE, BASE_CRIT_MULTIPLIER } from "@/game/constants";
+import { BASE_CRIT_CHANCE, BASE_CRIT_MULTIPLIER, DRONE_MAX_STACKS, DRONE_STACK_BONUS } from "@/game/constants";
 import {
   checkBossEvasionBoost,
   checkBossModuleDodge,
@@ -536,17 +536,17 @@ function applyDamageToEnemy(
     );
   }
 
-  // Drones: increment stack counter (cap at 20 = +100%)
+  // Drones: increment stack counter (cap at DRONE_MAX_STACKS = +100%)
   if (damage.droneHitCount > 0) {
     const currentStacks = get().currentCombat?.droneStacks ?? 0;
-    const newStacks = Math.min(20, currentStacks + damage.droneHitCount);
+    const newStacks = Math.min(DRONE_MAX_STACKS, currentStacks + damage.droneHitCount);
     if (newStacks > currentStacks) {
       set((s) => {
         if (!s.currentCombat) return;
         s.currentCombat.droneStacks = newStacks;
       });
       damage.logs.push(
-        `🤖 Стак дронов: ${newStacks}/20 (+${newStacks * 5}% урон)`,
+        `🤖 Стак дронов: ${newStacks}/${DRONE_MAX_STACKS} (+${Math.round(newStacks * DRONE_STACK_BONUS * 100)}% урон)`,
       );
     }
   }
@@ -746,14 +746,18 @@ export function executePlayerAttack(
     return bonus;
   }, 0);
 
-  // Build per-type damage: scale each type's base damage by the same bonus multiplier
-  const bonusMultiplier = baseWeaponDamage > 0 ? finalDamagePerWeapon / baseWeaponDamage : 1;
+  // Build per-type damage using fullMultiplier = finalDamagePerWeapon / rawBaseTotal,
+  // where rawBaseTotal is the unmodified sum of per-type bases (no racial/artifact/tech bonuses).
+  // This correctly scales each weapon type by ALL bonuses combined.
   const totalDamageByType = get().getTotalDamage();
+  const rawBaseTotal = (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "quantum_torpedo", "ion_cannon"] as const)
+    .reduce((s, t) => s + totalDamageByType[t], 0);
+  const fullMultiplier = rawBaseTotal > 0 ? finalDamagePerWeapon / rawBaseTotal : 1;
   const perTypeDamage: Partial<Record<string, number>> = {};
   (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "quantum_torpedo", "ion_cannon"] as const).forEach(
     (type) => {
       if (totalDamageByType[type] > 0) {
-        perTypeDamage[type] = Math.floor(totalDamageByType[type] * bonusMultiplier);
+        perTypeDamage[type] = Math.floor(totalDamageByType[type] * fullMultiplier);
       }
     },
   );
@@ -969,8 +973,12 @@ export function executePlayerAttackWithBayTargets(
   }, 0);
 
   // 7. Process each bay sequentially, sharing shields
-  // bonusMultiplier scales per-type base damage by the same ratio as all bonuses applied to total
-  const bonusMultiplier = baseWeaponDamage > 0 ? finalDamagePerWeapon / baseWeaponDamage : 1;
+  // fullMultiplier = finalDamagePerWeapon / rawBaseTotal where rawBaseTotal = sum of per-type raw bases.
+  // This correctly captures ALL bonuses (racial/artifact/tech + gunner/overclock) relative to raw weapon base.
+  const totalDamageData = get().getTotalDamage();
+  const rawBaseTotal = (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "quantum_torpedo", "ion_cannon"] as const)
+    .reduce((s, t) => s + totalDamageData[t], 0);
+  const fullMultiplier = rawBaseTotal > 0 ? finalDamagePerWeapon / rawBaseTotal : 1;
   let remainingShields = currentState.currentCombat.enemy.shields;
   const droneStacks = currentState.currentCombat.droneStacks ?? 0;
   let anyHit = false;
@@ -1020,13 +1028,13 @@ export function executePlayerAttackWithBayTargets(
     const bayWeapons = countWeaponsInBay(bay);
     const shieldsBeforeBay = remainingShields;
 
-    // Compute per-type damage for this bay (base type damage * level bonus * bonus multiplier)
+    // Compute per-type damage for this bay: raw base * level bonus * fullMultiplier (all bonuses)
     const bayLevelBonus = 1 + ((bay.level ?? 1) - 1) * 0.1;
     const bayPerTypeDamage: Partial<Record<string, number>> = {};
     bay.weapons?.forEach((w) => {
       if (w && WEAPON_TYPES[w.type]) {
         bayPerTypeDamage[w.type] = Math.floor(
-          Math.floor(WEAPON_TYPES[w.type].damage * bayLevelBonus) * bonusMultiplier,
+          Math.floor(WEAPON_TYPES[w.type].damage * bayLevelBonus) * fullMultiplier,
         );
       }
     });

@@ -25,7 +25,7 @@ export const CRAFTING_RECIPES: Record<CraftingWeapon, CraftingRecipe> = {
     resources: { tech_salvage: 8, rare_minerals: 5 },
     credits: 500,
     unlockedBy: "combat_drones",
-    description: "Каждое попадание даёт +5% к урону (макс. 20 стаков = ×2)",
+    description: "Каждое попадание даёт +10% к урону (макс. 10 стаков = ×2)",
   },
   antimatter: {
     id: "antimatter",

@@ -7,7 +7,7 @@ const armorPenetration = 0.5;
 export const WEAPON_TYPES: Record<Weapon["type"], WeaponDetails> = {
     kinetic: {
         name: "Кинетическое",
-        damage: 15,
+        damage: 18,
         color: "#888888",
         icon: "●",
         description: `Игнорирует ${armorPenetration * 100}% защиты врага`,
@@ -23,11 +23,12 @@ export const WEAPON_TYPES: Record<Weapon["type"], WeaponDetails> = {
     },
     missile: {
         name: "Ракетное",
-        damage: 25,
+        damage: 28,
         color: "#ffaa00",
         icon: "▲",
-        description: `Высокий урон, но ${interceptChance * 100}% могут быть сбиты щитами`,
-        interceptChance,
+        description: `Высокий урон, пробивает 35% брони, но ${interceptChance * 100}% могут быть сбиты щитами`,
+        interceptChance: 0.1,
+        armorPenetration: 0.35,
     },
     plasma: {
         name: "Плазменное",
@@ -40,10 +41,10 @@ export const WEAPON_TYPES: Record<Weapon["type"], WeaponDetails> = {
     },
     drones: {
         name: "Боевые дроны",
-        damage: 18,
+        damage: 22,
         color: "#00ff41",
         icon: "⬡",
-        description: "Каждое попадание даёт +5% к урону (макс. 20 стаков = ×2)",
+        description: "Каждое попадание даёт +10% к урону (макс. 10 стаков = ×2)",
     },
     antimatter: {
         name: "Антиматерия",
@@ -63,7 +64,7 @@ export const WEAPON_TYPES: Record<Weapon["type"], WeaponDetails> = {
     },
     ion_cannon: {
         name: "Ионная пушка",
-        damage: 20,
+        damage: 26,
         color: "#4488ff",
         icon: "⚡",
         description: "×4 урона по щитам, не наносит урон корпусу — идеально для сноса щитов",

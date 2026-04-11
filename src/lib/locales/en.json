@@ -181,7 +181,15 @@
     "quantum_torpedo": "└ Q. torpedo:",
     "per_turn": "per turn",
     "units": "pts",
-    "ion_cannon": "Ion Cannon"
+    "ion_cannon": "Ion Cannon",
+    "cargo": "Cargo hold",
+    "credit_bonus": "💰 Reward bonus",
+    "accuracy_base": "to base",
+    "section_hull": "Hull & defense",
+    "section_navigation": "Navigation",
+    "section_energy": "Energy",
+    "section_weapons": "Weapons",
+    "section_bonuses": "Bonuses"
   },
   "header": {
     "tooltip_logbook": "Ship's logbook",

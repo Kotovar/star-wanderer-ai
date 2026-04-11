@@ -181,7 +181,15 @@
     "quantum_torpedo": "└ Кв. торпеда:",
     "per_turn": "за ход",
     "units": "ед.",
-    "ion_cannon": "Ионная пушка"
+    "ion_cannon": "Ионная пушка",
+    "cargo": "Грузовой отсек",
+    "credit_bonus": "💰 Бонус к наградам",
+    "accuracy_base": "к базе",
+    "section_hull": "Корпус и защита",
+    "section_navigation": "Навигация",
+    "section_energy": "Энергетика",
+    "section_weapons": "Вооружение",
+    "section_bonuses": "Бонусы"
   },
   "header": {
     "tooltip_logbook": "Руководство",

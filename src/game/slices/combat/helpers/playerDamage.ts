@@ -8,6 +8,7 @@ import {
     COMBAT_ACCURACY_MODIFIERS,
     COMBAT_DAMAGE_MODIFIERS,
     ARTIFACT_TYPES,
+    DRONE_STACK_BONUS,
 } from "@/game/constants";
 import { isModuleActive } from "@/game/modules/utils";
 import {
@@ -555,7 +556,7 @@ export function processPlasmaDamage(
 
 /**
  * Processes drones weapon damage.
- * Fires once per weapon. Each hit grants +5% damage stack (max 20 stacks = +100%).
+ * Fires once per weapon. Each hit grants +10% damage stack (max 10 stacks = +100%).
  * Stack is tracked externally in currentCombat.droneStacks.
  */
 export function processDronesDamage(
@@ -580,7 +581,7 @@ export function processDronesDamage(
     let missedShots = 0;
     let droneHitCount = 0;
 
-    const stackBonus = 1 + droneStacks * 0.05;
+    const stackBonus = 1 + droneStacks * DRONE_STACK_BONUS;
 
     if (droneStacks > 0) {
         logs.push(
