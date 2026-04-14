@@ -50,7 +50,7 @@ const BASE_FUEL = 80;
 // ─── Шаблоны ─────────────────────────────────────────────────────────────────
 
 export const SHIP_TEMPLATES: ShipTemplate[] = [
-  // ── 1. Исследователь (Стандарт) ──────────────────────────────────────────
+  // ── 1. Исследователь (easy) ─────────────────────────────────────────────
   {
     id: "explorer",
     nameKey: "ship_templates.explorer.name",
@@ -78,34 +78,7 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     compatibleClasses: null,
   },
 
-  // ── 2. Боец ──────────────────────────────────────────────────────────────
-  {
-    id: "fighter",
-    nameKey: "ship_templates.fighter.name",
-    descriptionKey: "ship_templates.fighter.description",
-    icon: "⚔️",
-    difficulty: "hard",
-    moduleIcons: ["⚛️", "🎮", "🌬️", "🔫", "🔧", "⛽"],
-    modules: [
-      { id: T_FIGHTER + 1, type: "reactor", name: "Реактор Мк.2", x: 1, y: 1, width: 1, height: 1, power: 15, health: 120, maxHealth: 120, level: 2, defense: 3 },
-      { id: T_FIGHTER + 2, type: "cockpit", name: "Кабина", x: 2, y: 1, width: 1, height: 1, consumption: 1, health: 100, maxHealth: 100, level: 1, defense: 2 },
-      { id: T_FIGHTER + 3, type: "engine", name: "Двигатель", x: 3, y: 1, width: 1, height: 1, consumption: 1, health: 100, maxHealth: 100, level: 1, fuelEfficiency: 10, defense: 1 },
-      { id: T_FIGHTER + 4, type: "lifesupport", name: "Жизнеобеспечение", x: 1, y: 2, width: 1, height: 1, consumption: 2, health: 100, maxHealth: 100, level: 1, oxygen: 5, defense: 1 },
-      { id: T_FIGHTER + 5, type: "weaponbay", name: "Боевая палуба", x: 2, y: 2, width: 1, height: 1, consumption: 2, health: 100, maxHealth: 100, level: 1, defense: 2, weapons: [{ type: "laser" }] },
-      { id: T_FIGHTER + 6, type: "fueltank", name: "Топливный бак", x: 3, y: 2, width: 1, height: 1, health: 100, maxHealth: 100, level: 1, capacity: BASE_FUEL, defense: 1 },
-    ],
-    crew: [
-      { id: 1, name: "Торкас Кр'асс", profession: "pilot", moduleId: T_FIGHTER + 2, level: 1, race: "krylorian" },
-      { id: 2, name: "Варга З'орк", profession: "gunner", moduleId: T_FIGHTER + 5, level: 1, race: "krylorian" },
-    ],
-    credits: 800,
-    fuel: BASE_FUEL,
-    maxFuel: BASE_FUEL,
-    probes: 0,
-    compatibleClasses: null,
-  },
-
-  // ── 3. Торговец ──────────────────────────────────────────────────────────
+  // ── 2. Торговец (easy) ─────────────────────────────────────────────
   {
     id: "trader",
     nameKey: "ship_templates.trader.name",
@@ -134,7 +107,7 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     compatibleClasses: null,
   },
 
-  // ── 4. Учёный ────────────────────────────────────────────────────────────
+  // ── 3. Учёный (normal) ─────────────────────────────────────────────
   {
     id: "scientist",
     nameKey: "ship_templates.scientist.name",
@@ -168,7 +141,7 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     compatibleClasses: null,
   },
 
-  // ── 5. Инженер ───────────────────────────────────────────────────────────
+  // ── 4. Инженер (normal) ─────────────────────────────────────────────
   {
     id: "engineer",
     nameKey: "ship_templates.engineer.name",
@@ -189,6 +162,33 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
       { id: 2, name: "АЛЬФА-7", profession: "engineer", moduleId: T_ENGINEER + 4, level: 1, race: "synthetic" },
     ],
     credits: 900,
+    fuel: BASE_FUEL,
+    maxFuel: BASE_FUEL,
+    probes: 0,
+    compatibleClasses: null,
+  },
+
+  // ── 5. Боец (hard) ─────────────────────────────────────────────
+  {
+    id: "fighter",
+    nameKey: "ship_templates.fighter.name",
+    descriptionKey: "ship_templates.fighter.description",
+    icon: "⚔️",
+    difficulty: "hard",
+    moduleIcons: ["⚛️", "🎮", "🌬️", "🔫", "🔧", "⛽"],
+    modules: [
+      { id: T_FIGHTER + 1, type: "reactor", name: "Реактор Мк.2", x: 1, y: 1, width: 1, height: 1, power: 15, health: 120, maxHealth: 120, level: 2, defense: 3 },
+      { id: T_FIGHTER + 2, type: "cockpit", name: "Кабина", x: 2, y: 1, width: 1, height: 1, consumption: 1, health: 100, maxHealth: 100, level: 1, defense: 2 },
+      { id: T_FIGHTER + 3, type: "engine", name: "Двигатель", x: 3, y: 1, width: 1, height: 1, consumption: 1, health: 100, maxHealth: 100, level: 1, fuelEfficiency: 10, defense: 1 },
+      { id: T_FIGHTER + 4, type: "lifesupport", name: "Жизнеобеспечение", x: 1, y: 2, width: 1, height: 1, consumption: 2, health: 100, maxHealth: 100, level: 1, oxygen: 5, defense: 1 },
+      { id: T_FIGHTER + 5, type: "weaponbay", name: "Боевая палуба", x: 2, y: 2, width: 1, height: 1, consumption: 2, health: 100, maxHealth: 100, level: 1, defense: 2, weapons: [{ type: "laser" }] },
+      { id: T_FIGHTER + 6, type: "fueltank", name: "Топливный бак", x: 3, y: 2, width: 1, height: 1, health: 100, maxHealth: 100, level: 1, capacity: BASE_FUEL, defense: 1 },
+    ],
+    crew: [
+      { id: 1, name: "Торкас Кр'асс", profession: "pilot", moduleId: T_FIGHTER + 2, level: 1, race: "krylorian" },
+      { id: 2, name: "Варга З'орк", profession: "gunner", moduleId: T_FIGHTER + 5, level: 1, race: "krylorian" },
+    ],
+    credits: 800,
     fuel: BASE_FUEL,
     maxFuel: BASE_FUEL,
     probes: 0,

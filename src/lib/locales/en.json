@@ -10,6 +10,11 @@
     "logbook": "LOGBOOK",
     "start": "START"
   },
+  "title_screen": {
+    "title": "STAR WANDERER",
+    "subtitle": "A SPACE ADVENTURE",
+    "flavor": "The void between stars holds both danger and opportunity. Choose your ship wisely, Captain — the galaxy awaits."
+  },
   "ship": {
     "title": "SHIP",
     "locked": "🔒",
