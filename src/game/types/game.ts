@@ -336,7 +336,7 @@ export interface GameScanContracts {
 }
 
 export interface GameManagement {
-    restartGame: () => void;
+    restartGame: (templateId?: string, modifierIds?: string[]) => void;
     saveGame: () => void;
     loadGame: () => boolean;
     saveToSlot: (slotId: "manual1" | "manual2" | "manual3") => void;

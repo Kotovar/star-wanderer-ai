@@ -275,35 +275,40 @@
       "plural": "Synthetics",
       "adjective": "Synthetic",
       "description": "Artificial intelligence created by ancient civilization or humans. No emotions but flawless logic.",
-      "homeworld": "Unknown"
+      "homeworld": "Unknown",
+      "special_tip": "Synthetics don't consume oxygen, are immune to disease, and never lose morale — a great choice for a crew without life support or medical modules. Watch for potential AI glitches in critical moments."
     },
     "xenosymbiont": {
       "name": "Xenomorph-Symbiont",
       "plural": "Xenomorph-Symbionts",
       "adjective": "Symbiont",
       "description": "Semi-organic creatures living in symbiosis with technology. Can \"merge\" with ship.",
-      "homeworld": "Unknown planet in Tier 3"
+      "homeworld": "Unknown planet in Tier 3",
+      "special_tip": "Xenomorphs can permanently merge with a ship module, granting it a lasting bonus. Open crew panel → select a xenomorph → assign task «Module Merge». Once merged, they become part of the ship and cannot be moved."
     },
     "krylorian": {
       "name": "Krylorian",
       "plural": "Krylorians",
       "adjective": "Krylorian",
       "description": "Warlike reptilian race with strong sense of honor. Excellent fighters.",
-      "homeworld": "Krylor Prime"
+      "homeworld": "Krylor Prime",
+      "special_tip": "Krylorian Intimidation reduces enemy accuracy. Multiple Krylorians in the crew stack this effect — enemies will miss significantly more often."
     },
     "voidborn": {
       "name": "Voidborn",
       "plural": "Voidborn",
       "adjective": "Void",
       "description": "Creatures born in the depths of space. Don't need atmosphere or comfort.",
-      "homeworld": "Unknown"
+      "homeworld": "Unknown",
+      "special_tip": "Voidborn don't consume oxygen and never tire — ideal for hostile planet expeditions and long voyages. Their presence, however, unsettles organic crew members."
     },
     "crystalline": {
       "name": "Crystalline",
       "plural": "Crystallines",
       "adjective": "Crystalline",
       "description": "Sentient crystalline beings. Think slowly but possess great wisdom.",
-      "homeworld": "Geoda Prime"
+      "homeworld": "Geoda Prime",
+      "special_tip": "Crystallines boost Ancient artifact effects by 15%. If you're building around artifacts, Crystalline crew members significantly amplify their output."
     }
   },
   "racial_traits": {
@@ -1438,9 +1443,23 @@
   "race_discovery": {
     "title": "New Race Discovered",
     "description": "Race details",
-    "traits": "Traits",
+    "traits": "Race Traits",
     "traits_none": "None",
-    "description_label": "Description"
+    "description_label": "Description",
+    "homeworld_label": "Homeworld",
+    "bonuses_label": "Crew Bonuses",
+    "properties_label": "Properties",
+    "tip_label": "Tip",
+    "prop_no_oxygen": "No oxygen required",
+    "prop_no_happiness": "No morale",
+    "bonus_happiness": "happiness",
+    "bonus_health_regen": "HP regen/turn",
+    "bonus_repair": "repair efficiency",
+    "bonus_science": "research speed",
+    "bonus_combat": "combat stats",
+    "bonus_health": "max health",
+    "bonus_fuel": "fuel efficiency",
+    "bonus_heal": "healing efficiency"
   },
   "technology_discovery": {
     "title": "Technology Researched",
@@ -1775,24 +1794,24 @@
     "ion_cannon": "Ion Cannon"
   },
   "module_roles": {
-    "reactor":           "Energy",
-    "cockpit":           "Control",
-    "weaponbay":         "Weapons",
-    "shield":            "Shields",
-    "engine":            "Engine",
-    "lifesupport":       "Oxygen",
-    "cargo":             "Storage",
-    "fueltank":          "Fuel",
-    "medical":           "Healing",
-    "scanner":           "Scanner",
-    "lab":               "Research",
-    "quarters":          "Crew",
-    "repair_bay":        "Auto-repair",
-    "ai_core":           "AI core",
-    "drill":             "Mining",
-    "bio_research_lab":  "Research + Healing",
-    "pulse_drive":       "Energy + Fuel",
-    "habitat_module":    "Crew + Oxygen",
+    "reactor": "Energy",
+    "cockpit": "Control",
+    "weaponbay": "Weapons",
+    "shield": "Shields",
+    "engine": "Engine",
+    "lifesupport": "Oxygen",
+    "cargo": "Storage",
+    "fueltank": "Fuel",
+    "medical": "Healing",
+    "scanner": "Scanner",
+    "lab": "Research",
+    "quarters": "Crew",
+    "repair_bay": "Auto-repair",
+    "ai_core": "AI core",
+    "drill": "Mining",
+    "bio_research_lab": "Research + Healing",
+    "pulse_drive": "Energy + Fuel",
+    "habitat_module": "Crew + Oxygen",
     "deep_survey_array": "Scanner + Research"
   },
   "module_descriptions": {
@@ -2595,5 +2614,70 @@
     "btn_overwrite": "Overwrite",
     "btn_cancel": "Cancel",
     "btn_confirm_load": "Confirm load"
+  },
+
+  "new_game_setup": {
+    "title": "New Game",
+    "subtitle": "Choose a ship template and launch modifiers",
+    "template_section": "Ship Template",
+    "modifiers_section": "Modifiers",
+    "modifiers_hint": "(optional)",
+    "modifiers_active": "Modifiers active",
+    "difficulty_easy": "Easy",
+    "difficulty_normal": "Normal",
+    "difficulty_hard": "Hard",
+    "ship_label": "Ship",
+    "start_credits": "Starting credits",
+    "start_button": "Start"
+  },
+
+  "ship_templates": {
+    "explorer": {
+      "name": "Explorer",
+      "description": "A balanced standard ship. Cargo bay, medic and engineer in the crew. Ideal for a first run."
+    },
+    "fighter": {
+      "name": "Fighter",
+      "description": "Upgraded reactor and weapon bay. Krylorian crew. High damage, but no medical or science."
+    },
+    "trader": {
+      "name": "Trader",
+      "description": "Two cargo bays and large capital for trading. Survives on credits, not firepower."
+    },
+    "scientist": {
+      "name": "Scientist",
+      "description": "Lab, scanner, and starting research resources. Slow start, but strong late game."
+    },
+    "engineer": {
+      "name": "Engineer",
+      "description": "Repair bay and powerful reactor. Synthetic engineer never tires. Ship repairs itself every turn."
+    }
+  },
+
+  "launch_modifiers": {
+    "veteran_crew": {
+      "name": "Veteran Crew",
+      "description": "All crew starts at level 3 with high stats."
+    },
+    "extra_fuel": {
+      "name": "Extra Tanks",
+      "description": "+50 to max fuel capacity and starting fuel."
+    },
+    "research_head_start": {
+      "name": "Research Head Start",
+      "description": "Starting research resources: ancient_data ×5, tech_salvage ×5, rare_minerals ×3."
+    },
+    "solo_mission": {
+      "name": "Solo Mission",
+      "description": "Only one crew member (pilot). No support, but extra credits."
+    },
+    "weakened_reactor": {
+      "name": "Weakened Reactor",
+      "description": "Reactor generates 2 less energy. Some modules may shut down."
+    },
+    "cursed_relic": {
+      "name": "Cursed Relic",
+      "description": "Game starts with a random cursed artifact activated. High risk, high reward."
+    }
   }
 }

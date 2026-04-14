@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useGameStore } from "@/game/store";
 import { Button } from "@/components/ui/button";
+import { NewGameSetupModal } from "@/game/components/NewGameSetupModal";
 import { useTranslation } from "@/lib/useTranslation";
 
 interface GameEndPanelProps {
@@ -31,8 +33,8 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
     const turn = useGameStore((s) => s.turn);
     const crew = useGameStore((s) => s.crew);
     const ship = useGameStore((s) => s.ship);
-    const restartGame = useGameStore((s) => s.restartGame);
     const { t } = useTranslation();
+    const [showNewGameSetup, setShowNewGameSetup] = useState(false);
 
     const theme = THEMES[type];
     const isVictory = type === "victory";
@@ -179,13 +181,10 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                         </div>
                     )}
 
-                    <div className="pt-4">
+                    <div className="pt-4 space-y-2">
                         <Button
-                            onClick={() => {
-                                restartGame();
-                                window.location.href = "/";
-                            }}
-                            className="text-(--border-color)  cursor-pointer w-full bg-transparent border-2 hover:bg-(--border-color) hover:text-[#050810] uppercase tracking-wider text-lg py-6"
+                            onClick={() => setShowNewGameSetup(true)}
+                            className="text-(--border-color) cursor-pointer w-full bg-transparent border-2 hover:bg-(--border-color) hover:text-[#050810] uppercase tracking-wider text-lg py-6"
                             style={{
                                 borderColor: theme.border,
                                 ["--border-color" as string]: theme.border,
@@ -193,6 +192,10 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                         >
                             🔄 {t("game_end.restart")}
                         </Button>
+                        <NewGameSetupModal
+                            open={showNewGameSetup}
+                            onClose={() => setShowNewGameSetup(false)}
+                        />
                     </div>
 
                     {isVictory && (

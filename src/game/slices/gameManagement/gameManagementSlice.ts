@@ -12,7 +12,7 @@ import { CREW_TRAITS } from "@/game/constants/traits";
 export interface GameManagementSlice {
     checkGameOver: () => void;
     triggerVictory: () => void;
-    restartGame: () => void;
+    restartGame: (templateId?: string, modifierIds?: string[]) => void;
     saveGame: () => void;
     loadGame: () => boolean;
     saveToSlot: (slotId: ManualSlotId) => void;
@@ -25,7 +25,8 @@ export const createGameManagementSlice = (
 ): GameManagementSlice => ({
     checkGameOver: () => checkGameOver(set, get),
     triggerVictory: () => triggerVictory(set, get),
-    restartGame: () => restartGame(set, get),
+    restartGame: (templateId?: string, modifierIds?: string[]) =>
+        restartGame(set, get, templateId, modifierIds),
 
     /** Авто-сохранение каждый ход (сохраняет в auto-слот + legacy ключ) */
     saveGame: () => {

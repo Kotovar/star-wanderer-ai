@@ -5,6 +5,7 @@ import { useGameStore } from "@/game/store";
 import { HelpPanel, ActiveEffectsPanel } from "../panels";
 import { ResearchPanel } from "../ResearchPanel";
 import { SaveLoadPanel } from "../SaveLoadPanel";
+import { NewGameSetupModal } from "../NewGameSetupModal";
 import {
     Dialog,
     DialogContent,
@@ -20,6 +21,7 @@ export function GameHeader() {
     const [showHelp, setShowHelp] = useState(false);
     const [showEffects, setShowEffects] = useState(false);
     const [showRestartDialog, setShowRestartDialog] = useState(false);
+    const [showNewGameSetup, setShowNewGameSetup] = useState(false);
     const [showResearchModal, setShowResearchModal] = useState(false);
     const [showSaveLoad, setShowSaveLoad] = useState(false);
     const turn = useGameStore((s) => s.turn);
@@ -32,7 +34,6 @@ export function GameHeader() {
     const showReputation = useGameStore((s) => s.showReputation);
     const closeReputationPanel = useGameStore((s) => s.closeReputationPanel);
     const gameMode = useGameStore((s) => s.gameMode);
-    const restartGame = useGameStore((s) => s.restartGame);
     const { t, changeLanguage, currentLanguage } = useTranslation();
 
     const discoveredArtifacts = artifacts.filter((a) => a.discovered).length;
@@ -43,8 +44,8 @@ export function GameHeader() {
     };
 
     const handleRestartConfirm = () => {
-        restartGame();
         setShowRestartDialog(false);
+        setShowNewGameSetup(true);
     };
 
     const handleArtifactsClick = () => {
@@ -253,6 +254,11 @@ export function GameHeader() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <NewGameSetupModal
+                open={showNewGameSetup}
+                onClose={() => setShowNewGameSetup(false)}
+            />
 
             {/* Mobile research modal */}
             <Dialog
