@@ -112,22 +112,24 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                     }}
                   >
                     {/* Верхняя строка */}
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="mb-1.5">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-lg sm:text-xl">{tmpl.icon}</span>
+                        <span className="text-lg sm:text-xl shrink-0">{tmpl.icon}</span>
                         <span
-                          className="font-bold text-xs sm:text-sm"
+                          className="font-bold text-xs sm:text-sm leading-snug"
                           style={{ color: isSelected ? dc.text : "#00ff41" }}
                         >
                           {t(tmpl.nameKey)}
                         </span>
                       </div>
-                      <span
-                        className="text-[10px] sm:text-xs px-1.5 py-0.5 border font-bold shrink-0 ml-1"
-                        style={{ color: dc.text, borderColor: dc.border }}
-                      >
-                        {t(`new_game_setup.difficulty_${tmpl.difficulty}`)}
-                      </span>
+                      <div className="mt-1 ml-0.5">
+                        <span
+                          className="text-[10px] sm:text-xs px-1.5 py-0.5 border font-bold"
+                          style={{ color: dc.text, borderColor: dc.border }}
+                        >
+                          {t(`new_game_setup.difficulty_${tmpl.difficulty}`)}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Описание */}
@@ -184,18 +186,18 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                         : "transparent",
                     }}
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <span className="shrink-0">{mod.icon}</span>
+                    <div className="flex items-start justify-between mb-1 gap-2">
+                      <div className="flex items-start gap-1.5 min-w-0">
+                        <span className="shrink-0 mt-px">{mod.icon}</span>
                         <span
-                          className="font-bold text-xs sm:text-sm truncate"
+                          className="font-bold text-xs sm:text-sm leading-snug"
                           style={{ color: isActive ? tc.text : "#00ff41" }}
                         >
                           {t(mod.nameKey)}
                         </span>
                       </div>
                       <span
-                        className="text-xs font-bold tabular-nums shrink-0 ml-1"
+                        className="text-xs font-bold tabular-nums shrink-0 whitespace-nowrap"
                         style={{ color: mod.creditDelta > 0 ? "#00ff41" : "#ff4444" }}
                       >
                         {mod.creditDelta > 0 ? `+${mod.creditDelta}` : mod.creditDelta}₢
