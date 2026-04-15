@@ -21,41 +21,42 @@ const STARTING_SECTOR_INDEX = 0;
  * @param modifierIds - Активные модификаторы запуска
  */
 export const restartGame = (
-    set: SetState,
-    get: () => GameStore,
-    templateId: string = DEFAULT_TEMPLATE_ID,
-    modifierIds: string[] = [],
+  set: SetState,
+  get: () => GameStore,
+  templateId: string = DEFAULT_TEMPLATE_ID,
+  modifierIds: string[] = [],
 ): void => {
-    clearLocalStorage();
+  clearLocalStorage();
 
-    const newSectors = generateGalaxy();
-    newSectors[STARTING_SECTOR_INDEX].visited = true;
+  const newSectors = generateGalaxy();
+  newSectors[STARTING_SECTOR_INDEX].visited = true;
 
-    const { prices: restartPrices, stock: restartStock } =
-        initializeStationData(newSectors);
+  const { prices: restartPrices, stock: restartStock } =
+    initializeStationData(newSectors);
 
-    const patch = buildStartingState(templateId, modifierIds);
+  const patch = buildStartingState(templateId, modifierIds);
 
-    set({
-        ...initialState,
-        currentSector: newSectors[STARTING_SECTOR_INDEX],
-        galaxy: { sectors: newSectors },
-        stationPrices: restartPrices,
-        stationStock: restartStock,
-        log: [],
-        credits: patch.credits,
-        probes: patch.probes,
-        ship: patch.ship,
-        crew: patch.crew,
-        artifacts: patch.artifacts,
-        research: {
-            ...initialState.research,
-            resources: patch.researchResources,
-        },
-    });
+  set({
+    ...initialState,
+    currentSector: newSectors[STARTING_SECTOR_INDEX],
+    galaxy: { sectors: newSectors },
+    stationPrices: restartPrices,
+    stationStock: restartStock,
+    log: [],
+    credits: patch.credits,
+    probes: patch.probes,
+    ship: patch.ship,
+    crew: patch.crew,
+    artifacts: patch.artifacts,
+    research: {
+      ...initialState.research,
+      resources: patch.researchResources,
+    },
+    startTemplateId: templateId,
+  });
 
-    get().addLog("Новая игра", "info");
-    playSound("success");
+  get().addLog("Новая игра", "info");
+  playSound("success");
 
-    saveToLocalStorage(get());
+  saveToLocalStorage(get());
 };

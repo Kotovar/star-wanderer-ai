@@ -33,6 +33,18 @@ const MODIFIER_TYPE_COLORS = {
   mixed: { text: "#ff00ff" },
 };
 
+const MODULE_LEGEND = [
+  { icon: "⚛️", key: "new_game_setup.mod_reactor" },
+  { icon: "🎮", key: "new_game_setup.mod_cockpit" },
+  { icon: "🌬️", key: "new_game_setup.mod_lifesupport" },
+  { icon: "📦", key: "new_game_setup.mod_cargo" },
+  { icon: "⛽", key: "new_game_setup.mod_fueltank" },
+  { icon: "🧪", key: "new_game_setup.mod_lab" },
+  { icon: "📡", key: "new_game_setup.mod_scanner" },
+  { icon: "🔫", key: "new_game_setup.mod_weapon" },
+  { icon: "🛠️", key: "new_game_setup.mod_repair" },
+];
+
 export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModalProps) {
   const { t } = useTranslation();
   const restartGame = useGameStore((s) => s.restartGame);
@@ -105,7 +117,7 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                   <button
                     key={tmpl.id}
                     onClick={() => setSelectedTemplateId(tmpl.id)}
-                    className="text-left p-2.5 sm:p-3 border transition-all cursor-pointer rounded-sm"
+                    className="text-left p-2.5 sm:p-3 border transition-all cursor-pointer rounded-sm flex flex-col"
                     style={{
                       borderColor: isSelected ? dc.border : "rgba(0,255,65,0.2)",
                       backgroundColor: isSelected ? dc.bg : "transparent",
@@ -122,27 +134,37 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                           {t(tmpl.nameKey)}
                         </span>
                       </div>
-                      <div className="mt-1 ml-0.5">
+                      <div className="mt-1 ml-0.5 flex items-center gap-1.5 flex-wrap">
                         <span
                           className="text-[10px] sm:text-xs px-1.5 py-0.5 border font-bold"
                           style={{ color: dc.text, borderColor: dc.border }}
                         >
                           {t(`new_game_setup.difficulty_${tmpl.difficulty}`)}
                         </span>
+                        {tmpl.difficulty === "easy" && (
+                          <span className="text-[9px] sm:text-[10px] text-[#ffb000]">
+                            ⭐ {t("new_game_setup.recommended_badge")}
+                          </span>
+                        )}
                       </div>
                     </div>
 
                     {/* Описание */}
-                    <div className="text-[11px] sm:text-xs text-[#888] mb-2 leading-snug">
+                    <div className="text-[11px] sm:text-xs text-[#888] mb-2 leading-snug flex-1">
                       {t(tmpl.descriptionKey)}
                     </div>
 
-                    {/* Модули + кредиты */}
+                    {/* Экипаж + модули + кредиты */}
                     <div className="flex items-center justify-between">
-                      <div className="flex gap-0.5 sm:gap-1 flex-wrap">
-                        {tmpl.moduleIcons.map((icon, i) => (
-                          <span key={i} className="text-xs sm:text-sm">{icon}</span>
-                        ))}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-[#555]" title={t("new_game_setup.crew_hint")}>
+                          👥 {tmpl.crew.length}
+                        </span>
+                        <div className="flex gap-0.5 sm:gap-1 flex-wrap">
+                          {tmpl.moduleIcons.map((icon, i) => (
+                            <span key={i} className="text-xs sm:text-sm">{icon}</span>
+                          ))}
+                        </div>
                       </div>
                       <div className="text-xs text-[#ffb000] shrink-0 ml-1">
                         ₢{tmpl.credits}
@@ -160,15 +182,32 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                 );
               })}
             </div>
+
+            {/* Легенда модулей */}
+            <div className="mt-2 pt-2 border-t border-[rgba(0,255,65,0.1)]">
+              <div className="text-[9px] text-[#555] mb-1 uppercase tracking-wider">
+                {t("new_game_setup.module_legend_label")}:
+              </div>
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                {MODULE_LEGEND.map(({ icon, key }) => (
+                  <span key={icon} className="text-[9px] text-[#555] whitespace-nowrap">
+                    {icon} {t(key)}
+                  </span>
+                ))}
+              </div>
+            </div>
           </section>
 
           {/* ── Модификаторы ─────────────────────────────────────────── */}
           <section>
-            <div className="text-xs text-[#ffb000] font-bold uppercase tracking-widest mb-2">
+            <div className="text-xs text-[#ffb000] font-bold uppercase tracking-widest mb-1">
               ⚙️ {t("new_game_setup.modifiers_section")}
               <span className="text-[#888] normal-case font-normal ml-2">
                 {t("new_game_setup.modifiers_hint")}
               </span>
+            </div>
+            <div className="text-[10px] text-[#555] mb-2">
+              {t("new_game_setup.modifiers_beginner_tip")}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {LAUNCH_MODIFIERS.map((mod) => {
