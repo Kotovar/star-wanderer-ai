@@ -33,6 +33,7 @@ export const createGameLoopSlice = (
 
         // Инициализация нового хода
         initNewTurn(set);
+        const currentTurnState = get();
 
         // Сбрасываем bonusPower/bonusEvasion до значений из активных планетарных эффектов.
         // Это удаляет устаревшие накопленные значения от назначений экипажа
@@ -103,7 +104,7 @@ export const createGameLoopSlice = (
         processors.processRandomEvents(state, set, get);
 
         // Глобальные кризисы
-        processors.processGlobalCrises(state, set, get);
+        processors.processGlobalCrises(currentTurnState, set, get);
 
         // Назначения экипажа
         processors.processCrewAssignments(set, get);

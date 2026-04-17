@@ -125,6 +125,7 @@ export interface GameState {
   startTemplateId?: string; // Ship template used to start this game (undefined = old save)
   activeCrisis: ActiveCrisisState | null; // Currently active global crisis
   nextCrisisTurn: number; // Turn on which the next global crisis triggers
+  nextCrisisId: string | null; // Crisis selected to trigger next
 }
 
 export interface GameActions {

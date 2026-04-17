@@ -83,7 +83,7 @@ export function EventDisplay() {
                     <Button
                         onClick={handleSkipTurn}
                         disabled={isSkipping}
-                        className={`bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${
+                        className={`bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none ${
                             isSkipping
                                 ? "scale-95 bg-[#00ff41] text-[#050810]"
                                 : ""
@@ -105,20 +105,20 @@ export function EventDisplay() {
                     <div className="grid grid-cols-3 gap-1 shrink-0 mb-1">
                         <Button
                             onClick={showSectorMap}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none"
                         >
                             {t("galaxy.buttons.sector_map")}
                         </Button>
                         <Button
                             onClick={showAssignments}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none"
                         >
                             {t("galaxy.buttons.crew_tasks")}
                         </Button>
                         <Button
                             onClick={handleSkipTurn}
                             disabled={isSkipping}
-                            className={`bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${
+                            className={`bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none ${
                                 isSkipping
                                     ? "scale-95 bg-[#00ff41] text-[#050810]"
                                     : ""
@@ -143,20 +143,20 @@ export function EventDisplay() {
                     <div className="grid grid-cols-3 gap-1 shrink-0 mb-1">
                         <Button
                             onClick={showGalaxyMap}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none"
                         >
                             {t("galaxy.buttons.galaxy_map")}
                         </Button>
                         <Button
                             onClick={showAssignments}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none"
                         >
                             {t("galaxy.buttons.crew_tasks")}
                         </Button>
                         <Button
                             onClick={handleSkipTurn}
                             disabled={isSkipping}
-                            className={`cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+                            className={`cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed select-none ${
                                 isSkipping
                                     ? "scale-95 bg-[#00ff41] text-[#050810]"
                                     : ""

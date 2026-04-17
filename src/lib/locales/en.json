@@ -2723,19 +2723,27 @@
   "crises": {
     "raider_wave": {
       "name": "Raider Wave",
-      "warning": "Raiders are preparing an attack"
+      "warning": "Raiders are preparing an attack",
+      "description": "Raiders become unusually active in the region and start pressuring your ship's supplies.",
+      "effects": "At the start they may steal cargo and damage modules. Then each turn brings raids that cost credits or fuel, damage a random system, and reduce crew morale."
     },
     "solar_flare": {
       "name": "Solar Flare",
-      "warning": "Solar activity detected"
+      "warning": "Solar activity detected",
+      "description": "A powerful stellar flare overloads sensitive electronics and strips away shield stability.",
+      "effects": "Sensitive modules are disabled at the start and shields are dropped to zero. While the crisis lasts, those systems keep taking damage. They come back online when it ends."
     },
     "epidemic": {
       "name": "Epidemic",
-      "warning": "First infection cases reported"
+      "warning": "First infection cases reported",
+      "description": "Disease spreads aboard the ship: some crew become infected and the rest begin to panic.",
+      "effects": "Specific organic crew members become infected. They lose health and morale each turn, while the rest of the crew also suffers morale loss. A medic significantly reduces the severity."
     },
     "fuel_shortage": {
       "name": "Fuel Crisis",
-      "warning": "Fuel markets are unstable"
+      "warning": "Fuel markets are unstable",
+      "description": "Fuel reserves become unreliable and parts of the propulsion chain must be throttled.",
+      "effects": "You immediately lose some fuel and engine or fuel systems may be temporarily limited. Then each turn drains more fuel, wears down those systems, and lightly hurts morale."
     }
   }
 }

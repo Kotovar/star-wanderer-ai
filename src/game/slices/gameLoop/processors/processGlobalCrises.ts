@@ -1,17 +1,17 @@
 import type { GameState, GameStore, SetState } from "@/game/types";
 import {
-  GLOBAL_CRISES,
-  CRISIS_INTERVAL,
   CRISIS_WARNING_TURNS,
+  GLOBAL_CRISES,
+  pickWeightedCrisis,
+  rollNextCrisisTurn,
 } from "@/game/constants/globalCrises";
+import { store as i18nStore } from "@/lib/useTranslation";
 
 /**
  * Выбирает случайный кризис, исключая только что завершившийся
  */
-const pickRandomCrisis = (excludeId?: string) => {
-  const pool = GLOBAL_CRISES.filter((c) => c.id !== excludeId);
-  return pool[Math.floor(Math.random() * pool.length)];
-};
+const getCrisisById = (id?: string | null) =>
+  GLOBAL_CRISES.find((crisis) => crisis.id === id);
 
 /**
  * Обработка глобальных кризисов — вызывается каждый ход.
@@ -28,19 +28,30 @@ export const processGlobalCrises = (
   set: SetState,
   get: () => GameStore,
 ): void => {
-  const { turn, activeCrisis, nextCrisisTurn } = state;
+  const { turn, activeCrisis, nextCrisisTurn, nextCrisisId } = state;
 
   // ── Активный кризис ────────────────────────────────────────────────────────
   if (activeCrisis) {
-    const crisis = GLOBAL_CRISES.find((c) => c.id === activeCrisis.id);
+    const crisis = getCrisisById(activeCrisis.id);
     if (crisis) {
-      crisis.onTurnEffect(set, get);
+      const updatedData = crisis.onTurnEffect(set, get, activeCrisis);
+      if (updatedData !== undefined) {
+        set(() => ({
+          activeCrisis: { ...activeCrisis, data: { ...activeCrisis.data, ...updatedData } },
+        }));
+      }
     }
 
     const newRemaining = activeCrisis.turnsRemaining - 1;
     if (newRemaining <= 0) {
+      if (crisis?.onEndEffect) {
+        crisis.onEndEffect(set, get, activeCrisis);
+      }
       set(() => ({ activeCrisis: null }));
-      get().addLog(`✅ Кризис "${crisis?.icon ?? ""}" завершён`, "info");
+      get().addLog(
+        `✅ Кризис завершён: ${crisis?.icon ?? ""} ${crisis ? i18nStore.t(crisis.nameKey) : ""}`.trim(),
+        "info",
+      );
     } else {
       set(() => ({
         activeCrisis: { ...activeCrisis, turnsRemaining: newRemaining },
@@ -52,22 +63,32 @@ export const processGlobalCrises = (
   // ── Предупреждение ─────────────────────────────────────────────────────────
   const turnsUntilCrisis = nextCrisisTurn - turn;
   if (turnsUntilCrisis === CRISIS_WARNING_TURNS) {
+    const upcomingCrisis = getCrisisById(nextCrisisId);
     get().addLog(
-      `⚠️ Внимание! Через ${CRISIS_WARNING_TURNS} хода надвигается галактический кризис!`,
+      upcomingCrisis
+        ? `⚠️ ${upcomingCrisis.icon} ${i18nStore.t(upcomingCrisis.warningKey)}. До кризиса ${CRISIS_WARNING_TURNS} хода`
+        : `⚠️ Внимание! Через ${CRISIS_WARNING_TURNS} хода надвигается галактический кризис!`,
       "warning",
     );
-    return;
   }
 
   // ── Начало нового кризиса ──────────────────────────────────────────────────
   if (turn >= nextCrisisTurn) {
-    const crisis = pickRandomCrisis();
+    const crisis = getCrisisById(nextCrisisId) ?? pickWeightedCrisis(state);
+    const preparedData = crisis.onStartEffect?.(set, get) ?? undefined;
+    const freshState = get();
+    const nextPlannedCrisis = pickWeightedCrisis(freshState, crisis.id);
     set(() => ({
-      activeCrisis: { id: crisis.id, turnsRemaining: crisis.duration },
-      nextCrisisTurn: nextCrisisTurn + CRISIS_INTERVAL,
+      activeCrisis: {
+        id: crisis.id,
+        turnsRemaining: crisis.duration,
+        data: preparedData,
+      },
+      nextCrisisTurn: rollNextCrisisTurn(turn, freshState),
+      nextCrisisId: nextPlannedCrisis.id,
     }));
     get().addLog(
-      `🚨 ГАЛАКТИЧЕСКИЙ КРИЗИС: ${crisis.icon} Длительность: ${crisis.duration} хода`,
+      `🚨 ГАЛАКТИЧЕСКИЙ КРИЗИС: ${crisis.icon} ${i18nStore.t(crisis.nameKey)} · длительность ${crisis.duration} хода`,
       "error",
     );
   }

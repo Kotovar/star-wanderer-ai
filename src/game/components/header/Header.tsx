@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useGameStore } from "@/game/store";
 import { HelpPanel, ActiveEffectsPanel } from "../panels";
 import { ResearchPanel } from "../ResearchPanel";
@@ -23,10 +23,16 @@ export function GameHeader() {
   const [showRestartDialog, setShowRestartDialog] = useState(false);
   const [showResearchModal, setShowResearchModal] = useState(false);
   const [showSaveLoad, setShowSaveLoad] = useState(false);
+  const [dismissedCrisisWidgetKey, setDismissedCrisisWidgetKey] = useState<string | null>(null);
+  const [crisisWidgetPosition, setCrisisWidgetPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const turn = useGameStore((s) => s.turn);
   const credits = useGameStore((s) => s.credits);
   const activeCrisis = useGameStore((s) => s.activeCrisis);
   const nextCrisisTurn = useGameStore((s) => s.nextCrisisTurn);
+  const nextCrisisId = useGameStore((s) => s.nextCrisisId);
   const currentSector = useGameStore((s) => s.currentSector);
   const artifacts = useGameStore((s) => s.artifacts);
   const activeEffects = useGameStore((s) => s.activeEffects);
@@ -39,6 +45,22 @@ export function GameHeader() {
 
   const discoveredArtifacts = artifacts.filter((a) => a.discovered).length;
   const activeArtifacts = artifacts.filter((a) => a.effect.active).length;
+  const crisis = activeCrisis
+    ? GLOBAL_CRISES.find((item) => item.id === activeCrisis.id)
+    : null;
+  const upcomingCrisis = nextCrisisId
+    ? GLOBAL_CRISES.find((item) => item.id === nextCrisisId)
+    : null;
+  const turnsUntilCrisis = nextCrisisTurn - turn;
+  const crisisWidgetRef = useRef<HTMLDivElement | null>(null);
+  const dragOffsetRef = useRef({ x: 0, y: 0 });
+  const isDraggingCrisisRef = useRef(false);
+  const crisisWidgetKey = activeCrisis
+    ? `active:${activeCrisis.id}:${activeCrisis.turnsRemaining}`
+    : turnsUntilCrisis <= CRISIS_WARNING_TURNS && turnsUntilCrisis > 0
+      ? `warning:${nextCrisisId ?? "unknown"}:${turnsUntilCrisis}`
+      : "none";
+  const crisisWidgetDismissed = dismissedCrisisWidgetKey === crisisWidgetKey;
 
   const handleRestartClick = () => {
     setShowRestartDialog(true);
@@ -85,6 +107,42 @@ export function GameHeader() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [gameMode, closeReputationPanel]);
+
+  useEffect(() => {
+    const handlePointerMove = (event: PointerEvent) => {
+      if (!isDraggingCrisisRef.current) return;
+      setCrisisWidgetPosition({
+        x: Math.max(8, Math.min(window.innerWidth - 328, event.clientX - dragOffsetRef.current.x)),
+        y: Math.max(8, Math.min(window.innerHeight - 140, event.clientY - dragOffsetRef.current.y)),
+      });
+    };
+
+    const handlePointerUp = () => {
+      isDraggingCrisisRef.current = false;
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, []);
+
+  const startDraggingCrisisWidget = (clientX: number, clientY: number) => {
+    const rect = crisisWidgetRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    isDraggingCrisisRef.current = true;
+    dragOffsetRef.current = {
+      x: clientX - rect.left,
+      y: clientY - rect.top,
+    };
+    setCrisisWidgetPosition({
+      x: rect.left,
+      y: rect.top,
+    });
+  };
 
   return (
     <>
@@ -211,31 +269,121 @@ export function GameHeader() {
         </div>
       </header>
 
-      {/* ── Баннер кризиса ── */}
-      {activeCrisis ? (
-        (() => {
-          const crisis = GLOBAL_CRISES.find((c) => c.id === activeCrisis.id);
-          return (
-            <div className="bg-[rgba(255,0,64,0.15)] border-b border-[#ff0040] px-4 py-1 flex items-center justify-center gap-3 text-xs animate-pulse">
-              <span className="text-[#ff0040] font-bold">🚨 КРИЗИС:</span>
-              <span className="text-[#ff6680]">
-                {crisis?.icon ?? "⚠️"} {t(crisis?.nameKey ?? "")}
-              </span>
-              <span className="text-[#ff0040]">
-                — осталось {activeCrisis.turnsRemaining}{" "}
-                {activeCrisis.turnsRemaining === 1 ? "ход" : "хода"}
-              </span>
+      {/* ── Оверлей кризиса: не влияет на layout ── */}
+      {activeCrisis && !crisisWidgetDismissed ? (
+        <div
+          ref={crisisWidgetRef}
+          className={`fixed z-40 w-[min(90vw,320px)] ${crisisWidgetPosition ? "" : "top-24 md:top-20 left-1/2 -translate-x-1/2"}`}
+          style={
+            crisisWidgetPosition
+              ? {
+                  left: crisisWidgetPosition.x,
+                  top: crisisWidgetPosition.y,
+                }
+              : undefined
+          }
+        >
+          <div className="rounded-md border border-[#ff0040] bg-[rgba(28,6,14,0.9)] px-3 py-2 shadow-[0_0_20px_rgba(255,0,64,0.25)] backdrop-blur-sm">
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#ff6680]">
+              <button
+                type="button"
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  startDraggingCrisisWidget(event.clientX, event.clientY);
+                }}
+                className="cursor-grab active:cursor-grabbing rounded border border-[#ff668055] px-1 py-0.5 text-[9px] text-[#ff9aae] hover:bg-[rgba(255,102,128,0.12)]"
+                title="Перетащить"
+              >
+                ⠿
+              </button>
+              <span>🚨</span>
+              <span>Кризис</span>
+              <button
+                type="button"
+                onClick={() => setDismissedCrisisWidgetKey(crisisWidgetKey)}
+                className="ml-auto cursor-pointer rounded border border-[#ff668055] px-1 py-0.5 text-[9px] text-[#ff9aae] hover:bg-[rgba(255,102,128,0.12)]"
+                title="Закрыть"
+              >
+                ✕
+              </button>
             </div>
-          );
-        })()
-      ) : nextCrisisTurn - turn <= CRISIS_WARNING_TURNS &&
-        nextCrisisTurn - turn > 0 ? (
-        <div className="bg-[rgba(255,176,0,0.1)] border-b border-[#ffb000] px-4 py-1 flex items-center justify-center gap-2 text-xs">
-          <span className="text-[#ffb000] font-bold">⚠️</span>
-          <span className="text-[#ffb000]">
-            Кризис через {nextCrisisTurn - turn}{" "}
-            {nextCrisisTurn - turn === 1 ? "ход" : "хода"}
-          </span>
+            <div className="mt-1 text-sm font-semibold text-[#ffd6de]">
+              {crisis?.icon ?? "⚠️"} {t(crisis?.nameKey ?? "")}
+            </div>
+            {crisis && (
+              <>
+                <div className="mt-1 text-[11px] leading-snug text-[#ffb6c4]">
+                  {t(crisis.descriptionKey)}
+                </div>
+                <div className="mt-1 text-[10px] leading-snug text-[#ff8da2]">
+                  {t(crisis.effectsKey)}
+                </div>
+              </>
+            )}
+            <div className="mt-1 text-[11px] text-[#ff8da2]">
+              Осталось {activeCrisis.turnsRemaining}{" "}
+              {activeCrisis.turnsRemaining === 1 ? "ход" : "хода"}
+            </div>
+          </div>
+        </div>
+      ) : turnsUntilCrisis <= CRISIS_WARNING_TURNS &&
+        turnsUntilCrisis > 0 &&
+        !crisisWidgetDismissed ? (
+        <div
+          ref={crisisWidgetRef}
+          className={`fixed z-40 w-[min(90vw,320px)] ${crisisWidgetPosition ? "" : "top-24 md:top-20 left-1/2 -translate-x-1/2"}`}
+          style={
+            crisisWidgetPosition
+              ? {
+                  left: crisisWidgetPosition.x,
+                  top: crisisWidgetPosition.y,
+                }
+              : undefined
+          }
+        >
+          <div className="rounded-md border border-[#ffb000] bg-[rgba(32,22,6,0.9)] px-3 py-2 shadow-[0_0_18px_rgba(255,176,0,0.2)] backdrop-blur-sm">
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#ffd36b]">
+              <button
+                type="button"
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  startDraggingCrisisWidget(event.clientX, event.clientY);
+                }}
+                className="cursor-grab active:cursor-grabbing rounded border border-[#ffd36b55] px-1 py-0.5 text-[9px] text-[#ffe6a6] hover:bg-[rgba(255,211,107,0.12)]"
+                title="Перетащить"
+              >
+                ⠿
+              </button>
+              <span>⚠️</span>
+              <span>Предупреждение</span>
+              <button
+                type="button"
+                onClick={() => setDismissedCrisisWidgetKey(crisisWidgetKey)}
+                className="ml-auto cursor-pointer rounded border border-[#ffd36b55] px-1 py-0.5 text-[9px] text-[#ffe6a6] hover:bg-[rgba(255,211,107,0.12)]"
+                title="Закрыть"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="mt-1 text-sm font-semibold text-[#ffe6a6]">
+              {upcomingCrisis?.icon ?? "⚠️"}{" "}
+              {upcomingCrisis ? t(upcomingCrisis.nameKey) : "Кризис"} через {turnsUntilCrisis}{" "}
+              {turnsUntilCrisis === 1 ? "ход" : "хода"}
+            </div>
+            {upcomingCrisis && (
+              <>
+                <div className="mt-1 text-[11px] text-[#ffd36b]">
+                  {t(upcomingCrisis.warningKey)}
+                </div>
+                <div className="mt-1 text-[11px] leading-snug text-[#ffe6a6]">
+                  {t(upcomingCrisis.descriptionKey)}
+                </div>
+                <div className="mt-1 text-[10px] leading-snug text-[#ffd36b]">
+                  {t(upcomingCrisis.effectsKey)}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       ) : null}
 

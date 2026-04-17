@@ -128,117 +128,110 @@ export function PlanetVisual({ planetType }: PlanetVisualProps) {
                 <g clipPath={`url(#clip-planet-${planetType})`}>
                     {planetType === "Пустынная" && (
                         <>
-                            <ellipse cx="65" cy="78" rx="28" ry="12" fill={colors.secondary} opacity="0.5" />
-                            <ellipse cx="130" cy="110" rx="35" ry="14" fill={colors.secondary} opacity="0.4" />
-                            <ellipse cx="95" cy="130" rx="22" ry="9" fill={colors.accent} opacity="0.3" />
-                            <ellipse cx="80" cy="100" rx="40" ry="16" fill={colors.secondary} opacity="0.25" />
+                            <path d="M38 118 C56 102, 78 104, 96 112 S136 126, 162 114 L162 145 L38 145 Z" fill={colors.secondary} opacity="0.45" />
+                            <path d="M48 86 C68 78, 92 80, 116 88 S146 100, 160 94" fill="none" stroke={colors.accent} strokeWidth="4" opacity="0.28" />
+                            <path d="M42 97 C62 89, 82 90, 102 98 S142 111, 158 106" fill="none" stroke={colors.secondary} strokeWidth="3" opacity="0.24" />
+                            <path d="M72 70 L88 60 L98 68 L110 62 L124 74" fill="none" stroke={colors.secondary} strokeWidth="4" opacity="0.35" />
                         </>
                     )}
 
                     {planetType === "Ледяная" && (
                         <>
-                            <ellipse cx="70" cy="65" rx="45" ry="18" fill={colors.accent} opacity="0.4" />
-                            <circle cx="55" cy="90" r="14" fill={colors.accent} opacity="0.35" />
-                            <circle cx="140" cy="120" r="18" fill={colors.accent} opacity="0.3" />
-                            <ellipse cx="100" cy="140" rx="50" ry="14" fill={colors.accent} opacity="0.25" />
-                            <circle cx="115" cy="80" r="10" fill={colors.accent} opacity="0.4" />
+                            <path d="M42 70 C66 58, 98 58, 128 68 S154 88, 160 80" fill="none" stroke={colors.accent} strokeWidth="9" opacity="0.35" />
+                            <path d="M50 128 C68 118, 98 120, 122 128 S148 138, 156 134" fill="none" stroke={colors.accent} strokeWidth="8" opacity="0.28" />
+                            <path d="M66 78 L82 96 L74 112 M98 72 L110 90 L100 106 M128 86 L138 102 L126 122" fill="none" stroke="#ffffff" strokeWidth="2.5" opacity="0.34" />
+                            <path d="M58 98 C74 92, 88 94, 100 104 S128 118, 146 112" fill="none" stroke="#ffffff" strokeWidth="2" opacity="0.22" />
                         </>
                     )}
 
                     {planetType === "Лесная" && (
                         <>
-                            <ellipse cx="70" cy="85" rx="22" ry="35" fill={colors.secondary} opacity="0.45" />
-                            <ellipse cx="125" cy="95" rx="28" ry="40" fill={colors.secondary} opacity="0.4" />
-                            <ellipse cx="95" cy="125" rx="32" ry="22" fill={colors.accent} opacity="0.3" />
-                            <ellipse cx="140" cy="75" rx="18" ry="28" fill={colors.secondary} opacity="0.35" />
+                            <path d="M40 122 C52 96, 72 82, 90 86 S120 108, 138 114 S154 110, 160 96 L160 150 L40 150 Z" fill={colors.secondary} opacity="0.42" />
+                            <path d="M50 118 C62 100, 76 90, 90 94 S112 112, 132 120" fill="none" stroke={colors.accent} strokeWidth="6" opacity="0.24" />
+                            <path d="M62 82 L72 66 L84 82 M88 86 L98 68 L110 86 M116 92 L128 72 L140 92" fill="none" stroke="#173620" strokeWidth="4" opacity="0.38" />
+                            <path d="M72 108 C86 100, 100 102, 112 112 S138 126, 150 120" fill="none" stroke={colors.accent} strokeWidth="3" opacity="0.2" />
                         </>
                     )}
 
                     {planetType === "Вулканическая" && (
                         <>
-                            <ellipse cx="80" cy="100" rx="50" ry="20" fill={colors.secondary} opacity="0.5" />
-                            <circle cx="65" cy="80" r="9" fill={colors.accent} opacity="0.75" />
-                            <circle cx="130" cy="110" r="11" fill={colors.accent} opacity="0.65" />
-                            <circle cx="95" cy="125" r="13" fill={colors.accent} opacity="0.55" />
-                            <circle cx="115" cy="70" r="7" fill={colors.accent} opacity="0.7" />
-                            <ellipse cx="100" cy="140" rx="40" ry="10" fill={colors.accent} opacity="0.3" />
+                            <path d="M38 128 L56 102 L74 116 L90 86 L110 104 L126 78 L150 110 L162 128 L162 150 L38 150 Z" fill={colors.secondary} opacity="0.5" />
+                            <path d="M89 86 L96 103 L90 122 M126 78 L130 94 L124 112" fill="none" stroke={colors.accent} strokeWidth="4" opacity="0.72" />
+                            <path d="M54 122 C72 112, 88 112, 106 122 S138 136, 154 130" fill="none" stroke={colors.accent} strokeWidth="3" opacity="0.34" />
+                            <circle cx="114" cy="86" r="7" fill={colors.accent} opacity="0.55" />
                         </>
                     )}
 
                     {planetType === "Океаническая" && (
                         <>
-                            <ellipse cx="75" cy="75" rx="38" ry="14" fill={colors.accent} opacity="0.4" />
-                            <ellipse cx="120" cy="115" rx="44" ry="16" fill={colors.accent} opacity="0.35" />
-                            <ellipse cx="95" cy="100" rx="48" ry="12" fill={colors.accent} opacity="0.3" />
-                            {/* Landmass */}
-                            <ellipse cx="85" cy="95" rx="16" ry="22" fill={colors.secondary} opacity="0.7" />
-                            <ellipse cx="130" cy="80" rx="12" ry="18" fill={colors.secondary} opacity="0.6" />
+                            <path d="M34 96 C52 80, 74 76, 92 82 S126 102, 166 96" fill="none" stroke={colors.accent} strokeWidth="6" opacity="0.28" />
+                            <path d="M40 122 C58 112, 74 112, 92 118 S132 132, 158 126" fill="none" stroke={colors.accent} strokeWidth="5" opacity="0.22" />
+                            <path d="M68 74 C82 68, 94 74, 98 86 S94 110, 78 118 S54 122, 50 108 S54 80, 68 74 Z" fill={colors.secondary} opacity="0.62" />
+                            <path d="M118 76 C130 72, 140 78, 142 90 S136 108, 124 112 S106 108, 104 96 S108 80, 118 76 Z" fill={colors.secondary} opacity="0.55" />
+                            <path d="M74 84 C82 90, 84 98, 78 106" fill="none" stroke={colors.accent} strokeWidth="2.5" opacity="0.32" />
                         </>
                     )}
 
                     {planetType === "Кристаллическая" && (
                         <>
-                            <polygon points="72,66 82,90 64,104 54,84" fill={colors.accent} opacity="0.6" />
-                            <polygon points="118,58 132,86 112,102 100,78" fill={colors.accent} opacity="0.5" />
-                            <polygon points="138,100 150,126 128,142 118,116" fill={colors.accent} opacity="0.45" />
-                            <polygon points="88,112 102,146 74,158 66,128" fill={colors.secondary} opacity="0.45" />
-                            <ellipse cx="100" cy="104" rx="46" ry="10" fill={colors.accent} opacity="0.18" />
+                            <path d="M54 128 L70 84 L82 126 Z" fill={colors.accent} opacity="0.52" />
+                            <path d="M92 138 L110 64 L126 138 Z" fill={colors.accent} opacity="0.46" />
+                            <path d="M124 134 L142 88 L154 132 Z" fill={colors.secondary} opacity="0.42" />
+                            <path d="M54 126 H154" stroke={colors.accent} strokeWidth="3" opacity="0.2" />
+                            <path d="M110 64 L116 96 L104 122" fill="none" stroke="#ffffff" strokeWidth="2" opacity="0.25" />
                         </>
                     )}
 
                     {planetType === "Радиоактивная" && (
                         <>
-                            <circle cx="70" cy="88" r="16" fill={colors.accent} opacity="0.45" />
-                            <circle cx="128" cy="105" r="20" fill={colors.accent} opacity="0.4" />
-                            <circle cx="100" cy="125" r="13" fill={colors.accent} opacity="0.5" />
-                            <circle cx="88" cy="72" r="11" fill={colors.accent} opacity="0.55" />
-                            <ellipse cx="110" cy="140" rx="30" ry="9" fill={colors.accent} opacity="0.3" />
+                            <path d="M42 128 C58 104, 76 96, 96 102 S128 128, 158 120 L158 150 L42 150 Z" fill={colors.secondary} opacity="0.38" />
+                            <path d="M64 78 C80 70, 96 76, 98 90 S82 110, 66 102 S52 84, 64 78 Z" fill={colors.accent} opacity="0.42" />
+                            <path d="M118 92 C136 86, 148 98, 144 114 S124 130, 110 120 S104 98, 118 92 Z" fill={colors.accent} opacity="0.34" />
+                            <path d="M78 92 L88 104 L78 116 M128 100 L136 112 L124 124" fill="none" stroke="#c8ff7a" strokeWidth="2.5" opacity="0.4" />
+                            <circle cx="98" cy="124" r="8" fill={colors.accent} opacity="0.3" />
                         </>
                     )}
 
                     {planetType === "Тропическая" && (
                         <>
-                            <ellipse cx="75" cy="82" rx="24" ry="32" fill={colors.secondary} opacity="0.45" />
-                            <ellipse cx="125" cy="105" rx="30" ry="36" fill={colors.secondary} opacity="0.4" />
-                            <ellipse cx="95" cy="118" rx="22" ry="28" fill={colors.accent} opacity="0.35" />
-                            <ellipse cx="110" cy="75" rx="18" ry="24" fill={colors.secondary} opacity="0.3" />
+                            <path d="M40 128 C48 104, 66 82, 86 82 S118 100, 136 110 S154 118, 160 102 L160 150 L40 150 Z" fill={colors.secondary} opacity="0.44" />
+                            <path d="M48 118 C64 100, 76 88, 90 90 S114 110, 132 122" fill="none" stroke={colors.accent} strokeWidth="6" opacity="0.22" />
+                            <path d="M84 74 C88 88, 84 98, 74 108 M100 70 C106 84, 104 98, 94 116 M120 84 C126 98, 124 110, 114 126" fill="none" stroke="#144e33" strokeWidth="4" opacity="0.34" />
+                            <path d="M90 94 C98 102, 98 112, 92 124" fill="none" stroke={colors.accent} strokeWidth="2.5" opacity="0.24" />
                         </>
                     )}
 
                     {planetType === "Арктическая" && (
                         <>
-                            <ellipse cx="100" cy="70" rx="55" ry="20" fill={colors.accent} opacity="0.55" />
-                            <circle cx="65" cy="78" r="15" fill={colors.accent} opacity="0.5" />
-                            <circle cx="135" cy="118" r="18" fill={colors.accent} opacity="0.45" />
-                            <ellipse cx="100" cy="140" rx="48" ry="12" fill={colors.accent} opacity="0.4" />
+                            <path d="M40 74 C62 60, 96 58, 130 68 S154 86, 160 80" fill="none" stroke={colors.accent} strokeWidth="10" opacity="0.42" />
+                            <path d="M48 126 C72 114, 100 116, 126 126 S150 138, 158 132" fill="none" stroke={colors.accent} strokeWidth="9" opacity="0.34" />
+                            <path d="M62 90 L90 112 L82 132 M102 86 L114 102 L108 126 M130 98 L142 116 L132 136" fill="none" stroke="#e9fbff" strokeWidth="2.5" opacity="0.36" />
                         </>
                     )}
 
                     {planetType === "Разрушенная войной" && (
                         <>
-                            {/* Craters */}
-                            <circle cx="70" cy="82" r="12" fill={colors.secondary} opacity="0.7" />
-                            <circle cx="70" cy="82" r="10" fill="#000" opacity="0.4" />
-                            <circle cx="130" cy="108" r="15" fill={colors.secondary} opacity="0.65" />
-                            <circle cx="130" cy="108" r="12" fill="#000" opacity="0.35" />
-                            <circle cx="95" cy="125" r="9" fill={colors.secondary} opacity="0.6" />
-                            <circle cx="95" cy="125" r="7" fill="#000" opacity="0.3" />
-                            <ellipse cx="110" cy="72" rx="20" ry="10" fill="#ff4444" opacity="0.3" />
+                            <path d="M42 132 L58 104 L80 110 L98 90 L116 108 L142 98 L158 126 L158 150 L42 150 Z" fill={colors.secondary} opacity="0.44" />
+                            <path d="M58 90 C66 82, 78 82, 82 92 S76 110, 66 108 S50 98, 58 90 Z" fill="#000" opacity="0.32" />
+                            <path d="M118 100 C130 90, 144 96, 144 110 S130 130, 118 122 S108 108, 118 100 Z" fill="#000" opacity="0.28" />
+                            <path d="M74 118 L102 94 M88 130 L116 108 M116 88 L140 116" fill="none" stroke="#ff5a5a" strokeWidth="2.2" opacity="0.34" />
                         </>
                     )}
 
                     {planetType === "Планета-кольцо" && (
                         <>
-                            <ellipse cx="80" cy="90" rx="20" ry="30" fill={colors.secondary} opacity="0.4" />
-                            <ellipse cx="120" cy="105" rx="25" ry="35" fill={colors.secondary} opacity="0.35" />
+                            <path d="M48 124 C62 100, 84 88, 108 90 S142 102, 158 120 L158 150 L48 150 Z" fill={colors.secondary} opacity="0.36" />
+                            <path d="M58 98 C82 84, 108 84, 136 96" fill="none" stroke={colors.accent} strokeWidth="4" opacity="0.24" />
+                            <path d="M74 80 L90 66 L102 78 L118 70 L134 86" fill="none" stroke={colors.secondary} strokeWidth="4" opacity="0.24" />
                         </>
                     )}
 
                     {planetType === "Приливная" && (
                         <>
-                            <ellipse cx="75" cy="78" rx="32" ry="16" fill={colors.accent} opacity="0.4" />
-                            <ellipse cx="125" cy="112" rx="38" ry="18" fill={colors.accent} opacity="0.35" />
-                            <ellipse cx="98" cy="96" rx="42" ry="14" fill={colors.accent} opacity="0.3" />
+                            <path d="M38 118 C58 92, 84 88, 108 100 S144 128, 162 114 L162 148 L38 148 Z" fill={colors.secondary} opacity="0.42" />
+                            <path d="M42 94 C60 86, 78 86, 96 96 S130 114, 160 104" fill="none" stroke={colors.accent} strokeWidth="5" opacity="0.26" />
+                            <path d="M76 86 C88 100, 88 112, 78 126 M112 78 C124 94, 124 110, 114 128 M138 96 C146 108, 146 120, 138 132" fill="none" stroke="#ffd08a" strokeWidth="3" opacity="0.28" />
+                            <path d="M90 108 C102 104, 112 110, 116 122" fill="none" stroke={colors.accent} strokeWidth="2.5" opacity="0.22" />
                         </>
                     )}
 
