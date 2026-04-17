@@ -1,3 +1,4 @@
+import type { ModuleType } from "@/game/types/modules";
 import type { ResearchResourceType } from "@/game/types/research";
 import type { RaceId } from "@/game/types/races";
 
@@ -14,8 +15,10 @@ export interface LaunchModifier {
   type: "bonus" | "challenge" | "mixed";
   /** Изменение стартовых кредитов */
   creditDelta: number;
-  /** Изменение стартового топлива и макс. топлива */
+  /** Изменение стартового запаса топлива */
   fuelDelta?: number;
+  /** Изменение максимальной вместимости бака */
+  maxFuelDelta?: number;
   /** Дополнительные исследовательские ресурсы */
   researchResources?: Partial<Record<ResearchResourceType, number>>;
   /** Уровень старта всего экипажа (override, не суммируется с шаблоном) */
@@ -28,6 +31,10 @@ export interface LaunchModifier {
   startWithCursedArtifact?: boolean;
   /** Процент урона, применяемый ко всем модулям при старте (0–100) */
   moduleDamagePercent?: number;
+  /** Процент урона по одному случайному модулю выбранных типов при старте (0–100) */
+  targetedModuleDamagePercent?: number;
+  /** Допустимые типы модулей для точечного стартового урона */
+  targetedModuleTypes?: ModuleType[];
   /** Стартовая репутация с расами (override поверх нейтральных 0) */
   startRaceReputation?: Partial<Record<RaceId, number>>;
 }
@@ -53,6 +60,7 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     type: "bonus",
     creditDelta: -500,
     fuelDelta: 50,
+    maxFuelDelta: 50,
   },
   {
     id: "research_head_start",
@@ -107,6 +115,9 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     type: "challenge",
     creditDelta: +800,
     fuelDelta: -60,
+    targetedModuleDamagePercent: 35,
+    targetedModuleTypes: ["engine", "fueltank"],
+    researchResources: { tech_salvage: 1 },
   },
   {
     id: "damaged_ship",

@@ -52,11 +52,15 @@ export function buildStartingState(
   let fuel = template.fuel;
   let maxFuel = template.maxFuel;
   for (const mod of activeModifiers) {
-    if (mod.fuelDelta) {
+    if (mod.fuelDelta !== undefined) {
       fuel += mod.fuelDelta;
-      maxFuel += mod.fuelDelta;
+    }
+    if (mod.maxFuelDelta !== undefined) {
+      maxFuel += mod.maxFuelDelta;
     }
   }
+  maxFuel = Math.max(0, maxFuel);
+  fuel = Math.max(0, Math.min(fuel, maxFuel));
 
   // ── Модули ────────────────────────────────────────────────────────────────
   let modules = template.modules.map((m) => ({ ...m }));
@@ -93,6 +97,33 @@ export function buildStartingState(
         Math.round(m.maxHealth * (1 - totalDamagePercent / 100)),
       ),
     }));
+  }
+
+  const targetedDamageMods = activeModifiers.filter(
+    (mod) =>
+      (mod.targetedModuleDamagePercent ?? 0) > 0 &&
+      (mod.targetedModuleTypes?.length ?? 0) > 0,
+  );
+  for (const mod of targetedDamageMods) {
+    const candidates = modules
+      .map((module, index) => ({ module, index }))
+      .filter(({ module }) => mod.targetedModuleTypes?.includes(module.type));
+
+    if (candidates.length === 0) continue;
+
+    const picked = candidates[Math.floor(Math.random() * candidates.length)];
+    const damagedHealth = Math.max(
+      10,
+      Math.round(
+        picked.module.maxHealth *
+          (1 - (mod.targetedModuleDamagePercent ?? 0) / 100),
+      ),
+    );
+
+    modules[picked.index] = {
+      ...picked.module,
+      health: Math.min(picked.module.health, damagedHealth),
+    };
   }
 
   // ── Экипаж ────────────────────────────────────────────────────────────────

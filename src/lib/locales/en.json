@@ -2704,7 +2704,7 @@
     },
     "stranded": {
       "name": "Stranded",
-      "description": "Start with almost no fuel (-60). You'll need to find some at any cost."
+      "description": "Start with a nearly empty standard tank: 20 fuel. The engine or fuel tank is damaged by 35%, but you salvage a bit of tech from the wreck."
     },
     "damaged_ship": {
       "name": "Damaged Ship",
