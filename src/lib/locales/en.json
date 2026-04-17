@@ -840,6 +840,7 @@
       "forest": "Forest",
       "volcanic": "Volcanic",
       "oceanic": "Oceanic",
+      "crystalline": "Crystalline",
       "tropical": "Tropical",
       "arctic": "Arctic",
       "ringed": "Ringed Planet",
@@ -2193,6 +2194,7 @@
     "forest": "Planet with rich biosphere and moderate climate. Ideal for colonization and agriculture.",
     "volcanic": "Geologically active world with constant eruptions. Rich in sulfur and rare metals.",
     "oceanic": "Water world with archipelagos. Prospective for fishing and marine resource extraction.",
+    "crystalline": "World with giant crystal formations and resonant caverns. Rich in quantum crystals and rare minerals.",
     "radioactive": "World with high radiation levels after catastrophe or bombardment. Requires protective suits.",
     "tropical": "Humid planet with dense jungles. Rich in bio-resources but dangerous due to diseases.",
     "arctic": "Cold world with ice wastelands. Prospective for ice and cryogenic mineral mining.",
@@ -2697,6 +2699,41 @@
     "cursed_relic": {
       "name": "Cursed Relic",
       "description": "Game starts with a random cursed artifact activated. High risk, high reward."
+    },
+    "stranded": {
+      "name": "Stranded",
+      "description": "Start with almost no fuel (-60). You'll need to find some at any cost."
+    },
+    "damaged_ship": {
+      "name": "Damaged Ship",
+      "description": "All ship modules are damaged by 40% at the start. Urgent repairs needed."
+    },
+    "wanted": {
+      "name": "Wanted",
+      "description": "Krylorians are hostile from turn one (-70 reputation). Extra credits compensate the risk."
+    },
+    "salvaged_parts": {
+      "name": "Salvaged Parts",
+      "description": "Ship cobbled together from scraps: modules damaged 20%, but +10 tech salvage in the hold for research."
+    }
+  },
+
+  "crises": {
+    "raider_wave": {
+      "name": "Raider Wave",
+      "warning": "Raiders are preparing an attack"
+    },
+    "solar_flare": {
+      "name": "Solar Flare",
+      "warning": "Solar activity detected"
+    },
+    "epidemic": {
+      "name": "Epidemic",
+      "warning": "First infection cases reported"
+    },
+    "fuel_shortage": {
+      "name": "Fuel Crisis",
+      "warning": "Fuel markets are unstable"
     }
   }
 }

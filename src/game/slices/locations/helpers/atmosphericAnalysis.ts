@@ -37,6 +37,12 @@ const getAtmosphereResources = (
                 { type: "energy_samples", qty: r(1, 2) },
             ];
 
+        case "Кристаллическая":
+            return [
+                { type: "quantum_crystals", qty: 1 },
+                { type: "rare_minerals", qty: r(2, 4) },
+            ];
+
         case "Пустынная":
         case "Планета-кольцо":
             return [{ type: "rare_minerals", qty: r(3, 5) }];

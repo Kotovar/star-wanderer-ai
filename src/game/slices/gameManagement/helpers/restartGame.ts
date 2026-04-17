@@ -36,6 +36,10 @@ export const restartGame = (
 
   const patch = buildStartingState(templateId, modifierIds);
 
+  const patchedReputation = patch.raceReputation
+    ? { ...initialState.raceReputation, ...patch.raceReputation }
+    : initialState.raceReputation;
+
   set({
     ...initialState,
     currentSector: newSectors[STARTING_SECTOR_INDEX],
@@ -52,6 +56,7 @@ export const restartGame = (
       ...initialState.research,
       resources: patch.researchResources,
     },
+    raceReputation: patchedReputation,
     startTemplateId: templateId,
   });
 

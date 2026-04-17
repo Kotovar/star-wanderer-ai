@@ -102,6 +102,9 @@ export const createGameLoopSlice = (
         // Случайные события
         processors.processRandomEvents(state, set, get);
 
+        // Глобальные кризисы
+        processors.processGlobalCrises(state, set, get);
+
         // Назначения экипажа
         processors.processCrewAssignments(set, get);
 

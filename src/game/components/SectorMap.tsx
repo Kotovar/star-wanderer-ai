@@ -113,6 +113,7 @@ function getPlanetTypeTranslation(
     Лесная: "forest",
     Вулканическая: "volcanic",
     Океаническая: "oceanic",
+    Кристаллическая: "crystalline",
     Тропическая: "tropical",
     Арктическая: "arctic",
     "Планета-кольцо": "ringed",
@@ -124,6 +125,7 @@ function getPlanetTypeTranslation(
     Forest: "forest",
     Volcanic: "volcanic",
     Oceanic: "oceanic",
+    Crystalline: "crystalline",
     Tropical: "tropical",
     Arctic: "arctic",
     "Ringed Planet": "ringed",
@@ -2694,6 +2696,29 @@ function drawPlanet(
       );
       ctx.fill();
     }
+  }
+
+  if (loc.planetType === "Кристаллическая") {
+    // Crystal spikes
+    ctx.fillStyle = "#9ef7ff";
+    for (let i = 0; i < 4; i++) {
+      const angle = seededRandom(loc, i) * Math.PI * 2;
+      const dist = seededRandom(loc, i + 10) * radius * 0.55;
+      const px = x + Math.cos(angle) * dist;
+      const py = y + Math.sin(angle) * dist;
+      ctx.beginPath();
+      ctx.moveTo(px, py - 3);
+      ctx.lineTo(px + 2.5, py + 1.5);
+      ctx.lineTo(px, py + 4);
+      ctx.lineTo(px - 2.5, py + 1.5);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.strokeStyle = "#d8ffff";
+    ctx.lineWidth = 0.75;
+    ctx.beginPath();
+    ctx.arc(x, y, radius * 0.45, 0.2, Math.PI + 0.4);
+    ctx.stroke();
   }
 
   if (loc.planetType === "Вулканическая") {

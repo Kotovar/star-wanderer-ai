@@ -21,6 +21,7 @@ import type { CraftingRecipeId, ModuleRecipeId } from "./crafting";
 import type { ShopItem } from "./shops";
 import type { AugmentationId } from "./augmentations";
 import type { DiveState, ExpeditionState } from "./exploration";
+import type { ActiveCrisisState } from "./crisis";
 
 export type GameMode =
   | "galaxy_map"
@@ -122,6 +123,8 @@ export interface GameState {
   sectorOffset: { x: number; y: number }; // Sector map pan offset
   bannedPlanets: string[]; // Planet location IDs permanently hostile (guard killed there)
   startTemplateId?: string; // Ship template used to start this game (undefined = old save)
+  activeCrisis: ActiveCrisisState | null; // Currently active global crisis
+  nextCrisisTurn: number; // Turn on which the next global crisis triggers
 }
 
 export interface GameActions {

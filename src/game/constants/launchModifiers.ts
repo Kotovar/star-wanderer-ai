@@ -1,4 +1,5 @@
 import type { ResearchResourceType } from "@/game/types/research";
+import type { RaceId } from "@/game/types/races";
 
 // ─── Launch Modifier ──────────────────────────────────────────────────────────
 
@@ -25,6 +26,10 @@ export interface LaunchModifier {
   crewLimit?: number;
   /** Запустить игру с одним случайным cursed артефактом в активном состоянии */
   startWithCursedArtifact?: boolean;
+  /** Процент урона, применяемый ко всем модулям при старте (0–100) */
+  moduleDamagePercent?: number;
+  /** Стартовая репутация с расами (override поверх нейтральных 0) */
+  startRaceReputation?: Partial<Record<RaceId, number>>;
 }
 
 // ─── Модификаторы ────────────────────────────────────────────────────────────
@@ -91,5 +96,46 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     type: "mixed",
     creditDelta: +500,
     startWithCursedArtifact: true,
+  },
+
+  // ── Новые испытания ───────────────────────────────────────────────────────
+  {
+    id: "stranded",
+    nameKey: "launch_modifiers.stranded.name",
+    descriptionKey: "launch_modifiers.stranded.description",
+    icon: "🏚️",
+    type: "challenge",
+    creditDelta: +800,
+    fuelDelta: -60,
+  },
+  {
+    id: "damaged_ship",
+    nameKey: "launch_modifiers.damaged_ship.name",
+    descriptionKey: "launch_modifiers.damaged_ship.description",
+    icon: "💥",
+    type: "challenge",
+    creditDelta: +500,
+    moduleDamagePercent: 40,
+  },
+  {
+    id: "wanted",
+    nameKey: "launch_modifiers.wanted.name",
+    descriptionKey: "launch_modifiers.wanted.description",
+    icon: "🎯",
+    type: "challenge",
+    creditDelta: +400,
+    startRaceReputation: { krylorian: -70 },
+  },
+
+  // ── Новый смешанный ───────────────────────────────────────────────────────
+  {
+    id: "salvaged_parts",
+    nameKey: "launch_modifiers.salvaged_parts.name",
+    descriptionKey: "launch_modifiers.salvaged_parts.description",
+    icon: "🔩",
+    type: "mixed",
+    creditDelta: 0,
+    moduleDamagePercent: 20,
+    researchResources: { tech_salvage: 10 },
   },
 ];

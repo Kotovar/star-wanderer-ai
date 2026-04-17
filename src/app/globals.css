@@ -212,6 +212,41 @@
     }
 }
 
+.planet-bg-кристаллическая {
+    background: linear-gradient(
+        135deg,
+        #090814 0%,
+        #1f1a4f 25%,
+        #4532a8 50%,
+        #1a275d 75%,
+        #070b1a 100%
+    );
+    position: relative;
+    overflow: hidden;
+}
+.planet-bg-кристаллическая::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(35deg, transparent 0%, rgba(158, 247, 255, 0.1) 30%, transparent 55%),
+        linear-gradient(145deg, transparent 10%, rgba(255, 255, 255, 0.08) 38%, transparent 60%),
+        radial-gradient(circle at 30% 30%, rgba(158, 247, 255, 0.2) 0%, transparent 18%),
+        radial-gradient(circle at 70% 65%, rgba(176, 130, 255, 0.18) 0%, transparent 22%);
+    animation: crystal-shimmer 9s ease-in-out infinite;
+}
+@keyframes crystal-shimmer {
+    0%,
+    100% {
+        opacity: 0.45;
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: translateY(-2%) scale(1.03);
+    }
+}
+
 .planet-bg-газовый-гигант {
     background: linear-gradient(
         135deg,

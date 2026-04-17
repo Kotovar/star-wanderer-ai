@@ -4,6 +4,7 @@ import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
 import type { CrewMember, GameState, Artifact } from "@/game/types";
 import type { ResearchResourceType } from "@/game/types/research";
+import type { RaceId } from "@/game/types/races";
 
 export interface StartingStatePatch {
   credits: number;
@@ -13,6 +14,8 @@ export interface StartingStatePatch {
   artifacts: Artifact[];
   /** Только ресурсы исследований — мёржится поверх initialState.research */
   researchResources: Partial<Record<ResearchResourceType, number>>;
+  /** Стартовая репутация с расами (override поверх нейтральных 0) */
+  raceReputation?: Partial<Record<RaceId, number>>;
 }
 
 /**
@@ -76,6 +79,22 @@ export function buildStartingState(
     m.type === "fueltank" ? { ...m, capacity: maxFuel } : m,
   );
 
+  // Урон модулям (moduleDamagePercent)
+  const totalDamagePercent = activeModifiers.reduce(
+    (sum, mod) => sum + (mod.moduleDamagePercent ?? 0),
+    0,
+  );
+  if (totalDamagePercent > 0) {
+    const MIN_HEALTH = 10;
+    modules = modules.map((m) => ({
+      ...m,
+      health: Math.max(
+        MIN_HEALTH,
+        Math.round(m.maxHealth * (1 - totalDamagePercent / 100)),
+      ),
+    }));
+  }
+
   // ── Экипаж ────────────────────────────────────────────────────────────────
   const crewLimit = activeModifiers.reduce<number | null>((acc, mod) => {
     if (mod.crewLimit !== undefined) {
@@ -113,6 +132,17 @@ export function buildStartingState(
       for (const [key, val] of Object.entries(mod.researchResources)) {
         const k = key as ResearchResourceType;
         researchResources[k] = (researchResources[k] ?? 0) + val;
+      }
+    }
+  }
+
+  // ── Стартовая репутация ───────────────────────────────────────────────────
+  const raceReputation: Partial<Record<RaceId, number>> = {};
+  for (const mod of activeModifiers) {
+    if (mod.startRaceReputation) {
+      for (const [raceId, value] of Object.entries(mod.startRaceReputation)) {
+        const k = raceId as RaceId;
+        raceReputation[k] = Math.max(-100, Math.min(100, (raceReputation[k] ?? 0) + value));
       }
     }
   }
@@ -163,5 +193,13 @@ export function buildStartingState(
 
   const probes = template.probes;
 
-  return { credits, probes, ship, crew, artifacts, researchResources };
+  return {
+    credits,
+    probes,
+    ship,
+    crew,
+    artifacts,
+    researchResources,
+    raceReputation: Object.keys(raceReputation).length > 0 ? raceReputation : undefined,
+  };
 }

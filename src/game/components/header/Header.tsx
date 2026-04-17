@@ -5,6 +5,7 @@ import { useGameStore } from "@/game/store";
 import { HelpPanel, ActiveEffectsPanel } from "../panels";
 import { ResearchPanel } from "../ResearchPanel";
 import { SaveLoadPanel } from "../SaveLoadPanel";
+import { GLOBAL_CRISES, CRISIS_WARNING_TURNS } from "@/game/constants/globalCrises";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,8 @@ export function GameHeader() {
   const [showSaveLoad, setShowSaveLoad] = useState(false);
   const turn = useGameStore((s) => s.turn);
   const credits = useGameStore((s) => s.credits);
+  const activeCrisis = useGameStore((s) => s.activeCrisis);
+  const nextCrisisTurn = useGameStore((s) => s.nextCrisisTurn);
   const currentSector = useGameStore((s) => s.currentSector);
   const artifacts = useGameStore((s) => s.artifacts);
   const activeEffects = useGameStore((s) => s.activeEffects);
@@ -207,6 +210,34 @@ export function GameHeader() {
 
         </div>
       </header>
+
+      {/* ── Баннер кризиса ── */}
+      {activeCrisis ? (
+        (() => {
+          const crisis = GLOBAL_CRISES.find((c) => c.id === activeCrisis.id);
+          return (
+            <div className="bg-[rgba(255,0,64,0.15)] border-b border-[#ff0040] px-4 py-1 flex items-center justify-center gap-3 text-xs animate-pulse">
+              <span className="text-[#ff0040] font-bold">🚨 КРИЗИС:</span>
+              <span className="text-[#ff6680]">
+                {crisis?.icon ?? "⚠️"} {t(crisis?.nameKey ?? "")}
+              </span>
+              <span className="text-[#ff0040]">
+                — осталось {activeCrisis.turnsRemaining}{" "}
+                {activeCrisis.turnsRemaining === 1 ? "ход" : "хода"}
+              </span>
+            </div>
+          );
+        })()
+      ) : nextCrisisTurn - turn <= CRISIS_WARNING_TURNS &&
+        nextCrisisTurn - turn > 0 ? (
+        <div className="bg-[rgba(255,176,0,0.1)] border-b border-[#ffb000] px-4 py-1 flex items-center justify-center gap-2 text-xs">
+          <span className="text-[#ffb000] font-bold">⚠️</span>
+          <span className="text-[#ffb000]">
+            Кризис через {nextCrisisTurn - turn}{" "}
+            {nextCrisisTurn - turn === 1 ? "ход" : "хода"}
+          </span>
+        </div>
+      ) : null}
 
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
       {showSaveLoad && (

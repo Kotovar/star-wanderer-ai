@@ -176,6 +176,16 @@ export function PlanetVisual({ planetType }: PlanetVisualProps) {
                         </>
                     )}
 
+                    {planetType === "Кристаллическая" && (
+                        <>
+                            <polygon points="72,66 82,90 64,104 54,84" fill={colors.accent} opacity="0.6" />
+                            <polygon points="118,58 132,86 112,102 100,78" fill={colors.accent} opacity="0.5" />
+                            <polygon points="138,100 150,126 128,142 118,116" fill={colors.accent} opacity="0.45" />
+                            <polygon points="88,112 102,146 74,158 66,128" fill={colors.secondary} opacity="0.45" />
+                            <ellipse cx="100" cy="104" rx="46" ry="10" fill={colors.accent} opacity="0.18" />
+                        </>
+                    )}
+
                     {planetType === "Радиоактивная" && (
                         <>
                             <circle cx="70" cy="88" r="16" fill={colors.accent} opacity="0.45" />

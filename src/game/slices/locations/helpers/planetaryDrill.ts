@@ -46,6 +46,15 @@ const getDrillYield = (planetType: PlanetType | undefined): DrillYield => {
                 researchResources: [{ type: "alien_biology", qty: r(2, 3) }],
             };
 
+        case "Кристаллическая":
+            return {
+                tradeGood: { id: "rare_minerals", qty: r(1, 3) },
+                researchResources: [
+                    { type: "quantum_crystals", qty: 1 },
+                    { type: "rare_minerals", qty: r(2, 4) },
+                ],
+            };
+
         case "Пустынная":
             return {
                 tradeGood: { id: "minerals", qty: r(2, 4) },

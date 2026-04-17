@@ -1,5 +1,6 @@
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { RESEARCH_TREE } from "@/game/constants";
+import { FIRST_CRISIS_TURN } from "@/game/constants/globalCrises";
 import { generateGalaxy } from "@/game/galaxy/generateGalaxy";
 import { initialModules, STARTING_FUEL } from "@/game/modules/initial";
 import { initializeStationData } from "@/game/stations/initialize";
@@ -226,6 +227,8 @@ const baseState: GameState = {
   galaxyOffset: { x: 0, y: 0 },
   sectorOffset: { x: 0, y: 0 },
   bannedPlanets: [],
+  activeCrisis: null,
+  nextCrisisTurn: FIRST_CRISIS_TURN,
 };
 
 /**

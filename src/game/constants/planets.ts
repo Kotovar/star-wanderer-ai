@@ -6,6 +6,7 @@ export const PLANET_TYPES: PlanetType[] = [
     "Лесная",
     "Вулканическая",
     "Океаническая",
+    "Кристаллическая",
     "Радиоактивная",
     "Тропическая",
     "Арктическая",
@@ -25,6 +26,8 @@ export const PLANET_DESCRIPTIONS: Record<PlanetType, string> = {
         "Геологически активный мир с постоянными извержениями. Богата серой и редкими металлами.",
     Океаническая:
         "Водный мир с архипелагами. Перспективен для рыболовства и добычи морских ресурсов.",
+    Кристаллическая:
+        "Мир с гигантскими кристаллическими образованиями и резонансными пещерами. Богата квантовыми кристаллами и редкими минералами.",
     Радиоактивная:
         "Мир с высоким уровнем радиации после катастрофы или бомбардировки. Требует защитных костюмов.",
     Тропическая:
@@ -55,6 +58,11 @@ export const PLANET_COLORS: Record<
         primary: "#2d6a87",
         secondary: "#1a3a5a",
         accent: "#4a9fd4",
+    },
+    Кристаллическая: {
+        primary: "#6b5cff",
+        secondary: "#2b1f6b",
+        accent: "#9ef7ff",
     },
     Радиоактивная: {
         primary: "#4a8a3a",
@@ -93,6 +101,7 @@ export const PLANET_COLORS_IN_SECTOR: Record<
     Лесная: { base: "#4a7c59", atmosphere: "#6b9b7a" }, // Earth-like green
     Вулканическая: { base: "#8b4513", atmosphere: "#ff4500" }, // Io-like
     Океаническая: { base: "#1e90ff", atmosphere: "#87ceeb" }, // Earth-like blue
+    Кристаллическая: { base: "#7568ff", atmosphere: "#b7f8ff" }, // Crystal violet with cyan glow
     Радиоактивная: { base: "#5a8f3a", atmosphere: "#7fff00" }, // Green radioactive glow
     Тропическая: { base: "#228b22", atmosphere: "#90ee90" }, // Lush green tropical
     Арктическая: { base: "#b0e0e6", atmosphere: "#f0f8ff" }, // Ice blue arctic
@@ -111,6 +120,7 @@ export const PLANET_CLASS_MAP: Record<PlanetType, string> = {
     Лесная: "planet-bg-лесная",
     Вулканическая: "planet-bg-вулканическая",
     Океаническая: "planet-bg-океаническая",
+    Кристаллическая: "planet-bg-кристаллическая",
     Радиоактивная: "planet-bg-радиоактивная",
     Тропическая: "planet-bg-тропическая",
     Арктическая: "planet-bg-арктическая",
