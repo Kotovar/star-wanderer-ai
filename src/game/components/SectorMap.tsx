@@ -638,6 +638,52 @@ function canDetectObject(
 
 function LegendIcon({ type }: { type: string }) {
   switch (type) {
+    case "unknown_ship":
+      return (
+        <svg width="22" height="22" viewBox="0 0 24 24">
+          <defs>
+            <radialGradient id="lg-unknown-ship" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="#aab3c4" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="#aab3c4" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <circle cx="12" cy="12" r="11" fill="url(#lg-unknown-ship)" />
+          <polygon
+            points="12,2.8 7.2,8.8 4.2,16.2 8.9,15.1 12,18.8 15.1,15.1 19.8,16.2 16.8,8.8"
+            fill="#2f3642" stroke="#9aa4b5" strokeWidth="1.2"
+          />
+          <polygon
+            points="12,6.4 9.3,11.7 14.7,11.7"
+            fill="#1a1f28"
+          />
+          <line x1="8.8" y1="14.8" x2="15.2" y2="14.8" stroke="#6d7787" strokeWidth="1" />
+          <circle cx="9.7" cy="15.9" r="1.1" fill="#788291" />
+          <circle cx="14.3" cy="15.9" r="1.1" fill="#788291" />
+        </svg>
+      );
+    case "unknown_object":
+      return (
+        <svg width="22" height="22" viewBox="0 0 24 24">
+          <defs>
+            <radialGradient id="lg-unknown-object" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="#b184ff" stopOpacity="0.24" />
+              <stop offset="100%" stopColor="#b184ff" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <circle cx="12" cy="12" r="10.5" fill="url(#lg-unknown-object)" />
+          <polygon
+            points="12,2.8 19.2,7 19.2,17 12,21.2 4.8,17 4.8,7"
+            fill="#15131d" stroke="#8f7ab8" strokeWidth="1.2"
+          />
+          <polygon
+            points="12,5.6 16.8,8.3 16.8,15.7 12,18.4 7.2,15.7 7.2,8.3"
+            fill="none" stroke="#5f4d7d" strokeWidth="1"
+          />
+          <circle cx="12" cy="12" r="2.1" fill="#d9ccff" opacity="0.9" />
+          <circle cx="16.8" cy="8.1" r="1" fill="#a48de3" />
+          <circle cx="7.3" cy="15.9" r="1" fill="#a48de3" />
+        </svg>
+      );
     case "planet":
       return (
         <svg width="22" height="22" viewBox="0 0 24 24">
@@ -650,18 +696,16 @@ function LegendIcon({ type }: { type: string }) {
     case "station":
       return (
         <svg width="22" height="22" viewBox="0 0 24 24">
-          <polygon points="17.2,9 17.2,15 12,18 6.8,15 6.8,9 12,6" fill="#2a5a6a" opacity="0.6" />
-          <polygon points="17.2,9 17.2,15 12,18 6.8,15 6.8,9 12,6" fill="none" stroke="#5ab8d4" strokeWidth="1.5" />
-          {/* arm up */}
-          <line x1="12" y1="6" x2="12" y2="2" stroke="#2a5a6a" strokeWidth="2.5" />
-          <circle cx="12" cy="2" r="1.5" fill="none" stroke="#00ff88" strokeWidth="1" />
-          {/* arm lower-right */}
-          <line x1="17.2" y1="15" x2="20.7" y2="17" stroke="#2a5a6a" strokeWidth="2.5" />
-          <circle cx="20.7" cy="17" r="1.5" fill="none" stroke="#00ff88" strokeWidth="1" />
-          {/* arm lower-left */}
-          <line x1="6.8" y1="15" x2="3.3" y2="17" stroke="#2a5a6a" strokeWidth="2.5" />
-          <circle cx="3.3" cy="17" r="1.5" fill="none" stroke="#00ff88" strokeWidth="1" />
-          <circle cx="12" cy="12" r="2.5" fill="#5ab8d4" />
+          <circle cx="12" cy="12" r="10.5" fill="#5ab8d4" opacity="0.12" />
+          <circle cx="12" cy="12" r="7.5" fill="none" stroke="#2d6d82" strokeWidth="1.2" opacity="0.75" />
+          <polygon points="12,5.4 17.4,8.6 17.4,15.4 12,18.6 6.6,15.4 6.6,8.6" fill="#1c3540" stroke="#5ab8d4" strokeWidth="1.2" />
+          <line x1="12" y1="5.4" x2="12" y2="2.6" stroke="#244b59" strokeWidth="2" />
+          <line x1="17.4" y1="15.4" x2="20" y2="17.1" stroke="#244b59" strokeWidth="2" />
+          <line x1="6.6" y1="15.4" x2="4" y2="17.1" stroke="#244b59" strokeWidth="2" />
+          <circle cx="12" cy="2.6" r="1.3" fill="#0c1820" stroke="#00ff88" strokeWidth="0.9" />
+          <circle cx="20" cy="17.1" r="1.3" fill="#0c1820" stroke="#00ff88" strokeWidth="0.9" />
+          <circle cx="4" cy="17.1" r="1.3" fill="#0c1820" stroke="#00ff88" strokeWidth="0.9" />
+          <circle cx="12" cy="12" r="2.2" fill="#8fe2ff" />
         </svg>
       );
     case "enemy_ship":
@@ -2059,13 +2103,34 @@ export function SectorMap() {
       <div className="absolute bottom-4 left-4 flex flex-col gap-2 items-start z-20">
         <div className="bg-[rgba(5,8,16,0.75)] border border-[#00ff41] text-[#00ff41] text-xs select-none backdrop-blur-sm flex flex-col max-w-[calc(100vw-2rem)]">
           {legendOpen && (
-            <div className="border-b border-[#00ff4133] px-2 py-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px] text-[#aaa] max-h-[40vh] md:max-h-[55vh] overflow-y-auto">
-              {(["planet", "gas_giant", "station", "enemy_ship", "friendly_ship", "boss", "anomaly", "cosmic_storm", "distress_signal", "derelict_ship", "wreck_field", "asteroid_belt"] as const).map((key) => (
-                <span key={key} className="flex items-center gap-1 min-w-0">
-                  <LegendIcon type={key} />
-                  <span className="truncate">{t(`location_types.${key}`)}</span>
-                </span>
-              ))}
+            <div className="border-b border-[#00ff4133] px-2 py-2 max-h-[40vh] md:max-h-[55vh] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px] text-[#aaa]">
+                {[
+                  { key: "planet", label: t("location_types.planet") },
+                  { key: "gas_giant", label: t("location_types.gas_giant") },
+                  { key: "station", label: t("location_types.station") },
+                  { key: "unknown_ship", label: t("locations.unknown_ship") },
+                  { key: "enemy_ship", label: t("location_types.enemy_ship") },
+                  { key: "friendly_ship", label: t("location_types.friendly_ship") },
+                  { key: "unknown_object", label: t("locations.unknown_object") },
+                  { key: "boss", label: t("location_types.boss") },
+                  { key: "anomaly", label: t("location_types.anomaly") },
+                  { key: "cosmic_storm", label: t("location_types.cosmic_storm") },
+                  { key: "distress_signal", label: t("location_types.distress_signal") },
+                  { key: "derelict_ship", label: t("location_types.derelict_ship") },
+                  { key: "wreck_field", label: t("location_types.wreck_field") },
+                  { key: "asteroid_belt", label: t("location_types.asteroid_belt") },
+                ].map(({ key, label }) => (
+                  <span key={key} className="flex items-center gap-1 min-w-0">
+                    <LegendIcon type={key} />
+                    <span className="truncate">{label}</span>
+                  </span>
+                ))}
+              </div>
+              <div className="mt-2 pt-2 border-t border-[#00ff411f] text-[10px] leading-snug text-[#7fbf8f]">
+                <div>{t("sector_map_ui.unknown_markers_hint_line_1")}</div>
+                <div>{t("sector_map_ui.unknown_markers_hint_line_2")}</div>
+              </div>
             </div>
           )}
           <button
@@ -2856,6 +2921,23 @@ function drawStation(
 
   const colors = stationColors[stationType] || stationColors.trade;
 
+  // Shared station halo so all station types feel like the same object family.
+  const stationGlow = ctx.createRadialGradient(x, y, 0, x, y, 28);
+  stationGlow.addColorStop(0, `${colors.primary}33`);
+  stationGlow.addColorStop(0.5, `${colors.secondary}24`);
+  stationGlow.addColorStop(1, "transparent");
+  ctx.fillStyle = stationGlow;
+  ctx.beginPath();
+  ctx.arc(x, y, 28, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Faint scaffold ring behind the station body.
+  ctx.strokeStyle = `${colors.primary}55`;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(x, y, 18, 0, Math.PI * 2);
+  ctx.stroke();
+
   switch (stationType) {
     case "trade": {
       // ТОРГОВАЯ: Гексагональное кольцо + 3 стыковочных рукава + огни доков
@@ -3307,23 +3389,25 @@ function drawUnknown(
     ctx.globalAlpha = 0.4;
   }
 
-  // Mystery glow (purple tint for objects)
-  const gradient = ctx.createRadialGradient(x, y, 0, x, y, 22);
-  gradient.addColorStop(0, "rgba(80, 60, 100, 0.4)");
+  // Mystery glow with resonant purple/cyan interference.
+  const gradient = ctx.createRadialGradient(x, y, 0, x, y, 24);
+  gradient.addColorStop(0, "rgba(174, 132, 255, 0.32)");
+  gradient.addColorStop(0.55, "rgba(94, 74, 140, 0.22)");
   gradient.addColorStop(1, "transparent");
   ctx.fillStyle = gradient;
   ctx.beginPath();
-  ctx.arc(x, y, 22, 0, Math.PI * 2);
+  ctx.arc(x, y, 24, 0, Math.PI * 2);
   ctx.fill();
 
-  // Hexagonal frame (mysterious object shape)
-  ctx.strokeStyle = "#666";
-  ctx.lineWidth = 2;
+  // Outer distorted hex frame.
+  ctx.strokeStyle = "#9276bf";
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
   for (let i = 0; i < 6; i++) {
     const angle = (i / 6) * Math.PI * 2 - Math.PI / 6;
-    const px = x + Math.cos(angle) * 14;
-    const py = y + Math.sin(angle) * 14;
+    const radius = i % 2 === 0 ? 15 : 13;
+    const px = x + Math.cos(angle) * radius;
+    const py = y + Math.sin(angle) * radius;
     if (i === 0) {
       ctx.moveTo(px, py);
     } else {
@@ -3333,15 +3417,55 @@ function drawUnknown(
   ctx.closePath();
   ctx.stroke();
 
-  // Inner fill (dark)
-  ctx.fillStyle = "#1a1a1a";
+  // Inner shell.
+  ctx.fillStyle = "#14121b";
+  ctx.fill();
+  ctx.strokeStyle = "#56476f";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2 - Math.PI / 6;
+    const px = x + Math.cos(angle) * 9;
+    const py = y + Math.sin(angle) * 9;
+    if (i === 0) {
+      ctx.moveTo(px, py);
+    } else {
+      ctx.lineTo(px, py);
+    }
+  }
+  ctx.closePath();
+  ctx.stroke();
+
+  // Resonant core.
+  const core = ctx.createRadialGradient(x, y, 0, x, y, 5);
+  core.addColorStop(0, "rgba(225, 239, 255, 0.95)");
+  core.addColorStop(0.5, "rgba(189, 156, 255, 0.85)");
+  core.addColorStop(1, "rgba(189, 156, 255, 0)");
+  ctx.fillStyle = core;
+  ctx.beginPath();
+  ctx.arc(x, y, 5, 0, Math.PI * 2);
   ctx.fill();
 
-  // Question mark in center
-  ctx.font = "bold 14px Share Tech Mono";
-  ctx.fillStyle = "#888";
+  // Small anomaly markers around the shell.
+  ctx.fillStyle = "#a58cdf";
+  for (let i = 0; i < 3; i++) {
+    const angle = -Math.PI / 2 + (i * Math.PI * 2) / 3;
+    ctx.beginPath();
+    ctx.arc(
+      x + Math.cos(angle) * 12,
+      y + Math.sin(angle) * 12,
+      1.4,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  // Subtle question mark so the icon still reads as "unknown".
+  ctx.font = "bold 12px Share Tech Mono";
+  ctx.fillStyle = "#e7ddff";
   ctx.textAlign = "center";
-  ctx.fillText("?", x, y + 5);
+  ctx.fillText("?", x, y + 4);
 
   ctx.globalAlpha = 1;
 }
@@ -3358,46 +3482,66 @@ function drawUnknownShip(
     ctx.globalAlpha = 0.4;
   }
 
-  // Gray glow
-  const grayGlow = ctx.createRadialGradient(x, y, 0, x, y, 25);
-  grayGlow.addColorStop(0, "rgba(100, 100, 100, 0.3)");
+  // Stealth-contact glow.
+  const grayGlow = ctx.createRadialGradient(x, y, 0, x, y, 26);
+  grayGlow.addColorStop(0, "rgba(170, 182, 200, 0.24)");
+  grayGlow.addColorStop(0.5, "rgba(94, 104, 118, 0.18)");
   grayGlow.addColorStop(1, "transparent");
   ctx.fillStyle = grayGlow;
   ctx.beginPath();
-  ctx.arc(x, y, 25, 0, Math.PI * 2);
+  ctx.arc(x, y, 26, 0, Math.PI * 2);
   ctx.fill();
 
-  // Ship silhouette - distinct arrow/triangle shape pointing up
-  ctx.fillStyle = "#444";
-  ctx.strokeStyle = "#888";
-  ctx.lineWidth = 2;
-
-  // Main hull - arrow shape
+  // Shadow scanner arc behind hull.
+  ctx.strokeStyle = "#606b79";
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(x, y - 16); // Nose (top point)
-  ctx.lineTo(x - 12, y + 8); // Left wing
-  ctx.lineTo(x - 4, y + 4); // Left engine notch
-  ctx.lineTo(x, y + 10); // Center rear
-  ctx.lineTo(x + 4, y + 4); // Right engine notch
-  ctx.lineTo(x + 12, y + 8); // Right wing
+  ctx.arc(x, y, 18, Math.PI * 0.1, Math.PI * 0.9);
+  ctx.stroke();
+
+  // Main hull.
+  ctx.fillStyle = "#2d3440";
+  ctx.strokeStyle = "#9ba5b3";
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 17);
+  ctx.lineTo(x - 7, y - 7);
+  ctx.lineTo(x - 13, y + 6);
+  ctx.lineTo(x - 7, y + 5);
+  ctx.lineTo(x - 4, y + 12);
+  ctx.lineTo(x, y + 8);
+  ctx.lineTo(x + 4, y + 12);
+  ctx.lineTo(x + 7, y + 5);
+  ctx.lineTo(x + 13, y + 6);
+  ctx.lineTo(x + 7, y - 7);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
 
-  // Cockpit window (dark)
-  ctx.fillStyle = "#222";
+  // Cockpit slit.
+  ctx.fillStyle = "#171c22";
   ctx.beginPath();
-  ctx.moveTo(x, y - 8);
-  ctx.lineTo(x - 4, y + 2);
-  ctx.lineTo(x + 4, y + 2);
+  ctx.moveTo(x, y - 10);
+  ctx.lineTo(x - 4.5, y - 1.5);
+  ctx.lineTo(x + 4.5, y - 1.5);
   ctx.closePath();
   ctx.fill();
 
-  // Engine glow indicators (gray)
-  ctx.fillStyle = "#666";
+  // Hull segmentation.
+  ctx.strokeStyle = "#5f6875";
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.arc(x - 3, y + 7, 2, 0, Math.PI * 2);
-  ctx.arc(x + 3, y + 7, 2, 0, Math.PI * 2);
+  ctx.moveTo(x - 8, y + 2);
+  ctx.lineTo(x + 8, y + 2);
+  ctx.moveTo(x - 5, y + 6);
+  ctx.lineTo(x + 5, y + 6);
+  ctx.stroke();
+
+  // Engine pods.
+  ctx.fillStyle = "#737e8e";
+  ctx.beginPath();
+  ctx.arc(x - 4, y + 9, 1.8, 0, Math.PI * 2);
+  ctx.arc(x + 4, y + 9, 1.8, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.globalAlpha = 1;

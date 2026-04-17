@@ -2605,7 +2605,9 @@
     "animations_off": "Disable animations",
     "animations_on": "Enable animations",
     "hint": "Click a location to fly there. Click and drag to pan. Mouse wheel to zoom.",
-    "legend": "LEGEND"
+    "legend": "LEGEND",
+    "unknown_markers_hint_line_1": "Unknown ships and objects appear when scanner coverage is insufficient",
+    "unknown_markers_hint_line_2": "and may conceal other locations until you get closer or detect them with the scanner."
   },
   "save_load": {
     "title": "SAVES",
