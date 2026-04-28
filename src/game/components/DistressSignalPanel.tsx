@@ -3,6 +3,15 @@
 import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
+import { RiskRewardPreview } from "./RiskRewardPreview";
+import {
+    ABANDONED_CARGO_ARTIFACT_CHANCE,
+    ABANDONED_CARGO_CREDITS,
+    ABANDONED_CARGO_QUANTITY,
+    SURVIVORS_REWARD,
+    SURVIVOR_JOINS_CHANCE,
+} from "@/game/slices/locations/constants";
+import type { SignalType } from "@/game/types";
 
 // Get scanner range label
 export function getScannerRangeLabel(
@@ -39,6 +48,134 @@ const OUTCOME_INFO = {
         bgClass: "bg-[rgba(0,212,255,0.1)]",
     },
 };
+
+const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
+
+const formatRange = (min: number, max: number, suffix = "") =>
+    min === max ? `${min}${suffix}` : `${min}-${max}${suffix}`;
+
+function buildDistressPreview(outcome?: SignalType) {
+    if (outcome === "pirate_ambush") {
+        return {
+            risks: [
+                {
+                    label: "Бой",
+                    value: "пираты атакуют первыми",
+                    tone: "danger" as const,
+                },
+            ],
+            rewards: [
+                {
+                    label: "После победы",
+                    value: "добыча с врага",
+                    tone: "warning" as const,
+                },
+                {
+                    label: "Контракты",
+                    value: "может засчитаться бой",
+                    tone: "neutral" as const,
+                },
+            ],
+            notes: [
+                "Сканер определил засаду. При подходе сразу начнётся бой с первым ходом врага.",
+            ],
+        };
+    }
+
+    if (outcome === "survivors") {
+        return {
+            risks: [
+                {
+                    label: "Боевой риск",
+                    value: "не ожидается",
+                    tone: "good" as const,
+                },
+            ],
+            rewards: [
+                {
+                    label: "Кредиты",
+                    value: `+${formatRange(SURVIVORS_REWARD.MIN, SURVIVORS_REWARD.MAX, "₢")}`,
+                    tone: "good" as const,
+                },
+                {
+                    label: "Новый член экипажа",
+                    value: formatPercent(SURVIVOR_JOINS_CHANCE),
+                    tone: "warning" as const,
+                },
+                {
+                    label: "Чужеродная биология",
+                    value: "50%",
+                    tone: "warning" as const,
+                },
+            ],
+            notes: [
+                "Если есть свободное место, один из выживших может попроситься в экипаж.",
+            ],
+        };
+    }
+
+    if (outcome === "abandoned_cargo") {
+        return {
+            risks: [
+                {
+                    label: "Боевой риск",
+                    value: "не ожидается",
+                    tone: "good" as const,
+                },
+            ],
+            rewards: [
+                {
+                    label: "Кредиты",
+                    value: `+${formatRange(ABANDONED_CARGO_CREDITS.MIN, ABANDONED_CARGO_CREDITS.MAX, "₢")}`,
+                    tone: "good" as const,
+                },
+                {
+                    label: "Товар",
+                    value: `x${formatRange(ABANDONED_CARGO_QUANTITY.MIN, ABANDONED_CARGO_QUANTITY.MAX)}`,
+                    tone: "good" as const,
+                },
+                {
+                    label: "Технологический лом",
+                    value: "x1-3",
+                    tone: "good" as const,
+                },
+                {
+                    label: "Артефакт",
+                    value: formatPercent(ABANDONED_CARGO_ARTIFACT_CHANCE),
+                    tone: "warning" as const,
+                },
+            ],
+            notes: [
+                "Тип товара выбирается случайно из торговых ресурсов.",
+            ],
+        };
+    }
+
+    return {
+        risks: [
+            {
+                label: "Пиратская засада",
+                value: "35%",
+                tone: "danger" as const,
+            },
+        ],
+        rewards: [
+            {
+                label: "Выжившие",
+                value: "30%",
+                tone: "good" as const,
+            },
+            {
+                label: "Заброшенный груз",
+                value: "35%",
+                tone: "good" as const,
+            },
+        ],
+        notes: [
+            "Сканер может раскрыть точный исход до подхода. Без раскрытия решение остаётся рискованным.",
+        ],
+    };
+}
 
 function SOSBeacon({
     color = "#ffaa00",
@@ -246,6 +383,7 @@ export function DistressSignalPanel() {
     // ── REVEALED ──────────────────────────────────────────────────────────
     if (isRevealed && outcome && !isResolved) {
         const info = OUTCOME_INFO[outcome];
+        const revealedPreview = buildDistressPreview(outcome);
 
         return (
             <div className="flex flex-col gap-4">
@@ -303,6 +441,13 @@ export function DistressSignalPanel() {
                 <div className="text-sm text-[#888] leading-relaxed">
                     {t("distress_signal.scanner_analyzed")}
                 </div>
+
+                <RiskRewardPreview
+                    title="Прогноз подхода"
+                    risks={revealedPreview.risks}
+                    rewards={revealedPreview.rewards}
+                    notes={revealedPreview.notes}
+                />
 
                 <Button
                     onClick={() => respondToDistressSignal()}
@@ -414,16 +559,6 @@ export function DistressSignalPanel() {
                     </span>
                 </div>
             )}
-
-            {/* Risk warning */}
-            <div className="bg-[rgba(255,176,0,0.08)] border border-[#ffb000] p-3 text-sm">
-                <span className="text-[#ffb000] font-bold">
-                    ⚠ {t("distress_signal.risk_title")}{" "}
-                </span>
-                <span className="text-[#888]">
-                    {t("distress_signal.risk_text")}
-                </span>
-            </div>
 
             {/* Action buttons */}
             <div className="flex items-center gap-3">

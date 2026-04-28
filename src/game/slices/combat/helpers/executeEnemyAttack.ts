@@ -386,7 +386,7 @@ function applyDamageToShip(
 
     // Apply normal damage through shields
     let shieldDmgDealt = 0;
-    let hullDmgDealt = 0;
+    let hullDmgDealt = piercingDamage;
 
     if (normalDamage > 0) {
         if (state.ship.shields > 0) {

@@ -10,6 +10,11 @@ import { getModuleTranslation } from "@/lib/moduleTranslations";
 
 const BASE_CELL_SIZE = 60;
 
+type HitMarker = {
+    moduleId: number;
+    amount: number;
+};
+
 interface CombatShipGridProps {
     cropEmptySpace?: boolean;
     scale?: number;
@@ -27,12 +32,28 @@ export function CombatShipGrid({
     const { currentLanguage } = useTranslation();
 
     const [flashType, setFlashType] = useState<"shield" | "hull" | null>(null);
+    const [hitMarker, setHitMarker] = useState<HitMarker | null>(null);
 
     useEffect(() => {
         if (!lastPlayerHit) return;
         const type = lastPlayerHit.shieldDamage > 0 ? "shield" : "hull";
         const raf = requestAnimationFrame(() => setFlashType(type));
         const endTimer = setTimeout(() => setFlashType(null), 600);
+        return () => {
+            cancelAnimationFrame(raf);
+            clearTimeout(endTimer);
+        };
+    }, [lastPlayerHit]);
+
+    useEffect(() => {
+        if (!lastPlayerHit || lastPlayerHit.hullDamage <= 0) return;
+        const raf = requestAnimationFrame(() =>
+            setHitMarker({
+                moduleId: lastPlayerHit.moduleId,
+                amount: lastPlayerHit.hullDamage,
+            }),
+        );
+        const endTimer = setTimeout(() => setHitMarker(null), 850);
         return () => {
             cancelAnimationFrame(raf);
             clearTimeout(endTimer);
@@ -128,6 +149,7 @@ export function CombatShipGrid({
                             currentLanguage={currentLanguage}
                             offsetX={cropEmptySpace ? startX : 0}
                             offsetY={cropEmptySpace ? startY : 0}
+                            hitMarker={hitMarker?.moduleId === mod.id ? hitMarker : null}
                         />
                     </g>
                 ))}
@@ -185,6 +207,7 @@ interface ModuleRendererProps {
     currentLanguage: "ru" | "en";
     offsetX?: number;
     offsetY?: number;
+    hitMarker?: HitMarker | null;
 }
 
 function ModuleRenderer({
@@ -194,6 +217,7 @@ function ModuleRenderer({
     currentLanguage,
     offsetX = 0,
     offsetY = 0,
+    hitMarker,
 }: ModuleRendererProps) {
     if (module.type === "weaponShed") {
         return;
@@ -207,6 +231,8 @@ function ModuleRenderer({
         color: "#ffffff33",
         borderColor: "#ffffff",
     };
+    const maxHealth = module.maxHealth || 100;
+    const healthPct = maxHealth > 0 ? module.health / maxHealth : 0;
 
     const crewInModule = crew.filter((c) => c.moduleId === module.id);
 
@@ -261,7 +287,16 @@ function ModuleRenderer({
             {(module.disabled || module.manualDisabled) && (
                 <DisabledOverlay x={x} y={y} w={w} h={h} />
             )}
-            {module.health < 30 && <DamageOverlay x={x} y={y} w={w} h={h} />}
+            {healthPct < 0.7 && (
+                <DamageScars
+                    x={x}
+                    y={y}
+                    w={w}
+                    h={h}
+                    severity={healthPct < 0.3 ? "critical" : "damaged"}
+                />
+            )}
+            {hitMarker && <HitPulse x={x} y={y} w={w} h={h} amount={hitMarker.amount} />}
 
             {crewInModule.length > 0 && (
                 <CrewIcons crew={crewInModule} x={x} y={y} h={h} />
@@ -403,17 +438,22 @@ function DisabledOverlay({
     );
 }
 
-function DamageOverlay({
+function DamageScars({
     x,
     y,
     w,
     h,
+    severity,
 }: {
     x: number;
     y: number;
     w: number;
     h: number;
+    severity: "damaged" | "critical";
 }) {
+    const crackColor = severity === "critical" ? "#ff0040" : "#ffb000";
+    const tint = severity === "critical" ? "rgba(255,0,64,0.26)" : "rgba(255,176,0,0.13)";
+
     return (
         <>
             <rect
@@ -421,18 +461,69 @@ function DamageOverlay({
                 y={y + 2}
                 width={w - 4}
                 height={h - 4}
-                fill="rgba(255,0,0,0.4)"
+                fill={tint}
+            />
+            <path
+                d={`M ${x + w * 0.25} ${y + h * 0.25} L ${x + w * 0.38} ${y + h * 0.42} L ${x + w * 0.32} ${y + h * 0.58} L ${x + w * 0.48} ${y + h * 0.78}`}
+                fill="none"
+                stroke={crackColor}
+                strokeWidth={severity === "critical" ? 2 : 1.4}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={severity === "critical" ? 0.9 : 0.65}
+            />
+            <path
+                d={`M ${x + w * 0.68} ${y + h * 0.2} L ${x + w * 0.56} ${y + h * 0.38} L ${x + w * 0.72} ${y + h * 0.52}`}
+                fill="none"
+                stroke={crackColor}
+                strokeWidth={severity === "critical" ? 1.8 : 1.2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={severity === "critical" ? 0.75 : 0.5}
+            />
+        </>
+    );
+}
+
+function HitPulse({
+    x,
+    y,
+    w,
+    h,
+    amount,
+}: {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    amount: number;
+}) {
+    return (
+        <>
+            <rect
+                x={x + 1}
+                y={y + 1}
+                width={w - 2}
+                height={h - 2}
+                fill="rgba(255,0,64,0.28)"
+                stroke="#ff0040"
+                strokeWidth={3}
+                className="combat-module-hit-pulse"
             />
             <text
                 x={x + w / 2}
                 y={y + h / 2}
-                fill="#ff0000"
-                fontSize="18"
+                fill="#ffccd5"
+                stroke="#050810"
+                strokeWidth={2}
+                paintOrder="stroke"
+                fontSize="14"
                 fontFamily="Share Tech Mono"
                 textAnchor="middle"
                 fontWeight="bold"
+                className="combat-damage-number"
             >
-                💥
+                -{amount}
             </text>
         </>
     );

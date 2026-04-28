@@ -23,6 +23,7 @@
     "modules": "MODULES",
     "cargo": "CARGO BAY",
     "contracts": "ACTIVE CONTRACTS",
+    "progress": "PROGRESS",
     "craft": "CRAFT",
     "event_log": "EVENT LOG",
     "cannot_move_combat": "⚠️ Cannot move modules during combat!",

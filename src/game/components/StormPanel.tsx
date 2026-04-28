@@ -5,6 +5,15 @@ import { Button } from "@/components/ui/button";
 import type { StormType } from "../types";
 import { useTranslation } from "@/lib/useTranslation";
 import { ShipStatsPanel } from "./ShipStatsPanel";
+import { RiskRewardPreview } from "./RiskRewardPreview";
+import {
+    STORM_COMMON,
+    STORM_CONFIG,
+    STORM_LOOT_CONFIG,
+    STORM_RESOURCES,
+} from "@/game/slices/locations/constants";
+import { RESEARCH_RESOURCES } from "@/game/constants";
+import type { ResearchResourceType } from "@/game/types";
 
 // StormType
 type StormDetails = {
@@ -68,6 +77,146 @@ const STORM_INFO: StormInfo = {
     },
 };
 
+const formatRange = (min: number, max: number, suffix = "") => {
+    if (min === max) return `${min}${suffix}`;
+    return `${min}-${max}${suffix}`;
+};
+
+function buildStormPreview({
+    stormType,
+    intensity,
+    currentShields,
+    hasStormShields,
+}: {
+    stormType: StormType;
+    intensity: number;
+    currentShields: number;
+    hasStormShields: boolean;
+}) {
+    const config = STORM_CONFIG[stormType] || STORM_CONFIG.radiation;
+    const damageMultiplier = hasStormShields ? 0.5 : 1;
+    const scaleDamage = (value: number) =>
+        Math.floor(value * intensity * damageMultiplier);
+
+    const risks = [];
+
+    if (config.shieldDamageType === "all") {
+        risks.push({
+            label: "Щиты",
+            value: hasStormShields
+                ? `до ${Math.floor(currentShields * 0.5)}`
+                : "все текущие",
+            tone: "warning" as const,
+        });
+    } else if (config.shieldDamage) {
+        risks.push({
+            label: "Щиты",
+            value: formatRange(
+                scaleDamage(config.shieldDamage.min),
+                scaleDamage(config.shieldDamage.max),
+            ),
+            tone: "warning" as const,
+        });
+    }
+
+    if (config.moduleDamage) {
+        const targetText = config.damageAllModules
+            ? "все модули"
+            : config.disableModules
+              ? "все модули + отключение"
+              : `${STORM_COMMON.randomModulesToDamage.min}-${STORM_COMMON.randomModulesToDamage.max} модуля`;
+
+        risks.push({
+            label: targetText,
+            value: formatRange(
+                scaleDamage(config.moduleDamage.min),
+                scaleDamage(config.moduleDamage.max),
+                " HP",
+            ),
+            tone: config.damageAllModules || config.disableModules ? "danger" as const : "warning" as const,
+        });
+    }
+
+    if (config.crewDamage) {
+        risks.push({
+            label: "Экипаж",
+            value: formatRange(
+                scaleDamage(config.crewDamage.min),
+                scaleDamage(config.crewDamage.max),
+                " HP",
+            ),
+            tone: "danger" as const,
+        });
+    }
+
+    if (config.resetExp) {
+        risks.push({
+            label: "Опыт экипажа",
+            value: "сброс до 0",
+            tone: "danger" as const,
+        });
+    }
+
+    if (risks.length === 0) {
+        risks.push({
+            label: "Прямой урон",
+            value: "не ожидается",
+            tone: "good" as const,
+        });
+    }
+
+    const baseLootMin = Math.floor(
+        STORM_LOOT_CONFIG.baseLoot.min * intensity * config.lootMultiplier,
+    );
+    const baseLootMax = Math.floor(
+        STORM_LOOT_CONFIG.baseLoot.max * intensity * config.lootMultiplier,
+    );
+    const rareChance = Math.min(
+        100,
+        Math.round(
+            STORM_LOOT_CONFIG.rareLootChanceBase *
+                intensity *
+                config.lootMultiplier *
+                100,
+        ),
+    );
+    const rewards = [
+        {
+            label: "Кредиты",
+            value: formatRange(baseLootMin, baseLootMax, "₢"),
+            tone: "good" as const,
+        },
+        {
+            label: "Редкая находка",
+            value: `${rareChance}%`,
+            tone: rareChance >= 50 ? "good" as const : "warning" as const,
+        },
+    ];
+
+    const resourceConfig = STORM_RESOURCES[stormType];
+    if (resourceConfig) {
+        const resourceInfo =
+            RESEARCH_RESOURCES[resourceConfig.type as ResearchResourceType];
+        rewards.push({
+            label: "Особый ресурс",
+            value: `${resourceInfo?.name ?? resourceConfig.type} x${formatRange(
+                resourceConfig.amount.min * intensity,
+                resourceConfig.amount.max * intensity,
+            )}`,
+            tone: "good" as const,
+        });
+    }
+
+    const notes = [
+        "Это прогноз диапазонов: точный результат всё ещё бросается при входе в шторм.",
+    ];
+    if (hasStormShields) {
+        notes.push("Технология штормовых щитов уже учтена: входящий урон снижен на 50%.");
+    }
+
+    return { risks, rewards, notes };
+}
+
 export function StormPanel() {
     const { t } = useTranslation();
     const currentLocation = useGameStore((s) => s.currentLocation);
@@ -78,6 +227,9 @@ export function StormPanel() {
     const enterStorm = useGameStore((s) => s.enterStorm);
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
+    const hasStormShields = useGameStore((s) =>
+        s.research.researchedTechs.includes("storm_shields"),
+    );
 
     if (!currentLocation || currentLocation.type !== "storm") return null;
 
@@ -96,6 +248,12 @@ export function StormPanel() {
 
     // Check if storm was already entered
     const stormCompleted = completedLocations.includes(currentLocation.id);
+    const preview = buildStormPreview({
+        stormType,
+        intensity,
+        currentShields: ship.shields,
+        hasStormShields,
+    });
 
     // Get recent storm-related log entries
     const recentStormLogs = log
@@ -305,6 +463,13 @@ export function StormPanel() {
                     {t("storm.warning_storm")}
                 </p>
             </div>
+
+            <RiskRewardPreview
+                title="Прогноз перед входом"
+                risks={preview.risks}
+                rewards={preview.rewards}
+                notes={preview.notes}
+            />
 
             <div className="bg-[rgba(0,0,0,0.3)] p-3 mb-4 border border-[#00ff41]">
                 <p className="text-[#ffb000] mb-2">{t("storm.your_stats")}</p>

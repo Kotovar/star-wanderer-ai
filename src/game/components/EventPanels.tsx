@@ -27,16 +27,180 @@ import { DerelictShipPanel } from "./DerelictShipPanel";
 import { GasGiantPanel } from "./GasGiantPanel";
 import { WreckFieldPanel } from "./WreckFieldPanel";
 import { HostileApproachWarningPanel } from "./HostileApproachWarningPanel";
+import { RiskRewardPreview } from "./RiskRewardPreview";
+import type { TravelEventType } from "@/game/types";
+import { getActiveModule } from "@/game/modules";
+
+type PreviewItem = {
+    label: string;
+    value: string;
+    tone: "danger" | "warning" | "good" | "neutral";
+};
+
+const TRAVEL_EVENT_UI: Record<
+    TravelEventType,
+    {
+        title: string;
+        description: string;
+        risk: PreviewItem[];
+        cautious: PreviewItem[];
+        riskButton: string;
+        cautiousButton: string;
+        cautiousFuelCost?: number;
+    }
+> = {
+    asteroids: {
+        title: "Астероидный поток",
+        description: "Курс проходит через плотное облако обломков.",
+        risk: [
+            { label: "Быстрый проход", value: "1 модуль -5 HP", tone: "warning" },
+            { label: "Время", value: "без задержки", tone: "good" },
+        ],
+        cautious: [
+            { label: "Повреждения", value: "нет", tone: "good" },
+            { label: "Топливо", value: "-5", tone: "warning" },
+        ],
+        riskButton: "Пройти напрямую",
+        cautiousButton: "Обойти поток",
+        cautiousFuelCost: 5,
+    },
+    anomaly: {
+        title: "Аномальный фронт",
+        description: "Перед кораблём нестабильная зона искажений.",
+        risk: [
+            { label: "Прямой проход", value: "все модули -10 HP", tone: "danger" },
+            { label: "Время", value: "без задержки", tone: "good" },
+        ],
+        cautious: [
+            { label: "Сниженный урон", value: "все модули -5 HP", tone: "warning" },
+            { label: "Топливо", value: "-5", tone: "warning" },
+        ],
+        riskButton: "Прорваться",
+        cautiousButton: "Снизить нагрузку",
+        cautiousFuelCost: 5,
+    },
+    stress: {
+        title: "Усталость экипажа",
+        description: "Долгий перелёт начинает давить на команду.",
+        risk: [
+            { label: "Продолжить график", value: "мораль экипажа -5", tone: "warning" },
+            { label: "Темп", value: "без задержки", tone: "good" },
+        ],
+        cautious: [
+            { label: "Мораль", value: "без потерь", tone: "good" },
+            { label: "Время", value: "+1 ход перелёта", tone: "warning" },
+        ],
+        riskButton: "Продолжать курс",
+        cautiousButton: "Дать смену отдыха",
+    },
+    signal: {
+        title: "Слабый сигнал",
+        description: "Приёмник поймал короткий пакет данных по маршруту.",
+        risk: [
+            { label: "Следовать сигналу", value: "изменить курс ненадолго", tone: "neutral" },
+            { label: "Находка", value: "+15₢", tone: "good" },
+        ],
+        cautious: [
+            { label: "Курс", value: "сохранён", tone: "good" },
+            { label: "Награда", value: "нет", tone: "neutral" },
+        ],
+        riskButton: "Проверить сигнал",
+        cautiousButton: "Игнорировать",
+    },
+    emp: {
+        title: "Электромагнитный импульс",
+        description: "Фронт импульса может перегрузить защитные контуры.",
+        risk: [
+            { label: "Принять удар", value: "потерять все щиты", tone: "danger" },
+            { label: "Ресурсы", value: "без расхода", tone: "good" },
+        ],
+        cautious: [
+            { label: "Щиты", value: "потерять половину", tone: "warning" },
+            { label: "Риск", value: "смягчён", tone: "good" },
+        ],
+        riskButton: "Выдержать импульс",
+        cautiousButton: "Перенастроить контуры",
+    },
+};
+
+function getTravelEventCautiousItems({
+    eventType,
+    baseItems,
+    hasPilotInCockpit,
+    scanRange,
+    shields,
+}: {
+    eventType: TravelEventType;
+    baseItems: PreviewItem[];
+    hasPilotInCockpit: boolean;
+    scanRange: number;
+    shields: number;
+}): PreviewItem[] {
+    if (eventType === "asteroids" && hasPilotInCockpit) {
+        return [
+            { label: "Манёвр пилота", value: "без урона", tone: "good" },
+            { label: "Топливо", value: "без расхода", tone: "good" },
+        ];
+    }
+
+    if (eventType === "signal" && scanRange >= 3) {
+        return [
+            { label: "Сканер", value: "расшифровать без схода с курса", tone: "good" },
+            { label: "Находка", value: "+25₢", tone: "good" },
+        ];
+    }
+
+    if (eventType === "emp" && shields > 0) {
+        return [
+            { label: "Щиты", value: "поглотить импульс", tone: "good" },
+            { label: "Потери", value: "нет", tone: "good" },
+        ];
+    }
+
+    return baseItems;
+}
+
+function getTravelEventCautiousButton({
+    eventType,
+    baseLabel,
+    hasPilotInCockpit,
+    scanRange,
+    shields,
+}: {
+    eventType: TravelEventType;
+    baseLabel: string;
+    hasPilotInCockpit: boolean;
+    scanRange: number;
+    shields: number;
+}) {
+    if (eventType === "asteroids" && hasPilotInCockpit) {
+        return "Манёвр пилота";
+    }
+    if (eventType === "signal" && scanRange >= 3) {
+        return "Расшифровать сканером";
+    }
+    if (eventType === "emp" && shields > 0) {
+        return "Принять на щиты";
+    }
+    return baseLabel;
+}
 
 export function EventDisplay() {
     const gameMode = useGameStore((s) => s.gameMode);
     const traveling = useGameStore((s) => s.traveling);
+    const pendingTravelEvent = useGameStore((s) => s.pendingTravelEvent);
+    const shipFuel = useGameStore((s) => s.ship.fuel);
+    const shipShields = useGameStore((s) => s.ship.shields);
+    const shipModules = useGameStore((s) => s.ship.modules);
+    const crew = useGameStore((s) => s.crew);
     const showGalaxyMap = useGameStore((s) => s.showGalaxyMap);
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const showAssignments = useGameStore((s) => s.showAssignments);
     const skipTurn = useGameStore((s) => s.skipTurn);
     const currentSector = useGameStore((s) => s.currentSector);
     const emergencyJump = useGameStore((s) => s.emergencyJump);
+    const resolveTravelEvent = useGameStore((s) => s.resolveTravelEvent);
+    const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
     const isStuckInBlackHole = useGameStore((s) => {
         if (s.currentSector?.star?.type !== "blackhole") return false;
         const nonBH = s.galaxy.sectors.filter(
@@ -62,6 +226,90 @@ export function EventDisplay() {
 
     // Traveling state
     if (traveling) {
+        if (pendingTravelEvent) {
+            const eventInfo = TRAVEL_EVENT_UI[pendingTravelEvent.type];
+            const pilot = crew.find((c) => c.profession === "pilot");
+            const cockpit = getActiveModule(shipModules, "cockpit");
+            const hasPilotInCockpit =
+                !!pilot && !!cockpit && pilot.moduleId === cockpit.id;
+            const scanRange = getEffectiveScanRange();
+            const cautiousItems = getTravelEventCautiousItems({
+                eventType: pendingTravelEvent.type,
+                baseItems: eventInfo.cautious,
+                hasPilotInCockpit,
+                scanRange,
+                shields: shipShields,
+            });
+            const cautiousButton = getTravelEventCautiousButton({
+                eventType: pendingTravelEvent.type,
+                baseLabel: eventInfo.cautiousButton,
+                hasPilotInCockpit,
+                scanRange,
+                shields: shipShields,
+            });
+            const cautiousUsesFuel =
+                eventInfo.cautiousFuelCost !== undefined &&
+                cautiousItems.some((item) => item.label === "Топливо");
+            const lacksFuel =
+                cautiousUsesFuel &&
+                eventInfo.cautiousFuelCost !== undefined &&
+                shipFuel < eventInfo.cautiousFuelCost;
+
+            return (
+                <div className="flex flex-col gap-4">
+                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
+                        ▸ Событие в пути
+                    </div>
+                    <div className="border border-[#ffb00066] bg-[rgba(255,176,0,0.05)] p-4">
+                        <div className="font-['Orbitron'] text-base font-bold text-[#ffb000]">
+                            {eventInfo.title}
+                        </div>
+                        <div className="mt-2 text-sm leading-relaxed text-[#888]">
+                            {eventInfo.description}
+                        </div>
+                    </div>
+                    <RiskRewardPreview
+                        title="Решение капитана"
+                        riskTitle="Рискованный вариант"
+                        rewardTitle="Осторожный вариант"
+                        risks={eventInfo.risk}
+                        rewards={
+                            lacksFuel
+                                ? [
+                                      ...eventInfo.cautious,
+                                      {
+                                          label: "Доступность",
+                                          value: "не хватает топлива",
+                                          tone: "danger",
+                                      },
+                                  ]
+                                : cautiousItems
+                        }
+                    />
+                    <div className="grid gap-2 sm:grid-cols-2">
+                        <Button
+                            onClick={() => resolveTravelEvent("risk")}
+                            className="cursor-pointer bg-transparent border-2 border-[#ff4444] text-[#ff4444] hover:bg-[#ff4444] hover:text-white uppercase tracking-wider"
+                        >
+                            {eventInfo.riskButton}
+                        </Button>
+                        <Button
+                            onClick={() => resolveTravelEvent("cautious")}
+                            disabled={lacksFuel}
+                            className="cursor-pointer bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                            {cautiousButton}
+                        </Button>
+                    </div>
+                    {lacksFuel && (
+                        <div className="text-xs text-[#ff4444]">
+                            Недостаточно топлива для осторожного варианта.
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
         return (
             <div className="flex flex-col gap-4">
                 <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mb-4">

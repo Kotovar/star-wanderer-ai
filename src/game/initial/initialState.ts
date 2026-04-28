@@ -145,6 +145,7 @@ const baseState: GameState = {
   gameMode: INITIAL_GAME_MODE,
   previousGameMode: null,
   traveling: null,
+  pendingTravelEvent: null,
   ship: {
     armor: 1,
     shields: 0,

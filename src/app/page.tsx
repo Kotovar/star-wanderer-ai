@@ -10,6 +10,7 @@ import { CargoDisplay } from "@/game/components/CargoDisplay";
 import { GameLog } from "@/game/components/GameLog";
 import { ContractsList } from "@/game/components/ContractsList";
 import { BlueprintsTab } from "@/game/components/BlueprintsTab";
+import { CampaignProgressPanel } from "@/game/components/CampaignProgressPanel";
 import { EventDisplay } from "@/game/components/EventPanels";
 import { GameEndPanel } from "@/game/components/panels";
 import { useGameStore } from "@/game/store";
@@ -28,6 +29,7 @@ type LeftTab =
   | "modules"
   | "cargo"
   | "contracts"
+  | "progress"
   | "blueprints"
   | "log";
 
@@ -95,6 +97,7 @@ export default function Home() {
     { id: "modules", icon: "⚙️", label: t("ship.modules") },
     { id: "cargo", icon: "📦", label: t("ship.cargo") },
     { id: "contracts", icon: "📋", label: t("ship.contracts") },
+    { id: "progress", icon: "▣", label: t("ship.progress") },
     { id: "blueprints", icon: "📐", label: t("ship.craft") },
     { id: "log", icon: "📜", label: t("ship.event_log") },
   ];
@@ -230,6 +233,9 @@ export default function Home() {
                 {activeTab === "cargo" && <CargoDisplay />}
                 {activeTab === "contracts" && (
                   <ContractsList />
+                )}
+                {activeTab === "progress" && (
+                  <CampaignProgressPanel />
                 )}
                 {activeTab === "blueprints" && (
                   <BlueprintsTab />

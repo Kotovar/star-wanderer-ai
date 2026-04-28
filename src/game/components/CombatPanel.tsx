@@ -17,6 +17,13 @@ interface WeaponHint {
   color: string;
 }
 
+type CombatPhaseId = "ambush" | "targeting" | "salvo" | "counter" | "stabilize";
+
+const COMBAT_PHASES: { id: CombatPhaseId; label: string; caption: string }[] = [
+  { id: "targeting", label: "Наведение", caption: "выбор целей" },
+  { id: "salvo", label: "Залп", caption: "ваш выстрел" },
+];
+
 function getWeaponHints(type: string): WeaponHint[] {
   const w = WEAPON_TYPES[type as keyof typeof WEAPON_TYPES];
   if (!w) return [];
@@ -40,6 +47,65 @@ function getWeaponHints(type: string): WeaponHint[] {
   if (type === "drones")
     hints.push({ text: `+${DRONE_STACK_BONUS * 100}%/стак (макс ${DRONE_MAX_STACKS} = ×2)`, color: "#00ff41" });
   return hints;
+}
+
+function CombatPhaseStrip({
+  activePhase,
+  note,
+}: {
+  activePhase: CombatPhaseId;
+  note: string;
+}) {
+  const displayedActivePhase: CombatPhaseId =
+    activePhase === "ambush" ? "counter" : activePhase;
+  const activeIndex = COMBAT_PHASES.findIndex(
+    (phase) => phase.id === displayedActivePhase,
+  );
+  const normalizedActiveIndex = activeIndex >= 0 ? activeIndex : 0;
+
+  return (
+    <div className="border border-[#1a3320] bg-[rgba(0,0,0,0.28)] p-3">
+      <div className="grid grid-cols-2 gap-2">
+        {COMBAT_PHASES.map((phase, index) => {
+          const isActive = phase.id === displayedActivePhase;
+          const isPast = index < normalizedActiveIndex;
+          return (
+            <div
+              key={phase.id}
+              className="min-w-0"
+            >
+              <div
+                className={`min-h-10.5 border px-2 py-1 text-center transition-colors ${isActive
+                    ? "border-[#ffb000] bg-[rgba(255,176,0,0.12)] text-[#ffb000]"
+                    : isPast
+                      ? "border-[#00ff4133] bg-[rgba(0,255,65,0.05)] text-[#00ff41]"
+                      : "border-[#333] bg-[rgba(255,255,255,0.02)] text-[#666]"
+                  }`}
+              >
+                <div className="font-['Orbitron'] text-[10px] font-bold uppercase">
+                  {phase.label}
+                </div>
+                <div className="mt-0.5 text-[9px] normal-case tracking-normal opacity-70">
+                  {phase.caption}
+                </div>
+              </div>
+              <div
+                className={`mt-1 h-1 ${isActive ? "bg-[#ffb000]" : isPast ? "bg-[#00ff41]" : "bg-[#222]"
+                  }`}
+              />
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-2 text-xs leading-snug text-[#889988]">
+        {activePhase === "ambush" ? "Засада: враг перехватил инициативу. " : ""}
+        {note}
+        <span className="text-[#556655]">
+          {" "}После залпа игра автоматически разыгрывает ответ врага, ремонт, щиты и переход к следующему ходу.
+        </span>
+      </div>
+    </div>
+  );
 }
 
 export function CombatPanel() {
@@ -158,6 +224,32 @@ export function CombatPanel() {
   // The targeted module for the active bay (for canvas highlight)
   const activeBayTargetId =
     activeBayId !== null ? (bayTargets[activeBayId] ?? null) : null;
+  const armedBayIds = weaponBays
+    .filter((bay) => bay.weapons?.some((weapon) => weapon))
+    .map((bay) => bay.id);
+  const assignedTargetCount = armedBayIds.filter(
+    (bayId) => bayTargets[bayId] !== undefined,
+  ).length;
+  const targetingProgress =
+    armedBayIds.length > 0
+      ? `${Math.min(assignedTargetCount, armedBayIds.length)}/${armedBayIds.length}`
+      : "0/0";
+  const activeCombatPhase: CombatPhaseId =
+    currentCombat.isAmbush && !currentCombat.ambushAttackDone
+      ? "ambush"
+      : currentCombat.skipPlayerTurn
+        ? "counter"
+        : activeBayId !== null || assignedTargetCount < armedBayIds.length
+          ? "targeting"
+          : "salvo";
+  const phaseNote =
+    activeCombatPhase === "counter"
+      ? "Следующий залп будет пропущен эффектом оглушения: враг получает инициативу."
+      : activeCombatPhase === "salvo"
+        ? "Цели назначены. После атаки игра автоматически разыграет ответ врага и конец хода."
+        : activeBayId !== null
+          ? "Выберите модуль врага для активного оружейного отсека."
+          : `Назначьте цели оружейным отсекам. Готово: ${targetingProgress}.`;
 
   return (
     <div className="flex flex-col gap-4 h-full overflow-y-auto pr-2">
@@ -167,6 +259,8 @@ export function CombatPanel() {
         {isBoss ? t("combat.boss_title") : t("combat.fight_title")}
         {currentCombat.enemy.name.toUpperCase()}
       </div>
+
+      <CombatPhaseStrip activePhase={activeCombatPhase} note={phaseNote} />
 
       {!hasWeaponBay && (
         <div className="bg-[rgba(255,0,64,0.1)] border border-[#ff0040] p-2 text-sm text-[#ff0040]">

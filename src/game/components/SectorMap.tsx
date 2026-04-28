@@ -2921,23 +2921,6 @@ function drawStation(
 
   const colors = stationColors[stationType] || stationColors.trade;
 
-  // Shared station halo so all station types feel like the same object family.
-  const stationGlow = ctx.createRadialGradient(x, y, 0, x, y, 28);
-  stationGlow.addColorStop(0, `${colors.primary}33`);
-  stationGlow.addColorStop(0.5, `${colors.secondary}24`);
-  stationGlow.addColorStop(1, "transparent");
-  ctx.fillStyle = stationGlow;
-  ctx.beginPath();
-  ctx.arc(x, y, 28, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Faint scaffold ring behind the station body.
-  ctx.strokeStyle = `${colors.primary}55`;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(x, y, 18, 0, Math.PI * 2);
-  ctx.stroke();
-
   switch (stationType) {
     case "trade": {
       // ТОРГОВАЯ: Гексагональное кольцо + 3 стыковочных рукава + огни доков

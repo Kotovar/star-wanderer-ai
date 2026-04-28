@@ -65,3 +65,14 @@ export interface TravelingState {
     turnsLeft: number;
     turnsTotal: number;
 }
+
+export type TravelEventType =
+    | "asteroids"
+    | "anomaly"
+    | "stress"
+    | "signal"
+    | "emp";
+
+export interface PendingTravelEvent {
+    type: TravelEventType;
+}

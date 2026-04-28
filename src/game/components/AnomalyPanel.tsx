@@ -9,6 +9,7 @@ import {
     ANOMALY_BASE_DAMAGE_PER_LEVEL,
     ANOMALY_RANDOM_DAMAGE_MAX,
 } from "@/game/slices/locations/constants";
+import { RiskRewardPreview } from "./RiskRewardPreview";
 
 // Цвет по тиру (совпадает с ANOMALY_COLORS в config.ts)
 const TIER_COLOR: Record<number, string> = {
@@ -186,6 +187,106 @@ function TierDots({ tier }: { tier: number }) {
     );
 }
 
+const rangeText = (min: number, max: number, suffix = "") =>
+    min === max ? `${min}${suffix}` : `${min}-${max}${suffix}`;
+
+function buildAnomalyPreview({
+    anomalyType,
+    rewardMin,
+    rewardMax,
+    badRewardMin,
+    badRewardMax,
+    dmgMin,
+    dmgMax,
+}: {
+    anomalyType?: string;
+    rewardMin: number;
+    rewardMax: number;
+    badRewardMin: number;
+    badRewardMax: number;
+    dmgMin: number;
+    dmgMax: number;
+}) {
+    if (anomalyType === "good") {
+        return {
+            risks: [
+                {
+                    label: "Прямой урон",
+                    value: "не ожидается",
+                    tone: "good" as const,
+                },
+            ],
+            rewards: [
+                {
+                    label: "Кредиты",
+                    value: `+${rangeText(rewardMin, rewardMax, "₢")}`,
+                    tone: "good" as const,
+                },
+                {
+                    label: "Исследовательские данные",
+                    value: "возможно",
+                    tone: "warning" as const,
+                },
+            ],
+            notes: [
+                "Стабильные аномалии в основном дают ресурсы и не должны повреждать корабль.",
+            ],
+        };
+    }
+
+    if (anomalyType === "bad") {
+        return {
+            risks: [
+                {
+                    label: "Повреждение модуля",
+                    value: `-${rangeText(dmgMin, dmgMax, " HP")}`,
+                    tone: "danger" as const,
+                },
+            ],
+            rewards: [
+                {
+                    label: "Кредиты",
+                    value: `60% / +${rangeText(badRewardMin, badRewardMax, "₢")}`,
+                    tone: "good" as const,
+                },
+                {
+                    label: "Редкие ресурсы",
+                    value: "30%",
+                    tone: "warning" as const,
+                },
+                {
+                    label: "Артефакт",
+                    value: "10%",
+                    tone: "warning" as const,
+                },
+            ],
+            notes: [
+                "Опасные аномалии дают лучший шанс на редкую награду, но могут повредить случайный модуль.",
+            ],
+        };
+    }
+
+    return {
+        risks: [
+            {
+                label: "Тип аномалии",
+                value: "неизвестен",
+                tone: "warning" as const,
+            },
+        ],
+        rewards: [
+            {
+                label: "Результат",
+                value: "непредсказуем",
+                tone: "neutral" as const,
+            },
+        ],
+        notes: [
+            "Сканирование не определило профиль аномалии. Риск и награда скрыты.",
+        ],
+    };
+}
+
 // ─── Строка в экране результатов ─────────────────────────────────────────────
 
 function ResultRow({ message, type }: { message: string; type: string }) {
@@ -268,6 +369,15 @@ export function AnomalyPanel() {
 
     const flavorKey = aType ?? "unknown";
     const flavor = FLAVOR[flavorKey]?.[tier] ?? "";
+    const preview = buildAnomalyPreview({
+        anomalyType: aType,
+        rewardMin,
+        rewardMax,
+        badRewardMin,
+        badRewardMax,
+        dmgMin,
+        dmgMax,
+    });
 
     // ── Экран результатов ────────────────────────────────────────────────────
     if (anomalyCompleted) {
@@ -471,67 +581,12 @@ export function AnomalyPanel() {
                 )}
             </div>
 
-            {/* Превью наград и рисков */}
-            <div
-                className="border p-3 flex flex-col gap-2 shrink-0"
-                style={{ borderColor: "#1a1a2e", background: "rgba(0,0,0,0.25)" }}
-            >
-                <div className="text-[10px] text-[#888] uppercase tracking-wider mb-0.5">
-                    Ожидаемые результаты
-                </div>
-
-                {aType === "good" && (
-                    <>
-                        <div className="flex items-center gap-2 text-xs">
-                            <span className="text-[#ffb000]">💰</span>
-                            <span className="text-[#aaa]">Кредиты</span>
-                            <span className="ml-auto font-bold text-[#00ff88]">
-                                +{rewardMin}–{rewardMax}₢
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                            <span>🔬</span>
-                            <span className="text-[#aaa]">Исследовательские данные</span>
-                            <span className="ml-auto text-[#00d4ff] text-[10px]">возможно</span>
-                        </div>
-                    </>
-                )}
-
-                {aType === "bad" && (
-                    <>
-                        <div className="flex items-center gap-2 text-xs">
-                            <span className="text-[#ff5555]">⚠</span>
-                            <span className="text-[#aaa]">Повреждение модуля</span>
-                            <span className="ml-auto font-bold text-[#ff5555]">
-                                -{dmgMin}–{dmgMax}%
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                            <span className="text-[#ffb000]">💰</span>
-                            <span className="text-[#aaa]">Кредиты (60%)</span>
-                            <span className="ml-auto font-bold text-[#00ff88]">
-                                +{badRewardMin}–{badRewardMax}₢
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                            <span>🔬</span>
-                            <span className="text-[#aaa]">Редкие ресурсы (30%)</span>
-                            <span className="ml-auto text-[#00d4ff] text-[10px]">кристаллы / данные</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                            <span>✨</span>
-                            <span className="text-[#aaa]">Артефакт (10%)</span>
-                            <span className="ml-auto text-[#ffb000] text-[10px]">редко</span>
-                        </div>
-                    </>
-                )}
-
-                {!aType && (
-                    <div className="text-xs text-[#555]">
-                        Тип аномалии не определён. Результат непредсказуем.
-                    </div>
-                )}
-            </div>
+            <RiskRewardPreview
+                title="Прогноз исследования"
+                risks={preview.risks}
+                rewards={preview.rewards}
+                notes={preview.notes}
+            />
 
             {/* Учёные */}
             <div

@@ -9,7 +9,7 @@ import type {
 } from "./crew";
 import type { ActiveEffect } from "./effects";
 import type { Goods, TradeGood } from "./goods";
-import type { Sector, TravelingState } from "./locations/sectors";
+import type { PendingTravelEvent, Sector, TravelingState } from "./locations/sectors";
 import type { Location, LocationType } from "./locations/locations";
 import type { LogEntry } from "./logs";
 import type { Module, WeaponCounts } from "./modules";
@@ -55,6 +55,7 @@ export interface GameState {
   gameMode: GameMode;
   previousGameMode: GameMode | null; // Track previous game mode for modal-like panels
   traveling: TravelingState | null;
+  pendingTravelEvent: PendingTravelEvent | null;
   ship: {
     armor: number;
     shields: number;
@@ -163,6 +164,7 @@ export interface GameActionsClick {
   skipTurn: () => void;
   selectSector: (sectorId: number) => void;
   selectLocation: (locationIdx: number) => void;
+  resolveTravelEvent: (choice: "risk" | "cautious") => void;
   travelThroughBlackHole: () => void;
   emergencyJump: () => void;
   mineAsteroid: () => void;
