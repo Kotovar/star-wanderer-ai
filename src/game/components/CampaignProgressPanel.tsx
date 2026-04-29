@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 import { useGameStore } from "@/game/store";
 import { RESEARCH_TREE } from "@/game/constants";
-import { RACES } from "@/game/constants/races";
 import { canSeeTier4 } from "@/game/galaxy/galaxy-map-utils";
 import { useTranslation } from "@/lib/useTranslation";
 
@@ -105,6 +104,41 @@ function Milestone({
   );
 }
 
+function isLocationCountedAsVisited(
+  loc: {
+    id: string;
+    visited?: boolean;
+    defeated?: boolean;
+    bossDefeated?: boolean;
+    mined?: boolean;
+    signalResolved?: boolean;
+    derelictExplored?: boolean;
+    scoutedTimes?: number;
+    planetaryDrilled?: boolean;
+    atmosphereAnalyzed?: boolean;
+    expeditionCompleted?: boolean;
+    wreckPassesDone?: number;
+    gasGiantLastDiveAt?: number;
+  },
+  completedLocations: string[],
+) {
+  return (
+    loc.visited ||
+    completedLocations.includes(loc.id) ||
+    loc.defeated ||
+    loc.bossDefeated ||
+    loc.mined ||
+    loc.signalResolved ||
+    loc.derelictExplored ||
+    (loc.scoutedTimes ?? 0) > 0 ||
+    loc.planetaryDrilled ||
+    loc.atmosphereAnalyzed ||
+    loc.expeditionCompleted ||
+    (loc.wreckPassesDone ?? 0) > 0 ||
+    loc.gasGiantLastDiveAt !== undefined
+  );
+}
+
 const REGION_NAMES: Record<number, string> = {
   1: "Внутренние миры",
   2: "Срединный пояс",
@@ -117,8 +151,6 @@ export function CampaignProgressPanel() {
   const sectors = useGameStore((s) => s.galaxy.sectors);
   const currentSector = useGameStore((s) => s.currentSector);
   const shipModules = useGameStore((s) => s.ship.modules);
-  const knownRaces = useGameStore((s) => s.knownRaces);
-  const raceReputation = useGameStore((s) => s.raceReputation);
   const research = useGameStore((s) => s.research);
   const artifacts = useGameStore((s) => s.artifacts);
   const activeContracts = useGameStore((s) => s.activeContracts);
@@ -156,17 +188,13 @@ export function CampaignProgressPanel() {
     const defeatedBosses = bossLocations.filter(
       (loc) => loc.bossDefeated || completedLocations.includes(loc.id),
     ).length;
-    const exploredLocations = allLocations.filter((loc) =>
-      completedLocations.includes(loc.id),
+    const visitedLocations = allLocations.filter((loc) =>
+      isLocationCountedAsVisited(loc, completedLocations),
     ).length;
 
     const discoveredArtifacts = artifacts.filter((artifact) => artifact.discovered).length;
     const researchedArtifacts = artifacts.filter((artifact) => artifact.researched).length;
     const activeArtifacts = artifacts.filter((artifact) => artifact.effect.active).length;
-
-    const reputationValues = Object.values(raceReputation);
-    const allies = reputationValues.filter((value) => value >= 50).length;
-    const enemies = reputationValues.filter((value) => value <= -50).length;
 
     return {
       tiers,
@@ -174,19 +202,16 @@ export function CampaignProgressPanel() {
       visitedSectors: visibleSectors.filter((sector) => sector.visited).length,
       bossTotal: bossLocations.length,
       defeatedBosses,
-      exploredLocations,
+      visitedLocations,
       totalLocations: allLocations.length,
       discoveredArtifacts,
       researchedArtifacts,
       activeArtifacts,
-      allies,
-      enemies,
     };
-  }, [artifacts, canSeeHiddenRim, completedLocations, raceReputation, sectors]);
+  }, [artifacts, canSeeHiddenRim, completedLocations, sectors]);
 
   const techTotal = Object.keys(RESEARCH_TREE).length;
   const techDone = research.researchedTechs.length;
-  const raceTotal = Object.keys(RACES).length;
 
   return (
     <div className="space-y-3 text-[#00ff41]">
@@ -309,28 +334,19 @@ export function CampaignProgressPanel() {
             <div className="mb-1 flex justify-between text-xs">
               <span className="text-[#888]">Локации</span>
               <span className="text-[#667766]">
-                {stats.exploredLocations}/{stats.totalLocations}
+                {stats.visitedLocations}/{stats.totalLocations}
               </span>
             </div>
-            <ProgressBar value={stats.exploredLocations} max={stats.totalLocations} color="#00d4ff" />
+            <ProgressBar value={stats.visitedLocations} max={stats.totalLocations} color="#00d4ff" />
+            <div className="mt-1 text-[10px] text-[#555]">
+              засчитываются открытые, посещённые и завершённые локации
+            </div>
           </div>
         </div>
       </Section>
 
-      <Section title="Фракции и задания">
+      <Section title="Задания">
         <div className="grid grid-cols-2 gap-2">
-          <MetricCard
-            label="Расы"
-            value={`${knownRaces.length}/${raceTotal}`}
-            hint="обнаружено"
-            tone="good"
-          />
-          <MetricCard
-            label="Репутация"
-            value={`+${stats.allies} / -${stats.enemies}`}
-            hint="союзники / враги"
-            tone={stats.enemies > 0 ? "warning" : "neutral"}
-          />
           <MetricCard
             label="Активные задания"
             value={String(activeContracts.length)}

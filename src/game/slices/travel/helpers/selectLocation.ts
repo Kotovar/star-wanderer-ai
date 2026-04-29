@@ -64,12 +64,19 @@ const markLocationVisited = (
  */
 const updateLocationInSector = (loc: Location, set: SetState): void => {
     set((s) => ({
-        currentLocation: loc,
+        currentLocation: {
+            ...loc,
+            visited: s.currentLocation?.id === loc.id
+                ? s.currentLocation.visited || loc.visited
+                : loc.visited,
+        },
         currentSector: s.currentSector
             ? {
                   ...s.currentSector,
                   locations: s.currentSector.locations.map((l) =>
-                      l.id === loc.id ? loc : l,
+                      l.id === loc.id
+                          ? { ...loc, visited: l.visited || loc.visited }
+                          : l,
                   ),
               }
             : null,
@@ -143,6 +150,7 @@ export const selectLocation = (
 
     // Повторное посещение resolved сигналов бедствия (просмотр того, что было)
     if (loc.type === "distress_signal" && loc.signalResolved) {
+        markLocationVisited(loc, set, get);
         set({ currentLocation: loc, gameMode: "distress_signal" });
         return;
     }
@@ -155,10 +163,8 @@ export const selectLocation = (
 
     set({ currentLocation: loc });
 
-    // Отметка локации как посещённой (для планет и станций)
-    if (loc.type === "planet" || loc.type === "station") {
-        markLocationVisited(loc, set, get);
-    }
+    // Отметка локации как посещённой для прогресса и карты сектора.
+    markLocationVisited(loc, set, get);
 
     // Путешествие внутри сектора всегда занимает ход
     get().nextTurn();

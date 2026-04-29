@@ -1,8 +1,10 @@
 import type { GameState, GameStore, SetState } from "@/game/types";
 import {
   CRISIS_WARNING_TURNS,
+  FIRST_CRISIS_TURN_MIN,
   GLOBAL_CRISES,
   pickWeightedCrisis,
+  rollInitialCrisisTurn,
   rollNextCrisisTurn,
 } from "@/game/constants/globalCrises";
 import { store as i18nStore } from "@/lib/useTranslation";
@@ -29,6 +31,27 @@ export const processGlobalCrises = (
   get: () => GameStore,
 ): void => {
   const { turn, activeCrisis, nextCrisisTurn, nextCrisisId } = state;
+
+  // Balance migration for old saves: crises planned by the previous early schedule
+  // should not interrupt the opening phase.
+  if (turn < FIRST_CRISIS_TURN_MIN) {
+    if (activeCrisis) {
+      const crisis = getCrisisById(activeCrisis.id);
+      crisis?.onEndEffect?.(set, get, activeCrisis);
+      set(() => ({
+        activeCrisis: null,
+        nextCrisisTurn: rollInitialCrisisTurn(),
+        nextCrisisId,
+      }));
+      get().addLog("⚠️ Ранний галактический кризис отложен: система кризисов перебалансирована", "info");
+      return;
+    }
+
+    if (nextCrisisTurn < FIRST_CRISIS_TURN_MIN) {
+      set(() => ({ nextCrisisTurn: rollInitialCrisisTurn() }));
+      return;
+    }
+  }
 
   // ── Активный кризис ────────────────────────────────────────────────────────
   if (activeCrisis) {

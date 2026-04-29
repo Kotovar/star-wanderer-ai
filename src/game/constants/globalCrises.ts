@@ -6,15 +6,15 @@ import { TRADE_GOODS } from "@/game/constants/goods";
 // ─── Константы ────────────────────────────────────────────────────────────────
 
 /** Первый кризис приходит в случайном окне, а не в фиксированный ход */
-export const FIRST_CRISIS_TURN_MIN = 12;
-export const FIRST_CRISIS_TURN_MAX = 18;
+export const FIRST_CRISIS_TURN_MIN = 30;
+export const FIRST_CRISIS_TURN_MAX = 42;
 
 /** Интервал между кризисами тоже плавает */
-export const CRISIS_INTERVAL_MIN = 12;
-export const CRISIS_INTERVAL_MAX = 22;
+export const CRISIS_INTERVAL_MIN = 24;
+export const CRISIS_INTERVAL_MAX = 38;
 
 /** За сколько ходов до кризиса показывать предупреждение */
-export const CRISIS_WARNING_TURNS = 3;
+export const CRISIS_WARNING_TURNS = 5;
 
 // ─── Значения эффектов ────────────────────────────────────────────────────────
 
@@ -97,6 +97,17 @@ const randomInt = (min: number, max: number) =>
 
 const countModulesByTypes = (state: GameState, types: string[]) =>
   state.ship.modules.filter((module) => types.includes(module.type)).length;
+
+const getCrisisIntensity = (state: GameState) => {
+  const tierPressure = Math.max(0, (state.currentSector?.tier ?? 1) - 1) * 0.12;
+  const turnPressure =
+    state.turn >= 90 ? 0.4 : state.turn >= 60 ? 0.25 : state.turn >= 40 ? 0.12 : 0;
+  const victoryPressure = state.victoryTriggered || state.gameVictory ? 0.25 : 0;
+  return Math.min(1.85, 1 + tierPressure + turnPressure + victoryPressure);
+};
+
+const scaled = (state: GameState, value: number) =>
+  Math.max(1, Math.round(value * getCrisisIntensity(state)));
 
 export const rollInitialCrisisTurn = () =>
   randomInt(FIRST_CRISIS_TURN_MIN, FIRST_CRISIS_TURN_MAX);
@@ -181,13 +192,14 @@ export const rollNextCrisisTurn = (
   currentTurn: number,
   state: GameState,
 ) => {
-  const creditsPressure = state.credits > 1800 ? -2 : state.credits < 300 ? 2 : 0;
-  const fuelPressure = state.ship.fuel < 25 ? -1 : state.ship.fuel > 90 ? 1 : 0;
-  const crewPressure = state.crew.length >= 6 ? -1 : 0;
+  const creditsPressure = state.credits > 2200 ? -2 : state.credits < 350 ? 3 : 0;
+  const fuelPressure = state.ship.fuel < 20 ? 2 : state.ship.fuel > 110 ? -1 : 0;
+  const crewPressure = state.crew.length >= 7 ? -1 : 0;
+  const tierPressure = (state.currentSector?.tier ?? 1) >= 3 ? -2 : 0;
   const instabilityPressure = creditsPressure + fuelPressure + crewPressure;
 
-  const minDelay = Math.max(8, CRISIS_INTERVAL_MIN + instabilityPressure);
-  const maxDelay = Math.max(minDelay + 2, CRISIS_INTERVAL_MAX + instabilityPressure);
+  const minDelay = Math.max(18, CRISIS_INTERVAL_MIN + instabilityPressure + tierPressure);
+  const maxDelay = Math.max(minDelay + 6, CRISIS_INTERVAL_MAX + instabilityPressure + tierPressure);
   return currentTurn + randomInt(minDelay, maxDelay);
 };
 
@@ -205,11 +217,12 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
     duration: 4,
     onStartEffect: (set, get) => {
       const state = get();
+      const intensity = getCrisisIntensity(state);
       const targets = pickRandomItems(getOperationalModules(state), 2);
-      damageModules(set, targets.map((module) => module.id), 7);
+      damageModules(set, targets.map((module) => module.id), scaled(state, 7));
       const cargoLoss = pickRandomItems(state.ship.tradeGoods, 1)[0];
       if (cargoLoss) {
-        const stolenQty = Math.max(1, Math.ceil(cargoLoss.quantity * 0.25));
+        const stolenQty = Math.max(1, Math.ceil(cargoLoss.quantity * Math.min(0.45, 0.2 + intensity * 0.05)));
         set((s: GameState) => ({
           ship: {
             ...s.ship,
@@ -237,9 +250,10 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
     onTurnEffect: (set, get) => {
       const state = get();
       const targets = pickRandomItems(getOperationalModules(state), 1);
+      const fuelLoss = scaled(state, 3);
       const creditLoss = Math.min(
-        55,
-        Math.max(15, Math.round((state.credits || 0) * 0.08)),
+        scaled(state, 65),
+        Math.max(scaled(state, 12), Math.round((state.credits || 0) * (0.055 + getCrisisIntensity(state) * 0.018))),
       );
       if (state.credits > 0) {
         set((s: GameState) => ({
@@ -249,22 +263,22 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
         set((s: GameState) => ({
           ship: {
             ...s.ship,
-            fuel: Math.max(0, s.ship.fuel - 4),
+            fuel: Math.max(0, s.ship.fuel - fuelLoss),
           },
         }));
       }
-      damageModules(set, targets.map((module) => module.id), 6);
+      damageModules(set, targets.map((module) => module.id), scaled(state, 5));
       const targetName = targets[0]?.name;
       set((s: GameState) => ({
         crew: s.crew.map((crewMember) => ({
           ...crewMember,
-          happiness: Math.max(0, crewMember.happiness - 3),
+          happiness: Math.max(0, crewMember.happiness - scaled(state, 2)),
         })),
       }));
       get().addLog(
         targetName
           ? `🏴‍☠️ Рейдерский налёт: -${state.credits > 0 ? creditLoss : 0}₢, повреждён ${targetName}`
-          : `🏴‍☠️ Рейдерский налёт: ${state.credits > 0 ? `-${creditLoss}₢` : "-4 топлива"}, экипаж на взводе`,
+          : `🏴‍☠️ Рейдерский налёт: ${state.credits > 0 ? `-${creditLoss}₢` : `-${fuelLoss} топлива`}, экипаж на взводе`,
         "error",
       );
     },
@@ -306,8 +320,9 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       return { disabledModuleIds: disruptedIds };
     },
     onTurnEffect: (set, get, activeCrisis) => {
+      const state = get();
       const disruptedIds = (activeCrisis.data?.disabledModuleIds as number[] | undefined) ?? [];
-      damageModules(set, disruptedIds, 4);
+      damageModules(set, disruptedIds, scaled(state, 3));
       set((s: GameState) => ({
         ship: {
           ...s.ship,
@@ -353,15 +368,16 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       return { infectedCrewIds: infected.map((crewMember) => crewMember.id) };
     },
     onTurnEffect: (set, get, activeCrisis) => {
+      const state = get();
       const infectedIds = (activeCrisis.data?.infectedCrewIds as number[] | undefined) ?? [];
       const hasMedicSupport = get().crew.some(
         (crewMember) =>
           crewMember.profession === "medic" &&
           crewMember.health > 0,
       );
-      const infectedHealthLoss = hasMedicSupport ? 3 : 6;
-      const infectedMoraleLoss = hasMedicSupport ? 4 : 7;
-      const backgroundMoraleLoss = hasMedicSupport ? 1 : 2;
+      const infectedHealthLoss = scaled(state, hasMedicSupport ? 2 : 5);
+      const infectedMoraleLoss = scaled(state, hasMedicSupport ? 3 : 6);
+      const backgroundMoraleLoss = scaled(state, hasMedicSupport ? 1 : 2);
       set((s: GameState) => ({
         crew: s.crew.map((c) => ({
           ...c,
@@ -416,7 +432,7 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       set((s: GameState) => ({
         ship: {
           ...s.ship,
-          fuel: Math.max(0, s.ship.fuel - 10),
+          fuel: Math.max(0, s.ship.fuel - scaled(state, 8)),
         },
       }));
       if (throttled.length > 0) {
@@ -430,9 +446,10 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       return { throttledModuleIds: throttledIds };
     },
     onTurnEffect: (set, get, activeCrisis) => {
+      const state = get();
       const throttledIds = (activeCrisis.data?.throttledModuleIds as number[] | undefined) ?? [];
-      const activeCrew = get().crew.length;
-      const drain = Math.min(10, 4 + Math.floor(activeCrew / 3));
+      const activeCrew = state.crew.length;
+      const drain = Math.min(scaled(state, 11), scaled(state, 3 + Math.floor(activeCrew / 4)));
       set((s: GameState) => ({
         ship: {
           ...s.ship,
@@ -440,10 +457,10 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
         },
         crew: s.crew.map((crewMember) => ({
           ...crewMember,
-          happiness: Math.max(0, crewMember.happiness - 2),
+          happiness: Math.max(0, crewMember.happiness - scaled(state, 1)),
         })),
       }));
-      damageModules(set, throttledIds, 3);
+      damageModules(set, throttledIds, scaled(state, 2));
       get().addLog(
         `⛽ Нормирование топлива: -${drain} топлива, экипажу урезаны перелёты и пайки`,
         "warning",
