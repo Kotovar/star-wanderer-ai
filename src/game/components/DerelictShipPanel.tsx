@@ -4,6 +4,8 @@ import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
 import { MODULE_RECIPES } from "@/game/constants/crafting";
 import { useTranslation } from "@/lib/useTranslation";
+import { ArrowLeft, Cpu, DraftingCompass, Gem, Search, Wrench } from "lucide-react";
+import { EventIllustration } from "./EventIllustration";
 
 export function DerelictShipPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
@@ -26,7 +28,6 @@ export function DerelictShipPanel() {
         <div className="flex flex-col gap-4 p-4">
             {/* Header */}
             <div className="flex items-center gap-3">
-                <span className="text-4xl">🛸</span>
                 <div>
                     <div className="font-['Orbitron'] font-bold text-lg text-[#00d4ff]">
                         ▸ {t("derelict_ship.title")}
@@ -36,6 +37,8 @@ export function DerelictShipPanel() {
                     </div>
                 </div>
             </div>
+
+            <EventIllustration variant="derelict" accent="#00d4ff" muted={isExplored} />
 
             <div className="border border-[#00d4ff33] bg-[rgba(0,212,255,0.03)] p-4">
                 <p className="text-sm text-[#aaa] mb-3">
@@ -51,25 +54,25 @@ export function DerelictShipPanel() {
                                 </div>
                                 <div className="space-y-1 text-sm">
                                     {loot?.spares && loot.spares > 0 && (
-                                        <div className="text-[#aaa]">
-                                            🔧 {t("derelict_ship.loot_spares")}: ×{loot.spares}
+                                        <div className="flex items-center gap-2 text-[#aaa]">
+                                            <Wrench size={14} /> {t("derelict_ship.loot_spares")}: ×{loot.spares}
                                         </div>
                                     )}
                                     {loot?.electronics && loot.electronics > 0 && (
-                                        <div className="text-[#aaa]">
-                                            💾 {t("derelict_ship.loot_electronics")}: ×{loot.electronics}
+                                        <div className="flex items-center gap-2 text-[#aaa]">
+                                            <Cpu size={14} /> {t("derelict_ship.loot_electronics")}: ×{loot.electronics}
                                         </div>
                                     )}
                                     {loot?.rare_minerals && loot.rare_minerals > 0 && (
-                                        <div className="text-[#aaa]">
-                                            💎 {t("derelict_ship.loot_rare_minerals")}: ×{loot.rare_minerals}
+                                        <div className="flex items-center gap-2 text-[#aaa]">
+                                            <Gem size={14} /> {t("derelict_ship.loot_rare_minerals")}: ×{loot.rare_minerals}
                                         </div>
                                     )}
                                     {loot?.moduleRecipeId && (
-                                        <div className="text-[#ffb000] font-bold">
-                                            📐 {t("derelict_ship.loot_blueprint")}:{" "}
+                                        <div className="flex items-center gap-2 text-[#ffb000] font-bold">
+                                            <DraftingCompass size={14} /> {t("derelict_ship.loot_blueprint")}:{" "}
                                             {MODULE_RECIPES[loot.moduleRecipeId as keyof typeof MODULE_RECIPES]
-                                                ? `${MODULE_RECIPES[loot.moduleRecipeId as keyof typeof MODULE_RECIPES].icon} ${MODULE_RECIPES[loot.moduleRecipeId as keyof typeof MODULE_RECIPES].name}`
+                                                ? MODULE_RECIPES[loot.moduleRecipeId as keyof typeof MODULE_RECIPES].name
                                                 : loot.moduleRecipeId}
                                         </div>
                                     )}
@@ -100,7 +103,7 @@ export function DerelictShipPanel() {
                             onClick={() => exploreDerelictShip(currentLocation.id)}
                             className="w-full bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            🔍 {t("derelict_ship.explore_button")}
+                            <Search size={14} /> {t("derelict_ship.explore_button")}
                         </Button>
                     </div>
                 )}
@@ -110,7 +113,7 @@ export function DerelictShipPanel() {
                 onClick={showSectorMap}
                 className="bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider w-fit cursor-pointer"
             >
-                ◂ {t("common.leave")}
+                <ArrowLeft size={14} /> {t("common.leave")}
             </Button>
         </div>
     );

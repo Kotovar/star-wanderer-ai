@@ -7,6 +7,7 @@ import { useTranslation } from "@/lib/useTranslation";
 import type { ExploreTileType } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES, TRADE_GOODS } from "@/game/constants";
 import { ExpeditionMapCanvas } from "./ExpeditionMapCanvas";
+import { EventIllustration } from "./EventIllustration";
 
 const TILE_COLORS: Record<ExploreTileType, { border: string; bg: string }> = {
     market: { border: "#00ff41", bg: "rgba(0,255,65,0.08)" },
@@ -17,11 +18,11 @@ const TILE_COLORS: Record<ExploreTileType, { border: string; bg: string }> = {
 };
 
 const TILE_ICONS: Record<ExploreTileType, string> = {
-    market: "🏪",
-    lab: "🔬",
-    ruins: "🏚️",
-    incident: "⚠️",
-    artifact: "✨",
+    market: "M",
+    lab: "L",
+    ruins: "R",
+    incident: "!",
+    artifact: "A",
 };
 
 export function PlanetExplorationPanel() {
@@ -103,7 +104,7 @@ export function PlanetExplorationPanel() {
                     {/* Amber header strip */}
                     <div className="px-4 pt-4 pb-3 border-b border-[#ffb00033] bg-[rgba(255,176,0,0.04)]">
                         <div className="text-[10px] text-[#ffb000] uppercase tracking-widest font-['Orbitron'] mb-1 opacity-60">
-                            🏚️ {t("planet_panel.tile_ruins")}
+                            {t("planet_panel.tile_ruins")}
                         </div>
                         <DialogTitle className="text-[#ffb000] font-bold text-sm font-['Orbitron'] uppercase tracking-wider">
                             {activeRuinsEvent
@@ -112,6 +113,7 @@ export function PlanetExplorationPanel() {
                         </DialogTitle>
                     </div>
                     <div className="flex flex-col gap-3 p-4">
+                        <EventIllustration variant="ruins" accent="#ffb000" />
                         <div className="text-xs text-[#aaa] leading-relaxed border-l-2 border-[#ffb00044] pl-3">
                             {activeRuinsEvent
                                 ? t(`planet_panel.${activeRuinsEvent.descKey}`)

@@ -3348,11 +3348,7 @@ function drawStation(
       ctx.arc(x, y, 4, 0, Math.PI * 2);
       ctx.fill();
 
-      // Star symbol
-      ctx.fillStyle = colors.secondary;
-      ctx.font = "bold 6px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText("★", x, y + 2);
+      drawSparkGlyph(ctx, x, y, 4, colors.secondary);
       break;
     }
   }
@@ -4304,6 +4300,216 @@ function drawAsteroidBelt(
   ctx.globalAlpha = 1;
 }
 
+function drawSparkGlyph(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size);
+  ctx.lineTo(x + size * 0.28, y - size * 0.28);
+  ctx.lineTo(x + size, y);
+  ctx.lineTo(x + size * 0.28, y + size * 0.28);
+  ctx.lineTo(x, y + size);
+  ctx.lineTo(x - size * 0.28, y + size * 0.28);
+  ctx.lineTo(x - size, y);
+  ctx.lineTo(x - size * 0.28, y - size * 0.28);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawBoltGlyph(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.1, y - size);
+  ctx.lineTo(x - size * 0.55, y + size * 0.1);
+  ctx.lineTo(x - size * 0.05, y + size * 0.1);
+  ctx.lineTo(x - size * 0.25, y + size);
+  ctx.lineTo(x + size * 0.6, y - size * 0.25);
+  ctx.lineTo(x + size * 0.08, y - size * 0.25);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawRadiationGlyph(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+) {
+  ctx.save();
+  ctx.fillStyle = color;
+  for (let i = 0; i < 3; i++) {
+    const angle = -Math.PI / 2 + (i * Math.PI * 2) / 3;
+    ctx.beginPath();
+    ctx.moveTo(
+      x + Math.cos(angle - 0.22) * size * 0.38,
+      y + Math.sin(angle - 0.22) * size * 0.38,
+    );
+    ctx.arc(x, y, size, angle - 0.36, angle + 0.36);
+    ctx.lineTo(
+      x + Math.cos(angle + 0.22) * size * 0.38,
+      y + Math.sin(angle + 0.22) * size * 0.38,
+    );
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.fillStyle = "#061106";
+  ctx.beginPath();
+  ctx.arc(x, y, size * 0.24, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawGravityGlyph(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(x, y, size * 0.68, Math.PI * 0.1, Math.PI * 1.55);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(x, y, size * 0.38, Math.PI * 1.05, Math.PI * 2.45);
+  ctx.stroke();
+  ctx.fillStyle = "#030006";
+  ctx.beginPath();
+  ctx.arc(x, y, size * 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawHourglassGlyph(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.55, y - size);
+  ctx.lineTo(x + size * 0.55, y - size);
+  ctx.lineTo(x - size * 0.55, y + size);
+  ctx.lineTo(x + size * 0.55, y + size);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.55, size * 0.15, 0, Math.PI * 2);
+  ctx.arc(x, y + size * 0.55, size * 0.15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawHexGlyph(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.8;
+  for (let layer = 0; layer < 2; layer++) {
+    const radius = size * (layer === 0 ? 0.85 : 0.45);
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI * 2) / 6 - Math.PI / 6;
+      const px = x + Math.cos(angle) * radius;
+      const py = y + Math.sin(angle) * radius;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawStormGlyph(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  stormType: StormType,
+  color: string,
+) {
+  switch (stormType) {
+    case "radiation":
+      drawRadiationGlyph(ctx, x, y, 8, color);
+      break;
+    case "ionic":
+      drawBoltGlyph(ctx, x, y, 8, color);
+      break;
+    case "plasma":
+      drawSparkGlyph(ctx, x, y, 8, color);
+      break;
+    case "gravitational":
+      drawGravityGlyph(ctx, x, y, 9, color);
+      break;
+    case "temporal":
+      drawHourglassGlyph(ctx, x, y, 8, color);
+      break;
+    case "nanite":
+      drawHexGlyph(ctx, x, y, 8, color);
+      break;
+    default:
+      drawSparkGlyph(ctx, x, y, 7, color);
+      break;
+  }
+}
+
+function drawGearGlyph(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 8; i++) {
+    const angle = (i * Math.PI * 2) / 8;
+    ctx.beginPath();
+    ctx.moveTo(
+      x + Math.cos(angle) * size * 0.55,
+      y + Math.sin(angle) * size * 0.55,
+    );
+    ctx.lineTo(x + Math.cos(angle) * size, y + Math.sin(angle) * size);
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.arc(x, y, size * 0.62, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(x, y, size * 0.22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 // Draw storm
 function drawStorm(
   ctx: CanvasRenderingContext2D,
@@ -4319,36 +4525,28 @@ function drawStorm(
   const stormType = loc.stormType || "radiation";
 
   let color: string;
-  let icon: string;
 
   switch (stormType) {
     case "radiation":
       color = "#00ff00";
-      icon = "☢";
       break;
     case "ionic":
       color = "#00d4ff";
-      icon = "⚡";
       break;
     case "plasma":
       color = "#ff4400";
-      icon = "✦";
       break;
     case "gravitational":
       color = "#9d00ff";
-      icon = "🕳";
       break;
     case "temporal":
       color = "#ff00ff";
-      icon = "⏳";
       break;
     case "nanite":
       color = "#ffaa00";
-      icon = "⬡";
       break;
     default:
       color = "#00ff00";
-      icon = "?";
   }
 
   // Storm cloud base
@@ -4373,13 +4571,11 @@ function drawStorm(
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.stroke();
       }
-      // Radiation symbols around
-      ctx.font = "10px Share Tech Mono";
       for (let i = 0; i < 3; i++) {
         const angle = (i * Math.PI * 2) / 3;
         const rx = x + Math.cos(angle) * 14;
         const ry = y + Math.sin(angle) * 14;
-        ctx.fillText("☢", rx, ry);
+        drawRadiationGlyph(ctx, rx, ry, 3.5, color);
       }
       break;
 
@@ -4515,11 +4711,8 @@ function drawStorm(
       break;
   }
 
-  // Storm icon in center
-  ctx.font = "bold 14px Share Tech Mono";
-  ctx.fillStyle = color;
-  ctx.textAlign = "center";
-  ctx.fillText(icon, x, y + 5);
+  // Storm symbol in center
+  drawStormGlyph(ctx, x, y, stormType, color);
 
   ctx.globalAlpha = 1;
 }
@@ -4598,16 +4791,25 @@ function drawDistressSignal(
   ctx.stroke();
   ctx.restore();
 
-  // ── Текст SOS ─────────────────────────────────────────────────────
-  const textBlink = isResolved
+  // ── Внутренний сигнал маяка ───────────────────────────────────────
+  const signalBlink = isResolved
     ? 0.6
     : 0.88 + 0.12 * Math.sin(t * Math.PI * 0.6); // синхронно с glow
-  ctx.globalAlpha = baseAlpha * textBlink;
-  ctx.font = "bold 8px 'Share Tech Mono', monospace";
+  ctx.globalAlpha = baseAlpha * signalBlink;
+  ctx.strokeStyle = isResolved ? "#666" : color;
   ctx.fillStyle = isResolved ? "#666" : color;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("SOS", x, y);
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(x, y + 5);
+  ctx.lineTo(x, y - 5);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(x, y - 5, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x, y - 2, 4.8, -Math.PI * 0.78, -Math.PI * 0.22);
+  ctx.arc(x, y - 2, 4.8, Math.PI * 0.22, Math.PI * 0.78);
+  ctx.stroke();
 
   // Сброс
   ctx.globalAlpha = 1;
@@ -4681,7 +4883,7 @@ function drawAncientBoss(
       break;
 
     case "stalker":
-      // 🔥 Нова сталкер - Nova Stalker (flame collector)
+      // Nova Stalker - flame collector
       ctx.fillStyle = "#ff4400";
       ctx.beginPath();
       ctx.moveTo(x, y - 14);
@@ -4742,7 +4944,7 @@ function drawAncientBoss(
       break;
 
     case "hunter":
-      // ⚡ Фазовый Охотник - Phase Hunter (lightning bolt)
+      // Phase Hunter - lightning bolt
       ctx.fillStyle = "#00d4ff";
       ctx.beginPath();
       ctx.moveTo(x + 4, y - 14);
@@ -4802,7 +5004,7 @@ function drawAncientBoss(
       break;
 
     case "destroyer":
-      // 💀 Разрушитель Связи - Nexus Destroyer (skull/crossbones)
+      // Nexus Destroyer - disruptor core
       ctx.fillStyle = "#ff4444";
       ctx.beginPath();
       ctx.arc(x, y - 4, 8, 0, Math.PI * 2);
@@ -4825,7 +5027,7 @@ function drawAncientBoss(
       break;
 
     case "warden":
-      // ⏳ Хранитель Времени - Chronos Warden (hourglass)
+      // Chronos Warden - hourglass
       ctx.strokeStyle = "#ffaa00";
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -4868,11 +5070,7 @@ function drawAncientBoss(
       ctx.beginPath();
       ctx.arc(x, y, 12, 0, Math.PI * 2);
       ctx.fill();
-      // Tech symbol
-      ctx.font = "bold 14px Share Tech Mono";
-      ctx.fillStyle = "#fff";
-      ctx.textAlign = "center";
-      ctx.fillText("⚙", x, y + 5);
+      drawGearGlyph(ctx, x, y, 8, "#fff");
       break;
   }
 

@@ -2,6 +2,7 @@
 
 import { useGameStore } from "@/game/store";
 import { Button } from "@/components/ui/button";
+import { Database, Radio, ShieldAlert, Wrench, Zap } from "lucide-react";
 
 const TIER_COLORS: Record<1 | 2 | 3, string> = {
   1: "#8b7355",
@@ -160,7 +161,7 @@ export function WreckFieldPanel() {
           className="font-['Orbitron'] font-bold uppercase tracking-wider text-sm"
           style={{ color: tierColor }}
         >
-          💀 {currentLocation.name}
+          {currentLocation.name}
         </div>
         <button
           onClick={showSectorMap}
@@ -213,14 +214,14 @@ export function WreckFieldPanel() {
             Последний проход
           </div>
           <div className="flex flex-wrap gap-x-3 gap-y-1 text-[#aaa]">
-            {lastLoot.spares && <span>🔩 Запчасти ×{lastLoot.spares}</span>}
-            {lastLoot.electronics && <span>💡 Электроника ×{lastLoot.electronics}</span>}
-            {lastLoot.rare_minerals && <span>💎 Редкие минералы ×{lastLoot.rare_minerals}</span>}
-            {lastLoot.tech_salvage && <span className="text-[#00d4ff]">⚙️ Техн. металлолом ×{lastLoot.tech_salvage}</span>}
-            {lastLoot.ancient_data && <span className="text-[#cc44ff]">📡 Древние данные ×{lastLoot.ancient_data}</span>}
+            {lastLoot.spares && <span className="flex items-center gap-1"><Wrench size={12} /> Запчасти ×{lastLoot.spares}</span>}
+            {lastLoot.electronics && <span className="flex items-center gap-1"><Zap size={12} /> Электроника ×{lastLoot.electronics}</span>}
+            {lastLoot.rare_minerals && <span className="flex items-center gap-1"><Database size={12} /> Редкие минералы ×{lastLoot.rare_minerals}</span>}
+            {lastLoot.tech_salvage && <span className="flex items-center gap-1 text-[#00d4ff]"><Wrench size={12} /> Техн. металлолом ×{lastLoot.tech_salvage}</span>}
+            {lastLoot.ancient_data && <span className="flex items-center gap-1 text-[#cc44ff]"><Radio size={12} /> Древние данные ×{lastLoot.ancient_data}</span>}
             {lastLoot.shieldDamage && (
-              <span className="text-[#ff6644]">
-                🔴 Щиты -{lastLoot.shieldDamage}
+              <span className="flex items-center gap-1 text-[#ff6644]">
+                <ShieldAlert size={12} /> Щиты -{lastLoot.shieldDamage}
               </span>
             )}
           </div>
@@ -230,7 +231,7 @@ export function WreckFieldPanel() {
       {/* Предупреждение о радиации */}
       {!exhausted && (
         <div className="text-[10px] text-[#ff6644] border border-[#ff664422] p-2 bg-[rgba(255,68,0,0.04)] shrink-0">
-          ☢ Радиационный фон — каждый проход наносит <strong>{shieldWarning}</strong> урона щитам.
+          Радиационный фон — каждый проход наносит <strong>{shieldWarning}</strong> урона щитам.
         </div>
       )}
 
@@ -245,7 +246,7 @@ export function WreckFieldPanel() {
               color: tierColor,
             }}
           >
-            🔧 Обыскать обломки ({done}/{total})
+            <Wrench size={14} /> Обыскать обломки ({done}/{total})
           </Button>
         ) : (
           <div className="text-xs text-center text-[#444] border border-[#1a1a2e] p-2">

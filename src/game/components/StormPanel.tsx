@@ -6,6 +6,7 @@ import type { StormType } from "../types";
 import { useTranslation } from "@/lib/useTranslation";
 import { ShipStatsPanel } from "./ShipStatsPanel";
 import { RiskRewardPreview } from "./RiskRewardPreview";
+import { EventIllustration } from "./EventIllustration";
 import {
     STORM_COMMON,
     STORM_CONFIG,
@@ -17,7 +18,6 @@ import type { ResearchResourceType } from "@/game/types";
 
 // StormType
 type StormDetails = {
-    icon: string;
     color: string;
     nameKey: string;
     descKey: string;
@@ -28,7 +28,6 @@ type StormInfo = Record<StormType, StormDetails>;
 
 const STORM_INFO: StormInfo = {
     radiation: {
-        icon: "☢️",
         color: "#00ff00",
         nameKey: "storm.radiation_cloud",
         descKey: "storm.radiation_cloud_desc",
@@ -36,7 +35,6 @@ const STORM_INFO: StormInfo = {
         lootKey: "storm.radiation_cloud_loot",
     },
     ionic: {
-        icon: "⚡",
         color: "#00d4ff",
         nameKey: "storm.ion_storm",
         descKey: "storm.ion_storm_desc",
@@ -44,7 +42,6 @@ const STORM_INFO: StormInfo = {
         lootKey: "storm.ion_storm_loot",
     },
     plasma: {
-        icon: "✦",
         color: "#ff4400",
         nameKey: "storm.plasma_storm",
         descKey: "storm.plasma_storm_desc",
@@ -52,7 +49,6 @@ const STORM_INFO: StormInfo = {
         lootKey: "storm.plasma_storm_loot",
     },
     gravitational: {
-        icon: "🕳️",
         color: "#9d00ff",
         nameKey: "storm.gravitational_storm",
         descKey: "storm.gravitational_storm_desc",
@@ -60,7 +56,6 @@ const STORM_INFO: StormInfo = {
         lootKey: "storm.gravitational_storm_loot",
     },
     temporal: {
-        icon: "⏳",
         color: "#ff00ff",
         nameKey: "storm.temporal_storm",
         descKey: "storm.temporal_storm_desc",
@@ -68,7 +63,6 @@ const STORM_INFO: StormInfo = {
         lootKey: "storm.temporal_storm_loot",
     },
     nanite: {
-        icon: "🦠",
         color: "#ffaa00",
         nameKey: "storm.nanite_storm",
         descKey: "storm.nanite_storm_desc",
@@ -288,11 +282,15 @@ export function StormPanel() {
                         className="text-xl font-bold font-['Orbitron']"
                         style={{ color: info.color }}
                     >
-                        {info.icon} {t("storm.storm_overcome")}
+                        {t("storm.storm_overcome")}
                     </h2>
                     <span className="text-sm text-[#00ff41]">
                         {t("storm.investigated")}
                     </span>
+                </div>
+
+                <div className="mb-4">
+                    <EventIllustration variant="storm" accent={info.color} />
                 </div>
 
                 <div
@@ -377,6 +375,10 @@ export function StormPanel() {
                     </h2>
                 </div>
 
+                <div className="mb-4">
+                    <EventIllustration variant="storm" accent="#777" muted />
+                </div>
+
                 <div className="bg-[rgba(0,0,0,0.4)] p-3 mb-4 border border-[#666]">
                     <p className="text-[#888] mb-2">
                         {t("storm.sensors_unknown")}
@@ -425,13 +427,17 @@ export function StormPanel() {
                     className="text-xl font-bold font-['Orbitron']"
                     style={{ color: info.color }}
                 >
-                    {info.icon} {t(info.nameKey)}
+                    {t(info.nameKey)}
                 </h2>
                 <span className="text-sm text-[#ffb000]">
                     {t("storm.intensity")
                         .replace("{{intensity}}", String(intensity))
                         .replace("{{label}}", intensityLabels[intensity])}
                 </span>
+            </div>
+
+            <div className="mb-4">
+                <EventIllustration variant="storm" accent={info.color} />
             </div>
 
             <div
@@ -507,7 +513,7 @@ export function StormPanel() {
                     onClick={enterStorm}
                     className="flex-1 bg-[#ff4444] hover:bg-[#ff6666] text-white font-bold cursor-pointer"
                 >
-                    {t("storm.enter_storm").replace("{{icon}}", info.icon)}
+                    {t("storm.enter_storm").replace("{{icon}}", "").trim()}
                 </Button>
                 <Button
                     onClick={showSectorMap}

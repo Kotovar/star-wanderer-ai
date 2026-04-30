@@ -10,6 +10,7 @@ import {
     ANOMALY_RANDOM_DAMAGE_MAX,
 } from "@/game/slices/locations/constants";
 import { RiskRewardPreview } from "./RiskRewardPreview";
+import { Microscope, Telescope } from "lucide-react";
 
 // Цвет по тиру (совпадает с ANOMALY_COLORS в config.ts)
 const TIER_COLOR: Record<number, string> = {
@@ -601,7 +602,9 @@ export function AnomalyPanel() {
                         <span className="text-[#ccc]">{s.name}</span>
                         <div className="flex items-center gap-2">
                             {s.assignment === "analyzing" && (
-                                <span className="text-[10px] text-[#00d4ff]">🔬 анализ</span>
+                                <span className="flex items-center gap-1 text-[10px] text-[#00d4ff]">
+                                    <Microscope size={11} /> анализ
+                                </span>
                             )}
                             <span className="font-bold text-[#00ff88]">
                                 LV{s.level ?? 1} ✓
@@ -621,7 +624,7 @@ export function AnomalyPanel() {
                         color: tierColor,
                     }}
                 >
-                    🔭 {t("anomaly.investigate")}
+                    <Telescope size={14} /> {t("anomaly.investigate")}
                 </Button>
                 <Button
                     onClick={showSectorMap}
