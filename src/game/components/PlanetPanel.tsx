@@ -33,6 +33,7 @@ import {
     REPUTATION_ICONS,
     getReputationLevel,
 } from "@/game/types/reputation";
+import { RaceSprite } from "./RaceSprite";
 
 export function PlanetPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
@@ -472,7 +473,13 @@ export function PlanetPanel() {
                                 backgroundColor: `${race.color}15`,
                             }}
                         >
-                            <span className="text-xl">{race.icon}</span>
+                            <RaceSprite
+                                race={currentLocation.dominantRace ?? "human"}
+                                size={40}
+                                title={t(
+                                    `races.${currentLocation.dominantRace}.plural`,
+                                )}
+                            />
                             <div>
                                 <div
                                     style={{ color: race.color }}
@@ -741,13 +748,22 @@ export function PlanetPanel() {
                                                     {c.isRaceQuest &&
                                                         raceInfo && (
                                                             <span
-                                                                className="text-xs px-1 py-0.5 rounded"
+                                                                className="inline-flex items-center gap-1 text-xs px-1 py-0.5 rounded"
                                                                 style={{
                                                                     backgroundColor: `${raceInfo.color}20`,
                                                                     color: raceInfo.color,
                                                                 }}
                                                             >
-                                                                {raceInfo.icon}{" "}
+                                                                <RaceSprite
+                                                                    race={
+                                                                        c.requiredRace ??
+                                                                        "human"
+                                                                    }
+                                                                    size={18}
+                                                                    title={t(
+                                                                        `races.${c.requiredRace}.plural`,
+                                                                    )}
+                                                                />
                                                                 {t(
                                                                     `races.${c.requiredRace}.plural`,
                                                                 )}

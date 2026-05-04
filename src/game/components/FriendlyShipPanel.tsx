@@ -14,6 +14,7 @@ import { useTranslation } from "@/lib/useTranslation";
 import { getRaceReputationLevel } from "@/game/reputation/utils";
 import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
 import type { Quality, RaceId } from "@/game/types";
+import { RaceSprite } from "./RaceSprite";
 
 const INITIAL_STOCK: Goods[] = ["water", "food", "medicine"];
 
@@ -253,7 +254,11 @@ export function FriendlyShipPanel() {
             className="inline-flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded border text-xs"
             style={{ borderColor: race.color, backgroundColor: `${race.color}15`, color: race.color }}
           >
-            <span>{race.icon}</span>
+            <RaceSprite
+              race={dominantRace ?? "human"}
+              size={20}
+              title={t(`races.${dominantRace}.plural`)}
+            />
             <span className="font-bold">{t(`races.${dominantRace}.plural`)}</span>
           </div>
         )}
@@ -375,9 +380,11 @@ export function FriendlyShipPanel() {
             <div className="flex justify-between items-start bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <span style={{ color: crewRace.color }}>
-                    {crewRace.icon}
-                  </span>
+                  <RaceSprite
+                    race={crewRaceId}
+                    size={22}
+                    title={crewRace.name}
+                  />
                   <span className="text-[#00d4ff] font-bold">
                     {crewName}
                     {availableLevel

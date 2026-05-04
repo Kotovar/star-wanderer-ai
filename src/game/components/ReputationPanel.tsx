@@ -10,6 +10,7 @@ import {
 } from "../types/reputation";
 import { getRaceReputation } from "../reputation/utils";
 import { useTranslation } from "@/lib/useTranslation";
+import { RaceSprite } from "./RaceSprite";
 
 export function ReputationPanel() {
     const raceReputation = useGameStore((s) => s.raceReputation);
@@ -50,9 +51,11 @@ export function ReputationPanel() {
                         >
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-2xl">
-                                        {race.icon}
-                                    </span>
+                                    <RaceSprite
+                                        race={raceId}
+                                        size={42}
+                                        title={race.name}
+                                    />
                                     <div>
                                         <div
                                             className="font-bold"

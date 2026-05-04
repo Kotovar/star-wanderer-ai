@@ -12,6 +12,7 @@ import {
 import { RACES } from "@/game/constants/races";
 import type { CrewTrait, Profession, RaceId } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
+import { RaceSprite } from "../RaceSprite";
 
 interface CrewTabProps {
     availableCrew: Array<{
@@ -170,7 +171,13 @@ function CrewHeader({
     return (
         <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2 flex-wrap">
-                {race && <span style={{ color: race.color }}>{race.icon}</span>}
+                {race && (
+                    <RaceSprite
+                        race={crew.member.race}
+                        size={22}
+                        title={t(`races.${crew.member.race}.name`)}
+                    />
+                )}
                 <span className="text-[#00d4ff] font-bold">
                     {crew.member.name}
                     {crew.member.level ? ` LV${crew.member.level}` : ""}
@@ -373,7 +380,11 @@ function CrewDetailDialog({
                         backgroundColor: `${race.color}10`,
                     }}
                 >
-                    <span className="text-2xl">{race.icon}</span>
+                    <RaceSprite
+                        race={crew.member.race}
+                        size={42}
+                        title={t(`races.${crew.member.race}.name`)}
+                    />
                     <div>
                         <div
                             className="font-bold"

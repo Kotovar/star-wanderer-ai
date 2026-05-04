@@ -24,6 +24,7 @@ import {
     CrewDamageReductionRow,
     CrewExpBonusRow,
 } from "./CrewListHelpers";
+import { RaceSprite } from "./RaceSprite";
 
 export function CrewList() {
     const { t } = useTranslation();
@@ -79,12 +80,11 @@ export function CrewList() {
                             {/* Name row */}
                             <div className="flex items-center gap-1 min-w-0">
                                 {race && (
-                                    <span
-                                        className="`shrink-0"
-                                        style={{ color: race.color }}
-                                    >
-                                        {race.icon}
-                                    </span>
+                                    <RaceSprite
+                                        race={member.race}
+                                        size={19}
+                                        title={t(`races.${member.race}.name`)}
+                                    />
                                 )}
                                 <span className="text-[#00d4ff] font-bold truncate leading-tight">
                                     {member.name}
@@ -203,9 +203,13 @@ export function CrewList() {
                                                 backgroundColor: `${race.color}10`,
                                             }}
                                         >
-                                            <span className="text-2xl">
-                                                {race.icon}
-                                            </span>
+                                            <RaceSprite
+                                                race={selectedCrew.race}
+                                                size={48}
+                                                title={t(
+                                                    `races.${selectedCrew.race}.name`,
+                                                )}
+                                            />
                                             <div>
                                                 <div
                                                     className="font-bold"

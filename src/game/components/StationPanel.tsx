@@ -32,6 +32,7 @@ import {
     REPUTATION_ICONS,
     getReputationLevel,
 } from "../types/reputation";
+import { RaceSprite } from "./RaceSprite";
 
 // Re-export these from the original file - they contain complex logic
 export {
@@ -478,9 +479,11 @@ export function StationPanel() {
                                             className="flex items-center justify-between gap-3 p-2 rounded border border-[#333]"
                                         >
                                             <div className="flex items-center gap-2">
-                                                <span className="text-lg">
-                                                    {raceData.icon}
-                                                </span>
+                                                <RaceSprite
+                                                    race={raceId}
+                                                    size={26}
+                                                    title={raceData.name}
+                                                />
                                                 <div>
                                                     <div
                                                         className="text-xs font-bold"
@@ -662,7 +665,11 @@ function StationHeader({
                             backgroundColor: `${race.color}15`,
                         }}
                     >
-                        <span className="text-xl">{race.icon}</span>
+                        <RaceSprite
+                            race={location.dominantRace ?? "human"}
+                            size={40}
+                            title={t(`race_names.${location.dominantRace}`)}
+                        />
                         <div>
                             <div
                                 style={{ color: race.color }}
