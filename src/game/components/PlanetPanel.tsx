@@ -717,6 +717,21 @@ export function PlanetPanel() {
                                               : "кораблю";
                                     return `${contract.targetLocationName} (${typeText}), сектор ${contract.targetSectorName}`;
                                 };
+                                const rawTitle = c.desc.startsWith(
+                                    "contracts.",
+                                )
+                                    ? t(c.desc, {
+                                          planetType: c.planetType
+                                              ? getPlanetTypeName(
+                                                    c.planetType,
+                                                    t,
+                                                )
+                                              : "",
+                                      })
+                                    : c.desc;
+                                const title = c.isRaceQuest
+                                    ? stripLeadingEmoji(rawTitle)
+                                    : rawTitle;
 
                                 return (
                                     <div
@@ -732,19 +747,7 @@ export function PlanetPanel() {
                                         <div className="flex justify-between items-start gap-2">
                                             <div className="flex-1 min-w-0">
                                                 <div className="text-[#00d4ff] font-bold flex items-center gap-2 flex-wrap">
-                                                    {c.desc.startsWith(
-                                                        "contracts.",
-                                                    )
-                                                        ? t(c.desc, {
-                                                              planetType:
-                                                                  c.planetType
-                                                                      ? getPlanetTypeName(
-                                                                            c.planetType,
-                                                                            t,
-                                                                        )
-                                                                      : "",
-                                                          })
-                                                        : c.desc}
+                                                    {title}
                                                     {c.isRaceQuest &&
                                                         raceInfo && (
                                                             <span
@@ -821,8 +824,11 @@ export function PlanetPanel() {
                                                     )}
                                                 {c.type === "research" &&
                                                     (c.requiresTechResearch
-                                                        ? t(
-                                                              "contracts.desc_research_synth",
+                                                        ? stripRaceQuestEmoji(
+                                                              t(
+                                                                  "contracts.desc_research_synth",
+                                                              ),
+                                                              c.isRaceQuest,
                                                           )
                                                         : t(
                                                               "contracts.desc_research",
@@ -1038,4 +1044,12 @@ export function PlanetPanel() {
 
         </div>
     );
+}
+
+function stripRaceQuestEmoji(text: string, isRaceQuest?: boolean): string {
+    return isRaceQuest ? stripLeadingEmoji(text) : text;
+}
+
+function stripLeadingEmoji(text: string): string {
+    return text.replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u, "");
 }

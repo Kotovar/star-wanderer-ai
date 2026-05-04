@@ -8,7 +8,7 @@ import type { Module, CrewMember, Weapon } from "../types";
 import { MODULE_TYPES } from "../constants/modules";
 import { useTranslation } from "@/lib/useTranslation";
 import { getModuleTranslation } from "@/lib/moduleTranslations";
-import { RaceSprite } from "./RaceSprite";
+import { ProfessionSprite } from "./ProfessionSprite";
 import {
   Tooltip,
   TooltipContent,
@@ -582,14 +582,13 @@ function CrewIcon({
       className="select-none"
       style={{ userSelect: "none", WebkitUserSelect: "none" }}
     >
-      <RaceSprite race={crewMember.race} x={x} y={y} size={size} />
-
-      {/* Profession symbol — small badge bottom-right corner */}
-      <ProfessionSymbol
+      <ProfessionSprite
+        race={crewMember.race}
         profession={crewMember.profession}
         x={x}
         y={y}
         size={size}
+        title={crewMember.name}
       />
 
       {/* Assignment indicator — gold dot bottom-left */}
@@ -636,127 +635,6 @@ function CrewIcon({
           </text>
         </g>
       )}
-    </g>
-  );
-}
-
-/**
- * Draws a small profession-specific symbol at the bottom-center of an icon.
- * Each profession has a unique geometric shape, no color coding.
- */
-function ProfessionSymbol({
-  profession,
-  x,
-  y,
-  size,
-}: {
-  profession: string;
-  x: number;
-  y: number;
-  size: number;
-}) {
-  // Bottom-right corner — doesn't overlap the main silhouette
-  const r = size * 0.14;
-  const bgR = r * 1.4;
-  const bx = x + size - bgR;
-  const by = y + size - bgR;
-
-  const symbol = (() => {
-    switch (profession) {
-      case "pilot":
-        // Spacesuit helmet: dome arc + collar + visor cutout
-        return (
-          <g>
-            <path
-              d={`M ${bx - r} ${by + r * 0.1}
-                                A ${r} ${r} 0 0 1 ${bx + r} ${by + r * 0.1}
-                                L ${bx + r * 0.72} ${by + r * 0.65}
-                                L ${bx - r * 0.72} ${by + r * 0.65}
-                                Z`}
-              fill="white"
-              opacity={0.9}
-            />
-            {/* Visor */}
-            <rect
-              x={bx - r * 0.52}
-              y={by - r * 0.42}
-              width={r * 1.04}
-              height={r * 0.36}
-              fill="#050810"
-              opacity={0.85}
-            />
-          </g>
-        );
-      case "engineer":
-        // Bolt: wide flat head + narrow shaft
-        return (
-          <g>
-            <rect x={bx - r} y={by - r} width={r * 2} height={r * 0.72} fill="white" opacity={0.9} />
-            <rect x={bx - r * 0.28} y={by - r * 0.28} width={r * 0.56} height={r * 1.28} fill="white" opacity={0.9} />
-          </g>
-        );
-      case "medic":
-        // Circle with cross ⊕
-        return (
-          <g>
-            <circle cx={bx} cy={by} r={r} fill="none" stroke="white" strokeWidth={r * 0.35} opacity={0.9} />
-            <line x1={bx} y1={by - r * 0.6} x2={bx} y2={by + r * 0.6} stroke="white" strokeWidth={r * 0.35} opacity={0.9} />
-            <line x1={bx - r * 0.6} y1={by} x2={bx + r * 0.6} y2={by} stroke="white" strokeWidth={r * 0.35} opacity={0.9} />
-          </g>
-        );
-      case "scout":
-        // Eye shape with pupil
-        return (
-          <g>
-            <path
-              d={`M ${bx - r} ${by} Q ${bx} ${by - r * 0.72} ${bx + r} ${by} Q ${bx} ${by + r * 0.72} ${bx - r} ${by} Z`}
-              fill="white"
-              opacity={0.9}
-            />
-            <circle cx={bx} cy={by} r={r * 0.32} fill="#050810" opacity={0.85} />
-          </g>
-        );
-      case "scientist":
-        // Microscope: eyepiece circle + tapered body + wide base
-        return (
-          <g>
-            <circle cx={bx} cy={by - r * 0.72} r={r * 0.26} fill="white" opacity={0.9} />
-            <path
-              d={`M ${bx - r * 0.2} ${by - r * 0.46}
-                                L ${bx + r * 0.2} ${by - r * 0.46}
-                                L ${bx + r * 0.44} ${by + r * 0.38}
-                                L ${bx - r * 0.44} ${by + r * 0.38}
-                                Z`}
-              fill="white"
-              opacity={0.9}
-            />
-            <rect x={bx - r * 0.78} y={by + r * 0.38} width={r * 1.56} height={r * 0.36} fill="white" opacity={0.9} />
-          </g>
-        );
-      case "gunner":
-        // Bullet: pointed tip + rectangular body
-        return (
-          <g>
-            <path
-              d={`M ${bx} ${by - r}
-                                L ${bx + r * 0.38} ${by - r * 0.3}
-                                L ${bx - r * 0.38} ${by - r * 0.3}
-                                Z`}
-              fill="white"
-              opacity={0.9}
-            />
-            <rect x={bx - r * 0.38} y={by - r * 0.3} width={r * 0.76} height={r * 1.3} fill="white" opacity={0.9} />
-          </g>
-        );
-      default:
-        return <circle cx={bx} cy={by} r={r * 0.6} fill="white" opacity={0.5} />;
-    }
-  })();
-
-  return (
-    <g className="select-none">
-      <circle cx={bx} cy={by} r={bgR} fill="#050810" opacity={0.7} />
-      {symbol}
     </g>
   );
 }

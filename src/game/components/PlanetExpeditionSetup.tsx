@@ -11,20 +11,12 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ProfessionSprite } from "./ProfessionSprite";
 
 interface Props {
     planetId: string;
     onClose: () => void;
 }
-
-const PROFESSION_ICONS: Record<string, string> = {
-    pilot: "✈️",
-    engineer: "🔧",
-    medic: "💉",
-    scout: "🔭",
-    scientist: "🔬",
-    gunner: "🎯",
-};
 
 export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
     const crew = useGameStore((s) => s.crew);
@@ -85,9 +77,12 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                                       : "border-[#333] text-[#888] hover:border-[#555] hover:text-[#ccc] cursor-pointer"
                             }`}
                         >
-                            <span className="text-lg shrink-0">
-                                {PROFESSION_ICONS[member.profession] ?? "👤"}
-                            </span>
+                            <ProfessionSprite
+                                race={member.race}
+                                profession={member.profession}
+                                size={36}
+                                title={t(`professions.${member.profession}`)}
+                            />
                             <div className="flex-1 min-w-0">
                                 <div className="text-sm font-bold truncate">
                                     {member.name}

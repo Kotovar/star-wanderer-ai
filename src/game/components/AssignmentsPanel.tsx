@@ -15,7 +15,7 @@ import type {
     RaceId,
 } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
-import { RaceSprite } from "./RaceSprite";
+import { ProfessionSprite } from "./ProfessionSprite";
 
 type CivilianAction = {
     value: NonNullable<CrewMemberAssignment>;
@@ -290,10 +290,11 @@ function CrewAssignmentCard({
         >
             <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
                 <div className="flex items-center gap-3 min-w-0">
-                    <RaceSprite
+                    <ProfessionSprite
                         race={crewMember.race}
-                        size={42}
-                        title={race?.name}
+                        profession={crewMember.profession}
+                        size={46}
+                        title={`${PROFESSION_NAMES[crewMember.profession as Profession] || crewMember.profession}: ${race?.name ?? ""}`}
                     />
                     <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">

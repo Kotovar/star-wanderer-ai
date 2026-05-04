@@ -24,7 +24,7 @@ import {
     CrewDamageReductionRow,
     CrewExpBonusRow,
 } from "./CrewListHelpers";
-import { RaceSprite } from "./RaceSprite";
+import { ProfessionSprite } from "./ProfessionSprite";
 
 export function CrewList() {
     const { t } = useTranslation();
@@ -80,10 +80,11 @@ export function CrewList() {
                             {/* Name row */}
                             <div className="flex items-center gap-1 min-w-0">
                                 {race && (
-                                    <RaceSprite
+                                    <ProfessionSprite
                                         race={member.race}
-                                        size={19}
-                                        title={t(`races.${member.race}.name`)}
+                                        profession={member.profession}
+                                        size={24}
+                                        title={`${t(`professions.${member.profession}`)}: ${t(`races.${member.race}.name`)}`}
                                     />
                                 )}
                                 <span className="text-[#00d4ff] font-bold truncate leading-tight">
@@ -203,12 +204,13 @@ export function CrewList() {
                                                 backgroundColor: `${race.color}10`,
                                             }}
                                         >
-                                            <RaceSprite
+                                            <ProfessionSprite
                                                 race={selectedCrew.race}
-                                                size={48}
-                                                title={t(
-                                                    `races.${selectedCrew.race}.name`,
-                                                )}
+                                                profession={
+                                                    selectedCrew.profession
+                                                }
+                                                size={56}
+                                                title={`${t(`professions.${selectedCrew.profession}`)}: ${t(`races.${selectedCrew.race}.name`)}`}
                                             />
                                             <div>
                                                 <div

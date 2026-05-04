@@ -15,6 +15,7 @@ import { getRaceReputationLevel } from "@/game/reputation/utils";
 import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
 import type { Quality, RaceId } from "@/game/types";
 import { RaceSprite } from "./RaceSprite";
+import { ProfessionSprite } from "./ProfessionSprite";
 
 const INITIAL_STOCK: Goods[] = ["water", "food", "medicine"];
 
@@ -380,10 +381,11 @@ export function FriendlyShipPanel() {
             <div className="flex justify-between items-start bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <RaceSprite
+                  <ProfessionSprite
                     race={crewRaceId}
-                    size={22}
-                    title={crewRace.name}
+                    profession={availableProfession}
+                    size={24}
+                    title={`${PROFESSION_NAMES[availableProfession]}: ${crewRace.name}`}
                   />
                   <span className="text-[#00d4ff] font-bold">
                     {crewName}
