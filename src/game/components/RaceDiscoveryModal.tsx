@@ -10,6 +10,7 @@ import { useGameStore } from "../store";
 import { RACES } from "../constants/races";
 import type { RaceId } from "../types";
 import { useTranslation } from "@/lib/useTranslation";
+import { RaceSprite } from "./RaceSprite";
 
 /** Форматирует бонусы расы в список строк */
 function formatCrewBonuses(
@@ -99,7 +100,11 @@ export function RaceDiscoveryModal() {
         <div className="space-y-4 p-1">
           {/* Заголовок расы */}
           <div className="flex items-center gap-3 pb-2 border-b border-[rgba(255,176,0,0.3)]">
-            <span className="text-4xl">{race.icon}</span>
+            <RaceSprite
+              race={raceId}
+              size={64}
+              title={t(`races.${raceId}.name`)}
+            />
             <div>
               <div className="font-bold text-2xl text-[#ffb000]">
                 {t(`races.${raceId}.name`)}
