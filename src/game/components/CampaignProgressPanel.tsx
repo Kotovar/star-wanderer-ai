@@ -200,7 +200,6 @@ export function CampaignProgressPanel() {
       tiers,
       totalSectors: visibleSectors.length,
       visitedSectors: visibleSectors.filter((sector) => sector.visited).length,
-      bossTotal: bossLocations.length,
       defeatedBosses,
       visitedLocations,
       totalLocations: allLocations.length,
@@ -212,6 +211,8 @@ export function CampaignProgressPanel() {
 
   const techTotal = Object.keys(RESEARCH_TREE).length;
   const techDone = research.researchedTechs.length;
+  const innerWorldsVisited = stats.tiers.find((tier) => tier.tier === 1)?.visited ?? 0;
+  const innerWorldsFootholdDone = innerWorldsVisited >= 3;
 
   return (
     <div className="space-y-3 text-[#00ff41]">
@@ -246,8 +247,8 @@ export function CampaignProgressPanel() {
         />
         <MetricCard
           label="Боссы"
-          value={`${stats.defeatedBosses}/${stats.bossTotal}`}
-          hint="побеждено"
+          value={stats.defeatedBosses > 0 ? `${stats.defeatedBosses} побеждено` : "не побеждены"}
+          hint="древние угрозы"
           tone={stats.defeatedBosses > 0 ? "warning" : "neutral"}
         />
       </div>
@@ -290,13 +291,17 @@ export function CampaignProgressPanel() {
 
       <Section title="Ключевые этапы">
         <div className="grid gap-2">
-          <Milestone label="Закрепиться в центральных секторах" done={stats.tiers[0]?.visited > 0} />
+          <Milestone
+            label="Закрепиться в центральных секторах"
+            done={innerWorldsFootholdDone}
+            detail={`${innerWorldsVisited}/3 внутренних сектора`}
+          />
           <Milestone label="Покинуть внутренние миры" done={stats.tiers.some((tier) => tier.tier >= 2 && tier.visited > 0)} />
           <Milestone label="Достичь внешних рубежей" done={stats.tiers.some((tier) => tier.tier >= 3 && tier.visited > 0)} />
           <Milestone
-            label="Победить древнего босса"
+            label="Победить первого древнего босса"
             done={stats.defeatedBosses > 0}
-            detail={`${stats.defeatedBosses}/${stats.bossTotal}`}
+            detail={stats.defeatedBosses > 0 ? `побеждено: ${stats.defeatedBosses}` : "любой древний босс"}
           />
           <Milestone
             label="Открыть неразмеченный рубеж"

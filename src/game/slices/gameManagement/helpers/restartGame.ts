@@ -39,6 +39,9 @@ export const restartGame = (
   const patchedReputation = patch.raceReputation
     ? { ...initialState.raceReputation, ...patch.raceReputation }
     : initialState.raceReputation;
+  const knownRaces = patch.knownRaces
+    ? [...new Set([...initialState.knownRaces, ...patch.knownRaces])]
+    : initialState.knownRaces;
 
   set({
     ...initialState,
@@ -57,6 +60,7 @@ export const restartGame = (
       resources: patch.researchResources,
     },
     raceReputation: patchedReputation,
+    knownRaces,
     startTemplateId: templateId,
   });
 

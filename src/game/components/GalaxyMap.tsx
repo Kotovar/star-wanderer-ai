@@ -194,6 +194,7 @@ export function GalaxyMap() {
     const initializedRef = useRef(false);
     const canvasSizeRef = useRef({ width: 0, height: 0 });
     const hasMovedRef = useRef(false);
+    const playerShipImageRef = useRef<HTMLImageElement | null>(null);
 
     // Animation canvas ref
     const animCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -207,6 +208,7 @@ export function GalaxyMap() {
     const [legendOpen, setLegendOpen] = useState(false);
     const [offset, setOffset] = useState(galaxyOffset);
     const [targetZoom, setTargetZoom] = useState<number | null>(null);
+    const [playerShipImageReady, setPlayerShipImageReady] = useState(false);
     const zoomAnimationRef = useRef<number | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const dragStartRef = useRef({ x: 0, y: 0 });
@@ -227,12 +229,20 @@ export function GalaxyMap() {
     );
     const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
     const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
-    const seeHostility = useGameStore((s) =>
-        s.crew.some((c) =>
-            c.traits?.some((trait) => trait.effect?.seeHostility),
-        ),
-    );
     const scanRange = useGameStore((s) => getEffectiveScanRange(s));
+
+    useEffect(() => {
+        const image = new Image();
+        image.src = "/assets/ship.png";
+        image.onload = () => {
+            playerShipImageRef.current = image;
+            setPlayerShipImageReady(true);
+        };
+        image.onerror = () => {
+            playerShipImageRef.current = null;
+            setPlayerShipImageReady(false);
+        };
+    }, []);
 
     // Calculate fuel cost with all modifiers for UI display
     const calculateFuelCost = useCallback((sectorId: number) => {
@@ -327,7 +337,7 @@ export function GalaxyMap() {
         prevGalaxySignatureRef.current = galaxySignature;
     }, [sectors]);
 
-    useEffect(() => {
+    const drawGalaxyCanvas = useCallback(() => {
         const canvas = canvasRef.current;
         const container = containerRef.current;
         if (!canvas || !container || !initializedRef.current) return;
@@ -350,6 +360,7 @@ export function GalaxyMap() {
         const centerY = height / 2;
         const minDim = Math.min(width, height);
         const baseMaxRadius = minDim * (minDim < 450 ? 0.65 : 0.42);
+        const markerTime = animationsEnabled ? animationStateRef.current.time : 0;
 
         // Clear canvas FIRST (before any transform)
         ctx.fillStyle = "#050810";
@@ -433,10 +444,13 @@ export function GalaxyMap() {
             scanRange,
             width,
             height,
+            playerShipImageRef.current,
+            markerTime,
         );
 
         ctx.restore();
     }, [
+        animationsEnabled,
         areEnginesFunctional,
         areFuelTanksFunctional,
         artifacts,
@@ -449,11 +463,14 @@ export function GalaxyMap() {
         offset.y,
         scanRange,
         sectors,
-        seeHostility,
         t,
         updateSectorPosition,
         zoom,
     ]);
+
+    useEffect(() => {
+        drawGalaxyCanvas();
+    }, [drawGalaxyCanvas, playerShipImageReady]);
 
     // Animation effect for twinkling stars and cosmic particles
     useEffect(() => {
@@ -543,6 +560,7 @@ export function GalaxyMap() {
                 animCtx.clearRect(0, 0, width, height);
             }
 
+            drawGalaxyCanvas();
             animationFrameId = requestAnimationFrame(animate);
         };
 
@@ -551,7 +569,7 @@ export function GalaxyMap() {
         return () => {
             cancelAnimationFrame(animationFrameId);
         };
-    }, [animationsEnabled]);
+    }, [animationsEnabled, drawGalaxyCanvas]);
 
     // Handle wheel zoom
     const handleWheel = useCallback(
@@ -858,7 +876,11 @@ export function GalaxyMap() {
                                             <span>{t("galaxy.legend.visited")}</span>
                                         </div>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="font-mono">🚀</span>
+                                            <span
+                                                aria-hidden="true"
+                                                className="block h-4 w-4 bg-contain bg-center bg-no-repeat"
+                                                style={{ backgroundImage: "url('/assets/ship.png')" }}
+                                            />
                                             <span>{t("galaxy.legend.current_sector")}</span>
                                         </div>
                                     </div>
@@ -912,6 +934,8 @@ function drawSectors(
     scanRange?: number,
     canvasWidth?: number,
     canvasHeight?: number,
+    playerShipImage?: HTMLImageElement | null,
+    time: number = 0,
 ) {
     const canSeeT4 = canSeeTier4(modules, artifacts, scanRange);
 
@@ -935,6 +959,8 @@ function drawSectors(
             updateSectorPosition,
             canvasWidth,
             canvasHeight,
+            playerShipImage,
+            time,
         );
     });
 }

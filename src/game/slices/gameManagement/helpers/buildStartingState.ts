@@ -16,6 +16,8 @@ export interface StartingStatePatch {
   researchResources: Partial<Record<ResearchResourceType, number>>;
   /** Стартовая репутация с расами (override поверх нейтральных 0) */
   raceReputation?: Partial<Record<RaceId, number>>;
+  /** Расы, которые должны быть известны игроку с первого хода */
+  knownRaces?: RaceId[];
 }
 
 /**
@@ -169,11 +171,16 @@ export function buildStartingState(
 
   // ── Стартовая репутация ───────────────────────────────────────────────────
   const raceReputation: Partial<Record<RaceId, number>> = {};
+  const knownRaces = new Set<RaceId>();
   for (const mod of activeModifiers) {
     if (mod.startRaceReputation) {
       for (const [raceId, value] of Object.entries(mod.startRaceReputation)) {
         const k = raceId as RaceId;
-        raceReputation[k] = Math.max(-100, Math.min(100, (raceReputation[k] ?? 0) + value));
+        raceReputation[k] = Math.max(
+          -100,
+          Math.min(100, (raceReputation[k] ?? 0) + value),
+        );
+        knownRaces.add(k);
       }
     }
   }
@@ -232,5 +239,6 @@ export function buildStartingState(
     artifacts,
     researchResources,
     raceReputation: Object.keys(raceReputation).length > 0 ? raceReputation : undefined,
+    knownRaces: knownRaces.size > 0 ? [...knownRaces] : undefined,
   };
 }

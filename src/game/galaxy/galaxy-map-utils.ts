@@ -174,6 +174,8 @@ export function drawSector(
     updateSectorPosition?: (sectorId: number, x: number, y: number) => void,
     canvasWidth?: number,
     canvasHeight?: number,
+    playerShipImage?: HTMLImageElement | null,
+    time: number = 0,
 ) {
     const tier = sector.tier;
     const isAccessible =
@@ -211,6 +213,8 @@ export function drawSector(
         fuelCost,
         canvasWidth,
         canvasHeight,
+        playerShipImage,
+        time,
     );
 
     drawStar(ctx, x, y, sector.star, isCurrentSector, isAccessible, sector.id, canvasWidth, canvasHeight);
@@ -237,14 +241,16 @@ function drawSectorText(
     fuelCost: number,
     canvasWidth?: number,
     canvasHeight?: number,
+    playerShipImage?: HTMLImageElement | null,
+    time: number = 0,
 ) {
     const minDim = Math.min(canvasWidth ?? 600, canvasHeight ?? 600);
     const isMobile = minDim < 450;
     const nameFontSize = isMobile ? 5 : 10;
     const fuelFontSize = isMobile ? 3 : 8;
-    const rocketFontSize = isMobile ? 8 : 16;
 
-    const rocketOffsetY = isMobile ? 12 : 24;
+    const shipSize = isMobile ? 16 : 30;
+    const shipOffsetY = isMobile ? 26 : 46;
     const checkOffsetY  = isMobile ? 13 : 26;
     const nameOffsetY   = isMobile ? 7  : 18;
     const fuelOffsetY   = isMobile ? 3  : 10;
@@ -254,9 +260,15 @@ function drawSectorText(
         ctx.fillStyle = isCurrent ? "#ffb000" : "#00ff41";
 
         if (isCurrent) {
-            // Draw spaceship icon for current sector
-            ctx.font = `${rocketFontSize}px Arial`;
-            ctx.fillText("🚀", x, y - rocketOffsetY);
+            const bobOffset = Math.sin(time * 0.0014) * (isMobile ? 1.1 : 1.8);
+            drawPlayerShipMarker(
+                ctx,
+                x,
+                y - shipOffsetY + bobOffset,
+                shipSize,
+                playerShipImage,
+                time,
+            );
         } else {
             // Draw checkmark for visited sectors
             ctx.font = `${nameFontSize}px Share Tech Mono`;
@@ -278,6 +290,53 @@ function drawSectorText(
         ctx.fillStyle = canAffordFuel ? "#9933ff" : "#ff0040";
         ctx.fillText(`⛽${fuelCost}`, x, y - fuelOffsetY);
     }
+}
+
+function drawPlayerShipMarker(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number,
+    image?: HTMLImageElement | null,
+    time: number = 0,
+) {
+    ctx.save();
+
+    const glowPulse = 0.9 + Math.sin(time * 0.0018) * 0.1;
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, size * 0.72);
+    glow.addColorStop(0, `rgba(0, 212, 255, ${0.38 * glowPulse})`);
+    glow.addColorStop(0.58, `rgba(255, 176, 0, ${0.14 * glowPulse})`);
+    glow.addColorStop(1, "transparent");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.72, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (image?.complete && image.naturalWidth > 0) {
+        ctx.drawImage(image, x - size / 2, y - size / 2, size, size);
+        ctx.restore();
+        return;
+    }
+
+    // Fallback before the bitmap asset is loaded.
+    ctx.fillStyle = "#dfe8ef";
+    ctx.strokeStyle = "#00d4ff";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x, y - size * 0.48);
+    ctx.lineTo(x + size * 0.28, y + size * 0.34);
+    ctx.lineTo(x, y + size * 0.18);
+    ctx.lineTo(x - size * 0.28, y + size * 0.34);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "#00d4ff";
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.1, size * 0.12, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
 }
 
 // Draw tier rings on galaxy map

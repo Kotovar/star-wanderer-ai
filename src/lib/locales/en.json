@@ -2713,7 +2713,7 @@
     },
     "wanted": {
       "name": "Wanted",
-      "description": "Krylorians are hostile from turn one (-70 reputation). Extra credits compensate the risk."
+      "description": "Krylorians are known from turn one and already hostile (-70 reputation). Extra credits compensate the risk."
     },
     "salvaged_parts": {
       "name": "Salvaged Parts",
