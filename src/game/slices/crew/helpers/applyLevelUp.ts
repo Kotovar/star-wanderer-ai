@@ -26,13 +26,15 @@ export const calculateLevelUp = (
     currentExp: number,
     currentLevel: number,
 ): { newLevel: number; remainingExp: number } => {
-    const expNeeded = getExpNeededForNextLevel(currentLevel);
-    const remainingExp = currentExp - expNeeded;
+    let newLevel = currentLevel;
+    let remainingExp = currentExp;
 
-    return {
-        newLevel: currentLevel + 1,
-        remainingExp,
-    };
+    while (remainingExp >= getExpNeededForNextLevel(newLevel)) {
+        remainingExp -= getExpNeededForNextLevel(newLevel);
+        newLevel += 1;
+    }
+
+    return { newLevel, remainingExp };
 };
 
 /**
@@ -57,11 +59,13 @@ export const applyLevelUp = (
 
     const { newLevel, remainingExp } = calculateLevelUp(newExp, currentLevel);
 
+    const levelsGained = newLevel - currentLevel;
+
     // === ЗДОРОВЬЕ ===
     const raceData = RACES[crewMember.race];
 
-    // Базовое увеличение: 20 HP за уровень
-    let healthGain = BASE_CREW_HEALTH_PER_LEVEL;
+    // Базовое увеличение: 20 HP за каждый полученный уровень
+    let healthGain = BASE_CREW_HEALTH_PER_LEVEL * levelsGained;
 
     // Применяем процентные штрафы расы (voidborn -20%, crystalline -15%)
     let raceHealthPenaltyPercent = 0;

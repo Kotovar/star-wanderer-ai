@@ -55,7 +55,7 @@ export const processArtifactEffects = (
                         ...s.ship,
                         modules: s.ship.modules.map((m) => ({
                             ...m,
-                            health: Math.min(100, m.health + repairAmount),
+                            health: Math.min(m.maxHealth ?? 100, m.health + repairAmount),
                         })),
                     },
                 }));
@@ -74,7 +74,7 @@ export const processArtifactEffects = (
                         ...s.ship,
                         modules: s.ship.modules.map((m) => ({
                             ...m,
-                            health: Math.min(100, m.health + repairAmount),
+                            health: Math.min(m.maxHealth ?? 100, m.health + repairAmount),
                         })),
                     },
                 }));

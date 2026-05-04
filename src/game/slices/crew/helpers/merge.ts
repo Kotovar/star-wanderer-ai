@@ -37,7 +37,15 @@ export const mergeWithModule = (
     }
 
     const moduleShip = get().ship.modules.find((m) => m.id === moduleId);
-    if (!moduleShip || moduleShip.type === "weaponShed") {
+    const mergeEffect = moduleShip
+        ? XENOSYMBIONT_MERGE_EFFECTS[moduleShip.type]
+        : undefined;
+    if (
+        !moduleShip ||
+        moduleShip.type === "weaponShed" ||
+        !mergeEffect ||
+        Object.keys(mergeEffect.effects).length === 0
+    ) {
         return false;
     }
 
@@ -65,7 +73,6 @@ export const mergeWithModule = (
         ),
     }));
 
-    const mergeEffect = XENOSYMBIONT_MERGE_EFFECTS[moduleShip.type];
     get().addLog(
         `🧬 ${crewMember.name} срастился с "${moduleShip.name}" (${mergeEffect.name})`,
         "info",

@@ -186,6 +186,20 @@ export const getArtifactShieldRegen = (
         shieldRegen = Math.floor(shieldRegen * (1 + researchBoost));
     }
 
+    // Crystalline resonance should boost secondary artifact values too.
+    let crystallineBonus = 0;
+    state.crew.forEach((c) => {
+        const resonanceTrait = RACES[c.race]?.specialTraits?.find(
+            (t) => t.id === "resonance",
+        );
+        if (resonanceTrait?.effects.artifactBonus) {
+            crystallineBonus += Number(resonanceTrait.effects.artifactBonus);
+        }
+    });
+    if (crystallineBonus > 0) {
+        shieldRegen = Math.floor(shieldRegen * (1 + crystallineBonus));
+    }
+
     // Check if this artifact is boosted by voidborn ritual (stacks on top of research)
     const boostEffect = state.activeEffects.find(
         (e) =>

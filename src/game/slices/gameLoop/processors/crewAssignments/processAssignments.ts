@@ -266,7 +266,36 @@ const processMergeAssignment = (
     if (crewRace?.id !== "xenosymbiont") return;
 
     const mergeEffect = XENOSYMBIONT_MERGE_EFFECTS[currentModule.type];
-    if (!mergeEffect) return;
+    if (!mergeEffect || Object.keys(mergeEffect.effects).length === 0) {
+        if (crewMember.isMerged) {
+            set((s) => ({
+                crew: s.crew.map((c) =>
+                    c.id === crewMember.id
+                        ? { ...c, isMerged: false, mergedModuleId: null }
+                        : c,
+                ),
+            }));
+        }
+        return;
+    }
+
+    const existingMerge = get().crew.find(
+        (c) =>
+            c.id !== crewMember.id &&
+            c.isMerged &&
+            c.mergedModuleId === currentModule.id,
+    );
+    if (existingMerge) {
+        get().addLog(
+            `⚠️ ${crewMember.name}: модуль "${currentModule.name}" уже занят другим ксеноморфом`,
+            "warning",
+        );
+        return;
+    }
+
+    if (crewMember.isMerged && crewMember.mergedModuleId === currentModule.id) {
+        return;
+    }
 
     set((s) => ({
         crew: s.crew.map((c) =>

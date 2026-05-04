@@ -811,7 +811,12 @@ export function executePlayerAttack(
           if (healAmount > 0) {
             set((s) => {
               const member = s.crew.find((m) => m.id === c.id);
-              if (member) member.health = Math.min(100, member.health + healAmount);
+              if (member) {
+                member.health = Math.min(
+                  member.maxHealth ?? 100,
+                  member.health + healAmount,
+                );
+              }
             });
             get().addLog(`🧬 ${c.name} симбиоз: +${healAmount} HP`, "info");
           }
@@ -1084,7 +1089,7 @@ export function executePlayerAttackWithBayTargets(
             if (heal > 0) {
               set((s) => {
                 const m = s.crew.find((x) => x.id === c.id);
-                if (m) m.health = Math.min(100, m.health + heal);
+                if (m) m.health = Math.min(m.maxHealth ?? 100, m.health + heal);
               });
               get().addLog(`🧬 ${c.name} симбиоз: +${heal} HP`, "info");
             }

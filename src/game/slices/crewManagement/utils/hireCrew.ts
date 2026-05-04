@@ -199,6 +199,7 @@ export const hireCrew = (
         newCrew.maxHealth = Math.floor(
             newCrew.maxHealth * (1 + crewHealthBonus),
         );
+        newCrew.health = newCrew.maxHealth;
     }
 
     // Обновление состояния

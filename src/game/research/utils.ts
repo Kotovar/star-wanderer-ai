@@ -203,6 +203,7 @@ export const getTechBonusSum = (
 
     research.researchedTechs.forEach((techId) => {
         const tech = RESEARCH_TREE[techId as TechnologyId];
+        if (!tech) return;
         tech.bonuses.forEach((bonus) => {
             if (bonus.type === bonusType) {
                 totalBonus += bonus.value;
