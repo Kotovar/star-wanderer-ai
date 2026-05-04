@@ -22,10 +22,25 @@ const HEALTH_BAR_HEIGHT = 5;
 const HEALTH_BAR_SIDE_PADDING = 10; // x offset from module edge
 
 // Crew icon layout
-const CREW_ICON_SIZE = 16;
+const CREW_ICON_SIZE = 20;
 const CREW_ICON_GAP = 3;
 const CREW_ICON_PADDING = 8; // horizontal padding inside module
 const CREW_ICON_HEALTH_BAR_MARGIN = 3; // gap between icon rows and health bar
+
+const RACE_SPRITE_SHEET = "/assets/races.png";
+const RACE_SPRITE_SHEET_WIDTH = 2172;
+const RACE_SPRITE_SHEET_HEIGHT = 722;
+const RACE_SPRITES: Record<
+  string,
+  { x: number; y: number; width: number; height: number }
+> = {
+  human: { x: 52, y: 185, width: 335, height: 345 },
+  synthetic: { x: 398, y: 185, width: 312, height: 345 },
+  xenosymbiont: { x: 742, y: 158, width: 335, height: 385 },
+  krylorian: { x: 1088, y: 185, width: 340, height: 350 },
+  voidborn: { x: 1458, y: 150, width: 320, height: 385 },
+  crystalline: { x: 1808, y: 135, width: 305, height: 400 },
+};
 
 
 export function ShipGrid() {
@@ -575,10 +590,6 @@ function CrewIcon({
 }) {
   const race = RACES[crewMember.race];
   const raceColor = race?.color || "#00ff41";
-  const cx = x + size / 2;
-  // Silhouette fills the full icon (no strip offset)
-  const scy = y + size / 2;
-  const sf = size / 2;
   const badgeR = size * 0.19;
 
   return (
@@ -586,8 +597,7 @@ function CrewIcon({
       className="select-none"
       style={{ userSelect: "none", WebkitUserSelect: "none" }}
     >
-      {/* Race silhouette — transparent background */}
-      {getRaceSilhouette(cx, scy, sf, y, crewMember.race, raceColor)}
+      <RaceSprite race={crewMember.race} x={x} y={y} size={size} />
 
       {/* Profession symbol — small badge bottom-right corner */}
       <ProfessionSymbol
@@ -642,6 +652,41 @@ function CrewIcon({
         </g>
       )}
     </g>
+  );
+}
+
+function RaceSprite({
+  race,
+  x,
+  y,
+  size,
+}: {
+  race: string;
+  x: number;
+  y: number;
+  size: number;
+}) {
+  const sprite = RACE_SPRITES[race] ?? RACE_SPRITES.human;
+
+  return (
+    <svg
+      x={x}
+      y={y}
+      width={size}
+      height={size}
+      viewBox={`${sprite.x} ${sprite.y} ${sprite.width} ${sprite.height}`}
+      preserveAspectRatio="xMidYMid meet"
+      className="select-none"
+      style={{ overflow: "hidden" }}
+    >
+      <image
+        href={RACE_SPRITE_SHEET}
+        x={0}
+        y={0}
+        width={RACE_SPRITE_SHEET_WIDTH}
+        height={RACE_SPRITE_SHEET_HEIGHT}
+      />
+    </svg>
   );
 }
 
@@ -764,164 +809,4 @@ function ProfessionSymbol({
       {symbol}
     </g>
   );
-}
-
-/**
- * Draws a race-specific silhouette in SVG.
- * cx, scy — center of the silhouette area; sf — half-height of that area; y — top of the icon.
- * All coordinates are scaled relative to sf so the silhouette works at any icon size.
- */
-function getRaceSilhouette(
-  cx: number,
-  scy: number,
-  sf: number,
-  y: number,
-  race: string,
-  color: string,
-): React.ReactElement {
-  switch (race) {
-    case "human": {
-      // Round head + shoulder bust
-      const hr = sf * 0.32;
-      const headCy = scy - sf * 0.32;
-      const bodyTopY = scy - sf * 0.02;
-      return (
-        <g>
-          <circle cx={cx} cy={headCy} r={hr} fill={color} />
-          <path
-            d={`M ${cx - sf * 0.6} ${scy + sf * 0.88}
-                            C ${cx - sf * 0.6} ${bodyTopY} ${cx - sf * 0.25} ${bodyTopY} ${cx} ${bodyTopY}
-                            C ${cx + sf * 0.25} ${bodyTopY} ${cx + sf * 0.6} ${bodyTopY} ${cx + sf * 0.6} ${scy + sf * 0.88}
-                            Z`}
-            fill={color}
-          />
-        </g>
-      );
-    }
-
-    case "synthetic": {
-      // Square robot head + antenna + body
-      const hw = sf * 0.52;
-      const hh = sf * 0.48;
-      const headTop = scy - sf * 0.78;
-      const headBottom = headTop + hh * 2;
-      return (
-        <g>
-          {/* Antenna */}
-          <line x1={cx} y1={y} x2={cx} y2={headTop} stroke={color} strokeWidth={sf * 0.1} />
-          <circle cx={cx} cy={y + sf * 0.06} r={sf * 0.1} fill={color} />
-          {/* Head box */}
-          <rect x={cx - hw} y={headTop} width={hw * 2} height={hh * 2} fill={color} />
-          {/* Eye slits (negative space) */}
-          <rect x={cx - hw * 0.62} y={scy - hh * 0.38} width={hw * 0.45} height={hh * 0.42} fill="#080d16" />
-          <rect x={cx + hw * 0.17} y={scy - hh * 0.38} width={hw * 0.45} height={hh * 0.42} fill="#080d16" />
-          {/* Neck + shoulder plate */}
-          <rect x={cx - hw * 0.38} y={headBottom} width={hw * 0.76} height={sf * 0.22} fill={color} />
-          <rect x={cx - hw * 0.88} y={headBottom + sf * 0.17} width={hw * 1.76} height={sf * 0.42} fill={color} />
-        </g>
-      );
-    }
-
-    case "krylorian": {
-      // Elongated reptilian head + dorsal crest spikes
-      return (
-        <g>
-          {/* Main head shape */}
-          <path
-            d={`M ${cx} ${y + sf * 0.08}
-                            L ${cx + sf * 0.55} ${scy - sf * 0.18}
-                            L ${cx + sf * 0.5} ${scy + sf * 0.35}
-                            L ${cx + sf * 0.42} ${scy + sf * 0.88}
-                            L ${cx - sf * 0.42} ${scy + sf * 0.88}
-                            L ${cx - sf * 0.5} ${scy + sf * 0.35}
-                            L ${cx - sf * 0.55} ${scy - sf * 0.18}
-                            Z`}
-            fill={color}
-          />
-          {/* Dorsal crest — 3 small spikes */}
-          <path
-            d={`M ${cx - sf * 0.22} ${y + sf * 0.08}
-                            L ${cx - sf * 0.12} ${y}
-                            L ${cx - sf * 0.02} ${y + sf * 0.08}
-                            L ${cx + sf * 0.08} ${y}
-                            L ${cx + sf * 0.18} ${y + sf * 0.08}
-                            L ${cx + sf * 0.28} ${y}
-                            L ${cx + sf * 0.33} ${y + sf * 0.08}`}
-            fill={color}
-          />
-        </g>
-      );
-    }
-
-    case "crystalline": {
-      // Crystal cluster — central tall spire + two flanking spires
-      return (
-        <g>
-          {/* Left spire */}
-          <polygon
-            points={`${cx - sf * 0.18},${y + sf * 0.28} ${cx - sf * 0.62},${y + sf * 0.52} ${cx - sf * 0.62},${scy + sf * 0.88} ${cx - sf * 0.14},${scy + sf * 0.88}`}
-            fill={color}
-          />
-          {/* Right spire */}
-          <polygon
-            points={`${cx + sf * 0.18},${y + sf * 0.28} ${cx + sf * 0.62},${y + sf * 0.52} ${cx + sf * 0.62},${scy + sf * 0.88} ${cx + sf * 0.14},${scy + sf * 0.88}`}
-            fill={color}
-          />
-          {/* Center spire (tallest) */}
-          <polygon
-            points={`${cx},${y} ${cx + sf * 0.3},${y + sf * 0.45} ${cx + sf * 0.24},${scy + sf * 0.88} ${cx - sf * 0.24},${scy + sf * 0.88} ${cx - sf * 0.3},${y + sf * 0.45}`}
-            fill={color}
-          />
-          {/* Facet line on center spire */}
-          <line x1={cx} y1={y} x2={cx} y2={scy + sf * 0.88} stroke="#080d16" strokeWidth={sf * 0.08} opacity={0.55} />
-        </g>
-      );
-    }
-
-    case "voidborn": {
-      // Ethereal oval form + large slit eye + wispy tendrils
-      return (
-        <g>
-          {/* Main ethereal form */}
-          <ellipse cx={cx} cy={scy - sf * 0.05} rx={sf * 0.68} ry={sf * 0.72} fill={color} opacity={0.75} />
-          {/* Wispy tendrils at bottom */}
-          <line x1={cx - sf * 0.24} y1={scy + sf * 0.62} x2={cx - sf * 0.34} y2={scy + sf * 0.9} stroke={color} strokeWidth={sf * 0.12} strokeLinecap="round" />
-          <line x1={cx} y1={scy + sf * 0.67} x2={cx} y2={scy + sf * 0.92} stroke={color} strokeWidth={sf * 0.12} strokeLinecap="round" />
-          <line x1={cx + sf * 0.24} y1={scy + sf * 0.62} x2={cx + sf * 0.34} y2={scy + sf * 0.9} stroke={color} strokeWidth={sf * 0.12} strokeLinecap="round" />
-          {/* Eye socket */}
-          <ellipse cx={cx} cy={scy - sf * 0.1} rx={sf * 0.36} ry={sf * 0.25} fill="#080d16" />
-          {/* Vertical slit pupil */}
-          <ellipse cx={cx} cy={scy - sf * 0.1} rx={sf * 0.1} ry={sf * 0.21} fill={color} opacity={0.9} />
-        </g>
-      );
-    }
-
-    case "xenosymbiont": {
-      // Organic blob body + tentacles hanging from the base
-      return (
-        <g>
-          {/* Main blob */}
-          <path
-            d={`M ${cx} ${y + sf * 0.05}
-                            C ${cx + sf * 0.68} ${y + sf * 0.05} ${cx + sf * 0.74} ${scy + sf * 0.05} ${cx + sf * 0.63} ${scy + sf * 0.45}
-                            C ${cx + sf * 0.5} ${scy + sf * 0.65} ${cx + sf * 0.14} ${scy + sf * 0.55} ${cx + sf * 0.05} ${scy + sf * 0.6}
-                            C ${cx - sf * 0.05} ${scy + sf * 0.55} ${cx - sf * 0.5} ${scy + sf * 0.65} ${cx - sf * 0.63} ${scy + sf * 0.45}
-                            C ${cx - sf * 0.74} ${scy + sf * 0.05} ${cx - sf * 0.68} ${y + sf * 0.05} ${cx} ${y + sf * 0.05}
-                            Z`}
-            fill={color}
-          />
-          {/* 3 tentacles */}
-          <path d={`M ${cx - sf * 0.28} ${scy + sf * 0.58} Q ${cx - sf * 0.44} ${scy + sf * 0.8} ${cx - sf * 0.34} ${scy + sf * 0.93}`} stroke={color} strokeWidth={sf * 0.15} fill="none" strokeLinecap="round" />
-          <path d={`M ${cx} ${scy + sf * 0.6} Q ${cx} ${scy + sf * 0.82} ${cx + sf * 0.08} ${scy + sf * 0.93}`} stroke={color} strokeWidth={sf * 0.15} fill="none" strokeLinecap="round" />
-          <path d={`M ${cx + sf * 0.28} ${scy + sf * 0.58} Q ${cx + sf * 0.44} ${scy + sf * 0.8} ${cx + sf * 0.34} ${scy + sf * 0.93}`} stroke={color} strokeWidth={sf * 0.15} fill="none" strokeLinecap="round" />
-          {/* Organic spot markings */}
-          <circle cx={cx - sf * 0.15} cy={scy - sf * 0.24} r={sf * 0.1} fill="#080d16" opacity={0.5} />
-          <circle cx={cx + sf * 0.24} cy={scy + sf * 0.04} r={sf * 0.08} fill="#080d16" opacity={0.5} />
-        </g>
-      );
-    }
-
-    default:
-      return <circle cx={cx} cy={scy} r={sf * 0.7} fill={color} />;
-  }
 }
