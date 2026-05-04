@@ -5,6 +5,7 @@ import type {
     GalaxyTierAll,
     Artifact,
 } from "@/game/types";
+import { drawStarSprite } from "@/game/assets/starSprites";
 import { findActiveArtifact } from "../artifacts";
 import { ARTIFACT_TYPES } from "../constants";
 
@@ -175,6 +176,7 @@ export function drawSector(
     canvasWidth?: number,
     canvasHeight?: number,
     playerShipImage?: HTMLImageElement | null,
+    starSpriteSheet?: HTMLImageElement | null,
     time: number = 0,
 ) {
     const tier = sector.tier;
@@ -217,7 +219,18 @@ export function drawSector(
         time,
     );
 
-    drawStar(ctx, x, y, sector.star, isCurrentSector, isAccessible, sector.id, canvasWidth, canvasHeight);
+    drawStar(
+        ctx,
+        x,
+        y,
+        sector.star,
+        isCurrentSector,
+        isAccessible,
+        sector.id,
+        canvasWidth,
+        canvasHeight,
+        starSpriteSheet,
+    );
 }
 
 function drawSectorGlow(ctx: CanvasRenderingContext2D, x: number, y: number) {
@@ -443,11 +456,29 @@ export function drawStar(
     seed?: number,
     canvasWidth?: number,
     canvasHeight?: number,
+    starSpriteSheet?: HTMLImageElement | null,
 ) {
     const minDim = Math.min(canvasWidth ?? 600, canvasHeight ?? 600);
     const size = minDim < 450
         ? (isActive ? 3 : 2)
         : (isActive ? 8 : 6);
+    const starType = star?.type;
+
+    if (starType && starSpriteSheet?.complete && starSpriteSheet.naturalWidth > 0) {
+        const spriteSize = minDim < 450
+            ? (isActive ? 15 : 12)
+            : (isActive ? 30 : 24);
+        drawStarSprite(
+            ctx,
+            starSpriteSheet,
+            starType,
+            x,
+            y,
+            spriteSize,
+            isAccessible ? 1 : 0.45,
+        );
+        return;
+    }
 
     if (!isAccessible) {
         ctx.globalAlpha = 0.5;
@@ -458,8 +489,6 @@ export function drawStar(
         ctx.globalAlpha = 1;
         return;
     }
-
-    const starType = star?.type;
 
     if (starType === "blackhole") {
         drawBlackHole(ctx, x, y, size);

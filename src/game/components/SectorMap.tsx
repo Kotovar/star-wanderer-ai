@@ -23,12 +23,66 @@ import {
   REACTOR_HP_MULTIPLIER,
   SHIELD_CONTRIBUTION_PER_THREAT,
 } from "@/game/slices/combat/helpers/combatSetup";
+import {
+  drawStarSprite,
+  STAR_SPRITE_SHEET,
+} from "@/game/assets/starSprites";
+import type { PlanetType } from "@/game/types/planets";
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const ZOOM_SENSITIVITY = 0.001;
 const DRAG_THRESHOLD = 5;
 const NEEDS_SCANNER_LOCATIONS: LocationType[] = ["storm", "anomaly", "boss"];
+const PLANET_SPRITE_SHEET = "/assets/plantes/planets.png";
+const GAS_PLANET_SPRITE_SHEET = "/assets/plantes/gas-planets.png";
+const STATION_SPRITE_SHEET = "/assets/stations.png";
+const PLANET_SPRITE_SHEET_WIDTH = 1535;
+const PLANET_SPRITE_SHEET_HEIGHT = 1024;
+const GAS_PLANET_SPRITE_SHEET_WIDTH = 2400;
+const GAS_PLANET_SPRITE_SHEET_HEIGHT = 600;
+
+
+const PLANET_SPRITE_ORDER: PlanetType[] = [
+  "Пустынная",
+  "Ледяная",
+  "Лесная",
+  "Вулканическая",
+  "Океаническая",
+  "Кристаллическая",
+  "Радиоактивная",
+  "Тропическая",
+  "Арктическая",
+  "Разрушенная войной",
+  "Планета-кольцо",
+  "Приливная",
+];
+
+const GAS_PLANET_SPRITE_ORDER = [
+  "hydrogen",
+  "methane",
+  "ammonia",
+  "nitrogen",
+] as const;
+
+type SectorSpriteImages = {
+  planets?: HTMLImageElement;
+  gasPlanets?: HTMLImageElement;
+  stations?: HTMLImageElement;
+  stars?: HTMLImageElement;
+};
+
+type SpriteRect = { x: number; y: number; width: number; height: number };
+
+const STATION_SPRITES: Record<string, SpriteRect> = {
+  trade: { x: 28, y: 156, width: 333, height: 354 },
+  military: { x: 391, y: 157, width: 304, height: 350 },
+  research: { x: 735, y: 150, width: 304, height: 351 },
+  mining: { x: 1067, y: 158, width: 357, height: 359 },
+  shipyard: { x: 133, y: 586, width: 362, height: 328 },
+  medical: { x: 567, y: 599, width: 318, height: 304 },
+  diplomatic: { x: 944, y: 566, width: 346, height: 358 },
+};
 
 /**
  * Возвращает цвет фона для сектора на основе типа звезды
@@ -410,8 +464,8 @@ function getScannerInfo(
     if (scanRange >= 5) {
       const services: string[] = [];
       if (loc.hasTrader) services.push(t("locations.scan_ship_trader"));
-      if (loc.hasCrew)   services.push(t("locations.scan_ship_crew"));
-      if (loc.hasQuest)  services.push(t("locations.scan_ship_quest"));
+      if (loc.hasCrew) services.push(t("locations.scan_ship_crew"));
+      if (loc.hasQuest) services.push(t("locations.scan_ship_quest"));
       if (services.length > 0) {
         info.push(`🛎 ${services.join(" · ")}`);
       }
@@ -949,6 +1003,8 @@ export function SectorMap() {
 
   // Ref for animation canvas
   const animCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const spriteImagesRef = useRef<SectorSpriteImages>({});
+  const [, setSpriteImagesReady] = useState(0);
 
   const scanRange = getEffectiveScanRange();
 
@@ -981,6 +1037,16 @@ export function SectorMap() {
     ctx.scale(zoom, zoom);
     ctx.translate(-centerX, -centerY);
 
+    drawStar(
+      ctx,
+      centerX,
+      centerY,
+      currentSector.star,
+      currentSector.id,
+      animationStateRef.current.time,
+      spriteImagesRef.current.stars,
+    );
+
     // Draw locations at grid-based positions
     const locations = currentSector.locations;
 
@@ -1007,9 +1073,23 @@ export function SectorMap() {
       );
 
       if (loc.type === "station") {
-        drawStation(ctx, x, y, loc, completed);
+        drawStation(
+          ctx,
+          x,
+          y,
+          loc,
+          completed,
+          spriteImagesRef.current.stations,
+        );
       } else if (loc.type === "planet") {
-        drawPlanet(ctx, x, y, loc, completed);
+        drawPlanet(
+          ctx,
+          x,
+          y,
+          loc,
+          completed,
+          spriteImagesRef.current.planets,
+        );
       } else if (loc.type === "enemy") {
         // Without scanner AND not revealed - show as unknown (unless telepathy)
         if (!canScan && !isRevealed && !hasTelepathy) {
@@ -1055,7 +1135,14 @@ export function SectorMap() {
           drawDerelictShip(ctx, x, y, loc, completed);
         }
       } else if (loc.type === "gas_giant") {
-        drawGasGiant(ctx, x, y, loc, completed);
+        drawGasGiant(
+          ctx,
+          x,
+          y,
+          loc,
+          completed,
+          spriteImagesRef.current.gasPlanets,
+        );
       } else if (loc.type === "wreck_field") {
         drawWreckField(ctx, x, y, loc, completed);
       } else if (loc.type === "boss") {
@@ -1162,6 +1249,37 @@ export function SectorMap() {
     t,
     zoom,
   ]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadImage = (
+      key: keyof SectorSpriteImages,
+      src: string,
+    ) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = src;
+      image.onload = () => {
+        if (cancelled) return;
+        spriteImagesRef.current = {
+          ...spriteImagesRef.current,
+          [key]: image,
+        };
+        setSpriteImagesReady((value) => value + 1);
+        requestAnimationFrame(drawCanvas);
+      };
+    };
+
+    loadImage("planets", PLANET_SPRITE_SHEET);
+    loadImage("gasPlanets", GAS_PLANET_SPRITE_SHEET);
+    loadImage("stations", STATION_SPRITE_SHEET);
+    loadImage("stars", STAR_SPRITE_SHEET);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [drawCanvas]);
 
   // Initialize canvas and background
   useEffect(() => {
@@ -1409,52 +1527,6 @@ export function SectorMap() {
       // Draw main canvas
       drawCanvas();
 
-      // Draw animated star on top (after bgCanvas is drawn)
-      const mainCanvas = canvasRef.current;
-      if (mainCanvas && currentSector) {
-        const mainCtx = mainCanvas.getContext("2d");
-        if (mainCtx) {
-          const width = mainCanvas.width;
-          const height = mainCanvas.height;
-          const centerX = width / 2;
-          const centerY = height / 2;
-
-          const star = currentSector.star;
-          const currentAnimState = animationStateRef.current;
-
-          // Save context state
-          mainCtx.save();
-          // Apply the same transforms as in drawCanvas
-          const currentOffset = isDraggingRef.current
-            ? offsetRef.current
-            : offset;
-          mainCtx.translate(
-            centerX + currentOffset.x,
-            centerY + currentOffset.y,
-          );
-          mainCtx.scale(zoom, zoom);
-          mainCtx.translate(-centerX, -centerY);
-
-          // During drag, freeze animation at the time when drag started
-          const time = isDraggingRef.current
-            ? dragStartTimeRef.current
-            : currentAnimState.time;
-
-          // Redraw star with current time (or frozen during drag)
-          drawStar(
-            mainCtx,
-            centerX,
-            centerY,
-            star,
-            currentSector.id,
-            time,
-          );
-
-          // Restore context state
-          mainCtx.restore();
-        }
-      }
-
       animationFrameIdRef.current = requestAnimationFrame(animate);
     };
 
@@ -1572,43 +1644,6 @@ export function SectorMap() {
 
           // Draw main canvas
           drawCanvas();
-
-          // Draw the central star (frozen during drag)
-          const mainCanvas = canvasRef.current;
-          if (mainCanvas && currentSector) {
-            const mainCtx = mainCanvas.getContext("2d");
-            if (mainCtx) {
-              const width = mainCanvas.width;
-              const height = mainCanvas.height;
-              const centerX = width / 2;
-              const centerY = height / 2;
-              const star = currentSector.star;
-
-              // Save context state
-              mainCtx.save();
-              const currentOffset = offsetRef.current;
-              mainCtx.translate(
-                centerX + currentOffset.x,
-                centerY + currentOffset.y,
-              );
-              mainCtx.scale(zoom, zoom);
-              mainCtx.translate(-centerX, -centerY);
-
-              // Use frozen time during drag
-              const time = dragStartTimeRef.current;
-
-              drawStar(
-                mainCtx,
-                centerX,
-                centerY,
-                star,
-                currentSector.id,
-                time,
-              );
-
-              mainCtx.restore();
-            }
-          }
 
           animationFrameRef.current = null;
         });
@@ -1787,41 +1822,6 @@ export function SectorMap() {
 
         // Draw main canvas
         drawCanvas();
-
-        // Draw the central star (frozen during drag)
-        const mainCanvas = canvasRef.current;
-        if (mainCanvas && currentSector) {
-          const mainCtx = mainCanvas.getContext("2d");
-          if (mainCtx) {
-            const width = mainCanvas.width;
-            const height = mainCanvas.height;
-            const centerX = width / 2;
-            const centerY = height / 2;
-            const star = currentSector.star;
-
-            mainCtx.save();
-            const currentOffset = offsetRef.current;
-            mainCtx.translate(
-              centerX + currentOffset.x,
-              centerY + currentOffset.y,
-            );
-            mainCtx.scale(zoom, zoom);
-            mainCtx.translate(-centerX, -centerY);
-
-            const time = dragStartTimeRef.current;
-
-            drawStar(
-              mainCtx,
-              centerX,
-              centerY,
-              star,
-              currentSector.id,
-              time,
-            );
-
-            mainCtx.restore();
-          }
-        }
       });
     },
     [animationsEnabled, drawCanvas, currentSector, zoom],
@@ -2266,10 +2266,38 @@ function drawStar(
   star: { type: StarType; name: string } | undefined,
   sectorId?: number,
   time?: number,
+  spriteSheet?: HTMLImageElement,
 ) {
   if (!star) return;
 
   const currentTime = time || 0;
+
+  if (spriteSheet?.complete && spriteSheet.naturalWidth > 0) {
+    const baseSizeByType: Record<StarType, number> = {
+      red_dwarf: 92,
+      yellow_dwarf: 104,
+      white_dwarf: 84,
+      blue_giant: 126,
+      red_supergiant: 146,
+      neutron_star: 86,
+      gas_giant: 116,
+      double: 126,
+      triple: 132,
+      blackhole: 124,
+      variable_star: 128,
+      stellar_remnant: 116,
+    };
+
+    drawStarSprite(
+      ctx,
+      spriteSheet,
+      star.type,
+      x,
+      y,
+      baseSizeByType[star.type] ?? 108,
+    );
+    return;
+  }
 
   if (star.type === "blackhole") {
     // Black hole with rotating accretion disk
@@ -2587,9 +2615,38 @@ function drawPlanet(
   y: number,
   loc: Location,
   completed: boolean,
+  spriteSheet?: HTMLImageElement,
 ) {
   const radius = 12;
   const planetType = loc.planetType;
+  if (planetType && spriteSheet?.complete) {
+    const index = PLANET_SPRITE_ORDER.indexOf(planetType);
+    if (index >= 0) {
+      const cols = 4;
+      const spriteW = PLANET_SPRITE_SHEET_WIDTH / cols;
+      const spriteH = PLANET_SPRITE_SHEET_HEIGHT / 3;
+      const sx = (index % cols) * spriteW;
+      const sy = Math.floor(index / cols) * spriteH;
+      const size = loc.planetType === "Планета-кольцо" ? 42 : 36;
+
+      ctx.save();
+      ctx.globalAlpha = completed ? 0.4 : 1;
+      ctx.drawImage(
+        spriteSheet,
+        sx,
+        sy,
+        spriteW,
+        spriteH,
+        x - size / 2,
+        y - size / 2,
+        size,
+        size,
+      );
+      ctx.restore();
+      return;
+    }
+  }
+
   const colors = planetType
     ? PLANET_COLORS_IN_SECTOR[planetType]
     : {
@@ -2902,12 +2959,36 @@ function drawStation(
   y: number,
   loc: Location,
   completed: boolean,
+  spriteSheet?: HTMLImageElement,
 ) {
+  const stationType = loc.stationType || "trade";
+  const sprite = STATION_SPRITES[stationType];
+  if (sprite && spriteSheet?.complete) {
+    const maxSize = 52;
+    const scale = Math.min(maxSize / sprite.width, maxSize / sprite.height);
+    const drawWidth = sprite.width * scale;
+    const drawHeight = sprite.height * scale;
+
+    ctx.save();
+    ctx.globalAlpha = completed ? 0.4 : 1;
+    ctx.drawImage(
+      spriteSheet,
+      sprite.x,
+      sprite.y,
+      sprite.width,
+      sprite.height,
+      x - drawWidth / 2,
+      y - drawHeight / 2,
+      drawWidth,
+      drawHeight,
+    );
+    ctx.restore();
+    return;
+  }
+
   if (completed) {
     ctx.globalAlpha = 0.4;
   }
-
-  const stationType = loc.stationType || "trade";
 
   const stationColors: Record<string, { primary: string; secondary: string; accent: string }> = {
     trade: { primary: "#5ab8d4", secondary: "#2a5a6a", accent: "#00ff88" },
@@ -5320,12 +5401,40 @@ function drawGasGiant(
   y: number,
   loc: Location,
   completed: boolean,
+  spriteSheet?: HTMLImageElement,
 ) {
   const isDived = !!loc.gasGiantLastDiveAt;
+  const atmosphere = loc.gasGiantAtmosphere ?? "hydrogen";
+
+  if (spriteSheet?.complete) {
+    const index = GAS_PLANET_SPRITE_ORDER.indexOf(atmosphere);
+    if (index >= 0) {
+      const spriteW =
+        GAS_PLANET_SPRITE_SHEET_WIDTH / GAS_PLANET_SPRITE_ORDER.length;
+      const spriteH = GAS_PLANET_SPRITE_SHEET_HEIGHT;
+      const size = 50;
+
+      ctx.save();
+      ctx.globalAlpha = completed || isDived ? 0.45 : 1;
+      ctx.drawImage(
+        spriteSheet,
+        index * spriteW,
+        0,
+        spriteW,
+        spriteH,
+        x - size / 2,
+        y - size / 2,
+        size,
+        size,
+      );
+      ctx.restore();
+      return;
+    }
+  }
+
   ctx.globalAlpha = completed || isDived ? 0.45 : 1;
 
   const r = 18;
-  const atmosphere = loc.gasGiantAtmosphere ?? "hydrogen";
 
   const coreColor =
     atmosphere === "hydrogen"

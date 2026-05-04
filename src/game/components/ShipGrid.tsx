@@ -135,54 +135,54 @@ export function ShipGrid() {
     >
       {!isCombatMode && (
         <div className="mb-2 px-1 text-[10px] text-[#666] space-y-1">
-            <div className="flex flex-wrap gap-x-3 gap-y-0.5">
-              {[
-                { type: "reactor", color: "#ffb000" },
-                { type: "cockpit", color: "#00d4ff" },
-                { type: "weaponbay", color: "#ff00ff" },
-                { type: "shield", color: "#0080ff" },
-                { type: "engine", color: "#ff6600" },
-                { type: "lifesupport", color: "#00ff41" },
-                { type: "cargo", color: "#ff0040" },
-                { type: "fueltank", color: "#9933ff" },
-                { type: "medical", color: "#00ffaa" },
-                { type: "scanner", color: "#ffff00" },
-                { type: "lab", color: "#00ff41" },
-                { type: "quarters", color: "#ffa500" },
-                { type: "repair_bay", color: "#c0c0c0" },
-                { type: "ai_core", color: "#00ffff" },
-                { type: "drill", color: "#cd853f" },
-              ].map(({ type, color }) => (
-                <Tooltip key={type} delayDuration={600}>
-                  <TooltipTrigger asChild>
-                    <span className="flex items-center gap-0.5 cursor-help">
-                      <span style={{ color }}>■</span>
-                      <span>{getModuleTranslation(type, currentLanguage).name}</span>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">{t(`module_descriptions.${type}`)}</TooltipContent>
-                </Tooltip>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-x-3 gap-y-0.5 border-t border-[#ffffff11] pt-1">
-              {[
-                { type: "bio_research_lab", color: "#00ffaa" },
-                { type: "pulse_drive", color: "#ff6600" },
-                { type: "habitat_module", color: "#ffa500" },
-                { type: "deep_survey_array", color: "#ffff00" },
-              ].map(({ type, color }) => (
-                <Tooltip key={type} delayDuration={600}>
-                  <TooltipTrigger asChild>
-                    <span className="flex items-center gap-0.5 cursor-help">
-                      <span style={{ color }}>■</span>
-                      <span>{getModuleTranslation(type, currentLanguage).name}</span>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">{t(`module_descriptions.${type}`)}</TooltipContent>
-                </Tooltip>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+            {[
+              { type: "reactor", color: "#ffb000" },
+              { type: "cockpit", color: "#00d4ff" },
+              { type: "weaponbay", color: "#ff00ff" },
+              { type: "shield", color: "#0080ff" },
+              { type: "engine", color: "#ff6600" },
+              { type: "lifesupport", color: "#00ff41" },
+              { type: "cargo", color: "#ff0040" },
+              { type: "fueltank", color: "#9933ff" },
+              { type: "medical", color: "#00ffaa" },
+              { type: "scanner", color: "#ffff00" },
+              { type: "lab", color: "#00ff41" },
+              { type: "quarters", color: "#ffa500" },
+              { type: "repair_bay", color: "#c0c0c0" },
+              { type: "ai_core", color: "#00ffff" },
+              { type: "drill", color: "#cd853f" },
+            ].map(({ type, color }) => (
+              <Tooltip key={type} delayDuration={600}>
+                <TooltipTrigger asChild>
+                  <span className="flex items-center gap-0.5 cursor-help">
+                    <span style={{ color }}>■</span>
+                    <span>{getModuleTranslation(type, currentLanguage).name}</span>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">{t(`module_descriptions.${type}`)}</TooltipContent>
+              </Tooltip>
+            ))}
           </div>
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 border-t border-[#ffffff11] pt-1">
+            {[
+              { type: "bio_research_lab", color: "#00ffaa" },
+              { type: "pulse_drive", color: "#ff6600" },
+              { type: "habitat_module", color: "#ffa500" },
+              { type: "deep_survey_array", color: "#ffff00" },
+            ].map(({ type, color }) => (
+              <Tooltip key={type} delayDuration={600}>
+                <TooltipTrigger asChild>
+                  <span className="flex items-center gap-0.5 cursor-help">
+                    <span style={{ color }}>■</span>
+                    <span>{getModuleTranslation(type, currentLanguage).name}</span>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">{t(`module_descriptions.${type}`)}</TooltipContent>
+              </Tooltip>
+            ))}
+          </div>
+        </div>
       )}
 
       <svg

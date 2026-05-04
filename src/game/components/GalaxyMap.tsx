@@ -10,6 +10,11 @@ import {
     canSeeTier4,
     getSectorRadius,
 } from "@/game/galaxy/galaxy-map-utils";
+import {
+    getStarSpriteBackgroundStyle,
+    STAR_SPRITE_ORDER,
+    STAR_SPRITE_SHEET,
+} from "@/game/assets/starSprites";
 import { getEffectiveScanRange } from "@/game/slices/scanner/helpers/getEffectiveScanRange";
 import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
 
@@ -118,49 +123,16 @@ const MAX_ZOOM = 3;
 const ZOOM_SENSITIVITY = 0.001;
 const DRAG_THRESHOLD = 5; // Minimum pixels to move before considering it a drag
 
-const STAR_TYPES = [
-    "red_dwarf", "yellow_dwarf", "white_dwarf", "blue_giant",
-    "red_supergiant", "neutron_star", "gas_giant", "double",
-    "triple", "blackhole", "variable_star", "stellar_remnant",
-] as const;
+const STAR_TYPES = STAR_SPRITE_ORDER;
 
-function GalaxyStarIcon({ type }: { type: string }) {
-    switch (type) {
-        case "red_dwarf":
-            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" fill="#cc3311" /><circle cx="8" cy="8" r="3" fill="#ff6644" /></svg>;
-        case "yellow_dwarf":
-            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" fill="#ffaa00" opacity="0.35" /><circle cx="8" cy="8" r="4.5" fill="#ffdd44" /></svg>;
-        case "white_dwarf":
-            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="4" fill="#aaddff" /><circle cx="8" cy="8" r="2" fill="#ffffff" /></svg>;
-        case "blue_giant":
-            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#114488" opacity="0.6" /><circle cx="8" cy="8" r="5" fill="#2266aa" /><circle cx="8" cy="8" r="2.5" fill="#66aaff" /></svg>;
-        case "red_supergiant":
-            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#660000" opacity="0.7" /><circle cx="8" cy="8" r="5.5" fill="#aa1100" /><circle cx="8" cy="8" r="3" fill="#ff4422" /></svg>;
-        case "neutron_star":
-            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#6688ff" strokeWidth="1" opacity="0.6" /><circle cx="8" cy="8" r="3" fill="#4466cc" /><circle cx="8" cy="8" r="1.5" fill="#ffffff" /></svg>;
-        case "gas_giant":
-            return (
-                <svg width="16" height="16" viewBox="0 0 16 16">
-                    <defs><clipPath id="gm-gg-clip"><circle cx="8" cy="8" r="6" /></clipPath></defs>
-                    <circle cx="8" cy="8" r="6" fill="#009933" />
-                    <circle cx="8" cy="8" r="4.5" fill="#00cc55" />
-                    <rect x="2" y="6.5" width="12" height="1.5" fill="#00ff66" opacity="0.55" clipPath="url(#gm-gg-clip)" />
-                    <rect x="2" y="9.5" width="12" height="1.5" fill="#006622" opacity="0.6" clipPath="url(#gm-gg-clip)" />
-                </svg>
-            );
-        case "double":
-            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="5" cy="8" r="4" fill="#ffdd44" /><circle cx="11" cy="8" r="4" fill="#ffaa00" /></svg>;
-        case "triple":
-            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="4" r="3" fill="#ffdd44" /><circle cx="4" cy="12" r="3" fill="#ffaa00" /><circle cx="12" cy="12" r="3" fill="#ff6600" /></svg>;
-        case "blackhole":
-            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="#ff00ff" strokeWidth="1.5" /><circle cx="8" cy="8" r="5" fill="#000" /></svg>;
-        case "variable_star":
-            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#ffc864" opacity="0.3" /><circle cx="8" cy="8" r="4.5" fill="#ffc864" /><circle cx="8" cy="8" r="2" fill="#ffffc8" /></svg>;
-        case "stellar_remnant":
-            return <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#333" /><circle cx="8" cy="8" r="2.5" fill="#555" /></svg>;
-        default:
-            return null;
-    }
+function GalaxyStarIcon({ type }: { type: (typeof STAR_TYPES)[number] }) {
+    return (
+        <span
+            aria-hidden="true"
+            className="block h-5 w-5 shrink-0 bg-no-repeat"
+            style={getStarSpriteBackgroundStyle(type)}
+        />
+    );
 }
 
 export function GalaxyMap() {
@@ -195,6 +167,7 @@ export function GalaxyMap() {
     const canvasSizeRef = useRef({ width: 0, height: 0 });
     const hasMovedRef = useRef(false);
     const playerShipImageRef = useRef<HTMLImageElement | null>(null);
+    const starSpriteImageRef = useRef<HTMLImageElement | null>(null);
 
     // Animation canvas ref
     const animCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -209,6 +182,7 @@ export function GalaxyMap() {
     const [offset, setOffset] = useState(galaxyOffset);
     const [targetZoom, setTargetZoom] = useState<number | null>(null);
     const [playerShipImageReady, setPlayerShipImageReady] = useState(false);
+    const [starSpriteImageReady, setStarSpriteImageReady] = useState(false);
     const zoomAnimationRef = useRef<number | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const dragStartRef = useRef({ x: 0, y: 0 });
@@ -241,6 +215,20 @@ export function GalaxyMap() {
         image.onerror = () => {
             playerShipImageRef.current = null;
             setPlayerShipImageReady(false);
+        };
+    }, []);
+
+    useEffect(() => {
+        const image = new Image();
+        image.decoding = "async";
+        image.src = STAR_SPRITE_SHEET;
+        image.onload = () => {
+            starSpriteImageRef.current = image;
+            setStarSpriteImageReady(true);
+        };
+        image.onerror = () => {
+            starSpriteImageRef.current = null;
+            setStarSpriteImageReady(false);
         };
     }, []);
 
@@ -445,6 +433,7 @@ export function GalaxyMap() {
             width,
             height,
             playerShipImageRef.current,
+            starSpriteImageRef.current,
             markerTime,
         );
 
@@ -470,7 +459,7 @@ export function GalaxyMap() {
 
     useEffect(() => {
         drawGalaxyCanvas();
-    }, [drawGalaxyCanvas, playerShipImageReady]);
+    }, [drawGalaxyCanvas, playerShipImageReady, starSpriteImageReady]);
 
     // Animation effect for twinkling stars and cosmic particles
     useEffect(() => {
@@ -935,6 +924,7 @@ function drawSectors(
     canvasWidth?: number,
     canvasHeight?: number,
     playerShipImage?: HTMLImageElement | null,
+    starSpriteImage?: HTMLImageElement | null,
     time: number = 0,
 ) {
     const canSeeT4 = canSeeTier4(modules, artifacts, scanRange);
@@ -960,6 +950,7 @@ function drawSectors(
             canvasWidth,
             canvasHeight,
             playerShipImage,
+            starSpriteImage,
             time,
         );
     });
