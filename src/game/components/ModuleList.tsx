@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { useGameStore } from "../store";
 import { WEAPON_TYPES } from "../constants";
 import type { Module, Weapon } from "../types";
@@ -14,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import { StatIcon, type StatIconType } from "./StatIcon";
 
 // Helper to get translated module name
 function getTranslatedModuleName(
@@ -106,61 +108,68 @@ interface ModuleCardProps {
 function CompactModuleStat({ module }: { module: Module }) {
     const { t } = useTranslation();
     const cons = module.consumption && module.consumption > 0
-        ? <span className="text-[#888]"> ⚡-{module.consumption}</span>
+        ? <span className="text-[#888] inline-flex items-center gap-0.5 ml-1"><StatIcon type="power_consumption" size={24} />-{module.consumption}</span>
         : null;
 
+    const stat = (icon: StatIconType, value: ReactNode) => (
+        <span className="inline-flex items-center gap-0.5">
+            <StatIcon type={icon} size={24} />
+            {value}
+        </span>
+    );
+
     if (module.type === "reactor" && module.power)
-        return <><span>⚡ +{module.power}</span></>;
+        return <>{stat("power_generation", <>+{module.power}</>)}</>;
     if (module.type === "shield" && module.shields)
-        return <><span>🛡 {module.shields}</span>{cons}</>;
+        return <>{stat("shields", module.shields)}{cons}</>;
     if (module.type === "fueltank" && module.capacity)
-        return <><span>⛽ {module.capacity}</span></>;
+        return <>{stat("capacity", module.capacity)}</>;
     if (module.type === "cargo" && module.capacity)
-        return <><span>📦 {module.capacity}т</span>{cons}</>;
+        return <>{stat("cargo", `${module.capacity}т`)}{cons}</>;
     if (module.type === "engine")
-        return <><span>⛽ {module.fuelEfficiency}</span>{cons}</>;
+        return <>{stat("fuel_efficiency", module.fuelEfficiency)}{cons}</>;
     if (module.type === "drill")
         return <><span>⛏ LV{module.level || 1}</span>{cons}</>;
     if (module.type === "scanner" && module.scanRange)
-        return <><span>📡 {module.scanRange}</span>{cons}</>;
+        return <>{stat("scan_range", module.scanRange)}{cons}</>;
     if (module.type === "medical" && module.healing)
-        return <><span>🏥 +{module.healing}</span>{cons}</>;
+        return <>{stat("health", <>+{module.healing}</>)}{cons}</>;
     if (module.type === "lab" && module.researchOutput)
-        return <><span>🔬 {module.researchOutput}</span>{cons}</>;
+        return <>{stat("research", module.researchOutput)}{cons}</>;
     if (module.type === "weaponbay" && module.weapons) {
         const activeWeapons = module.weapons.filter((w) => w !== null).length;
-        return <><span>⚔ {activeWeapons}/{module.weapons.length}</span>{cons}</>;
+        return <>{stat("damage_bonus", `${activeWeapons}/${module.weapons.length}`)}{cons}</>;
     }
     if (module.type === "lifesupport" && module.oxygen)
-        return <><span>🫁 {module.oxygen}</span>{cons}</>;
+        return <>{stat("oxygen", module.oxygen)}{cons}</>;
     if (module.type === "quarters" && module.capacity)
-        return <><span>👥 +{module.capacity}</span>{cons}</>;
+        return <>{stat("crew", <>+{module.capacity}</>)}{cons}</>;
     if (module.type === "bio_research_lab")
         return <>
-            {module.researchOutput ? <span>🔬 {module.researchOutput}</span> : null}
-            {module.healing ? <span> 🏥+{module.healing}</span> : null}
+            {module.researchOutput ? stat("research", module.researchOutput) : null}
+            {module.healing ? <span className="ml-1">{stat("health", <>+{module.healing}</>)}</span> : null}
             {cons}
         </>;
     if (module.type === "deep_survey_array")
         return <>
-            {module.scanRange ? <span>📡 {module.scanRange}</span> : null}
-            {module.researchOutput ? <span> 🔬{module.researchOutput}</span> : null}
+            {module.scanRange ? stat("scan_range", module.scanRange) : null}
+            {module.researchOutput ? <span className="ml-1">{stat("research", module.researchOutput)}</span> : null}
             {cons}
         </>;
     if (module.type === "pulse_drive")
         return <>
-            {module.power ? <span>⚡ +{module.power}</span> : null}
-            {module.fuelEfficiency ? <span> ⛽{module.fuelEfficiency}</span> : null}
+            {module.power ? stat("power_generation", <>+{module.power}</>) : null}
+            {module.fuelEfficiency ? <span className="ml-1">{stat("fuel_efficiency", module.fuelEfficiency)}</span> : null}
             {cons}
         </>;
     if (module.type === "habitat_module")
         return <>
-            {module.capacity ? <span>👥 +{module.capacity}</span> : null}
-            {module.healing ? <span> 🏥+{module.healing}</span> : null}
+            {module.capacity ? stat("crew", <>+{module.capacity}</>) : null}
+            {module.healing ? <span className="ml-1">{stat("health", <>+{module.healing}</>)}</span> : null}
             {cons}
         </>;
     if (module.consumption && module.consumption > 0)
-        return <span>⚡ -{module.consumption}</span>;
+        return <span className="inline-flex items-center gap-0.5"><StatIcon type="power_consumption" size={24} />-{module.consumption}</span>;
     return <span className="text-[#555]">{t("module_list.condition")} —</span>;
 }
 
@@ -296,7 +305,9 @@ export function ModuleDetailDialog({
                         module.healing &&
                         module.healing > 0 && (
                             <div>
-                                🏥 +{module.healing} HP
+                                <span className="inline-flex items-center gap-1.5">
+                                    <StatIcon type="health" size={32} /> +{module.healing} HP
+                                </span>
                                 {mergeBonus.healing &&
                                     mergeBonus.healing > 0 && (
                                         <span className="text-[#00d4ff]">
@@ -375,6 +386,38 @@ interface ModuleDetailedStatsProps {
     module: Module;
 }
 
+function DetailedStatLabel({
+    icon,
+    children,
+}: {
+    icon: StatIconType;
+    children: ReactNode;
+}) {
+    return (
+        <span className="text-[#ffb000] inline-flex items-center gap-1.5">
+            <StatIcon type={icon} size={32} />
+            <span>{children}</span>
+        </span>
+    );
+}
+
+function DetailedStatRow({
+    icon,
+    label,
+    children,
+}: {
+    icon: StatIconType;
+    label: ReactNode;
+    children: ReactNode;
+}) {
+    return (
+        <div className="flex items-center gap-2">
+            <DetailedStatLabel icon={icon}>{label}</DetailedStatLabel>
+            <span>{children}</span>
+        </div>
+    );
+}
+
 function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
     const { t } = useTranslation();
     const descriptionKey = getModuleDescription(module);
@@ -394,49 +437,34 @@ function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
             )}
 
             {module.type === "reactor" && module.power && module.power > 0 && (
-                <div>
-                    <span className="text-[#ffb000]">
-                        {t("module_list.generation")}:
-                    </span>{" "}
+                <DetailedStatRow icon="power_generation" label={`${t("module_list.generation")}:`}>
                     +{module.power}
-                </div>
+                </DetailedStatRow>
             )}
             {module.type !== "reactor" &&
                 module.type !== "fueltank" &&
                 module.consumption &&
                 module.consumption > 0 && (
-                    <div>
-                        <span className="text-[#ffb000]">
-                            {t("module_list.consumption")}:
-                        </span>{" "}
+                    <DetailedStatRow icon="power_consumption" label={`${t("module_list.consumption")}:`}>
                         -{module.consumption}
-                    </div>
+                    </DetailedStatRow>
                 )}
             {module.type === "fueltank" && module.capacity && (
-                <div>
-                    <span className="text-[#ffb000]">
-                        {t("module_list.fuel")}:
-                    </span>{" "}
-                    ⛽ {module.capacity}
-                </div>
+                <DetailedStatRow icon="capacity" label={`${t("module_list.fuel")}:`}>
+                    {module.capacity}
+                </DetailedStatRow>
             )}
             {module.type === "cargo" &&
                 module.capacity &&
                 module.capacity > 0 && (
-                    <div>
-                        <span className="text-[#ffb000]">
-                            {t("module_list.capacity")}:
-                        </span>{" "}
+                    <DetailedStatRow icon="cargo" label={`${t("module_list.capacity")}:`}>
                         {module.capacity}т
-                    </div>
+                    </DetailedStatRow>
                 )}
             {module.type === "engine" && module.fuelEfficiency && (
-                <div>
-                    <span className="text-[#ffb000]">
-                        {t("module_list.efficiency")}:
-                    </span>{" "}
+                <DetailedStatRow icon="fuel_efficiency" label={`${t("module_list.efficiency")}:`}>
                     {module.fuelEfficiency} {t("module_list.efficiency_note")}
-                </div>
+                </DetailedStatRow>
             )}
             {module.type === "drill" && (
                 <div>
@@ -466,121 +494,84 @@ function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
                                     ? t("module_list.scanner_mk2")
                                     : t("module_list.scanner_mk1")}
                         </div>
-                        <div>
-                            <span className="text-[#ffb000]">
-                                {t("module_list.scan_range")}:
-                            </span>{" "}
+                        <DetailedStatRow icon="scan_range" label={`${t("module_list.scan_range")}:`}>
                             {module.scanRange}
-                        </div>
+                        </DetailedStatRow>
                     </>
                 )}
             {module.type === "lab" && (
-                <div>
-                    <span className="text-[#ffb000]">
-                        {t("module_list.research")}:
-                    </span>{" "}
+                <DetailedStatRow icon="research" label={`${t("module_list.research")}:`}>
                     {module.researchOutput || 5}{" "}
                     {t("module_list.search_per_turn")}
-                </div>
+                </DetailedStatRow>
             )}
             {module.type === "shield" &&
                 module.shields &&
                 module.shields > 0 && (
-                    <div>
-                        <span className="text-[#ffb000]">
-                            {t("module_list.shields")}:
-                        </span>{" "}
+                    <DetailedStatRow icon="shields" label={`${t("module_list.shields")}:`}>
                         {module.shields}
-                    </div>
+                    </DetailedStatRow>
                 )}
             {module.type === "lifesupport" &&
                 module.oxygen &&
                 module.oxygen > 0 && (
-                    <div>
-                        <span className="text-[#ffb000]">
-                            {t("module_list.oxygen")}:
-                        </span>{" "}
+                    <DetailedStatRow icon="oxygen" label={`${t("module_list.oxygen")}:`}>
                         {module.oxygen} {t("module_list.creatures")}
-                    </div>
+                    </DetailedStatRow>
                 )}
             {module.type === "quarters" &&
                 module.capacity !== undefined &&
                 module.capacity > 0 && (
-                    <div>
-                        <span className="text-[#ffb000]">
-                            👥 {t("module_list.crew_slots")}:
-                        </span>{" "}
+                    <DetailedStatRow icon="crew" label={`${t("module_list.crew_slots")}:`}>
                         +{module.capacity}
-                    </div>
+                    </DetailedStatRow>
                 )}
             {module.type === "repair_bay" &&
                 module.repairAmount !== undefined &&
                 module.repairAmount > 0 && (
-                    <div>
-                        <span className="text-[#ffb000]">
-                            {t("module_list.repair_per_turn")}:
-                        </span>{" "}
+                    <DetailedStatRow icon="repair" label={`${t("module_list.repair_per_turn")}:`}>
                         {module.repairAmount} HP × {module.repairTargets ?? 1}{" "}
                         {t("module_list.modules")}
-                    </div>
+                    </DetailedStatRow>
                 )}
             {module.type === "weaponbay" && (
-                <div>
-                    <span className="text-[#ffb000]">
-                        {t("module_list.damage_bonus")}:
-                    </span>{" "}
+                <DetailedStatRow icon="damage_bonus" label={`${t("module_list.damage_bonus")}:`}>
                     +{((module.level ?? 1) - 1) * 10}%
-                </div>
+                </DetailedStatRow>
             )}
             {module.type === "habitat_module" && module.capacity !== undefined && module.capacity > 0 && (
-                <div>
-                    <span className="text-[#ffb000]">
-                        👥 {t("module_list.crew_slots")}:
-                    </span>{" "}
+                <DetailedStatRow icon="crew" label={`${t("module_list.crew_slots")}:`}>
                     +{module.capacity}
-                </div>
+                </DetailedStatRow>
             )}
             {module.type === "habitat_module" && module.healing && module.healing > 0 && (
-                <div>🏥 +{module.healing} HP</div>
+                <div className="inline-flex items-center gap-1.5">
+                    <StatIcon type="health" size={32} /> +{module.healing} HP
+                </div>
             )}
             {(module.type === "bio_research_lab" || module.type === "deep_survey_array") && module.researchOutput && module.researchOutput > 0 && (
-                <div>
-                    <span className="text-[#ffb000]">
-                        {t("module_list.research")}:
-                    </span>{" "}
+                <DetailedStatRow icon="research" label={`${t("module_list.research")}:`}>
                     {module.researchOutput} {t("module_list.search_per_turn")}
-                </div>
+                </DetailedStatRow>
             )}
             {module.type === "deep_survey_array" && module.scanRange && module.scanRange > 0 && (
-                <div>
-                    <span className="text-[#ffb000]">
-                        {t("module_list.scan_range")}:
-                    </span>{" "}
+                <DetailedStatRow icon="scan_range" label={`${t("module_list.scan_range")}:`}>
                     {module.scanRange}
-                </div>
+                </DetailedStatRow>
             )}
             {module.type === "pulse_drive" && module.power && module.power > 0 && (
-                <div>
-                    <span className="text-[#ffb000]">
-                        {t("module_list.generation")}:
-                    </span>{" "}
+                <DetailedStatRow icon="power_generation" label={`${t("module_list.generation")}:`}>
                     +{module.power}
-                </div>
+                </DetailedStatRow>
             )}
             {module.type === "pulse_drive" && module.fuelEfficiency && (
-                <div>
-                    <span className="text-[#ffb000]">
-                        {t("module_list.efficiency")}:
-                    </span>{" "}
+                <DetailedStatRow icon="fuel_efficiency" label={`${t("module_list.efficiency")}:`}>
                     {module.fuelEfficiency} {t("module_list.efficiency_note")}
-                </div>
+                </DetailedStatRow>
             )}
             {/* Defense/Armor for all modules - for shields use level */}
             {module.defense !== undefined && module.defense > 0 && (
-                <div>
-                    <span className="text-[#ffb000]">
-                        {t("module_list.armor")}:
-                    </span>{" "}
+                <DetailedStatRow icon="armor" label={`${t("module_list.armor")}:`}>
                     {module.defense}
                     {artifactArmor > 0 && (
                         <span className="text-[#00d4ff]">
@@ -588,7 +579,7 @@ function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
                             (+{artifactArmor})
                         </span>
                     )}
-                </div>
+                </DetailedStatRow>
             )}
             <div>
                 <span className="text-[#ffb000]">

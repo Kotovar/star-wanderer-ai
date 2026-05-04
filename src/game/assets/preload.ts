@@ -11,4 +11,6 @@ export const GAME_IMAGE_PRELOADS = [
     "/assets/plantes/gas-planets.png",
     "/assets/stations.png",
     "/assets/stars.png",
+    "/assets/icons.png",
+    "/assets/icons-add.png",
 ];

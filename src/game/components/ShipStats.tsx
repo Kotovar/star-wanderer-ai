@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import type { ReactNode } from "react";
 import { getTotalEvasion } from "@/game/slices";
 import { useGameStore } from "@/game/store";
 import {
@@ -25,6 +26,7 @@ import { getTechBonusSum } from "@/game/research";
 import { getActiveModules } from "../modules";
 import { RACES } from "@/game/constants/races";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import { StatIcon, type StatIconType } from "./StatIcon";
 
 function SectionHeader({ label }: { label: string }) {
   return (
@@ -54,6 +56,21 @@ function StatBar({
         style={{ width: `${pct}%`, backgroundColor: color }}
       />
     </div>
+  );
+}
+
+function StatLabel({
+  icon,
+  children,
+}: {
+  icon: StatIconType;
+  children: ReactNode;
+}) {
+  return (
+    <span className="text-[#ffb000] inline-flex items-center gap-1.5">
+      <StatIcon type={icon} size={34} />
+      <span>{children}</span>
+    </span>
   );
 }
 
@@ -353,7 +370,7 @@ export function ShipStats() {
       <SectionHeader label={t("ship_stats.section_hull")} />
 
       <div className="flex justify-between items-baseline mb-0.5">
-        <span className="text-[#ffb000]">{t("ship_stats.hull")}</span>
+        <StatLabel icon="health">{t("ship_stats.hull")}</StatLabel>
         <span style={{ color: hullColor }}>
           {currentHull}/{maxHull}
         </span>
@@ -361,7 +378,7 @@ export function ShipStats() {
       <StatBar value={currentHull} max={maxHull} color={hullColor} />
 
       <div className="flex justify-between items-baseline mb-0.5">
-        <span className="text-[#ffb000]">{t("ship_stats.shields")}</span>
+        <StatLabel icon="shields">{t("ship_stats.shields")}</StatLabel>
         <span className="text-[#00d4ff]">
           {ship.shields}/{ship.maxShields}
         </span>
@@ -369,9 +386,7 @@ export function ShipStats() {
       <StatBar value={ship.shields} max={ship.maxShields} color="#00d4ff" />
 
       <div className="flex justify-between items-baseline mb-1.5">
-        <span className="text-[#ffb000]">
-          {t("ship_stats.shield_regen")}
-        </span>
+        <StatLabel icon="shield_regen">{t("ship_stats.shield_regen")}</StatLabel>
         <span
           className={
             shieldRegen >= 15
@@ -399,14 +414,14 @@ export function ShipStats() {
       </div>
 
       <div className="flex justify-between items-baseline mb-1.5">
-        <span className="text-[#ffb000]">{t("ship_stats.defense")}</span>
+        <StatLabel icon="armor">{t("ship_stats.defense")}</StatLabel>
         <span className="text-[#00ff41]">
           {totalDefense} {t("ship_stats.units")}
         </span>
       </div>
 
       <div className="flex justify-between items-baseline mb-1.5">
-        <span className="text-[#ffb000]">{t("ship_stats.evasion")}</span>
+        <StatLabel icon="evasion">{t("ship_stats.evasion")}</StatLabel>
         <span
           className={
             evasionChance >= 30
@@ -422,9 +437,7 @@ export function ShipStats() {
 
       {reflectChance > 0 && (
         <div className="flex justify-between items-baseline mb-1.5">
-          <span className="text-[#ffb000]">
-            {t("ship_stats.reflection")}
-          </span>
+          <StatLabel icon="reflection">{t("ship_stats.reflection")}</StatLabel>
           <span className="text-[#00d4ff]">
             {Math.round(reflectChance)}%
           </span>
@@ -434,7 +447,7 @@ export function ShipStats() {
       {moduleRepairPercent > 0 && (
         <div className="flex justify-between items-baseline mb-1.5">
           <span className="text-[#ffb000]">
-            {t("ship_stats.module_repair")}
+            <StatLabel icon="repair">{t("ship_stats.module_repair")}</StatLabel>
           </span>
           <span
             className={
@@ -457,7 +470,9 @@ export function ShipStats() {
 
 
       <div className="flex justify-between items-baseline mb-0.5">
-        <span className="text-[#ffb000]">
+        <span className="text-[#ffb000] inline-flex items-center gap-1.5">
+          <StatIcon type="fuel_efficiency" size={34} />
+          <span>
           {t("ship_stats.fuel")}
           {efficiencyPercent >= 0 && (
             <span className="text-[#888] text-xs">
@@ -467,6 +482,7 @@ export function ShipStats() {
               %)
             </span>
           )}
+          </span>
         </span>
         <span style={{ color: fuelColor }}>
           {ship.fuel || 0}/{ship.maxFuel || 0}
@@ -479,9 +495,7 @@ export function ShipStats() {
       />
 
       <div className="flex justify-between items-baseline mb-0.5">
-        <span className="text-[#ffb000]">
-          {t("ship_stats.crew_count")}
-        </span>
+        <StatLabel icon="crew">{t("ship_stats.crew_count")}</StatLabel>
         <span
           className={
             crew.length <= crewCapacity
@@ -499,7 +513,7 @@ export function ShipStats() {
       />
 
       <div className="flex justify-between items-baseline mb-0.5">
-        <span className="text-[#ffb000]">{t("ship_stats.oxygen")}</span>
+        <StatLabel icon="oxygen">{t("ship_stats.oxygen")}</StatLabel>
         <span
           className={
             oxygenRequiredCount <= oxygenCapacity
@@ -519,7 +533,7 @@ export function ShipStats() {
       />
 
       <div className="flex justify-between items-baseline mb-0.5">
-        <span className="text-[#ffb000]">{t("ship_stats.cargo")}</span>
+        <StatLabel icon="cargo">{t("ship_stats.cargo")}</StatLabel>
         <span style={{ color: cargoColor }}>
           {currentCargo}/{cargoCapacity}
         </span>
@@ -534,14 +548,14 @@ export function ShipStats() {
       <SectionHeader label={t("ship_stats.section_navigation")} />
 
       <div className="flex justify-between items-baseline mb-1.5">
-        <span className="text-[#ffb000]">{t("ship_stats.engine")}</span>
+        <StatLabel icon="engine_level">{t("ship_stats.engine")}</StatLabel>
         <span className="text-[#00ff41]">
           {t("ship_stats.level")}
           {engineLevel}
         </span>
       </div>
       <div className="flex justify-between items-baseline mb-1.5">
-        <span className="text-[#ffb000]">{t("ship_stats.captain")}</span>
+        <StatLabel icon="captain_level">{t("ship_stats.captain")}</StatLabel>
         <span className="text-[#00ff41]">
           {t("ship_stats.level")}
           {captain?.level ?? 1}
@@ -549,7 +563,7 @@ export function ShipStats() {
       </div>
       <div className="flex justify-between items-baseline mb-1.5">
         <span className="text-[#ffb000]">
-          {t("ship_stats.scan_range")}
+          <StatLabel icon="scan_range">{t("ship_stats.scan_range")}</StatLabel>
         </span>
         <span className="text-[#00ff41]">
           {scanRange > 0 ? `${scanRange}` : "—"}
@@ -560,9 +574,13 @@ export function ShipStats() {
       <SectionHeader label={t("ship_stats.section_energy")} />
 
       <div className="flex justify-between items-baseline mb-0.5">
-        <span className="text-[#ffb000]">
-          {t("ship_stats.power_consumption")} /{" "}
-          {t("ship_stats.power_generation")}
+        <span className="text-[#ffb000] inline-flex items-center gap-1.5">
+          <StatIcon type="power_consumption" size={34} />
+          <StatIcon type="power_generation" size={34} />
+          <span>
+            {t("ship_stats.power_consumption")} /{" "}
+            {t("ship_stats.power_generation")}
+          </span>
         </span>
         <span style={{ color: powerColor }}>
           {totalConsumption}/{totalPower}
@@ -575,7 +593,7 @@ export function ShipStats() {
       />
       <div className="flex justify-between items-baseline mb-1.5 font-bold">
         <span className="text-[#ffb000]">
-          {t("ship_stats.power_available")}
+          <StatLabel icon="power_generation">{t("ship_stats.power_available")}</StatLabel>
         </span>
         <span style={{ color: powerColor }}>
           {available > 0 ? `+${available}` : available}
@@ -589,7 +607,7 @@ export function ShipStats() {
         <>
           <div className="flex justify-between items-baseline mb-1.5 font-bold">
             <span className="text-[#ffb000]">
-              {t("ship_stats.damage")}
+              <StatLabel icon="damage_bonus">{t("ship_stats.damage")}</StatLabel>
             </span>
             <span className="text-[#ff6600]">{displayDamageTotal}</span>
           </div>
@@ -671,7 +689,7 @@ export function ShipStats() {
       <div className="mb-1">
         <div className="flex justify-between items-baseline mb-0.5">
           <span className="text-[#ffb000]">
-            {t("ship_stats.accuracy")}
+            <StatLabel icon="accuracy">{t("ship_stats.accuracy")}</StatLabel>
           </span>
           {accuracyModifier !== 0 && (
             <span className={accuracyModifier > 0 ? "text-[#00ff41] text-xs" : "text-[#ff0040] text-xs"}>
@@ -704,7 +722,7 @@ export function ShipStats() {
 
       <div className="flex justify-between items-baseline mb-1.5">
         <span className="text-[#ffb000]">
-          {t("ship_stats.crit_chance")}
+          <StatLabel icon="crit_chance">{t("ship_stats.crit_chance")}</StatLabel>
         </span>
         <span className="text-[#ff6600]">
           {Math.round(totalCritChance * 100)}%
@@ -722,7 +740,7 @@ export function ShipStats() {
       </div>
       <div className="flex justify-between items-baseline mb-1.5">
         <span className="text-[#ffb000]">
-          {t("ship_stats.crit_damage")}
+          <StatLabel icon="crit_damage">{t("ship_stats.crit_damage")}</StatLabel>
         </span>
         <span className="text-[#ff0040]">
           ×{totalCritDamage.toFixed(1)}
@@ -744,7 +762,7 @@ export function ShipStats() {
         <>
           <SectionHeader label={t("ship_stats.section_bonuses")} />
           <div className="flex justify-between items-baseline mb-1.5">
-            <span className="text-[#ffb000]">{t("ship_stats.credit_bonus")}</span>
+            <StatLabel icon="credit_bonus">{t("ship_stats.credit_bonus")}</StatLabel>
             <span className="text-[#00ff41]">+{creditBonus}%</span>
           </div>
         </>

@@ -2,6 +2,7 @@
 
 import { useGameStore } from "@/game/store";
 import { useTranslation } from "@/lib/useTranslation";
+import { StatIcon } from "./StatIcon";
 
 interface ShipStatsPanelProps {
     title?: string;
@@ -35,6 +36,7 @@ export function ShipStatsPanel({ title, showEvasion = true }: ShipStatsPanelProp
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs md:text-sm">
                 <div className="min-w-0">
                     <span className="text-[#00d4ff] whitespace-nowrap">
+                        <StatIcon type="shields" size={32} className="mr-1" />
                         {t("unknown_ship.shields")}
                     </span>
                     <span className="text-[#00ff41] ml-1">
@@ -43,6 +45,7 @@ export function ShipStatsPanel({ title, showEvasion = true }: ShipStatsPanelProp
                 </div>
                 <div className="min-w-0">
                     <span className="text-[#ffb000] whitespace-nowrap">
+                        <StatIcon type="armor" size={32} className="mr-1" />
                         {t("unknown_ship.defense")}
                     </span>
                     <span className="text-[#00ff41] ml-1">
@@ -51,6 +54,7 @@ export function ShipStatsPanel({ title, showEvasion = true }: ShipStatsPanelProp
                 </div>
                 <div className="min-w-0">
                     <span className="text-[#ffb000] whitespace-nowrap">
+                        <StatIcon type="health" size={32} className="mr-1" />
                         {t("unknown_ship.hull")}
                     </span>
                     <span className="text-[#00ff41] ml-1">
@@ -59,6 +63,7 @@ export function ShipStatsPanel({ title, showEvasion = true }: ShipStatsPanelProp
                 </div>
                 <div className="min-w-0">
                     <span className="text-[#ff4444] whitespace-nowrap">
+                        <StatIcon type="crew" size={32} className="mr-1" />
                         {t("unknown_ship.crew")}
                     </span>
                     <span className="text-[#00ff41] ml-1">
@@ -70,6 +75,7 @@ export function ShipStatsPanel({ title, showEvasion = true }: ShipStatsPanelProp
             {showEvasion && (
                 <div className="mt-2 text-xs md:text-sm">
                     <span className="text-[#00ff41] whitespace-nowrap">
+                        <StatIcon type="evasion" size={32} className="mr-1" />
                         {t("unknown_ship.evasion")}
                     </span>
                     <span className="text-[#00ff41] ml-1">

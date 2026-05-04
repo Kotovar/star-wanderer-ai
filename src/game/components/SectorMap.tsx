@@ -1824,7 +1824,7 @@ export function SectorMap() {
         drawCanvas();
       });
     },
-    [animationsEnabled, drawCanvas, currentSector, zoom],
+    [animationsEnabled, drawCanvas],
   );
 
   const handleTouchEnd = useCallback(() => {

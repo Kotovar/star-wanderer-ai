@@ -10,6 +10,7 @@ import {
 import type { ShopItem, Module } from "../../types";
 import { MODULES_BY_LEVEL } from "./station-data";
 import { useTranslation } from "@/lib/useTranslation";
+import { StatIcon } from "../StatIcon";
 
 // Helper to get translated module name
 function getTranslatedModuleName(
@@ -395,8 +396,8 @@ function ModuleUpgradeCard({
             </div>
             <div className="text-xs text-[#00ff41] mt-1 flex gap-4">
                 {module.power !== undefined && module.power > 0 && (
-                    <span>
-                        ⚡ {module.power}
+                    <span className="inline-flex items-center gap-1">
+                        <StatIcon type="power_generation" size={30} /> {module.power}
                         {powerAfter !== undefined &&
                             powerAfter !== module.power && (
                                 <span className="text-[#ffb000]">
@@ -407,12 +408,17 @@ function ModuleUpgradeCard({
                     </span>
                 )}
                 {module.capacity !== undefined && module.capacity > 0 && (
-                    <span>
-                        {module.type === "fueltank"
-                            ? "⛽"
-                            : module.type === "quarters"
-                              ? "👥"
-                              : "📦"}{" "}
+                    <span className="inline-flex items-center gap-1">
+                        <StatIcon
+                            type={
+                                module.type === "fueltank"
+                                    ? "capacity"
+                                    : module.type === "quarters"
+                                      ? "crew"
+                                      : "cargo"
+                            }
+                            size={30}
+                        />
                         {module.capacity}
                         {module.type === "cargo" && "т"}
                         {capacityAfter !== undefined &&
@@ -426,8 +432,8 @@ function ModuleUpgradeCard({
                     </span>
                 )}
                 {module.fuelEfficiency !== undefined && (
-                    <span>
-                        ⛽эф. {module.fuelEfficiency}
+                    <span className="inline-flex items-center gap-1">
+                        <StatIcon type="fuel_efficiency" size={30} /> эф. {module.fuelEfficiency}
                         {fuelEfficiencyAfter !== undefined &&
                             fuelEfficiencyAfter !== module.fuelEfficiency && (
                                 <span className="text-[#ffb000]">
@@ -438,8 +444,8 @@ function ModuleUpgradeCard({
                     </span>
                 )}
                 {module.oxygen !== undefined && (
-                    <span>
-                        💨 {module.oxygen}
+                    <span className="inline-flex items-center gap-1">
+                        <StatIcon type="oxygen" size={30} /> {module.oxygen}
                         {oxygenAfter !== undefined &&
                             oxygenAfter !== module.oxygen && (
                                 <span className="text-[#ffb000]">
@@ -451,8 +457,8 @@ function ModuleUpgradeCard({
                 )}
                 {module.researchOutput !== undefined &&
                     module.researchOutput > 0 && (
-                    <span>
-                        🔬 {module.researchOutput}
+                    <span className="inline-flex items-center gap-1">
+                        <StatIcon type="research" size={30} /> {module.researchOutput}
                         {researchOutputAfter !== undefined &&
                             researchOutputAfter !== module.researchOutput && (
                                 <span className="text-[#ffb000]">
@@ -469,7 +475,8 @@ function ModuleUpgradeCard({
                     </span>
                 )}
                 {module.shields !== undefined && module.shields > 0 && (
-                    <span>
+                    <span className="inline-flex items-center gap-1">
+                        <StatIcon type="shields" size={30} />
                         {t("module_list.shields")}: {module.shields}
                         {shieldsAfter !== undefined &&
                             shieldsAfter !== module.shields && (
@@ -481,8 +488,8 @@ function ModuleUpgradeCard({
                     </span>
                 )}
                 {module.shieldRegen !== undefined && module.shieldRegen > 0 && (
-                    <span>
-                        🔄 {module.shieldRegen}
+                    <span className="inline-flex items-center gap-1">
+                        <StatIcon type="shield_regen" size={30} /> {module.shieldRegen}
                         {shieldRegenAfter !== undefined &&
                             shieldRegenAfter !== module.shieldRegen && (
                                 <span className="text-[#ffb000]">
@@ -493,7 +500,8 @@ function ModuleUpgradeCard({
                     </span>
                 )}
                 {module.defense !== undefined && module.defense > 0 && (
-                    <span>
+                    <span className="inline-flex items-center gap-1">
+                        <StatIcon type="armor" size={30} />
                         {t("module_list.armor")}: {module.defense}
                         {defenseAfter !== undefined &&
                             defenseAfter !== module.defense && (
@@ -505,8 +513,8 @@ function ModuleUpgradeCard({
                     </span>
                 )}
                 {module.scanRange !== undefined && (
-                    <span>
-                        📡 {module.scanRange}
+                    <span className="inline-flex items-center gap-1">
+                        <StatIcon type="scan_range" size={30} /> {module.scanRange}
                         {scanRangeAfter !== undefined &&
                             scanRangeAfter !== module.scanRange && (
                                 <span className="text-[#ffb000]">
@@ -516,8 +524,8 @@ function ModuleUpgradeCard({
                             )}</span>
                 )}
                 {module.consumption !== undefined && module.consumption > 0 && (
-                    <span>
-                        ⚡ -{module.consumption}
+                    <span className="inline-flex items-center gap-1">
+                        <StatIcon type="power_consumption" size={30} /> -{module.consumption}
                         {consumptionAfter !== undefined &&
                             consumptionAfter !== module.consumption && (
                                 <span className="text-[#ff6644]">
@@ -528,8 +536,8 @@ function ModuleUpgradeCard({
                     </span>
                 )}
                 {module.healing !== undefined && module.healing > 0 && (
-                    <span>
-                        🏥 {module.healing} HP
+                    <span className="inline-flex items-center gap-1">
+                        <StatIcon type="health" size={30} /> {module.healing} HP
                         {healingAfter !== undefined &&
                             healingAfter !== module.healing && (
                                 <span className="text-[#ffb000]">
@@ -540,8 +548,8 @@ function ModuleUpgradeCard({
                     </span>
                 )}
                 {module.type === "weaponbay" && (
-                    <span>
-                        ⚔ +{((module.level ?? 1) - 1) * 10}%
+                    <span className="inline-flex items-center gap-1">
+                        <StatIcon type="damage_bonus" size={30} /> +{((module.level ?? 1) - 1) * 10}%
                         <span className="text-[#ffb000]">
                             {" "}
                             → +{(nextLevel - 1) * 10}%
@@ -552,7 +560,9 @@ function ModuleUpgradeCard({
                     module.repairAmount !== undefined &&
                     module.repairAmount > 0 && (
                         <span>
-                            🔧 {module.repairAmount} HP
+                            <span className="inline-flex items-center gap-1">
+                                <StatIcon type="repair" size={30} /> {module.repairAmount} HP
+                            </span>
                             {repairAmountAfter !== undefined &&
                                 repairAmountAfter !== module.repairAmount && (
                                     <span className="text-[#ffb000]">
