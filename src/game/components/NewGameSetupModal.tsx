@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,8 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { useGameStore } from "../store";
 import { SHIP_TEMPLATES, DEFAULT_TEMPLATE_ID } from "../constants/shipTemplates";
-import { LAUNCH_MODIFIERS } from "../constants/launchModifiers";
+import { LAUNCH_MODIFIERS, type LaunchModifier } from "../constants/launchModifiers";
 import { useTranslation } from "@/lib/useTranslation";
+import type { Module, ModuleType, ResearchResourceType } from "@/game/types";
 
 interface NewGameSetupModalProps {
   open: boolean;
@@ -22,28 +23,156 @@ interface NewGameSetupModalProps {
 }
 
 const DIFFICULTY_COLORS = {
-  easy: { text: "#00ff41", border: "#00ff41", bg: "rgba(0,255,65,0.1)" },
-  normal: { text: "#ffb000", border: "#ffb000", bg: "rgba(255,176,0,0.1)" },
-  hard: { text: "#ff4444", border: "#ff4444", bg: "rgba(255,68,68,0.1)" },
+  easy: { text: "#00ff41", border: "#00ff41", bg: "rgba(0,255,65,0.08)" },
+  normal: { text: "#ffb000", border: "#ffb000", bg: "rgba(255,176,0,0.08)" },
+  hard: { text: "#ff4444", border: "#ff4444", bg: "rgba(255,68,68,0.08)" },
+};
+
+const DIFFICULTY_SYMBOLS = {
+  easy: "●",
+  normal: "◆",
+  hard: "▲",
 };
 
 const MODIFIER_TYPE_COLORS = {
-  bonus: { text: "#00ff41" },
-  challenge: { text: "#ff4444" },
-  mixed: { text: "#ff00ff" },
+  bonus: { text: "#00ff41", border: "#00ff41", bg: "rgba(0,255,65,0.07)" },
+  challenge: { text: "#ff4444", border: "#ff4444", bg: "rgba(255,68,68,0.07)" },
+  mixed: { text: "#ff00ff", border: "#ff00ff", bg: "rgba(255,0,255,0.06)" },
 };
 
-const MODULE_LEGEND = [
-  { icon: "⚛️", key: "new_game_setup.mod_reactor" },
-  { icon: "🎮", key: "new_game_setup.mod_cockpit" },
-  { icon: "🌬️", key: "new_game_setup.mod_lifesupport" },
-  { icon: "📦", key: "new_game_setup.mod_cargo" },
-  { icon: "⛽", key: "new_game_setup.mod_fueltank" },
-  { icon: "🧪", key: "new_game_setup.mod_lab" },
-  { icon: "📡", key: "new_game_setup.mod_scanner" },
-  { icon: "🔫", key: "new_game_setup.mod_weapon" },
-  { icon: "🛠️", key: "new_game_setup.mod_repair" },
-];
+const MODULE_NAME_KEYS: Partial<Record<ModuleType, string>> = {
+  reactor: "new_game_setup.mod_reactor",
+  cockpit: "new_game_setup.mod_cockpit",
+  lifesupport: "new_game_setup.mod_lifesupport",
+  cargo: "new_game_setup.mod_cargo",
+  fueltank: "new_game_setup.mod_fueltank",
+  lab: "new_game_setup.mod_lab",
+  scanner: "new_game_setup.mod_scanner",
+  weaponbay: "new_game_setup.mod_weapon",
+  repair_bay: "new_game_setup.mod_repair",
+  engine: "new_game_setup.mod_engine",
+};
+
+type TFn = (key: string) => string;
+
+function countModules(modules: Module[]) {
+  return modules.reduce<Partial<Record<ModuleType, number>>>((acc, module) => {
+    acc[module.type] = (acc[module.type] ?? 0) + 1;
+    return acc;
+  }, {});
+}
+
+function getModuleLabel(type: ModuleType, t: TFn) {
+  const key = MODULE_NAME_KEYS[type];
+  if (!key) return type;
+  const translated = t(key);
+  return translated === key ? type : translated;
+}
+
+function getCrewSummary(
+  crew: (typeof SHIP_TEMPLATES)[number]["crew"],
+  t: TFn,
+) {
+  const professions = crew.reduce<Record<string, number>>((acc, member) => {
+    const profession = member.profession ?? "unknown";
+    acc[profession] = (acc[profession] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  return Object.entries(professions)
+    .map(([profession, count]) => {
+      const label = t(`professions.${profession}`);
+      return count > 1 ? `${label} x${count}` : label;
+    })
+    .join(", ");
+}
+
+function getCrewLevelSummary(
+  crew: (typeof SHIP_TEMPLATES)[number]["crew"],
+  overrideLevel: number | null,
+  t: TFn,
+) {
+  if (crew.length === 0) return t("new_game_setup.none");
+  if (overrideLevel !== null) return `LV${overrideLevel}`;
+
+  const levels = [
+    ...new Set(
+      crew.map((member) => {
+        const level = member.level ?? 1;
+        return Array.isArray(level) ? `${level[0]}-${level[1]}` : String(level);
+      }),
+    ),
+  ].sort();
+
+  return levels.length === 1
+    ? `LV${levels[0]}`
+    : `${t("new_game_setup.levels_label")} ${levels.map((level) => `LV${level}`).join(", ")}`;
+}
+
+function joinLabels(labels: string[]) {
+  return labels.join(", ");
+}
+
+function getResearchResourceSummary(
+  resources: Partial<Record<ResearchResourceType, number>> | undefined,
+  t: TFn,
+) {
+  if (!resources) return null;
+  const entries = Object.entries(resources) as [ResearchResourceType, number][];
+  if (entries.length === 0) return null;
+  return entries
+    .map(([type, value]) => `${t(`blueprints.resources.${type}`)} x${value}`)
+    .join(", ");
+}
+
+function getModifierDetails(mod: LaunchModifier, t: TFn) {
+  const details: string[] = [];
+
+  if (mod.crewLevel) details.push(`${t("new_game_setup.effect_crew")} LV${mod.crewLevel}`);
+  if (mod.crewLimit) details.push(`${t("new_game_setup.effect_crew")}: ${mod.crewLimit}`);
+  if (mod.fuelDelta) {
+    details.push(`${t("new_game_setup.effect_fuel")} ${mod.fuelDelta > 0 ? "+" : ""}${mod.fuelDelta}`);
+  }
+  if (mod.maxFuelDelta) details.push(`${t("new_game_setup.effect_tank")} +${mod.maxFuelDelta}`);
+  if (mod.reactorPowerPenalty) {
+    details.push(`${t("new_game_setup.effect_reactor")} -${mod.reactorPowerPenalty}`);
+  }
+  if (mod.moduleDamagePercent) {
+    details.push(`${t("new_game_setup.effect_modules")} -${mod.moduleDamagePercent}% HP`);
+  }
+  if (mod.targetedModuleDamagePercent) {
+    details.push(`${t("new_game_setup.effect_key_module")} -${mod.targetedModuleDamagePercent}% HP`);
+  }
+  if (mod.startWithCursedArtifact) details.push(t("new_game_setup.effect_cursed_artifact"));
+  if (mod.startRaceReputation) details.push(t("new_game_setup.effect_reputation"));
+  if (mod.researchResources) {
+    const summary = getResearchResourceSummary(mod.researchResources, t);
+    if (summary) details.push(summary);
+  }
+
+  return details;
+}
+
+function Pill({
+  children,
+  tone = "neutral",
+}: {
+  children: React.ReactNode;
+  tone?: "good" | "warning" | "danger" | "neutral";
+}) {
+  const classes = {
+    good: "border-[#00ff4144] bg-[rgba(0,255,65,0.08)] text-[#9dffae]",
+    warning: "border-[#ffb00055] bg-[rgba(255,176,0,0.08)] text-[#ffd27a]",
+    danger: "border-[#ff444455] bg-[rgba(255,68,68,0.08)] text-[#ff9a9a]",
+    neutral: "border-[#1a3320] bg-[rgba(0,0,0,0.25)] text-[#888]",
+  };
+
+  return (
+    <span className={`inline-flex min-w-0 max-w-full items-center break-words border px-1.5 py-0.5 text-[10px] ${classes[tone]}`}>
+      {children}
+    </span>
+  );
+}
 
 export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModalProps) {
   const { t } = useTranslation();
@@ -53,14 +182,60 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
   const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
 
   const selectedTemplate = SHIP_TEMPLATES.find((tmpl) => tmpl.id === selectedTemplateId);
+
+  const selectedModifierItems = useMemo(
+    () => LAUNCH_MODIFIERS.filter((mod) => selectedModifiers.includes(mod.id)),
+    [selectedModifiers],
+  );
+
   if (!selectedTemplate) return null;
+
+  const moduleCounts = countModules(selectedTemplate.modules);
+
+  const crewLimit = selectedModifierItems.reduce<number | null>((acc, mod) => {
+    if (mod.crewLimit === undefined) return acc;
+    return acc === null ? mod.crewLimit : Math.min(acc, mod.crewLimit);
+  }, null);
+  const crewLevel = selectedModifierItems.reduce<number | null>((acc, mod) => {
+    if (mod.crewLevel === undefined) return acc;
+    return acc === null ? mod.crewLevel : Math.max(acc, mod.crewLevel);
+  }, null);
+  const finalCrew =
+    crewLimit !== null
+      ? selectedTemplate.crew.slice(0, crewLimit)
+      : selectedTemplate.crew;
+
+  const finalResearchResources: Partial<Record<ResearchResourceType, number>> = {
+    ...(selectedTemplate.researchResources ?? {}),
+  };
+  for (const mod of selectedModifierItems) {
+    if (!mod.researchResources) continue;
+    for (const [key, value] of Object.entries(mod.researchResources)) {
+      const resource = key as ResearchResourceType;
+      finalResearchResources[resource] =
+        (finalResearchResources[resource] ?? 0) + value;
+    }
+  }
+
+  const researchSummary = getResearchResourceSummary(finalResearchResources, t);
+
+  const finalMaxFuel = Math.max(
+    0,
+    selectedTemplate.maxFuel +
+      selectedModifierItems.reduce((sum, mod) => sum + (mod.maxFuelDelta ?? 0), 0),
+  );
+  const finalFuel = Math.max(
+    0,
+    Math.min(
+      selectedTemplate.fuel +
+        selectedModifierItems.reduce((sum, mod) => sum + (mod.fuelDelta ?? 0), 0),
+      finalMaxFuel,
+    ),
+  );
 
   const totalCredits =
     selectedTemplate.credits +
-    selectedModifiers.reduce((sum, id) => {
-      const mod = LAUNCH_MODIFIERS.find((m) => m.id === id);
-      return sum + (mod?.creditDelta ?? 0);
-    }, 0);
+    selectedModifierItems.reduce((sum, mod) => sum + mod.creditDelta, 0);
 
   const toggleModifier = (id: string) => {
     setSelectedModifiers((prev) =>
@@ -75,7 +250,7 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
   };
 
   const handleOpenChange = (v: boolean) => {
-    if (!v && required) return; // первый старт — нельзя закрыть без выбора
+    if (!v && required) return;
     if (!v) onClose();
   };
 
@@ -84,16 +259,10 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="bg-[rgba(5,8,16,0.98)] border-2 border-[#00ff41] text-[#00ff41] w-[calc(100%-1rem)] max-w-2xl max-h-[92vh] overflow-y-auto p-0"
-        // Скрываем дефолтную крестовину закрытия при required
-        style={required ? { "--close-btn-display": "none" } as React.CSSProperties : undefined}
+        className="bg-[rgba(5,8,16,0.98)] border-2 border-[#00ff41] text-[#00ff41] w-[calc(100vw-1rem)] min-[900px]:w-[calc(100vw-2rem)] min-[1280px]:w-[min(1280px,calc(100vw-2rem))] !max-w-none max-h-[92vh] overflow-hidden p-0 gap-0 grid-rows-[auto_minmax(0,1fr)_auto]"
+        showCloseButton={!required}
       >
-        {/* Прячем кнопку × через CSS когда required */}
-        {required && (
-          <style>{`[data-radix-dialog-close] { display: none !important; }`}</style>
-        )}
-
-        <DialogHeader className="px-4 pt-4 pb-3 sm:px-5 sm:pt-5 border-b border-[rgba(0,255,65,0.2)]">
+        <DialogHeader className="min-w-0 px-4 pt-4 pb-3 sm:px-5 border-b border-[rgba(0,255,65,0.2)]">
           <DialogTitle className="text-[#00ff41] font-['Orbitron'] text-base sm:text-xl">
             {t("new_game_setup.title")}
           </DialogTitle>
@@ -102,172 +271,246 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
           </DialogDescription>
         </DialogHeader>
 
-        <div className="px-3 py-4 sm:p-5 space-y-5">
+        <div className="min-h-0 overflow-y-auto overflow-x-hidden px-2 py-3 sm:p-4">
+          <div className="grid min-w-0 gap-3 min-[980px]:grid-cols-[minmax(260px,0.72fr)_minmax(0,1.55fr)]">
+            <section className="min-w-0 border border-[#00ff4133] bg-[rgba(0,255,65,0.02)] p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-[0.18em] text-[#ffb000]">
+                  {t("new_game_setup.template_section")}
+                </div>
+                <div className="text-[10px] text-[#667766]">
+                  {SHIP_TEMPLATES.length} {t("new_game_setup.options_label")}
+                </div>
+              </div>
 
-          {/* ── Шаблон корабля ──────────────────────────────────────── */}
-          <section>
-            <div className="text-xs text-[#ffb000] font-bold uppercase tracking-widest mb-2">
-              🚀 {t("new_game_setup.template_section")}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {SHIP_TEMPLATES.map((tmpl) => {
-                const isSelected = tmpl.id === selectedTemplateId;
-                const dc = DIFFICULTY_COLORS[tmpl.difficulty];
-                return (
-                  <button
-                    key={tmpl.id}
-                    onClick={() => setSelectedTemplateId(tmpl.id)}
-                    className="text-left p-2.5 sm:p-3 border transition-all cursor-pointer rounded-sm flex flex-col"
-                    style={{
-                      borderColor: isSelected ? dc.border : "rgba(0,255,65,0.2)",
-                      backgroundColor: isSelected ? dc.bg : "transparent",
-                    }}
-                  >
-                    {/* Верхняя строка */}
-                    <div className="mb-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-lg sm:text-xl shrink-0">{tmpl.icon}</span>
-                        <span
-                          className="font-bold text-xs sm:text-sm leading-snug"
-                          style={{ color: isSelected ? dc.text : "#00ff41" }}
-                        >
-                          {t(tmpl.nameKey)}
-                        </span>
-                      </div>
-                      <div className="mt-1 ml-0.5 flex items-center gap-1.5 flex-wrap">
-                        <span
-                          className="text-[10px] sm:text-xs px-1.5 py-0.5 border font-bold"
-                          style={{ color: dc.text, borderColor: dc.border }}
-                        >
-                          {t(`new_game_setup.difficulty_${tmpl.difficulty}`)}
-                        </span>
-                        {tmpl.difficulty === "easy" && (
-                          <span className="text-[9px] sm:text-[10px] text-[#ffb000]">
-                            ⭐ {t("new_game_setup.recommended_badge")}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+              <div className="grid min-w-0 gap-2 sm:grid-cols-2 min-[980px]:grid-cols-1">
+                {SHIP_TEMPLATES.map((tmpl) => {
+                  const isSelected = tmpl.id === selectedTemplateId;
+                  const dc = DIFFICULTY_COLORS[tmpl.difficulty];
 
-                    {/* Описание */}
-                    <div className="text-[11px] sm:text-xs text-[#888] mb-2 leading-snug flex-1">
-                      {t(tmpl.descriptionKey)}
-                    </div>
-
-                    {/* Экипаж + модули + кредиты */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-[#555]" title={t("new_game_setup.crew_hint")}>
-                          👥 {tmpl.crew.length}
-                        </span>
-                        <div className="flex gap-0.5 sm:gap-1 flex-wrap">
-                          {tmpl.moduleIcons.map((icon, i) => (
-                            <span key={i} className="text-xs sm:text-sm">{icon}</span>
-                          ))}
+                  return (
+                    <button
+                      key={tmpl.id}
+                      onClick={() => setSelectedTemplateId(tmpl.id)}
+                      className="min-w-0 text-left border p-2.5 transition-all cursor-pointer"
+                      style={{
+                        borderColor: isSelected ? dc.border : "rgba(0,255,65,0.18)",
+                        backgroundColor: isSelected ? dc.bg : "rgba(0,0,0,0.18)",
+                      }}
+                    >
+                      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                        <div className="min-w-0">
+                          <div
+                            className="max-w-full pr-1 font-bold text-xs leading-snug sm:text-sm"
+                            style={{ color: isSelected ? dc.text : "#00ff41" }}
+                          >
+                            {t(tmpl.nameKey)}
+                          </div>
+                          <div className="mt-1 text-[10px] text-[#777] line-clamp-2">
+                            {t(tmpl.descriptionKey)}
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-xs text-[#ffb000] shrink-0 ml-1">
-                        ₢{tmpl.credits}
-                        {tmpl.researchResources && (
-                          <span className="ml-1 text-[#9933ff]">+🔬</span>
-                        )}
-                        {tmpl.probes > 0 && (
-                          <span className="ml-1 text-[#00d4ff]" title={t("new_game_setup.probes_hint")}>
-                            ×{tmpl.probes}🔭
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Легенда модулей */}
-            <div className="mt-2 pt-2 border-t border-[rgba(0,255,65,0.1)]">
-              <div className="text-[9px] text-[#555] mb-1 uppercase tracking-wider">
-                {t("new_game_setup.module_legend_label")}:
-              </div>
-              <div className="flex flex-wrap gap-x-3 gap-y-0.5">
-                {MODULE_LEGEND.map(({ icon, key }) => (
-                  <span key={icon} className="text-[9px] text-[#555] whitespace-nowrap">
-                    {icon} {t(key)}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* ── Модификаторы ─────────────────────────────────────────── */}
-          <section>
-            <div className="text-xs text-[#ffb000] font-bold uppercase tracking-widest mb-1">
-              ⚙️ {t("new_game_setup.modifiers_section")}
-              <span className="text-[#888] normal-case font-normal ml-2">
-                {t("new_game_setup.modifiers_hint")}
-              </span>
-            </div>
-            <div className="text-[10px] text-[#555] mb-2">
-              {t("new_game_setup.modifiers_beginner_tip")}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {LAUNCH_MODIFIERS.map((mod) => {
-                const isActive = selectedModifiers.includes(mod.id);
-                const tc = MODIFIER_TYPE_COLORS[mod.type];
-                return (
-                  <button
-                    key={mod.id}
-                    onClick={() => toggleModifier(mod.id)}
-                    className="text-left p-2.5 sm:p-3 border transition-all cursor-pointer rounded-sm"
-                    style={{
-                      borderColor: isActive ? tc.text : "rgba(0,255,65,0.15)",
-                      backgroundColor: isActive
-                        ? `rgba(${mod.type === "bonus" ? "0,255,65" : mod.type === "challenge" ? "255,68,68" : "255,0,255"},0.07)`
-                        : "transparent",
-                    }}
-                  >
-                    <div className="flex items-start justify-between mb-1 gap-2">
-                      <div className="flex items-start gap-1.5 min-w-0">
-                        <span className="shrink-0 mt-px">{mod.icon}</span>
                         <span
-                          className="font-bold text-xs sm:text-sm leading-snug"
-                          style={{ color: isActive ? tc.text : "#00ff41" }}
+                          className="grid h-5 w-5 shrink-0 place-items-center whitespace-nowrap border text-[10px] font-bold leading-none"
+                          style={{ color: dc.text, borderColor: dc.border }}
+                          title={t(`new_game_setup.difficulty_${tmpl.difficulty}`)}
+                          aria-label={t(`new_game_setup.difficulty_${tmpl.difficulty}`)}
                         >
-                          {t(mod.nameKey)}
+                          {DIFFICULTY_SYMBOLS[tmpl.difficulty]}
                         </span>
                       </div>
-                      <span
-                        className="text-xs font-bold tabular-nums shrink-0 whitespace-nowrap"
-                        style={{ color: mod.creditDelta > 0 ? "#00ff41" : "#ff4444" }}
-                      >
-                        {mod.creditDelta > 0 ? `+${mod.creditDelta}` : mod.creditDelta}₢
+
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        <Pill>{t("new_game_setup.crew_short")}: {tmpl.crew.length}</Pill>
+                        <Pill>{t("new_game_setup.modules_short")}: {tmpl.modules.length}</Pill>
+                        <Pill tone="warning">₢{tmpl.credits}</Pill>
+                        {tmpl.probes > 0 && <Pill tone="good">{t("new_game_setup.probes_short")}: {tmpl.probes}</Pill>}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <div className="grid min-w-0 gap-3">
+              <section className="min-w-0 border border-[#00ff4133] bg-[rgba(0,255,65,0.02)] p-3">
+                <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-['Orbitron'] text-sm font-bold uppercase tracking-[0.16em] text-[#ffb000]">
+                      {t("new_game_setup.final_preview")}
+                    </div>
+                    <div className="mt-1 max-w-2xl text-xs leading-relaxed text-[#888]">
+                      <span className="font-bold text-[#00ff41]">
+                        {t(selectedTemplate.nameKey)}
+                      </span>
+                      {" · "}
+                      {t(selectedTemplate.descriptionKey)}
+                    </div>
+                  </div>
+                  <span
+                    className="border px-2 py-1 text-xs font-bold"
+                    style={{ color: diffColors.text, borderColor: diffColors.border }}
+                  >
+                    {t(`new_game_setup.difficulty_${selectedTemplate.difficulty}`)}
+                  </span>
+                </div>
+
+                <div className="grid min-w-0 gap-2 min-[560px]:grid-cols-2 min-[1180px]:grid-cols-4">
+                  <InfoMetric label={t("new_game_setup.start_credits")} value={`₢${Math.max(0, totalCredits)}`} />
+                  <InfoMetric label={t("new_game_setup.fuel_label")} value={`${finalFuel}/${finalMaxFuel}`} />
+                  <InfoMetric label={t("new_game_setup.crew_label")} value={String(finalCrew.length)} />
+                  <InfoMetric label={t("new_game_setup.probes_label")} value={String(selectedTemplate.probes)} />
+                </div>
+
+                <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2">
+                  <div className="min-w-0">
+                    <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-[#667766]">
+                      {t("new_game_setup.crew_composition")}
+                    </div>
+                    <div className="break-words text-xs text-[#00d4ff]">{getCrewSummary(finalCrew, t)}</div>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-[#667766]">
+                      {t("new_game_setup.crew_level")}
+                    </div>
+                    <div className="break-words text-xs text-[#00ff41]">
+                      {getCrewLevelSummary(finalCrew, crewLevel, t)}
+                    </div>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-[#667766]">
+                      {t("new_game_setup.research_resources")}
+                    </div>
+                    <div className="break-words text-xs text-[#a855f7]">
+                      {researchSummary ?? t("new_game_setup.none")}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 min-h-14">
+                  <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-[#667766]">
+                    {t("new_game_setup.final_effects")}
+                  </div>
+                  {selectedModifierItems.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {selectedModifierItems.flatMap((mod) =>
+                        getModifierDetails(mod, t).map((detail) => (
+                          <Pill
+                            key={`${mod.id}-${detail}`}
+                            tone={mod.type === "bonus" ? "good" : mod.type === "challenge" ? "danger" : "warning"}
+                          >
+                            {detail}
+                          </Pill>
+                        )),
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-[#555]">
+                      {t("new_game_setup.no_final_effects")}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-3">
+                  <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-[#667766]">
+                    {t("new_game_setup.module_legend_label")}
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {Object.entries(moduleCounts).map(([type, count]) => (
+                      <Pill key={type}>
+                        {getModuleLabel(type as ModuleType, t)} x{count}
+                      </Pill>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              <section className="min-w-0 border border-[#00ff4133] bg-[rgba(0,255,65,0.02)] p-3">
+                <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-[0.18em] text-[#ffb000]">
+                      {t("new_game_setup.modifiers_section")}
+                      <span className="ml-2 font-mono text-[10px] font-normal normal-case tracking-normal text-[#888]">
+                        {t("new_game_setup.modifiers_hint")}
                       </span>
                     </div>
-                    <div className="text-[11px] sm:text-xs text-[#888] leading-snug">
-                      {t(mod.descriptionKey)}
+                    <div className="mt-1 text-[10px] text-[#666]">
+                      {t("new_game_setup.modifiers_beginner_tip")}
                     </div>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
+                  </div>
+                  <div className="text-[10px] text-[#667766]">
+                    {t("new_game_setup.modifiers_active")}: {selectedModifiers.length}
+                  </div>
+                </div>
 
-          {/* ── Итог + кнопка старта ─────────────────────────────────── */}
-          <section className="border-t border-[rgba(0,255,65,0.2)] pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            {/* Итоговая сводка */}
-            <div className="space-y-1 text-xs sm:text-sm">
-              <div className="flex items-center gap-2 flex-wrap">
+                <div className="grid min-w-0 gap-2 min-[1180px]:grid-cols-2">
+                  {LAUNCH_MODIFIERS.map((mod) => {
+                    const isActive = selectedModifiers.includes(mod.id);
+                    const tc = MODIFIER_TYPE_COLORS[mod.type];
+                    const details = getModifierDetails(mod, t);
+
+                    return (
+                      <button
+                        key={mod.id}
+                        onClick={() => toggleModifier(mod.id)}
+                        className="min-w-0 text-left border p-2.5 transition-all cursor-pointer"
+                        style={{
+                          borderColor: isActive ? tc.border : "rgba(0,255,65,0.15)",
+                          backgroundColor: isActive ? tc.bg : "rgba(0,0,0,0.18)",
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div
+                              className="font-bold text-xs leading-snug"
+                              style={{ color: isActive ? tc.text : "#00ff41" }}
+                            >
+                              {t(mod.nameKey)}
+                            </div>
+                            <div className="mt-1 text-[10px] leading-snug text-[#777]">
+                              {t(mod.descriptionKey)}
+                            </div>
+                          </div>
+                          <span
+                            className="shrink-0 text-xs font-bold tabular-nums"
+                            style={{ color: mod.creditDelta >= 0 ? "#00ff41" : "#ff4444" }}
+                          >
+                            {mod.creditDelta > 0 ? `+${mod.creditDelta}` : mod.creditDelta}₢
+                          </span>
+                        </div>
+
+                        {details.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {details.slice(0, 3).map((detail) => (
+                              <Pill
+                                key={detail}
+                                tone={mod.type === "bonus" ? "good" : mod.type === "challenge" ? "danger" : "warning"}
+                              >
+                                {detail}
+                              </Pill>
+                            ))}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        <footer className="min-w-0 border-t border-[rgba(0,255,65,0.2)] bg-[rgba(5,8,16,0.98)] px-3 py-3 sm:px-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0 text-xs">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[#888]">{t("new_game_setup.ship_label")}:</span>
-                <span className="text-[#00ff41] font-bold">
-                  {selectedTemplate.icon} {t(selectedTemplate.nameKey)}
-                </span>
-                <span
-                  className="text-[10px] sm:text-xs px-1.5 py-0.5 border"
-                  style={{ color: diffColors.text, borderColor: diffColors.border }}
-                >
-                  {t(`new_game_setup.difficulty_${selectedTemplate.difficulty}`)}
-                </span>
+                <span className="font-bold text-[#00ff41]">{t(selectedTemplate.nameKey)}</span>
+                <span className="text-[#444]">/</span>
+                <span className="text-[#888]">{t("new_game_setup.modifiers_active")}:</span>
+                <span className="font-bold text-[#ffb000]">{selectedModifiers.length}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="mt-1 flex flex-wrap items-center gap-2">
                 <span className="text-[#888]">{t("new_game_setup.start_credits")}:</span>
                 <span
                   className="font-bold tabular-nums"
@@ -275,24 +518,32 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                 >
                   ₢{Math.max(0, totalCredits)}
                 </span>
+                {selectedModifierItems.length > 0 && (
+                  <span className="min-w-0 break-words text-[#555]">
+                    {joinLabels(selectedModifierItems.map((mod) => t(mod.nameKey)))}
+                  </span>
+                )}
               </div>
-
-              <div className="text-[#888]">
-                {t("new_game_setup.modifiers_active")}: {selectedModifiers.length}
-              </div>
-
             </div>
 
-            {/* Кнопка старта */}
             <Button
               onClick={handleStart}
-              className="cursor-pointer w-full sm:w-auto shrink-0 bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider px-4 sm:px-6 py-4 sm:py-5 font-bold text-sm sm:text-base"
+              className="cursor-pointer w-full sm:w-auto shrink-0 bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider px-6 py-5 font-bold text-sm"
             >
-              🚀 {t("new_game_setup.start_button")}
+              {t("new_game_setup.start_button")}
             </Button>
-          </section>
-        </div>
+          </div>
+        </footer>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function InfoMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border border-[#1a3320] bg-[rgba(0,0,0,0.25)] p-2">
+      <div className="text-[9px] uppercase tracking-[0.16em] text-[#667766]">{label}</div>
+      <div className="mt-1 font-['Orbitron'] text-sm font-bold text-[#00ff41]">{value}</div>
+    </div>
   );
 }
