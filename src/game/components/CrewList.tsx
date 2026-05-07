@@ -25,6 +25,10 @@ import {
     CrewExpBonusRow,
 } from "./CrewListHelpers";
 import { ProfessionSprite } from "./ProfessionSprite";
+import { CrewStatusIcon } from "./CrewStatusIcon";
+
+const stripLeadingSymbol = (value: string) =>
+    value.replace(/^[^\p{L}\p{N}]+/u, "");
 
 export function CrewList() {
     const { t } = useTranslation();
@@ -289,10 +293,20 @@ export function CrewList() {
                                             className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${selectedCrew.health < 30 ? "[&>div]:bg-[#ff0040]" : selectedCrew.health < 60 ? "[&>div]:bg-[#ffb000]" : "[&>div]:bg-[#00ff41]"}`}
                                         />
                                     </div>
-                                    <div className="text-[10px] text-[#00ff41]">
-                                        {t("crew_member.regen_short")}
-                                        {getCrewRegen(selectedCrew)}/
-                                        {t("crew.turn")}
+                                    <div className="text-[10px] text-[#00ff41] flex items-center gap-1">
+                                        <CrewStatusIcon
+                                            type="regen"
+                                            size={18}
+                                        />
+                                        <span>
+                                            {stripLeadingSymbol(
+                                                t(
+                                                    "crew_member.regen_short",
+                                                ),
+                                            )}
+                                            {getCrewRegen(selectedCrew)}/
+                                            {t("crew.turn")}
+                                        </span>
                                     </div>
                                     <CrewDamageReductionRow
                                         member={selectedCrew}
@@ -322,8 +336,18 @@ export function CrewList() {
                                             />
                                         </div>
                                     ) : (
-                                        <div className="text-[#00d4ff] text-xs">
-                                            {t("crew_member.immune_morale")}
+                                        <div className="text-[#00d4ff] text-xs flex items-center gap-1">
+                                            <CrewStatusIcon
+                                                type="no_happiness"
+                                                size={20}
+                                            />
+                                            <span>
+                                                {stripLeadingSymbol(
+                                                    t(
+                                                        "crew_member.immune_morale",
+                                                    ),
+                                                )}
+                                            </span>
                                         </div>
                                     )}
                                     <div>
@@ -341,8 +365,18 @@ export function CrewList() {
 
                                     {/* Module movement section */}
                                     <div className="border-t border-[#00ff41] pt-4">
-                                        <div className="text-[#ffb000] mb-2">
-                                            {t("crew_member.movement")}
+                                        <div className="text-[#ffb000] mb-2 inline-flex items-center gap-1">
+                                            <CrewStatusIcon
+                                                type="movement"
+                                                size={20}
+                                            />
+                                            <span>
+                                                {stripLeadingSymbol(
+                                                    t(
+                                                        "crew_member.movement",
+                                                    ),
+                                                )}
+                                            </span>
                                         </div>
                                         {selectedCrew.movedThisTurn ? (
                                             <div className="text-[#ff0040] text-xs">

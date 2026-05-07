@@ -18,6 +18,7 @@ import type {
 import { COMBAT_ACTIONS } from "@/game/constants/crew";
 import { getAvailableTasksForModule } from "@/game/slices/crew/helpers";
 import { useTranslation } from "@/lib/useTranslation";
+import { CrewStatusIcon } from "./CrewStatusIcon";
 
 interface CrewMemberCardProps {
   crewMember: CrewMember;
@@ -141,7 +142,8 @@ function MovementRow({
 
   return (
     <div className="flex items-start gap-2 mb-1.5">
-      <span className="text-[#00ff41] min-w-27.5 pt-0.5">
+      <span className="text-[#00ff41] min-w-27.5 pt-0.5 inline-flex items-center gap-1">
+        <CrewStatusIcon type="movement" size={18} />
         {t("crew_member.move_to")}
       </span>
       <div className="flex flex-wrap gap-1">

@@ -13,4 +13,5 @@ export const GAME_IMAGE_PRELOADS = [
     "/assets/stars.png",
     "/assets/icons.png",
     "/assets/icons-add.png",
+    "/assets/icons-crew.png",
 ];

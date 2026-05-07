@@ -10,6 +10,7 @@ import type {
     Module,
     TechnologyId,
 } from "@/game/types";
+import { CrewStatusIcon } from "./CrewStatusIcon";
 
 export type TFn = (key: string) => string;
 
@@ -141,8 +142,9 @@ export const CrewDamageReductionRow = ({
     const dr = getCrewDamageReduction(member, researchedTechs);
     if (dr.total <= 0) return null;
     return (
-        <div className="text-[10px] text-[#00aaff]">
-            🛡 {t("crew_member.damage_reduction")}{" "}
+        <div className="text-[10px] text-[#00aaff] flex flex-wrap items-center gap-1">
+            <CrewStatusIcon type="damage_reduction" size={18} />
+            <span>{t("crew_member.damage_reduction")}</span>{" "}
             <span className="font-bold">{Math.round(dr.total * 100)}%</span>
             {dr.traitReduction > 0 && dr.techReduction > 0 && (
                 <span className="text-[#888] ml-1">
@@ -168,8 +170,9 @@ export const CrewExpBonusRow = ({
     const expMult = getCrewExpMultiplier(member, researchedTechs);
     if (expMult <= 1) return null;
     return (
-        <div className="text-[10px] text-[#00d4ff]">
-            ⭐ {t("crew_member.exp_bonus")}{" "}
+        <div className="text-[10px] text-[#00d4ff] flex flex-wrap items-center gap-1">
+            <CrewStatusIcon type="experience" size={18} />
+            <span>{t("crew_member.exp_bonus")}</span>{" "}
             <span className="font-bold">
                 ×{expMult.toFixed(2).replace(/\.?0+$/, "")}
             </span>
