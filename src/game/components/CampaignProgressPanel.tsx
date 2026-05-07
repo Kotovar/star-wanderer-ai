@@ -3,6 +3,8 @@
 import { useMemo } from "react";
 import { useGameStore } from "@/game/store";
 import { RESEARCH_TREE } from "@/game/constants";
+import { CRAFTING_RECIPES } from "@/game/constants/crafting";
+import { WEAPON_TYPES } from "@/game/constants/weapons";
 import { canSeeTier4 } from "@/game/galaxy/galaxy-map-utils";
 import { useTranslation } from "@/lib/useTranslation";
 
@@ -211,6 +213,11 @@ export function CampaignProgressPanel() {
 
   const techTotal = Object.keys(RESEARCH_TREE).length;
   const techDone = research.researchedTechs.length;
+  const weaponRecipes = Object.values(CRAFTING_RECIPES);
+  const unlockedWeaponRecipeIds = new Set(research.unlockedRecipes ?? []);
+  const unlockedWeaponRecipes = weaponRecipes.filter((recipe) =>
+    unlockedWeaponRecipeIds.has(recipe.id),
+  );
   const innerWorldsVisited = stats.tiers.find((tier) => tier.tier === 1)?.visited ?? 0;
   const innerWorldsFootholdDone = innerWorldsVisited >= 3;
 
@@ -322,6 +329,46 @@ export function CampaignProgressPanel() {
               <span className="text-[#667766]">{techDone}/{techTotal}</span>
             </div>
             <ProgressBar value={techDone} max={techTotal} color="#9933ff" />
+          </div>
+          <div>
+            <div className="mb-1 flex justify-between text-xs">
+              <span className="text-[#888]">Рецепты оружия</span>
+              <span className="text-[#667766]">
+                {unlockedWeaponRecipes.length}/{weaponRecipes.length}
+              </span>
+            </div>
+            <ProgressBar
+              value={unlockedWeaponRecipes.length}
+              max={weaponRecipes.length}
+              color="#ffb000"
+            />
+            <div className="mt-2 flex flex-wrap gap-1">
+              {weaponRecipes.map((recipe) => {
+                const weapon = WEAPON_TYPES[recipe.weaponType];
+                const unlocked = unlockedWeaponRecipeIds.has(recipe.id);
+
+                return (
+                  <div
+                    key={recipe.id}
+                    className={`flex items-center gap-1 border px-1.5 py-1 text-[10px] ${
+                      unlocked
+                        ? "border-[#ffb00088] bg-[rgba(255,176,0,0.08)] text-[#ffd27a]"
+                        : "border-[#1a3320] bg-[rgba(0,0,0,0.22)] text-[#555]"
+                    }`}
+                    title={
+                      unlocked
+                        ? `Изучено: ${recipe.name}`
+                        : `Не изучено: ${recipe.name}`
+                    }
+                  >
+                    <span style={{ color: unlocked ? weapon.color : "#555" }}>
+                      {recipe.icon}
+                    </span>
+                    <span>{recipe.name}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           <div>
             <div className="mb-1 flex justify-between text-xs">
