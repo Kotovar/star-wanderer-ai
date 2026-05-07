@@ -15,4 +15,5 @@ export const GAME_IMAGE_PRELOADS = [
   "/assets/icons-add.png",
   "/assets/icons-crew.png",
   "/assets/expedition_locations.png",
+  "/assets/tech.png",
 ];

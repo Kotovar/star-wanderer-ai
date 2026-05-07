@@ -23,6 +23,7 @@ import { typedKeys } from "@/lib/utils";
 import { useTranslation, store } from "@/lib/useTranslation";
 import { getTechTranslation } from "@/lib/techTranslations";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { TechIcon } from "./TechIcon";
 
 // ─── Layout constants ──────────────────────────────────────────────────────────
 const NODE_W = 162;
@@ -268,8 +269,12 @@ function TechNode({
       <div
         className={`flex items-start h-full px-2 pt-2 pb-1 gap-1.5 ${textOpacity}`}
       >
-        <span className="text-xl shrink-0 leading-none mt-0.5">
-          {isDiscovered ? tech.icon : "❓"}
+        <span className="shrink-0 leading-none mt-0.5">
+          {isDiscovered ? (
+            <TechIcon techId={tech.id} size={28} />
+          ) : (
+            <span className="text-xl">?</span>
+          )}
         </span>
         <div className="flex-1 min-w-0">
           <div
@@ -676,9 +681,7 @@ function TechModal({
           className="flex items-start gap-3 p-4 border-b"
           style={{ borderColor: catColor + "33" }}
         >
-          <span className="text-4xl leading-none mt-0.5">
-            {tech.icon}
-          </span>
+          <TechIcon techId={tech.id} size={48} className="mt-0.5" />
           <div className="flex-1 min-w-0">
             <div
               className="font-['Orbitron'] font-bold text-base leading-tight"

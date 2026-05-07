@@ -11,6 +11,7 @@ import { RESEARCH_TREE } from "../constants/research";
 import type { TechnologyId } from "../types";
 import { useTranslation } from "@/lib/useTranslation";
 import { getTechnologyBonusesDescription } from "@/game/slices/research/helpers/researchHelpers";
+import { TechIcon } from "./TechIcon";
 
 export function TechnologyDiscoveryModal() {
     const { t } = useTranslation();
@@ -70,7 +71,7 @@ export function TechnologyDiscoveryModal() {
 
                 <div className="space-y-3 p-4">
                     <div className="flex items-center gap-3">
-                        <span className="text-2xl">{tech.icon}</span>
+                        <TechIcon techId={techId} size={42} />
                         <div>
                             <div className="font-bold text-xl">
                                 {t(`tech.${techId}.name`)}
