@@ -12,8 +12,18 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { TRADE_GOODS, DELIVERY_GOODS } from "@/game/constants";
+import { RACES } from "@/game/constants/races";
 import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "@/game/slices/contracts/constants";
 import { useTranslation } from "@/lib/useTranslation";
+import { RaceSprite } from "./RaceSprite";
+
+function stripLeadingEmoji(text: string): string {
+    return text.replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u, "");
+}
+
+function stripRaceQuestEmoji(text: string, isRaceQuest?: boolean): string {
+    return isRaceQuest ? stripLeadingEmoji(text) : text;
+}
 
 function ProgressBar({ current, total }: { current: number; total: number }) {
     const pct = total > 0 ? Math.min(1, current / total) : 0;
@@ -23,6 +33,19 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
                 className="h-full bg-[#00ff41] transition-all duration-300"
                 style={{ width: `${pct * 100}%` }}
             />
+        </div>
+    );
+}
+
+function ContractMetric({ label, value }: { label: string; value: number }) {
+    return (
+        <div className="min-w-0 border border-[#00d4ff44] bg-[rgba(0,212,255,0.055)] px-2 py-1">
+            <div className="text-[#00d4ff] font-bold tabular-nums">
+                {value}
+            </div>
+            <div className="text-[#667] uppercase tracking-wide truncate">
+                {label}
+            </div>
         </div>
     );
 }
@@ -38,8 +61,11 @@ export function ContractsList() {
 
     if (activeContracts.length === 0) {
         return (
-            <div className="text-xs text-[#888] p-2.5">
-                {t("contracts.no_active")}
+            <div className="border border-[#333] bg-[rgba(255,255,255,0.025)] p-3 text-xs text-[#888]">
+                <div className="text-[#ffb000] font-bold uppercase tracking-wide mb-1">
+                    {t("ship.contracts")}
+                </div>
+                <div>{t("contracts.no_active")}</div>
             </div>
         );
     }
@@ -692,25 +718,80 @@ export function ContractsList() {
         }
     };
 
+    const readyContracts = activeContracts.filter(isContractReady).length;
+    const totalRewards = activeContracts.reduce(
+        (sum, contract) => sum + contract.reward,
+        0,
+    );
+
     return (
         <>
-            <div className="flex flex-col gap-2.5">
+            <div className="mb-2 grid grid-cols-3 gap-1.5 text-center text-[10px]">
+                <ContractMetric
+                    label={t("ship.contracts")}
+                    value={activeContracts.length}
+                />
+                <ContractMetric
+                    label={t("contracts.ready_badge")}
+                    value={readyContracts}
+                />
+                <ContractMetric label="₢" value={totalRewards} />
+            </div>
+
+            <div className="flex flex-col gap-2">
                 {activeContracts.map((contract) => {
                     const progress = getProgress(contract);
                     const ready = isContractReady(contract);
+                    const raceInfo = contract.requiredRace
+                        ? RACES[contract.requiredRace]
+                        : null;
+                    const contractName = stripRaceQuestEmoji(
+                        getContractName(contract),
+                        contract.isRaceQuest,
+                    );
+                    const statusText = stripRaceQuestEmoji(
+                        getStatusText(contract),
+                        contract.isRaceQuest,
+                    );
                     return (
                         <div
                             key={contract.id}
-                            className={`border p-3 cursor-pointer transition-colors ${
+                            className={`relative overflow-hidden border p-3 cursor-pointer transition-colors ${
                                 ready
                                     ? "bg-[rgba(0,255,65,0.08)] border-[#00ff41] hover:bg-[rgba(0,255,65,0.15)]"
-                                    : "bg-[rgba(0,255,65,0.03)] border-[#00ff41] hover:bg-[rgba(0,255,65,0.1)]"
+                                    : "bg-[rgba(0,255,65,0.035)] border-[#00ff4166] hover:border-[#00ff41] hover:bg-[rgba(0,255,65,0.09)]"
                             }`}
                             onClick={() => setSelectedContract(contract)}
                         >
+                            <div
+                                className={`absolute inset-y-0 left-0 w-1 ${
+                                    ready ? "bg-[#00ff41]" : "bg-[#00d4ff]"
+                                }`}
+                            />
                             <div className="flex items-start justify-between gap-2">
-                                <div className="text-[#00d4ff] font-bold leading-tight">
-                                    {getContractName(contract)}
+                                <div className="pl-1 flex min-w-0 items-center gap-2 text-[#00d4ff] font-bold leading-tight">
+                                    {contract.isRaceQuest &&
+                                        raceInfo &&
+                                        contract.requiredRace && (
+                                            <span
+                                                className="shrink-0 inline-flex items-center justify-center rounded-sm border px-1 py-0.5"
+                                                style={{
+                                                    borderColor: `${raceInfo.color}70`,
+                                                    backgroundColor: `${raceInfo.color}18`,
+                                                }}
+                                            >
+                                                <RaceSprite
+                                                    race={contract.requiredRace}
+                                                    size={22}
+                                                    title={t(
+                                                        `races.${contract.requiredRace}.plural`,
+                                                    )}
+                                                />
+                                            </span>
+                                        )}
+                                    <span className="min-w-0">
+                                        {contractName}
+                                    </span>
                                 </div>
                                 {ready && (
                                     <span className="shrink-0 text-[10px] font-bold text-[#050810] bg-[#00ff41] px-1.5 py-0.5 rounded-sm">
@@ -718,8 +799,8 @@ export function ContractsList() {
                                     </span>
                                 )}
                             </div>
-                            <div className="text-[11px] mt-1">
-                                {getStatusText(contract)}
+                            <div className="pl-1 text-[11px] mt-1 text-[#99aa99] leading-snug">
+                                {statusText}
                             </div>
                             {progress && (
                                 <ProgressBar
@@ -727,7 +808,7 @@ export function ContractsList() {
                                     total={progress.total}
                                 />
                             )}
-                            <div className="text-[#ffb000] text-xs mt-1">
+                            <div className="pl-1 mt-2 inline-flex border border-[#ffb00055] bg-[rgba(255,176,0,0.08)] px-1.5 py-0.5 text-[#ffb000] text-xs">
                                 {t("contracts.reward_short", {
                                     reward: contract.reward,
                                 })}
@@ -741,11 +822,27 @@ export function ContractsList() {
                 open={!!selectedContract}
                 onOpenChange={() => setSelectedContract(null)}
             >
-                <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md w-[calc(100%-2rem)] md:w-auto">
+                <DialogContent className="bg-[rgba(10,20,30,0.96)] border-2 border-[#00ff41] text-[#00ff41] max-w-lg w-[calc(100%-2rem)] md:w-auto">
                     <DialogHeader>
-                        <DialogTitle className="text-[#ffb000] font-['Orbitron']">
+                        <DialogTitle className="text-[#ffb000] font-['Orbitron'] flex items-center gap-2">
                             {selectedContract &&
-                                getContractName(selectedContract)}
+                                selectedContract.isRaceQuest &&
+                                selectedContract.requiredRace && (
+                                    <RaceSprite
+                                        race={selectedContract.requiredRace}
+                                        size={26}
+                                        title={t(
+                                            `races.${selectedContract.requiredRace}.plural`,
+                                        )}
+                                    />
+                                )}
+                            <span>
+                                {selectedContract &&
+                                    stripRaceQuestEmoji(
+                                        getContractName(selectedContract),
+                                        selectedContract.isRaceQuest,
+                                    )}
+                            </span>
                         </DialogTitle>
                         <DialogDescription className="sr-only">
                             {t("contracts.details_title")}
@@ -765,33 +862,33 @@ export function ContractsList() {
                             }
                             return (
                                 <div className="space-y-4 text-sm">
-                                    <div>
-                                        <span className="text-[#ffb000]">
-                                            {t("contracts.type")}:{" "}
+                                    <div className="inline-flex border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-2 py-1">
+                                        <span className="text-[#888] mr-1">
+                                            {t("contracts.type")}:
                                         </span>
-                                        <span className="text-[#00d4ff]">
+                                        <span className="text-[#00d4ff] font-bold">
                                             {details.type}
                                         </span>
                                     </div>
 
-                                    <div className="space-y-3">
+                                    <div className="space-y-2">
                                         {details.tasks.map((task, index) => (
                                             <div
                                                 key={index}
-                                                className="bg-[rgba(0,255,65,0.05)] border-l-2 border-[#ffb000] pl-3 py-1"
+                                                className="bg-[rgba(0,255,65,0.045)] border border-[#1a3320] border-l-[#ffb000] border-l-2 px-3 py-2"
                                             >
-                                                <div className="text-[#ffb000] text-xs">
+                                                <div className="text-[#ffb000] text-[10px] uppercase tracking-wide">
                                                     {task.label}:
                                                 </div>
-                                                <div className="text-[#00ff41]">
+                                                <div className="text-[#00ff41] leading-snug">
                                                     {task.value}
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
 
-                                    <div className="pt-4 border-t border-[#00ff41]">
-                                        <span className="text-[#00ff41] text-lg">
+                                    <div className="pt-4 border-t border-[#00ff4144]">
+                                        <span className="text-[#00ff41] text-lg font-bold">
                                             {t("contracts.reward_label")}{" "}
                                             {selectedContract.reward}₢
                                         </span>

@@ -50,18 +50,38 @@ function SectionHeader({
         <button
             type="button"
             onClick={onToggle}
-            className="w-full flex items-center gap-1 text-[10px] py-1 mb-1 cursor-pointer"
+            className="w-full flex items-center gap-1.5 text-[10px] py-1.5 mb-1 cursor-pointer group"
         >
-            <span style={{ color }}>{collapsed ? "▶" : "▼"}</span>
+            <span className="transition-transform group-hover:scale-110" style={{ color }}>
+                {collapsed ? "▶" : "▼"}
+            </span>
             <span className="font-bold tracking-wide" style={{ color }}>
                 {label}
             </span>
-            <span className="text-[#555]">({count})</span>
+            <span
+                className="rounded-sm border px-1 text-[9px] tabular-nums"
+                style={{ color, borderColor: `${color}55` }}
+            >
+                {count}
+            </span>
             <span
                 className="flex-1 ml-1 border-t border-dashed"
                 style={{ borderColor: `${color}33` }}
             />
         </button>
+    );
+}
+
+function CargoMetric({ label, value }: { label: string; value: number }) {
+    return (
+        <div className="min-w-0 border border-[#1a3320] bg-[rgba(0,0,0,0.22)] px-1.5 py-1">
+            <div className="text-[#00ff41] font-bold tabular-nums">
+                {value}
+            </div>
+            <div className="text-[#667] uppercase tracking-wide truncate">
+                {label}
+            </div>
+        </div>
     );
 }
 
@@ -141,14 +161,14 @@ export function CargoDisplay() {
         setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
 
     return (
-        <div>
+        <div className="space-y-3">
             {/* Capacity header + progress bar */}
-            <div className="mb-3">
-                <div className="flex justify-between text-xs mb-1">
-                    <span className="text-[#888]">
+            <div className="border border-[#00ff4144] bg-[rgba(0,255,65,0.035)] p-2.5">
+                <div className="flex justify-between text-xs mb-2">
+                    <span className="text-[#ffb000] font-bold uppercase tracking-wide">
                         {t("cargo.capacity_label")}
                     </span>
-                    <span style={{ color: barColor }} title={t("cargo.tons_title")}>
+                    <span className="font-bold tabular-nums" style={{ color: barColor }} title={t("cargo.tons_title")}>
                         {totalCargo}/{totalCapacity}т
                         {isOverflow && (
                             <span className="ml-1 text-[10px] animate-pulse">
@@ -157,7 +177,7 @@ export function CargoDisplay() {
                         )}
                     </span>
                 </div>
-                <div className="h-1.5 bg-[rgba(255,255,255,0.07)] rounded-full overflow-hidden">
+                <div className="h-2 bg-[rgba(255,255,255,0.07)] rounded-full overflow-hidden">
                     <div
                         className="h-full rounded-full transition-all duration-300"
                         style={{
@@ -167,6 +187,12 @@ export function CargoDisplay() {
                         }}
                     />
                 </div>
+                <div className="mt-2 grid grid-cols-4 gap-1 text-center text-[10px]">
+                    <CargoMetric label={t("cargo.section_contracts")} value={contractCargo} />
+                    <CargoMetric label={t("cargo.section_trade")} value={tradeCargo} />
+                    <CargoMetric label={t("cargo.section_modules")} value={moduleItems.length} />
+                    <CargoMetric label={t("cargo.section_probes")} value={probes} />
+                </div>
             </div>
 
             {totalCargo === 0 ? (
@@ -174,7 +200,7 @@ export function CargoDisplay() {
                     {t("cargo.hold_empty")}
                 </div>
             ) : (
-                <div>
+                <div className="space-y-2">
                     {/* CRAFTED WEAPONS */}
                     {craftedWeapons.length > 0 && (
                         <div>

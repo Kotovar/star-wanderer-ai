@@ -55,7 +55,7 @@ export function CrewList() {
 
     return (
         <>
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {crew.map((member) => {
                     const expNeeded = (member.level || 1) * 100;
                     const expPercent = Math.min(
@@ -78,7 +78,7 @@ export function CrewList() {
                     return (
                         <div
                             key={member.id}
-                            className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-1.5 text-xs cursor-pointer transition-all hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_8px_rgba(0,255,65,0.4)] flex flex-col gap-1"
+                            className="group bg-[rgba(0,255,65,0.045)] border border-[#00ff4155] p-2 text-xs cursor-pointer transition-all hover:border-[#00ff41] hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_10px_rgba(0,255,65,0.32)] flex flex-col gap-1.5"
                             onClick={() => setSelectedCrew(member)}
                         >
                             {/* Name row */}
@@ -95,13 +95,13 @@ export function CrewList() {
                                     {member.name}
                                 </span>
                                 {member.movedThisTurn && (
-                                    <span className="text-[#ff0040] `shrink-0 text-[9px]">
+                                    <span className="text-[#ff0040] shrink-0 text-[9px]">
                                         ●
                                     </span>
                                 )}
                                 {member.augmentation && (
                                     <span
-                                        className="`shrink-0 text-[9px]"
+                                        className="shrink-0 text-[9px]"
                                         title={
                                             AUGMENTATIONS[member.augmentation]
                                                 ?.name
@@ -114,14 +114,17 @@ export function CrewList() {
                             </div>
 
                             {/* Profession + level + assignment */}
-                            <div className="text-[#ffb000] text-[10px] truncate leading-tight">
-                                {t(`professions.${member.profession}`)}
-                                {member.level ? ` LV${member.level}` : ""}
+                            <div className="flex items-center justify-between gap-1 text-[10px] leading-tight">
+                                <span className="text-[#ffb000] truncate">
+                                    {t(`professions.${member.profession}`)}
+                                </span>
+                                <span className="shrink-0 text-[#00d4ff] tabular-nums">
+                                    LV{member.level || 1}
+                                </span>
+                            </div>
+                            <div className="text-[#555] text-[10px] truncate leading-tight min-h-3">
                                 {currentAssignment && (
-                                    <span className="text-[#555]">
-                                        {" "}
-                                        · {currentAssignment}
-                                    </span>
+                                    <span>{currentAssignment}</span>
                                 )}
                             </div>
 
