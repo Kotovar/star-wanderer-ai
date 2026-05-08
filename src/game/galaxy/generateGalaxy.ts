@@ -89,7 +89,9 @@ export const generateGalaxy = (): Sector[] => {
             if (!isBlackHole) {
                 ensureColonizedPlanet(sector);
                 ensureStation(sector);
-                ensureBoss(sector);
+                if (sector.id !== 0) {
+                    ensureBoss(sector);
+                }
             }
 
             // Позиционирование локаций на сетке
@@ -101,7 +103,9 @@ export const generateGalaxy = (): Sector[] => {
     });
 
     // Постобработка ЧД-секторов: 1 The Eternal на всю галактику, остальные — случайный босс
-    const bhSectors = sectors.filter((s) => s.star?.type === "blackhole");
+    const bhSectors = sectors.filter(
+        (s) => s.id !== 0 && s.star?.type === "blackhole",
+    );
     if (bhSectors.length > 0) {
         const eternalIdx = Math.floor(Math.random() * bhSectors.length);
         bhSectors.forEach((sector, i) => {

@@ -520,6 +520,7 @@ export function CombatPanel() {
             shields={currentCombat.enemy.shields}
             hitFlash={enemyFlash}
             selectedModuleId={activeBayTargetId ?? undefined}
+            damageHit={lastEnemyHit ?? null}
           />
           {activeBayId !== null && (
             <div className="text-[10px] text-[#00d4ff] mt-2 text-center animate-pulse">

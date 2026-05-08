@@ -6,8 +6,8 @@ import { TRADE_GOODS } from "@/game/constants/goods";
 // ─── Константы ────────────────────────────────────────────────────────────────
 
 /** Первый кризис приходит в случайном окне, а не в фиксированный ход */
-export const FIRST_CRISIS_TURN_MIN = 30;
-export const FIRST_CRISIS_TURN_MAX = 42;
+export const FIRST_CRISIS_TURN_MIN = 100;
+export const FIRST_CRISIS_TURN_MAX = 120;
 
 /** Интервал между кризисами тоже плавает */
 export const CRISIS_INTERVAL_MIN = 24;

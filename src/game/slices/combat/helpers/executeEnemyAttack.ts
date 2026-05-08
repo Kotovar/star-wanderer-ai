@@ -59,6 +59,25 @@ const CREW_PRESENCE_BONUS = 10;
 // Random variance
 const PRIORITY_VARIANCE = 20;
 
+const createCombatHitEventId = () => Date.now() + Math.random();
+
+function recordPlayerMiss(
+    set: (fn: (s: GameState) => void) => void,
+    targetModule: Module,
+) {
+    set((s) => {
+        if (!s.currentCombat) return;
+        s.currentCombat.lastPlayerHit = {
+            eventId: createCombatHitEventId(),
+            moduleId: targetModule.id,
+            moduleName: targetModule.name,
+            shieldDamage: 0,
+            hullDamage: 0,
+            missed: true,
+        };
+    });
+}
+
 /**
  * Обрабатывает атаку врага по кораблю игрока
  */
@@ -93,9 +112,11 @@ export function executeEnemyAttack(
 
     // Apply guaranteed crit and multi_hit multipliers
     let finalDamage = eDmg;
+    let isCrit = false;
     if (bossModifiers) {
         if (bossModifiers.isGuaranteedCrit) {
             finalDamage = Math.floor(finalDamage * 1.5);
+            isCrit = true;
             get().addLog(`💥 Гарантированный крит босса!`, "error");
         }
         finalDamage = Math.floor(finalDamage * bossModifiers.multiHitCount);
@@ -114,6 +135,7 @@ export function executeEnemyAttack(
             `✈️ ${pilot ? `Пилот ${pilot.name} уклонился` : "Корабль уклонился"} от атаки! (${Math.round(evasionChance * 100)}% шанс)`,
             "info",
         );
+        recordPlayerMiss(set, targetModule);
         if (pilot) get().gainExp(pilot, PILOT_EVASION_COMBAT_EXP);
         return;
     }
@@ -130,6 +152,7 @@ export function executeEnemyAttack(
             (scoutWithSabotage.level ?? 1) * 0.01;
         if (Math.random() < sabotageChance) {
             get().addLog(`🔧 Диверсия! Враг промахнулся!`, "info");
+            recordPlayerMiss(set, targetModule);
             return;
         }
     }
@@ -149,6 +172,7 @@ export function executeEnemyAttack(
             `🔷 Фазовый щит! Атака полностью поглощена! (20% шанс)`,
             "info",
         );
+        recordPlayerMiss(set, targetModule);
         return;
     }
 
@@ -161,6 +185,7 @@ export function executeEnemyAttack(
         targetModule,
         bossModifiers?.shieldPiercePercent ?? 0,
         bossModifiers?.ignoreDefense ?? false,
+        isCrit,
     );
 
     // Increment boss attack count
@@ -360,6 +385,7 @@ function applyDamageToShip(
     targetModule: Module,
     shieldPiercePercent = 0,
     ignoreDefense = false,
+    isCrit = false,
 ) {
     // Split damage: piercing portion bypasses shields
     const piercingDamage =
@@ -367,6 +393,8 @@ function applyDamageToShip(
             ? Math.floor((enemyDamage * shieldPiercePercent) / 100)
             : 0;
     const normalDamage = enemyDamage - piercingDamage;
+    let shieldDmgDealt = 0;
+    let hullDmgDealt = 0;
 
     // Apply piercing damage directly to module
     if (piercingDamage > 0) {
@@ -374,7 +402,7 @@ function applyDamageToShip(
             `🔱 Пробитие щитов: ${piercingDamage} урона игнорирует щиты`,
             "warning",
         );
-        applyModuleDamage(
+        hullDmgDealt += applyModuleDamage(
             state,
             set,
             get,
@@ -385,9 +413,6 @@ function applyDamageToShip(
     }
 
     // Apply normal damage through shields
-    let shieldDmgDealt = 0;
-    let hullDmgDealt = piercingDamage;
-
     if (normalDamage > 0) {
         if (state.ship.shields > 0) {
             const sDmg = Math.min(state.ship.shields, normalDamage);
@@ -399,8 +424,7 @@ function applyDamageToShip(
 
             const overflow = normalDamage - sDmg;
             if (overflow > 0) {
-                hullDmgDealt = overflow;
-                applyModuleDamage(
+                hullDmgDealt += applyModuleDamage(
                     state,
                     set,
                     get,
@@ -410,8 +434,7 @@ function applyDamageToShip(
                 );
             }
         } else {
-            hullDmgDealt = normalDamage;
-            applyModuleDamage(
+            hullDmgDealt += applyModuleDamage(
                 state,
                 set,
                 get,
@@ -426,10 +449,12 @@ function applyDamageToShip(
     set((s) => {
         if (!s.currentCombat) return;
         s.currentCombat.lastPlayerHit = {
+            eventId: createCombatHitEventId(),
             moduleId: targetModule.id,
             moduleName: targetModule.name,
             shieldDamage: shieldDmgDealt,
             hullDamage: hullDmgDealt,
+            isCrit,
         };
     });
 }
@@ -445,7 +470,7 @@ function applyModuleDamage(
     damage: number,
     targetModule: Module,
     forceIgnoreDefense = false,
-) {
+): number {
     // Overclock removes armor of the weaponbay the engineer is in
     const hasOverclockInModule = state.crew.some(
         (c) =>
@@ -532,6 +557,8 @@ function applyModuleDamage(
     }
 
     damageCrewInModule(targetModule.id, crewDmg, wasDestroyed, set, get, state);
+
+    return reducedDamage;
 }
 
 /**

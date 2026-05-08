@@ -18,7 +18,7 @@ export function applyModuleDamage(
     damage: number,
     targetModule: Module,
     ignoreDefense = false,
-) {
+): number {
     // Overclock removes armor of the weaponbay the engineer is in
     const hasOverclockInModule = state.crew.some(
         (c) =>
@@ -120,6 +120,8 @@ export function applyModuleDamage(
         get,
         state,
     );
+
+    return reducedDamage;
 }
 
 /**

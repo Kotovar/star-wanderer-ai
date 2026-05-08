@@ -59,6 +59,25 @@ interface DamageResult {
   logs: string[];
 }
 
+const createCombatHitEventId = () => Date.now() + Math.random();
+
+function recordEnemyMiss(
+  set: (fn: (s: GameState) => void) => void,
+  target: NonNullable<ReturnType<typeof resolveTarget>>,
+) {
+  set((s) => {
+    if (!s.currentCombat) return;
+    s.currentCombat.lastEnemyHit = {
+      eventId: createCombatHitEventId(),
+      moduleId: target.id,
+      moduleName: target.name,
+      shieldDamage: 0,
+      hullDamage: 0,
+      missed: true,
+    };
+  });
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
@@ -495,7 +514,10 @@ function applyDamageToEnemy(
   enemyShields: number,
   combatFlags: CombatFlags,
   weaponCounts: WeaponCounts,
+  isCrit = false,
 ) {
+  let finalModuleDamage = 0;
+
   // Apply shield damage
   if (damage.totalShieldDamage > 0) {
     const newShields = Math.max(0, enemyShields - damage.totalShieldDamage);
@@ -582,6 +604,7 @@ function applyDamageToEnemy(
       1,
       damage.totalModuleDamage - moduleDefense,
     );
+    finalModuleDamage = finalDamage;
 
     set((s) => {
       if (!s.currentCombat) return;
@@ -596,6 +619,20 @@ function applyDamageToEnemy(
       "combat",
     );
     playSound("damage");
+  }
+
+  if (damage.totalShieldDamage > 0 || finalModuleDamage > 0) {
+    set((s) => {
+      if (!s.currentCombat) return;
+      s.currentCombat.lastEnemyHit = {
+        eventId: createCombatHitEventId(),
+        moduleId: tgtMod.id,
+        moduleName: tgtMod.name,
+        shieldDamage: damage.totalShieldDamage,
+        hullDamage: finalModuleDamage,
+        isCrit,
+      };
+    });
   }
 }
 
@@ -689,6 +726,7 @@ export function executePlayerAttack(
 
   // 2a. Boss evasion_boost: entire attack evaded
   if (checkBossEvasionBoost(currentState, get)) {
+    recordEnemyMiss(set, tgtMod);
     handleEnemyCounterAttack(currentState, set, get);
     return;
   }
@@ -699,6 +737,7 @@ export function executePlayerAttack(
     : [];
   if (currentState.currentCombat.enemy.isBoss && checkBossModuleDodge(aliveBossMods, get)) {
     get().addLog(`⚡ Модуль "${tgtMod.name}" уклонился от атаки!`, "warning");
+    recordEnemyMiss(set, tgtMod);
     handleEnemyCounterAttack(currentState, set, get);
     return;
   }
@@ -777,6 +816,7 @@ export function executePlayerAttack(
   if (damage.totalShieldDamage === 0 && damage.totalModuleDamage === 0) {
     damage.logs.forEach((log) => get().addLog(log, "combat"));
     get().addLog("Все выстрелы промахнулись!", "warning");
+    recordEnemyMiss(set, tgtMod);
     handleEnemyCounterAttack(currentState, set, get);
     return;
   }
@@ -790,6 +830,7 @@ export function executePlayerAttack(
     enemyShields,
     combatFlags,
     weaponCounts,
+    crit.isCrit && damageMultiplier > 1,
   );
 
   // 7a. Boss take-damage passives (damage_absorb, damage_mirror)
@@ -949,6 +990,10 @@ export function executePlayerAttackWithBayTargets(
 
   // 2. Boss evasion check (entire salvo)
   if (checkBossEvasionBoost(currentState, get)) {
+    const fallbackTarget = currentState.currentCombat.enemy.modules.find(
+      (m) => m.health > 0,
+    );
+    if (fallbackTarget) recordEnemyMiss(set, fallbackTarget);
     handleEnemyCounterAttack(currentState, set, get);
     return;
   }
@@ -987,9 +1032,6 @@ export function executePlayerAttackWithBayTargets(
   let remainingShields = currentState.currentCombat.enemy.shields;
   const droneStacks = currentState.currentCombat.droneStacks ?? 0;
   let anyHit = false;
-  let totalShieldDamageDealt = 0;
-  let lastHitModuleId: number | null = null;
-  let lastHitModuleName = "";
 
   for (const bay of activeBays) {
     const combatNow = get().currentCombat;
@@ -1015,6 +1057,7 @@ export function executePlayerAttackWithBayTargets(
       : [];
     if (combatNow.enemy.isBoss && checkBossModuleDodge(aliveBossMods, get)) {
       get().addLog(`⚡ Модуль "${tgtMod.name}" уклонился!`, "warning");
+      recordEnemyMiss(set, tgtMod);
       continue;
     }
 
@@ -1059,17 +1102,22 @@ export function executePlayerAttackWithBayTargets(
 
     if (damage.totalShieldDamage === 0 && damage.totalModuleDamage === 0) {
       damage.logs.forEach((log) => get().addLog(log, "combat"));
+      recordEnemyMiss(set, tgtMod);
       continue;
     }
 
     anyHit = true;
-    totalShieldDamageDealt += damage.totalShieldDamage;
-    if (damage.totalModuleDamage > 0) {
-      lastHitModuleId = tgtMod.id;
-      lastHitModuleName = tgtMod.name;
-    }
 
-    applyDamageToEnemy(set, get, tgtMod, damage, shieldsBeforeBay, combatFlags, bayWeapons);
+    applyDamageToEnemy(
+      set,
+      get,
+      tgtMod,
+      damage,
+      shieldsBeforeBay,
+      combatFlags,
+      bayWeapons,
+      bayCrit.isCrit && bayDamageMultiplier > 1,
+    );
 
     // Boss take-damage effects
     if (combatNow.enemy.isBoss && damage.totalModuleDamage > 0) {
@@ -1138,19 +1186,6 @@ export function executePlayerAttackWithBayTargets(
         return;
       }
     }
-  }
-
-  // Record last hit for UI animations
-  if (lastHitModuleId !== null) {
-    set((s) => {
-      if (!s.currentCombat) return;
-      s.currentCombat.lastEnemyHit = {
-        moduleId: lastHitModuleId,
-        moduleName: lastHitModuleName,
-        shieldDamage: totalShieldDamageDealt,
-        hullDamage: 1,
-      };
-    });
   }
 
   if (!anyHit) {

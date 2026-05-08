@@ -12,6 +12,30 @@ import {
     MODULE_TARGET_PRIORITY,
 } from "./combatConstants";
 
+const createCombatHitEventId = () => Date.now() + Math.random();
+
+function recordPlayerHit(
+    set: (fn: (s: GameState) => void) => void,
+    targetModule: Module,
+    shieldDamage: number,
+    hullDamage: number,
+    isCrit = false,
+    missed = false,
+) {
+    set((s) => {
+        if (!s.currentCombat) return;
+        s.currentCombat.lastPlayerHit = {
+            eventId: createCombatHitEventId(),
+            moduleId: targetModule.id,
+            moduleName: targetModule.name,
+            shieldDamage,
+            hullDamage,
+            isCrit,
+            missed,
+        };
+    });
+}
+
 /**
  * Handles enemy counter-attack after player attack
  */
@@ -50,13 +74,20 @@ export function handleEnemyCounterAttack(
 
     // Apply guaranteed crit and multi_hit
     let finalDamage = eDmg;
+    let isCrit = false;
     if (bossModifiers) {
         if (bossModifiers.isGuaranteedCrit) {
             finalDamage = Math.floor(finalDamage * 1.5);
+            isCrit = true;
             get().addLog(`💥 Гарантированный крит босса!`, "error");
         }
         finalDamage = Math.floor(finalDamage * bossModifiers.multiHitCount);
     }
+
+    // Select target module
+    const activeMods = state.ship.modules.filter((m) => m.health > 0);
+    const tgt = selectTargetModule(activeMods, get);
+    if (!tgt) return;
 
     // Evasion check
     const evasionChance = getTotalEvasion(state) / 100;
@@ -72,6 +103,7 @@ export function handleEnemyCounterAttack(
             `✈️ ${pilot ? `Пилот ${pilot.name} уклонился` : `Корабль уклонился`} от атаки! ${evasionSource}`,
             "info",
         );
+        recordPlayerHit(set, tgt, 0, 0, false, true);
         if (pilot) get().gainExp(pilot, PILOT_EVASION_COMBAT_EXP);
         return;
     }
@@ -86,14 +118,10 @@ export function handleEnemyCounterAttack(
             (scoutWithSabotage.level ?? 1) * 0.01;
         if (Math.random() < sabotageChance) {
             get().addLog(`🔧 Диверсия! Враг промахнулся!`, "info");
+            recordPlayerHit(set, tgt, 0, 0, false, true);
             return;
         }
     }
-
-    // Select target module
-    const activeMods = state.ship.modules.filter((m) => m.health > 0);
-    const tgt = selectTargetModule(activeMods, get);
-    if (!tgt) return;
 
     // Mirror Shield check
     const mirrorShield = findActiveArtifact(
@@ -117,6 +145,7 @@ export function handleEnemyCounterAttack(
         Math.random() < 0.2
     ) {
         get().addLog(`🔷 Фазовый щит! Атака полностью поглощена! (20% шанс)`, "info");
+        recordPlayerHit(set, tgt, 0, 0, false, true);
         return;
     }
 
@@ -124,9 +153,18 @@ export function handleEnemyCounterAttack(
     const shieldPierce = bossModifiers?.shieldPiercePercent ?? 0;
     const ignoreDefense = bossModifiers?.ignoreDefense ?? false;
     if (state.ship.shields > 0) {
-        applyDamageWithShields(state, set, get, finalDamage, tgt, shieldPierce, ignoreDefense);
+        applyDamageWithShields(
+            state,
+            set,
+            get,
+            finalDamage,
+            tgt,
+            shieldPierce,
+            ignoreDefense,
+            isCrit,
+        );
     } else {
-        applyDamageNoShields(state, set, get, finalDamage, tgt, ignoreDefense);
+        applyDamageNoShields(state, set, get, finalDamage, tgt, ignoreDefense, isCrit);
     }
 
     // Increment boss attack count
@@ -279,28 +317,48 @@ export function applyDamageWithShields(
     tgt: Module,
     shieldPiercePercent = 0,
     ignoreDefense = false,
+    isCrit = false,
 ) {
     // Split damage: piercing portion bypasses shields
     const piercingDamage = shieldPiercePercent > 0
         ? Math.floor((eDmg * shieldPiercePercent) / 100)
         : 0;
     const normalDamage = eDmg - piercingDamage;
+    let hullDamageDealt = 0;
 
     if (piercingDamage > 0) {
         get().addLog(`🔱 Пробитие щитов: ${piercingDamage} урона игнорирует щиты`, "warning");
-        applyModuleDamage(state, set, get, piercingDamage, tgt);
+        hullDamageDealt += applyModuleDamage(
+            state,
+            set,
+            get,
+            piercingDamage,
+            tgt,
+        );
     }
+
+    let shieldDamageDealt = 0;
 
     if (normalDamage > 0) {
         const sDmg = Math.min(get().ship.shields, normalDamage);
+        shieldDamageDealt = sDmg;
         set((s) => ({ ship: { ...s.ship, shields: s.ship.shields - sDmg } }));
         get().addLog(`Враг по щитам: -${sDmg}`, "warning");
 
         const overflow = normalDamage - sDmg;
         if (overflow > 0) {
-            applyModuleDamage(state, set, get, overflow, tgt, ignoreDefense);
+            hullDamageDealt += applyModuleDamage(
+                state,
+                set,
+                get,
+                overflow,
+                tgt,
+                ignoreDefense,
+            );
         }
     }
+
+    recordPlayerHit(set, tgt, shieldDamageDealt, hullDamageDealt, isCrit);
 }
 
 /**
@@ -351,6 +409,15 @@ export function applyDamageNoShields(
     eDmg: number,
     tgt: Module,
     ignoreDefense = false,
+    isCrit = false,
 ) {
-    applyModuleDamage(state, set, get, eDmg, tgt, ignoreDefense);
+    const actualDamage = applyModuleDamage(
+        state,
+        set,
+        get,
+        eDmg,
+        tgt,
+        ignoreDefense,
+    );
+    recordPlayerHit(set, tgt, 0, actualDamage, isCrit);
 }

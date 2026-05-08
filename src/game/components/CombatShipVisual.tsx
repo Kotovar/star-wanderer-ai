@@ -17,6 +17,14 @@ interface CombatShipVisualProps {
   shields?: number;
   hitFlash?: "shield" | "hull" | null;
   selectedModuleId?: number;
+  damageHit?: {
+    eventId?: number;
+    moduleId: number;
+    shieldDamage: number;
+    hullDamage: number;
+    isCrit?: boolean;
+    missed?: boolean;
+  } | null;
 }
 
 export function CombatShipVisual({
@@ -29,6 +37,7 @@ export function CombatShipVisual({
   shields,
   hitFlash,
   selectedModuleId,
+  damageHit,
 }: CombatShipVisualProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { currentLanguage } = useTranslation();
@@ -242,6 +251,24 @@ export function CombatShipVisual({
     });
   }, [modules, crew, isEnemy, isBoss, currentLanguage, selectedModuleId]);
 
+  const visualGridSize = Math.ceil(Math.sqrt(modules.length));
+  const visualCellSize = 120;
+  const visualGap = 4;
+  const visualCanvasSize =
+    visualGridSize * (visualCellSize + visualGap) - visualGap;
+  const hitModuleIndex =
+    damageHit && (damageHit.hullDamage > 0 || damageHit.missed)
+      ? modules.findIndex((mod) => mod.id === damageHit.moduleId)
+      : -1;
+  const hitModuleCol =
+    hitModuleIndex >= 0 ? hitModuleIndex % visualGridSize : 0;
+  const hitModuleRow =
+    hitModuleIndex >= 0 ? Math.floor(hitModuleIndex / visualGridSize) : 0;
+  const hitModuleCenterX =
+    hitModuleCol * (visualCellSize + visualGap) + visualCellSize / 2;
+  const hitModuleCenterY =
+    hitModuleRow * (visualCellSize + visualGap) + visualCellSize / 2;
+
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!onModuleClick) return;
     const canvas = canvasRef.current;
@@ -314,6 +341,42 @@ export function CombatShipVisual({
               animation: "combatHitFlash 0.5s ease-out forwards",
             }}
           />
+        )}
+        {damageHit && damageHit.shieldDamage > 0 && (
+          <div
+            key={`shield-${damageHit.eventId}`}
+            className={`combat-damage-number pointer-events-none absolute left-1/2 top-2 z-10 -translate-x-1/2 font-['Orbitron'] text-[#66aaff] ${
+              damageHit.isCrit ? "text-xl font-black" : "text-sm font-bold"
+            }`}
+            style={{
+              textShadow: "0 0 8px #0080ff, 0 0 14px #0080ff",
+            }}
+          >
+            -{damageHit.shieldDamage}
+          </div>
+        )}
+        {damageHit &&
+          (damageHit.hullDamage > 0 || damageHit.missed) &&
+          hitModuleIndex >= 0 && (
+          <div
+            key={`hull-${damageHit.eventId}`}
+            className={`combat-damage-number pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2 font-['Orbitron'] ${
+              damageHit.missed
+                ? "text-[10px] font-bold text-[#889988]"
+                : damageHit.isCrit
+                  ? "text-xl font-black text-[#ffccd5]"
+                  : "text-sm font-bold text-[#ffccd5]"
+            }`}
+            style={{
+              left: `${(hitModuleCenterX / visualCanvasSize) * 100}%`,
+              top: `${(hitModuleCenterY / visualCanvasSize) * 100}%`,
+              textShadow: damageHit.missed
+                ? "0 0 8px #445544"
+                : "0 0 8px #ff0040, 0 0 14px #ff0040",
+            }}
+          >
+            {damageHit.missed ? "ПРОМАХ" : `-${damageHit.hullDamage}`}
+          </div>
         )}
       </div>
     </div>

@@ -7,12 +7,23 @@ import type { Module, CrewMember, Weapon } from "@/game/types";
 import { MODULE_TYPES } from "@/game/constants/modules";
 import { useTranslation } from "@/lib/useTranslation";
 import { getModuleTranslation } from "@/lib/moduleTranslations";
+import { ProfessionSprite } from "./ProfessionSprite";
 
 const BASE_CELL_SIZE = 60;
 
 type HitMarker = {
+    eventId?: number;
     moduleId: number;
     amount: number;
+    isCrit?: boolean;
+    missed?: boolean;
+};
+
+type ShieldHitMarker = {
+    eventId?: number;
+    amount: number;
+    isCrit?: boolean;
+    missed?: boolean;
 };
 
 interface CombatShipGridProps {
@@ -33,9 +44,14 @@ export function CombatShipGrid({
 
     const [flashType, setFlashType] = useState<"shield" | "hull" | null>(null);
     const [hitMarker, setHitMarker] = useState<HitMarker | null>(null);
+    const [shieldHitMarker, setShieldHitMarker] =
+        useState<ShieldHitMarker | null>(null);
 
     useEffect(() => {
         if (!lastPlayerHit) return;
+        if (lastPlayerHit.missed) {
+            return;
+        }
         const type = lastPlayerHit.shieldDamage > 0 ? "shield" : "hull";
         const raf = requestAnimationFrame(() => setFlashType(type));
         const endTimer = setTimeout(() => setFlashType(null), 600);
@@ -46,14 +62,37 @@ export function CombatShipGrid({
     }, [lastPlayerHit]);
 
     useEffect(() => {
-        if (!lastPlayerHit || lastPlayerHit.hullDamage <= 0) return;
+        if (
+            !lastPlayerHit ||
+            (lastPlayerHit.hullDamage <= 0 && !lastPlayerHit.missed)
+        )
+            return;
         const raf = requestAnimationFrame(() =>
             setHitMarker({
+                eventId: lastPlayerHit.eventId,
                 moduleId: lastPlayerHit.moduleId,
                 amount: lastPlayerHit.hullDamage,
+                isCrit: lastPlayerHit.isCrit,
+                missed: lastPlayerHit.missed,
             }),
         );
         const endTimer = setTimeout(() => setHitMarker(null), 850);
+        return () => {
+            cancelAnimationFrame(raf);
+            clearTimeout(endTimer);
+        };
+    }, [lastPlayerHit]);
+
+    useEffect(() => {
+        if (!lastPlayerHit || lastPlayerHit.shieldDamage <= 0) return;
+        const raf = requestAnimationFrame(() =>
+            setShieldHitMarker({
+                eventId: lastPlayerHit.eventId,
+                amount: lastPlayerHit.shieldDamage,
+                isCrit: lastPlayerHit.isCrit,
+            }),
+        );
+        const endTimer = setTimeout(() => setShieldHitMarker(null), 850);
         return () => {
             cancelAnimationFrame(raf);
             clearTimeout(endTimer);
@@ -99,7 +138,7 @@ export function CombatShipGrid({
 
     return (
         <div
-            className="relative"
+            className="relative w-full max-w-[368px]"
             style={{ boxShadow: shieldGlow, transition: "box-shadow 0.4s ease" }}
         >
         {flashType && (
@@ -113,6 +152,21 @@ export function CombatShipGrid({
                     animation: "combatHitFlash 0.5s ease-out forwards",
                 }}
             />
+        )}
+        {shieldHitMarker !== null && (
+            <div
+                key={shieldHitMarker.eventId}
+                className={`combat-damage-number pointer-events-none absolute left-1/2 top-2 z-20 -translate-x-1/2 font-['Orbitron'] text-[#66aaff] ${
+                    shieldHitMarker.isCrit
+                        ? "text-xl font-black"
+                        : "text-sm font-bold"
+                }`}
+                style={{
+                    textShadow: "0 0 8px #0080ff, 0 0 14px #0080ff",
+                }}
+            >
+                -{shieldHitMarker.amount}
+            </div>
         )}
         <div
             className={`select-none transition-colors overflow-hidden max-w-full w-full ${
@@ -296,10 +350,21 @@ function ModuleRenderer({
                     severity={healthPct < 0.3 ? "critical" : "damaged"}
                 />
             )}
-            {hitMarker && <HitPulse x={x} y={y} w={w} h={h} amount={hitMarker.amount} />}
+            {hitMarker && (
+                <HitPulse
+                    key={hitMarker.eventId}
+                    x={x}
+                    y={y}
+                    w={w}
+                    h={h}
+                    amount={hitMarker.amount}
+                    isCrit={hitMarker.isCrit}
+                    missed={hitMarker.missed}
+                />
+            )}
 
             {crewInModule.length > 0 && (
-                <CrewIcons crew={crewInModule} x={x} y={y} h={h} />
+                <CrewIcons crew={crewInModule} x={x} y={y} w={w} h={h} />
             )}
         </g>
     );
@@ -491,39 +556,45 @@ function HitPulse({
     w,
     h,
     amount,
+    isCrit = false,
+    missed = false,
 }: {
     x: number;
     y: number;
     w: number;
     h: number;
     amount: number;
+    isCrit?: boolean;
+    missed?: boolean;
 }) {
     return (
         <>
-            <rect
-                x={x + 1}
-                y={y + 1}
-                width={w - 2}
-                height={h - 2}
-                fill="rgba(255,0,64,0.28)"
-                stroke="#ff0040"
-                strokeWidth={3}
-                className="combat-module-hit-pulse"
-            />
+            {!missed && (
+                <rect
+                    x={x + 1}
+                    y={y + 1}
+                    width={w - 2}
+                    height={h - 2}
+                    fill="rgba(255,0,64,0.28)"
+                    stroke="#ff0040"
+                    strokeWidth={3}
+                    className="combat-module-hit-pulse"
+                />
+            )}
             <text
                 x={x + w / 2}
                 y={y + h / 2}
-                fill="#ffccd5"
+                fill={missed ? "#889988" : "#ffccd5"}
                 stroke="#050810"
                 strokeWidth={2}
                 paintOrder="stroke"
-                fontSize="14"
+                fontSize={missed ? "9" : isCrit ? "18" : "14"}
                 fontFamily="Share Tech Mono"
                 textAnchor="middle"
-                fontWeight="bold"
+                fontWeight={isCrit ? "900" : "bold"}
                 className="combat-damage-number"
             >
-                -{amount}
+                {missed ? "ПРОМАХ" : `-${amount}`}
             </text>
         </>
     );
@@ -533,28 +604,43 @@ function CrewIcons({
     crew,
     x,
     y,
+    w,
     h,
 }: {
     crew: CrewMember[];
     x: number;
     y: number;
+    w: number;
     h: number;
 }) {
-    const iconSize = 10;
-    const startX = x + 10;
-    const startY = y + h - iconSize - 18;
+    const iconSize = 14;
+    const iconGap = 2;
+    const iconPadding = 5;
+    const iconsPerRow = Math.max(
+        1,
+        Math.floor((w - iconPadding * 2) / (iconSize + iconGap)),
+    );
+    const rowHeight = iconSize + iconGap;
+    const rows = Math.ceil(crew.length / iconsPerRow);
 
     return (
         <>
-            {crew.map((c, idx) => (
-                <CrewIcon
-                    key={c.id}
-                    crewMember={c}
-                    x={startX + idx * (iconSize + 4)}
-                    y={startY}
-                    size={iconSize}
-                />
-            ))}
+            {crew.map((c, idx) => {
+                const col = idx % iconsPerRow;
+                const row = Math.floor(idx / iconsPerRow);
+                const iconX = x + iconPadding + col * (iconSize + iconGap);
+                const iconY = y + h - 14 - rowHeight * (rows - row);
+
+                return (
+                    <CrewIcon
+                        key={c.id}
+                        crewMember={c}
+                        x={iconX}
+                        y={iconY}
+                        size={iconSize}
+                    />
+                );
+            })}
         </>
     );
 }
@@ -571,84 +657,68 @@ function CrewIcon({
     size: number;
 }) {
     const race = RACES[crewMember.race];
-    const color = race?.color || "#00ff41";
-    const cx = x + size / 2;
-    const cy = y + size / 2;
-    const s = size / 2;
+    const raceColor = race?.color || "#00ff41";
+    const badgeR = size * 0.19;
+    const hasAssignment = !!(
+        crewMember.combatAssignment || crewMember.assignment
+    );
 
     return (
         <g
             className="select-none"
             style={{ userSelect: "none", WebkitUserSelect: "none" }}
         >
-            <path
-                d={getProfessionPath(cx, cy, s, crewMember.profession)}
-                fill={color}
-                className="select-none"
+            <ProfessionSprite
+                race={crewMember.race}
+                profession={crewMember.profession}
+                x={x}
+                y={y}
+                size={size}
+                title={crewMember.name}
             />
-            {crewMember.assignment && (
+
+            {hasAssignment && (
                 <circle
-                    cx={cx}
-                    cy={cy}
-                    r={s}
-                    fill="none"
-                    stroke="#ffb000"
-                    strokeWidth={2}
+                    cx={x + size * 0.22}
+                    cy={y + size - size * 0.22}
+                    r={size * 0.16}
+                    fill="#ffb000"
                     className="select-none"
                 />
             )}
-            <text
-                x={cx}
-                y={cy}
-                fill="#050810"
-                fontSize="4"
-                fontFamily="Share Tech Mono"
-                textAnchor="middle"
-                fontWeight="bold"
-                dominantBaseline="middle"
-                className="select-none"
-                style={{ userSelect: "none", WebkitUserSelect: "none" }}
-            >
-                {crewMember.name.charAt(0).toUpperCase()}
-            </text>
+
+            {crewMember.level > 1 && (
+                <g className="select-none">
+                    <circle
+                        cx={x + size - badgeR}
+                        cy={y + badgeR}
+                        r={badgeR}
+                        fill="#050810"
+                    />
+                    <circle
+                        cx={x + size - badgeR}
+                        cy={y + badgeR}
+                        r={badgeR}
+                        fill="none"
+                        stroke={raceColor}
+                        strokeWidth={0.7}
+                    />
+                    <text
+                        x={x + size - badgeR}
+                        y={y + badgeR}
+                        fill={raceColor}
+                        fontSize={size * 0.25}
+                        fontFamily="Share Tech Mono"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fontWeight="bold"
+                        className="select-none"
+                        style={{ userSelect: "none", WebkitUserSelect: "none" }}
+                    >
+                        {crewMember.level}
+                    </text>
+                </g>
+            )}
         </g>
     );
-}
-
-function getProfessionPath(
-    cx: number,
-    cy: number,
-    s: number,
-    profession: string,
-): string {
-    switch (profession) {
-        case "pilot":
-            return `M ${cx} ${cy - s} L ${cx + s} ${cy + s * 0.7} L ${cx - s} ${cy + s * 0.7} Z`;
-        case "engineer":
-            return `M ${cx - s * 0.8} ${cy - s * 0.8} L ${cx + s * 0.8} ${cy - s * 0.8} L ${cx + s * 0.8} ${cy + s * 0.8} L ${cx - s * 0.8} ${cy + s * 0.8} Z`;
-        case "medic":
-            return `M ${cx} ${cy - s} L ${cx + s} ${cy} L ${cx} ${cy + s} L ${cx - s} ${cy} Z`;
-        case "scout": {
-            let path = "";
-            for (let i = 0; i < 5; i++) {
-                const angle = (i * 2 * Math.PI) / 5 - Math.PI / 2;
-                const px = cx + s * Math.cos(angle);
-                const py = cy + s * Math.sin(angle);
-                path += i === 0 ? `M ${px} ${py} ` : `L ${px} ${py} `;
-            }
-            return path + "Z";
-        }
-        case "scientist": {
-            let path = "";
-            for (let i = 0; i < 6; i++) {
-                const angle = (i * 2 * Math.PI) / 6 - Math.PI / 2;
-                const px = cx + s * Math.cos(angle);
-                const py = cy + s * Math.sin(angle);
-                path += i === 0 ? `M ${px} ${py} ` : `L ${px} ${py} `;
-            }
-            return path + "Z";
-        }
-        default:
-            return `M ${cx - s} ${cy} A ${s} ${s} 0 1 1 ${cx + s} ${cy} A ${s} ${s} 0 1 1 ${cx - s} ${cy}`;
-    }
 }

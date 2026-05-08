@@ -37,16 +37,22 @@ export interface CombatState {
     combatTargetLocationId?: string;
     // Last hit tracking for UI animations
     lastEnemyHit?: {
+        eventId?: number;
         moduleId: number;
         moduleName: string;
         shieldDamage: number;
         hullDamage: number;
+        isCrit?: boolean;
+        missed?: boolean;
     } | null;
     lastPlayerHit?: {
+        eventId?: number;
         moduleId: number;
         moduleName: string;
         shieldDamage: number;
         hullDamage: number;
+        isCrit?: boolean;
+        missed?: boolean;
     } | null;
     // Battle results (filled after victory)
     battleResults?: {
