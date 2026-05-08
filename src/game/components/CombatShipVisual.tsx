@@ -6,6 +6,10 @@ import { MODULE_TYPES } from "../constants/modules";
 import { RACES } from "../constants/races";
 import { useTranslation } from "@/lib/useTranslation";
 import { getModuleTranslation } from "@/lib/moduleTranslations";
+import {
+  drawSymbiosisModuleOverlay,
+  hasMergedXenosymbiont,
+} from "./SymbiosisModuleOverlay";
 
 interface CombatShipVisualProps {
   modules: Module[] | EnemyModule[];
@@ -87,6 +91,10 @@ export function CombatShipVisual({
           : moduleStyle.borderColor;
       ctx.lineWidth = isDestroyed ? 2 : 3;
       ctx.strokeRect(x + 2, y + 2, cellSize - 4, cellSize - 4);
+
+      if (!isEnemy && hasMergedXenosymbiont(crew, mod.id)) {
+        drawSymbiosisModuleOverlay(ctx, x, y, cellSize, cellSize);
+      }
 
       // Module name - split into multiple lines if needed
       ctx.fillStyle = isDestroyed ? "#555555" : moduleStyle.borderColor;

@@ -10,6 +10,10 @@ import { useTranslation } from "@/lib/useTranslation";
 import { getModuleTranslation } from "@/lib/moduleTranslations";
 import { ProfessionSprite } from "./ProfessionSprite";
 import {
+  hasMergedXenosymbiont,
+  SymbiosisModuleOverlay,
+} from "./SymbiosisModuleOverlay";
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -304,6 +308,7 @@ function ModuleRenderer({
   };
 
   const crewInModule = crew.filter((c) => c.moduleId === module.id);
+  const hasSymbiosis = hasMergedXenosymbiont(crew, module.id);
 
   return (
     <g
@@ -328,6 +333,7 @@ function ModuleRenderer({
         strokeWidth={isDragging ? 3 : 2}
         className="select-none"
       />
+      {hasSymbiosis && <SymbiosisModuleOverlay x={x} y={y} w={w} h={h} />}
       <text
         x={x + w / 2}
         y={y + 20}
