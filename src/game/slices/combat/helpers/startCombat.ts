@@ -36,6 +36,7 @@ export function initializeCombat(
                 threat,
             },
             loot: { credits: lootCredits },
+            round: 1,
             droneStacks: 0,
             isAmbush,
             ambushAttackDone: false,

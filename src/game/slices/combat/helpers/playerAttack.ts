@@ -34,6 +34,7 @@ import {
   applyBossTakeDamageEffects,
   checkBossResurrect,
 } from "./bossAbilities";
+import { advanceCombatRound } from "./combatTime";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -930,7 +931,7 @@ export function executePlayerAttack(
   });
 
   get().updateShipStats();
-  get().nextTurn();
+  advanceCombatRound(set, get);
 
   // 12. Alien presence penalty
   applyAlienPresencePenalty(set, get);
@@ -1200,6 +1201,6 @@ export function executePlayerAttackWithBayTargets(
   });
 
   get().updateShipStats();
-  get().nextTurn();
+  advanceCombatRound(set, get);
   applyAlienPresencePenalty(set, get);
 }

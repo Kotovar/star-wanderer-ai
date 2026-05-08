@@ -1,4 +1,4 @@
-import type { GameStore, SetState } from "@/game/types";
+import type { GameState, GameStore, SetState } from "@/game/types";
 import {
     initNewTurn,
     processPassiveExperience,
@@ -12,6 +12,7 @@ import {
 import * as processors from "./processors";
 import { processTravel } from "@/game/slices/travel/helpers";
 import { checkContractExpiry } from "@/game/slices/contracts/helpers/checkContractExpiry";
+import { advanceCombatRound } from "@/game/slices/combat/helpers/combatTime";
 
 /**
  * Интерфейс GameLoopSlice
@@ -122,15 +123,17 @@ export const createGameLoopSlice = (
     },
 
     skipTurn: () => {
-        get().addLog("Ход пропущен - задачи выполняются", "info");
-
-        // Enemy attacks when we skip
         if (get().currentCombat) {
+            get().addLog("Боевой раунд пропущен - враг атакует", "combat");
             get().processEnemyAttack();
-            get().updateShipStats();
-            get().checkGameOver();
+            advanceCombatRound(
+                set as unknown as (fn: (state: GameState) => void) => void,
+                get,
+            );
+            return;
         }
 
+        get().addLog("Ход пропущен - задачи выполняются", "info");
         get().nextTurn();
     },
 });

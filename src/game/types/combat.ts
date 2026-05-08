@@ -21,6 +21,8 @@ export interface CombatState {
         threat?: number;
     };
     loot: Loot;
+    // Separate tactical time inside combat. Campaign turn is charged on combat exit.
+    round: number;
     // Drone stack counter: +5% damage per hit, resets after combat (max 20 stacks = +100%)
     droneStacks: number;
     // Ambush - enemy attacks first (when no scanner and approaching unknown enemy ship)

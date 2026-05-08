@@ -3,6 +3,7 @@ import { playSound } from "@/sounds";
 import * as helpers from "./helpers";
 import { DEFENDER_CONFIGS } from "./helpers/combatSetup";
 import { startDefenderCombat } from "./helpers/startDefenderCombat";
+import { advanceCombatRound, applyCombatTimeCost } from "./helpers/combatTime";
 import type { RaceId } from "@/game/types/races";
 import type { EnemyShip } from "@/game/types/enemy";
 
@@ -173,6 +174,7 @@ export const createCombatSlice = (
         const retreatChance = helpers.calculateRetreatChance(pilot);
 
         if (Math.random() < retreatChance) {
+            const combatRound = state.currentCombat.round;
             set((s) => {
                 s.currentCombat = null;
                 // Always return to sector map after combat (not galaxy map)
@@ -182,12 +184,12 @@ export const createCombatSlice = (
                     c.combatAssignmentEffect = null;
                 });
             });
+            applyCombatTimeCost(combatRound, set, get);
             get().addLog("Побег успешен!", "info");
         } else {
             get().addLog("Побег не удался! Враг атакует!", "warning");
             get().processEnemyAttack();
-            get().updateShipStats();
-            get().checkGameOver();
+            advanceCombatRound(set, get);
         }
     },
 });

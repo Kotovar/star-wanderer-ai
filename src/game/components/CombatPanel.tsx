@@ -11,6 +11,7 @@ import type { CrewMember, CrewMemberCombatAssignment } from "../types";
 import { getTotalEvasion } from "@/game/slices";
 import { useTranslation } from "@/lib/useTranslation";
 import { WEAPON_TYPES, DRONE_MAX_STACKS, DRONE_STACK_BONUS } from "@/game/constants";
+import { calculateCombatTimeCost } from "@/game/slices/combat/helpers/combatTime";
 
 interface WeaponHint {
   text: string;
@@ -168,6 +169,8 @@ export function CombatPanel() {
   const dmgMultiplier = dmgBaseSum > 0 ? pDmg.total / dmgBaseSum : 1;
   const isBoss = currentCombat?.enemy.isBoss || false;
   const evasionChance = getTotalEvasion(useGameStore.getState());
+  const combatRound = currentCombat?.round ?? 1;
+  const campaignTimeCost = calculateCombatTimeCost(combatRound);
 
   const getAdjacentModules = (moduleId: number) => {
     return ship.modules.filter(
@@ -261,6 +264,21 @@ export function CombatPanel() {
       </div>
 
       <CombatPhaseStrip activePhase={activeCombatPhase} note={phaseNote} />
+
+      <div className="grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
+        <CombatMetric label="Раунд боя" value={combatRound} color="#00d4ff" />
+        <CombatMetric
+          label="Время после боя"
+          value={`+${campaignTimeCost}`}
+          color="#ffb000"
+        />
+        <CombatMetric label="Цели" value={targetingProgress} color="#00ff41" />
+        <CombatMetric
+          label="Стаков дронов"
+          value={currentCombat.droneStacks}
+          color="#9933ff"
+        />
+      </div>
 
       {!hasWeaponBay && (
         <div className="bg-[rgba(255,0,64,0.1)] border border-[#ff0040] p-2 text-sm text-[#ff0040]">
@@ -545,6 +563,30 @@ export function CombatPanel() {
           {t("combat.boss_artifact_guaranteed")}
         </div>
       )}
+    </div>
+  );
+}
+
+function CombatMetric({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: string | number;
+  color: string;
+}) {
+  return (
+    <div
+      className="min-w-0 border bg-[rgba(0,0,0,0.26)] px-2 py-1"
+      style={{ borderColor: `${color}66` }}
+    >
+      <div className="font-['Orbitron'] text-sm font-bold" style={{ color }}>
+        {value}
+      </div>
+      <div className="truncate text-[10px] uppercase tracking-wide text-[#667]">
+        {label}
+      </div>
     </div>
   );
 }

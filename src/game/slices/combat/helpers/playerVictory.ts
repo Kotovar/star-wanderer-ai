@@ -26,6 +26,7 @@ import type {
 } from "@/game/types";
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import { completeBattleContracts } from "./completeBattleContracts";
+import { applyCombatTimeCost } from "./combatTime";
 
 /**
  * Handles victory after defeating boss
@@ -37,6 +38,7 @@ export function handleVictory(
     updatedCombat: NonNullable<GameState["currentCombat"]>,
     weaponBays: { id: number }[],
 ) {
+    const combatRound = updatedCombat.round;
     const loot = updatedCombat.loot;
 
     // Boss resurrect chance
@@ -389,5 +391,6 @@ export function handleVictory(
         gameMode: "battle_results",
     }));
 
+    applyCombatTimeCost(combatRound, set, get);
     get().updateShipStats();
 }
