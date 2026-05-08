@@ -70,8 +70,8 @@ export function AssignmentsPanel() {
     };
 
     return (
-        <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex h-full min-h-0 flex-col gap-4">
+            <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
                 <div>
                     <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
                         ▸ ЭКИПАЖ
@@ -87,7 +87,7 @@ export function AssignmentsPanel() {
                 </div>
             </div>
 
-            <div className="overflow-y-auto max-h-[62vh] bg-[rgba(0,212,255,0.04)] border border-[#00d4ff] p-3 space-y-3">
+            <div className="min-h-0 flex-1 overflow-y-auto bg-[rgba(0,212,255,0.04)] border border-[#00d4ff] p-3 space-y-3">
                 {crew.map((c) => {
                     const pendingModuleId = moves[c.id];
                     const effectiveModuleId = pendingModuleId ?? c.moduleId;
@@ -202,7 +202,7 @@ export function AssignmentsPanel() {
                 })}
             </div>
 
-            <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="mt-auto flex shrink-0 items-center justify-between gap-3 flex-wrap">
                 <div className="text-xs text-[#888]">
                     {hasPlannedChanges
                         ? `Будет применено: ${plannedMoveCount} перемещ., ${plannedTaskCount} задач.`
