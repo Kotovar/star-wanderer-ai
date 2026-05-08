@@ -25,7 +25,7 @@
     "contracts": "ACTIVE CONTRACTS",
     "progress": "PROGRESS",
     "craft": "CRAFT",
-    "event_log": "EVENT LOG",
+    "event_log": "LOG",
     "cannot_move_combat": "⚠️ Cannot move modules during combat!",
     "confirm_restart_title": "Restart?",
     "confirm_restart_desc": "Are you sure you want to restart? All progress will be lost.",
@@ -1767,6 +1767,28 @@
   },
   "game_log": {
     "turn_label": "TURN"
+  },
+  "journal": {
+    "title": "SHIP JOURNAL",
+    "subtitle": "Chronology of important run events: combat, crew, research, contracts and discoveries.",
+    "current_turn": "turn",
+    "records": "records",
+    "warnings": "warnings",
+    "alerts": "crit.",
+    "combat": "combat",
+    "filtered": "shown",
+    "stored": "stored",
+    "empty": "No entries in this category yet.",
+    "filters": {
+      "all": "All",
+      "combat": "Combat",
+      "crew": "Crew",
+      "research": "Research",
+      "contracts": "Tasks",
+      "exploration": "Exploration",
+      "reputation": "Reputation",
+      "system": "System"
+    }
   },
   "module_names": {
     "reactor": "Reactor",
