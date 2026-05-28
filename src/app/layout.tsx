@@ -44,7 +44,7 @@ export default function RootLayout({
     children: ReactNode;
 }>) {
     return (
-        <html lang="ru" className="h-full overflow-hidden">
+        <html lang="ru">
             <head>
                 {GAME_IMAGE_PRELOADS.map((href) => (
                     <link
@@ -57,7 +57,7 @@ export default function RootLayout({
                 ))}
             </head>
             <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-hidden h-screen`}
+                className={`${geistSans.variable} ${geistMono.variable} antialiased`}
             >
                 <main>{children}</main>
                 <Toaster />
