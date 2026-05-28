@@ -34,6 +34,7 @@ export function GameHeader() {
   const nextCrisisTurn = useGameStore((s) => s.nextCrisisTurn);
   const nextCrisisId = useGameStore((s) => s.nextCrisisId);
   const currentSector = useGameStore((s) => s.currentSector);
+  const traveling = useGameStore((s) => s.traveling);
   const artifacts = useGameStore((s) => s.artifacts);
   const activeEffects = useGameStore((s) => s.activeEffects);
   const showArtifacts = useGameStore((s) => s.showArtifacts);
@@ -160,11 +161,26 @@ export function GameHeader() {
               <span className="font-bold text-[#00ff41]">{turn}</span>
             </div>
             <div className="flex items-center gap-1 md:gap-2">
-              <span className="text-[#ffb000] hidden md:inline">{t("game.sector")}:</span>
-              <span className="text-[#ffb000] md:hidden">📍</span>
-              <span className="font-bold text-[#00ff41] text-xs md:text-base">
-                {currentSector?.name || "START"}
-              </span>
+              {traveling ? (
+                <>
+                  <span className="text-[#00d4ff] hidden md:inline">{t("travel.heading")}:</span>
+                  <span className="text-[#00d4ff] md:hidden">🚀</span>
+                  <span className="font-bold text-[#00d4ff] text-xs md:text-base">
+                    {traveling.destination.name}
+                  </span>
+                  <span className="text-[#445544] text-[10px]">
+                    {traveling.turnsLeft}/{traveling.turnsTotal} {t("travel.turns_left")}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="text-[#ffb000] hidden md:inline">{t("game.sector")}:</span>
+                  <span className="text-[#ffb000] md:hidden">📍</span>
+                  <span className="font-bold text-[#00ff41] text-xs md:text-base">
+                    {currentSector?.name || "START"}
+                  </span>
+                </>
+              )}
             </div>
             <div className="flex items-center gap-1 md:gap-2">
               <span className="text-[#ffb000]">₢</span>
@@ -238,6 +254,14 @@ export function GameHeader() {
 
           {/* ── Система ── */}
           <div className="flex items-center gap-1 md:gap-2">
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("sw:showTutorial"))}
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
+              title={t("header.tooltip_tutorial")}
+            >
+              <span className="text-[#00d4ff]">❓</span>
+              <span className="text-[#00d4ff] hidden md:inline text-xs">{t("game.tutorial")}</span>
+            </button>
             <button
               onClick={() => setShowSaveLoad(true)}
               className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"

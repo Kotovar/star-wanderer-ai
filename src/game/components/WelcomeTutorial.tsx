@@ -13,22 +13,26 @@ const getSnapshot = () => !localStorage.getItem(TUTORIAL_KEY);
 const getServerSnapshot = () => false;
 
 interface WelcomeTutorialProps {
+  forceShow?: boolean;
   onDismissed?: () => void;
 }
 
-export function WelcomeTutorial({ onDismissed }: WelcomeTutorialProps) {
+export function WelcomeTutorial({ forceShow, onDismissed }: WelcomeTutorialProps) {
   const shouldShow = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [dismissed, setDismissed] = useState(false);
   const [step, setStep] = useState(0);
   const { t } = useTranslation();
 
   const dismiss = () => {
-    localStorage.setItem(TUTORIAL_KEY, "1");
+    if (!forceShow) {
+      localStorage.setItem(TUTORIAL_KEY, "1");
+    }
     setDismissed(true);
     onDismissed?.();
   };
 
-  if (!shouldShow || dismissed) return null;
+  const isVisible = forceShow || (shouldShow && !dismissed);
+  if (!isVisible) return null;
 
   const steps = [
     {
@@ -42,6 +46,12 @@ export function WelcomeTutorial({ onDismissed }: WelcomeTutorialProps) {
       title: t("tutorial.step2_title"),
       desc: t("tutorial.step2_desc"),
       highlight: t("tutorial.step2_highlight"),
+    },
+    {
+      icon: "🌌",
+      title: t("tutorial.step_nav_title"),
+      desc: t("tutorial.step_nav_desc"),
+      highlight: t("tutorial.step_nav_highlight"),
     },
     {
       icon: "🏪",

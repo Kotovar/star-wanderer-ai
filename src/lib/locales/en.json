@@ -8,6 +8,7 @@
     "artifacts": "ARTIFACTS",
     "effects": "EFFECTS",
     "logbook": "LOGBOOK",
+    "tutorial": "TUTORIAL",
     "start": "START"
   },
   "title_screen": {
@@ -210,6 +211,7 @@
     "tooltip_artifacts": "Ancient artifacts",
     "tooltip_research": "Research",
     "tooltip_restart": "Restart game",
+    "tooltip_tutorial": "Tutorial",
     "tooltip_probes": "Research probes"
   },
   "professions": {
@@ -2612,6 +2614,9 @@
     "step2_title": "Map & Navigation",
     "step2_desc": "The right panel shows the game world. Click SECTOR MAP to see all available locations. Click any object — your ship will fly there.",
     "step2_highlight": "Mouse wheel to zoom, click and drag to pan the map",
+    "step_nav_title": "Two-layer Map",
+    "step_nav_desc": "First select a sector on the galaxy map, then a location inside it. Travel between distant sectors takes multiple turns.",
+    "step_nav_highlight": "Click a sector → sector map opens → choose a planet or station",
     "step3_title": "Visit a Station",
     "step3_desc": "Find and visit a station (🏪 on the map). Buy ship modules, hire crew, repair hull damage and take on contracts for rewards.",
     "step3_highlight": "Without a reactor and engine your ship won't fly — check their condition!",
@@ -2637,6 +2642,9 @@
     "legend": "LEGEND",
     "unknown_markers_hint_line_1": "Unknown ships and objects appear when scanner coverage is insufficient",
     "unknown_markers_hint_line_2": "and may conceal other locations until you get closer or detect them with the scanner."
+  },
+  "galaxy_map_ui": {
+    "hint": "Select a sector to jump to. Mouse wheel to zoom. Click and drag to pan."
   },
   "save_load": {
     "title": "SAVES",

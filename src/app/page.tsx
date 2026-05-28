@@ -55,6 +55,7 @@ export default function Home() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<LeftTab>("ship");
   const [shipSubTab, setShipSubTab] = useState<ShipSubTab>("layout");
+  const [showTutorial, setShowTutorial] = useState(false);
 
   // Legacy tab compatibility: if a saved state somehow points to merged tabs,
   // render them as the ship tab with the correct sub-tab.
@@ -81,6 +82,13 @@ export default function Home() {
     const handler = () => setPhase("title_setup");
     window.addEventListener("sw:showTitleSetup", handler);
     return () => window.removeEventListener("sw:showTitleSetup", handler);
+  }, []);
+
+  // Listen for tutorial show signal from Header
+  useEffect(() => {
+    const handler = () => setShowTutorial(true);
+    window.addEventListener("sw:showTutorial", handler);
+    return () => window.removeEventListener("sw:showTutorial", handler);
   }, []);
 
   // When NewGameSetupModal starts a game, it calls restartGame + reloads the page.
@@ -273,7 +281,7 @@ export default function Home() {
           <RaceDiscoveryModal />
           <TechnologyDiscoveryModal />
           <SurvivorModal />
-          <WelcomeTutorial />
+          <WelcomeTutorial forceShow={showTutorial} onDismissed={() => setShowTutorial(false)} />
         </>
       )}
     </div>

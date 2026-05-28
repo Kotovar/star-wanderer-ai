@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback, useSyncExternalStore } from "react";
 import { useGameStore } from "../store";
 import { useTranslation } from "@/lib/useTranslation";
 import {
@@ -185,8 +185,17 @@ export function GalaxyMap() {
     const [starSpriteImageReady, setStarSpriteImageReady] = useState(false);
     const zoomAnimationRef = useRef<number | null>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const hintDismissed = useSyncExternalStore(
+        () => () => {},
+        () => !!localStorage.getItem("sw_galaxy_hint_done"),
+        () => false,
+    );
     const dragStartRef = useRef({ x: 0, y: 0 });
     const offsetStartRef = useRef({ x: 0, y: 0 });
+
+    const dismissHint = () => {
+        localStorage.setItem("sw_galaxy_hint_done", "1");
+    };
 
     const sectors = useGameStore((s) => s.galaxy.sectors);
     const currentSector = useGameStore((s) => s.currentSector);
@@ -745,6 +754,19 @@ export function GalaxyMap() {
 
     return (
         <div ref={containerRef} className="w-full h-full relative">
+            {/* First-visit galaxy navigation hint */}
+            {!hintDismissed && (
+                <div className="absolute top-2 left-2 right-2 bg-[rgba(0,212,255,0.08)] border border-[#00d4ff] px-3 py-2 text-xs text-[#00d4ff] z-20 flex items-center justify-between gap-2">
+                    <span>💡 {t("galaxy_map_ui.hint")}</span>
+                    <button
+                        onClick={dismissHint}
+                        className="text-[#00d4ff] hover:text-white cursor-pointer shrink-0 opacity-70 hover:opacity-100 transition-opacity"
+                        title={t("common.close")}
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
             <canvas
                 ref={canvasRef}
                 className="border-2 border-[#00ff41] bg-[#050810] cursor-grab w-full h-full touch-none"
