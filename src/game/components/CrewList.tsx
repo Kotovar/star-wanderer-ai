@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useTranslation } from "@/lib/useTranslation";
 import {
     useTraitTranslation,
@@ -182,7 +183,7 @@ export function CrewList() {
                 open={!!selectedCrew}
                 onOpenChange={() => setSelectedCrew(null)}
             >
-                <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md max-h-[90vh] overflow-y-auto w-[calc(100%-2rem)] md:w-auto">
+                <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] w-[calc(100%-2rem)] md:w-[28rem] overflow-hidden">
                     <DialogHeader>
                         <DialogTitle className="text-[#ffb000] font-['Orbitron']">
                             ▸ {selectedCrew?.name}
@@ -202,521 +203,531 @@ export function CrewList() {
                             );
 
                             return (
-                                <div className="space-y-4 text-sm leading-relaxed">
-                                    {race && (
-                                        <div
-                                            className="flex items-center gap-2 p-2 rounded border"
-                                            style={{
-                                                borderColor: race.color,
-                                                backgroundColor: `${race.color}10`,
-                                            }}
-                                        >
-                                            <ProfessionSprite
-                                                race={selectedCrew.race}
-                                                profession={
-                                                    selectedCrew.profession
-                                                }
-                                                size={56}
-                                                title={`${t(`professions.${selectedCrew.profession}`)}: ${t(`races.${selectedCrew.race}.name`)}`}
-                                            />
-                                            <div>
-                                                <div
-                                                    className="font-bold"
-                                                    style={{
-                                                        color: race.color,
-                                                    }}
-                                                >
-                                                    {t(
-                                                        `races.${selectedCrew.race}.name`,
-                                                    )}
-                                                </div>
-                                                <div className="text-xs text-gray-400">
-                                                    {t(
-                                                        `races.${selectedCrew.race}.description`,
-                                                    )}
+                                <Tabs defaultValue="profile" className="mt-2 h-[60vh] flex flex-col">
+                                    <TabsList className="grid grid-cols-3 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] rounded-none h-8 w-full shrink-0">
+                                        <TabsTrigger value="profile" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-[#ffb000] text-[#667766] uppercase font-bold tracking-wider">{t("crew.tab_profile")}</TabsTrigger>
+                                        <TabsTrigger value="assignment" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-[#ffb000] text-[#667766] uppercase font-bold tracking-wider">{t("crew.tab_assignment")}</TabsTrigger>
+                                        <TabsTrigger value="bonuses" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-[#ffb000] text-[#667766] uppercase font-bold tracking-wider">{t("crew.tab_bonuses")}</TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="profile" className="mt-2 space-y-4 text-sm leading-relaxed overflow-y-auto pr-1">
+                                        {race && (
+                                            <div
+                                                className="flex items-center gap-2 p-2 rounded border"
+                                                style={{
+                                                    borderColor: race.color,
+                                                    backgroundColor: `${race.color}10`,
+                                                }}
+                                            >
+                                                <ProfessionSprite
+                                                    race={selectedCrew.race}
+                                                    profession={
+                                                        selectedCrew.profession
+                                                    }
+                                                    size={56}
+                                                    title={`${t(`professions.${selectedCrew.profession}`)}: ${t(`races.${selectedCrew.race}.name`)}`}
+                                                />
+                                                <div>
+                                                    <div
+                                                        className="font-bold"
+                                                        style={{
+                                                            color: race.color,
+                                                        }}
+                                                    >
+                                                        {t(
+                                                            `races.${selectedCrew.race}.name`,
+                                                        )}
+                                                    </div>
+                                                    <div className="text-xs text-gray-400">
+                                                        {t(
+                                                            `races.${selectedCrew.race}.description`,
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    )}
-                                    <div>
-                                        <span className="text-[#ffb000]">
-                                            {t(
-                                                "crew_member.current_module",
-                                            )}{" "}
-                                        </span>
-                                        <span className="text-[#00d4ff]">
-                                            {currentModule
-                                                ? getModuleNameById(
-                                                      currentModule.id,
-                                                  )
-                                                : t("crew_member.unknown")}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <span className="text-[#ffb000]">
-                                            {t("crew_member.profession")}{" "}
-                                        </span>
-                                        {t(
-                                            `professions.${selectedCrew.profession}`,
                                         )}
-                                        {selectedCrew.level
-                                            ? ` [${t("crew_member.level_short")}${selectedCrew.level}]`
-                                            : ""}
-                                    </div>
-                                    <div>
-                                        <span className="text-[#ffb000]">
-                                            {t("crew_member.experience")}{" "}
-                                        </span>
-                                        {selectedCrew.exp}/
-                                        {(selectedCrew.level || 1) * 100}
-                                        <Progress
-                                            value={Math.min(
-                                                100,
-                                                ((selectedCrew.exp || 0) /
-                                                    ((selectedCrew.level || 1) *
-                                                        100)) *
-                                                    100,
-                                            )}
-                                            className="h-2 mt-1 bg-[rgba(0,0,0,0.5)] [&>div]:bg-[#00d4ff]"
-                                        />
-                                    </div>
-                                    <div>
-                                        <span className="text-[#ffb000]">
-                                            {t("crew_member.health")}{" "}
-                                        </span>
-                                        {selectedCrew.health}/
-                                        {selectedCrew.maxHealth || 100}
-                                        <Progress
-                                            value={
-                                                (selectedCrew.health /
-                                                    (selectedCrew.maxHealth ||
-                                                        100)) *
-                                                100
-                                            }
-                                            className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${selectedCrew.health < 30 ? "[&>div]:bg-[#ff0040]" : selectedCrew.health < 60 ? "[&>div]:bg-[#ffb000]" : "[&>div]:bg-[#00ff41]"}`}
-                                        />
-                                    </div>
-                                    <div className="text-[10px] text-[#00ff41] flex items-center gap-1">
-                                        <CrewStatusIcon
-                                            type="regen"
-                                            size={18}
-                                        />
-                                        <span>
-                                            {stripLeadingSymbol(
-                                                t(
-                                                    "crew_member.regen_short",
-                                                ),
-                                            )}
-                                            {getCrewRegen(selectedCrew)}/
-                                            {t("crew.turn")}
-                                        </span>
-                                    </div>
-                                    <CrewDamageReductionRow
-                                        member={selectedCrew}
-                                        researchedTechs={researchedTechs}
-                                        t={t}
-                                    />
-                                    <CrewExpBonusRow
-                                        member={selectedCrew}
-                                        researchedTechs={researchedTechs}
-                                        t={t}
-                                    />
-                                    {race?.hasHappiness ? (
                                         <div>
                                             <span className="text-[#ffb000]">
-                                                {t("crew_member.mood")}{" "}
+                                                {t("crew_member.profession")}{" "}
                                             </span>
-                                            {selectedCrew.happiness}/
-                                            {selectedCrew.maxHappiness || 100}
+                                            {t(
+                                                `professions.${selectedCrew.profession}`,
+                                            )}
+                                            {selectedCrew.level
+                                                ? ` [${t("crew_member.level_short")}${selectedCrew.level}]`
+                                                : ""}
+                                        </div>
+                                        <div>
+                                            <span className="text-[#ffb000]">
+                                                {t("crew_member.experience")}{" "}
+                                            </span>
+                                            {selectedCrew.exp}/
+                                            {(selectedCrew.level || 1) * 100}
+                                            <Progress
+                                                value={Math.min(
+                                                    100,
+                                                    ((selectedCrew.exp || 0) /
+                                                        ((selectedCrew.level || 1) *
+                                                            100)) *
+                                                        100,
+                                                )}
+                                                className="h-2 mt-1 bg-[rgba(0,0,0,0.5)] [&>div]:bg-[#00d4ff]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <span className="text-[#ffb000]">
+                                                {t("crew_member.health")}{" "}
+                                            </span>
+                                            {selectedCrew.health}/
+                                            {selectedCrew.maxHealth || 100}
                                             <Progress
                                                 value={
-                                                    (selectedCrew.happiness /
-                                                        (selectedCrew.maxHappiness ||
+                                                    (selectedCrew.health /
+                                                        (selectedCrew.maxHealth ||
                                                             100)) *
                                                     100
                                                 }
-                                                className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${selectedCrew.happiness < 30 ? "[&>div]:bg-[#ff0040]" : selectedCrew.happiness < 60 ? "[&>div]:bg-[#ffb000]" : "[&>div]:bg-[#00ff41]"}`}
+                                                className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${selectedCrew.health < 30 ? "[&>div]:bg-[#ff0040]" : selectedCrew.health < 60 ? "[&>div]:bg-[#ffb000]" : "[&>div]:bg-[#00ff41]"}`}
                                             />
                                         </div>
-                                    ) : (
-                                        <div className="text-[#00d4ff] text-xs flex items-center gap-1">
+                                        <div className="text-[10px] text-[#00ff41] flex items-center gap-1">
                                             <CrewStatusIcon
-                                                type="no_happiness"
-                                                size={20}
+                                                type="regen"
+                                                size={18}
                                             />
                                             <span>
                                                 {stripLeadingSymbol(
                                                     t(
-                                                        "crew_member.immune_morale",
+                                                        "crew_member.regen_short",
                                                     ),
                                                 )}
+                                                {getCrewRegen(selectedCrew)}/
+                                                {t("crew.turn")}
                                             </span>
                                         </div>
-                                    )}
-                                    <div>
-                                        <span className="text-[#ffb000]">
-                                            {t("crew_member.assignment")}{" "}
-                                        </span>
-                                        {isCombat
-                                            ? selectedCrew.combatAssignment
-                                                ? `[${selectedCrew.combatAssignment.toUpperCase()}]`
-                                                : t("crew_member.waiting_short")
-                                            : selectedCrew.assignment
-                                              ? `[${selectedCrew.assignment.toUpperCase()}]`
-                                              : t("crew_member.waiting_short")}
-                                    </div>
-
-                                    {/* Module movement section */}
-                                    <div className="border-t border-[#00ff41] pt-4">
-                                        <div className="text-[#ffb000] mb-2 inline-flex items-center gap-1">
-                                            <CrewStatusIcon
-                                                type="movement"
-                                                size={20}
-                                            />
-                                            <span>
-                                                {stripLeadingSymbol(
-                                                    t(
-                                                        "crew_member.movement",
-                                                    ),
-                                                )}
-                                            </span>
-                                        </div>
-                                        {selectedCrew.movedThisTurn ? (
-                                            <div className="text-[#ff0040] text-xs">
-                                                {t("crew_member.moved_already")}
-                                            </div>
-                                        ) : adjacentModules.length > 0 ? (
-                                            <div className="flex flex-wrap gap-1">
-                                                {/* Number modules by type for easier identification */}
-                                                {(() => {
-                                                    const modulesWithTypeIndex =
-                                                        adjacentModules.map(
-                                                            (mod, index) => {
-                                                                const sameTypeBefore =
-                                                                    adjacentModules
-                                                                        .slice(
-                                                                            0,
-                                                                            index,
-                                                                        )
-                                                                        .filter(
-                                                                            (
-                                                                                m,
-                                                                            ) =>
-                                                                                m.type ===
-                                                                                mod.type,
-                                                                        ).length;
-                                                                return {
-                                                                    module: mod,
-                                                                    typeIndex:
-                                                                        sameTypeBefore +
-                                                                        1,
-                                                                };
-                                                            },
-                                                        );
-                                                    return modulesWithTypeIndex.map(
-                                                        ({
-                                                            module,
-                                                            typeIndex,
-                                                        }) => (
-                                                            <Button
-                                                                key={module.id}
-                                                                onClick={() => {
-                                                                    moveCrewMember(
-                                                                        selectedCrew.id,
-                                                                        module.id,
-                                                                    );
-                                                                    setSelectedCrew(
-                                                                        null,
-                                                                    );
-                                                                }}
-                                                                className="cursor-pointer bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-xs py-1 px-2 h-auto"
-                                                            >
-                                                                →{" "}
-                                                                {getModuleNameById(
-                                                                    module.id,
-                                                                )}{" "}
-                                                                #{typeIndex} (
-                                                                {module.x},
-                                                                {module.y})
-                                                            </Button>
-                                                        ),
-                                                    );
-                                                })()}
-                                            </div>
-                                        ) : (
-                                            <div className="text-[#888] text-xs">
-                                                {t("crew_member.no_adjacent")}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {race && (
-                                        <div>
-                                            <span className="text-[#ffb000]">
-                                                {t(
-                                                    "crew_member.racial_bonuses",
-                                                )}
-                                            </span>
-                                            {/* crewBonuses */}
-                                            {race.crewBonuses &&
-                                                Object.keys(race.crewBonuses)
-                                                    .length > 0 && (
-                                                    <div className="flex flex-wrap gap-1 mt-1">
-                                                        {race.crewBonuses
-                                                            .happiness && (
-                                                            <span className="text-xs bg-[#00ff4120] text-[#00ff41] px-1 rounded">
-                                                                😊 +
-                                                                {
-                                                                    race
-                                                                        .crewBonuses
-                                                                        .happiness
-                                                                }
-                                                                {t(
-                                                                    "crew_member.bonus_mood",
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                        {race.crewBonuses
-                                                            .repair && (
-                                                            <span className="text-xs bg-[#ffb00020] text-[#ffb000] px-1 rounded">
-                                                                🔧 +
-                                                                {Math.round(
-                                                                    race
-                                                                        .crewBonuses
-                                                                        .repair *
-                                                                        100,
-                                                                )}
-                                                                {t(
-                                                                    "crew_member.bonus_repair",
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                        {race.crewBonuses
-                                                            .science && (
-                                                            <span className="text-xs bg-[#00d4ff20] text-[#00d4ff] px-1 rounded">
-                                                                🔬 +
-                                                                {Math.round(
-                                                                    race
-                                                                        .crewBonuses
-                                                                        .science *
-                                                                        100,
-                                                                )}
-                                                                {t(
-                                                                    "crew_member.bonus_science",
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                        {race.crewBonuses
-                                                            .combat && (
-                                                            <span className="text-xs bg-[#ff004020] text-[#ff0040] px-1 rounded">
-                                                                ⚔️ +
-                                                                {Math.round(
-                                                                    race
-                                                                        .crewBonuses
-                                                                        .combat *
-                                                                        100,
-                                                                )}
-                                                                {t(
-                                                                    "crew_member.bonus_combat",
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                        {race.crewBonuses
-                                                            .health && (
-                                                            <span className="text-xs bg-[#00ff4120] text-[#00ff41] px-1 rounded">
-                                                                ❤️ +
-                                                                {
-                                                                    race
-                                                                        .crewBonuses
-                                                                        .health
-                                                                }
-                                                                {t(
-                                                                    "crew_member.bonus_hp_turn",
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                        {race.crewBonuses
-                                                            .energy && (
-                                                            <span className="text-xs bg-[#9933ff20] text-[#9933ff] px-1 rounded">
-                                                                ⚡ -
-                                                                {Math.round(
-                                                                    Math.abs(
-                                                                        race
-                                                                            .crewBonuses
-                                                                            .energy,
-                                                                    ) * 100,
-                                                                )}
-                                                                {t(
-                                                                    "crew_member.bonus_energy",
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                        {race.crewBonuses
-                                                            .adaptation && (
-                                                            <span className="text-xs bg-[#00ff4120] text-[#00ff41] px-1 rounded">
-                                                                🌍 +
-                                                                {Math.round(
-                                                                    race
-                                                                        .crewBonuses
-                                                                        .adaptation *
-                                                                        100,
-                                                                )}
-                                                                {t(
-                                                                    "crew_member.bonus_adaptation",
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                        {race.crewBonuses
-                                                            .fuelEfficiency && (
-                                                            <span className="text-xs bg-[#9933ff20] text-[#9933ff] px-1 rounded">
-                                                                ⛽ -
-                                                                {Math.round(
-                                                                    race
-                                                                        .crewBonuses
-                                                                        .fuelEfficiency *
-                                                                        100,
-                                                                )}
-                                                                {t(
-                                                                    "crew_member.bonus_fuel",
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            {/* specialTraits */}
-                                            {race.specialTraits &&
-                                                race.specialTraits.length >
-                                                    0 && (
-                                                    <div className="mt-1.5 space-y-1">
-                                                        {race.specialTraits.map(
-                                                            (trait) => {
-                                                                const {
-                                                                    name,
-                                                                    desc,
-                                                                } =
-                                                                    translateTrait(
-                                                                        trait.id,
-                                                                        trait.name,
-                                                                        trait.description,
-                                                                    );
-                                                                return (
-                                                                    <TraitRow
-                                                                        key={
-                                                                            trait.id
-                                                                        }
-                                                                        itemKey={
-                                                                            trait.id
-                                                                        }
-                                                                        name={
-                                                                            name
-                                                                        }
-                                                                        desc={
-                                                                            desc
-                                                                        }
-                                                                        type={
-                                                                            trait.type
-                                                                        }
-                                                                        bold
-                                                                    />
-                                                                );
-                                                            },
-                                                        )}
-                                                    </div>
-                                                )}
-                                        </div>
-                                    )}
-                                    {selectedCrew.traits &&
-                                        selectedCrew.traits.length > 0 && (
+                                        <CrewDamageReductionRow
+                                            member={selectedCrew}
+                                            researchedTechs={researchedTechs}
+                                            t={t}
+                                        />
+                                        <CrewExpBonusRow
+                                            member={selectedCrew}
+                                            researchedTechs={researchedTechs}
+                                            t={t}
+                                        />
+                                        {race?.hasHappiness ? (
                                             <div>
                                                 <span className="text-[#ffb000]">
-                                                    {t("crew_member.traits")}
+                                                    {t("crew_member.mood")}{" "}
                                                 </span>
-                                                <br />
-                                                {selectedCrew.traits.map(
-                                                    (trait, idx) => {
-                                                        const { name, desc } =
-                                                            translateTrait(
-                                                                trait.id ?? "",
-                                                                trait.name,
-                                                                trait.desc,
-                                                            );
-                                                        return (
-                                                            <TraitRow
-                                                                key={`${selectedCrew.id}-trait-${idx}-${trait.type}`}
-                                                                itemKey={`${selectedCrew.id}-trait-${idx}`}
-                                                                name={name}
-                                                                desc={desc}
-                                                                type={
-                                                                    trait.type
-                                                                }
-                                                            />
-                                                        );
-                                                    },
-                                                )}
+                                                {selectedCrew.happiness}/
+                                                {selectedCrew.maxHappiness || 100}
+                                                <Progress
+                                                    value={
+                                                        (selectedCrew.happiness /
+                                                            (selectedCrew.maxHappiness ||
+                                                                100)) *
+                                                        100
+                                                    }
+                                                    className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${selectedCrew.happiness < 30 ? "[&>div]:bg-[#ff0040]" : selectedCrew.happiness < 60 ? "[&>div]:bg-[#ffb000]" : "[&>div]:bg-[#00ff41]"}`}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="text-[#00d4ff] text-xs flex items-center gap-1">
+                                                <CrewStatusIcon
+                                                    type="no_happiness"
+                                                    size={20}
+                                                />
+                                                <span>
+                                                    {stripLeadingSymbol(
+                                                        t(
+                                                            "crew_member.immune_morale",
+                                                        ),
+                                                    )}
+                                                </span>
                                             </div>
                                         )}
+                                        {selectedCrew.traits &&
+                                            selectedCrew.traits.length > 0 && (
+                                                <div>
+                                                    <span className="text-[#ffb000]">
+                                                        {t("crew_member.traits")}
+                                                    </span>
+                                                    <br />
+                                                    {selectedCrew.traits.map(
+                                                        (trait, idx) => {
+                                                            const { name, desc } =
+                                                                translateTrait(
+                                                                    trait.id ?? "",
+                                                                    trait.name,
+                                                                    trait.desc,
+                                                                );
+                                                            return (
+                                                                <TraitRow
+                                                                    key={`${selectedCrew.id}-trait-${idx}-${trait.type}`}
+                                                                    itemKey={`${selectedCrew.id}-trait-${idx}`}
+                                                                    name={name}
+                                                                    desc={desc}
+                                                                    type={
+                                                                        trait.type
+                                                                    }
+                                                                />
+                                                            );
+                                                        },
+                                                    )}
+                                                </div>
+                                            )}
 
-                                    {selectedCrew.augmentation &&
-                                        (() => {
-                                            const aug =
-                                                AUGMENTATIONS[
-                                                    selectedCrew.augmentation
-                                                ];
-                                            return aug ? (
-                                                <div className="p-2 border border-[#9933ff55] bg-[rgba(153,51,255,0.05)] rounded">
-                                                    <div className="text-[#ffb000] text-xs mb-1">
-                                                        {t(
-                                                            "crew_member.augmentation",
-                                                        )}
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-lg">
-                                                            {aug.icon}
-                                                        </span>
-                                                        <div>
-                                                            <div className="font-bold text-[#9933ff] text-xs">
-                                                                {aug.name}
-                                                            </div>
-                                                            <div className="text-[#888] text-[10px]">
-                                                                {
-                                                                    aug.description
-                                                                }
+                                        {selectedCrew.augmentation &&
+                                            (() => {
+                                                const aug =
+                                                    AUGMENTATIONS[
+                                                        selectedCrew.augmentation
+                                                    ];
+                                                return aug ? (
+                                                    <div className="p-2 border border-[#9933ff55] bg-[rgba(153,51,255,0.05)] rounded">
+                                                        <div className="text-[#ffb000] text-xs mb-1">
+                                                            {t(
+                                                                "crew_member.augmentation",
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-lg">
+                                                                {aug.icon}
+                                                            </span>
+                                                            <div>
+                                                                <div className="font-bold text-[#9933ff] text-xs">
+                                                                    {aug.name}
+                                                                </div>
+                                                                <div className="text-[#888] text-[10px]">
+                                                                    {
+                                                                        aug.description
+                                                                    }
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
+                                                ) : null;
+                                            })()}
+
+                                        {/* Fire crew button */}
+                                        <div className="border-t border-[#ff0040] pt-4 mt-4">
+                                            <Button
+                                                onClick={() => {
+                                                    fireCrewMember(selectedCrew.id);
+                                                    setSelectedCrew(null);
+                                                }}
+                                                disabled={crew.length <= 1}
+                                                className="cursor-pointer bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase tracking-wider w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {t("crew_member.fire")}
+                                            </Button>
+                                            {crew.length <= 1 && (
+                                                <div className="text-xs text-[#888] text-center mt-1">
+                                                    {t("crew_member.fire_warning")}
                                                 </div>
-                                            ) : null;
-                                        })()}
+                                            )}
+                                        </div>
+                                    </TabsContent>
+                                    <TabsContent value="assignment" className="mt-2 space-y-4 text-sm leading-relaxed overflow-y-auto pr-1">
+                                        <div>
+                                            <span className="text-[#ffb000]">
+                                                {t(
+                                                    "crew_member.current_module",
+                                                )}{" "}
+                                            </span>
+                                            <span className="text-[#00d4ff]">
+                                                {currentModule
+                                                    ? getModuleNameById(
+                                                          currentModule.id,
+                                                      )
+                                                    : t("crew_member.unknown")}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[#ffb000]">
+                                                {t("crew_member.assignment")}{" "}
+                                            </span>
+                                            {isCombat
+                                                ? selectedCrew.combatAssignment
+                                                    ? `[${selectedCrew.combatAssignment.toUpperCase()}]`
+                                                    : t("crew_member.waiting_short")
+                                                : selectedCrew.assignment
+                                                  ? `[${selectedCrew.assignment.toUpperCase()}]`
+                                                  : t("crew_member.waiting_short")}
+                                        </div>
 
-                                    <div>
-                                        <span className="text-[#ffb000]">
-                                            {t("crew_member.features")}
-                                        </span>
-                                        <br />
-                                        {t(
-                                            `profession_descriptions.${selectedCrew.profession}`,
-                                        )}
-                                    </div>
-
-                                    {/* Fire crew button */}
-                                    <div className="border-t border-[#ff0040] pt-4 mt-4">
-                                        <Button
-                                            onClick={() => {
-                                                fireCrewMember(selectedCrew.id);
-                                                setSelectedCrew(null);
-                                            }}
-                                            disabled={crew.length <= 1}
-                                            className="cursor-pointer bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase tracking-wider w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            {t("crew_member.fire")}
-                                        </Button>
-                                        {crew.length <= 1 && (
-                                            <div className="text-xs text-[#888] text-center mt-1">
-                                                {t("crew_member.fire_warning")}
+                                        {/* Module movement section */}
+                                        <div className="border-t border-[#00ff41] pt-4">
+                                            <div className="text-[#ffb000] mb-2 inline-flex items-center gap-1">
+                                                <CrewStatusIcon
+                                                    type="movement"
+                                                    size={20}
+                                                />
+                                                <span>
+                                                    {stripLeadingSymbol(
+                                                        t(
+                                                            "crew_member.movement",
+                                                        ),
+                                                    )}
+                                                </span>
+                                            </div>
+                                            {selectedCrew.movedThisTurn ? (
+                                                <div className="text-[#ff0040] text-xs">
+                                                    {t("crew_member.moved_already")}
+                                                </div>
+                                            ) : adjacentModules.length > 0 ? (
+                                                <div className="flex flex-wrap gap-1">
+                                                    {/* Number modules by type for easier identification */}
+                                                    {(() => {
+                                                        const modulesWithTypeIndex =
+                                                            adjacentModules.map(
+                                                                (mod, index) => {
+                                                                    const sameTypeBefore =
+                                                                        adjacentModules
+                                                                            .slice(
+                                                                                0,
+                                                                                index,
+                                                                            )
+                                                                            .filter(
+                                                                                (
+                                                                                    m,
+                                                                                ) =>
+                                                                                    m.type ===
+                                                                                    mod.type,
+                                                                            ).length;
+                                                                    return {
+                                                                        module: mod,
+                                                                        typeIndex:
+                                                                            sameTypeBefore +
+                                                                            1,
+                                                                    };
+                                                                },
+                                                            );
+                                                        return modulesWithTypeIndex.map(
+                                                            ({
+                                                                module,
+                                                                typeIndex,
+                                                            }) => (
+                                                                <Button
+                                                                    key={module.id}
+                                                                    onClick={() => {
+                                                                        moveCrewMember(
+                                                                            selectedCrew.id,
+                                                                            module.id,
+                                                                        );
+                                                                        setSelectedCrew(
+                                                                            null,
+                                                                        );
+                                                                    }}
+                                                                    className="cursor-pointer bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-xs py-1 px-2 h-auto"
+                                                                >
+                                                                    →{" "}
+                                                                    {getModuleNameById(
+                                                                        module.id,
+                                                                    )}{" "}
+                                                                    #{typeIndex} (
+                                                                    {module.x},
+                                                                    {module.y})
+                                                                </Button>
+                                                            ),
+                                                        );
+                                                    })()}
+                                                </div>
+                                            ) : (
+                                                <div className="text-[#888] text-xs">
+                                                    {t("crew_member.no_adjacent")}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </TabsContent>
+                                    <TabsContent value="bonuses" className="mt-2 space-y-4 text-sm leading-relaxed overflow-y-auto pr-1">
+                                        {race && (
+                                            <div>
+                                                <span className="text-[#ffb000]">
+                                                    {t(
+                                                        "crew_member.racial_bonuses",
+                                                    )}
+                                                </span>
+                                                {/* crewBonuses */}
+                                                {race.crewBonuses &&
+                                                    Object.keys(race.crewBonuses)
+                                                        .length > 0 && (
+                                                        <div className="flex flex-wrap gap-1 mt-1">
+                                                            {race.crewBonuses
+                                                                .happiness && (
+                                                                <span className="text-xs bg-[#00ff4120] text-[#00ff41] px-1 rounded">
+                                                                    😊 +
+                                                                    {
+                                                                        race
+                                                                            .crewBonuses
+                                                                            .happiness
+                                                                    }
+                                                                    {t(
+                                                                        "crew_member.bonus_mood",
+                                                                    )}
+                                                                </span>
+                                                            )}
+                                                            {race.crewBonuses
+                                                                .repair && (
+                                                                <span className="text-xs bg-[#ffb00020] text-[#ffb000] px-1 rounded">
+                                                                    🔧 +
+                                                                    {Math.round(
+                                                                        race
+                                                                            .crewBonuses
+                                                                            .repair *
+                                                                            100,
+                                                                    )}
+                                                                    {t(
+                                                                        "crew_member.bonus_repair",
+                                                                    )}
+                                                                </span>
+                                                            )}
+                                                            {race.crewBonuses
+                                                                .science && (
+                                                                <span className="text-xs bg-[#00d4ff20] text-[#00d4ff] px-1 rounded">
+                                                                    🔬 +
+                                                                    {Math.round(
+                                                                        race
+                                                                            .crewBonuses
+                                                                            .science *
+                                                                            100,
+                                                                    )}
+                                                                    {t(
+                                                                        "crew_member.bonus_science",
+                                                                    )}
+                                                                </span>
+                                                            )}
+                                                            {race.crewBonuses
+                                                                .combat && (
+                                                                <span className="text-xs bg-[#ff004020] text-[#ff0040] px-1 rounded">
+                                                                    ⚔️ +
+                                                                    {Math.round(
+                                                                        race
+                                                                            .crewBonuses
+                                                                            .combat *
+                                                                            100,
+                                                                    )}
+                                                                    {t(
+                                                                        "crew_member.bonus_combat",
+                                                                    )}
+                                                                </span>
+                                                            )}
+                                                            {race.crewBonuses
+                                                                .health && (
+                                                                <span className="text-xs bg-[#00ff4120] text-[#00ff41] px-1 rounded">
+                                                                    ❤️ +
+                                                                    {
+                                                                        race
+                                                                            .crewBonuses
+                                                                            .health
+                                                                    }
+                                                                    {t(
+                                                                        "crew_member.bonus_hp_turn",
+                                                                    )}
+                                                                </span>
+                                                            )}
+                                                            {race.crewBonuses
+                                                                .energy && (
+                                                                <span className="text-xs bg-[#9933ff20] text-[#9933ff] px-1 rounded">
+                                                                    ⚡ -
+                                                                    {Math.round(
+                                                                        Math.abs(
+                                                                            race
+                                                                                .crewBonuses
+                                                                                .energy,
+                                                                        ) * 100,
+                                                                    )}
+                                                                    {t(
+                                                                        "crew_member.bonus_energy",
+                                                                    )}
+                                                                </span>
+                                                            )}
+                                                            {race.crewBonuses
+                                                                .adaptation && (
+                                                                <span className="text-xs bg-[#00ff4120] text-[#00ff41] px-1 rounded">
+                                                                    🌍 +
+                                                                    {Math.round(
+                                                                        race
+                                                                            .crewBonuses
+                                                                            .adaptation *
+                                                                            100,
+                                                                    )}
+                                                                    {t(
+                                                                        "crew_member.bonus_adaptation",
+                                                                    )}
+                                                                </span>
+                                                            )}
+                                                            {race.crewBonuses
+                                                                .fuelEfficiency && (
+                                                                <span className="text-xs bg-[#9933ff20] text-[#9933ff] px-1 rounded">
+                                                                    ⛽ -
+                                                                    {Math.round(
+                                                                        race
+                                                                            .crewBonuses
+                                                                            .fuelEfficiency *
+                                                                            100,
+                                                                    )}
+                                                                    {t(
+                                                                        "crew_member.bonus_fuel",
+                                                                    )}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                {/* specialTraits */}
+                                                {race.specialTraits &&
+                                                    race.specialTraits.length >
+                                                        0 && (
+                                                        <div className="mt-1.5 space-y-1">
+                                                            {race.specialTraits.map(
+                                                                (trait) => {
+                                                                    const {
+                                                                        name,
+                                                                        desc,
+                                                                    } =
+                                                                        translateTrait(
+                                                                            trait.id,
+                                                                            trait.name,
+                                                                            trait.description,
+                                                                        );
+                                                                    return (
+                                                                        <TraitRow
+                                                                            key={
+                                                                                trait.id
+                                                                            }
+                                                                            itemKey={
+                                                                                trait.id
+                                                                            }
+                                                                            name={
+                                                                                name
+                                                                            }
+                                                                            desc={
+                                                                                desc
+                                                                            }
+                                                                            type={
+                                                                                trait.type
+                                                                            }
+                                                                            bold
+                                                                        />
+                                                                    );
+                                                                },
+                                                            )}
+                                                        </div>
+                                                    )}
                                             </div>
                                         )}
-                                    </div>
-                                </div>
+
+                                        <div>
+                                            <span className="text-[#ffb000]">
+                                                {t("crew_member.features")}
+                                            </span>
+                                            <br />
+                                            {t(
+                                                `profession_descriptions.${selectedCrew.profession}`,
+                                            )}
+                                        </div>
+                                    </TabsContent>
+                                </Tabs>
                             );
                         })()}
                 </DialogContent>

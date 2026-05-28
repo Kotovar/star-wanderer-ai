@@ -571,6 +571,22 @@
     scrollbar-gutter: stable both-edges;
 }
 
+/* Tab transition animations */
+@keyframes tab-fade-in {
+    0% {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tab-transition {
+    animation: tab-fade-in 0.2s ease-out forwards;
+}
+
 
 /* Combat hit flash animation */
 @keyframes combatHitFlash {

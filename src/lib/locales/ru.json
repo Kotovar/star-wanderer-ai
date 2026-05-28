@@ -26,6 +26,9 @@
     "progress": "ПРОГРЕСС",
     "craft": "ЧЕРТЕЖИ",
     "event_log": "ЖУРНАЛ",
+    "subtab_layout": "СХЕМА",
+    "subtab_stats": "СТАТУС",
+    "subtab_modules": "МОДУЛИ",
     "cannot_move_combat": "⚠️ Нельзя перемещать модули во время боя!",
     "confirm_restart_title": "Начать заново?",
     "confirm_restart_desc": "Вы уверены, что хотите начать игру заново? Весь прогресс будет потерян.",
@@ -83,7 +86,10 @@
     "no_health": "Не имеет здоровья",
     "rest": "Отдых",
     "fatigue": "Усталость",
-    "traits": "Трейты"
+    "traits": "Трейты",
+    "tab_profile": "ПРОФИЛЬ",
+    "tab_assignment": "НАЗНАЧЕНИЕ",
+    "tab_bonuses": "БОНУСЫ"
   },
   "cargo": {
     "title": "Грузовой отсек",

@@ -26,6 +26,9 @@
     "progress": "PROGRESS",
     "craft": "CRAFT",
     "event_log": "LOG",
+    "subtab_layout": "LAYOUT",
+    "subtab_stats": "STATUS",
+    "subtab_modules": "MODULES",
     "cannot_move_combat": "⚠️ Cannot move modules during combat!",
     "confirm_restart_title": "Restart?",
     "confirm_restart_desc": "Are you sure you want to restart? All progress will be lost.",
@@ -83,7 +86,10 @@
     "no_health": "No health",
     "rest": "Rest",
     "fatigue": "Fatigue",
-    "traits": "Traits"
+    "traits": "Traits",
+    "tab_profile": "PROFILE",
+    "tab_assignment": "ASSIGNMENT",
+    "tab_bonuses": "BONUSES"
   },
   "cargo": {
     "title": "Cargo Bay",

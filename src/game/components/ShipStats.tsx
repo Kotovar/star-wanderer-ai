@@ -74,6 +74,38 @@ function StatLabel({
   );
 }
 
+function DashboardCard({
+  label,
+  value,
+  max,
+  color,
+  icon,
+  displayValue,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  color: string;
+  icon: StatIconType;
+  displayValue?: string;
+}) {
+  const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
+  return (
+    <div className="border border-[#00ff4133] bg-[rgba(0,255,65,0.03)] p-2 flex flex-col gap-1">
+      <div className="flex items-center gap-1.5 text-[10px] text-[#889988] uppercase tracking-wider">
+        <StatIcon type={icon} size={24} />
+        <span>{label}</span>
+      </div>
+      <div className="text-lg font-bold font-['Orbitron'] tabular-nums" style={{ color }}>
+        {displayValue ?? `${value}/${max}`}
+      </div>
+      <div className="w-full h-1 bg-[rgba(255,255,255,0.08)] rounded-sm">
+        <div className="h-1 rounded-sm transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+      </div>
+    </div>
+  );
+}
+
 export function ShipStats() {
   const ship = useGameStore((s) => s.ship);
   const crew = useGameStore((s) => s.crew);
@@ -366,6 +398,14 @@ export function ShipStats() {
 
   return (
     <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3 mt-2.5 text-sm">
+      {/* ── Dashboard ────────────────────────────── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+        <DashboardCard label={t("ship_stats.hull")} value={currentHull} max={maxHull} color={hullColor} icon="health" />
+        <DashboardCard label={t("ship_stats.fuel")} value={ship.fuel || 0} max={ship.maxFuel || 0} color={fuelColor} icon="fuel_efficiency" />
+        <DashboardCard label={t("ship_stats.shields")} value={ship.shields} max={ship.maxShields} color="#00d4ff" icon="shields" />
+        <DashboardCard label={t("ship_stats.power_available")} value={available} max={Math.max(totalPower, 1)} color={powerColor} icon="power_generation" displayValue={available > 0 ? `+${available}` : `${available}`} />
+      </div>
+
       {/* ── Корпус и защита ──────────────────────── */}
       <SectionHeader label={t("ship_stats.section_hull")} />
 

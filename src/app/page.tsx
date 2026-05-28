@@ -21,6 +21,7 @@ import { WelcomeTutorial } from "@/game/components/WelcomeTutorial";
 import { NewGameSetupModal } from "@/game/components/NewGameSetupModal";
 import { TitleScreen } from "@/game/components/TitleScreen";
 import { useTranslation } from "@/lib/useTranslation";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 type LeftTab =
   | "ship"
@@ -32,6 +33,8 @@ type LeftTab =
   | "progress"
   | "blueprints"
   | "log";
+
+type ShipSubTab = "layout" | "stats" | "modules";
 
 /**
  * Flow state machine:
@@ -51,6 +54,14 @@ export default function Home() {
   const gameMode = useGameStore((s) => s.gameMode);
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<LeftTab>("ship");
+  const [shipSubTab, setShipSubTab] = useState<ShipSubTab>("layout");
+
+  // Legacy tab compatibility: if a saved state somehow points to merged tabs,
+  // render them as the ship tab with the correct sub-tab.
+  const effectiveActiveTab: LeftTab =
+    activeTab === "stats" || activeTab === "modules" ? "ship" : activeTab;
+  const effectiveShipSubTab: ShipSubTab =
+    activeTab === "stats" || activeTab === "modules" ? activeTab : shipSubTab;
 
   // ── Phase state machine ────────────────────────────────────────
   const [phase, setPhase] = useState<FlowPhase>("game");
@@ -92,9 +103,7 @@ export default function Home() {
   // ── Left tab definitions ────────────────────────────────────────
   const leftTabs: { id: LeftTab; icon: string; label: string }[] = [
     { id: "ship", icon: "🚀", label: t("ship.title") },
-    { id: "stats", icon: "📊", label: t("ship.ship_state") },
     { id: "crew", icon: "👥", label: t("ship.crew") },
-    { id: "modules", icon: "⚙️", label: t("ship.modules") },
     { id: "cargo", icon: "📦", label: t("ship.cargo") },
     { id: "contracts", icon: "📋", label: t("ship.contracts") },
     { id: "progress", icon: "▣", label: t("ship.progress") },
@@ -173,9 +182,9 @@ export default function Home() {
 
           <GameHeader />
 
-          <main className="flex-1 flex flex-col lg:flex-row overflow-hidden max-w-full min-w-0 px-2 lg:px-4 py-4 gap-4">
+          <main className="flex-1 flex flex-col lg:flex-row overflow-hidden max-w-full min-w-0 px-2 lg:px-4 py-4 gap-4 min-h-0">
             {/* Left Panel */}
-            <div className="panel flex-1 lg:w-95 flex flex-col min-w-0 lg:h-[calc(100vh-100px)] border-2 border-[#00ff41] bg-[rgba(0,255,65,0.02)] rounded-lg overflow-hidden">
+            <div className="panel flex-1 lg:w-95 flex flex-col min-w-0 lg:h-[calc(100vh-100px)] border-2 border-[#00ff41] bg-[rgba(0,255,65,0.02)] rounded-lg overflow-hidden min-h-0">
               <div className="flex shrink-0 border-b-2 border-[#00ff41]">
                 {leftTabs.map((tab, idx) => {
                   const isActive = activeTab === tab.id;
@@ -225,27 +234,36 @@ export default function Home() {
                 })}
               </div>
 
-              <div className="flex-1 overflow-y-auto p-2 scrollbar-gutter-stable">
-                {activeTab === "ship" && <ShipGrid />}
-                {activeTab === "stats" && <ShipStats />}
-                {activeTab === "crew" && <CrewList />}
-                {activeTab === "modules" && <ModuleList />}
-                {activeTab === "cargo" && <CargoDisplay />}
-                {activeTab === "contracts" && (
-                  <ContractsList />
+              <div className="flex-1 overflow-y-auto p-2 scrollbar-gutter-stable min-h-0">
+                {effectiveActiveTab === "ship" && (
+                  <Tabs value={effectiveShipSubTab} onValueChange={(v) => setShipSubTab(v as ShipSubTab)} className="h-full flex flex-col">
+                    <TabsList className="grid grid-cols-3 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] rounded-none h-8 shrink-0">
+                      <TabsTrigger value="layout" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-[#ffb000] text-[#667766] uppercase font-bold tracking-wider">{t("ship.subtab_layout")}</TabsTrigger>
+                      <TabsTrigger value="stats" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-[#ffb000] text-[#667766] uppercase font-bold tracking-wider">{t("ship.subtab_stats")}</TabsTrigger>
+                      <TabsTrigger value="modules" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-[#ffb000] text-[#667766] uppercase font-bold tracking-wider">{t("ship.subtab_modules")}</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="layout" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ShipGrid /></TabsContent>
+                    <TabsContent value="stats" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ShipStats /></TabsContent>
+                    <TabsContent value="modules" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ModuleList /></TabsContent>
+                  </Tabs>
                 )}
-                {activeTab === "progress" && (
-                  <CampaignProgressPanel />
+                {effectiveActiveTab === "crew" && <div className="tab-transition"><CrewList /></div>}
+                {effectiveActiveTab === "cargo" && <div className="tab-transition"><CargoDisplay /></div>}
+                {effectiveActiveTab === "contracts" && (
+                  <div className="tab-transition"><ContractsList /></div>
                 )}
-                {activeTab === "blueprints" && (
-                  <BlueprintsTab />
+                {effectiveActiveTab === "progress" && (
+                  <div className="tab-transition"><CampaignProgressPanel /></div>
                 )}
-                {activeTab === "log" && <GameLog />}
+                {effectiveActiveTab === "blueprints" && (
+                  <div className="tab-transition"><BlueprintsTab /></div>
+                )}
+                {effectiveActiveTab === "log" && <div className="tab-transition"><GameLog /></div>}
               </div>
             </div>
 
             {/* Right Panel */}
-            <div className="panel flex-1 lg:flex-1 flex flex-col min-w-0 h-[calc(100vh-200px)] lg:h-[calc(100vh-100px)] border-2 border-[#00ff41] bg-[rgba(0,255,65,0.02)] rounded-lg p-2">
+            <div className="panel flex-1 lg:flex-1 flex flex-col min-w-0 h-[calc(100vh-200px)] lg:h-[calc(100vh-100px)] border-2 border-[#00ff41] bg-[rgba(0,255,65,0.02)] rounded-lg p-2 min-h-0 overflow-hidden">
               <div className="flex-1 overflow-hidden min-h-0">
                 <EventDisplay />
               </div>
