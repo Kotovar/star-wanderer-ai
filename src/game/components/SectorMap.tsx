@@ -481,12 +481,19 @@ export function SectorMap() {
         bgCtx.fillStyle = bgColor;
         bgCtx.fillRect(0, 0, newWidth, newHeight);
 
-        // Add subtle glow from the star
+        // Add subtle glow from the star — smooth radial fade with no visible edge
         const glowColor = getStarGlowColor(currentSector.star?.type);
         if (glowColor !== "transparent") {
           const centerX = newWidth / 2;
           const centerY = newHeight / 2;
-          const maxRadius = Math.max(newWidth, newHeight) * 0.7;
+          // Gradient extends beyond canvas so the fade never cuts off visibly
+          const maxRadius = Math.max(newWidth, newHeight) * 1.3;
+
+          // Fade the inner color to half-opacity at ~30% then to transparent
+          const fadeColor = glowColor.replace(
+            /(\d\.\d+)/,
+            (_, alpha) => String(Number(alpha) * 0.4),
+          );
 
           const glowGradient = bgCtx.createRadialGradient(
             centerX,
@@ -497,12 +504,7 @@ export function SectorMap() {
             maxRadius,
           );
           glowGradient.addColorStop(0, glowColor);
-          glowGradient.addColorStop(
-            0.5,
-            glowColor
-              .replace("0.03", "0.015")
-              .replace("0.04", "0.02"),
-          );
+          glowGradient.addColorStop(0.35, fadeColor);
           glowGradient.addColorStop(1, "transparent");
           bgCtx.fillStyle = glowGradient;
           bgCtx.fillRect(0, 0, newWidth, newHeight);
