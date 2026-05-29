@@ -58,36 +58,72 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                 {t("planet_panel.expedition_crew_select")}
             </div>
 
-            <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
+            {/* Selected crew preview */}
+            {selectedIds.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                    {selectedIds.map((id) => {
+                        const member = crew.find((c) => c.id === id);
+                        if (!member) return null;
+                        return (
+                            <div
+                                key={id}
+                                className="flex items-center gap-1 px-1.5 py-0.5 border border-[#00d4ff44] bg-[rgba(0,212,255,0.08)] rounded-sm"
+                            >
+                                <ProfessionSprite
+                                    race={member.race}
+                                    profession={member.profession}
+                                    size={16}
+                                />
+                                <span className="text-[10px] text-[#00d4ff]">
+                                    {member.name}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            <div className="flex flex-col gap-2 max-h-56 overflow-y-auto scrollbar-gutter-stable pr-1">
                 {crew.map((member) => {
                     const selected = selectedIds.includes(member.id);
                     const fatigued = (member.expeditionFatigue ?? 0) > 0;
                     const hpPct = member.maxHealth > 0 ? (member.health / member.maxHealth) * 100 : 0;
                     const hpColor = hpPct > 60 ? "#00ff41" : hpPct > 30 ? "#ffb000" : "#ff0040";
+                    const isSynthetic = member.race === "synthetic";
                     return (
                         <button
                             key={member.id}
                             onClick={() => !fatigued && toggleCrew(member.id)}
                             disabled={fatigued}
-                            className={`flex items-center gap-3 p-2 border text-left transition-colors ${
+                            className={`flex items-center gap-3 p-2.5 border text-left transition-all duration-150 rounded-sm ${
                                 fatigued
                                     ? "border-[#222] text-[#444] cursor-not-allowed opacity-50"
                                     : selected
-                                      ? "border-[#00d4ff] bg-[rgba(0,212,255,0.1)] text-[#00d4ff] cursor-pointer"
-                                      : "border-[#333] text-[#888] hover:border-[#555] hover:text-[#ccc] cursor-pointer"
+                                      ? "border-[#00d4ff] bg-[rgba(0,212,255,0.1)] text-[#00d4ff] cursor-pointer shadow-[0_0_10px_rgba(0,212,255,0.15)]"
+                                      : "border-[#333] text-[#888] hover:border-[#555] hover:text-[#ccc] hover:bg-[rgba(255,255,255,0.02)] cursor-pointer"
                             }`}
                         >
                             <ProfessionSprite
                                 race={member.race}
                                 profession={member.profession}
-                                size={36}
+                                size={40}
                                 title={t(`professions.${member.profession}`)}
                             />
                             <div className="flex-1 min-w-0">
-                                <div className="text-sm font-bold truncate">
-                                    {member.name}
+                                <div className="flex items-center gap-1.5 mb-0.5">
+                                    <span className="text-sm font-bold truncate">
+                                        {member.name}
+                                    </span>
+                                    {isSynthetic && (
+                                        <span
+                                            className="text-[9px] px-1 py-0.5 rounded-sm bg-[rgba(68,136,255,0.15)] text-[#4488ff] border border-[#4488ff44] font-bold uppercase tracking-wider"
+                                            title={t("planet_panel.expedition_synthetic_bonus", { count: 1 })}
+                                        >
+                                            +AP
+                                        </span>
+                                    )}
                                 </div>
-                                <div className="text-xs opacity-70 mb-1">
+                                <div className="text-xs opacity-70 mb-1.5">
                                     {t(`professions.${member.profession}`)} ·{" "}
                                     {t("effects.level_short")}
                                     {member.level}
@@ -96,22 +132,22 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                                 </div>
                                 {/* HP bar */}
                                 <div className="flex items-center gap-1.5">
-                                    <div className="flex-1 h-1 rounded-full bg-[#1a1a1a] overflow-hidden">
+                                    <div className="flex-1 h-2 rounded-full bg-[#1a1a1a] overflow-hidden border border-[#222]">
                                         <div
-                                            className="h-full rounded-full transition-all"
+                                            className="h-full rounded-full transition-all duration-300"
                                             style={{
                                                 width: `${hpPct}%`,
                                                 backgroundColor: hpColor,
                                             }}
                                         />
                                     </div>
-                                    <span className="text-[10px] opacity-50 whitespace-nowrap">
+                                    <span className="text-[10px] opacity-50 whitespace-nowrap font-mono">
                                         {member.health}/{member.maxHealth}
                                     </span>
                                 </div>
                             </div>
                             {selected && !fatigued && (
-                                <span className="text-[#00d4ff] text-base shrink-0">✓</span>
+                                <span className="text-[#00d4ff] text-lg shrink-0">✓</span>
                             )}
                         </button>
                     );
@@ -123,7 +159,7 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <div className="flex items-center gap-1.5 border border-[#00d4ff44] px-2 py-1 bg-[rgba(0,212,255,0.05)] cursor-help">
+                            <div className="flex items-center gap-1.5 border border-[#00d4ff44] px-2 py-1 bg-[rgba(0,212,255,0.05)] cursor-help rounded-sm">
                                 <span className="text-[#888]">{t("planet_panel.expedition_ap_label")}:</span>
                                 <span className="text-white font-bold text-sm">{totalAP}</span>
                                 <span className="text-[#555] text-[9px]">?</span>
@@ -157,9 +193,9 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                 <Button
                     onClick={handleLaunch}
                     disabled={selectedIds.length === 0}
-                    className={`flex-1 uppercase tracking-wider text-sm border-2 bg-transparent ${
+                    className={`flex-1 uppercase tracking-wider text-sm border-2 bg-transparent transition-all duration-200 font-['Orbitron'] ${
                         selectedIds.length > 0
-                            ? "border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] cursor-pointer"
+                            ? "border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] cursor-pointer shadow-[0_0_15px_rgba(0,212,255,0.2)] hover:shadow-[0_0_25px_rgba(0,212,255,0.4)]"
                             : "border-[#333] text-[#333] cursor-not-allowed"
                     }`}
                 >

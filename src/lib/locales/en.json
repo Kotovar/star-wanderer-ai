@@ -1010,6 +1010,7 @@
     "title": "▸ Active Effects",
     "no_effects": "No active effects",
     "close": "CLOSE",
+    "cancel": "Cancel",
     "description": "Effects last several turns and expire automatically",
     "turns": "turn(s)",
     "level_short": "Lv"
@@ -1400,6 +1401,7 @@
     "explore_planet_desc": "Send crew on an expedition across the planet surface.",
     "expedition_active_title": "Expedition",
     "expedition_abort_btn": "Abort",
+    "expedition_abort_desc": "Uncollected rewards will be lost. Crew will gain fatigue.",
     "expedition_no_ap_hint": "AP exhausted — finish the expedition",
     "expedition_setup_title": "Launch Expedition",
     "expedition_crew_select": "Select crew members:",
