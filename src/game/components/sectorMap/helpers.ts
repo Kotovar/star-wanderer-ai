@@ -51,31 +51,31 @@ export function getStarBackgroundColor(starType: StarType | undefined): string {
 export function getStarGlowColor(starType: StarType | undefined): string {
   switch (starType) {
     case "red_dwarf":
-      return "rgba(255, 80, 40, 0.15)";
+      return "rgba(255, 80, 40, 0.07)";
     case "yellow_dwarf":
-      return "rgba(255, 220, 60, 0.2)";
+      return "rgba(255, 220, 60, 0.09)";
     case "white_dwarf":
-      return "rgba(180, 210, 255, 0.18)";
+      return "rgba(180, 210, 255, 0.08)";
     case "blue_giant":
-      return "rgba(80, 140, 255, 0.22)";
+      return "rgba(80, 140, 255, 0.1)";
     case "red_supergiant":
-      return "rgba(255, 60, 30, 0.2)";
+      return "rgba(255, 60, 30, 0.09)";
     case "neutron_star":
-      return "rgba(140, 140, 255, 0.2)";
+      return "rgba(140, 140, 255, 0.09)";
     case "gas_giant":
-      return "rgba(0, 255, 100, 0.15)";
+      return "rgba(0, 255, 100, 0.07)";
     case "double":
-      return "rgba(255, 200, 80, 0.18)";
+      return "rgba(255, 200, 80, 0.08)";
     case "triple":
-      return "rgba(255, 180, 60, 0.18)";
+      return "rgba(255, 180, 60, 0.08)";
     case "blackhole":
-      return "rgba(180, 60, 255, 0.12)";
+      return "rgba(180, 60, 255, 0.05)";
     case "variable_star":
-      return "rgba(255, 200, 120, 0.2)";
+      return "rgba(255, 200, 120, 0.09)";
     case "stellar_remnant":
-      return "rgba(180, 180, 180, 0.08)";
+      return "rgba(180, 180, 180, 0.04)";
     default:
-      return "rgba(255, 220, 80, 0.15)";
+      return "rgba(255, 220, 80, 0.07)";
   }
 }
 
