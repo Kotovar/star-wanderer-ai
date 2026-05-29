@@ -1,5 +1,6 @@
 import { STORAGE_KEY } from "@/game/constants";
 import type { GameState } from "@/game/types";
+import { loadWithMigrations, serializeWithVersion } from "./migrations";
 
 // ──────────────────────────────────────────────
 // Legacy auto-save (backward compat)
@@ -8,7 +9,7 @@ import type { GameState } from "@/game/types";
 export const saveToLocalStorage = (state: GameState) => {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(STORAGE_KEY, serializeWithVersion(state));
   } catch (e) {
     console.error("Failed to save game:", e);
   }
@@ -19,7 +20,7 @@ export const loadFromLocalStorage = (): GameState | null => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) return null;
-    return JSON.parse(saved) as GameState;
+    return loadWithMigrations(saved);
   } catch (e) {
     console.error("Failed to load game:", e);
     return null;
@@ -68,7 +69,7 @@ const META_KEYS: Record<SaveSlotId, string> = {
 export const saveSlot = (id: SaveSlotId, state: GameState): void => {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(SLOT_KEYS[id], JSON.stringify(state));
+    localStorage.setItem(SLOT_KEYS[id], serializeWithVersion(state));
 
     const meta: SaveSlotMeta = {
       slotId: id,
@@ -89,7 +90,7 @@ export const loadSlot = (id: SaveSlotId): GameState | null => {
   try {
     const raw = localStorage.getItem(SLOT_KEYS[id]);
     if (!raw) return null;
-    return JSON.parse(raw) as GameState;
+    return loadWithMigrations(raw);
   } catch (e) {
     console.error(`Failed to load slot ${id}:`, e);
     return null;

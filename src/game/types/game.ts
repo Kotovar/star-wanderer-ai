@@ -47,6 +47,8 @@ export type GameMode =
   | "hostile_approach_warning";
 
 export interface GameState {
+  /** Версия состояния для миграций сохранений */
+  stateVersion: number;
   turn: number;
   credits: number;
   probes: number;

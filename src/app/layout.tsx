@@ -15,6 +15,8 @@ const geistMono = Geist_Mono({
     subsets: ["latin"],
 });
 
+
+
 export const metadata: Metadata = {
     title: "Star Wanderer",
     description: `The project was created and implemented at approximately 99% completion as an experiment to evaluate the capabilities of
@@ -46,6 +48,19 @@ export default function RootLayout({
     return (
         <html lang="ru">
             <head>
+                <link
+                    rel="preconnect"
+                    href="https://fonts.googleapis.com"
+                />
+                <link
+                    rel="preconnect"
+                    href="https://fonts.gstatic.com"
+                    crossOrigin="anonymous"
+                />
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap"
+                    rel="stylesheet"
+                />
                 {GAME_IMAGE_PRELOADS.map((href) => (
                     <link
                         key={href}

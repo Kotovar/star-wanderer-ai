@@ -14,11 +14,29 @@ import { CampaignProgressPanel } from "@/game/components/CampaignProgressPanel";
 import { EventDisplay } from "@/game/components/EventPanels";
 import { GameEndPanel } from "@/game/components/panels";
 import { useGameStore } from "@/game/store";
-import { RaceDiscoveryModal } from "@/game/components/RaceDiscoveryModal";
-import { TechnologyDiscoveryModal } from "@/game/components/TechnologyDiscoveryModal";
-import { SurvivorModal } from "@/game/components/SurvivorModal";
-import { WelcomeTutorial } from "@/game/components/WelcomeTutorial";
-import { NewGameSetupModal } from "@/game/components/NewGameSetupModal";
+import { useShallow } from "zustand/react/shallow";
+import dynamic from "next/dynamic";
+
+const RaceDiscoveryModal = dynamic(
+  () => import("@/game/components/RaceDiscoveryModal").then((m) => m.RaceDiscoveryModal),
+  { ssr: false },
+);
+const TechnologyDiscoveryModal = dynamic(
+  () => import("@/game/components/TechnologyDiscoveryModal").then((m) => m.TechnologyDiscoveryModal),
+  { ssr: false },
+);
+const SurvivorModal = dynamic(
+  () => import("@/game/components/SurvivorModal").then((m) => m.SurvivorModal),
+  { ssr: false },
+);
+const WelcomeTutorial = dynamic(
+  () => import("@/game/components/WelcomeTutorial").then((m) => m.WelcomeTutorial),
+  { ssr: false },
+);
+const NewGameSetupModal = dynamic(
+  () => import("@/game/components/NewGameSetupModal").then((m) => m.NewGameSetupModal),
+  { ssr: false },
+);
 import { TitleScreen } from "@/game/components/TitleScreen";
 import { useTranslation } from "@/lib/useTranslation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -45,10 +63,14 @@ type ShipSubTab = "layout" | "stats" | "modules";
 type FlowPhase = "title_setup" | "game";
 
 export default function Home() {
-  const gameOver = useGameStore((s) => s.gameOver);
-  const gameOverReason = useGameStore((s) => s.gameOverReason);
-  const gameVictory = useGameStore((s) => s.gameVictory);
-  const gameVictoryReason = useGameStore((s) => s.gameVictoryReason);
+  const { gameOver, gameOverReason, gameVictory, gameVictoryReason } = useGameStore(
+    useShallow((s) => ({
+      gameOver: s.gameOver,
+      gameOverReason: s.gameOverReason,
+      gameVictory: s.gameVictory,
+      gameVictoryReason: s.gameVictoryReason,
+    })),
+  );
   const moduleMovedThisTurn = useGameStore((s) => s.ship.moduleMovedThisTurn);
   const loadGame = useGameStore((s) => s.loadGame);
   const gameMode = useGameStore((s) => s.gameMode);
@@ -119,36 +141,6 @@ export default function Home() {
     { id: "log", icon: "📜", label: t("ship.event_log") },
   ];
 
-  // ── Styles (shared keyframes) ───────────────────────────────────
-  const globalStyles = `
-        @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap");
-
-        @keyframes scanlines {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(10px); }
-        }
-        @keyframes glow-pulse {
-            0%, 100% {
-                text-shadow: 0 0 10px #00ff41, 0 0 20px #00ff41;
-            }
-            50% {
-                text-shadow: 0 0 15px #00ff41, 0 0 30px #00ff41;
-            }
-        }
-        ::-webkit-scrollbar { width: 8px; }
-        @media (min-width: 768px) { ::-webkit-scrollbar { width: 10px; } }
-        ::-webkit-scrollbar-track {
-            background: #050810;
-            border: 1px solid #00ff41;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #00ff41;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover { background: #00d4ff; }
-        .scrollbar-gutter-stable { scrollbar-gutter: stable; }
-    `;
-
   // ── Render ──────────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex flex-col bg-[#050810] font-['Share_Tech_Mono'] text-[#00ff41]">
@@ -173,7 +165,6 @@ export default function Home() {
       {/* ── Phase: Tutorial or Title+Setup ────────────────── */}
       {isTitleSetup ? (
         <>
-          <style jsx global>{globalStyles}</style>
           <TitleScreen />
           <NewGameSetupModal
             open={true}
@@ -186,8 +177,6 @@ export default function Home() {
       ) : (
         /* ── Phase: Normal game ──────────────────────────── */
         <>
-          <style jsx global>{globalStyles}</style>
-
           <GameHeader />
 
           <main className="flex-1 flex flex-col lg:flex-row overflow-hidden max-w-full min-w-0 px-2 lg:px-4 py-4 gap-4 min-h-0">

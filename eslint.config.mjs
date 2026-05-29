@@ -16,6 +16,7 @@ const eslintConfig = defineConfig([
             eqeqeq: "error",
             "no-fallthrough": "error",
             "no-shadow": "error",
+            "@next/next/no-page-custom-font": "off",
         },
     },
 ]);

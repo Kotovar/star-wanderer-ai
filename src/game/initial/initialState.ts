@@ -1,6 +1,7 @@
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { RESEARCH_TREE } from "@/game/constants";
 import { GLOBAL_CRISES, rollInitialCrisisTurn } from "@/game/constants/globalCrises";
+import { CURRENT_STATE_VERSION } from "@/game/constants/version";
 import { generateGalaxy } from "@/game/galaxy/generateGalaxy";
 import { initialModules, STARTING_FUEL } from "@/game/modules/initial";
 import { initializeStationData } from "@/game/stations/initialize";
@@ -137,6 +138,7 @@ const DEBUG_RESEARCHED_TECHS: TechnologyId[] = [
  * - Состояния игры (боевая система, cooldown'ы, эффекты)
  */
 const baseState: GameState = {
+  stateVersion: CURRENT_STATE_VERSION,
   turn: INITIAL_TURN,
   credits: INITIAL_CREDITS,
   probes: 1,
