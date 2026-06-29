@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ExploreTile, ExploreTileType } from "@/game/types/exploration";
+import { setupHiDPICanvas } from "./canvas-utils";
 
 interface Props {
   grid: ExploreTile[];
@@ -520,7 +521,8 @@ export function ExpeditionMapCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const size = canvas.width;
+    const size = 500;
+    setupHiDPICanvas(canvas, ctx, size, size);
     const gridSize = 5;
     const cellSize = size / gridSize;
 

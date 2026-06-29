@@ -1,6 +1,29 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Design tokens: neon terminal palette mapped to shadcn semantics.
+   Generates bg / text / border / ring utilities (bg-primary, text-muted-foreground, etc.)
+   so the Radix primitives in src/components/ui resolve to the real palette. */
+@theme {
+    --color-background: #050810;
+    --color-foreground: #00ff41;
+    --color-primary: #00ff41;
+    --color-primary-foreground: #050810;
+    --color-secondary: #0a2a14;
+    --color-secondary-foreground: #00ff41;
+    --color-accent: #ffb000;
+    --color-accent-foreground: #050810;
+    --color-muted: #0a1410;
+    --color-muted-foreground: #667766;
+    --color-destructive: #ff0040;
+    --color-destructive-foreground: #ffffff;
+    --color-popover: #0d1a26;
+    --color-popover-foreground: #c8c8c8;
+    --color-border: #1a3a2a;
+    --color-input: #1a3a2a;
+    --color-ring: #00d4ff;
+}
+
 @keyframes scanlines {
     0% { transform: translateY(0); }
     100% { transform: translateY(10px); }

@@ -17,6 +17,7 @@ import {
 } from "@/game/assets/starSprites";
 import { getEffectiveScanRange } from "@/game/slices/scanner/helpers/getEffectiveScanRange";
 import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
+import { setupHiDPICanvas } from "./canvas-utils";
 
 // Animation constants
 const TWINKLING_STARS_COUNT = 40;
@@ -342,16 +343,13 @@ export function GalaxyMap() {
         // Use cached canvas size to prevent drift
         const { width, height } = canvasSizeRef.current;
 
-        // Set canvas size only if changed
-        if (canvas.width !== width || canvas.height !== height) {
-            canvas.width = width;
-            canvas.height = height;
-            // Regenerate stars when canvas size changes
-            starsRef.current = null;
-        }
-
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
+
+        // Size the HiDPI backing store; regenerate stars on resize
+        if (setupHiDPICanvas(canvas, ctx, width, height)) {
+            starsRef.current = null;
+        }
 
         const centerX = width / 2;
         const centerY = height / 2;
@@ -480,10 +478,9 @@ export function GalaxyMap() {
         const width = Math.round(rect.width);
         const height = Math.round(rect.height);
 
-        animCanvas.width = width;
-        animCanvas.height = height;
         const animCtx = animCanvas.getContext("2d");
         if (!animCtx) return;
+        setupHiDPICanvas(animCanvas, animCtx, width, height);
 
         // Initialize twinkling stars and particles
         if (!twinklingStarsRef.current) {
@@ -711,15 +708,16 @@ export function GalaxyMap() {
 
         const canvas = canvasRef.current;
         if (!canvas) return;
+        const { width: cw, height: ch } = canvasSizeRef.current;
         const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
+        const scaleX = cw / rect.width;
+        const scaleY = ch / rect.height;
         const clickX = (e.clientX - rect.left) * scaleX;
         const clickY = (e.clientY - rect.top) * scaleY;
 
         // Account for zoom and pan - transform click coordinates to world coordinates
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
+        const centerX = cw / 2;
+        const centerY = ch / 2;
 
         // Inverse transform: screen -> world
         // screenX = (worldX - centerX) * zoom + centerX + offset.x
@@ -728,7 +726,7 @@ export function GalaxyMap() {
         const worldClickY = (clickY - centerY - offset.y) / zoom + centerY;
 
         // Calculate sector positions using the same formula as drawSector
-        const minDim = Math.min(canvas.width, canvas.height);
+        const minDim = Math.min(cw, ch);
         const baseMaxRadius = minDim * (minDim < 450 ? 0.65 : 0.42);
 
         for (const sector of sectors) {

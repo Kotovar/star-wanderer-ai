@@ -10,6 +10,7 @@ import {
   drawSymbiosisModuleOverlay,
   hasMergedXenosymbiont,
 } from "./SymbiosisModuleOverlay";
+import { setupHiDPICanvas } from "./canvas-utils";
 
 interface CombatShipVisualProps {
   modules: Module[] | EnemyModule[];
@@ -58,8 +59,7 @@ export function CombatShipVisual({
     const gridSize = Math.ceil(Math.sqrt(modules.length));
     const canvasSize = gridSize * (cellSize + gap) - gap;
 
-    canvas.width = canvasSize;
-    canvas.height = canvasSize;
+    setupHiDPICanvas(canvas, ctx, canvasSize, canvasSize);
 
     // Draw modules
     modules.forEach((mod, idx) => {
@@ -283,24 +283,27 @@ export function CombatShipVisual({
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    // Canvas may be CSS-scaled (max-w-full); map display px -> logical draw px.
+    const scale = visualCanvasSize / rect.width || 1;
+    const x = (e.clientX - rect.left) * scale;
+    const y = (e.clientY - rect.top) * scale;
 
     const cellSize = 120;
-    const padding = 2;
-    const gridSize = Math.ceil(Math.sqrt(modules.length));
+    const gap = 4;
+    const inset = 2;
+    const gridSize = visualGridSize;
 
     modules.forEach((mod, idx) => {
       const col = idx % gridSize;
       const row = Math.floor(idx / gridSize);
-      const modX = padding + col * (cellSize + 5);
-      const modY = padding + row * (cellSize + 5);
+      const modX = col * (cellSize + gap);
+      const modY = row * (cellSize + gap);
 
       if (
-        x >= modX + 4 &&
-        x <= modX + cellSize - 4 &&
-        y >= modY + 4 &&
-        y <= modY + cellSize - 4 &&
+        x >= modX + inset &&
+        x <= modX + cellSize - inset &&
+        y >= modY + inset &&
+        y <= modY + cellSize - inset &&
         mod.health > 0
       ) {
         onModuleClick(mod.id);
@@ -333,8 +336,6 @@ export function CombatShipVisual({
       >
         <canvas
           ref={canvasRef}
-          width={400}
-          height={400}
           className={`max-w-full ${onModuleClick ? "cursor-pointer" : "cursor-default"}`}
           onClick={handleCanvasClick}
         />

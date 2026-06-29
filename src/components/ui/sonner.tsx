@@ -1,23 +1,19 @@
-"use client";
+import { Toaster as Sonner, type ToasterProps } from "sonner";
 
-import { useTheme } from "next-themes";
-import { Toaster as Sonner, ToasterProps } from "sonner";
-
-export const Toaster = ({ ...props }: ToasterProps) => {
-    const { theme = "system" } = useTheme();
-
-    return (
-        <Sonner
-            theme={theme as ToasterProps["theme"]}
-            className="toaster group"
-            style={
-                {
-                    "--normal-bg": "var(--popover)",
-                    "--normal-text": "var(--popover-foreground)",
-                    "--normal-border": "var(--border)",
-                } as React.CSSProperties
-            }
-            {...props}
-        />
-    );
-};
+// ponytail: app is always dark-themed; next-themes had no ThemeProvider, so the
+// toaster resolved to an undefined "system" theme. Tokens are now defined in
+// globals.css (@theme), so --popover/--border resolve directly.
+export const Toaster = ({ ...props }: ToasterProps) => (
+    <Sonner
+        theme="dark"
+        className="toaster group"
+        style={
+            {
+                "--normal-bg": "var(--popover)",
+                "--normal-text": "var(--popover-foreground)",
+                "--normal-border": "var(--border)",
+            } as React.CSSProperties
+        }
+        {...props}
+    />
+);

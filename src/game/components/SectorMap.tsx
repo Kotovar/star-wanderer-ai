@@ -14,6 +14,7 @@ import {
   getStarGlowColor,
 } from "./sectorMap/helpers";
 import { LegendIcon } from "./sectorMap/LegendIcon";
+import { setupHiDPICanvas } from "./canvas-utils";
 import {
   drawAncientBoss,
   drawAnomaly,
@@ -161,15 +162,14 @@ export function SectorMap() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const width = canvas.width;
-    const height = canvas.height;
+    const { width, height } = canvasSizeRef.current;
     const centerX = width / 2;
     const centerY = height / 2;
     const baseMaxRadius = Math.min(width, height) * 0.45;
 
     // Draw cached background (stars) - no transform
     if (bgCanvasRef.current) {
-      ctx.drawImage(bgCanvasRef.current, 0, 0);
+      ctx.drawImage(bgCanvasRef.current, 0, 0, width, height);
     }
 
     // Apply transform for zoom and pan (use ref for sync access during drag)
@@ -445,10 +445,9 @@ export function SectorMap() {
     if (!ctx) return;
 
     // Setup animation canvas
-    animCanvas.width = newWidth;
-    animCanvas.height = newHeight;
     const animCtx = animCanvas.getContext("2d");
     if (!animCtx) return;
+    setupHiDPICanvas(animCanvas, animCtx, newWidth, newHeight);
 
     // Regenerate background if canvas size changed OR star type changed
     const sizeChanged =
@@ -459,8 +458,7 @@ export function SectorMap() {
       canvasSizeRef.current.starType !== currentSector.star?.type;
 
     if (sizeChanged || starTypeChanged) {
-      canvas.width = newWidth;
-      canvas.height = newHeight;
+      setupHiDPICanvas(canvas, ctx, newWidth, newHeight);
       canvasSizeRef.current = {
         width: newWidth,
         height: newHeight,
@@ -469,9 +467,8 @@ export function SectorMap() {
 
       // Create off-screen background canvas
       const bgCanvas = document.createElement("canvas");
-      bgCanvas.width = newWidth;
-      bgCanvas.height = newHeight;
       const bgCtx = bgCanvas.getContext("2d");
+      if (bgCtx) setupHiDPICanvas(bgCanvas, bgCtx, newWidth, newHeight);
 
       if (bgCtx) {
         // Clear with space background - color depends on star type
@@ -759,31 +756,31 @@ export function SectorMap() {
               animCtx.clearRect(
                 0,
                 0,
-                animCanvas.width,
-                animCanvas.height,
+                canvasSizeRef.current.width,
+                canvasSizeRef.current.height,
               );
               drawMeteors(animCtx, animState);
               drawParticles(
                 animCtx,
                 animState,
-                animCanvas.width,
-                animCanvas.height,
+                canvasSizeRef.current.width,
+                canvasSizeRef.current.height,
               );
               if (starsRef.current) {
                 drawTwinklingStars(
                   animCtx,
                   starsRef.current,
                   animState.time,
-                  animCanvas.width,
-                  animCanvas.height,
+                  canvasSizeRef.current.width,
+                  canvasSizeRef.current.height,
                 );
               }
             } else if (animCtx) {
               animCtx.clearRect(
                 0,
                 0,
-                animCanvas.width,
-                animCanvas.height,
+                canvasSizeRef.current.width,
+                canvasSizeRef.current.height,
               );
             }
           }
@@ -799,14 +796,14 @@ export function SectorMap() {
       const canvas = canvasRef.current;
       if (!canvas || !currentSector) return;
       const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
+      const scaleX = canvasSizeRef.current.width / rect.width;
+      const scaleY = canvasSizeRef.current.height / rect.height;
       const mouseX = (e.clientX - rect.left) * scaleX;
       const mouseY = (e.clientY - rect.top) * scaleY;
 
       // Account for zoom and pan
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
+      const centerX = canvasSizeRef.current.width / 2;
+      const centerY = canvasSizeRef.current.height / 2;
       const currentOffset = isDraggingRef.current
         ? offsetRef.current
         : offset;
@@ -821,7 +818,7 @@ export function SectorMap() {
       ) => {
         const distanceRatio = loc.distanceRatio ?? 0.5;
         const baseMaxRadius =
-          Math.min(canvas.width, canvas.height) * 0.45;
+          Math.min(canvasSizeRef.current.width, canvasSizeRef.current.height) * 0.45;
         const distance = baseMaxRadius * distanceRatio;
         const angle = loc.angle ?? 0;
         const x = centerX + Math.cos(angle) * distance;
@@ -937,31 +934,31 @@ export function SectorMap() {
             animCtx.clearRect(
               0,
               0,
-              animCanvas.width,
-              animCanvas.height,
+              canvasSizeRef.current.width,
+              canvasSizeRef.current.height,
             );
             drawMeteors(animCtx, animState);
             drawParticles(
               animCtx,
               animState,
-              animCanvas.width,
-              animCanvas.height,
+              canvasSizeRef.current.width,
+              canvasSizeRef.current.height,
             );
             if (starsRef.current) {
               drawTwinklingStars(
                 animCtx,
                 starsRef.current,
                 animState.time,
-                animCanvas.width,
-                animCanvas.height,
+                canvasSizeRef.current.width,
+                canvasSizeRef.current.height,
               );
             }
           } else if (animCtx) {
             animCtx.clearRect(
               0,
               0,
-              animCanvas.width,
-              animCanvas.height,
+              canvasSizeRef.current.width,
+              canvasSizeRef.current.height,
             );
           }
         }
@@ -1064,14 +1061,14 @@ export function SectorMap() {
     const canvas = canvasRef.current;
     if (!canvas || !currentSector) return;
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    const scaleX = canvasSizeRef.current.width / rect.width;
+    const scaleY = canvasSizeRef.current.height / rect.height;
     const clickX = (e.clientX - rect.left) * scaleX;
     const clickY = (e.clientY - rect.top) * scaleY;
 
     // Account for zoom and pan - transform click coordinates to world coordinates
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    const centerX = canvasSizeRef.current.width / 2;
+    const centerY = canvasSizeRef.current.height / 2;
 
     // Use ref offset during drag, state otherwise
     const currentOffset = isDraggingRef.current
@@ -1100,7 +1097,7 @@ export function SectorMap() {
     }
 
     // Helper function to compute location position
-    const baseMaxRadius = Math.min(canvas.width, canvas.height) * 0.45;
+    const baseMaxRadius = Math.min(canvasSizeRef.current.width, canvasSizeRef.current.height) * 0.45;
     const computeLocationPosition = (
       loc: (typeof currentSector.locations)[0],
     ) => {
