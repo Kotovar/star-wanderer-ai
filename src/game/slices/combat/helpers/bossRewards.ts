@@ -7,6 +7,23 @@ interface BossReward {
     credits: number;
 }
 
+const STORY_BOSS_REWARD_BY_TIER: Partial<Record<number, string>> = {
+    2: "scanner-quantum",
+    3: "engine-quantum",
+};
+
+const hasRewardModule = (state: GameState, module: ShopItem): boolean =>
+    state.ship.modules.some(
+        (m) =>
+            m.type === module.moduleType &&
+            !m.disabled &&
+            m.health > 0 &&
+            (m.level || 1) >= (module.level || 1),
+    ) ||
+    state.ship.cargo.some(
+        (item) => item.isModule && item.module?.id === module.id,
+    );
+
 /**
  * Gets a random tier 4 module from MODULES_FROM_BOSSES
  * Only available for tier 2+ bosses. Excludes modules player already has installed.
@@ -18,15 +35,17 @@ export const getRandomBossReward = (
     // Tier 1 bosses don't drop modules
     if (bossTier < 2) return null;
 
+    const storyRewardId = STORY_BOSS_REWARD_BY_TIER[bossTier];
+    const storyReward = MODULES_FROM_BOSSES.find(
+        (module) => module.id === storyRewardId,
+    );
+    if (storyReward && !hasRewardModule(state, storyReward)) {
+        return storyReward;
+    }
+
     // Filter out modules player already has
     const availableModules = MODULES_FROM_BOSSES.filter((module) => {
-        return !state.ship.modules.some(
-            (m) =>
-                m.type === module.moduleType &&
-                !m.disabled &&
-                m.health > 0 &&
-                (m.level || 1) >= 4,
-        );
+        return !hasRewardModule(state, module);
     });
 
     if (availableModules.length === 0) return null;
