@@ -4,8 +4,10 @@ import { initialState } from "@/game/initial";
 import { clearLocalStorage, saveToLocalStorage } from "@/game/saves/utils";
 import { playSound } from "@/sounds";
 import { buildStartingState } from "./buildStartingState";
+import { applyResearchedTechs } from "@/game/research/applyResearchedTechs";
 import { DEFAULT_TEMPLATE_ID } from "@/game/constants/shipTemplates";
 import { getVictoryObjectives } from "@/game/constants/victoryObjectives";
+import { RESEARCH_TREE } from "@/game/constants/research";
 import {
   GLOBAL_CRISES,
   pickWeightedCrisis,
@@ -70,6 +72,14 @@ export const restartGame = (
     knownRaces,
     startTemplateId: templateId,
   });
+
+  if (patch.startingTechId) {
+    set(applyResearchedTechs(get(), [patch.startingTechId]));
+    get().addLog(
+      `🔬 Стартовая технология: ${RESEARCH_TREE[patch.startingTechId]?.name ?? patch.startingTechId}`,
+      "info",
+    );
+  }
 
   if (patch.startingCrisisId) {
     const crisis = GLOBAL_CRISES.find(

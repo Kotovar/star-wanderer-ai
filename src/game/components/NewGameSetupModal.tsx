@@ -46,6 +46,13 @@ const MODIFIER_TYPE_COLORS = {
   mixed: { text: "#ff00ff", border: "#ff00ff", bg: "rgba(255,0,255,0.06)" },
 };
 
+const DOCTRINE_MODIFIERS = LAUNCH_MODIFIERS.filter(
+  (mod) => mod.group === "doctrine",
+);
+const REGULAR_MODIFIERS = LAUNCH_MODIFIERS.filter(
+  (mod) => mod.group !== "doctrine",
+);
+
 const MODULE_NAME_KEYS: Partial<Record<ModuleType, string>> = {
   reactor: "new_game_setup.mod_reactor",
   cockpit: "new_game_setup.mod_cockpit",
@@ -164,6 +171,8 @@ function getModifierDetails(mod: LaunchModifier, t: TFn) {
     details.push(t("new_game_setup.effect_cursed_artifact"));
   if (mod.startWithCrisis)
     details.push(t("new_game_setup.effect_starting_crisis"));
+  if (mod.startWithRandomTech)
+    details.push(t("new_game_setup.effect_random_tech"));
   if (mod.startRaceReputation)
     details.push(t("new_game_setup.effect_reputation"));
   if (mod.researchResources) {
@@ -172,6 +181,18 @@ function getModifierDetails(mod: LaunchModifier, t: TFn) {
   }
 
   return details;
+}
+
+function getBlockingModifier(mod: LaunchModifier, selectedIds: string[]) {
+  return (
+    LAUNCH_MODIFIERS.find(
+      (selected) =>
+        selectedIds.includes(selected.id) &&
+        selected.id !== mod.id &&
+        (mod.conflictsWith?.includes(selected.id) ||
+          selected.conflictsWith?.includes(mod.id)),
+    ) ?? null
+  );
 }
 
 function Pill({
@@ -279,6 +300,8 @@ export function NewGameSetupModal({
       if (prev.includes(id)) return prev.filter((m) => m !== id);
 
       const modifier = LAUNCH_MODIFIERS.find((mod) => mod.id === id);
+      if (!modifier || getBlockingModifier(modifier, prev)) return prev;
+
       const next = modifier?.group
         ? prev.filter((selectedId) => {
             const selected = LAUNCH_MODIFIERS.find(
@@ -290,6 +313,81 @@ export function NewGameSetupModal({
 
       return [...next, id];
     });
+  };
+
+  const renderModifierButton = (mod: LaunchModifier) => {
+    const isActive = selectedModifiers.includes(mod.id);
+    const blockingModifier = getBlockingModifier(mod, selectedModifiers);
+    const isBlocked = !isActive && blockingModifier !== null;
+    const tc = MODIFIER_TYPE_COLORS[mod.type];
+    const details = getModifierDetails(mod, t);
+
+    return (
+      <button
+        key={mod.id}
+        type="button"
+        disabled={isBlocked}
+        onClick={() => toggleModifier(mod.id)}
+        className={`min-w-0 text-left border p-2.5 transition-all ${
+          isBlocked ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+        }`}
+        style={{
+          borderColor: isActive ? tc.border : "rgba(0,255,65,0.15)",
+          backgroundColor: isActive ? tc.bg : "rgba(0,0,0,0.18)",
+        }}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div
+              className="font-bold text-xs leading-snug"
+              style={{ color: isActive ? tc.text : "#00ff41" }}
+            >
+              {mod.group === "doctrine" && (
+                <span className="mr-1 text-[10px] uppercase tracking-[0.12em] text-accent">
+                  {t("new_game_setup.doctrine_badge")}
+                </span>
+              )}
+              {t(mod.nameKey)}
+            </div>
+            <div className="mt-1 text-[10px] leading-snug text-[#777]">
+              {t(mod.descriptionKey)}
+            </div>
+          </div>
+          <span
+            className="shrink-0 text-xs font-bold tabular-nums"
+            style={{
+              color: mod.creditDelta >= 0 ? "#00ff41" : "#ff4444",
+            }}
+          >
+            {mod.creditDelta > 0 ? `+${mod.creditDelta}` : mod.creditDelta}₢
+          </span>
+        </div>
+
+        {details.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {details.slice(0, 3).map((detail) => (
+              <Pill
+                key={detail}
+                tone={
+                  mod.type === "bonus"
+                    ? "good"
+                    : mod.type === "challenge"
+                      ? "danger"
+                      : "warning"
+                }
+              >
+                {detail}
+              </Pill>
+            ))}
+          </div>
+        )}
+        {blockingModifier && (
+          <div className="mt-2 text-[10px] text-[#ff9a9a]">
+            {t("new_game_setup.conflicts_with")}: {t(blockingModifier.nameKey)}
+          </div>
+        )}
+      </button>
+    );
   };
 
   const handleStart = () => {
@@ -535,78 +633,18 @@ export function NewGameSetupModal({
                   </div>
                 </div>
 
+                <div className="mb-2 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                  {t("new_game_setup.doctrine_section")}
+                </div>
                 <div className="grid min-w-0 gap-2 min-[1180px]:grid-cols-2">
-                  {LAUNCH_MODIFIERS.map((mod) => {
-                    const isActive = selectedModifiers.includes(mod.id);
-                    const tc = MODIFIER_TYPE_COLORS[mod.type];
-                    const details = getModifierDetails(mod, t);
+                  {DOCTRINE_MODIFIERS.map(renderModifierButton)}
+                </div>
 
-                    return (
-                      <button
-                        key={mod.id}
-                        onClick={() => toggleModifier(mod.id)}
-                        className="min-w-0 text-left border p-2.5 transition-all cursor-pointer"
-                        style={{
-                          borderColor: isActive
-                            ? tc.border
-                            : "rgba(0,255,65,0.15)",
-                          backgroundColor: isActive
-                            ? tc.bg
-                            : "rgba(0,0,0,0.18)",
-                        }}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <div
-                              className="font-bold text-xs leading-snug"
-                              style={{ color: isActive ? tc.text : "#00ff41" }}
-                            >
-                              {mod.group === "doctrine" && (
-                                <span className="mr-1 text-[10px] uppercase tracking-[0.12em] text-accent">
-                                  {t("new_game_setup.doctrine_badge")}
-                                </span>
-                              )}
-                              {t(mod.nameKey)}
-                            </div>
-                            <div className="mt-1 text-[10px] leading-snug text-[#777]">
-                              {t(mod.descriptionKey)}
-                            </div>
-                          </div>
-                          <span
-                            className="shrink-0 text-xs font-bold tabular-nums"
-                            style={{
-                              color:
-                                mod.creditDelta >= 0 ? "#00ff41" : "#ff4444",
-                            }}
-                          >
-                            {mod.creditDelta > 0
-                              ? `+${mod.creditDelta}`
-                              : mod.creditDelta}
-                            ₢
-                          </span>
-                        </div>
-
-                        {details.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {details.slice(0, 3).map((detail) => (
-                              <Pill
-                                key={detail}
-                                tone={
-                                  mod.type === "bonus"
-                                    ? "good"
-                                    : mod.type === "challenge"
-                                      ? "danger"
-                                      : "warning"
-                                }
-                              >
-                                {detail}
-                              </Pill>
-                            ))}
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
+                <div className="mb-2 mt-4 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                  {t("new_game_setup.regular_modifiers_section")}
+                </div>
+                <div className="grid min-w-0 gap-2 min-[1180px]:grid-cols-2">
+                  {REGULAR_MODIFIERS.map(renderModifierButton)}
                 </div>
               </section>
             </div>

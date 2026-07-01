@@ -2673,6 +2673,9 @@
     "modifiers_active": "Модификаторов",
     "modifiers_beginner_tip": "Можно выбрать одну доктрину и любые обычные модификаторы",
     "doctrine_badge": "Доктрина",
+    "doctrine_section": "Стартовая доктрина",
+    "regular_modifiers_section": "Обычные модификаторы",
+    "conflicts_with": "Несовместимо с",
     "difficulty_easy": "Лёгкий",
     "difficulty_normal": "Средний",
     "difficulty_hard": "Сложный",
@@ -2713,6 +2716,7 @@
     "effect_key_module": "ключевой модуль",
     "effect_cursed_artifact": "проклятый артефакт",
     "effect_starting_crisis": "кризис с первого хода",
+    "effect_random_tech": "случайная стартовая технология",
     "effect_reputation": "репутация изменена",
     "ship_label": "Корабль",
     "start_credits": "Стартовые кредиты",
@@ -2770,6 +2774,10 @@
     "research_head_start": {
       "name": "Научный задел",
       "description": "Стартовые ресурсы для исследований: древние данные ×5, технологический лом ×5"
+    },
+    "random_starting_tech": {
+      "name": "Случайный прорыв",
+      "description": "Игра начинается с одной случайной уже изученной стартовой технологией."
     },
     "solo_mission": {
       "name": "Одиночка",

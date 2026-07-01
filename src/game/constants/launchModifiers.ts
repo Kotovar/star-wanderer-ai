@@ -15,6 +15,8 @@ export interface LaunchModifier {
   type: "bonus" | "challenge" | "mixed";
   /** Модификаторы одной группы взаимоисключающие в UI новой игры */
   group?: "doctrine";
+  /** ID модификаторов, которые нельзя выбирать вместе с этим */
+  conflictsWith?: string[];
   /** Изменение стартовых кредитов */
   creditDelta: number;
   /** Изменение стартового запаса топлива */
@@ -33,6 +35,8 @@ export interface LaunchModifier {
   startWithCursedArtifact?: boolean;
   /** Запустить игру с активным случайным кризисом */
   startWithCrisis?: boolean;
+  /** Запустить игру с одной случайной изученной стартовой технологией */
+  startWithRandomTech?: boolean;
   /** Процент урона, применяемый ко всем модулям при старте (0–100) */
   moduleDamagePercent?: number;
   /** Процент урона по одному случайному модулю выбранных типов при старте (0–100) */
@@ -72,6 +76,7 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     creditDelta: -700,
     crewLevel: 2,
     fuelDelta: -20,
+    conflictsWith: ["veteran_crew"],
   },
   {
     id: "doctrine_trader",
@@ -94,6 +99,7 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     creditDelta: 700,
     startRaceReputation: { krylorian: -45 },
     moduleDamagePercent: 15,
+    conflictsWith: ["wanted"],
   },
 
   // ── Бонусы (дают преимущество, но стоят кредитов) ────────────────────────
@@ -105,6 +111,7 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     type: "bonus",
     creditDelta: -1000,
     crewLevel: 3,
+    conflictsWith: ["doctrine_boss_hunter"],
   },
   {
     id: "extra_fuel",
@@ -127,6 +134,15 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
       ancient_data: 5,
       tech_salvage: 5,
     },
+  },
+  {
+    id: "random_starting_tech",
+    nameKey: "launch_modifiers.random_starting_tech.name",
+    descriptionKey: "launch_modifiers.random_starting_tech.description",
+    icon: "🧬",
+    type: "bonus",
+    creditDelta: -800,
+    startWithRandomTech: true,
   },
 
   // ── Испытания (дают трудности, но добавляют кредиты) ─────────────────────
@@ -199,6 +215,7 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     type: "challenge",
     creditDelta: +400,
     startRaceReputation: { krylorian: -70 },
+    conflictsWith: ["doctrine_exile"],
   },
 
   // ── Новый смешанный ───────────────────────────────────────────────────────

@@ -1,9 +1,10 @@
 import { SHIP_TEMPLATES, DEFAULT_TEMPLATE_ID } from "@/game/constants/shipTemplates";
 import { LAUNCH_MODIFIERS } from "@/game/constants/launchModifiers";
 import { GLOBAL_CRISES } from "@/game/constants/globalCrises";
+import { RESEARCH_TREE } from "@/game/constants/research";
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
-import type { CrewMember, GameState, Artifact } from "@/game/types";
+import type { CrewMember, GameState, Artifact, TechnologyId } from "@/game/types";
 import type { ResearchResourceType } from "@/game/types/research";
 import type { RaceId } from "@/game/types/races";
 
@@ -21,6 +22,8 @@ export interface StartingStatePatch {
   knownRaces?: RaceId[];
   /** Кризис, который надо активировать сразу после создания стартового состояния */
   startingCrisisId?: string;
+  /** Случайная технология, которую надо сразу засчитать изученной */
+  startingTechId?: TechnologyId;
 }
 
 /**
@@ -218,6 +221,13 @@ export function buildStartingState(
   const startingCrisis = wantsStartingCrisis
     ? GLOBAL_CRISES[Math.floor(Math.random() * GLOBAL_CRISES.length)]
     : undefined;
+  const startingTechPool = Object.values(RESEARCH_TREE).filter(
+    (tech) => tech.discovered && tech.prerequisites.length === 0,
+  );
+  const wantsStartingTech = activeModifiers.some((m) => m.startWithRandomTech);
+  const startingTech = wantsStartingTech
+    ? startingTechPool[Math.floor(Math.random() * startingTechPool.length)]
+    : undefined;
 
   // ── Корабль ───────────────────────────────────────────────────────────────
   const crewCapacity =
@@ -249,5 +259,6 @@ export function buildStartingState(
     raceReputation: Object.keys(raceReputation).length > 0 ? raceReputation : undefined,
     knownRaces: knownRaces.size > 0 ? [...knownRaces] : undefined,
     startingCrisisId: startingCrisis?.id,
+    startingTechId: startingTech?.id,
   };
 }

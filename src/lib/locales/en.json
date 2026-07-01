@@ -2673,6 +2673,9 @@
     "modifiers_active": "Modifiers active",
     "modifiers_beginner_tip": "Choose one doctrine and any number of regular modifiers",
     "doctrine_badge": "Doctrine",
+    "doctrine_section": "Starting Doctrine",
+    "regular_modifiers_section": "Regular Modifiers",
+    "conflicts_with": "Conflicts with",
     "difficulty_easy": "Easy",
     "difficulty_normal": "Normal",
     "difficulty_hard": "Hard",
@@ -2713,6 +2716,7 @@
     "effect_key_module": "key module",
     "effect_cursed_artifact": "cursed artifact",
     "effect_starting_crisis": "crisis from turn one",
+    "effect_random_tech": "random starting technology",
     "effect_reputation": "reputation changed",
     "ship_label": "Ship",
     "start_credits": "Starting credits",
@@ -2770,6 +2774,10 @@
     "research_head_start": {
       "name": "Research Head Start",
       "description": "Starting research resources: ancient_data ×5, tech_salvage ×5, rare_minerals ×3."
+    },
+    "random_starting_tech": {
+      "name": "Random Breakthrough",
+      "description": "Game begins with one random starting technology already researched."
     },
     "solo_mission": {
       "name": "Solo Mission",
