@@ -12,6 +12,8 @@ export type CrisisDataValue =
 
 export type CrisisData = Record<string, CrisisDataValue>;
 
+export type CrisisResponse = "combat" | "science" | "diplomacy" | "resources";
+
 export interface GlobalCrisis {
   id: string;
   /** Ключ переводов: `crises.{id}.name` */
@@ -25,6 +27,10 @@ export interface GlobalCrisis {
   icon: string;
   /** Сколько ходов длится кризис */
   duration: number;
+  /** Какие способы подавления подходят именно этому кризису */
+  allowedResponses: CrisisResponse[];
+  /** Контекстные пояснения для способов подавления */
+  responseNotes?: Partial<Record<CrisisResponse, string>>;
   /** Эффект при старте кризиса */
   onStartEffect?: (set: SetState, get: () => GameStore) => CrisisData | void;
   /** Эффект, применяемый каждый ход пока кризис активен */

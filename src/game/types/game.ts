@@ -21,7 +21,7 @@ import type { CraftingRecipeId, ModuleRecipeId } from "./crafting";
 import type { ShopItem } from "./shops";
 import type { AugmentationId } from "./augmentations";
 import type { DiveState, ExpeditionState } from "./exploration";
-import type { ActiveCrisisState } from "./crisis";
+import type { ActiveCrisisState, CrisisResponse } from "./crisis";
 
 export type GameMode =
   | "galaxy_map"
@@ -41,6 +41,7 @@ export type GameMode =
   | "storm_results"
   | "research"
   | "reputation"
+  | "crises"
   | "derelict_ship"
   | "gas_giant"
   | "wreck_field"
@@ -164,6 +165,7 @@ export interface GameActions {
 export interface GameActionsClick {
   nextTurn: () => void;
   skipTurn: () => void;
+  resolveCrisis: (response: CrisisResponse) => void;
   selectSector: (sectorId: number) => void;
   selectLocation: (locationIdx: number) => void;
   resolveTravelEvent: (choice: "risk" | "cautious") => void;
@@ -177,6 +179,7 @@ export interface GameModeChanges {
   showGalaxyMap: () => void;
   showSectorMap: () => void;
   showAssignments: () => void;
+  showCrises: () => void;
   closeArtifactsPanel: () => void;
   closeResearchPanel: () => void;
   savePreviousGameMode: () => void;

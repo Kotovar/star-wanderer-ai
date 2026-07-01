@@ -31,7 +31,7 @@ const CRITICAL_MODULE_TYPES = new Set([
   "reactor",
 ]);
 
-const pickRandomItems = <T,>(items: T[], count: number): T[] => {
+const pickRandomItems = <T>(items: T[], count: number): T[] => {
   const pool = [...items];
   const result: T[] = [];
   while (pool.length > 0 && result.length < count) {
@@ -101,8 +101,15 @@ const countModulesByTypes = (state: GameState, types: string[]) =>
 const getCrisisIntensity = (state: GameState) => {
   const tierPressure = Math.max(0, (state.currentSector?.tier ?? 1) - 1) * 0.12;
   const turnPressure =
-    state.turn >= 90 ? 0.4 : state.turn >= 60 ? 0.25 : state.turn >= 40 ? 0.12 : 0;
-  const victoryPressure = state.victoryTriggered || state.gameVictory ? 0.25 : 0;
+    state.turn >= 90
+      ? 0.4
+      : state.turn >= 60
+        ? 0.25
+        : state.turn >= 40
+          ? 0.12
+          : 0;
+  const victoryPressure =
+    state.victoryTriggered || state.gameVictory ? 0.25 : 0;
   return Math.min(1.85, 1 + tierPressure + turnPressure + victoryPressure);
 };
 
@@ -116,7 +123,10 @@ const getCrisisWeights = (
   state: GameState,
   excludeId?: string,
 ): Record<string, number> => {
-  const totalCargo = state.ship.tradeGoods.reduce((sum, good) => sum + good.quantity, 0);
+  const totalCargo = state.ship.tradeGoods.reduce(
+    (sum, good) => sum + good.quantity,
+    0,
+  );
   const sensitiveModules = countModulesByTypes(state, [
     "shield",
     "scanner",
@@ -125,15 +135,23 @@ const getCrisisWeights = (
     "ai_core",
     "deep_survey_array",
   ]);
-  const fuelSystems = countModulesByTypes(state, ["engine", "fueltank", "pulse_drive"]);
+  const fuelSystems = countModulesByTypes(state, [
+    "engine",
+    "fueltank",
+    "pulse_drive",
+  ]);
   const organicCrew = state.crew.filter(
     (crewMember) => RACES[crewMember.race]?.canGetSick !== false,
   ).length;
-  const hasMedic = state.crew.some((crewMember) => crewMember.profession === "medic");
+  const hasMedic = state.crew.some(
+    (crewMember) => crewMember.profession === "medic",
+  );
   const avgModuleHealth =
     state.ship.modules.length > 0
-      ? state.ship.modules.reduce((sum, module) => sum + module.health / module.maxHealth, 0) /
-        state.ship.modules.length
+      ? state.ship.modules.reduce(
+          (sum, module) => sum + module.health / module.maxHealth,
+          0,
+        ) / state.ship.modules.length
       : 1;
 
   const weights: Record<string, number> = {
@@ -166,13 +184,13 @@ const getCrisisWeights = (
   return weights;
 };
 
-export const pickWeightedCrisis = (
-  state: GameState,
-  excludeId?: string,
-) => {
+export const pickWeightedCrisis = (state: GameState, excludeId?: string) => {
   const weights = getCrisisWeights(state, excludeId);
   const pool = GLOBAL_CRISES.filter((crisis) => (weights[crisis.id] ?? 0) > 0);
-  const totalWeight = pool.reduce((sum, crisis) => sum + (weights[crisis.id] ?? 0), 0);
+  const totalWeight = pool.reduce(
+    (sum, crisis) => sum + (weights[crisis.id] ?? 0),
+    0,
+  );
 
   if (pool.length === 0 || totalWeight <= 0) {
     const fallback = GLOBAL_CRISES.filter((crisis) => crisis.id !== excludeId);
@@ -188,18 +206,23 @@ export const pickWeightedCrisis = (
   return pool[pool.length - 1];
 };
 
-export const rollNextCrisisTurn = (
-  currentTurn: number,
-  state: GameState,
-) => {
-  const creditsPressure = state.credits > 2200 ? -2 : state.credits < 350 ? 3 : 0;
-  const fuelPressure = state.ship.fuel < 20 ? 2 : state.ship.fuel > 110 ? -1 : 0;
+export const rollNextCrisisTurn = (currentTurn: number, state: GameState) => {
+  const creditsPressure =
+    state.credits > 2200 ? -2 : state.credits < 350 ? 3 : 0;
+  const fuelPressure =
+    state.ship.fuel < 20 ? 2 : state.ship.fuel > 110 ? -1 : 0;
   const crewPressure = state.crew.length >= 7 ? -1 : 0;
   const tierPressure = (state.currentSector?.tier ?? 1) >= 3 ? -2 : 0;
   const instabilityPressure = creditsPressure + fuelPressure + crewPressure;
 
-  const minDelay = Math.max(18, CRISIS_INTERVAL_MIN + instabilityPressure + tierPressure);
-  const maxDelay = Math.max(minDelay + 6, CRISIS_INTERVAL_MAX + instabilityPressure + tierPressure);
+  const minDelay = Math.max(
+    18,
+    CRISIS_INTERVAL_MIN + instabilityPressure + tierPressure,
+  );
+  const maxDelay = Math.max(
+    minDelay + 6,
+    CRISIS_INTERVAL_MAX + instabilityPressure + tierPressure,
+  );
   return currentTurn + randomInt(minDelay, maxDelay);
 };
 
@@ -214,22 +237,41 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
     descriptionKey: "crises.raider_wave.description",
     effectsKey: "crises.raider_wave.effects",
     icon: "🏴‍☠️",
-    duration: 4,
+    duration: 32,
+    allowedResponses: ["combat", "diplomacy", "resources"],
+    responseNotes: {
+      combat: "Перехватить рейдерские группы и сорвать налёты силой.",
+      diplomacy: "Подкупить посредников и перекрыть рейдерам каналы снабжения.",
+      resources:
+        "Оплатить охранные конвои, ложные маяки и аварийную переброску грузов.",
+    },
     onStartEffect: (set, get) => {
       const state = get();
       const intensity = getCrisisIntensity(state);
       const targets = pickRandomItems(getOperationalModules(state), 2);
-      damageModules(set, targets.map((module) => module.id), scaled(state, 7));
+      damageModules(
+        set,
+        targets.map((module) => module.id),
+        scaled(state, 7),
+      );
       const cargoLoss = pickRandomItems(state.ship.tradeGoods, 1)[0];
       if (cargoLoss) {
-        const stolenQty = Math.max(1, Math.ceil(cargoLoss.quantity * Math.min(0.45, 0.2 + intensity * 0.05)));
+        const stolenQty = Math.max(
+          1,
+          Math.ceil(
+            cargoLoss.quantity * Math.min(0.45, 0.2 + intensity * 0.05),
+          ),
+        );
         set((s: GameState) => ({
           ship: {
             ...s.ship,
             tradeGoods: s.ship.tradeGoods
               .map((good) =>
                 good.item === cargoLoss.item
-                  ? { ...good, quantity: Math.max(0, good.quantity - stolenQty) }
+                  ? {
+                      ...good,
+                      quantity: Math.max(0, good.quantity - stolenQty),
+                    }
                   : good,
               )
               .filter((good) => good.quantity > 0),
@@ -253,7 +295,12 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       const fuelLoss = scaled(state, 3);
       const creditLoss = Math.min(
         scaled(state, 65),
-        Math.max(scaled(state, 12), Math.round((state.credits || 0) * (0.055 + getCrisisIntensity(state) * 0.018))),
+        Math.max(
+          scaled(state, 12),
+          Math.round(
+            (state.credits || 0) * (0.055 + getCrisisIntensity(state) * 0.018),
+          ),
+        ),
       );
       if (state.credits > 0) {
         set((s: GameState) => ({
@@ -267,7 +314,11 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
           },
         }));
       }
-      damageModules(set, targets.map((module) => module.id), scaled(state, 5));
+      damageModules(
+        set,
+        targets.map((module) => module.id),
+        scaled(state, 5),
+      );
       const targetName = targets[0]?.name;
       set((s: GameState) => ({
         crew: s.crew.map((crewMember) => ({
@@ -292,14 +343,25 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
     descriptionKey: "crises.solar_flare.description",
     effectsKey: "crises.solar_flare.effects",
     icon: "☀️",
-    duration: 3,
+    duration: 28,
+    allowedResponses: ["science", "resources"],
+    responseNotes: {
+      science: "Пересчитать защитные контуры и стабилизировать электронику.",
+      resources:
+        "Сжечь запас топлива и расходников на аварийное экранирование.",
+    },
     onStartEffect: (set, get) => {
       const state = get();
       const disrupted = state.ship.modules.filter(
         (module) =>
-          ["shield", "scanner", "lab", "medical", "ai_core", "deep_survey_array"].includes(
-            module.type,
-          ) &&
+          [
+            "shield",
+            "scanner",
+            "lab",
+            "medical",
+            "ai_core",
+            "deep_survey_array",
+          ].includes(module.type) &&
           module.health > 0 &&
           !module.manualDisabled,
       );
@@ -321,7 +383,8 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
     },
     onTurnEffect: (set, get, activeCrisis) => {
       const state = get();
-      const disruptedIds = (activeCrisis.data?.disabledModuleIds as number[] | undefined) ?? [];
+      const disruptedIds =
+        (activeCrisis.data?.disabledModuleIds as number[] | undefined) ?? [];
       damageModules(set, disruptedIds, scaled(state, 3));
       set((s: GameState) => ({
         ship: {
@@ -337,10 +400,14 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       );
     },
     onEndEffect: (set, get, activeCrisis) => {
-      const disruptedIds = (activeCrisis.data?.disabledModuleIds as number[] | undefined) ?? [];
+      const disruptedIds =
+        (activeCrisis.data?.disabledModuleIds as number[] | undefined) ?? [];
       setModulesManualDisabled(set, disruptedIds, false);
       if (disruptedIds.length > 0) {
-        get().addLog("☀️ Солнечная активность спала, бортовая электроника возвращается в строй", "info");
+        get().addLog(
+          "☀️ Солнечная активность спала, бортовая электроника возвращается в строй",
+          "info",
+        );
       }
     },
   },
@@ -353,12 +420,23 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
     descriptionKey: "crises.epidemic.description",
     effectsKey: "crises.epidemic.effects",
     icon: "🦠",
-    duration: 4,
+    duration: 36,
+    allowedResponses: ["science", "diplomacy", "resources"],
+    responseNotes: {
+      science:
+        "Развернуть карантинный протокол и подобрать лечение по образцам.",
+      diplomacy: "Запросить медпомощь и вакцины у известных рас.",
+      resources:
+        "Потратить резервы на изоляцию отсеков, медикаменты и смену пайков.",
+    },
     onStartEffect: (set, get) => {
       const organicCrew = get().crew.filter(
         (crewMember) => RACES[crewMember.race]?.canGetSick !== false,
       );
-      const infected = pickRandomItems(organicCrew, Math.min(2, organicCrew.length));
+      const infected = pickRandomItems(
+        organicCrew,
+        Math.min(2, organicCrew.length),
+      );
       if (infected.length > 0) {
         get().addLog(
           `🦠 Вспышка болезни на борту: заражены ${formatNames(infected.map((crewMember) => crewMember.name))}`,
@@ -369,11 +447,11 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
     },
     onTurnEffect: (set, get, activeCrisis) => {
       const state = get();
-      const infectedIds = (activeCrisis.data?.infectedCrewIds as number[] | undefined) ?? [];
+      const infectedIds =
+        (activeCrisis.data?.infectedCrewIds as number[] | undefined) ?? [];
       const hasMedicSupport = get().crew.some(
         (crewMember) =>
-          crewMember.profession === "medic" &&
-          crewMember.health > 0,
+          crewMember.profession === "medic" && crewMember.health > 0,
       );
       const infectedHealthLoss = scaled(state, hasMedicSupport ? 2 : 5);
       const infectedMoraleLoss = scaled(state, hasMedicSupport ? 3 : 6);
@@ -383,7 +461,10 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
           ...c,
           happiness: Math.max(
             0,
-            c.happiness - (infectedIds.includes(c.id) ? infectedMoraleLoss : backgroundMoraleLoss),
+            c.happiness -
+              (infectedIds.includes(c.id)
+                ? infectedMoraleLoss
+                : backgroundMoraleLoss),
           ),
           health: infectedIds.includes(c.id)
             ? Math.max(1, c.health - infectedHealthLoss)
@@ -401,7 +482,10 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       set((s: GameState) => ({
         crew: s.crew.map((crewMember) => ({
           ...crewMember,
-          happiness: Math.min(crewMember.maxHappiness || 100, crewMember.happiness + 5),
+          happiness: Math.min(
+            crewMember.maxHappiness || 100,
+            crewMember.happiness + 5,
+          ),
           health: Math.min(crewMember.maxHealth, crewMember.health + 4),
         })),
       }));
@@ -417,7 +501,13 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
     descriptionKey: "crises.fuel_shortage.description",
     effectsKey: "crises.fuel_shortage.effects",
     icon: "⛽",
-    duration: 4,
+    duration: 32,
+    allowedResponses: ["science", "diplomacy", "resources"],
+    responseNotes: {
+      science: "Перенастроить двигатели и снизить потери в топливной цепи.",
+      diplomacy: "Выбить срочные поставки через знакомые фракции.",
+      resources: "Купить дорогой аварийный резерв и растянуть его по системам.",
+    },
     onStartEffect: (set, get) => {
       const state = get();
       const bottleneckModules = state.ship.modules.filter(
@@ -426,7 +516,10 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
           module.health > 0 &&
           !module.manualDisabled,
       );
-      const throttled = pickRandomItems(bottleneckModules, Math.min(2, bottleneckModules.length));
+      const throttled = pickRandomItems(
+        bottleneckModules,
+        Math.min(2, bottleneckModules.length),
+      );
       const throttledIds = throttled.map((module) => module.id);
       setModulesManualDisabled(set, throttledIds, true);
       set((s: GameState) => ({
@@ -441,15 +534,22 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
           "warning",
         );
       } else {
-        get().addLog("⛽ Топливный кризис: баки пустеют быстрее обычного", "warning");
+        get().addLog(
+          "⛽ Топливный кризис: баки пустеют быстрее обычного",
+          "warning",
+        );
       }
       return { throttledModuleIds: throttledIds };
     },
     onTurnEffect: (set, get, activeCrisis) => {
       const state = get();
-      const throttledIds = (activeCrisis.data?.throttledModuleIds as number[] | undefined) ?? [];
+      const throttledIds =
+        (activeCrisis.data?.throttledModuleIds as number[] | undefined) ?? [];
       const activeCrew = state.crew.length;
-      const drain = Math.min(scaled(state, 11), scaled(state, 3 + Math.floor(activeCrew / 4)));
+      const drain = Math.min(
+        scaled(state, 11),
+        scaled(state, 3 + Math.floor(activeCrew / 4)),
+      );
       set((s: GameState) => ({
         ship: {
           ...s.ship,
@@ -467,9 +567,13 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       );
     },
     onEndEffect: (set, get, activeCrisis) => {
-      const throttledIds = (activeCrisis.data?.throttledModuleIds as number[] | undefined) ?? [];
+      const throttledIds =
+        (activeCrisis.data?.throttledModuleIds as number[] | undefined) ?? [];
       setModulesManualDisabled(set, throttledIds, false);
-      get().addLog("⛽ Топливные поставки стабилизировались, двигатели снова доступны", "info");
+      get().addLog(
+        "⛽ Топливные поставки стабилизировались, двигатели снова доступны",
+        "info",
+      );
     },
   },
 ];

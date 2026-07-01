@@ -5,7 +5,10 @@ import { useGameStore } from "@/game/store";
 import { HelpPanel, ActiveEffectsPanel } from "../panels";
 import { ResearchPanel } from "../ResearchPanel";
 import { SaveLoadPanel } from "../SaveLoadPanel";
-import { GLOBAL_CRISES, CRISIS_WARNING_TURNS } from "@/game/constants/globalCrises";
+import {
+  GLOBAL_CRISES,
+  CRISIS_WARNING_TURNS,
+} from "@/game/constants/globalCrises";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +26,9 @@ export function GameHeader() {
   const [showRestartDialog, setShowRestartDialog] = useState(false);
   const [showResearchModal, setShowResearchModal] = useState(false);
   const [showSaveLoad, setShowSaveLoad] = useState(false);
-  const [dismissedCrisisWidgetKey, setDismissedCrisisWidgetKey] = useState<string | null>(null);
+  const [dismissedCrisisWidgetKey, setDismissedCrisisWidgetKey] = useState<
+    string | null
+  >(null);
   const [crisisWidgetPosition, setCrisisWidgetPosition] = useState<{
     x: number;
     y: number;
@@ -41,6 +46,7 @@ export function GameHeader() {
   const showResearch = useGameStore((s) => s.showResearch);
   const showReputation = useGameStore((s) => s.showReputation);
   const closeReputationPanel = useGameStore((s) => s.closeReputationPanel);
+  const showCrises = useGameStore((s) => s.showCrises);
   const gameMode = useGameStore((s) => s.gameMode);
   const { t, changeLanguage, currentLanguage } = useTranslation();
 
@@ -113,8 +119,20 @@ export function GameHeader() {
     const handlePointerMove = (event: PointerEvent) => {
       if (!isDraggingCrisisRef.current) return;
       setCrisisWidgetPosition({
-        x: Math.max(8, Math.min(window.innerWidth - 328, event.clientX - dragOffsetRef.current.x)),
-        y: Math.max(8, Math.min(window.innerHeight - 140, event.clientY - dragOffsetRef.current.y)),
+        x: Math.max(
+          8,
+          Math.min(
+            window.innerWidth - 328,
+            event.clientX - dragOffsetRef.current.x,
+          ),
+        ),
+        y: Math.max(
+          8,
+          Math.min(
+            window.innerHeight - 140,
+            event.clientY - dragOffsetRef.current.y,
+          ),
+        ),
       });
     };
 
@@ -152,30 +170,36 @@ export function GameHeader() {
           ◆ {t("game.title")} ◆
         </h1>
         <div className="flex gap-2 md:gap-4 text-xs md:text-sm items-center flex-wrap justify-center md:justify-normal">
-
           {/* ── Статистика ── */}
           <div className="flex items-center gap-2 md:gap-3">
             <div className="flex items-center gap-1 md:gap-2">
-              <span className="text-[#ffb000] hidden md:inline">{t("game.turn")}:</span>
-              <span className="text-[#ffb000] md:hidden">🔢</span>
+              <span className="text-accent hidden md:inline">
+                {t("game.turn")}:
+              </span>
+              <span className="text-accent md:hidden">🔢</span>
               <span className="font-bold text-[#00ff41]">{turn}</span>
             </div>
             <div className="flex items-center gap-1 md:gap-2">
               {traveling ? (
                 <>
-                  <span className="text-[#00d4ff] hidden md:inline">{t("travel.heading")}:</span>
-                  <span className="text-[#00d4ff] md:hidden">🚀</span>
-                  <span className="font-bold text-[#00d4ff] text-xs md:text-base">
+                  <span className="text-ring hidden md:inline">
+                    {t("travel.heading")}:
+                  </span>
+                  <span className="text-ring md:hidden">🚀</span>
+                  <span className="font-bold text-ring text-xs md:text-base">
                     {traveling.destination.name}
                   </span>
                   <span className="text-[#445544] text-[10px]">
-                    {traveling.turnsLeft}/{traveling.turnsTotal} {t("travel.turns_left")}
+                    {traveling.turnsLeft}/{traveling.turnsTotal}{" "}
+                    {t("travel.turns_left")}
                   </span>
                 </>
               ) : (
                 <>
-                  <span className="text-[#ffb000] hidden md:inline">{t("game.sector")}:</span>
-                  <span className="text-[#ffb000] md:hidden">📍</span>
+                  <span className="text-accent hidden md:inline">
+                    {t("game.sector")}:
+                  </span>
+                  <span className="text-accent md:hidden">📍</span>
                   <span className="font-bold text-[#00ff41] text-xs md:text-base">
                     {currentSector?.name || "START"}
                   </span>
@@ -183,7 +207,7 @@ export function GameHeader() {
               )}
             </div>
             <div className="flex items-center gap-1 md:gap-2">
-              <span className="text-[#ffb000]">₢</span>
+              <span className="text-accent">₢</span>
               <span className="font-bold text-[#00ff41]">
                 {isNaN(credits) ? 0 : Math.floor(credits)}
               </span>
@@ -196,11 +220,13 @@ export function GameHeader() {
           <div className="flex items-center gap-1 md:gap-2">
             <button
               onClick={() => setShowHelp(true)}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-ring hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
               title={t("header.tooltip_logbook")}
             >
-              <span className="text-[#00d4ff]">📖</span>
-              <span className="text-[#00d4ff] hidden md:inline">{t("game.logbook")}</span>
+              <span className="text-ring">📖</span>
+              <span className="text-ring hidden md:inline">
+                {t("game.logbook")}
+              </span>
             </button>
             <button
               onClick={() => setShowEffects(true)}
@@ -208,7 +234,9 @@ export function GameHeader() {
               title={t("header.tooltip_effects")}
             >
               <span className="text-[#9933ff]">⚡</span>
-              <span className="text-[#9933ff] hidden md:inline">{t("game.effects")}</span>
+              <span className="text-[#9933ff] hidden md:inline">
+                {t("game.effects")}
+              </span>
               {activeEffects.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-[#9933ff] text-[#050810] text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
                   {activeEffects.length}
@@ -223,7 +251,9 @@ export function GameHeader() {
               <span className="text-[#ff00ff]">★</span>
               <span className="text-[#ff00ff]">{discoveredArtifacts}</span>
               {activeArtifacts > 0 && (
-                <span className="text-[#00ff41] text-xs">({activeArtifacts})</span>
+                <span className="text-[#00ff41] text-xs">
+                  ({activeArtifacts})
+                </span>
               )}
             </button>
             <button
@@ -232,7 +262,9 @@ export function GameHeader() {
               title={t("header.tooltip_research")}
             >
               <span className="text-[#9933ff]">🔬</span>
-              <span className="text-[#9933ff] hidden lg:inline">{t("game.science")}</span>
+              <span className="text-[#9933ff] hidden lg:inline">
+                {t("game.science")}
+              </span>
             </button>
             <button
               onClick={() => {
@@ -246,7 +278,19 @@ export function GameHeader() {
               title={t("reputation.button_tooltip")}
             >
               <span className="text-[#9933ff] lg:hidden">🤝</span>
-              <span className="text-[#9933ff] hidden lg:inline">{t("reputation.button")}</span>
+              <span className="text-[#9933ff] hidden lg:inline">
+                {t("reputation.button")}
+              </span>
+            </button>
+            <button
+              onClick={showCrises}
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#ff4444] hover:bg-[rgba(255,68,68,0.2)] transition-colors cursor-pointer"
+              title="Центр кризисов"
+            >
+              <span className="text-[#ff4444]">🚨</span>
+              <span className="text-[#ff4444] hidden lg:inline">
+                Кризисы
+              </span>
             </button>
           </div>
 
@@ -255,20 +299,26 @@ export function GameHeader() {
           {/* ── Система ── */}
           <div className="flex items-center gap-1 md:gap-2">
             <button
-              onClick={() => window.dispatchEvent(new CustomEvent("sw:showTutorial"))}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
+              onClick={() =>
+                window.dispatchEvent(new CustomEvent("sw:showTutorial"))
+              }
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-ring hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
               title={t("header.tooltip_tutorial")}
             >
-              <span className="text-[#00d4ff]">❓</span>
-              <span className="text-[#00d4ff] hidden md:inline text-xs">{t("game.tutorial")}</span>
+              <span className="text-ring">❓</span>
+              <span className="text-ring hidden md:inline text-xs">
+                {t("game.tutorial")}
+              </span>
             </button>
             <button
               onClick={() => setShowSaveLoad(true)}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-ring hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
               title={t("save_load.title")}
             >
-              <span className="text-[#00d4ff]">💾</span>
-              <span className="text-[#00d4ff] hidden md:inline text-xs">{t("save_load.title")}</span>
+              <span className="text-ring">💾</span>
+              <span className="text-ring hidden md:inline text-xs">
+                {t("save_load.title")}
+              </span>
             </button>
             <button
               onClick={handleRestartClick}
@@ -276,10 +326,14 @@ export function GameHeader() {
               title={t("header.tooltip_restart")}
             >
               <span className="text-[#ff4444]">🔄</span>
-              <span className="text-[#ff4444] hidden md:inline">{t("game.restart")}</span>
+              <span className="text-[#ff4444] hidden md:inline">
+                {t("game.restart")}
+              </span>
             </button>
             <button
-              onClick={() => changeLanguage(currentLanguage === "ru" ? "en" : "ru")}
+              onClick={() =>
+                changeLanguage(currentLanguage === "ru" ? "en" : "ru")
+              }
               className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00ff41] hover:bg-[rgba(0,255,65,0.2)] transition-colors cursor-pointer font-bold"
               title={t("language.switch")}
             >
@@ -289,7 +343,6 @@ export function GameHeader() {
               </span>
             </button>
           </div>
-
         </div>
       </header>
 
@@ -307,7 +360,7 @@ export function GameHeader() {
               : undefined
           }
         >
-          <div className="rounded-md border border-[#ff0040] bg-[rgba(28,6,14,0.9)] px-3 py-2 shadow-[0_0_20px_rgba(255,0,64,0.25)] backdrop-blur-sm">
+          <div className="rounded-md border border-destructive bg-[rgba(28,6,14,0.9)] px-3 py-2 shadow-[0_0_20px_rgba(255,0,64,0.25)] backdrop-blur-sm">
             <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#ff6680]">
               <button
                 type="button"
@@ -348,6 +401,13 @@ export function GameHeader() {
               Осталось {activeCrisis.turnsRemaining}{" "}
               {activeCrisis.turnsRemaining === 1 ? "ход" : "хода"}
             </div>
+            <button
+              type="button"
+              onClick={showCrises}
+              className="mt-2 w-full cursor-pointer rounded border border-[#ff668055] px-2 py-1 text-[10px] font-bold text-[#ffd6de] hover:bg-[rgba(255,102,128,0.14)]"
+            >
+              Открыть центр кризисов
+            </button>
           </div>
         </div>
       ) : turnsUntilCrisis <= CRISIS_WARNING_TURNS &&
@@ -365,7 +425,7 @@ export function GameHeader() {
               : undefined
           }
         >
-          <div className="rounded-md border border-[#ffb000] bg-[rgba(32,22,6,0.9)] px-3 py-2 shadow-[0_0_18px_rgba(255,176,0,0.2)] backdrop-blur-sm">
+          <div className="rounded-md border border-accent bg-[rgba(32,22,6,0.9)] px-3 py-2 shadow-[0_0_18px_rgba(255,176,0,0.2)] backdrop-blur-sm">
             <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#ffd36b]">
               <button
                 type="button"
@@ -391,8 +451,8 @@ export function GameHeader() {
             </div>
             <div className="mt-1 text-sm font-semibold text-[#ffe6a6]">
               {upcomingCrisis?.icon ?? "⚠️"}{" "}
-              {upcomingCrisis ? t(upcomingCrisis.nameKey) : "Кризис"} через {turnsUntilCrisis}{" "}
-              {turnsUntilCrisis === 1 ? "ход" : "хода"}
+              {upcomingCrisis ? t(upcomingCrisis.nameKey) : "Кризис"} через{" "}
+              {turnsUntilCrisis} {turnsUntilCrisis === 1 ? "ход" : "хода"}
             </div>
             {upcomingCrisis && (
               <>
@@ -412,23 +472,16 @@ export function GameHeader() {
       ) : null}
 
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
-      {showSaveLoad && (
-        <SaveLoadPanel onClose={() => setShowSaveLoad(false)} />
-      )}
+      {showSaveLoad && <SaveLoadPanel onClose={() => setShowSaveLoad(false)} />}
       {showEffects && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div className="bg-[rgba(10,20,30,0.95)] border-2 border-[#9933ff] p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
-            <ActiveEffectsPanel
-              onClose={() => setShowEffects(false)}
-            />
+            <ActiveEffectsPanel onClose={() => setShowEffects(false)} />
           </div>
         </div>
       )}
 
-      <Dialog
-        open={showRestartDialog}
-        onOpenChange={setShowRestartDialog}
-      >
+      <Dialog open={showRestartDialog} onOpenChange={setShowRestartDialog}>
         <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ff4444] text-[#00ff41] max-w-md">
           <DialogHeader>
             <DialogTitle className="cursor-pointer text-xl font-['Orbitron'] text-[#ff4444]">
@@ -472,7 +525,7 @@ export function GameHeader() {
           onPointerDownOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>
-            <DialogTitle className="text-[#ffb000] font-['Orbitron'] text-lg">
+            <DialogTitle className="text-accent font-['Orbitron'] text-lg">
               🔬 {t("game.science")}
             </DialogTitle>
             <DialogDescription className="sr-only">

@@ -15,6 +15,8 @@ export interface UiSlice {
     showSectorMap: () => void;
     /** Показать экран назначений экипажа */
     showAssignments: () => void;
+    /** Показать экран кризисов */
+    showCrises: () => void;
     /** Показать панель артефактов */
     showArtifacts: () => void;
     /** Показать панель исследований */
@@ -66,6 +68,16 @@ export const createUiSlice = (set: SetState): UiSlice => ({
         }),
 
     showAssignments: () => set({ gameMode: GAME_MODES.MANAGEMENT.ASSIGNMENTS }),
+
+    showCrises: () =>
+        set((state) => ({
+            previousGameMode: PANELS_RETURNING_TO_NAVIGATION.includes(
+                state.gameMode as (typeof PANELS_RETURNING_TO_NAVIGATION)[number],
+            )
+                ? state.previousGameMode
+                : state.gameMode,
+            gameMode: GAME_MODES.MANAGEMENT.CRISES,
+        })),
 
     showArtifacts: () =>
         set((state) => ({

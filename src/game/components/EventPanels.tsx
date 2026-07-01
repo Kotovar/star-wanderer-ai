@@ -27,531 +27,531 @@ import { DerelictShipPanel } from "./DerelictShipPanel";
 import { GasGiantPanel } from "./GasGiantPanel";
 import { WreckFieldPanel } from "./WreckFieldPanel";
 import { HostileApproachWarningPanel } from "./HostileApproachWarningPanel";
+import { CrisisPanel } from "./CrisisPanel";
 import { RiskRewardPreview } from "./RiskRewardPreview";
 import type { TravelEventType } from "@/game/types";
 import { getActiveModule } from "@/game/modules";
 
 type PreviewItem = {
-    label: string;
-    value: string;
-    tone: "danger" | "warning" | "good" | "neutral";
+  label: string;
+  value: string;
+  tone: "danger" | "warning" | "good" | "neutral";
 };
 
 const TRAVEL_EVENT_UI: Record<
-    TravelEventType,
-    {
-        title: string;
-        description: string;
-        risk: PreviewItem[];
-        cautious: PreviewItem[];
-        riskButton: string;
-        cautiousButton: string;
-        cautiousFuelCost?: number;
-    }
+  TravelEventType,
+  {
+    title: string;
+    description: string;
+    risk: PreviewItem[];
+    cautious: PreviewItem[];
+    riskButton: string;
+    cautiousButton: string;
+    cautiousFuelCost?: number;
+  }
 > = {
-    asteroids: {
-        title: "Астероидный поток",
-        description: "Курс проходит через плотное облако обломков.",
-        risk: [
-            { label: "Быстрый проход", value: "1 модуль -5 HP", tone: "warning" },
-            { label: "Время", value: "без задержки", tone: "good" },
-        ],
-        cautious: [
-            { label: "Повреждения", value: "нет", tone: "good" },
-            { label: "Топливо", value: "-5", tone: "warning" },
-        ],
-        riskButton: "Пройти напрямую",
-        cautiousButton: "Обойти поток",
-        cautiousFuelCost: 5,
-    },
-    anomaly: {
-        title: "Аномальный фронт",
-        description: "Перед кораблём нестабильная зона искажений.",
-        risk: [
-            { label: "Прямой проход", value: "все модули -10 HP", tone: "danger" },
-            { label: "Время", value: "без задержки", tone: "good" },
-        ],
-        cautious: [
-            { label: "Сниженный урон", value: "все модули -5 HP", tone: "warning" },
-            { label: "Топливо", value: "-5", tone: "warning" },
-        ],
-        riskButton: "Прорваться",
-        cautiousButton: "Снизить нагрузку",
-        cautiousFuelCost: 5,
-    },
-    stress: {
-        title: "Усталость экипажа",
-        description: "Долгий перелёт начинает давить на команду.",
-        risk: [
-            { label: "Продолжить график", value: "мораль экипажа -5", tone: "warning" },
-            { label: "Темп", value: "без задержки", tone: "good" },
-        ],
-        cautious: [
-            { label: "Мораль", value: "без потерь", tone: "good" },
-            { label: "Время", value: "+1 ход перелёта", tone: "warning" },
-        ],
-        riskButton: "Продолжать курс",
-        cautiousButton: "Дать смену отдыха",
-    },
-    signal: {
-        title: "Слабый сигнал",
-        description: "Приёмник поймал короткий пакет данных по маршруту.",
-        risk: [
-            { label: "Следовать сигналу", value: "изменить курс ненадолго", tone: "neutral" },
-            { label: "Находка", value: "+15₢", tone: "good" },
-        ],
-        cautious: [
-            { label: "Курс", value: "сохранён", tone: "good" },
-            { label: "Награда", value: "нет", tone: "neutral" },
-        ],
-        riskButton: "Проверить сигнал",
-        cautiousButton: "Игнорировать",
-    },
-    emp: {
-        title: "Электромагнитный импульс",
-        description: "Фронт импульса может перегрузить защитные контуры.",
-        risk: [
-            { label: "Принять удар", value: "потерять все щиты", tone: "danger" },
-            { label: "Ресурсы", value: "без расхода", tone: "good" },
-        ],
-        cautious: [
-            { label: "Щиты", value: "потерять половину", tone: "warning" },
-            { label: "Риск", value: "смягчён", tone: "good" },
-        ],
-        riskButton: "Выдержать импульс",
-        cautiousButton: "Перенастроить контуры",
-    },
+  asteroids: {
+    title: "Астероидный поток",
+    description: "Курс проходит через плотное облако обломков.",
+    risk: [
+      { label: "Быстрый проход", value: "1 модуль -5 HP", tone: "warning" },
+      { label: "Время", value: "без задержки", tone: "good" },
+    ],
+    cautious: [
+      { label: "Повреждения", value: "нет", tone: "good" },
+      { label: "Топливо", value: "-5", tone: "warning" },
+    ],
+    riskButton: "Пройти напрямую",
+    cautiousButton: "Обойти поток",
+    cautiousFuelCost: 5,
+  },
+  anomaly: {
+    title: "Аномальный фронт",
+    description: "Перед кораблём нестабильная зона искажений.",
+    risk: [
+      { label: "Прямой проход", value: "все модули -10 HP", tone: "danger" },
+      { label: "Время", value: "без задержки", tone: "good" },
+    ],
+    cautious: [
+      { label: "Сниженный урон", value: "все модули -5 HP", tone: "warning" },
+      { label: "Топливо", value: "-5", tone: "warning" },
+    ],
+    riskButton: "Прорваться",
+    cautiousButton: "Снизить нагрузку",
+    cautiousFuelCost: 5,
+  },
+  stress: {
+    title: "Усталость экипажа",
+    description: "Долгий перелёт начинает давить на команду.",
+    risk: [
+      {
+        label: "Продолжить график",
+        value: "мораль экипажа -5",
+        tone: "warning",
+      },
+      { label: "Темп", value: "без задержки", tone: "good" },
+    ],
+    cautious: [
+      { label: "Мораль", value: "без потерь", tone: "good" },
+      { label: "Время", value: "+1 ход перелёта", tone: "warning" },
+    ],
+    riskButton: "Продолжать курс",
+    cautiousButton: "Дать смену отдыха",
+  },
+  signal: {
+    title: "Слабый сигнал",
+    description: "Приёмник поймал короткий пакет данных по маршруту.",
+    risk: [
+      {
+        label: "Следовать сигналу",
+        value: "изменить курс ненадолго",
+        tone: "neutral",
+      },
+      { label: "Находка", value: "+15₢", tone: "good" },
+    ],
+    cautious: [
+      { label: "Курс", value: "сохранён", tone: "good" },
+      { label: "Награда", value: "нет", tone: "neutral" },
+    ],
+    riskButton: "Проверить сигнал",
+    cautiousButton: "Игнорировать",
+  },
+  emp: {
+    title: "Электромагнитный импульс",
+    description: "Фронт импульса может перегрузить защитные контуры.",
+    risk: [
+      { label: "Принять удар", value: "потерять все щиты", tone: "danger" },
+      { label: "Ресурсы", value: "без расхода", tone: "good" },
+    ],
+    cautious: [
+      { label: "Щиты", value: "потерять половину", tone: "warning" },
+      { label: "Риск", value: "смягчён", tone: "good" },
+    ],
+    riskButton: "Выдержать импульс",
+    cautiousButton: "Перенастроить контуры",
+  },
 };
 
 function getTravelEventCautiousItems({
-    eventType,
-    baseItems,
-    hasPilotInCockpit,
-    scanRange,
-    shields,
+  eventType,
+  baseItems,
+  hasPilotInCockpit,
+  scanRange,
+  shields,
 }: {
-    eventType: TravelEventType;
-    baseItems: PreviewItem[];
-    hasPilotInCockpit: boolean;
-    scanRange: number;
-    shields: number;
+  eventType: TravelEventType;
+  baseItems: PreviewItem[];
+  hasPilotInCockpit: boolean;
+  scanRange: number;
+  shields: number;
 }): PreviewItem[] {
-    if (eventType === "asteroids" && hasPilotInCockpit) {
-        return [
-            { label: "Манёвр пилота", value: "без урона", tone: "good" },
-            { label: "Топливо", value: "без расхода", tone: "good" },
-        ];
-    }
+  if (eventType === "asteroids" && hasPilotInCockpit) {
+    return [
+      { label: "Манёвр пилота", value: "без урона", tone: "good" },
+      { label: "Топливо", value: "без расхода", tone: "good" },
+    ];
+  }
 
-    if (eventType === "signal" && scanRange >= 3) {
-        return [
-            { label: "Сканер", value: "расшифровать без схода с курса", tone: "good" },
-            { label: "Находка", value: "+25₢", tone: "good" },
-        ];
-    }
+  if (eventType === "signal" && scanRange >= 3) {
+    return [
+      {
+        label: "Сканер",
+        value: "расшифровать без схода с курса",
+        tone: "good",
+      },
+      { label: "Находка", value: "+25₢", tone: "good" },
+    ];
+  }
 
-    if (eventType === "emp" && shields > 0) {
-        return [
-            { label: "Щиты", value: "поглотить импульс", tone: "good" },
-            { label: "Потери", value: "нет", tone: "good" },
-        ];
-    }
+  if (eventType === "emp" && shields > 0) {
+    return [
+      { label: "Щиты", value: "поглотить импульс", tone: "good" },
+      { label: "Потери", value: "нет", tone: "good" },
+    ];
+  }
 
-    return baseItems;
+  return baseItems;
 }
 
 function getTravelEventCautiousButton({
-    eventType,
-    baseLabel,
-    hasPilotInCockpit,
-    scanRange,
-    shields,
+  eventType,
+  baseLabel,
+  hasPilotInCockpit,
+  scanRange,
+  shields,
 }: {
-    eventType: TravelEventType;
-    baseLabel: string;
-    hasPilotInCockpit: boolean;
-    scanRange: number;
-    shields: number;
+  eventType: TravelEventType;
+  baseLabel: string;
+  hasPilotInCockpit: boolean;
+  scanRange: number;
+  shields: number;
 }) {
-    if (eventType === "asteroids" && hasPilotInCockpit) {
-        return "Манёвр пилота";
-    }
-    if (eventType === "signal" && scanRange >= 3) {
-        return "Расшифровать сканером";
-    }
-    if (eventType === "emp" && shields > 0) {
-        return "Принять на щиты";
-    }
-    return baseLabel;
+  if (eventType === "asteroids" && hasPilotInCockpit) {
+    return "Манёвр пилота";
+  }
+  if (eventType === "signal" && scanRange >= 3) {
+    return "Расшифровать сканером";
+  }
+  if (eventType === "emp" && shields > 0) {
+    return "Принять на щиты";
+  }
+  return baseLabel;
 }
 
 export function EventDisplay() {
-    const gameMode = useGameStore((s) => s.gameMode);
-    const traveling = useGameStore((s) => s.traveling);
-    const pendingTravelEvent = useGameStore((s) => s.pendingTravelEvent);
-    const shipFuel = useGameStore((s) => s.ship.fuel);
-    const shipShields = useGameStore((s) => s.ship.shields);
-    const shipModules = useGameStore((s) => s.ship.modules);
-    const crew = useGameStore((s) => s.crew);
-    const showGalaxyMap = useGameStore((s) => s.showGalaxyMap);
-    const showSectorMap = useGameStore((s) => s.showSectorMap);
-    const showAssignments = useGameStore((s) => s.showAssignments);
-    const skipTurn = useGameStore((s) => s.skipTurn);
-    const currentSector = useGameStore((s) => s.currentSector);
-    const emergencyJump = useGameStore((s) => s.emergencyJump);
-    const resolveTravelEvent = useGameStore((s) => s.resolveTravelEvent);
-    const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
-    const isStuckInBlackHole = useGameStore((s) => {
-        if (s.currentSector?.star?.type !== "blackhole") return false;
-        const nonBH = s.galaxy.sectors.filter(
-            (sec) =>
-                sec.star?.type !== "blackhole" &&
-                sec.id !== s.currentSector?.id,
-        );
-        if (nonBH.length === 0) return true;
-        const minCost = Math.min(
-            ...nonBH.map((sec) => calculateFuelCostForUI(s, sec.id).fuelCost),
-        );
-        return s.ship.fuel < minCost;
-    });
-    const { t } = useTranslation();
+  const gameMode = useGameStore((s) => s.gameMode);
+  const traveling = useGameStore((s) => s.traveling);
+  const pendingTravelEvent = useGameStore((s) => s.pendingTravelEvent);
+  const shipFuel = useGameStore((s) => s.ship.fuel);
+  const shipShields = useGameStore((s) => s.ship.shields);
+  const shipModules = useGameStore((s) => s.ship.modules);
+  const crew = useGameStore((s) => s.crew);
+  const showGalaxyMap = useGameStore((s) => s.showGalaxyMap);
+  const showSectorMap = useGameStore((s) => s.showSectorMap);
+  const showAssignments = useGameStore((s) => s.showAssignments);
+  const skipTurn = useGameStore((s) => s.skipTurn);
+  const currentSector = useGameStore((s) => s.currentSector);
+  const emergencyJump = useGameStore((s) => s.emergencyJump);
+  const resolveTravelEvent = useGameStore((s) => s.resolveTravelEvent);
+  const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
+  const isStuckInBlackHole = useGameStore((s) => {
+    if (s.currentSector?.star?.type !== "blackhole") return false;
+    const nonBH = s.galaxy.sectors.filter(
+      (sec) => sec.star?.type !== "blackhole" && sec.id !== s.currentSector?.id,
+    );
+    if (nonBH.length === 0) return true;
+    const minCost = Math.min(
+      ...nonBH.map((sec) => calculateFuelCostForUI(s, sec.id).fuelCost),
+    );
+    return s.ship.fuel < minCost;
+  });
+  const { t } = useTranslation();
 
-    const [isSkipping, setIsSkipping] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
 
-    const handleSkipTurn = () => {
-        setIsSkipping(true);
-        skipTurn();
-        setTimeout(() => setIsSkipping(false), 600);
-    };
+  const handleSkipTurn = () => {
+    setIsSkipping(true);
+    skipTurn();
+    setTimeout(() => setIsSkipping(false), 600);
+  };
 
-    // Traveling state
-    if (traveling) {
-        if (pendingTravelEvent) {
-            const eventInfo = TRAVEL_EVENT_UI[pendingTravelEvent.type];
-            const pilot = crew.find((c) => c.profession === "pilot");
-            const cockpit = getActiveModule(shipModules, "cockpit");
-            const hasPilotInCockpit =
-                !!pilot && !!cockpit && pilot.moduleId === cockpit.id;
-            const scanRange = getEffectiveScanRange();
-            const cautiousItems = getTravelEventCautiousItems({
-                eventType: pendingTravelEvent.type,
-                baseItems: eventInfo.cautious,
-                hasPilotInCockpit,
-                scanRange,
-                shields: shipShields,
-            });
-            const cautiousButton = getTravelEventCautiousButton({
-                eventType: pendingTravelEvent.type,
-                baseLabel: eventInfo.cautiousButton,
-                hasPilotInCockpit,
-                scanRange,
-                shields: shipShields,
-            });
-            const cautiousUsesFuel =
-                eventInfo.cautiousFuelCost !== undefined &&
-                cautiousItems.some((item) => item.label === "Топливо");
-            const lacksFuel =
-                cautiousUsesFuel &&
-                eventInfo.cautiousFuelCost !== undefined &&
-                shipFuel < eventInfo.cautiousFuelCost;
+  // Traveling state
+  if (traveling) {
+    if (pendingTravelEvent) {
+      const eventInfo = TRAVEL_EVENT_UI[pendingTravelEvent.type];
+      const pilot = crew.find((c) => c.profession === "pilot");
+      const cockpit = getActiveModule(shipModules, "cockpit");
+      const hasPilotInCockpit =
+        !!pilot && !!cockpit && pilot.moduleId === cockpit.id;
+      const scanRange = getEffectiveScanRange();
+      const cautiousItems = getTravelEventCautiousItems({
+        eventType: pendingTravelEvent.type,
+        baseItems: eventInfo.cautious,
+        hasPilotInCockpit,
+        scanRange,
+        shields: shipShields,
+      });
+      const cautiousButton = getTravelEventCautiousButton({
+        eventType: pendingTravelEvent.type,
+        baseLabel: eventInfo.cautiousButton,
+        hasPilotInCockpit,
+        scanRange,
+        shields: shipShields,
+      });
+      const cautiousUsesFuel =
+        eventInfo.cautiousFuelCost !== undefined &&
+        cautiousItems.some((item) => item.label === "Топливо");
+      const lacksFuel =
+        cautiousUsesFuel &&
+        eventInfo.cautiousFuelCost !== undefined &&
+        shipFuel < eventInfo.cautiousFuelCost;
 
-            return (
-                <div className="flex flex-col gap-4">
-                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                        ▸ Событие в пути
-                    </div>
-                    <div className="border border-[#ffb00066] bg-[rgba(255,176,0,0.05)] p-4">
-                        <div className="font-['Orbitron'] text-base font-bold text-[#ffb000]">
-                            {eventInfo.title}
-                        </div>
-                        <div className="mt-2 text-sm leading-relaxed text-[#888]">
-                            {eventInfo.description}
-                        </div>
-                    </div>
-                    <RiskRewardPreview
-                        title="Решение капитана"
-                        riskTitle="Рискованный вариант"
-                        rewardTitle="Осторожный вариант"
-                        risks={eventInfo.risk}
-                        rewards={
-                            lacksFuel
-                                ? [
-                                      ...eventInfo.cautious,
-                                      {
-                                          label: "Доступность",
-                                          value: "не хватает топлива",
-                                          tone: "danger",
-                                      },
-                                  ]
-                                : cautiousItems
-                        }
-                    />
-                    <div className="grid gap-2 sm:grid-cols-2">
-                        <Button
-                            onClick={() => resolveTravelEvent("risk")}
-                            className="cursor-pointer bg-transparent border-2 border-[#ff4444] text-[#ff4444] hover:bg-[#ff4444] hover:text-white uppercase tracking-wider"
-                        >
-                            {eventInfo.riskButton}
-                        </Button>
-                        <Button
-                            onClick={() => resolveTravelEvent("cautious")}
-                            disabled={lacksFuel}
-                            className="cursor-pointer bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                            {cautiousButton}
-                        </Button>
-                    </div>
-                    {lacksFuel && (
-                        <div className="text-xs text-[#ff4444]">
-                            Недостаточно топлива для осторожного варианта.
-                        </div>
-                    )}
-                </div>
-            );
-        }
-
-        return (
-            <div className="flex flex-col gap-4">
-                <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] mb-4">
-                    ▸ {t("travel.title")}
-                </div>
-                <div className="text-sm leading-relaxed">
-                    {t("travel.heading")}{" "}
-                    <span className="text-[#ffb000]">
-                        {traveling.destination.name}
-                    </span>
-                    <br />
-                    <br />
-                    {t("travel.turns_left")}:{" "}
-                    <span className="text-[#00d4ff]">
-                        {traveling.turnsLeft}
-                    </span>
-                </div>
-                <div className="flex gap-2.5 flex-wrap mt-5">
-                    <Button
-                        onClick={handleSkipTurn}
-                        disabled={isSkipping}
-                        className={`bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none ${
-                            isSkipping
-                                ? "scale-95 bg-[#00ff41] text-[#050810]"
-                                : ""
-                        }`}
-                    >
-                        {isSkipping
-                            ? `⏱️ ${t("travel.skipping")}`
-                            : t("galaxy.buttons.next_turn")}
-                    </Button>
-                </div>
+      return (
+        <div className="flex flex-col gap-4">
+          <div className="font-['Orbitron'] font-bold text-lg text-accent">
+            ▸ Событие в пути
+          </div>
+          <div className="border border-[#ffb00066] bg-[rgba(255,176,0,0.05)] p-4">
+            <div className="font-['Orbitron'] text-base font-bold text-accent">
+              {eventInfo.title}
             </div>
-        );
+            <div className="mt-2 text-sm leading-relaxed text-[#888]">
+              {eventInfo.description}
+            </div>
+          </div>
+          <RiskRewardPreview
+            title="Решение капитана"
+            riskTitle="Рискованный вариант"
+            rewardTitle="Осторожный вариант"
+            risks={eventInfo.risk}
+            rewards={
+              lacksFuel
+                ? [
+                    ...eventInfo.cautious,
+                    {
+                      label: "Доступность",
+                      value: "не хватает топлива",
+                      tone: "danger",
+                    },
+                  ]
+                : cautiousItems
+            }
+          />
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button
+              onClick={() => resolveTravelEvent("risk")}
+              className="cursor-pointer bg-transparent border-2 border-[#ff4444] text-[#ff4444] hover:bg-[#ff4444] hover:text-white uppercase tracking-wider"
+            >
+              {eventInfo.riskButton}
+            </Button>
+            <Button
+              onClick={() => resolveTravelEvent("cautious")}
+              disabled={lacksFuel}
+              className="cursor-pointer bg-transparent border-2 border-ring text-ring hover:bg-ring hover:text-[#050810] uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {cautiousButton}
+            </Button>
+          </div>
+          {lacksFuel && (
+            <div className="text-xs text-[#ff4444]">
+              Недостаточно топлива для осторожного варианта.
+            </div>
+          )}
+        </div>
+      );
     }
 
-    switch (gameMode) {
-        case "galaxy_map":
-            return (
-                <div className="flex flex-col h-full">
-                    <div className="grid grid-cols-3 gap-1 shrink-0 mb-1">
-                        <Button
-                            onClick={showSectorMap}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none"
-                        >
-                            {t("galaxy.buttons.sector_map")}
-                        </Button>
-                        <Button
-                            onClick={showAssignments}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none"
-                        >
-                            {t("galaxy.buttons.crew_tasks")}
-                        </Button>
-                        <Button
-                            onClick={handleSkipTurn}
-                            disabled={isSkipping}
-                            className={`bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none ${
-                                isSkipping
-                                    ? "scale-95 bg-[#00ff41] text-[#050810]"
-                                    : ""
-                            }`}
-                        >
-                            {isSkipping ? "⏱️ " : ""}
-                            {t("galaxy.buttons.skip_turn")}
-                        </Button>
-                    </div>
-                    <div className="flex-1 relative min-h-0">
-                        <GalaxyMap />
-                    </div>
-                    <div className="text-[11px] text-center text-[#00ff41] h-6 flex items-center justify-center shrink-0">
-                        {t("galaxy.labels.click_sector")}
-                    </div>
-                </div>
-            );
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="font-['Orbitron'] font-bold text-lg text-accent mb-4">
+          ▸ {t("travel.title")}
+        </div>
+        <div className="text-sm leading-relaxed">
+          {t("travel.heading")}{" "}
+          <span className="text-accent">{traveling.destination.name}</span>
+          <br />
+          <br />
+          {t("travel.turns_left")}:{" "}
+          <span className="text-ring">{traveling.turnsLeft}</span>
+        </div>
+        <div className="flex gap-2.5 flex-wrap mt-5">
+          <Button
+            onClick={handleSkipTurn}
+            disabled={isSkipping}
+            className={`bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none ${
+              isSkipping ? "scale-95 bg-[#00ff41] text-[#050810]" : ""
+            }`}
+          >
+            {isSkipping
+              ? `⏱️ ${t("travel.skipping")}`
+              : t("galaxy.buttons.next_turn")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
-        case "sector_map":
-            return (
-                <div className="flex flex-col h-full">
-                    <div className="grid grid-cols-3 gap-1 shrink-0 mb-1">
-                        <Button
-                            onClick={showGalaxyMap}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none"
-                        >
-                            {t("galaxy.buttons.galaxy_map")}
-                        </Button>
-                        <Button
-                            onClick={showAssignments}
-                            className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none"
-                        >
-                            {t("galaxy.buttons.crew_tasks")}
-                        </Button>
-                        <Button
-                            onClick={handleSkipTurn}
-                            disabled={isSkipping}
-                            className={`cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed select-none ${
-                                isSkipping
-                                    ? "scale-95 bg-[#00ff41] text-[#050810]"
-                                    : ""
-                            }`}
-                        >
-                            {isSkipping ? "⏱️ " : ""}
-                            {t("galaxy.buttons.skip_turn")}
-                        </Button>
-                    </div>
-                    <div className="flex-1 relative min-h-0">
-                        <SectorMap />
-                    </div>
-                    {currentSector?.star?.type === "blackhole" ? (
-                        <div className="text-[11px] text-center h-6 flex items-center justify-center shrink-0">
-                            <span className="text-[#ff00ff] font-bold">
-                                {t("galaxy.black_hole.title")}
-                            </span>
-                            <span className="text-[#ffb000] ml-1">
-                                — {t("galaxy.black_hole.hint")}
-                            </span>
-                            {isStuckInBlackHole && (
-                                <button
-                                    onClick={emergencyJump}
-                                    className="cursor-pointer bg-[rgba(255,50,50,0.2)] border border-[#ff3232] text-[#ff3232] px-3 text-xs font-bold hover:bg-[rgba(255,50,50,0.4)] transition-colors ml-2"
-                                >
-                                    {t("galaxy.black_hole.emergency_jump")}
-                                </button>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="text-[11px] text-center text-[#00ff41] h-6 flex items-center justify-center shrink-0">
-                            {t("galaxy.labels.click_object")}
-                        </div>
-                    )}
-                </div>
-            );
+  switch (gameMode) {
+    case "galaxy_map":
+      return (
+        <div className="flex flex-col h-full">
+          <div className="grid grid-cols-3 gap-1 shrink-0 mb-1">
+            <Button
+              onClick={showSectorMap}
+              className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none"
+            >
+              {t("galaxy.buttons.sector_map")}
+            </Button>
+            <Button
+              onClick={showAssignments}
+              className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none"
+            >
+              {t("galaxy.buttons.crew_tasks")}
+            </Button>
+            <Button
+              onClick={handleSkipTurn}
+              disabled={isSkipping}
+              className={`bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none ${
+                isSkipping ? "scale-95 bg-[#00ff41] text-[#050810]" : ""
+              }`}
+            >
+              {isSkipping ? "⏱️ " : ""}
+              {t("galaxy.buttons.skip_turn")}
+            </Button>
+          </div>
+          <div className="flex-1 relative min-h-0">
+            <GalaxyMap />
+          </div>
+          <div className="text-[11px] text-center text-[#00ff41] h-6 flex items-center justify-center shrink-0">
+            {t("galaxy.labels.click_sector")}
+          </div>
+        </div>
+      );
 
-        case "station":
-            return <StationPanel />;
+    case "sector_map":
+      return (
+        <div className="flex flex-col h-full">
+          <div className="grid grid-cols-3 gap-1 shrink-0 mb-1">
+            <Button
+              onClick={showGalaxyMap}
+              className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none"
+            >
+              {t("galaxy.buttons.galaxy_map")}
+            </Button>
+            <Button
+              onClick={showAssignments}
+              className="bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer select-none"
+            >
+              {t("galaxy.buttons.crew_tasks")}
+            </Button>
+            <Button
+              onClick={handleSkipTurn}
+              disabled={isSkipping}
+              className={`cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] py-1 px-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed select-none ${
+                isSkipping ? "scale-95 bg-[#00ff41] text-[#050810]" : ""
+              }`}
+            >
+              {isSkipping ? "⏱️ " : ""}
+              {t("galaxy.buttons.skip_turn")}
+            </Button>
+          </div>
+          <div className="flex-1 relative min-h-0">
+            <SectorMap />
+          </div>
+          {currentSector?.star?.type === "blackhole" ? (
+            <div className="text-[11px] text-center h-6 flex items-center justify-center shrink-0">
+              <span className="text-[#ff00ff] font-bold">
+                {t("galaxy.black_hole.title")}
+              </span>
+              <span className="text-accent ml-1">
+                — {t("galaxy.black_hole.hint")}
+              </span>
+              {isStuckInBlackHole && (
+                <button
+                  onClick={emergencyJump}
+                  className="cursor-pointer bg-[rgba(255,50,50,0.2)] border border-[#ff3232] text-[#ff3232] px-3 text-xs font-bold hover:bg-[rgba(255,50,50,0.4)] transition-colors ml-2"
+                >
+                  {t("galaxy.black_hole.emergency_jump")}
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="text-[11px] text-center text-[#00ff41] h-6 flex items-center justify-center shrink-0">
+              {t("galaxy.labels.click_object")}
+            </div>
+          )}
+        </div>
+      );
 
-        case "planet":
-            return <PlanetPanel />;
+    case "station":
+      return <StationPanel />;
 
-        case "combat":
-            return <CombatPanel />;
+    case "planet":
+      return <PlanetPanel />;
 
-        case "anomaly":
-            return <AnomalyPanel />;
+    case "combat":
+      return <CombatPanel />;
 
-        case "friendly_ship":
-            return <FriendlyShipPanel />;
+    case "anomaly":
+      return <AnomalyPanel />;
 
-        case "asteroid_belt":
-            return <AsteroidBeltPanel />;
+    case "friendly_ship":
+      return <FriendlyShipPanel />;
 
-        case "storm":
-            return <StormPanel />;
+    case "asteroid_belt":
+      return <AsteroidBeltPanel />;
 
-        case "distress_signal":
-            return <DistressSignalPanel />;
+    case "storm":
+      return <StormPanel />;
 
-        case "derelict_ship":
-            return <DerelictShipPanel />;
+    case "distress_signal":
+      return <DistressSignalPanel />;
 
-        case "gas_giant":
-            return <GasGiantPanel />;
+    case "derelict_ship":
+      return <DerelictShipPanel />;
 
-        case "wreck_field":
-            return <WreckFieldPanel />;
+    case "gas_giant":
+      return <GasGiantPanel />;
 
-        case "hostile_approach_warning":
-            return <HostileApproachWarningPanel />;
+    case "wreck_field":
+      return <WreckFieldPanel />;
 
-        case "artifacts":
-            return (
-                <>
-                    {/* Desktop: inline panel with fixed height */}
-                    <div className="hidden md:flex md:flex-col md:h-full">
-                        <ArtifactPanel />
-                    </div>
-                    {/* Mobile: full-screen modal */}
-                    <div className="md:hidden fixed inset-0 bg-[rgba(0,0,0,0.9)] z-50 flex items-center justify-center p-4">
-                        <div className="bg-[#0a0f1a] border-2 border-[#ff00ff] max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                            <div className="flex justify-between items-center p-4 border-b border-[#ff00ff] sticky top-0 bg-[#0a0f1a]">
-                                <h2 className="font-['Orbitron'] text-xl font-bold text-[#ff00ff]">
-                                    ★ АРТЕФАКТЫ ДРЕВНИХ
-                                </h2>
-                                <button
-                                    onClick={() =>
-                                        useGameStore
-                                            .getState()
-                                            .closeArtifactsPanel()
-                                    }
-                                    className="text-[#ff0040] hover:text-white text-2xl font-bold cursor-pointer px-2"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                            <div className="p-4">
-                                <ArtifactPanel />
-                            </div>
-                        </div>
-                    </div>
-                </>
-            );
+    case "hostile_approach_warning":
+      return <HostileApproachWarningPanel />;
 
-        case "unknown_ship":
-            return <UnknownShipPanel />;
+    case "artifacts":
+      return (
+        <>
+          {/* Desktop: inline panel with fixed height */}
+          <div className="hidden md:flex md:flex-col md:h-full">
+            <ArtifactPanel />
+          </div>
+          {/* Mobile: full-screen modal */}
+          <div className="md:hidden fixed inset-0 bg-[rgba(0,0,0,0.9)] z-50 flex items-center justify-center p-4">
+            <div className="bg-[#0a0f1a] border-2 border-[#ff00ff] max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center p-4 border-b border-[#ff00ff] sticky top-0 bg-[#0a0f1a]">
+                <h2 className="font-['Orbitron'] text-xl font-bold text-[#ff00ff]">
+                  ★ АРТЕФАКТЫ ДРЕВНИХ
+                </h2>
+                <button
+                  onClick={() => useGameStore.getState().closeArtifactsPanel()}
+                  className="text-destructive hover:text-white text-2xl font-bold cursor-pointer px-2"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-4">
+                <ArtifactPanel />
+              </div>
+            </div>
+          </div>
+        </>
+      );
 
-        case "battle_results":
-            return <BattleResultsPanel />;
+    case "unknown_ship":
+      return <UnknownShipPanel />;
 
-        case "storm_results":
-            return <StormResultsPanel />;
+    case "battle_results":
+      return <BattleResultsPanel />;
 
-        case "assignments":
-            return <AssignmentsPanel />;
+    case "storm_results":
+      return <StormResultsPanel />;
 
-        case "research":
-            return (
-                <>
-                    {/* Desktop: full panel */}
-                    <div className="hidden md:block">
-                        <ResearchPanel />
-                    </div>
-                    {/* Mobile: show button that triggers modal in ResearchPanel */}
-                    <div className="md:hidden p-4">
-                        <ResearchPanel />
-                    </div>
-                </>
-            );
+    case "assignments":
+      return <AssignmentsPanel />;
 
-        case "reputation":
-            return (
-                <>
-                    {/* Desktop: full panel */}
-                    <div className="hidden md:block h-full overflow-hidden">
-                        <ReputationPanel />
-                    </div>
-                    {/* Mobile: modal via Header */}
-                    <div className="md:hidden p-4 h-full overflow-y-auto">
-                        <ReputationPanel />
-                    </div>
-                </>
-            );
+    case "research":
+      return (
+        <>
+          {/* Desktop: full panel */}
+          <div className="hidden md:block">
+            <ResearchPanel />
+          </div>
+          {/* Mobile: show button that triggers modal in ResearchPanel */}
+          <div className="md:hidden p-4">
+            <ResearchPanel />
+          </div>
+        </>
+      );
 
-        default:
-            return null;
-    }
+    case "reputation":
+      return (
+        <>
+          {/* Desktop: full panel */}
+          <div className="hidden md:block h-full overflow-hidden">
+            <ReputationPanel />
+          </div>
+          {/* Mobile: modal via Header */}
+          <div className="md:hidden p-4 h-full overflow-y-auto">
+            <ReputationPanel />
+          </div>
+        </>
+      );
+
+    case "crises":
+      return <CrisisPanel />;
+
+    default:
+      return null;
+  }
 }

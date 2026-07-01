@@ -1,4 +1,5 @@
 import type { GameState, GameStore, SetState } from "@/game/types";
+import type { CrisisResponse } from "@/game/types/crisis";
 import {
     initNewTurn,
     processPassiveExperience,
@@ -13,6 +14,9 @@ import * as processors from "./processors";
 import { processTravel } from "@/game/slices/travel/helpers";
 import { checkContractExpiry } from "@/game/slices/contracts/helpers/checkContractExpiry";
 import { advanceCombatRound } from "@/game/slices/combat/helpers/combatTime";
+import { GLOBAL_CRISES } from "@/game/constants/globalCrises";
+import { getCrisisResponseDefinition } from "@/game/constants/crisisResponses";
+import { store as i18nStore } from "@/lib/useTranslation";
 
 /**
  * Интерфейс GameLoopSlice
@@ -20,6 +24,7 @@ import { advanceCombatRound } from "@/game/slices/combat/helpers/combatTime";
 export interface GameLoopSlice {
     nextTurn: () => void;
     skipTurn: () => void;
+    resolveCrisis: (response: CrisisResponse) => void;
 }
 
 /**
@@ -135,5 +140,45 @@ export const createGameLoopSlice = (
 
         get().addLog("Ход пропущен - задачи выполняются", "info");
         get().nextTurn();
+    },
+
+    resolveCrisis: (response) => {
+        const state = get();
+        const activeCrisis = state.activeCrisis;
+        if (!activeCrisis) return;
+
+        const crisis = GLOBAL_CRISES.find((item) => item.id === activeCrisis.id);
+        const responseDefinition = getCrisisResponseDefinition(response);
+        if (!crisis?.allowedResponses.includes(response)) {
+            get().addLog(
+                `Кризис: ${responseDefinition.label.toLowerCase()} не подходит для этой угрозы`,
+                "warning",
+            );
+            return;
+        }
+        if (!responseDefinition.pay(state, set)) {
+            get().addLog(
+                `Кризис: не хватает условий для решения через ${responseDefinition.label.toLowerCase()}`,
+                "warning",
+            );
+            return;
+        }
+
+        if (Math.random() > responseDefinition.getChance(state)) {
+            get().addLog(
+                `Кризис: ${responseDefinition.label.toLowerCase()} не сработал, кризис продолжается`,
+                "warning",
+            );
+            get().saveGame();
+            return;
+        }
+
+        crisis?.onEndEffect?.(set, get, activeCrisis);
+        set(() => ({ activeCrisis: null }));
+        get().addLog(
+            `✅ Кризис подавлен: ${crisis?.icon ?? ""} ${crisis ? i18nStore.t(crisis.nameKey) : ""} через ${responseDefinition.label.toLowerCase()}`,
+            "info",
+        );
+        get().saveGame();
     },
 });
