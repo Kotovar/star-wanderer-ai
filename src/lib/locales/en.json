@@ -2666,12 +2666,13 @@
 
   "new_game_setup": {
     "title": "New Game",
-    "subtitle": "Choose a ship template and launch modifiers",
+    "subtitle": "Choose a ship template, starting doctrine, and launch modifiers",
     "template_section": "Ship Template",
-    "modifiers_section": "Modifiers",
+    "modifiers_section": "Doctrines and Modifiers",
     "modifiers_hint": "(optional)",
     "modifiers_active": "Modifiers active",
-    "modifiers_beginner_tip": "First time? Skip this section — it's for experienced players",
+    "modifiers_beginner_tip": "Choose one doctrine and any number of regular modifiers",
+    "doctrine_badge": "Doctrine",
     "difficulty_easy": "Easy",
     "difficulty_normal": "Normal",
     "difficulty_hard": "Hard",
@@ -2741,6 +2742,22 @@
   },
 
   "launch_modifiers": {
+    "doctrine_explorer": {
+      "name": "Deep-Space Explorer",
+      "description": "More fuel and starting data for pushing beyond the map, but fewer credits for repairs and trade."
+    },
+    "doctrine_boss_hunter": {
+      "name": "Ancient Hunter",
+      "description": "Crew starts more experienced and better prepared for dangerous fights, but the campaign begins with costly preparation and less fuel."
+    },
+    "doctrine_trader": {
+      "name": "Free Trader",
+      "description": "Strong starting capital for markets and upgrades, but reduced fuel makes route planning tighter."
+    },
+    "doctrine_exile": {
+      "name": "Exile",
+      "description": "Extra credits for a risky start: the ship is damaged and Krylorians already distrust you."
+    },
     "veteran_crew": {
       "name": "Veteran Crew",
       "description": "All crew starts at level 3 with high stats."

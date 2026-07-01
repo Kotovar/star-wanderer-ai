@@ -10,8 +10,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useGameStore } from "../store";
-import { SHIP_TEMPLATES, DEFAULT_TEMPLATE_ID } from "../constants/shipTemplates";
-import { LAUNCH_MODIFIERS, type LaunchModifier } from "../constants/launchModifiers";
+import {
+  SHIP_TEMPLATES,
+  DEFAULT_TEMPLATE_ID,
+} from "../constants/shipTemplates";
+import {
+  LAUNCH_MODIFIERS,
+  type LaunchModifier,
+} from "../constants/launchModifiers";
 import { useTranslation } from "@/lib/useTranslation";
 import type { Module, ModuleType, ResearchResourceType } from "@/game/types";
 
@@ -69,10 +75,7 @@ function getModuleLabel(type: ModuleType, t: TFn) {
   return translated === key ? type : translated;
 }
 
-function getCrewSummary(
-  crew: (typeof SHIP_TEMPLATES)[number]["crew"],
-  t: TFn,
-) {
+function getCrewSummary(crew: (typeof SHIP_TEMPLATES)[number]["crew"], t: TFn) {
   const professions = crew.reduce<Record<string, number>>((acc, member) => {
     const profession = member.profession ?? "unknown";
     acc[profession] = (acc[profession] ?? 0) + 1;
@@ -128,23 +131,39 @@ function getResearchResourceSummary(
 function getModifierDetails(mod: LaunchModifier, t: TFn) {
   const details: string[] = [];
 
-  if (mod.crewLevel) details.push(`${t("new_game_setup.effect_crew")} LV${mod.crewLevel}`);
-  if (mod.crewLimit) details.push(`${t("new_game_setup.effect_crew")}: ${mod.crewLimit}`);
+  if (mod.crewLevel)
+    details.push(`${t("new_game_setup.effect_crew")} LV${mod.crewLevel}`);
+  if (mod.crewLimit)
+    details.push(`${t("new_game_setup.effect_crew")}: ${mod.crewLimit}`);
   if (mod.fuelDelta) {
-    details.push(`${t("new_game_setup.effect_fuel")} ${mod.fuelDelta > 0 ? "+" : ""}${mod.fuelDelta}`);
+    details.push(
+      `${t("new_game_setup.effect_fuel")} ${mod.fuelDelta > 0 ? "+" : ""}${mod.fuelDelta}`,
+    );
   }
-  if (mod.maxFuelDelta) details.push(`${t("new_game_setup.effect_tank")} +${mod.maxFuelDelta}`);
+  if (mod.maxFuelDelta) {
+    details.push(
+      `${t("new_game_setup.effect_tank")} ${mod.maxFuelDelta > 0 ? "+" : ""}${mod.maxFuelDelta}`,
+    );
+  }
   if (mod.reactorPowerPenalty) {
-    details.push(`${t("new_game_setup.effect_reactor")} -${mod.reactorPowerPenalty}`);
+    details.push(
+      `${t("new_game_setup.effect_reactor")} -${mod.reactorPowerPenalty}`,
+    );
   }
   if (mod.moduleDamagePercent) {
-    details.push(`${t("new_game_setup.effect_modules")} -${mod.moduleDamagePercent}% HP`);
+    details.push(
+      `${t("new_game_setup.effect_modules")} -${mod.moduleDamagePercent}% HP`,
+    );
   }
   if (mod.targetedModuleDamagePercent) {
-    details.push(`${t("new_game_setup.effect_key_module")} -${mod.targetedModuleDamagePercent}% HP`);
+    details.push(
+      `${t("new_game_setup.effect_key_module")} -${mod.targetedModuleDamagePercent}% HP`,
+    );
   }
-  if (mod.startWithCursedArtifact) details.push(t("new_game_setup.effect_cursed_artifact"));
-  if (mod.startRaceReputation) details.push(t("new_game_setup.effect_reputation"));
+  if (mod.startWithCursedArtifact)
+    details.push(t("new_game_setup.effect_cursed_artifact"));
+  if (mod.startRaceReputation)
+    details.push(t("new_game_setup.effect_reputation"));
   if (mod.researchResources) {
     const summary = getResearchResourceSummary(mod.researchResources, t);
     if (summary) details.push(summary);
@@ -168,20 +187,29 @@ function Pill({
   };
 
   return (
-    <span className={`inline-flex min-w-0 max-w-full items-center break-words border px-1.5 py-0.5 text-[10px] ${classes[tone]}`}>
+    <span
+      className={`inline-flex min-w-0 max-w-full items-center wrap-break-word border px-1.5 py-0.5 text-[10px] ${classes[tone]}`}
+    >
       {children}
     </span>
   );
 }
 
-export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModalProps) {
+export function NewGameSetupModal({
+  open,
+  onClose,
+  required,
+}: NewGameSetupModalProps) {
   const { t } = useTranslation();
   const restartGame = useGameStore((s) => s.restartGame);
 
-  const [selectedTemplateId, setSelectedTemplateId] = useState(DEFAULT_TEMPLATE_ID);
+  const [selectedTemplateId, setSelectedTemplateId] =
+    useState(DEFAULT_TEMPLATE_ID);
   const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
 
-  const selectedTemplate = SHIP_TEMPLATES.find((tmpl) => tmpl.id === selectedTemplateId);
+  const selectedTemplate = SHIP_TEMPLATES.find(
+    (tmpl) => tmpl.id === selectedTemplateId,
+  );
 
   const selectedModifierItems = useMemo(
     () => LAUNCH_MODIFIERS.filter((mod) => selectedModifiers.includes(mod.id)),
@@ -205,9 +233,10 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
       ? selectedTemplate.crew.slice(0, crewLimit)
       : selectedTemplate.crew;
 
-  const finalResearchResources: Partial<Record<ResearchResourceType, number>> = {
-    ...(selectedTemplate.researchResources ?? {}),
-  };
+  const finalResearchResources: Partial<Record<ResearchResourceType, number>> =
+    {
+      ...(selectedTemplate.researchResources ?? {}),
+    };
   for (const mod of selectedModifierItems) {
     if (!mod.researchResources) continue;
     for (const [key, value] of Object.entries(mod.researchResources)) {
@@ -222,13 +251,19 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
   const finalMaxFuel = Math.max(
     0,
     selectedTemplate.maxFuel +
-      selectedModifierItems.reduce((sum, mod) => sum + (mod.maxFuelDelta ?? 0), 0),
+      selectedModifierItems.reduce(
+        (sum, mod) => sum + (mod.maxFuelDelta ?? 0),
+        0,
+      ),
   );
   const finalFuel = Math.max(
     0,
     Math.min(
       selectedTemplate.fuel +
-        selectedModifierItems.reduce((sum, mod) => sum + (mod.fuelDelta ?? 0), 0),
+        selectedModifierItems.reduce(
+          (sum, mod) => sum + (mod.fuelDelta ?? 0),
+          0,
+        ),
       finalMaxFuel,
     ),
   );
@@ -238,9 +273,21 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
     selectedModifierItems.reduce((sum, mod) => sum + mod.creditDelta, 0);
 
   const toggleModifier = (id: string) => {
-    setSelectedModifiers((prev) =>
-      prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id],
-    );
+    setSelectedModifiers((prev) => {
+      if (prev.includes(id)) return prev.filter((m) => m !== id);
+
+      const modifier = LAUNCH_MODIFIERS.find((mod) => mod.id === id);
+      const next = modifier?.group
+        ? prev.filter((selectedId) => {
+            const selected = LAUNCH_MODIFIERS.find(
+              (mod) => mod.id === selectedId,
+            );
+            return selected?.group !== modifier.group;
+          })
+        : prev;
+
+      return [...next, id];
+    });
   };
 
   const handleStart = () => {
@@ -259,7 +306,7 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="bg-[rgba(5,8,16,0.98)] border-2 border-[#00ff41] text-[#00ff41] w-[calc(100vw-1rem)] min-[900px]:w-[calc(100vw-2rem)] min-[1280px]:w-[min(1280px,calc(100vw-2rem))] !max-w-none max-h-[92vh] overflow-hidden p-0 gap-0 grid-rows-[auto_minmax(0,1fr)_auto]"
+        className="bg-[rgba(5,8,16,0.98)] border-2 border-[#00ff41] text-[#00ff41] w-[calc(100vw-1rem)] min-[900px]:w-[calc(100vw-2rem)] min-[1280px]:w-[min(1280px,calc(100vw-2rem))] max-w-none! max-h-[92vh] overflow-hidden p-0 gap-0 grid-rows-[auto_minmax(0,1fr)_auto]"
         showCloseButton={!required}
       >
         <DialogHeader className="min-w-0 px-4 pt-4 pb-3 sm:px-5 border-b border-[rgba(0,255,65,0.2)]">
@@ -275,10 +322,10 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
           <div className="grid min-w-0 gap-3 min-[980px]:grid-cols-[minmax(260px,0.72fr)_minmax(0,1.55fr)]">
             <section className="min-w-0 border border-[#00ff4133] bg-[rgba(0,255,65,0.02)] p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
-                <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-[0.18em] text-[#ffb000]">
+                <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-[0.18em] text-accent">
                   {t("new_game_setup.template_section")}
                 </div>
-                <div className="text-[10px] text-[#667766]">
+                <div className="text-[10px] text-muted-foreground">
                   {SHIP_TEMPLATES.length} {t("new_game_setup.options_label")}
                 </div>
               </div>
@@ -294,8 +341,12 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                       onClick={() => setSelectedTemplateId(tmpl.id)}
                       className="min-w-0 text-left border p-2.5 transition-all cursor-pointer"
                       style={{
-                        borderColor: isSelected ? dc.border : "rgba(0,255,65,0.18)",
-                        backgroundColor: isSelected ? dc.bg : "rgba(0,0,0,0.18)",
+                        borderColor: isSelected
+                          ? dc.border
+                          : "rgba(0,255,65,0.18)",
+                        backgroundColor: isSelected
+                          ? dc.bg
+                          : "rgba(0,0,0,0.18)",
                       }}
                     >
                       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
@@ -313,18 +364,31 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                         <span
                           className="grid h-5 w-5 shrink-0 place-items-center whitespace-nowrap border text-[10px] font-bold leading-none"
                           style={{ color: dc.text, borderColor: dc.border }}
-                          title={t(`new_game_setup.difficulty_${tmpl.difficulty}`)}
-                          aria-label={t(`new_game_setup.difficulty_${tmpl.difficulty}`)}
+                          title={t(
+                            `new_game_setup.difficulty_${tmpl.difficulty}`,
+                          )}
+                          aria-label={t(
+                            `new_game_setup.difficulty_${tmpl.difficulty}`,
+                          )}
                         >
                           {DIFFICULTY_SYMBOLS[tmpl.difficulty]}
                         </span>
                       </div>
 
                       <div className="mt-2 flex flex-wrap gap-1">
-                        <Pill>{t("new_game_setup.crew_short")}: {tmpl.crew.length}</Pill>
-                        <Pill>{t("new_game_setup.modules_short")}: {tmpl.modules.length}</Pill>
+                        <Pill>
+                          {t("new_game_setup.crew_short")}: {tmpl.crew.length}
+                        </Pill>
+                        <Pill>
+                          {t("new_game_setup.modules_short")}:{" "}
+                          {tmpl.modules.length}
+                        </Pill>
                         <Pill tone="warning">₢{tmpl.credits}</Pill>
-                        {tmpl.probes > 0 && <Pill tone="good">{t("new_game_setup.probes_short")}: {tmpl.probes}</Pill>}
+                        {tmpl.probes > 0 && (
+                          <Pill tone="good">
+                            {t("new_game_setup.probes_short")}: {tmpl.probes}
+                          </Pill>
+                        )}
                       </div>
                     </button>
                   );
@@ -336,7 +400,7 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
               <section className="min-w-0 border border-[#00ff4133] bg-[rgba(0,255,65,0.02)] p-3">
                 <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="font-['Orbitron'] text-sm font-bold uppercase tracking-[0.16em] text-[#ffb000]">
+                    <div className="font-['Orbitron'] text-sm font-bold uppercase tracking-[0.16em] text-accent">
                       {t("new_game_setup.final_preview")}
                     </div>
                     <div className="mt-1 max-w-2xl text-xs leading-relaxed text-[#888]">
@@ -349,46 +413,65 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                   </div>
                   <span
                     className="border px-2 py-1 text-xs font-bold"
-                    style={{ color: diffColors.text, borderColor: diffColors.border }}
+                    style={{
+                      color: diffColors.text,
+                      borderColor: diffColors.border,
+                    }}
                   >
-                    {t(`new_game_setup.difficulty_${selectedTemplate.difficulty}`)}
+                    {t(
+                      `new_game_setup.difficulty_${selectedTemplate.difficulty}`,
+                    )}
                   </span>
                 </div>
 
                 <div className="grid min-w-0 gap-2 min-[560px]:grid-cols-2 min-[1180px]:grid-cols-4">
-                  <InfoMetric label={t("new_game_setup.start_credits")} value={`₢${Math.max(0, totalCredits)}`} />
-                  <InfoMetric label={t("new_game_setup.fuel_label")} value={`${finalFuel}/${finalMaxFuel}`} />
-                  <InfoMetric label={t("new_game_setup.crew_label")} value={String(finalCrew.length)} />
-                  <InfoMetric label={t("new_game_setup.probes_label")} value={String(selectedTemplate.probes)} />
+                  <InfoMetric
+                    label={t("new_game_setup.start_credits")}
+                    value={`₢${Math.max(0, totalCredits)}`}
+                  />
+                  <InfoMetric
+                    label={t("new_game_setup.fuel_label")}
+                    value={`${finalFuel}/${finalMaxFuel}`}
+                  />
+                  <InfoMetric
+                    label={t("new_game_setup.crew_label")}
+                    value={String(finalCrew.length)}
+                  />
+                  <InfoMetric
+                    label={t("new_game_setup.probes_label")}
+                    value={String(selectedTemplate.probes)}
+                  />
                 </div>
 
                 <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2">
                   <div className="min-w-0">
-                    <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-[#667766]">
+                    <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                       {t("new_game_setup.crew_composition")}
                     </div>
-                    <div className="break-words text-xs text-[#00d4ff]">{getCrewSummary(finalCrew, t)}</div>
+                    <div className="wrap-break-word text-xs text-ring">
+                      {getCrewSummary(finalCrew, t)}
+                    </div>
                   </div>
                   <div className="min-w-0">
-                    <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-[#667766]">
+                    <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                       {t("new_game_setup.crew_level")}
                     </div>
-                    <div className="break-words text-xs text-[#00ff41]">
+                    <div className="wrap-break-word text-xs text-[#00ff41]">
                       {getCrewLevelSummary(finalCrew, crewLevel, t)}
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-[#667766]">
+                    <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                       {t("new_game_setup.research_resources")}
                     </div>
-                    <div className="break-words text-xs text-[#a855f7]">
+                    <div className="wrap-break-word text-xs text-[#a855f7]">
                       {researchSummary ?? t("new_game_setup.none")}
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-3 min-h-14">
-                  <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-[#667766]">
+                  <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                     {t("new_game_setup.final_effects")}
                   </div>
                   {selectedModifierItems.length > 0 ? (
@@ -397,7 +480,13 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                         getModifierDetails(mod, t).map((detail) => (
                           <Pill
                             key={`${mod.id}-${detail}`}
-                            tone={mod.type === "bonus" ? "good" : mod.type === "challenge" ? "danger" : "warning"}
+                            tone={
+                              mod.type === "bonus"
+                                ? "good"
+                                : mod.type === "challenge"
+                                  ? "danger"
+                                  : "warning"
+                            }
                           >
                             {detail}
                           </Pill>
@@ -412,7 +501,7 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                 </div>
 
                 <div className="mt-3">
-                  <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-[#667766]">
+                  <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                     {t("new_game_setup.module_legend_label")}
                   </div>
                   <div className="flex flex-wrap gap-1">
@@ -428,7 +517,7 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
               <section className="min-w-0 border border-[#00ff4133] bg-[rgba(0,255,65,0.02)] p-3">
                 <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-[0.18em] text-[#ffb000]">
+                    <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-[0.18em] text-accent">
                       {t("new_game_setup.modifiers_section")}
                       <span className="ml-2 font-mono text-[10px] font-normal normal-case tracking-normal text-[#888]">
                         {t("new_game_setup.modifiers_hint")}
@@ -438,8 +527,9 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                       {t("new_game_setup.modifiers_beginner_tip")}
                     </div>
                   </div>
-                  <div className="text-[10px] text-[#667766]">
-                    {t("new_game_setup.modifiers_active")}: {selectedModifiers.length}
+                  <div className="text-[10px] text-muted-foreground">
+                    {t("new_game_setup.modifiers_active")}:{" "}
+                    {selectedModifiers.length}
                   </div>
                 </div>
 
@@ -455,8 +545,12 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                         onClick={() => toggleModifier(mod.id)}
                         className="min-w-0 text-left border p-2.5 transition-all cursor-pointer"
                         style={{
-                          borderColor: isActive ? tc.border : "rgba(0,255,65,0.15)",
-                          backgroundColor: isActive ? tc.bg : "rgba(0,0,0,0.18)",
+                          borderColor: isActive
+                            ? tc.border
+                            : "rgba(0,255,65,0.15)",
+                          backgroundColor: isActive
+                            ? tc.bg
+                            : "rgba(0,0,0,0.18)",
                         }}
                       >
                         <div className="flex items-start justify-between gap-2">
@@ -465,6 +559,11 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                               className="font-bold text-xs leading-snug"
                               style={{ color: isActive ? tc.text : "#00ff41" }}
                             >
+                              {mod.group === "doctrine" && (
+                                <span className="mr-1 text-[10px] uppercase tracking-[0.12em] text-accent">
+                                  {t("new_game_setup.doctrine_badge")}
+                                </span>
+                              )}
                               {t(mod.nameKey)}
                             </div>
                             <div className="mt-1 text-[10px] leading-snug text-[#777]">
@@ -473,9 +572,15 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                           </div>
                           <span
                             className="shrink-0 text-xs font-bold tabular-nums"
-                            style={{ color: mod.creditDelta >= 0 ? "#00ff41" : "#ff4444" }}
+                            style={{
+                              color:
+                                mod.creditDelta >= 0 ? "#00ff41" : "#ff4444",
+                            }}
                           >
-                            {mod.creditDelta > 0 ? `+${mod.creditDelta}` : mod.creditDelta}₢
+                            {mod.creditDelta > 0
+                              ? `+${mod.creditDelta}`
+                              : mod.creditDelta}
+                            ₢
                           </span>
                         </div>
 
@@ -484,7 +589,13 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                             {details.slice(0, 3).map((detail) => (
                               <Pill
                                 key={detail}
-                                tone={mod.type === "bonus" ? "good" : mod.type === "challenge" ? "danger" : "warning"}
+                                tone={
+                                  mod.type === "bonus"
+                                    ? "good"
+                                    : mod.type === "challenge"
+                                      ? "danger"
+                                      : "warning"
+                                }
                               >
                                 {detail}
                               </Pill>
@@ -504,14 +615,24 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0 text-xs">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[#888]">{t("new_game_setup.ship_label")}:</span>
-                <span className="font-bold text-[#00ff41]">{t(selectedTemplate.nameKey)}</span>
+                <span className="text-[#888]">
+                  {t("new_game_setup.ship_label")}:
+                </span>
+                <span className="font-bold text-[#00ff41]">
+                  {t(selectedTemplate.nameKey)}
+                </span>
                 <span className="text-[#444]">/</span>
-                <span className="text-[#888]">{t("new_game_setup.modifiers_active")}:</span>
-                <span className="font-bold text-[#ffb000]">{selectedModifiers.length}</span>
+                <span className="text-[#888]">
+                  {t("new_game_setup.modifiers_active")}:
+                </span>
+                <span className="font-bold text-accent">
+                  {selectedModifiers.length}
+                </span>
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-2">
-                <span className="text-[#888]">{t("new_game_setup.start_credits")}:</span>
+                <span className="text-[#888]">
+                  {t("new_game_setup.start_credits")}:
+                </span>
                 <span
                   className="font-bold tabular-nums"
                   style={{ color: totalCredits < 0 ? "#ff4444" : "#ffb000" }}
@@ -519,8 +640,10 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
                   ₢{Math.max(0, totalCredits)}
                 </span>
                 {selectedModifierItems.length > 0 && (
-                  <span className="min-w-0 break-words text-[#555]">
-                    {joinLabels(selectedModifierItems.map((mod) => t(mod.nameKey)))}
+                  <span className="min-w-0 wrap-break-word text-[#555]">
+                    {joinLabels(
+                      selectedModifierItems.map((mod) => t(mod.nameKey)),
+                    )}
                   </span>
                 )}
               </div>
@@ -542,8 +665,12 @@ export function NewGameSetupModal({ open, onClose, required }: NewGameSetupModal
 function InfoMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="border border-[#1a3320] bg-[rgba(0,0,0,0.25)] p-2">
-      <div className="text-[9px] uppercase tracking-[0.16em] text-[#667766]">{label}</div>
-      <div className="mt-1 font-['Orbitron'] text-sm font-bold text-[#00ff41]">{value}</div>
+      <div className="text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
+        {label}
+      </div>
+      <div className="mt-1 font-['Orbitron'] text-sm font-bold text-[#00ff41]">
+        {value}
+      </div>
     </div>
   );
 }

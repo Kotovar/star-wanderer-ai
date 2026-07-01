@@ -13,6 +13,8 @@ export interface LaunchModifier {
   icon: string;
   /** bonus = даёт преимущество, challenge = усложняет, mixed = и то и то */
   type: "bonus" | "challenge" | "mixed";
+  /** Модификаторы одной группы взаимоисключающие в UI новой игры */
+  group?: "doctrine";
   /** Изменение стартовых кредитов */
   creditDelta: number;
   /** Изменение стартового запаса топлива */
@@ -42,6 +44,56 @@ export interface LaunchModifier {
 // ─── Модификаторы ────────────────────────────────────────────────────────────
 
 export const LAUNCH_MODIFIERS: LaunchModifier[] = [
+  // ── Стартовые доктрины (выбирается максимум одна) ───────────────────────
+  {
+    id: "doctrine_explorer",
+    nameKey: "launch_modifiers.doctrine_explorer.name",
+    descriptionKey: "launch_modifiers.doctrine_explorer.description",
+    icon: "🧭",
+    type: "mixed",
+    group: "doctrine",
+    creditDelta: -400,
+    fuelDelta: 40,
+    maxFuelDelta: 40,
+    researchResources: {
+      ancient_data: 4,
+      tech_salvage: 2,
+    },
+  },
+  {
+    id: "doctrine_boss_hunter",
+    nameKey: "launch_modifiers.doctrine_boss_hunter.name",
+    descriptionKey: "launch_modifiers.doctrine_boss_hunter.description",
+    icon: "⚔️",
+    type: "mixed",
+    group: "doctrine",
+    creditDelta: -700,
+    crewLevel: 2,
+    fuelDelta: -20,
+  },
+  {
+    id: "doctrine_trader",
+    nameKey: "launch_modifiers.doctrine_trader.name",
+    descriptionKey: "launch_modifiers.doctrine_trader.description",
+    icon: "💳",
+    type: "mixed",
+    group: "doctrine",
+    creditDelta: 900,
+    fuelDelta: -25,
+    maxFuelDelta: -25,
+  },
+  {
+    id: "doctrine_exile",
+    nameKey: "launch_modifiers.doctrine_exile.name",
+    descriptionKey: "launch_modifiers.doctrine_exile.description",
+    icon: "☄️",
+    type: "mixed",
+    group: "doctrine",
+    creditDelta: 700,
+    startRaceReputation: { krylorian: -45 },
+    moduleDamagePercent: 15,
+  },
+
   // ── Бонусы (дают преимущество, но стоят кредитов) ────────────────────────
   {
     id: "veteran_crew",
