@@ -371,7 +371,7 @@ const handleTravelCompletion = (
     set((s) => ({ ...s, gameMode: "sector_map" as GameMode }));
 
     if (sector.tier === 4) {
-        get().triggerVictory();
+        get().checkVictory();
     }
 };
 
@@ -454,7 +454,7 @@ const handleTravelStart = (
         }
 
         if (sector.tier === 4) {
-            get().triggerVictory();
+            get().checkVictory();
         }
     } else {
         get().addLog(

@@ -1,5 +1,5 @@
 import type { GameStore, SetState } from "@/game/types";
-import { checkGameOver, triggerVictory, restartGame } from "./helpers";
+import { checkGameOver, checkVictory, triggerVictory, restartGame } from "./helpers";
 import {
     loadFromLocalStorage,
     saveToLocalStorage,
@@ -11,6 +11,7 @@ import { CREW_TRAITS } from "@/game/constants/traits";
 
 export interface GameManagementSlice {
     checkGameOver: () => void;
+    checkVictory: () => void;
     triggerVictory: () => void;
     restartGame: (templateId?: string, modifierIds?: string[]) => void;
     saveGame: () => void;
@@ -24,6 +25,7 @@ export const createGameManagementSlice = (
     get: () => GameStore,
 ): GameManagementSlice => ({
     checkGameOver: () => checkGameOver(set, get),
+    checkVictory: () => checkVictory(set, get),
     triggerVictory: () => triggerVictory(set, get),
     restartGame: (templateId?: string, modifierIds?: string[]) =>
         restartGame(set, get, templateId, modifierIds),

@@ -287,6 +287,7 @@ export function handleVictory(
             ],
         }));
     }
+    get().checkVictory();
 
     // Reset combat assignments
     set((s) => {

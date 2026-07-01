@@ -106,7 +106,7 @@ export interface GameState {
   stormResult: StormResult | null; // Results of last storm entry
   gameOver: boolean; // Game over state
   gameOverReason: string | null; // Reason for game over
-  gameVictory: boolean; // Victory state (reached tier 4)
+  gameVictory: boolean; // Victory state
   gameVictoryReason: string | null; // Reason for victory
   victoryTriggered: boolean; // Persistent flag — prevents re-triggering after "Continue"
   activeEffects: ActiveEffect[]; // Active planet specialization effects
@@ -313,6 +313,7 @@ export interface GamePlanetSpecializations {
 
 export interface GameFinish {
   checkGameOver: () => void;
+  checkVictory: () => void;
   triggerVictory: () => void;
 }
 

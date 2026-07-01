@@ -1,4 +1,5 @@
 import type { GameStore, SetState } from "@/game/types";
+import { getCompletedVictoryObjective } from "@/game/constants/victoryObjectives";
 import { playSound } from "@/sounds";
 
 /**
@@ -14,7 +15,9 @@ const getVictoryMessage = (
     captainLevel: number,
     discoveredArtifacts: number,
     sectorsExplored: number,
-) => `🎉 Поздравляем! Вы достигли границы галактики!
+    objectiveTitle: string,
+    objectiveText: string,
+) => `🎉 Победа: ${objectiveTitle}!
 
 📊 ИТОГИ ИГРЫ:
 • Ходов сделано: ${turn}
@@ -22,8 +25,7 @@ const getVictoryMessage = (
 • Найдено артефактов: ${discoveredArtifacts}
 • Исследовано секторов: ${sectorsExplored}
 
-Вы одни из первых, кто достиг Тир 4 - границы известной галактики.
-Квантовый двигатель привёл вас сюда, к краю космоса.
+${objectiveText}
 Что ждёт за этой гранью? Это уже другая история...`;
 
 /**
@@ -46,6 +48,11 @@ export const triggerVictory = (set: SetState, get: () => GameStore): void => {
     const sectorsExplored = state.galaxy.sectors.filter(
         (s) => s.visited,
     ).length;
+    const objective = getCompletedVictoryObjective(state);
+
+    if (!objective) {
+        return;
+    }
 
     set({
         gameVictory: true,
@@ -55,9 +62,11 @@ export const triggerVictory = (set: SetState, get: () => GameStore): void => {
             captainLevel,
             discoveredArtifacts,
             sectorsExplored,
+            objective.title,
+            objective.completionText,
         ),
     });
 
-    get().addLog("🎉 ПОБЕДА! Граница галактики достигнута!", "info");
+    get().addLog(`🎉 ПОБЕДА! ${objective.title}`, "info");
     playSound("success");
 };

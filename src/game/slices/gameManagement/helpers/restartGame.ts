@@ -5,6 +5,7 @@ import { clearLocalStorage, saveToLocalStorage } from "@/game/saves/utils";
 import { playSound } from "@/sounds";
 import { buildStartingState } from "./buildStartingState";
 import { DEFAULT_TEMPLATE_ID } from "@/game/constants/shipTemplates";
+import { getVictoryObjectives } from "@/game/constants/victoryObjectives";
 import type { GameStore, SetState } from "@/game/types";
 
 /**
@@ -65,6 +66,12 @@ export const restartGame = (
   });
 
   get().addLog("Новая игра", "info");
+  get().addLog(
+    `Способы победы: ${getVictoryObjectives()
+      .map((objective) => objective.title)
+      .join(" / ")}`,
+    "info",
+  );
   playSound("success");
 
   saveToLocalStorage(get());

@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useGameStore } from "@/game/store";
 import { RESEARCH_TREE } from "@/game/constants";
 import { CRAFTING_RECIPES } from "@/game/constants/crafting";
+import { getVictoryObjectives } from "@/game/constants/victoryObjectives";
 import { WEAPON_TYPES } from "@/game/constants/weapons";
 import { canSeeTier4 } from "@/game/galaxy/galaxy-map-utils";
 import { useTranslation } from "@/lib/useTranslation";
@@ -55,13 +56,17 @@ function MetricCard({
 }) {
   return (
     <div className="border border-[#1a3320] bg-[rgba(0,0,0,0.25)] p-2">
-      <div className="text-[9px] uppercase tracking-[0.16em] text-[#667766]">
+      <div className="text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
         {label}
       </div>
-      <div className={`mt-1 font-['Orbitron'] text-sm font-bold ${toneClass[tone]}`}>
+      <div
+        className={`mt-1 font-['Orbitron'] text-sm font-bold ${toneClass[tone]}`}
+      >
         {value}
       </div>
-      {hint && <div className="mt-1 text-[10px] leading-snug text-[#666]">{hint}</div>}
+      {hint && (
+        <div className="mt-1 text-[10px] leading-snug text-[#666]">{hint}</div>
+      )}
     </div>
   );
 }
@@ -76,7 +81,7 @@ function Section({
   return (
     <section className="border border-[#00ff4133] bg-[rgba(0,255,65,0.02)] p-3">
       <div className="mb-3 flex items-center gap-2">
-        <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-[0.18em] text-[#ffb000]">
+        <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-[0.18em] text-accent">
           {title}
         </div>
         <div className="h-px flex-1 bg-[#ffb00022]" />
@@ -97,7 +102,9 @@ function Milestone({
 }) {
   return (
     <div className="flex items-start gap-2 text-xs">
-      <span className={done ? "text-[#00ff41]" : "text-[#444]"}>{done ? "✓" : "□"}</span>
+      <span className={done ? "text-[#00ff41]" : "text-[#444]"}>
+        {done ? "✓" : "□"}
+      </span>
       <div className="min-w-0">
         <div className={done ? "text-[#b6ffc7]" : "text-[#777]"}>{label}</div>
         {detail && <div className="text-[10px] text-[#555]">{detail}</div>}
@@ -194,9 +201,15 @@ export function CampaignProgressPanel() {
       isLocationCountedAsVisited(loc, completedLocations),
     ).length;
 
-    const discoveredArtifacts = artifacts.filter((artifact) => artifact.discovered).length;
-    const researchedArtifacts = artifacts.filter((artifact) => artifact.researched).length;
-    const activeArtifacts = artifacts.filter((artifact) => artifact.effect.active).length;
+    const discoveredArtifacts = artifacts.filter(
+      (artifact) => artifact.discovered,
+    ).length;
+    const researchedArtifacts = artifacts.filter(
+      (artifact) => artifact.researched,
+    ).length;
+    const activeArtifacts = artifacts.filter(
+      (artifact) => artifact.effect.active,
+    ).length;
 
     return {
       tiers,
@@ -210,6 +223,17 @@ export function CampaignProgressPanel() {
       activeArtifacts,
     };
   }, [artifacts, canSeeHiddenRim, completedLocations, sectors]);
+  const victoryObjectives = useMemo(
+    () => getVictoryObjectives().map((objective) => ({
+      ...objective,
+      done: objective.isComplete({
+        completedLocations,
+        currentSector,
+        galaxy: { sectors },
+      }),
+    })),
+    [completedLocations, currentSector, sectors],
+  );
 
   const techTotal = Object.keys(RESEARCH_TREE).length;
   const techDone = research.researchedTechs.length;
@@ -218,18 +242,35 @@ export function CampaignProgressPanel() {
   const unlockedWeaponRecipes = weaponRecipes.filter((recipe) =>
     unlockedWeaponRecipeIds.has(recipe.id),
   );
-  const innerWorldsVisited = stats.tiers.find((tier) => tier.tier === 1)?.visited ?? 0;
+  const innerWorldsVisited =
+    stats.tiers.find((tier) => tier.tier === 1)?.visited ?? 0;
   const innerWorldsFootholdDone = innerWorldsVisited >= 3;
 
   return (
     <div className="space-y-3 text-[#00ff41]">
       <div>
-        <div className="font-['Orbitron'] text-base font-bold uppercase tracking-[0.18em] text-[#ffb000]">
+        <div className="font-['Orbitron'] text-base font-bold uppercase tracking-[0.18em] text-accent">
           {t("ship.progress")}
         </div>
-        <div className="mt-1 text-xs leading-relaxed text-[#667766]">
-          Сводка текущей кампании: насколько далеко открыт маршрут, какие системы уже закрыты,
-          и что ещё остаётся до финального прорыва.
+        <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
+          Сводка текущей кампании: насколько далеко открыт маршрут, какие
+          системы уже закрыты, и что ещё остаётся до финального прорыва.
+        </div>
+      </div>
+
+      <div className="border border-[#ffb00066] bg-[rgba(255,176,0,0.06)] p-3">
+        <div className="font-['Orbitron'] text-[10px] uppercase tracking-[0.16em] text-accent">
+          Способы победы
+        </div>
+        <div className="mt-2 grid gap-2">
+          {victoryObjectives.map((objective) => (
+            <Milestone
+              key={objective.id}
+              label={objective.title}
+              done={victoryDone || objective.done}
+              detail={objective.description}
+            />
+          ))}
         </div>
       </div>
 
@@ -254,7 +295,11 @@ export function CampaignProgressPanel() {
         />
         <MetricCard
           label="Боссы"
-          value={stats.defeatedBosses > 0 ? `${stats.defeatedBosses} побеждено` : "не побеждены"}
+          value={
+            stats.defeatedBosses > 0
+              ? `${stats.defeatedBosses} побеждено`
+              : "не побеждены"
+          }
           hint="древние угрозы"
           tone={stats.defeatedBosses > 0 ? "warning" : "neutral"}
         />
@@ -265,10 +310,14 @@ export function CampaignProgressPanel() {
           {stats.tiers.map((tier) => (
             <div key={tier.tier}>
               <div className="mb-1 flex items-center justify-between text-xs">
-                <span className={currentTier === tier.tier ? "text-[#ffb000]" : "text-[#888]"}>
+                <span
+                  className={
+                    currentTier === tier.tier ? "text-accent" : "text-[#888]"
+                  }
+                >
                   {REGION_NAMES[tier.tier] ?? `Область ${tier.tier}`}
                 </span>
-                <span className="text-[#667766]">
+                <span className="text-muted-foreground">
                   {tier.visited}/{tier.total}
                 </span>
               </div>
@@ -285,8 +334,9 @@ export function CampaignProgressPanel() {
                 Неразмеченный рубеж
               </div>
               <div className="mt-1 leading-relaxed text-[#555]">
-                Дальние сектора скрыты от навигационной карты. Они появятся после глубокого
-                сканирования: сканер IV, эффективная дальность 25+ или артефакт всевидения.
+                Дальние сектора скрыты от навигационной карты. Они появятся
+                после глубокого сканирования: сканер IV, эффективная дальность
+                25+ или артефакт всевидения.
               </div>
               <div className="mt-1 text-[#444]">
                 Текущая дальность сканера: {scanRange}
@@ -303,21 +353,37 @@ export function CampaignProgressPanel() {
             done={innerWorldsFootholdDone}
             detail={`${innerWorldsVisited}/3 внутренних сектора`}
           />
-          <Milestone label="Покинуть внутренние миры" done={stats.tiers.some((tier) => tier.tier >= 2 && tier.visited > 0)} />
-          <Milestone label="Достичь внешних рубежей" done={stats.tiers.some((tier) => tier.tier >= 3 && tier.visited > 0)} />
+          <Milestone
+            label="Покинуть внутренние миры"
+            done={stats.tiers.some(
+              (tier) => tier.tier >= 2 && tier.visited > 0,
+            )}
+          />
+          <Milestone
+            label="Достичь внешних рубежей"
+            done={stats.tiers.some(
+              (tier) => tier.tier >= 3 && tier.visited > 0,
+            )}
+          />
           <Milestone
             label="Победить первого древнего босса"
             done={stats.defeatedBosses > 0}
-            detail={stats.defeatedBosses > 0 ? `побеждено: ${stats.defeatedBosses}` : "любой древний босс"}
+            detail={
+              stats.defeatedBosses > 0
+                ? `побеждено: ${stats.defeatedBosses}`
+                : "любой древний босс"
+            }
           />
           <Milestone
             label="Открыть неразмеченный рубеж"
             done={canSeeHiddenRim}
             detail="глубокое сканирование или артефакт всевидения"
           />
-          {canSeeHiddenRim && (
-            <Milestone label="Финальный прорыв" done={victoryDone} detail="достигнуть дальнего рубежа" />
-          )}
+          <Milestone
+            label="Финал"
+            done={victoryDone}
+            detail="выполнить любой способ победы"
+          />
         </div>
       </Section>
 
@@ -326,14 +392,16 @@ export function CampaignProgressPanel() {
           <div>
             <div className="mb-1 flex justify-between text-xs">
               <span className="text-[#888]">Исследования</span>
-              <span className="text-[#667766]">{techDone}/{techTotal}</span>
+              <span className="text-muted-foreground">
+                {techDone}/{techTotal}
+              </span>
             </div>
             <ProgressBar value={techDone} max={techTotal} color="#9933ff" />
           </div>
           <div>
             <div className="mb-1 flex justify-between text-xs">
               <span className="text-[#888]">Рецепты оружия</span>
-              <span className="text-[#667766]">
+              <span className="text-muted-foreground">
                 {unlockedWeaponRecipes.length}/{weaponRecipes.length}
               </span>
             </div>
@@ -373,23 +441,32 @@ export function CampaignProgressPanel() {
           <div>
             <div className="mb-1 flex justify-between text-xs">
               <span className="text-[#888]">Артефакты</span>
-              <span className="text-[#667766]">
+              <span className="text-muted-foreground">
                 {stats.discoveredArtifacts}/{artifacts.length}
               </span>
             </div>
-            <ProgressBar value={stats.discoveredArtifacts} max={artifacts.length} color="#ff00ff" />
+            <ProgressBar
+              value={stats.discoveredArtifacts}
+              max={artifacts.length}
+              color="#ff00ff"
+            />
             <div className="mt-1 text-[10px] text-[#555]">
-              изучено: {stats.researchedArtifacts}, активно: {stats.activeArtifacts}
+              изучено: {stats.researchedArtifacts}, активно:{" "}
+              {stats.activeArtifacts}
             </div>
           </div>
           <div>
             <div className="mb-1 flex justify-between text-xs">
               <span className="text-[#888]">Локации</span>
-              <span className="text-[#667766]">
+              <span className="text-muted-foreground">
                 {stats.visitedLocations}/{stats.totalLocations}
               </span>
             </div>
-            <ProgressBar value={stats.visitedLocations} max={stats.totalLocations} color="#00d4ff" />
+            <ProgressBar
+              value={stats.visitedLocations}
+              max={stats.totalLocations}
+              color="#00d4ff"
+            />
             <div className="mt-1 text-[10px] text-[#555]">
               засчитываются открытые, посещённые и завершённые локации
             </div>

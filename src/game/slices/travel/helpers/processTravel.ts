@@ -535,7 +535,7 @@ export const processTravel = (
         set(() => ({ gameMode: "sector_map" }));
 
         if (destinationSector.tier === 4) {
-            get().triggerVictory();
+            get().checkVictory();
         }
     }
 };
