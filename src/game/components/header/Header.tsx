@@ -5,10 +5,7 @@ import { useGameStore } from "@/game/store";
 import { HelpPanel, ActiveEffectsPanel } from "../panels";
 import { ResearchPanel } from "../ResearchPanel";
 import { SaveLoadPanel } from "../SaveLoadPanel";
-import {
-  GLOBAL_CRISES,
-  CRISIS_WARNING_TURNS,
-} from "@/game/constants/globalCrises";
+import { GLOBAL_CRISES } from "@/game/constants/globalCrises";
 import {
   Dialog,
   DialogContent,
@@ -36,8 +33,6 @@ export function GameHeader() {
   const turn = useGameStore((s) => s.turn);
   const credits = useGameStore((s) => s.credits);
   const activeCrisis = useGameStore((s) => s.activeCrisis);
-  const nextCrisisTurn = useGameStore((s) => s.nextCrisisTurn);
-  const nextCrisisId = useGameStore((s) => s.nextCrisisId);
   const currentSector = useGameStore((s) => s.currentSector);
   const traveling = useGameStore((s) => s.traveling);
   const artifacts = useGameStore((s) => s.artifacts);
@@ -55,18 +50,10 @@ export function GameHeader() {
   const crisis = activeCrisis
     ? GLOBAL_CRISES.find((item) => item.id === activeCrisis.id)
     : null;
-  const upcomingCrisis = nextCrisisId
-    ? GLOBAL_CRISES.find((item) => item.id === nextCrisisId)
-    : null;
-  const turnsUntilCrisis = nextCrisisTurn - turn;
   const crisisWidgetRef = useRef<HTMLDivElement | null>(null);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const isDraggingCrisisRef = useRef(false);
-  const crisisWidgetKey = activeCrisis
-    ? `active:${activeCrisis.id}`
-    : turnsUntilCrisis <= CRISIS_WARNING_TURNS && turnsUntilCrisis > 0
-      ? `warning:${nextCrisisId ?? "unknown"}`
-      : "none";
+  const crisisWidgetKey = activeCrisis ? `active:${activeCrisis.id}` : "none";
   const crisisWidgetDismissed = dismissedCrisisWidgetKey === crisisWidgetKey;
 
   const handleRestartClick = () => {
@@ -411,65 +398,6 @@ export function GameHeader() {
             >
               Открыть центр кризисов
             </button>
-          </div>
-        </div>
-      ) : turnsUntilCrisis <= CRISIS_WARNING_TURNS &&
-        turnsUntilCrisis > 0 &&
-        !crisisWidgetDismissed ? (
-        <div
-          ref={crisisWidgetRef}
-          className={`fixed z-40 w-[min(90vw,320px)] ${crisisWidgetPosition ? "" : "top-24 md:top-20 left-1/2 -translate-x-1/2"}`}
-          style={
-            crisisWidgetPosition
-              ? {
-                  left: crisisWidgetPosition.x,
-                  top: crisisWidgetPosition.y,
-                }
-              : undefined
-          }
-        >
-          <div className="rounded-md border border-accent bg-[rgba(32,22,6,0.9)] px-3 py-2 shadow-[0_0_18px_rgba(255,176,0,0.2)] backdrop-blur-sm">
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#ffd36b]">
-              <button
-                type="button"
-                onPointerDown={(event) => {
-                  event.preventDefault();
-                  startDraggingCrisisWidget(event.clientX, event.clientY);
-                }}
-                className="cursor-grab active:cursor-grabbing rounded border border-[#ffd36b55] px-1 py-0.5 text-[9px] text-[#ffe6a6] hover:bg-[rgba(255,211,107,0.12)]"
-                title="Перетащить"
-              >
-                ⠿
-              </button>
-              <span>⚠️</span>
-              <span>Предупреждение</span>
-              <button
-                type="button"
-                onClick={() => setDismissedCrisisWidgetKey(crisisWidgetKey)}
-                className="ml-auto cursor-pointer rounded border border-[#ffd36b55] px-1 py-0.5 text-[9px] text-[#ffe6a6] hover:bg-[rgba(255,211,107,0.12)]"
-                title="Закрыть"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="mt-1 text-sm font-semibold text-[#ffe6a6]">
-              {upcomingCrisis?.icon ?? "⚠️"}{" "}
-              {upcomingCrisis ? t(upcomingCrisis.nameKey) : "Кризис"} через{" "}
-              {turnsUntilCrisis} {turnsUntilCrisis === 1 ? "ход" : "хода"}
-            </div>
-            {upcomingCrisis && (
-              <>
-                <div className="mt-1 text-[11px] text-[#ffd36b]">
-                  {t(upcomingCrisis.warningKey)}
-                </div>
-                <div className="mt-1 text-[11px] leading-snug text-[#ffe6a6]">
-                  {t(upcomingCrisis.descriptionKey)}
-                </div>
-                <div className="mt-1 text-[10px] leading-snug text-[#ffd36b]">
-                  {t(upcomingCrisis.effectsKey)}
-                </div>
-              </>
-            )}
           </div>
         </div>
       ) : null}

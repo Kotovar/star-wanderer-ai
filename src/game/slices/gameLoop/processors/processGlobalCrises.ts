@@ -1,6 +1,5 @@
 import type { GameState, GameStore, SetState } from "@/game/types";
 import {
-  CRISIS_WARNING_TURNS,
   FIRST_CRISIS_TURN_MIN,
   GLOBAL_CRISES,
   pickWeightedCrisis,
@@ -21,9 +20,7 @@ const getCrisisById = (id?: string | null) =>
  * Логика:
  * 1. Если кризис активен — применяет его эффект и уменьшает счётчик;
  *    когда счётчик достигает 0 — кризис завершается.
- * 2. Если до следующего кризиса осталось CRISIS_WARNING_TURNS ходов —
- *    показывает предупреждение в лог один раз.
- * 3. Когда наступает ход кризиса — активирует случайный кризис.
+ * 2. Когда наступает ход кризиса — активирует случайный кризис.
  */
 export const processGlobalCrises = (
   state: GameState,
@@ -84,18 +81,6 @@ export const processGlobalCrises = (
       }));
     }
     return;
-  }
-
-  // ── Предупреждение ─────────────────────────────────────────────────────────
-  const turnsUntilCrisis = nextCrisisTurn - turn;
-  if (turnsUntilCrisis === CRISIS_WARNING_TURNS) {
-    const upcomingCrisis = getCrisisById(nextCrisisId);
-    get().addLog(
-      upcomingCrisis
-        ? `⚠️ ${upcomingCrisis.icon} ${i18nStore.t(upcomingCrisis.warningKey)}. До кризиса ${CRISIS_WARNING_TURNS} хода`
-        : `⚠️ Внимание! Через ${CRISIS_WARNING_TURNS} хода надвигается галактический кризис!`,
-      "warning",
-    );
   }
 
   // ── Начало нового кризиса ──────────────────────────────────────────────────

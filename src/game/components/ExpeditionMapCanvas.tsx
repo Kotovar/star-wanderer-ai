@@ -504,8 +504,9 @@ export function ExpeditionMapCanvas({
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredTile, setHoveredTile] = useState<number | null>(null);
-  const [locationSprite, setLocationSprite] =
-    useState<HTMLImageElement | null>(null);
+  const [locationSprite, setLocationSprite] = useState<HTMLImageElement | null>(
+    null,
+  );
 
   useEffect(() => {
     const image = new Image();
@@ -560,13 +561,7 @@ export function ExpeditionMapCanvas({
           hiddenGradient.addColorStop(1, "rgba(25, 35, 25, 0.9)");
 
           ctx.beginPath();
-          ctx.roundRect(
-            x + padding,
-            y + padding,
-            tileWidth,
-            tileWidth,
-            4,
-          );
+          ctx.roundRect(x + padding, y + padding, tileWidth, tileWidth, 4);
           ctx.fillStyle = hiddenGradient;
           ctx.fill();
 
@@ -608,13 +603,7 @@ export function ExpeditionMapCanvas({
           tileGradient.addColorStop(1, "rgba(0,0,0,0.4)");
 
           ctx.beginPath();
-          ctx.roundRect(
-            x + padding,
-            y + padding,
-            tileWidth,
-            tileWidth,
-            4,
-          );
+          ctx.roundRect(x + padding, y + padding, tileWidth, tileWidth, 4);
           ctx.fillStyle = tileGradient;
           ctx.fill();
           ctx.strokeStyle = style.border;
@@ -723,10 +712,11 @@ export function ExpeditionMapCanvas({
         {Array.from({ length: apTotal }).map((_, i) => (
           <div
             key={i}
-            className={`w-2 h-2 rounded-full border transition-all ${i < apRemaining
-              ? "bg-[#00d4ff] border-[#00d4ff] shadow-[0_0_6px_#00d4ff]"
-              : "bg-transparent border-[#333]"
-              }`}
+            className={`w-2 h-2 rounded-full border transition-all ${
+              i < apRemaining
+                ? "bg-ring border-ring shadow-[0_0_6px_#00d4ff]"
+                : "bg-transparent border-[#333]"
+            }`}
           />
         ))}
       </div>

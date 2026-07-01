@@ -7,6 +7,7 @@ import { useGameStore } from "@/game/store";
 import { useTranslation } from "@/lib/useTranslation";
 
 const formatChance = (chance: number) => `${Math.round(chance * 100)}%`;
+const pct = (value: number) => `${Math.round(value)}%`;
 
 export function CrisisPanel() {
   const state = useGameStore();
@@ -15,25 +16,73 @@ export function CrisisPanel() {
   const active = activeCrisis
     ? GLOBAL_CRISES.find((crisis) => crisis.id === activeCrisis.id)
     : null;
-  const upcoming = state.nextCrisisId
-    ? GLOBAL_CRISES.find((crisis) => crisis.id === state.nextCrisisId)
-    : null;
-  const turnsUntilCrisis = state.nextCrisisTurn - state.turn;
   const availableResponses = active
     ? CRISIS_RESPONSES.filter((response) =>
         active.allowedResponses.includes(response.id),
       )
     : [];
+  const moduleIntegrity =
+    state.ship.modules.length > 0
+      ? (state.ship.modules.reduce(
+          (sum, module) => sum + module.health / module.maxHealth,
+          0,
+        ) /
+          state.ship.modules.length) *
+        100
+      : 100;
+  const crewCondition =
+    state.crew.length > 0
+      ? (state.crew.reduce(
+          (sum, crew) =>
+            sum +
+            (crew.health / crew.maxHealth +
+              crew.happiness / crew.maxHappiness) /
+              2,
+          0,
+        ) /
+          state.crew.length) *
+        100
+      : 100;
+  const readinessItems = [
+    {
+      label: "Корпус",
+      value: pct(moduleIntegrity),
+      ok: moduleIntegrity >= 70,
+      hint: "ремонт снижает риск каскадных поломок",
+    },
+    {
+      label: "Экипаж",
+      value: pct(crewCondition),
+      ok: crewCondition >= 70,
+      hint: "здоровье и мораль держат кризис под контролем",
+    },
+    {
+      label: "Топливо",
+      value: String(Math.floor(state.ship.fuel)),
+      ok: state.ship.fuel >= 40,
+      hint: "запас нужен для эвакуации и аварийных манёвров",
+    },
+    {
+      label: "Резерв",
+      value: `₢${Math.floor(state.credits)}`,
+      ok: state.credits >= 500,
+      hint: "кредиты оплачивают быстрые решения",
+    },
+  ];
+  const responseLabels = Object.fromEntries(
+    CRISIS_RESPONSES.map((response) => [response.id, response.label]),
+  );
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto p-2">
-      <div className="flex items-start justify-between gap-3">
+    <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto p-2 text-[#d7ffe0]">
+      <div className="flex items-start justify-between gap-3 border-b border-[#ff444433] pb-3">
         <div>
           <div className="font-['Orbitron'] text-lg font-bold uppercase tracking-[0.14em] text-[#ff4444]">
             Центр кризисов
           </div>
           <div className="mt-1 text-xs text-[#888]">
-            Подавление кризиса требует подготовки. Провал тратит цену попытки.
+            Мониторинг угроз без прогноза расписания. Кризис считается внезапным
+            событием.
           </div>
         </div>
         <Button
@@ -44,98 +93,159 @@ export function CrisisPanel() {
         </Button>
       </div>
 
-      <section className="border border-[#ff444466] bg-[rgba(255,68,68,0.05)] p-3">
-        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#ff8da2]">
-          Активный кризис
-        </div>
-        {active && activeCrisis ? (
-          <>
-            <div className="mt-2 text-base font-bold text-[#ffd6de]">
-              {active.icon} {t(active.nameKey)}
-            </div>
-            <div className="mt-2 text-sm leading-relaxed text-[#ffb6c4]">
-              {t(active.descriptionKey)}
-            </div>
-            <div className="mt-2 text-xs leading-relaxed text-[#ff8da2]">
-              {t(active.effectsKey)}
-            </div>
-            <div className="mt-2 text-xs text-[#ffd6de]">
-              Осталось ходов:{" "}
-              <span className="font-bold text-[#ff4444]">
-                {activeCrisis.turnsRemaining}
-              </span>
-            </div>
-          </>
-        ) : (
-          <div className="mt-2 text-sm text-muted-foreground">
-            Сейчас активного кризиса нет.
+      <section className="grid gap-3 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="border border-[#ff444466] bg-[rgba(255,68,68,0.06)] p-3">
+          <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#ff8da2]">
+            Текущая тревога
           </div>
-        )}
+          {active && activeCrisis ? (
+            <>
+              <div className="mt-2 flex items-center gap-3">
+                <div className="grid h-12 w-12 place-items-center border border-[#ff668055] bg-[rgba(255,68,68,0.12)] text-2xl">
+                  {active.icon}
+                </div>
+                <div>
+                  <div className="text-base font-bold text-[#ffd6de]">
+                    {t(active.nameKey)}
+                  </div>
+                  <div className="text-xs text-[#ff8da2]">
+                    Осталось ходов:{" "}
+                    <span className="font-bold text-[#ff4444]">
+                      {activeCrisis.turnsRemaining}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 text-sm leading-relaxed text-[#ffb6c4]">
+                {t(active.descriptionKey)}
+              </div>
+              <div className="mt-2 border-l-2 border-[#ff6680] pl-3 text-xs leading-relaxed text-[#ff8da2]">
+                {t(active.effectsKey)}
+              </div>
+            </>
+          ) : (
+            <div className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Активного кризиса нет. Центр показывает готовность корабля и
+              протоколы, но не раскрывает будущие события.
+            </div>
+          )}
+        </div>
+
+        <div className="border border-[#00d4ff55] bg-[rgba(0,212,255,0.04)] p-3">
+          <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-ring">
+            Готовность
+          </div>
+          <div className="mt-3 grid gap-2">
+            {readinessItems.map((item) => (
+              <div
+                key={item.label}
+                className="border border-[#1a5260] bg-[rgba(0,0,0,0.22)] p-2"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold text-[#d7ffe0]">
+                    {item.label}
+                  </span>
+                  <span
+                    className={`text-xs font-bold ${item.ok ? "text-[#00ff41]" : "text-accent"}`}
+                  >
+                    {item.value}
+                  </span>
+                </div>
+                <div className="mt-1 text-[10px] leading-snug text-[#789]">
+                  {item.hint}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {active && (
-        <section className="grid gap-2 lg:grid-cols-2">
-          {availableResponses.map((response) => {
-            const canPay = response.canPay(state);
-            const chance = response.getChance(state);
-            const note = active.responseNotes?.[response.id];
-            return (
-              <button
-                key={response.id}
-                type="button"
-                disabled={!canPay}
-                onClick={() => state.resolveCrisis(response.id)}
-                className="cursor-pointer border border-[#ff668055] bg-[rgba(255,102,128,0.04)] p-3 text-left transition-colors hover:bg-[rgba(255,102,128,0.12)] disabled:cursor-not-allowed disabled:opacity-45"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="font-['Orbitron'] text-sm font-bold text-[#ffd6de]">
-                    {response.label}
+        <section>
+          <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#ff8da2]">
+            Подавление активного кризиса
+          </div>
+          <div className="grid gap-2 lg:grid-cols-2">
+            {availableResponses.map((response) => {
+              const canPay = response.canPay(state);
+              const chance = response.getChance(state);
+              const note = active.responseNotes?.[response.id];
+              return (
+                <button
+                  key={response.id}
+                  type="button"
+                  disabled={!canPay}
+                  onClick={() => state.resolveCrisis(response.id)}
+                  className="cursor-pointer border border-[#ff668055] bg-[rgba(255,102,128,0.04)] p-3 text-left transition-colors hover:bg-[rgba(255,102,128,0.12)] disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-['Orbitron'] text-sm font-bold text-[#ffd6de]">
+                      {response.label}
+                    </div>
+                    <div className="text-xs font-bold text-accent">
+                      {formatChance(chance)}
+                    </div>
                   </div>
-                  <div className="text-xs font-bold text-accent">
-                    {formatChance(chance)}
+                  <div className="mt-2 text-[11px] leading-relaxed text-[#ffb6c4]">
+                    {note ?? response.requirement}
                   </div>
-                </div>
-                <div className="mt-2 text-[11px] leading-relaxed text-[#ffb6c4]">
-                  {note ?? response.requirement}
-                </div>
-                <div className="mt-2 text-[11px] leading-relaxed text-[#ffb6c4]">
-                  Требование: {response.requirement}
-                </div>
-                <div className="mt-1 text-[11px] leading-relaxed text-[#ff8da2]">
-                  Цена: {response.cost}
-                </div>
-                {!canPay && (
-                  <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#ff4444]">
-                    условия не выполнены
+                  <div className="mt-2 text-[11px] leading-relaxed text-[#ffb6c4]">
+                    Требование: {response.requirement}
                   </div>
-                )}
-              </button>
-            );
-          })}
+                  <div className="mt-1 text-[11px] leading-relaxed text-[#ff8da2]">
+                    Цена: {response.cost}
+                  </div>
+                  {!canPay && (
+                    <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#ff4444]">
+                      условия не выполнены
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </section>
       )}
 
       <section className="border border-[#ffb00066] bg-[rgba(255,176,0,0.05)] p-3">
-        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#ffd36b]">
-          Следующий кризис
-        </div>
-        {upcoming ? (
-          <>
-            <div className="mt-2 text-sm font-bold text-[#ffe6a6]">
-              {upcoming.icon} {t(upcoming.nameKey)}
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#ffd36b]">
+              База угроз
             </div>
-            <div className="mt-1 text-xs text-[#ffd36b]">
-              До начала: {Math.max(0, turnsUntilCrisis)} ходов
+            <div className="mt-1 text-xs text-[#887a4f]">
+              Возможные классы кризисов. Порядок и время появления неизвестны.
             </div>
-            <div className="mt-2 text-xs leading-relaxed text-[#ffe6a6]">
-              {t(upcoming.warningKey)}
-            </div>
-          </>
-        ) : (
-          <div className="mt-2 text-sm text-muted-foreground">
-            Следующий кризис ещё не определён.
           </div>
-        )}
+          <div className="border border-[#ffd36b55] px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-[#ffe6a6]">
+            прогноз недоступен
+          </div>
+        </div>
+        <div className="mt-3 grid gap-2 lg:grid-cols-2">
+          {GLOBAL_CRISES.map((crisis) => (
+            <div
+              key={crisis.id}
+              className="border border-[#5c4618] bg-[rgba(0,0,0,0.2)] p-3"
+            >
+              <div className="font-bold text-[#ffe6a6]">
+                {crisis.icon} {t(crisis.nameKey)}
+              </div>
+              <div className="mt-2 text-[11px] leading-relaxed text-[#c8b57a]">
+                {t(crisis.descriptionKey)}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1">
+                {crisis.allowedResponses.map((responseId) => (
+                  <span
+                    key={responseId}
+                    className="border border-[#ffd36b33] px-1.5 py-0.5 text-[10px] text-[#ffe6a6]"
+                  >
+                    {responseLabels[responseId]}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
     </div>
   );

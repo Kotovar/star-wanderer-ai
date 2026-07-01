@@ -70,10 +70,7 @@ export function CombatShipVisual({
 
       const isDestroyed = mod.health <= 0;
       const moduleStyle = (
-        MODULE_TYPES as Record<
-          string,
-          { color: string; borderColor: string }
-        >
+        MODULE_TYPES as Record<string, { color: string; borderColor: string }>
       )[mod.type] || {
         color: "#333333aa",
         borderColor: "#888888",
@@ -129,9 +126,7 @@ export function CombatShipVisual({
             let splitIdx = 0;
 
             for (let i = 0; i < words.length; i++) {
-              const wordWidth = ctx.measureText(
-                words[i] + " ",
-              ).width;
+              const wordWidth = ctx.measureText(words[i] + " ").width;
               if (line1Width + wordWidth <= maxWidth) {
                 line1Width += wordWidth;
                 splitIdx = i + 1;
@@ -141,15 +136,11 @@ export function CombatShipVisual({
             }
 
             const line1 =
-              splitIdx > 0
-                ? words.slice(0, splitIdx).join(" ")
-                : words[0];
+              splitIdx > 0 ? words.slice(0, splitIdx).join(" ") : words[0];
             const line2 =
               splitIdx > 0
                 ? words.slice(splitIdx).join(" ")
-                : shortName.substring(
-                  Math.floor(shortName.length / 2),
-                );
+                : shortName.substring(Math.floor(shortName.length / 2));
 
             ctx.fillText(line1, x + cellSize / 2, y + 18);
             ctx.fillText(line2, x + cellSize / 2, y + 32);
@@ -320,12 +311,13 @@ export function CombatShipVisual({
     <div className="flex flex-col items-center">
       {title && (
         <div
-          className={`text-base font-bold mb-4 px-4 py-2 rounded ${isEnemy
+          className={`text-base font-bold mb-4 px-4 py-2 rounded ${
+            isEnemy
               ? isBoss
                 ? "bg-[rgba(255,0,255,0.2)] text-[#ff00ff]"
-                : "bg-[rgba(255,0,64,0.2)] text-[#ff0040]"
-              : "bg-[rgba(0,255,65,0.2)] text-[#00d4ff]"
-            }`}
+                : "bg-[rgba(255,0,64,0.2)] text-destructive"
+              : "bg-[rgba(0,255,65,0.2)] text-ring"
+          }`}
         >
           {title}
         </div>
@@ -367,26 +359,26 @@ export function CombatShipVisual({
         {damageHit &&
           (damageHit.hullDamage > 0 || damageHit.missed) &&
           hitModuleIndex >= 0 && (
-          <div
-            key={`hull-${damageHit.eventId}`}
-            className={`combat-damage-number pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2 font-['Orbitron'] ${
-              damageHit.missed
-                ? "text-[10px] font-bold text-[#889988]"
-                : damageHit.isCrit
-                  ? "text-xl font-black text-[#ffccd5]"
-                  : "text-sm font-bold text-[#ffccd5]"
-            }`}
-            style={{
-              left: `${(hitModuleCenterX / visualCanvasSize) * 100}%`,
-              top: `${(hitModuleCenterY / visualCanvasSize) * 100}%`,
-              textShadow: damageHit.missed
-                ? "0 0 8px #445544"
-                : "0 0 8px #ff0040, 0 0 14px #ff0040",
-            }}
-          >
-            {damageHit.missed ? "ПРОМАХ" : `-${damageHit.hullDamage}`}
-          </div>
-        )}
+            <div
+              key={`hull-${damageHit.eventId}`}
+              className={`combat-damage-number pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2 font-['Orbitron'] ${
+                damageHit.missed
+                  ? "text-[10px] font-bold text-[#889988]"
+                  : damageHit.isCrit
+                    ? "text-xl font-black text-[#ffccd5]"
+                    : "text-sm font-bold text-[#ffccd5]"
+              }`}
+              style={{
+                left: `${(hitModuleCenterX / visualCanvasSize) * 100}%`,
+                top: `${(hitModuleCenterY / visualCanvasSize) * 100}%`,
+                textShadow: damageHit.missed
+                  ? "0 0 8px #445544"
+                  : "0 0 8px #ff0040, 0 0 14px #ff0040",
+              }}
+            >
+              {damageHit.missed ? "ПРОМАХ" : `-${damageHit.hullDamage}`}
+            </div>
+          )}
       </div>
     </div>
   );
