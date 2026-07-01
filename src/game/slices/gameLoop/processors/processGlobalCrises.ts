@@ -34,7 +34,10 @@ export const processGlobalCrises = (
 
   // Balance migration for old saves: crises planned by the previous early schedule
   // should not interrupt the opening phase.
-  if (turn < FIRST_CRISIS_TURN_MIN) {
+  if (
+    turn < FIRST_CRISIS_TURN_MIN &&
+    activeCrisis?.data?.startedFromModifier !== true
+  ) {
     if (activeCrisis) {
       const crisis = getCrisisById(activeCrisis.id);
       crisis?.onEndEffect?.(set, get, activeCrisis);

@@ -31,6 +31,8 @@ export interface LaunchModifier {
   crewLimit?: number;
   /** Запустить игру с одним случайным cursed артефактом в активном состоянии */
   startWithCursedArtifact?: boolean;
+  /** Запустить игру с активным случайным кризисом */
+  startWithCrisis?: boolean;
   /** Процент урона, применяемый ко всем модулям при старте (0–100) */
   moduleDamagePercent?: number;
   /** Процент урона по одному случайному модулю выбранных типов при старте (0–100) */
@@ -145,6 +147,15 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     type: "challenge",
     creditDelta: +300,
     reactorPowerPenalty: 2,
+  },
+  {
+    id: "crisis_start",
+    nameKey: "launch_modifiers.crisis_start.name",
+    descriptionKey: "launch_modifiers.crisis_start.description",
+    icon: "🚨",
+    type: "challenge",
+    creditDelta: +1200,
+    startWithCrisis: true,
   },
 
   // ── Смешанные (риск + потенциальная награда) ──────────────────────────────

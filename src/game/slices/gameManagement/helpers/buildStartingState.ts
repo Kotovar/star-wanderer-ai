@@ -1,5 +1,6 @@
 import { SHIP_TEMPLATES, DEFAULT_TEMPLATE_ID } from "@/game/constants/shipTemplates";
 import { LAUNCH_MODIFIERS } from "@/game/constants/launchModifiers";
+import { GLOBAL_CRISES } from "@/game/constants/globalCrises";
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
 import type { CrewMember, GameState, Artifact } from "@/game/types";
@@ -18,6 +19,8 @@ export interface StartingStatePatch {
   raceReputation?: Partial<Record<RaceId, number>>;
   /** Расы, которые должны быть известны игроку с первого хода */
   knownRaces?: RaceId[];
+  /** Кризис, который надо активировать сразу после создания стартового состояния */
+  startingCrisisId?: string;
 }
 
 /**
@@ -211,6 +214,11 @@ export function buildStartingState(
     }
   }
 
+  const wantsStartingCrisis = activeModifiers.some((m) => m.startWithCrisis);
+  const startingCrisis = wantsStartingCrisis
+    ? GLOBAL_CRISES[Math.floor(Math.random() * GLOBAL_CRISES.length)]
+    : undefined;
+
   // ── Корабль ───────────────────────────────────────────────────────────────
   const crewCapacity =
     modules.find((m) => m.oxygen !== undefined)?.oxygen ?? 5;
@@ -240,5 +248,6 @@ export function buildStartingState(
     researchResources,
     raceReputation: Object.keys(raceReputation).length > 0 ? raceReputation : undefined,
     knownRaces: knownRaces.size > 0 ? [...knownRaces] : undefined,
+    startingCrisisId: startingCrisis?.id,
   };
 }

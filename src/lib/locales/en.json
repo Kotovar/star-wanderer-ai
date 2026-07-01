@@ -2712,6 +2712,7 @@
     "effect_modules": "modules",
     "effect_key_module": "key module",
     "effect_cursed_artifact": "cursed artifact",
+    "effect_starting_crisis": "crisis from turn one",
     "effect_reputation": "reputation changed",
     "ship_label": "Ship",
     "start_credits": "Starting credits",
@@ -2777,6 +2778,10 @@
     "weakened_reactor": {
       "name": "Weakened Reactor",
       "description": "Reactor generates 2 less energy. Some modules may shut down."
+    },
+    "crisis_start": {
+      "name": "Emergency Start",
+      "description": "Game begins with a random galactic crisis already active. Very dangerous, but the starting budget is much higher."
     },
     "cursed_relic": {
       "name": "Cursed Relic",

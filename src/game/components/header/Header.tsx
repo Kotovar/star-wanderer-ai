@@ -63,9 +63,9 @@ export function GameHeader() {
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const isDraggingCrisisRef = useRef(false);
   const crisisWidgetKey = activeCrisis
-    ? `active:${activeCrisis.id}:${activeCrisis.turnsRemaining}`
+    ? `active:${activeCrisis.id}`
     : turnsUntilCrisis <= CRISIS_WARNING_TURNS && turnsUntilCrisis > 0
-      ? `warning:${nextCrisisId ?? "unknown"}:${turnsUntilCrisis}`
+      ? `warning:${nextCrisisId ?? "unknown"}`
       : "none";
   const crisisWidgetDismissed = dismissedCrisisWidgetKey === crisisWidgetKey;
 
@@ -403,7 +403,10 @@ export function GameHeader() {
             </div>
             <button
               type="button"
-              onClick={showCrises}
+              onClick={() => {
+                showCrises();
+                setDismissedCrisisWidgetKey(crisisWidgetKey);
+              }}
               className="mt-2 w-full cursor-pointer rounded border border-[#ff668055] px-2 py-1 text-[10px] font-bold text-[#ffd6de] hover:bg-[rgba(255,102,128,0.14)]"
             >
               Открыть центр кризисов

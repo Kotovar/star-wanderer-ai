@@ -6,6 +6,12 @@ import { playSound } from "@/sounds";
 import { buildStartingState } from "./buildStartingState";
 import { DEFAULT_TEMPLATE_ID } from "@/game/constants/shipTemplates";
 import { getVictoryObjectives } from "@/game/constants/victoryObjectives";
+import {
+  GLOBAL_CRISES,
+  pickWeightedCrisis,
+  rollNextCrisisTurn,
+} from "@/game/constants/globalCrises";
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 
 /**
@@ -64,6 +70,30 @@ export const restartGame = (
     knownRaces,
     startTemplateId: templateId,
   });
+
+  if (patch.startingCrisisId) {
+    const crisis = GLOBAL_CRISES.find(
+      (item) => item.id === patch.startingCrisisId,
+    );
+    if (crisis) {
+      const crisisData = crisis.onStartEffect?.(set, get) ?? undefined;
+      const stateAfterStart = get();
+      const nextCrisis = pickWeightedCrisis(stateAfterStart, crisis.id);
+      set((state) => ({
+        activeCrisis: {
+          id: crisis.id,
+          turnsRemaining: crisis.duration,
+          data: { ...crisisData, startedFromModifier: true },
+        },
+        nextCrisisTurn: rollNextCrisisTurn(state.turn, stateAfterStart),
+        nextCrisisId: nextCrisis.id,
+      }));
+      get().addLog(
+        `🚨 ГАЛАКТИЧЕСКИЙ КРИЗИС: ${crisis.icon} ${i18nStore.t(crisis.nameKey)} · длительность ${crisis.duration} хода`,
+        "error",
+      );
+    }
+  }
 
   get().addLog("Новая игра", "info");
   get().addLog(

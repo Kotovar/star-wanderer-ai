@@ -162,6 +162,8 @@ function getModifierDetails(mod: LaunchModifier, t: TFn) {
   }
   if (mod.startWithCursedArtifact)
     details.push(t("new_game_setup.effect_cursed_artifact"));
+  if (mod.startWithCrisis)
+    details.push(t("new_game_setup.effect_starting_crisis"));
   if (mod.startRaceReputation)
     details.push(t("new_game_setup.effect_reputation"));
   if (mod.researchResources) {
