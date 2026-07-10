@@ -45,32 +45,35 @@ export function CrisisPanel() {
       : 100;
   const readinessItems = [
     {
-      label: "Корпус",
+      label: t("crisis_panel.readiness.hull.label"),
       value: pct(moduleIntegrity),
       ok: moduleIntegrity >= 70,
-      hint: "ремонт снижает риск каскадных поломок",
+      hint: t("crisis_panel.readiness.hull.hint"),
     },
     {
-      label: "Экипаж",
+      label: t("crisis_panel.readiness.crew.label"),
       value: pct(crewCondition),
       ok: crewCondition >= 70,
-      hint: "здоровье и мораль держат кризис под контролем",
+      hint: t("crisis_panel.readiness.crew.hint"),
     },
     {
-      label: "Топливо",
+      label: t("crisis_panel.readiness.fuel.label"),
       value: String(Math.floor(state.ship.fuel)),
       ok: state.ship.fuel >= 40,
-      hint: "запас нужен для эвакуации и аварийных манёвров",
+      hint: t("crisis_panel.readiness.fuel.hint"),
     },
     {
-      label: "Резерв",
+      label: t("crisis_panel.readiness.reserve.label"),
       value: `₢${Math.floor(state.credits)}`,
       ok: state.credits >= 500,
-      hint: "кредиты оплачивают быстрые решения",
+      hint: t("crisis_panel.readiness.reserve.hint"),
     },
   ];
   const responseLabels = Object.fromEntries(
-    CRISIS_RESPONSES.map((response) => [response.id, response.label]),
+    CRISIS_RESPONSES.map((response) => [
+      response.id,
+      t(`crisis_panel.responses.${response.id}.label`),
+    ]),
   );
 
   return (
@@ -78,25 +81,24 @@ export function CrisisPanel() {
       <div className="flex items-start justify-between gap-3 border-b border-[#ff444433] pb-3">
         <div>
           <div className="font-['Orbitron'] text-lg font-bold uppercase tracking-[0.14em] text-[#ff4444]">
-            Центр кризисов
+            {t("crisis_panel.title")}
           </div>
           <div className="mt-1 text-xs text-[#888]">
-            Мониторинг угроз без прогноза расписания. Кризис считается внезапным
-            событием.
+            {t("crisis_panel.subtitle")}
           </div>
         </div>
         <Button
           onClick={state.showSectorMap}
           className="cursor-pointer border border-[#00ff41] bg-transparent text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
         >
-          К карте
+          {t("common.back_to_map")}
         </Button>
       </div>
 
       <section className="grid gap-3 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="border border-[#ff444466] bg-[rgba(255,68,68,0.06)] p-3">
           <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#ff8da2]">
-            Текущая тревога
+            {t("crisis_panel.current_alert")}
           </div>
           {active && activeCrisis ? (
             <>
@@ -109,7 +111,7 @@ export function CrisisPanel() {
                     {t(active.nameKey)}
                   </div>
                   <div className="text-xs text-[#ff8da2]">
-                    Осталось ходов:{" "}
+                    {t("crisis_panel.turns_remaining")}{" "}
                     <span className="font-bold text-[#ff4444]">
                       {activeCrisis.turnsRemaining}
                     </span>
@@ -125,15 +127,14 @@ export function CrisisPanel() {
             </>
           ) : (
             <div className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Активного кризиса нет. Центр показывает готовность корабля и
-              протоколы, но не раскрывает будущие события.
+              {t("crisis_panel.no_active")}
             </div>
           )}
         </div>
 
         <div className="border border-[#00d4ff55] bg-[rgba(0,212,255,0.04)] p-3">
           <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-ring">
-            Готовность
+            {t("crisis_panel.readiness.title")}
           </div>
           <div className="mt-3 grid gap-2">
             {readinessItems.map((item) => (
@@ -163,13 +164,15 @@ export function CrisisPanel() {
       {active && (
         <section>
           <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#ff8da2]">
-            Подавление активного кризиса
+            {t("crisis_panel.suppression")}
           </div>
           <div className="grid gap-2 lg:grid-cols-2">
             {availableResponses.map((response) => {
               const canPay = response.canPay(state);
               const chance = response.getChance(state);
-              const note = active.responseNotes?.[response.id];
+              const note = t(
+                `crisis_panel.response_notes.${active.id}.${response.id}`,
+              );
               return (
                 <button
                   key={response.id}
@@ -180,7 +183,7 @@ export function CrisisPanel() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="font-['Orbitron'] text-sm font-bold text-[#ffd6de]">
-                      {response.label}
+                      {t(`crisis_panel.responses.${response.id}.label`)}
                     </div>
                     <div className="text-xs font-bold text-accent">
                       {formatChance(chance)}
@@ -190,14 +193,16 @@ export function CrisisPanel() {
                     {note ?? response.requirement}
                   </div>
                   <div className="mt-2 text-[11px] leading-relaxed text-[#ffb6c4]">
-                    Требование: {response.requirement}
+                    {t("crisis_panel.requirement")}{" "}
+                    {t(`crisis_panel.responses.${response.id}.requirement`)}
                   </div>
                   <div className="mt-1 text-[11px] leading-relaxed text-[#ff8da2]">
-                    Цена: {response.cost}
+                    {t("crisis_panel.cost")}{" "}
+                    {t(`crisis_panel.responses.${response.id}.cost`)}
                   </div>
                   {!canPay && (
                     <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#ff4444]">
-                      условия не выполнены
+                      {t("crisis_panel.conditions_unmet")}
                     </div>
                   )}
                 </button>
@@ -211,14 +216,14 @@ export function CrisisPanel() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#ffd36b]">
-              База угроз
+              {t("crisis_panel.threat_database")}
             </div>
             <div className="mt-1 text-xs text-[#887a4f]">
-              Возможные классы кризисов. Порядок и время появления неизвестны.
+              {t("crisis_panel.threat_database_description")}
             </div>
           </div>
           <div className="border border-[#ffd36b55] px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-[#ffe6a6]">
-            прогноз недоступен
+            {t("crisis_panel.forecast_unavailable")}
           </div>
         </div>
         <div className="mt-3 grid gap-2 lg:grid-cols-2">

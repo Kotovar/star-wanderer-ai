@@ -242,6 +242,7 @@ export function ArtifactPanel() {
     const toggleArtifact = useGameStore((s) => s.toggleArtifact);
     const crew = useGameStore((s) => s.crew);
     const research = useGameStore((s) => s.research);
+    const showSectorMap = useGameStore((s) => s.showSectorMap);
     const { t } = useTranslation();
 
     const scientists = crew.filter((c) => c.profession === "scientist");
@@ -268,11 +269,19 @@ export function ArtifactPanel() {
         <div className="flex flex-col h-full overflow-hidden gap-2">
             {/* Header */}
             <div className="shrink-0">
-                <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                    {t("artifacts.title")}
+                <div className="flex items-start justify-between gap-3 border-b border-[#ffb00044] pb-3">
+                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
+                        {t("artifacts.title")}
+                    </div>
+                    <Button
+                        onClick={showSectorMap}
+                        className="shrink-0 cursor-pointer border border-[#00ff41] bg-transparent text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
+                    >
+                        {t("common.back_to_map")}
+                    </Button>
                 </div>
 
-                <div className="text-sm text-[#888]">
+                <div className="mt-3 text-sm text-[#888]">
                     {t("artifacts.discovered")}:{" "}
                     <span className="text-[#00ff41]">{discoveredCount}</span> /{" "}
                     {artifacts.length}

@@ -11,20 +11,30 @@ import {
 import { getRaceReputation } from "../reputation/utils";
 import { useTranslation } from "@/lib/useTranslation";
 import { RaceSprite } from "./RaceSprite";
+import { Button } from "@/components/ui/button";
 
 export function ReputationPanel() {
     const raceReputation = useGameStore((s) => s.raceReputation);
     const knownRaces = useGameStore((s) => s.knownRaces);
+    const showSectorMap = useGameStore((s) => s.showSectorMap);
     const { t } = useTranslation();
 
     if (knownRaces.length === 0) return null;
 
     return (
         <div className="bg-[#0a0f14] border-2 border-[#9933ff] p-4 flex flex-col h-full">
-            <h3 className="text-[#9933ff] font-bold text-lg mb-3 flex items-center gap-2 shrink-0">
-                <span>🤝</span>
-                <span>{t("reputation.title")}</span>
-            </h3>
+            <div className="mb-3 flex shrink-0 items-start justify-between gap-3 border-b border-[#9933ff44] pb-3">
+                <h3 className="flex items-center gap-2 text-lg font-bold text-[#9933ff]">
+                    <span>🤝</span>
+                    <span>{t("reputation.title")}</span>
+                </h3>
+                <Button
+                    onClick={showSectorMap}
+                    className="shrink-0 cursor-pointer border border-[#00ff41] bg-transparent text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
+                >
+                    {t("common.back_to_map")}
+                </Button>
+            </div>
 
             <div className="grid grid-cols-1 gap-3 overflow-y-auto  pr-2">
                 {knownRaces.map((raceId) => {

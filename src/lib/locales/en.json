@@ -878,6 +878,7 @@
   },
   "research": {
     "title": "Research",
+    "panel_title": "Research Center",
     "available": "Available",
     "completed": "Researched",
     "in_progress": "In progress",
@@ -1584,6 +1585,7 @@
     "ok": "OK",
     "close": "Close",
     "back": "Back",
+    "back_to_map": "Back to map",
     "next": "Next",
     "previous": "Previous",
     "loading": "Loading...",
@@ -2955,6 +2957,91 @@
       "crew_dispute_captain": "The captain settled the dispute: crew morale -{{penalty}}",
       "crew_dispute_quarters": "Shifts separated into living quarters: dispute resolved",
       "crew_dispute_standard": "Dispute ended by command: crew morale -{{penalty}}"
+    }
+  },
+
+  "crisis_panel": {
+    "button": "Crises",
+    "title": "Crisis Center",
+    "subtitle": "Threat monitoring without schedule forecasts. Crises are treated as unexpected events.",
+    "current_alert": "Current alert",
+    "turns_remaining": "Turns remaining:",
+    "no_active": "There is no active crisis. The center shows ship readiness and response protocols without revealing future events.",
+    "readiness": {
+      "title": "Readiness",
+      "hull": {
+        "label": "Hull",
+        "hint": "repairs reduce the risk of cascading failures"
+      },
+      "crew": {
+        "label": "Crew",
+        "hint": "health and morale help keep a crisis under control"
+      },
+      "fuel": {
+        "label": "Fuel",
+        "hint": "reserves are needed for evacuation and emergency maneuvers"
+      },
+      "reserve": {
+        "label": "Reserve",
+        "hint": "credits fund rapid response measures"
+      }
+    },
+    "suppression": "Active crisis response",
+    "requirement": "Requirement:",
+    "cost": "Cost:",
+    "conditions_unmet": "requirements not met",
+    "threat_database": "Threat database",
+    "threat_database_description": "Known crisis classes. Their order and timing are unknown.",
+    "forecast_unavailable": "forecast unavailable",
+    "responses": {
+      "combat": {
+        "label": "Combat",
+        "requirement": "weapon bay and an active gunner",
+        "cost": "250₢, 18 fuel, -30 HP to every weapon bay"
+      },
+      "science": {
+        "label": "Science",
+        "requirement": "laboratory, scanner, and an active scientist",
+        "cost": "12 Tech Salvage, 8 Ancient Data, 4 Energy Samples"
+      },
+      "diplomacy": {
+        "label": "Diplomacy",
+        "requirement": "3 known races and 35+ reputation with at least one",
+        "cost": "800₢ and -12 reputation with your strongest ally"
+      },
+      "resources": {
+        "label": "Resources",
+        "requirement": "large emergency reserve",
+        "cost": "1800₢ and 60 fuel"
+      }
+    },
+    "response_notes": {
+      "raider_wave": {
+        "combat": "Intercept the raider groups and stop their attacks by force.",
+        "diplomacy": "Bribe intermediaries and cut off the raiders' supply lines.",
+        "resources": "Fund escort convoys, false beacons, and emergency cargo rerouting."
+      },
+      "solar_flare": {
+        "science": "Recalculate protection circuits and stabilize the electronics.",
+        "resources": "Burn fuel and spare parts on emergency shielding."
+      },
+      "epidemic": {
+        "science": "Deploy quarantine protocols and develop treatment from samples.",
+        "diplomacy": "Request medical aid and vaccines from known races.",
+        "resources": "Spend reserves on compartment isolation, medicine, and ration changes."
+      },
+      "fuel_shortage": {
+        "science": "Retune the engines and reduce losses in the fuel system.",
+        "diplomacy": "Secure emergency supplies through known factions.",
+        "resources": "Buy an expensive emergency reserve and distribute it across ship systems."
+      }
+    },
+    "widget": {
+      "drag": "Drag",
+      "close": "Close",
+      "title": "Crisis",
+      "turns_remaining": "Turns remaining: {{count}}",
+      "open": "Open Crisis Center"
     }
   },
 

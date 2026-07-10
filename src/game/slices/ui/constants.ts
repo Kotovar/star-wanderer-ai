@@ -29,6 +29,7 @@ export const GAME_MODES: GameModeObj = {
     MANAGEMENT: {
         ASSIGNMENTS: "assignments",
         ARTIFACTS: "artifacts",
+        EFFECTS: "effects",
         RESEARCH: "research",
         CRISES: "crises",
     },
@@ -44,6 +45,7 @@ export const DEFAULT_NAVIGATION_MODE = GAME_MODES.NAVIGATION.GALAXY_MAP;
  */
 export const PANELS_RETURNING_TO_NAVIGATION = [
     GAME_MODES.MANAGEMENT.ARTIFACTS,
+    GAME_MODES.MANAGEMENT.EFFECTS,
     GAME_MODES.MANAGEMENT.RESEARCH,
     GAME_MODES.MANAGEMENT.CRISES,
 ] as const;

@@ -37,6 +37,7 @@ export type GameMode =
   | "storm"
   | "distress_signal"
   | "artifacts"
+  | "effects"
   | "unknown_ship"
   | "battle_results"
   | "storm_results"
@@ -183,6 +184,7 @@ export interface GameModeChanges {
   showSectorMap: () => void;
   showAssignments: () => void;
   showCrises: () => void;
+  showEffects: () => void;
   closeArtifactsPanel: () => void;
   closeResearchPanel: () => void;
   savePreviousGameMode: () => void;

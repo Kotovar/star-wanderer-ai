@@ -23,6 +23,7 @@ import { typedKeys } from "@/lib/utils";
 import { useTranslation, store } from "@/lib/useTranslation";
 import { getTechTranslation } from "@/lib/techTranslations";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { TechIcon } from "./TechIcon";
 
 // ─── Layout constants ──────────────────────────────────────────────────────────
@@ -879,6 +880,7 @@ export function ResearchPanel() {
   const crew = useGameStore((s) => s.crew);
   const ship = useGameStore((s) => s.ship);
   const startResearch = useGameStore((s) => s.startResearch);
+  const showSectorMap = useGameStore((s) => s.showSectorMap);
   const { t, currentLanguage } = useTranslation();
 
   // Ensure credits are always displayed as integers
@@ -1018,6 +1020,17 @@ export function ResearchPanel() {
     <div className="flex flex-col h-full overflow-hidden">
       {/* ── Header ── */}
       <div className="shrink-0 p-2 border-b border-[#1a1a1a] space-y-2">
+        <div className="flex items-start justify-between gap-3 border-b border-[#9933ff44] pb-2">
+          <div className="font-['Orbitron'] text-lg font-bold uppercase tracking-[0.14em] text-[#b46cff]">
+            🔬 {t("research.panel_title")}
+          </div>
+          <Button
+            onClick={showSectorMap}
+            className="shrink-0 cursor-pointer border border-[#00ff41] bg-transparent text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
+          >
+            {t("common.back_to_map")}
+          </Button>
+        </div>
         <div className="flex items-center justify-between gap-2">
           <div
             className={`text-xs font-bold px-2 py-1 border ${canResearch

@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useGameStore } from "@/game/store";
-import { HelpPanel, ActiveEffectsPanel } from "../panels";
-import { ResearchPanel } from "../ResearchPanel";
+import { HelpPanel } from "../panels";
 import { SaveLoadPanel } from "../SaveLoadPanel";
 import { GLOBAL_CRISES } from "@/game/constants/globalCrises";
 import {
@@ -19,9 +18,7 @@ import { useTranslation } from "@/lib/useTranslation";
 
 export function GameHeader() {
   const [showHelp, setShowHelp] = useState(false);
-  const [showEffects, setShowEffects] = useState(false);
   const [showRestartDialog, setShowRestartDialog] = useState(false);
-  const [showResearchModal, setShowResearchModal] = useState(false);
   const [showSaveLoad, setShowSaveLoad] = useState(false);
   const [dismissedCrisisWidgetKey, setDismissedCrisisWidgetKey] = useState<
     string | null
@@ -38,10 +35,11 @@ export function GameHeader() {
   const artifacts = useGameStore((s) => s.artifacts);
   const activeEffects = useGameStore((s) => s.activeEffects);
   const showArtifacts = useGameStore((s) => s.showArtifacts);
+  const showEffects = useGameStore((s) => s.showEffects);
   const showResearch = useGameStore((s) => s.showResearch);
   const showReputation = useGameStore((s) => s.showReputation);
-  const closeReputationPanel = useGameStore((s) => s.closeReputationPanel);
   const showCrises = useGameStore((s) => s.showCrises);
+  const showSectorMap = useGameStore((s) => s.showSectorMap);
   const gameMode = useGameStore((s) => s.gameMode);
   const { t, changeLanguage, currentLanguage } = useTranslation();
 
@@ -67,40 +65,27 @@ export function GameHeader() {
 
   const handleArtifactsClick = () => {
     if (gameMode === "artifacts") {
-      useGameStore.getState().closeArtifactsPanel();
+      showSectorMap();
     } else {
       showArtifacts();
     }
   };
 
   const handleResearchClick = () => {
-    if (typeof window !== "undefined" && window.innerWidth < 1024) {
-      // Save previous game mode for mobile modal (without changing gameMode)
-      if (gameMode !== "research" && gameMode !== "artifacts") {
-        useGameStore.getState().savePreviousGameMode();
-      }
-      setShowResearchModal(true);
+    if (gameMode === "research") {
+      showSectorMap();
     } else {
-      if (gameMode === "research") {
-        useGameStore.getState().closeResearchPanel();
-      } else {
-        showResearch();
-      }
+      showResearch();
     }
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setShowResearchModal(false);
-        if (gameMode === "reputation") {
-          closeReputationPanel();
-        }
-      }
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [gameMode, closeReputationPanel]);
+  const handleEffectsClick = () => {
+    if (gameMode === "effects") {
+      showSectorMap();
+    } else {
+      showEffects();
+    }
+  };
 
   useEffect(() => {
     const handlePointerMove = (event: PointerEvent) => {
@@ -216,7 +201,7 @@ export function GameHeader() {
               </span>
             </button>
             <button
-              onClick={() => setShowEffects(true)}
+              onClick={handleEffectsClick}
               className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer relative"
               title={t("header.tooltip_effects")}
             >
@@ -256,7 +241,7 @@ export function GameHeader() {
             <button
               onClick={() => {
                 if (gameMode === "reputation") {
-                  closeReputationPanel();
+                  showSectorMap();
                 } else {
                   showReputation();
                 }
@@ -270,13 +255,19 @@ export function GameHeader() {
               </span>
             </button>
             <button
-              onClick={showCrises}
+              onClick={() => {
+                if (gameMode === "crises") {
+                  showSectorMap();
+                } else {
+                  showCrises();
+                }
+              }}
               className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#ff4444] hover:bg-[rgba(255,68,68,0.2)] transition-colors cursor-pointer"
-              title="Центр кризисов"
+              title={t("crisis_panel.title")}
             >
               <span className="text-[#ff4444]">🚨</span>
               <span className="text-[#ff4444] hidden lg:inline">
-                Кризисы
+                {t("crisis_panel.button")}
               </span>
             </button>
           </div>
@@ -356,17 +347,17 @@ export function GameHeader() {
                   startDraggingCrisisWidget(event.clientX, event.clientY);
                 }}
                 className="cursor-grab active:cursor-grabbing rounded border border-[#ff668055] px-1 py-0.5 text-[9px] text-[#ff9aae] hover:bg-[rgba(255,102,128,0.12)]"
-                title="Перетащить"
+                title={t("crisis_panel.widget.drag")}
               >
                 ⠿
               </button>
               <span>🚨</span>
-              <span>Кризис</span>
+              <span>{t("crisis_panel.widget.title")}</span>
               <button
                 type="button"
                 onClick={() => setDismissedCrisisWidgetKey(crisisWidgetKey)}
                 className="ml-auto cursor-pointer rounded border border-[#ff668055] px-1 py-0.5 text-[9px] text-[#ff9aae] hover:bg-[rgba(255,102,128,0.12)]"
-                title="Закрыть"
+                title={t("crisis_panel.widget.close")}
               >
                 ✕
               </button>
@@ -385,8 +376,9 @@ export function GameHeader() {
               </>
             )}
             <div className="mt-1 text-[11px] text-[#ff8da2]">
-              Осталось {activeCrisis.turnsRemaining}{" "}
-              {activeCrisis.turnsRemaining === 1 ? "ход" : "хода"}
+              {t("crisis_panel.widget.turns_remaining", {
+                count: activeCrisis.turnsRemaining,
+              })}
             </div>
             <button
               type="button"
@@ -396,7 +388,7 @@ export function GameHeader() {
               }}
               className="mt-2 w-full cursor-pointer rounded border border-[#ff668055] px-2 py-1 text-[10px] font-bold text-[#ffd6de] hover:bg-[rgba(255,102,128,0.14)]"
             >
-              Открыть центр кризисов
+              {t("crisis_panel.widget.open")}
             </button>
           </div>
         </div>
@@ -404,14 +396,6 @@ export function GameHeader() {
 
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
       {showSaveLoad && <SaveLoadPanel onClose={() => setShowSaveLoad(false)} />}
-      {showEffects && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-[rgba(10,20,30,0.95)] border-2 border-[#9933ff] p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
-            <ActiveEffectsPanel onClose={() => setShowEffects(false)} />
-          </div>
-        </div>
-      )}
-
       <Dialog open={showRestartDialog} onOpenChange={setShowRestartDialog}>
         <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ff4444] text-[#00ff41] max-w-md">
           <DialogHeader>
@@ -440,34 +424,6 @@ export function GameHeader() {
         </DialogContent>
       </Dialog>
 
-      {/* Mobile research modal */}
-      <Dialog
-        open={showResearchModal}
-        onOpenChange={(open) => {
-          if (!open) {
-            useGameStore.getState().closeResearchPanel();
-          }
-          setShowResearchModal(open);
-        }}
-      >
-        <DialogContent
-          className="bg-[rgba(10,20,30,0.98)] border-2 border-[#9933ff] text-[#00ff41] max-w-[95vw] w-[95vw] md:hidden max-h-[90vh] overflow-y-auto p-4 scrollbar-gutter-stable"
-          style={{ scrollbarGutter: "stable both-edges" }}
-          onPointerDownOutside={(e) => e.preventDefault()}
-        >
-          <DialogHeader>
-            <DialogTitle className="text-accent font-['Orbitron'] text-lg">
-              🔬 {t("game.science")}
-            </DialogTitle>
-            <DialogDescription className="sr-only">
-              {t("research.panel_title")}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-2 min-h-[60vh]">
-            <ResearchPanel />
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

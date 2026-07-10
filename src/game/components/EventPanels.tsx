@@ -28,6 +28,7 @@ import { GasGiantPanel } from "./GasGiantPanel";
 import { WreckFieldPanel } from "./WreckFieldPanel";
 import { HostileApproachWarningPanel } from "./HostileApproachWarningPanel";
 import { CrisisPanel } from "./CrisisPanel";
+import { ActiveEffectsPanel } from "./panels/ActiveEffectsPanel";
 import { RandomEventPanel } from "./RandomEventPanel";
 import { RiskRewardPreview } from "./RiskRewardPreview";
 import type { TravelEventType } from "@/game/types";
@@ -486,33 +487,10 @@ export function EventDisplay() {
       return <HostileApproachWarningPanel />;
 
     case "artifacts":
-      return (
-        <>
-          {/* Desktop: inline panel with fixed height */}
-          <div className="hidden md:flex md:flex-col md:h-full">
-            <ArtifactPanel />
-          </div>
-          {/* Mobile: full-screen modal */}
-          <div className="md:hidden fixed inset-0 bg-[rgba(0,0,0,0.9)] z-50 flex items-center justify-center p-4">
-            <div className="bg-[#0a0f1a] border-2 border-[#ff00ff] max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center p-4 border-b border-[#ff00ff] sticky top-0 bg-[#0a0f1a]">
-                <h2 className="font-['Orbitron'] text-xl font-bold text-[#ff00ff]">
-                  ★ АРТЕФАКТЫ ДРЕВНИХ
-                </h2>
-                <button
-                  onClick={() => useGameStore.getState().closeArtifactsPanel()}
-                  className="text-destructive hover:text-white text-2xl font-bold cursor-pointer px-2"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="p-4">
-                <ArtifactPanel />
-              </div>
-            </div>
-          </div>
-        </>
-      );
+      return <ArtifactPanel />;
+
+    case "effects":
+      return <ActiveEffectsPanel />;
 
     case "unknown_ship":
       return <UnknownShipPanel />;
@@ -527,32 +505,10 @@ export function EventDisplay() {
       return <AssignmentsPanel />;
 
     case "research":
-      return (
-        <>
-          {/* Desktop: full panel */}
-          <div className="hidden md:block">
-            <ResearchPanel />
-          </div>
-          {/* Mobile: show button that triggers modal in ResearchPanel */}
-          <div className="md:hidden p-4">
-            <ResearchPanel />
-          </div>
-        </>
-      );
+      return <ResearchPanel />;
 
     case "reputation":
-      return (
-        <>
-          {/* Desktop: full panel */}
-          <div className="hidden md:block h-full overflow-hidden">
-            <ReputationPanel />
-          </div>
-          {/* Mobile: modal via Header */}
-          <div className="md:hidden p-4 h-full overflow-y-auto">
-            <ReputationPanel />
-          </div>
-        </>
-      );
+      return <ReputationPanel />;
 
     case "crises":
       return <CrisisPanel />;
