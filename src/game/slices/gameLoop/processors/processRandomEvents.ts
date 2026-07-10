@@ -7,6 +7,7 @@ import type {
   SetState,
 } from "@/game/types";
 import { store as i18nStore } from "@/lib/useTranslation";
+import { grantTimedEffect } from "@/game/effects/timedEffects";
 
 const EVENT_TRIGGER_CHANCE = 0.08;
 const EVENT_COOLDOWN = 8;
@@ -324,6 +325,10 @@ export const resolveRandomEvent = (
     case "crew_dispute":
       applyCrewDisputeChoice(event, choice, set, get);
       break;
+  }
+
+  if (choice === "specialist") {
+    grantTimedEffect("decisive_response", set, get);
   }
 
   set({ pendingRandomEvent: null });

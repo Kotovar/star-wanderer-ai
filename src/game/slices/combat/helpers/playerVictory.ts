@@ -27,6 +27,7 @@ import type {
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import { completeBattleContracts } from "./completeBattleContracts";
 import { applyCombatTimeCost } from "./combatTime";
+import { grantTimedEffect } from "@/game/effects/timedEffects";
 
 /**
  * Handles victory after defeating boss
@@ -63,6 +64,8 @@ export function handleVictory(
             return;
         }
     }
+
+    grantTimedEffect("combat_momentum", set, get);
 
     // Collect battle results
     const damagedModules = get()

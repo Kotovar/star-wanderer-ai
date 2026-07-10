@@ -113,7 +113,7 @@ export interface GameState {
   gameVictory: boolean; // Victory state
   gameVictoryReason: string | null; // Reason for victory
   victoryTriggered: boolean; // Persistent flag — prevents re-triggering after "Continue"
-  activeEffects: ActiveEffect[]; // Active planet specialization effects
+  activeEffects: ActiveEffect[]; // Temporary effects from planets and gameplay
   planetCooldowns: Record<string, number>; // Track cooldowns per planet (planetId -> turnsRemaining)
   research: ResearchData; // Research system data
   moduleRecipes: ModuleRecipeId[]; // One-time module blueprint recipes found by Scout
@@ -131,6 +131,7 @@ export interface GameState {
   bannedPlanets: string[]; // Planet location IDs permanently hostile (guard killed there)
   startTemplateId?: string; // Ship template used to start this game (undefined = old save)
   activeCrisis: ActiveCrisisState | null; // Currently active global crisis
+  discoveredCrisisIds: string[]; // Crises already encountered by the player
   nextCrisisTurn: number; // Turn on which the next global crisis triggers
   nextCrisisId: string | null; // Crisis selected to trigger next
 }

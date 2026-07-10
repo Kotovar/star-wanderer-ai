@@ -95,6 +95,9 @@ export const restartGame = (
           turnsRemaining: crisis.duration,
           data: { ...crisisData, startedFromModifier: true },
         },
+        discoveredCrisisIds: [
+          ...new Set([...state.discoveredCrisisIds, crisis.id]),
+        ],
         nextCrisisTurn: rollNextCrisisTurn(state.turn, stateAfterStart),
         nextCrisisId: nextCrisis.id,
       }));

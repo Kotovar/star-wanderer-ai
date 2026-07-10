@@ -75,6 +75,9 @@ export function CrisisPanel() {
       t(`crisis_panel.responses.${response.id}.label`),
     ]),
   );
+  const discoveredCrises = GLOBAL_CRISES.filter((crisis) =>
+    state.discoveredCrisisIds.includes(crisis.id),
+  );
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto p-2 text-[#d7ffe0]">
@@ -226,31 +229,37 @@ export function CrisisPanel() {
             {t("crisis_panel.forecast_unavailable")}
           </div>
         </div>
-        <div className="mt-3 grid gap-2 lg:grid-cols-2">
-          {GLOBAL_CRISES.map((crisis) => (
-            <div
-              key={crisis.id}
-              className="border border-[#5c4618] bg-[rgba(0,0,0,0.2)] p-3"
-            >
-              <div className="font-bold text-[#ffe6a6]">
-                {crisis.icon} {t(crisis.nameKey)}
+        {discoveredCrises.length === 0 ? (
+          <div className="mt-3 border border-dashed border-[#5c4618] p-4 text-center text-xs text-[#887a4f]">
+            {t("crisis_panel.threat_database_empty")}
+          </div>
+        ) : (
+          <div className="mt-3 grid gap-2 lg:grid-cols-2">
+            {discoveredCrises.map((crisis) => (
+              <div
+                key={crisis.id}
+                className="border border-[#5c4618] bg-[rgba(0,0,0,0.2)] p-3"
+              >
+                <div className="font-bold text-[#ffe6a6]">
+                  {crisis.icon} {t(crisis.nameKey)}
+                </div>
+                <div className="mt-2 text-[11px] leading-relaxed text-[#c8b57a]">
+                  {t(crisis.descriptionKey)}
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {crisis.allowedResponses.map((responseId) => (
+                    <span
+                      key={responseId}
+                      className="border border-[#ffd36b33] px-1.5 py-0.5 text-[10px] text-[#ffe6a6]"
+                    >
+                      {responseLabels[responseId]}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="mt-2 text-[11px] leading-relaxed text-[#c8b57a]">
-                {t(crisis.descriptionKey)}
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1">
-                {crisis.allowedResponses.map((responseId) => (
-                  <span
-                    key={responseId}
-                    className="border border-[#ffd36b33] px-1.5 py-0.5 text-[10px] text-[#ffe6a6]"
-                  >
-                    {responseLabels[responseId]}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

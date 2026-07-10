@@ -46,6 +46,10 @@ export const applyPlanetEffect = (
         name: spec.name,
         description: spec.description,
         raceId,
+        source: "planet",
+        polarity: "positive",
+        acquiredTurn: state.turn,
+        totalTurns: spec.duration,
         turnsRemaining: spec.duration,
         effects: spec.effects.map((e) => ({
             type: e.type as ActiveEffect["effects"][number]["type"],

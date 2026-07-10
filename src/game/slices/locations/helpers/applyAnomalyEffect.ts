@@ -10,6 +10,7 @@ import { calculateScienceBonus } from "./calculateScienceBonus";
 import { getCrewByProfession, giveRandomMutation } from "@/game/crew";
 import { MUTATION_CHANCES } from "@/game/constants";
 import { getRandomUndiscoveredArtifact } from "@/game/artifacts";
+import { grantTimedEffect } from "@/game/effects/timedEffects";
 
 /**
  * Применяет эффект аномалии (награда или урон)
@@ -37,8 +38,10 @@ export const applyAnomalyEffect = (
             set,
             get,
         );
+        grantTimedEffect("anomaly_resonance", set, get);
     } else {
         applyBadAnomaly(anomalyLevel, set, get);
+        grantTimedEffect("anomaly_interference", set, get);
         // Шанс мутации для учёных: ANOMALY_PER_LEVEL * уровень аномалии (макс ANOMALY_MAX)
         const mutationChance = Math.min(MUTATION_CHANCES.ANOMALY_MAX, MUTATION_CHANCES.ANOMALY_PER_LEVEL * anomalyLevel);
         scientists.forEach((scientist) => {

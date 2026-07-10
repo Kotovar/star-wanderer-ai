@@ -19,6 +19,15 @@ const migrations: Record<number, Migration> = {
       stateVersion: 1,
     };
   },
+  1: (raw) => {
+    const state = raw as Record<string, unknown>;
+    const activeCrisis = state.activeCrisis as { id?: unknown } | null;
+    return {
+      ...state,
+      discoveredCrisisIds:
+        typeof activeCrisis?.id === "string" ? [activeCrisis.id] : [],
+    };
+  },
 };
 
 /**

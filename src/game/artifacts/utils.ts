@@ -75,6 +75,11 @@ export const getEffectDescription = (
                 value,
             });
         case "fuel_efficiency":
+            if (valuePercent < 0) {
+                return i18nStore.t("effects.modifiers.fuel_penalty", {
+                    value: Math.abs(valuePercent),
+                });
+            }
             return i18nStore.t("planet_effects.effects.fuel_efficiency", {
                 value: valuePercent,
             });

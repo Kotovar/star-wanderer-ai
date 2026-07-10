@@ -222,7 +222,7 @@ export function StationPanel() {
 
             <Button
                 onClick={showSectorMap}
-                className="bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider w-fit cursor-pointer"
+                className="bg-transparent border-2 border-accent text-accent hover:bg-accent hover:text-[#050810] uppercase tracking-wider w-fit cursor-pointer"
             >
                 {t("station.leave")}
             </Button>
@@ -523,7 +523,7 @@ export function StationPanel() {
                                                         )
                                                     }
                                                     disabled={credits < cost}
-                                                    className="bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] text-xs px-2 py-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    className="bg-transparent border border-accent text-accent hover:bg-accent hover:text-[#050810] text-xs px-2 py-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                                                 >
                                                     {t(
                                                         "station.diplomacy_buy_rep",
@@ -561,9 +561,9 @@ export function StationPanel() {
                                         return (
                                             <div
                                                 key={planetId}
-                                                className="flex items-center justify-between gap-3 p-2 rounded border border-[#ff0040] bg-[rgba(255,0,64,0.05)]"
+                                                className="flex items-center justify-between gap-3 p-2 rounded border border-destructive bg-[rgba(255,0,64,0.05)]"
                                             >
-                                                <div className="text-xs text-[#ff0040]">
+                                                <div className="text-xs text-destructive">
                                                     ⛔ {displayName}
                                                 </div>
                                                 <Button
@@ -636,7 +636,7 @@ function StationHeader({
 
     return (
         <>
-            <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
+            <div className="font-['Orbitron'] font-bold text-lg text-accent">
                 {t("station_upgrades.title", {
                     name: getStationName(location.name),
                     type: stationTypeKey
@@ -798,7 +798,7 @@ function DeliveryContracts({
                         }`}
                     >
                         <div className="flex-1">
-                            <div className="text-[#00d4ff] font-bold">
+                            <div className="text-ring font-bold">
                                 {c.desc}
                             </div>
                             <div className="text-[11px] mt-1 text-[#00ff41]">
@@ -812,7 +812,7 @@ function DeliveryContracts({
                                 {c.quantity ?? DELIVERY_CONTRACT_CARGO_AMOUNT}
                                 т)
                             </div>
-                            <div className="text-[#ffb000] text-xs mt-1">
+                            <div className="text-accent text-xs mt-1">
                                 💰 {c.reward}₢
                             </div>
                         </div>

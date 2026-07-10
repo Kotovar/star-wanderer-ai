@@ -232,6 +232,7 @@ const baseState: GameState = {
   sectorOffset: { x: 0, y: 0 },
   bannedPlanets: [],
   activeCrisis: null,
+  discoveredCrisisIds: [],
   nextCrisisTurn: rollInitialCrisisTurn(),
   nextCrisisId:
     GLOBAL_CRISES[Math.floor(Math.random() * GLOBAL_CRISES.length)]?.id ?? null,

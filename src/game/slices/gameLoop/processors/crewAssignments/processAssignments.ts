@@ -22,6 +22,9 @@ import type {
     LocationType,
 } from "@/game/types";
 import { isModuleActive } from "@/game/modules/utils";
+import { grantTimedEffect } from "@/game/effects/timedEffects";
+
+const COORDINATED_SHIFT_CHANCE = 0.04;
 
 /**
  * Обрабатывает все назначения экипажа
@@ -75,6 +78,22 @@ export const processCrewAssignments = (
             );
         }
     });
+
+    const currentState = get();
+    const assignedCrew = currentState.crew.filter(
+        (crewMember) => crewMember.health > 0 && crewMember.assignment,
+    );
+    const alreadyCoordinated = currentState.activeEffects.some(
+        (effect) => effect.definitionId === "coordinated_shift",
+    );
+    if (
+        !currentState.currentCombat &&
+        assignedCrew.length >= 2 &&
+        !alreadyCoordinated &&
+        Math.random() < COORDINATED_SHIFT_CHANCE
+    ) {
+        grantTimedEffect("coordinated_shift", set, get);
+    }
 };
 
 /**

@@ -1018,11 +1018,61 @@
   "effects": {
     "title": "▸ Active Effects",
     "no_effects": "No active effects",
+    "no_matches": "No effects match this filter",
     "close": "CLOSE",
     "cancel": "Cancel",
-    "description": "Effects last several turns and expire automatically",
+    "description": "Temporary ship conditions from planets, crew, combat, anomalies, and events",
+    "empty_hint": "Assign crew, win battles, investigate anomalies, and use specialist event choices to gain temporary effects.",
     "turns": "turn(s)",
-    "level_short": "Lv"
+    "level_short": "Lv",
+    "acquired_turn": "Received on turn {{turn}}",
+    "summary": {
+      "positive": "Bonuses",
+      "negative": "Penalties",
+      "expiring": "Expiring"
+    },
+    "filters": {
+      "label": "Effect filters",
+      "all": "All",
+      "positive": "Bonuses",
+      "negative": "Penalties",
+      "expiring": "Expiring"
+    },
+    "sources": {
+      "planet": "Planet",
+      "crew": "Crew tasks",
+      "combat": "Combat",
+      "anomaly": "Anomaly",
+      "event": "Event decision"
+    },
+    "items": {
+      "coordinated_shift": {
+        "name": "Coordinated Shift",
+        "description": "The crew has found a shared rhythm: systems respond faster and routine injuries are treated immediately."
+      },
+      "combat_momentum": {
+        "name": "Combat Momentum",
+        "description": "A recent victory sharpened the crew's reactions and confidence in the next engagement."
+      },
+      "anomaly_resonance": {
+        "name": "Anomaly Resonance",
+        "description": "Residual exotic energy stabilizes the reactor and reduces fuel losses."
+      },
+      "anomaly_interference": {
+        "name": "Anomaly Interference",
+        "description": "Distorted fields disrupt engine calibration and increase fuel consumption."
+      },
+      "decisive_response": {
+        "name": "Decisive Response",
+        "description": "A specialist solution left the crew prepared for the next emergency."
+      }
+    },
+    "modifiers": {
+      "fuel_penalty": "+{{value}}% fuel consumption"
+    },
+    "logs": {
+      "received": "◆ Temporary effect received: {{name}}"
+    }
   },
   "help": {
     "title": "📖 LOGBOOK",
@@ -2991,7 +3041,8 @@
     "cost": "Cost:",
     "conditions_unmet": "requirements not met",
     "threat_database": "Threat database",
-    "threat_database_description": "Known crisis classes. Their order and timing are unknown.",
+    "threat_database_description": "An archive of crises already encountered by the crew.",
+    "threat_database_empty": "No data yet. The first encountered crisis will be added automatically.",
     "forecast_unavailable": "forecast unavailable",
     "responses": {
       "combat": {

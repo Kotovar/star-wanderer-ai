@@ -95,6 +95,9 @@ export const processGlobalCrises = (
         turnsRemaining: crisis.duration,
         data: preparedData,
       },
+      discoveredCrisisIds: [
+        ...new Set([...freshState.discoveredCrisisIds, crisis.id]),
+      ],
       nextCrisisTurn: rollNextCrisisTurn(turn, freshState),
       nextCrisisId: nextPlannedCrisis.id,
     }));
