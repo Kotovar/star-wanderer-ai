@@ -60,6 +60,9 @@ export const createGameManagementSlice = (
         if (saved.pendingTravelEvent === undefined) {
             saved.pendingTravelEvent = null;
         }
+        if (saved.pendingRandomEvent === undefined) {
+            saved.pendingRandomEvent = null;
+        }
 
         // Синхронизация трейтов экипажа
         const allTraits = Object.values(CREW_TRAITS).flat();
@@ -104,6 +107,9 @@ export const createGameManagementSlice = (
         }
         if (saved.pendingTravelEvent === undefined) {
             saved.pendingTravelEvent = null;
+        }
+        if (saved.pendingRandomEvent === undefined) {
+            saved.pendingRandomEvent = null;
         }
 
         // Синхронизация трейтов

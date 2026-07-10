@@ -2821,6 +2821,143 @@
     }
   },
 
+  "random_events": {
+    "signal": "Unscheduled signal",
+    "captain_decision": "Captain's decision required",
+    "choose": "Choose approach",
+    "unavailable": "Unavailable",
+    "unknown_module": "unknown module",
+    "storm": {
+      "title": "Cosmic Storm",
+      "description": "An energy front threatens the {{module}} system. Expected load: {{damage}} HP.",
+      "pilot": {
+        "label": "Evade the front",
+        "description": "The pilot plots a course through a break in the storm.",
+        "outcome": "The module takes only {{damage}} damage and the pilot gains experience.",
+        "requirement": "a living pilot stationed in an active cockpit"
+      },
+      "shields": {
+        "label": "Route shields",
+        "description": "Redirect the defensive field toward the impact side.",
+        "outcome": "Shields absorb {{absorbed}}; remaining module damage: {{damage}}.",
+        "requirement": "charged shields"
+      },
+      "standard": {
+        "label": "Brace compartments",
+        "description": "Prepare the ship to take the storm head-on.",
+        "outcome": "The selected module takes {{damage}} damage."
+      }
+    },
+    "capsule": {
+      "title": "Drifting Capsule",
+      "description": "Scanners detect a sealed capsule. A trade beacon values its coordinates at {{reward}}₢.",
+      "science": {
+        "label": "Decode the archive",
+        "description": "A scientist studies the capsule's memory instead of selling it.",
+        "outcome": "+1 Ancient Data and scientist experience.",
+        "requirement": "a living scientist"
+      },
+      "salvage": {
+        "label": "Dismantle capsule",
+        "description": "An engineer safely extracts equipment inside the cargo hold.",
+        "outcome": "+2 Tech Salvage and engineer experience.",
+        "requirement": "a living engineer and active cargo hold"
+      },
+      "standard": {
+        "label": "Sell coordinates",
+        "description": "Transmit the data to a trade beacon without bringing the capsule aboard.",
+        "outcome": "+{{reward}}₢ with no additional risk."
+      }
+    },
+    "virus": {
+      "title": "Shipboard Virus",
+      "description": "An unknown pathogen entered the ventilation system. Without intervention, all crew morale drops by {{penalty}}.",
+      "medic": {
+        "label": "Field treatment",
+        "description": "A medic contains the symptoms and runs emergency prophylaxis.",
+        "outcome": "Crew morale drops by only 2 and the medic gains experience.",
+        "requirement": "a living medic"
+      },
+      "purge": {
+        "label": "Digital purge",
+        "description": "An AI or synthetic absorbs the infected data and destroys it.",
+        "outcome": "Morale is preserved; the AI module or synthetic loses 5 HP.",
+        "requirement": "an active AI core or living synthetic"
+      },
+      "standard": {
+        "label": "Full quarantine",
+        "description": "Seal the decks and wait for the outbreak to pass.",
+        "outcome": "All crew morale drops by {{penalty}}."
+      }
+    },
+    "fuel_leak": {
+      "title": "Fuel Leak",
+      "description": "Sensors detect a ruptured fuel line. Estimated loss before isolation: {{loss}} fuel.",
+      "engineer": {
+        "label": "Manual seal",
+        "description": "An engineer reaches the damaged junction and seals it in place.",
+        "outcome": "Only {{loss}} fuel is lost and the engineer gains experience.",
+        "requirement": "a living engineer"
+      },
+      "drones": {
+        "label": "Send repair drones",
+        "description": "The repair bay seals the line before any fuel is lost.",
+        "outcome": "Fuel is preserved; the repair bay loses 5 HP.",
+        "requirement": "an active repair bay"
+      },
+      "standard": {
+        "label": "Isolate the line",
+        "description": "Use standard automation to shut down the damaged section.",
+        "outcome": "The ship loses {{loss}} fuel."
+      }
+    },
+    "crew_dispute": {
+      "title": "Crew Dispute",
+      "description": "Mounting tension has erupted into an open dispute between shifts. Without intervention, morale drops by {{penalty}}.",
+      "captain": {
+        "label": "Intervene personally",
+        "description": "The captain hears both sides and makes a decision.",
+        "outcome": "Morale drops by only 2 and the pilot-captain gains experience.",
+        "requirement": "a living pilot-captain"
+      },
+      "quarters": {
+        "label": "Separate the shifts",
+        "description": "Send the conflicting shifts to rest in the living quarters.",
+        "outcome": "The crew settles down without losing morale.",
+        "requirement": "active living quarters"
+      },
+      "standard": {
+        "label": "Restore order",
+        "description": "End the dispute by command and send everyone back to duty.",
+        "outcome": "All crew morale drops by {{penalty}}."
+      }
+    },
+    "logs": {
+      "decision_required": "Resolve the unscheduled event before advancing the turn",
+      "choice_unavailable": "The requirements for that choice are no longer met",
+      "detected_storm": "⚠ Cosmic storm detected — captain's decision required",
+      "detected_capsule": "◈ Drifting capsule detected — captain's decision required",
+      "detected_virus": "☣ Shipboard virus detected — captain's decision required",
+      "detected_fuel_leak": "◒ Fuel leak detected — captain's decision required",
+      "detected_crew_dispute": "◐ Crew dispute reported — captain's decision required",
+      "storm_pilot": "The pilot crossed the front: module took {{damage}} damage",
+      "storm_shields": "Shields absorbed {{absorbed}}; remaining module damage: {{damage}}",
+      "storm_standard": "The storm damaged a module by {{damage}} HP",
+      "capsule_science": "Capsule archive decoded: +1 Ancient Data",
+      "capsule_salvage": "Capsule dismantled: +2 Tech Salvage",
+      "capsule_standard": "Capsule coordinates sold: +{{reward}}₢",
+      "virus_medic": "The medic contained the virus: crew morale -{{penalty}}",
+      "virus_purge": "Virus destroyed by digital purge: receiving system lost 5 HP",
+      "virus_standard": "Quarantine complete: crew morale -{{penalty}}",
+      "fuel_leak_engineer": "The engineer contained the leak: {{loss}} fuel lost",
+      "fuel_leak_drones": "Repair drones sealed the leak: repair bay -5 HP",
+      "fuel_leak_standard": "Fuel line isolated: {{loss}} fuel lost",
+      "crew_dispute_captain": "The captain settled the dispute: crew morale -{{penalty}}",
+      "crew_dispute_quarters": "Shifts separated into living quarters: dispute resolved",
+      "crew_dispute_standard": "Dispute ended by command: crew morale -{{penalty}}"
+    }
+  },
+
   "crises": {
     "raider_wave": {
       "name": "Raider Wave",

@@ -22,6 +22,7 @@ import type { ShopItem } from "./shops";
 import type { AugmentationId } from "./augmentations";
 import type { DiveState, ExpeditionState } from "./exploration";
 import type { ActiveCrisisState, CrisisResponse } from "./crisis";
+import type { PendingRandomEvent, RandomEventChoiceId } from "./randomEvents";
 
 export type GameMode =
   | "galaxy_map"
@@ -59,6 +60,7 @@ export interface GameState {
   previousGameMode: GameMode | null; // Track previous game mode for modal-like panels
   traveling: TravelingState | null;
   pendingTravelEvent: PendingTravelEvent | null;
+  pendingRandomEvent: PendingRandomEvent | null;
   ship: {
     armor: number;
     shields: number;
@@ -166,6 +168,7 @@ export interface GameActionsClick {
   nextTurn: () => void;
   skipTurn: () => void;
   resolveCrisis: (response: CrisisResponse) => void;
+  resolveRandomEvent: (choice: RandomEventChoiceId) => void;
   selectSector: (sectorId: number) => void;
   selectLocation: (locationIdx: number) => void;
   resolveTravelEvent: (choice: "risk" | "cautious") => void;

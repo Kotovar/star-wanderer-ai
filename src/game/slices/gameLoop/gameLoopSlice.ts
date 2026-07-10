@@ -1,5 +1,6 @@
 import type { GameState, GameStore, SetState } from "@/game/types";
 import type { CrisisResponse } from "@/game/types/crisis";
+import type { RandomEventChoiceId } from "@/game/types/randomEvents";
 import {
     initNewTurn,
     processPassiveExperience,
@@ -25,6 +26,7 @@ export interface GameLoopSlice {
     nextTurn: () => void;
     skipTurn: () => void;
     resolveCrisis: (response: CrisisResponse) => void;
+    resolveRandomEvent: (choice: RandomEventChoiceId) => void;
 }
 
 /**
@@ -35,6 +37,11 @@ export const createGameLoopSlice = (
     get: () => GameStore,
 ): GameLoopSlice => ({
     nextTurn: () => {
+        if (get().pendingRandomEvent) {
+            get().addLog(i18nStore.t("random_events.logs.decision_required"), "warning");
+            return;
+        }
+
         const state = get();
 
         // Инициализация нового хода
@@ -128,6 +135,11 @@ export const createGameLoopSlice = (
     },
 
     skipTurn: () => {
+        if (get().pendingRandomEvent) {
+            get().addLog(i18nStore.t("random_events.logs.decision_required"), "warning");
+            return;
+        }
+
         if (get().currentCombat) {
             get().addLog("Боевой раунд пропущен - враг атакует", "combat");
             get().processEnemyAttack();
@@ -141,6 +153,9 @@ export const createGameLoopSlice = (
         get().addLog("Ход пропущен - задачи выполняются", "info");
         get().nextTurn();
     },
+
+    resolveRandomEvent: (choice) =>
+        processors.resolveRandomEvent(choice, set, get),
 
     resolveCrisis: (response) => {
         const state = get();

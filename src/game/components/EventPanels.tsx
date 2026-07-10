@@ -28,6 +28,7 @@ import { GasGiantPanel } from "./GasGiantPanel";
 import { WreckFieldPanel } from "./WreckFieldPanel";
 import { HostileApproachWarningPanel } from "./HostileApproachWarningPanel";
 import { CrisisPanel } from "./CrisisPanel";
+import { RandomEventPanel } from "./RandomEventPanel";
 import { RiskRewardPreview } from "./RiskRewardPreview";
 import type { TravelEventType } from "@/game/types";
 import { getActiveModule } from "@/game/modules";
@@ -200,6 +201,7 @@ function getTravelEventCautiousButton({
 
 export function EventDisplay() {
   const gameMode = useGameStore((s) => s.gameMode);
+  const pendingRandomEvent = useGameStore((s) => s.pendingRandomEvent);
   const traveling = useGameStore((s) => s.traveling);
   const pendingTravelEvent = useGameStore((s) => s.pendingTravelEvent);
   const shipFuel = useGameStore((s) => s.ship.fuel);
@@ -234,6 +236,10 @@ export function EventDisplay() {
     skipTurn();
     setTimeout(() => setIsSkipping(false), 600);
   };
+
+  if (pendingRandomEvent) {
+    return <RandomEventPanel />;
+  }
 
   // Traveling state
   if (traveling) {
