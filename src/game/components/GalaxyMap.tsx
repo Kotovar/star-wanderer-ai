@@ -372,27 +372,25 @@ export function GalaxyMap() {
             );
         }
 
-        // Draw static background gradients (before transform)
-        for (let i = 0; i < 3; i++) {
-            const gradient = ctx.createRadialGradient(
-                centerX,
-                centerY,
-                0,
-                centerX,
-                centerY,
-                baseMaxRadius * 1.2,
-            );
-            gradient.addColorStop(0, "rgba(100, 50, 150, 0.03)");
-            gradient.addColorStop(0.5, "rgba(50, 100, 150, 0.02)");
-            gradient.addColorStop(1, "transparent");
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, width, height);
-        }
+        // Subtle radar bloom behind the navigation rings.
+        const gradient = ctx.createRadialGradient(
+            centerX,
+            centerY,
+            0,
+            centerX,
+            centerY,
+            baseMaxRadius * 1.25,
+        );
+        gradient.addColorStop(0, "rgba(0, 212, 255, 0.055)");
+        gradient.addColorStop(0.55, "rgba(0, 255, 65, 0.022)");
+        gradient.addColorStop(1, "transparent");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
 
         // Draw background stars BEFORE transform (so they don't move with pan/zoom)
         if (starsRef.current) {
             starsRef.current.forEach((star) => {
-                ctx.fillStyle = `rgba(255, 255, 255, ${0.1 + star.brightness}`;
+                ctx.fillStyle = `rgba(255, 255, 255, ${0.1 + star.brightness})`;
                 ctx.beginPath();
                 ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
                 ctx.fill();
@@ -751,7 +749,11 @@ export function GalaxyMap() {
     };
 
     return (
-        <div ref={containerRef} className="w-full h-full relative">
+        <div
+            ref={containerRef}
+            className="radar-viewport w-full h-full relative"
+            data-animations={animationsEnabled ? "on" : "off"}
+        >
             {/* First-visit galaxy navigation hint */}
             {!hintDismissed && (
                 <div className="absolute top-2 left-2 right-2 bg-[rgba(0,212,255,0.08)] border border-[#00d4ff] px-3 py-2 text-xs text-[#00d4ff] z-20 flex items-center justify-between gap-2">
@@ -767,7 +769,7 @@ export function GalaxyMap() {
             )}
             <canvas
                 ref={canvasRef}
-                className="border-2 border-[#00ff41] bg-[#050810] cursor-grab w-full h-full touch-none"
+                className="radar-canvas cursor-grab w-full h-full touch-none"
                 style={{
                     cursor: isDragging ? "grabbing" : "grab",
                     touchAction: "none",
@@ -793,10 +795,10 @@ export function GalaxyMap() {
             />
 
             {/* Zoom controls */}
-            <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+            <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
                 <button
                     onClick={() => setAnimationsEnabled(!animationsEnabled)}
-                    className="w-10 h-10 bg-[#050810] border-2 border-[#00ff41] text-[#00ff41] text-xs font-bold hover:bg-[#0a1a20] transition-colors flex items-center justify-center cursor-pointer"
+                    className="radar-control w-10 h-10 border text-xs font-bold transition-colors flex items-center justify-center cursor-pointer"
                     title={
                         animationsEnabled
                             ? "Выключить анимации"
@@ -807,21 +809,21 @@ export function GalaxyMap() {
                 </button>
                 <button
                     onClick={handleZoomIn}
-                    className="w-10 h-10 bg-[#050810] border-2 border-[#00ff41] text-[#00ff41] text-xl font-bold hover:bg-[#0a1a20] transition-colors flex items-center justify-center cursor-pointer"
+                    className="radar-control w-10 h-10 border text-xl font-bold transition-colors flex items-center justify-center cursor-pointer"
                     title="Приблизить"
                 >
                     +
                 </button>
                 <button
                     onClick={handleZoomOut}
-                    className="w-10 h-10 bg-[#050810] border-2 border-[#00ff41] text-[#00ff41] text-xl font-bold hover:bg-[#0a1a20] transition-colors flex items-center justify-center cursor-pointer"
+                    className="radar-control w-10 h-10 border text-xl font-bold transition-colors flex items-center justify-center cursor-pointer"
                     title="Отдалить"
                 >
                     −
                 </button>
                 <button
                     onClick={handleReset}
-                    className="w-10 h-10 bg-[#050810] border-2 border-[#00ff41] text-[#00ff41] text-xs font-bold hover:bg-[#0a1a20] transition-colors flex items-center justify-center cursor-pointer"
+                    className="radar-control w-10 h-10 border text-xs font-bold transition-colors flex items-center justify-center cursor-pointer"
                     title="Сбросить вид"
                 >
                     RST

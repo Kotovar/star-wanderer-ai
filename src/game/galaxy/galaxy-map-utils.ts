@@ -119,7 +119,7 @@ export function drawStaticLegend(
     canvasHeight: number,
 ) {
     const legendX = 10;
-    const legendY = 10;
+    const legendY = 48;
     const engineLevel = getEngineLevel(modules);
 
     const minDim = Math.min(canvasWidth, canvasHeight);
@@ -146,7 +146,7 @@ export function drawStaticLegend(
         legendY + lineH * 2,
     );
 
-    ctx.fillStyle = "#888";
+    ctx.fillStyle = "#70808a";
     ctx.fillText(
         `${t("galaxy.legend.captain")}: Ур.${captainLevel}`,
         legendX,
@@ -290,17 +290,17 @@ function drawSectorText(
     }
 
     ctx.font = `${isCurrent ? "bold " : ""}${nameFontSize}px Share Tech Mono`;
-    ctx.fillStyle = isAccessible
-        ? isCurrent
-            ? "#ffb000"
-            : TIER_COLORS[sector.tier].ring
-        : "#555";
+    ctx.fillStyle = isCurrent
+        ? "#ffb000"
+        : isAccessible
+          ? "#00d4ff"
+          : "#44515a";
     ctx.textAlign = "center";
     ctx.fillText(sector.name, x, y - nameOffsetY);
 
     if (isAccessible && !isCurrent) {
         ctx.font = `${fuelFontSize}px Share Tech Mono`;
-        ctx.fillStyle = canAffordFuel ? "#9933ff" : "#ff0040";
+        ctx.fillStyle = canAffordFuel ? "#00d4ff" : "#ff0040";
         ctx.fillText(`⛽${fuelCost}`, x, y - fuelOffsetY);
     }
 }
@@ -435,9 +435,9 @@ function drawTierRing(
     thin = false,
 ) {
     ctx.strokeStyle = isAccessible ? colors.ring : "#444";
-    ctx.lineWidth = thin ? 0.75 : (tier === 2 ? 2 : 1.5);
+    ctx.lineWidth = thin ? 0.65 : (tier === 2 ? 1.5 : 1.1);
     ctx.setLineDash(tier === 2 ? [5, 5] : []);
-    ctx.globalAlpha = isAccessible ? 0.6 : 0.3;
+    ctx.globalAlpha = isAccessible ? 0.46 : 0.22;
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
     ctx.stroke();

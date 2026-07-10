@@ -72,6 +72,7 @@ export default function Home() {
     })),
   );
   const moduleMovedThisTurn = useGameStore((s) => s.ship.moduleMovedThisTurn);
+  const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
   const loadGame = useGameStore((s) => s.loadGame);
   const gameMode = useGameStore((s) => s.gameMode);
   const { t } = useTranslation();
@@ -143,16 +144,12 @@ export default function Home() {
 
   // ── Render ──────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex flex-col bg-[#050810] font-['Share_Tech_Mono'] text-[#00ff41]">
+    <div
+      className="cockpit-shell min-h-screen flex flex-col bg-[#050810] font-['Share_Tech_Mono'] text-[#00ff41]"
+      data-animations={animationsEnabled ? "on" : "off"}
+    >
       {/* Scanline overlay (always on top) */}
-      <div
-        className="fixed inset-0 pointer-events-none z-9999"
-        style={{
-          background:
-            "repeating-linear-gradient(0deg, rgba(0, 255, 65, 0.03) 0px, transparent 1px, transparent 2px, rgba(0, 255, 65, 0.03) 3px)",
-          animation: "scanlines 8s linear infinite",
-        }}
-      />
+      <div className="cockpit-scanlines fixed inset-0 pointer-events-none z-9999" />
 
       {/* Game Over / Victory panels (always rendered, self-hide) */}
       {gameOver && gameOverReason && (
@@ -179,10 +176,10 @@ export default function Home() {
         <>
           <GameHeader />
 
-          <main className="flex-1 flex flex-col lg:flex-row overflow-hidden max-w-full min-w-0 px-2 lg:px-4 py-4 gap-4 min-h-0">
+          <main className="cockpit-layout flex-1 flex flex-col lg:flex-row overflow-hidden max-w-full min-w-0 px-2 lg:px-4 py-4 gap-4 min-h-0">
             {/* Left Panel */}
-            <div className="panel flex-1 lg:w-95 flex flex-col min-w-0 lg:h-[calc(100vh-100px)] border-2 border-[#00ff41] bg-[rgba(0,255,65,0.02)] rounded-lg overflow-hidden min-h-0">
-              <div className="flex shrink-0 border-b-2 border-[#00ff41]">
+            <div className="panel cockpit-panel cockpit-panel--controls flex-1 flex flex-col min-w-0 lg:h-[calc(100vh-100px)] rounded-lg overflow-hidden min-h-0">
+              <div className="cockpit-tabs flex shrink-0 border-b border-[#00ff4155]">
                 {leftTabs.map((tab, idx) => {
                   const isActive = activeTab === tab.id;
                   const hasAlert =
@@ -260,7 +257,7 @@ export default function Home() {
             </div>
 
             {/* Right Panel */}
-            <div className="panel flex-1 lg:flex-1 flex flex-col min-w-0 h-[calc(100vh-200px)] lg:h-[calc(100vh-100px)] border-2 border-[#00ff41] bg-[rgba(0,255,65,0.02)] rounded-lg p-2 min-h-0 overflow-hidden">
+            <div className="panel cockpit-panel cockpit-panel--stage flex-1 flex flex-col min-w-0 h-[calc(100vh-200px)] lg:h-[calc(100vh-100px)] rounded-lg p-2 min-h-0 overflow-hidden">
               <div className="flex-1 overflow-hidden min-h-0">
                 <EventDisplay />
               </div>

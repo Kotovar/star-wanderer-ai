@@ -6,7 +6,7 @@ export function TitleScreen() {
   const { t } = useTranslation();
 
   return (
-    <div className="fixed inset-0 bg-[#050810] flex flex-col items-center justify-center overflow-hidden">
+    <div className="title-screen fixed inset-0 bg-[#050810] flex flex-col items-center justify-center overflow-hidden">
       {/* Starfield background */}
       <div className="absolute inset-0">
         {Array.from({ length: 80 }).map((_, i) => {
@@ -19,7 +19,7 @@ export function TitleScreen() {
           return (
             <div
               key={i}
-              className="absolute rounded-full bg-white"
+              className="title-star absolute rounded-full bg-white"
               style={{
                 top,
                 left,
@@ -59,10 +59,15 @@ export function TitleScreen() {
         }}
       />
 
+      <div className="title-radar absolute left-1/2 top-1/2" aria-hidden="true" />
+
       {/* Title */}
       <div className="relative z-10 text-center px-4">
+        <h1 className="title-wordmark font-['Orbitron'] font-black uppercase leading-none tracking-[0.08em] text-[#00ff41]">
+          {t("title_screen.title")}
+        </h1>
         <p
-          className="font-['Orbitron'] text-sm sm:text-base tracking-[0.3em] text-[#ffb000] mt-2"
+          className="font-['Orbitron'] text-xs sm:text-base tracking-[0.3em] text-[#ffb000] mt-4"
           style={{
             textShadow: "0 0 10px rgba(255,176,0,0.4)",
           }}
@@ -81,32 +86,8 @@ export function TitleScreen() {
 
       {/* Scanline overlay */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-30"
-        style={{
-          background:
-            "repeating-linear-gradient(0deg, rgba(0,255,65,0.03) 0px, transparent 1px, transparent 2px, rgba(0,255,65,0.03) 3px)",
-          animation: "scanlines 8s linear infinite",
-        }}
+        className="cockpit-scanlines absolute inset-0 pointer-events-none opacity-30"
       />
-
-      <style jsx>{`
-                @keyframes twinkle {
-                    0%, 100% { opacity: 0.2; }
-                    50% { opacity: 0.8; }
-                }
-                @keyframes scanlines {
-                    0% { transform: translateY(0); }
-                    100% { transform: translateY(10px); }
-                }
-                @keyframes glow-pulse {
-                    0%, 100% {
-                        text-shadow: 0 0 20px rgba(0,255,65,0.6), 0 0 40px rgba(0,255,65,0.3);
-                    }
-                    50% {
-                        text-shadow: 0 0 30px rgba(0,255,65,0.8), 0 0 60px rgba(0,255,65,0.4), 0 0 100px rgba(0,255,65,0.2);
-                    }
-                }
-            `}</style>
     </div>
   );
 }

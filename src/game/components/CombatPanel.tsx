@@ -486,9 +486,9 @@ export function CombatPanel() {
       )}
 
       {/* Ship visuals - side by side */}
-      <div className="grid grid-cols-2 gap-4 my-2 items-start">
-        <div className="flex flex-col items-center">
-          <div className="text-base font-bold mb-4 px-4 py-2 rounded bg-[rgba(0,255,65,0.2)] text-[#00d4ff] min-h-11 flex items-center justify-center">
+      <div className="combat-visual-stage grid grid-cols-2 gap-4 my-2 items-start">
+        <div className="combat-vessel-panel combat-vessel-panel--player flex min-w-0 flex-col items-center">
+          <div className="combat-vessel-label text-base font-bold mb-4 px-4 py-2 text-[#00d4ff] min-h-11 flex items-center justify-center">
             {t("combat.your_ship")}
           </div>
           <div className="flex items-center gap-2 mb-3">
@@ -497,7 +497,7 @@ export function CombatPanel() {
                 setZoomLevel((z) => Math.max(0.5, z - 0.1))
               }
               disabled={zoomLevel <= 0.5}
-              className="cursor-pointer bg-[#0a0f1a] border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] w-8 h-8 p-0 text-lg disabled:opacity-30 disabled:cursor-not-allowed"
+              className="radar-control cursor-pointer border w-8 h-8 p-0 text-lg disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Уменьшить"
             >
               −
@@ -510,7 +510,7 @@ export function CombatPanel() {
                 setZoomLevel((z) => Math.min(1, z + 0.1))
               }
               disabled={zoomLevel >= 1}
-              className="cursor-pointer bg-[#0a0f1a] border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] w-8 h-8 p-0 text-lg disabled:opacity-30 disabled:cursor-not-allowed"
+              className="radar-control cursor-pointer border w-8 h-8 p-0 text-lg disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Увеличить"
             >
               +
@@ -518,11 +518,11 @@ export function CombatPanel() {
           </div>
           <CombatShipGrid scale={zoomLevel} />
         </div>
-        <div className="flex flex-col items-center">
+        <div className="combat-vessel-panel combat-vessel-panel--enemy flex min-w-0 flex-col items-center">
           <div
-            className={`text-base font-bold mb-4 px-4 py-2 rounded min-h-11 flex items-center justify-center text-center ${isBoss
-              ? "bg-[rgba(255,0,255,0.2)] text-[#ff00ff]"
-              : "bg-[rgba(255,0,64,0.2)] text-[#ff0040]"
+            className={`combat-vessel-label text-base font-bold mb-4 px-4 py-2 min-h-11 flex items-center justify-center text-center ${isBoss
+              ? "text-[#ff00ff]"
+              : "text-[#ff0040]"
               }`}
           >
             {currentCombat.enemy.name}

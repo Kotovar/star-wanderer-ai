@@ -323,23 +323,22 @@ export function CombatShipVisual({
         </div>
       )}
       <div
-        className="relative"
+        className={`combat-vessel-visual relative ${isEnemy ? "combat-vessel-visual--enemy" : "combat-vessel-visual--player"}`}
         style={{ boxShadow: shieldGlow, transition: "box-shadow 0.4s ease" }}
       >
         <canvas
           ref={canvasRef}
-          className={`max-w-full ${onModuleClick ? "cursor-pointer" : "cursor-default"}`}
+          className={`combat-vessel-canvas max-w-full ${onModuleClick ? "cursor-pointer" : "cursor-default"}`}
           onClick={handleCanvasClick}
         />
         {hitFlash && (
           <div
-            className="absolute inset-0 pointer-events-none"
+            className={`combat-impact-overlay absolute inset-0 pointer-events-none ${hitFlash === "shield" ? "text-[#66aaff]" : "text-[#ff405f]"}`}
             style={{
               backgroundColor:
                 hitFlash === "shield"
                   ? "rgba(30,120,255,0.45)"
                   : "rgba(255,0,64,0.45)",
-              animation: "combatHitFlash 0.5s ease-out forwards",
             }}
           />
         )}

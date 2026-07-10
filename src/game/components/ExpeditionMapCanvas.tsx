@@ -530,8 +530,19 @@ export function ExpeditionMapCanvas({
     // Clear canvas
     ctx.clearRect(0, 0, size, size);
 
-    // Draw subtle background
-    ctx.fillStyle = "rgba(10, 15, 10, 0.5)";
+    // Draw a subdued scanner surface behind the tile grid.
+    const background = ctx.createRadialGradient(
+      size / 2,
+      size / 2,
+      0,
+      size / 2,
+      size / 2,
+      size * 0.72,
+    );
+    background.addColorStop(0, "rgba(8, 30, 34, 0.96)");
+    background.addColorStop(0.62, "rgba(5, 18, 22, 0.98)");
+    background.addColorStop(1, "rgba(2, 8, 12, 1)");
+    ctx.fillStyle = background;
     ctx.fillRect(0, 0, size, size);
 
     // Draw grid cells
@@ -544,6 +555,7 @@ export function ExpeditionMapCanvas({
         const y = row * cellSize;
         const padding = 3;
         const tileWidth = cellSize - padding * 2;
+        const coordinate = `${String.fromCharCode(65 + col)}${row + 1}`;
 
         const isHovered = hoveredTile === index;
 
@@ -567,6 +579,8 @@ export function ExpeditionMapCanvas({
 
           // Hover effect for unrevealed tiles
           if (isHovered && canReveal) {
+            ctx.fillStyle = "rgba(0, 212, 255, 0.08)";
+            ctx.fill();
             ctx.strokeStyle = "rgba(0, 212, 255, 0.8)";
             ctx.lineWidth = 2;
             ctx.shadowColor = "rgba(0, 212, 255, 0.6)";
@@ -581,7 +595,7 @@ export function ExpeditionMapCanvas({
 
           // Add subtle question mark - no silhouettes to avoid hints
           ctx.fillStyle = "rgba(120, 150, 120, 0.6)";
-          ctx.font = "bold 20px sans-serif";
+          ctx.font = "bold 20px Share Tech Mono";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText("?", x + cellSize / 2, y + cellSize / 2);
@@ -633,6 +647,15 @@ export function ExpeditionMapCanvas({
             );
           }
         }
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = tile.revealed
+          ? "rgba(220, 240, 245, 0.68)"
+          : "rgba(0, 212, 255, 0.42)";
+        ctx.font = "bold 10px Share Tech Mono";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillText(coordinate, x + 11, y + 17);
       }
     }
   }, [grid, hoveredTile, canReveal, locationSprite]);
@@ -697,18 +720,18 @@ export function ExpeditionMapCanvas({
   };
 
   return (
-    <div className="relative">
+    <div className="expedition-map-frame relative w-fit max-w-full">
       <canvas
         ref={canvasRef}
         width={500}
         height={500}
-        className={`w-full max-w-125 h-auto cursor-${canReveal ? "pointer" : "not-allowed"}`}
+        className={`expedition-map-canvas w-full max-w-125 h-auto ${canReveal ? "cursor-pointer" : "cursor-not-allowed"}`}
         onClick={handleClick}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       />
       {/* AP indicators */}
-      <div className="flex justify-center gap-1 mt-2">
+      <div className="expedition-ap-rail flex justify-center gap-1 mt-2">
         {Array.from({ length: apTotal }).map((_, i) => (
           <div
             key={i}

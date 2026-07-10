@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, MouseEvent } from "react";
+import { useMemo, useState, MouseEvent } from "react";
 import { useGameStore } from "../store";
 import { WEAPON_TYPES } from "../constants";
 import { RACES } from "../constants/races";
@@ -32,6 +32,94 @@ const CREW_ICON_GAP = 3;
 const CREW_ICON_PADDING = 8; // horizontal padding inside module
 const CREW_ICON_HEALTH_BAR_MARGIN = 3; // gap between icon rows and health bar
 
+type PowerLinkState = "online" | "warning" | "offline";
+
+interface PowerLink {
+  id: number;
+  sourceX: number;
+  sourceY: number;
+  targetX: number;
+  targetY: number;
+  state: PowerLinkState;
+}
+
+function getModuleCenter(module: Module) {
+  return {
+    x: (module.x + module.width / 2) * CELL_SIZE,
+    y: (module.y + module.height / 2) * CELL_SIZE,
+  };
+}
+
+function getPowerLinks(modules: Module[]): PowerLink[] {
+  const reactors = modules.filter((module) => module.type === "reactor");
+  if (reactors.length === 0) return [];
+
+  return modules.flatMap((module) => {
+    if (module.type === "reactor" || module.type === "weaponShed") return [];
+
+    const target = getModuleCenter(module);
+    const source = reactors.reduce((nearest, reactor) => {
+      const point = getModuleCenter(reactor);
+      const nearestPoint = getModuleCenter(nearest);
+      const distance = (point.x - target.x) ** 2 + (point.y - target.y) ** 2;
+      const nearestDistance =
+        (nearestPoint.x - target.x) ** 2 + (nearestPoint.y - target.y) ** 2;
+      return distance < nearestDistance ? reactor : nearest;
+    });
+    const sourcePoint = getModuleCenter(source);
+    const isOffline =
+      source.health <= 0 ||
+      source.disabled ||
+      source.manualDisabled ||
+      module.health <= 0 ||
+      module.disabled ||
+      module.manualDisabled;
+    const healthRatio = module.maxHealth > 0 ? module.health / module.maxHealth : 0;
+
+    return [
+      {
+        id: module.id,
+        sourceX: sourcePoint.x,
+        sourceY: sourcePoint.y,
+        targetX: target.x,
+        targetY: target.y,
+        state: isOffline ? "offline" : healthRatio < 0.4 ? "warning" : "online",
+      },
+    ];
+  });
+}
+
+function PowerGrid({ links }: { links: PowerLink[] }) {
+  return (
+    <g className="ship-power-grid" aria-hidden="true">
+      {links.map((link) => (
+        <g key={link.id} data-state={link.state}>
+          <line
+            className="ship-power-link-rail"
+            x1={link.sourceX}
+            y1={link.sourceY}
+            x2={link.targetX}
+            y2={link.targetY}
+          />
+          <line
+            className="ship-power-link"
+            x1={link.sourceX}
+            y1={link.sourceY}
+            x2={link.targetX}
+            y2={link.targetY}
+          />
+          <circle
+            className="ship-power-node"
+            cx={link.targetX}
+            cy={link.targetY}
+            r="3"
+          />
+        </g>
+      ))}
+    </g>
+  );
+}
+
 export function ShipGrid() {
   const ship = useGameStore((s) => s.ship);
   const modules = useGameStore((s) => s.ship.modules);
@@ -50,6 +138,10 @@ export function ShipGrid() {
   );
 
   const isCombatMode = !!currentCombat;
+  const powerLinks = useMemo(() => getPowerLinks(modules), [modules]);
+  const onlinePowerLinks = powerLinks.filter(
+    (link) => link.state !== "offline",
+  ).length;
 
   // SVG dimensions
   const svgSize = gridSize * CELL_SIZE;
@@ -139,7 +231,13 @@ export function ShipGrid() {
         }`}
     >
       {!isCombatMode && (
-        <div className="relative">
+        <div className="relative h-5">
+          <div className="absolute left-1 top-0 z-10 flex h-5 items-center gap-2 text-[9px] uppercase tracking-[0.14em] text-[#526452] pointer-events-none">
+            <span className="text-[#00d4ff]">⌁ {t("ship.power_bus")}</span>
+            <span>
+              {onlinePowerLinks}/{powerLinks.length} {t("ship.circuits_online")}
+            </span>
+          </div>
           <button
             onClick={() => setShowLegend((s) => !s)}
             className="absolute right-0 top-0 z-10 w-5 h-5 flex items-center justify-center border border-[#00ff4166] bg-[rgba(0,255,65,0.08)] text-[#00ff41] text-[10px] hover:bg-[rgba(0,255,65,0.2)] transition-colors cursor-pointer"
@@ -243,6 +341,7 @@ export function ShipGrid() {
             />
           </g>
         ))}
+        <PowerGrid links={powerLinks} />
       </svg>
 
       {isCombatMode && (

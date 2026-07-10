@@ -38,6 +38,124 @@
     }
 }
 
+@keyframes twinkle {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.8; }
+}
+
+@keyframes cockpit-wordmark-in {
+    from {
+        opacity: 0;
+        letter-spacing: 0.18em;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        letter-spacing: 0.08em;
+        transform: translateY(0);
+    }
+}
+
+@keyframes cockpit-radar-sweep {
+    from { transform: translateY(-115%); opacity: 0; }
+    18% { opacity: 0.7; }
+    to { transform: translateY(115%); opacity: 0; }
+}
+
+.cockpit-shell {
+    background:
+        radial-gradient(circle at 72% 42%, rgba(0, 212, 255, 0.035), transparent 36%),
+        linear-gradient(145deg, #050810 0%, #061019 52%, #03070d 100%);
+}
+
+.cockpit-scanlines {
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 255, 65, 0.018) 0,
+        transparent 1px,
+        transparent 3px,
+        rgba(0, 255, 65, 0.018) 4px
+    );
+    animation: scanlines 8s linear infinite;
+}
+
+.cockpit-header {
+    background: linear-gradient(180deg, rgba(7, 18, 26, 0.97), rgba(4, 11, 17, 0.94));
+    border-bottom: 1px solid rgba(0, 255, 65, 0.42);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32), inset 0 -1px rgba(0, 212, 255, 0.08);
+}
+
+.cockpit-header__title {
+    text-shadow: 0 0 12px rgba(0, 255, 65, 0.42);
+}
+
+.cockpit-panel {
+    border: 1px solid rgba(0, 255, 65, 0.34);
+    background: linear-gradient(155deg, rgba(7, 18, 24, 0.94), rgba(2, 9, 14, 0.96));
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.025), 0 12px 34px rgba(0, 0, 0, 0.28);
+}
+
+.cockpit-panel--stage {
+    border-color: rgba(0, 212, 255, 0.48);
+    box-shadow:
+        inset 0 1px rgba(0, 212, 255, 0.08),
+        0 0 24px rgba(0, 212, 255, 0.055),
+        0 12px 34px rgba(0, 0, 0, 0.34);
+}
+
+.cockpit-tabs {
+    background: rgba(1, 8, 12, 0.72);
+}
+
+button:focus-visible,
+[role="tab"]:focus-visible {
+    outline: 2px solid #00d4ff;
+    outline-offset: -2px;
+}
+
+@media (min-width: 1024px) {
+    .cockpit-panel--controls { flex: 0 1 42%; }
+    .cockpit-panel--stage { flex: 1 1 58%; }
+}
+
+.title-screen {
+    background:
+        radial-gradient(ellipse at 50% 50%, rgba(0, 212, 255, 0.055), transparent 42%),
+        radial-gradient(circle at 16% 18%, rgba(72, 48, 160, 0.055), transparent 28%),
+        #02070d;
+}
+
+.title-wordmark {
+    font-size: clamp(2.15rem, 5vw, 4.5rem);
+    margin-inline: auto;
+    max-width: 80vw;
+    text-shadow: 0 0 18px rgba(0, 255, 65, 0.58), 0 0 54px rgba(0, 212, 255, 0.16);
+    animation: cockpit-wordmark-in 0.9s ease-out both;
+}
+
+.title-radar {
+    width: min(72vw, 760px);
+    aspect-ratio: 2 / 1;
+    overflow: hidden;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(0, 212, 255, 0.13);
+    border-radius: 50%;
+    background:
+        radial-gradient(circle, transparent 29%, rgba(0, 255, 65, 0.08) 30%, transparent 31%),
+        radial-gradient(circle, transparent 59%, rgba(0, 212, 255, 0.08) 60%, transparent 61%),
+        linear-gradient(90deg, transparent 49.85%, rgba(0, 212, 255, 0.09) 50%, transparent 50.15%),
+        linear-gradient(0deg, transparent 49.7%, rgba(0, 255, 65, 0.08) 50%, transparent 50.3%);
+    mask-image: radial-gradient(circle, black 0%, transparent 72%);
+}
+
+.title-radar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 46%, rgba(0, 212, 255, 0.38) 50%, transparent 54%);
+    animation: cockpit-radar-sweep 0.9s ease-out both;
+}
+
 ::-webkit-scrollbar { width: 8px; }
 
 @media (min-width: 768px) {
@@ -641,7 +759,55 @@
 }
 
 .tab-transition {
-    animation: tab-fade-in 0.2s ease-out forwards;
+    animation: tab-fade-in 0.18s ease-out forwards;
+}
+
+.radar-viewport {
+    isolation: isolate;
+    overflow: hidden;
+    background: #02070d;
+}
+
+.radar-viewport::before,
+.radar-viewport::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.radar-viewport::before {
+    background:
+        linear-gradient(rgba(0, 212, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 255, 0.025) 1px, transparent 1px),
+        radial-gradient(circle at 50% 50%, transparent 58%, rgba(0, 212, 255, 0.055) 100%);
+    background-size: 48px 48px, 48px 48px, 100% 100%;
+    box-shadow: inset 0 0 68px rgba(0, 0, 0, 0.64);
+}
+
+.radar-viewport::after {
+    background: linear-gradient(180deg, transparent 47%, rgba(0, 212, 255, 0.24) 50%, transparent 53%);
+    animation: cockpit-radar-sweep 0.9s ease-out both;
+}
+
+.radar-canvas {
+    border: 1px solid rgba(0, 212, 255, 0.55);
+    background: #02070d;
+    box-shadow: inset 0 0 38px rgba(0, 212, 255, 0.04);
+}
+
+.radar-control {
+    border-color: rgba(0, 212, 255, 0.58);
+    color: #00d4ff;
+    background: rgba(2, 10, 16, 0.9);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.36);
+}
+
+.radar-control:hover {
+    border-color: #ffb000;
+    color: #ffb000;
+    background: rgba(255, 176, 0, 0.08);
 }
 
 
@@ -689,4 +855,199 @@
 
 .combat-damage-number {
     animation: combatDamageNumber 0.85s ease-out forwards;
+}
+
+@keyframes combat-impact-ring {
+    from { opacity: 0.9; transform: translate(-50%, -50%) scale(0.25); }
+    to { opacity: 0; transform: translate(-50%, -50%) scale(1.15); }
+}
+
+.combat-visual-stage {
+    position: relative;
+    flex-shrink: 0;
+    overflow: hidden;
+    padding: clamp(0.6rem, 1.4vw, 1rem);
+    border: 1px solid rgba(0, 212, 255, 0.28);
+    background:
+        radial-gradient(circle at 22% 48%, rgba(0, 212, 255, 0.09), transparent 34%),
+        radial-gradient(circle at 78% 48%, rgba(255, 0, 64, 0.085), transparent 34%),
+        linear-gradient(180deg, rgba(4, 16, 22, 0.94), rgba(2, 8, 12, 0.98));
+    box-shadow: inset 0 0 42px rgba(0, 0, 0, 0.5);
+}
+
+.combat-visual-stage::before {
+    content: "";
+    position: absolute;
+    inset-block: 8%;
+    left: 50%;
+    border-left: 1px dashed rgba(255, 176, 0, 0.24);
+    pointer-events: none;
+}
+
+.combat-vessel-panel {
+    position: relative;
+    z-index: 1;
+    padding: 0.5rem;
+}
+
+.combat-vessel-label {
+    width: min(100%, 18rem);
+    border: 1px solid rgba(0, 212, 255, 0.28);
+    border-radius: 2px;
+    background: rgba(2, 10, 16, 0.78);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.combat-vessel-panel--enemy .combat-vessel-label {
+    border-color: rgba(255, 0, 64, 0.32);
+}
+
+.combat-vessel-visual {
+    overflow: hidden;
+    border: 1px solid rgba(0, 212, 255, 0.32);
+    background: rgba(1, 7, 11, 0.78);
+}
+
+.combat-vessel-visual--enemy {
+    border-color: rgba(255, 0, 64, 0.34);
+}
+
+.combat-vessel-canvas {
+    display: block;
+    filter: saturate(1.08) contrast(1.04);
+}
+
+.combat-impact-overlay {
+    animation: combatHitFlash 0.5s ease-out forwards;
+}
+
+.combat-impact-overlay::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 72%;
+    aspect-ratio: 1;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    box-shadow: 0 0 18px currentColor;
+    animation: combat-impact-ring 0.58s ease-out forwards;
+}
+
+.expedition-map-frame {
+    padding: 0.5rem;
+    border: 1px solid rgba(0, 212, 255, 0.34);
+    background: linear-gradient(145deg, rgba(5, 22, 27, 0.94), rgba(2, 8, 12, 0.98));
+    box-shadow: inset 0 0 28px rgba(0, 212, 255, 0.035), 0 12px 28px rgba(0, 0, 0, 0.28);
+}
+
+.expedition-map-canvas {
+    display: block;
+    border: 1px solid rgba(0, 212, 255, 0.26);
+}
+
+.expedition-ap-rail {
+    padding: 0.35rem 0.5rem 0.1rem;
+    border-top: 1px solid rgba(0, 212, 255, 0.14);
+}
+
+.ship-power-grid {
+    pointer-events: none;
+    mix-blend-mode: screen;
+}
+
+.ship-power-link-rail,
+.ship-power-link {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+}
+
+.ship-power-link-rail {
+    stroke: rgba(0, 212, 255, 0.09);
+    stroke-width: 5;
+}
+
+.ship-power-link {
+    stroke: rgba(0, 212, 255, 0.76);
+    stroke-width: 1.5;
+    stroke-dasharray: 3 9;
+    animation: ship-power-flow 2.2s linear infinite;
+    filter: drop-shadow(0 0 3px rgba(0, 212, 255, 0.72));
+}
+
+.ship-power-node {
+    fill: #00d4ff;
+    filter: drop-shadow(0 0 4px rgba(0, 212, 255, 0.86));
+}
+
+.ship-power-grid [data-state="warning"] .ship-power-link {
+    stroke: rgba(255, 176, 0, 0.88);
+}
+
+.ship-power-grid [data-state="warning"] .ship-power-node {
+    fill: #ffb000;
+}
+
+.ship-power-grid [data-state="offline"] .ship-power-link {
+    stroke: rgba(255, 0, 64, 0.62);
+    stroke-dasharray: 2 12;
+    animation: none;
+}
+
+.ship-power-grid [data-state="offline"] .ship-power-node {
+    fill: #ff0040;
+}
+
+@keyframes ship-power-flow {
+    to {
+        stroke-dashoffset: -24;
+    }
+}
+
+@media (max-width: 640px) {
+    .combat-visual-stage {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .combat-visual-stage::before {
+        inset: auto 8% 50%;
+        border-top: 1px dashed rgba(255, 176, 0, 0.24);
+        border-left: 0;
+    }
+}
+
+[data-animations="off"] .cockpit-scanlines,
+[data-animations="off"] .tab-transition,
+[data-animations="off"] .title-star,
+[data-animations="off"] .title-wordmark,
+[data-animations="off"] .ship-power-link,
+[data-animations="off"] .combat-impact-overlay {
+    animation: none !important;
+}
+
+[data-animations="off"] .title-radar::after,
+[data-animations="off"] .radar-viewport::before,
+[data-animations="off"] .radar-viewport::after,
+.radar-viewport[data-animations="off"]::before,
+.radar-viewport[data-animations="off"]::after,
+[data-animations="off"] .combat-impact-overlay::after {
+    display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .title-radar::after,
+    .radar-viewport::after,
+    .combat-impact-overlay::after {
+        display: none;
+    }
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

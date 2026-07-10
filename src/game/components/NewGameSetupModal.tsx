@@ -410,6 +410,9 @@ export function NewGameSetupModal({
         showCloseButton={!required}
       >
         <DialogHeader className="min-w-0 px-4 pt-4 pb-3 sm:px-5 border-b border-[rgba(0,255,65,0.2)]">
+          <div className="font-['Orbitron'] text-[9px] font-bold uppercase tracking-[0.28em] text-ring">
+            {t("title_screen.title")}
+          </div>
           <DialogTitle className="text-[#00ff41] font-['Orbitron'] text-base sm:text-xl">
             {t("new_game_setup.title")}
           </DialogTitle>
