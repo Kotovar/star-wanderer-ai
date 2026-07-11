@@ -1,7 +1,6 @@
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import { getMaxCrewTraitBonus } from "@/game/traits";
-import { getTechBonusSum } from "@/game/research";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type { GameState } from "@/game/types";
 
@@ -55,11 +54,9 @@ export const getEffectiveScanRange = (state: GameState) => {
         maxRange += getArtifactEffectValue(quantumScanner, state);
     }
 
-    // Применяем бонусы от исследованных технологий (плоские бонусы: +1, +2, +3)
-    const techScanRangeBonus = getTechBonusSum(state.research, "scan_range");
-    if (techScanRangeBonus > 0) {
-        maxRange += techScanRangeBonus;
-    }
+    // ponytail: бонусы scan_range применяются перманентно к модулю сканера при
+    // завершении исследования (applyModuleBonus), поэтому здесь не пересчитываем —
+    // иначе задвоение.
 
     // Применяем бонус кристаллического артефакта (+15% к эффектам артефактов)
     // Применяется только к бонусу артефакта quantum_scanner, не к бонусам технологий
@@ -74,10 +71,11 @@ export const getEffectiveScanRange = (state: GameState) => {
         maxRange += Math.floor(quantumBonus * artifactBonus);
     }
 
-    // Бонус от сращивания ксеноморфа с scanner
+    // Бонус от сращивания ксеноморфа с scanner — плоское добавление клеток
+    // (scanRange в игре измеряется целыми клетками: пороги 3/5/8/15)
     const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);
     if (mergeBonus.scanRange) {
-        maxRange = Math.floor(maxRange * (1 + mergeBonus.scanRange / 100));
+        maxRange += mergeBonus.scanRange;
     }
 
     return maxRange;

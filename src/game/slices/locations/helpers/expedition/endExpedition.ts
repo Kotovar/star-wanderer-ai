@@ -37,9 +37,13 @@ export function endExpedition(set: SetState, get: () => GameStore): void {
             if (!expedition.crewIds.includes(c.id)) return c;
             const race = RACES[c.race];
             const hasHappiness = race?.hasHappiness !== false;
+            // Расы с hasFatigue:false (синтетики, порождённые пустотой) не устают
+            const hasFatigue = race?.hasFatigue !== false;
             return {
                 ...c,
-                expeditionFatigue: EXPEDITION_FATIGUE_TURNS,
+                expeditionFatigue: hasFatigue
+                    ? EXPEDITION_FATIGUE_TURNS
+                    : c.expeditionFatigue,
                 happiness: hasHappiness
                     ? Math.max(0, c.happiness - EXPEDITION_HAPPINESS_PENALTY)
                     : c.happiness,

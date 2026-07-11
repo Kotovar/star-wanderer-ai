@@ -653,7 +653,12 @@ export const processMedicalModule = (
             (c) => c.isMerged && c.mergedModuleId === medicalModule.id && c.race === "xenosymbiont",
         );
         if (hasXenoMerged) {
-            healAmount = Math.floor(healAmount * 1.25);
+            // Бонус берётся из констант сращивания для типа модуля (medical: +25%, habitat_module: +10%)
+            const mergeHealing =
+                XENOSYMBIONT_MERGE_EFFECTS[medicalModule.type]?.effects.healing;
+            if (mergeHealing) {
+                healAmount = Math.floor(healAmount * (1 + mergeHealing / 100));
+            }
         }
 
         crewInMedical.forEach((crewMember) => {
