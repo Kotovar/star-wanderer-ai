@@ -79,6 +79,8 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<LeftTab>("ship");
   const [shipSubTab, setShipSubTab] = useState<ShipSubTab>("layout");
   const [showTutorial, setShowTutorial] = useState(false);
+  // Скрываем окно создания игры, пока проигрывается интро-анимация титульного экрана
+  const [setupReady, setSetupReady] = useState(false);
 
   // Legacy tab compatibility: if a saved state somehow points to merged tabs,
   // render them as the ship tab with the correct sub-tab.
@@ -102,7 +104,10 @@ export default function Home() {
 
   // Listen for restart signal from Header (restart confirmed)
   useEffect(() => {
-    const handler = () => setPhase("title_setup");
+    const handler = () => {
+      setSetupReady(false);
+      setPhase("title_setup");
+    };
     window.addEventListener("sw:showTitleSetup", handler);
     return () => window.removeEventListener("sw:showTitleSetup", handler);
   }, []);
@@ -119,6 +124,17 @@ export default function Home() {
   // WelcomeTutorial shows via useSyncExternalStore if it's the first time.
 
   const isTitleSetup = phase === "title_setup";
+
+  // Показываем окно создания игры только после завершения интро-анимации
+  // (длительность radar-sweep). setState — в колбэке таймера, не в теле эффекта.
+  useEffect(() => {
+    if (!isTitleSetup || !animationsEnabled) return;
+    const id = setTimeout(() => setSetupReady(true), 2800);
+    return () => clearTimeout(id);
+  }, [isTitleSetup, animationsEnabled]);
+
+  // При выключенных анимациях модалка доступна сразу
+  const showSetupModal = !animationsEnabled || setupReady;
 
   // ── Resize handler (unchanged) ─────────────────────────────────
   useEffect(() => {
@@ -163,13 +179,15 @@ export default function Home() {
       {isTitleSetup ? (
         <>
           <TitleScreen />
-          <NewGameSetupModal
-            open={true}
-            onClose={() => {
-              /* required: can't close without starting */
-            }}
-            required
-          />
+          {showSetupModal && (
+            <NewGameSetupModal
+              open={true}
+              onClose={() => {
+                /* required: can't close without starting */
+              }}
+              required
+            />
+          )}
         </>
       ) : (
         /* ── Phase: Normal game ──────────────────────────── */

@@ -130,7 +130,7 @@ button:focus-visible,
     margin-inline: auto;
     max-width: 80vw;
     text-shadow: 0 0 18px rgba(0, 255, 65, 0.58), 0 0 54px rgba(0, 212, 255, 0.16);
-    animation: cockpit-wordmark-in 0.9s ease-out both;
+    animation: cockpit-wordmark-in 2.2s ease-out both;
 }
 
 .title-radar {
@@ -153,7 +153,7 @@ button:focus-visible,
     position: absolute;
     inset: 0;
     background: linear-gradient(180deg, transparent 46%, rgba(0, 212, 255, 0.38) 50%, transparent 54%);
-    animation: cockpit-radar-sweep 0.9s ease-out both;
+    animation: cockpit-radar-sweep 2.8s ease-out both;
 }
 
 ::-webkit-scrollbar { width: 8px; }
