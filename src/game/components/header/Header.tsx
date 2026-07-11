@@ -328,7 +328,7 @@ export function GameHeader() {
       {activeCrisis && !crisisWidgetDismissed ? (
         <div
           ref={crisisWidgetRef}
-          className={`fixed z-40 w-[min(90vw,320px)] ${crisisWidgetPosition ? "" : "top-24 md:top-20 left-1/2 -translate-x-1/2"}`}
+          className={`fixed z-40 w-[min(90vw,320px)] ${crisisWidgetPosition ? "" : "bottom-3 left-1/2 -translate-x-1/2 md:bottom-auto md:top-20"}`}
           style={
             crisisWidgetPosition
               ? {
@@ -346,7 +346,7 @@ export function GameHeader() {
                   event.preventDefault();
                   startDraggingCrisisWidget(event.clientX, event.clientY);
                 }}
-                className="cursor-grab active:cursor-grabbing rounded border border-[#ff668055] px-1 py-0.5 text-[9px] text-[#ff9aae] hover:bg-[rgba(255,102,128,0.12)]"
+                className="cursor-grab active:cursor-grabbing rounded border border-[#ff668055] px-1.5 py-1 text-[11px] text-[#ff9aae] hover:bg-[rgba(255,102,128,0.12)]"
                 title={t("crisis_panel.widget.drag")}
               >
                 ⠿
@@ -356,7 +356,7 @@ export function GameHeader() {
               <button
                 type="button"
                 onClick={() => setDismissedCrisisWidgetKey(crisisWidgetKey)}
-                className="ml-auto cursor-pointer rounded border border-[#ff668055] px-1 py-0.5 text-[9px] text-[#ff9aae] hover:bg-[rgba(255,102,128,0.12)]"
+                className="ml-auto cursor-pointer rounded border border-[#ff668055] px-1.5 py-1 text-[11px] text-[#ff9aae] hover:bg-[rgba(255,102,128,0.12)]"
                 title={t("crisis_panel.widget.close")}
               >
                 ✕

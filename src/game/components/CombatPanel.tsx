@@ -77,7 +77,7 @@ function CombatPhaseStrip({
             >
               <div
                 className={`min-h-10.5 border px-2 py-1 text-center transition-colors ${isActive
-                    ? "border-[#ffb000] bg-[rgba(255,176,0,0.12)] text-[#ffb000]"
+                    ? " bg-[rgba(255,176,0,0.12)] border-accent"
                     : isPast
                       ? "border-[#00ff4133] bg-[rgba(0,255,65,0.05)] text-[#00ff41]"
                       : "border-[#333] bg-[rgba(255,255,255,0.02)] text-[#666]"
@@ -91,7 +91,7 @@ function CombatPhaseStrip({
                 </div>
               </div>
               <div
-                className={`mt-1 h-1 ${isActive ? "bg-[#ffb000]" : isPast ? "bg-[#00ff41]" : "bg-[#222]"
+                className={`mt-1 h-1 ${isActive ? "bg-accent" : isPast ? "bg-[#00ff41]" : "bg-[#222]"
                   }`}
               />
             </div>
@@ -257,7 +257,7 @@ export function CombatPanel() {
   return (
     <div className="flex flex-col gap-4 h-full overflow-y-auto pr-2">
       <div
-        className={`font-['Orbitron'] font-bold text-lg ${isBoss ? "text-[#ff00ff]" : "text-[#ffb000]"}`}
+        className={`font-['Orbitron'] font-bold text-lg ${isBoss ? "text-[#ff00ff]" : "border-accent"}`}
       >
         {isBoss ? t("combat.boss_title") : t("combat.fight_title")}
         {currentCombat.enemy.name.toUpperCase()}
@@ -281,7 +281,7 @@ export function CombatPanel() {
       </div>
 
       {!hasWeaponBay && (
-        <div className="bg-[rgba(255,0,64,0.1)] border border-[#ff0040] p-2 text-sm text-[#ff0040]">
+        <div className="bg-[rgba(255,0,64,0.1)] border border-destructive p-2 text-sm text-destructive">
           {t("combat.no_weapon_bay")}
         </div>
       )}
@@ -297,7 +297,7 @@ export function CombatPanel() {
       {/* Ship stats summary */}
       <div className="grid grid-cols-2 gap-4 my-3">
         <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4">
-          <div className="text-base font-bold mb-3 text-[#00d4ff]">
+          <div className="text-base font-bold mb-3 text-ring">
             {t("combat.your_ship")}
           </div>
           <div className="text-sm space-y-2">
@@ -340,10 +340,10 @@ export function CombatPanel() {
         </div>
 
         <div
-          className={`${isBoss ? "bg-[rgba(255,0,255,0.05)] border-[#ff00ff]" : "bg-[rgba(255,0,64,0.05)] border-[#ff0040]"} border p-4`}
+          className={`${isBoss ? "bg-[rgba(255,0,255,0.05)] border-[#ff00ff]" : "bg-[rgba(255,0,64,0.05)] border-destructive"} border p-4`}
         >
           <div
-            className={`text-base font-bold mb-3 ${isBoss ? "text-[#ff00ff]" : "text-[#ff0040]"}`}
+            className={`text-base font-bold mb-3 ${isBoss ? "text-[#ff00ff]" : "text-destructive"}`}
           >
             {currentCombat.enemy.name}
           </div>
@@ -368,7 +368,7 @@ export function CombatPanel() {
               {t("combat.hull")} {eHP}/{eMaxHP}
               <Progress
                 value={(eHP / eMaxHP) * 100}
-                className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${isBoss ? "[&>div]:bg-[#ff00ff]" : "[&>div]:bg-[#ff0040]"}`}
+                className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${isBoss ? "[&>div]:bg-[#ff00ff]" : "[&>div]:bg-destructive"}`}
               />
             </div>
             <div>
@@ -389,14 +389,14 @@ export function CombatPanel() {
         </Button>
         <Button
           onClick={() => useGameStore.getState().skipTurn()}
-          className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
+          className="cursor-pointer bg-transparent border-2 border-accent hover:bg-accent hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
         >
           {t("combat.skip_turn")}
         </Button>
         <Button
           variant="destructive"
           onClick={retreat}
-          className="cursor-pointer bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
+          className="cursor-pointer bg-transparent border-2 border-destructive text-destructive hover:bg-destructive hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
         >
           {t("combat.retreat")}
         </Button>
@@ -405,7 +405,7 @@ export function CombatPanel() {
       {/* Per-bay target selector */}
       {weaponBays.length > 0 && (
         <div className="space-y-1.5">
-          <div className="text-xs text-[#ffb000] font-bold uppercase tracking-wider">
+          <div className="text-xs border-accent font-bold uppercase tracking-wider">
             {weaponBays.length > 1 ? "Цели по отсекам:" : "Цель:"}
           </div>
           {weaponBays.map((bay) => {
@@ -433,7 +433,7 @@ export function CombatPanel() {
                 key={bay.id}
                 onClick={() => setActiveBayId(isActive ? null : bay.id)}
                 className={`cursor-pointer w-full text-left border px-3 py-2 text-xs transition-colors ${isActive
-                  ? "border-[#00d4ff] bg-[rgba(0,212,255,0.12)]"
+                  ? "border-ring bg-[rgba(0,212,255,0.12)]"
                   : "border-[#333] bg-[rgba(0,0,0,0.3)] hover:border-[#555]"
                   }`}
               >
@@ -458,7 +458,7 @@ export function CombatPanel() {
                       );
                     })}
                   </div>
-                  <span className={`shrink-0 ${targetMod ? "text-[#ffb000]" : "text-[#444]"}`}>
+                  <span className={`shrink-0 ${targetMod ? "border-accent" : "text-[#444]"}`}>
                     → {targetMod ? targetMod.name : "случайная цель"}
                   </span>
                 </div>
@@ -478,7 +478,7 @@ export function CombatPanel() {
             );
           })}
           {activeBayId !== null && (
-            <div className="text-[10px] text-[#00d4ff] text-center pt-0.5">
+            <div className="text-[10px] text-ring text-center pt-0.5">
               Нажмите на модуль врага чтобы назначить цель
             </div>
           )}
@@ -488,7 +488,7 @@ export function CombatPanel() {
       {/* Ship visuals - side by side */}
       <div className="combat-visual-stage grid grid-cols-2 gap-4 my-2 items-start">
         <div className="combat-vessel-panel combat-vessel-panel--player flex min-w-0 flex-col items-center">
-          <div className="combat-vessel-label text-base font-bold mb-4 px-4 py-2 text-[#00d4ff] min-h-11 flex items-center justify-center">
+          <div className="combat-vessel-label text-base font-bold mb-4 px-4 py-2 text-ring min-h-11 flex items-center justify-center">
             {t("combat.your_ship")}
           </div>
           <div className="flex items-center gap-2 mb-3">
@@ -497,7 +497,7 @@ export function CombatPanel() {
                 setZoomLevel((z) => Math.max(0.5, z - 0.1))
               }
               disabled={zoomLevel <= 0.5}
-              className="radar-control cursor-pointer border w-8 h-8 p-0 text-lg disabled:opacity-30 disabled:cursor-not-allowed"
+              className="radar-control cursor-pointer border w-10 h-10 p-0 text-lg disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Уменьшить"
             >
               −
@@ -510,7 +510,7 @@ export function CombatPanel() {
                 setZoomLevel((z) => Math.min(1, z + 0.1))
               }
               disabled={zoomLevel >= 1}
-              className="radar-control cursor-pointer border w-8 h-8 p-0 text-lg disabled:opacity-30 disabled:cursor-not-allowed"
+              className="radar-control cursor-pointer border w-10 h-10 p-0 text-lg disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Увеличить"
             >
               +
@@ -522,7 +522,7 @@ export function CombatPanel() {
           <div
             className={`combat-vessel-label text-base font-bold mb-4 px-4 py-2 min-h-11 flex items-center justify-center text-center ${isBoss
               ? "text-[#ff00ff]"
-              : "text-[#ff0040]"
+              : "text-destructive"
               }`}
           >
             {currentCombat.enemy.name}
@@ -541,7 +541,7 @@ export function CombatPanel() {
             damageHit={lastEnemyHit ?? null}
           />
           {activeBayId !== null && (
-            <div className="text-[10px] text-[#00d4ff] mt-2 text-center animate-pulse">
+            <div className="text-[10px] text-ring mt-2 text-center animate-pulse">
               Выбор цели...
             </div>
           )}
@@ -641,7 +641,7 @@ function CrewManagement({
   const { t } = useTranslation();
   return (
     <div className="border-t border-[#00ff41] pt-3 mt-2">
-      <div className="text-[#ffb000] font-bold mb-2 text-sm">
+      <div className="border-accent font-bold mb-2 text-sm">
         {t("combat.crew_control")}
       </div>
       <div className="space-y-1.5 max-h-64 overflow-y-auto">

@@ -344,14 +344,41 @@ function PanZoomCanvas({ children }: { children: React.ReactNode }) {
   const [zoom, setZoom] = useState(0.8);
   const dragging = useRef(false);
   const lastPos = useRef({ x: 0, y: 0 });
+  // Активные указатели для pinch-zoom (тач)
+  const pointers = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchStartDist = useRef(0);
+  const pinchStartZoom = useRef(0.8);
 
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
     if (e.button !== 0) return;
-    dragging.current = true;
-    lastPos.current = { x: e.clientX, y: e.clientY };
-  }, []);
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.current.size === 2) {
+      // Начало pinch
+      dragging.current = false;
+      const pts = [...pointers.current.values()];
+      pinchStartDist.current = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      pinchStartZoom.current = zoom;
+    } else if (pointers.current.size === 1) {
+      dragging.current = true;
+      lastPos.current = { x: e.clientX, y: e.clientY };
+    }
+  }, [zoom]);
 
-  const onMouseMove = useCallback((e: React.MouseEvent) => {
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!pointers.current.has(e.pointerId)) return;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    // Pinch-zoom: два указателя
+    if (pointers.current.size >= 2) {
+      const pts = [...pointers.current.values()];
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      if (pinchStartDist.current > 0) {
+        const ratio = dist / pinchStartDist.current;
+        setZoom(Math.max(0.25, Math.min(2, pinchStartZoom.current * ratio)));
+      }
+      return;
+    }
+
     if (!dragging.current) return;
     const dx = e.clientX - lastPos.current.x;
     const dy = e.clientY - lastPos.current.y;
@@ -359,12 +386,22 @@ function PanZoomCanvas({ children }: { children: React.ReactNode }) {
     setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
   }, []);
 
-  const stopDrag = useCallback(() => {
-    dragging.current = false;
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
+    pointers.current.delete(e.pointerId);
+    if (pointers.current.size < 2) {
+      pinchStartDist.current = 0;
+    }
+    if (pointers.current.size === 0) {
+      dragging.current = false;
+    } else if (pointers.current.size === 1) {
+      // Остался один палец — продолжаем пан
+      const [pt] = [...pointers.current.values()];
+      lastPos.current = pt;
+      dragging.current = true;
+    }
   }, []);
 
   const onWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
     const factor = e.deltaY > 0 ? 0.9 : 1.1;
     setZoom((z) => Math.max(0.25, Math.min(2, z * factor)));
   }, []);
@@ -372,11 +409,11 @@ function PanZoomCanvas({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="flex-1 overflow-hidden min-h-0 bg-[#030608] cursor-grab active:cursor-grabbing"
-      style={{ userSelect: "none" }}
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={stopDrag}
-      onMouseLeave={stopDrag}
+      style={{ userSelect: "none", touchAction: "none" }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
       onWheel={onWheel}
     >
       <div

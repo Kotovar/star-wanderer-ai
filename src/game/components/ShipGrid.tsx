@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, MouseEvent } from "react";
+import { useMemo, useState } from "react";
 import { useGameStore } from "../store";
 import { WEAPON_TYPES } from "../constants";
 import { RACES } from "../constants/races";
@@ -146,10 +146,15 @@ export function ShipGrid() {
   // SVG dimensions
   const svgSize = gridSize * CELL_SIZE;
 
-  const handleMouseDown = (e: MouseEvent<SVGGElement>, module: Module) => {
+  const handlePointerDown = (
+    e: React.PointerEvent<SVGGElement>,
+    module: Module,
+  ) => {
     // Получаем <svg> из текущего <g>
     const svg = e.currentTarget.ownerSVGElement;
     if (!svg) return;
+    // Захват указателя: события move/up продолжат идти на <svg> даже за пределами
+    svg.setPointerCapture?.(e.pointerId);
     const rect = svg.getBoundingClientRect();
     const scaleX = svgSize / rect.width;
     const scaleY = svgSize / rect.height;
@@ -165,7 +170,7 @@ export function ShipGrid() {
     setTempPos({ x: module.x, y: module.y });
   };
 
-  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+  const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     if (isCombatMode || !draggedModule) return;
 
     const svg = e.currentTarget; // всегда сам SVG
@@ -175,7 +180,7 @@ export function ShipGrid() {
     const scaleX = svgSize / rect.width;
     const scaleY = svgSize / rect.height;
 
-    // курсор в координатах SVG
+    // указатель в координатах SVG
     const mouseX = (e.clientX - rect.left) * scaleX;
     const mouseY = (e.clientY - rect.top) * scaleY;
 
@@ -202,7 +207,7 @@ export function ShipGrid() {
     setTempPos({ x: clampedX, y: clampedY });
   };
 
-  const handleMouseUp = () => {
+  const handlePointerUp = () => {
     if (isCombatMode) return;
 
     if (!draggedModule || !tempPos) {
@@ -226,14 +231,14 @@ export function ShipGrid() {
   return (
     <div
       className={`p-1 md:p-2 select-none transition-colors overflow-hidden max-w-full w-full ${ship?.moduleMovedThisTurn
-        ? "bg-[#050810] border border-[#ffb000]"
+        ? "bg-[#050810] border border-accent"
         : "bg-[#050810] border border-[#00ff41]"
         }`}
     >
       {!isCombatMode && (
         <div className="relative h-5">
           <div className="absolute left-1 top-0 z-10 flex h-5 items-center gap-2 text-[9px] uppercase tracking-[0.14em] text-[#526452] pointer-events-none">
-            <span className="text-[#00d4ff]">⌁ {t("ship.power_bus")}</span>
+            <span className="text-ring">⌁ {t("ship.power_bus")}</span>
             <span>
               {onlinePowerLinks}/{powerLinks.length} {t("ship.circuits_online")}
             </span>
@@ -307,19 +312,19 @@ export function ShipGrid() {
           ? "cursor-not-allowed"
           : "cursor-grab active:cursor-grabbing"
           }`}
-        style={{ userSelect: "none", WebkitUserSelect: "none" }}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        style={{ userSelect: "none", WebkitUserSelect: "none", touchAction: "none" }}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
       >
         <Grid gridSize={gridSize} cellSize={CELL_SIZE} />
         {modules.map((mod) => (
           <g
             key={mod.id}
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.stopPropagation();
               if (!ship.moduleMovedThisTurn) {
-                handleMouseDown(e, mod);
+                handlePointerDown(e, mod);
               }
             }}
             style={{
@@ -345,7 +350,7 @@ export function ShipGrid() {
       </svg>
 
       {isCombatMode && (
-        <div className="text-[#ff0040] text-[10px] mt-1 text-center">
+        <div className="text-destructive text-[10px] mt-1 text-center">
           {t("ship.cannot_move_combat")}
         </div>
       )}

@@ -194,9 +194,9 @@ export default function Home() {
         <>
           <GameHeader />
 
-          <main className="cockpit-layout flex-1 flex flex-col lg:flex-row overflow-hidden max-w-full min-w-0 px-2 lg:px-4 py-4 gap-4 min-h-0">
+          <main className="cockpit-layout flex-1 flex flex-col lg:flex-row lg:overflow-hidden max-w-full min-w-0 px-2 lg:px-4 py-4 gap-4 lg:min-h-0">
             {/* Left Panel */}
-            <div className="panel cockpit-panel cockpit-panel--controls flex-1 flex flex-col min-w-0 lg:h-[calc(100vh-100px)] rounded-lg overflow-hidden min-h-0">
+            <div className="panel cockpit-panel cockpit-panel--controls lg:flex-1 flex flex-col min-w-0 lg:h-[calc(100vh-100px)] rounded-lg overflow-hidden lg:min-h-0">
               <div className="cockpit-tabs flex shrink-0 border-b border-[#00ff4155]">
                 {leftTabs.map((tab, idx) => {
                   const isActive = activeTab === tab.id;
@@ -210,14 +210,14 @@ export default function Home() {
                         setActiveTab(tab.id)
                       }
                       title={tab.label}
-                      className={`relative flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-[9px] font-['Orbitron'] font-bold transition-all duration-150 cursor-pointer select-none
+                      className={`relative flex-1 flex flex-col items-center justify-center py-2.5 min-h-11 gap-0.5 text-[10px] font-['Orbitron'] font-bold transition-all duration-150 cursor-pointer select-none
                                                 ${idx <
                           leftTabs.length - 1
                           ? "border-r border-[#1a3320]"
                           : ""
                         }
                                                 ${isActive
-                          ? "text-[#ffb000] bg-[rgba(255,176,0,0.1)]"
+                          ? "text-accent bg-[rgba(255,176,0,0.1)]"
                           : "text-[#445544] hover:text-[#00ff41] hover:bg-[rgba(0,255,65,0.05)]"
                         }`}
                       style={
@@ -230,7 +230,7 @@ export default function Home() {
                       }
                     >
                       {isActive && (
-                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#ffb000] opacity-50" />
+                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-accent opacity-50" />
                       )}
                       <span className="text-sm leading-none">
                         {tab.icon}
@@ -239,7 +239,7 @@ export default function Home() {
                         {tab.label}
                       </span>
                       {hasAlert && (
-                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[#ff0040]" />
+                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-destructive" />
                       )}
                     </button>
                   );
@@ -250,9 +250,9 @@ export default function Home() {
                 {effectiveActiveTab === "ship" && (
                   <Tabs value={effectiveShipSubTab} onValueChange={(v) => setShipSubTab(v as ShipSubTab)} className="h-full flex flex-col">
                     <TabsList className="grid grid-cols-3 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] rounded-none h-8 shrink-0">
-                      <TabsTrigger value="layout" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-[#ffb000] text-[#667766] uppercase font-bold tracking-wider">{t("ship.subtab_layout")}</TabsTrigger>
-                      <TabsTrigger value="stats" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-[#ffb000] text-[#667766] uppercase font-bold tracking-wider">{t("ship.subtab_stats")}</TabsTrigger>
-                      <TabsTrigger value="modules" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-[#ffb000] text-[#667766] uppercase font-bold tracking-wider">{t("ship.subtab_modules")}</TabsTrigger>
+                      <TabsTrigger value="layout" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_layout")}</TabsTrigger>
+                      <TabsTrigger value="stats" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_stats")}</TabsTrigger>
+                      <TabsTrigger value="modules" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_modules")}</TabsTrigger>
                     </TabsList>
                     <TabsContent value="layout" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ShipGrid /></TabsContent>
                     <TabsContent value="stats" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ShipStats /></TabsContent>
@@ -275,7 +275,7 @@ export default function Home() {
             </div>
 
             {/* Right Panel */}
-            <div className="panel cockpit-panel cockpit-panel--stage flex-1 flex flex-col min-w-0 h-[calc(100vh-200px)] lg:h-[calc(100vh-100px)] rounded-lg p-2 min-h-0 overflow-hidden">
+            <div className="panel cockpit-panel cockpit-panel--stage lg:flex-1 flex flex-col min-w-0 min-h-[45vh] lg:min-h-0 lg:h-[calc(100vh-100px)] rounded-lg p-2 overflow-hidden">
               <div className="flex-1 overflow-hidden min-h-0">
                 <EventDisplay />
               </div>

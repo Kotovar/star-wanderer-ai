@@ -246,7 +246,7 @@ function TradeButtons({
     onSell: (goodId: Goods, quantity: number) => void;
 }) {
     return (
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1.5">
             <BuyButton
                 quantity={1}
                 disabled={
@@ -302,7 +302,7 @@ function BuyButton({
         <Button
             disabled={disabled}
             onClick={onBuy}
-            className="bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] px-1.5 cursor-pointer disabled:cursor-not-allowed"
+            className="bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs px-2.5 py-1 min-h-[34px] cursor-pointer disabled:cursor-not-allowed"
         >
             +{quantity}
         </Button>
@@ -322,7 +322,7 @@ function SellButton({
         <Button
             disabled={disabled}
             onClick={onSell}
-            className="bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase text-[9px] px-1.5 cursor-pointer disabled:cursor-not-allowed"
+            className="bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase text-xs px-2.5 py-1 min-h-[34px] cursor-pointer disabled:cursor-not-allowed"
         >
             -{quantity}
         </Button>

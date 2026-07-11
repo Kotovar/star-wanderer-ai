@@ -93,6 +93,10 @@ export function SectorMap() {
   const offsetStartRef = useRef({ x: 0, y: 0 });
   const offsetRef = useRef(sectorOffset); // Ref for smooth dragging — initialized from store
   const hasMovedRef = useRef(false);
+  // Pinch-to-zoom state
+  const pinchStartDist = useRef(0);
+  const pinchStartZoom = useRef(1);
+  const isPinching = useRef(false);
   const animationFrameRef = useRef<number | null>(null);
   const dragStartTimeRef = useRef<number>(0); // Store animation time when drag starts
 
@@ -879,9 +883,21 @@ export function SectorMap() {
     }
   }, [setOffsetState]);
 
-  // Touch handlers for mobile
+  // Touch handlers for mobile (pan + pinch-to-zoom)
   const handleTouchStart = useCallback(
     (e: React.TouchEvent<HTMLCanvasElement>) => {
+      if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        pinchStartDist.current = Math.hypot(dx, dy);
+        pinchStartZoom.current = zoom;
+        isPinching.current = true;
+        hasMovedRef.current = true;
+        setIsDragging(false);
+        isDraggingRef.current = false;
+        return;
+      }
+      if (isPinching.current) return;
       const touch = e.touches[0];
       setIsDragging(true);
       isDraggingRef.current = true;
@@ -890,11 +906,29 @@ export function SectorMap() {
       offsetStartRef.current = { ...offsetRef.current };
       dragStartTimeRef.current = animationStateRef.current.time;
     },
-    [],
+    [zoom],
   );
 
   const handleTouchMove = useCallback(
     (e: React.TouchEvent<HTMLCanvasElement>) => {
+      // Pinch-to-zoom: два пальца
+      if (isPinching.current && e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        if (pinchStartDist.current > 0) {
+          const ratio = dist / pinchStartDist.current;
+          const newZoom = Math.min(
+            MAX_ZOOM,
+            Math.max(MIN_ZOOM, pinchStartZoom.current * ratio),
+          );
+          setZoom(newZoom);
+          setTargetZoom(null);
+          setZoomState(newZoom);
+        }
+        return;
+      }
+
       if (!isDraggingRef.current) return;
 
       const touch = e.touches[0];
@@ -967,22 +1001,77 @@ export function SectorMap() {
         drawCanvas();
       });
     },
-    [animationsEnabled, drawCanvas],
+    [animationsEnabled, drawCanvas, setZoomState],
   );
 
-  const handleTouchEnd = useCallback(() => {
-    if (isDraggingRef.current) {
-      const finalOffset = { ...offsetRef.current };
-      setOffset(finalOffset);
-      setOffsetState(finalOffset);
-    }
-    setIsDragging(false);
-    isDraggingRef.current = false;
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-  }, [setOffsetState]);
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent<HTMLCanvasElement>) => {
+      if (isPinching.current) {
+        isPinching.current = false;
+        if (e.touches.length === 1) {
+          const touch = e.touches[0];
+          setIsDragging(true);
+          isDraggingRef.current = true;
+          hasMovedRef.current = true;
+          dragStartRef.current = { x: touch.clientX, y: touch.clientY };
+          offsetStartRef.current = { ...offsetRef.current };
+          dragStartTimeRef.current = animationStateRef.current.time;
+        }
+        return;
+      }
+      if (isDraggingRef.current) {
+        const finalOffset = { ...offsetRef.current };
+        setOffset(finalOffset);
+        setOffsetState(finalOffset);
+      }
+      setIsDragging(false);
+      isDraggingRef.current = false;
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+
+      // TAP-to-inspect: показать тултип сканера для локации под пальцем
+      if (!hasMovedRef.current) {
+        const touch = e.changedTouches[0];
+        if (touch) {
+          const canvas = canvasRef.current;
+          if (canvas && currentSector) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvasSizeRef.current.width / rect.width;
+            const scaleY = canvasSizeRef.current.height / rect.height;
+            const mx = (touch.clientX - rect.left) * scaleX;
+            const my = (touch.clientY - rect.top) * scaleY;
+            const centerX = canvasSizeRef.current.width / 2;
+            const centerY = canvasSizeRef.current.height / 2;
+            const cur = offsetRef.current;
+            const worldX = (mx - centerX - cur.x) / zoom + centerX;
+            const worldY = (my - centerY - cur.y) / zoom + centerY;
+            const baseMaxRadius =
+              Math.min(canvasSizeRef.current.width, canvasSizeRef.current.height) *
+              0.45;
+            let foundLoc: typeof currentSector.locations[0] | null = null;
+            for (const loc of currentSector.locations) {
+              const distance = baseMaxRadius * (loc.distanceRatio ?? 0.5);
+              const angle = loc.angle ?? 0;
+              const lx = centerX + Math.cos(angle) * distance;
+              const ly = centerY + Math.sin(angle) * distance;
+              if (Math.hypot(worldX - lx, worldY - ly) < 25 / zoom) {
+                foundLoc = loc;
+                break;
+              }
+            }
+            setHoveredLocation(
+              foundLoc
+                ? { loc: foundLoc, x: touch.clientX - rect.left, y: touch.clientY - rect.top }
+                : null,
+            );
+          }
+        }
+      }
+    },
+    [setOffsetState, currentSector, zoom],
+  );
 
   // Zoom animation effect
   useEffect(() => {

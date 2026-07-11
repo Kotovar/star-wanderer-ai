@@ -193,6 +193,10 @@ export function GalaxyMap() {
     );
     const dragStartRef = useRef({ x: 0, y: 0 });
     const offsetStartRef = useRef({ x: 0, y: 0 });
+    // Pinch-to-zoom state
+    const pinchStartDist = useRef(0);
+    const pinchStartZoom = useRef(1);
+    const isPinching = useRef(false);
 
     const dismissHint = () => {
         localStorage.setItem("sw_galaxy_hint_done", "1");
@@ -630,20 +634,49 @@ export function GalaxyMap() {
         setIsDragging(false);
     }, [isDragging, offset, setOffsetState]);
 
-    // Touch handlers for mobile
+    // Touch handlers for mobile (pan + pinch-to-zoom)
     const handleTouchStart = useCallback(
         (e: React.TouchEvent<HTMLCanvasElement>) => {
+            if (e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                pinchStartDist.current = Math.hypot(dx, dy);
+                pinchStartZoom.current = zoom;
+                isPinching.current = true;
+                hasMovedRef.current = true; // suppress click after pinch
+                setIsDragging(false);
+                return;
+            }
+            if (isPinching.current) return;
             const touch = e.touches[0];
             setIsDragging(true);
             hasMovedRef.current = false;
             dragStartRef.current = { x: touch.clientX, y: touch.clientY };
             offsetStartRef.current = { ...offset };
         },
-        [offset],
+        [offset, zoom],
     );
 
     const handleTouchMove = useCallback(
         (e: React.TouchEvent<HTMLCanvasElement>) => {
+            // Pinch-to-zoom: два пальца
+            if (isPinching.current && e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const dist = Math.hypot(dx, dy);
+                if (pinchStartDist.current > 0) {
+                    const ratio = dist / pinchStartDist.current;
+                    const newZoom = Math.min(
+                        MAX_ZOOM,
+                        Math.max(MIN_ZOOM, pinchStartZoom.current * ratio),
+                    );
+                    setZoom(newZoom);
+                    setTargetZoom(null);
+                    setZoomState(newZoom);
+                }
+                return;
+            }
+
             if (!isDragging) return;
 
             const touch = e.touches[0];
@@ -662,15 +695,30 @@ export function GalaxyMap() {
                 y: offsetStartRef.current.y + dy,
             });
         },
-        [isDragging],
+        [isDragging, setZoomState],
     );
 
-    const handleTouchEnd = useCallback(() => {
-        if (isDragging) {
-            setOffsetState(offset);
-        }
-        setIsDragging(false);
-    }, [isDragging, offset, setOffsetState]);
+    const handleTouchEnd = useCallback(
+        (e: React.TouchEvent<HTMLCanvasElement>) => {
+            if (isPinching.current) {
+                isPinching.current = false;
+                // Если остался один палец — продолжаем пан одним пальцем
+                if (e.touches.length === 1) {
+                    const touch = e.touches[0];
+                    setIsDragging(true);
+                    hasMovedRef.current = true;
+                    dragStartRef.current = { x: touch.clientX, y: touch.clientY };
+                    offsetStartRef.current = { ...offset };
+                }
+                return;
+            }
+            if (isDragging) {
+                setOffsetState(offset);
+            }
+            setIsDragging(false);
+        },
+        [isDragging, offset, setOffsetState],
+    );
 
     // Zoom in/out buttons
     const handleZoomIn = useCallback(() => {

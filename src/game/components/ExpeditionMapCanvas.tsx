@@ -719,6 +719,27 @@ export function ExpeditionMapCanvas({
     setHoveredTile(null);
   };
 
+  // Preview-подсветка плитки по тапу (до раскрытия через onClick)
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const clickX = touch.clientX - rect.left;
+    const clickY = touch.clientY - rect.top;
+    const gridSize = 5;
+    const cellSize = rect.width / gridSize;
+    const col = Math.floor(clickX / cellSize);
+    const row = Math.floor(clickY / cellSize);
+    if (col >= 0 && col < gridSize && row >= 0 && row < gridSize) {
+      const index = row * gridSize + col;
+      if (!grid[index].revealed) {
+        setHoveredTile(index);
+      }
+    }
+  };
+
   return (
     <div className="expedition-map-frame relative w-fit max-w-full">
       <canvas
@@ -726,9 +747,11 @@ export function ExpeditionMapCanvas({
         width={500}
         height={500}
         className={`expedition-map-canvas w-full max-w-125 h-auto ${canReveal ? "cursor-pointer" : "cursor-not-allowed"}`}
+        style={{ touchAction: "manipulation" }}
         onClick={handleClick}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
       />
       {/* AP indicators */}
       <div className="expedition-ap-rail flex justify-center gap-1 mt-2">

@@ -241,41 +241,38 @@ export function StationPanel() {
                 className="w-full mt-2 flex-1 min-h-0"
             >
                 <TabsList
-                    className="grid w-full bg-[rgba(0,255,65,0.1)] border border-[#00ff41] h-auto"
-                    style={{
-                        gridTemplateColumns: `repeat(${3 + (allowsTrade ? 1 : 0) + (allowsCraft ? 1 : 0) + (hasDiplomacy ? 1 : 0)}, minmax(0, 1fr))`,
-                    }}
+                    className="flex w-full overflow-x-auto bg-[rgba(0,255,65,0.1)] border border-[#00ff41] h-auto"
                 >
                     <TabsTrigger
                         value="shop"
-                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
+                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2 shrink-0 whitespace-nowrap px-3"
                     >
                         {t("station.modules_tab")}
                     </TabsTrigger>
                     {allowsTrade && (
                         <TabsTrigger
                             value="trade"
-                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
+                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2 shrink-0 whitespace-nowrap px-3"
                         >
                             {t("station.trade_tab")}
                         </TabsTrigger>
                     )}
                     <TabsTrigger
                         value="crew"
-                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
+                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2 shrink-0 whitespace-nowrap px-3"
                     >
                         {t("station.crew_tab")}
                     </TabsTrigger>
                     <TabsTrigger
                         value="services"
-                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
+                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2 shrink-0 whitespace-nowrap px-3"
                     >
                         {t("station.services_tab")}
                     </TabsTrigger>
                     {allowsCraft && (
                         <TabsTrigger
                             value="crafting"
-                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
+                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2 shrink-0 whitespace-nowrap px-3"
                         >
                             {t("station.craft")}
                         </TabsTrigger>
@@ -283,7 +280,7 @@ export function StationPanel() {
                     {hasDiplomacy && (
                         <TabsTrigger
                             value="diplomacy"
-                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2"
+                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2 shrink-0 whitespace-nowrap px-3"
                         >
                             <span>{t("station.diplomacy_tab")}</span>
                         </TabsTrigger>
