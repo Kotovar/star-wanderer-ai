@@ -33,6 +33,29 @@ export const PROFESSION_DESCRIPTIONS: Record<Profession, string> = {
     gunner: "Управляет огнём корабля. Может выбирать цели в бою",
 };
 
+type ActiveCrewAssignment = Exclude<NonNullable<CrewMemberAssignment>, "">;
+
+export const CREW_ASSIGNMENT_ICONS: Record<ActiveCrewAssignment, string> = {
+    targeting: "🎯",
+    navigation: "🧭",
+    firstaid: "🩹",
+    heal: "💉",
+    repair: "🔧",
+    morale: "😊",
+    evasion: "🌀",
+    overclock: "⚡",
+    rapidfire: "🔥",
+    calibration: "⚙",
+    patrol: "🔭",
+    research: "🔬",
+    analyzing: "🔎",
+    reactor_overload: "⚛",
+    analysis: "🧠",
+    sabotage: "🕵",
+    merge: "🧬",
+    training: "🎓",
+};
+
 export const COMBAT_ACTIONS: Record<
     Profession,
     {

@@ -3,11 +3,13 @@
 import { useMemo, useState } from "react";
 import { useGameStore } from "../store";
 import { WEAPON_TYPES } from "../constants";
+import { CREW_ASSIGNMENT_ICONS } from "../constants/crew";
 import { RACES } from "../constants/races";
 import type { Module, CrewMember, Weapon } from "../types";
 import { MODULE_TYPES } from "../constants/modules";
 import { useTranslation } from "@/lib/useTranslation";
 import { getModuleTranslation } from "@/lib/moduleTranslations";
+import { getActiveAssignment } from "@/game/crew/assignments";
 import { ProfessionSprite } from "./ProfessionSprite";
 import {
   hasMergedXenosymbiont,
@@ -138,6 +140,9 @@ export function ShipGrid() {
   );
 
   const isCombatMode = !!currentCombat;
+  const idleCrewCount = crew.filter(
+    (member) => !getActiveAssignment(member, isCombatMode),
+  ).length;
   const powerLinks = useMemo(() => getPowerLinks(modules), [modules]);
   const onlinePowerLinks = powerLinks.filter(
     (link) => link.state !== "offline",
@@ -242,6 +247,9 @@ export function ShipGrid() {
             <span>
               {onlinePowerLinks}/{powerLinks.length} {t("ship.circuits_online")}
             </span>
+            <span className={idleCrewCount > 0 ? "text-accent" : "text-[#00ff41]"}>
+              {t("crew.idle_count")}: {idleCrewCount}
+            </span>
           </div>
           <button
             onClick={() => setShowLegend((s) => !s)}
@@ -345,6 +353,7 @@ export function ShipGrid() {
                 draggedModule?.id === mod.id ? tempPos : null
               }
               currentLanguage={currentLanguage}
+              isCombatMode={isCombatMode}
             />
           </g>
         ))}
@@ -399,6 +408,7 @@ interface ModuleRendererProps {
   isDragging: boolean;
   tempPos?: { x: number; y: number } | null;
   currentLanguage: "ru" | "en";
+  isCombatMode: boolean;
 }
 
 function ModuleRenderer({
@@ -408,6 +418,7 @@ function ModuleRenderer({
   isDragging,
   tempPos,
   currentLanguage,
+  isCombatMode,
 }: ModuleRendererProps) {
   // Use tempPos when dragging, otherwise use module's original position
   //
@@ -484,7 +495,14 @@ function ModuleRenderer({
       {module.health < 30 && <DamageOverlay x={x} y={y} w={w} h={h} />}
 
       {crewInModule.length > 0 && (
-        <CrewIcons crew={crewInModule} x={x} y={y} w={w} h={h} />
+        <CrewIcons
+          crew={crewInModule}
+          x={x}
+          y={y}
+          w={w}
+          h={h}
+          isCombatMode={isCombatMode}
+        />
       )}
     </g>
   );
@@ -654,12 +672,14 @@ function CrewIcons({
   y,
   w,
   h,
+  isCombatMode,
 }: {
   crew: CrewMember[];
   x: number;
   y: number;
   w: number;
   h: number;
+  isCombatMode: boolean;
 }) {
   const iconsPerRow = Math.max(1, Math.floor((w - CREW_ICON_PADDING * 2) / (CREW_ICON_SIZE + CREW_ICON_GAP)));
   const healthBarOffset = HEALTH_BAR_BOTTOM_OFFSET + CREW_ICON_HEALTH_BAR_MARGIN;
@@ -680,6 +700,7 @@ function CrewIcons({
             x={iconX}
             y={iconY}
             size={CREW_ICON_SIZE}
+            isCombatMode={isCombatMode}
           />
         );
       })}
@@ -692,15 +713,20 @@ function CrewIcon({
   x,
   y,
   size,
+  isCombatMode,
 }: {
   crewMember: CrewMember;
   x: number;
   y: number;
   size: number;
+  isCombatMode: boolean;
 }) {
+  const { t } = useTranslation();
   const race = RACES[crewMember.race];
   const raceColor = race?.color || "#00ff41";
   const badgeR = size * 0.19;
+  const activeTask = getActiveAssignment(crewMember, isCombatMode);
+  const hasActiveTask = !!activeTask;
 
   return (
     <g
@@ -716,16 +742,33 @@ function CrewIcon({
         title={crewMember.name}
       />
 
-      {/* Assignment indicator — gold dot bottom-left */}
-      {crewMember.assignment && (
-        <circle
-          cx={x + size * 0.22}
-          cy={y + size - size * 0.22}
-          r={size * 0.16}
-          fill="#ffb000"
-          className="select-none"
-        />
-      )}
+      <g className={hasActiveTask ? undefined : "animate-pulse"}>
+        <title>
+          {t(hasActiveTask ? "crew.active_task" : "crew.no_active_task")}
+        </title>
+        {!hasActiveTask && (
+          <circle
+            cx={x + size / 2}
+            cy={y - 3}
+            r={size * 0.2}
+            fill="#050810"
+            stroke="#ffb000"
+            strokeWidth="1"
+          />
+        )}
+        <text
+          x={x + size / 2}
+          y={y - 3}
+          fill={hasActiveTask ? "#00ff41" : "#ffb000"}
+          fontSize={size * 0.42}
+          fontFamily="Share Tech Mono"
+          fontWeight="bold"
+          textAnchor="middle"
+          dominantBaseline="middle"
+        >
+          {activeTask ? CREW_ASSIGNMENT_ICONS[activeTask] : "!"}
+        </text>
+      </g>
 
       {/* Level badge — shown only when level > 1 */}
       {crewMember.level > 1 && (
