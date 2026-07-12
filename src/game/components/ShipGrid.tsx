@@ -230,7 +230,7 @@ export function ShipGrid() {
 
   return (
     <div
-      className={`p-1 md:p-2 select-none transition-colors overflow-hidden max-w-full w-full ${ship?.moduleMovedThisTurn
+      className={`p-1 md:p-2 select-none transition-colors overflow-hidden max-w-full w-full lg:h-full lg:flex lg:flex-col ${ship?.moduleMovedThisTurn
         ? "bg-[#050810] border border-accent"
         : "bg-[#050810] border border-[#00ff41]"
         }`}
@@ -304,19 +304,21 @@ export function ShipGrid() {
         </div>
       )}
 
-      <svg
-        width={gridSize * CELL_SIZE}
-        height={gridSize * CELL_SIZE}
-        viewBox={`0 0 ${gridSize * CELL_SIZE} ${gridSize * CELL_SIZE}`}
-        className={`w-full h-auto select-none max-h-100 md:max-h-none ${isCombatMode
-          ? "cursor-not-allowed"
-          : "cursor-grab active:cursor-grabbing"
-          }`}
-        style={{ userSelect: "none", WebkitUserSelect: "none", touchAction: "none" }}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-      >
+      <div className="w-full lg:flex-1 lg:min-h-0 lg:grid lg:place-items-center lg:@container-[size]">
+        <svg
+          width={gridSize * CELL_SIZE}
+          height={gridSize * CELL_SIZE}
+          viewBox={`0 0 ${gridSize * CELL_SIZE} ${gridSize * CELL_SIZE}`}
+          preserveAspectRatio="xMidYMid meet"
+          className={`w-full h-auto select-none max-h-100 lg:w-[min(100cqw,100cqh)] lg:h-[min(100cqw,100cqh)] lg:max-h-none ${isCombatMode
+            ? "cursor-not-allowed"
+            : "cursor-grab active:cursor-grabbing"
+            }`}
+          style={{ userSelect: "none", WebkitUserSelect: "none", touchAction: "none" }}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+        >
         <Grid gridSize={gridSize} cellSize={CELL_SIZE} />
         {modules.map((mod) => (
           <g
@@ -347,7 +349,8 @@ export function ShipGrid() {
           </g>
         ))}
         <PowerGrid links={powerLinks} />
-      </svg>
+        </svg>
+      </div>
 
       {isCombatMode && (
         <div className="text-destructive text-[10px] mt-1 text-center">

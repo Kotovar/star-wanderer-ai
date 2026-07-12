@@ -56,9 +56,7 @@ type LeftTab =
 type ShipSubTab = "layout" | "stats" | "modules";
 
 /**
- * gameMode, при которых на мобильном принудительно показываем сцену событий,
- * даже если игрок на вкладке управления. Это глобальные оверлеи из шапки
- * (технологии/эффекты/артефакты/кризисы/отношения), которые живут в EventDisplay.
+ * Глобальные панели из шапки, которые на мобильном открываются в сцене событий.
  */
 const GLOBAL_OVERLAY_MODES = new Set([
   "artifacts",
@@ -105,15 +103,17 @@ export default function Home() {
   const [lastGameMode, setLastGameMode] = useState(gameMode);
   if (gameMode !== lastGameMode) {
     setLastGameMode(gameMode);
-    if (gameMode === "sector_map" || gameMode === "galaxy_map") {
+    if (
+      gameMode === "sector_map" ||
+      gameMode === "galaxy_map" ||
+      GLOBAL_OVERLAY_MODES.has(gameMode)
+    ) {
       setMobileShowMap(true);
     }
   }
-  // Во время боя или глобального оверлея на мобильном принудительно показываем сцену
+  // Во время боя на мобильном принудительно показываем сцену.
   const inCombat = useGameStore((s) => !!s.currentCombat);
-  const showEventStage =
-    mobileShowMap ||
-    (isMobile && (inCombat || GLOBAL_OVERLAY_MODES.has(gameMode)));
+  const showEventStage = mobileShowMap || (isMobile && inCombat);
 
   // Legacy tab compatibility: if a saved state somehow points to merged tabs,
   // render them as the ship tab with the correct sub-tab.
@@ -260,7 +260,7 @@ export default function Home() {
           <main className="flex-1 flex flex-col min-h-0 lg:flex-row lg:overflow-hidden max-w-full min-w-0 px-2 lg:px-4 py-4 gap-4">
             {/* Панель управления — десктоп: слева; мобильный: полный экран когда !showEventStage */}
             {(!isMobile || !showEventStage) && (
-              <div className="panel cockpit-panel cockpit-panel--controls flex flex-col min-w-0 flex-1 lg:h-[calc(100vh-100px)] rounded-lg overflow-hidden min-h-0">
+              <div className="panel cockpit-panel cockpit-panel--controls flex flex-col min-w-0 flex-1 rounded-lg overflow-hidden min-h-0">
                 {/* Верхний таб-бар — только десктоп (на мобильном его заменяет нижняя навигация) */}
                 <div className="cockpit-tabs hidden lg:flex shrink-0 border-b border-[#00ff4155]">
                   {leftTabs.map((tab, idx) => {
@@ -299,7 +299,7 @@ export default function Home() {
 
             {/* Сцена событий (карта/бой) — десктоп: справа; мобильный: полный экран когда showEventStage */}
             {(!isMobile || showEventStage) && (
-              <div className="panel cockpit-panel cockpit-panel--stage flex flex-col min-w-0 flex-1 lg:h-[calc(100vh-100px)] rounded-lg p-2 overflow-hidden min-h-0">
+              <div className="panel cockpit-panel cockpit-panel--stage flex flex-col min-w-0 flex-1 rounded-lg p-2 overflow-hidden min-h-0">
                 <div className="flex-1 overflow-y-auto overflow-x-hidden lg:overflow-hidden min-h-0">
                   <EventDisplay />
                 </div>
