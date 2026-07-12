@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useGameStore } from "../store";
 import { WEAPON_TYPES } from "../constants";
 import { CREW_ASSIGNMENT_ICONS } from "../constants/crew";
@@ -128,7 +128,9 @@ export function ShipGrid() {
   const gridSize = useGameStore((s) => s.ship.gridSize);
   const crew = useGameStore((s) => s.crew);
   const moveModule = useGameStore((s) => s.moveModule);
+  const moveCrewMember = useGameStore((s) => s.moveCrewMember);
   const canPlaceModule = useGameStore((s) => s.canPlaceModule);
+  const isModuleAdjacent = useGameStore((s) => s.isModuleAdjacent);
   const currentCombat = useGameStore((s) => s.currentCombat);
   const { t, currentLanguage } = useTranslation();
 
@@ -138,6 +140,10 @@ export function ShipGrid() {
   const [tempPos, setTempPos] = useState<{ x: number; y: number } | null>(
     null,
   );
+  const [draggedCrew, setDraggedCrew] = useState<CrewMember | null>(null);
+  const [crewDragPos, setCrewDragPos] = useState({ x: 0, y: 0 });
+  const [crewDropModuleId, setCrewDropModuleId] = useState<number | null>(null);
+  const crewDropModuleRef = useRef<number | null>(null);
 
   const isCombatMode = !!currentCombat;
   const idleCrewCount = crew.filter(
@@ -176,6 +182,28 @@ export function ShipGrid() {
   };
 
   const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (draggedCrew) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const point = {
+        x: (e.clientX - rect.left) * (svgSize / rect.width),
+        y: (e.clientY - rect.top) * (svgSize / rect.height),
+      };
+      const target = modules.find(
+        (module) =>
+          !module.disabled &&
+          !module.manualDisabled &&
+          isModuleAdjacent(draggedCrew.moduleId, module.id) &&
+          point.x >= module.x * CELL_SIZE &&
+          point.x <= (module.x + module.width) * CELL_SIZE &&
+          point.y >= module.y * CELL_SIZE &&
+          point.y <= (module.y + module.height) * CELL_SIZE,
+      );
+      setCrewDragPos(point);
+      crewDropModuleRef.current = target?.id ?? null;
+      setCrewDropModuleId(target?.id ?? null);
+      return;
+    }
+
     if (isCombatMode || !draggedModule) return;
 
     const svg = e.currentTarget; // всегда сам SVG
@@ -213,6 +241,16 @@ export function ShipGrid() {
   };
 
   const handlePointerUp = () => {
+    if (draggedCrew) {
+      if (crewDropModuleRef.current !== null) {
+        moveCrewMember(draggedCrew.id, crewDropModuleRef.current);
+      }
+      setDraggedCrew(null);
+      crewDropModuleRef.current = null;
+      setCrewDropModuleId(null);
+      return;
+    }
+
     if (isCombatMode) return;
 
     if (!draggedModule || !tempPos) {
@@ -231,6 +269,29 @@ export function ShipGrid() {
 
     setDraggedModule(null);
     setTempPos(null);
+  };
+
+  const handleCrewPointerDown = (
+    e: React.PointerEvent<SVGGElement>,
+    member: CrewMember,
+  ) => {
+    e.stopPropagation();
+    if (member.movedThisTurn) return;
+    const svg = e.currentTarget.ownerSVGElement;
+    if (!svg) return;
+    svg.setPointerCapture?.(e.pointerId);
+    const rect = svg.getBoundingClientRect();
+    setDraggedCrew(member);
+    setCrewDragPos({
+      x: (e.clientX - rect.left) * (svgSize / rect.width),
+      y: (e.clientY - rect.top) * (svgSize / rect.height),
+    });
+  };
+
+  const cancelCrewDrag = () => {
+    setDraggedCrew(null);
+    crewDropModuleRef.current = null;
+    setCrewDropModuleId(null);
   };
 
   return (
@@ -325,7 +386,10 @@ export function ShipGrid() {
           style={{ userSelect: "none", WebkitUserSelect: "none", touchAction: "none" }}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
+          onPointerCancel={() => {
+            if (draggedCrew) cancelCrewDrag();
+            else handlePointerUp();
+          }}
         >
         <Grid gridSize={gridSize} cellSize={CELL_SIZE} />
         {modules.map((mod) => (
@@ -354,10 +418,47 @@ export function ShipGrid() {
               }
               currentLanguage={currentLanguage}
               isCombatMode={isCombatMode}
+              onCrewPointerDown={handleCrewPointerDown}
             />
           </g>
         ))}
+        {draggedCrew &&
+          modules
+            .filter(
+              (module) =>
+                !module.disabled &&
+                !module.manualDisabled &&
+                isModuleAdjacent(draggedCrew.moduleId, module.id),
+            )
+            .map((module) => (
+              <rect
+                key={module.id}
+                x={module.x * CELL_SIZE + 4}
+                y={module.y * CELL_SIZE + 4}
+                width={module.width * CELL_SIZE - 8}
+                height={module.height * CELL_SIZE - 8}
+                fill={
+                  crewDropModuleId === module.id
+                    ? "rgba(255,176,0,0.18)"
+                    : "rgba(0,255,65,0.08)"
+                }
+                stroke={crewDropModuleId === module.id ? "#ffb000" : "#00ff41"}
+                strokeWidth="2"
+                strokeDasharray="6 4"
+                pointerEvents="none"
+              />
+            ))}
         <PowerGrid links={powerLinks} />
+        {draggedCrew && (
+          <ProfessionSprite
+            race={draggedCrew.race}
+            profession={draggedCrew.profession}
+            x={crewDragPos.x - CREW_ICON_SIZE / 2}
+            y={crewDragPos.y - CREW_ICON_SIZE / 2}
+            size={CREW_ICON_SIZE}
+            title={draggedCrew.name}
+          />
+        )}
         </svg>
       </div>
 
@@ -409,6 +510,10 @@ interface ModuleRendererProps {
   tempPos?: { x: number; y: number } | null;
   currentLanguage: "ru" | "en";
   isCombatMode: boolean;
+  onCrewPointerDown: (
+    e: React.PointerEvent<SVGGElement>,
+    member: CrewMember,
+  ) => void;
 }
 
 function ModuleRenderer({
@@ -419,6 +524,7 @@ function ModuleRenderer({
   tempPos,
   currentLanguage,
   isCombatMode,
+  onCrewPointerDown,
 }: ModuleRendererProps) {
   // Use tempPos when dragging, otherwise use module's original position
   //
@@ -502,6 +608,7 @@ function ModuleRenderer({
           w={w}
           h={h}
           isCombatMode={isCombatMode}
+          onCrewPointerDown={onCrewPointerDown}
         />
       )}
     </g>
@@ -673,6 +780,7 @@ function CrewIcons({
   w,
   h,
   isCombatMode,
+  onCrewPointerDown,
 }: {
   crew: CrewMember[];
   x: number;
@@ -680,6 +788,10 @@ function CrewIcons({
   w: number;
   h: number;
   isCombatMode: boolean;
+  onCrewPointerDown: (
+    e: React.PointerEvent<SVGGElement>,
+    member: CrewMember,
+  ) => void;
 }) {
   const iconsPerRow = Math.max(1, Math.floor((w - CREW_ICON_PADDING * 2) / (CREW_ICON_SIZE + CREW_ICON_GAP)));
   const healthBarOffset = HEALTH_BAR_BOTTOM_OFFSET + CREW_ICON_HEALTH_BAR_MARGIN;
@@ -701,6 +813,7 @@ function CrewIcons({
             y={iconY}
             size={CREW_ICON_SIZE}
             isCombatMode={isCombatMode}
+            onPointerDown={onCrewPointerDown}
           />
         );
       })}
@@ -714,12 +827,17 @@ function CrewIcon({
   y,
   size,
   isCombatMode,
+  onPointerDown,
 }: {
   crewMember: CrewMember;
   x: number;
   y: number;
   size: number;
   isCombatMode: boolean;
+  onPointerDown: (
+    e: React.PointerEvent<SVGGElement>,
+    member: CrewMember,
+  ) => void;
 }) {
   const { t } = useTranslation();
   const race = RACES[crewMember.race];
@@ -731,7 +849,12 @@ function CrewIcon({
   return (
     <g
       className="select-none"
-      style={{ userSelect: "none", WebkitUserSelect: "none" }}
+      onPointerDown={(e) => onPointerDown(e, crewMember)}
+      style={{
+        cursor: crewMember.movedThisTurn ? "not-allowed" : "grab",
+        userSelect: "none",
+        WebkitUserSelect: "none",
+      }}
     >
       <ProfessionSprite
         race={crewMember.race}
