@@ -21,6 +21,7 @@ import { getRandomRace, getDominantRaceForPlanet } from "@/game/races/utils";
 import { getRandomBossForTier } from "@/game/bosses/utils";
 import { ANCIENT_BOSSES } from "@/game/constants/bosses";
 import { bossDistribution } from "./bossDistribution";
+import { rollEnemyThreat } from "@/game/progression/enemyProgression";
 
 const ENEMY_TYPES: EnemyShip[] = ["pirate", "raider", "mercenary", "marauder"];
 
@@ -258,22 +259,19 @@ export const generatePlanet = (
 export const generateEnemyShip = (
     sectorIdx: number,
     locIdx: number,
-    baseDanger: number,
+    tier: GalaxyTierAll,
     isBlackHole: boolean,
 ): Location => {
     const enemyType =
         ENEMY_TYPES[Math.floor(Math.random() * ENEMY_TYPES.length)];
-    const threat = Math.min(
-        3,
-        Math.max(1, baseDanger - 1 + Math.floor(Math.random() * 3)),
-    );
+    const threat = rollEnemyThreat(tier, isBlackHole);
 
     return {
         id: `${sectorIdx}-${locIdx}`,
         type: "enemy",
         name: ENEMY_TYPE_NAMES[enemyType],
         enemyType,
-        threat: isBlackHole ? Math.min(3, threat + 1) : threat,
+        threat,
     };
 };
 

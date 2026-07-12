@@ -96,7 +96,6 @@ export const generateLocation = (
     sectorIdx: number,
     locIdx: number,
     tier: GalaxyTierAll,
-    baseDanger: number,
     isBlackHole: boolean,
     starType?: StarType,
 ): Location => {
@@ -114,7 +113,7 @@ export const generateLocation = (
             return generateEnemyShip(
                 sectorIdx,
                 locIdx,
-                baseDanger,
+                tier,
                 isBlackHole,
             );
         case "asteroid_belt":

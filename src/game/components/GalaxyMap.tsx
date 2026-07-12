@@ -17,6 +17,7 @@ import {
 } from "@/game/assets/starSprites";
 import { getEffectiveScanRange } from "@/game/slices/scanner/helpers/getEffectiveScanRange";
 import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
+import { getSectorReadiness } from "@/game/progression/sectorReadiness";
 import { setupHiDPICanvas } from "./canvas-utils";
 
 // Animation constants
@@ -180,6 +181,12 @@ export function GalaxyMap() {
     const setOffsetState = useGameStore((s) => s.setGalaxyOffset);
     const [zoom, setZoom] = useState(galaxyZoom);
     const [legendOpen, setLegendOpen] = useState(false);
+    const [dangerousJump, setDangerousJump] = useState<{
+        sectorId: number;
+        sectorName: string;
+        rating: number;
+        recommended: number;
+    } | null>(null);
     const [offset, setOffset] = useState(galaxyOffset);
     const [targetZoom, setTargetZoom] = useState<number | null>(null);
     const [playerShipImageReady, setPlayerShipImageReady] = useState(false);
@@ -798,6 +805,20 @@ export function GalaxyMap() {
             // Hitbox size should also scale with zoom for consistent feel
             const hitboxSize = 35 / zoom;
             if (dist < hitboxSize) {
+                const state = useGameStore.getState();
+                if (sector.id !== state.currentSector?.id) {
+                    const readiness = getSectorReadiness(state, sector.tier);
+                    if (readiness.needsWarning) {
+                        setDangerousJump({
+                            sectorId: sector.id,
+                            sectorName: sector.name,
+                            rating: readiness.rating,
+                            recommended: readiness.recommended,
+                        });
+                        return;
+                    }
+                }
+                setDangerousJump(null);
                 selectSector(sector.id);
                 break;
             }
@@ -821,6 +842,44 @@ export function GalaxyMap() {
                     >
                         ✕
                     </button>
+                </div>
+            )}
+            {dangerousJump && (
+                <div
+                    role="alertdialog"
+                    aria-labelledby="dangerous-jump-title"
+                    className="absolute left-2 right-2 top-14 z-30 mx-auto max-w-md border border-[#ffb000] bg-[rgba(5,8,16,0.96)] p-3 shadow-[0_0_24px_rgba(255,176,0,0.18)]"
+                >
+                    <div
+                        id="dangerous-jump-title"
+                        className="font-['Orbitron'] text-xs font-bold uppercase tracking-wider text-[#ffb000]"
+                    >
+                        {t("galaxy_map_ui.danger.title")}
+                    </div>
+                    <div className="mt-2 text-xs text-[#b8b8b8]">
+                        {t("galaxy_map_ui.danger.description", {
+                            sector: dangerousJump.sectorName,
+                            rating: dangerousJump.rating,
+                            recommended: dangerousJump.recommended,
+                        })}
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                        <button
+                            onClick={() => setDangerousJump(null)}
+                            className="cursor-pointer border border-[#687868] px-2 py-2 text-[10px] uppercase text-[#9aa59a] hover:border-[#00ff41] hover:text-[#00ff41]"
+                        >
+                            {t("common.cancel")}
+                        </button>
+                        <button
+                            onClick={() => {
+                                selectSector(dangerousJump.sectorId);
+                                setDangerousJump(null);
+                            }}
+                            className="cursor-pointer border border-[#ffb000] px-2 py-2 text-[10px] uppercase text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
+                        >
+                            {t("galaxy_map_ui.danger.continue")}
+                        </button>
+                    </div>
                 </div>
             )}
             <canvas

@@ -76,7 +76,6 @@ export const generateGalaxy = (): Sector[] => {
                         sectorIdx,
                         j,
                         tier,
-                        baseDanger,
                         isBlackHole,
                         star.type,
                     ),

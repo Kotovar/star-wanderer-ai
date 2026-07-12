@@ -12,7 +12,9 @@
         "check:reputation": "node --no-warnings --experimental-strip-types scripts/check-reputation-ripple.mjs",
         "check:assignments": "node --no-warnings --experimental-strip-types scripts/check-assignment-fatigue.mjs",
         "check:events": "node --no-warnings --experimental-strip-types scripts/check-random-event-chains.mjs",
-        "check:research-abilities": "node --no-warnings --experimental-strip-types scripts/check-research-special-abilities.mjs"
+        "check:research-abilities": "node --no-warnings --experimental-strip-types scripts/check-research-special-abilities.mjs",
+        "check:sector-readiness": "node --no-warnings --experimental-strip-types scripts/check-sector-readiness.mjs",
+        "check:enemy-progression": "node --no-warnings --experimental-strip-types scripts/check-enemy-progression.mjs"
     },
     "dependencies": {
         "@radix-ui/react-accordion": "^1.2.11",

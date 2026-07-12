@@ -2756,7 +2756,12 @@
     "unknown_markers_hint_line_2": "and may conceal other locations until you get closer or detect them with the scanner."
   },
   "galaxy_map_ui": {
-    "hint": "Select a sector to jump to. Mouse wheel to zoom. Click and drag to pan."
+    "hint": "Select a sector to jump to. Mouse wheel to zoom. Click and drag to pan.",
+    "danger": {
+      "title": "Low combat readiness",
+      "description": "Sector “{{sector}}”: ship readiness {{rating}}, recommended {{recommended}}. Travel is possible, but enemies in this tier may be too strong.",
+      "continue": "Travel anyway"
+    }
   },
   "victory_paths": {
     "reach_tier4": {
