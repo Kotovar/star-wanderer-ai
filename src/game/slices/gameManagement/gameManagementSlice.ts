@@ -8,6 +8,7 @@ import {
 } from "@/game/saves/utils";
 import type { ManualSlotId, SaveSlotId } from "@/game/saves/utils";
 import { CREW_TRAITS } from "@/game/constants/traits";
+import { setSoundPlaybackEnabled } from "@/sounds";
 
 export interface GameManagementSlice {
     checkGameOver: () => void;
@@ -47,9 +48,10 @@ export const createGameManagementSlice = (
         }
 
         // Миграция настроек
-        if (!saved.settings) {
-            saved.settings = { animationsEnabled: false };
-        }
+        saved.settings = {
+            animationsEnabled: saved.settings?.animationsEnabled ?? false,
+            soundEnabled: saved.settings?.soundEnabled ?? true,
+        };
         if (saved.gameLoadedCount === undefined) {
             saved.gameLoadedCount = 0;
         }
@@ -75,6 +77,7 @@ export const createGameManagementSlice = (
             }),
         }));
 
+        setSoundPlaybackEnabled(saved.settings.soundEnabled);
         set({ ...saved });
         return true;
     },
@@ -95,9 +98,10 @@ export const createGameManagementSlice = (
         }
 
         // Миграция
-        if (!saved.settings) {
-            saved.settings = { animationsEnabled: false };
-        }
+        saved.settings = {
+            animationsEnabled: saved.settings?.animationsEnabled ?? false,
+            soundEnabled: saved.settings?.soundEnabled ?? true,
+        };
         if (saved.gameLoadedCount === undefined) {
             saved.gameLoadedCount = 0;
         }
@@ -123,6 +127,7 @@ export const createGameManagementSlice = (
             }),
         }));
 
+        setSoundPlaybackEnabled(saved.settings.soundEnabled);
         set({ ...saved });
         get().addLog(
             slotId === "auto"

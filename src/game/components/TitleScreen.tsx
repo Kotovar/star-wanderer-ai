@@ -62,7 +62,7 @@ export function TitleScreen() {
       <div className="title-radar absolute left-1/2 top-1/2" aria-hidden="true" />
 
       {/* Title */}
-      <div className="relative z-10 text-center px-4">
+      <div className="relative z-10 -translate-y-[24vh] text-center px-4">
         <h1 className="title-wordmark font-['Orbitron'] font-black uppercase leading-none tracking-[0.08em] text-[#00ff41]">
           {t("title_screen.title")}
         </h1>

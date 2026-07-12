@@ -225,6 +225,7 @@ const baseState: GameState = {
   activeDive: null,
   settings: {
     animationsEnabled: true,
+    soundEnabled: true,
   },
   galaxyZoom: 1,
   sectorZoom: 1,

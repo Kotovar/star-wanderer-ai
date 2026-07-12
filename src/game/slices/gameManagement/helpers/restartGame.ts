@@ -35,6 +35,7 @@ export const restartGame = (
   templateId: string = DEFAULT_TEMPLATE_ID,
   modifierIds: string[] = [],
 ): void => {
+  const settings = get().settings;
   clearLocalStorage();
 
   const newSectors = generateGalaxy();
@@ -54,6 +55,7 @@ export const restartGame = (
 
   set({
     ...initialState,
+    settings,
     currentSector: newSectors[STARTING_SECTOR_INDEX],
     galaxy: { sectors: newSectors },
     stationPrices: restartPrices,

@@ -24,6 +24,7 @@ import type { Module, ModuleType, ResearchResourceType } from "@/game/types";
 interface NewGameSetupModalProps {
   open: boolean;
   onClose: () => void;
+  onStarted?: () => void;
   /** Если true — нельзя закрыть без нажатия "Начать" (первый старт) */
   required?: boolean;
 }
@@ -221,6 +222,7 @@ function Pill({
 export function NewGameSetupModal({
   open,
   onClose,
+  onStarted,
   required,
 }: NewGameSetupModalProps) {
   const { t } = useTranslation();
@@ -392,8 +394,8 @@ export function NewGameSetupModal({
 
   const handleStart = () => {
     restartGame(selectedTemplateId, selectedModifiers);
+    onStarted?.();
     onClose();
-    window.location.href = "/";
   };
 
   const handleOpenChange = (v: boolean) => {

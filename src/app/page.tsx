@@ -38,6 +38,7 @@ const NewGameSetupModal = dynamic(
   { ssr: false },
 );
 import { TitleScreen } from "@/game/components/TitleScreen";
+import { StartMenu } from "@/game/components/StartMenu";
 import { useTranslation } from "@/lib/useTranslation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useIsMobile } from "@/game/hooks/useIsMobile";
@@ -85,7 +86,10 @@ export default function Home() {
   );
   const moduleMovedThisTurn = useGameStore((s) => s.ship.moduleMovedThisTurn);
   const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
-  const loadGame = useGameStore((s) => s.loadGame);
+  const soundEnabled = useGameStore((s) => s.settings.soundEnabled);
+  const loadFromSlot = useGameStore((s) => s.loadFromSlot);
+  const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
+  const setSoundEnabled = useGameStore((s) => s.setSoundEnabled);
   const gameMode = useGameStore((s) => s.gameMode);
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<LeftTab>("ship");
@@ -93,6 +97,7 @@ export default function Home() {
   const [showTutorial, setShowTutorial] = useState(false);
   // Скрываем окно создания игры, пока проигрывается интро-анимация титульного экрана
   const [setupReady, setSetupReady] = useState(false);
+  const [newGameOpen, setNewGameOpen] = useState(false);
 
   // ── Мобильная навигация: одно полноэкранное представление за раз ──
   const isMobile = useIsMobile();
@@ -123,22 +128,13 @@ export default function Home() {
     activeTab === "stats" || activeTab === "modules" ? activeTab : shipSubTab;
 
   // ── Phase state machine ────────────────────────────────────────
-  const [phase, setPhase] = useState<FlowPhase>("game");
-
-  useEffect(() => {
-    const hasSave = loadGame();
-    if (!hasSave) {
-      const id = requestAnimationFrame(() => {
-        setPhase("title_setup");
-      });
-      return () => cancelAnimationFrame(id);
-    }
-  }, [loadGame]);
+  const [phase, setPhase] = useState<FlowPhase>("title_setup");
 
   // Listen for restart signal from Header (restart confirmed)
   useEffect(() => {
     const handler = () => {
       setSetupReady(false);
+      setNewGameOpen(false);
       setPhase("title_setup");
     };
     window.addEventListener("sw:showTitleSetup", handler);
@@ -151,10 +147,6 @@ export default function Home() {
     window.addEventListener("sw:showTutorial", handler);
     return () => window.removeEventListener("sw:showTutorial", handler);
   }, []);
-
-  // When NewGameSetupModal starts a game, it calls restartGame + reloads the page.
-  // After reload: save exists → phase = "game" → Game UI renders.
-  // WelcomeTutorial shows via useSyncExternalStore if it's the first time.
 
   const isTitleSetup = phase === "title_setup";
 
@@ -243,14 +235,28 @@ export default function Home() {
         <>
           <TitleScreen />
           {showSetupModal && (
-            <NewGameSetupModal
-              open={true}
-              onClose={() => {
-                /* required: can't close without starting */
+            <StartMenu
+              animationsEnabled={animationsEnabled}
+              soundEnabled={soundEnabled}
+              onAnimationsChange={(enabled) => {
+                setSetupReady(true);
+                setAnimationsEnabled(enabled);
               }}
-              required
+              onSoundChange={setSoundEnabled}
+              onNewGame={() => setNewGameOpen(true)}
+              onLoad={(slotId) => {
+                loadFromSlot(slotId);
+                setAnimationsEnabled(animationsEnabled);
+                setSoundEnabled(soundEnabled);
+                setPhase("game");
+              }}
             />
           )}
+          <NewGameSetupModal
+            open={newGameOpen}
+            onClose={() => setNewGameOpen(false)}
+            onStarted={() => setPhase("game")}
+          />
         </>
       ) : (
         /* ── Phase: Normal game ──────────────────────────── */

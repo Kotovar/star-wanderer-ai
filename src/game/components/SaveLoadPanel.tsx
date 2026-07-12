@@ -9,6 +9,9 @@ import { SHIP_TEMPLATES } from "@/game/constants/shipTemplates";
 
 interface Props {
   onClose: () => void;
+  onGuide: () => void;
+  onTutorial: () => void;
+  onRestart: () => void;
 }
 
 function formatDate(timestamp: number, lang: string): string {
@@ -157,10 +160,14 @@ function SlotCard({
   );
 }
 
-export function SaveLoadPanel({ onClose }: Props) {
+export function SettingsPanel({ onClose, onGuide, onTutorial, onRestart }: Props) {
   const saveToSlot = useGameStore((s) => s.saveToSlot);
   const loadFromSlot = useGameStore((s) => s.loadFromSlot);
-  const { t } = useTranslation();
+  const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
+  const soundEnabled = useGameStore((s) => s.settings.soundEnabled);
+  const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
+  const setSoundEnabled = useGameStore((s) => s.setSoundEnabled);
+  const { t, currentLanguage, changeLanguage } = useTranslation();
 
   const [slots, setSlots] = useState<Record<SaveSlotId, SaveSlotMeta | null>>(
     () => getAllSlotMeta(),
@@ -196,13 +203,13 @@ export function SaveLoadPanel({ onClose }: Props) {
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
       <div
-        className="bg-[rgba(5,8,16,0.98)] border-2 border-[#00d4ff] max-w-sm w-full font-['Share_Tech_Mono']"
+        className="flex max-h-[calc(100dvh-2rem)] w-full max-w-sm flex-col border-2 border-[#00d4ff] bg-[rgba(5,8,16,0.98)] font-['Share_Tech_Mono']"
         style={{ boxShadow: "0 0 40px rgba(0,212,255,0.15)" }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#00d4ff33] bg-[rgba(0,212,255,0.04)]">
           <h2 className="font-['Orbitron'] text-sm font-bold text-[#00d4ff] tracking-widest uppercase">
-            💾 {t("save_load.title")}
+            ☰ {t("save_load.menu_title")}
           </h2>
           <button
             onClick={onClose}
@@ -212,7 +219,56 @@ export function SaveLoadPanel({ onClose }: Props) {
           </button>
         </div>
 
-        <div className="p-4 flex flex-col gap-3">
+        <div className="flex flex-col gap-3 overflow-y-auto p-4">
+          <div className="grid gap-2">
+            <div className="flex items-center justify-between gap-3 border border-[#1a3040] p-3">
+              <span className="text-xs text-[#00d4ff]">{t("start_menu.language")}</span>
+              <div className="grid grid-cols-2 border border-[#33454d]">
+                {(["ru", "en"] as const).map((language) => (
+                  <button
+                    key={language}
+                    type="button"
+                    aria-pressed={currentLanguage === language}
+                    onClick={() => changeLanguage(language)}
+                    className={`px-3 py-1.5 text-[10px] font-bold ${currentLanguage === language ? "bg-[#00d4ff] text-[#050810]" : "text-[#71818a]"}`}
+                  >
+                    {language.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 border border-[#1a3040] p-3">
+              <span className="text-xs text-[#00d4ff]">{t("start_menu.animations")}</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={animationsEnabled}
+                onClick={() => setAnimationsEnabled(!animationsEnabled)}
+                className={`relative h-7 w-13 shrink-0 border ${animationsEnabled ? "border-[#00ff41] bg-[rgba(0,255,65,0.18)]" : "border-[#445] bg-[#111820]"}`}
+              >
+                <span className={`absolute top-1 h-4 w-4 ${animationsEnabled ? "left-7 bg-[#00ff41]" : "left-1 bg-[#556]"}`} />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 border border-[#1a3040] p-3">
+              <span className="text-xs text-[#00d4ff]">{t("start_menu.sound")}</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={soundEnabled}
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                className={`relative h-7 w-13 shrink-0 border ${soundEnabled ? "border-[#00ff41] bg-[rgba(0,255,65,0.18)]" : "border-[#445] bg-[#111820]"}`}
+              >
+                <span className={`absolute top-1 h-4 w-4 ${soundEnabled ? "left-7 bg-[#00ff41]" : "left-1 bg-[#556]"}`} />
+              </button>
+            </div>
+          </div>
+
+          <div className="border-t border-[#00d4ff33] pt-3 text-[9px] uppercase tracking-widest text-[#555]">
+            {t("save_load.title")}
+          </div>
+
           {/* Auto-save slot */}
           <div>
             <div className="text-[9px] text-[#555] uppercase tracking-widest mb-1.5">
@@ -299,6 +355,30 @@ export function SaveLoadPanel({ onClose }: Props) {
           {/* Hint */}
           <div className="text-[10px] text-[#333] border-t border-[#0d1520] pt-2 leading-relaxed">
             {t("save_load.hint")}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={onGuide}
+              className="col-span-2 cursor-pointer border border-[#00d4ff] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#00d4ff] hover:bg-[rgba(0,212,255,0.15)]"
+            >
+              📖 {t("game.logbook")}
+            </button>
+            <button
+              type="button"
+              onClick={onTutorial}
+              className="cursor-pointer border border-[#00d4ff] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#00d4ff] hover:bg-[rgba(0,212,255,0.15)]"
+            >
+              ❓ {t("game.tutorial")}
+            </button>
+            <button
+              type="button"
+              onClick={onRestart}
+              className="cursor-pointer border border-[#ff4444] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#ff4444] hover:bg-[rgba(255,68,68,0.15)]"
+            >
+              🔄 {t("game.restart")}
+            </button>
           </div>
         </div>
       </div>

@@ -1,2 +1,6 @@
-export { playSound, playCustomSound } from "./utils";
+export {
+  playSound,
+  playCustomSound,
+  setSoundPlaybackEnabled,
+} from "./utils";
 export type { SoundType } from "./utils";

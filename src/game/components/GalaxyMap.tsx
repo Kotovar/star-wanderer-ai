@@ -216,7 +216,6 @@ export function GalaxyMap() {
         (s) => s.areFuelTanksFunctional,
     );
     const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
-    const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
     const scanRange = useGameStore((s) => getEffectiveScanRange(s));
 
     useEffect(() => {
@@ -853,17 +852,6 @@ export function GalaxyMap() {
 
             {/* Zoom controls */}
             <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
-                <button
-                    onClick={() => setAnimationsEnabled(!animationsEnabled)}
-                    className="radar-control w-10 h-10 border text-xs font-bold transition-colors flex items-center justify-center cursor-pointer"
-                    title={
-                        animationsEnabled
-                            ? "Выключить анимации"
-                            : "Включить анимации"
-                    }
-                >
-                    {animationsEnabled ? "✨" : "⊘"}
-                </button>
                 <button
                     onClick={handleZoomIn}
                     className="radar-control w-10 h-10 border text-xl font-bold transition-colors flex items-center justify-center cursor-pointer"

@@ -140,6 +140,11 @@ const soundConfigs: Record<SoundType, SoundConfig> = {
 
 // Audio context singleton
 let audioContext: AudioContext | null = null;
+let soundEnabled = true;
+
+export const setSoundPlaybackEnabled = (enabled: boolean): void => {
+  soundEnabled = enabled;
+};
 
 const getAudioContext = (): AudioContext | null => {
   if (typeof window === "undefined") return null;
@@ -168,6 +173,8 @@ const varyFrequency = (freq: number, variance: number = 0.02): number => {
 };
 
 export const playSound = (type: SoundType, volumeMultiplier: number = 1) => {
+  if (!soundEnabled) return;
+
   const ctx = getAudioContext();
   if (!ctx) return;
 
@@ -207,6 +214,8 @@ export const playCustomSound = (
   waveType: OscillatorType = "sine",
   volume: number = 0.15,
 ) => {
+  if (!soundEnabled) return;
+
   const ctx = getAudioContext();
   if (!ctx || frequencies.length === 0) return;
 

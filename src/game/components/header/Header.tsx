@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useGameStore } from "@/game/store";
 import { HelpPanel } from "../panels";
-import { SaveLoadPanel } from "../SaveLoadPanel";
+import { SettingsPanel } from "../SaveLoadPanel";
 import { GLOBAL_CRISES } from "@/game/constants/globalCrises";
 import {
   Dialog,
@@ -19,7 +19,7 @@ import { useTranslation } from "@/lib/useTranslation";
 export function GameHeader() {
   const [showHelp, setShowHelp] = useState(false);
   const [showRestartDialog, setShowRestartDialog] = useState(false);
-  const [showSaveLoad, setShowSaveLoad] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [dismissedCrisisWidgetKey, setDismissedCrisisWidgetKey] = useState<
     string | null
   >(null);
@@ -41,7 +41,7 @@ export function GameHeader() {
   const showCrises = useGameStore((s) => s.showCrises);
   const showSectorMap = useGameStore((s) => s.showSectorMap);
   const gameMode = useGameStore((s) => s.gameMode);
-  const { t, changeLanguage, currentLanguage } = useTranslation();
+  const { t } = useTranslation();
 
   const discoveredArtifacts = artifacts.filter((a) => a.discovered).length;
   const activeArtifacts = artifacts.filter((a) => a.effect.active).length;
@@ -55,7 +55,18 @@ export function GameHeader() {
   const crisisWidgetDismissed = dismissedCrisisWidgetKey === crisisWidgetKey;
 
   const handleRestartClick = () => {
+    setShowSettings(false);
     setShowRestartDialog(true);
+  };
+
+  const handleTutorialClick = () => {
+    setShowSettings(false);
+    window.dispatchEvent(new CustomEvent("sw:showTutorial"));
+  };
+
+  const handleGuideClick = () => {
+    setShowSettings(false);
+    setShowHelp(true);
   };
 
   const handleRestartConfirm = () => {
@@ -191,16 +202,6 @@ export function GameHeader() {
           {/* ── Панели ── */}
           <div className="flex items-center gap-1 md:gap-2">
             <button
-              onClick={() => setShowHelp(true)}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-ring hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
-              title={t("header.tooltip_logbook")}
-            >
-              <span className="text-ring">📖</span>
-              <span className="text-ring hidden md:inline">
-                {t("game.logbook")}
-              </span>
-            </button>
-            <button
               onClick={handleEffectsClick}
               className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer relative"
               title={t("header.tooltip_effects")}
@@ -277,47 +278,13 @@ export function GameHeader() {
           {/* ── Система ── */}
           <div className="flex items-center gap-1 md:gap-2">
             <button
-              onClick={() =>
-                window.dispatchEvent(new CustomEvent("sw:showTutorial"))
-              }
+              onClick={() => setShowSettings(true)}
               className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-ring hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
-              title={t("header.tooltip_tutorial")}
+              title={t("save_load.menu_title")}
             >
-              <span className="text-ring">❓</span>
+              <span className="text-ring">☰</span>
               <span className="text-ring hidden md:inline text-xs">
-                {t("game.tutorial")}
-              </span>
-            </button>
-            <button
-              onClick={() => setShowSaveLoad(true)}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-ring hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
-              title={t("save_load.title")}
-            >
-              <span className="text-ring">💾</span>
-              <span className="text-ring hidden md:inline text-xs">
-                {t("save_load.title")}
-              </span>
-            </button>
-            <button
-              onClick={handleRestartClick}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#ff4444] hover:bg-[rgba(255,68,68,0.2)] transition-colors cursor-pointer"
-              title={t("header.tooltip_restart")}
-            >
-              <span className="text-[#ff4444]">🔄</span>
-              <span className="text-[#ff4444] hidden md:inline">
-                {t("game.restart")}
-              </span>
-            </button>
-            <button
-              onClick={() =>
-                changeLanguage(currentLanguage === "ru" ? "en" : "ru")
-              }
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00ff41] hover:bg-[rgba(0,255,65,0.2)] transition-colors cursor-pointer font-bold"
-              title={t("language.switch")}
-            >
-              <span className="text-[#00ff41]">🌐</span>
-              <span className="text-[#00ff41]">
-                {currentLanguage === "ru" ? t("language.ru") : t("language.en")}
+                {t("save_load.menu_title")}
               </span>
             </button>
           </div>
@@ -395,7 +362,14 @@ export function GameHeader() {
       ) : null}
 
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
-      {showSaveLoad && <SaveLoadPanel onClose={() => setShowSaveLoad(false)} />}
+      {showSettings && (
+        <SettingsPanel
+          onClose={() => setShowSettings(false)}
+          onGuide={handleGuideClick}
+          onTutorial={handleTutorialClick}
+          onRestart={handleRestartClick}
+        />
+      )}
       <Dialog open={showRestartDialog} onOpenChange={setShowRestartDialog}>
         <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ff4444] text-[#00ff41] max-w-md">
           <DialogHeader>

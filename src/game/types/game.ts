@@ -122,6 +122,7 @@ export interface GameState {
   activeDive: DiveState | null; // Active gas giant dive
   settings: {
     animationsEnabled: boolean; // Sector map animations toggle
+    soundEnabled: boolean;
   };
   // Map zoom state (persisted between map switches)
   galaxyZoom: number; // Galaxy map zoom level (default 1)
@@ -160,6 +161,7 @@ export interface GameActions {
   refuel: (amount: number, price: number) => void;
   gainExp: (crewMember: CrewMember | undefined, amount: number) => void;
   setAnimationsEnabled: (enabled: boolean) => void;
+  setSoundEnabled: (enabled: boolean) => void;
   setGalaxyZoom: (zoom: number) => void;
   setSectorZoom: (zoom: number) => void;
   setGalaxyOffset: (offset: { x: number; y: number }) => void;

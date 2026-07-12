@@ -70,7 +70,6 @@ export function SectorMap() {
     s.crew.some((c) => c.traits?.some((t) => t.effect?.seeHostility)),
   );
   const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
-  const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
   const { t } = useTranslation();
 
   const [hoveredLocation, setHoveredLocation] = useState<{
@@ -1306,17 +1305,6 @@ export function SectorMap() {
 
       {/* Zoom controls */}
       <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
-        <button
-          onClick={() => setAnimationsEnabled(!animationsEnabled)}
-          className="radar-control w-10 h-10 border text-xs font-bold transition-colors flex items-center justify-center cursor-pointer"
-          title={
-            animationsEnabled
-              ? t("sector_map_ui.animations_off")
-              : t("sector_map_ui.animations_on")
-          }
-        >
-          {animationsEnabled ? "✨" : "⊘"}
-        </button>
         <button
           onClick={handleZoomIn}
           className="radar-control w-10 h-10 border text-xl font-bold transition-colors flex items-center justify-center cursor-pointer"
