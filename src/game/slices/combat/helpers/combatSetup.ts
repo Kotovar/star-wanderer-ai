@@ -199,13 +199,17 @@ export const calculateShieldsFromModules = (modules: EnemyModule[]) => {
  * Calculates combat loot based on threat level and enemy type
  * Includes random variation: ±20%
  */
-export const calculateCombatLoot = (threat: number, enemyType?: EnemyShip) => {
+export const calculateCombatLoot = (
+    threat: number,
+    enemyType?: EnemyShip,
+    roll = Math.random(),
+) => {
     const modifiers = enemyType
         ? ENEMY_TYPE_MODIFIERS[enemyType]
         : { lootMod: 1.0 };
 
     const baseLoot = threat * LOOT_BASE_THREAT;
-    const variation = LOOT_VARIATION_MIN + Math.random() * LOOT_VARIATION_RANGE;
+    const variation = LOOT_VARIATION_MIN + roll * LOOT_VARIATION_RANGE;
     return Math.floor(baseLoot * variation * modifiers.lootMod);
 };
 

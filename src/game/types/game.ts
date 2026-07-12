@@ -102,6 +102,7 @@ export interface GameState {
     Record<string, { buy: number; sell: number }>
   >;
   stationStock: Record<string, Record<string, number>>;
+  emergencyFuelStationIds: string[];
   friendlyShipStock: Record<string, Record<string, number>>; // Stock on friendly ships
   currentCombat: CombatState | null;
   log: LogEntry[];

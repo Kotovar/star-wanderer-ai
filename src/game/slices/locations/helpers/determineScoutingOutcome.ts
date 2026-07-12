@@ -2,6 +2,7 @@ import { SCOUTING_PROBABILITIES, SCOUTING_CREDIT_REWARD } from "../constants";
 import { TRADE_GOODS } from "@/game/constants";
 import { typedKeys } from "@/lib/utils";
 import type { ScoutingOutcome } from "@/game/types";
+import { scaleScoutingReward } from "@/game/progression/incomeBalance";
 
 /**
  * Определяет результат разведки на основе случайного числа
@@ -11,9 +12,10 @@ import type { ScoutingOutcome } from "@/game/types";
  */
 export const determineScoutingOutcome = (
     randomValue: number,
+    tier = 1,
 ): ScoutingOutcome => {
     if (randomValue < SCOUTING_PROBABILITIES.CREDITS) {
-        return generateCreditReward();
+        return generateCreditReward(tier);
     } else if (
         randomValue <
         SCOUTING_PROBABILITIES.CREDITS + SCOUTING_PROBABILITIES.TRADE_GOOD
@@ -29,11 +31,14 @@ export const determineScoutingOutcome = (
  *
  * @returns Объект с результатом разведки (кредиты)
  */
-const generateCreditReward = (): ScoutingOutcome => {
-    const reward = Math.floor(
-        SCOUTING_CREDIT_REWARD.MIN +
-            Math.random() *
-                (SCOUTING_CREDIT_REWARD.MAX - SCOUTING_CREDIT_REWARD.MIN),
+const generateCreditReward = (tier: number): ScoutingOutcome => {
+    const reward = scaleScoutingReward(
+        Math.floor(
+            SCOUTING_CREDIT_REWARD.MIN +
+                Math.random() *
+                    (SCOUTING_CREDIT_REWARD.MAX - SCOUTING_CREDIT_REWARD.MIN),
+        ),
+        tier,
     );
     return {
         type: "credits",

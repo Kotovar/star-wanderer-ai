@@ -1,0 +1,15 @@
+export const CONTRACT_REWARDS = {
+  human: { base: [500, 800, 1300], range: [200, 300, 400] },
+  synthetic: { base: [1400, 1800, 2200], range: [400, 500, 600] },
+  xenosymbiont: { base: [500, 700, 1000], range: [200, 300, 400] },
+  krylorian: { base: [2000, 3000, 4000], range: [200, 1000, 2200] },
+  voidborn: { base: [700, 1000, 1400], range: [400, 400, 400] },
+  crystalline: { base: [800, 1300, 1800], range: [600, 700, 800] },
+  scan_planet: { base: [400, 600, 800], range: [200, 200, 200] },
+  research: { base: [500, 800, 1200], range: [300, 400, 600] },
+  combat: { base: 600, range: 300 },
+  bounty: { threatMult: 300, baseFlat: 300 },
+  delivery: { base: [200, 400, 700], range: [200, 300, 400] },
+  gas_dive: { base: [600, 1000, 1500], range: [200, 300, 500] },
+  expedition_survey: { base: [700, 1100, 1700], range: [300, 400, 500] },
+} as const;

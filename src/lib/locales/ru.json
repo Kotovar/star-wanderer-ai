@@ -1349,6 +1349,8 @@
     }
   },
   "services": {
+    "emergency_fuel": "Аварийный запас +{{amount}}",
+    "emergency_fuel_log": "Станция выдала аварийный запас: +{{amount}} топлива",
     "tab_title": "УСЛУГИ",
     "refuel_title": "⛽ Заправка топливом",
     "refuel_fuel_label": "Топливо: {{fuel}}/{{maxFuel}}",

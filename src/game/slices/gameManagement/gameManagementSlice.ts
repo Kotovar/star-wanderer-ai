@@ -69,6 +69,7 @@ export const createGameManagementSlice = (
             saved.scheduledRandomEventConsequence = null;
         }
         saved.startModifierIds ??= [];
+        saved.emergencyFuelStationIds ??= [];
 
         // Синхронизация трейтов экипажа
         const allTraits = Object.values(CREW_TRAITS).flat();
@@ -123,6 +124,7 @@ export const createGameManagementSlice = (
             saved.scheduledRandomEventConsequence = null;
         }
         saved.startModifierIds ??= [];
+        saved.emergencyFuelStationIds ??= [];
 
         // Синхронизация трейтов
         const allTraits = Object.values(CREW_TRAITS).flat();

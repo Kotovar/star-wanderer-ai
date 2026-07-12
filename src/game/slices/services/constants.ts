@@ -12,6 +12,8 @@ export const REPAIR_CONFIG = {
     pricePerHp: 0.9,
 } as const;
 
+export const FUEL_PRICE_PER_UNIT = 3;
+
 /**
  * Стоимость лечения одной мутации на медицинской станции
  * Требуется технология "Ксенобиология"

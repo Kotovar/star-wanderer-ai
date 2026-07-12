@@ -45,7 +45,10 @@ export const sendScoutingMission = (
 
     // Instant scouting - resolve immediately (takes 1 turn)
     const outcome = Math.random();
-    const result = determineScoutingOutcome(outcome);
+    const result = determineScoutingOutcome(
+        outcome,
+        state.currentSector?.tier ?? 1,
+    );
 
     // Pre-compute trade good quantity so it's available for both apply and lastScoutResult
     if (result.type === "tradeGood") {

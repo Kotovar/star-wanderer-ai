@@ -62,6 +62,8 @@ interface ServicesTabProps {
     fuelPricePerUnit: number;
     fullRefuelPrice: number;
     refuel: (amount: number, price: number) => void;
+    emergencyFuelAmount: number;
+    onClaimEmergencyFuel: () => void;
     repairShip: () => void;
     healCrew: () => void;
     scrapModule: (moduleId: number) => void;
@@ -123,6 +125,8 @@ export function ServicesTab({
     fuelPricePerUnit,
     fullRefuelPrice,
     refuel,
+    emergencyFuelAmount,
+    onClaimEmergencyFuel,
     repairShip,
     healCrew,
     scrapModule,
@@ -163,6 +167,8 @@ export function ServicesTab({
                 fullRefuelPrice={fullRefuelPrice}
                 credits={credits}
                 onRefuel={refuel}
+                emergencyFuelAmount={emergencyFuelAmount}
+                onClaimEmergencyFuel={onClaimEmergencyFuel}
             />
 
             <ProbeSection
@@ -272,6 +278,8 @@ function RefuelSection({
     fullRefuelPrice,
     credits,
     onRefuel,
+    emergencyFuelAmount,
+    onClaimEmergencyFuel,
 }: {
     fuel: number;
     maxFuel: number;
@@ -280,6 +288,8 @@ function RefuelSection({
     fullRefuelPrice: number;
     credits: number;
     onRefuel: (amount: number, price: number) => void;
+    emergencyFuelAmount: number;
+    onClaimEmergencyFuel: () => void;
 }) {
     const { t } = useTranslation();
 
@@ -322,6 +332,16 @@ function RefuelSection({
                     disabled={fuelNeeded <= 0 || credits < fullRefuelPrice}
                     onRefuel={onRefuel}
                 />
+                {emergencyFuelAmount > 0 && (
+                    <Button
+                        onClick={onClaimEmergencyFuel}
+                        className="cursor-pointer border-2 border-[#ffb000] bg-transparent text-xs uppercase text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
+                    >
+                        {t("services.emergency_fuel", {
+                            amount: emergencyFuelAmount,
+                        })}
+                    </Button>
+                )}
             </div>
         </div>
     );

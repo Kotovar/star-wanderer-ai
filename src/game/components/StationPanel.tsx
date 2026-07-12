@@ -4,7 +4,10 @@ import { useState, useEffect, useMemo } from "react";
 import { useGameStore } from "../store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RACES } from "../constants/races";
-import { MUTATION_CURE_PRICE } from "../slices/services/constants";
+import {
+    FUEL_PRICE_PER_UNIT,
+    MUTATION_CURE_PRICE,
+} from "../slices/services/constants";
 import type {
     RaceId,
     Contract,
@@ -33,6 +36,8 @@ import {
     getReputationLevel,
 } from "../types/reputation";
 import { RaceSprite } from "./RaceSprite";
+import { getEmergencyFuelAmount } from "@/game/progression/emergencyFuel";
+import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
 
 // Re-export these from the original file - they contain complex logic
 export {
@@ -96,6 +101,9 @@ export function StationPanel() {
     const discoverRace = useGameStore((s) => s.discoverRace);
     const knownRaces = useGameStore((s) => s.knownRaces);
     const bannedPlanets = useGameStore((s) => s.bannedPlanets);
+    const emergencyFuelStationIds = useGameStore(
+        (s) => s.emergencyFuelStationIds,
+    );
     const sendDiplomaticGift = useGameStore((s) => s.sendDiplomaticGift);
     const removePlanetBan = useGameStore((s) => s.removePlanetBan);
     const activeContracts = useGameStore((s) => s.activeContracts);
@@ -205,8 +213,42 @@ export function StationPanel() {
     const fuel = ship.fuel;
     const maxFuel = ship.maxFuel;
     const fuelNeeded = maxFuel - fuel;
-    const fuelPricePerUnit = 2;
+    const fuelPricePerUnit = FUEL_PRICE_PER_UNIT;
     const fullRefuelPrice = fuelNeeded * fuelPricePerUnit;
+    const state = useGameStore.getState();
+    const minimumJumpCost = Math.min(
+        ...state.galaxy.sectors
+            .filter((sector) => sector.id !== currentSector?.id)
+            .map((sector) => calculateFuelCostForUI(state, sector.id).fuelCost),
+    );
+    const emergencyFuelAmount = getEmergencyFuelAmount(
+        fuel,
+        maxFuel,
+        credits,
+        minimumJumpCost,
+        stationId,
+        emergencyFuelStationIds,
+        FUEL_PRICE_PER_UNIT,
+    );
+
+    const claimEmergencyFuel = () => {
+        if (emergencyFuelAmount <= 0) return;
+        useGameStore.setState((draft) => ({
+            ship: {
+                ...draft.ship,
+                fuel: Math.min(
+                    draft.ship.maxFuel,
+                    draft.ship.fuel + emergencyFuelAmount,
+                ),
+            },
+            emergencyFuelStationIds: [
+                ...draft.emergencyFuelStationIds,
+                stationId,
+            ],
+        }));
+        addLog(t("services.emergency_fuel_log", { amount: emergencyFuelAmount }), "info");
+        useGameStore.getState().saveGame();
+    };
 
     if (!currentLocation) return null;
 
@@ -369,6 +411,8 @@ export function StationPanel() {
                         fuelPricePerUnit={fuelPricePerUnit}
                         fullRefuelPrice={fullRefuelPrice}
                         refuel={refuel}
+                        emergencyFuelAmount={emergencyFuelAmount}
+                        onClaimEmergencyFuel={claimEmergencyFuel}
                         repairShip={repairShip}
                         healCrew={healCrew}
                         scrapModule={scrapModule}

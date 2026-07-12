@@ -1349,6 +1349,8 @@
     }
   },
   "services": {
+    "emergency_fuel": "Emergency reserve +{{amount}}",
+    "emergency_fuel_log": "The station issued an emergency reserve: +{{amount}} fuel",
     "tab_title": "SERVICES",
     "refuel_title": "⛽ Refuel",
     "refuel_fuel_label": "Fuel: {{fuel}}/{{maxFuel}}",

@@ -176,6 +176,7 @@ const baseState: GameState = {
   stationInventory: {},
   stationPrices: prices,
   stationStock: stock,
+  emergencyFuelStationIds: [],
   friendlyShipStock: {},
   currentCombat: null,
   log: [],
