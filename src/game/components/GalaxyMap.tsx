@@ -579,6 +579,7 @@ export function GalaxyMap() {
     // Handle wheel zoom
     const handleWheel = useCallback(
         (e: React.WheelEvent<HTMLCanvasElement>) => {
+            e.preventDefault();
             e.stopPropagation();
             const delta = -e.deltaY * ZOOM_SENSITIVITY;
             const newZoom = Math.min(

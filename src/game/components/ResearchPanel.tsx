@@ -402,13 +402,14 @@ function PanZoomCanvas({ children }: { children: React.ReactNode }) {
   }, []);
 
   const onWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
     const factor = e.deltaY > 0 ? 0.9 : 1.1;
     setZoom((z) => Math.max(0.25, Math.min(2, z * factor)));
   }, []);
 
   return (
     <div
-      className="flex-1 overflow-hidden min-h-0 bg-[#030608] cursor-grab active:cursor-grabbing"
+      className="h-[60dvh] flex-none overflow-hidden min-h-80 bg-[#030608] cursor-grab active:cursor-grabbing lg:h-auto lg:flex-1 lg:min-h-0"
       style={{ userSelect: "none", touchAction: "none" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -1054,7 +1055,7 @@ export function ResearchPanel() {
     : null;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col min-h-full lg:h-full lg:overflow-hidden">
       {/* ── Header ── */}
       <div className="shrink-0 p-2 border-b border-[#1a1a1a] space-y-2">
         <div className="flex items-start justify-between gap-3 border-b border-[#9933ff44] pb-2">

@@ -224,7 +224,7 @@ export default function Home() {
   // ── Render ──────────────────────────────────────────────────────
   return (
     <div
-      className="cockpit-shell h-dvh lg:h-auto lg:min-h-screen flex flex-col bg-[#050810] font-['Share_Tech_Mono'] text-[#00ff41]"
+      className="cockpit-shell h-dvh flex flex-col overflow-hidden bg-[#050810] font-['Share_Tech_Mono'] text-[#00ff41]"
       data-animations={animationsEnabled ? "on" : "off"}
     >
       {/* Scanline overlay (always on top) */}
@@ -300,7 +300,7 @@ export default function Home() {
             {/* Сцена событий (карта/бой) — десктоп: справа; мобильный: полный экран когда showEventStage */}
             {(!isMobile || showEventStage) && (
               <div className="panel cockpit-panel cockpit-panel--stage flex flex-col min-w-0 flex-1 lg:h-[calc(100vh-100px)] rounded-lg p-2 overflow-hidden min-h-0">
-                <div className="flex-1 overflow-hidden min-h-0">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden lg:overflow-hidden min-h-0">
                   <EventDisplay />
                 </div>
               </div>

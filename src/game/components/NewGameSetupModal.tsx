@@ -406,7 +406,7 @@ export function NewGameSetupModal({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="bg-[rgba(5,8,16,0.98)] border-2 border-[#00ff41] text-[#00ff41] w-[calc(100vw-1rem)] min-[900px]:w-[calc(100vw-2rem)] min-[1280px]:w-[min(1280px,calc(100vw-2rem))] max-w-none! max-h-[92vh] overflow-hidden p-0 gap-0 grid-rows-[auto_minmax(0,1fr)_auto]"
+        className="bg-[rgba(5,8,16,0.98)] border-2 border-[#00ff41] text-[#00ff41] w-[calc(100vw-1rem)] min-[900px]:w-[calc(100vw-2rem)] min-[1280px]:w-[min(1280px,calc(100vw-2rem))] max-w-none! max-h-[calc(100dvh-1rem)] overflow-hidden p-0 gap-0 grid-rows-[auto_minmax(0,1fr)_auto]"
         showCloseButton={!required}
       >
         <DialogHeader className="min-w-0 px-4 pt-4 pb-3 sm:px-5 border-b border-[rgba(0,255,65,0.2)]">
@@ -654,7 +654,7 @@ export function NewGameSetupModal({
           </div>
         </div>
 
-        <footer className="min-w-0 border-t border-[rgba(0,255,65,0.2)] bg-[rgba(5,8,16,0.98)] px-3 py-3 sm:px-5">
+        <footer className="min-w-0 border-t border-[rgba(0,255,65,0.2)] bg-[rgba(5,8,16,0.98)] px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0 text-xs">
               <div className="flex flex-wrap items-center gap-2">

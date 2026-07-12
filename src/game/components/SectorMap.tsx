@@ -45,6 +45,9 @@ const PLANET_SPRITE_SHEET = "/assets/plantes/planets.png";
 const GAS_PLANET_SPRITE_SHEET = "/assets/plantes/gas-planets.png";
 const STATION_SPRITE_SHEET = "/assets/stations.png";
 
+const getSectorMapRadius = (width: number, height: number) =>
+  Math.min(width, height) * (width < 768 ? 0.7 : 0.45);
+
 type SectorSpriteImages = {
   planets?: HTMLImageElement;
   gasPlanets?: HTMLImageElement;
@@ -169,7 +172,7 @@ export function SectorMap() {
     const { width, height } = canvasSizeRef.current;
     const centerX = width / 2;
     const centerY = height / 2;
-    const baseMaxRadius = Math.min(width, height) * 0.45;
+    const baseMaxRadius = getSectorMapRadius(width, height);
 
     // Draw cached background (stars) - no transform
     if (bgCanvasRef.current) {
@@ -685,6 +688,7 @@ export function SectorMap() {
   // Handle wheel zoom
   const handleWheel = useCallback(
     (e: React.WheelEvent<HTMLCanvasElement>) => {
+      e.preventDefault();
       e.stopPropagation();
       const delta = -e.deltaY * ZOOM_SENSITIVITY;
       const newZoom = Math.min(
@@ -816,8 +820,10 @@ export function SectorMap() {
         loc: (typeof currentSector.locations)[0],
       ) => {
         const distanceRatio = loc.distanceRatio ?? 0.5;
-        const baseMaxRadius =
-          Math.min(canvasSizeRef.current.width, canvasSizeRef.current.height) * 0.45;
+        const baseMaxRadius = getSectorMapRadius(
+          canvasSizeRef.current.width,
+          canvasSizeRef.current.height,
+        );
         const distance = baseMaxRadius * distanceRatio;
         const angle = loc.angle ?? 0;
         const x = centerX + Math.cos(angle) * distance;
@@ -1042,9 +1048,10 @@ export function SectorMap() {
             const cur = offsetRef.current;
             const worldX = (mx - centerX - cur.x) / zoom + centerX;
             const worldY = (my - centerY - cur.y) / zoom + centerY;
-            const baseMaxRadius =
-              Math.min(canvasSizeRef.current.width, canvasSizeRef.current.height) *
-              0.45;
+            const baseMaxRadius = getSectorMapRadius(
+              canvasSizeRef.current.width,
+              canvasSizeRef.current.height,
+            );
             let foundLoc: typeof currentSector.locations[0] | null = null;
             for (const loc of currentSector.locations) {
               const distance = baseMaxRadius * (loc.distanceRatio ?? 0.5);
@@ -1181,7 +1188,10 @@ export function SectorMap() {
     }
 
     // Helper function to compute location position
-    const baseMaxRadius = Math.min(canvasSizeRef.current.width, canvasSizeRef.current.height) * 0.45;
+    const baseMaxRadius = getSectorMapRadius(
+      canvasSizeRef.current.width,
+      canvasSizeRef.current.height,
+    );
     const computeLocationPosition = (
       loc: (typeof currentSector.locations)[0],
     ) => {
