@@ -16,6 +16,13 @@
     "subtitle": "A SPACE ADVENTURE",
     "flavor": "The void between stars holds both danger and opportunity. Choose your ship wisely, Captain — the galaxy awaits."
   },
+  "mobile_nav": {
+    "map": "MAP",
+    "ship": "SHIP",
+    "crew": "CREW",
+    "cargo": "CARGO",
+    "more": "MORE"
+  },
   "ship": {
     "title": "SHIP",
     "locked": "🔒",

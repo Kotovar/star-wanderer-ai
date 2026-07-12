@@ -437,13 +437,8 @@ export function SectorMap() {
     if (!canvas || !container || !animCanvas || !currentSector) return;
 
     const rect = container.getBoundingClientRect();
-    const newWidth = Math.round(Math.max(rect.width, 500));
-    // Mobile: use aspect ratio for compact display
-    // Desktop: use square canvas to prevent circle distortion
-    const isMobile = rect.width < 768;
-    const newHeight = isMobile
-      ? Math.round(Math.max(rect.width * 0.65, 350))
-      : newWidth;
+    const newWidth = Math.round(rect.width);
+    const newHeight = Math.round(rect.height);
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -1235,11 +1230,11 @@ export function SectorMap() {
     >
       {/* First-visit navigation hint */}
       {!hintDismissed && (
-        <div className="absolute top-2 left-2 right-2 bg-[rgba(0,212,255,0.08)] border border-[#00d4ff] px-3 py-2 text-xs text-[#00d4ff] z-20 flex items-center justify-between gap-2">
+        <div className="absolute top-2 left-2 right-2 bg-[rgba(0,212,255,0.08)] border border-ring px-3 py-2 text-xs text-ring z-20 flex items-center justify-between gap-2">
           <span>💡 {t("sector_map_ui.hint")}</span>
           <button
             onClick={dismissHint}
-            className="text-[#00d4ff] hover:text-white cursor-pointer shrink-0 opacity-70 hover:opacity-100 transition-opacity"
+            className="text-ring hover:text-white cursor-pointer shrink-0 opacity-70 hover:opacity-100 transition-opacity"
             title={t("effects.close")}
           >
             ✕
@@ -1249,7 +1244,7 @@ export function SectorMap() {
 
       {/* Current sector indicator */}
       <div
-        className={`absolute left-2 bg-[rgba(255,176,0,0.15)] border-2 border-[#ffb000] px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm font-['Orbitron'] font-bold text-[#ffb000] z-20 shadow-[0_0_15px_rgba(255,176,0,0.3)] ${!hintDismissed ? "top-12" : "top-2"}`}
+        className={`absolute left-2 bg-[rgba(255,176,0,0.15)] border-2 border-accent px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm font-['Orbitron'] font-bold text-accent z-20 shadow-[0_0_15px_rgba(255,176,0,0.3)] ${!hintDismissed ? "top-12" : "top-2"}`}
       >
         <span className="text-[10px] md:text-xs opacity-70 mr-1">
           {t("game.sector")}:
@@ -1385,9 +1380,9 @@ export function SectorMap() {
       {/* Star info panel */}
       {starInfoOpen && currentSector?.star && (
         <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-          <div className="pointer-events-auto bg-[#080d18] border-2 border-[#00d4ff] max-w-sm w-full mx-4 font-['Share_Tech_Mono'] shadow-[0_0_40px_rgba(0,212,255,0.2)]">
+          <div className="pointer-events-auto bg-[#080d18] border-2 border-ring max-w-sm w-full mx-4 font-['Share_Tech_Mono'] shadow-[0_0_40px_rgba(0,212,255,0.2)]">
             {/* Header */}
-            <div className="flex justify-between items-center px-4 py-3 border-b border-[#00d4ff] bg-[rgba(0,212,255,0.04)]">
+            <div className="flex justify-between items-center px-4 py-3 border-b border-ring bg-[rgba(0,212,255,0.04)]">
               <div className="flex items-center gap-2">
                 <span className="text-xl">
                   {(t(
@@ -1395,7 +1390,7 @@ export function SectorMap() {
                   ) as string) || "★"}
                 </span>
                 <div>
-                  <div className="font-['Orbitron'] text-sm font-bold text-[#00d4ff]">
+                  <div className="font-['Orbitron'] text-sm font-bold text-ring">
                     {t(
                       `star_types.${currentSector.star.type}`,
                     )}
@@ -1407,7 +1402,7 @@ export function SectorMap() {
               </div>
               <button
                 onClick={() => setStarInfoOpen(false)}
-                className="text-[#00d4ff] hover:text-white cursor-pointer opacity-70 hover:opacity-100 transition-opacity px-1"
+                className="text-ring hover:text-white cursor-pointer opacity-70 hover:opacity-100 transition-opacity px-1"
               >
                 ✕
               </button>
@@ -1481,7 +1476,7 @@ export function SectorMap() {
               key={i}
               className={
                 line.startsWith("★")
-                  ? "text-[#ffb000]"
+                  ? "text-accent"
                   : "text-[#00ff41]"
               }
             >

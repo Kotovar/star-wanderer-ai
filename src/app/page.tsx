@@ -40,6 +40,7 @@ const NewGameSetupModal = dynamic(
 import { TitleScreen } from "@/game/components/TitleScreen";
 import { useTranslation } from "@/lib/useTranslation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useIsMobile } from "@/game/hooks/useIsMobile";
 
 type LeftTab =
   | "ship"
@@ -53,6 +54,19 @@ type LeftTab =
   | "log";
 
 type ShipSubTab = "layout" | "stats" | "modules";
+
+/**
+ * gameMode, при которых на мобильном принудительно показываем сцену событий,
+ * даже если игрок на вкладке управления. Это глобальные оверлеи из шапки
+ * (технологии/эффекты/артефакты/кризисы/отношения), которые живут в EventDisplay.
+ */
+const GLOBAL_OVERLAY_MODES = new Set([
+  "artifacts",
+  "effects",
+  "research",
+  "reputation",
+  "crises",
+]);
 
 /**
  * Flow state machine:
@@ -81,6 +95,25 @@ export default function Home() {
   const [showTutorial, setShowTutorial] = useState(false);
   // Скрываем окно создания игры, пока проигрывается интро-анимация титульного экрана
   const [setupReady, setSetupReady] = useState(false);
+
+  // ── Мобильная навигация: одно полноэкранное представление за раз ──
+  const isMobile = useIsMobile();
+  const [mobileShowMap, setMobileShowMap] = useState(true);
+  const [moreOpen, setMoreOpen] = useState(false);
+  // «К карте» из любой панели переводит gameMode в режим карты — тогда показываем карту
+  // (корректировка стейта при изменении значения, без эффекта).
+  const [lastGameMode, setLastGameMode] = useState(gameMode);
+  if (gameMode !== lastGameMode) {
+    setLastGameMode(gameMode);
+    if (gameMode === "sector_map" || gameMode === "galaxy_map") {
+      setMobileShowMap(true);
+    }
+  }
+  // Во время боя или глобального оверлея на мобильном принудительно показываем сцену
+  const inCombat = useGameStore((s) => !!s.currentCombat);
+  const showEventStage =
+    mobileShowMap ||
+    (isMobile && (inCombat || GLOBAL_OVERLAY_MODES.has(gameMode)));
 
   // Legacy tab compatibility: if a saved state somehow points to merged tabs,
   // render them as the ship tab with the correct sub-tab.
@@ -158,10 +191,40 @@ export default function Home() {
     { id: "log", icon: "📜", label: t("ship.event_log") },
   ];
 
+  // ── Содержимое вкладок управления (переиспользуется десктопом и мобильным) ──
+  const renderManagementContent = () => (
+    <>
+      {effectiveActiveTab === "ship" && (
+        <Tabs value={effectiveShipSubTab} onValueChange={(v) => setShipSubTab(v as ShipSubTab)} className="h-full flex flex-col">
+          <TabsList className="grid grid-cols-3 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] rounded-none h-8 shrink-0">
+            <TabsTrigger value="layout" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_layout")}</TabsTrigger>
+            <TabsTrigger value="stats" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_stats")}</TabsTrigger>
+            <TabsTrigger value="modules" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_modules")}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="layout" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ShipGrid /></TabsContent>
+          <TabsContent value="stats" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ShipStats /></TabsContent>
+          <TabsContent value="modules" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ModuleList /></TabsContent>
+        </Tabs>
+      )}
+      {effectiveActiveTab === "crew" && <div className="tab-transition"><CrewList /></div>}
+      {effectiveActiveTab === "cargo" && <div className="tab-transition"><CargoDisplay /></div>}
+      {effectiveActiveTab === "contracts" && (
+        <div className="tab-transition"><ContractsList /></div>
+      )}
+      {effectiveActiveTab === "progress" && (
+        <div className="tab-transition"><CampaignProgressPanel /></div>
+      )}
+      {effectiveActiveTab === "blueprints" && (
+        <div className="tab-transition"><BlueprintsTab /></div>
+      )}
+      {effectiveActiveTab === "log" && <div className="tab-transition"><GameLog /></div>}
+    </>
+  );
+
   // ── Render ──────────────────────────────────────────────────────
   return (
     <div
-      className="cockpit-shell min-h-screen flex flex-col bg-[#050810] font-['Share_Tech_Mono'] text-[#00ff41]"
+      className="cockpit-shell h-dvh lg:h-auto lg:min-h-screen flex flex-col bg-[#050810] font-['Share_Tech_Mono'] text-[#00ff41]"
       data-animations={animationsEnabled ? "on" : "off"}
     >
       {/* Scanline overlay (always on top) */}
@@ -194,93 +257,82 @@ export default function Home() {
         <>
           <GameHeader />
 
-          <main className="cockpit-layout flex-1 flex flex-col lg:flex-row lg:overflow-hidden max-w-full min-w-0 px-2 lg:px-4 py-4 gap-4 lg:min-h-0">
-            {/* Left Panel */}
-            <div className="panel cockpit-panel cockpit-panel--controls lg:flex-1 flex flex-col min-w-0 lg:h-[calc(100vh-100px)] rounded-lg overflow-hidden lg:min-h-0">
-              <div className="cockpit-tabs flex shrink-0 border-b border-[#00ff4155]">
-                {leftTabs.map((tab, idx) => {
-                  const isActive = activeTab === tab.id;
-                  const hasAlert =
-                    tab.id === "ship" &&
-                    moduleMovedThisTurn;
-                  return (
+          <main className="flex-1 flex flex-col min-h-0 lg:flex-row lg:overflow-hidden max-w-full min-w-0 px-2 lg:px-4 py-4 gap-4">
+            {/* Панель управления — десктоп: слева; мобильный: полный экран когда !showEventStage */}
+            {(!isMobile || !showEventStage) && (
+              <div className="panel cockpit-panel cockpit-panel--controls flex flex-col min-w-0 flex-1 lg:h-[calc(100vh-100px)] rounded-lg overflow-hidden min-h-0">
+                {/* Верхний таб-бар — только десктоп (на мобильном его заменяет нижняя навигация) */}
+                <div className="cockpit-tabs hidden lg:flex shrink-0 border-b border-[#00ff4155]">
+                  {leftTabs.map((tab, idx) => {
+                    const isActive = activeTab === tab.id;
+                    const hasAlert =
+                      tab.id === "ship" &&
+                      moduleMovedThisTurn;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        title={tab.label}
+                        className={`relative flex-1 flex flex-col items-center justify-center py-2.5 min-h-11 gap-0.5 text-[10px] font-['Orbitron'] font-bold transition-all duration-150 cursor-pointer select-none
+                                                ${idx < leftTabs.length - 1 ? "border-r border-[#1a3320]" : ""}
+                                                ${isActive ? "text-accent bg-[rgba(255,176,0,0.1)]" : "text-[#445544] hover:text-[#00ff41] hover:bg-[rgba(0,255,65,0.05)]"}`}
+                        style={isActive ? { boxShadow: "inset 0 -2px 0 #ffb000" } : {}}
+                      >
+                        {isActive && (
+                          <div className="absolute top-0 left-0 right-0 h-0.5 bg-accent opacity-50" />
+                        )}
+                        <span className="text-sm leading-none">{tab.icon}</span>
+                        <span className="hidden sm:block truncate w-full text-center px-0.5 leading-tight">{tab.label}</span>
+                        {hasAlert && (
+                          <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-destructive" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-2 scrollbar-gutter-stable min-h-0">
+                  {renderManagementContent()}
+                </div>
+              </div>
+            )}
+
+            {/* Сцена событий (карта/бой) — десктоп: справа; мобильный: полный экран когда showEventStage */}
+            {(!isMobile || showEventStage) && (
+              <div className="panel cockpit-panel cockpit-panel--stage flex flex-col min-w-0 flex-1 lg:h-[calc(100vh-100px)] rounded-lg p-2 overflow-hidden min-h-0">
+                <div className="flex-1 overflow-hidden min-h-0">
+                  <EventDisplay />
+                </div>
+              </div>
+            )}
+          </main>
+
+          {/* ── Мобильная нижняя навигация ── */}
+          {isMobile && (
+            <nav className="relative shrink-0 z-30 border-t border-[#00ff4155] bg-[rgba(1,8,12,0.97)] backdrop-blur-sm pb-[env(safe-area-inset-bottom)]">
+              {moreOpen && (
+                <div className="grid grid-cols-4 gap-1 p-2 border-b border-[#00ff4155]">
+                  {leftTabs.filter((tab) => ["contracts", "progress", "blueprints", "log"].includes(tab.id)).map((tab) => (
                     <button
                       key={tab.id}
-                      onClick={() =>
-                        setActiveTab(tab.id)
-                      }
-                      title={tab.label}
-                      className={`relative flex-1 flex flex-col items-center justify-center py-2.5 min-h-11 gap-0.5 text-[10px] font-['Orbitron'] font-bold transition-all duration-150 cursor-pointer select-none
-                                                ${idx <
-                          leftTabs.length - 1
-                          ? "border-r border-[#1a3320]"
-                          : ""
-                        }
-                                                ${isActive
-                          ? "text-accent bg-[rgba(255,176,0,0.1)]"
-                          : "text-[#445544] hover:text-[#00ff41] hover:bg-[rgba(0,255,65,0.05)]"
-                        }`}
-                      style={
-                        isActive
-                          ? {
-                            boxShadow:
-                              "inset 0 -2px 0 #ffb000",
-                          }
-                          : {}
-                      }
+                      onClick={() => { setActiveTab(tab.id); setMobileShowMap(false); setMoreOpen(false); }}
+                      className={`flex flex-col items-center gap-0.5 py-2 rounded text-[10px] font-['Orbitron'] font-bold ${activeTab === tab.id && !showEventStage ? "text-accent bg-[rgba(255,176,0,0.1)]" : "text-muted-foreground"}`}
                     >
-                      {isActive && (
-                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-accent opacity-50" />
-                      )}
-                      <span className="text-sm leading-none">
-                        {tab.icon}
-                      </span>
-                      <span className="hidden sm:block truncate w-full text-center px-0.5 leading-tight">
-                        {tab.label}
-                      </span>
-                      {hasAlert && (
-                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-destructive" />
-                      )}
+                      <span className="text-base leading-none">{tab.icon}</span>
+                      <span className="truncate w-full text-center px-0.5 leading-tight">{tab.label}</span>
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
+              )}
+              <div className="grid grid-cols-5">
+                <MobileNavButton icon="🗺️" label={t("mobile_nav.map")} active={showEventStage} onClick={() => { setMobileShowMap(true); setMoreOpen(false); }} />
+                <MobileNavButton icon="🚀" label={t("mobile_nav.ship")} alert={moduleMovedThisTurn && !showEventStage} active={!showEventStage && activeTab === "ship"} onClick={() => { setActiveTab("ship"); setMobileShowMap(false); setMoreOpen(false); }} />
+                <MobileNavButton icon="👥" label={t("mobile_nav.crew")} active={!showEventStage && activeTab === "crew"} onClick={() => { setActiveTab("crew"); setMobileShowMap(false); setMoreOpen(false); }} />
+                <MobileNavButton icon="📦" label={t("mobile_nav.cargo")} active={!showEventStage && activeTab === "cargo"} onClick={() => { setActiveTab("cargo"); setMobileShowMap(false); setMoreOpen(false); }} />
+                <MobileNavButton icon="⋯" label={t("mobile_nav.more")} active={!showEventStage && ["contracts", "progress", "blueprints", "log"].includes(activeTab)} onClick={() => setMoreOpen((o) => !o)} />
               </div>
-
-              <div className="flex-1 overflow-y-auto p-2 scrollbar-gutter-stable min-h-0">
-                {effectiveActiveTab === "ship" && (
-                  <Tabs value={effectiveShipSubTab} onValueChange={(v) => setShipSubTab(v as ShipSubTab)} className="h-full flex flex-col">
-                    <TabsList className="grid grid-cols-3 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] rounded-none h-8 shrink-0">
-                      <TabsTrigger value="layout" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_layout")}</TabsTrigger>
-                      <TabsTrigger value="stats" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_stats")}</TabsTrigger>
-                      <TabsTrigger value="modules" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_modules")}</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="layout" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ShipGrid /></TabsContent>
-                    <TabsContent value="stats" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ShipStats /></TabsContent>
-                    <TabsContent value="modules" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ModuleList /></TabsContent>
-                  </Tabs>
-                )}
-                {effectiveActiveTab === "crew" && <div className="tab-transition"><CrewList /></div>}
-                {effectiveActiveTab === "cargo" && <div className="tab-transition"><CargoDisplay /></div>}
-                {effectiveActiveTab === "contracts" && (
-                  <div className="tab-transition"><ContractsList /></div>
-                )}
-                {effectiveActiveTab === "progress" && (
-                  <div className="tab-transition"><CampaignProgressPanel /></div>
-                )}
-                {effectiveActiveTab === "blueprints" && (
-                  <div className="tab-transition"><BlueprintsTab /></div>
-                )}
-                {effectiveActiveTab === "log" && <div className="tab-transition"><GameLog /></div>}
-              </div>
-            </div>
-
-            {/* Right Panel */}
-            <div className="panel cockpit-panel cockpit-panel--stage lg:flex-1 flex flex-col min-w-0 min-h-[45vh] lg:min-h-0 lg:h-[calc(100vh-100px)] rounded-lg p-2 overflow-hidden">
-              <div className="flex-1 overflow-hidden min-h-0">
-                <EventDisplay />
-              </div>
-            </div>
-          </main>
+            </nav>
+          )}
 
           <RaceDiscoveryModal />
           <TechnologyDiscoveryModal />
@@ -289,5 +341,36 @@ export default function Home() {
         </>
       )}
     </div>
+  );
+}
+
+/** Кнопка нижней мобильной навигации */
+function MobileNavButton({
+  icon,
+  label,
+  active,
+  alert,
+  onClick,
+}: {
+  icon: string;
+  label: string;
+  active?: boolean;
+  alert?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`relative flex flex-col items-center justify-center gap-0.5 py-2 min-h-14 text-[10px] font-['Orbitron'] font-bold transition-colors ${active ? "text-accent" : "text-muted-foreground"}`}
+    >
+      {active && (
+        <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-accent" />
+      )}
+      <span className="text-xl leading-none">{icon}</span>
+      <span className="truncate w-full text-center px-1 leading-tight">{label}</span>
+      {alert && (
+        <span className="absolute top-1.5 right-[22%] w-2 h-2 rounded-full bg-destructive" />
+      )}
+    </button>
   );
 }

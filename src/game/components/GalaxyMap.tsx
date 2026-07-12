@@ -268,22 +268,30 @@ export function GalaxyMap() {
         [],
     );
 
-    // Initialize canvas size once
+    // Keep canvas coordinates in sync with the responsive container.
     useEffect(() => {
         const container = containerRef.current;
-        if (!container || initializedRef.current) return;
+        if (!container) return;
 
-        const rect = container.getBoundingClientRect();
-        const width = Math.round(Math.max(rect.width, 500));
-        // Mobile: use aspect ratio for compact display
-        // Desktop: use square canvas to prevent circle distortion
-        const isMobile = rect.width < 768;
-        const height = isMobile
-            ? Math.round(Math.max(rect.width * 0.65, 350))
-            : width;
+        const observer = new ResizeObserver(([entry]) => {
+            const width = Math.round(entry.contentRect.width);
+            const height = Math.round(entry.contentRect.height);
+            if (!width || !height) return;
+            if (
+                canvasSizeRef.current.width === width &&
+                canvasSizeRef.current.height === height
+            ) {
+                return;
+            }
 
-        canvasSizeRef.current = { width, height };
-        initializedRef.current = true;
+            canvasSizeRef.current = { width, height };
+            starsRef.current = null;
+            twinklingStarsRef.current = null;
+            initializedRef.current = true;
+        });
+
+        observer.observe(container);
+        return () => observer.disconnect();
     }, []);
 
     // Zoom animation effect
@@ -804,11 +812,11 @@ export function GalaxyMap() {
         >
             {/* First-visit galaxy navigation hint */}
             {!hintDismissed && (
-                <div className="absolute top-2 left-2 right-2 bg-[rgba(0,212,255,0.08)] border border-[#00d4ff] px-3 py-2 text-xs text-[#00d4ff] z-20 flex items-center justify-between gap-2">
+                <div className="absolute top-2 left-2 right-2 bg-[rgba(0,212,255,0.08)] border border-ring px-3 py-2 text-xs text-ring z-20 flex items-center justify-between gap-2">
                     <span>💡 {t("galaxy_map_ui.hint")}</span>
                     <button
                         onClick={dismissHint}
-                        className="text-[#00d4ff] hover:text-white cursor-pointer shrink-0 opacity-70 hover:opacity-100 transition-opacity"
+                        className="text-ring hover:text-white cursor-pointer shrink-0 opacity-70 hover:opacity-100 transition-opacity"
                         title={t("common.close")}
                     >
                         ✕
