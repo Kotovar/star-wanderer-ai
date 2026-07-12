@@ -1742,7 +1742,18 @@
     "results": "Results:",
     "leave": "LEAVE ANOMALY",
     "retreat": "RETREAT",
-    "investigate": "INVESTIGATE"
+    "investigate": "INVESTIGATE",
+    "choose_approach": "CHOOSE APPROACH",
+    "mod_reward": "reward",
+    "mod_risk": "risk",
+    "approach": {
+      "cautious": "CAUTIOUS",
+      "cautious_desc": "Remote scanning. Reduced module damage, no mutation risk.",
+      "standard": "STANDARD",
+      "standard_desc": "Balanced risk and reward. Standard research procedure.",
+      "deep": "DEEP DIVE",
+      "deep_desc": "Direct contact with the anomaly. Maximum reward, but higher damage, mutation chance, and better artifact odds."
+    }
   },
   "crew_member": {
     "assignment_fatigue": "Fatigue {{value}}/{{max}}",

@@ -8,9 +8,11 @@ import {
     ANOMALY_RANDOM_REWARD_MAX,
     ANOMALY_BASE_DAMAGE_PER_LEVEL,
     ANOMALY_RANDOM_DAMAGE_MAX,
+    ANOMALY_APPROACH_CONFIG,
 } from "@/game/slices/locations/constants";
+import type { AnomalyApproach } from "@/game/types";
 import { RiskRewardPreview } from "./RiskRewardPreview";
-import { Microscope, Telescope } from "lucide-react";
+import { Microscope, Telescope, Shield, Zap } from "lucide-react";
 
 // Цвет по тиру (совпадает с ANOMALY_COLORS в config.ts)
 const TIER_COLOR: Record<number, string> = {
@@ -190,6 +192,16 @@ function TierDots({ tier }: { tier: number }) {
 
 const rangeText = (min: number, max: number, suffix = "") =>
     min === max ? `${min}${suffix}` : `${min}-${max}${suffix}`;
+
+// Описание подходов к исследованию
+const APPROACH_META: Record<
+    AnomalyApproach,
+    { icon: typeof Shield; color: string; key: string }
+> = {
+    cautious: { icon: Shield, color: "#00d4ff", key: "cautious" },
+    standard: { icon: Telescope, color: "#00ff88", key: "standard" },
+    deep: { icon: Zap, color: "#ff00ff", key: "deep" },
+};
 
 function buildAnomalyPreview({
     anomalyType,
@@ -614,21 +626,86 @@ export function AnomalyPanel() {
                 ))}
             </div>
 
-            {/* Кнопки */}
-            <div className="flex gap-2 shrink-0">
-                <Button
-                    onClick={() => handleAnomaly(currentLocation)}
-                    className="flex-1 bg-transparent border-2 uppercase tracking-wider cursor-pointer text-xs"
-                    style={{
-                        borderColor: tierColor,
-                        color: tierColor,
-                    }}
-                >
-                    <Telescope size={14} /> {t("anomaly.investigate")}
-                </Button>
+            {/* Подходы к исследованию */}
+            <div className="flex flex-col gap-2 shrink-0">
+                <div className="text-[10px] text-[#888] uppercase tracking-wider">
+                    {t("anomaly.choose_approach")}
+                </div>
+                {(Object.keys(APPROACH_META) as AnomalyApproach[]).map(
+                    (approach) => {
+                        const meta = APPROACH_META[approach];
+                        const cfg = ANOMALY_APPROACH_CONFIG[approach];
+                        const Icon = meta.icon;
+                        return (
+                            <button
+                                key={approach}
+                                onClick={() =>
+                                    handleAnomaly(currentLocation, approach)
+                                }
+                                className="flex items-center gap-3 px-3 py-2 border bg-transparent cursor-pointer text-left transition-all hover:bg-white/5"
+                                style={{ borderColor: meta.color + "44" }}
+                            >
+                                <Icon
+                                    size={18}
+                                    style={{ color: meta.color }}
+                                    className="shrink-0"
+                                />
+                                <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                                    <span
+                                        className="text-xs font-bold uppercase tracking-wider"
+                                        style={{ color: meta.color }}
+                                    >
+                                        {t(`anomaly.approach.${approach}`)}
+                                    </span>
+                                    <span className="text-[10px] text-[#888] leading-tight">
+                                        {t(
+                                            `anomaly.approach.${approach}_desc`,
+                                        )}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col items-end gap-0.5 shrink-0 text-[10px]">
+                                    <span
+                                        className="font-bold"
+                                        style={{
+                                            color:
+                                                cfg.rewardMult >= 1
+                                                    ? "#00ff88"
+                                                    : "#ffaa00",
+                                        }}
+                                    >
+                                        {cfg.rewardMult >= 1 ? "+" : ""}
+                                        {Math.round(
+                                            (cfg.rewardMult - 1) * 100,
+                                        )}
+                                        %{" "}
+                                        {t("anomaly.mod_reward")}
+                                    </span>
+                                    <span
+                                        className="font-bold"
+                                        style={{
+                                            color:
+                                                cfg.damageMult <= 1
+                                                    ? "#00d4ff"
+                                                    : "#ff5555",
+                                        }}
+                                    >
+                                        {cfg.damageMult <= 1 ? "−" : "+"}
+                                        {Math.abs(
+                                            Math.round(
+                                                (cfg.damageMult - 1) * 100,
+                                            ),
+                                        )}
+                                        %{" "}
+                                        {t("anomaly.mod_risk")}
+                                    </span>
+                                </div>
+                            </button>
+                        );
+                    },
+                )}
                 <Button
                     onClick={showSectorMap}
-                    className="bg-transparent border border-[#333] text-[#666] hover:bg-[#1a1a2e] hover:text-[#999] uppercase tracking-wider cursor-pointer text-xs"
+                    className="bg-transparent border border-[#333] text-[#666] hover:bg-[#1a1a2e] hover:text-[#999] uppercase tracking-wider cursor-pointer text-xs mt-1"
                 >
                     {t("anomaly.retreat")}
                 </Button>

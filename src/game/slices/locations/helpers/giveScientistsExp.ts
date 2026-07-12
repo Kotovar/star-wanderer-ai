@@ -8,14 +8,18 @@ import { ANOMALY_BASE_EXP_PER_LEVEL } from "@/game/constants/experience";
  * @param scientists - Список учёных
  * @param anomalyLevel - Уровень сложности аномалии
  * @param gainExp - Функция начисления опыта
+ * @param expMult - Множитель опыта (зависит от подхода)
  */
 export const giveScientistsExp = (
     scientists: CrewMember[],
     anomalyLevel: number,
     gainExp: (crewMember: CrewMember, amount: number) => void,
+    expMult = 1,
 ): void => {
     scientists.forEach((scientist) => {
-        const expGain = calculateScientistExp(anomalyLevel, scientist.race);
+        const expGain = Math.floor(
+            calculateScientistExp(anomalyLevel, scientist.race) * expMult,
+        );
         gainExp(scientist, expGain);
     });
 };

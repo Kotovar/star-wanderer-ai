@@ -1,7 +1,8 @@
-import type { SetState, GameStore, Location } from "@/game/types";
+import type { SetState, GameStore, Location, AnomalyApproach } from "@/game/types";
 import { RESEARCH_RESOURCES } from "@/game/constants";
 import { getAnomalyResources } from "@/game/research/utils";
 import { getCrewByProfession } from "@/game/crew";
+import { ANOMALY_APPROACH_CONFIG } from "../constants";
 import { checkScientistLevel } from "./checkScientistLevel";
 import { giveScientistsExp } from "./giveScientistsExp";
 import { handleResearchContract } from "./handleResearchContract";
@@ -13,11 +14,13 @@ import { applyAnomalyEffect } from "./applyAnomalyEffect";
  * @param anomaly - Объект аномалии
  * @param set - Функция обновления состояния
  * @param get - Функция получения состояния
+ * @param approach - Подход к исследованию (по умолчанию "standard")
  */
 export const handleAnomaly = (
     anomaly: Location,
     set: SetState,
     get: () => GameStore,
+    approach: AnomalyApproach = "standard",
 ): void => {
     const requiredLevel = anomaly.requiresScientistLevel ?? 1;
     const scientists = getCrewByProfession(get().crew, "scientist");
@@ -32,36 +35,47 @@ export const handleAnomaly = (
         return;
     }
 
+    const config = ANOMALY_APPROACH_CONFIG[approach];
+
     // Mark location as completed
     set((s) => ({
         completedLocations: [...s.completedLocations, anomaly.id],
     }));
 
     // Get research resources from anomaly
-    addResearchResources(set, get);
+    addResearchResources(set, get, config.guaranteedResources);
 
     // Bonus resources if any scientist has "analyzing" assignment
-    const analyzingScientists = scientists.filter(
-        (s) => s.assignment === "analyzing",
-    );
-    if (analyzingScientists.length > 0) {
-        addResearchResources(set, get);
-        analyzingScientists.forEach((s) => {
-            get().addLog(
-                `🔬 ${s.name}: Углублённый анализ — дополнительные ресурсы!`,
-                "info",
-            );
-        });
+    // Only standard and deep approaches benefit from analyzing scientists
+    if (approach !== "cautious") {
+        const analyzingScientists = scientists.filter(
+            (s) => s.assignment === "analyzing",
+        );
+        if (analyzingScientists.length > 0) {
+            addResearchResources(set, get, config.guaranteedResources);
+            analyzingScientists.forEach((s) => {
+                get().addLog(
+                    `🔬 ${s.name}: Углублённый анализ — дополнительные ресурсы!`,
+                    "info",
+                );
+            });
+        }
     }
 
-    // Give experience to scientists
-    giveScientistsExp(scientists, requiredLevel, get().gainExp);
+    // Give experience to scientists (scaled by approach)
+    giveScientistsExp(scientists, requiredLevel, get().gainExp, config.expMult);
 
     // Handle research contracts
     handleResearchContracts(set, get);
 
-    // Apply anomaly effect (reward or damage)
-    applyAnomalyEffect(requiredLevel, anomaly.anomalyType || "good", set, get);
+    // Apply anomaly effect (reward or damage), scaled by approach
+    applyAnomalyEffect(
+        requiredLevel,
+        anomaly.anomalyType || "good",
+        approach,
+        set,
+        get,
+    );
 
     // Update ship stats
     get().updateShipStats();
@@ -70,8 +84,19 @@ export const handleAnomaly = (
 /**
  * Добавляет исследовательские ресурсы из аномалии
  */
-const addResearchResources = (set: SetState, get: () => GameStore): void => {
-    const anomalyResources = getAnomalyResources();
+const addResearchResources = (
+    set: SetState,
+    get: () => GameStore,
+    guaranteed: boolean,
+): void => {
+    let anomalyResources = getAnomalyResources();
+
+    // При глубоком погружении гарантируем хотя бы один ресурс
+    if (guaranteed && anomalyResources.length === 0) {
+        anomalyResources = [
+            { type: "energy_samples", quantity: 1 },
+        ];
+    }
 
     if (anomalyResources.length === 0) return;
 

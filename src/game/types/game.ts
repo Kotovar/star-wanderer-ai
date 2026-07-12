@@ -10,7 +10,7 @@ import type {
 import type { ActiveEffect } from "./effects";
 import type { Goods, TradeGood } from "./goods";
 import type { PendingTravelEvent, Sector, TravelingState } from "./locations/sectors";
-import type { Location, LocationType } from "./locations/locations";
+import type { Location, LocationType, AnomalyApproach } from "./locations/locations";
 import type { LogEntry } from "./logs";
 import type { Module, WeaponCounts } from "./modules";
 import type { RaceId } from "./races";
@@ -272,7 +272,7 @@ export interface GameModule {
 }
 
 export interface GameAnomaly {
-  handleAnomaly: (anomaly: Location) => void;
+  handleAnomaly: (anomaly: Location, approach?: AnomalyApproach) => void;
 }
 
 export interface GameScouting {

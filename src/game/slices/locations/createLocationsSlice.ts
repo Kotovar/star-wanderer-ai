@@ -1,4 +1,4 @@
-import type { GameStore, SetState, Location, RaceId } from "@/game/types";
+import type { GameStore, SetState, Location, RaceId, AnomalyApproach } from "@/game/types";
 import { RACES } from "@/game/constants";
 import { mineAsteroid } from "./helpers";
 import { handleStormEntry } from "./helpers/enterStorm";
@@ -41,8 +41,9 @@ export interface LocationsSlice {
     /**
      * Обрабатывает посещение аномалии
      * @param anomaly - Объект аномалии
+     * @param approach - Подход к исследованию (cautious/standard/deep)
      */
-    handleAnomaly: (anomaly: Location) => void;
+    handleAnomaly: (anomaly: Location, approach?: AnomalyApproach) => void;
 
     /**
      * Отправляет разведчика на исследование планеты
@@ -132,8 +133,8 @@ export const createLocationsSlice = (
         handleStormEntry(set, get);
     },
 
-    handleAnomaly: (anomaly) => {
-        handleAnomalyHelper(anomaly, set, get);
+    handleAnomaly: (anomaly, approach) => {
+        handleAnomalyHelper(anomaly, set, get, approach);
     },
 
     sendScoutingMission: (planetId) => {

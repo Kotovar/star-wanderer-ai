@@ -2,6 +2,8 @@
 // Константы для локаций
 // ============================================================================
 
+import type { AnomalyApproach } from "@/game/types";
+
 // ============================================================================
 // Константы для добычи астероидов
 // ============================================================================
@@ -168,6 +170,53 @@ export const ANOMALY_RANDOM_DAMAGE_MAX = 25;
  * Минимальное здоровье модуля после повреждения аномалией
  */
 export const ANOMALY_MIN_MODULE_HEALTH = 10;
+
+// ============================================================================
+// Подходы к исследованию аномалии
+// ============================================================================
+
+/**
+ * Множители для каждого подхода к исследованию.
+ * cautious — меньше урон/награда, нет мутаций.
+ * standard — текущий баланс.
+ * deep — больше награда/опыт, но выше урон и шанс мутации + шанс артефакта.
+ */
+export const ANOMALY_APPROACH_CONFIG: Record<
+    AnomalyApproach,
+    {
+        rewardMult: number;
+        damageMult: number;
+        mutationMult: number;
+        artifactBonus: number;
+        expMult: number;
+        guaranteedResources: boolean;
+    }
+> = {
+    cautious: {
+        rewardMult: 0.6,
+        damageMult: 0.4,
+        mutationMult: 0,
+        artifactBonus: 0,
+        expMult: 0.7,
+        guaranteedResources: false,
+    },
+    standard: {
+        rewardMult: 1.0,
+        damageMult: 1.0,
+        mutationMult: 1.0,
+        artifactBonus: 0,
+        expMult: 1.0,
+        guaranteedResources: false,
+    },
+    deep: {
+        rewardMult: 1.8,
+        damageMult: 1.6,
+        mutationMult: 1.5,
+        artifactBonus: 0.05,
+        expMult: 1.4,
+        guaranteedResources: true,
+    },
+};
 
 // ============================================================================
 // Константы для разведки планет

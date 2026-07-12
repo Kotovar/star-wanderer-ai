@@ -8,6 +8,8 @@ import type { ResearchResourceType } from "../research";
 
 export type AsteroidTier = 1 | 2 | 3 | 4;
 
+export type AnomalyApproach = "cautious" | "standard" | "deep";
+
 export type StormType =
     | "radiation"
     | "ionic"
