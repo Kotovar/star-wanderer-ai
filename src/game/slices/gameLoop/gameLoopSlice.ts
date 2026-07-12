@@ -131,6 +131,7 @@ export const createGameLoopSlice = (
 
         // Сохранение
         get().updateShipStats();
+        get().checkVictory();
         get().saveGame();
     },
 

@@ -2,6 +2,8 @@ import type { GameStore, SetState, Contract } from "@/game/types";
 import { DELIVERY_GOODS } from "@/game/constants";
 import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "../constants";
 import { playSound } from "@/sounds";
+import { getContractReputationImpact } from "@/game/reputation/utils";
+import { RACES } from "@/game/constants/races";
 import { isRaceContractAvailable } from "@/game/reputation/utils";
 
 /**
@@ -87,6 +89,18 @@ export const acceptContract = (
         ],
     }));
     get().addLog(`Задача принята: ${contract.desc}`, "info");
+
+    const reputationImpact = getContractReputationImpact(contract);
+    if (reputationImpact.length > 1) {
+        get().addLog(
+            `Дипломатические последствия: ${reputationImpact
+                .map(({ raceId, change }) =>
+                    `${RACES[raceId].name} ${change > 0 ? "+" : ""}${change}`,
+                )
+                .join(" · ")}`,
+            "warning",
+        );
+    }
 
     // Special message for supply_run contracts
     if (contract.type === "supply_run") {

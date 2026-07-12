@@ -1,6 +1,7 @@
 import type { GameStore, SetState } from "@/game/types";
 import { getCompletedVictoryObjective } from "@/game/constants/victoryObjectives";
 import { playSound } from "@/sounds";
+import { store as i18nStore } from "@/lib/useTranslation";
 
 /**
  * Сообщение о победе в игре
@@ -62,11 +63,14 @@ export const triggerVictory = (set: SetState, get: () => GameStore): void => {
             captainLevel,
             discoveredArtifacts,
             sectorsExplored,
-            objective.title,
-            objective.completionText,
+            i18nStore.t(objective.titleKey),
+            i18nStore.t(objective.completionKey),
         ),
     });
 
-    get().addLog(`🎉 ПОБЕДА! ${objective.title}`, "info");
+    get().addLog(
+        `🎉 ${i18nStore.t("game.victory")}! ${i18nStore.t(objective.titleKey)}`,
+        "info",
+    );
     playSound("success");
 };

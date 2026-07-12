@@ -115,6 +115,10 @@ export interface CrewMember {
     augmentation: AugmentationId | null;
     // Expedition fatigue — turns remaining before crew can join another expedition
     expeditionFatigue?: number;
+    // Fatigue accumulated from continuous civilian assignments
+    assignmentFatigue?: number;
+    // Automatic rest before the current assignment resumes
+    assignmentRestTurns?: number;
 }
 
 export type CrewTraitEffect = {

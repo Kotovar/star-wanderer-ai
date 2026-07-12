@@ -4,7 +4,15 @@ import { useMemo } from "react";
 import { useGameStore } from "@/game/store";
 import { RESEARCH_TREE } from "@/game/constants";
 import { CRAFTING_RECIPES } from "@/game/constants/crafting";
-import { getVictoryObjectives } from "@/game/constants/victoryObjectives";
+import {
+  COALITION_ALLY_TARGET,
+  COALITION_CONTRACT_TARGET,
+  COALITION_CREDIT_TARGET,
+  SCIENCE_ARTIFACT_TARGET,
+  SCIENCE_TECH_TARGET,
+  countAlliedRaces,
+  getVictoryObjectives,
+} from "@/game/constants/victoryObjectives";
 import { WEAPON_TYPES } from "@/game/constants/weapons";
 import { canSeeTier4 } from "@/game/galaxy/galaxy-map-utils";
 import { useTranslation } from "@/lib/useTranslation";
@@ -95,10 +103,12 @@ function Milestone({
   label,
   done,
   detail,
+  recommended = false,
 }: {
   label: string;
   done: boolean;
   detail?: string;
+  recommended?: boolean;
 }) {
   return (
     <div className="flex items-start gap-2 text-xs">
@@ -106,7 +116,14 @@ function Milestone({
         {done ? "✓" : "□"}
       </span>
       <div className="min-w-0">
-        <div className={done ? "text-[#b6ffc7]" : "text-[#777]"}>{label}</div>
+        <div className={done ? "text-[#b6ffc7]" : "text-[#777]"}>
+          {label}
+          {recommended && (
+            <span className="ml-2 text-[9px] uppercase tracking-wider text-accent">
+              ★
+            </span>
+          )}
+        </div>
         {detail && <div className="text-[10px] text-[#555]">{detail}</div>}
       </div>
     </div>
@@ -165,6 +182,10 @@ export function CampaignProgressPanel() {
   const activeContracts = useGameStore((s) => s.activeContracts);
   const completedContractIds = useGameStore((s) => s.completedContractIds);
   const completedLocations = useGameStore((s) => s.completedLocations);
+  const credits = useGameStore((s) => s.credits);
+  const knownRaces = useGameStore((s) => s.knownRaces);
+  const raceReputation = useGameStore((s) => s.raceReputation);
+  const startModifierIds = useGameStore((s) => s.startModifierIds);
   const gameVictory = useGameStore((s) => s.gameVictory);
   const victoryTriggered = useGameStore((s) => s.victoryTriggered);
   const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
@@ -223,16 +244,44 @@ export function CampaignProgressPanel() {
       activeArtifacts,
     };
   }, [artifacts, canSeeHiddenRim, completedLocations, sectors]);
+  const selectedDoctrineId = startModifierIds.find((id) =>
+    id.startsWith("doctrine_"),
+  );
+  const victoryState = useMemo(
+    () => ({
+      artifacts,
+      completedContractIds,
+      completedLocations,
+      credits,
+      currentSector,
+      galaxy: { sectors },
+      knownRaces,
+      raceReputation,
+      research,
+    }),
+    [
+      artifacts,
+      completedContractIds,
+      completedLocations,
+      credits,
+      currentSector,
+      knownRaces,
+      raceReputation,
+      research,
+      sectors,
+    ],
+  );
+  const alliedRaces = countAlliedRaces(victoryState);
+  const researchedArtifacts = artifacts.filter(
+    (artifact) => artifact.researched,
+  ).length;
   const victoryObjectives = useMemo(
-    () => getVictoryObjectives().map((objective) => ({
-      ...objective,
-      done: objective.isComplete({
-        completedLocations,
-        currentSector,
-        galaxy: { sectors },
-      }),
-    })),
-    [completedLocations, currentSector, sectors],
+    () =>
+      getVictoryObjectives().map((objective) => ({
+        ...objective,
+        done: objective.isComplete(victoryState),
+      })),
+    [victoryState],
   );
 
   const techTotal = Object.keys(RESEARCH_TREE).length;
@@ -266,9 +315,31 @@ export function CampaignProgressPanel() {
           {victoryObjectives.map((objective) => (
             <Milestone
               key={objective.id}
-              label={objective.title}
+              label={t(objective.titleKey)}
               done={victoryDone || objective.done}
-              detail={objective.description}
+              recommended={
+                selectedDoctrineId !== undefined &&
+                objective.doctrineIds.includes(selectedDoctrineId)
+              }
+              detail={`${t(objective.descriptionKey)}${
+                objective.id === "scientific_ascension"
+                  ? ` · ${t("victory_paths.scientific_ascension.progress", {
+                      tech: research.researchedTechs.length,
+                      techTarget: SCIENCE_TECH_TARGET,
+                      artifacts: researchedArtifacts,
+                      artifactTarget: SCIENCE_ARTIFACT_TARGET,
+                    })}`
+                  : objective.id === "galactic_coalition"
+                    ? ` · ${t("victory_paths.galactic_coalition.progress", {
+                        allies: alliedRaces,
+                        allyTarget: COALITION_ALLY_TARGET,
+                        contracts: completedContractIds.length,
+                        contractTarget: COALITION_CONTRACT_TARGET,
+                        credits: Math.floor(credits),
+                        creditTarget: COALITION_CREDIT_TARGET,
+                      })}`
+                    : ""
+              }`}
             />
           ))}
         </div>

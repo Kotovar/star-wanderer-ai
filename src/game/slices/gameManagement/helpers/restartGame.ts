@@ -73,6 +73,7 @@ export const restartGame = (
     raceReputation: patchedReputation,
     knownRaces,
     startTemplateId: templateId,
+    startModifierIds: modifierIds,
   });
 
   if (patch.startingTechId) {
@@ -113,7 +114,7 @@ export const restartGame = (
   get().addLog("Новая игра", "info");
   get().addLog(
     `Способы победы: ${getVictoryObjectives()
-      .map((objective) => objective.title)
+      .map((objective) => i18nStore.t(objective.titleKey))
       .join(" / ")}`,
     "info",
   );

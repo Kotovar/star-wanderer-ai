@@ -682,6 +682,7 @@
     "retreat": "RETREAT"
   },
   "contracts": {
+    "reputation_impact": "Reputation consequences",
     "active": "Active contracts",
     "failed": "Failed",
     "reward": "Reward",
@@ -1742,6 +1743,8 @@
     "investigate": "INVESTIGATE"
   },
   "crew_member": {
+    "assignment_fatigue": "Fatigue {{value}}/{{max}}",
+    "assignment_rest": "Resting: {{turns}} turns",
     "moved": "MOVED",
     "move_to": "Move to:",
     "moved_already": "Already moved",
@@ -2755,6 +2758,35 @@
   "galaxy_map_ui": {
     "hint": "Select a sector to jump to. Mouse wheel to zoom. Click and drag to pan."
   },
+  "victory_paths": {
+    "reach_tier4": {
+      "title": "The Far Frontier",
+      "description": "Find a route beyond the known star charts.",
+      "completion": "The quantum drive carried the ship to the edge of known space."
+    },
+    "defeat_void_oracle": {
+      "title": "Oracle of the Void",
+      "description": "Find and destroy the Oracle of the Void.",
+      "completion": "The Oracle of the Void was destroyed and its network fell silent."
+    },
+    "defeat_3_bosses": {
+      "title": "Hunt the Ancients",
+      "description": "Destroy three ancient bosses anywhere in the galaxy.",
+      "completion": "Three ancient machines were destroyed. The others can no longer act with impunity."
+    },
+    "scientific_ascension": {
+      "title": "Scientific Ascension",
+      "description": "Decode Ancient technologies and study the artifacts you discover.",
+      "completion": "The crew united Ancient technology and artifacts into a new scientific paradigm.",
+      "progress": "technologies {{tech}}/{{techTarget}}, artifacts {{artifacts}}/{{artifactTarget}}"
+    },
+    "galactic_coalition": {
+      "title": "Galactic Coalition",
+      "description": "Unite the races through contracts, trust and a shared economy.",
+      "completion": "The allied worlds recognized the ship as the center of a new galactic coalition.",
+      "progress": "allies {{allies}}/{{allyTarget}}, contracts {{contracts}}/{{contractTarget}}, credits {{credits}}/{{creditTarget}}"
+    }
+  },
   "save_load": {
     "menu_title": "MENU",
     "title": "SAVES",
@@ -3032,6 +3064,37 @@
         "outcome": "All crew morale drops by {{penalty}}."
       }
     },
+    "consequence": {
+      "title": "Delayed Consequence",
+      "confirm": "Accept result",
+      "description": "A consequence of the decision during “{{event}}” has surfaced.",
+      "outcome": "The result will be applied to the ship state after confirmation.",
+      "storm": {
+        "specialist": "The successful maneuver strengthened crew confidence: up to +3 morale.",
+        "systems": "The defenses endured the calculated load: up to +3 crew morale.",
+        "standard": "The direct impact still weighs on the crew: morale -2."
+      },
+      "capsule": {
+        "specialist": "Archive decoding revealed another fragment: +1 Ancient Data.",
+        "systems": "A useful component was found in the capsule: +1 Tech Salvage.",
+        "standard": "The coordinates buyer paid a verification bonus: +10₢."
+      },
+      "virus": {
+        "specialist": "The medic's prevention worked: up to +3 crew morale.",
+        "systems": "The digital purge fully secured the systems: up to +3 crew morale.",
+        "standard": "Residual symptoms surfaced after quarantine: crew morale -3."
+      },
+      "fuel_leak": {
+        "specialist": "The engineer recovered fuel from the emergency loop: up to +4 fuel.",
+        "systems": "The drones collected fuel from the damaged section: up to +4 fuel.",
+        "standard": "The isolated line developed a secondary leak: -3 fuel."
+      },
+      "crew_dispute": {
+        "specialist": "The captain's personal decision restored trust: up to +4 crew morale.",
+        "systems": "Separate rest shifts helped the crew reconcile: up to +4 crew morale.",
+        "standard": "The dispute ended by command left resentment: crew morale -2."
+      }
+    },
     "logs": {
       "decision_required": "Resolve the unscheduled event before advancing the turn",
       "choice_unavailable": "The requirements for that choice are no longer met",
@@ -3040,6 +3103,7 @@
       "detected_virus": "☣ Shipboard virus detected — captain's decision required",
       "detected_fuel_leak": "◒ Fuel leak detected — captain's decision required",
       "detected_crew_dispute": "◐ Crew dispute reported — captain's decision required",
+      "detected_consequence": "◆ A delayed consequence of an earlier decision has surfaced",
       "storm_pilot": "The pilot crossed the front: module took {{damage}} damage",
       "storm_shields": "Shields absorbed {{absorbed}}; remaining module damage: {{damage}}",
       "storm_standard": "The storm damaged a module by {{damage}} HP",

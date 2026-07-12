@@ -14,6 +14,7 @@ import {
 import { findActiveArtifact, findArtifactByEffect } from "@/game/artifacts";
 import { getActiveModule } from "@/game/modules/utils";
 import type { GameState, Sector } from "@/game/types";
+import { hasWarpTravel } from "@/game/research/specialAbilities";
 
 /**
  * Множитель расхода топлива без пилота в кабине
@@ -200,8 +201,7 @@ export const calculateFuelCost = (
     }
 
     // Варп-драйв — бесплатные прыжки в любой сектор
-    const hasWarpDrive = state.research.researchedTechs.includes("warp_drive");
-    if (hasWarpDrive) {
+    if (hasWarpTravel(state.research.researchedTechs)) {
         return { fuelCost: 0, travelInstant: true };
     }
 

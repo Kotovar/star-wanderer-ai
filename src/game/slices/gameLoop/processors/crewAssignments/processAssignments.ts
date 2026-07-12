@@ -23,6 +23,10 @@ import type {
 } from "@/game/types";
 import { isModuleActive } from "@/game/modules/utils";
 import { grantTimedEffect } from "@/game/effects/timedEffects";
+import {
+    ASSIGNMENT_TIRED_AT,
+    getAssignmentFatigueState,
+} from "@/game/crew/assignmentFatigue";
 
 const COORDINATED_SHIFT_CHANCE = 0.04;
 
@@ -44,6 +48,13 @@ export const processCrewAssignments = (
 
     crew.forEach((crewMember) => {
         const crewRace = RACES[crewMember.race];
+        const fatigueState = getAssignmentFatigueState({
+            fatigue: crewMember.assignmentFatigue,
+            restTurns: crewMember.assignmentRestTurns,
+            assigned: Boolean(crewMember.assignment),
+            canFatigue: crewRace.hasFatigue,
+            turn: get().turn,
+        });
         const currentModule = get().ship.modules.find(
             (m) => m.id === crewMember.moduleId,
         );
@@ -57,13 +68,26 @@ export const processCrewAssignments = (
         }
 
         // Обработка вне-боевых назначений
-        if (!get().currentCombat && crewMember.assignment) {
+        if (
+            !get().currentCombat &&
+            crewMember.assignment &&
+            fatigueState.shouldWork
+        ) {
             processNonCombatAssignment(
                 crewMember,
                 currentModule,
                 crewRace,
                 set,
                 get,
+            );
+        } else if (
+            !get().currentCombat &&
+            crewMember.assignment &&
+            !crewMember.assignmentRestTurns
+        ) {
+            get().addLog(
+                `💤 ${crewMember.name}: усталость, задача пропущена в этом ходу`,
+                "warning",
             );
         }
 
@@ -78,6 +102,52 @@ export const processCrewAssignments = (
             );
         }
     });
+
+    if (!get().currentCombat) {
+        crew.forEach((crewMember) => {
+            const crewRace = RACES[crewMember.race];
+            const fatigueState = getAssignmentFatigueState({
+                fatigue: crewMember.assignmentFatigue,
+                restTurns: crewMember.assignmentRestTurns,
+                assigned: Boolean(crewMember.assignment),
+                canFatigue: crewRace.hasFatigue,
+                turn: get().turn,
+            });
+
+            if (
+                crewMember.assignment &&
+                crewMember.assignmentFatigue === ASSIGNMENT_TIRED_AT - 1
+            ) {
+                get().addLog(
+                    `⚠️ ${crewMember.name} устал: эффективность задачи снижена`,
+                    "warning",
+                );
+            }
+            if (crewMember.assignment && fatigueState.startedRest) {
+                get().addLog(
+                    `🛌 ${crewMember.name} уходит отдыхать; задача возобновится автоматически`,
+                    "warning",
+                );
+            }
+        });
+
+        set((state) => ({
+            crew: state.crew.map((crewMember) => {
+                const fatigueState = getAssignmentFatigueState({
+                    fatigue: crewMember.assignmentFatigue,
+                    restTurns: crewMember.assignmentRestTurns,
+                    assigned: Boolean(crewMember.assignment),
+                    canFatigue: RACES[crewMember.race].hasFatigue,
+                    turn: state.turn,
+                });
+                return {
+                    ...crewMember,
+                    assignmentFatigue: fatigueState.nextFatigue,
+                    assignmentRestTurns: fatigueState.nextRestTurns,
+                };
+            }),
+        }));
+    }
 
     const currentState = get();
     const assignedCrew = currentState.crew.filter(

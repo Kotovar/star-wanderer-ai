@@ -27,6 +27,7 @@ import {
 } from "./CrewListHelpers";
 import { ProfessionSprite } from "./ProfessionSprite";
 import { CrewStatusIcon } from "./CrewStatusIcon";
+import { ASSIGNMENT_EXHAUSTED_AT } from "@/game/crew/assignmentFatigue";
 
 const stripLeadingSymbol = (value: string) =>
     value.replace(/^[^\p{L}\p{N}]+/u, "");
@@ -128,6 +129,25 @@ export function CrewList() {
                                     <span>{currentAssignment}</span>
                                 )}
                             </div>
+
+                            {race?.hasFatigue &&
+                                ((member.assignmentFatigue ?? 0) > 0 ||
+                                    (member.assignmentRestTurns ?? 0) > 0) && (
+                                    <div className="text-[9px] text-[#ffb000]">
+                                        {(member.assignmentRestTurns ?? 0) > 0
+                                            ? t("crew_member.assignment_rest", {
+                                                  turns:
+                                                      member.assignmentRestTurns ??
+                                                      0,
+                                              })
+                                            : t("crew_member.assignment_fatigue", {
+                                                  value:
+                                                      member.assignmentFatigue ??
+                                                      0,
+                                                  max: ASSIGNMENT_EXHAUSTED_AT,
+                                              })}
+                                    </div>
+                                )}
 
                             {/* HP bar */}
                             <div className="flex items-center gap-1">

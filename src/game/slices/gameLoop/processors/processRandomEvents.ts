@@ -8,6 +8,10 @@ import type {
 } from "@/game/types";
 import { store as i18nStore } from "@/lib/useTranslation";
 import { grantTimedEffect } from "@/game/effects/timedEffects";
+import {
+  isRandomEventConsequenceDue,
+  scheduleRandomEventConsequence,
+} from "@/game/events/randomEventChains";
 
 const EVENT_TRIGGER_CHANCE = 0.08;
 const EVENT_COOLDOWN = 8;
@@ -45,6 +49,7 @@ export function canUseRandomEventChoice(
   choice: RandomEventChoiceId,
 ): boolean {
   if (choice === "standard") return true;
+  if (event.type === "consequence") return false;
 
   switch (event.type) {
     case "storm": {
@@ -69,6 +74,85 @@ export function canUseRandomEventChoice(
       if (choice === "specialist") return !!findLivingCrew(state, "pilot");
       return !!findActiveModule(state, "quarters");
   }
+}
+
+function changeCrewHappiness(set: SetState, amount: number): void {
+  set((state) => ({
+    crew: state.crew.map((member) => ({
+      ...member,
+      happiness: Math.max(0, Math.min(100, member.happiness + amount)),
+    })),
+  }));
+}
+
+function applyRandomEventConsequence(
+  event: Extract<PendingRandomEvent, { type: "consequence" }>,
+  set: SetState,
+  get: () => GameStore,
+): void {
+  const positive = event.choice !== "standard";
+
+  switch (event.eventType) {
+    case "storm":
+      if (positive) {
+        changeCrewHappiness(set, 3);
+      } else {
+        changeCrewHappiness(set, -2);
+      }
+      break;
+    case "capsule":
+      if (event.choice === "specialist") {
+        set((state) => ({
+          research: {
+            ...state.research,
+            resources: {
+              ...state.research.resources,
+              ancient_data: (state.research.resources.ancient_data ?? 0) + 1,
+            },
+          },
+        }));
+      } else if (event.choice === "systems") {
+        set((state) => ({
+          research: {
+            ...state.research,
+            resources: {
+              ...state.research.resources,
+              tech_salvage: (state.research.resources.tech_salvage ?? 0) + 1,
+            },
+          },
+        }));
+      } else {
+        set((state) => ({ credits: state.credits + 10 }));
+      }
+      break;
+    case "virus":
+      changeCrewHappiness(set, positive ? 3 : -3);
+      break;
+    case "fuel_leak":
+      if (positive) {
+        set((state) => ({
+          ship: {
+            ...state.ship,
+            fuel: Math.min(state.ship.maxFuel, state.ship.fuel + 4),
+          },
+        }));
+      } else {
+        set((state) => ({
+          ship: { ...state.ship, fuel: Math.max(0, state.ship.fuel - 3) },
+        }));
+      }
+      break;
+    case "crew_dispute":
+      changeCrewHappiness(set, positive ? 4 : -2);
+      break;
+  }
+
+  get().addLog(
+    i18nStore.t(
+      `random_events.consequence.${event.eventType}.${event.choice}`,
+    ),
+    positive ? "info" : "warning",
+  );
 }
 
 function damageModule(set: SetState, moduleId: number, damage: number): void {
@@ -325,9 +409,22 @@ export const resolveRandomEvent = (
     case "crew_dispute":
       applyCrewDisputeChoice(event, choice, set, get);
       break;
+    case "consequence":
+      applyRandomEventConsequence(event, set, get);
+      break;
   }
 
-  if (choice === "specialist") {
+  if (event.type !== "consequence") {
+    set({
+      scheduledRandomEventConsequence: scheduleRandomEventConsequence(
+        event.type,
+        choice,
+        get().turn,
+      ),
+    });
+  }
+
+  if (event.type !== "consequence" && choice === "specialist") {
     grantTimedEffect("decisive_response", set, get);
   }
 
@@ -342,10 +439,27 @@ export const processRandomEvents = (
   get: () => GameStore,
 ): void => {
   const state = get();
+  const consequence = state.scheduledRandomEventConsequence;
+  if (
+    consequence &&
+    isRandomEventConsequenceDue(consequence, state.turn) &&
+    !state.currentCombat &&
+    !state.pendingTravelEvent &&
+    !state.pendingRandomEvent
+  ) {
+    set({
+      pendingRandomEvent: { type: "consequence", ...consequence },
+      scheduledRandomEventConsequence: null,
+    });
+    get().addLog(i18nStore.t("random_events.logs.detected_consequence"), "warning");
+    return;
+  }
+
   if (
     state.currentCombat ||
     state.pendingTravelEvent ||
     state.pendingRandomEvent ||
+    state.scheduledRandomEventConsequence ||
     state.turn < FIRST_EVENT_TURN ||
     state.randomEventCooldown > 0 ||
     Math.random() >= EVENT_TRIGGER_CHANCE

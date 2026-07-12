@@ -34,6 +34,7 @@ import {
     getReputationLevel,
 } from "@/game/types/reputation";
 import { RaceSprite } from "./RaceSprite";
+import { ContractReputationImpact } from "./ContractReputationImpact";
 
 export function PlanetPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
@@ -788,6 +789,8 @@ export function PlanetPanel() {
                                                     : t("contracts.accept")}
                                             </Button>
                                         </div>
+
+                                        <ContractReputationImpact contract={c} />
 
                                         {/* Quest details */}
                                         <div className="text-[11px] mt-1.5 space-y-0.5">

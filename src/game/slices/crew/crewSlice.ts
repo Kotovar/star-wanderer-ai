@@ -110,6 +110,18 @@ export const createCrewSlice = (
         const crewMember = state.crew.find((c) => c.id === crewId);
         if (!crewMember) return;
 
+        if (
+            task &&
+            (crewMember.assignmentRestTurns ?? 0) > 0 &&
+            task !== crewMember.assignment
+        ) {
+            get().addLog(
+                `${crewMember.name} отдыхает и пока не может взять новую задачу`,
+                "warning",
+            );
+            return;
+        }
+
         // Check if crew member's assignment is valid based on their module position
         const currentModule = state.ship.modules.find(
             (m) => m.id === crewMember.moduleId,

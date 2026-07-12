@@ -16,6 +16,7 @@ import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
 import type { Quality, RaceId } from "@/game/types";
 import { RaceSprite } from "./RaceSprite";
 import { ProfessionSprite } from "./ProfessionSprite";
+import { ContractReputationImpact } from "./ContractReputationImpact";
 
 const INITIAL_STOCK: Goods[] = ["water", "food", "medicine"];
 
@@ -567,6 +568,7 @@ export function FriendlyShipPanel() {
                   {t("contracts.reward_label")}{" "}
                   {shipQuest.reward}₢
                 </div>
+                <ContractReputationImpact contract={shipQuest} />
               </>
             ) : (
               <div className="text-[#888] text-xs">

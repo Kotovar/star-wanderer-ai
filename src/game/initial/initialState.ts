@@ -149,6 +149,7 @@ const baseState: GameState = {
   traveling: null,
   pendingTravelEvent: null,
   pendingRandomEvent: null,
+  scheduledRandomEventConsequence: null,
   ship: {
     armor: 1,
     shields: 0,
@@ -232,6 +233,7 @@ const baseState: GameState = {
   galaxyOffset: { x: 0, y: 0 },
   sectorOffset: { x: 0, y: 0 },
   bannedPlanets: [],
+  startModifierIds: [],
   activeCrisis: null,
   discoveredCrisisIds: [],
   nextCrisisTurn: rollInitialCrisisTurn(),

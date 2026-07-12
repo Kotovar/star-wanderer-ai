@@ -4,6 +4,7 @@ import { ARTIFACT_TYPES } from "@/game/constants";
 import { COMBAT_ACCURACY_MODIFIERS } from "@/game/constants/combat";
 import { PILOT_EVASION_COMBAT_EXP } from "@/game/constants/experience";
 import { getTotalEvasion } from "@/game/slices/ship/helpers/getTotalEvasion";
+import { shouldPhaseShieldAbsorb } from "@/game/research/specialAbilities";
 import { applyModuleDamage } from "./moduleDamage";
 import { getBossAttackModifiers, processBossRegeneration } from "./bossAbilities";
 import {
@@ -138,11 +139,11 @@ export function handleEnemyCounterAttack(
 
     // Phase Shield: 20% chance to nullify attack if shields >= 20% of max
     if (
-        state.research.researchedTechs.includes("phase_shield") &&
-        state.ship.shields > 0 &&
-        state.ship.maxShields > 0 &&
-        state.ship.shields >= state.ship.maxShields * 0.2 &&
-        Math.random() < 0.2
+        shouldPhaseShieldAbsorb(
+            state.research.researchedTechs,
+            state.ship.shields,
+            state.ship.maxShields,
+        )
     ) {
         get().addLog(`🔷 Фазовый щит! Атака полностью поглощена! (20% шанс)`, "info");
         recordPlayerHit(set, tgt, 0, 0, false, true);

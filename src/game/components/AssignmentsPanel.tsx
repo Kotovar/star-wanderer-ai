@@ -16,6 +16,10 @@ import type {
 } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
 import { ProfessionSprite } from "./ProfessionSprite";
+import {
+    ASSIGNMENT_EXHAUSTED_AT,
+    ASSIGNMENT_TIRED_AT,
+} from "@/game/crew/assignmentFatigue";
 
 type CivilianAction = {
     value: NonNullable<CrewMemberAssignment>;
@@ -317,6 +321,21 @@ function CrewAssignmentCard({
                                     Ход потрачен
                                 </span>
                             )}
+                            {race?.hasFatigue &&
+                                (crewMember.assignmentFatigue ?? 0) > 0 && (
+                                    <span
+                                        className={`text-[10px] border px-1.5 py-0.5 rounded ${
+                                            (crewMember.assignmentFatigue ?? 0) >=
+                                            ASSIGNMENT_TIRED_AT
+                                                ? "border-[#ff660055] text-[#ff6600]"
+                                                : "border-[#00d4ff55] text-[#00d4ff]"
+                                        }`}
+                                    >
+                                        {(crewMember.assignmentRestTurns ?? 0) > 0
+                                            ? `Отдых: ${crewMember.assignmentRestTurns} х.`
+                                            : `Усталость ${crewMember.assignmentFatigue}/${ASSIGNMENT_EXHAUSTED_AT}`}
+                                    </span>
+                                )}
                         </div>
                         <div className="mt-1 grid grid-cols-2 gap-2 text-[10px]">
                             <CrewBar
@@ -422,6 +441,10 @@ function CrewAssignmentCard({
                                 <button
                                     key={itemValue}
                                     type="button"
+                                    disabled={
+                                        (crewMember.assignmentRestTurns ?? 0) >
+                                            0 && itemValue !== "none"
+                                    }
                                     onClick={() =>
                                         onSetTask(
                                             itemValue as
@@ -430,7 +453,7 @@ function CrewAssignmentCard({
                                             action,
                                         )
                                     }
-                                    className={`cursor-pointer text-left border p-2 transition-colors ${
+                                    className={`cursor-pointer text-left border p-2 transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${
                                         isActive
                                             ? "border-[#00ff41] bg-[rgba(0,255,65,0.12)]"
                                             : "border-[#333] bg-[rgba(0,0,0,0.2)] hover:border-[#00ff41aa]"

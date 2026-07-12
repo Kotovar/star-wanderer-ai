@@ -9,6 +9,7 @@ import {
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import { playSound } from "@/sounds";
 import { getTotalEvasion } from "@/game/slices/ship/helpers/getTotalEvasion";
+import { shouldPhaseShieldAbsorb } from "@/game/research/specialAbilities";
 import type { GameState, GameStore, Module, ModuleType } from "@/game/types";
 import * as enemyAttack from "./enemyAttack";
 import {
@@ -162,11 +163,11 @@ export function executeEnemyAttack(
 
     // Phase Shield: 20% chance to nullify attack if shields >= 20% of max
     if (
-        state.research.researchedTechs.includes("phase_shield") &&
-        state.ship.shields > 0 &&
-        state.ship.maxShields > 0 &&
-        state.ship.shields >= state.ship.maxShields * 0.2 &&
-        Math.random() < 0.2
+        shouldPhaseShieldAbsorb(
+            state.research.researchedTechs,
+            state.ship.shields,
+            state.ship.maxShields,
+        )
     ) {
         get().addLog(
             `🔷 Фазовый щит! Атака полностью поглощена! (20% шанс)`,

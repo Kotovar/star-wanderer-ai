@@ -29,6 +29,7 @@ const EVENT_ACCENTS: Record<PendingRandomEvent["type"], string> = {
   virus: "#ff0040",
   fuel_leak: "#c040ff",
   crew_dispute: "#ff7a00",
+  consequence: "#ffb000",
 };
 
 const EVENT_ICONS: Record<PendingRandomEvent["type"], string> = {
@@ -37,6 +38,7 @@ const EVENT_ICONS: Record<PendingRandomEvent["type"], string> = {
   virus: "☣",
   fuel_leak: "◒",
   crew_dispute: "◐",
+  consequence: "◆",
 };
 
 function buildEventView(
@@ -239,6 +241,24 @@ function buildEventView(
             outcome: t("random_events.crew_dispute.standard.outcome", {
               penalty: event.happinessPenalty,
             }),
+            available: true,
+          },
+        ],
+      };
+    case "consequence":
+      return {
+        description: t(
+          `random_events.consequence.${event.eventType}.${event.choice}`,
+        ),
+        choices: [
+          {
+            id: "standard",
+            icon: "✓",
+            label: t("random_events.consequence.confirm"),
+            description: t("random_events.consequence.description", {
+              event: t(`random_events.${event.eventType}.title`),
+            }),
+            outcome: t("random_events.consequence.outcome"),
             available: true,
           },
         ],

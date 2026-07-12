@@ -22,7 +22,11 @@ import type { ShopItem } from "./shops";
 import type { AugmentationId } from "./augmentations";
 import type { DiveState, ExpeditionState } from "./exploration";
 import type { ActiveCrisisState, CrisisResponse } from "./crisis";
-import type { PendingRandomEvent, RandomEventChoiceId } from "./randomEvents";
+import type {
+  PendingRandomEvent,
+  RandomEventChoiceId,
+  ScheduledRandomEventConsequence,
+} from "./randomEvents";
 
 export type GameMode =
   | "galaxy_map"
@@ -62,6 +66,7 @@ export interface GameState {
   traveling: TravelingState | null;
   pendingTravelEvent: PendingTravelEvent | null;
   pendingRandomEvent: PendingRandomEvent | null;
+  scheduledRandomEventConsequence: ScheduledRandomEventConsequence | null;
   ship: {
     armor: number;
     shields: number;
@@ -131,6 +136,7 @@ export interface GameState {
   sectorOffset: { x: number; y: number }; // Sector map pan offset
   bannedPlanets: string[]; // Planet location IDs permanently hostile (guard killed there)
   startTemplateId?: string; // Ship template used to start this game (undefined = old save)
+  startModifierIds: string[]; // Launch modifiers and selected doctrine
   activeCrisis: ActiveCrisisState | null; // Currently active global crisis
   discoveredCrisisIds: string[]; // Crises already encountered by the player
   nextCrisisTurn: number; // Turn on which the next global crisis triggers

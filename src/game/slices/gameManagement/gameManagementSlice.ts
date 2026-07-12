@@ -65,6 +65,10 @@ export const createGameManagementSlice = (
         if (saved.pendingRandomEvent === undefined) {
             saved.pendingRandomEvent = null;
         }
+        if (saved.scheduledRandomEventConsequence === undefined) {
+            saved.scheduledRandomEventConsequence = null;
+        }
+        saved.startModifierIds ??= [];
 
         // Синхронизация трейтов экипажа
         const allTraits = Object.values(CREW_TRAITS).flat();
@@ -115,6 +119,10 @@ export const createGameManagementSlice = (
         if (saved.pendingRandomEvent === undefined) {
             saved.pendingRandomEvent = null;
         }
+        if (saved.scheduledRandomEventConsequence === undefined) {
+            saved.scheduledRandomEventConsequence = null;
+        }
+        saved.startModifierIds ??= [];
 
         // Синхронизация трейтов
         const allTraits = Object.values(CREW_TRAITS).flat();
