@@ -9,6 +9,7 @@ import {
     STORM_LOOT_CONFIG,
     STORM_RESOURCES,
     STORM_COMMON,
+    LIFESUPPORT_HAZARD_RESISTANCE,
 } from "../constants";
 
 type ModuleDamaged = { name: string; damage: number };
@@ -317,6 +318,26 @@ export const handleStormEntry = (set: SetState, get: () => GameStore): void => {
             crewDamage: effects.crewDamage * 0.5,
         };
         get().addLog(`🌪️ Штормовые щиты: урон снижен на 50%`, "info");
+    }
+
+    // Жизнеобеспечение фильтрует экологические угрозы
+    const lifesupportModules = state.ship.modules.filter(
+        (m) => m.type === "lifesupport" && m.health > 0,
+    );
+    if (lifesupportModules.length > 0) {
+        const maxTier = Math.max(...lifesupportModules.map((m) => m.level ?? 1));
+        const resistance = LIFESUPPORT_HAZARD_RESISTANCE[maxTier] ?? 0;
+        if (resistance > 0) {
+            effects = {
+                ...effects,
+                moduleDamage: effects.moduleDamage * (1 - resistance),
+                crewDamage: effects.crewDamage * (1 - resistance),
+            };
+            get().addLog(
+                `🌿 Жизнеобеспечение: экологический урон снижен на ${Math.round(resistance * 100)}%`,
+                "info",
+            );
+        }
     }
 
     // Применяем урон по щитам

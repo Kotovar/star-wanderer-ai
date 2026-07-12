@@ -1813,14 +1813,16 @@
       "waiting": "Waiting - inactive",
       "evasion": "Evasion - increase evasion",
       "navigation": "Navigation - reduces fuel consumption",
-      "targeting": "Targeting - target selection"
+      "targeting": "Targeting - target selection",
+      "vent_fuel": "Vent 10 fuel to restore up to 15 shields"
     },
     "engineer": {
       "waiting": "Waiting - inactive",
       "power": "Power - +5 generation",
       "repair": "Repair - +15% module health",
       "overclock": "Overclock - +15% damage, weapon bay armor = 0",
-      "calibration": "Calibration - +10% firing accuracy"
+      "calibration": "Calibration - +10% firing accuracy",
+      "vent_fuel": "Vent 10 fuel to restore up to 15 shields"
     },
     "medic": {
       "waiting": "Waiting - inactive",
@@ -3082,6 +3084,27 @@
         "outcome": "All crew morale drops by {{penalty}}."
       }
     },
+    "biohazard": {
+      "title": "Biohazard",
+      "description": "Scanners detect alien spores in the ventilation system. Without intervention, the crew takes {{damage}} HP damage.",
+      "medic": {
+        "label": "Emergency decontamination",
+        "description": "The medic develops an antidote and contains the contamination.",
+        "outcome": "Crew damage reduced to {{damage}} HP, medic gains experience.",
+        "requirement": "a living medic"
+      },
+      "filters": {
+        "label": "Bio-filters",
+        "description": "Life support switches to deep filtration mode.",
+        "outcome": "Spores neutralized, life support takes 5 HP damage.",
+        "requirement": "active life support"
+      },
+      "standard": {
+        "label": "General isolation",
+        "description": "Seal the compartments and wait out the spore spread.",
+        "outcome": "Crew takes {{damage}} HP damage and loses 5 morale."
+      }
+    },
     "consequence": {
       "title": "Delayed Consequence",
       "confirm": "Accept result",
@@ -3108,9 +3131,14 @@
         "standard": "The isolated line developed a secondary leak: -3 fuel."
       },
       "crew_dispute": {
-        "specialist": "The captain's personal decision restored trust: up to +4 crew morale.",
-        "systems": "Separate rest shifts helped the crew reconcile: up to +4 crew morale.",
-        "standard": "The dispute ended by command left resentment: crew morale -2."
+        "specialist": "The captain's personal decision restored trust: up to +4 morale.",
+        "systems": "Separate rest helped the shifts reconcile: up to +4 morale.",
+        "standard": "The conflict suppressed by command left resentment: morale -2."
+      },
+      "biohazard": {
+        "specialist": "The medic's prevention averted a relapse: up to +2 morale.",
+        "systems": "Bio-filters cleansed the ventilation: up to +2 morale.",
+        "standard": "Remaining spores continue to trouble the crew: morale -3."
       }
     },
     "logs": {
@@ -3121,6 +3149,7 @@
       "detected_virus": "☣ Shipboard virus detected — captain's decision required",
       "detected_fuel_leak": "◒ Fuel leak detected — captain's decision required",
       "detected_crew_dispute": "◐ Crew dispute reported — captain's decision required",
+      "detected_biohazard": "☄ Biohazard detected — captain's decision required",
       "detected_consequence": "◆ A delayed consequence of an earlier decision has surfaced",
       "storm_pilot": "The pilot crossed the front: module took {{damage}} damage",
       "storm_shields": "Shields absorbed {{absorbed}}; remaining module damage: {{damage}}",
@@ -3136,7 +3165,10 @@
       "fuel_leak_standard": "Fuel line isolated: {{loss}} fuel lost",
       "crew_dispute_captain": "The captain settled the dispute: crew morale -{{penalty}}",
       "crew_dispute_quarters": "Shifts separated into living quarters: dispute resolved",
-      "crew_dispute_standard": "Dispute ended by command: crew morale -{{penalty}}"
+      "crew_dispute_standard": "Dispute ended by command: crew morale -{{penalty}}",
+      "biohazard_specialist": "Medic neutralized the spores: crew -{{damage}} HP",
+      "biohazard_systems": "Bio-filters cleansed the ventilation: life support -5 HP",
+      "biohazard_standard": "Spores spread through the ship: crew -{{damage}} HP, morale -5"
     }
   },
 

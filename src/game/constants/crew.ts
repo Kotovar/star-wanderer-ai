@@ -54,6 +54,8 @@ export const CREW_ASSIGNMENT_ICONS: Record<ActiveCrewAssignment, string> = {
     sabotage: "🕵",
     merge: "🧬",
     training: "🎓",
+    fuel_synthesis: "⛽",
+    vent_fuel: "♨️",
 };
 
 export const COMBAT_ACTIONS: Record<
@@ -73,6 +75,12 @@ export const COMBAT_ACTIONS: Record<
             effect: "+уровень% уклонение",
             moduleType: "cockpit",
         },
+        {
+            value: "vent_fuel",
+            label: "Вентиляция топлива",
+            effect: "-10 топлива, +15 щита",
+            moduleType: "fueltank",
+        },
     ],
     engineer: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
@@ -88,6 +96,12 @@ export const COMBAT_ACTIONS: Record<
             label: "Перегрузка",
             effect: "+15% урон, -броня модуля",
             moduleType: "weaponbay",
+        },
+        {
+            value: "vent_fuel",
+            label: "Вентиляция топлива",
+            effect: "-10 топлива, +15 щита",
+            moduleType: "fueltank",
         },
     ],
     medic: [
@@ -151,6 +165,11 @@ export const CREW_ACTIONS: Record<
             value: "reactor_overload",
             label: "Разгон реактора",
             effect: "+5⚡ энергии реактору",
+        },
+        {
+            value: "fuel_synthesis",
+            label: "Синтез топлива",
+            effect: "+1 топливо, -2 морали за ход",
         },
     ],
     medic: [

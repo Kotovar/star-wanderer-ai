@@ -278,6 +278,9 @@ const processNonCombatAssignment = (
         case "training":
             processTrainingAssignment(crewMember, currentModule, get);
             break;
+        case "fuel_synthesis":
+            processFuelSynthesisAssignment(crewMember, currentModule, set, get);
+            break;
     }
 };
 
@@ -484,7 +487,8 @@ const processEvasionAssignment = (
 
 /**
  * Лечение экипажа
- * Работает в любом модуле - лечит экипаж в том же модуле
+ * В medbay — лечит экипаж в том же модуле (100%)
+ * В lifesupport — био-регенерация: лечит весь экипаж на 50% + +1 к настроению
  */
 const processHealAssignment = (
     crewMember: CrewMember,
@@ -509,6 +513,47 @@ const processHealAssignment = (
         if (augEffect?.healingBonus) {
             healAmount = Math.floor(healAmount * (1 + augEffect.healingBonus));
         }
+    }
+
+    // Био-регенерация: lifesupport лечит весь экипаж на 50% + бонус к настроению
+    if (currentModule.type === "lifesupport") {
+        const bioHeal = Math.floor(healAmount * 0.5);
+        const crewToHeal = get().crew.filter(
+            (c) =>
+                c.health < (c.maxHealth || ASSIGNMENT_MULTIPLIERS.MAX_HEALTH),
+        );
+        if (crewToHeal.length === 0) {
+            get().addLog(`${crewMember.name}: Экипаж здоров`, "info");
+            return;
+        }
+        set((s) => ({
+            crew: s.crew.map((c) => {
+                const needsHeal =
+                    c.health <
+                    (c.maxHealth || ASSIGNMENT_MULTIPLIERS.MAX_HEALTH);
+                return needsHeal
+                    ? {
+                          ...c,
+                          health: Math.min(
+                              c.maxHealth ||
+                                  ASSIGNMENT_MULTIPLIERS.MAX_HEALTH,
+                              c.health + bioHeal,
+                          ),
+                          happiness: Math.min(
+                              c.maxHappiness ||
+                                  ASSIGNMENT_MULTIPLIERS.MAX_HAPPINESS,
+                              c.happiness + 1,
+                          ),
+                      }
+                    : c;
+            }),
+        }));
+        get().addLog(
+            `🌿 ${crewMember.name}: Био-регенерация +${bioHeal}❤️ всему экипажу`,
+            "info",
+        );
+        get().gainExp(crewMember, BASE_EXP_REWARDS.HEAL);
+        return;
     }
 
     const crewToHeal = get().crew.filter(
@@ -685,6 +730,44 @@ const processTrainingAssignment = (
     }
     get().addLog(`🎯 ${crewMember.name}: Тренировка — получен опыт`, "info");
     get().gainExp(crewMember, BASE_EXP_REWARDS.TRAINING);
+};
+
+const processFuelSynthesisAssignment = (
+    crewMember: CrewMember,
+    currentModule: Module,
+    set: SetState,
+    get: () => GameStore,
+): void => {
+    const state = get();
+    if (
+        currentModule.type !== "fueltank" ||
+        state.ship.fuel >= state.ship.maxFuel
+    )
+        return;
+
+    set((s) => ({
+        ship: {
+            ...s.ship,
+            fuel: Math.min(
+                s.ship.maxFuel,
+                s.ship.fuel + ASSIGNMENT_BASES.FUEL_SYNTHESIS_AMOUNT,
+            ),
+        },
+        crew: s.crew.map((member) =>
+            member.id === crewMember.id
+                ? {
+                      ...member,
+                      happiness: Math.max(
+                          ASSIGNMENT_MULTIPLIERS.MIN_HAPPINESS,
+                          member.happiness -
+                              ASSIGNMENT_BASES.FUEL_SYNTHESIS_HAPPINESS_COST,
+                      ),
+                  }
+                : member,
+        ),
+    }));
+    get().addLog(`⛽ ${crewMember.name}: +1 топливо, -2 морали`, "info");
+    get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
 };
 
 /**

@@ -29,6 +29,7 @@ const EVENT_ACCENTS: Record<PendingRandomEvent["type"], string> = {
   virus: "#ff0040",
   fuel_leak: "#c040ff",
   crew_dispute: "#ff7a00",
+  biohazard: "#00ff88",
   consequence: "#ffb000",
 };
 
@@ -38,6 +39,7 @@ const EVENT_ICONS: Record<PendingRandomEvent["type"], string> = {
   virus: "☣",
   fuel_leak: "◒",
   crew_dispute: "◐",
+  biohazard: "☄",
   consequence: "◆",
 };
 
@@ -240,6 +242,44 @@ function buildEventView(
             description: t("random_events.crew_dispute.standard.description"),
             outcome: t("random_events.crew_dispute.standard.outcome", {
               penalty: event.happinessPenalty,
+            }),
+            available: true,
+          },
+        ],
+      };
+    case "biohazard":
+      return {
+        description: t("random_events.biohazard.description", {
+          damage: event.crewDamage,
+        }),
+        choices: [
+          {
+            id: "specialist",
+            icon: "✚",
+            label: t("random_events.biohazard.medic.label"),
+            description: t("random_events.biohazard.medic.description"),
+            outcome: t("random_events.biohazard.medic.outcome", {
+              damage: Math.ceil(event.crewDamage * 0.3),
+            }),
+            available: isAvailable("specialist"),
+            requirement: t("random_events.biohazard.medic.requirement"),
+          },
+          {
+            id: "systems",
+            icon: "🌿",
+            label: t("random_events.biohazard.filters.label"),
+            description: t("random_events.biohazard.filters.description"),
+            outcome: t("random_events.biohazard.filters.outcome"),
+            available: isAvailable("systems"),
+            requirement: t("random_events.biohazard.filters.requirement"),
+          },
+          {
+            id: "standard",
+            icon: "▣",
+            label: t("random_events.biohazard.standard.label"),
+            description: t("random_events.biohazard.standard.description"),
+            outcome: t("random_events.biohazard.standard.outcome", {
+              damage: event.crewDamage,
             }),
             available: true,
           },

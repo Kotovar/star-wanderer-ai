@@ -16,6 +16,7 @@ import {
     getBossAttackModifiers,
     processBossRegeneration,
 } from "./bossAbilities";
+import { maybeExplodeFuelTank } from "./moduleDamage";
 
 /**
  * Priority values for enemy AI targeting
@@ -558,6 +559,7 @@ function applyModuleDamage(
     }
 
     damageCrewInModule(targetModule.id, crewDmg, wasDestroyed, set, get, state);
+    maybeExplodeFuelTank(targetModule.id, set, get);
 
     return reducedDamage;
 }

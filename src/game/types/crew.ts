@@ -69,6 +69,8 @@ export type CrewMemberAssignment =
     | "sabotage"
     | "merge"
     | "training"
+    | "fuel_synthesis"
+    | "vent_fuel"
     | ""
     | null;
 
@@ -83,6 +85,7 @@ export type CrewMemberCombatAssignment =
     | "firstaid"
     | "analysis"
     | "sabotage"
+    | "vent_fuel"
     | ""
     | null;
 

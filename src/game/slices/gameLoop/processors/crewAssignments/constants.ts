@@ -40,6 +40,8 @@ export const ASSIGNMENT_BASES = {
     NAVIGATION_CONSUMPTION: 1,
     EVADE_BONUS: 3,
     PATROL_CREDITS_PER_LEVEL: 5,
+    FUEL_SYNTHESIS_AMOUNT: 1,
+    FUEL_SYNTHESIS_HAPPINESS_COST: 2,
 } as const;
 
 /** Множители и лимиты */

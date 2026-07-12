@@ -5,7 +5,8 @@ export type RandomEventType =
   | "capsule"
   | "virus"
   | "fuel_leak"
-  | "crew_dispute";
+  | "crew_dispute"
+  | "biohazard";
 
 export interface ScheduledRandomEventConsequence {
   eventType: RandomEventType;
@@ -34,6 +35,10 @@ export type PendingRandomEvent =
   | {
       type: "crew_dispute";
       happinessPenalty: number;
+    }
+  | {
+      type: "biohazard";
+      crewDamage: number;
     }
   | {
       type: "consequence";

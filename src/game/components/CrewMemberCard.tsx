@@ -272,6 +272,7 @@ function getActionDescription(
       evasion: "profession_actions.pilot.evasion",
       navigation: "profession_actions.pilot.navigation",
       targeting: "profession_actions.pilot.targeting",
+      vent_fuel: "profession_actions.pilot.vent_fuel",
     },
     engineer: {
       "": "profession_actions.engineer.waiting",
@@ -279,6 +280,7 @@ function getActionDescription(
       repair: "profession_actions.engineer.repair",
       overclock: "profession_actions.engineer.overclock",
       calibration: "profession_actions.engineer.calibration",
+      vent_fuel: "profession_actions.engineer.vent_fuel",
     },
     medic: {
       "": "profession_actions.medic.waiting",

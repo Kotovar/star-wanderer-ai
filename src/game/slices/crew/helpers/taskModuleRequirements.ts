@@ -18,6 +18,8 @@ export const TASK_MODULE_REQUIREMENTS: Record<
     repair: [],
     calibration: ["weaponbay"],
     overclock: ["weaponbay"],
+    fuel_synthesis: ["fueltank"],
+    vent_fuel: ["fueltank"],
 
     // Медик
     heal: [],

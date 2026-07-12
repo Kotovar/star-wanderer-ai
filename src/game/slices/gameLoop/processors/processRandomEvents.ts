@@ -26,6 +26,8 @@ const FUEL_LEAK_MIN = 8;
 const FUEL_LEAK_MAX = 15;
 const CREW_DISPUTE_HAPPINESS_PENALTY = 6;
 const SPECIALIST_EXP = 4;
+const BIOHAZARD_DAMAGE_MIN = 10;
+const BIOHAZARD_DAMAGE_MAX = 20;
 
 type RandomEventState = Pick<GameState, "crew" | "ship">;
 
@@ -73,6 +75,9 @@ export function canUseRandomEventChoice(
     case "crew_dispute":
       if (choice === "specialist") return !!findLivingCrew(state, "pilot");
       return !!findActiveModule(state, "quarters");
+    case "biohazard":
+      if (choice === "specialist") return !!findLivingCrew(state, "medic");
+      return !!findActiveModule(state, "lifesupport");
   }
 }
 
@@ -144,6 +149,13 @@ function applyRandomEventConsequence(
       break;
     case "crew_dispute":
       changeCrewHappiness(set, positive ? 4 : -2);
+      break;
+    case "biohazard":
+      if (positive) {
+        changeCrewHappiness(set, 2);
+      } else {
+        changeCrewHappiness(set, -3);
+      }
       break;
   }
 
@@ -381,6 +393,64 @@ function applyCrewDisputeChoice(
   );
 }
 
+function applyBiohazardChoice(
+  event: Extract<PendingRandomEvent, { type: "biohazard" }>,
+  choice: RandomEventChoiceId,
+  set: SetState,
+  get: () => GameStore,
+): void {
+  if (choice === "systems") {
+    // Жизнеобеспечение фильтрует споры — модуль получает небольшой урон
+    const lifesupport = findActiveModule(get(), "lifesupport");
+    if (lifesupport) {
+      set((s) => ({
+        ship: {
+          ...s.ship,
+          modules: s.ship.modules.map((m) =>
+            m.id === lifesupport.id
+              ? { ...m, health: Math.max(1, m.health - 5) }
+              : m,
+          ),
+        },
+      }));
+    }
+    get().addLog(i18nStore.t("random_events.logs.biohazard_systems"), "info");
+    return;
+  }
+
+  if (choice === "specialist") {
+    // Медик нейтрализует угрозу — минимальный урон + опыт
+    const damage = Math.floor(event.crewDamage * 0.3);
+    set((state) => ({
+      crew: state.crew.map((member) => ({
+        ...member,
+        health: Math.max(1, member.health - damage),
+      })),
+    }));
+    get().gainExp(findLivingCrew(get(), "medic"), SPECIALIST_EXP);
+    get().addLog(
+      i18nStore.t("random_events.logs.biohazard_specialist", { damage }),
+      "info",
+    );
+    return;
+  }
+
+  // Стандарт: полный урон экипажу + снижение настроения
+  set((state) => ({
+    crew: state.crew.map((member) => ({
+      ...member,
+      health: Math.max(1, member.health - event.crewDamage),
+      happiness: Math.max(0, member.happiness - 5),
+    })),
+  }));
+  get().addLog(
+    i18nStore.t("random_events.logs.biohazard_standard", {
+      damage: event.crewDamage,
+    }),
+    "error",
+  );
+}
+
 export const resolveRandomEvent = (
   choice: RandomEventChoiceId,
   set: SetState,
@@ -408,6 +478,9 @@ export const resolveRandomEvent = (
       break;
     case "crew_dispute":
       applyCrewDisputeChoice(event, choice, set, get);
+      break;
+    case "biohazard":
+      applyBiohazardChoice(event, choice, set, get);
       break;
     case "consequence":
       applyRandomEventConsequence(event, set, get);
@@ -473,6 +546,7 @@ export const processRandomEvents = (
     "virus",
     "fuel_leak",
     "crew_dispute",
+    "biohazard",
   ] as const);
   let event: PendingRandomEvent;
 
@@ -494,6 +568,11 @@ export const processRandomEvents = (
     event = {
       type: "fuel_leak",
       fuelLoss: randomInRange(FUEL_LEAK_MIN, FUEL_LEAK_MAX),
+    };
+  } else if (eventType === "biohazard") {
+    event = {
+      type: "biohazard",
+      crewDamage: randomInRange(BIOHAZARD_DAMAGE_MIN, BIOHAZARD_DAMAGE_MAX),
     };
   } else {
     event = {

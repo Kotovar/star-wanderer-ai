@@ -87,7 +87,35 @@ export const processCombatAssignment = (
             );
             get().gainExp(crewMember, BASE_EXP_REWARDS.ANALYSIS_SABOTAGE);
             break;
+        case "vent_fuel":
+            processVentFuel(crewMember, currentModule, set, get);
+            break;
     }
+};
+
+const processVentFuel = (
+    crewMember: CrewMember,
+    currentModule: Module,
+    set: SetState,
+    get: () => GameStore,
+): void => {
+    const state = get();
+    if (currentModule.type !== "fueltank" || state.ship.fuel < 10) return;
+    const restored = Math.min(15, state.ship.maxShields - state.ship.shields);
+    if (restored <= 0) return;
+
+    set((s) => ({
+        ship: {
+            ...s.ship,
+            fuel: s.ship.fuel - 10,
+            shields: s.ship.shields + restored,
+        },
+    }));
+    get().addLog(
+        `♨️ ${crewMember.name}: -10 топлива, +${restored} щита`,
+        "combat",
+    );
+    get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
 };
 
 /**

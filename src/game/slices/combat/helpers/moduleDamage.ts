@@ -120,8 +120,40 @@ export function applyModuleDamage(
         get,
         state,
     );
+    maybeExplodeFuelTank(targetModule.id, set, get);
 
     return reducedDamage;
+}
+
+export function maybeExplodeFuelTank(
+    moduleId: number,
+    set: (fn: (s: GameState) => void) => void,
+    get: () => GameStore,
+): void {
+    const tank = get().ship.modules.find((module) => module.id === moduleId);
+    if (!tank || tank.type !== "fueltank" || tank.health >= 30) return;
+
+    const chance =
+        (tank.level ?? 1) >= 4 ? 0 : (tank.level ?? 1) >= 3 ? 0.05 : 0.15;
+    if (Math.random() >= chance) return;
+
+    const adjacentIds = get().ship.modules
+        .filter(
+            (module) =>
+                module.id !== tank.id &&
+                get().isModuleAdjacent(tank.id, module.id),
+        )
+        .map((module) => module.id);
+    set((s) => {
+        s.ship.modules.forEach((module) => {
+            if (adjacentIds.includes(module.id))
+                module.health = Math.max(0, module.health - 15);
+        });
+    });
+    get().addLog(
+        `💥 Топливный бак «${tank.name}» взорвался: соседние модули получили 15 урона`,
+        "error",
+    );
 }
 
 /**
