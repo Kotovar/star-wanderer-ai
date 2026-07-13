@@ -33,7 +33,14 @@ export const tryFindArtifact = (
     // Помечаем артефакт как обнаруженный
     set((s) => ({
         artifacts: s.artifacts.map((a) =>
-            a.id === artifact.id ? { ...a, discovered: true } : a,
+            a.id === artifact.id
+                ? {
+                      ...a,
+                      discovered: true,
+                      hinted: false,
+                      hintedAt: undefined,
+                  }
+                : a,
         ),
     }));
 

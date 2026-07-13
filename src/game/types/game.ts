@@ -82,7 +82,7 @@ export interface GameState {
     bonusPower?: number; // Temporary power bonus from planet effects
     bonusShields?: number; // Temporary shield bonus from planet effects
     bonusEvasion?: number; // Temporary evasion bonus from planet effects (as percentage)
-    bonusDamage?: number; // Temporary damage bonus from planet effects (as multiplier, e.g. 0.15 = +15%)
+    bonusDamage?: number; // Damage bonus from planet and gameplay effects (as multiplier, e.g. 0.1 = +10%)
     bonusShieldRegen?: number; // Temporary shield regen bonus from planet effects (per turn)
     mergeTraits?: ShipMergeTrait[]; // Traits from xenosymbiont merging with ship
   };
@@ -119,7 +119,7 @@ export interface GameState {
   gameVictory: boolean; // Victory state
   gameVictoryReason: string | null; // Reason for victory
   victoryTriggered: boolean; // Persistent flag — prevents re-triggering after "Continue"
-  activeEffects: ActiveEffect[]; // Temporary effects from planets and gameplay
+  activeEffects: ActiveEffect[]; // Active effects from planets and gameplay
   planetCooldowns: Record<string, number>; // Track cooldowns per planet (planetId -> turnsRemaining)
   research: ResearchData; // Research system data
   moduleRecipes: ModuleRecipeId[]; // One-time module blueprint recipes found by Scout

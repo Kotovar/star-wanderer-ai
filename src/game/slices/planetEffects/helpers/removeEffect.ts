@@ -10,7 +10,7 @@ export const removeExpiredEffects = (set: SetState, get: () => GameStore) => {
     set((s) => {
         // Находим эффекты, которые истекают в этом ходу
         const expiringEffects = s.activeEffects.filter(
-            (e) => e.turnsRemaining === 1,
+            (e) => !e.permanent && e.turnsRemaining === 1,
         );
 
         // Собираем значения бонусов для удаления
@@ -63,9 +63,11 @@ export const removeExpiredEffects = (set: SetState, get: () => GameStore) => {
         const activeEffects = s.activeEffects
             .map((effect) => ({
                 ...effect,
-                turnsRemaining: effect.turnsRemaining - 1,
+                turnsRemaining: effect.permanent
+                    ? effect.turnsRemaining
+                    : effect.turnsRemaining - 1,
             }))
-            .filter((effect) => effect.turnsRemaining > 0);
+            .filter((effect) => effect.permanent || effect.turnsRemaining > 0);
 
         // Логируем истёкшие эффекты
         expiringEffects.forEach((effect) => {

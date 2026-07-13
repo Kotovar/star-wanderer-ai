@@ -1033,6 +1033,7 @@
     "discovered": "Discovered",
     "researched": "Researched",
     "active": "Active",
+    "hints": "Hints",
     "active_artifacts": "Active artifacts",
     "slots_full": "full!",
     "slots_full_hint": "Slots full. Deactivate another artifact.",
@@ -1050,6 +1051,9 @@
     "tip_text": "Regular artifacts can be found in anomalies and storms. Cursed artifacts are rarer, but their effects are very powerful — and dangerous.",
     "undiscovered": "Not yet discovered...",
     "undiscovered_hint": "Search anomalies, wrecks and ruins",
+    "hint_label": "ARCHIVE SIGNAL",
+    "hint_text": "Archives marked this artifact as a priority for discovery",
+    "hint_location": "Search",
     "active_label": "ACTIVE",
     "research_btn": "RESEARCH",
     "research_btn_dangerous": "⚠️ RESEARCH (DANGEROUS)",
@@ -1070,9 +1074,10 @@
     "no_matches": "No effects match this filter",
     "close": "CLOSE",
     "cancel": "Cancel",
-    "description": "Temporary ship conditions from planets, crew, combat, anomalies, and events",
-    "empty_hint": "Assign crew, win battles, investigate anomalies, and use specialist event choices to gain temporary effects.",
+    "description": "Ship conditions from planets, crew, combat, anomalies, and events",
+    "empty_hint": "Assign crew, win battles, investigate anomalies, and use specialist event choices to gain effects.",
     "turns": "turn(s)",
+    "permanent": "permanent",
     "level_short": "Lv",
     "acquired_turn": "Received on turn {{turn}}",
     "summary": {
@@ -2142,7 +2147,7 @@
     },
     "synthetic_archives": {
       "name": "Data Archives",
-      "description": "Synthetics store knowledge of ancient civilizations. You can receive valuable information about the sector."
+      "description": "Archives scan the sector and mark signals from three artifacts."
     },
     "xenosymbiont_lab": {
       "name": "Bio Laboratory",
@@ -2150,11 +2155,11 @@
     },
     "krylorian_dojo": {
       "name": "Warrior Dojo",
-      "description": "Insectoid krylorians are born warriors. Dojo training improves combat skills."
+      "description": "Insectoid-krylorians are born warriors. The dojo permanently increases crew damage by 10%."
     },
     "voidborn_ritual": {
       "name": "Mystic Ritual",
-      "description": "Voidborn conduct ancient rituals to enhance artifacts and connection with the cosmos."
+      "description": "The ritual grants +50% fuel efficiency and optionally enhances one active artifact."
     },
     "crystalline_resonator": {
       "name": "Crystal Resonator",
@@ -2165,7 +2170,7 @@
       "health_regen": "+{{value}} health regen per turn",
       "crew_level": "+{{value}} level to selected crew member",
       "sector_scan": "Full scan of current sector",
-      "artifact_hints": "{{value}} artifact hints",
+      "artifact_hints": "{{value}} artifact signals saved",
       "combat_bonus": "+{{value}}% combat damage",
       "evasion_bonus": "+{{value}}% evasion",
       "power_boost": "+{{value}} reactor power",
@@ -2378,7 +2383,7 @@
     },
     "synthetic_archives": {
       "name": "Data Archives",
-      "description": "Synthetics store knowledge of ancient civilizations. Can obtain valuable sector information."
+      "description": "Archives scan the sector and mark signals from three artifacts."
     },
     "xenosymbiont_lab": {
       "name": "Bio-Laboratory",
@@ -2386,11 +2391,12 @@
     },
     "krylorian_dojo": {
       "name": "Warrior Dojo",
-      "description": "Insectoid-krylorians are born warriors. Dojo training enhances combat skills."
+      "description": "Insectoid-krylorians are born warriors. The dojo permanently increases crew damage by 10%."
     },
     "voidborn_ritual": {
       "name": "Mystic Ritual",
-      "description": "Voidborn conduct ancient rituals to amplify artifacts and connect with the cosmos."
+      "description": "The ritual grants +50% fuel efficiency and optionally enhances one active artifact.",
+      "voidborn_artifact_selection": "Choose an active artifact to enhance (optional; without one, only the fuel bonus applies):"
     },
     "crystalline_resonator": {
       "name": "Crystal Resonator",

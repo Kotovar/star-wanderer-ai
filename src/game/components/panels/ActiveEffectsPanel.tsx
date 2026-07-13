@@ -47,12 +47,14 @@ export function ActiveEffectsPanel() {
     (effect) => effect.polarity === "negative",
   ).length;
   const expiringCount = activeEffects.filter(
-    (effect) => effect.turnsRemaining <= 2,
+    (effect) => !effect.permanent && effect.turnsRemaining <= 2,
   ).length;
   const filteredEffects = activeEffects.filter((effect) => {
     if (filter === "positive") return effect.polarity !== "negative";
     if (filter === "negative") return effect.polarity === "negative";
-    if (filter === "expiring") return effect.turnsRemaining <= 2;
+    if (filter === "expiring") {
+      return !effect.permanent && effect.turnsRemaining <= 2;
+    }
     return true;
   });
 
@@ -145,7 +147,8 @@ export function ActiveEffectsPanel() {
             const effectKey = effect.raceId
               ? getPlanetEffectKey(effect.raceId)
               : null;
-            const isExpiring = effect.turnsRemaining <= 2;
+            const isExpiring =
+              !effect.permanent && effect.turnsRemaining <= 2;
             const color = effect.color ?? race?.color ?? "#b46cff";
             const icon = effect.icon ?? race?.icon ?? SOURCE_ICONS[source];
             const name = effect.nameKey
@@ -193,7 +196,11 @@ export function ActiveEffectsPanel() {
                         : "border-[#00ff4166] bg-[rgba(0,255,65,0.08)] text-[#00ff41]"
                     }`}
                   >
-                    ⏱ {effect.turnsRemaining} {t("effects.turns")}
+                    {effect.permanent ? (
+                      <>∞ {t("effects.permanent")}</>
+                    ) : (
+                      <>⏱ {effect.turnsRemaining} {t("effects.turns")}</>
+                    )}
                   </div>
                 </div>
 

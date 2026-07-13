@@ -178,9 +178,9 @@ export const PLANET_SPECIALIZATIONS: Record<RaceId, PlanetSpecialization> = {
         id: "synthetic_archives",
         name: "Архивы Данных",
         description:
-            "Синтетики хранят знания древних цивилизаций. Можно получить ценную информацию о секторе.",
+            "Синтетики хранят знания древних цивилизаций. Архивы сканируют сектор и отмечают сигналы трёх артефактов.",
         icon: "📚",
-        cost: 300,
+        cost: 400,
         duration: 0, // Instant effect
         cooldown: 999,
         effects: [
@@ -193,7 +193,7 @@ export const PLANET_SPECIALIZATIONS: Record<RaceId, PlanetSpecialization> = {
             {
                 type: "artifact_hints",
                 value: 3,
-                description: "Подсказки о местонахождении артефактов",
+                description: "3 сигнала артефактов сохраняются в панели артефактов",
             },
         ],
     },
@@ -232,8 +232,8 @@ export const PLANET_SPECIALIZATIONS: Record<RaceId, PlanetSpecialization> = {
         effects: [
             {
                 type: "combat_bonus",
-                value: 0.15,
-                description: "+15% к урону в бою (постоянно для экипажа)",
+                value: 0.1,
+                description: "+10% к урону в бою (постоянно для экипажа)",
             },
             {
                 type: "evasion_bonus",
@@ -246,7 +246,7 @@ export const PLANET_SPECIALIZATIONS: Record<RaceId, PlanetSpecialization> = {
         id: "voidborn_ritual",
         name: "Мистический Ритуал",
         description:
-            "Рождённые Пустотой проводят древние ритуалы для усиления артефактов и связи с космосом.",
+            "Рождённые Пустотой проводят древние ритуалы: дают +50% к эффективности топлива и, по желанию, усиливают один активный артефакт.",
         icon: "🔮",
         cost: 600,
         duration: 15,

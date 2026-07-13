@@ -98,10 +98,38 @@ export const applyPlanetEffect = (
             break;
     }
 
+    const splitEffectTypes =
+        raceId === "xenosymbiont"
+            ? { permanent: "health_boost", timed: "health_regen" }
+            : raceId === "krylorian"
+              ? { permanent: "combat_bonus", timed: "evasion_bonus" }
+              : null;
+    const effectsToAdd: ActiveEffect[] = splitEffectTypes
+        ? [
+              {
+                  ...activeEffect,
+                  id: `${activeEffect.id}-permanent`,
+                  permanent: true,
+                  totalTurns: undefined,
+                  turnsRemaining: 0,
+                  effects: activeEffect.effects.filter(
+                      (effect) => effect.type === splitEffectTypes.permanent,
+                  ),
+              },
+              {
+                  ...activeEffect,
+                  id: `${activeEffect.id}-timed`,
+                  effects: activeEffect.effects.filter(
+                      (effect) => effect.type === splitEffectTypes.timed,
+                  ),
+              },
+          ].filter((effect) => effect.effects.length > 0)
+        : [activeEffect];
+
     // Добавляем активный эффект и списываем кредиты
     set((s) => ({
         credits: s.credits - spec.cost,
-        activeEffects: [...s.activeEffects, activeEffect],
+        activeEffects: [...s.activeEffects, ...effectsToAdd],
         planetCooldowns: planetId
             ? { ...s.planetCooldowns, [planetId]: spec.cooldown ?? 999 }
             : s.planetCooldowns,
@@ -152,7 +180,7 @@ const applyXenosymbiontEffect = (
 
 /**
  * Применяет эффект крилориан
- * +15% к урону (bonusDamage), +10% к уклонению
+ * +10% к урону (bonusDamage), +10% к уклонению
  */
 const applyKrylorianEffect = (spec: PlanetSpecialization, set: SetState) => {
     const evasionEffect = spec.effects.find((e) => e.type === "evasion_bonus");
@@ -161,7 +189,7 @@ const applyKrylorianEffect = (spec: PlanetSpecialization, set: SetState) => {
     const evasionBonus =
         typeof evasionEffect?.value === "number" ? evasionEffect.value : 0.1;
     const damageBonus =
-        typeof combatEffect?.value === "number" ? combatEffect.value : 0.15;
+        typeof combatEffect?.value === "number" ? combatEffect.value : 0.1;
 
     set((s) => ({
         ship: {

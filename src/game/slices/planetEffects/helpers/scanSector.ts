@@ -1,5 +1,10 @@
 import { PLANET_SPECIALIZATIONS } from "@/game/constants";
-import type { GameStore, SetState } from "@/game/types";
+import {
+    getArchiveHintLocations,
+    getRandomUndiscoveredArtifact,
+} from "@/game/artifacts/utils";
+import type { Artifact, GameStore, SetState } from "@/game/types";
+import { store as i18nStore } from "@/lib/useTranslation";
 import { playSound } from "@/sounds";
 
 /**
@@ -19,9 +24,71 @@ export const scanSector = (set: SetState, get: () => GameStore): boolean => {
         return false;
     }
 
+    const artifactHintEffect = PLANET_SPECIALIZATIONS.synthetic.effects.find(
+        (effect) => effect.type === "artifact_hints",
+    );
+    const artifactHintCount =
+        typeof artifactHintEffect?.value === "number"
+            ? artifactHintEffect.value
+            : 0;
+    const hintLocations = getArchiveHintLocations(
+        state.galaxy.sectors,
+        state.currentSector?.id,
+    );
+    const bossHint = hintLocations.find(
+        (location) => location.locationType === "boss",
+    );
+    const anomalyHint = hintLocations.find(
+        (location) => location.locationType === "anomaly",
+    );
+
+    let hintCandidates = state.artifacts.filter(
+        (artifact) => !artifact.discovered && !artifact.hinted,
+    );
+    const hintedArtifactIds = new Set<string>();
+    const hintedArtifactLocations = new Map<
+        string,
+        NonNullable<Artifact["hintedAt"]>
+    >();
+
+    while (
+        hintedArtifactIds.size < artifactHintCount &&
+        hintCandidates.length > 0
+    ) {
+        const artifact = getRandomUndiscoveredArtifact(hintCandidates);
+        if (!artifact) break;
+
+        const hintLocation =
+            hintLocations.length > 0
+                ? hintLocations[hintedArtifactIds.size % hintLocations.length]
+                : undefined;
+        hintedArtifactIds.add(artifact.id);
+        if (hintLocation) {
+            hintedArtifactLocations.set(artifact.id, hintLocation);
+        }
+        hintCandidates = hintCandidates.filter(
+            (candidate) => candidate.id !== artifact.id,
+        );
+    }
+
     // Открываем все локации в текущем секторе и сохраняем в galaxy.sectors
     set((s) => ({
         credits: s.credits - cost,
+        artifacts: s.artifacts.map((artifact) =>
+            hintedArtifactIds.has(artifact.id)
+                ? {
+                      ...artifact,
+                      hinted: true,
+                      ...(hintedArtifactLocations.has(artifact.id)
+                          ? {
+                                hintedAt: hintedArtifactLocations.get(
+                                    artifact.id,
+                                ),
+                            }
+                          : {}),
+                  }
+                : artifact,
+        ),
         currentSector: s.currentSector
             ? {
                   ...s.currentSector,
@@ -54,35 +121,23 @@ export const scanSector = (set: SetState, get: () => GameStore): boolean => {
         "info",
     );
 
-    // Ищем секторы с боссами (гарантированные артефакты) и аномалиями
-    const allSectors = state.galaxy.sectors;
-
-    // Ближайший сектор с боссом (не побеждённым)
-    const bossHint = allSectors
-        .filter((sec) =>
-            sec.locations.some((l) => l.type === "boss" && !l.bossDefeated),
-        )
-        .sort((a, b) => a.danger - b.danger)[0];
-
-    // Ближайший сектор с аномалиями
-    const anomalyHint = allSectors
-        .filter((sec) => sec.locations.some((l) => l.type === "anomaly"))
-        .filter((sec) => sec.id !== state.currentSector?.id)
-        .sort((a, b) => a.danger - b.danger)[0];
+    if (hintedArtifactIds.size > 0) {
+        get().addLog(
+            `📡 ${i18nStore.t("planet_effects.effects.artifact_hints", { value: hintedArtifactIds.size })}`,
+            "info",
+        );
+    }
 
     if (bossHint) {
-        const bossLoc = bossHint.locations.find(
-            (l) => l.type === "boss" && !l.bossDefeated,
-        );
         get().addLog(
-            `🔍 Разведданные: в секторе "${bossHint.name}" обнаружен мощный сигнал (${bossLoc?.name ?? "неизвестный объект"}) — возможно наличие ценных артефактов`,
+            `🔍 Разведданные: в секторе "${bossHint.sectorName}" обнаружен мощный сигнал (${bossHint.locationName}) — возможно наличие ценных артефактов`,
             "warning",
         );
     }
 
     if (anomalyHint) {
         get().addLog(
-            `🔍 Разведданные: в секторе "${anomalyHint.name}" зафиксированы аномальные сигналы — рекомендуется исследование`,
+            `🔍 Разведданные: в секторе "${anomalyHint.sectorName}" зафиксированы аномальные сигналы — рекомендуется исследование`,
             "warning",
         );
     }

@@ -126,7 +126,11 @@ export function handleVictory(
             artifactName = artifact.name;
             set((s) => {
                 s.artifacts.forEach((a) => {
-                    if (a.id === loot.guaranteedArtifact) a.discovered = true;
+                    if (a.id === loot.guaranteedArtifact) {
+                        a.discovered = true;
+                        a.hinted = false;
+                        a.hintedAt = undefined;
+                    }
                 });
             });
         }

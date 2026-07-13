@@ -44,7 +44,7 @@ export function PlanetSpecializationPanel({
 
     // Calculate actual cost for human academy based on selected crew level
     const actualCost =
-        spec.id === "human_academy" && selectedCrewId
+        spec.id === "human_academy" && selectedCrewId !== null
             ? (() => {
                   const member = crew.find((c) => c.id === selectedCrewId);
                   const level = member?.level || 1;
@@ -53,6 +53,8 @@ export function PlanetSpecializationPanel({
             : spec.cost;
 
     const canAfford = credits >= actualCost;
+    const needsCrewSelection =
+        spec.id === "human_academy" && selectedCrewId === null;
 
     const isMaxLevelReached = spec.requirements?.maxLevel
         ? (crew.find((c) => c.id === selectedCrewId)?.level || 1) >=
@@ -60,7 +62,13 @@ export function PlanetSpecializationPanel({
         : false;
 
     const handleConfirm = () => {
-        if (!canAfford || isOnCooldown || isMaxLevelReached) return;
+        if (
+            !canAfford ||
+            isOnCooldown ||
+            isMaxLevelReached ||
+            needsCrewSelection
+        )
+            return;
 
         const planetId = currentLocation.id;
         const raceId = currentLocation.dominantRace;
@@ -76,7 +84,7 @@ export function PlanetSpecializationPanel({
 
         // Handle special cases that need selection
         if (spec.id === "human_academy") {
-            if (selectedCrewId) {
+            if (selectedCrewId !== null) {
                 trainCrew(selectedCrewId);
             }
         } else if (spec.id === "synthetic_archives") {
@@ -157,7 +165,7 @@ export function PlanetSpecializationPanel({
                             canAfford ? "text-[#00ff41]" : "text-[#ff0040]"
                         }
                     >
-                        {spec.id === "human_academy" && selectedCrewId
+                        {spec.id === "human_academy" && selectedCrewId !== null
                             ? (() => {
                                   const selectedMember = crew.find(
                                       (c) => c.id === selectedCrewId,
@@ -236,7 +244,9 @@ export function PlanetSpecializationPanel({
             {spec.id === "voidborn_ritual" && artifacts.length > 0 && (
                 <div className="flex flex-col gap-2">
                     <div className="text-xs text-[#888]">
-                        Выберите артефакт для усиления (опционально):
+                        {t(
+                            "planet_specializations.voidborn_ritual.voidborn_artifact_selection",
+                        )}
                     </div>
                     <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
                         <button
@@ -286,7 +296,12 @@ export function PlanetSpecializationPanel({
             <div className="flex gap-2 pt-2">
                 <Button
                     onClick={handleConfirm}
-                    disabled={!canAfford || isOnCooldown || isMaxLevelReached}
+                    disabled={
+                        !canAfford ||
+                        isOnCooldown ||
+                        isMaxLevelReached ||
+                        needsCrewSelection
+                    }
                     className="cursor-pointer flex-1 bg-[#00ff41] text-black hover:bg-[#00cc33]"
                 >
                     {isOnCooldown

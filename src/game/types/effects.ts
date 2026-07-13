@@ -51,6 +51,7 @@ export interface ActiveEffect {
     acquiredTurn?: number;
     totalTurns?: number;
     turnsRemaining: number;
+    permanent?: boolean;
     effects: {
         type: EffectType;
         value: number | string;

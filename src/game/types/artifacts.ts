@@ -13,6 +13,11 @@ export interface Artifact {
     negativeEffect?: ArtifactNegativeEffect; // Primary negative effect for cursed artifacts
     negativeEffects?: ArtifactNegativeEffect[]; // Additional negative effects
     hinted?: boolean; // Has been hinted at by synthetic archives
+    hintedAt?: {
+        sectorName: string;
+        locationName: string;
+        locationType: "boss" | "anomaly";
+    };
     cursed?: boolean; // Is this a cursed artifact with negative effects
     canBoost?: boolean; // Can be enhanced by voidborn ritual (default: true if has numeric value)
     scanRange?: number; // Scan range value for artifacts that provide scan range

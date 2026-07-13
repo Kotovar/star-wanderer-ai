@@ -8,6 +8,7 @@ import type {
     ArtifactEffectType,
     GameState,
     PlanetEffectType,
+    Sector,
 } from "@/game/types";
 import { store as i18nStore } from "@/lib/useTranslation";
 
@@ -16,12 +17,58 @@ export const getArtifactById = (id: string): Artifact | undefined => {
     return ANCIENT_ARTIFACTS.find((a) => a.id === id);
 };
 
+export const getArchiveHintLocations = (
+    sectors: Sector[],
+    currentSectorId?: number,
+): NonNullable<Artifact["hintedAt"]>[] => {
+    const bossSector = sectors
+        .filter((sector) =>
+            sector.locations.some(
+                (location) => location.type === "boss" && !location.bossDefeated,
+            ),
+        )
+        .sort((a, b) => a.danger - b.danger)[0];
+    const bossLocation = bossSector?.locations.find(
+        (location) => location.type === "boss" && !location.bossDefeated,
+    );
+    const anomalySector = sectors
+        .filter((sector) =>
+            sector.locations.some((location) => location.type === "anomaly"),
+        )
+        .filter((sector) => sector.id !== currentSectorId)
+        .sort((a, b) => a.danger - b.danger)[0];
+    const anomalyLocation = anomalySector?.locations.find(
+        (location) => location.type === "anomaly",
+    );
+    const locations: NonNullable<Artifact["hintedAt"]>[] = [];
+
+    if (bossSector && bossLocation) {
+        locations.push({
+            sectorName: bossSector.name,
+            locationName: bossLocation.name,
+            locationType: "boss",
+        });
+    }
+    if (anomalySector && anomalyLocation) {
+        locations.push({
+            sectorName: anomalySector.name,
+            locationName: anomalyLocation.name,
+            locationType: "anomaly",
+        });
+    }
+
+    return locations;
+};
+
 // Get random undiscovered artifact weighted by rarity
 export const getRandomUndiscoveredArtifact = (
     artifacts: Artifact[],
 ): Artifact | null => {
     const undiscovered = artifacts.filter((a) => !a.discovered);
     if (undiscovered.length === 0) return null;
+    const candidates = undiscovered.some((a) => a.hinted)
+        ? undiscovered.filter((a) => a.hinted)
+        : undiscovered;
 
     // Weight by rarity (cursed is moderately rare but not impossible)
     const weights: Record<string, number> = {
@@ -30,18 +77,18 @@ export const getRandomUndiscoveredArtifact = (
         mythic: 10,
         cursed: 20,
     };
-    const totalWeight = undiscovered.reduce(
+    const totalWeight = candidates.reduce(
         (sum, a) => sum + (weights[a.rarity] || 10),
         0,
     );
     let random = Math.random() * totalWeight;
 
-    for (const artifact of undiscovered) {
+    for (const artifact of candidates) {
         random -= weights[artifact.rarity] || 10;
         if (random <= 0) return artifact;
     }
 
-    return undiscovered[0];
+    return candidates[0];
 };
 
 export const getEffectDescription = (

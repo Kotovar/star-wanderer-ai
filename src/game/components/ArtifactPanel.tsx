@@ -7,6 +7,8 @@ import { useTranslation } from "@/lib/useTranslation";
 import { getTechBonusSum } from "@/game/research";
 import { DEFAULT_ARTIFACT_SLOTS } from "@/game/slices/artifacts/constants";
 import type { Artifact, ArtifactType } from "@/game/types";
+import { getArchiveHintLocations } from "@/game/artifacts/utils";
+import { getLocationName } from "@/lib/translationHelpers";
 
 const RARITY_COLORS: Record<
     string,
@@ -37,7 +39,14 @@ function getRarityName(rarity: string, t: (key: string) => string): string {
     return t(RARITY_NAMES[rarity] || `artifacts.rarity.${rarity}`);
 }
 
-type ArtifactFilter = "all" | "regular" | "cursed" | "discovered" | "researched" | "active";
+type ArtifactFilter =
+    | "all"
+    | "regular"
+    | "cursed"
+    | "discovered"
+    | "researched"
+    | "active"
+    | "hinted";
 
 const EFFECT_ICONS: Record<ArtifactType, string> = {
     free_power: "⚡",
@@ -82,7 +91,7 @@ function ArtifactCard({
 
     return (
         <div
-            className={`border-2 p-3 cursor-pointer ${artifact.discovered ? "" : "opacity-40"}`}
+            className={`border-2 p-3 cursor-pointer ${artifact.discovered || artifact.hinted ? "" : "opacity-40"}`}
             style={{
                 borderColor: colors.border,
                 backgroundColor: artifact.effect.active
@@ -110,11 +119,18 @@ function ArtifactCard({
                     </div>
                 </div>
 
-                {artifact.effect.active && (
-                    <span className="text-xs text-[#00ff41] bg-[rgba(0,255,65,0.2)] px-2 py-1">
-                        {t("artifacts.active_label")}
-                    </span>
-                )}
+                <div className="flex shrink-0 flex-wrap justify-end gap-1">
+                    {artifact.hinted && !artifact.discovered && (
+                        <span className="text-xs text-[#00d4ff] bg-[rgba(0,212,255,0.15)] px-2 py-1">
+                            {t("artifacts.hint_label")}
+                        </span>
+                    )}
+                    {artifact.effect.active && (
+                        <span className="text-xs text-[#00ff41] bg-[rgba(0,255,65,0.2)] px-2 py-1">
+                            {t("artifacts.active_label")}
+                        </span>
+                    )}
+                </div>
             </div>
 
             {artifact.discovered && (
@@ -228,10 +244,30 @@ function ArtifactCard({
                     <div className="text-xs text-[#666] italic">
                         {t("artifacts.undiscovered")}
                     </div>
-                    <div className="text-[10px] text-[#444] flex items-center gap-1">
-                        <span>📍</span>
-                        <span>{t("artifacts.undiscovered_hint")}</span>
-                    </div>
+                    {artifact.hintedAt ? (
+                        <div className="text-[10px] text-[#00d4ff] flex items-center gap-1">
+                            <span>🧭</span>
+                            <span>
+                                {t("artifacts.hint_location")}: {" "}
+                                {artifact.hintedAt.sectorName} · {" "}
+                                {getLocationName(
+                                    artifact.hintedAt.locationName,
+                                    t,
+                                )}
+                            </span>
+                        </div>
+                    ) : (
+                        <div className="text-[10px] text-[#444] flex items-center gap-1">
+                            <span>📍</span>
+                            <span>{t("artifacts.undiscovered_hint")}</span>
+                        </div>
+                    )}
+                    {artifact.hinted && (
+                        <div className="text-[10px] text-[#00d4ff] flex items-center gap-1">
+                            <span>📡</span>
+                            <span>{t("artifacts.hint_text")}</span>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
@@ -240,6 +276,8 @@ function ArtifactCard({
 
 export function ArtifactPanel() {
     const artifacts = useGameStore((s) => s.artifacts);
+    const galaxy = useGameStore((s) => s.galaxy);
+    const currentSectorId = useGameStore((s) => s.currentSector?.id);
     const researchArtifact = useGameStore((s) => s.researchArtifact);
     const toggleArtifact = useGameStore((s) => s.toggleArtifact);
     const crew = useGameStore((s) => s.crew);
@@ -255,10 +293,40 @@ export function ArtifactPanel() {
         scientists.length > 0
             ? Math.max(...scientists.map((s) => s.level || 1))
             : 0;
+    const archiveHintLocations = useMemo(
+        () => getArchiveHintLocations(galaxy.sectors, currentSectorId),
+        [galaxy.sectors, currentSectorId],
+    );
+    const legacyHintLocations = useMemo(() => {
+        const locations = new Map<
+            string,
+            NonNullable<Artifact["hintedAt"]>
+        >();
+        if (archiveHintLocations.length === 0) return locations;
+
+        let locationIndex = 0;
+        artifacts.forEach((artifact) => {
+            if (!artifact.hinted || artifact.discovered || artifact.hintedAt) {
+                return;
+            }
+
+            const hintLocation =
+                archiveHintLocations[locationIndex % archiveHintLocations.length];
+            if (hintLocation) {
+                locations.set(artifact.id, hintLocation);
+                locationIndex += 1;
+            }
+        });
+
+        return locations;
+    }, [artifacts, archiveHintLocations]);
 
     const discoveredCount = artifacts.filter((a) => a.discovered).length;
     const researchedCount = artifacts.filter((a) => a.researched).length;
     const activeCount = artifacts.filter((a) => a.effect.active).length;
+    const hintedCount = artifacts.filter(
+        (a) => !a.discovered && a.hinted,
+    ).length;
     const cursedActive = artifacts.filter(
         (a) => a.cursed && a.effect.active,
     ).length;
@@ -290,7 +358,9 @@ export function ArtifactPanel() {
                             ? artifact.discovered
                             : artifactFilter === "researched"
                               ? artifact.researched
-                              : artifact.effect.active;
+                              : artifactFilter === "active"
+                                ? artifact.effect.active
+                                : !artifact.discovered && !!artifact.hinted;
             return matchesSearch && matchesFilter;
         });
     }, [artifactSearchText, artifactFilter, artifacts]);
@@ -319,6 +389,10 @@ export function ArtifactPanel() {
                     id: "active",
                     label: `${t("artifacts.active")} (${activeCount})`,
                 },
+                {
+                    id: "hinted",
+                    label: `📡 ${t("artifacts.hints")} (${hintedCount})`,
+                },
         ] satisfies Array<{ id: ArtifactFilter; label: string }>,
         [
             discoveredRegularCount,
@@ -328,6 +402,7 @@ export function ArtifactPanel() {
             discoveredCount,
             researchedCount,
             activeCount,
+            hintedCount,
             t,
         ],
     );
@@ -420,15 +495,24 @@ export function ArtifactPanel() {
 
             <div className="flex-1 overflow-hidden mt-2">
                 <div className="h-full overflow-y-auto pr-2 grid gap-3">
-                    {filteredArtifacts.map((artifact) => (
-                        <ArtifactCard
-                            key={artifact.id}
-                            artifact={artifact}
-                            onResearch={() => researchArtifact(artifact.id)}
-                            onToggle={() => toggleArtifact(artifact.id)}
-                            slotsAtLimit={slotsAtLimit}
-                        />
-                    ))}
+                    {filteredArtifacts.map((artifact) => {
+                        const hintedAt =
+                            artifact.hintedAt ??
+                            legacyHintLocations.get(artifact.id);
+                        const cardArtifact = hintedAt
+                            ? { ...artifact, hintedAt }
+                            : artifact;
+
+                        return (
+                            <ArtifactCard
+                                key={artifact.id}
+                                artifact={cardArtifact}
+                                onResearch={() => researchArtifact(artifact.id)}
+                                onToggle={() => toggleArtifact(artifact.id)}
+                                slotsAtLimit={slotsAtLimit}
+                            />
+                        );
+                    })}
                     {filteredArtifacts.length === 0 && (
                         <div className="text-sm text-[#888] text-center py-8">
                             {artifactFilter === "cursed"
