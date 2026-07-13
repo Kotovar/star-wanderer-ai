@@ -144,7 +144,7 @@ export function PlanetSpecializationPanel({
 
             {/* Effects */}
             <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3">
-                <div className="text-[#ffb000] font-bold text-sm mb-2">
+                <div className="text-accent font-bold text-sm mb-2">
                     Эффекты:
                 </div>
                 <ul className="text-xs text-[#888] space-y-1">
@@ -158,11 +158,11 @@ export function PlanetSpecializationPanel({
 
             {/* Cost and duration */}
             <div className="flex gap-4 text-sm">
-                <div className="text-[#ffb000]">
+                <div className="text-accent">
                     💰 Стоимость:{" "}
                     <span
                         className={
-                            canAfford ? "text-[#00ff41]" : "text-[#ff0040]"
+                            canAfford ? "text-[#00ff41]" : "text-destructive"
                         }
                     >
                         {spec.id === "human_academy" && selectedCrewId !== null
@@ -230,7 +230,7 @@ export function PlanetSpecializationPanel({
                                         </div>
                                     </div>
                                     {isMaxLevel && (
-                                        <div className="text-[10px] text-[#ff0040]">
+                                        <div className="text-[10px] text-destructive">
                                             МАКС.
                                         </div>
                                     )}

@@ -309,3 +309,18 @@ export const ABANDONED_CARGO_QUANTITY = {
  * Шанс найти артефакт в заброшенном грузе (25%)
  */
 export const ABANDONED_CARGO_ARTIFACT_CHANCE = 0.25;
+
+/** Минимальный диапазон сканера для активного анализа сигнала. */
+export const DISTRESS_DEEP_SCAN_MIN_SCAN_RANGE = 3;
+
+/** Резерв энергии для глубокого анализа и защитного сближения. */
+export const DISTRESS_PROTOCOL_MIN_AVAILABLE_POWER = 2;
+
+/** Топливо, которое тратит защитная траектория. */
+export const DISTRESS_GUARDED_APPROACH_FUEL_COST = 2;
+
+/** Шанс присоединения выжившего после медицинского протокола. */
+export const DISTRESS_MEDICAL_SURVIVOR_JOINS_CHANCE = 0.8;
+
+/** Репутация за спасение с медицинским протоколом. */
+export const DISTRESS_MEDICAL_REPUTATION = 5;

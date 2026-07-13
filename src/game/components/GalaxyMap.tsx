@@ -873,11 +873,11 @@ export function GalaxyMap() {
                 <div
                     role="alertdialog"
                     aria-labelledby="dangerous-jump-title"
-                    className="absolute left-2 right-2 top-14 z-30 mx-auto max-w-md border border-[#ffb000] bg-[rgba(5,8,16,0.96)] p-3 shadow-[0_0_24px_rgba(255,176,0,0.18)]"
+                    className="absolute left-2 right-2 top-14 z-30 mx-auto max-w-md border border-accent bg-[rgba(5,8,16,0.96)] p-3 shadow-[0_0_24px_rgba(255,176,0,0.18)]"
                 >
                     <div
                         id="dangerous-jump-title"
-                        className="font-['Orbitron'] text-xs font-bold uppercase tracking-wider text-[#ffb000]"
+                        className="font-['Orbitron'] text-xs font-bold uppercase tracking-wider text-accent"
                     >
                         {t("galaxy_map_ui.danger.title")}
                     </div>
@@ -903,7 +903,7 @@ export function GalaxyMap() {
                                 selectSector(dangerousJump.sectorId);
                                 setDangerousJump(null);
                             }}
-                            className="cursor-pointer border border-[#ffb000] px-2 py-2 text-[10px] uppercase text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
+                            className="cursor-pointer border border-accent px-2 py-2 text-[10px] uppercase text-accent hover:bg-accent hover:text-[#050810]"
                         >
                             {t("galaxy_map_ui.danger.continue")}
                         </button>

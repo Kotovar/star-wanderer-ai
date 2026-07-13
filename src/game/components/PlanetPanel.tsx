@@ -156,7 +156,7 @@ export function PlanetPanel() {
                     {/* Planet Visual */}
                     <PlanetVisual planetType={currentLocationPlanetType} />
 
-                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
+                    <div className="font-['Orbitron'] font-bold text-lg text-accent">
                         ▸ {getLocationName(currentLocation.name, t)} -{" "}
                         {currentLocationPlanetType
                             ? getPlanetTypeName(currentLocationPlanetType, t)
@@ -189,7 +189,7 @@ export function PlanetPanel() {
                             )}
                         </div>
                         <span
-                            className={`text-xs ${canScout ? "text-[#ffb000]" : "text-[#00ff41]"}`}
+                            className={`text-xs ${canScout ? "text-accent" : "text-[#00ff41]"}`}
                         >
                             {canScout
                                 ? t("planet_panel.can_scout")
@@ -201,7 +201,7 @@ export function PlanetPanel() {
                     {/* Last scouting result */}
                     {lastScoutResult && (
                         <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3 mt-2">
-                            <div className="text-[#ffb000] font-bold text-sm mb-1">
+                            <div className="text-accent font-bold text-sm mb-1">
                                 {t("planet_panel.last_scouting")}
                             </div>
                             {lastScoutResult.type === "credits" &&
@@ -252,7 +252,7 @@ export function PlanetPanel() {
                             )}
                             {lastScoutResult.type === "enemy" &&
                                 lastScoutResult.enemyThreat && (
-                                    <div className="text-[#ff0040] text-sm">
+                                    <div className="text-destructive text-sm">
                                         {t("planet_panel.found_enemy", {
                                             threat: lastScoutResult.enemyThreat,
                                         })}
@@ -273,7 +273,7 @@ export function PlanetPanel() {
                     )}
 
                     {!hasScout && canScout && (
-                        <div className="text-[#ff0040] text-sm mt-4 p-3 border border-[#ff0040] bg-[rgba(255,0,64,0.1)]">
+                        <div className="text-destructive text-sm mt-4 p-3 border border-destructive bg-[rgba(255,0,64,0.1)]">
                             {t("planet.scout_requires_scout")}
                         </div>
                     )}
@@ -282,7 +282,7 @@ export function PlanetPanel() {
                     {hasDrillTech && (
                         <div className="mt-3">
                             <div className="flex items-center gap-3">
-                                <span className="font-['Orbitron'] font-bold text-sm text-[#ffb000]">
+                                <span className="font-['Orbitron'] font-bold text-sm text-accent">
                                     {t("planet.drill_title")}
                                 </span>
                             {canDrill ? (
@@ -291,7 +291,7 @@ export function PlanetPanel() {
                                         onClick={() =>
                                             planetaryDrill(currentLocation.id)
                                         }
-                                        className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider text-xs px-3 py-1"
+                                        className="cursor-pointer bg-transparent border-2 border-accent text-accent hover:bg-accent hover:text-[#050810] uppercase tracking-wider text-xs px-3 py-1"
                                     >
                                         {t("planet.drill_button")}
                                     </Button>
@@ -301,14 +301,14 @@ export function PlanetPanel() {
                                     {t("planet.drill_done")}
                                 </span>
                             ) : (
-                                <span className="text-[#ff0040] text-xs">
+                                <span className="text-destructive text-xs">
                                     {t("planet.drill_requires_drill")}
                                 </span>
                             )}
                         </div>
                         {currentLocation.lastDrillResult && (
-                            <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-2 mt-2 text-xs">
-                                <div className="text-[#ffb000] font-bold mb-1">
+                            <div className="bg-[rgba(255,176,0,0.05)] border border-accent p-2 mt-2 text-xs">
+                                <div className="text-accent font-bold mb-1">
                                     {t("planet.drill_result")}
                                 </div>
                                 {currentLocation.lastDrillResult.tradeGood && (
@@ -349,7 +349,7 @@ export function PlanetPanel() {
                     {hasAtmoTech && (
                         <div className="mt-3">
                             <div className="flex items-center gap-3">
-                                <span className="font-['Orbitron'] font-bold text-sm text-[#00d4ff]">
+                                <span className="font-['Orbitron'] font-bold text-sm text-ring">
                                     {t("planet.analysis_title")}
                                 </span>
                             {canAnalyze ? (
@@ -357,7 +357,7 @@ export function PlanetPanel() {
                                     onClick={() =>
                                         atmosphericAnalysis(currentLocation.id)
                                     }
-                                    className="cursor-pointer bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider text-xs px-3 py-1"
+                                    className="cursor-pointer bg-transparent border-2 border-ring text-ring hover:bg-ring hover:text-[#050810] uppercase tracking-wider text-xs px-3 py-1"
                                 >
                                     {t("planet.analysis_button")}
                                 </Button>
@@ -366,14 +366,14 @@ export function PlanetPanel() {
                                     {t("planet.analysis_done")}
                                 </span>
                             ) : (
-                                <span className="text-[#ff0040] text-xs">
+                                <span className="text-destructive text-xs">
                                     {t("planet.drill_requires_scientist")}
                                 </span>
                             )}
                             </div>
                             {currentLocation.lastAtmosphericResult && (
-                                <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-2 mt-2 text-xs">
-                                    <div className="text-[#00d4ff] font-bold mb-1">
+                                <div className="bg-[rgba(0,212,255,0.05)] border border-ring p-2 mt-2 text-xs">
+                                    <div className="text-ring font-bold mb-1">
                                         {t("planet.analysis_result")}
                                     </div>
                                     {currentLocation.lastAtmosphericResult.researchResources.map(
@@ -399,7 +399,7 @@ export function PlanetPanel() {
 
                     {currentLocation.explored && (
                         <div className="mt-4 border border-[#00d4ff66] bg-[rgba(0,212,255,0.04)] p-3">
-                            <div className="text-[#00d4ff] font-bold text-sm font-['Orbitron']">
+                            <div className="text-ring font-bold text-sm font-['Orbitron']">
                                 ◈ {t("planet_panel.point_of_interest_title")}
                             </div>
                             {pointOfInterest && (
@@ -419,12 +419,12 @@ export function PlanetPanel() {
                                         onClick={() =>
                                             setShowExpeditionSetup(true)
                                         }
-                                        className="cursor-pointer bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider text-xs px-3 py-1"
+                                        className="cursor-pointer bg-transparent border-2 border-ring text-ring hover:bg-ring hover:text-[#050810] uppercase tracking-wider text-xs px-3 py-1"
                                     >
                                         🗺️ {t("planet_panel.explore_planet")}
                                     </Button>
                                 ) : (
-                                    <span className="text-[#ff0040]">
+                                    <span className="text-destructive">
                                         {t(
                                             "planet_panel.expedition_requires_kits",
                                         )}
@@ -437,7 +437,7 @@ export function PlanetPanel() {
                     <div className="flex gap-2.5 flex-wrap mt-5">
                         <Button
                             onClick={showSectorMap}
-                            className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider"
+                            className="cursor-pointer bg-transparent border-2 border-accent text-accent hover:bg-accent hover:text-[#050810] uppercase tracking-wider"
                         >
                             {t("planet_panel.leave_planet")}
                         </Button>
@@ -709,7 +709,7 @@ export function PlanetPanel() {
                                     className="flex justify-between items-center bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3"
                                 >
                                     <div className="flex-1">
-                                        <div className="text-[#00d4ff] font-bold">
+                                        <div className="text-ring font-bold">
                                             {c.desc}
                                         </div>
                                         {c.cargo && (
@@ -723,7 +723,7 @@ export function PlanetPanel() {
                                                 т)
                                             </div>
                                         )}
-                                        <div className="text-[#ffb000] text-xs mt-1">
+                                        <div className="text-accent text-xs mt-1">
                                             💰 {c.reward}₢
                                         </div>
                                     </div>
@@ -809,7 +809,7 @@ export function PlanetPanel() {
                                     >
                                         <div className="flex justify-between items-start gap-2">
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-[#00d4ff] font-bold flex items-center gap-2 flex-wrap">
+                                                <div className="text-ring font-bold flex items-center gap-2 flex-wrap">
                                                     {title}
                                                     {c.isRaceQuest &&
                                                         raceInfo && (
@@ -1074,7 +1074,7 @@ export function PlanetPanel() {
                 <div className="flex gap-2.5 flex-wrap mt-5">
                     <Button
                         onClick={showSectorMap}
-                        className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider"
+                        className="cursor-pointer bg-transparent border-2 border-accent text-accent hover:bg-accent hover:text-[#050810] uppercase tracking-wider"
                     >
                         {t("planet_panel.leave_planet")}
                     </Button>

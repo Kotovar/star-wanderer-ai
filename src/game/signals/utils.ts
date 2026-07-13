@@ -29,3 +29,22 @@ export const determineSignalOutcome = (
 
     return "abandoned_cargo";
 };
+
+/**
+ * Вероятность расшифровать источник сигнала активным сканированием.
+ * Диапазон сканера остаётся главным фактором, а учёный и инженер повышают
+ * качество обработки сигнала и калибровки антенн.
+ */
+export const getDeepScanChance = (
+    scanRange: number,
+    scientistLevel: number,
+    engineerLevel: number,
+): number => {
+    const chance =
+        25 +
+        Math.max(0, scanRange) * 3 +
+        Math.max(0, scientistLevel) * 8 +
+        Math.max(0, engineerLevel) * 4;
+
+    return Math.min(95, chance);
+};

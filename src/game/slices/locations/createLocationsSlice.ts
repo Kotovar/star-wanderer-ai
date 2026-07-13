@@ -1,10 +1,21 @@
-import type { GameStore, SetState, Location, RaceId, AnomalyApproach } from "@/game/types";
+import type {
+    GameStore,
+    SetState,
+    Location,
+    RaceId,
+    AnomalyApproach,
+    DistressApproach,
+} from "@/game/types";
 import { RACES } from "@/game/constants";
 import { mineAsteroid } from "./helpers";
 import { handleStormEntry } from "./helpers/enterStorm";
 import { handleAnomaly as handleAnomalyHelper } from "./helpers";
 import { sendScoutingMission as sendScoutingMissionHelper } from "./helpers";
-import { respondToDistressSignal as respondToDistressSignalHelper } from "./helpers";
+import {
+    deepScanDistressSignal as deepScanDistressSignalHelper,
+    probeDistressSignal as probeDistressSignalHelper,
+    respondToDistressSignal as respondToDistressSignalHelper,
+} from "./helpers";
 import { planetaryDrill as planetaryDrillHelper } from "./helpers";
 import { atmosphericAnalysis as atmosphericAnalysisHelper } from "./helpers";
 import { exploreDerelictShip as exploreDerelictShipHelper } from "./helpers";
@@ -55,7 +66,13 @@ export interface LocationsSlice {
     /**
      * Обрабатывает сигнал бедствия
      */
-    respondToDistressSignal: () => void;
+    respondToDistressSignal: (approach?: DistressApproach) => void;
+
+    /** Активно расшифровывает неизвестный сигнал сканером. */
+    deepScanDistressSignal: () => void;
+
+    /** Отправляет исследовательский зонд, чтобы раскрыть источник сигнала. */
+    probeDistressSignal: () => void;
 
     /**
      * Планетарное бурение — однократная добыча с поверхности пустой планеты
@@ -145,8 +162,16 @@ export const createLocationsSlice = (
         sendScoutingMissionHelper(planetId, set, get);
     },
 
-    respondToDistressSignal: () => {
-        respondToDistressSignalHelper(set, get);
+    respondToDistressSignal: (approach) => {
+        respondToDistressSignalHelper(set, get, approach);
+    },
+
+    deepScanDistressSignal: () => {
+        deepScanDistressSignalHelper(set, get);
+    },
+
+    probeDistressSignal: () => {
+        probeDistressSignalHelper(set, get);
     },
 
     planetaryDrill: (planetId) => {

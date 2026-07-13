@@ -10,7 +10,12 @@ import type {
 import type { ActiveEffect } from "./effects";
 import type { Goods, TradeGood } from "./goods";
 import type { PendingTravelEvent, Sector, TravelingState } from "./locations/sectors";
-import type { Location, LocationType, AnomalyApproach } from "./locations/locations";
+import type {
+  Location,
+  LocationType,
+  AnomalyApproach,
+  DistressApproach,
+} from "./locations/locations";
 import type { LogEntry } from "./logs";
 import type { Module, WeaponCounts } from "./modules";
 import type { RaceId } from "./races";
@@ -299,7 +304,9 @@ export interface GameScouting {
 }
 
 export interface GameDistressSignal {
-  respondToDistressSignal: () => void;
+  respondToDistressSignal: (approach?: DistressApproach) => void;
+  deepScanDistressSignal: () => void;
+  probeDistressSignal: () => void;
 }
 
 export interface GameArtifacts {

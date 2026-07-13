@@ -85,7 +85,7 @@ export function PlanetExplorationPanel() {
     <div className="flex flex-col gap-3">
       {/* Header */}
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="font-['Orbitron'] font-bold text-[#00d4ff] uppercase tracking-wider text-sm shrink-0">
+        <div className="font-['Orbitron'] font-bold text-ring uppercase tracking-wider text-sm shrink-0">
           🗺️ {t("planet_panel.expedition_active_title")}
         </div>
         {pointOfInterest && (
@@ -124,7 +124,7 @@ export function PlanetExplorationPanel() {
         {!finished && !apExhausted && (
           <button
             onClick={() => setShowAbortConfirm(true)}
-            className="text-[10px] text-[#ff004055] hover:text-[#ff0040] transition-colors cursor-pointer uppercase tracking-wider shrink-0"
+            className="text-[10px] text-[#ff004055] hover:text-destructive transition-colors cursor-pointer uppercase tracking-wider shrink-0"
           >
             ✕ {t("planet_panel.expedition_abort_btn")}
           </button>
@@ -152,7 +152,7 @@ export function PlanetExplorationPanel() {
                   profession={member.profession}
                   size={20}
                 />
-                <span className="text-[10px] text-[#aaa] truncate max-w-[60px]">
+                <span className="text-[10px] text-[#aaa] truncate max-w-15">
                   {member.name}
                 </span>
                 <div className="w-8 h-1 rounded-full bg-[#1a1a1a] overflow-hidden">
@@ -177,7 +177,7 @@ export function PlanetExplorationPanel() {
           style={{ border: "2px solid #ff004066" }}
         >
           <div className="px-4 pt-4 pb-3 border-b border-[#ff004033] bg-[rgba(255,0,64,0.04)]">
-            <DialogTitle className="text-[#ff0040] font-bold text-sm font-['Orbitron'] uppercase tracking-wider">
+            <DialogTitle className="text-destructive font-bold text-sm font-['Orbitron'] uppercase tracking-wider">
               {t("planet_panel.expedition_abort_btn")}?
             </DialogTitle>
           </div>
@@ -188,7 +188,7 @@ export function PlanetExplorationPanel() {
             <div className="flex gap-2">
               <Button
                 onClick={handleAbort}
-                className="flex-1 bg-transparent border border-[#ff004066] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] text-xs py-1.5 cursor-pointer uppercase tracking-wider"
+                className="flex-1 bg-transparent border border-[#ff004066] text-destructive hover:bg-destructive hover:text-[#050810] text-xs py-1.5 cursor-pointer uppercase tracking-wider"
               >
                 ✕ {t("planet_panel.expedition_abort_btn")}
               </Button>
@@ -212,10 +212,10 @@ export function PlanetExplorationPanel() {
           showCloseButton={false}
         >
           <div className="px-4 pt-4 pb-3 border-b border-[#ffb00033] bg-[rgba(255,176,0,0.04)]">
-            <div className="text-[10px] text-[#ffb000] uppercase tracking-widest font-['Orbitron'] mb-1 opacity-60">
+            <div className="text-[10px] text-accent uppercase tracking-widest font-['Orbitron'] mb-1 opacity-60">
               {t("planet_panel.tile_ruins")}
             </div>
-            <DialogTitle className="text-[#ffb000] font-bold text-sm font-['Orbitron'] uppercase tracking-wider">
+            <DialogTitle className="text-accent font-bold text-sm font-['Orbitron'] uppercase tracking-wider">
               {activeRuinsEvent
                 ? t(`planet_panel.${activeRuinsEvent.titleKey}`)
                 : ""}
@@ -233,7 +233,7 @@ export function PlanetExplorationPanel() {
                 <Button
                   key={idx}
                   onClick={() => resolveRuinsChoice(idx)}
-                  className="bg-transparent border border-[#ffb00066] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] text-xs py-1.5 cursor-pointer text-left justify-start"
+                  className="bg-transparent border border-[#ffb00066] text-accent hover:bg-accent hover:text-[#050810] text-xs py-1.5 cursor-pointer text-left justify-start"
                 >
                   {t(`planet_panel.${choice.labelKey}`)}
                 </Button>
@@ -286,12 +286,12 @@ export function PlanetExplorationPanel() {
       {/* AP exhausted hint */}
       {apExhausted && (
         <div className="flex items-center gap-2 px-3 py-2 border border-[#ffb00033] bg-[rgba(255,176,0,0.04)] rounded-sm">
-          <span className="text-xs text-[#ffb000]">
+          <span className="text-xs text-accent">
             {t("planet_panel.expedition_no_ap_hint")}
           </span>
           <Button
             onClick={endExpedition}
-            className="ml-auto bg-transparent border border-[#ffb00066] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] text-xs py-1 px-3 cursor-pointer uppercase tracking-wider"
+            className="ml-auto bg-transparent border border-[#ffb00066] text-accent hover:bg-accent hover:text-[#050810] text-xs py-1 px-3 cursor-pointer uppercase tracking-wider"
           >
             {t("planet_panel.expedition_end_btn")}
           </Button>
@@ -313,7 +313,7 @@ export function PlanetExplorationPanel() {
             {rewards.tradeGoods.map((tg) => (
               <span
                 key={tg.id}
-                className="px-2 py-1 rounded-sm border border-[#ffb00044] bg-[rgba(255,176,0,0.08)] text-[#ffb000]"
+                className="px-2 py-1 rounded-sm border border-[#ffb00044] bg-[rgba(255,176,0,0.08)] text-accent"
               >
                 📦 {TRADE_GOODS[tg.id]?.name ?? tg.id} ×{tg.quantity}
               </span>

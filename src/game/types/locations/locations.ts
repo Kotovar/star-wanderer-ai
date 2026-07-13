@@ -20,6 +20,8 @@ export type StormType =
 
 export type SignalType = "pirate_ambush" | "survivors" | "abandoned_cargo";
 
+export type DistressApproach = "standard" | "guarded" | "medical";
+
 export type SpaceMonsterType =
     | "void_ray"
     | "nebula_manta"
@@ -131,6 +133,8 @@ export interface Location {
     signalResolved?: boolean;
     signalRevealed?: boolean; // Scanner successfully revealed the outcome
     signalRevealChecked?: boolean; // Already checked with scanner (one-time check)
+    signalDeepScanUsed?: boolean; // Deep scan was already attempted
+    signalResponseProtocol?: DistressApproach; // Protocol used to approach the signal
     signalLoot?: {
         // Store loot details for display
         credits?: number;

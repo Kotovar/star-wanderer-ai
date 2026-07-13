@@ -53,7 +53,7 @@ export function SpaceMonsterPanel() {
           {monster.icon}
         </div>
         <div>
-          <div className="font-['Orbitron'] text-lg font-bold text-[#00d4ff]">
+          <div className="font-['Orbitron'] text-lg font-bold text-ring">
             ▸ {t("space_monsters.title")}
           </div>
           <div className="font-['Orbitron'] text-sm font-bold" style={{ color: monster.color }}>
@@ -81,7 +81,7 @@ export function SpaceMonsterPanel() {
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="border border-[#ffb00044] bg-[rgba(255,176,0,0.05)] p-3">
           <div className="text-[#888]">{t("space_monsters.threat")}</div>
-          <div className="mt-1 font-['Orbitron'] text-base font-bold text-[#ffb000]">
+          <div className="mt-1 font-['Orbitron'] text-base font-bold text-accent">
             ⚠ {threat}
           </div>
         </div>
@@ -149,7 +149,7 @@ export function SpaceMonsterPanel() {
 
       <Button
         onClick={showSectorMap}
-        className="w-fit border-2 border-[#ffb000] bg-transparent uppercase tracking-wider text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
+        className="w-fit border-2 border-accent bg-transparent uppercase tracking-wider text-accent hover:bg-accent hover:text-[#050810]"
       >
         <ArrowLeft size={14} /> {t("space_monsters.withdraw")}
       </Button>

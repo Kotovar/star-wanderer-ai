@@ -306,7 +306,7 @@ export default function Home() {
             {/* Сцена событий (карта/бой) — десктоп: справа; мобильный: полный экран когда showEventStage */}
             {(!isMobile || showEventStage) && (
               <div className="panel cockpit-panel cockpit-panel--stage flex flex-col min-w-0 flex-1 rounded-lg p-2 overflow-hidden min-h-0">
-                <div className="flex-1 overflow-y-auto overflow-x-hidden lg:overflow-hidden min-h-0">
+                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-2 lg:overflow-hidden lg:pr-0">
                   <EventDisplay />
                 </div>
               </div>

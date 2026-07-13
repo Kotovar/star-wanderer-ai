@@ -17,7 +17,8 @@
         "check:enemy-progression": "node --no-warnings --experimental-strip-types scripts/check-enemy-progression.mjs",
         "check:economy": "node --no-warnings --experimental-strip-types scripts/check-campaign-economy.mjs",
         "check:income": "node --no-warnings --experimental-strip-types scripts/check-income-sources.mjs",
-        "check:space-monsters": "node --no-warnings --experimental-strip-types scripts/check-space-monsters.mjs"
+        "check:space-monsters": "node --no-warnings --experimental-strip-types scripts/check-space-monsters.mjs",
+        "check:distress-signals": "node --no-warnings --experimental-strip-types scripts/check-distress-signals.mjs"
     },
     "dependencies": {
         "@radix-ui/react-accordion": "^1.2.11",

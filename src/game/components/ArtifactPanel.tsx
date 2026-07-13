@@ -121,7 +121,7 @@ function ArtifactCard({
 
                 <div className="flex shrink-0 flex-wrap justify-end gap-1">
                     {artifact.hinted && !artifact.discovered && (
-                        <span className="text-xs text-[#00d4ff] bg-[rgba(0,212,255,0.15)] px-2 py-1">
+                        <span className="text-xs text-ring bg-[rgba(0,212,255,0.15)] px-2 py-1">
                             {t("artifacts.hint_label")}
                         </span>
                     )}
@@ -142,7 +142,7 @@ function ArtifactCard({
 
                     {/* Negative effect for cursed artifacts */}
                     {artifact.cursed && artifact.negativeEffect && (
-                        <div className="text-xs mt-2 leading-relaxed text-[#ff0040] bg-[rgba(255,0,64,0.1)] p-2 border-l-2 border-[#ff0040]">
+                        <div className="text-xs mt-2 leading-relaxed text-destructive bg-[rgba(255,0,64,0.1)] p-2 border-l-2 border-destructive">
                             ⚠ {artifact.negativeEffect.description}
                         </div>
                     )}
@@ -150,7 +150,7 @@ function ArtifactCard({
                         artifact.negativeEffects?.map((neg, i) => (
                             <div
                                 key={i}
-                                className="text-xs mt-1 leading-relaxed text-[#ff0040] bg-[rgba(255,0,64,0.1)] p-2 border-l-2 border-[#ff0040]"
+                                className="text-xs mt-1 leading-relaxed text-destructive bg-[rgba(255,0,64,0.1)] p-2 border-l-2 border-destructive"
                             >
                                 ⚠ {neg.description}
                             </div>
@@ -160,7 +160,7 @@ function ArtifactCard({
                     {artifact.cursed &&
                         artifact.effect.active &&
                         artifact.negativeEffect && (
-                            <div className="text-xs mt-1 text-[#ff4444] bg-[rgba(255,0,0,0.15)] px-2 py-1 border border-[#ff0040] animate-pulse">
+                            <div className="text-xs mt-1 text-[#ff4444] bg-[rgba(255,0,0,0.15)] px-2 py-1 border border-destructive animate-pulse">
                                 ☠️ АКТИВНО — потери каждый ход:{" "}
                                 {artifact.negativeEffect.description}
                             </div>
@@ -170,7 +170,7 @@ function ArtifactCard({
                         artifact.negativeEffects?.map((neg, i) => (
                             <div
                                 key={i}
-                                className="text-xs mt-1 text-[#ff4444] bg-[rgba(255,0,0,0.15)] px-2 py-1 border border-[#ff0040] animate-pulse"
+                                className="text-xs mt-1 text-[#ff4444] bg-[rgba(255,0,0,0.15)] px-2 py-1 border border-destructive animate-pulse"
                             >
                                 ☠️ АКТИВНО: {neg.description}
                             </div>
@@ -184,7 +184,7 @@ function ArtifactCard({
                             className={
                                 artifact.researched
                                     ? "text-[#00ff41]"
-                                    : "text-[#ffb000]"
+                                    : "text-accent"
                             }
                         >
                             {t("crew.level")} {artifact.requiresScientistLevel}
@@ -196,8 +196,8 @@ function ArtifactCard({
                             onClick={onResearch}
                             className={`cursor-pointer w-full mt-3 text-xs py-1 bg-transparent border hover:text-[#050810] ${
                                 artifact.cursed
-                                    ? "border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040]"
-                                    : "border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000]"
+                                    ? "border-destructive text-destructive hover:bg-destructive"
+                                    : "border-accent text-accent hover:bg-accent"
                             }`}
                         >
                             {artifact.cursed
@@ -224,7 +224,7 @@ function ArtifactCard({
                                         : artifact.effect.active
                                           ? artifact.cursed
                                               ? "bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
-                                              : "bg-transparent border border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810]"
+                                              : "bg-transparent border border-destructive text-destructive hover:bg-destructive hover:text-[#050810]"
                                           : "bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
                                 }`}
                             >
@@ -245,7 +245,7 @@ function ArtifactCard({
                         {t("artifacts.undiscovered")}
                     </div>
                     {artifact.hintedAt ? (
-                        <div className="text-[10px] text-[#00d4ff] flex items-center gap-1">
+                        <div className="text-[10px] text-ring flex items-center gap-1">
                             <span>🧭</span>
                             <span>
                                 {t("artifacts.hint_location")}: {" "}
@@ -263,7 +263,7 @@ function ArtifactCard({
                         </div>
                     )}
                     {artifact.hinted && (
-                        <div className="text-[10px] text-[#00d4ff] flex items-center gap-1">
+                        <div className="text-[10px] text-ring flex items-center gap-1">
                             <span>📡</span>
                             <span>{t("artifacts.hint_text")}</span>
                         </div>
@@ -412,7 +412,7 @@ export function ArtifactPanel() {
             {/* Header */}
             <div className="shrink-0">
                 <div className="flex items-start justify-between gap-3 border-b border-[#ffb00044] pb-3">
-                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
+                    <div className="font-['Orbitron'] font-bold text-lg text-accent">
                         {t("artifacts.title")}
                     </div>
                     <Button
@@ -427,19 +427,19 @@ export function ArtifactPanel() {
                     {t("artifacts.active_artifacts")}:{" "}
                     <span
                         className={
-                            slotsAtLimit ? "text-[#ff0040]" : "text-[#00d4ff]"
+                            slotsAtLimit ? "text-destructive" : "text-ring"
                         }
                     >
                         {activeCount}/{maxSlots}
                     </span>
                     {slotsAtLimit && (
-                        <span className="text-[#ff0040]">
+                        <span className="text-destructive">
                             {" "}
                             — {t("artifacts.slots_full")}
                         </span>
                     )}
                     {cursedActive > 0 && (
-                        <span className="text-[#ff0040]">
+                        <span className="text-destructive">
                             {" "}
                             ({cursedActive} ☠️ {t("artifacts.cursed_active")})
                         </span>
@@ -527,8 +527,8 @@ export function ArtifactPanel() {
 
             {/* Footer - Advice */}
             <div className="shrink-0 mt-auto">
-                <div className="bg-[rgba(255,176,0,0.1)] border border-[#ffb000] p-3 text-xs">
-                    <span className="text-[#ffb000]">
+                <div className="bg-[rgba(255,176,0,0.1)] border border-accent p-3 text-xs">
+                    <span className="text-accent">
                         {t("artifacts.tip_title")}
                     </span>
                     <span className="text-[#888]">

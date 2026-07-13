@@ -4,14 +4,19 @@ import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { RiskRewardPreview } from "./RiskRewardPreview";
+import { getDeepScanChance } from "@/game/signals";
 import {
     ABANDONED_CARGO_ARTIFACT_CHANCE,
     ABANDONED_CARGO_CREDITS,
     ABANDONED_CARGO_QUANTITY,
+    DISTRESS_DEEP_SCAN_MIN_SCAN_RANGE,
+    DISTRESS_GUARDED_APPROACH_FUEL_COST,
+    DISTRESS_MEDICAL_SURVIVOR_JOINS_CHANCE,
+    DISTRESS_PROTOCOL_MIN_AVAILABLE_POWER,
     SURVIVORS_REWARD,
     SURVIVOR_JOINS_CHANCE,
 } from "@/game/slices/locations/constants";
-import type { SignalType } from "@/game/types";
+import type { DistressApproach, SignalType } from "@/game/types";
 
 // Get scanner range label
 export function getScannerRangeLabel(
@@ -222,14 +227,124 @@ function SOSBeacon({
     );
 }
 
+const PROTOCOL_NAME_KEYS: Record<DistressApproach, string> = {
+    standard: "distress_signal.protocol_standard",
+    guarded: "distress_signal.protocol_guarded",
+    medical: "distress_signal.protocol_medical",
+};
+
+const getFirstMissing = (
+    ...requirements: Array<string | false>
+): string | undefined =>
+    requirements.find(
+        (requirement): requirement is string => typeof requirement === "string",
+    );
+
+function SignalProtocolCard({
+    icon,
+    title,
+    description,
+    detail,
+    color,
+    disabled = false,
+    disabledReason,
+    onClick,
+}: {
+    icon: string;
+    title: string;
+    description: string;
+    detail: string;
+    color: string;
+    disabled?: boolean;
+    disabledReason?: string;
+    onClick: () => void;
+}) {
+    const accentColor = disabled ? "#56606e" : color;
+
+    return (
+        <Button
+            disabled={disabled}
+            onClick={onClick}
+            className="h-auto min-h-0 w-full min-w-0 max-w-full flex-col items-stretch justify-start rounded-none border bg-transparent p-3 text-left normal-case whitespace-normal shadow-none transition-all duration-150 cursor-pointer enabled:hover:-translate-y-px enabled:hover:brightness-125 enabled:hover:shadow-[0_0_18px_rgba(0,212,255,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-[#050810] disabled:cursor-not-allowed disabled:opacity-100"
+            style={{
+                borderColor: disabled ? "#334155" : `${color}99`,
+                backgroundColor: disabled ? "rgba(21,29,40,0.52)" : `${color}0d`,
+            }}
+        >
+            <div className="flex w-full min-w-0 items-start gap-3">
+                <span
+                    className="flex size-9 shrink-0 items-center justify-center border text-lg"
+                    style={{ borderColor: `${accentColor}88`, color: accentColor }}
+                >
+                    {icon}
+                </span>
+                <div className="min-w-0 wrap-anywhere">
+                    <div
+                        className="font-['Orbitron'] text-xs font-bold uppercase tracking-wide"
+                        style={{ color: accentColor }}
+                    >
+                        {title}
+                    </div>
+                    <div className="mt-1 text-xs leading-relaxed text-[#a1a8b8]">
+                        {description}
+                    </div>
+                </div>
+            </div>
+            <div
+                className={`mt-3 min-w-0 border-t pt-2 text-[11px] leading-relaxed wrap-anywhere ${
+                    disabled ? "text-[#ff9b9b]" : "text-[#9ba6b5]"
+                }`}
+                style={{ borderColor: `${accentColor}33` }}
+            >
+                {disabled && disabledReason ? `⚠ ${disabledReason}` : detail}
+            </div>
+        </Button>
+    );
+}
+
+function SignalTelemetry({
+    label,
+    value,
+    color,
+}: {
+    label: string;
+    value: string;
+    color: string;
+}) {
+    return (
+        <div className="min-w-0 border border-[#263445] bg-[rgba(4,10,18,0.62)] p-2">
+            <div className="truncate text-[9px] uppercase tracking-[0.12em] text-[#6f7b8d]">
+                {label}
+            </div>
+            <div
+                className="mt-1 truncate font-['Share_Tech_Mono'] text-xs font-bold"
+                style={{ color }}
+            >
+                {value}
+            </div>
+        </div>
+    );
+}
+
 export function DistressSignalPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
+    const crew = useGameStore((s) => s.crew);
+    const ship = useGameStore((s) => s.ship);
+    const probes = useGameStore((s) => s.probes);
     const respondToDistressSignal = useGameStore(
         (s) => s.respondToDistressSignal,
+    );
+    const deepScanDistressSignal = useGameStore(
+        (s) => s.deepScanDistressSignal,
+    );
+    const probeDistressSignal = useGameStore(
+        (s) => s.probeDistressSignal,
     );
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const getSignalRevealChance = useGameStore((s) => s.getSignalRevealChance);
     const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
+    const getTotalPower = useGameStore((s) => s.getTotalPower);
+    const getTotalConsumption = useGameStore((s) => s.getTotalConsumption);
     const { t } = useTranslation();
 
     if (!currentLocation) return null;
@@ -240,13 +355,65 @@ export function DistressSignalPanel() {
     const isResolved = currentLocation.signalResolved;
     const isRevealed = currentLocation.signalRevealed;
     const revealChecked = currentLocation.signalRevealChecked;
+    const activeCrew = crew.filter((member) => member.health > 0);
+    const scientistLevel = activeCrew
+        .filter((member) => member.profession === "scientist")
+        .reduce((total, member) => total + member.level, 0);
+    const engineerLevel = activeCrew
+        .filter((member) => member.profession === "engineer")
+        .reduce((total, member) => total + member.level, 0);
+    const medicLevel = activeCrew
+        .filter((member) => member.profession === "medic")
+        .reduce((total, member) => total + member.level, 0);
+    const medicineQuantity =
+        (ship.cargo.find((item) => item.item === "medicine")?.quantity ?? 0) +
+        (ship.tradeGoods.find((item) => item.item === "medicine")?.quantity ?? 0);
+    const availablePower = Math.max(
+        0,
+        getTotalPower() - getTotalConsumption(),
+    );
+    const deepScanChance = getDeepScanChance(
+        scanRange,
+        scientistLevel,
+        engineerLevel,
+    );
+    const guardedDisabledReason = getFirstMissing(
+        engineerLevel < 1 && t("distress_signal.requires_engineer"),
+        ship.shields <= 0 && t("distress_signal.requires_shields"),
+        availablePower < DISTRESS_PROTOCOL_MIN_AVAILABLE_POWER &&
+            t("distress_signal.requires_power", {
+                power: DISTRESS_PROTOCOL_MIN_AVAILABLE_POWER,
+            }),
+        ship.fuel < DISTRESS_GUARDED_APPROACH_FUEL_COST &&
+            t("distress_signal.requires_fuel", {
+                fuel: DISTRESS_GUARDED_APPROACH_FUEL_COST,
+            }),
+    );
+    const deepScanDisabledReason = currentLocation.signalDeepScanUsed
+        ? t("distress_signal.deep_scan_used")
+        : getFirstMissing(
+              scanRange < DISTRESS_DEEP_SCAN_MIN_SCAN_RANGE &&
+                  t("distress_signal.requires_scanner", {
+                      range: DISTRESS_DEEP_SCAN_MIN_SCAN_RANGE,
+                  }),
+              availablePower < DISTRESS_PROTOCOL_MIN_AVAILABLE_POWER &&
+                  t("distress_signal.requires_power", {
+                      power: DISTRESS_PROTOCOL_MIN_AVAILABLE_POWER,
+                  }),
+          );
+    const probeDisabledReason =
+        probes < 1 ? t("distress_signal.requires_probe") : undefined;
+    const medicalDisabledReason = getFirstMissing(
+        medicLevel < 1 && t("distress_signal.requires_medic"),
+        medicineQuantity < 1 && t("distress_signal.requires_medicine"),
+    );
 
     // ── RESOLVED ──────────────────────────────────────────────────────────
     if (isResolved && outcome) {
         const info = OUTCOME_INFO[outcome];
 
         return (
-            <div className="flex flex-col gap-4">
+            <div className="flex min-w-0 max-w-full flex-col gap-4">
                 {/* Header */}
                 <div className="flex items-center gap-3">
                     <SOSBeacon color="#555" size={56} />
@@ -293,7 +460,7 @@ export function DistressSignalPanel() {
                             style={{ borderColor: `${info.color}40` }}
                         >
                             {outcome === "pirate_ambush" && (
-                                <span className="text-[#ffb000]">
+                                <span className="text-accent">
                                     {t("distress_signal.enemy_found")}
                                 </span>
                             )}
@@ -331,7 +498,7 @@ export function DistressSignalPanel() {
                                             )}
                                             {currentLocation.signalLoot
                                                 .tradeGood && (
-                                                <div className="flex items-center gap-2 text-[#00d4ff] text-sm">
+                                                <div className="flex items-center gap-2 text-ring text-sm">
                                                     <span>📦</span>
                                                     <span>
                                                         {
@@ -370,6 +537,16 @@ export function DistressSignalPanel() {
                     </div>
                 </div>
 
+                <div className="border border-[#2b3645] bg-[rgba(8,15,25,0.66)] px-3 py-2 text-xs text-[#9099a8]">
+                    {t("distress_signal.protocol_used", {
+                        protocol: t(
+                            PROTOCOL_NAME_KEYS[
+                                currentLocation.signalResponseProtocol ?? "standard"
+                            ],
+                        ),
+                    })}
+                </div>
+
                 <Button
                     onClick={showSectorMap}
                     className="cursor-pointer bg-transparent border-2 border-[#444] text-[#666] hover:bg-[#444] hover:text-[#050810] uppercase tracking-wider mt-1"
@@ -386,12 +563,12 @@ export function DistressSignalPanel() {
         const revealedPreview = buildDistressPreview(outcome);
 
         return (
-            <div className="flex flex-col gap-4">
+            <div className="flex min-w-0 max-w-full flex-col gap-4">
                 {/* Header */}
                 <div className="flex items-center gap-3">
                     <SOSBeacon color={info.color} size={64} />
                     <div>
-                        <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
+                        <div className="font-['Orbitron'] font-bold text-lg text-accent">
                             {t("distress_signal.title")}
                         </div>
                         <div
@@ -443,24 +620,60 @@ export function DistressSignalPanel() {
                 </div>
 
                 <RiskRewardPreview
-                    title="Прогноз подхода"
+                    title={t("distress_signal.approach_forecast")}
                     risks={revealedPreview.risks}
                     rewards={revealedPreview.rewards}
                     notes={revealedPreview.notes}
                 />
 
-                <Button
-                    onClick={() => respondToDistressSignal()}
-                    className="cursor-pointer bg-transparent border-2 uppercase tracking-wider"
-                    style={{
-                        borderColor: info.color,
-                        color: info.color,
-                    }}
-                >
-                    {outcome === "pirate_ambush"
-                        ? t("distress_signal.approach_combat")
-                        : t("distress_signal.approach")}
-                </Button>
+                <div>
+                    <div className="font-['Share_Tech_Mono'] text-xs uppercase tracking-widest text-[#718096]">
+                        {t("distress_signal.protocols")}
+                    </div>
+                    <div className="mt-1 text-xs leading-relaxed text-[#8d97a8]">
+                        {t("distress_signal.protocol_hint")}
+                    </div>
+                    <div className="mt-3 grid min-w-0 max-w-full grid-cols-1 gap-2 sm:grid-cols-2">
+                        <SignalProtocolCard
+                            icon={outcome === "pirate_ambush" ? "⚔" : "↗"}
+                            title={t("distress_signal.direct_approach")}
+                            description={t("distress_signal.direct_approach_desc")}
+                            detail={t("distress_signal.direct_approach_ready")}
+                            color={info.color}
+                            onClick={() => respondToDistressSignal("standard")}
+                        />
+                        {outcome === "pirate_ambush" && (
+                            <SignalProtocolCard
+                                icon="🛡"
+                                title={t("distress_signal.guarded_approach")}
+                                description={t("distress_signal.guarded_approach_desc")}
+                                detail={t("distress_signal.guarded_approach_ready", {
+                                    fuel: DISTRESS_GUARDED_APPROACH_FUEL_COST,
+                                })}
+                                color="#00d4ff"
+                                disabled={Boolean(guardedDisabledReason)}
+                                disabledReason={guardedDisabledReason}
+                                onClick={() => respondToDistressSignal("guarded")}
+                            />
+                        )}
+                        {outcome === "survivors" && (
+                            <SignalProtocolCard
+                                icon="💊"
+                                title={t("distress_signal.medical_protocol")}
+                                description={t("distress_signal.medical_protocol_desc")}
+                                detail={t("distress_signal.medical_protocol_ready", {
+                                    chance: Math.round(
+                                        DISTRESS_MEDICAL_SURVIVOR_JOINS_CHANCE * 100,
+                                    ),
+                                })}
+                                color="#00ff9d"
+                                disabled={Boolean(medicalDisabledReason)}
+                                disabledReason={medicalDisabledReason}
+                                onClick={() => respondToDistressSignal("medical")}
+                            />
+                        )}
+                    </div>
+                </div>
 
                 <Button
                     onClick={showSectorMap}
@@ -476,12 +689,12 @@ export function DistressSignalPanel() {
     const scannerLabel = getScannerRangeLabel(scanRange, t);
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex min-w-0 max-w-full flex-col gap-4">
             {/* Header with animated beacon */}
             <div className="flex items-center gap-3">
                 <SOSBeacon color="#ffaa00" size={72} />
                 <div>
-                    <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000] animate-pulse">
+                    <div className="font-['Orbitron'] font-bold text-lg text-accent animate-pulse">
                         {t("distress_signal.title")}
                     </div>
                     <div className="text-[#ffaa00] text-xs font-['Share_Tech_Mono'] mt-0.5">
@@ -501,6 +714,47 @@ export function DistressSignalPanel() {
                 </div>
             </div>
 
+            <div className="border border-[#283444] bg-[rgba(5,11,20,0.76)] p-3">
+                <div className="flex items-center justify-between gap-3">
+                    <div className="font-['Share_Tech_Mono'] text-[10px] uppercase tracking-widest text-[#7d899c]">
+                        {t("distress_signal.signal_diagnostics")}
+                    </div>
+                    <div className="text-[10px] font-['Share_Tech_Mono'] text-[#ffaa00]">
+                        {t("distress_signal.source_unknown")}
+                    </div>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                    <SignalTelemetry
+                        label={t("distress_signal.scanner_range")}
+                        value={
+                            scanRange > 0
+                                ? `${scanRange} · ${scannerLabel}`
+                                : scannerLabel
+                        }
+                        color={scanRange > 0 ? "#00d4ff" : "#657080"}
+                    />
+                    <SignalTelemetry
+                        label={t("distress_signal.power_reserve")}
+                        value={`${availablePower}/${DISTRESS_PROTOCOL_MIN_AVAILABLE_POWER}`}
+                        color={
+                            availablePower >= DISTRESS_PROTOCOL_MIN_AVAILABLE_POWER
+                                ? "#00ff41"
+                                : "#ff7b7b"
+                        }
+                    />
+                    <SignalTelemetry
+                        label={t("distress_signal.specialists")}
+                        value={`🔬 ${scientistLevel} · 🔧 ${engineerLevel} · 💊 ${medicLevel}`}
+                        color="#c4a1ff"
+                    />
+                    <SignalTelemetry
+                        label={t("distress_signal.shields_status")}
+                        value={`${Math.round(ship.shields)}/${Math.round(ship.maxShields)}`}
+                        color={ship.shields > 0 ? "#00d4ff" : "#ff7b7b"}
+                    />
+                </div>
+            </div>
+
             {/* Possible outcomes grid */}
             <div>
                 <div className="text-[#666] text-xs uppercase tracking-widest mb-2 font-['Share_Tech_Mono']">
@@ -516,18 +770,18 @@ export function DistressSignalPanel() {
                             {t("distress_signal.survivors")}
                         </div>
                     </div>
-                    <div className="border border-[#00d4ff] bg-[rgba(0,212,255,0.04)] p-2 text-center">
+                    <div className="border border-ring bg-[rgba(0,212,255,0.04)] p-2 text-center">
                         <div className="text-2xl mb-1">📦</div>
-                        <div className="text-[#00d4ff] text-xs font-bold font-['Share_Tech_Mono']">
+                        <div className="text-ring text-xs font-bold font-['Share_Tech_Mono']">
                             35%
                         </div>
                         <div className="text-[#888] text-xs mt-0.5">
                             {t("distress_signal.abandoned_cargo")}
                         </div>
                     </div>
-                    <div className="border border-[#ff0040] bg-[rgba(255,0,64,0.04)] p-2 text-center">
+                    <div className="border border-destructive bg-[rgba(255,0,64,0.04)] p-2 text-center">
                         <div className="text-2xl mb-1">🚨</div>
-                        <div className="text-[#ff0040] text-xs font-bold font-['Share_Tech_Mono']">
+                        <div className="text-destructive text-xs font-bold font-['Share_Tech_Mono']">
                             35%
                         </div>
                         <div className="text-[#888] text-xs mt-0.5">
@@ -546,7 +800,7 @@ export function DistressSignalPanel() {
                     <span className="text-[#888] text-xs">
                         {t("distress_signal.reveal_chance")}{" "}
                     </span>
-                    <span className="text-[#ffb000] text-xs font-bold">
+                    <span className="text-accent text-xs font-bold">
                         {revealChance}%
                     </span>
                 </div>
@@ -560,17 +814,71 @@ export function DistressSignalPanel() {
                 </div>
             )}
 
-            {/* Action buttons */}
+            <div>
+                <div className="font-['Share_Tech_Mono'] text-xs uppercase tracking-widest text-[#718096]">
+                    {t("distress_signal.protocols")}
+                </div>
+                <div className="mt-1 text-xs leading-relaxed text-[#8d97a8]">
+                    {t("distress_signal.protocol_hint")}
+                </div>
+                <div className="mt-3 grid min-w-0 max-w-full grid-cols-1 gap-2 sm:grid-cols-2">
+                    <SignalProtocolCard
+                        icon="📡"
+                        title={t("distress_signal.deep_scan")}
+                        description={t("distress_signal.deep_scan_desc")}
+                        detail={
+                            scanRange >= DISTRESS_DEEP_SCAN_MIN_SCAN_RANGE
+                                ? t("distress_signal.deep_scan_chance", {
+                                      chance: deepScanChance,
+                                  })
+                                : t("distress_signal.requires_scanner", {
+                                      range: DISTRESS_DEEP_SCAN_MIN_SCAN_RANGE,
+                                  })
+                        }
+                        color="#00d4ff"
+                        disabled={Boolean(deepScanDisabledReason)}
+                        disabledReason={deepScanDisabledReason}
+                        onClick={deepScanDistressSignal}
+                    />
+                    <SignalProtocolCard
+                        icon="🔬"
+                        title={t("distress_signal.probe_analysis")}
+                        description={t("distress_signal.probe_analysis_desc")}
+                        detail={t("distress_signal.probe_analysis_ready", {
+                            count: probes,
+                        })}
+                        color="#b785ff"
+                        disabled={Boolean(probeDisabledReason)}
+                        disabledReason={probeDisabledReason}
+                        onClick={probeDistressSignal}
+                    />
+                    <SignalProtocolCard
+                        icon="↗"
+                        title={t("distress_signal.direct_approach")}
+                        description={t("distress_signal.direct_approach_desc")}
+                        detail={t("distress_signal.direct_approach_ready")}
+                        color="#ffaa00"
+                        onClick={() => respondToDistressSignal("standard")}
+                    />
+                    <SignalProtocolCard
+                        icon="🛡"
+                        title={t("distress_signal.guarded_approach")}
+                        description={t("distress_signal.guarded_approach_desc")}
+                        detail={t("distress_signal.guarded_approach_ready", {
+                            fuel: DISTRESS_GUARDED_APPROACH_FUEL_COST,
+                        })}
+                        color="#00ff9d"
+                        disabled={Boolean(guardedDisabledReason)}
+                        disabledReason={guardedDisabledReason}
+                        onClick={() => respondToDistressSignal("guarded")}
+                    />
+                </div>
+            </div>
+
             <div className="flex items-center gap-3">
                 <Button
-                    onClick={() => respondToDistressSignal()}
-                    className="cursor-pointer bg-transparent border-2 border-[#ffaa00] text-[#ffaa00] hover:bg-[#ffaa00] hover:text-[#050810] uppercase tracking-wider flex-1"
-                >
-                    {t("distress_signal.respond")}
-                </Button>
-                <Button
                     onClick={showSectorMap}
-                    className="cursor-pointer bg-transparent border-2 border-[#444] text-[#666] hover:bg-[#444] hover:text-[#050810] uppercase tracking-wider"
+                    className="cursor-pointer bg-transparent border-2 border-[#444] text-[#77808f] hover:bg-[#444] hover:text-[#050810] uppercase tracking-wider"
                 >
                     {t("distress_signal.ignore")}
                 </Button>
