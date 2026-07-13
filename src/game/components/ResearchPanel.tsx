@@ -138,6 +138,216 @@ const CATEGORY_META: Record<
   },
 };
 
+type TechDirectoryFilter = "all" | "active" | "ready" | "opened" | "researched";
+type TechDirectoryStatus =
+  | "active"
+  | "ready"
+  | "opened"
+  | "researched"
+  | "blocked";
+
+const TECH_DIRECTORY_FILTERS: {
+  id: TechDirectoryFilter;
+  label: string;
+}[] = [
+  { id: "all", label: "Все" },
+  { id: "active", label: "В разработке" },
+  { id: "ready", label: "Готово" },
+  { id: "opened", label: "Открыто" },
+  { id: "researched", label: "Изучено" },
+];
+
+interface TechDirectoryRow {
+  tech: Technology;
+  status: TechDirectoryStatus;
+  canStart: boolean;
+  isResearched: boolean;
+  isActive: boolean;
+  isOpened: boolean;
+  canPayResources: boolean;
+  name: string;
+}
+
+function getDirectoryStatusText(status: TechDirectoryStatus): string {
+  return status === "active"
+    ? "В процессе"
+    : status === "ready"
+      ? "Можно начать"
+      : status === "opened"
+        ? "Открыта ветка"
+        : status === "researched"
+          ? "Изучена"
+          : "Недоступна";
+}
+
+function getDirectoryStatusColor(status: TechDirectoryStatus): string {
+  return status === "active"
+    ? "#00d4ff"
+    : status === "ready"
+      ? "#00ff41"
+      : status === "opened"
+        ? "#ffb000"
+        : status === "researched"
+          ? "#00aa66"
+          : "#666";
+}
+
+interface TechDirectoryProps {
+  rows: TechDirectoryRow[];
+  filter: TechDirectoryFilter;
+  searchText: string;
+  canResearch: boolean;
+  hasActiveResearch: boolean;
+  onFilterChange: (filter: TechDirectoryFilter) => void;
+  onSearchChange: (value: string) => void;
+  onSelectTech: (techId: TechnologyId) => void;
+  onQuickStart: (techId: TechnologyId) => void;
+}
+
+function TechDirectory({
+  rows,
+  filter,
+  searchText,
+  canResearch,
+  hasActiveResearch,
+  onFilterChange,
+  onSearchChange,
+  onSelectTech,
+  onQuickStart,
+}: TechDirectoryProps) {
+  return (
+    <div className="space-y-2 border-t border-[#1a1a1a] pt-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-52">
+          <input
+            value={searchText}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Поиск технологий..."
+            className="w-full px-2 py-1 text-xs bg-[#080808] border border-[#333] text-[#888] placeholder:text-[#555] outline-none focus:border-[#00ff41]"
+          />
+        </div>
+        <div className="text-[10px] text-[#888]">
+          Найдено: {rows.length}
+        </div>
+        {canResearch ? (
+          <div className="text-[10px] text-[#00d4ff]">Лаб: активна</div>
+        ) : (
+          <div className="text-[10px] text-[#ffb000]">Лаб/учёные не готовы</div>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-1">
+        {TECH_DIRECTORY_FILTERS.map((entry) => (
+          <button
+            key={entry.id}
+            type="button"
+            onClick={() => onFilterChange(entry.id)}
+            className="px-2 py-1 text-[10px] border cursor-pointer"
+            style={{
+              borderColor:
+                filter === entry.id ? "#00ff41" : "#333",
+              color: filter === entry.id ? "#00ff41" : "#777",
+              backgroundColor:
+                filter === entry.id ? "rgba(0,255,65,0.07)" : "rgba(0,0,0,0.18)",
+            }}
+          >
+            {entry.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="max-h-36 overflow-y-auto pr-1 space-y-1">
+        {rows.length === 0 ? (
+          <div className="text-xs text-[#555] p-2 border border-dashed border-[#333]">
+            Нет технологий по заданным условиям
+          </div>
+        ) : (
+          rows.map((row) => {
+            const statusColor = getDirectoryStatusColor(row.status);
+            const canQuickStart = row.canStart && !hasActiveResearch && canResearch;
+            return (
+              <div
+                key={row.tech.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => onSelectTech(row.tech.id)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onSelectTech(row.tech.id);
+                  }
+                }}
+                aria-label={`Открыть технологию ${row.name}`}
+                className="w-full border border-[#1f1f1f] text-left p-2 transition-all cursor-pointer"
+                style={{
+                  backgroundColor: row.isActive
+                    ? "rgba(0,212,255,0.06)"
+                    : "rgba(0,0,0,0.22)",
+                  borderColor: `${statusColor}55`,
+                }}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="text-[11px] text-[#ccc] truncate">
+                      {row.name}
+                    </div>
+                    <div className="text-[9px] text-[#666]">
+                      T{row.tech.tier} · {CATEGORY_META[row.tech.category].short}
+                    </div>
+                  </div>
+                  <div
+                    className="text-[10px]"
+                    style={{ color: statusColor }}
+                  >
+                    {getDirectoryStatusText(row.status)}
+                  </div>
+                </div>
+                <div className="mt-1 text-[9px] text-[#666]">
+                  {row.tech.bonuses.map((bonus) => bonus.description).join("; ")}
+                </div>
+                <div className="mt-1 flex items-center gap-1">
+                  {row.isOpened && (
+                    <span className="text-[8px] text-[#ffb000] px-1.5 py-0.5 border border-[#ffb00055]">
+                      {canResearch
+                        ? row.canPayResources
+                          ? "есть ресурсы"
+                          : "нужны ресурсы"
+                        : "нужна лаборатория"}
+                    </span>
+                  )}
+                  {row.isActive && (
+                    <span className="text-[8px] text-[#00d4ff] px-1.5 py-0.5 border border-[#00d4ff55]">
+                      В работе
+                    </span>
+                  )}
+                  <div className="ml-auto" />
+                  {canQuickStart && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onQuickStart(row.tech.id);
+                      }}
+                      className="text-[9px] px-1.5 py-0.5 border cursor-pointer"
+                      style={{
+                        borderColor: "#00ff41",
+                        color: "#00ff41",
+                        backgroundColor: "rgba(0,255,65,0.08)",
+                      }}
+                    >
+                      Старт
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Edge helpers ─────────────────────────────────────────────────────────────
 function getNodeCenter(id: TechnologyId): [number, number] {
   const [col, row] = TREE_LAYOUT[id];
@@ -927,6 +1137,9 @@ export function ResearchPanel() {
   const [selectedTech, setSelectedTech] = useState<TechnologyId | null>(null);
   const [focusedCategory, setFocusedCategory] =
     useState<ResearchCategory | null>(null);
+  const [techSearchText, setTechSearchText] = useState("");
+  const [techDirectoryFilter, setTechDirectoryFilter] =
+    useState<TechDirectoryFilter>("all");
 
   const scientists = useMemo(
     () => crew.filter((c: CrewMember) => c.profession === "scientist"),
@@ -965,7 +1178,10 @@ export function ResearchPanel() {
     () => research?.researchedTechs ?? [],
     [research],
   );
-  const discoveredTechs = research?.discoveredTechs ?? [];
+  const discoveredTechs = useMemo(
+    () => research?.discoveredTechs ?? [],
+    [research],
+  );
   const activeResearch = research?.activeResearch ?? null;
 
   const canStartResearch = useCallback(
@@ -978,6 +1194,102 @@ export function ResearchPanel() {
       return true;
     },
     [canResearch, credits, getResourceQty],
+  );
+
+  const techDirectoryRows = useMemo(() => {
+    const normalizedSearch = techSearchText.trim().toLowerCase();
+    return (Object.values(RESEARCH_TREE) as Technology[])
+      .map((tech) => {
+        const isResearched = researchedTechs.includes(tech.id);
+        const isDiscovered = discoveredTechs.includes(tech.id) || isResearched;
+        if (!isDiscovered) return null;
+
+        const isActive = activeResearch?.techId === tech.id;
+        const prereqsMet = canResearchTech(tech.id, researchedTechs);
+        const isOpened = prereqsMet && !isResearched;
+        const canPayResources = (() => {
+          if (credits < tech.credits) return false;
+          for (const [type, needed] of Object.entries(tech.resources)) {
+            if (getResourceQty(type) < (needed ?? 0)) return false;
+          }
+          return true;
+        })();
+        const isReady = isOpened && canResearch && canPayResources;
+
+        const status: TechDirectoryStatus = isActive
+          ? "active"
+          : isResearched
+            ? "researched"
+            : isReady
+              ? "ready"
+              : isOpened
+                ? "opened"
+                : "blocked";
+
+        const name = getTechTranslation(tech.id, currentLanguage).name;
+        if (
+          normalizedSearch &&
+          !name.toLowerCase().includes(normalizedSearch)
+        ) {
+          return null;
+        }
+
+        if (focusedCategory && tech.category !== focusedCategory) {
+          return null;
+        }
+
+        return {
+          tech,
+          status,
+          canStart: isReady,
+          isResearched,
+          isActive,
+          isOpened,
+          canPayResources,
+          name,
+        } satisfies TechDirectoryRow;
+      })
+      .filter((tech): tech is TechDirectoryRow => tech !== null)
+      .filter((tech) => {
+        if (techDirectoryFilter === "all") return true;
+        if (techDirectoryFilter === "active") return tech.isActive;
+        if (techDirectoryFilter === "ready") return tech.status === "ready";
+        if (techDirectoryFilter === "opened") return tech.status === "opened";
+        if (techDirectoryFilter === "researched")
+          return tech.status === "researched";
+        return true;
+      })
+      .sort((a, b) => {
+        if (a.status === "active" && b.status !== "active") return -1;
+        if (b.status === "active" && a.status !== "active") return 1;
+
+        if (a.tech.tier !== b.tech.tier) return a.tech.tier - b.tech.tier;
+        return a.name.localeCompare(b.name);
+      });
+  }, [
+    canResearch,
+    currentLanguage,
+    discoveredTechs,
+    focusedCategory,
+    researchedTechs,
+    techDirectoryFilter,
+    techSearchText,
+    getResourceQty,
+    credits,
+    activeResearch?.techId,
+  ]);
+
+  const activeResearchId = activeResearch?.techId ?? null;
+  const handleQuickStart = useCallback(
+    (techId: TechnologyId) => {
+      if (activeResearchId || !canResearch) return;
+      const tech = RESEARCH_TREE[techId];
+      if (tech && canStartResearch(tech)) {
+        startResearch(techId);
+        setSelectedTech(null);
+      }
+    },
+    [activeResearchId, canResearch, canStartResearch, startResearch],
   );
 
   const sciencePerTurn = useMemo(() => {
@@ -1147,6 +1459,20 @@ export function ResearchPanel() {
             <span>{t("research.pan_zoom_hint")}</span>
           </div>
         </div>
+
+        <TechDirectory
+          rows={techDirectoryRows}
+          filter={techDirectoryFilter}
+          searchText={techSearchText}
+          canResearch={canResearch}
+          hasActiveResearch={Boolean(activeResearchId)}
+          onFilterChange={setTechDirectoryFilter}
+          onSearchChange={setTechSearchText}
+          onSelectTech={(id) =>
+            setSelectedTech((current) => (current === id ? null : id))
+          }
+          onQuickStart={handleQuickStart}
+        />
       </div>
 
       {/* ── Pan/Zoom tree ── */}
