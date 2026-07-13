@@ -1,4 +1,4 @@
-import type { RaceId } from "@/game/types";
+import type { PlanetPointOfInterest, RaceId } from "@/game/types";
 import type { ExploreTileType } from "@/game/types/exploration";
 
 type TileWeightMap = Record<ExploreTileType, number>;
@@ -57,7 +57,52 @@ const RACE_WEIGHTS: Record<RaceId, TileWeightMap> = {
     },
 };
 
-export function getWeightsForRace(raceId: RaceId | undefined): TileWeightMap {
+const POINT_OF_INTEREST_WEIGHTS: Record<
+    PlanetPointOfInterest,
+    TileWeightMap
+> = {
+    ancient_ruins: {
+        market: 1,
+        lab: 3,
+        ruins: 8,
+        incident: 3,
+        artifact: 4,
+    },
+    research_site: {
+        market: 1,
+        lab: 8,
+        ruins: 3,
+        incident: 2,
+        artifact: 3,
+    },
+    resource_vein: {
+        market: 6,
+        lab: 3,
+        ruins: 2,
+        incident: 4,
+        artifact: 1,
+    },
+    crash_site: {
+        market: 7,
+        lab: 2,
+        ruins: 3,
+        incident: 4,
+        artifact: 2,
+    },
+    alien_biosphere: {
+        market: 2,
+        lab: 6,
+        ruins: 2,
+        incident: 6,
+        artifact: 2,
+    },
+};
+
+export function getWeightsForRace(
+    raceId: RaceId | undefined,
+    pointOfInterest?: PlanetPointOfInterest,
+): TileWeightMap {
+    if (pointOfInterest) return POINT_OF_INTEREST_WEIGHTS[pointOfInterest];
     if (!raceId || !(raceId in RACE_WEIGHTS)) return DEFAULT_WEIGHTS;
     return RACE_WEIGHTS[raceId];
 }

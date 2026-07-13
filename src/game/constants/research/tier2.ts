@@ -315,7 +315,7 @@ export const TIER2_TECHS: Partial<Record<TechnologyId, Technology>> = {
     id: "expedition_kits",
     name: "Комплекты экспедиции",
     description:
-      "Стимпаки, ручные дроны и разведывательные зонды расширяют возможности экспедиций на поверхности планет. Каждая экспедиция получает +2 очка действий.",
+      "Открывают экспедиции на полностью разведанных пустых планетах. Каждая наземная экспедиция получает +2 очка действий.",
     tier: 2,
     category: "engineering",
     prerequisites: ["automated_repair"],

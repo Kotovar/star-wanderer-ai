@@ -1,5 +1,5 @@
 import type { Contract } from "../contracts";
-import type { PlanetType } from "../planets";
+import type { PlanetPointOfInterest, PlanetType } from "../planets";
 import type { RaceId } from "../races";
 import type { StationConfig, StationName } from "../stations";
 import type { EnemyShip } from "../enemy";
@@ -58,6 +58,7 @@ export interface Location {
     planetType?: PlanetType;
     isEmpty?: boolean;
     explored?: boolean; // Fully explored empty planet (after 3 scout missions)
+    pointOfInterest?: PlanetPointOfInterest;
     planetaryDrilled?: boolean; // Planetary drill has been used on this planet
     atmosphereAnalyzed?: boolean; // Atmospheric analysis has been performed
     lastDrillResult?: {

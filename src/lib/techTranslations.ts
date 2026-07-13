@@ -202,7 +202,7 @@ export const TECH_TRANSLATIONS: Record<
     expedition_kits: {
       name: "Комплекты экспедиции",
       description:
-        "Стимпаки, ручные дроны и разведывательные зонды увеличивают охват экспедиции. +2 очка действий к каждой наземной экспедиции.",
+        "Открывают экспедиции на полностью разведанных пустых планетах. Сохраняют бонус +2 очка действий к каждой наземной экспедиции.",
     },
     storm_shields: {
       name: "Штормовые щиты",
@@ -419,7 +419,7 @@ export const TECH_TRANSLATIONS: Record<
     expedition_kits: {
       name: "Expedition Kits",
       description:
-        "Stimpacks, handheld drones, and recon probes extend expedition coverage. +2 action points for every ground expedition.",
+        "Unlocks expeditions on fully scouted empty planets. Keeps the +2 action point bonus for every ground expedition.",
     },
     storm_shields: {
       name: "Storm Shields",

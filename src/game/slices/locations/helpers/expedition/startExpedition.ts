@@ -1,10 +1,11 @@
 import type { SetState, GameStore } from "@/game/types";
 import type { ExpeditionState } from "@/game/types/exploration";
+import { PLANET_POINT_OF_INTERESTS } from "@/game/constants/planets";
 import { getTechBonusSum } from "@/game/research";
 import { generateExpeditionGrid } from "./generateExpeditionGrid";
 
 /**
- * Начинает экспедицию на поверхность населённой планеты.
+ * Начинает экспедицию на поверхность планеты.
  * AP = количество членов экипажа + бонус технологии + бонус синтетиков.
  * Ход не тратится — только финальный endExpedition стоит 1 ход.
  */
@@ -21,8 +22,24 @@ export function startExpedition(
 
     const state = get();
     const planet = state.currentSector?.locations.find((l) => l.id === planetId);
-    if (!planet || planet.isEmpty) {
-        get().addLog("Экспедиция возможна только на населённых планетах.", "error");
+    if (!planet) {
+        get().addLog("Планета не найдена.", "error");
+        return;
+    }
+
+    if (planet.isEmpty && !planet.explored) {
+        get().addLog("Сначала завершите разведку поверхности.", "error");
+        return;
+    }
+
+    if (
+        planet.isEmpty &&
+        !state.research.researchedTechs.includes("expedition_kits")
+    ) {
+        get().addLog(
+            "Для экспедиции на пустую планету нужна технология «Комплекты экспедиции».",
+            "error",
+        );
         return;
     }
 
@@ -56,7 +73,15 @@ export function startExpedition(
     const techBonus = getTechBonusSum(state.research, "expedition_ap");
     apTotal += techBonus;
 
-    const grid = generateExpeditionGrid(planet.dominantRace);
+    const pointOfInterest =
+        planet.isEmpty && planet.planetType
+            ? planet.pointOfInterest ??
+              PLANET_POINT_OF_INTERESTS[planet.planetType]
+            : undefined;
+    const grid = generateExpeditionGrid(
+        planet.dominantRace,
+        pointOfInterest,
+    );
 
     const expedition: ExpeditionState = {
         planetId,

@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useGameStore } from "@/game/store";
-import { PLANET_SPECIALIZATIONS } from "@/game/constants/planets";
+import {
+    PLANET_POINT_OF_INTERESTS,
+    PLANET_SPECIALIZATIONS,
+} from "@/game/constants/planets";
 import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
 import { PlanetSpecializationPanel } from "./PlanetSpecializationPanel";
@@ -83,6 +86,27 @@ export function PlanetPanel() {
 
     if (!currentLocation) return null;
 
+    // Active expedition for either inhabited or empty planet
+    if (activeExpedition && activeExpedition.planetId === currentLocation.id) {
+        const currentLocationPlanetTypePlanet = currentLocation.planetType;
+        const planetBgClassPlanet = getPlanetBackgroundClass(
+            currentLocationPlanetTypePlanet,
+        );
+        return (
+            <div
+                className={`flex flex-col h-full min-h-0 rounded-lg border ${planetBgClassPlanet}`}
+                style={{ borderColor: raceBorder }}
+            >
+                <div
+                    className="relative z-10 bg-[rgba(5,8,16,0.85)] rounded border flex-1 overflow-y-auto p-4 min-h-0"
+                    style={{ borderColor: raceBorder }}
+                >
+                    <PlanetExplorationPanel />
+                </div>
+            </div>
+        );
+    }
+
     // Empty planet
     if (currentLocation.isEmpty) {
         const hasScout = crew.some((c) => c.profession === "scout");
@@ -98,6 +122,11 @@ export function PlanetPanel() {
         const canScout = scoutedTimes < maxScoutAttempts;
         const lastScoutResult = currentLocation.lastScoutResult;
         const currentLocationPlanetType = currentLocation.planetType;
+        const pointOfInterest = currentLocationPlanetType
+            ? currentLocation.pointOfInterest ??
+              PLANET_POINT_OF_INTERESTS[currentLocationPlanetType]
+            : undefined;
+        const hasExpeditionKits = researchedTechs.includes("expedition_kits");
 
         const hasDrillTech = researchedTechs.includes("planetary_drill");
         const hasDrillModule = ship.modules.some(
@@ -368,6 +397,43 @@ export function PlanetPanel() {
                         </div>
                     )}
 
+                    {currentLocation.explored && (
+                        <div className="mt-4 border border-[#00d4ff66] bg-[rgba(0,212,255,0.04)] p-3">
+                            <div className="text-[#00d4ff] font-bold text-sm font-['Orbitron']">
+                                ◈ {t("planet_panel.point_of_interest_title")}
+                            </div>
+                            {pointOfInterest && (
+                                <div className="text-[#aaa] text-xs mt-1">
+                                    {t(
+                                        `planet_panel.point_of_interest_types.${pointOfInterest}`,
+                                    )}
+                                </div>
+                            )}
+                            <div className="text-xs mt-2">
+                                {currentLocation.expeditionCompleted ? (
+                                    <span className="text-[#555]">
+                                        {t("planet_panel.expedition_finished")}
+                                    </span>
+                                ) : hasExpeditionKits ? (
+                                    <Button
+                                        onClick={() =>
+                                            setShowExpeditionSetup(true)
+                                        }
+                                        className="cursor-pointer bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider text-xs px-3 py-1"
+                                    >
+                                        🗺️ {t("planet_panel.explore_planet")}
+                                    </Button>
+                                ) : (
+                                    <span className="text-[#ff0040]">
+                                        {t(
+                                            "planet_panel.expedition_requires_kits",
+                                        )}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex gap-2.5 flex-wrap mt-5">
                         <Button
                             onClick={showSectorMap}
@@ -376,27 +442,23 @@ export function PlanetPanel() {
                             {t("planet_panel.leave_planet")}
                         </Button>
                     </div>
-                </div>
-            </div>
-        );
-    }
 
-    // Inhabited planet — show expedition if active for this planet
-    if (activeExpedition && activeExpedition.planetId === currentLocation.id) {
-        const currentLocationPlanetTypePlanet = currentLocation.planetType;
-        const planetBgClassPlanet = getPlanetBackgroundClass(
-            currentLocationPlanetTypePlanet,
-        );
-        return (
-            <div
-                className={`flex flex-col h-full min-h-0 rounded-lg border ${planetBgClassPlanet}`}
-                style={{ borderColor: raceBorder }}
-            >
-                <div
-                    className="relative z-10 bg-[rgba(5,8,16,0.85)] rounded border flex-1 overflow-y-auto p-4 min-h-0"
-                    style={{ borderColor: raceBorder }}
-                >
-                    <PlanetExplorationPanel />
+                    {/* Expedition Setup Modal */}
+                    {showExpeditionSetup && planetId && (
+                        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                            <div
+                                className="bg-[rgba(10,20,30,0.95)] border-2 p-6 max-w-md w-full max-h-[80vh] overflow-y-auto"
+                                style={{ borderColor: "#00d4ff" }}
+                            >
+                                <PlanetExpeditionSetup
+                                    planetId={planetId}
+                                    onClose={() =>
+                                        setShowExpeditionSetup(false)
+                                    }
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         );

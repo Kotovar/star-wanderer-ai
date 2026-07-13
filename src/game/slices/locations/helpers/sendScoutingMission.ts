@@ -5,7 +5,12 @@ import type {
     ScoutingOutcome,
     ResearchResourceType,
 } from "@/game/types";
-import { TRADE_GOODS, MUTATION_CHANCES, RESEARCH_RESOURCES } from "@/game/constants";
+import {
+    MUTATION_CHANCES,
+    PLANET_POINT_OF_INTERESTS,
+    RESEARCH_RESOURCES,
+    TRADE_GOODS,
+} from "@/game/constants";
 import {
     SCOUTING_TRADE_GOOD_BASE_MIN,
     SCOUTING_TRADE_GOOD_BASE_MAX,
@@ -92,6 +97,14 @@ export const sendScoutingMission = (
         : false;
     const maxScoutAttempts = SCOUTING_REQUIRED_VISITS + (scoutHasOptical ? 1 : 0);
     const isFullyExplored = newScoutedTimes >= maxScoutAttempts;
+    const planet = state.currentSector?.locations.find(
+        (location) => location.id === planetId,
+    );
+    const pointOfInterest =
+        isFullyExplored && planet?.isEmpty && planet.planetType
+            ? planet.pointOfInterest ??
+              PLANET_POINT_OF_INTERESTS[planet.planetType]
+            : planet?.pointOfInterest;
 
     // Update state
     updateScoutingState(
@@ -99,6 +112,7 @@ export const sendScoutingMission = (
         newScoutedTimes,
         isFullyExplored,
         result,
+        pointOfInterest,
         set,
     );
 
@@ -238,6 +252,7 @@ const updateScoutingState = (
     newScoutedTimes: number,
     isFullyExplored: boolean,
     result: ScoutingOutcome,
+    pointOfInterest: Location["pointOfInterest"],
     set: SetState,
 ): void => {
     const scoutResult = createScoutResult(result);
@@ -250,6 +265,7 @@ const updateScoutingState = (
             newScoutedTimes,
             isFullyExplored,
             scoutResult,
+            pointOfInterest,
         ),
         currentLocation: updateCurrentLocation(
             s.currentLocation,
@@ -257,6 +273,7 @@ const updateScoutingState = (
             newScoutedTimes,
             isFullyExplored,
             scoutResult,
+            pointOfInterest,
         ),
     }));
 };
@@ -270,6 +287,7 @@ const updateSectorLocations = (
     scoutedTimes: number,
     explored: boolean,
     scoutResult: NonNullable<Location["lastScoutResult"]>,
+    pointOfInterest: Location["pointOfInterest"],
 ): GameStore["currentSector"] => {
     if (!sector) return null;
 
@@ -281,6 +299,7 @@ const updateSectorLocations = (
                       ...loc,
                       scoutedTimes,
                       explored,
+                      pointOfInterest: pointOfInterest ?? loc.pointOfInterest,
                       lastScoutResult: scoutResult,
                   }
                 : loc,
@@ -297,6 +316,7 @@ const updateCurrentLocation = (
     scoutedTimes: number,
     explored: boolean,
     scoutResult: NonNullable<Location["lastScoutResult"]>,
+    pointOfInterest: Location["pointOfInterest"],
 ): GameStore["currentLocation"] => {
     if (location?.id !== planetId) return location;
 
@@ -304,6 +324,7 @@ const updateCurrentLocation = (
         ...location,
         scoutedTimes,
         explored,
+        pointOfInterest: pointOfInterest ?? location.pointOfInterest,
         lastScoutResult: scoutResult,
     };
 };

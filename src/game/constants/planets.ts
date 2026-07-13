@@ -1,4 +1,9 @@
-import type { PlanetSpecialization, PlanetType, RaceId } from "../types";
+import type {
+    PlanetPointOfInterest,
+    PlanetSpecialization,
+    PlanetType,
+    RaceId,
+} from "../types";
 
 export const PLANET_TYPES: PlanetType[] = [
     "Пустынная",
@@ -14,6 +19,24 @@ export const PLANET_TYPES: PlanetType[] = [
     "Планета-кольцо",
     "Приливная",
 ];
+
+export const PLANET_POINT_OF_INTERESTS: Record<
+    PlanetType,
+    PlanetPointOfInterest
+> = {
+    Пустынная: "resource_vein",
+    Ледяная: "crash_site",
+    Лесная: "alien_biosphere",
+    Вулканическая: "resource_vein",
+    Океаническая: "alien_biosphere",
+    Кристаллическая: "ancient_ruins",
+    Радиоактивная: "crash_site",
+    Тропическая: "alien_biosphere",
+    Арктическая: "crash_site",
+    "Разрушенная войной": "ancient_ruins",
+    "Планета-кольцо": "resource_vein",
+    Приливная: "research_site",
+};
 
 // Planet type descriptions
 export const PLANET_DESCRIPTIONS: Record<PlanetType, string> = {

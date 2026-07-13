@@ -15,6 +15,13 @@ export type PlanetType =
     | "Планета-кольцо"
     | "Приливная";
 
+export type PlanetPointOfInterest =
+    | "ancient_ruins"
+    | "research_site"
+    | "resource_vein"
+    | "crash_site"
+    | "alien_biosphere";
+
 export interface PlanetSpecialization {
     id: string;
     name: string;

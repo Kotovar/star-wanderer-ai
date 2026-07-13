@@ -11,6 +11,7 @@ import {
 import { useTranslation } from "@/lib/useTranslation";
 import type { ExploreTileType } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES, TRADE_GOODS } from "@/game/constants";
+import { PLANET_POINT_OF_INTERESTS } from "@/game/constants/planets";
 import { ExpeditionMapCanvas } from "./ExpeditionMapCanvas";
 import { EventIllustration } from "./EventIllustration";
 import { ProfessionSprite } from "./ProfessionSprite";
@@ -33,6 +34,7 @@ const TILE_ICONS: Record<ExploreTileType, string> = {
 
 export function PlanetExplorationPanel() {
   const expedition = useGameStore((s) => s.activeExpedition);
+  const currentLocation = useGameStore((s) => s.currentLocation);
   const crew = useGameStore((s) => s.crew);
   const revealExpeditionTile = useGameStore((s) => s.revealExpeditionTile);
   const resolveRuinsChoice = useGameStore((s) => s.resolveRuinsChoice);
@@ -42,6 +44,13 @@ export function PlanetExplorationPanel() {
   const [showAbortConfirm, setShowAbortConfirm] = useState(false);
 
   if (!expedition) return null;
+
+  const isEmptyPlanet = currentLocation?.isEmpty === true;
+  const pointOfInterest =
+    isEmptyPlanet && currentLocation.planetType
+      ? currentLocation.pointOfInterest ??
+        PLANET_POINT_OF_INTERESTS[currentLocation.planetType]
+      : undefined;
 
   const { grid, apRemaining, apTotal, rewards, activeRuinsEvent, finished, crewIds } =
     expedition;
@@ -79,6 +88,13 @@ export function PlanetExplorationPanel() {
         <div className="font-['Orbitron'] font-bold text-[#00d4ff] uppercase tracking-wider text-sm shrink-0">
           🗺️ {t("planet_panel.expedition_active_title")}
         </div>
+        {pointOfInterest && (
+          <span className="text-[10px] text-[#00d4ff99] border border-[#00d4ff33] px-1.5 py-0.5 rounded-sm">
+            ◈ {t("planet_panel.point_of_interest_title")}: {t(
+              `planet_panel.point_of_interest_types.${pointOfInterest}`,
+            )}
+          </span>
+        )}
         {/* Tile counter */}
         <span className="text-xs font-mono text-[#00d4ff66] shrink-0">
           {revealedCount}/{totalTiles}
@@ -255,7 +271,14 @@ export function PlanetExplorationPanel() {
               background: style.bg,
             }}
           >
-            {TILE_ICONS[type]} {t(`planet_panel.tile_${type}`)}
+            {type === "market" && isEmptyPlanet
+              ? "📦"
+              : TILE_ICONS[type]}{" "}
+            {t(
+              type === "market" && isEmptyPlanet
+                ? "planet_panel.tile_supply_cache"
+                : `planet_panel.tile_${type}`,
+            )}
           </span>
         ))}
       </div>
