@@ -1045,6 +1045,7 @@
     },
     "no_regular": "No regular artifacts",
     "no_cursed": "No cursed artifacts",
+    "no_results": "No artifacts match selected filters",
     "tip_title": "★ Tip: ",
     "tip_text": "Regular artifacts can be found in anomalies and storms. Cursed artifacts are rarer, but their effects are very powerful — and dangerous.",
     "undiscovered": "Not yet discovered...",

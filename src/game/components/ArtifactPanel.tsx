@@ -2,7 +2,7 @@
 
 import { useGameStore } from "@/game/store";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useMemo, useState } from "react";
 import { useTranslation } from "@/lib/useTranslation";
 import { getTechBonusSum } from "@/game/research";
 import { DEFAULT_ARTIFACT_SLOTS } from "@/game/slices/artifacts/constants";
@@ -36,6 +36,8 @@ const RARITY_NAMES: Record<string, string> = {
 function getRarityName(rarity: string, t: (key: string) => string): string {
     return t(RARITY_NAMES[rarity] || `artifacts.rarity.${rarity}`);
 }
+
+type ArtifactFilter = "all" | "regular" | "cursed" | "discovered" | "researched" | "active";
 
 const EFFECT_ICONS: Record<ArtifactType, string> = {
     free_power: "⚡",
@@ -244,6 +246,9 @@ export function ArtifactPanel() {
     const research = useGameStore((s) => s.research);
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const { t } = useTranslation();
+    const [artifactSearchText, setArtifactSearchText] = useState("");
+    const [artifactFilter, setArtifactFilter] =
+        useState<ArtifactFilter>("all");
 
     const scientists = crew.filter((c) => c.profession === "scientist");
     const maxScientistLevel =
@@ -261,9 +266,71 @@ export function ArtifactPanel() {
         DEFAULT_ARTIFACT_SLOTS + getTechBonusSum(research, "artifact_slots");
     const slotsAtLimit = activeCount >= maxSlots;
 
-    // Separate regular and cursed artifacts
     const regularArtifacts = artifacts.filter((a) => !a.cursed);
     const cursedArtifacts = artifacts.filter((a) => a.cursed);
+    const discoveredRegularCount = regularArtifacts.filter(
+        (a) => a.discovered,
+    ).length;
+    const discoveredCursedCount = cursedArtifacts.filter((a) => a.discovered).length;
+
+    const filteredArtifacts = useMemo(() => {
+        const query = artifactSearchText.trim().toLowerCase();
+        return artifacts.filter((artifact) => {
+            const matchesSearch = query
+                ? artifact.name.toLowerCase().includes(query)
+                : true;
+            const matchesFilter =
+                artifactFilter === "all"
+                    ? true
+                    : artifactFilter === "regular"
+                        ? !artifact.cursed
+                        : artifactFilter === "cursed"
+                          ? artifact.cursed
+                          : artifactFilter === "discovered"
+                            ? artifact.discovered
+                            : artifactFilter === "researched"
+                              ? artifact.researched
+                              : artifact.effect.active;
+            return matchesSearch && matchesFilter;
+        });
+    }, [artifactSearchText, artifactFilter, artifacts]);
+
+    const filterButtons = useMemo(
+        () =>
+            [
+                { id: "all", label: "Все" },
+                {
+                    id: "regular",
+                    label: `${t("artifacts.tabs.regular")} (${discoveredRegularCount}/${regularArtifacts.length})`,
+                },
+                {
+                    id: "cursed",
+                    label: `${t("artifacts.tabs.cursed")} (${discoveredCursedCount}/${cursedArtifacts.length})`,
+                },
+                {
+                    id: "discovered",
+                    label: `${t("artifacts.discovered")} (${discoveredCount})`,
+                },
+                {
+                    id: "researched",
+                    label: `${t("artifacts.researched")} (${researchedCount})`,
+                },
+                {
+                    id: "active",
+                    label: `${t("artifacts.active")} (${activeCount})`,
+                },
+        ] satisfies Array<{ id: ArtifactFilter; label: string }>,
+        [
+            discoveredRegularCount,
+            regularArtifacts.length,
+            discoveredCursedCount,
+            cursedArtifacts.length,
+            discoveredCount,
+            researchedCount,
+            activeCount,
+            t,
+        ],
+    );
 
     return (
         <div className="flex flex-col h-full overflow-hidden gap-2">
@@ -281,14 +348,6 @@ export function ArtifactPanel() {
                     </Button>
                 </div>
 
-                <div className="mt-3 text-sm text-[#888]">
-                    {t("artifacts.discovered")}:{" "}
-                    <span className="text-[#00ff41]">{discoveredCount}</span> /{" "}
-                    {artifacts.length}
-                    {" | "}
-                    {t("artifacts.researched")}:{" "}
-                    <span className="text-[#ffb000]">{researchedCount}</span>
-                </div>
                 <div className="text-sm text-[#888]">
                     {t("artifacts.active_artifacts")}:{" "}
                     <span
@@ -318,81 +377,69 @@ export function ArtifactPanel() {
                         ? `${t("crew.level")} ${maxScientistLevel}`
                         : t("artifacts.no_scientists")}
                 </div>
+
+                <div className="mt-2">
+                    <input
+                        value={artifactSearchText}
+                        onChange={(event) =>
+                            setArtifactSearchText(event.target.value)
+                        }
+                        placeholder="Поиск артефактов..."
+                        className="w-full px-2 py-1 text-xs bg-[#080808] border border-[#333] text-[#888] placeholder:text-[#555] outline-none focus:border-[#00ff41]"
+                    />
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1">
+                    {filterButtons.map((button) => (
+                        <button
+                            type="button"
+                            key={button.id}
+                            onClick={() =>
+                                setArtifactFilter(button.id)
+                            }
+                            className="px-2 py-1 text-[10px] border cursor-pointer"
+                            style={{
+                                borderColor:
+                                    artifactFilter === button.id
+                                        ? "#00ff41"
+                                        : "#333",
+                                color:
+                                    artifactFilter === button.id
+                                        ? "#00ff41"
+                                        : "#777",
+                                backgroundColor:
+                                    artifactFilter === button.id
+                                        ? "rgba(0,255,65,0.07)"
+                                        : "rgba(0,0,0,0.18)",
+                            }}
+                        >
+                            {button.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
-            {/* Tabs for regular and cursed artifacts */}
-            <Tabs
-                defaultValue="regular"
-                className="flex-1 overflow-hidden flex flex-col"
-            >
-                <TabsList className="shrink-0">
-                    <TabsTrigger
-                        value="regular"
-                        className="text-[#00d4ff] data-[state=active]:border-[#00d4ff] data-[state=active]:bg-[rgba(0,212,255,0.1)] cursor-pointer"
-                    >
-                        {t("artifacts.tabs.regular")} (
-                        {discoveredCount -
-                            cursedArtifacts.filter((a) => a.discovered).length}
-                        /{regularArtifacts.length})
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="cursed"
-                        className="text-[#ff0040] data-[state=active]:border-[#ff0040] data-[state=active]:bg-[rgba(255,0,64,0.1)] cursor-pointer"
-                    >
-                        {t("artifacts.tabs.cursed")} (
-                        {cursedArtifacts.filter((a) => a.discovered).length}/
-                        {cursedArtifacts.length})
-                    </TabsTrigger>
-                </TabsList>
-
-                <TabsContent
-                    value="regular"
-                    className="flex-1 overflow-hidden mt-2"
-                >
-                    <div className="h-full overflow-y-auto pr-2 grid gap-3">
-                        {regularArtifacts.map((artifact) => (
-                            <ArtifactCard
-                                key={artifact.id}
-                                artifact={artifact}
-                                onResearch={() => researchArtifact(artifact.id)}
-                                onToggle={() => toggleArtifact(artifact.id)}
-                                slotsAtLimit={slotsAtLimit}
-                            />
-                        ))}
-                        {regularArtifacts.length === 0 && (
-                            <div className="text-sm text-[#888] text-center py-8">
-                                {t("artifacts.no_regular")}
-                            </div>
-                        )}
-                    </div>
-                </TabsContent>
-
-                <TabsContent
-                    value="cursed"
-                    className="flex-1 overflow-hidden mt-2"
-                >
-                    <div className="h-full overflow-y-auto pr-2 space-y-3">
-                        <div className="grid gap-3">
-                            {cursedArtifacts.map((artifact) => (
-                                <ArtifactCard
-                                    key={artifact.id}
-                                    artifact={artifact}
-                                    onResearch={() =>
-                                        researchArtifact(artifact.id)
-                                    }
-                                    onToggle={() => toggleArtifact(artifact.id)}
-                                    slotsAtLimit={slotsAtLimit}
-                                />
-                            ))}
+            <div className="flex-1 overflow-hidden mt-2">
+                <div className="h-full overflow-y-auto pr-2 grid gap-3">
+                    {filteredArtifacts.map((artifact) => (
+                        <ArtifactCard
+                            key={artifact.id}
+                            artifact={artifact}
+                            onResearch={() => researchArtifact(artifact.id)}
+                            onToggle={() => toggleArtifact(artifact.id)}
+                            slotsAtLimit={slotsAtLimit}
+                        />
+                    ))}
+                    {filteredArtifacts.length === 0 && (
+                        <div className="text-sm text-[#888] text-center py-8">
+                            {artifactFilter === "cursed"
+                                ? t("artifacts.no_cursed")
+                                : artifactFilter === "regular"
+                                  ? t("artifacts.no_regular")
+                                  : t("artifacts.no_results")}
                         </div>
-                        {cursedArtifacts.length === 0 && (
-                            <div className="text-sm text-[#888] text-center py-8">
-                                {t("artifacts.no_cursed")}
-                            </div>
-                        )}
-                    </div>
-                </TabsContent>
-            </Tabs>
+                    )}
+                </div>
+            </div>
 
             {/* Footer - Advice */}
             <div className="shrink-0 mt-auto">
