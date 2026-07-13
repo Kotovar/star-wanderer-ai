@@ -20,7 +20,6 @@ import {
 } from "@/game/constants";
 import { computeAccuracyModifier } from "@/game/slices/combat/helpers/playerDamage";
 import type { GameState, WeaponType } from "@/game/types";
-import { useFuelEfficiency } from "@/game/hooks";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getTechBonusSum } from "@/game/research";
 import { getActiveModules } from "../modules";
@@ -81,6 +80,8 @@ function DashboardCard({
   color,
   icon,
   displayValue,
+  detail,
+  className = "",
 }: {
   label: string;
   value: number;
@@ -88,10 +89,12 @@ function DashboardCard({
   color: string;
   icon: StatIconType;
   displayValue?: string;
+  detail?: ReactNode;
+  className?: string;
 }) {
   const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
   return (
-    <div className="group relative overflow-hidden border border-[#00ff4133] bg-[linear-gradient(145deg,rgba(0,255,65,0.06),rgba(4,10,18,0.72))] p-2.5 flex flex-col gap-1.5 transition-colors hover:border-[#00ff4177]">
+    <div className={`group relative min-w-0 overflow-hidden border border-[#00ff4133] bg-[linear-gradient(145deg,rgba(0,255,65,0.06),rgba(4,10,18,0.72))] p-2.5 flex flex-col gap-1.5 transition-colors hover:border-[#00ff4177] ${className}`}>
       <div
         className="absolute inset-y-0 left-0 w-px opacity-70"
         style={{ backgroundColor: color }}
@@ -105,8 +108,11 @@ function DashboardCard({
           {Math.round(pct)}%
         </span>
       </div>
-      <div className="text-xl font-bold font-['Orbitron'] leading-none tabular-nums" style={{ color }}>
-        {displayValue ?? `${value}/${max}`}
+      <div className="flex items-end justify-between gap-2">
+        <div className="text-xl font-bold font-['Orbitron'] leading-none tabular-nums" style={{ color }}>
+          {displayValue ?? `${value}/${max}`}
+        </div>
+        {detail}
       </div>
       <div className="relative h-1.5 w-full overflow-hidden bg-[rgba(255,255,255,0.07)]">
         <div
@@ -140,8 +146,6 @@ export function ShipStats() {
   const research = useGameStore((s) => s.research);
 
   const { t } = useTranslation();
-
-  const { efficiencyPercent } = useFuelEfficiency();
 
   const scanRange = getEffectiveScanRange();
   const cargoCapacity = getCargoCapacity();
@@ -449,31 +453,42 @@ export function ShipStats() {
       </div>
 
       {/* ── Dashboard ────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+      <div className="grid grid-cols-2 gap-2 mb-4 md:grid-cols-[1fr_1fr_1.6fr_1fr]">
         <DashboardCard label={t("ship_stats.hull")} value={currentHull} max={maxHull} color={hullColor} icon="health" />
-        <DashboardCard label={t("ship_stats.fuel")} value={ship.fuel || 0} max={ship.maxFuel || 0} color={fuelColor} icon="fuel_efficiency" />
         <DashboardCard label={t("ship_stats.shields")} value={ship.shields} max={ship.maxShields} color="#00d4ff" icon="shields" />
-        <DashboardCard label={t("ship_stats.power_available")} value={available} max={Math.max(totalPower, 1)} color={powerColor} icon="power_generation" displayValue={available > 0 ? `+${available}` : `${available}`} />
+        <DashboardCard
+          label={t("ship_stats.power_available")}
+          value={available}
+          max={Math.max(totalPower, 1)}
+          color={powerColor}
+          icon="power_generation"
+          displayValue={available > 0 ? `+${available}` : `${available}`}
+          className="col-span-2 md:col-span-1"
+          detail={
+            <div className="grid grid-cols-2 gap-x-2 border-l border-[#00ff4133] pl-2 text-[8px] font-bold uppercase tracking-[0.08em]">
+              <span className="flex items-center gap-1 whitespace-nowrap text-[#ffb000]">
+                <StatIcon type="power_consumption" size={14} />
+                {t("ship_stats.power_consumption")} {totalConsumption}
+              </span>
+              <span className="flex items-center gap-1 whitespace-nowrap text-[#00d4ff]">
+                <StatIcon type="power_generation" size={14} />
+                {t("ship_stats.power_generation")} {totalPower}
+              </span>
+            </div>
+          }
+        />
+        <DashboardCard
+          label={t("ship_stats.fuel")}
+          value={ship.fuel || 0}
+          max={ship.maxFuel || 0}
+          color={fuelColor}
+          icon="fuel_efficiency"
+          className="col-span-2 md:col-span-1"
+        />
       </div>
 
       {/* ── Корпус и защита ──────────────────────── */}
       <SectionHeader label={t("ship_stats.section_hull")} />
-
-      <div className="flex justify-between items-baseline mb-0.5">
-        <StatLabel icon="health">{t("ship_stats.hull")}</StatLabel>
-        <span style={{ color: hullColor }}>
-          {currentHull}/{maxHull}
-        </span>
-      </div>
-      <StatBar value={currentHull} max={maxHull} color={hullColor} />
-
-      <div className="flex justify-between items-baseline mb-0.5">
-        <StatLabel icon="shields">{t("ship_stats.shields")}</StatLabel>
-        <span className="text-ring">
-          {ship.shields}/{ship.maxShields}
-        </span>
-      </div>
-      <StatBar value={ship.shields} max={ship.maxShields} color="#00d4ff" />
 
       <div className="flex justify-between items-baseline mb-1.5">
         <StatLabel icon="shield_regen">{t("ship_stats.shield_regen")}</StatLabel>
@@ -560,31 +575,6 @@ export function ShipStats() {
       <SectionHeader label={t("ship_stats.section_resources")} />
 
       <div className="flex justify-between items-baseline mb-0.5">
-        <span className="text-accent inline-flex items-center gap-1.5">
-          <StatIcon type="fuel_efficiency" size={34} />
-          <span>
-          {t("ship_stats.fuel")}
-          {efficiencyPercent >= 0 && (
-            <span className="text-[#888] text-xs">
-              {" "}
-              (
-              {efficiencyPercent + (mergeBonus.fuelEfficiency || 0)}
-              %)
-            </span>
-          )}
-          </span>
-        </span>
-        <span style={{ color: fuelColor }}>
-          {ship.fuel || 0}/{ship.maxFuel || 0}
-        </span>
-      </div>
-      <StatBar
-        value={ship.fuel || 0}
-        max={ship.maxFuel || 0}
-        color={fuelColor}
-      />
-
-      <div className="flex justify-between items-baseline mb-0.5">
         <StatLabel icon="crew">{t("ship_stats.crew_count")}</StatLabel>
         <span
           className={
@@ -657,36 +647,6 @@ export function ShipStats() {
         </span>
         <span className="text-[#00ff41]">
           {scanRange > 0 ? `${scanRange}` : "—"}
-        </span>
-      </div>
-
-      {/* ── Энергетика ───────────────────────────── */}
-      <SectionHeader label={t("ship_stats.section_energy")} />
-
-      <div className="flex justify-between items-baseline mb-0.5">
-        <span className="text-accent inline-flex items-center gap-1.5">
-          <StatIcon type="power_consumption" size={34} />
-          <StatIcon type="power_generation" size={34} />
-          <span>
-            {t("ship_stats.power_consumption")} /{" "}
-            {t("ship_stats.power_generation")}
-          </span>
-        </span>
-        <span style={{ color: powerColor }}>
-          {totalConsumption}/{totalPower}
-        </span>
-      </div>
-      <StatBar
-        value={totalConsumption}
-        max={totalPower}
-        color={powerColor}
-      />
-      <div className="flex justify-between items-baseline mb-1.5 font-bold">
-        <span className="text-accent">
-          <StatLabel icon="power_generation">{t("ship_stats.power_available")}</StatLabel>
-        </span>
-        <span style={{ color: powerColor }}>
-          {available > 0 ? `+${available}` : available}
         </span>
       </div>
 
