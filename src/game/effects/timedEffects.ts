@@ -93,7 +93,7 @@ export const TIMED_EFFECTS: Record<TimedEffectId, TimedEffectDefinition> = {
     polarity: "positive",
     icon: "🪼",
     color: "#8b5cf6",
-    duration: 6,
+    duration: 15,
     effects: [
       { type: "fuel_efficiency", value: 0.18 },
       { type: "evasion_bonus", value: 0.05 },
@@ -105,7 +105,7 @@ export const TIMED_EFFECTS: Record<TimedEffectId, TimedEffectDefinition> = {
     polarity: "positive",
     icon: "🦋",
     color: "#22d3ee",
-    duration: 6,
+    duration: 15,
     effects: [
       { type: "power_boost", value: 3 },
       { type: "health_regen", value: 1 },
@@ -117,7 +117,7 @@ export const TIMED_EFFECTS: Record<TimedEffectId, TimedEffectDefinition> = {
     polarity: "positive",
     icon: "🐉",
     color: "#fb923c",
-    duration: 5,
+    duration: 15,
     effects: [
       { type: "combat_bonus", value: 0.12 },
       { type: "power_boost", value: 2 },
@@ -129,7 +129,7 @@ export const TIMED_EFFECTS: Record<TimedEffectId, TimedEffectDefinition> = {
     polarity: "positive",
     icon: "💠",
     color: "#c084fc",
-    duration: 5,
+    duration: 15,
     effects: [
       { type: "combat_bonus", value: 0.08 },
       { type: "evasion_bonus", value: 0.1 },

@@ -5,6 +5,26 @@ import type {
   StarType,
 } from "@/game/types";
 
+export type SpaceMonsterFirstContact =
+  | {
+      type: "reveal_sector";
+      descriptionKey: string;
+    }
+  | {
+      type: "heal_crew";
+      descriptionKey: string;
+      value: number;
+    }
+  | {
+      type: "refuel";
+      descriptionKey: string;
+      value: number;
+    }
+  | {
+      type: "artifact_hint";
+      descriptionKey: string;
+    };
+
 export type SpaceMonsterDefinition = {
   nameKey: string;
   descriptionKey: string;
@@ -15,6 +35,7 @@ export type SpaceMonsterDefinition = {
   resonanceEffect: TimedEffectId;
   huntReward: ResearchResourceType;
   huntRewardBase: number;
+  firstContact: SpaceMonsterFirstContact;
 };
 
 export const SPACE_MONSTERS: Record<
@@ -31,6 +52,10 @@ export const SPACE_MONSTERS: Record<
     resonanceEffect: "void_ray_pact",
     huntReward: "void_membrane",
     huntRewardBase: 1,
+    firstContact: {
+      type: "reveal_sector",
+      descriptionKey: "space_monsters.void_ray.first_contact",
+    },
   },
   nebula_manta: {
     nameKey: "space_monsters.nebula_manta.name",
@@ -42,6 +67,11 @@ export const SPACE_MONSTERS: Record<
     resonanceEffect: "nebula_manta_pact",
     huntReward: "alien_biology",
     huntRewardBase: 2,
+    firstContact: {
+      type: "heal_crew",
+      descriptionKey: "space_monsters.nebula_manta.first_contact",
+      value: 8,
+    },
   },
   plasma_leviathan: {
     nameKey: "space_monsters.plasma_leviathan.name",
@@ -53,6 +83,11 @@ export const SPACE_MONSTERS: Record<
     resonanceEffect: "plasma_leviathan_pact",
     huntReward: "energy_samples",
     huntRewardBase: 2,
+    firstContact: {
+      type: "refuel",
+      descriptionKey: "space_monsters.plasma_leviathan.first_contact",
+      value: 30,
+    },
   },
   crystal_hydra: {
     nameKey: "space_monsters.crystal_hydra.name",
@@ -64,6 +99,10 @@ export const SPACE_MONSTERS: Record<
     resonanceEffect: "crystal_hydra_pact",
     huntReward: "quantum_crystals",
     huntRewardBase: 1,
+    firstContact: {
+      type: "artifact_hint",
+      descriptionKey: "space_monsters.crystal_hydra.first_contact",
+    },
   },
 };
 

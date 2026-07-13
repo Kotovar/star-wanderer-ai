@@ -5,6 +5,7 @@ import { useGameStore } from "@/game/store";
 import { useTranslation } from "@/lib/useTranslation";
 import { getLocationName } from "@/lib/translationHelpers";
 import { RACES } from "@/game/constants/races";
+import { SPACE_MONSTERS } from "@/game/constants/spaceMonsters";
 import { getScannerRangeLabel } from "./DistressSignalPanel";
 import { STAR_SPRITE_SHEET } from "@/game/assets/starSprites";
 import type { Location, LocationType, StarType } from "@/game/types";
@@ -395,7 +396,7 @@ export function SectorMap() {
             : loc.type === "gas_giant"
               ? "#cc88ff"
               : loc.type === "space_monster"
-                ? "#c084fc"
+                ? SPACE_MONSTERS[loc.spaceMonsterType ?? "void_ray"].color
               : "#00ff41";
       ctx.fillText(finalDisplayName, x, y + 28);
 

@@ -15,6 +15,12 @@ assert.equal(
   new Set(Object.values(SPACE_MONSTERS).map((monster) => monster.resonanceEffect)).size,
   Object.keys(SPACE_MONSTERS).length,
 );
+assert.deepEqual(
+  Object.values(SPACE_MONSTERS).map((monster) => monster.firstContact.type).sort(),
+  ["artifact_hint", "heal_crew", "refuel", "reveal_sector"],
+);
+assert.equal(SPACE_MONSTERS.nebula_manta.firstContact.value, 8);
+assert.equal(SPACE_MONSTERS.plasma_leviathan.firstContact.value, 30);
 
 const biologicalModules = generateEnemyModules(3, "space_monster");
 assert.ok(biologicalModules.every((module) => module.isBiological));

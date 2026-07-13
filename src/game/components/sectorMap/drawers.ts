@@ -3205,92 +3205,302 @@ export function drawSpaceMonster(
   const color = monster?.color ?? "#c084fc";
   const resolved = completed || loc.spaceMonsterResolved === "hunted";
   const pulse = 1 + Math.sin(time * 0.004) * 0.08;
+  const sway = Math.sin(time * 0.0017) * 0.12;
 
   ctx.save();
   ctx.globalAlpha = resolved ? 0.35 : 1;
 
-  const glow = ctx.createRadialGradient(x, y, 2, x, y, 25 * pulse);
-  glow.addColorStop(0, `${color}66`);
-  glow.addColorStop(0.55, `${color}22`);
+  const glow = ctx.createRadialGradient(x, y, 2, x, y, 29 * pulse);
+  glow.addColorStop(0, `${color}77`);
+  glow.addColorStop(0.52, `${color}25`);
   glow.addColorStop(1, "transparent");
   ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.arc(x, y, 25 * pulse, 0, Math.PI * 2);
+  ctx.arc(x, y, 29 * pulse, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.translate(x, y);
-  ctx.strokeStyle = color;
-  ctx.fillStyle = "#111427";
-  ctx.lineWidth = 1.5;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
 
   switch (loc.spaceMonsterType) {
-    case "void_ray":
-      ctx.beginPath();
-      ctx.moveTo(-18, 1);
-      ctx.quadraticCurveTo(-8, -12, 0, -4);
-      ctx.quadraticCurveTo(8, -12, 18, 1);
-      ctx.quadraticCurveTo(8, 8, 0, 11);
-      ctx.quadraticCurveTo(-8, 8, -18, 1);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(0, 1, 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = color;
-      ctx.beginPath();
-      ctx.moveTo(0, 9);
-      ctx.quadraticCurveTo(4, 16, 1, 19);
-      ctx.stroke();
-      break;
+    case "void_ray": {
+      ctx.rotate(sway);
 
-    case "nebula_manta":
-      ctx.rotate(Math.PI / 4);
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 15, 7, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = color;
-      ctx.fillRect(-3, -3, 6, 6);
-      break;
-
-    case "plasma_leviathan":
-      ctx.beginPath();
-      ctx.arc(0, 0, 11, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(0, 0, 5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#ffd166";
-      for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2 + time * 0.001;
+      ctx.strokeStyle = "rgba(196, 181, 253, 0.5)";
+      ctx.lineWidth = 1.25;
+      [-5, 0, 5].forEach((offset, index) => {
         ctx.beginPath();
-        ctx.moveTo(Math.cos(angle) * 10, Math.sin(angle) * 10);
-        ctx.lineTo(Math.cos(angle) * 17, Math.sin(angle) * 17);
-        ctx.stroke();
-      }
-      break;
-
-    case "crystal_hydra":
-      [-8, 0, 8].forEach((offset) => {
-        ctx.beginPath();
-        ctx.moveTo(offset, -12);
-        ctx.lineTo(offset + 5, -2);
-        ctx.lineTo(offset, 8);
-        ctx.lineTo(offset - 5, -2);
-        ctx.closePath();
-        ctx.fill();
+        ctx.moveTo(offset, 7);
+        ctx.bezierCurveTo(
+          offset + 2,
+          12,
+          offset - 5 + index * 2,
+          16,
+          offset + (index - 1) * 3,
+          21,
+        );
         ctx.stroke();
       });
-      ctx.fillStyle = color;
+
+      const rayBody = ctx.createLinearGradient(-18, -12, 18, 12);
+      rayBody.addColorStop(0, "#111426");
+      rayBody.addColorStop(0.52, "#3b2365");
+      rayBody.addColorStop(1, "#8b5cf6");
       ctx.beginPath();
-      ctx.arc(0, -2, 3, 0, Math.PI * 2);
+      ctx.moveTo(-21, 1);
+      ctx.bezierCurveTo(-15, -4, -13, -16, -2, -10);
+      ctx.quadraticCurveTo(0, -6, 2, -10);
+      ctx.bezierCurveTo(13, -16, 15, -4, 21, 1);
+      ctx.bezierCurveTo(14, 8, 7, 10, 0, 8);
+      ctx.bezierCurveTo(-7, 10, -14, 8, -21, 1);
+      ctx.closePath();
+      ctx.fillStyle = rayBody;
+      ctx.fill();
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 8;
+      ctx.strokeStyle = "#c4b5fd";
+      ctx.lineWidth = 1.35;
+      ctx.stroke();
+
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "rgba(233, 213, 255, 0.5)";
+      ctx.lineWidth = 0.8;
+      [-1, 1].forEach((side) => {
+        ctx.beginPath();
+        ctx.moveTo(0, -1);
+        ctx.quadraticCurveTo(side * 8, -7, side * 15, 0);
+        ctx.stroke();
+      });
+
+      const eye = ctx.createRadialGradient(-1, -2, 0, 0, 0, 5);
+      eye.addColorStop(0, "#ffffff");
+      eye.addColorStop(0.35, "#ddd6fe");
+      eye.addColorStop(1, "#7c3aed");
+      ctx.fillStyle = eye;
+      ctx.beginPath();
+      ctx.arc(0, -1, 4.2, 0, Math.PI * 2);
       ctx.fill();
       break;
+    }
+
+    case "nebula_manta": {
+      ctx.rotate(-0.18 + sway * 0.8);
+
+      for (let index = 0; index < 5; index += 1) {
+        const phase = time * 0.003 + index * 1.6;
+        ctx.fillStyle = `rgba(165, 243, 252, ${0.2 + index * 0.08})`;
+        ctx.beginPath();
+        ctx.arc(
+          -19 - index * 3 + Math.sin(phase) * 1.5,
+          5 + Math.cos(phase) * 2.5,
+          index % 2 === 0 ? 1.25 : 0.8,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+
+      const mantaBody = ctx.createLinearGradient(-20, -9, 20, 10);
+      mantaBody.addColorStop(0, "#0c1d2a");
+      mantaBody.addColorStop(0.48, "#155e75");
+      mantaBody.addColorStop(1, "#67e8f9");
+      ctx.beginPath();
+      ctx.moveTo(-21, 2);
+      ctx.bezierCurveTo(-15, -2, -12, -13, -2, -7);
+      ctx.quadraticCurveTo(0, -4, 2, -7);
+      ctx.bezierCurveTo(12, -13, 15, -2, 21, 2);
+      ctx.bezierCurveTo(13, 9, 6, 8, 0, 6);
+      ctx.bezierCurveTo(-6, 8, -13, 9, -21, 2);
+      ctx.closePath();
+      ctx.fillStyle = mantaBody;
+      ctx.fill();
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 8;
+      ctx.strokeStyle = "#a5f3fc";
+      ctx.lineWidth = 1.3;
+      ctx.stroke();
+
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "rgba(207, 250, 254, 0.54)";
+      ctx.lineWidth = 0.75;
+      [-1, 1].forEach((side) => {
+        ctx.beginPath();
+        ctx.moveTo(0, -1);
+        ctx.quadraticCurveTo(side * 7, -5, side * 16, 1);
+        ctx.stroke();
+      });
+      ctx.strokeStyle = "rgba(34, 211, 238, 0.85)";
+      ctx.lineWidth = 1.35;
+      ctx.beginPath();
+      ctx.moveTo(0, 4);
+      ctx.quadraticCurveTo(-3, 11, 1, 15);
+      ctx.stroke();
+
+      const mantaCore = ctx.createRadialGradient(-1, -1, 0, 0, 0, 4);
+      mantaCore.addColorStop(0, "#ecfeff");
+      mantaCore.addColorStop(0.55, "#67e8f9");
+      mantaCore.addColorStop(1, "#0e7490");
+      ctx.fillStyle = mantaCore;
+      ctx.beginPath();
+      ctx.ellipse(0, -1, 3.5, 2.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
+    case "plasma_leviathan": {
+      ctx.rotate(sway * 0.55);
+      ctx.strokeStyle = "rgba(251, 146, 60, 0.32)";
+      ctx.lineWidth = 2;
+      for (let index = 0; index < 3; index += 1) {
+        const tailOffset = index * 3;
+        ctx.beginPath();
+        ctx.moveTo(-17 - tailOffset, 10 + index * 2);
+        ctx.quadraticCurveTo(-10 - tailOffset, 3, -5 - tailOffset, 6);
+        ctx.stroke();
+      }
+
+      const body = ctx.createLinearGradient(-18, 10, 17, -6);
+      body.addColorStop(0, "#7c2d12");
+      body.addColorStop(0.42, "#ea580c");
+      body.addColorStop(0.78, "#fbbf24");
+      body.addColorStop(1, "#fff7b2");
+      ctx.beginPath();
+      ctx.moveTo(-18, 10);
+      ctx.quadraticCurveTo(-12, 2, -6, 7);
+      ctx.quadraticCurveTo(0, 12, 5, 2);
+      ctx.quadraticCurveTo(10, -7, 17, -4);
+      ctx.strokeStyle = "#431407";
+      ctx.lineWidth = 10;
+      ctx.stroke();
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 10;
+      ctx.strokeStyle = body;
+      ctx.lineWidth = 6.3;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      const segments = [
+        [-11, 4.5, 3.1],
+        [-4, 7, 3.4],
+        [3, 2.5, 3.5],
+        [10, -4, 3.8],
+      ] as const;
+      segments.forEach(([segmentX, segmentY, radius]) => {
+        const segment = ctx.createRadialGradient(
+          segmentX - 1,
+          segmentY - 1,
+          0,
+          segmentX,
+          segmentY,
+          radius,
+        );
+        segment.addColorStop(0, "#fff7b2");
+        segment.addColorStop(0.5, "#fb923c");
+        segment.addColorStop(1, "#9a3412");
+        ctx.fillStyle = segment;
+        ctx.beginPath();
+        ctx.arc(segmentX, segmentY, radius, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.fillStyle = "#f97316";
+      ctx.strokeStyle = "#fed7aa";
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      ctx.moveTo(13, -8);
+      ctx.lineTo(20, -5);
+      ctx.lineTo(15, 1);
+      ctx.lineTo(10, -3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#fff7b2";
+      ctx.beginPath();
+      ctx.arc(16.5, -4.8, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
+    case "crystal_hydra": {
+      const heads = [
+        { x: -11, y: -8, angle: -0.48 },
+        { x: 0, y: -14, angle: 0 },
+        { x: 11, y: -8, angle: 0.48 },
+      ];
+
+      ctx.strokeStyle = "#3b1a60";
+      ctx.lineWidth = 7;
+      heads.forEach((head) => {
+        ctx.beginPath();
+        ctx.moveTo(0, 8);
+        ctx.quadraticCurveTo(head.x * 0.55, 2, head.x, head.y);
+        ctx.stroke();
+      });
+      ctx.strokeStyle = "#a855f7";
+      ctx.lineWidth = 4;
+      heads.forEach((head) => {
+        ctx.beginPath();
+        ctx.moveTo(0, 8);
+        ctx.quadraticCurveTo(head.x * 0.55, 2, head.x, head.y);
+        ctx.stroke();
+      });
+
+      heads.forEach((head, index) => {
+        ctx.save();
+        ctx.translate(head.x, head.y);
+        ctx.rotate(head.angle + sway * (index - 1));
+        const crystal = ctx.createLinearGradient(-4, -6, 5, 6);
+        crystal.addColorStop(0, "#f5d0fe");
+        crystal.addColorStop(0.42, "#c084fc");
+        crystal.addColorStop(1, "#581c87");
+        ctx.beginPath();
+        ctx.moveTo(0, -6);
+        ctx.lineTo(5, -1);
+        ctx.lineTo(3, 5);
+        ctx.lineTo(-3, 5);
+        ctx.lineTo(-5, -1);
+        ctx.closePath();
+        ctx.fillStyle = crystal;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 7;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "#e9d5ff";
+        ctx.lineWidth = 0.9;
+        ctx.stroke();
+        ctx.fillStyle = "rgba(255,255,255,0.72)";
+        ctx.beginPath();
+        ctx.moveTo(0, -4);
+        ctx.lineTo(2.4, -1);
+        ctx.lineTo(0, 0.5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      });
+
+      const base = ctx.createRadialGradient(-2, 5, 1, 0, 7, 8);
+      base.addColorStop(0, "#f5d0fe");
+      base.addColorStop(0.5, "#9333ea");
+      base.addColorStop(1, "#3b0764");
+      ctx.fillStyle = base;
+      ctx.strokeStyle = "#e9d5ff";
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      ctx.moveTo(0, -1);
+      ctx.lineTo(7, 7);
+      ctx.lineTo(0, 14);
+      ctx.lineTo(-7, 7);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      break;
+    }
 
     default:
+      ctx.fillStyle = "#111427";
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.arc(0, 0, 11, 0, Math.PI * 2);
       ctx.fill();

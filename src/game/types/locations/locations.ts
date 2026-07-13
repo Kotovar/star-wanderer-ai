@@ -95,6 +95,8 @@ export interface Location {
     spaceMonsterType?: SpaceMonsterType;
     // "pact" is retained only to read old saves; current peaceful contact keeps the creature active.
     spaceMonsterResolved?: "hunted" | "pact";
+    // First resonance triggers one species-specific encounter effect.
+    spaceMonsterInsightUsed?: boolean;
     anomalyType?: "good" | "bad";
     anomalyTier?: number;
     anomalyColor?: string;

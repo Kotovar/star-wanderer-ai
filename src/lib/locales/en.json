@@ -2385,6 +2385,8 @@
     "resonate": "SEND RESONANCE PROBE",
     "resonate_hint": "The probe safely reads the biosignal and grants a temporary effect. The creature remains in the sector.",
     "resonance_active_hint": "Resonance is already active. Return after the effect ends.",
+    "first_contact": "UNIQUE RESPONSE",
+    "first_contact_used": "This biosignal has already been studied. Further contacts only refresh the temporary effect.",
     "protective_membrane": "Protective membrane",
     "organs": {
       "reactor": "Living core",
@@ -2396,27 +2398,38 @@
     "logs": {
       "insufficient_probes": "Not enough probes for a resonance contact.",
       "resonance_active": "Resonance with this creature is already active.",
-      "resonance": "📡 The resonance probe recorded {{name}}'s biosignal. A temporary effect was gained."
+      "resonance": "📡 The resonance probe recorded {{name}}'s biosignal. A temporary effect was gained.",
+      "first_contact_sector_scan": "🪼 The Void Ray's wake revealed every signal in the current sector.",
+      "first_contact_crew_heal": "🦋 Nebula Manta dust restored {{value}} crew health.",
+      "first_contact_crew_healthy": "🦋 The Nebula Manta wrapped the crew in charged dust, but no treatment was needed.",
+      "first_contact_refuel": "🐉 Leviathan ion wake: +{{value}} fuel.",
+      "first_contact_fuel_full": "🐉 The Leviathan's ion wake dissipated: the fuel tanks are already full.",
+      "first_contact_artifact_hint": "💠 Crystal Hydra stored an artifact clue: {{sector}} · {{location}}.",
+      "first_contact_crystal_shard": "💠 The Hydra found no new artifact trail and shed a quantum shard."
     },
     "void_ray": {
       "name": "Void Ray",
       "description": "A translucent creature glides along a gravity field and studies the ship's electromagnetic wake.",
-      "behavior": "A resonance probe can map its route, while hunting cuts off its way to the rift."
+      "behavior": "A resonance probe can map its route, while hunting cuts off its way to the rift.",
+      "first_contact": "The Ray's wake reveals every signal in the current sector once."
     },
     "nebula_manta": {
       "name": "Nebula Manta",
       "description": "A giant bioluminescent manta gathers charged dust around the star.",
-      "behavior": "A resonance probe maps its charged dust, while hunting yields rare biological samples."
+      "behavior": "A resonance probe maps its charged dust, while hunting yields rare biological samples.",
+      "first_contact": "Charged dust restores up to {{value}} health to every living crew member."
     },
     "plasma_leviathan": {
       "name": "Plasma Leviathan",
       "description": "A knot of living plasma crosses stellar flares and leaves a burning trail behind it.",
-      "behavior": "It reacts dangerously to weapon targeting, but a probe can safely record its plasma wake."
+      "behavior": "It reacts dangerously to weapon targeting, but a probe can safely record its plasma wake.",
+      "first_contact": "Its ion wake refills fuel tanks by {{value}}% of their capacity."
     },
     "crystal_hydra": {
       "name": "Crystal Hydra",
       "description": "Several crystalline heads read the ship's signals in unison and reflect the surrounding light.",
-      "behavior": "A probe records its crystalline pattern; destroying it leaves valuable quantum crystals."
+      "behavior": "A probe records its crystalline pattern; destroying it leaves valuable quantum crystals.",
+      "first_contact": "Its crystalline pattern stores an exact clue to one undiscovered artifact."
     }
   },
   "asteroid_belt_names": {

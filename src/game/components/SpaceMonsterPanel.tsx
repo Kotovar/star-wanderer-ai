@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Radio, ShieldAlert, Swords } from "lucide-react";
+import { ArrowLeft, Radio, ShieldAlert, Sparkles, Swords } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RESEARCH_RESOURCES } from "@/game/constants/research/resources";
 import {
@@ -37,6 +37,11 @@ export function SpaceMonsterPanel() {
     (effect) => effect.definitionId === monster.resonanceEffect,
   );
   const canResonate = probes > 0 && !resonanceActive;
+  const firstContactDescription = "value" in monster.firstContact
+    ? t(monster.firstContact.descriptionKey, {
+        value: monster.firstContact.value,
+      })
+    : t(monster.firstContact.descriptionKey);
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -88,6 +93,23 @@ export function SpaceMonsterPanel() {
             <span className="truncate">{resource.name}</span>
           </div>
         </div>
+      </div>
+
+      <div
+        className="border p-3 text-xs"
+        style={{
+          borderColor: `${monster.color}66`,
+          backgroundColor: `${monster.color}0d`,
+        }}
+      >
+        <div className="flex items-center gap-2 font-['Orbitron'] text-[11px] font-bold" style={{ color: monster.color }}>
+          <Sparkles size={14} /> {t("space_monsters.first_contact")}
+        </div>
+        <p className="mt-2 leading-relaxed text-[#c4c7d1]">
+          {currentLocation.spaceMonsterInsightUsed
+            ? t("space_monsters.first_contact_used")
+            : firstContactDescription}
+        </p>
       </div>
 
       <div className="space-y-2 border border-[#202c3a] bg-[#050810] p-3">
