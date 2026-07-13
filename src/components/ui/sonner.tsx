@@ -1,17 +1,24 @@
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
-// ponytail: app is always dark-themed; next-themes had no ThemeProvider, so the
-// toaster resolved to an undefined "system" theme. Tokens are now defined in
-// globals.css (@theme), so --popover/--border resolve directly.
 export const Toaster = ({ ...props }: ToasterProps) => (
     <Sonner
         theme="dark"
-        className="toaster group"
+        richColors
+        position="top-center"
+        toastOptions={{
+            style: {
+                boxShadow:
+                    "0 0 0 1px rgba(0, 212, 255, 0.16), 0 14px 34px rgba(0, 0, 0, 0.72)",
+            },
+        }}
         style={
             {
-                "--normal-bg": "var(--popover)",
-                "--normal-text": "var(--popover-foreground)",
-                "--normal-border": "var(--border)",
+                "--normal-bg": "#07111a",
+                "--normal-text": "#effff4",
+                "--normal-border": "rgba(0, 255, 65, 0.72)",
+                "--error-bg": "#1a080e",
+                "--error-text": "#fff3f4",
+                "--error-border": "rgba(255, 92, 92, 0.9)",
             } as React.CSSProperties
         }
         {...props}

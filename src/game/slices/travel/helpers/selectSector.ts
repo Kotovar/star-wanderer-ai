@@ -6,6 +6,7 @@ import {
 } from "@/game/constants/experience";
 import { getActiveModule, getActiveModules } from "@/game/modules";
 import { playSound } from "@/sounds";
+import { toast } from "sonner";
 import { calculateFuelCost } from "./calculateFuelCost";
 import { handlePatrolContracts } from "./processTravel";
 import type { GameState, GameStore, GameMode, Artifact, SetState } from "@/game/types";
@@ -47,6 +48,12 @@ const DEFAULT_CURSED_ARTIFACT_DAMAGE = 5;
 // Вспомогательные функции
 // ============================================================================
 
+const reportTravelBlocked = (message: string, get: () => GameStore): void => {
+    get().addLog(message, "error");
+    toast.error(message);
+    playSound("error");
+};
+
 /**
  * Проверяет наличие и доступность кабины
  * @param state - Текущее состояние игры
@@ -60,11 +67,10 @@ const checkCockpitAvailable = (
     const cockpit = getActiveModule(state.ship.modules, "cockpit");
 
     if (!cockpit) {
-        get().addLog(
+        reportTravelBlocked(
             "Кабина отключена! Невозможно управлять кораблем!",
-            "error",
+            get,
         );
-        playSound("error");
         return false;
     }
     return true;
@@ -81,11 +87,10 @@ const checkPropulsionSystems = (get: () => GameStore): boolean => {
 
     if (!enginesWorking || !tanksWorking) {
         const reason = !enginesWorking ? "Двигатели" : "Топливные баки";
-        get().addLog(
+        reportTravelBlocked(
             `${reason} не работают! Межсистемные полёты запрещены`,
-            "error",
+            get,
         );
-        playSound("error");
         return false;
     }
     return true;
@@ -206,11 +211,10 @@ const checkFuelAvailable = (
     get: () => GameStore,
 ) => {
     if (state.ship.fuel < fuelCost) {
-        get().addLog(
+        reportTravelBlocked(
             `Недостаточно топлива! Нужно: ${fuelCost}, есть: ${state.ship.fuel}`,
-            "error",
+            get,
         );
-        playSound("error");
         return false;
     }
     return true;
@@ -515,8 +519,7 @@ export const selectSector = (
             captainLevel,
         );
         if (accessError) {
-            get().addLog(accessError, "error");
-            playSound("error");
+            reportTravelBlocked(accessError, get);
             return;
         }
     }
