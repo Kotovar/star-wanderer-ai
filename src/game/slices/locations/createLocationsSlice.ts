@@ -22,6 +22,7 @@ import {
     abandonDive as abandonDiveHelper,
 } from "./helpers/gasGiant";
 import { salvageWreckField as salvageWreckFieldHelper } from "./helpers/salvageWreckField";
+import { resonateWithSpaceMonster as resonateWithSpaceMonsterHelper } from "./helpers/spaceMonster";
 
 /**
  * Интерфейс LocationsSlice
@@ -110,6 +111,9 @@ export interface LocationsSlice {
     /** Один проход по полю обломков: лут + урон щитам */
     salvageWreckField: () => void;
 
+    /** Отправляет зонд для временного резонанса с космическим существом */
+    resonateWithSpaceMonster: () => void;
+
     /** Покупает исследовательские зонды на станции */
     buyProbe: (count: number) => void;
 }
@@ -195,6 +199,10 @@ export const createLocationsSlice = (
 
     salvageWreckField: () => {
         salvageWreckFieldHelper(set, get);
+    },
+
+    resonateWithSpaceMonster: () => {
+        resonateWithSpaceMonsterHelper(set, get);
     },
 
     buyProbe: (count: number) => {

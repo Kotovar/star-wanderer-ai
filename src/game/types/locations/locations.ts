@@ -20,6 +20,12 @@ export type StormType =
 
 export type SignalType = "pirate_ambush" | "survivors" | "abandoned_cargo";
 
+export type SpaceMonsterType =
+    | "void_ray"
+    | "nebula_manta"
+    | "plasma_leviathan"
+    | "crystal_hydra";
+
 export type SignalDetails = {
     name: string;
     description: string;
@@ -38,7 +44,8 @@ export type LocationType =
     | "boss"
     | "derelict_ship"
     | "gas_giant"
-    | "wreck_field";
+    | "wreck_field"
+    | "space_monster";
 
 export const SHIP_LOCATION_TYPES: LocationType[] = [
     "boss",
@@ -84,6 +91,10 @@ export interface Location {
     enemyType?: EnemyShip; // Type of enemy ship (pirate, raider, mercenary, marauder)
     threat?: number;
     defeated?: boolean; // Whether this enemy has been defeated
+    // Space monster fields
+    spaceMonsterType?: SpaceMonsterType;
+    // "pact" is retained only to read old saves; current peaceful contact keeps the creature active.
+    spaceMonsterResolved?: "hunted" | "pact";
     anomalyType?: "good" | "bad";
     anomalyTier?: number;
     anomalyColor?: string;

@@ -78,6 +78,13 @@ export const ENEMY_TYPE_MODIFIERS: Record<EnemyShip, EnemyStats> = {
     krylorian_guard:    DEFENDER_CONFIGS.krylorian_guard.stats,
     voidborn_guard:     DEFENDER_CONFIGS.voidborn_guard.stats,
     crystalline_guard:  DEFENDER_CONFIGS.crystalline_guard.stats,
+    space_monster: {
+        healthMod: 1.15,
+        damageMod: 1.15,
+        shieldMod: 1,
+        weaponCountMod: 0,
+        lootMod: 1.1,
+    },
 };
 
 /**
@@ -87,6 +94,7 @@ export const generateEnemyModules = (
     threat: number,
     enemyType?: EnemyShip,
 ): EnemyModule[] => {
+    const isBiological = enemyType === "space_monster";
     const modifiers = enemyType
         ? ENEMY_TYPE_MODIFIERS[enemyType]
         : {
@@ -109,11 +117,12 @@ export const generateEnemyModules = (
     modules.push({
         id: 0,
         type: "reactor",
-        name: "Реактор",
+        name: getModuleName("reactor", isBiological),
         health: reactorHealth,
         maxHealth: reactorHealth,
         damage: 0,
         defense: REACTOR_DEFENSE,
+        isBiological,
     });
 
     // id=1: Weapon — always at least one weapon
@@ -121,11 +130,12 @@ export const generateEnemyModules = (
     modules.push({
         id: 1,
         type: "weapon",
-        name: "Оружие",
+        name: getModuleName("weapon", isBiological),
         health: baseWeaponHealth,
         maxHealth: baseWeaponHealth,
         damage: Math.floor(threat * MODULE_DAMAGE_PER_THREAT * damageMultiplier),
         defense: 0,
+        isBiological,
     });
 
     // id=2+: Random modules — weapon or shield only
@@ -154,7 +164,7 @@ export const generateEnemyModules = (
         modules.push({
             id: i + 2,
             type,
-            name: getModuleName(type),
+            name: getModuleName(type, isBiological),
             health: moduleHealth,
             maxHealth: moduleHealth,
             damage:
@@ -164,6 +174,7 @@ export const generateEnemyModules = (
             defense: 0,
             shieldContribution,
             regenContribution,
+            isBiological,
         });
     }
 
@@ -173,7 +184,15 @@ export const generateEnemyModules = (
 /**
  * Gets module name by type
  */
-const getModuleName = (type: EnemyModuleType) => {
+const BIOLOGICAL_MODULE_NAMES: Record<EnemyModuleType, string> = {
+    reactor: "Живое ядро",
+    weapon: "Хищный орган",
+    shield: "Защитная мембрана",
+};
+
+const getModuleName = (type: EnemyModuleType, isBiological = false): string => {
+    if (isBiological) return BIOLOGICAL_MODULE_NAMES[type];
+
     switch (type) {
         case "weapon":
             return "Оружие";

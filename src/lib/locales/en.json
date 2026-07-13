@@ -1119,6 +1119,22 @@
       "decisive_response": {
         "name": "Decisive Response",
         "description": "A specialist solution left the crew prepared for the next emergency."
+      },
+      "void_ray_pact": {
+        "name": "Void Ray Wake",
+        "description": "Resonance with the creature smooths gravitational shifts and makes the ship more efficient."
+      },
+      "nebula_manta_pact": {
+        "name": "Nebula Manta Song",
+        "description": "Gentle pulses from the living nebula feed the reactor and speed crew recovery."
+      },
+      "plasma_leviathan_pact": {
+        "name": "Plasma Wake",
+        "description": "The leviathan's ion trail saturates weapon circuits and the reactor before future battles."
+      },
+      "crystal_hydra_pact": {
+        "name": "Crystal Resonance",
+        "description": "Synchronizing with the hydra refracts enemy fire and helps the ship evade it."
       }
     },
     "modifiers": {
@@ -1698,6 +1714,7 @@
   "common": {
     "yes": "Yes",
     "no": "No",
+    "cancel": "Cancel",
     "ok": "OK",
     "close": "Close",
     "back": "Back",
@@ -2356,7 +2373,51 @@
     "derelict_ship": "Derelict Ship",
     "cosmic_storm": "Cosmic Storm",
     "wreck_field": "Wreck Field",
-    "boss": "Ancient Boss"
+    "boss": "Ancient Boss",
+    "space_monster": "Space Creature"
+  },
+  "space_monsters": {
+    "title": "SPACE CREATURE",
+    "threat": "Threat level",
+    "hunt_reward": "Hunt trophy",
+    "hunt": "HUNT",
+    "hunt_hint": "The fight targets the creature's living organs; the trophy is added to research resources.",
+    "resonate": "SEND RESONANCE PROBE",
+    "resonate_hint": "The probe safely reads the biosignal and grants a temporary effect. The creature remains in the sector.",
+    "resonance_active_hint": "Resonance is already active. Return after the effect ends.",
+    "protective_membrane": "Protective membrane",
+    "organs": {
+      "reactor": "Living core",
+      "weapon": "Predatory organ",
+      "shield": "Protective membrane"
+    },
+    "not_enough_probes": "A resonance probe is required",
+    "withdraw": "WITHDRAW",
+    "logs": {
+      "insufficient_probes": "Not enough probes for a resonance contact.",
+      "resonance_active": "Resonance with this creature is already active.",
+      "resonance": "📡 The resonance probe recorded {{name}}'s biosignal. A temporary effect was gained."
+    },
+    "void_ray": {
+      "name": "Void Ray",
+      "description": "A translucent creature glides along a gravity field and studies the ship's electromagnetic wake.",
+      "behavior": "A resonance probe can map its route, while hunting cuts off its way to the rift."
+    },
+    "nebula_manta": {
+      "name": "Nebula Manta",
+      "description": "A giant bioluminescent manta gathers charged dust around the star.",
+      "behavior": "A resonance probe maps its charged dust, while hunting yields rare biological samples."
+    },
+    "plasma_leviathan": {
+      "name": "Plasma Leviathan",
+      "description": "A knot of living plasma crosses stellar flares and leaves a burning trail behind it.",
+      "behavior": "It reacts dangerously to weapon targeting, but a probe can safely record its plasma wake."
+    },
+    "crystal_hydra": {
+      "name": "Crystal Hydra",
+      "description": "Several crystalline heads read the ship's signals in unison and reflect the surrounding light.",
+      "behavior": "A probe records its crystalline pattern; destroying it leaves valuable quantum crystals."
+    }
   },
   "asteroid_belt_names": {
     "regular": "Asteroid Belt",
@@ -2791,7 +2852,8 @@
     "hint": "Select a sector to jump to. Mouse wheel to zoom. Click and drag to pan.",
     "danger": {
       "title": "Low combat readiness",
-      "description": "Sector “{{sector}}”: ship readiness {{rating}}, recommended {{recommended}}. Travel is possible, but enemies in this tier may be too strong.",
+      "description": "Sector “{{sector}}”: readiness score {{rating}}, recommended {{recommended}}. Travel is possible, but enemies in this tier may be too strong.",
+      "readiness_hint": "Readiness is a combat estimate based on working modules, weapons, and living crew. The recommended value is not an engine level or a travel lock.",
       "continue": "Travel anyway"
     }
   },

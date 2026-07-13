@@ -675,6 +675,7 @@ const PATROL_LOCATION_CONFIG: Record<
     station: { chance: 0.12, min: 10, max: 30 },
     friendly_ship: { chance: 0.1, min: 5, max: 15 },
     enemy: { chance: 0.05, min: 5, max: 10 },
+    space_monster: { chance: 0.08, min: 10, max: 25 },
     boss: { chance: 0.05, min: 5, max: 10 },
     storm: { chance: 0.05, min: 5, max: 10 },
     distress_signal: { chance: 0.08, min: 5, max: 15 },

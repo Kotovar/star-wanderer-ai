@@ -93,6 +93,9 @@ const isObjectScanned = (loc: Location, get: () => GameStore): boolean => {
     if (loc.type === "enemy") {
         return get().canScanObject("enemy", loc.threat ?? 1);
     }
+    if (loc.type === "space_monster") {
+        return get().canScanObject("space_monster", loc.threat ?? 1);
+    }
     if (loc.type === "boss") {
         return get().canScanObject("boss", BOSS_TIER);
     }
@@ -228,6 +231,15 @@ export const selectLocation = (
             } else {
                 get().startCombat(loc);
             }
+            break;
+        }
+
+        case "space_monster": {
+            if (loc.spaceMonsterResolved === "hunted") {
+                set({ gameMode: "sector_map" });
+                break;
+            }
+            set({ gameMode: "space_monster" });
             break;
         }
 

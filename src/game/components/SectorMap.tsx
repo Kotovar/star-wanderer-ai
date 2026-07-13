@@ -27,6 +27,7 @@ import {
   drawMeteors,
   drawParticles,
   drawPlanet,
+  drawSpaceMonster,
   drawStar,
   drawStation,
   drawStorm,
@@ -40,7 +41,12 @@ const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const ZOOM_SENSITIVITY = 0.001;
 const DRAG_THRESHOLD = 5;
-const NEEDS_SCANNER_LOCATIONS: LocationType[] = ["storm", "anomaly", "boss"];
+const NEEDS_SCANNER_LOCATIONS: LocationType[] = [
+  "storm",
+  "anomaly",
+  "boss",
+  "space_monster",
+];
 const PLANET_SPRITE_SHEET = "/assets/plantes/planets.png";
 const GAS_PLANET_SPRITE_SHEET = "/assets/plantes/gas-planets.png";
 const STATION_SPRITE_SHEET = "/assets/stations.png";
@@ -247,6 +253,15 @@ export function SectorMap() {
         } else {
           drawEnemy(ctx, x, y, loc, completed);
         }
+      } else if (loc.type === "space_monster") {
+        drawSpaceMonster(
+          ctx,
+          x,
+          y,
+          loc,
+          completed,
+          animationStateRef.current.time,
+        );
       } else if (loc.type === "anomaly") {
         if (canScan || isRevealed) {
           drawAnomaly(ctx, x, y, loc, completed);
@@ -379,6 +394,8 @@ export function SectorMap() {
             ? "#ffb000"
             : loc.type === "gas_giant"
               ? "#cc88ff"
+              : loc.type === "space_monster"
+                ? "#c084fc"
               : "#00ff41";
       ctx.fillText(finalDisplayName, x, y + 28);
 
@@ -1348,6 +1365,7 @@ export function SectorMap() {
                   { key: "distress_signal", label: t("location_types.distress_signal") },
                   { key: "derelict_ship", label: t("location_types.derelict_ship") },
                   { key: "wreck_field", label: t("location_types.wreck_field") },
+                  { key: "space_monster", label: t("location_types.space_monster") },
                   { key: "asteroid_belt", label: t("location_types.asteroid_belt") },
                 ].map(({ key, label }) => (
                   <span key={key} className="flex items-center gap-1 min-w-0">

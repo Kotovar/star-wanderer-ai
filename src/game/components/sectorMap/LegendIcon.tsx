@@ -88,6 +88,26 @@ export function LegendIcon({ type }: { type: string }) {
           <polygon points="9.2,17.6 12,22.5 14.8,17.6" fill="#ff4400" />
         </svg>
       );
+    case "space_monster":
+      return (
+        <svg width="22" height="22" viewBox="0 0 24 24">
+          <defs>
+            <radialGradient id="lg-space-monster" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="#c084fc" stopOpacity="0.42" />
+              <stop offset="100%" stopColor="#c084fc" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <circle cx="12" cy="12" r="11" fill="url(#lg-space-monster)" />
+          <path
+            d="M3 12c3.2-5.8 6.2-6.3 9-2.5C14.8 5.7 17.8 6.2 21 12c-3.2 4.2-6.2 4.8-9 1.5C9.2 16.8 6.2 16.2 3 12Z"
+            fill="#211436"
+            stroke="#c084fc"
+            strokeWidth="1.35"
+          />
+          <circle cx="12" cy="11.6" r="2.2" fill="#e9d5ff" />
+          <path d="M10 14c0 3 1.2 4.7 2 6 0.8-1.3 2-3 2-6" fill="none" stroke="#a855f7" strokeWidth="1.2" />
+        </svg>
+      );
     case "friendly_ship":
       return (
         <svg width="22" height="22" viewBox="0 0 24 24">

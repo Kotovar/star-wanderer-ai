@@ -14,6 +14,7 @@ export type EnemyModule = {
     // Boss-specific module features
     maxHealth?: number;
     isAncient?: boolean; // Module not available to player
+    isBiological?: boolean; // Organic target that uses combat module mechanics
     regenRate?: number; // Self-regeneration
     specialEffect?: BossModuleEffect; // e.g., { type: 'damage_aura', value: 10 }
 };
@@ -29,7 +30,8 @@ export type EnemyShip =
     | "xenosymbiont_guard"
     | "krylorian_guard"
     | "voidborn_guard"
-    | "crystalline_guard";
+    | "crystalline_guard"
+    | "space_monster";
 export type EnemyStats = {
     healthMod: number;
     damageMod: number;

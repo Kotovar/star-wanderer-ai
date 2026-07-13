@@ -1,5 +1,7 @@
 import { CURRENT_STATE_VERSION } from "@/game/constants/version";
-import type { GameState } from "@/game/types";
+import { generateSpaceMonster } from "@/game/galaxy/generate";
+import { assignGridPositions } from "@/game/sectorGrid";
+import type { GameState, Location, Sector } from "@/game/types";
 
 export interface PersistedState {
   version: number;
@@ -26,6 +28,73 @@ const migrations: Record<number, Migration> = {
       ...state,
       discoveredCrisisIds:
         typeof activeCrisis?.id === "string" ? [activeCrisis.id] : [],
+    };
+  },
+  2: (raw) => {
+    const state = raw as GameState;
+    const addMonster = (sector: Sector): Sector => {
+      if (sector.locations.some((location) => location.type === "space_monster")) {
+        return sector;
+      }
+
+      const locations = [
+        ...sector.locations,
+        generateSpaceMonster(sector.id, sector.tier, sector.star.type),
+      ];
+      assignGridPositions(locations, true);
+      return { ...sector, locations };
+    };
+    const sectors = state.galaxy.sectors.map(addMonster);
+    const currentSector = state.currentSector
+      ? (sectors.find((sector) => sector.id === state.currentSector?.id) ??
+        addMonster(state.currentSector))
+      : null;
+
+    return {
+      ...state,
+      stateVersion: 3,
+      galaxy: { ...state.galaxy, sectors },
+      currentSector,
+    };
+  },
+  3: (raw) => {
+    const state = raw as GameState;
+    const legacyPactIds = new Set<string>();
+    const restoreMonster = (location: Location): Location => {
+      if (
+        location.type !== "space_monster" ||
+        location.spaceMonsterResolved !== "pact"
+      ) {
+        return location;
+      }
+
+      legacyPactIds.add(location.id);
+      const activeMonster = { ...location };
+      delete activeMonster.spaceMonsterResolved;
+      return activeMonster;
+    };
+    const sectors = state.galaxy.sectors.map((sector) => ({
+      ...sector,
+      locations: sector.locations.map(restoreMonster),
+    }));
+    const currentSector = state.currentSector
+      ? (sectors.find((sector) => sector.id === state.currentSector?.id) ?? {
+          ...state.currentSector,
+          locations: state.currentSector.locations.map(restoreMonster),
+        })
+      : null;
+
+    return {
+      ...state,
+      stateVersion: 4,
+      galaxy: { ...state.galaxy, sectors },
+      currentSector,
+      currentLocation: state.currentLocation
+        ? restoreMonster(state.currentLocation)
+        : null,
+      completedLocations: state.completedLocations.filter(
+        (id) => !legacyPactIds.has(id),
+      ),
     };
   },
 };

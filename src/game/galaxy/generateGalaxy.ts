@@ -12,7 +12,12 @@ import {
     ensureStation,
     ensureStationTypes,
 } from "./ensure";
-import { addEternalBoss, addRandomBossToBlackHole, generateStar } from "./generate";
+import {
+    addEternalBoss,
+    addRandomBossToBlackHole,
+    generateSpaceMonster,
+    generateStar,
+} from "./generate";
 import { generateLocation } from "./getLocation";
 import {
     calculateSectorAngle,
@@ -92,6 +97,10 @@ export const generateGalaxy = (): Sector[] => {
                     ensureBoss(sector);
                 }
             }
+
+            sector.locations.push(
+                generateSpaceMonster(sectorIdx, tier, star.type),
+            );
 
             // Позиционирование локаций на сетке
             assignGridPositions(sector.locations, true);

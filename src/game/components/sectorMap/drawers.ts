@@ -1,5 +1,5 @@
 import { drawStarSprite } from "@/game/assets/starSprites";
-import { PLANET_COLORS_IN_SECTOR } from "@/game/constants";
+import { PLANET_COLORS_IN_SECTOR, SPACE_MONSTERS } from "@/game/constants";
 import type { Location, StarType, StormType } from "@/game/types";
 import type { PlanetType } from "@/game/types/planets";
 
@@ -3189,6 +3189,115 @@ export function drawDerelictShip(
   }
 
   ctx.globalAlpha = 1;
+}
+
+export function drawSpaceMonster(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  loc: Location,
+  completed: boolean,
+  time: number = 0,
+) {
+  const monster = loc.spaceMonsterType
+    ? SPACE_MONSTERS[loc.spaceMonsterType]
+    : null;
+  const color = monster?.color ?? "#c084fc";
+  const resolved = completed || loc.spaceMonsterResolved === "hunted";
+  const pulse = 1 + Math.sin(time * 0.004) * 0.08;
+
+  ctx.save();
+  ctx.globalAlpha = resolved ? 0.35 : 1;
+
+  const glow = ctx.createRadialGradient(x, y, 2, x, y, 25 * pulse);
+  glow.addColorStop(0, `${color}66`);
+  glow.addColorStop(0.55, `${color}22`);
+  glow.addColorStop(1, "transparent");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(x, y, 25 * pulse, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.translate(x, y);
+  ctx.strokeStyle = color;
+  ctx.fillStyle = "#111427";
+  ctx.lineWidth = 1.5;
+
+  switch (loc.spaceMonsterType) {
+    case "void_ray":
+      ctx.beginPath();
+      ctx.moveTo(-18, 1);
+      ctx.quadraticCurveTo(-8, -12, 0, -4);
+      ctx.quadraticCurveTo(8, -12, 18, 1);
+      ctx.quadraticCurveTo(8, 8, 0, 11);
+      ctx.quadraticCurveTo(-8, 8, -18, 1);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(0, 1, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(0, 9);
+      ctx.quadraticCurveTo(4, 16, 1, 19);
+      ctx.stroke();
+      break;
+
+    case "nebula_manta":
+      ctx.rotate(Math.PI / 4);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 15, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.fillRect(-3, -3, 6, 6);
+      break;
+
+    case "plasma_leviathan":
+      ctx.beginPath();
+      ctx.arc(0, 0, 11, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(0, 0, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ffd166";
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2 + time * 0.001;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(angle) * 10, Math.sin(angle) * 10);
+        ctx.lineTo(Math.cos(angle) * 17, Math.sin(angle) * 17);
+        ctx.stroke();
+      }
+      break;
+
+    case "crystal_hydra":
+      [-8, 0, 8].forEach((offset) => {
+        ctx.beginPath();
+        ctx.moveTo(offset, -12);
+        ctx.lineTo(offset + 5, -2);
+        ctx.lineTo(offset, 8);
+        ctx.lineTo(offset - 5, -2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      });
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(0, -2, 3, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+
+    default:
+      ctx.beginPath();
+      ctx.arc(0, 0, 11, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+  }
+
+  ctx.restore();
 }
 
 export function drawGasGiant(

@@ -13,7 +13,11 @@ export type TimedEffectId =
   | "combat_momentum"
   | "anomaly_resonance"
   | "anomaly_interference"
-  | "decisive_response";
+  | "decisive_response"
+  | "void_ray_pact"
+  | "nebula_manta_pact"
+  | "plasma_leviathan_pact"
+  | "crystal_hydra_pact";
 
 interface TimedEffectDefinition {
   id: TimedEffectId;
@@ -81,6 +85,54 @@ export const TIMED_EFFECTS: Record<TimedEffectId, TimedEffectDefinition> = {
     effects: [
       { type: "evasion_bonus", value: 0.04 },
       { type: "health_regen", value: 1 },
+    ],
+  },
+  void_ray_pact: {
+    id: "void_ray_pact",
+    source: "event",
+    polarity: "positive",
+    icon: "🪼",
+    color: "#8b5cf6",
+    duration: 6,
+    effects: [
+      { type: "fuel_efficiency", value: 0.18 },
+      { type: "evasion_bonus", value: 0.05 },
+    ],
+  },
+  nebula_manta_pact: {
+    id: "nebula_manta_pact",
+    source: "event",
+    polarity: "positive",
+    icon: "🦋",
+    color: "#22d3ee",
+    duration: 6,
+    effects: [
+      { type: "power_boost", value: 3 },
+      { type: "health_regen", value: 1 },
+    ],
+  },
+  plasma_leviathan_pact: {
+    id: "plasma_leviathan_pact",
+    source: "event",
+    polarity: "positive",
+    icon: "🐉",
+    color: "#fb923c",
+    duration: 5,
+    effects: [
+      { type: "combat_bonus", value: 0.12 },
+      { type: "power_boost", value: 2 },
+    ],
+  },
+  crystal_hydra_pact: {
+    id: "crystal_hydra_pact",
+    source: "event",
+    polarity: "positive",
+    icon: "💠",
+    color: "#c084fc",
+    duration: 5,
+    effects: [
+      { type: "combat_bonus", value: 0.08 },
+      { type: "evasion_bonus", value: 0.1 },
     ],
   },
 };

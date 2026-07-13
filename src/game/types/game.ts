@@ -51,6 +51,7 @@ export type GameMode =
   | "derelict_ship"
   | "gas_giant"
   | "wreck_field"
+  | "space_monster"
   | "hostile_approach_warning";
 
 export interface GameState {
@@ -275,6 +276,10 @@ export interface GameAnomaly {
   handleAnomaly: (anomaly: Location, approach?: AnomalyApproach) => void;
 }
 
+export interface GameSpaceMonsters {
+  resonateWithSpaceMonster: () => void;
+}
+
 export interface GameScouting {
   sendScoutingMission: (planetId: string) => void;
   planetaryDrill: (planetId: string) => void;
@@ -381,6 +386,7 @@ export type GameStore = GameState &
   GameContracts &
   GameModule &
   GameAnomaly &
+  GameSpaceMonsters &
   GameScouting &
   GameDistressSignal &
   GameArtifacts &

@@ -4,12 +4,14 @@ import { useRef, useEffect, useState, useCallback, useSyncExternalStore } from "
 import { useGameStore } from "../store";
 import { useTranslation } from "@/lib/useTranslation";
 import {
+    canAccessTier,
     drawStaticLegend,
     drawSector,
     drawTierRings,
     canSeeTier4,
     getSectorRadius,
 } from "@/game/galaxy/galaxy-map-utils";
+import { getActiveModule } from "@/game/modules/utils";
 import {
     getStarSpriteBackgroundStyle,
     STAR_SPRITE_ORDER,
@@ -807,6 +809,29 @@ export function GalaxyMap() {
             if (dist < hitboxSize) {
                 const state = useGameStore.getState();
                 if (sector.id !== state.currentSector?.id) {
+                    const targetCaptainLevel =
+                        state.crew.find((crew) => crew.profession === "pilot")
+                            ?.level ?? 1;
+                    const canTravel =
+                        !state.traveling &&
+                        Boolean(getActiveModule(state.ship.modules, "cockpit")) &&
+                        state.areEnginesFunctional() &&
+                        state.areFuelTanksFunctional() &&
+                        (state.research.researchedTechs.includes("warp_drive") ||
+                            canAccessTier(
+                                sector.tier,
+                                state.ship.modules,
+                                targetCaptainLevel,
+                            )) &&
+                        state.ship.fuel >=
+                            calculateFuelCostForUI(state, sector.id).fuelCost;
+
+                    if (!canTravel) {
+                        setDangerousJump(null);
+                        selectSector(sector.id);
+                        break;
+                    }
+
                     const readiness = getSectorReadiness(state, sector.tier);
                     if (readiness.needsWarning) {
                         setDangerousJump({
@@ -862,6 +887,9 @@ export function GalaxyMap() {
                             rating: dangerousJump.rating,
                             recommended: dangerousJump.recommended,
                         })}
+                    </div>
+                    <div className="mt-2 border-l-2 border-[#ffb00066] pl-2 text-[11px] leading-relaxed text-[#9aa59a]">
+                        {t("galaxy_map_ui.danger.readiness_hint")}
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
                         <button

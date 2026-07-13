@@ -22,6 +22,10 @@ import { getRandomBossForTier } from "@/game/bosses/utils";
 import { ANCIENT_BOSSES } from "@/game/constants/bosses";
 import { bossDistribution } from "./bossDistribution";
 import { rollEnemyThreat } from "@/game/progression/enemyProgression";
+import {
+    getSpaceMonsterTypeForStar,
+    SPACE_MONSTERS,
+} from "@/game/constants/spaceMonsters";
 
 const ENEMY_TYPES: EnemyShip[] = ["pirate", "raider", "mercenary", "marauder"];
 
@@ -37,6 +41,7 @@ const ENEMY_TYPE_NAMES: Record<EnemyShip, string> = {
     krylorian_guard: "Крилорианский воитель",
     voidborn_guard: "Страж Пустоты",
     crystalline_guard: "Кристаллический страж",
+    space_monster: "Космическое существо",
 };
 
 /**
@@ -272,6 +277,28 @@ export const generateEnemyShip = (
         name: ENEMY_TYPE_NAMES[enemyType],
         enemyType,
         threat,
+    };
+};
+
+export const generateSpaceMonster = (
+    sectorIdx: number,
+    tier: GalaxyTierAll,
+    starType: Sector["star"]["type"],
+): Location => {
+    const spaceMonsterType = getSpaceMonsterTypeForStar(starType);
+    const monster = SPACE_MONSTERS[spaceMonsterType];
+    const threat = Math.min(
+        6,
+        rollEnemyThreat(tier, starType === "blackhole") + monster.threatBonus,
+    );
+
+    return {
+        id: `${sectorIdx}-monster`,
+        type: "space_monster",
+        name: monster.nameKey,
+        enemyType: "space_monster",
+        threat,
+        spaceMonsterType,
     };
 };
 

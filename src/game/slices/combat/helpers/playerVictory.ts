@@ -23,11 +23,16 @@ import type {
     GameStore,
     CargoItem,
     BattleResult,
+    Location,
 } from "@/game/types";
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import { completeBattleContracts } from "./completeBattleContracts";
 import { applyCombatTimeCost } from "./combatTime";
 import { grantTimedEffect } from "@/game/effects/timedEffects";
+import {
+    getSpaceMonsterHuntReward,
+    SPACE_MONSTERS,
+} from "@/game/constants/spaceMonsters";
 
 /**
  * Handles victory after defeating boss
@@ -41,6 +46,13 @@ export function handleVictory(
 ) {
     const combatRound = updatedCombat.round;
     const loot = updatedCombat.loot;
+    const spaceMonsterLocation =
+        state.currentLocation?.type === "space_monster"
+            ? state.currentLocation
+            : null;
+    const spaceMonster = spaceMonsterLocation?.spaceMonsterType
+        ? SPACE_MONSTERS[spaceMonsterLocation.spaceMonsterType]
+        : null;
 
     // Boss resurrect chance
     if (
@@ -208,6 +220,41 @@ export function handleVictory(
         });
     }
 
+    if (spaceMonsterLocation) {
+        set((s) => {
+            const markResolved = (location: Location): Location =>
+                location.id === spaceMonsterLocation.id
+                    ? {
+                          ...location,
+                          defeated: true,
+                          spaceMonsterResolved: "hunted" as const,
+                      }
+                    : location;
+            const updatedSector = s.currentSector
+                ? {
+                      ...s.currentSector,
+                      locations: s.currentSector.locations.map(markResolved),
+                  }
+                : null;
+
+            return {
+                currentLocation:
+                    s.currentLocation?.id === spaceMonsterLocation.id
+                        ? markResolved(s.currentLocation)
+                        : s.currentLocation,
+                currentSector: updatedSector,
+                galaxy: {
+                    ...s.galaxy,
+                    sectors: s.galaxy.sectors.map((sector) =>
+                        sector.id === s.currentSector?.id && updatedSector
+                            ? updatedSector
+                            : sector,
+                    ),
+                },
+            };
+        });
+    }
+
     // Complete contracts
     const enemyThreat = updatedCombat.enemy.threat ?? 1;
     completeBattleContracts(
@@ -222,6 +269,13 @@ export function handleVictory(
     const combatResources = updatedCombat.enemy.isBoss
         ? getBossLootResources(enemyTier)
         : getCombatLootResources(enemyTier);
+
+    if (spaceMonster) {
+        combatResources.push({
+            type: spaceMonster.huntReward,
+            quantity: getSpaceMonsterHuntReward(spaceMonster, enemyTier),
+        });
+    }
 
     if (combatResources.length > 0) {
         set((s) => {

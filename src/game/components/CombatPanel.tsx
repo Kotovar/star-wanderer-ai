@@ -196,6 +196,9 @@ export function CombatPanel() {
     (s, m) => s + (m.maxHealth || 100),
     0,
   );
+  const isBiologicalEnemy = currentCombat.enemy.modules.some(
+    (module) => module.isBiological,
+  );
   const playerMaxHP = ship.modules.reduce(
     (s, m) => s + (m.maxHealth || m.health),
     0,
@@ -352,7 +355,9 @@ export function CombatPanel() {
               {t("ship_stats.damage")} {eDmg}
             </div>
             <div>
-              {t("combat.shields")}{" "}
+              {isBiologicalEnemy
+                ? t("space_monsters.protective_membrane")
+                : t("combat.shields")}{" "}
               {currentCombat.enemy.shields || 0}/
               {currentCombat.enemy.maxShields || 0}
               <div className="h-2 rounded-full mt-1 bg-[rgba(0,0,0,0.5)] relative">
@@ -389,7 +394,7 @@ export function CombatPanel() {
         </Button>
         <Button
           onClick={() => useGameStore.getState().skipTurn()}
-          className="cursor-pointer bg-transparent border-2 border-accent hover:bg-accent hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
+          className="cursor-pointer bg-transparent border-2 border-accent text-accent hover:bg-accent hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
         >
           {t("combat.skip_turn")}
         </Button>

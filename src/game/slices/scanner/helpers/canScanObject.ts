@@ -37,7 +37,8 @@ export const canScanObject = (
             // Tier 1 - requires scanRange >= 3
             return scanRange >= 3 || hasAllSeeing;
 
-        case "enemy": {
+        case "enemy":
+        case "space_monster": {
             // Enemy threat levels:
             // Tier 1: scanRange >= 3
             // Tier 2: scanRange >= 5

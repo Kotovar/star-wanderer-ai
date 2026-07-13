@@ -12,6 +12,15 @@ import {
 } from "./SymbiosisModuleOverlay";
 import { setupHiDPICanvas } from "./canvas-utils";
 
+const BIOLOGICAL_MODULE_TYPES: Record<
+  string,
+  { color: string; borderColor: string }
+> = {
+  reactor: { color: "#7f1d1d88", borderColor: "#fb7185" },
+  weapon: { color: "#4c1d9588", borderColor: "#c084fc" },
+  shield: { color: "#164e6388", borderColor: "#67e8f9" },
+};
+
 interface CombatShipVisualProps {
   modules: Module[] | EnemyModule[];
   crew: CrewMember[];
@@ -45,7 +54,7 @@ export function CombatShipVisual({
   damageHit,
 }: CombatShipVisualProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { currentLanguage } = useTranslation();
+  const { currentLanguage, t } = useTranslation();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -69,23 +78,27 @@ export function CombatShipVisual({
       const y = row * (cellSize + gap);
 
       const isDestroyed = mod.health <= 0;
-      const moduleStyle = (
-        MODULE_TYPES as Record<string, { color: string; borderColor: string }>
-      )[mod.type] || {
+      const isBiological = "isBiological" in mod && mod.isBiological === true;
+      const moduleStyle = isBiological
+        ? BIOLOGICAL_MODULE_TYPES[mod.type]
+        : (MODULE_TYPES as Record<string, { color: string; borderColor: string }>)[
+            mod.type
+          ];
+      const resolvedStyle = moduleStyle || {
         color: "#333333aa",
         borderColor: "#888888",
       };
 
-      // Module background - use actual color from MODULE_TYPES
-      ctx.fillStyle = isDestroyed ? "#1a1a2e" : moduleStyle.color;
+      // Module background
+      ctx.fillStyle = isDestroyed ? "#1a1a2e" : resolvedStyle.color;
       ctx.fillRect(x + 2, y + 2, cellSize - 4, cellSize - 4);
 
       // Module border
       ctx.strokeStyle = isDestroyed
         ? "#444444"
-        : isEnemy
+        : isEnemy && !isBiological
           ? "#ff0040"
-          : moduleStyle.borderColor;
+          : resolvedStyle.borderColor;
       ctx.lineWidth = isDestroyed ? 2 : 3;
       ctx.strokeRect(x + 2, y + 2, cellSize - 4, cellSize - 4);
 
@@ -94,14 +107,12 @@ export function CombatShipVisual({
       }
 
       // Module name - split into multiple lines if needed
-      ctx.fillStyle = isDestroyed ? "#555555" : moduleStyle.borderColor;
+      ctx.fillStyle = isDestroyed ? "#555555" : resolvedStyle.borderColor;
       ctx.font = "bold 13px Share Tech Mono";
       ctx.textAlign = "center";
-      const shortName = getModuleTranslation(
-        mod.type,
-        currentLanguage,
-        mod.name,
-      ).name;
+      const shortName = isBiological
+        ? t(`space_monsters.organs.${mod.type}`)
+        : getModuleTranslation(mod.type, currentLanguage, mod.name).name;
 
       // Optimized: Quick length check first (faster than measureText)
       const maxWidth = cellSize - 16;
@@ -248,7 +259,7 @@ export function CombatShipVisual({
         ctx.shadowBlur = 0;
       }
     });
-  }, [modules, crew, isEnemy, isBoss, currentLanguage, selectedModuleId]);
+  }, [modules, crew, isEnemy, isBoss, currentLanguage, selectedModuleId, t]);
 
   const visualGridSize = Math.ceil(Math.sqrt(modules.length));
   const visualCellSize = 120;

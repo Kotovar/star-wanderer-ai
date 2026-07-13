@@ -26,6 +26,7 @@ import { ReputationPanel } from "./ReputationPanel";
 import { DerelictShipPanel } from "./DerelictShipPanel";
 import { GasGiantPanel } from "./GasGiantPanel";
 import { WreckFieldPanel } from "./WreckFieldPanel";
+import { SpaceMonsterPanel } from "./SpaceMonsterPanel";
 import { HostileApproachWarningPanel } from "./HostileApproachWarningPanel";
 import { CrisisPanel } from "./CrisisPanel";
 import { ActiveEffectsPanel } from "./panels/ActiveEffectsPanel";
@@ -482,6 +483,9 @@ export function EventDisplay() {
 
     case "wreck_field":
       return <WreckFieldPanel />;
+
+    case "space_monster":
+      return <SpaceMonsterPanel />;
 
     case "hostile_approach_warning":
       return <HostileApproachWarningPanel />;

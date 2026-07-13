@@ -42,6 +42,16 @@ import { AUGMENTATIONS } from "@/game/constants/augmentations";
 const OVERCLOCK_ARMOR_REDUCTION = 0.1;
 const KINETIC_ARMOR_REDUCTION_LABEL = 50; // percent, for logs
 
+const getCoreDestroyedLog = (isBiological?: boolean): string =>
+  isBiological
+    ? "💥 ЖИВОЕ ЯДРО УНИЧТОЖЕНО! Существо погибает!"
+    : "💥 РЕАКТОР ВРАГА УНИЧТОЖЕН! Корабль разрушен!";
+
+const getBarrierDestroyedLog = (isBiological?: boolean): string =>
+  isBiological
+    ? "💥 Последняя защитная мембрана разрушена! Биобарьер рассеян!"
+    : "💥 Последний щитовой модуль уничтожен! Щиты врага обнулены!";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface CritResult {
@@ -881,7 +891,7 @@ export function executePlayerAttack(
           s.currentCombat.enemy.maxShields = 0;
           s.currentCombat.enemy.shieldRegenRate = undefined;
         });
-        get().addLog("💥 Последний щитовой модуль уничтожен! Щиты врага обнулены!", "combat");
+        get().addLog(getBarrierDestroyedLog(updatedTgtMod.isBiological), "combat");
       } else {
         const newMax = aliveShields.reduce((sum, m) => sum + (m.shieldContribution ?? 0), 0);
         const newRegen = aliveShields.reduce((sum, m) => sum + (m.regenContribution ?? 0), 0);
@@ -893,7 +903,9 @@ export function executePlayerAttack(
           s.currentCombat.enemy.shieldRegenRate = newRegen > 0 ? newRegen : undefined;
         });
         get().addLog(
-          `🛡 Щитовой модуль уничтожен! Макс. щиты врага: ${newMax}, регенерация: ${newRegen}/ход`,
+          updatedTgtMod.isBiological
+            ? `🫧 Защитная мембрана разрушена! Биобарьер существа: ${newMax}, восстановление: ${newRegen}/ход`
+            : `🛡 Щитовой модуль уничтожен! Макс. щиты врага: ${newMax}, регенерация: ${newRegen}/ход`,
           "combat",
         );
       }
@@ -912,7 +924,7 @@ export function executePlayerAttack(
       // Boss resurrected — continue combat (no victory yet)
     } else {
       if (reactorModule && reactorModule.health <= 0) {
-        get().addLog("💥 РЕАКТОР ВРАГА УНИЧТОЖЕН! Корабль разрушен!", "combat");
+        get().addLog(getCoreDestroyedLog(reactorModule.isBiological), "combat");
       }
       if (updatedCombat) {
         handleVictory(currentState, set, get, updatedCombat, weaponBays);
@@ -1161,7 +1173,7 @@ export function executePlayerAttackWithBayTargets(
             s.currentCombat.enemy.maxShields = 0;
             s.currentCombat.enemy.shieldRegenRate = undefined;
           });
-          get().addLog("💥 Последний щитовой модуль уничтожен! Щиты обнулены!", "combat");
+          get().addLog(getBarrierDestroyedLog(updatedTgt.isBiological), "combat");
           remainingShields = 0;
         }
       }
@@ -1178,8 +1190,8 @@ export function executePlayerAttackWithBayTargets(
       if (updatedCombat?.enemy.isBoss && checkBossResurrect(set, get)) {
         // Boss resurrected — continue
       } else {
-        if (reactorMod?.health === 0) {
-          get().addLog("💥 РЕАКТОР ВРАГА УНИЧТОЖЕН! Корабль разрушен!", "combat");
+        if (reactorMod && reactorMod.health <= 0) {
+          get().addLog(getCoreDestroyedLog(reactorMod.isBiological), "combat");
         }
         if (updatedCombat) {
           handleVictory(currentState, set, get, updatedCombat, weaponBays);

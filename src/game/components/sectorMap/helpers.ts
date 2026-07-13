@@ -143,6 +143,9 @@ export function getScannerInfo(
     if (loc.type === "enemy") {
       info.push(`⚔️ ${t("locations.enemy_ship")}`);
       info.push(`${t("locations.threat")}: ${loc.threat ?? 1}`);
+    } else if (loc.type === "space_monster") {
+      info.push(`🪼 ${t("location_types.space_monster")}`);
+      info.push(`${t("locations.threat")}: ${loc.threat ?? 1}`);
     } else if (loc.type === "friendly_ship") {
       info.push(`🤝 ${t("locations.friendly_ship")}`);
       if (loc.shipRace) {
@@ -279,6 +282,11 @@ export function getScannerInfo(
     } else {
       info.push(`📐 Возможен чертёж модуля`);
     }
+    return info;
+  }
+  if (loc.type === "space_monster") {
+    info.push(`🪼 ${t("location_types.space_monster")}`);
+    info.push(`⚠️ ${t("locations.threat")}: ${loc.threat ?? 1}`);
     return info;
   }
   if (loc.type === "gas_giant") {
@@ -556,8 +564,14 @@ export function canDetectObject(
   if (type === "friendly_ship") return scanRange >= 3;
   if (type === "storm") return scanRange >= 5;
 
-  // enemy, anomaly, boss, derelict
-  if (type === "enemy" || type === "anomaly" || type === "boss" || type === "derelict_ship") {
+  // enemy, monster, anomaly, boss, derelict
+  if (
+    type === "enemy" ||
+    type === "space_monster" ||
+    type === "anomaly" ||
+    type === "boss" ||
+    type === "derelict_ship"
+  ) {
     if (tier <= 1) return scanRange >= 3;
     if (tier === 2) return scanRange >= 5;
     if (tier === 3) return scanRange >= 8;
