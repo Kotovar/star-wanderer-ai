@@ -72,3 +72,14 @@ export const WEAPON_TYPES: Record<Weapon["type"], WeaponDetails> = {
         shieldOnly: true,
     },
 };
+
+export const WEAPON_ART: Record<Weapon["type"], string> = {
+    kinetic: "/assets/weapons/kinetic.webp",
+    laser: "/assets/weapons/laser.webp",
+    missile: "/assets/weapons/missile.webp",
+    plasma: "/assets/weapons/plasma.webp",
+    drones: "/assets/weapons/drones.webp",
+    antimatter: "/assets/weapons/antimatter.webp",
+    quantum_torpedo: "/assets/weapons/quantum_torpedo.webp",
+    ion_cannon: "/assets/weapons/ion_cannon.webp",
+};

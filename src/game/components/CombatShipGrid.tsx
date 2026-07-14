@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useGameStore } from "@/game/store";
 import { RACES } from "@/game/constants/races";
-import type { Module, CrewMember, Weapon } from "@/game/types";
+import type { Module, CrewMember } from "@/game/types";
 import { MODULE_TYPES } from "@/game/constants/modules";
 import { useTranslation } from "@/lib/useTranslation";
 import { getModuleTranslation } from "@/lib/moduleTranslations";
@@ -12,6 +12,7 @@ import {
   hasMergedXenosymbiont,
   SymbiosisModuleOverlay,
 } from "./SymbiosisModuleOverlay";
+import { WeaponSlotsRenderer } from "./WeaponSlotsRenderer";
 
 const BASE_CELL_SIZE = 60;
 
@@ -331,7 +332,7 @@ function ModuleRenderer({
       </text>
 
       {module.type === "weaponbay" && module.weapons && (
-        <WeaponsRenderer weapons={module.weapons} x={x} y={y} w={w} h={h} />
+        <WeaponSlotsRenderer weapons={module.weapons} x={x} y={y} w={w} h={h} />
       )}
 
       <HealthBar module={module} x={x} y={y} w={w} h={h} />
@@ -365,67 +366,6 @@ function ModuleRenderer({
         <CrewIcons crew={crewInModule} x={x} y={y} w={w} h={h} />
       )}
     </g>
-  );
-}
-
-function WeaponsRenderer({
-  weapons,
-  x,
-  y,
-  w,
-  h,
-}: {
-  weapons: (Weapon | null)[];
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}) {
-  const iconY = y + h / 2 + 10;
-  const spacing = w / ((weapons?.length ?? 0) + 1);
-
-  return (
-    <>
-      {weapons.map((weapon, idx) =>
-        weapon ? (
-          <text
-            key={idx}
-            x={x + spacing * (idx + 1)}
-            y={iconY}
-            fill={
-              weapon.type === "kinetic"
-                ? "#ff0040"
-                : weapon.type === "laser"
-                  ? "#ffb000"
-                  : "#00d4ff"
-            }
-            fontSize="18"
-            fontFamily="Share Tech Mono"
-            textAnchor="middle"
-            fontWeight="bold"
-          >
-            {weapon.type === "kinetic"
-              ? "●"
-              : weapon.type === "laser"
-                ? "◆"
-                : "▲"}
-          </text>
-        ) : (
-          <text
-            key={idx}
-            x={x + spacing * (idx + 1)}
-            y={iconY}
-            fill="#444444"
-            fontSize="14"
-            fontFamily="Share Tech Mono"
-            textAnchor="middle"
-            fontWeight="bold"
-          >
-            ○
-          </text>
-        ),
-      )}
-    </>
   );
 }
 

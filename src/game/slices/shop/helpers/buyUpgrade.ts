@@ -204,6 +204,11 @@ const upgradeModule = (
 
     const newWidth = targetModuleTemplate.width || module.width;
     const newHeight = targetModuleTemplate.height || module.height;
+    const weaponSlotBonus = Math.max(
+        0,
+        (module.weapons?.length || 0) - module.width * module.height,
+    );
+    const newWeaponSlotCount = newWidth * newHeight + weaponSlotBonus;
 
     // Поиск места на корабле (с учётом расширения)
     const state = get();
@@ -267,12 +272,12 @@ const upgradeModule = (
                                   weapons: [
                                       ...m.weapons.slice(
                                           0,
-                                          newWidth * newHeight,
+                                          newWeaponSlotCount,
                                       ),
                                       ...Array(
                                           Math.max(
                                               0,
-                                              newWidth * newHeight -
+                                              newWeaponSlotCount -
                                                   m.weapons.length,
                                           ),
                                       ).fill(null),
