@@ -402,9 +402,7 @@ const handleTravelStart = (
         get().gainExp(pilot, distance * PILOT_EXP_PER_TIER);
     }
 
-    markSectorVisited(sector, set);
-
-    set((s) => ({
+    set(() => ({
         traveling: travelInstant
             ? null
             : {
@@ -413,19 +411,11 @@ const handleTravelStart = (
                   turnsTotal: distance,
               },
         gameMode: "galaxy_map" as GameMode,
-        galaxy: {
-            ...s.galaxy,
-            sectors: s.galaxy.sectors.map((sec) =>
-                sec.id === sector.id ? { ...sec, visited: true } : sec,
-            ),
-        },
     }));
 
     if (travelInstant) {
-        set(() => ({
-            currentSector: { ...sector, visited: true },
-            gameMode: "sector_map" as GameMode,
-        }));
+        markSectorVisited(sector, set);
+        set(() => ({ gameMode: "sector_map" as GameMode }));
         get().addLog(`⚡ Мгновенный перелёт в ${sector.name}!`, "info");
 
         const warpPatrolState = get();

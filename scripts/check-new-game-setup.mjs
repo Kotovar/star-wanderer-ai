@@ -5,6 +5,8 @@ import {
   getLaunchCredits,
 } from "../src/game/constants/launchModifiers.ts";
 import { SHIP_TEMPLATES } from "../src/game/constants/shipTemplates.ts";
+import { MODULE_TYPES } from "../src/game/constants/modules.ts";
+import { areAllModulesConnected } from "../src/game/modules/areAllModulesConnected.ts";
 import {
   FUEL_PRICE_PER_UNIT,
   REPAIR_CONFIG,
@@ -23,18 +25,63 @@ for (const template of SHIP_TEMPLATES) {
   assert.ok(template.modules.some((module) => module.type === "lifesupport"));
   assert.ok(template.modules.some((module) => module.type === "fueltank"));
 
+  const gridSize = template.gridSize ?? 5;
   const occupiedCells = new Set();
   for (const shipModule of template.modules) {
     for (let x = shipModule.x; x < shipModule.x + shipModule.width; x += 1) {
       for (let y = shipModule.y; y < shipModule.y + shipModule.height; y += 1) {
-        assert.ok(x >= 1 && x <= 5 && y >= 1 && y <= 5);
+        assert.ok(x >= 0 && x < gridSize && y >= 0 && y < gridSize);
         const cell = `${x}:${y}`;
         assert.ok(!occupiedCells.has(cell), `${template.id} overlaps at ${cell}`);
         occupiedCells.add(cell);
       }
     }
   }
+
+  if (template.id === "dev_arsenal_fixture") {
+    assert.equal(gridSize, 7);
+    assert.equal(occupiedCells.size, gridSize ** 2);
+    assert.equal(areAllModulesConnected(template.modules), true);
+    assert.deepEqual(
+      template.modules
+        .filter((module) => module.type === "weaponbay")
+        .map((module) => module.weapons?.length ?? 0)
+        .sort((a, b) => a - b),
+      [1, 3, 4, 5],
+    );
+    assert.deepEqual(
+      [...new Set(template.modules.map((module) => module.type))].sort(),
+      Object.keys(MODULE_TYPES).sort(),
+    );
+    assert.deepEqual(
+      [
+        ...new Set(
+          template.modules.flatMap((module) =>
+            module.weapons?.map((weapon) => weapon.type) ?? [],
+          ),
+        ),
+      ].sort(),
+      [
+        "antimatter",
+        "drones",
+        "ion_cannon",
+        "kinetic",
+        "laser",
+        "missile",
+        "plasma",
+        "quantum_torpedo",
+      ],
+    );
+  }
 }
+
+const devArsenalTemplate = SHIP_TEMPLATES.find(
+  (template) => template.id === "dev_arsenal_fixture",
+);
+assert.equal(
+  Boolean(devArsenalTemplate),
+  process.env.NODE_ENV === "development",
+);
 
 for (const modifier of LAUNCH_MODIFIERS) {
   for (const conflictId of modifier.conflictsWith ?? []) {

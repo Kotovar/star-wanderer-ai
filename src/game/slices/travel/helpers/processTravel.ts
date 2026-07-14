@@ -500,8 +500,16 @@ export const processTravel = (
         );
 
         set((s) => ({
-            currentSector: destinationSector,
+            currentSector: { ...destinationSector, visited: true },
             traveling: null,
+            galaxy: {
+                ...s.galaxy,
+                sectors: s.galaxy.sectors.map((sector) =>
+                    sector.id === destinationSector.id
+                        ? { ...sector, visited: true }
+                        : sector,
+                ),
+            },
             credits: patrolResult.contractCompleted
                 ? s.credits + patrolResult.reward
                 : s.credits,

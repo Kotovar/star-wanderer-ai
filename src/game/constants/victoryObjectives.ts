@@ -18,6 +18,7 @@ type VictoryObjectiveState = Pick<
   | "knownRaces"
   | "raceReputation"
   | "research"
+  | "traveling"
 >;
 
 export type VictoryObjective = {
@@ -56,7 +57,8 @@ export const VICTORY_OBJECTIVES: Record<VictoryObjectiveId, VictoryObjective> = 
     descriptionKey: "victory_paths.reach_tier4.description",
     completionKey: "victory_paths.reach_tier4.completion",
     doctrineIds: ["doctrine_explorer"],
-    isComplete: (state) => (state.currentSector?.tier ?? 1) >= 4,
+    isComplete: (state) =>
+      !state.traveling && (state.currentSector?.tier ?? 1) >= 4,
   },
   defeat_void_oracle: {
     id: "defeat_void_oracle",

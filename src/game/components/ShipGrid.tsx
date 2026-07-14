@@ -10,6 +10,7 @@ import { useTranslation } from "@/lib/useTranslation";
 import { getModuleTranslation } from "@/lib/moduleTranslations";
 import { getActiveAssignment } from "@/game/crew/assignments";
 import { ProfessionSprite } from "./ProfessionSprite";
+import { getCrewIconLayout } from "./crewIconLayout";
 import {
   hasMergedXenosymbiont,
   SymbiosisModuleOverlay,
@@ -88,7 +89,7 @@ const HEALTH_BAR_SIDE_PADDING = 10; // x offset from module edge
 // Crew icon layout
 const CREW_ICON_SIZE = 20;
 const CREW_ICON_GAP = 3;
-const CREW_ICON_PADDING = 8; // horizontal padding inside module
+const CREW_ICON_PADDING = 4; // four crew members fit across a 1x1 module
 const CREW_ICON_HEALTH_BAR_MARGIN = 3; // gap between icon rows and health bar
 
 type PowerLinkState = "online" | "warning" | "offline";
@@ -830,25 +831,31 @@ function CrewIcons({
     member: CrewMember,
   ) => void;
 }) {
-  const iconsPerRow = Math.max(1, Math.floor((w - CREW_ICON_PADDING * 2) / (CREW_ICON_SIZE + CREW_ICON_GAP)));
-  const healthBarOffset = HEALTH_BAR_BOTTOM_OFFSET + CREW_ICON_HEALTH_BAR_MARGIN;
-  const rowHeight = CREW_ICON_SIZE + CREW_ICON_GAP;
-  const rows = Math.ceil(crew.length / iconsPerRow);
+  const layout = getCrewIconLayout({
+    count: crew.length,
+    x,
+    y,
+    width: w,
+    height: h,
+    iconSize: CREW_ICON_SIZE,
+    iconGap: CREW_ICON_GAP,
+    horizontalPadding: CREW_ICON_PADDING,
+    topInset: 24,
+    bottomInset:
+      HEALTH_BAR_BOTTOM_OFFSET + CREW_ICON_HEALTH_BAR_MARGIN + CREW_ICON_GAP,
+  });
 
   return (
     <>
       {crew.map((c, idx) => {
-        const col = idx % iconsPerRow;
-        const row = Math.floor(idx / iconsPerRow);
-        const iconX = x + CREW_ICON_PADDING + col * (CREW_ICON_SIZE + CREW_ICON_GAP);
-        const iconY = y + h - healthBarOffset - rowHeight * (rows - row);
+        const icon = layout[idx];
         return (
           <CrewIcon
             key={c.id}
             crewMember={c}
-            x={iconX}
-            y={iconY}
-            size={CREW_ICON_SIZE}
+            x={icon.x}
+            y={icon.y}
+            size={icon.size}
             isCombatMode={isCombatMode}
             onPointerDown={onCrewPointerDown}
           />
@@ -893,6 +900,19 @@ function CrewIcon({
         WebkitUserSelect: "none",
       }}
     >
+      <rect
+        x={x - 0.5}
+        y={y - 0.5}
+        width={size + 1}
+        height={size + 1}
+        rx={2}
+        fill="#050810"
+        fillOpacity={0.82}
+        stroke={raceColor}
+        strokeOpacity={0.9}
+        strokeWidth={1}
+        pointerEvents="none"
+      />
       <ProfessionSprite
         race={crewMember.race}
         profession={crewMember.profession}

@@ -12,6 +12,7 @@ const state = {
   completedLocations: [],
   credits: 8000,
   currentSector: { tier: 1 },
+  traveling: null,
   galaxy: { sectors: [] },
   knownRaces: ["human", "krylorian", "crystalline"],
   raceReputation: { human: 51, krylorian: 51, crystalline: 51 },
@@ -28,5 +29,17 @@ state.knownRaces.pop();
 
 assert.equal(VICTORY_OBJECTIVES.scientific_ascension.isComplete(state), false);
 assert.equal(VICTORY_OBJECTIVES.galactic_coalition.isComplete(state), false);
+
+state.currentSector = { tier: 1 };
+state.traveling = {
+  destination: { tier: 4 },
+  turnsLeft: 3,
+  turnsTotal: 3,
+};
+assert.equal(VICTORY_OBJECTIVES.reach_tier4.isComplete(state), false);
+
+state.traveling = null;
+state.currentSector = { tier: 4 };
+assert.equal(VICTORY_OBJECTIVES.reach_tier4.isComplete(state), true);
 
 console.log("Victory path checks passed");

@@ -237,7 +237,7 @@ export function buildStartingState(
     maxShields: 0,
     crewCapacity,
     modules,
-    gridSize: 5,
+    gridSize: template.gridSize ?? 5,
     cargo: [],
     tradeGoods: [],
     fuel,

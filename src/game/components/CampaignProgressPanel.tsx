@@ -176,6 +176,7 @@ export function CampaignProgressPanel() {
   const { t } = useTranslation();
   const sectors = useGameStore((s) => s.galaxy.sectors);
   const currentSector = useGameStore((s) => s.currentSector);
+  const traveling = useGameStore((s) => s.traveling);
   const shipModules = useGameStore((s) => s.ship.modules);
   const research = useGameStore((s) => s.research);
   const artifacts = useGameStore((s) => s.artifacts);
@@ -254,6 +255,7 @@ export function CampaignProgressPanel() {
       completedLocations,
       credits,
       currentSector,
+      traveling,
       galaxy: { sectors },
       knownRaces,
       raceReputation,
@@ -265,6 +267,7 @@ export function CampaignProgressPanel() {
       completedLocations,
       credits,
       currentSector,
+      traveling,
       knownRaces,
       raceReputation,
       research,

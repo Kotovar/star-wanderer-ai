@@ -8,6 +8,7 @@ import { MODULE_TYPES } from "@/game/constants/modules";
 import { useTranslation } from "@/lib/useTranslation";
 import { getModuleTranslation } from "@/lib/moduleTranslations";
 import { ProfessionSprite } from "./ProfessionSprite";
+import { getCrewIconLayout } from "./crewIconLayout";
 import {
   hasMergedXenosymbiont,
   SymbiosisModuleOverlay,
@@ -174,7 +175,7 @@ export function CombatShipGrid({
       <div
         className={`select-none transition-colors overflow-hidden max-w-full w-full ${
           ship?.moduleMovedThisTurn
-            ? "bg-[#050810] border border-[#ffb000]"
+            ? "bg-[#050810] border border-accent"
             : "bg-[#050810] border border-[#00ff41]"
         }`}
         style={{
@@ -546,31 +547,31 @@ function CrewIcons({
   w: number;
   h: number;
 }) {
-  const iconSize = 14;
-  const iconGap = 2;
-  const iconPadding = 5;
-  const iconsPerRow = Math.max(
-    1,
-    Math.floor((w - iconPadding * 2) / (iconSize + iconGap)),
-  );
-  const rowHeight = iconSize + iconGap;
-  const rows = Math.ceil(crew.length / iconsPerRow);
+  const layout = getCrewIconLayout({
+    count: crew.length,
+    x,
+    y,
+    width: w,
+    height: h,
+    iconSize: 12,
+    iconGap: 2,
+    horizontalPadding: 3,
+    topInset: 15,
+    bottomInset: 16,
+  });
 
   return (
     <>
       {crew.map((c, idx) => {
-        const col = idx % iconsPerRow;
-        const row = Math.floor(idx / iconsPerRow);
-        const iconX = x + iconPadding + col * (iconSize + iconGap);
-        const iconY = y + h - 14 - rowHeight * (rows - row);
+        const icon = layout[idx];
 
         return (
           <CrewIcon
             key={c.id}
             crewMember={c}
-            x={iconX}
-            y={iconY}
-            size={iconSize}
+            x={icon.x}
+            y={icon.y}
+            size={icon.size}
           />
         );
       })}
@@ -601,6 +602,19 @@ function CrewIcon({
       className="select-none"
       style={{ userSelect: "none", WebkitUserSelect: "none" }}
     >
+      <rect
+        x={x - 0.5}
+        y={y - 0.5}
+        width={size + 1}
+        height={size + 1}
+        rx={2}
+        fill="#050810"
+        fillOpacity={0.82}
+        stroke={raceColor}
+        strokeOpacity={0.9}
+        strokeWidth={1}
+        pointerEvents="none"
+      />
       <ProfessionSprite
         race={crewMember.race}
         profession={crewMember.profession}

@@ -23,6 +23,8 @@ export interface ShipTemplate {
   moduleIcons: string[];
   /** Стартовые модули */
   modules: Module[];
+  /** Размер стартовой сетки (по умолчанию 5×5) */
+  gridSize?: number;
   /** Параметры стартового экипажа */
   crew: CrewBuildOptions[];
   credits: number;
@@ -49,7 +51,7 @@ const BASE_FUEL = 80;
 
 // ─── Шаблоны ─────────────────────────────────────────────────────────────────
 
-export const SHIP_TEMPLATES: ShipTemplate[] = [
+const STANDARD_SHIP_TEMPLATES: ShipTemplate[] = [
   // ── 1. Исследователь (easy) ─────────────────────────────────────────────
   {
     id: "explorer",
@@ -196,6 +198,54 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     compatibleClasses: null,
   },
 ];
+
+export const SHIP_TEMPLATES: ShipTemplate[] =
+  process.env.NODE_ENV === "development"
+    ? [
+        ...STANDARD_SHIP_TEMPLATES,
+        {
+          id: "dev_arsenal_fixture",
+          nameKey: "ship_templates.weapon_showcase.name",
+          descriptionKey: "ship_templates.weapon_showcase.description",
+          icon: "🧪",
+          difficulty: "hard",
+          moduleIcons: ["⚛️", "⚔️", "🛡️", "🔧", "📡"],
+          gridSize: 7,
+          modules: [
+            { id: 701, type: "ai_core", name: "Ядро ИИ", x: 0, y: 0, width: 2, height: 2, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 702, type: "lab", name: "Лаборатория", x: 2, y: 0, width: 2, height: 2, consumption: 8, researchOutput: 12, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 703, type: "bio_research_lab", name: "Биолаборатория", x: 4, y: 0, width: 2, height: 2, consumption: 4, researchOutput: 10, healing: 8, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 704, type: "quarters", name: "Жилой модуль", x: 6, y: 0, width: 1, height: 2, consumption: 1, capacity: 6, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 705, type: "pulse_drive", name: "Импульсный привод", x: 0, y: 2, width: 2, height: 2, power: 20, fuelEfficiency: 4, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 706, type: "habitat_module", name: "Медицинский жилой модуль", x: 2, y: 2, width: 2, height: 2, consumption: 3, healing: 8, capacity: 6, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 707, type: "deep_survey_array", name: "Комплекс глубокого сканирования", x: 4, y: 2, width: 2, height: 2, consumption: 4, researchOutput: 8, scanRange: 3, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 708, type: "repair_bay", name: "Ремонтный отсек", x: 6, y: 2, width: 1, height: 2, consumption: 8, repairAmount: 5, repairTargets: 2, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 709, type: "weaponbay", name: "Древняя палуба — 4 слота", x: 0, y: 4, width: 2, height: 2, consumption: 2, weapons: [{ type: "drones" }, { type: "antimatter" }, { type: "quantum_torpedo" }, { type: "ion_cannon" }], health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 710, type: "weaponbay", name: "Палуба Мк.3 — 3 слота", x: 2, y: 4, width: 2, height: 1, consumption: 2, weapons: [{ type: "laser" }, { type: "missile" }, { type: "plasma" }], health: 250, maxHealth: 250, level: 3, defense: 4 },
+            { id: 711, type: "reactor", name: "Реактор", x: 4, y: 4, width: 1, height: 1, power: 60, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 712, type: "cockpit", name: "Кабина", x: 5, y: 4, width: 1, height: 1, consumption: 1, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 713, type: "lifesupport", name: "Жизнеобеспечение", x: 6, y: 4, width: 1, height: 1, consumption: 2, oxygen: 12, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 714, type: "cargo", name: "Грузовой отсек", x: 2, y: 5, width: 1, height: 1, consumption: 1, capacity: 160, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 715, type: "weaponbay", name: "Палуба Мк.1 — 1 слот", x: 3, y: 5, width: 1, height: 1, consumption: 2, weapons: [{ type: "kinetic" }], health: 250, maxHealth: 250, level: 1, defense: 2 },
+            { id: 716, type: "weaponbay", name: "Древняя палуба — 5 слотов", x: 4, y: 5, width: 2, height: 2, consumption: 2, weapons: [{ type: "kinetic" }, { type: "laser" }, { type: "missile" }, { type: "plasma" }, { type: "drones" }], health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 717, type: "scanner", name: "Сканер", x: 6, y: 5, width: 1, height: 1, consumption: 1, scanRange: 3, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 718, type: "engine", name: "Двигатель", x: 0, y: 6, width: 1, height: 1, consumption: 1, fuelEfficiency: 4, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 719, type: "fueltank", name: "Топливный бак", x: 1, y: 6, width: 1, height: 1, capacity: 160, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 720, type: "drill", name: "Буровая установка", x: 2, y: 6, width: 1, height: 1, consumption: 1, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 721, type: "shield", name: "Щитовой генератор", x: 3, y: 6, width: 1, height: 1, consumption: 3, shields: 40, shieldRegen: 8, health: 250, maxHealth: 250, level: 4, defense: 5 },
+            { id: 722, type: "medical", name: "Медицинский отсек", x: 6, y: 6, width: 1, height: 1, consumption: 2, healing: 8, health: 250, maxHealth: 250, level: 4, defense: 5 },
+          ],
+          crew: [
+            { id: 1, name: "Тестовый пилот", profession: "pilot", moduleId: 712, level: 4 },
+          ],
+          credits: 50000,
+          fuel: 160,
+          maxFuel: 160,
+          probes: 10,
+          compatibleClasses: null,
+        },
+      ]
+    : STANDARD_SHIP_TEMPLATES;
 
 /** Шаблон по умолчанию (Исследователь) */
 export const DEFAULT_TEMPLATE_ID = "explorer";

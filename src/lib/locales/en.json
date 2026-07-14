@@ -3058,6 +3058,10 @@
     "engineer": {
       "name": "Engineer",
       "description": "Repair bay and powerful reactor. Synthetic engineer never tires. Ship repairs itself every turn."
+    },
+    "weapon_showcase": {
+      "name": "Weapon Range (DEV)",
+      "description": "A 7×7 visual test grid with every rendered module and weapon bays holding 1, 3, 4, and 5 weapons. Available only in development."
     }
   },
 
