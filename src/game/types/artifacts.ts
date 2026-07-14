@@ -1,4 +1,5 @@
 export type ArtifactRarity = "rare" | "legendary" | "mythic" | "cursed";
+export type ArtifactHintSource = "archives" | "space_monster";
 
 // Ancient Artifacts - unique items with special effects
 export interface Artifact {
@@ -12,7 +13,8 @@ export interface Artifact {
     rarity: ArtifactRarity; // cursed = special category
     negativeEffect?: ArtifactNegativeEffect; // Primary negative effect for cursed artifacts
     negativeEffects?: ArtifactNegativeEffect[]; // Additional negative effects
-    hinted?: boolean; // Has been hinted at by synthetic archives
+    hinted?: boolean; // Has a lead for discovery
+    hintSource?: ArtifactHintSource;
     hintedAt?: {
         sectorName: string;
         locationName: string;

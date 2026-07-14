@@ -187,6 +187,7 @@ const applyBadAnomalyBonus = (
                               ...a,
                               discovered: true,
                               hinted: false,
+                              hintSource: undefined,
                               hintedAt: undefined,
                           }
                         : a,

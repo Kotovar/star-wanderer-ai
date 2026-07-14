@@ -7,7 +7,6 @@ import { useTranslation } from "@/lib/useTranslation";
 import { getTechBonusSum } from "@/game/research";
 import { DEFAULT_ARTIFACT_SLOTS } from "@/game/slices/artifacts/constants";
 import type { Artifact, ArtifactType } from "@/game/types";
-import { getArchiveHintLocations } from "@/game/artifacts/utils";
 import { getLocationName } from "@/lib/translationHelpers";
 
 const RARITY_COLORS: Record<
@@ -88,6 +87,7 @@ function ArtifactCard({
     const { t } = useTranslation();
     const colors = RARITY_COLORS[artifact.rarity];
     const icon = EFFECT_ICONS[artifact.effect.type] || "?";
+    const hintSource = artifact.hintSource ?? "unknown";
 
     return (
         <div
@@ -122,7 +122,7 @@ function ArtifactCard({
                 <div className="flex shrink-0 flex-wrap justify-end gap-1">
                     {artifact.hinted && !artifact.discovered && (
                         <span className="text-xs text-ring bg-[rgba(0,212,255,0.15)] px-2 py-1">
-                            {t("artifacts.hint_label")}
+                            {t(`artifacts.hint_label_${hintSource}`)}
                         </span>
                     )}
                     {artifact.effect.active && (
@@ -265,7 +265,7 @@ function ArtifactCard({
                     {artifact.hinted && (
                         <div className="text-[10px] text-ring flex items-center gap-1">
                             <span>📡</span>
-                            <span>{t("artifacts.hint_text")}</span>
+                            <span>{t(`artifacts.hint_text_${hintSource}`)}</span>
                         </div>
                     )}
                 </div>
@@ -276,8 +276,6 @@ function ArtifactCard({
 
 export function ArtifactPanel() {
     const artifacts = useGameStore((s) => s.artifacts);
-    const galaxy = useGameStore((s) => s.galaxy);
-    const currentSectorId = useGameStore((s) => s.currentSector?.id);
     const researchArtifact = useGameStore((s) => s.researchArtifact);
     const toggleArtifact = useGameStore((s) => s.toggleArtifact);
     const crew = useGameStore((s) => s.crew);
@@ -293,34 +291,6 @@ export function ArtifactPanel() {
         scientists.length > 0
             ? Math.max(...scientists.map((s) => s.level || 1))
             : 0;
-    const archiveHintLocations = useMemo(
-        () => getArchiveHintLocations(galaxy.sectors, currentSectorId),
-        [galaxy.sectors, currentSectorId],
-    );
-    const legacyHintLocations = useMemo(() => {
-        const locations = new Map<
-            string,
-            NonNullable<Artifact["hintedAt"]>
-        >();
-        if (archiveHintLocations.length === 0) return locations;
-
-        let locationIndex = 0;
-        artifacts.forEach((artifact) => {
-            if (!artifact.hinted || artifact.discovered || artifact.hintedAt) {
-                return;
-            }
-
-            const hintLocation =
-                archiveHintLocations[locationIndex % archiveHintLocations.length];
-            if (hintLocation) {
-                locations.set(artifact.id, hintLocation);
-                locationIndex += 1;
-            }
-        });
-
-        return locations;
-    }, [artifacts, archiveHintLocations]);
-
     const discoveredCount = artifacts.filter((a) => a.discovered).length;
     const researchedCount = artifacts.filter((a) => a.researched).length;
     const activeCount = artifacts.filter((a) => a.effect.active).length;
@@ -408,7 +378,7 @@ export function ArtifactPanel() {
     );
 
     return (
-        <div className="flex flex-col h-full overflow-hidden gap-2">
+        <div className="flex flex-col h-full min-h-0 overflow-hidden gap-2">
             {/* Header */}
             <div className="shrink-0">
                 <div className="flex items-start justify-between gap-3 border-b border-[#ffb00044] pb-3">
@@ -463,7 +433,7 @@ export function ArtifactPanel() {
                         className="w-full px-2 py-1 text-xs bg-[#080808] border border-[#333] text-[#888] placeholder:text-[#555] outline-none focus:border-[#00ff41]"
                     />
                 </div>
-                <div className="mt-2 flex flex-wrap gap-1">
+                <div className="mt-2 flex flex-nowrap gap-1 overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible lg:pb-0">
                     {filterButtons.map((button) => (
                         <button
                             type="button"
@@ -471,7 +441,7 @@ export function ArtifactPanel() {
                             onClick={() =>
                                 setArtifactFilter(button.id)
                             }
-                            className="px-2 py-1 text-[10px] border cursor-pointer"
+                            className="shrink-0 whitespace-nowrap px-2 py-1 text-[10px] border cursor-pointer"
                             style={{
                                 borderColor:
                                     artifactFilter === button.id
@@ -493,26 +463,17 @@ export function ArtifactPanel() {
                 </div>
             </div>
 
-            <div className="flex-1 overflow-hidden mt-2">
+            <div className="flex-1 min-h-0 overflow-hidden mt-2">
                 <div className="h-full overflow-y-auto pr-2 grid gap-3">
-                    {filteredArtifacts.map((artifact) => {
-                        const hintedAt =
-                            artifact.hintedAt ??
-                            legacyHintLocations.get(artifact.id);
-                        const cardArtifact = hintedAt
-                            ? { ...artifact, hintedAt }
-                            : artifact;
-
-                        return (
-                            <ArtifactCard
-                                key={artifact.id}
-                                artifact={cardArtifact}
-                                onResearch={() => researchArtifact(artifact.id)}
-                                onToggle={() => toggleArtifact(artifact.id)}
-                                slotsAtLimit={slotsAtLimit}
-                            />
-                        );
-                    })}
+                    {filteredArtifacts.map((artifact) => (
+                        <ArtifactCard
+                            key={artifact.id}
+                            artifact={artifact}
+                            onResearch={() => researchArtifact(artifact.id)}
+                            onToggle={() => toggleArtifact(artifact.id)}
+                            slotsAtLimit={slotsAtLimit}
+                        />
+                    ))}
                     {filteredArtifacts.length === 0 && (
                         <div className="text-sm text-[#888] text-center py-8">
                             {artifactFilter === "cursed"
@@ -526,7 +487,7 @@ export function ArtifactPanel() {
             </div>
 
             {/* Footer - Advice */}
-            <div className="shrink-0 mt-auto">
+            <div className="hidden shrink-0 mt-auto lg:block">
                 <div className="bg-[rgba(255,176,0,0.1)] border border-accent p-3 text-xs">
                     <span className="text-accent">
                         {t("artifacts.tip_title")}

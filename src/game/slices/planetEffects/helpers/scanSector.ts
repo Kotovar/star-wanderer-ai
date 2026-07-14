@@ -79,6 +79,7 @@ export const scanSector = (set: SetState, get: () => GameStore): boolean => {
                 ? {
                       ...artifact,
                       hinted: true,
+                      hintSource: "archives",
                       ...(hintedArtifactLocations.has(artifact.id)
                           ? {
                                 hintedAt: hintedArtifactLocations.get(

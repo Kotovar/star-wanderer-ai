@@ -38,6 +38,7 @@ export const tryFindArtifact = (
                       ...a,
                       discovered: true,
                       hinted: false,
+                      hintSource: undefined,
                       hintedAt: undefined,
                   }
                 : a,

@@ -161,6 +161,7 @@ export const resonateWithSpaceMonster = (
                                   ? {
                                         ...artifact,
                                         hinted: true,
+                                        hintSource: "space_monster",
                                         hintedAt: artifactHint.hintedAt,
                                     }
                                   : artifact,
