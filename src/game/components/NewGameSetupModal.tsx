@@ -16,6 +16,7 @@ import {
 } from "../constants/shipTemplates";
 import {
   LAUNCH_MODIFIERS,
+  getLaunchCredits,
   type LaunchModifier,
 } from "../constants/launchModifiers";
 import { useTranslation } from "@/lib/useTranslation";
@@ -293,9 +294,11 @@ export function NewGameSetupModal({
     ),
   );
 
-  const totalCredits =
-    selectedTemplate.credits +
-    selectedModifierItems.reduce((sum, mod) => sum + mod.creditDelta, 0);
+  const totalCredits = getLaunchCredits(
+    selectedTemplate.credits,
+    selectedModifierItems,
+  );
+  const hasSufficientCredits = totalCredits >= 0;
 
   const toggleModifier = (id: string) => {
     setSelectedModifiers((prev) => {
@@ -393,6 +396,7 @@ export function NewGameSetupModal({
   };
 
   const handleStart = () => {
+    if (!hasSufficientCredits) return;
     restartGame(selectedTemplateId, selectedModifiers);
     onStarted?.();
     onClose();
@@ -435,7 +439,7 @@ export function NewGameSetupModal({
                 </div>
               </div>
 
-              <div className="grid min-w-0 gap-2 sm:grid-cols-2 min-[980px]:grid-cols-1">
+              <div className="grid min-w-0 gap-2 sm:grid-cols-2 min-[980px]:grid-cols-1!">
                 {SHIP_TEMPLATES.map((tmpl) => {
                   const isSelected = tmpl.id === selectedTemplateId;
                   const dc = DIFFICULTY_COLORS[tmpl.difficulty];
@@ -457,7 +461,7 @@ export function NewGameSetupModal({
                       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                         <div className="min-w-0">
                           <div
-                            className="max-w-full pr-1 font-bold text-xs leading-snug sm:text-sm"
+                            className="max-w-full wrap-break-word pr-1 font-bold text-xs leading-snug sm:text-sm"
                             style={{ color: isSelected ? dc.text : "#00ff41" }}
                           >
                             {t(tmpl.nameKey)}
@@ -532,7 +536,7 @@ export function NewGameSetupModal({
                 <div className="grid min-w-0 gap-2 min-[560px]:grid-cols-2 min-[1180px]:grid-cols-4">
                   <InfoMetric
                     label={t("new_game_setup.start_credits")}
-                    value={`₢${Math.max(0, totalCredits)}`}
+                    value={`₢${totalCredits}`}
                   />
                   <InfoMetric
                     label={t("new_game_setup.fuel_label")}
@@ -682,7 +686,7 @@ export function NewGameSetupModal({
                   className="font-bold tabular-nums"
                   style={{ color: totalCredits < 0 ? "#ff4444" : "#ffb000" }}
                 >
-                  ₢{Math.max(0, totalCredits)}
+                  ₢{totalCredits}
                 </span>
                 {selectedModifierItems.length > 0 && (
                   <span className="min-w-0 wrap-break-word text-[#555]">
@@ -692,11 +696,24 @@ export function NewGameSetupModal({
                   </span>
                 )}
               </div>
+              {!hasSufficientCredits && (
+                <p
+                  id="new-game-credits-error"
+                  role="alert"
+                  className="mt-1 text-[10px] text-[#ff9a9a]"
+                >
+                  {t("new_game_setup.insufficient_credits")}
+                </p>
+              )}
             </div>
 
             <Button
               onClick={handleStart}
-              className="cursor-pointer w-full sm:w-auto shrink-0 bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider px-6 py-5 font-bold text-sm"
+              disabled={!hasSufficientCredits}
+              aria-describedby={
+                hasSufficientCredits ? undefined : "new-game-credits-error"
+              }
+              className="w-full shrink-0 border-2 border-[#00ff41] bg-transparent px-6 py-5 text-sm font-bold uppercase tracking-wider text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] sm:w-auto disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t("new_game_setup.start_button")}
             </Button>

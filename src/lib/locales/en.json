@@ -3034,13 +3034,14 @@
     "effect_reputation": "reputation changed",
     "ship_label": "Ship",
     "start_credits": "Starting credits",
+    "insufficient_credits": "Not enough starting credits",
     "start_button": "Start"
   },
 
   "ship_templates": {
     "explorer": {
       "name": "Explorer",
-      "description": "A balanced standard ship. Cargo bay, medic and engineer in the crew. Ideal for a first run."
+      "description": "A balanced standard ship. Cargo bay, engineer, and scout in the crew. Ideal for a first run."
     },
     "fighter": {
       "name": "Fighter",
@@ -3087,7 +3088,7 @@
     },
     "research_head_start": {
       "name": "Research Head Start",
-      "description": "Starting research resources: ancient_data ×5, tech_salvage ×5, rare_minerals ×3."
+      "description": "Starting research resources: ancient_data ×5, tech_salvage ×5."
     },
     "random_starting_tech": {
       "name": "Random Breakthrough",
@@ -3095,11 +3096,11 @@
     },
     "solo_mission": {
       "name": "Solo Mission",
-      "description": "Only one crew member (pilot). No support, but extra credits."
+      "description": "Start with only the pilot. No support, but extra credits."
     },
     "weakened_reactor": {
       "name": "Weakened Reactor",
-      "description": "Reactor generates 2 less energy. Some modules may shut down."
+      "description": "Reactor generates 2 less energy, leaving less reserve for upgrades and power-hungry systems."
     },
     "crisis_start": {
       "name": "Emergency Start",

@@ -1,6 +1,8 @@
 import { SHIP_TEMPLATES, DEFAULT_TEMPLATE_ID } from "@/game/constants/shipTemplates";
-import { LAUNCH_MODIFIERS } from "@/game/constants/launchModifiers";
-import { GLOBAL_CRISES } from "@/game/constants/globalCrises";
+import {
+  LAUNCH_MODIFIERS,
+  assertValidLaunchSelection,
+} from "@/game/constants/launchModifiers";
 import { RESEARCH_TREE } from "@/game/constants/research";
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
@@ -20,8 +22,8 @@ export interface StartingStatePatch {
   raceReputation?: Partial<Record<RaceId, number>>;
   /** Расы, которые должны быть известны игроку с первого хода */
   knownRaces?: RaceId[];
-  /** Кризис, который надо активировать сразу после создания стартового состояния */
-  startingCrisisId?: string;
+  /** Нужно активировать подходящий текущему состоянию кризис сразу после старта */
+  startsWithCrisis: boolean;
   /** Случайная технология, которую надо сразу засчитать изученной */
   startingTechId?: TechnologyId;
 }
@@ -50,11 +52,10 @@ export function buildStartingState(
   );
 
   // ── Кредиты ──────────────────────────────────────────────────────────────
-  let credits = template.credits;
-  for (const mod of activeModifiers) {
-    credits += mod.creditDelta;
-  }
-  credits = Math.max(0, credits);
+  const credits = assertValidLaunchSelection(
+    template.credits,
+    activeModifiers,
+  );
 
   // ── Топливо ───────────────────────────────────────────────────────────────
   let fuel = template.fuel;
@@ -218,9 +219,6 @@ export function buildStartingState(
   }
 
   const wantsStartingCrisis = activeModifiers.some((m) => m.startWithCrisis);
-  const startingCrisis = wantsStartingCrisis
-    ? GLOBAL_CRISES[Math.floor(Math.random() * GLOBAL_CRISES.length)]
-    : undefined;
   const startingTechPool = Object.values(RESEARCH_TREE).filter(
     (tech) => tech.discovered && tech.prerequisites.length === 0,
   );
@@ -258,7 +256,7 @@ export function buildStartingState(
     researchResources,
     raceReputation: Object.keys(raceReputation).length > 0 ? raceReputation : undefined,
     knownRaces: knownRaces.size > 0 ? [...knownRaces] : undefined,
-    startingCrisisId: startingCrisis?.id,
+    startsWithCrisis: wantsStartingCrisis,
     startingTechId: startingTech?.id,
   };
 }

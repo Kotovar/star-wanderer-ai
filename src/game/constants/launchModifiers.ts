@@ -47,6 +47,40 @@ export interface LaunchModifier {
   startRaceReputation?: Partial<Record<RaceId, number>>;
 }
 
+export function getLaunchCredits(
+  startingCredits: number,
+  modifiers: readonly LaunchModifier[],
+) {
+  return startingCredits + modifiers.reduce(
+    (sum, mod) => sum + mod.creditDelta,
+    0,
+  );
+}
+
+export function assertValidLaunchSelection(
+  startingCredits: number,
+  modifiers: readonly LaunchModifier[],
+) {
+  if (modifiers.filter((mod) => mod.group === "doctrine").length > 1) {
+    throw new Error("Only one starting doctrine can be selected");
+  }
+
+  const modifierIds = new Set(modifiers.map((mod) => mod.id));
+  const conflictingModifier = modifiers.find((mod) =>
+    mod.conflictsWith?.some((modifierId) => modifierIds.has(modifierId)),
+  );
+  if (conflictingModifier) {
+    throw new Error(`Conflicting launch modifier: ${conflictingModifier.id}`);
+  }
+
+  const credits = getLaunchCredits(startingCredits, modifiers);
+  if (credits < 0) {
+    throw new Error("Selected modifiers cost more than starting credits");
+  }
+
+  return credits;
+}
+
 // ─── Модификаторы ────────────────────────────────────────────────────────────
 
 export const LAUNCH_MODIFIERS: LaunchModifier[] = [
@@ -161,7 +195,7 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     descriptionKey: "launch_modifiers.weakened_reactor.description",
     icon: "⚡",
     type: "challenge",
-    creditDelta: +300,
+    creditDelta: +100,
     reactorPowerPenalty: 2,
   },
   {
@@ -192,11 +226,12 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     descriptionKey: "launch_modifiers.stranded.description",
     icon: "🏚️",
     type: "challenge",
-    creditDelta: +800,
+    creditDelta: +200,
     fuelDelta: -60,
     targetedModuleDamagePercent: 35,
     targetedModuleTypes: ["engine", "fueltank"],
     researchResources: { tech_salvage: 1 },
+    conflictsWith: ["damaged_ship"],
   },
   {
     id: "damaged_ship",
@@ -204,8 +239,9 @@ export const LAUNCH_MODIFIERS: LaunchModifier[] = [
     descriptionKey: "launch_modifiers.damaged_ship.description",
     icon: "💥",
     type: "challenge",
-    creditDelta: +500,
+    creditDelta: +200,
     moduleDamagePercent: 40,
+    conflictsWith: ["stranded"],
   },
   {
     id: "wanted",

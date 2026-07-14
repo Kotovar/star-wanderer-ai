@@ -161,10 +161,12 @@ const getCrisisWeights = (
       Math.min(2.5, totalCargo / 18) +
       Math.random() * 1.5,
     solar_flare:
-      1 +
-      sensitiveModules * 0.8 +
-      Math.max(0, 1.8 - avgModuleHealth * 1.4) +
-      Math.random() * 1.5,
+      sensitiveModules > 0
+        ? 1 +
+          sensitiveModules * 0.8 +
+          Math.max(0, 1.8 - avgModuleHealth * 1.4) +
+          Math.random() * 1.5
+        : 0,
     epidemic:
       (organicCrew > 0 ? 1 : 0) +
       organicCrew * 0.55 +

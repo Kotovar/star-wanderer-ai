@@ -148,7 +148,7 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     descriptionKey: "ship_templates.engineer.description",
     icon: "🔧",
     difficulty: "normal",
-    moduleIcons: ["⚛️", "🎮", "🌬️", "🛠️", "🔧", "⛽"],
+    moduleIcons: ["⚛️", "🎮", "🌬️", "🛠️", "🔧", "⛽", "📦"],
     modules: [
       { id: T_ENGINEER + 1, type: "reactor", name: "Реактор Мк.2", x: 1, y: 1, width: 1, height: 1, power: 15, health: 120, maxHealth: 120, level: 2, defense: 3 },
       { id: T_ENGINEER + 2, type: "cockpit", name: "Кабина", x: 2, y: 1, width: 1, height: 1, consumption: 1, health: 100, maxHealth: 100, level: 1, defense: 2 },
@@ -156,6 +156,7 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
       { id: T_ENGINEER + 4, type: "lifesupport", name: "Жизнеобеспечение", x: 1, y: 2, width: 1, height: 1, consumption: 2, health: 100, maxHealth: 100, level: 1, oxygen: 5, defense: 1 },
       { id: T_ENGINEER + 5, type: "repair_bay", name: "Ремонтный отсек", x: 2, y: 2, width: 1, height: 1, consumption: 8, health: 100, maxHealth: 100, level: 1, defense: 2, repairAmount: 3, repairTargets: 1 },
       { id: T_ENGINEER + 6, type: "fueltank", name: "Топливный бак", x: 3, y: 2, width: 1, height: 1, health: 100, maxHealth: 100, level: 1, capacity: BASE_FUEL, defense: 1 },
+      { id: T_ENGINEER + 7, type: "cargo", name: "Грузовой отсек", x: 2, y: 3, width: 1, height: 1, consumption: 1, health: 100, maxHealth: 100, level: 1, capacity: 40, defense: 1 },
     ],
     crew: [
       { id: 1, name: "Иван Смирнов", profession: "pilot", moduleId: T_ENGINEER + 2, level: 1 },

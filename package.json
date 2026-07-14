@@ -14,6 +14,7 @@
         "check:events": "node --no-warnings --experimental-strip-types scripts/check-random-event-chains.mjs",
         "check:research-abilities": "node --no-warnings --experimental-strip-types scripts/check-research-special-abilities.mjs",
         "check:sector-readiness": "node --no-warnings --experimental-strip-types scripts/check-sector-readiness.mjs",
+        "check:new-game": "node --no-warnings --experimental-strip-types scripts/check-new-game-setup.mjs",
         "check:enemy-progression": "node --no-warnings --experimental-strip-types scripts/check-enemy-progression.mjs",
         "check:economy": "node --no-warnings --experimental-strip-types scripts/check-campaign-economy.mjs",
         "check:income": "node --no-warnings --experimental-strip-types scripts/check-income-sources.mjs",

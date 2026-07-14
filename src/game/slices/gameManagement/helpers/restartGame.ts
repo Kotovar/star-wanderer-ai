@@ -9,7 +9,6 @@ import { DEFAULT_TEMPLATE_ID } from "@/game/constants/shipTemplates";
 import { getVictoryObjectives } from "@/game/constants/victoryObjectives";
 import { RESEARCH_TREE } from "@/game/constants/research";
 import {
-  GLOBAL_CRISES,
   pickWeightedCrisis,
   rollNextCrisisTurn,
 } from "@/game/constants/globalCrises";
@@ -36,6 +35,7 @@ export const restartGame = (
   modifierIds: string[] = [],
 ): void => {
   const settings = get().settings;
+  const patch = buildStartingState(templateId, modifierIds);
   clearLocalStorage();
 
   const newSectors = generateGalaxy();
@@ -43,8 +43,6 @@ export const restartGame = (
 
   const { prices: restartPrices, stock: restartStock } =
     initializeStationData(newSectors);
-
-  const patch = buildStartingState(templateId, modifierIds);
 
   const patchedReputation = patch.raceReputation
     ? { ...initialState.raceReputation, ...patch.raceReputation }
@@ -84,31 +82,29 @@ export const restartGame = (
     );
   }
 
-  if (patch.startingCrisisId) {
-    const crisis = GLOBAL_CRISES.find(
-      (item) => item.id === patch.startingCrisisId,
+  get().updateShipStats();
+
+  if (patch.startsWithCrisis) {
+    const crisis = pickWeightedCrisis(get());
+    const crisisData = crisis.onStartEffect?.(set, get) ?? undefined;
+    const stateAfterStart = get();
+    const nextCrisis = pickWeightedCrisis(stateAfterStart, crisis.id);
+    set((state) => ({
+      activeCrisis: {
+        id: crisis.id,
+        turnsRemaining: crisis.duration,
+        data: { ...crisisData, startedFromModifier: true },
+      },
+      discoveredCrisisIds: [
+        ...new Set([...state.discoveredCrisisIds, crisis.id]),
+      ],
+      nextCrisisTurn: rollNextCrisisTurn(state.turn, stateAfterStart),
+      nextCrisisId: nextCrisis.id,
+    }));
+    get().addLog(
+      `🚨 ГАЛАКТИЧЕСКИЙ КРИЗИС: ${crisis.icon} ${i18nStore.t(crisis.nameKey)} · длительность ${crisis.duration} хода`,
+      "error",
     );
-    if (crisis) {
-      const crisisData = crisis.onStartEffect?.(set, get) ?? undefined;
-      const stateAfterStart = get();
-      const nextCrisis = pickWeightedCrisis(stateAfterStart, crisis.id);
-      set((state) => ({
-        activeCrisis: {
-          id: crisis.id,
-          turnsRemaining: crisis.duration,
-          data: { ...crisisData, startedFromModifier: true },
-        },
-        discoveredCrisisIds: [
-          ...new Set([...state.discoveredCrisisIds, crisis.id]),
-        ],
-        nextCrisisTurn: rollNextCrisisTurn(state.turn, stateAfterStart),
-        nextCrisisId: nextCrisis.id,
-      }));
-      get().addLog(
-        `🚨 ГАЛАКТИЧЕСКИЙ КРИЗИС: ${crisis.icon} ${i18nStore.t(crisis.nameKey)} · длительность ${crisis.duration} хода`,
-        "error",
-      );
-    }
   }
 
   get().addLog("Новая игра", "info");
