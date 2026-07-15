@@ -814,6 +814,7 @@
     "cargo": "Груз",
     "close": "ЗАКРЫТЬ",
     "ready_badge": "✓ ГОТОВО",
+    "completed_count": "ВЫПОЛНЕНО",
     "location_planet": "планете",
     "location_station": "станции",
     "location_ship": "кораблю",

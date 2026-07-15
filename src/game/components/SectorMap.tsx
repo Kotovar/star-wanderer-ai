@@ -702,9 +702,11 @@ export function SectorMap() {
     };
   }, [animationsEnabled, currentSector, drawCanvas, offset, zoom]);
 
-  // Handle wheel zoom
-  const handleWheel = useCallback(
-    (e: React.WheelEvent<HTMLCanvasElement>) => {
+  // Handle wheel zoom — native non-passive listener so preventDefault works
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       e.stopPropagation();
       const delta = -e.deltaY * ZOOM_SENSITIVITY;
@@ -713,9 +715,10 @@ export function SectorMap() {
         Math.max(MIN_ZOOM, zoom * (1 + delta)),
       );
       setTargetZoom(newZoom);
-    },
-    [zoom],
-  );
+    };
+    canvas.addEventListener("wheel", handleWheel, { passive: false });
+    return () => canvas.removeEventListener("wheel", handleWheel);
+  }, [zoom]);
 
   // Handle mouse down for dragging
   const handleMouseDown = useCallback(
@@ -1299,7 +1302,6 @@ export function SectorMap() {
           touchAction: "none",
         }}
         onClick={handleClick}
-        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

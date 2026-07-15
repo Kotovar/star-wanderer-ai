@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import { useGameStore } from "../store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RACES } from "../constants/races";
@@ -15,6 +16,7 @@ import type {
     CrewMember,
     Profession,
     CrewTrait,
+    StationName,
 } from "@/game/types";
 import { ShopTab } from "./station/ShopTab";
 import { TradeTab } from "./station/TradeTab";
@@ -55,6 +57,16 @@ import {
 } from "./station/station-data";
 import { DELIVERY_GOODS } from "@/game/constants";
 import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "@/game/slices/contracts/constants";
+
+const STATION_BACKGROUNDS = {
+    trade: "/assets/station-backgrounds/trade-hub.webp",
+    military: "/assets/station-backgrounds/military-bastion.webp",
+    research: "/assets/station-backgrounds/research-observatory.webp",
+    mining: "/assets/station-backgrounds/mining-refinery.webp",
+    shipyard: "/assets/station-backgrounds/shipyard-drydock.webp",
+    medical: "/assets/station-backgrounds/medical-bay.webp",
+    diplomatic: "/assets/station-backgrounds/diplomatic-forum.webp",
+} satisfies Record<StationName, string>;
 
 export function StationPanel() {
     const { t } = useTranslation();
@@ -251,23 +263,53 @@ export function StationPanel() {
     };
 
     if (!currentLocation) return null;
+    const stationBackground =
+        STATION_BACKGROUNDS[currentLocation.stationType ?? "trade"] ??
+        STATION_BACKGROUNDS.trade;
 
     return (
         <div className="flex flex-col gap-4 h-full">
-            <StationHeader
-                location={currentLocation}
-                sectorTier={sectorTier}
-                race={race}
-                raceReputation={raceReputation}
-                t={t}
-            />
+            <section className="relative min-h-52 overflow-hidden rounded border border-[#00ff4155]">
+                <Image
+                    src={stationBackground}
+                    alt=""
+                    fill
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    preload
+                    unoptimized
+                    className="object-cover"
+                />
+                <div
+                    className="absolute inset-0"
+                    style={{
+                        background:
+                            "linear-gradient(90deg, rgba(5,8,16,0.97) 0%, rgba(5,8,16,0.78) 57%, rgba(5,8,16,0.22) 100%)",
+                    }}
+                />
+                <div
+                    className="absolute inset-x-0 bottom-0 h-2/3"
+                    style={{
+                        background:
+                            "linear-gradient(0deg, rgba(5,8,16,0.9) 0%, rgba(5,8,16,0) 100%)",
+                    }}
+                />
+                <div className="relative z-10 flex min-h-52 flex-col justify-between gap-4 p-4 sm:p-5">
+                    <StationHeader
+                        location={currentLocation}
+                        sectorTier={sectorTier}
+                        race={race}
+                        raceReputation={raceReputation}
+                        t={t}
+                    />
 
-            <Button
-                onClick={showSectorMap}
-                className="bg-transparent border-2 border-accent text-accent hover:bg-accent hover:text-[#050810] uppercase tracking-wider w-fit cursor-pointer"
-            >
-                {t("station.leave")}
-            </Button>
+                    <Button
+                        onClick={showSectorMap}
+                        className="w-fit cursor-pointer border-2 border-accent bg-transparent uppercase tracking-wider text-accent hover:bg-accent hover:text-[#050810]"
+                    >
+                        {t("station.leave")}
+                    </Button>
+                </div>
+            </section>
 
             {deliveryContracts.length > 0 && (
                 <DeliveryContracts

@@ -17,6 +17,7 @@ import { useTranslation } from "@/lib/useTranslation";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import { getModuleImageUrl } from "./moduleArt";
+import { GameImage } from "./GameImage";
 
 // Helper to get translated module name
 function getTranslatedModuleName(
@@ -208,36 +209,55 @@ function ModuleCard({ module, onClick }: ModuleCardProps) {
     const borderClass =
         isOff || isBroken ? "border-[#ff0040]" : "border-[#00ff41]";
 
+    const artUrl = getModuleImageUrl(
+        module.type,
+        module.width || 1,
+        module.height || 1,
+    );
+
     return (
         <div
-            className={`bg-[rgba(0,255,65,0.05)] border ${borderClass} p-1.5 text-xs cursor-pointer transition-all hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_8px_rgba(0,255,65,0.4)] flex flex-col gap-1 ${isOff ? "opacity-50" : ""}`}
+            className={`bg-[rgba(0,255,65,0.05)] border ${borderClass} p-1.5 text-xs cursor-pointer transition-all hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_8px_rgba(0,255,65,0.4)] flex gap-2.5 ${isOff ? "opacity-50" : ""}`}
             onClick={onClick}
         >
-            {/* Name + tier */}
-            <div className="text-[#00d4ff] font-bold text-[10px] truncate leading-tight">
-                {getTranslatedModuleName(module.type, t)}
-                {tier && (
-                    <span className="text-[#555] font-normal"> {tier}</span>
-                )}
-            </div>
-
-            {/* Key stat */}
-            <div className="text-[#00ff41] text-[10px] leading-tight">
-                <CompactModuleStat module={module} />
-                {isOff && <span className="text-[#ff0040] ml-1">OFF</span>}
-            </div>
-
-            {/* Condition bar */}
-            <div className="flex items-center gap-1">
-                <div className="flex-1 h-1 bg-[rgba(0,0,0,0.6)] rounded-full overflow-hidden">
-                    <div
-                        className={`h-full rounded-full ${hpColor}`}
-                        style={{ width: `${healthPct}%` }}
+            {/* Thumbnail */}
+            {artUrl && (
+                <div className="shrink-0 w-12 h-12 flex items-center justify-center bg-[rgba(0,0,0,0.3)] border border-[#00ff4122] rounded-sm overflow-hidden">
+                    <GameImage
+                        src={artUrl}
+                        alt={getTranslatedModuleName(module.type, t)}
+                        className="max-w-full max-h-full object-contain"
                     />
                 </div>
-                <span className="text-[#555] text-[9px] shrink-0 tabular-nums">
-                    {healthPct}%
-                </span>
+            )}
+
+            <div className="flex-1 min-w-0 flex flex-col gap-1">
+                {/* Name + tier */}
+                <div className="text-ring font-bold text-[10px] truncate leading-tight">
+                    {getTranslatedModuleName(module.type, t)}
+                    {tier && (
+                        <span className="text-[#555] font-normal"> {tier}</span>
+                    )}
+                </div>
+
+                {/* Key stat */}
+                <div className="text-[#00ff41] text-[10px] leading-tight">
+                    <CompactModuleStat module={module} />
+                    {isOff && <span className="text-destructive ml-1">OFF</span>}
+                </div>
+
+                {/* Condition bar */}
+                <div className="flex items-center gap-1">
+                    <div className="flex-1 h-1 bg-[rgba(0,0,0,0.6)] rounded-full overflow-hidden">
+                        <div
+                            className={`h-full rounded-full ${hpColor}`}
+                            style={{ width: `${healthPct}%` }}
+                        />
+                    </div>
+                    <span className="text-[#555] text-[9px] shrink-0 tabular-nums">
+                        {healthPct}%
+                    </span>
+                </div>
             </div>
         </div>
     );
@@ -269,7 +289,7 @@ export function ModuleDetailDialog({
         <Dialog open={!!module} onOpenChange={onClose}>
             <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md w-[calc(100%-2rem)] md:w-auto">
                 <DialogHeader>
-                    <DialogTitle className="text-[#ffb000] font-['Orbitron']">
+                    <DialogTitle className="text-accent font-['Orbitron']">
                         {getTranslatedModuleName(module.type, t)}
                     </DialogTitle>
                     <DialogDescription className="sr-only">
@@ -278,7 +298,7 @@ export function ModuleDetailDialog({
                     {/* Module level and size */}
                     <div className="flex gap-4 text-xs mt-2">
                         {isValidLevel && (
-                            <span className="text-[#ffb000]">
+                            <span className="text-accent">
                                 ★ {t("module_list.level")}: {module.level}
                             </span>
                         )}
@@ -305,11 +325,8 @@ export function ModuleDetailDialog({
                         if (!artUrl) return null;
                         return (
                             <div className="flex justify-center">
-                                <img
-                                    src={artUrl.replace(".webp", ".avif")}
-                                    onError={(e) => {
-                                        e.currentTarget.src = artUrl;
-                                    }}
+                                <GameImage
+                                    src={artUrl}
                                     alt={getTranslatedModuleName(module.type, t)}
                                     className="max-h-32 object-contain rounded border border-[#00ff4133] bg-[rgba(0,0,0,0.3)]"
                                 />
@@ -331,7 +348,7 @@ export function ModuleDetailDialog({
                                 </span>
                                 {mergeBonus.healing &&
                                     mergeBonus.healing > 0 && (
-                                        <span className="text-[#00d4ff]">
+                                        <span className="text-ring">
                                             {" "}
                                             (+{mergeBonus.healing}%)
                                         </span>
@@ -347,15 +364,15 @@ export function ModuleDetailDialog({
                     {!isStationItem && (
                         <>
                             <div>
-                                <span className="text-[#ffb000]">
+                                <span className="text-accent">
                                     {t("module_list.status")}:{" "}
                                 </span>
                                 <span
                                     className={
                                         module.disabled || module.manualDisabled
-                                            ? "text-[#ff0040]"
+                                            ? "text-destructive"
                                             : module.health <= 0
-                                              ? "text-[#ff0040]"
+                                              ? "text-destructive"
                                               : "text-[#00ff41]"
                                     }
                                 >
@@ -368,7 +385,7 @@ export function ModuleDetailDialog({
                             </div>
 
                             {module.health <= 0 && (
-                                <div className="text-[11px] text-[#ff0040]">
+                                <div className="text-[11px] text-destructive">
                                     {t("module_list.module_damaged_warning")}
                                 </div>
                             )}
@@ -415,7 +432,7 @@ function DetailedStatLabel({
     children: ReactNode;
 }) {
     return (
-        <span className="text-[#ffb000] inline-flex items-center gap-1.5">
+        <span className="text-accent inline-flex items-center gap-1.5">
             <StatIcon type={icon} size={32} />
             <span>{children}</span>
         </span>
@@ -489,7 +506,7 @@ function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
             )}
             {module.type === "drill" && (
                 <div>
-                    <span className="text-[#ffb000]">
+                    <span className="text-accent">
                         {t("module_list.drill_level")}:
                     </span>{" "}
                     {module.level || 1} (
@@ -504,7 +521,7 @@ function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
                 module.scanRange > 0 && (
                     <>
                         <div>
-                            <span className="text-[#ffb000]">
+                            <span className="text-accent">
                                 ★ {t("module_list.level")}:
                             </span>{" "}
                             {module.scanRange >= 15
@@ -595,7 +612,7 @@ function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
                 <DetailedStatRow icon="armor" label={`${t("module_list.armor")}:`}>
                     {module.defense}
                     {artifactArmor > 0 && (
-                        <span className="text-[#00d4ff]">
+                        <span className="text-ring">
                             {" "}
                             (+{artifactArmor})
                         </span>
@@ -603,7 +620,7 @@ function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
                 </DetailedStatRow>
             )}
             <div>
-                <span className="text-[#ffb000]">
+                <span className="text-accent">
                     {t("module_list.condition")}:
                 </span>{" "}
                 {Math.min(
@@ -633,10 +650,10 @@ function ScannerDescription({ scanRange }: { scanRange?: number }) {
 
     return (
         <div className="mt-2 p-2 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] text-xs">
-            <div className="text-[#00d4ff] mb-1 font-bold">
+            <div className="text-ring mb-1 font-bold">
                 {getScannerLevel()}
             </div>
-            <div className="text-[#00d4ff] mb-1">
+            <div className="text-ring mb-1">
                 {t("module_list.scanner_title")}:
             </div>
             <ul className="text-[#888] space-y-1">
@@ -664,7 +681,7 @@ function WeaponsDetail({ weapons }: { weapons: (Weapon | null)[] }) {
 
     return (
         <div className="pt-4 border-t border-[#00ff41]">
-            <div className="text-[#ffb000] mb-2">
+            <div className="text-accent mb-2">
                 {t("module_list.weapon_slots")}:
             </div>
             {weapons.map((weapon, i) =>
@@ -684,7 +701,7 @@ function WeaponsDetail({ weapons }: { weapons: (Weapon | null)[] }) {
                                 {WEAPON_TYPES[weapon.type].icon}{" "}
                                 {t(`weapon_types.${weapon.type}`)}
                             </span>
-                            <span className="text-[#ff0040]">
+                            <span className="text-destructive">
                                 ({WEAPON_TYPES[weapon.type].damage})
                             </span>
                         </div>

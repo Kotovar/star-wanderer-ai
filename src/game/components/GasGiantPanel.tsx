@@ -167,7 +167,7 @@ function DiveLayerRail({
             }}
           >
             <span
-              className="absolute -left-[25px] top-1/2 hidden h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full border bg-[#050810] text-[10px] font-bold lg:flex"
+              className="absolute -left-6.25 top-1/2 hidden h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full border bg-[#050810] text-[10px] font-bold lg:flex"
               style={{
                 borderColor: color,
                 color,
@@ -256,7 +256,7 @@ function GasGiantDescentVisual({
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,8,16,0.96)_0%,rgba(5,8,16,0.72)_48%,rgba(5,8,16,0.36)_100%)]" />
       <div className="absolute inset-x-0 bottom-0 h-2/3 bg-[linear-gradient(0deg,rgba(5,8,16,0.98)_0%,rgba(5,8,16,0)_100%)]" />
 
-      <div className="relative z-10 grid min-h-[385px] flex-1 gap-3 p-3 sm:min-h-[500px] sm:gap-5 sm:p-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:p-6">
+      <div className="relative z-10 grid min-h-96.25 flex-1 gap-3 p-3 sm:min-h-125 sm:gap-5 sm:p-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:p-6">
         <div className="flex min-h-0 min-w-0 flex-col">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
@@ -274,13 +274,13 @@ function GasGiantDescentVisual({
               type="button"
               onClick={onClose}
               aria-label={t("gas_giant.leave")}
-              className="shrink-0 cursor-pointer border border-[#ff004088] bg-[#050810a8] px-1.5 py-0.5 text-xs font-bold text-[#ff667f] transition-colors hover:bg-[#ff0040] hover:text-[#050810] sm:px-2 sm:py-1 sm:text-sm"
+              className="shrink-0 cursor-pointer border border-[#ff004088] bg-[#050810a8] px-1.5 py-0.5 text-xs font-bold text-[#ff667f] transition-colors hover:bg-destructive hover:text-[#050810] sm:px-2 sm:py-1 sm:text-sm"
             >
               ✕
             </button>
           </div>
 
-          <div className="relative mt-3 min-h-[220px] flex-1 overflow-hidden border border-white/10 bg-[#05081052] sm:mt-5 sm:min-h-[265px]">
+          <div className="relative mt-3 min-h-55 flex-1 overflow-hidden border border-white/10 bg-[#05081052] sm:mt-5 sm:min-h-66.25">
             {currentDepth && (
               <ProbeMarker
                 color={accent}
@@ -479,7 +479,7 @@ export function GasGiantPanel() {
                 : t("gas_giant.probes_available", { count: probes })}
             </div>
             {atmosphereBonusLabel && (
-              <div className="text-[9px] text-[#ffb000] sm:text-[10px]">✦ {atmosphereBonusLabel}</div>
+              <div className="text-[9px] text-accent sm:text-[10px]">✦ {atmosphereBonusLabel}</div>
             )}
           </div>
 
@@ -495,7 +495,7 @@ export function GasGiantPanel() {
                   }}
                 >
                   {resource?.icon} {resource?.name} ×{boosted}
-                  {isBoosted && <span className="ml-1 text-[#ffb000]">✦</span>}
+                  {isBoosted && <span className="ml-1 text-accent">✦</span>}
                 </div>
               ))}
             </div>
@@ -561,8 +561,8 @@ export function GasGiantPanel() {
                 onClick={surfaceDive}
                 className={
                   probeLost
-                    ? "min-h-9 cursor-pointer border-2 border-[#ff0040] bg-transparent px-2 text-[9px] uppercase tracking-normal text-[#ff667f] hover:bg-[#ff0040] hover:text-[#050810] sm:text-xs sm:tracking-wider"
-                    : "min-h-9 cursor-pointer border-2 border-[#00d4ff] bg-transparent px-2 text-[9px] uppercase tracking-normal text-[#8cecff] hover:bg-[#00d4ff] hover:text-[#050810] sm:text-xs sm:tracking-wider"
+                    ? "min-h-9 cursor-pointer border-2 border-destructive bg-transparent px-2 text-[9px] uppercase tracking-normal text-[#ff667f] hover:bg-destructive hover:text-[#050810] sm:text-xs sm:tracking-wider"
+                    : "min-h-9 cursor-pointer border-2 border-ring bg-transparent px-2 text-[9px] uppercase tracking-normal text-[#8cecff] hover:bg-ring hover:text-[#050810] sm:text-xs sm:tracking-wider"
                 }
               >
                 {probeLost
@@ -582,7 +582,7 @@ export function GasGiantPanel() {
           showCloseButton={false}
         >
           <div className="flex flex-col gap-4 p-4">
-            <DialogTitle className="font-['Orbitron'] text-sm font-bold uppercase tracking-wider text-[#ff0040]">
+            <DialogTitle className="font-['Orbitron'] text-sm font-bold uppercase tracking-wider text-destructive">
               ⚠ Прервать погружение?
             </DialogTitle>
             <p className="border-l-2 border-[#ff004066] pl-3 text-xs leading-relaxed text-[#aaa]">
@@ -602,7 +602,7 @@ export function GasGiantPanel() {
                   abandonDive();
                   showSectorMap();
                 }}
-                className="flex-1 cursor-pointer border border-[#ff0040] bg-transparent text-xs uppercase tracking-wider text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810]"
+                className="flex-1 cursor-pointer border border-destructive bg-transparent text-xs uppercase tracking-wider text-destructive hover:bg-destructive hover:text-[#050810]"
               >
                 Бросить зонд
               </Button>
@@ -627,7 +627,7 @@ export function GasGiantPanel() {
             </p>
             <Button
               onClick={() => setShowProbeLost(false)}
-              className="cursor-pointer border border-[#ff0040] bg-transparent text-xs uppercase tracking-wider text-[#ff667f] hover:bg-[#ff0040] hover:text-[#050810]"
+              className="cursor-pointer border border-destructive bg-transparent text-xs uppercase tracking-wider text-[#ff667f] hover:bg-destructive hover:text-[#050810]"
             >
               {t("gas_giant.probe_lost_confirm")}
             </Button>
@@ -705,7 +705,7 @@ export function GasGiantPanel() {
                         <span className="text-[#ff667f]">⚠️ {choice.damageChance}%</span>
                       )}
                       {choice.probeLossChance && choice.probeLossChance > 0 && (
-                        <span className="text-[#ffb000]">
+                        <span className="text-accent">
                           {t("gas_giant.probe_loss_chance", {
                             chance: choice.probeLossChance,
                           })}

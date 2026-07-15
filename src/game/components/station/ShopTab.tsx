@@ -6,6 +6,7 @@ import { WEAPON_TYPES, WEAPON_ART } from "../../constants";
 import type { ShopItem, Module } from "../../types";
 import { ModuleDetailDialog } from "../ModuleList";
 import { getModuleImageUrl } from "../moduleArt";
+import { GameImage } from "../GameImage";
 import {
     Dialog,
     DialogContent,
@@ -339,7 +340,7 @@ function ShopItemCard({
         <div
             className={`flex gap-3 items-center border p-2.5 transition-colors hover:bg-[rgba(0,255,65,0.06)] ${
                 isUnique
-                    ? "border-[#ffb000] bg-[rgba(255,176,0,0.05)]"
+                    ? "border-accent bg-[rgba(255,176,0,0.05)]"
                     : "border-[#00ff41] bg-[rgba(0,255,65,0.05)]"
             } ${disabled ? "opacity-40" : ""}`}
         >
@@ -352,20 +353,14 @@ function ShopItemCard({
                 } cursor-pointer hover:border-[#00ff41] transition-colors`}
             >
                 {moduleArtUrl ? (
-                    <img
-                        src={moduleArtUrl.replace(".webp", ".avif")}
-                        onError={(e) => {
-                            e.currentTarget.src = moduleArtUrl;
-                        }}
+                    <GameImage
+                        src={moduleArtUrl}
                         alt={displayName}
                         className="max-w-full max-h-full object-contain"
                     />
                 ) : weaponArtUrl ? (
-                    <img
-                        src={weaponArtUrl.replace(".webp", ".avif")}
-                        onError={(e) => {
-                            e.currentTarget.src = weaponArtUrl;
-                        }}
+                    <GameImage
+                        src={weaponArtUrl}
                         alt={displayName}
                         className="max-w-full max-h-full object-contain"
                     />
@@ -376,7 +371,7 @@ function ShopItemCard({
 
             <div className="flex-1 min-w-0">
                 <div
-                    className={`${isUnique ? "text-[#ffb000]" : "text-[#00d4ff]"} font-bold cursor-pointer hover:underline`}
+                    className={`${isUnique ? "text-accent" : "text-ring"} font-bold cursor-pointer hover:underline`}
                     onClick={onViewDetails}
                 >
                     {isUnique && "★ "}
@@ -427,12 +422,12 @@ function ItemPriceAndStock({
     const { t } = useTranslation();
 
     return (
-        <div className="text-[#ffb000] mt-1 text-xs">
+        <div className="text-accent mt-1 text-xs">
             💰 {isUpgrade ? "" : price + " ₢"}
             <span
                 className={`${isUpgrade ? "" : "ml-4"} ${
                     soldOut || noWB || (alreadyOwned && !isUpgrade)
-                        ? "text-[#ff0040]"
+                        ? "text-destructive"
                         : "text-[#00ff41]"
                 }`}
             >
@@ -476,7 +471,7 @@ function ItemDescription({ item }: ItemDescriptionProps) {
         <div className="text-[11px] mt-1 text-[#00ff41]">
             {/* Module level - only show for ancient/quantum modules (level 4+) */}
             {moduleLevel && moduleLevel >= 4 && (
-                <div className="text-[#ffb000] mb-1">
+                <div className="text-accent mb-1">
                     ★ {t("module_list.level")}: {moduleLevel}
                 </div>
             )}
@@ -562,7 +557,7 @@ function BuyButton({
             onClick={onClick}
             className={`bg-transparent border-2 text-xs uppercase cursor-pointer ${
                 isUnique
-                    ? "border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
+                    ? "border-accent text-accent hover:bg-accent hover:text-[#050810]"
                     : "border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
             }`}
         >
@@ -594,9 +589,9 @@ function WeaponDetailDialog({ weaponType, onClose }: WeaponDetailDialogProps) {
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ffb000] text-[#ffb000] max-w-md w-[calc(100%-2rem)] md:w-auto">
+            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-accent text-accent max-w-md w-[calc(100%-2rem)] md:w-auto">
                 <DialogHeader>
-                    <DialogTitle className="text-[#ffb000] font-['Orbitron'] flex items-center gap-2">
+                    <DialogTitle className="text-accent font-['Orbitron'] flex items-center gap-2">
                         <span
                             style={{ color: weapon.color, fontSize: "1.5em" }}
                         >
@@ -612,19 +607,16 @@ function WeaponDetailDialog({ weaponType, onClose }: WeaponDetailDialogProps) {
                 <div className="space-y-4">
                     {weaponArtUrl && (
                         <div className="flex justify-center">
-                            <img
-                                src={weaponArtUrl.replace(".webp", ".avif")}
-                                onError={(e) => {
-                                    e.currentTarget.src = weaponArtUrl;
-                                }}
+                            <GameImage
+                                src={weaponArtUrl}
                                 alt={t(`weapon_types.${weaponType}`)}
                                 className="max-h-32 object-contain rounded border border-[#ffb00033] bg-[rgba(0,0,0,0.3)]"
                             />
                         </div>
                     )}
                     {/* Damage */}
-                    <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 text-xs">
-                        <div className="text-[#ffb000] font-bold mb-2">
+                    <div className="bg-[rgba(255,176,0,0.05)] border border-accent p-3 text-xs">
+                        <div className="text-accent font-bold mb-2">
                             ⚔ {t("weapon_info.damage")}: {weapon.damage}
                         </div>
                         <div className="text-[#888]">
@@ -633,8 +625,8 @@ function WeaponDetailDialog({ weaponType, onClose }: WeaponDetailDialogProps) {
                     </div>
 
                     {/* Accuracy */}
-                    <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 text-xs">
-                        <div className="text-[#ffb000] font-bold mb-2">
+                    <div className="bg-[rgba(255,176,0,0.05)] border border-accent p-3 text-xs">
+                        <div className="text-accent font-bold mb-2">
                             🎯 {t("weapon_info.accuracy")}
                         </div>
                         {weaponType === "kinetic" && (
@@ -658,8 +650,8 @@ function WeaponDetailDialog({ weaponType, onClose }: WeaponDetailDialogProps) {
                     </div>
 
                     {/* Special ability */}
-                    <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 text-xs">
-                        <div className="text-[#ffb000] font-bold mb-2">
+                    <div className="bg-[rgba(255,176,0,0.05)] border border-accent p-3 text-xs">
+                        <div className="text-accent font-bold mb-2">
                             ★ {t("weapon_info.feature")}
                         </div>
                         <div className="text-[#00ff41]">
@@ -668,8 +660,8 @@ function WeaponDetailDialog({ weaponType, onClose }: WeaponDetailDialogProps) {
                     </div>
 
                     {/* Usage tips */}
-                    <div className="border-t border-[#ffb000] pt-3 text-xs">
-                        <div className="text-[#ffb000] font-bold mb-2">
+                    <div className="border-t border-accent pt-3 text-xs">
+                        <div className="text-accent font-bold mb-2">
                             💡 {t("weapon_info.when_to_use")}
                         </div>
                         {weaponType === "kinetic" && (

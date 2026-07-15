@@ -16,6 +16,8 @@ import { RACES } from "@/game/constants/races";
 import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "@/game/slices/contracts/constants";
 import { useTranslation } from "@/lib/useTranslation";
 import { RaceSprite } from "./RaceSprite";
+import { ContractReputationImpact } from "./ContractReputationImpact";
+import { getContractReputationImpact } from "@/game/reputation/utils";
 
 function stripLeadingEmoji(text: string): string {
     return text.replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u, "");
@@ -40,7 +42,7 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
 function ContractMetric({ label, value }: { label: string; value: number }) {
     return (
         <div className="min-w-0 border border-[#00d4ff44] bg-[rgba(0,212,255,0.055)] px-2 py-1">
-            <div className="text-[#00d4ff] font-bold tabular-nums">
+            <div className="text-ring font-bold tabular-nums">
                 {value}
             </div>
             <div className="text-[#667] uppercase tracking-wide truncate">
@@ -52,6 +54,7 @@ function ContractMetric({ label, value }: { label: string; value: number }) {
 
 export function ContractsList() {
     const activeContracts = useGameStore((s) => s.activeContracts);
+    const completedContractIds = useGameStore((s) => s.completedContractIds);
     const cancelContract = useGameStore((s) => s.cancelContract);
     const get = useGameStore.getState;
     const { t } = useTranslation();
@@ -62,7 +65,7 @@ export function ContractsList() {
     if (activeContracts.length === 0) {
         return (
             <div className="border border-[#333] bg-[rgba(255,255,255,0.025)] p-3 text-xs text-[#888]">
-                <div className="text-[#ffb000] font-bold uppercase tracking-wide mb-1">
+                <div className="text-accent font-bold uppercase tracking-wide mb-1">
                     {t("ship.contracts")}
                 </div>
                 <div>{t("contracts.no_active")}</div>
@@ -726,7 +729,7 @@ export function ContractsList() {
 
     return (
         <>
-            <div className="mb-2 grid grid-cols-3 gap-1.5 text-center text-[10px]">
+            <div className="mb-2 grid grid-cols-4 gap-1.5 text-center text-[10px]">
                 <ContractMetric
                     label={t("ship.contracts")}
                     value={activeContracts.length}
@@ -736,6 +739,10 @@ export function ContractsList() {
                     value={readyContracts}
                 />
                 <ContractMetric label="₢" value={totalRewards} />
+                <ContractMetric
+                    label={t("contracts.completed_count")}
+                    value={completedContractIds.length}
+                />
             </div>
 
             <div className="flex flex-col gap-2">
@@ -753,10 +760,25 @@ export function ContractsList() {
                         getStatusText(contract),
                         contract.isRaceQuest,
                     );
+                    const repImpact = getContractReputationImpact(contract);
+                    const typeLabel: Record<string, string> = {
+                        delivery: t("contracts.type_delivery"),
+                        scan_planet: t("contracts.type_scan"),
+                        combat: t("contracts.type_combat"),
+                        research: t("contracts.type_research"),
+                        rescue: t("contracts.type_rescue"),
+                        mining: t("contracts.type_mining"),
+                        patrol: t("contracts.type_patrol"),
+                        bounty: t("contracts.type_bounty"),
+                        supply_run: t("contracts.type_supply"),
+                        diplomacy: t("contracts.type_diplomacy"),
+                        gas_dive: t("contracts.type_gas_dive"),
+                        expedition_survey: t("contracts.type_expedition_survey"),
+                    };
                     return (
                         <div
                             key={contract.id}
-                            className={`relative overflow-hidden border p-3 cursor-pointer transition-colors ${
+                            className={`relative overflow-hidden border p-2.5 cursor-pointer transition-colors ${
                                 ready
                                     ? "bg-[rgba(0,255,65,0.08)] border-[#00ff41] hover:bg-[rgba(0,255,65,0.15)]"
                                     : "bg-[rgba(0,255,65,0.035)] border-[#00ff4166] hover:border-[#00ff41] hover:bg-[rgba(0,255,65,0.09)]"
@@ -765,11 +787,11 @@ export function ContractsList() {
                         >
                             <div
                                 className={`absolute inset-y-0 left-0 w-1 ${
-                                    ready ? "bg-[#00ff41]" : "bg-[#00d4ff]"
+                                    ready ? "bg-[#00ff41]" : "bg-ring"
                                 }`}
                             />
-                            <div className="flex items-start justify-between gap-2">
-                                <div className="pl-1 flex min-w-0 items-center gap-2 text-[#00d4ff] font-bold leading-tight">
+                            <div className="flex items-start justify-between gap-2 pl-1">
+                                <div className="flex min-w-0 items-center gap-2">
                                     {contract.isRaceQuest &&
                                         raceInfo &&
                                         contract.requiredRace && (
@@ -782,16 +804,21 @@ export function ContractsList() {
                                             >
                                                 <RaceSprite
                                                     race={contract.requiredRace}
-                                                    size={22}
+                                                    size={20}
                                                     title={t(
                                                         `races.${contract.requiredRace}.plural`,
                                                     )}
                                                 />
                                             </span>
                                         )}
-                                    <span className="min-w-0">
-                                        {contractName}
-                                    </span>
+                                    <div className="min-w-0">
+                                        <div className="text-ring font-bold text-xs leading-tight truncate">
+                                            {contractName}
+                                        </div>
+                                        <div className="text-[#556655] text-[9px] uppercase tracking-wider leading-tight">
+                                            {typeLabel[contract.type] ?? contract.type}
+                                        </div>
+                                    </div>
                                 </div>
                                 {ready && (
                                     <span className="shrink-0 text-[10px] font-bold text-[#050810] bg-[#00ff41] px-1.5 py-0.5 rounded-sm">
@@ -808,10 +835,29 @@ export function ContractsList() {
                                     total={progress.total}
                                 />
                             )}
-                            <div className="pl-1 mt-2 inline-flex border border-[#ffb00055] bg-[rgba(255,176,0,0.08)] px-1.5 py-0.5 text-[#ffb000] text-xs">
-                                {t("contracts.reward_short", {
-                                    reward: contract.reward,
-                                })}
+                            <div className="pl-1 mt-2 flex items-center justify-between">
+                                <span className="inline-flex border border-[#ffb00055] bg-[rgba(255,176,0,0.08)] px-1.5 py-0.5 text-accent text-[11px]">
+                                    {t("contracts.reward_short", {
+                                        reward: contract.reward,
+                                    })}
+                                </span>
+                                {repImpact.length > 0 && (
+                                    <div className="flex flex-wrap gap-x-2 justify-end">
+                                        {repImpact.map(({ raceId, change }) => (
+                                            <span
+                                                key={raceId}
+                                                className="text-[10px]"
+                                                style={{
+                                                    color: RACES[raceId].color,
+                                                }}
+                                            >
+                                                {t(`races.${raceId}.plural`)}{" "}
+                                                {change > 0 ? "+" : ""}
+                                                {change}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     );
@@ -824,7 +870,7 @@ export function ContractsList() {
             >
                 <DialogContent className="bg-[rgba(10,20,30,0.96)] border-2 border-[#00ff41] text-[#00ff41] max-w-lg w-[calc(100%-2rem)] md:w-auto">
                     <DialogHeader>
-                        <DialogTitle className="text-[#ffb000] font-['Orbitron'] flex items-center gap-2">
+                        <DialogTitle className="text-accent font-['Orbitron'] flex items-center gap-2">
                             {selectedContract &&
                                 selectedContract.isRaceQuest &&
                                 selectedContract.requiredRace && (
@@ -855,29 +901,29 @@ export function ContractsList() {
 
                             if (!details) {
                                 return (
-                                    <span className="text-[#ffb000]">
+                                    <span className="text-accent">
                                         {t("contracts.not_found")}
                                     </span>
                                 );
                             }
                             return (
-                                <div className="space-y-4 text-sm">
+                                <div className="space-y-3 text-sm">
                                     <div className="inline-flex border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-2 py-1">
                                         <span className="text-[#888] mr-1">
                                             {t("contracts.type")}:
                                         </span>
-                                        <span className="text-[#00d4ff] font-bold">
+                                        <span className="text-ring font-bold">
                                             {details.type}
                                         </span>
                                     </div>
 
-                                    <div className="space-y-2">
+                                    <div className="space-y-1.5">
                                         {details.tasks.map((task, index) => (
                                             <div
                                                 key={index}
-                                                className="bg-[rgba(0,255,65,0.045)] border border-[#1a3320] border-l-[#ffb000] border-l-2 px-3 py-2"
+                                                className="bg-[rgba(0,255,65,0.04)] border border-[#1a3320] border-l-2 border-l-accent px-3 py-1.5"
                                             >
-                                                <div className="text-[#ffb000] text-[10px] uppercase tracking-wide">
+                                                <div className="text-accent text-[10px] uppercase tracking-wide">
                                                     {task.label}:
                                                 </div>
                                                 <div className="text-[#00ff41] leading-snug">
@@ -887,9 +933,15 @@ export function ContractsList() {
                                         ))}
                                     </div>
 
-                                    <div className="pt-4 border-t border-[#00ff4144]">
-                                        <span className="text-[#00ff41] text-lg font-bold">
-                                            {t("contracts.reward_label")}{" "}
+                                    <ContractReputationImpact
+                                        contract={selectedContract}
+                                    />
+
+                                    <div className="flex items-center justify-between border border-[#ffb00044] bg-[rgba(255,176,0,0.06)] px-3 py-2">
+                                        <span className="text-accent text-[10px] uppercase tracking-wider">
+                                            {t("contracts.reward_label")}
+                                        </span>
+                                        <span className="text-[#00ff41] text-lg font-bold tabular-nums">
                                             {selectedContract.reward}₢
                                         </span>
                                     </div>
@@ -905,14 +957,14 @@ export function ContractsList() {
                                             {t("contracts.close")}
                                         </Button>
                                         <Button
-                                            variant="destructive"
+                                            variant="outline"
                                             onClick={() => {
                                                 cancelContract(
                                                     selectedContract.id,
                                                 );
                                                 setSelectedContract(null);
                                             }}
-                                            className="cursor-pointer bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810]"
+                                            className="cursor-pointer bg-transparent border-2 border-destructive text-destructive hover:bg-destructive hover:text-[#050810]"
                                         >
                                             {t("contracts.cancel")}
                                         </Button>

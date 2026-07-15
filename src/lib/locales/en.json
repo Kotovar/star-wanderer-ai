@@ -814,6 +814,7 @@
     "cargo": "Cargo",
     "close": "CLOSE",
     "ready_badge": "✓ READY",
+    "completed_count": "COMPLETED",
     "location_planet": "planet",
     "location_station": "station",
     "location_ship": "ship",
