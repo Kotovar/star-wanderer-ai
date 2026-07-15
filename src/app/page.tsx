@@ -56,7 +56,7 @@ type LeftTab =
   | "blueprints"
   | "log";
 
-type ShipSubTab = "layout" | "stats" | "modules";
+type ShipSubTab = "layout" | "stats" | "modules" | "cargo";
 
 /**
  * Глобальные панели из шапки, которые на мобильном открываются в сцене событий.
@@ -131,9 +131,15 @@ export default function Home() {
   // Legacy tab compatibility: if a saved state somehow points to merged tabs,
   // render them as the ship tab with the correct sub-tab.
   const effectiveActiveTab: LeftTab =
-    activeTab === "stats" || activeTab === "modules" ? "ship" : activeTab;
+    activeTab === "stats" || activeTab === "modules" || activeTab === "cargo"
+      ? "ship"
+      : activeTab;
   const effectiveShipSubTab: ShipSubTab =
-    activeTab === "stats" || activeTab === "modules" ? activeTab : shipSubTab;
+    activeTab === "stats" || activeTab === "modules"
+      ? activeTab
+      : activeTab === "cargo"
+        ? "cargo"
+        : shipSubTab;
 
   // ── Phase state machine ────────────────────────────────────────
   const [phase, setPhase] = useState<FlowPhase>("title_setup");
@@ -184,7 +190,6 @@ export default function Home() {
   const leftTabs: { id: LeftTab; icon: string; label: string }[] = [
     { id: "ship", icon: "🚀", label: t("ship.title") },
     { id: "crew", icon: "👥", label: t("ship.crew") },
-    { id: "cargo", icon: "📦", label: t("ship.cargo") },
     { id: "contracts", icon: "📋", label: t("ship.contracts") },
     { id: "progress", icon: "▣", label: t("ship.progress") },
     { id: "blueprints", icon: "📐", label: t("ship.craft") },
@@ -196,18 +201,19 @@ export default function Home() {
     <>
       {effectiveActiveTab === "ship" && (
         <Tabs value={effectiveShipSubTab} onValueChange={(v) => setShipSubTab(v as ShipSubTab)} className="h-full flex flex-col">
-          <TabsList className="grid grid-cols-3 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] rounded-none h-8 shrink-0">
+          <TabsList className="grid grid-cols-4 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] rounded-none h-8 shrink-0">
             <TabsTrigger value="layout" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_layout")}</TabsTrigger>
             <TabsTrigger value="stats" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_stats")}</TabsTrigger>
             <TabsTrigger value="modules" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_modules")}</TabsTrigger>
+            <TabsTrigger value="cargo" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_cargo")}</TabsTrigger>
           </TabsList>
           <TabsContent value="layout" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ShipGrid /></TabsContent>
           <TabsContent value="stats" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ShipStats /></TabsContent>
           <TabsContent value="modules" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ModuleList /></TabsContent>
+          <TabsContent value="cargo" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><CargoDisplay /></TabsContent>
         </Tabs>
       )}
       {effectiveActiveTab === "crew" && <div className="tab-transition"><CrewList /></div>}
-      {effectiveActiveTab === "cargo" && <div className="tab-transition"><CargoDisplay /></div>}
       {effectiveActiveTab === "contracts" && (
         <div className="tab-transition"><ContractsList /></div>
       )}
@@ -325,8 +331,8 @@ export default function Home() {
           {isMobile && (
             <nav className="relative shrink-0 z-30 border-t border-[#00ff4155] bg-[rgba(1,8,12,0.97)] backdrop-blur-sm pb-[env(safe-area-inset-bottom)]">
               {moreOpen && (
-                <div className="grid grid-cols-4 gap-1 p-2 border-b border-[#00ff4155]">
-                  {leftTabs.filter((tab) => ["contracts", "progress", "blueprints", "log"].includes(tab.id)).map((tab) => (
+                <div className="grid grid-cols-3 gap-1 p-2 border-b border-[#00ff4155]">
+                  {leftTabs.filter((tab) => ["progress", "blueprints", "log"].includes(tab.id)).map((tab) => (
                     <button
                       key={tab.id}
                       onClick={() => { setActiveTab(tab.id); setMobileShowMap(false); setMoreOpen(false); }}
@@ -342,8 +348,8 @@ export default function Home() {
                 <MobileNavButton icon="🗺️" label={t("mobile_nav.map")} active={showEventStage} onClick={() => { setMobileShowMap(true); setMoreOpen(false); }} />
                 <MobileNavButton icon="🚀" label={t("mobile_nav.ship")} alert={moduleMovedThisTurn && !showEventStage} active={!showEventStage && activeTab === "ship"} onClick={() => { setActiveTab("ship"); setMobileShowMap(false); setMoreOpen(false); }} />
                 <MobileNavButton icon="👥" label={t("mobile_nav.crew")} active={!showEventStage && activeTab === "crew"} onClick={() => { setActiveTab("crew"); setMobileShowMap(false); setMoreOpen(false); }} />
-                <MobileNavButton icon="📦" label={t("mobile_nav.cargo")} active={!showEventStage && activeTab === "cargo"} onClick={() => { setActiveTab("cargo"); setMobileShowMap(false); setMoreOpen(false); }} />
-                <MobileNavButton icon="⋯" label={t("mobile_nav.more")} active={!showEventStage && ["contracts", "progress", "blueprints", "log"].includes(activeTab)} onClick={() => setMoreOpen((o) => !o)} />
+                <MobileNavButton icon="📋" label={t("mobile_nav.contracts")} active={!showEventStage && activeTab === "contracts"} onClick={() => { setActiveTab("contracts"); setMobileShowMap(false); setMoreOpen(false); }} />
+                <MobileNavButton icon="⋯" label={t("mobile_nav.more")} active={!showEventStage && ["progress", "blueprints", "log"].includes(activeTab)} onClick={() => setMoreOpen((o) => !o)} />
               </div>
             </nav>
           )}

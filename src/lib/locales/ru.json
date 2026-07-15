@@ -58,6 +58,7 @@
     "ship": "КОРАБЛЬ",
     "crew": "ЭКИПАЖ",
     "cargo": "ГРУЗ",
+    "contracts": "ЗАДАНИЯ",
     "more": "ЕЩЁ"
   },
   "ship": {
@@ -74,6 +75,7 @@
     "subtab_layout": "СХЕМА",
     "subtab_stats": "СТАТУС",
     "subtab_modules": "МОДУЛИ",
+    "subtab_cargo": "ГРУЗ",
     "cannot_move_combat": "⚠️ Нельзя перемещать модули во время боя!",
     "power_bus": "Энергосеть",
     "circuits_online": "цепей в сети",

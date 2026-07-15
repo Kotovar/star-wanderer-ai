@@ -58,6 +58,7 @@
     "ship": "SHIP",
     "crew": "CREW",
     "cargo": "CARGO",
+    "contracts": "CONTRACTS",
     "more": "MORE"
   },
   "ship": {
@@ -74,6 +75,7 @@
     "subtab_layout": "LAYOUT",
     "subtab_stats": "STATUS",
     "subtab_modules": "MODULES",
+    "subtab_cargo": "CARGO",
     "cannot_move_combat": "⚠️ Cannot move modules during combat!",
     "power_bus": "Power bus",
     "circuits_online": "circuits online",
