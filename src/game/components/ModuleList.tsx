@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { StatIcon, type StatIconType } from "./StatIcon";
+import { getModuleImageUrl } from "./moduleArt";
 
 // Helper to get translated module name
 function getTranslatedModuleName(
@@ -295,6 +296,26 @@ export function ModuleDetailDialog({
                 </DialogHeader>
 
                 <div className="space-y-4">
+                    {(() => {
+                        const artUrl = getModuleImageUrl(
+                            module.type,
+                            module.width || 1,
+                            module.height || 1,
+                        );
+                        if (!artUrl) return null;
+                        return (
+                            <div className="flex justify-center">
+                                <img
+                                    src={artUrl.replace(".webp", ".avif")}
+                                    onError={(e) => {
+                                        e.currentTarget.src = artUrl;
+                                    }}
+                                    alt={getTranslatedModuleName(module.type, t)}
+                                    className="max-h-32 object-contain rounded border border-[#00ff4133] bg-[rgba(0,0,0,0.3)]"
+                                />
+                            </div>
+                        );
+                    })()}
                     <ModuleDetailedStats module={module} />
 
                     {module.type === "scanner" && (

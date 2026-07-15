@@ -2,9 +2,10 @@
 
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { WEAPON_TYPES } from "../../constants";
+import { WEAPON_TYPES, WEAPON_ART } from "../../constants";
 import type { ShopItem, Module } from "../../types";
 import { ModuleDetailDialog } from "../ModuleList";
+import { getModuleImageUrl } from "../moduleArt";
 import {
     Dialog,
     DialogContent,
@@ -320,15 +321,60 @@ function ShopItemCard({
                 ? getTranslatedUpgradeName(item, t)
                 : item.name;
 
+    const moduleArtUrl =
+        item.type === "module" && item.moduleType
+            ? getModuleImageUrl(
+                  item.moduleType,
+                  item.width || 1,
+                  item.height || 1,
+              )
+            : undefined;
+
+    const weaponArtUrl =
+        item.type === "weapon" && item.weaponType
+            ? WEAPON_ART[item.weaponType as keyof typeof WEAPON_ART]
+            : undefined;
+
     return (
         <div
-            className={`flex justify-between items-center bg-[rgba(0,255,65,0.05)] border p-3 ${
+            className={`flex gap-3 items-center border p-2.5 transition-colors hover:bg-[rgba(0,255,65,0.06)] ${
                 isUnique
                     ? "border-[#ffb000] bg-[rgba(255,176,0,0.05)]"
-                    : "border-[#00ff41]"
+                    : "border-[#00ff41] bg-[rgba(0,255,65,0.05)]"
             } ${disabled ? "opacity-40" : ""}`}
         >
-            <div className="flex-1">
+            {/* Thumbnail */}
+            <button
+                type="button"
+                onClick={onViewDetails}
+                className={`shrink-0 w-14 h-14 flex items-center justify-center bg-[rgba(0,0,0,0.35)] border ${
+                    isUnique ? "border-[#ffb00055]" : "border-[#00ff4155]"
+                } cursor-pointer hover:border-[#00ff41] transition-colors`}
+            >
+                {moduleArtUrl ? (
+                    <img
+                        src={moduleArtUrl.replace(".webp", ".avif")}
+                        onError={(e) => {
+                            e.currentTarget.src = moduleArtUrl;
+                        }}
+                        alt={displayName}
+                        className="max-w-full max-h-full object-contain"
+                    />
+                ) : weaponArtUrl ? (
+                    <img
+                        src={weaponArtUrl.replace(".webp", ".avif")}
+                        onError={(e) => {
+                            e.currentTarget.src = weaponArtUrl;
+                        }}
+                        alt={displayName}
+                        className="max-w-full max-h-full object-contain"
+                    />
+                ) : (
+                    <span className="text-2xl">{isUpgrade ? "⬆" : "📦"}</span>
+                )}
+            </button>
+
+            <div className="flex-1 min-w-0">
                 <div
                     className={`${isUnique ? "text-[#ffb000]" : "text-[#00d4ff]"} font-bold cursor-pointer hover:underline`}
                     onClick={onViewDetails}
@@ -543,6 +589,9 @@ function WeaponDetailDialog({ weaponType, onClose }: WeaponDetailDialogProps) {
 
     if (!weapon) return null;
 
+    const weaponArtUrl =
+        WEAPON_ART[weaponType as keyof typeof WEAPON_ART];
+
     return (
         <Dialog open={true} onOpenChange={onClose}>
             <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ffb000] text-[#ffb000] max-w-md w-[calc(100%-2rem)] md:w-auto">
@@ -561,6 +610,18 @@ function WeaponDetailDialog({ weaponType, onClose }: WeaponDetailDialogProps) {
                 </DialogHeader>
 
                 <div className="space-y-4">
+                    {weaponArtUrl && (
+                        <div className="flex justify-center">
+                            <img
+                                src={weaponArtUrl.replace(".webp", ".avif")}
+                                onError={(e) => {
+                                    e.currentTarget.src = weaponArtUrl;
+                                }}
+                                alt={t(`weapon_types.${weaponType}`)}
+                                className="max-h-32 object-contain rounded border border-[#ffb00033] bg-[rgba(0,0,0,0.3)]"
+                            />
+                        </div>
+                    )}
                     {/* Damage */}
                     <div className="bg-[rgba(255,176,0,0.05)] border border-[#ffb000] p-3 text-xs">
                         <div className="text-[#ffb000] font-bold mb-2">
