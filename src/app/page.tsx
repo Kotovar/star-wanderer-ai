@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { GameHeader } from "@/game/components/header";
-import { ShipGrid } from "@/game/components/ShipGrid";
+import { preloadModuleArt, ShipGrid } from "@/game/components/ShipGrid";
 import { ModuleList } from "@/game/components/ModuleList";
 import { CrewList } from "@/game/components/CrewList";
 import { ShipStats } from "@/game/components/ShipStats";
@@ -98,6 +98,10 @@ export default function Home() {
   // Скрываем окно создания игры, пока проигрывается интро-анимация титульного экрана
   const [setupReady, setSetupReady] = useState(false);
   const [newGameOpen, setNewGameOpen] = useState(false);
+
+  useEffect(() => {
+    preloadModuleArt();
+  }, []);
 
   // ── Мобильная навигация: одно полноэкранное представление за раз ──
   const isMobile = useIsMobile();

@@ -81,6 +81,21 @@ const MODULE_ART: Partial<
   },
 };
 
+const MODULE_ART_URLS = Object.values(MODULE_ART).flatMap((art) =>
+  Object.values(art).filter((url): url is string => url !== undefined),
+);
+
+export function preloadModuleArt() {
+  for (const moduleArt of MODULE_ART_URLS) {
+    const image = new Image();
+    image.onerror = () => {
+      image.onerror = null;
+      image.src = moduleArt;
+    };
+    image.src = moduleArt.replace(".webp", ".avif");
+  }
+}
+
 // Health bar geometry (shared between HealthBar and CrewIcons)
 const HEALTH_BAR_BOTTOM_OFFSET = 15; // px from module bottom to health bar top
 const HEALTH_BAR_HEIGHT = 5;
