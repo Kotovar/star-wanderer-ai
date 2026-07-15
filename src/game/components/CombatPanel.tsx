@@ -214,9 +214,9 @@ export function CombatPanel() {
       const newTargets = { ...bayTargets, [activeBayId]: moduleId };
       setBayTargets(newTargets);
       // Auto-advance to next bay without a target
-      const next = weaponBays.find(
-        (b) => b.id !== activeBayId && !newTargets[b.id],
-      );
+        const next = weaponBays.find(
+          (b) => b.id !== activeBayId && newTargets[b.id] === undefined,
+        );
       setActiveBayId(next?.id ?? null);
     } else if (weaponBays.length === 1) {
       setBayTargets({ [weaponBays[0].id]: moduleId });

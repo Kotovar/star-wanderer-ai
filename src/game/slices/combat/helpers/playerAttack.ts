@@ -47,6 +47,12 @@ const getCoreDestroyedLog = (isBiological?: boolean): string =>
     ? "💥 ЖИВОЕ ЯДРО УНИЧТОЖЕНО! Существо погибает!"
     : "💥 РЕАКТОР ВРАГА УНИЧТОЖЕН! Корабль разрушен!";
 
+/** Finds the enemy's core/reactor module — its destruction = instant victory */
+const findEnemyCore = (
+  modules: { type: string; health: number; isBiological?: boolean }[],
+) =>
+  modules.find((m) => m.type === "reactor" || m.type.includes("core"));
+
 const getBarrierDestroyedLog = (isBiological?: boolean): string =>
   isBiological
     ? "💥 Последняя защитная мембрана разрушена! Биобарьер рассеян!"
@@ -912,9 +918,9 @@ export function executePlayerAttack(
     }
   }
 
-  // 9. Victory check — reactor destroyed = instant win; fallback: all modules dead
+  // 9. Victory check — reactor/core destroyed = instant win; fallback: all modules dead
   const updatedCombat = get().currentCombat;
-  const reactorModule = updatedCombat?.enemy.modules.find((m) => m.type === "reactor");
+  const reactorModule = updatedCombat ? findEnemyCore(updatedCombat.enemy.modules) : undefined;
   const isVictory = reactorModule
     ? reactorModule.health <= 0
     : updatedCombat?.enemy.modules.every((m) => m.health <= 0) ?? false;
@@ -1181,7 +1187,7 @@ export function executePlayerAttackWithBayTargets(
 
     // Victory check after each bay
     const updatedCombat = get().currentCombat;
-    const reactorMod = updatedCombat?.enemy.modules.find((m) => m.type === "reactor");
+    const reactorMod = updatedCombat ? findEnemyCore(updatedCombat.enemy.modules) : undefined;
     const isVictory = reactorMod
       ? reactorMod.health <= 0
       : updatedCombat?.enemy.modules.every((m) => m.health <= 0) ?? false;

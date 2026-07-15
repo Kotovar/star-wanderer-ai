@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { GameHeader } from "@/game/components/header";
 import { preloadModuleArt, ShipGrid } from "@/game/components/ShipGrid";
+import { preloadRacePlanetBackgrounds } from "@/game/components/PlanetPanel";
 import { ModuleList } from "@/game/components/ModuleList";
 import { CrewList } from "@/game/components/CrewList";
 import { ShipStats } from "@/game/components/ShipStats";
@@ -101,6 +102,7 @@ export default function Home() {
 
   useEffect(() => {
     preloadModuleArt();
+    preloadRacePlanetBackgrounds();
   }, []);
 
   // ── Мобильная навигация: одно полноэкранное представление за раз ──

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useGameStore } from "@/game/store";
 import {
     PLANET_POINT_OF_INTERESTS,
@@ -38,6 +39,24 @@ import {
 } from "@/game/types/reputation";
 import { RaceSprite } from "./RaceSprite";
 import { ContractReputationImpact } from "./ContractReputationImpact";
+
+const RACE_PLANET_BACKGROUNDS = {
+    human: "/assets/planet-races/human-settlement.webp",
+    synthetic: "/assets/planet-races/synthetic-foundry.webp",
+    xenosymbiont: "/assets/planet-races/xenosymbiont-grove.webp",
+    krylorian: "/assets/planet-races/krylorian-citadel.webp",
+    voidborn: "/assets/planet-races/voidborn-rift.webp",
+    crystalline: "/assets/planet-races/crystalline-geode.webp",
+} satisfies Record<keyof typeof RACES, string>;
+
+const RACE_PLANET_BACKGROUND_URLS = Object.values(RACE_PLANET_BACKGROUNDS);
+
+export function preloadRacePlanetBackgrounds() {
+    for (const backgroundUrl of RACE_PLANET_BACKGROUND_URLS) {
+        const image = new window.Image();
+        image.src = backgroundUrl;
+    }
+}
 
 export function PlanetPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
@@ -77,6 +96,9 @@ export function PlanetPanel() {
     const raceAccent = race?.color ?? "#ffb000";
     const raceBg = race ? `${race.color}12` : "rgba(0,0,0,0)";
     const raceBorder = race ? `${race.color}55` : "#333";
+    const raceBackground = dominantRace
+        ? RACE_PLANET_BACKGROUNDS[dominantRace]
+        : null;
 
     useEffect(() => {
         if (dominantRace && race && !knownRaces.includes(dominantRace)) {
@@ -489,154 +511,186 @@ export function PlanetPanel() {
     const planetBgClass = getPlanetBackgroundClass(currentLocationPlanetType);
     return (
         <div
-            className={`flex flex-col gap-4 p-4 rounded-lg border ${planetBgClass}`}
+            className={`flex flex-col gap-3 p-2 sm:p-3 rounded-lg border ${planetBgClass}`}
             style={{ borderColor: raceAccent + "88" }}
         >
-            {/* Content overlay for readability */}
             <div
-                className="relative z-10 p-4 rounded border"
+                className="relative z-10 min-h-0 overflow-hidden rounded border"
                 style={{
                     borderColor: raceBorder,
                     backgroundColor: "rgba(5,8,16,0.9)",
                 }}
             >
-                {race && (
+                <section
+                    className="relative min-h-52 overflow-hidden border-b"
+                    style={{ borderColor: raceBorder }}
+                >
+                    {raceBackground && (
+                        <Image
+                            src={raceBackground}
+                            alt=""
+                            fill
+                            sizes="(min-width: 1024px) 50vw, 100vw"
+                            preload
+                            unoptimized
+                            className="object-cover"
+                        />
+                    )}
                     <div
-                        className="h-0.5 -mx-4 -mt-4 mb-4"
+                        className="absolute inset-0"
                         style={{
-                            background: `linear-gradient(90deg, ${race.color}cc 0%, ${race.color}22 100%)`,
+                            background:
+                                "linear-gradient(90deg, rgba(5,8,16,0.96) 0%, rgba(5,8,16,0.78) 52%, rgba(5,8,16,0.32) 100%)",
                         }}
                     />
-                )}
-                <div
-                    className="font-['Orbitron'] font-bold text-lg"
-                    style={{ color: raceAccent }}
-                >
-                    ▸ {getLocationName(currentLocation.name, t)} -{" "}
-                    {currentLocationPlanetType
-                        ? getPlanetTypeName(currentLocationPlanetType, t)
-                        : ""}
-                </div>
-
-                {/* Planet type description */}
-                <div className="text-sm text-[#888] italic leading-relaxed">
-                    {currentLocationPlanetType
-                        ? getPlanetDescription(currentLocationPlanetType, t) ||
-                          t("planet_panel.empty_description")
-                        : t("planet_panel.empty_description")}
-                </div>
-
-                {/* Population and Race info */}
-                <div className="flex items-center gap-3 text-sm relative z-20">
-                    {race && (
-                        <div
-                            className="flex items-center gap-2 px-3 py-1.5 rounded border"
-                            style={{
-                                borderColor: race.color,
-                                backgroundColor: `${race.color}15`,
-                            }}
-                        >
-                            <RaceSprite
-                                race={currentLocation.dominantRace ?? "human"}
-                                size={40}
-                                title={t(
-                                    `races.${currentLocation.dominantRace}.plural`,
-                                )}
-                            />
-                            <div>
-                                <div
-                                    style={{ color: race.color }}
-                                    className="font-bold"
-                                >
-                                    {t(
-                                        `races.${currentLocation.dominantRace}.plural`,
-                                    )}
-                                </div>
-                                {currentLocation.population && (
-                                    <div className="text-xs text-gray-400">
-                                        👥 {currentLocation.population}{" "}
-                                        {t("planet_panel.thousands")}
-                                    </div>
-                                )}
+                    <div
+                        className="absolute inset-x-0 bottom-0 h-2/3"
+                        style={{
+                            background:
+                                "linear-gradient(0deg, rgba(5,8,16,0.92) 0%, rgba(5,8,16,0) 100%)",
+                        }}
+                    />
+                    <div className="relative z-10 flex min-h-52 flex-col justify-between gap-5 p-4 sm:p-5">
+                        <div className="max-w-2xl">
+                            <div
+                                className="font-['Orbitron'] font-bold text-lg sm:text-xl"
+                                style={{ color: raceAccent }}
+                            >
+                                ▸ {getLocationName(currentLocation.name, t)} -{" "}
+                                {currentLocationPlanetType
+                                    ? getPlanetTypeName(
+                                          currentLocationPlanetType,
+                                          t,
+                                      )
+                                    : ""}
+                            </div>
+                            <div className="mt-1 text-sm italic leading-relaxed text-[#b5c1c6]">
+                                {currentLocationPlanetType
+                                    ? getPlanetDescription(
+                                          currentLocationPlanetType,
+                                          t,
+                                      ) || t("planet_panel.empty_description")
+                                    : t("planet_panel.empty_description")}
                             </div>
                         </div>
-                    )}
 
-                    {/* Reputation badge */}
-                    {raceReputation && currentLocation.dominantRace && (
-                        <div
-                            className="flex items-center gap-2 px-3 py-1.5 rounded border text-xs"
-                            style={{
-                                borderColor:
-                                    REPUTATION_COLORS[
-                                        getReputationLevel(
-                                            getRaceReputation(
-                                                raceReputation,
-                                                currentLocation.dominantRace,
-                                            ),
+                        <div className="flex flex-wrap items-end gap-2 text-sm">
+                            {race && (
+                                <div
+                                    className="flex max-w-xl items-center gap-2 border px-3 py-2 backdrop-blur-sm"
+                                    style={{
+                                        borderColor: race.color,
+                                        backgroundColor: `${race.color}20`,
+                                    }}
+                                >
+                                    <RaceSprite
+                                        race={dominantRace ?? "human"}
+                                        size={44}
+                                        title={t(`races.${dominantRace}.plural`)}
+                                    />
+                                    <div>
+                                        <div
+                                            className="font-bold"
+                                            style={{ color: race.color }}
+                                        >
+                                            {t(
+                                                `races.${dominantRace}.plural`,
+                                            )}
+                                        </div>
+                                        {currentLocation.population && (
+                                            <div className="text-xs text-[#c0ccd0]">
+                                                👥 {currentLocation.population}{" "}
+                                                {t("planet_panel.thousands")}
+                                            </div>
+                                        )}
+                                        <div className="hidden max-w-md text-xs leading-relaxed text-[#d0dbdf] sm:block">
+                                            {t(
+                                                `races.${dominantRace}.description`,
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {raceReputation && dominantRace && (
+                                <div
+                                    className="flex items-center gap-2 border px-3 py-2 text-xs backdrop-blur-sm"
+                                    style={{
+                                        borderColor:
+                                            REPUTATION_COLORS[
+                                                getReputationLevel(
+                                                    getRaceReputation(
+                                                        raceReputation,
+                                                        dominantRace,
+                                                    ),
+                                                )
+                                            ],
+                                        backgroundColor: `${
+                                            REPUTATION_COLORS[
+                                                getReputationLevel(
+                                                    getRaceReputation(
+                                                        raceReputation,
+                                                        dominantRace,
+                                                    ),
+                                                )
+                                            ]
+                                        }20`,
+                                    }}
+                                >
+                                    <span>
+                                        {
+                                            REPUTATION_ICONS[
+                                                getReputationLevel(
+                                                    getRaceReputation(
+                                                        raceReputation,
+                                                        dominantRace,
+                                                    ),
+                                                )
+                                            ]
+                                        }
+                                    </span>
+                                    <span
+                                        style={{
+                                            color: REPUTATION_COLORS[
+                                                getReputationLevel(
+                                                    getRaceReputation(
+                                                        raceReputation,
+                                                        dominantRace,
+                                                    ),
+                                                )
+                                            ],
+                                        }}
+                                    >
+                                        {t(
+                                            `reputation.levels.${getRaceReputationLevel(raceReputation, dominantRace)}`,
+                                        )}
+                                    </span>
+                                    <span className="text-[#c0ccd0]">
+                                        (
+                                        {getRaceReputation(
+                                            raceReputation,
+                                            dominantRace,
+                                        ) > 0
+                                            ? "+"
+                                            : ""}
+                                        {getRaceReputation(
+                                            raceReputation,
+                                            dominantRace,
+                                        )}
                                         )
-                                    ],
-                                backgroundColor: `${
-                                    REPUTATION_COLORS[
-                                        getReputationLevel(
-                                            getRaceReputation(
-                                                raceReputation,
-                                                currentLocation.dominantRace,
-                                            ),
-                                        )
-                                    ]
-                                }15`,
-                            }}
-                        >
-                            <span>
-                                {
-                                    REPUTATION_ICONS[
-                                        getReputationLevel(
-                                            getRaceReputation(
-                                                raceReputation,
-                                                currentLocation.dominantRace,
-                                            ),
-                                        )
-                                    ]
-                                }
-                            </span>
-                            <span
-                                style={{
-                                    color: REPUTATION_COLORS[
-                                        getReputationLevel(
-                                            getRaceReputation(
-                                                raceReputation,
-                                                currentLocation.dominantRace,
-                                            ),
-                                        )
-                                    ],
-                                }}
-                            >
-                                {t(
-                                    `reputation.levels.${getRaceReputationLevel(raceReputation, currentLocation.dominantRace)}`,
-                                )}
-                            </span>
-                            <span className="text-gray-400">
-                                (
-                                {getRaceReputation(
-                                    raceReputation,
-                                    currentLocation.dominantRace,
-                                ) > 0
-                                    ? "+"
-                                    : ""}
-                                {getRaceReputation(
-                                    raceReputation,
-                                    currentLocation.dominantRace,
-                                )}
-                                )
-                            </span>
+                                    </span>
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
+                    </div>
+                </section>
 
-                {/* Action buttons: Expedition + Specialization */}
-                {currentLocation.dominantRace && (
-                    <div className="flex gap-2 flex-wrap mt-2">
+                <div
+                    className="flex flex-wrap items-center justify-between gap-3 border-b bg-[rgba(5,8,16,0.9)] p-3 backdrop-blur-sm"
+                    style={{ borderColor: raceBorder }}
+                >
+                    {dominantRace && (
+                        <div className="flex flex-wrap gap-2">
                         {currentLocation.expeditionCompleted ? (
                             <div className="text-xs text-[#444] border border-[#222] px-3 py-1.5">
                                 {t("planet.surface_explored")}
@@ -654,9 +708,7 @@ export function PlanetPanel() {
                             </Button>
                         )}
                         {race &&
-                            PLANET_SPECIALIZATIONS[
-                                currentLocation.dominantRace
-                            ] && (
+                            PLANET_SPECIALIZATIONS[dominantRace] && (
                                 <Button
                                     onClick={() => setShowSpecialization(true)}
                                     disabled={isOnCooldown}
@@ -680,18 +732,17 @@ export function PlanetPanel() {
                                         : t("planet_panel.activity")}
                                 </Button>
                             )}
+                        </div>
+                    )}
+                    <div className="text-right text-xs text-[#aab8bd]">
+                        {t("planet_panel.inhabited_planet")}
+                        {availableContracts.length > 0
+                            ? ` ${t("planet_panel.tasks_available")}`
+                            : ` ${t("planet_panel.no_tasks")}`}
                     </div>
-                )}
-
-                {/* Planet Visual */}
-                <PlanetVisual planetType={currentLocationPlanetType} />
-
-                <div className="text-sm">
-                    {t("planet_panel.inhabited_planet")}
-                    {availableContracts.length > 0
-                        ? ` ${t("planet_panel.tasks_available")}`
-                        : ` ${t("planet_panel.no_tasks")}`}
                 </div>
+
+                <div className="p-4">
 
                 {/* Delivery contracts completion */}
                 {deliveryContracts.length > 0 && (
@@ -1078,6 +1129,7 @@ export function PlanetPanel() {
                     >
                         {t("planet_panel.leave_planet")}
                     </Button>
+                </div>
                 </div>
 
                 {/* Expedition Setup Modal */}

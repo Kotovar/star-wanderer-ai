@@ -131,8 +131,8 @@ export function SpaceMonsterPanel() {
         <Button
           disabled={!canResonate}
           onClick={resonateWithSpaceMonster}
-          className="w-full border-2 bg-transparent uppercase tracking-wider hover:text-[#050810] disabled:cursor-not-allowed disabled:opacity-45"
-          style={{ borderColor: monster.color, color: monster.color }}
+          className="w-full border-2 border-[var(--btn-color)] bg-transparent uppercase tracking-wider text-[var(--btn-color)] hover:bg-[var(--btn-color)] hover:text-[#050810] disabled:opacity-45"
+          style={{ "--btn-color": monster.color } as React.CSSProperties}
         >
           <Radio size={15} /> {t("space_monsters.resonate")} · 1× 🔬
         </Button>

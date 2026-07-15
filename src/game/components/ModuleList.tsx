@@ -655,11 +655,21 @@ function WeaponsDetail({ weapons }: { weapons: (Weapon | null)[] }) {
                             borderColor: WEAPON_TYPES[weapon.type].color,
                         }}
                     >
-                        {WEAPON_TYPES[weapon.type].icon}{" "}
-                        {t(`weapon_types.${weapon.type}`)}{" "}
-                        <span className="text-[#ff0040]">
-                            ({WEAPON_TYPES[weapon.type].damage})
-                        </span>
+                        <div
+                            className="flex items-center gap-2"
+                            style={{ color: WEAPON_TYPES[weapon.type].color }}
+                        >
+                            <span>
+                                {WEAPON_TYPES[weapon.type].icon}{" "}
+                                {t(`weapon_types.${weapon.type}`)}
+                            </span>
+                            <span className="text-[#ff0040]">
+                                ({WEAPON_TYPES[weapon.type].damage})
+                            </span>
+                        </div>
+                        <div className="text-[10px] text-[#888] mt-1">
+                            {WEAPON_TYPES[weapon.type].description}
+                        </div>
                     </div>
                 ) : (
                     <div

@@ -209,6 +209,7 @@ export function ShipGrid() {
 
   const [draggedModule, setDraggedModule] = useState<Module | null>(null);
   const [showLegend, setShowLegend] = useState(false);
+  const [showPowerLines, setShowPowerLines] = useState(true);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [tempPos, setTempPos] = useState<{ x: number; y: number } | null>(
     null,
@@ -386,6 +387,17 @@ export function ShipGrid() {
             </span>
           </div>
           <button
+            onClick={() => setShowPowerLines((s) => !s)}
+            className={`absolute right-6 top-0 z-10 w-5 h-5 flex items-center justify-center border text-[10px] transition-colors cursor-pointer ${
+              showPowerLines
+                ? "border-[#00ff4166] bg-[rgba(0,255,65,0.08)] text-[#00ff41] hover:bg-[rgba(0,255,65,0.2)]"
+                : "border-[#00ff4122] bg-transparent text-[#444] hover:bg-[rgba(0,255,65,0.1)]"
+            }`}
+            title={showPowerLines ? "Скрыть линии питания" : "Показать линии питания"}
+          >
+            ⌁
+          </button>
+          <button
             onClick={() => setShowLegend((s) => !s)}
             className="absolute right-0 top-0 z-10 w-5 h-5 flex items-center justify-center border border-[#00ff4166] bg-[rgba(0,255,65,0.08)] text-[#00ff41] text-[10px] hover:bg-[rgba(0,255,65,0.2)] transition-colors cursor-pointer"
             title={showLegend ? "Скрыть легенду" : "Показать легенду"}
@@ -521,7 +533,7 @@ export function ShipGrid() {
                 pointerEvents="none"
               />
             ))}
-        <PowerGrid links={powerLinks} />
+        {showPowerLines && <PowerGrid links={powerLinks} />}
         {draggedCrew && (
           <ProfessionSprite
             race={draggedCrew.race}

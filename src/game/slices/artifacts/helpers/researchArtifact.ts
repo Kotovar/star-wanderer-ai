@@ -1,6 +1,7 @@
 import type { GameStore, CrewMember, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 import { ARTIFACT_RESEARCH_EXP_MULTIPLIER } from "@/game/constants";
+import { toast } from "sonner";
 
 /**
  * Исследует артефакт и активирует его эффект
@@ -41,10 +42,10 @@ export const researchArtifact = (
             : 0;
 
     if (maxScientistLevel < artifact.requiresScientistLevel) {
-        get().addLog(
-            `Требуется учёный уровня ${artifact.requiresScientistLevel}!`,
-            "error",
-        );
+        const msg = `Требуется учёный уровня ${artifact.requiresScientistLevel}!`;
+        get().addLog(msg, "error");
+        toast.error(msg);
+        playSound("error");
         return;
     }
 
