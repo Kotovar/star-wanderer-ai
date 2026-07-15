@@ -2840,8 +2840,35 @@
     "choice_observation_only": "Observation only",
     "choice_catch_discharge": "Catch a discharge",
     "choice_analysis_from_distance": "Analysis from a distance",
+    "dive_progress": "Descent",
+    "pressure": "Pressure",
+    "temperature": "Temperature",
+    "storm_activity": "Storm activity",
+    "probe": "Probe",
+    "layer_complete": "Complete",
+    "layer_current": "Current",
+    "layer_unexplored": "Unexplored",
+    "layer_lost": "Probe lost",
+    "risk": "Risk",
+    "risk_low": "Low",
+    "risk_medium": "Medium",
+    "risk_high": "High",
+    "risk_critical": "Critical",
+    "reward_common": "Baseline data",
+    "reward_rare": "Rare data",
+    "reward_exotic": "Exotic samples",
+    "reward_legendary": "Unique findings",
+    "activity_low": "Low",
+    "activity_moderate": "Moderate",
+    "activity_high": "High",
+    "bonus_all_resources": "× all resources +25%",
+    "bonus_resource": "{{resource}} +50%",
+    "awaiting_decision": "Awaiting operator decision",
     "probes_available": "Probes on board: {{count}}",
     "no_probes": "No probes — buy at a station",
+    "probe_lost_title": "Probe destroyed",
+    "probe_lost_description": "Pressure and the storm destroyed the probe. Collected resources were lost.",
+    "probe_lost_confirm": "Understood",
     "probe_loss_chance": "💥 probe {{chance}}%"
   },
   "blueprints": {
@@ -3264,6 +3291,174 @@
         "outcome": "Crew takes {{damage}} HP damage and loses 5 morale."
       }
     },
+    "meteor_shower": {
+      "title": "Meteor Shower",
+      "description": "A stream of rocks bears down on the ship. System «{{module}}» at risk: {{damage}} HP damage.",
+      "engineer": {
+        "label": "Evasive maneuver",
+        "description": "The engineer reroutes engine power for emergency evasion.",
+        "outcome": "Only {{damage}} HP damage, engineer gains experience.",
+        "requirement": "living engineer"
+      },
+      "shields": {
+        "label": "Max shields",
+        "description": "Redirect all power to shields.",
+        "outcome": "Shields absorb {{absorbed}}, remaining module damage: {{damage}} HP.",
+        "requirement": "charged shields"
+      },
+      "standard": {
+        "label": "Brace for impact",
+        "description": "Hit the deck and pray.",
+        "outcome": "Module takes {{damage}} HP damage."
+      }
+    },
+    "pirate_raid": {
+      "title": "Pirate Raid",
+      "description": "Corsairs demand a {{loss}}₢ ransom. Without resistance they'll take everything.",
+      "gunner": {
+        "label": "Counterattack",
+        "description": "The gunner returns fire and scatters the pirates.",
+        "outcome": "Pirates drop their loot: +{{loot}}₢, gunner gains experience.",
+        "requirement": "living gunner"
+      },
+      "weapons": {
+        "label": "Show of force",
+        "description": "Power up weapon systems and intimidate the corsairs.",
+        "outcome": "Pirates retreat without a fight.",
+        "requirement": "active weapon bay"
+      },
+      "standard": {
+        "label": "Pay the ransom",
+        "description": "Transfer credits to avoid the worst.",
+        "outcome": "Lost {{loss}}₢, crew morale -3."
+      }
+    },
+    "distress_signal": {
+      "title": "Distress Signal",
+      "description": "A heavily damaged ship begs for help. Its crew is dying.",
+      "medic": {
+        "label": "Medical rescue",
+        "description": "The medic provides emergency aid to the wounded.",
+        "outcome": "+40₢ reward, morale +5, medic gains experience.",
+        "requirement": "living medic"
+      },
+      "medical": {
+        "label": "Take aboard wounded",
+        "description": "The medical bay takes in the wounded for treatment.",
+        "outcome": "Crew morale +3 for doing the right thing.",
+        "requirement": "active medical bay"
+      },
+      "standard": {
+        "label": "Ignore",
+        "description": "Not our problem. Fly past.",
+        "outcome": "Crew morale -3 from guilt."
+      }
+    },
+    "trader": {
+      "title": "Wandering Trader",
+      "description": "A roving merchant offers a deal with a {{discount}}₢ discount.",
+      "scientist": {
+        "label": "Appraise goods",
+        "description": "The scientist checks the goods for hidden value.",
+        "outcome": "Ancient Data found: +1, scientist gains experience.",
+        "requirement": "living scientist"
+      },
+      "cargo": {
+        "label": "Stock up",
+        "description": "The cargo bay takes in a shipment at a discount.",
+        "outcome": "+5 fuel, +{{bonus}}₢ from resale.",
+        "requirement": "active cargo bay"
+      },
+      "standard": {
+        "label": "Just browsing",
+        "description": "Browse the wares without buying.",
+        "outcome": "Nothing happened."
+      }
+    },
+    "derelict": {
+      "title": "Derelict Ship",
+      "description": "A drifting ship with no crew. Estimated value: {{reward}}₢.",
+      "scientist": {
+        "label": "Full analysis",
+        "description": "The scientist studies the ship from stern to bridge.",
+        "outcome": "+1 Ancient Data, +1 Tech Salvage, scientist gains experience.",
+        "requirement": "living scientist"
+      },
+      "scanner": {
+        "label": "Deep scan",
+        "description": "Scanners probe the ship for valuable components.",
+        "outcome": "+2 Tech Salvage, +{{reward}}₢.",
+        "requirement": "active scanner"
+      },
+      "standard": {
+        "label": "Quick look",
+        "description": "Grab easy salvage from the outside.",
+        "outcome": "+{{reward}}₢."
+      }
+    },
+    "ancient_signal": {
+      "title": "Ancient Signal",
+      "description": "Receivers pick up an encrypted signal of unknown origin.",
+      "scientist": {
+        "label": "Full decryption",
+        "description": "The scientist decodes the entire signal in the lab.",
+        "outcome": "+2 Ancient Data, +1 Tech Salvage, scientist gains experience.",
+        "requirement": "living scientist in an active lab"
+      },
+      "scanner": {
+        "label": "Partial intercept",
+        "description": "The scanner captures fragments of the signal.",
+        "outcome": "+1 Tech Salvage.",
+        "requirement": "active scanner"
+      },
+      "standard": {
+        "label": "Ignore",
+        "description": "Unknown format — too risky.",
+        "outcome": "The signal fades on its own."
+      }
+    },
+    "research_breakthrough": {
+      "title": "Research Breakthrough",
+      "description": "Lab instruments detected a pattern in the sector data.",
+      "scientist": {
+        "label": "Develop the hypothesis",
+        "description": "A scientist in the lab will confirm the discovery.",
+        "outcome": "+2 Ancient Data, +2 Tech Salvage, scientist gains experience.",
+        "requirement": "living scientist in an active lab"
+      },
+      "scanner": {
+        "label": "Cross-check signals",
+        "description": "The scanner gathers verification telemetry.",
+        "outcome": "+1 Tech Salvage.",
+        "requirement": "active scanner"
+      },
+      "standard": {
+        "label": "Log the finding",
+        "description": "Save the observation without committing resources.",
+        "outcome": "The discovery remains in the log."
+      }
+    },
+    "artifact_resonance": {
+      "title": "Artifact Resonance",
+      "description": "A discovered artifact has started responding to the ship's fields.",
+      "scientist": {
+        "label": "Tune the resonance",
+        "description": "A scientist guides the artifact's response.",
+        "outcome": "+2 Ancient Data, crew morale +5, scientist gains experience.",
+        "requirement": "living scientist"
+      },
+      "lab": {
+        "label": "Laboratory analysis",
+        "description": "The lab isolates useful signal fragments.",
+        "outcome": "+1 Ancient Data, +1 Tech Salvage.",
+        "requirement": "active lab"
+      },
+      "standard": {
+        "label": "Observe",
+        "description": "Let the resonance fade without intervention.",
+        "outcome": "Crew morale +1."
+      }
+    },
     "consequence": {
       "title": "Delayed Consequence",
       "confirm": "Accept result",
@@ -3298,6 +3493,46 @@
         "specialist": "The medic's prevention averted a relapse: up to +2 morale.",
         "systems": "Bio-filters cleansed the ventilation: up to +2 morale.",
         "standard": "Remaining spores continue to trouble the crew: morale -3."
+      },
+      "meteor_shower": {
+        "specialist": "Successful evasion inspired the crew: morale +2.",
+        "systems": "Shields weathered the barrage: morale +2.",
+        "standard": "The aftermath of impacts still lingers: morale -2."
+      },
+      "pirate_raid": {
+        "specialist": "Loot from the counterattack paid off: +20₢.",
+        "systems": "The show of force deterred future pirates.",
+        "standard": "The pirates came back for more: -10₢."
+      },
+      "distress_signal": {
+        "specialist": "The saved crew sent their gratitude: morale +3.",
+        "systems": "Word of the good deed spread through the sector: morale +3.",
+        "standard": "The crew still worries about those they abandoned: morale -2."
+      },
+      "trader": {
+        "specialist": "The trader recommended us to partners: +1 Tech Salvage.",
+        "systems": "Reselling the supplies turned a profit: +15₢.",
+        "standard": "The trader went on their way."
+      },
+      "derelict": {
+        "specialist": "The derelict's archive yielded new data: +1 Ancient Data.",
+        "systems": "A usable component was found in the wreckage: +1 Tech Salvage.",
+        "standard": "The buyer sent a finder's premium: +10₢."
+      },
+      "ancient_signal": {
+        "specialist": "Full decryption bore fruit: +1 Ancient Data.",
+        "systems": "Intercepted fragments proved useful: +1 Tech Salvage.",
+        "standard": "The signal does not repeat."
+      },
+      "research_breakthrough": {
+        "specialist": "A second pass added +1 Ancient Data to the archive.",
+        "systems": "The scanner refined the calculations: +1 Tech Salvage.",
+        "standard": "The breakthrough entry caught the attention of the scientific community."
+      },
+      "artifact_resonance": {
+        "specialist": "The resonance revealed another data layer: +1 Ancient Data.",
+        "systems": "The lab extracted a stable sample: +1 Tech Salvage.",
+        "standard": "The brief resonance steadied the crew: morale +1."
       }
     },
     "logs": {
@@ -3327,7 +3562,39 @@
       "crew_dispute_standard": "Dispute ended by command: crew morale -{{penalty}}",
       "biohazard_specialist": "Medic neutralized the spores: crew -{{damage}} HP",
       "biohazard_systems": "Bio-filters cleansed the ventilation: life support -5 HP",
-      "biohazard_standard": "Spores spread through the ship: crew -{{damage}} HP, morale -5"
+      "biohazard_standard": "Spores spread through the ship: crew -{{damage}} HP, morale -5",
+      "detected_meteor_shower": "✦ Meteor shower pelting the ship — captain's decision required",
+      "detected_pirate_raid": "☠ Pirate raid! — captain's decision required",
+      "detected_distress_signal": "SOS Distress signal intercepted — captain's decision required",
+      "detected_trader": "⚖ Wandering trader on comms — captain's decision required",
+      "detected_derelict": "⌖ Derelict ship detected — captain's decision required",
+      "detected_ancient_signal": "⟁ Mysterious Ancient signal — captain's decision required",
+      "meteor_shower_engineer": "The engineer evaded the barrage: module -{{damage}} HP",
+      "meteor_shower_shields": "Shields absorbed {{absorbed}}, remaining damage: {{damage}} HP",
+      "meteor_shower_standard": "Meteors damaged a module by {{damage}} HP",
+      "pirate_raid_gunner": "The gunner scattered the pirates: +{{loot}}₢ loot",
+      "pirate_raid_scared": "Weapon systems scared off the pirates",
+      "pirate_raid_standard": "Ransom paid to pirates: -{{loss}}₢, morale -3",
+      "distress_signal_medic": "The medic saved the crew: +40₢ reward, morale +5",
+      "distress_signal_medical": "Wounded taken aboard: morale +3",
+      "distress_signal_standard": "Distress signal ignored: morale -3",
+      "trader_scientist": "The scientist found Ancient Data in the goods: +1",
+      "trader_cargo": "Supplies purchased: +5 fuel, +{{bonus}}₢",
+      "trader_standard": "The trader left without a deal",
+      "derelict_science": "Full analysis: +1 Ancient Data, +1 Tech Salvage",
+      "derelict_scanner": "Deep scan: +2 Tech Salvage, +{{reward}}₢",
+      "derelict_standard": "Quick look: +{{reward}}₢",
+      "ancient_signal_scientist": "Signal decrypted: +2 Ancient Data, +1 Tech Salvage",
+      "ancient_signal_scanner": "Fragments intercepted: +1 Tech Salvage",
+      "ancient_signal_standard": "Signal ignored",
+      "detected_research_breakthrough": "⚛ Research breakthrough detected — captain's decision required",
+      "detected_artifact_resonance": "✶ An artifact has entered resonance — captain's decision required",
+      "research_breakthrough_scientist": "The scientist confirmed the breakthrough: +2 Ancient Data, +2 Tech Salvage",
+      "research_breakthrough_scanner": "The scanner gathered verification data: +1 Tech Salvage",
+      "research_breakthrough_standard": "The discovery was entered in the log",
+      "artifact_resonance_scientist": "The scientist tuned the resonance: +2 Ancient Data, morale +5",
+      "artifact_resonance_lab": "The lab isolated fragments: +1 Ancient Data, +1 Tech Salvage",
+      "artifact_resonance_standard": "The resonance faded: crew morale +1"
     }
   },
 

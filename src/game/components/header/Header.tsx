@@ -148,7 +148,7 @@ export function GameHeader() {
 
   return (
     <>
-      <header className="cockpit-header px-4 py-3 md:px-5 md:py-4 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0">
+      <header className="cockpit-header select-none px-4 py-3 md:px-5 md:py-4 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0">
         <h1 className="cockpit-header__title font-['Orbitron'] font-black text-lg md:text-2xl tracking-[2px] md:tracking-[3px] text-[#00ff41] text-center md:text-left">
           ◆ {t("game.title")} ◆
         </h1>

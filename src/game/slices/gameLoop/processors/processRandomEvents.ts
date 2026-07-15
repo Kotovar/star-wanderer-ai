@@ -4,6 +4,7 @@ import type {
   GameStore,
   PendingRandomEvent,
   RandomEventChoiceId,
+  RandomEventType,
   SetState,
 } from "@/game/types";
 import { store as i18nStore } from "@/lib/useTranslation";
@@ -12,10 +13,14 @@ import {
   isRandomEventConsequenceDue,
   scheduleRandomEventConsequence,
 } from "@/game/events/randomEventChains";
+import { pickRandomEvent } from "@/game/constants/randomEvents";
 
-const EVENT_TRIGGER_CHANCE = 0.08;
-const EVENT_COOLDOWN = 8;
+// ─── Frequency tuning ─────────────────────────────────────────
+const EVENT_TRIGGER_CHANCE = 0.05; // было 0.08
+const EVENT_COOLDOWN = 12; // было 8
 const FIRST_EVENT_TURN = 6;
+
+// ─── Payload ranges ───────────────────────────────────────────
 const STORM_DAMAGE_MIN = 5;
 const STORM_DAMAGE_MAX = 15;
 const MIN_MODULE_HEALTH = 10;
@@ -28,6 +33,15 @@ const CREW_DISPUTE_HAPPINESS_PENALTY = 6;
 const SPECIALIST_EXP = 4;
 const BIOHAZARD_DAMAGE_MIN = 10;
 const BIOHAZARD_DAMAGE_MAX = 20;
+
+const METEOR_DAMAGE_MIN = 8;
+const METEOR_DAMAGE_MAX = 18;
+const PIRATE_CREDIT_LOSS_MIN = 30;
+const PIRATE_CREDIT_LOSS_MAX = 60;
+const DERELICT_REWARD_MIN = 15;
+const DERELICT_REWARD_MAX = 35;
+const TRADER_DISCOUNT_MIN = 20;
+const TRADER_DISCOUNT_MAX = 40;
 
 type RandomEventState = Pick<GameState, "crew" | "ship">;
 
@@ -42,8 +56,15 @@ const findLivingCrew = (
   profession: GameState["crew"][number]["profession"],
 ) => state.crew.find((member) => member.profession === profession && member.health > 0);
 
-const findActiveModule = (state: RandomEventState, type: GameState["ship"]["modules"][number]["type"]) =>
-  state.ship.modules.find((module) => module.type === type && isModuleActive(module));
+const findActiveModule = (
+  state: RandomEventState,
+  type: GameState["ship"]["modules"][number]["type"],
+) =>
+  state.ship.modules.find(
+    (module) => module.type === type && isModuleActive(module),
+  );
+
+// ─── Choice availability ──────────────────────────────────────
 
 export function canUseRandomEventChoice(
   state: RandomEventState,
@@ -62,12 +83,16 @@ export function canUseRandomEventChoice(
     }
     case "capsule":
       if (choice === "specialist") return !!findLivingCrew(state, "scientist");
-      return !!findLivingCrew(state, "engineer") && !!findActiveModule(state, "cargo");
+      return (
+        !!findLivingCrew(state, "engineer") &&
+        !!findActiveModule(state, "cargo")
+      );
     case "virus":
       if (choice === "specialist") return !!findLivingCrew(state, "medic");
       return (
-        state.crew.some((member) => member.race === "synthetic" && member.health > 0) ||
-        !!findActiveModule(state, "ai_core")
+        state.crew.some(
+          (member) => member.race === "synthetic" && member.health > 0,
+        ) || !!findActiveModule(state, "ai_core")
       );
     case "fuel_leak":
       if (choice === "specialist") return !!findLivingCrew(state, "engineer");
@@ -78,8 +103,43 @@ export function canUseRandomEventChoice(
     case "biohazard":
       if (choice === "specialist") return !!findLivingCrew(state, "medic");
       return !!findActiveModule(state, "lifesupport");
+    case "meteor_shower":
+      if (choice === "systems") return state.ship.shields > 0;
+      return !!findLivingCrew(state, "engineer");
+    case "pirate_raid":
+      if (choice === "systems")
+        return !!findActiveModule(state, "weaponbay");
+      return !!findLivingCrew(state, "gunner");
+    case "distress_signal":
+      if (choice === "specialist") return !!findLivingCrew(state, "medic");
+      return !!findActiveModule(state, "medical");
+    case "trader":
+      if (choice === "specialist") return !!findLivingCrew(state, "scientist");
+      return !!findActiveModule(state, "cargo");
+    case "derelict":
+      if (choice === "specialist") return !!findLivingCrew(state, "scientist");
+      return !!findActiveModule(state, "scanner");
+    case "ancient_signal":
+      if (choice === "specialist") {
+        const lab = findActiveModule(state, "lab");
+        const scientist = findLivingCrew(state, "scientist");
+        return !!lab && scientist?.moduleId === lab.id;
+      }
+      return !!findActiveModule(state, "scanner");
+    case "research_breakthrough":
+      if (choice === "specialist") {
+        const lab = findActiveModule(state, "lab");
+        const scientist = findLivingCrew(state, "scientist");
+        return !!lab && scientist?.moduleId === lab.id;
+      }
+      return !!findActiveModule(state, "scanner");
+    case "artifact_resonance":
+      if (choice === "specialist") return !!findLivingCrew(state, "scientist");
+      return !!findActiveModule(state, "lab");
   }
 }
+
+// ─── Helpers ──────────────────────────────────────────────────
 
 function changeCrewHappiness(set: SetState, amount: number): void {
   set((state) => ({
@@ -90,6 +150,43 @@ function changeCrewHappiness(set: SetState, amount: number): void {
   }));
 }
 
+function damageModule(set: SetState, moduleId: number, damage: number): void {
+  if (damage <= 0) return;
+  set((state) => ({
+    ship: {
+      ...state.ship,
+      modules: state.ship.modules.map((module) =>
+        module.id === moduleId
+          ? {
+              ...module,
+              health: Math.max(MIN_MODULE_HEALTH, module.health - damage),
+            }
+          : module,
+      ),
+    },
+  }));
+}
+
+function addResearchResource(
+  set: SetState,
+  resource: string,
+  amount: number,
+): void {
+  set((state) => ({
+    research: {
+      ...state.research,
+      resources: {
+        ...state.research.resources,
+        [resource]:
+          ((state.research.resources as Record<string, number>)[resource] ??
+            0) + amount,
+      },
+    },
+  }));
+}
+
+// ─── Consequence handler ──────────────────────────────────────
+
 function applyRandomEventConsequence(
   event: Extract<PendingRandomEvent, { type: "consequence" }>,
   set: SetState,
@@ -99,63 +196,77 @@ function applyRandomEventConsequence(
 
   switch (event.eventType) {
     case "storm":
-      if (positive) {
-        changeCrewHappiness(set, 3);
-      } else {
-        changeCrewHappiness(set, -2);
-      }
+    case "virus":
+    case "crew_dispute":
+    case "biohazard":
+      changeCrewHappiness(
+        set,
+        positive ? 3 : event.eventType === "biohazard" ? -3 : -2,
+      );
       break;
     case "capsule":
-      if (event.choice === "specialist") {
-        set((state) => ({
-          research: {
-            ...state.research,
-            resources: {
-              ...state.research.resources,
-              ancient_data: (state.research.resources.ancient_data ?? 0) + 1,
-            },
-          },
-        }));
-      } else if (event.choice === "systems") {
-        set((state) => ({
-          research: {
-            ...state.research,
-            resources: {
-              ...state.research.resources,
-              tech_salvage: (state.research.resources.tech_salvage ?? 0) + 1,
-            },
-          },
-        }));
-      } else {
-        set((state) => ({ credits: state.credits + 10 }));
-      }
-      break;
-    case "virus":
-      changeCrewHappiness(set, positive ? 3 : -3);
+      if (event.choice === "specialist")
+        addResearchResource(set, "ancient_data", 1);
+      else if (event.choice === "systems")
+        addResearchResource(set, "tech_salvage", 1);
+      else set((state) => ({ credits: state.credits + 10 }));
       break;
     case "fuel_leak":
-      if (positive) {
+      if (positive)
         set((state) => ({
           ship: {
             ...state.ship,
             fuel: Math.min(state.ship.maxFuel, state.ship.fuel + 4),
           },
         }));
-      } else {
+      else
         set((state) => ({
           ship: { ...state.ship, fuel: Math.max(0, state.ship.fuel - 3) },
         }));
-      }
       break;
-    case "crew_dispute":
-      changeCrewHappiness(set, positive ? 4 : -2);
+    case "meteor_shower":
+      changeCrewHappiness(set, positive ? 2 : -2);
       break;
-    case "biohazard":
-      if (positive) {
-        changeCrewHappiness(set, 2);
-      } else {
-        changeCrewHappiness(set, -3);
-      }
+    case "pirate_raid":
+      if (event.choice === "specialist")
+        set((state) => ({ credits: state.credits + 20 }));
+      else if (event.choice === "standard")
+        set((state) => ({ credits: Math.max(0, state.credits - 10) }));
+      break;
+    case "distress_signal":
+      changeCrewHappiness(set, positive ? 3 : -2);
+      break;
+    case "trader":
+      if (event.choice === "specialist")
+        addResearchResource(set, "tech_salvage", 1);
+      else if (event.choice === "systems")
+        set((state) => ({ credits: state.credits + 15 }));
+      break;
+    case "derelict":
+      if (event.choice === "specialist")
+        addResearchResource(set, "ancient_data", 1);
+      else if (event.choice === "systems")
+        addResearchResource(set, "tech_salvage", 1);
+      else set((state) => ({ credits: state.credits + 10 }));
+      break;
+    case "ancient_signal":
+      if (event.choice === "specialist")
+        addResearchResource(set, "ancient_data", 1);
+      else if (event.choice === "systems")
+        addResearchResource(set, "tech_salvage", 1);
+      break;
+    case "research_breakthrough":
+      if (event.choice === "specialist")
+        addResearchResource(set, "ancient_data", 1);
+      else if (event.choice === "systems")
+        addResearchResource(set, "tech_salvage", 1);
+      break;
+    case "artifact_resonance":
+      if (event.choice === "specialist")
+        addResearchResource(set, "ancient_data", 1);
+      else if (event.choice === "systems")
+        addResearchResource(set, "tech_salvage", 1);
+      else changeCrewHappiness(set, 1);
       break;
   }
 
@@ -167,19 +278,7 @@ function applyRandomEventConsequence(
   );
 }
 
-function damageModule(set: SetState, moduleId: number, damage: number): void {
-  if (damage <= 0) return;
-  set((state) => ({
-    ship: {
-      ...state.ship,
-      modules: state.ship.modules.map((module) =>
-        module.id === moduleId
-          ? { ...module, health: Math.max(MIN_MODULE_HEALTH, module.health - damage) }
-          : module,
-      ),
-    },
-  }));
-}
+// ─── Per-event choice handlers (existing) ─────────────────────
 
 function applyStormChoice(
   event: Extract<PendingRandomEvent, { type: "storm" }>,
@@ -203,7 +302,10 @@ function applyStormChoice(
     const absorbed = Math.min(shields, event.damage);
     const remainingDamage = event.damage - absorbed;
     set((state) => ({
-      ship: { ...state.ship, shields: Math.max(0, state.ship.shields - absorbed) },
+      ship: {
+        ...state.ship,
+        shields: Math.max(0, state.ship.shields - absorbed),
+      },
     }));
     damageModule(set, event.targetModuleId, remainingDamage);
     get().addLog(
@@ -218,7 +320,9 @@ function applyStormChoice(
 
   damageModule(set, event.targetModuleId, event.damage);
   get().addLog(
-    i18nStore.t("random_events.logs.storm_standard", { damage: event.damage }),
+    i18nStore.t("random_events.logs.storm_standard", {
+      damage: event.damage,
+    }),
     "warning",
   );
 }
@@ -230,30 +334,14 @@ function applyCapsuleChoice(
   get: () => GameStore,
 ): void {
   if (choice === "specialist") {
-    set((state) => ({
-      research: {
-        ...state.research,
-        resources: {
-          ...state.research.resources,
-          ancient_data: (state.research.resources.ancient_data ?? 0) + 1,
-        },
-      },
-    }));
+    addResearchResource(set, "ancient_data", 1);
     get().gainExp(findLivingCrew(get(), "scientist"), SPECIALIST_EXP);
     get().addLog(i18nStore.t("random_events.logs.capsule_science"), "info");
     return;
   }
 
   if (choice === "systems") {
-    set((state) => ({
-      research: {
-        ...state.research,
-        resources: {
-          ...state.research.resources,
-          tech_salvage: (state.research.resources.tech_salvage ?? 0) + 2,
-        },
-      },
-    }));
+    addResearchResource(set, "tech_salvage", 2);
     get().gainExp(findLivingCrew(get(), "engineer"), SPECIALIST_EXP);
     get().addLog(i18nStore.t("random_events.logs.capsule_salvage"), "info");
     return;
@@ -261,7 +349,9 @@ function applyCapsuleChoice(
 
   set((state) => ({ credits: state.credits + event.reward }));
   get().addLog(
-    i18nStore.t("random_events.logs.capsule_standard", { reward: event.reward }),
+    i18nStore.t("random_events.logs.capsule_standard", {
+      reward: event.reward,
+    }),
     "info",
   );
 }
@@ -274,15 +364,12 @@ function applyVirusChoice(
 ): void {
   if (choice === "specialist") {
     const reducedPenalty = 2;
-    set((state) => ({
-      crew: state.crew.map((member) => ({
-        ...member,
-        happiness: Math.max(0, member.happiness - reducedPenalty),
-      })),
-    }));
+    changeCrewHappiness(set, -reducedPenalty);
     get().gainExp(findLivingCrew(get(), "medic"), SPECIALIST_EXP);
     get().addLog(
-      i18nStore.t("random_events.logs.virus_medic", { penalty: reducedPenalty }),
+      i18nStore.t("random_events.logs.virus_medic", {
+        penalty: reducedPenalty,
+      }),
       "info",
     );
     return;
@@ -310,12 +397,7 @@ function applyVirusChoice(
     return;
   }
 
-  set((state) => ({
-    crew: state.crew.map((member) => ({
-      ...member,
-      happiness: Math.max(0, member.happiness - event.happinessPenalty),
-    })),
-  }));
+  changeCrewHappiness(set, -event.happinessPenalty);
   get().addLog(
     i18nStore.t("random_events.logs.virus_standard", {
       penalty: event.happinessPenalty,
@@ -337,7 +419,9 @@ function applyFuelLeakChoice(
     }));
     get().gainExp(findLivingCrew(get(), "engineer"), SPECIALIST_EXP);
     get().addLog(
-      i18nStore.t("random_events.logs.fuel_leak_engineer", { loss: reducedLoss }),
+      i18nStore.t("random_events.logs.fuel_leak_engineer", {
+        loss: reducedLoss,
+      }),
       "info",
     );
     return;
@@ -354,7 +438,9 @@ function applyFuelLeakChoice(
     ship: { ...state.ship, fuel: Math.max(0, state.ship.fuel - event.fuelLoss) },
   }));
   get().addLog(
-    i18nStore.t("random_events.logs.fuel_leak_standard", { loss: event.fuelLoss }),
+    i18nStore.t("random_events.logs.fuel_leak_standard", {
+      loss: event.fuelLoss,
+    }),
     "warning",
   );
 }
@@ -366,17 +452,15 @@ function applyCrewDisputeChoice(
   get: () => GameStore,
 ): void {
   if (choice === "systems") {
-    get().addLog(i18nStore.t("random_events.logs.crew_dispute_quarters"), "info");
+    get().addLog(
+      i18nStore.t("random_events.logs.crew_dispute_quarters"),
+      "info",
+    );
     return;
   }
 
   const penalty = choice === "specialist" ? 2 : event.happinessPenalty;
-  set((state) => ({
-    crew: state.crew.map((member) => ({
-      ...member,
-      happiness: Math.max(0, member.happiness - penalty),
-    })),
-  }));
+  changeCrewHappiness(set, -penalty);
 
   if (choice === "specialist") {
     get().gainExp(findLivingCrew(get(), "pilot"), SPECIALIST_EXP);
@@ -400,26 +484,13 @@ function applyBiohazardChoice(
   get: () => GameStore,
 ): void {
   if (choice === "systems") {
-    // Жизнеобеспечение фильтрует споры — модуль получает небольшой урон
     const lifesupport = findActiveModule(get(), "lifesupport");
-    if (lifesupport) {
-      set((s) => ({
-        ship: {
-          ...s.ship,
-          modules: s.ship.modules.map((m) =>
-            m.id === lifesupport.id
-              ? { ...m, health: Math.max(1, m.health - 5) }
-              : m,
-          ),
-        },
-      }));
-    }
+    if (lifesupport) damageModule(set, lifesupport.id, 5);
     get().addLog(i18nStore.t("random_events.logs.biohazard_systems"), "info");
     return;
   }
 
   if (choice === "specialist") {
-    // Медик нейтрализует угрозу — минимальный урон + опыт
     const damage = Math.floor(event.crewDamage * 0.3);
     set((state) => ({
       crew: state.crew.map((member) => ({
@@ -435,7 +506,6 @@ function applyBiohazardChoice(
     return;
   }
 
-  // Стандарт: полный урон экипажу + снижение настроения
   set((state) => ({
     crew: state.crew.map((member) => ({
       ...member,
@@ -451,6 +521,289 @@ function applyBiohazardChoice(
   );
 }
 
+// ─── Per-event choice handlers (new) ──────────────────────────
+
+function applyMeteorShowerChoice(
+  event: Extract<PendingRandomEvent, { type: "meteor_shower" }>,
+  choice: RandomEventChoiceId,
+  set: SetState,
+  get: () => GameStore,
+): void {
+  if (choice === "specialist") {
+    const reducedDamage = Math.max(1, Math.ceil(event.damage * 0.3));
+    damageModule(set, event.targetModuleId, reducedDamage);
+    get().gainExp(findLivingCrew(get(), "engineer"), SPECIALIST_EXP);
+    get().addLog(
+      i18nStore.t("random_events.logs.meteor_shower_engineer", {
+        damage: reducedDamage,
+      }),
+      "info",
+    );
+    return;
+  }
+
+  if (choice === "systems") {
+    const shields = get().ship.shields;
+    const absorbed = Math.min(shields, event.damage);
+    const remainingDamage = event.damage - absorbed;
+    set((state) => ({
+      ship: {
+        ...state.ship,
+        shields: Math.max(0, state.ship.shields - absorbed),
+      },
+    }));
+    damageModule(set, event.targetModuleId, remainingDamage);
+    get().addLog(
+      i18nStore.t("random_events.logs.meteor_shower_shields", {
+        absorbed,
+        damage: remainingDamage,
+      }),
+      remainingDamage > 0 ? "warning" : "info",
+    );
+    return;
+  }
+
+  damageModule(set, event.targetModuleId, event.damage);
+  get().addLog(
+    i18nStore.t("random_events.logs.meteor_shower_standard", {
+      damage: event.damage,
+    }),
+    "warning",
+  );
+}
+
+function applyPirateRaidChoice(
+  event: Extract<PendingRandomEvent, { type: "pirate_raid" }>,
+  choice: RandomEventChoiceId,
+  set: SetState,
+  get: () => GameStore,
+): void {
+  if (choice === "specialist") {
+    const loot = Math.floor(event.creditLoss * 0.5);
+    set((state) => ({ credits: state.credits + loot }));
+    get().gainExp(findLivingCrew(get(), "gunner"), SPECIALIST_EXP);
+    get().addLog(
+      i18nStore.t("random_events.logs.pirate_raid_gunner", { loot }),
+      "info",
+    );
+    return;
+  }
+
+  if (choice === "systems") {
+    get().addLog(i18nStore.t("random_events.logs.pirate_raid_scared"), "info");
+    return;
+  }
+
+  set((state) => ({
+    credits: Math.max(0, state.credits - event.creditLoss),
+  }));
+  changeCrewHappiness(set, -3);
+  get().addLog(
+    i18nStore.t("random_events.logs.pirate_raid_standard", {
+      loss: event.creditLoss,
+    }),
+    "error",
+  );
+}
+
+function applyDistressSignalChoice(
+  _event: Extract<PendingRandomEvent, { type: "distress_signal" }>,
+  choice: RandomEventChoiceId,
+  set: SetState,
+  get: () => GameStore,
+): void {
+  if (choice === "specialist") {
+    set((state) => ({ credits: state.credits + 40 }));
+    changeCrewHappiness(set, 5);
+    get().gainExp(findLivingCrew(get(), "medic"), SPECIALIST_EXP);
+    get().addLog(i18nStore.t("random_events.logs.distress_signal_medic"), "info");
+    return;
+  }
+
+  if (choice === "systems") {
+    changeCrewHappiness(set, 3);
+    get().addLog(
+      i18nStore.t("random_events.logs.distress_signal_medical"),
+      "info",
+    );
+    return;
+  }
+
+  changeCrewHappiness(set, -3);
+  get().addLog(
+    i18nStore.t("random_events.logs.distress_signal_standard"),
+    "warning",
+  );
+}
+
+function applyTraderChoice(
+  event: Extract<PendingRandomEvent, { type: "trader" }>,
+  choice: RandomEventChoiceId,
+  set: SetState,
+  get: () => GameStore,
+): void {
+  if (choice === "specialist") {
+    addResearchResource(set, "ancient_data", 1);
+    get().gainExp(findLivingCrew(get(), "scientist"), SPECIALIST_EXP);
+    get().addLog(i18nStore.t("random_events.logs.trader_scientist"), "info");
+    return;
+  }
+
+  if (choice === "systems") {
+    set((state) => ({
+      ship: {
+        ...state.ship,
+        fuel: Math.min(state.ship.maxFuel, state.ship.fuel + 5),
+      },
+      credits: state.credits + event.discount,
+    }));
+    get().addLog(
+      i18nStore.t("random_events.logs.trader_cargo", {
+        bonus: event.discount,
+      }),
+      "info",
+    );
+    return;
+  }
+
+  get().addLog(i18nStore.t("random_events.logs.trader_standard"), "info");
+}
+
+function applyDerelictChoice(
+  event: Extract<PendingRandomEvent, { type: "derelict" }>,
+  choice: RandomEventChoiceId,
+  set: SetState,
+  get: () => GameStore,
+): void {
+  if (choice === "specialist") {
+    addResearchResource(set, "ancient_data", 1);
+    addResearchResource(set, "tech_salvage", 1);
+    get().gainExp(findLivingCrew(get(), "scientist"), SPECIALIST_EXP);
+    get().addLog(i18nStore.t("random_events.logs.derelict_science"), "info");
+    return;
+  }
+
+  if (choice === "systems") {
+    addResearchResource(set, "tech_salvage", 2);
+    set((state) => ({ credits: state.credits + event.reward }));
+    get().addLog(
+      i18nStore.t("random_events.logs.derelict_scanner", {
+        reward: event.reward,
+      }),
+      "info",
+    );
+    return;
+  }
+
+  set((state) => ({ credits: state.credits + Math.floor(event.reward * 0.5) }));
+  get().addLog(
+    i18nStore.t("random_events.logs.derelict_standard", {
+      reward: Math.floor(event.reward * 0.5),
+    }),
+    "info",
+  );
+}
+
+function applyAncientSignalChoice(
+  _event: Extract<PendingRandomEvent, { type: "ancient_signal" }>,
+  choice: RandomEventChoiceId,
+  set: SetState,
+  get: () => GameStore,
+): void {
+  if (choice === "specialist") {
+    addResearchResource(set, "ancient_data", 2);
+    addResearchResource(set, "tech_salvage", 1);
+    get().gainExp(findLivingCrew(get(), "scientist"), SPECIALIST_EXP);
+    get().addLog(
+      i18nStore.t("random_events.logs.ancient_signal_scientist"),
+      "info",
+    );
+    return;
+  }
+
+  if (choice === "systems") {
+    addResearchResource(set, "tech_salvage", 1);
+    get().addLog(
+      i18nStore.t("random_events.logs.ancient_signal_scanner"),
+      "info",
+    );
+    return;
+  }
+
+  get().addLog(
+    i18nStore.t("random_events.logs.ancient_signal_standard"),
+    "info",
+  );
+}
+
+function applyResearchBreakthroughChoice(
+  _event: Extract<PendingRandomEvent, { type: "research_breakthrough" }>,
+  choice: RandomEventChoiceId,
+  set: SetState,
+  get: () => GameStore,
+): void {
+  if (choice === "specialist") {
+    addResearchResource(set, "ancient_data", 2);
+    addResearchResource(set, "tech_salvage", 2);
+    get().gainExp(findLivingCrew(get(), "scientist"), SPECIALIST_EXP);
+    get().addLog(
+      i18nStore.t("random_events.logs.research_breakthrough_scientist"),
+      "info",
+    );
+    return;
+  }
+
+  if (choice === "systems") {
+    addResearchResource(set, "tech_salvage", 1);
+    get().addLog(
+      i18nStore.t("random_events.logs.research_breakthrough_scanner"),
+      "info",
+    );
+    return;
+  }
+
+  get().addLog(
+    i18nStore.t("random_events.logs.research_breakthrough_standard"),
+    "info",
+  );
+}
+
+function applyArtifactResonanceChoice(
+  _event: Extract<PendingRandomEvent, { type: "artifact_resonance" }>,
+  choice: RandomEventChoiceId,
+  set: SetState,
+  get: () => GameStore,
+): void {
+  if (choice === "specialist") {
+    addResearchResource(set, "ancient_data", 2);
+    changeCrewHappiness(set, 5);
+    get().gainExp(findLivingCrew(get(), "scientist"), SPECIALIST_EXP);
+    get().addLog(
+      i18nStore.t("random_events.logs.artifact_resonance_scientist"),
+      "info",
+    );
+    return;
+  }
+
+  if (choice === "systems") {
+    addResearchResource(set, "ancient_data", 1);
+    addResearchResource(set, "tech_salvage", 1);
+    get().addLog(
+      i18nStore.t("random_events.logs.artifact_resonance_lab"),
+      "info",
+    );
+    return;
+  }
+
+  changeCrewHappiness(set, 1);
+  get().addLog(
+    i18nStore.t("random_events.logs.artifact_resonance_standard"),
+    "info",
+  );
+}
+
+// ─── Resolve entry point ──────────────────────────────────────
+
 export const resolveRandomEvent = (
   choice: RandomEventChoiceId,
   set: SetState,
@@ -459,7 +812,10 @@ export const resolveRandomEvent = (
   const event = get().pendingRandomEvent;
   if (!event) return;
   if (!canUseRandomEventChoice(get(), event, choice)) {
-    get().addLog(i18nStore.t("random_events.logs.choice_unavailable"), "warning");
+    get().addLog(
+      i18nStore.t("random_events.logs.choice_unavailable"),
+      "warning",
+    );
     return;
   }
 
@@ -481,6 +837,30 @@ export const resolveRandomEvent = (
       break;
     case "biohazard":
       applyBiohazardChoice(event, choice, set, get);
+      break;
+    case "meteor_shower":
+      applyMeteorShowerChoice(event, choice, set, get);
+      break;
+    case "pirate_raid":
+      applyPirateRaidChoice(event, choice, set, get);
+      break;
+    case "distress_signal":
+      applyDistressSignalChoice(event, choice, set, get);
+      break;
+    case "trader":
+      applyTraderChoice(event, choice, set, get);
+      break;
+    case "derelict":
+      applyDerelictChoice(event, choice, set, get);
+      break;
+    case "ancient_signal":
+      applyAncientSignalChoice(event, choice, set, get);
+      break;
+    case "research_breakthrough":
+      applyResearchBreakthroughChoice(event, choice, set, get);
+      break;
+    case "artifact_resonance":
+      applyArtifactResonanceChoice(event, choice, set, get);
       break;
     case "consequence":
       applyRandomEventConsequence(event, set, get);
@@ -506,12 +886,81 @@ export const resolveRandomEvent = (
   get().saveGame();
 };
 
+// ─── Trigger logic ────────────────────────────────────────────
+
+function generateEventPayload(
+  type: RandomEventType,
+  state: GameState,
+): PendingRandomEvent {
+  switch (type) {
+    case "storm":
+      return {
+        type: "storm",
+        damage: randomInRange(STORM_DAMAGE_MIN, STORM_DAMAGE_MAX),
+        targetModuleId: randomElement(state.ship.modules).id,
+      };
+    case "capsule":
+      return {
+        type: "capsule",
+        reward: randomInRange(CAPSULE_REWARDS_MIN, CAPSULE_REWARDS_MAX),
+      };
+    case "virus":
+      return { type: "virus", happinessPenalty: VIRUS_HAPPINESS_PENALTY };
+    case "fuel_leak":
+      return {
+        type: "fuel_leak",
+        fuelLoss: randomInRange(FUEL_LEAK_MIN, FUEL_LEAK_MAX),
+      };
+    case "crew_dispute":
+      return {
+        type: "crew_dispute",
+        happinessPenalty: CREW_DISPUTE_HAPPINESS_PENALTY,
+      };
+    case "biohazard":
+      return {
+        type: "biohazard",
+        crewDamage: randomInRange(BIOHAZARD_DAMAGE_MIN, BIOHAZARD_DAMAGE_MAX),
+      };
+    case "meteor_shower":
+      return {
+        type: "meteor_shower",
+        damage: randomInRange(METEOR_DAMAGE_MIN, METEOR_DAMAGE_MAX),
+        targetModuleId: randomElement(state.ship.modules).id,
+      };
+    case "pirate_raid":
+      return {
+        type: "pirate_raid",
+        creditLoss: randomInRange(PIRATE_CREDIT_LOSS_MIN, PIRATE_CREDIT_LOSS_MAX),
+      };
+    case "distress_signal":
+      return { type: "distress_signal" };
+    case "trader":
+      return {
+        type: "trader",
+        discount: randomInRange(TRADER_DISCOUNT_MIN, TRADER_DISCOUNT_MAX),
+      };
+    case "derelict":
+      return {
+        type: "derelict",
+        reward: randomInRange(DERELICT_REWARD_MIN, DERELICT_REWARD_MAX),
+      };
+    case "ancient_signal":
+      return { type: "ancient_signal" };
+    case "research_breakthrough":
+      return { type: "research_breakthrough" };
+    case "artifact_resonance":
+      return { type: "artifact_resonance" };
+  }
+}
+
 export const processRandomEvents = (
   _state: GameState,
   set: SetState,
   get: () => GameStore,
 ): void => {
   const state = get();
+
+  // Phase A: resolve pending consequence
   const consequence = state.scheduledRandomEventConsequence;
   if (
     consequence &&
@@ -524,10 +973,14 @@ export const processRandomEvents = (
       pendingRandomEvent: { type: "consequence", ...consequence },
       scheduledRandomEventConsequence: null,
     });
-    get().addLog(i18nStore.t("random_events.logs.detected_consequence"), "warning");
+    get().addLog(
+      i18nStore.t("random_events.logs.detected_consequence"),
+      "warning",
+    );
     return;
   }
 
+  // Phase B: maybe spawn a fresh event
   if (
     state.currentCombat ||
     state.pendingTravelEvent ||
@@ -540,47 +993,12 @@ export const processRandomEvents = (
     return;
   }
 
-  const eventType = randomElement([
-    "storm",
-    "capsule",
-    "virus",
-    "fuel_leak",
-    "crew_dispute",
-    "biohazard",
-  ] as const);
-  let event: PendingRandomEvent;
-
-  if (eventType === "storm") {
-    const targetModule = randomElement(state.ship.modules);
-    event = {
-      type: "storm",
-      damage: randomInRange(STORM_DAMAGE_MIN, STORM_DAMAGE_MAX),
-      targetModuleId: targetModule.id,
-    };
-  } else if (eventType === "capsule") {
-    event = {
-      type: "capsule",
-      reward: randomInRange(CAPSULE_REWARDS_MIN, CAPSULE_REWARDS_MAX),
-    };
-  } else if (eventType === "virus") {
-    event = { type: "virus", happinessPenalty: VIRUS_HAPPINESS_PENALTY };
-  } else if (eventType === "fuel_leak") {
-    event = {
-      type: "fuel_leak",
-      fuelLoss: randomInRange(FUEL_LEAK_MIN, FUEL_LEAK_MAX),
-    };
-  } else if (eventType === "biohazard") {
-    event = {
-      type: "biohazard",
-      crewDamage: randomInRange(BIOHAZARD_DAMAGE_MIN, BIOHAZARD_DAMAGE_MAX),
-    };
-  } else {
-    event = {
-      type: "crew_dispute",
-      happinessPenalty: CREW_DISPUTE_HAPPINESS_PENALTY,
-    };
-  }
+  const eventType = pickRandomEvent(state);
+  const event = generateEventPayload(eventType, state);
 
   set({ pendingRandomEvent: event, randomEventCooldown: EVENT_COOLDOWN });
-  get().addLog(i18nStore.t(`random_events.logs.detected_${event.type}`), "warning");
+  get().addLog(
+    i18nStore.t(`random_events.logs.detected_${event.type}`),
+    "warning",
+  );
 };

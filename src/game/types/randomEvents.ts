@@ -6,7 +6,15 @@ export type RandomEventType =
   | "virus"
   | "fuel_leak"
   | "crew_dispute"
-  | "biohazard";
+  | "biohazard"
+  | "meteor_shower"
+  | "pirate_raid"
+  | "distress_signal"
+  | "trader"
+  | "derelict"
+  | "ancient_signal"
+  | "research_breakthrough"
+  | "artifact_resonance";
 
 export interface ScheduledRandomEventConsequence {
   eventType: RandomEventType;
@@ -39,6 +47,35 @@ export type PendingRandomEvent =
   | {
       type: "biohazard";
       crewDamage: number;
+    }
+  | {
+      type: "meteor_shower";
+      damage: number;
+      targetModuleId: number;
+    }
+  | {
+      type: "pirate_raid";
+      creditLoss: number;
+    }
+  | {
+      type: "distress_signal";
+    }
+  | {
+      type: "trader";
+      discount: number;
+    }
+  | {
+      type: "derelict";
+      reward: number;
+    }
+  | {
+      type: "ancient_signal";
+    }
+  | {
+      type: "research_breakthrough";
+    }
+  | {
+      type: "artifact_resonance";
     }
   | {
       type: "consequence";

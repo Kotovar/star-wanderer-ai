@@ -30,6 +30,14 @@ const EVENT_ACCENTS: Record<PendingRandomEvent["type"], string> = {
   fuel_leak: "#c040ff",
   crew_dispute: "#ff7a00",
   biohazard: "#00ff88",
+  meteor_shower: "#ff4444",
+  pirate_raid: "#ff8800",
+  distress_signal: "#00aaff",
+  trader: "#88ff00",
+  derelict: "#aaaaff",
+  ancient_signal: "#dd44ff",
+  research_breakthrough: "#00ffaa",
+  artifact_resonance: "#ff44dd",
   consequence: "#ffb000",
 };
 
@@ -40,6 +48,14 @@ const EVENT_ICONS: Record<PendingRandomEvent["type"], string> = {
   fuel_leak: "◒",
   crew_dispute: "◐",
   biohazard: "☄",
+  meteor_shower: "✦",
+  pirate_raid: "☠",
+  distress_signal: "SOS",
+  trader: "⚖",
+  derelict: "⌖",
+  ancient_signal: "⟁",
+  research_breakthrough: "⚛",
+  artifact_resonance: "✶",
   consequence: "◆",
 };
 
@@ -285,6 +301,294 @@ function buildEventView(
           },
         ],
       };
+    case "meteor_shower": {
+      const targetModule = state.ship.modules.find(
+        (module) => module.id === event.targetModuleId,
+      );
+      return {
+        description: t("random_events.meteor_shower.description", {
+          damage: event.damage,
+          module: targetModule
+            ? getModuleTranslation(targetModule.type, currentLanguage).name
+            : t("random_events.unknown_module"),
+        }),
+        choices: [
+          {
+            id: "specialist",
+            icon: "⚒",
+            label: t("random_events.meteor_shower.engineer.label"),
+            description: t("random_events.meteor_shower.engineer.description"),
+            outcome: t("random_events.meteor_shower.engineer.outcome", {
+              damage: Math.max(1, Math.ceil(event.damage * 0.3)),
+            }),
+            available: isAvailable("specialist"),
+            requirement: t("random_events.meteor_shower.engineer.requirement"),
+          },
+          {
+            id: "systems",
+            icon: "⬡",
+            label: t("random_events.meteor_shower.shields.label"),
+            description: t("random_events.meteor_shower.shields.description"),
+            outcome: t("random_events.meteor_shower.shields.outcome", {
+              absorbed: Math.min(state.ship.shields, event.damage),
+              damage: Math.max(0, event.damage - state.ship.shields),
+            }),
+            available: isAvailable("systems"),
+            requirement: t("random_events.meteor_shower.shields.requirement"),
+          },
+          {
+            id: "standard",
+            icon: "▦",
+            label: t("random_events.meteor_shower.standard.label"),
+            description: t("random_events.meteor_shower.standard.description"),
+            outcome: t("random_events.meteor_shower.standard.outcome", {
+              damage: event.damage,
+            }),
+            available: true,
+          },
+        ],
+      };
+    }
+    case "pirate_raid":
+      return {
+        description: t("random_events.pirate_raid.description", {
+          loss: event.creditLoss,
+        }),
+        choices: [
+          {
+            id: "specialist",
+            icon: "⚔",
+            label: t("random_events.pirate_raid.gunner.label"),
+            description: t("random_events.pirate_raid.gunner.description"),
+            outcome: t("random_events.pirate_raid.gunner.outcome", {
+              loot: Math.floor(event.creditLoss * 0.5),
+            }),
+            available: isAvailable("specialist"),
+            requirement: t("random_events.pirate_raid.gunner.requirement"),
+          },
+          {
+            id: "systems",
+            icon: "⌁",
+            label: t("random_events.pirate_raid.weapons.label"),
+            description: t("random_events.pirate_raid.weapons.description"),
+            outcome: t("random_events.pirate_raid.weapons.outcome"),
+            available: isAvailable("systems"),
+            requirement: t("random_events.pirate_raid.weapons.requirement"),
+          },
+          {
+            id: "standard",
+            icon: "▣",
+            label: t("random_events.pirate_raid.standard.label"),
+            description: t("random_events.pirate_raid.standard.description"),
+            outcome: t("random_events.pirate_raid.standard.outcome", {
+              loss: event.creditLoss,
+            }),
+            available: true,
+          },
+        ],
+      };
+    case "distress_signal":
+      return {
+        description: t("random_events.distress_signal.description"),
+        choices: [
+          {
+            id: "specialist",
+            icon: "✚",
+            label: t("random_events.distress_signal.medic.label"),
+            description: t("random_events.distress_signal.medic.description"),
+            outcome: t("random_events.distress_signal.medic.outcome"),
+            available: isAvailable("specialist"),
+            requirement: t("random_events.distress_signal.medic.requirement"),
+          },
+          {
+            id: "systems",
+            icon: "⚕",
+            label: t("random_events.distress_signal.medical.label"),
+            description: t("random_events.distress_signal.medical.description"),
+            outcome: t("random_events.distress_signal.medical.outcome"),
+            available: isAvailable("systems"),
+            requirement: t("random_events.distress_signal.medical.requirement"),
+          },
+          {
+            id: "standard",
+            icon: "▭",
+            label: t("random_events.distress_signal.standard.label"),
+            description: t("random_events.distress_signal.standard.description"),
+            outcome: t("random_events.distress_signal.standard.outcome"),
+            available: true,
+          },
+        ],
+      };
+    case "trader":
+      return {
+        description: t("random_events.trader.description", {
+          discount: event.discount,
+        }),
+        choices: [
+          {
+            id: "specialist",
+            icon: "⌬",
+            label: t("random_events.trader.scientist.label"),
+            description: t("random_events.trader.scientist.description"),
+            outcome: t("random_events.trader.scientist.outcome"),
+            available: isAvailable("specialist"),
+            requirement: t("random_events.trader.scientist.requirement"),
+          },
+          {
+            id: "systems",
+            icon: "▣",
+            label: t("random_events.trader.cargo.label"),
+            description: t("random_events.trader.cargo.description"),
+            outcome: t("random_events.trader.cargo.outcome", {
+              bonus: event.discount,
+            }),
+            available: isAvailable("systems"),
+            requirement: t("random_events.trader.cargo.requirement"),
+          },
+          {
+            id: "standard",
+            icon: "⚖",
+            label: t("random_events.trader.standard.label"),
+            description: t("random_events.trader.standard.description"),
+            outcome: t("random_events.trader.standard.outcome"),
+            available: true,
+          },
+        ],
+      };
+    case "derelict":
+      return {
+        description: t("random_events.derelict.description", {
+          reward: event.reward,
+        }),
+        choices: [
+          {
+            id: "specialist",
+            icon: "⌬",
+            label: t("random_events.derelict.scientist.label"),
+            description: t("random_events.derelict.scientist.description"),
+            outcome: t("random_events.derelict.scientist.outcome"),
+            available: isAvailable("specialist"),
+            requirement: t("random_events.derelict.scientist.requirement"),
+          },
+          {
+            id: "systems",
+            icon: "⌖",
+            label: t("random_events.derelict.scanner.label"),
+            description: t("random_events.derelict.scanner.description"),
+            outcome: t("random_events.derelict.scanner.outcome", {
+              reward: event.reward,
+            }),
+            available: isAvailable("systems"),
+            requirement: t("random_events.derelict.scanner.requirement"),
+          },
+          {
+            id: "standard",
+            icon: "◇",
+            label: t("random_events.derelict.standard.label"),
+            description: t("random_events.derelict.standard.description"),
+            outcome: t("random_events.derelict.standard.outcome", {
+              reward: Math.floor(event.reward * 0.5),
+            }),
+            available: true,
+          },
+        ],
+      };
+    case "ancient_signal":
+      return {
+        description: t("random_events.ancient_signal.description"),
+        choices: [
+          {
+            id: "specialist",
+            icon: "⟁",
+            label: t("random_events.ancient_signal.scientist.label"),
+            description: t("random_events.ancient_signal.scientist.description"),
+            outcome: t("random_events.ancient_signal.scientist.outcome"),
+            available: isAvailable("specialist"),
+            requirement: t("random_events.ancient_signal.scientist.requirement"),
+          },
+          {
+            id: "systems",
+            icon: "📡",
+            label: t("random_events.ancient_signal.scanner.label"),
+            description: t("random_events.ancient_signal.scanner.description"),
+            outcome: t("random_events.ancient_signal.scanner.outcome"),
+            available: isAvailable("systems"),
+            requirement: t("random_events.ancient_signal.scanner.requirement"),
+          },
+          {
+            id: "standard",
+            icon: "▭",
+            label: t("random_events.ancient_signal.standard.label"),
+            description: t("random_events.ancient_signal.standard.description"),
+            outcome: t("random_events.ancient_signal.standard.outcome"),
+            available: true,
+          },
+        ],
+      };
+    case "research_breakthrough":
+      return {
+        description: t("random_events.research_breakthrough.description"),
+        choices: [
+          {
+            id: "specialist",
+            icon: "⚛",
+            label: t("random_events.research_breakthrough.scientist.label"),
+            description: t("random_events.research_breakthrough.scientist.description"),
+            outcome: t("random_events.research_breakthrough.scientist.outcome"),
+            available: isAvailable("specialist"),
+            requirement: t("random_events.research_breakthrough.scientist.requirement"),
+          },
+          {
+            id: "systems",
+            icon: "📡",
+            label: t("random_events.research_breakthrough.scanner.label"),
+            description: t("random_events.research_breakthrough.scanner.description"),
+            outcome: t("random_events.research_breakthrough.scanner.outcome"),
+            available: isAvailable("systems"),
+            requirement: t("random_events.research_breakthrough.scanner.requirement"),
+          },
+          {
+            id: "standard",
+            icon: "▭",
+            label: t("random_events.research_breakthrough.standard.label"),
+            description: t("random_events.research_breakthrough.standard.description"),
+            outcome: t("random_events.research_breakthrough.standard.outcome"),
+            available: true,
+          },
+        ],
+      };
+    case "artifact_resonance":
+      return {
+        description: t("random_events.artifact_resonance.description"),
+        choices: [
+          {
+            id: "specialist",
+            icon: "✶",
+            label: t("random_events.artifact_resonance.scientist.label"),
+            description: t("random_events.artifact_resonance.scientist.description"),
+            outcome: t("random_events.artifact_resonance.scientist.outcome"),
+            available: isAvailable("specialist"),
+            requirement: t("random_events.artifact_resonance.scientist.requirement"),
+          },
+          {
+            id: "systems",
+            icon: "⚗",
+            label: t("random_events.artifact_resonance.lab.label"),
+            description: t("random_events.artifact_resonance.lab.description"),
+            outcome: t("random_events.artifact_resonance.lab.outcome"),
+            available: isAvailable("systems"),
+            requirement: t("random_events.artifact_resonance.lab.requirement"),
+          },
+          {
+            id: "standard",
+            icon: "▭",
+            label: t("random_events.artifact_resonance.standard.label"),
+            description: t("random_events.artifact_resonance.standard.description"),
+            outcome: t("random_events.artifact_resonance.standard.outcome"),
+            available: true,
+          },
+        ],
+      };
     case "consequence":
       return {
         description: t(
@@ -328,9 +632,9 @@ export function RandomEventPanel() {
   );
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto p-1">
+    <div className="flex min-h-0 flex-col gap-3 p-1 pb-3 lg:h-full lg:overflow-y-auto">
       <div
-        className="relative overflow-hidden border p-4"
+        className="relative overflow-hidden border p-3 sm:p-4"
         style={{
           borderColor: `${accent}77`,
           background: `linear-gradient(135deg, ${accent}18, rgba(3, 8, 14, 0.96) 58%)`,
@@ -362,7 +666,7 @@ export function RandomEventPanel() {
             </div>
           </div>
         </div>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#a7b0a7]">
+        <p className="mt-3 max-w-2xl break-words text-xs leading-relaxed text-[#a7b0a7] sm:text-sm">
           {description}
         </p>
       </div>

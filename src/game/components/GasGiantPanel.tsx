@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useGameStore } from "@/game/store";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { useTranslation } from "@/lib/useTranslation";
 import { RESEARCH_RESOURCES } from "@/game/constants";
-import type { DiveDepth } from "@/game/types/exploration";
 import { GAS_GIANT_DIVE_COOLDOWN } from "@/game/slices/locations/helpers/gasGiant/constants";
+import { useGameStore } from "@/game/store";
+import type { DiveDepth } from "@/game/types/exploration";
+import { getLocationName } from "@/lib/translationHelpers";
+import { useTranslation } from "@/lib/useTranslation";
 
 const DEPTH_COLORS: Record<DiveDepth, string> = {
   1: "#00d4ff",
@@ -23,445 +25,338 @@ const DEPTH_ICONS: Record<DiveDepth, string> = {
   4: "🌀",
 };
 
-const ATMOSPHERE_COLORS: Record<
-  string,
-  { band1: string; band2: string; band3: string; glow: string }
+const GAS_GIANT_BACKGROUNDS = {
+  hydrogen: "/assets/gas-giants/hydrogen-descent.webp",
+  methane: "/assets/gas-giants/methane-descent.webp",
+  ammonia: "/assets/gas-giants/ammonia-descent.webp",
+  nitrogen: "/assets/gas-giants/nitrogen-descent.webp",
+} as const;
+const GAS_GIANT_PROBE_ART = "/assets/gas-giants/probe-descent.webp";
+
+type GasGiantAtmosphere = keyof typeof GAS_GIANT_BACKGROUNDS;
+type DiveRisk = "low" | "medium" | "high" | "critical";
+type RewardTier = "common" | "rare" | "exotic" | "legendary";
+type StormActivity = "low" | "moderate" | "high";
+
+const GAS_GIANT_ASSET_URLS = [
+  ...Object.values(GAS_GIANT_BACKGROUNDS),
+  GAS_GIANT_PROBE_ART,
+];
+
+export function preloadGasGiantBackgrounds() {
+  for (const assetUrl of GAS_GIANT_ASSET_URLS) {
+    const image = new window.Image();
+    image.src = assetUrl;
+  }
+}
+
+const DIVE_LAYERS: ReadonlyArray<{
+  depth: DiveDepth;
+  pressure: string;
+  risk: DiveRisk;
+  reward: RewardTier;
+}> = [
+  { depth: 1, pressure: "1.2", risk: "low", reward: "common" },
+  { depth: 2, pressure: "12", risk: "medium", reward: "rare" },
+  { depth: 3, pressure: "81", risk: "high", reward: "exotic" },
+  { depth: 4, pressure: "460", risk: "critical", reward: "legendary" },
+];
+
+const ATMOSPHERE_TELEMETRY: Record<
+  GasGiantAtmosphere,
+  { temperature: string; activity: StormActivity; accent: string }
 > = {
-  hydrogen: {
-    band1: "#3a8fd4",
-    band2: "#2255a0",
-    band3: "#4fb3f0",
-    glow: "#00d4ff",
-  },
-  methane: {
-    band1: "#7ed494",
-    band2: "#2a6e42",
-    band3: "#a8e8bc",
-    glow: "#00ff41",
-  },
-  ammonia: {
-    band1: "#c49a2a",
-    band2: "#7a5a10",
-    band3: "#e8c86a",
-    glow: "#ffb000",
-  },
-  nitrogen: {
-    band1: "#9080d8",
-    band2: "#503a9a",
-    band3: "#c0b8f8",
-    glow: "#9933ff",
-  },
+  hydrogen: { temperature: "−128", activity: "moderate", accent: "#00d4ff" },
+  methane: { temperature: "−182", activity: "low", accent: "#00ff41" },
+  ammonia: { temperature: "−74", activity: "high", accent: "#ffb000" },
+  nitrogen: { temperature: "−163", activity: "moderate", accent: "#9933ff" },
 };
 
-// Tailwind-safe hover classes per depth (must be full strings so PurgeCSS keeps them)
-const DEPTH_BTN_CLASSES: Record<DiveDepth, string> = {
-  1: "border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810]",
-  2: "border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]",
-  3: "border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]",
-  4: "border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810]",
+const PROBE_TOP: Record<DiveDepth, string> = {
+  1: "15%",
+  2: "39%",
+  3: "63%",
+  4: "85%",
 };
 
-// Zone boundary radii (separators between depth 1→2, 2→3, 3→4)
-const ZONE_BOUNDS = [52, 37, 22] as const;
-
-// Midpoint radius of each depth zone — probe sits here
-const ZONE_MID_R: Record<DiveDepth, number> = { 1: 61, 2: 44, 3: 29, 4: 11 };
-
-// Stroke width for the annular zone glow (covers the zone thickness)
-const ZONE_GLOW_W: Record<DiveDepth, number> = { 1: 16, 2: 14, 3: 14, 4: 20 };
-
-// Probe sits at 315° (top-right), moving inward per depth
-const C45 = Math.SQRT2 / 2; // cos(-45°) = sin(45°) ≈ 0.7071
-
-// Per-atmosphere atmospheric band configs: y, height, color key (1/2/3), opacity, duration, direction, offset
-const ATMO_BANDS: Record<
-  string,
-  Array<{
-    y: number;
-    h: number;
-    c: 1 | 2 | 3;
-    op: number;
-    dur: number;
-    d: 1 | -1;
-    off: number;
-  }>
-> = {
-  // Hydrogen: Jupiter-style, wide evenly-spaced bands, right-side storm
-  hydrogen: [
-    { y: 76, h: 7, c: 3, op: 0.55, dur: 12, d: 1, off: 8 },
-    { y: 87, h: 5, c: 2, op: 0.4, dur: 16, d: -1, off: 5 },
-    { y: 96, h: 9, c: 1, op: 0.45, dur: 10, d: 1, off: 12 },
-    { y: 109, h: 5, c: 3, op: 0.35, dur: 14, d: -1, off: 9 },
-    { y: 118, h: 7, c: 2, op: 0.3, dur: 18, d: 1, off: 6 },
-  ],
-  // Methane: thick organic bands, left-side storm
-  methane: [
-    { y: 68, h: 10, c: 1, op: 0.5, dur: 9, d: -1, off: 14 },
-    { y: 82, h: 8, c: 3, op: 0.45, dur: 13, d: 1, off: 8 },
-    { y: 94, h: 14, c: 2, op: 0.55, dur: 8, d: -1, off: 16 },
-    { y: 112, h: 9, c: 1, op: 0.4, dur: 11, d: 1, off: 10 },
-    { y: 125, h: 7, c: 3, op: 0.35, dur: 15, d: -1, off: 7 },
-  ],
-  // Ammonia: fast narrow bands, large bottom storm
-  ammonia: [
-    { y: 72, h: 6, c: 3, op: 0.6, dur: 7, d: 1, off: 18 },
-    { y: 82, h: 9, c: 2, op: 0.5, dur: 10, d: -1, off: 12 },
-    { y: 94, h: 7, c: 1, op: 0.55, dur: 8, d: 1, off: 15 },
-    { y: 105, h: 11, c: 3, op: 0.4, dur: 14, d: -1, off: 9 },
-    { y: 120, h: 6, c: 2, op: 0.35, dur: 11, d: 1, off: 13 },
-  ],
-  // Nitrogen: slow subtle banding, multiple tiny vortices
-  nitrogen: [
-    { y: 74, h: 4, c: 1, op: 0.25, dur: 22, d: 1, off: 6 },
-    { y: 83, h: 6, c: 3, op: 0.3, dur: 28, d: -1, off: 4 },
-    { y: 93, h: 8, c: 2, op: 0.35, dur: 18, d: 1, off: 8 },
-    { y: 105, h: 5, c: 1, op: 0.3, dur: 24, d: -1, off: 5 },
-    { y: 114, h: 4, c: 3, op: 0.25, dur: 30, d: 1, off: 3 },
-  ],
-};
-
-// Per-atmosphere storm eyes
-const ATMO_STORMS: Record<
-  string,
-  Array<{
-    cx: number;
-    cy: number;
-    rx: number;
-    ry: number;
-    dur: number;
-    off: number;
-  }>
-> = {
-  hydrogen: [{ cx: 130, cy: 100, rx: 11, ry: 7, dur: 10, off: 5 }],
-  methane: [{ cx: 72, cy: 93, rx: 9, ry: 6, dur: 11, off: -6 }],
-  ammonia: [{ cx: 115, cy: 113, rx: 16, ry: 10, dur: 9, off: 7 }],
-  nitrogen: [
-    { cx: 80, cy: 85, rx: 5, ry: 3, dur: 14, off: 4 },
-    { cx: 118, cy: 115, rx: 4, ry: 2.5, dur: 19, off: -5 },
-    { cx: 95, cy: 105, rx: 6, ry: 4, dur: 11, off: 3 },
-  ],
-};
-
-function GasGiantVisual({
-  atmosphere,
+function ProbeMarker({
+  color,
   depth,
+  lost,
 }: {
-  atmosphere: string;
-  depth?: DiveDepth;
+  color: string;
+  depth: DiveDepth;
+  lost: boolean;
 }) {
-  const colors = ATMOSPHERE_COLORS[atmosphere] ?? ATMOSPHERE_COLORS.hydrogen;
-  const depthColor = depth ? DEPTH_COLORS[depth] : colors.glow;
-  const bands = ATMO_BANDS[atmosphere] ?? ATMO_BANDS.hydrogen;
-  const storms = ATMO_STORMS[atmosphere] ?? ATMO_STORMS.hydrogen;
-
-  const cb = (c: 1 | 2 | 3) =>
-    c === 1 ? colors.band1 : c === 2 ? colors.band2 : colors.band3;
-
-  // Probe position at the midpoint of the active zone ring (315° = top-right)
-  const pR = depth !== undefined ? ZONE_MID_R[depth] : null;
-  const probeCx = pR !== null ? 100 + pR * C45 : null;
-  const probeCy = pR !== null ? 100 - pR * C45 : null;
+  const { t } = useTranslation();
 
   return (
-    <div className="relative flex justify-center items-center py-2 shrink-0">
-      <svg role="img"
-        width="200"
-        height="200"
-        viewBox="0 0 200 200"
-        style={{ overflow: "visible" }}
+    <div
+      className="absolute left-[58%] z-20 -translate-x-1/2 -translate-y-1/2 transition-all duration-700 ease-out motion-reduce:transition-none sm:left-[60%]"
+      style={{ top: PROBE_TOP[depth] }}
+    >
+      <div className="relative flex h-12 w-10 items-center justify-center">
+        <Image
+          src={GAS_GIANT_PROBE_ART}
+          alt=""
+          width={256}
+          height={384}
+          unoptimized
+          className="relative h-12 w-auto object-contain"
+          style={{
+            filter: lost
+              ? "grayscale(1) opacity(0.4)"
+              : `drop-shadow(0 0 8px ${color})`,
+          }}
+        />
+        {!lost && (
+          <span
+            className="absolute -inset-2 rounded-full border opacity-60 animate-ping motion-reduce:animate-none"
+            style={{ borderColor: color }}
+          />
+        )}
+      </div>
+      <div
+        className="mt-1 whitespace-nowrap border bg-[#050810c9] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+        style={{ borderColor: `${color}88`, color }}
       >
-        <defs>
-          <radialGradient id="gg-glow" cx="50%" cy="50%" r="50%">
-            <stop
-              offset="0%"
-              stopColor={depthColor}
-              stopOpacity="0.18"
-            />
-            <stop
-              offset="100%"
-              stopColor={depthColor}
-              stopOpacity="0"
-            />
-          </radialGradient>
-          <clipPath id="gg-clip">
-            <circle cx="100" cy="100" r="70" />
-          </clipPath>
-          <radialGradient id="gg-surface" cx="38%" cy="35%" r="65%">
-            <stop
-              offset="0%"
-              stopColor={colors.band3}
-              stopOpacity="1"
-            />
-            <stop
-              offset="45%"
-              stopColor={colors.band1}
-              stopOpacity="1"
-            />
-            <stop
-              offset="100%"
-              stopColor={colors.band2}
-              stopOpacity="1"
-            />
-          </radialGradient>
-          <radialGradient id="gg-shadow" cx="65%" cy="62%" r="55%">
-            <stop offset="0%" stopColor="#000" stopOpacity="0" />
-            <stop offset="65%" stopColor="#000" stopOpacity="0.2" />
-            <stop
-              offset="100%"
-              stopColor="#000"
-              stopOpacity="0.58"
-            />
-          </radialGradient>
-        </defs>
-
-        {/* Outer glow halo */}
-        <circle cx="100" cy="100" r="90" fill="url(#gg-glow)" />
-
-        {/* Planet body */}
-        <circle cx="100" cy="100" r="70" fill="url(#gg-surface)" />
-
-        {/* All dynamic content clipped to planet circle */}
-        <g clipPath="url(#gg-clip)">
-          {/* Atmospheric bands — per-atmosphere layout */}
-          {bands.map((b, i) => (
-            <rect
-              key={i}
-              x="30"
-              y={b.y}
-              width="140"
-              height={b.h}
-              rx="3"
-              fill={cb(b.c)}
-              opacity={b.op}
-            >
-              <animateTransform
-                attributeName="transform"
-                type="translate"
-                from="0,0"
-                to={`${b.d * b.off},0`}
-                dur={`${b.dur}s`}
-                repeatCount="indefinite"
-                additive="sum"
-              />
-            </rect>
-          ))}
-
-          {/* Storm eyes — per-atmosphere position & size */}
-          {storms.map((s, i) => (
-            <g key={i}>
-              <ellipse
-                cx={s.cx}
-                cy={s.cy}
-                rx={s.rx}
-                ry={s.ry}
-                fill={colors.band2}
-                opacity="0.75"
-              >
-                <animateTransform
-                  attributeName="transform"
-                  type="translate"
-                  from="0,0"
-                  to={`${s.off},0`}
-                  dur={`${s.dur}s`}
-                  repeatCount="indefinite"
-                  additive="sum"
-                />
-              </ellipse>
-              <ellipse
-                cx={s.cx}
-                cy={s.cy}
-                rx={s.rx * 0.54}
-                ry={s.ry * 0.57}
-                fill={colors.band1}
-                opacity="0.5"
-              >
-                <animateTransform
-                  attributeName="transform"
-                  type="translate"
-                  from="0,0"
-                  to={`${s.off},0`}
-                  dur={`${s.dur}s`}
-                  repeatCount="indefinite"
-                  additive="sum"
-                />
-              </ellipse>
-            </g>
-          ))}
-
-          {/* Zone separator rings — dashed circles at depth transition radii */}
-          {ZONE_BOUNDS.map((r, i) => (
-            <circle
-              key={r}
-              cx="100"
-              cy="100"
-              r={r}
-              fill="none"
-              stroke={DEPTH_COLORS[(i + 2) as DiveDepth]}
-              strokeWidth="0.6"
-              strokeDasharray="3,5"
-              opacity="0.3"
-            />
-          ))}
-
-          {/* Active zone glow — thick annular ring at current depth midpoint */}
-          {depth !== undefined && pR !== null && (
-            <circle
-              cx="100"
-              cy="100"
-              r={pR}
-              fill="none"
-              stroke={depthColor}
-              strokeWidth={ZONE_GLOW_W[depth]}
-              opacity="0.2"
-            >
-              <animate
-                attributeName="opacity"
-                values="0.2;0.06;0.2"
-                dur="2.5s"
-                repeatCount="indefinite"
-              />
-            </circle>
-          )}
-
-          {/* Probe: dashed radial line + pulsing dot + expanding ring */}
-          {depth !== null && probeCx !== null && probeCy !== null && (
-            <>
-              <line
-                x1="100"
-                y1="100"
-                x2={probeCx}
-                y2={probeCy}
-                stroke={depthColor}
-                strokeWidth="0.5"
-                opacity="0.4"
-                strokeDasharray="2,3"
-              />
-              <circle
-                cx={probeCx}
-                cy={probeCy}
-                r="4"
-                fill={depthColor}
-                opacity="0.9"
-              >
-                <animate
-                  attributeName="r"
-                  values="3;5.5;3"
-                  dur="1.5s"
-                  repeatCount="indefinite"
-                />
-                <animate
-                  attributeName="opacity"
-                  values="0.9;0.35;0.9"
-                  dur="1.5s"
-                  repeatCount="indefinite"
-                />
-              </circle>
-              <circle
-                cx={probeCx}
-                cy={probeCy}
-                r="7"
-                fill="none"
-                stroke={depthColor}
-                strokeWidth="1"
-                opacity="0.5"
-              >
-                <animate
-                  attributeName="r"
-                  values="6;11;6"
-                  dur="1.5s"
-                  repeatCount="indefinite"
-                />
-                <animate
-                  attributeName="opacity"
-                  values="0.5;0;0.5"
-                  dur="1.5s"
-                  repeatCount="indefinite"
-                />
-              </circle>
-            </>
-          )}
-        </g>
-
-        {/* Lit rim */}
-        <circle
-          cx="100"
-          cy="100"
-          r="70"
-          fill="none"
-          stroke={colors.band3}
-          strokeWidth="1.5"
-          opacity="0.5"
-        />
-
-        {/* Night-side shadow overlay */}
-        <circle cx="100" cy="100" r="70" fill="url(#gg-shadow)" />
-
-        {/* Ring — ellipse for perspective, centered on planet */}
-        <ellipse
-          cx="100"
-          cy="100"
-          rx="92"
-          ry="11"
-          fill="none"
-          stroke={colors.band1}
-          strokeWidth="5"
-          opacity="0.22"
-        />
-        <ellipse
-          cx="100"
-          cy="100"
-          rx="92"
-          ry="11"
-          fill="none"
-          stroke={colors.band3}
-          strokeWidth="1.5"
-          opacity="0.28"
-        />
-      </svg>
+        {lost ? t("gas_giant.layer_lost") : t("gas_giant.probe")}
+      </div>
     </div>
   );
 }
 
-function DepthMeter({ currentDepth }: { currentDepth: DiveDepth }) {
+function DiveLayerRail({
+  currentDepth,
+  finished,
+  probeLost,
+}: {
+  currentDepth?: DiveDepth;
+  finished: boolean;
+  probeLost: boolean;
+}) {
+  const { t } = useTranslation();
+
   return (
-    <div className="flex items-stretch gap-1 shrink-0">
-      {([1, 2, 3, 4] as DiveDepth[]).map((d) => {
-        const active = d === currentDepth;
-        const passed = d < currentDepth;
-        const color = DEPTH_COLORS[d];
+    <aside
+      className="grid grid-cols-4 gap-1.5 border-t border-white/15 pt-3 lg:content-center lg:grid-cols-1 lg:gap-2 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0"
+      aria-label={t("gas_giant.dive_progress")}
+    >
+      {DIVE_LAYERS.map(({ depth, risk, reward }) => {
+        const color = DEPTH_COLORS[depth];
+        const isCurrent = depth === currentDepth;
+        const completed =
+          currentDepth !== undefined &&
+          (depth < currentDepth || (isCurrent && finished && !probeLost));
+        const status = probeLost && isCurrent
+          ? "lost"
+          : completed
+            ? "complete"
+            : isCurrent
+              ? "current"
+              : "unexplored";
+        const highlighted = completed || isCurrent;
+
         return (
           <div
-            key={d}
-            className="flex-1 flex flex-col items-center gap-1"
+            key={depth}
+            className="relative min-w-0 rounded-sm border bg-[#050810b8] p-1.5 backdrop-blur-sm transition-colors lg:p-2.5"
+            style={{
+              borderColor: `${color}${highlighted ? "bb" : "45"}`,
+              boxShadow: isCurrent ? `0 0 18px ${color}33` : "none",
+            }}
           >
-            <div
-              className="text-sm leading-none"
-              style={{ opacity: passed || active ? 1 : 0.25 }}
+            <span
+              className="absolute -left-[25px] top-1/2 hidden h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full border bg-[#050810] text-[10px] font-bold lg:flex"
+              style={{
+                borderColor: color,
+                color,
+                boxShadow: isCurrent ? `0 0 12px ${color}` : "none",
+              }}
             >
-              {DEPTH_ICONS[d]}
+              {completed ? "✓" : depth}
+            </span>
+            <div className="flex items-start justify-between gap-1 lg:gap-2">
+              <div className="min-w-0">
+                <div
+                  className="font-['Orbitron'] text-[8px] font-bold uppercase leading-tight tracking-wide lg:text-[10px] lg:tracking-wider"
+                  style={{ color }}
+                >
+                  {DEPTH_ICONS[depth]}
+                  <span className="ml-1 text-[7px] leading-tight sm:text-[8px] lg:ml-0 lg:text-[10px]">
+                    {t(`gas_giant.depth_${depth}`)}
+                  </span>
+                </div>
+                <div className="mt-1 hidden text-[10px] text-[#b9c6cc] lg:block">
+                  {t(`gas_giant.reward_${reward}`)}
+                </div>
+              </div>
+              <span
+                className="text-[10px] font-bold lg:hidden"
+                style={{ color: highlighted ? color : "#657178" }}
+              >
+                {completed ? "✓" : depth}
+              </span>
+              <span
+                className="hidden shrink-0 text-[9px] uppercase tracking-wide lg:inline"
+                style={{ color: highlighted ? color : "#657178" }}
+              >
+                {t(`gas_giant.layer_${status}`)}
+              </span>
             </div>
-            <div
-              className="h-1.5 w-full rounded-full transition-all"
-              style={{
-                backgroundColor:
-                  passed || active ? color : "#1a1a2e",
-                boxShadow: active ? `0 0 8px ${color}` : "none",
-              }}
-            />
-            <div
-              className="text-[9px] text-center leading-tight"
-              style={{
-                color: active
-                  ? color
-                  : passed
-                    ? "#444"
-                    : "#333",
-              }}
-            ></div>
+            <div className="mt-2 hidden items-center gap-1 text-[9px] text-[#9daab0] lg:flex">
+              <span>{t("gas_giant.risk")}:</span>
+              <span style={{ color }}>{t(`gas_giant.risk_${risk}`)}</span>
+            </div>
           </div>
         );
       })}
-    </div>
+    </aside>
+  );
+}
+
+function GasGiantDescentVisual({
+  atmosphere,
+  currentDepth,
+  finished,
+  probeLost,
+  title,
+  onClose,
+}: {
+  atmosphere: GasGiantAtmosphere;
+  currentDepth?: DiveDepth;
+  finished: boolean;
+  probeLost: boolean;
+  title: string;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const telemetry = ATMOSPHERE_TELEMETRY[atmosphere];
+  const activeLayer = DIVE_LAYERS[(currentDepth ?? 1) - 1];
+  const accent = probeLost
+    ? DEPTH_COLORS[4]
+    : currentDepth
+      ? DEPTH_COLORS[currentDepth]
+      : telemetry.accent;
+
+  return (
+    <section
+      className="relative isolate flex min-h-0 flex-1 overflow-hidden border-b"
+      style={{ borderColor: `${accent}88` }}
+    >
+      <Image
+        src={GAS_GIANT_BACKGROUNDS[atmosphere]}
+        alt=""
+        fill
+        sizes="(min-width: 1280px) 48vw, (min-width: 768px) 70vw, 100vw"
+        preload
+        unoptimized
+        className="object-cover"
+      />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,8,16,0.96)_0%,rgba(5,8,16,0.72)_48%,rgba(5,8,16,0.36)_100%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-[linear-gradient(0deg,rgba(5,8,16,0.98)_0%,rgba(5,8,16,0)_100%)]" />
+
+      <div className="relative z-10 grid min-h-[385px] flex-1 gap-3 p-3 sm:min-h-[500px] sm:gap-5 sm:p-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:p-6">
+        <div className="flex min-h-0 min-w-0 flex-col">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div
+                className="font-['Orbitron'] text-base font-bold uppercase tracking-wider sm:text-xl"
+                style={{ color: accent }}
+              >
+                {title}
+              </div>
+              <p className="mt-1 max-w-2xl text-[11px] leading-snug text-[#c3d0d5] sm:text-sm sm:leading-relaxed">
+                {t("gas_giant.description")}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t("gas_giant.leave")}
+              className="shrink-0 cursor-pointer border border-[#ff004088] bg-[#050810a8] px-1.5 py-0.5 text-xs font-bold text-[#ff667f] transition-colors hover:bg-[#ff0040] hover:text-[#050810] sm:px-2 sm:py-1 sm:text-sm"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="relative mt-3 min-h-[220px] flex-1 overflow-hidden border border-white/10 bg-[#05081052] sm:mt-5 sm:min-h-[265px]">
+            {currentDepth && (
+              <ProbeMarker
+                color={accent}
+                depth={currentDepth}
+                lost={probeLost}
+              />
+            )}
+
+            <div className="absolute left-2 top-2 border border-white/10 bg-[#050810ce] p-2 backdrop-blur-sm sm:left-3 sm:top-3 sm:p-3">
+              <div className="text-[8px] uppercase tracking-[0.16em] text-[#9caeb5] sm:text-[9px] sm:tracking-[0.18em]">
+                {t("gas_giant.dive_progress")}
+              </div>
+              <div
+                className="mt-0.5 font-['Orbitron'] text-xl font-bold sm:mt-1 sm:text-2xl"
+                style={{ color: accent }}
+              >
+                {currentDepth ?? 0}
+                <span className="text-xs text-[#9caeb5] sm:text-sm"> / 4</span>
+              </div>
+              <div className="mt-1.5 flex gap-1 sm:mt-2 sm:gap-1.5">
+                {DIVE_LAYERS.map(({ depth }) => (
+                  <span
+                    key={depth}
+                    className="h-2 w-2 rounded-full border sm:h-2.5 sm:w-2.5"
+                    style={{
+                      borderColor: DEPTH_COLORS[depth],
+                      backgroundColor:
+                        currentDepth !== undefined && depth <= currentDepth
+                          ? DEPTH_COLORS[depth]
+                          : "transparent",
+                      boxShadow:
+                        depth === currentDepth
+                          ? `0 0 10px ${DEPTH_COLORS[depth]}`
+                          : "none",
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="absolute bottom-2 left-2 grid grid-cols-3 gap-1 border border-white/10 bg-[#050810d9] p-2 text-[8px] backdrop-blur-sm sm:bottom-3 sm:left-3 sm:gap-2 sm:p-3 sm:text-[10px]">
+              <div className="min-w-0">
+                <div className="text-[7px] uppercase leading-tight tracking-wide text-[#87979e] sm:text-[10px]">
+                  {t("gas_giant.pressure")}
+                </div>
+                <div className="mt-0.5 whitespace-nowrap text-[9px] font-bold text-[#e5eef1] sm:text-[10px]">
+                  {activeLayer.pressure} atm
+                </div>
+              </div>
+              <div className="min-w-0">
+                <div className="text-[7px] uppercase leading-tight tracking-wide text-[#87979e] sm:text-[10px]">
+                  {t("gas_giant.temperature")}
+                </div>
+                <div className="mt-0.5 whitespace-nowrap text-[9px] font-bold text-[#e5eef1] sm:text-[10px]">
+                  {telemetry.temperature} °C
+                </div>
+              </div>
+              <div className="min-w-0">
+                <div className="text-[7px] uppercase leading-tight tracking-wide text-[#87979e] sm:text-[10px]">
+                  {t("gas_giant.storm_activity")}
+                </div>
+                <div className="mt-0.5 text-[9px] font-bold sm:text-[10px]" style={{ color: accent }}>
+                  {t(`gas_giant.activity_${telemetry.activity}`)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <DiveLayerRail
+          currentDepth={currentDepth}
+          finished={finished}
+          probeLost={probeLost}
+        />
+      </div>
+    </section>
   );
 }
 
@@ -477,252 +372,227 @@ export function GasGiantPanel() {
   const probes = useGameStore((s) => s.probes);
   const showSectorMap = useGameStore((s) => s.showSectorMap);
   const { t } = useTranslation();
-
   const [showAbandonWarning, setShowAbandonWarning] = useState(false);
+  const [showProbeLost, setShowProbeLost] = useState(false);
+  const probeLost = Boolean(
+    activeDive?.finished &&
+      activeDive.rewards.alien_biology === 0 &&
+      activeDive.rewards.rare_minerals === 0 &&
+      activeDive.rewards.void_membrane === 0,
+  );
+
+  useEffect(() => {
+    setShowProbeLost(probeLost);
+  }, [probeLost]);
 
   if (!currentLocation || currentLocation.type !== "gas_giant") return null;
 
-  const atmosphere = currentLocation.gasGiantAtmosphere ?? "hydrogen";
+  const atmosphere: GasGiantAtmosphere =
+    currentLocation.gasGiantAtmosphere ?? "hydrogen";
   const lastDiveAt = currentLocation.gasGiantLastDiveAt;
   const cooldownRemaining =
     lastDiveAt !== undefined
       ? Math.max(0, GAS_GIANT_DIVE_COOLDOWN - (turn - lastDiveAt))
       : 0;
   const canDive = cooldownRemaining === 0 && !activeDive && probes > 0;
-
-  // Mirror the bonus logic from surfaceDive.ts so the panel shows final amounts
-  const ATMOSPHERE_BONUS_KEY: Record<
-    string,
-    "alien_biology" | "rare_minerals" | "void_membrane"
+  const atmosphereBonusKey: Partial<
+    Record<GasGiantAtmosphere, "alien_biology" | "rare_minerals" | "void_membrane">
   > = {
     hydrogen: "alien_biology",
     methane: "rare_minerals",
     ammonia: "void_membrane",
   };
 
-  function getBoostedQty(
+  const getBoostedQty = (
     key: "alien_biology" | "rare_minerals" | "void_membrane",
     raw: number,
-  ): number {
+  ) => {
     if (raw === 0) return 0;
     if (atmosphere === "nitrogen") return Math.ceil(raw * 1.25);
-    if (ATMOSPHERE_BONUS_KEY[atmosphere] === key)
-      return Math.ceil(raw * 1.5);
-    return raw;
-  }
+    return atmosphereBonusKey[atmosphere] === key ? Math.ceil(raw * 1.5) : raw;
+  };
 
-  // Bonus label shown next to the section header
   const atmosphereBonusLabel = (() => {
     if (!activeDive) return null;
-    if (atmosphere === "nitrogen") return "× все ресурсы +25%";
-    const bonusKey = ATMOSPHERE_BONUS_KEY[atmosphere];
+    if (atmosphere === "nitrogen") {
+      return t("gas_giant.bonus_all_resources");
+    }
+    const bonusKey = atmosphereBonusKey[atmosphere];
     if (!bonusKey) return null;
-    const rd = RESEARCH_RESOURCES[bonusKey];
-    return `${rd?.icon} ${rd?.name} +50%`;
+    const resource = RESEARCH_RESOURCES[bonusKey];
+    return t("gas_giant.bonus_resource", {
+      resource: `${resource?.icon ?? ""} ${resource?.name ?? bonusKey}`.trim(),
+    });
   })();
 
   const rewardEntries = activeDive
     ? (["alien_biology", "rare_minerals", "void_membrane"] as const)
-      .filter((k) => activeDive.rewards[k] > 0)
-      .map((k) => {
-        const raw = activeDive.rewards[k];
-        const boosted = getBoostedQty(k, raw);
-        return {
-          key: k,
-          qty: raw,
-          boosted,
-          isBoosted: boosted !== raw,
-          rd: RESEARCH_RESOURCES[k],
-        };
-      })
+        .filter((key) => activeDive.rewards[key] > 0)
+        .map((key) => {
+          const raw = activeDive.rewards[key];
+          const boosted = getBoostedQty(key, raw);
+          return {
+            key,
+            boosted,
+            isBoosted: boosted !== raw,
+            resource: RESEARCH_RESOURCES[key],
+          };
+        })
     : [];
 
+  const title = `${t("location_types.gas_giant")} · ${getLocationName(
+    currentLocation.name,
+    t,
+  )}`;
   const depthColor = activeDive
     ? DEPTH_COLORS[activeDive.currentDepth]
-    : "#7b4fff";
+    : ATMOSPHERE_TELEMETRY[atmosphere].accent;
+
+  const handleClose = () => {
+    if (activeDive) {
+      setShowAbandonWarning(true);
+      return;
+    }
+    showSectorMap();
+  };
 
   return (
-    <div className="flex flex-col gap-3 h-full overflow-y-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between shrink-0">
-        <div className="font-['Orbitron'] font-bold text-[#7b4fff] uppercase tracking-wider text-sm">
-          🪸 {t(`gas_giant.atmosphere_${atmosphere}`)}
-        </div>
-        <button
-          onClick={() => activeDive ? setShowAbandonWarning(true) : showSectorMap()}
-          className="text-[#ff0040] hover:text-white text-lg font-bold cursor-pointer px-1"
-        >
-          ✕
-        </button>
-      </div>
-
-      {/* Gas Giant Visual */}
-      <GasGiantVisual
+    <div
+      className="flex h-full min-h-0 flex-col overflow-y-auto rounded-lg border bg-[#050810]"
+      style={{ borderColor: `${depthColor}88` }}
+    >
+      <GasGiantDescentVisual
         atmosphere={atmosphere}
-        depth={activeDive?.currentDepth}
+        currentDepth={activeDive?.currentDepth}
+        finished={activeDive?.finished ?? false}
+        probeLost={probeLost}
+        title={title}
+        onClose={handleClose}
       />
 
-      {/* Description (only when not diving) */}
-      {!activeDive && (
-        <div className="text-xs text-[#888] leading-relaxed border border-[#1a1a2e] p-3 bg-[rgba(123,79,255,0.04)]">
-          {t("gas_giant.description")}
-        </div>
-      )}
-
-      {/* Active dive state */}
-      {activeDive && (
-        <>
-          {/* Depth indicator */}
-          <div
-            className="border p-2 shrink-0"
-            style={{
-              borderColor: depthColor,
-              background: `rgba(0,0,0,0.4)`,
-            }}
-          >
-            <div
-              className="text-[10px] uppercase tracking-wider mb-2 text-center font-['Orbitron']"
-              style={{ color: depthColor }}
-            >
-              {DEPTH_ICONS[activeDive.currentDepth]}{" "}
-              {t(`gas_giant.depth_${activeDive.currentDepth}`)}
+      <div className="grid min-h-44 grid-rows-[minmax(0,1fr)_auto] gap-2 p-2.5 sm:gap-3 sm:p-4 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,0.7fr)] lg:grid-rows-none">
+        <div className="border border-white/10 bg-[rgba(0,0,0,0.32)] p-2.5 sm:p-3">
+          <div className="mb-1.5 flex items-center justify-between gap-2 sm:mb-2 sm:gap-3">
+            <div className="text-[9px] uppercase tracking-[0.12em] text-[#9caeb5] sm:text-[10px] sm:tracking-[0.16em]">
+              {activeDive
+                ? t("gas_giant.collected")
+                : t("gas_giant.probes_available", { count: probes })}
             </div>
-            <DepthMeter currentDepth={activeDive.currentDepth} />
+            {atmosphereBonusLabel && (
+              <div className="text-[9px] text-[#ffb000] sm:text-[10px]">✦ {atmosphereBonusLabel}</div>
+            )}
           </div>
 
-          {/* Accumulated rewards */}
-          {rewardEntries.length > 0 && (
-            <div className="border border-[#1a1a2e] p-2 bg-[rgba(0,0,0,0.3)] shrink-0">
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="text-[10px] text-[#888] uppercase tracking-wider">
-                  {t("gas_giant.collected")}
+          {rewardEntries.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+              {rewardEntries.map(({ key, boosted, isBoosted, resource }) => (
+                <div
+                  key={key}
+                  className="border px-1.5 py-0.5 text-[10px] sm:px-2 sm:py-1 sm:text-xs"
+                  style={{
+                    borderColor: `${resource?.color ?? "#ffffff"}66`,
+                    color: resource?.color ?? "#ffffff",
+                  }}
+                >
+                  {resource?.icon} {resource?.name} ×{boosted}
+                  {isBoosted && <span className="ml-1 text-[#ffb000]">✦</span>}
                 </div>
-                {atmosphereBonusLabel && (
-                  <div className="text-[10px] text-[#ffb000] opacity-80">
-                    ✦ {atmosphereBonusLabel}
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-x-3 gap-y-1">
-                {rewardEntries.map(
-                  ({ key, boosted, isBoosted, rd }) => (
-                    <span
-                      key={key}
-                      className="text-xs flex items-center gap-1"
-                      style={{
-                        color: rd?.color ?? "#fff",
-                      }}
-                    >
-                      <span>{rd?.icon}</span>
-                      <span>{rd?.name}</span>
-                      <span className="font-bold">
-                        ×{boosted}
-                      </span>
-                      {isBoosted && (
-                        <span className="text-[#ffb000] text-[10px]">
-                          ✦
-                        </span>
-                      )}
-                    </span>
-                  ),
-                )}
-              </div>
+              ))}
             </div>
+          ) : (
+            <p className="text-[11px] leading-snug text-[#b9c6cc] sm:text-xs sm:leading-relaxed">
+              {activeDive?.currentEvent
+                ? t("gas_giant.awaiting_decision")
+                : t("gas_giant.description")}
+            </p>
           )}
 
-          {/* Dive deeper / Surface buttons */}
-          {!activeDive.currentEvent && (
-            <div className="flex flex-col gap-2 shrink-0">
-              {activeDive.currentDepth < 4 &&
-                !activeDive.finished && (
-                  <Button
-                    onClick={diveDeeper}
-                    className={`w-full bg-transparent border-2 text-xs cursor-pointer uppercase tracking-wider transition-colors ${DEPTH_BTN_CLASSES[(activeDive.currentDepth + 1) as DiveDepth]}`}
-                  >
-                    🔽 {t("gas_giant.dive_deeper")}
-                    <span className="ml-2 text-[10px] opacity-60">
-                      →{" "}
-                      {t(
-                        `gas_giant.depth_${(activeDive.currentDepth + 1) as DiveDepth}`,
-                      )}
-                    </span>
-                  </Button>
-                )}
-              {activeDive.finished &&
-                rewardEntries.length === 0 ? (
+          {!activeDive && probes <= 0 && (
+            <div className="mt-1.5 text-[11px] text-[#ff667f] sm:mt-2 sm:text-xs">{t("gas_giant.no_probes")}</div>
+          )}
+          {!activeDive && cooldownRemaining > 0 && (
+            <div className="mt-1.5 text-[11px] text-[#b9c6cc] sm:mt-2 sm:text-xs">
+              {t("gas_giant.cooldown", { turns: cooldownRemaining })}
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1.5 sm:gap-2">
+          {!activeDive && (
+            <>
+              <Button
+                onClick={() => startDive(currentLocation.id)}
+                disabled={!canDive}
+                className="min-h-9 cursor-pointer border-2 border-[#7b4fff] bg-transparent px-2 text-[9px] uppercase tracking-normal text-[#b894ff] hover:bg-[#7b4fff] hover:text-[#050810] disabled:cursor-default disabled:opacity-40 sm:min-h-11 sm:text-xs sm:tracking-wider"
+              >
+                🪸 {t("gas_giant.start_dive")}
+              </Button>
+              <Button
+                onClick={showSectorMap}
+                className="min-h-9 cursor-pointer border border-[#3c4b52] bg-transparent px-2 text-[10px] text-[#b9c6cc] hover:bg-[#17232a] sm:text-xs"
+              >
+                {t("gas_giant.leave")}
+              </Button>
+            </>
+          )}
+
+          {activeDive && !activeDive.currentEvent && (
+            <>
+              {activeDive.currentDepth < 4 && !activeDive.finished && (
                 <Button
-                  onClick={surfaceDive}
-                  className="w-full bg-transparent border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] uppercase tracking-wider text-xs cursor-pointer"
+                  onClick={diveDeeper}
+                  className="min-h-9 cursor-pointer border-2 bg-transparent px-2 text-[9px] uppercase tracking-normal sm:min-h-11 sm:text-xs sm:tracking-wider"
+                  style={{
+                    borderColor: DEPTH_COLORS[
+                      (activeDive.currentDepth + 1) as DiveDepth
+                    ],
+                    color: DEPTH_COLORS[
+                      (activeDive.currentDepth + 1) as DiveDepth
+                    ],
+                  }}
                 >
-                  💥 {t("gas_giant.leave_probe_lost")}
-                </Button>
-              ) : (
-                <Button
-                  onClick={surfaceDive}
-                  className="w-full bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider text-xs cursor-pointer"
-                >
-                  🔼 {t("gas_giant.surface")}
+                  🔽 {t("gas_giant.dive_deeper")} ·{" "}
+                  {t(
+                    `gas_giant.depth_${(activeDive.currentDepth + 1) as DiveDepth}`,
+                  )}
                 </Button>
               )}
-            </div>
+              <Button
+                onClick={surfaceDive}
+                className={
+                  probeLost
+                    ? "min-h-9 cursor-pointer border-2 border-[#ff0040] bg-transparent px-2 text-[9px] uppercase tracking-normal text-[#ff667f] hover:bg-[#ff0040] hover:text-[#050810] sm:text-xs sm:tracking-wider"
+                    : "min-h-9 cursor-pointer border-2 border-[#00d4ff] bg-transparent px-2 text-[9px] uppercase tracking-normal text-[#8cecff] hover:bg-[#00d4ff] hover:text-[#050810] sm:text-xs sm:tracking-wider"
+                }
+              >
+                {probeLost
+                  ? `💥 ${t("gas_giant.leave_probe_lost")}`
+                  : `🔼 ${t("gas_giant.surface")}`}
+              </Button>
+            </>
           )}
-        </>
-      )}
-
-      {/* Initial dive button */}
-      {!activeDive && (
-        <div className="flex flex-col gap-2 shrink-0">
-          <div className="text-xs text-[#888] text-center">
-            🔬 {t("gas_giant.probes_available", { count: probes })}
-          </div>
-          {probes <= 0 && (
-            <div className="text-xs text-[#ff0040] text-center">
-              {t("gas_giant.no_probes")}
-            </div>
-          )}
-          {cooldownRemaining > 0 && (
-            <div className="text-xs text-[#888] text-center">
-              {t("gas_giant.cooldown", {
-                turns: cooldownRemaining,
-              })}
-            </div>
-          )}
-          <Button
-            onClick={() => startDive(currentLocation.id)}
-            disabled={!canDive}
-            className="w-full bg-transparent border-2 border-[#7b4fff] text-[#7b4fff] hover:bg-[#7b4fff] hover:text-[#050810] uppercase tracking-wider cursor-pointer disabled:opacity-40 disabled:cursor-default"
-          >
-            🪸 {t("gas_giant.start_dive")}
-          </Button>
-          <Button
-            onClick={showSectorMap}
-            className="w-full bg-transparent border border-[#333] text-[#888] hover:bg-[#1a1a2e] text-xs cursor-pointer"
-          >
-            {t("gas_giant.leave")}
-          </Button>
         </div>
-      )}
+      </div>
 
-      {/* Abandon dive warning */}
       <Dialog open={showAbandonWarning}>
         <DialogContent
           className="max-w-sm p-0"
           style={{ background: "#050810", border: "2px solid #ff0040" }}
-          onInteractOutside={(e) => e.preventDefault()}
+          onInteractOutside={(event) => event.preventDefault()}
           showCloseButton={false}
         >
           <div className="flex flex-col gap-4 p-4">
-            <DialogTitle className="font-bold text-sm font-['Orbitron'] uppercase tracking-wider text-[#ff0040]">
+            <DialogTitle className="font-['Orbitron'] text-sm font-bold uppercase tracking-wider text-[#ff0040]">
               ⚠ Прервать погружение?
             </DialogTitle>
-            <p className="text-xs text-[#aaa] leading-relaxed border-l-2 border-[#ff004066] pl-3">
+            <p className="border-l-2 border-[#ff004066] pl-3 text-xs leading-relaxed text-[#aaa]">
               Если покинуть планету сейчас — зонд будет утерян и собранные ресурсы не будут получены.
-              Вернувшись позже, можно начать новое погружение (при наличии свободного зонда).
+              Вернувшись позже, можно начать новое погружение при наличии свободного зонда.
             </p>
             <div className="flex gap-2">
               <Button
                 onClick={() => setShowAbandonWarning(false)}
-                className="flex-1 bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-xs cursor-pointer uppercase tracking-wider"
+                className="flex-1 cursor-pointer border border-[#00ff41] bg-transparent text-xs uppercase tracking-wider text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
               >
                 Остаться
               </Button>
@@ -732,7 +602,7 @@ export function GasGiantPanel() {
                   abandonDive();
                   showSectorMap();
                 }}
-                className="flex-1 bg-transparent border border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810] text-xs cursor-pointer uppercase tracking-wider"
+                className="flex-1 cursor-pointer border border-[#ff0040] bg-transparent text-xs uppercase tracking-wider text-[#ff0040] hover:bg-[#ff0040] hover:text-[#050810]"
               >
                 Бросить зонд
               </Button>
@@ -741,119 +611,110 @@ export function GasGiantPanel() {
         </DialogContent>
       </Dialog>
 
-      {/* Dive event modal */}
+      <Dialog open={showProbeLost}>
+        <DialogContent
+          className="max-w-sm p-0"
+          style={{ background: "#050810", border: "2px solid #ff0040" }}
+          onInteractOutside={(event) => event.preventDefault()}
+          showCloseButton={false}
+        >
+          <div className="flex flex-col gap-4 p-4">
+            <DialogTitle className="font-['Orbitron'] text-sm font-bold uppercase tracking-wider text-[#ff667f]">
+              💥 {t("gas_giant.probe_lost_title")}
+            </DialogTitle>
+            <p className="border-l-2 border-[#ff004066] pl-3 text-xs leading-relaxed text-[#c3d0d5]">
+              {t("gas_giant.probe_lost_description")}
+            </p>
+            <Button
+              onClick={() => setShowProbeLost(false)}
+              className="cursor-pointer border border-[#ff0040] bg-transparent text-xs uppercase tracking-wider text-[#ff667f] hover:bg-[#ff0040] hover:text-[#050810]"
+            >
+              {t("gas_giant.probe_lost_confirm")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!activeDive?.currentEvent}>
         <DialogContent
           className="max-w-sm p-0"
           style={{
             background: "#050810",
-            border: `2px solid ${activeDive ? DEPTH_COLORS[activeDive.currentDepth] : "#7b4fff"}`,
+            border: `2px solid ${
+              activeDive ? DEPTH_COLORS[activeDive.currentDepth] : "#7b4fff"
+            }`,
           }}
-          onInteractOutside={(e) => e.preventDefault()}
+          onInteractOutside={(event) => event.preventDefault()}
           showCloseButton={false}
         >
           <div className="flex flex-col gap-3 p-4">
-            {/* Depth badge */}
             {activeDive && (
               <div
-                className="text-[10px] uppercase tracking-widest font-['Orbitron'] flex items-center gap-1.5"
-                style={{
-                  color: DEPTH_COLORS[
-                    activeDive.currentDepth
-                  ],
-                }}
+                className="flex items-center gap-1.5 font-['Orbitron'] text-[10px] uppercase tracking-widest"
+                style={{ color: DEPTH_COLORS[activeDive.currentDepth] }}
               >
-                <span>
-                  {DEPTH_ICONS[activeDive.currentDepth]}
-                </span>
-                <span>
-                  {t(
-                    `gas_giant.depth_${activeDive.currentDepth}`,
-                  )}
-                </span>
+                <span>{DEPTH_ICONS[activeDive.currentDepth]}</span>
+                <span>{t(`gas_giant.depth_${activeDive.currentDepth}`)}</span>
               </div>
             )}
             <DialogTitle
-              className="font-bold text-sm font-['Orbitron'] uppercase tracking-wider"
+              className="font-['Orbitron'] text-sm font-bold uppercase tracking-wider"
               style={{
                 color: activeDive
                   ? DEPTH_COLORS[activeDive.currentDepth]
                   : "#7b4fff",
               }}
             >
-              {activeDive?.currentEvent
-                ? t(activeDive.currentEvent.titleKey)
-                : ""}
+              {activeDive?.currentEvent ? t(activeDive.currentEvent.titleKey) : ""}
             </DialogTitle>
             <div
-              className="text-xs text-[#aaa] leading-relaxed border-l-2 pl-3"
+              className="border-l-2 pl-3 text-xs leading-relaxed text-[#aaa]"
               style={{
                 borderColor: activeDive
-                  ? DEPTH_COLORS[activeDive.currentDepth] +
-                  "66"
+                  ? `${DEPTH_COLORS[activeDive.currentDepth]}66`
                   : "#333",
               }}
             >
-              {activeDive?.currentEvent
-                ? t(activeDive.currentEvent.descKey)
-                : ""}
+              {activeDive?.currentEvent ? t(activeDive.currentEvent.descKey) : ""}
             </div>
             <div className="flex flex-col gap-1.5">
-              {activeDive?.currentEvent?.choices.map(
-                (choice, idx) => {
-                  const hasDamage =
-                    choice.damageChance &&
-                    choice.damageChance > 0;
-                  const hasLoss =
-                    choice.probeLossChance &&
-                    choice.probeLossChance > 0;
-                  const depthClass = activeDive
-                    ? DEPTH_BTN_CLASSES[
-                    activeDive.currentDepth
-                    ]
-                    : DEPTH_BTN_CLASSES[1];
-                  return (
-                    <Button
-                      key={idx}
-                      onClick={() =>
-                        resolveDiveEvent(idx)
-                      }
-                      className={`bg-transparent border text-xs py-1.5 cursor-pointer text-left justify-start flex-col items-start h-auto transition-colors ${depthClass}`}
-                    >
-                      <span>{t(choice.labelKey)}</span>
-                      <span className="text-[10px] opacity-60 font-normal flex items-center gap-2 flex-wrap">
-                        {choice.rewards
-                          .map((r) => {
-                            const rd =
-                              RESEARCH_RESOURCES[
-                              r.type
-                              ];
-                            return `${rd?.icon} ×${r.quantity}`;
-                          })
-                          .join("  ")}
-                        {hasDamage && (
-                          <span className="text-[#ff6666]">
-                            ⚠️ {choice.damageChance}
-                            %
-                          </span>
-                        )}
-                        {hasLoss && (
-                          <span className="text-[#ff9900]">
-                            {t(
-                              "gas_giant.probe_loss_chance",
-                              {
-                                chance:
-                                  choice.probeLossChance ??
-                                  0,
-                              },
-                            )}
-                          </span>
-                        )}
-                      </span>
-                    </Button>
-                  );
-                },
-              )}
+              {activeDive?.currentEvent?.choices.map((choice, index) => {
+                const depthStyle = activeDive
+                  ? {
+                      borderColor: DEPTH_COLORS[activeDive.currentDepth],
+                      color: DEPTH_COLORS[activeDive.currentDepth],
+                    }
+                  : { borderColor: DEPTH_COLORS[1], color: DEPTH_COLORS[1] };
+
+                return (
+                  <Button
+                    key={choice.labelKey}
+                    onClick={() => resolveDiveEvent(index)}
+                    className="h-auto cursor-pointer items-start justify-start border bg-transparent py-1.5 text-left text-xs transition-colors hover:bg-white/10"
+                    style={depthStyle}
+                  >
+                    <span>{t(choice.labelKey)}</span>
+                    <span className="flex flex-wrap items-center gap-2 text-[10px] font-normal opacity-70">
+                      {choice.rewards
+                        .map((reward) => {
+                          const resource = RESEARCH_RESOURCES[reward.type];
+                          return `${resource?.icon} ×${reward.quantity}`;
+                        })
+                        .join("  ")}
+                      {choice.damageChance && choice.damageChance > 0 && (
+                        <span className="text-[#ff667f]">⚠️ {choice.damageChance}%</span>
+                      )}
+                      {choice.probeLossChance && choice.probeLossChance > 0 && (
+                        <span className="text-[#ffb000]">
+                          {t("gas_giant.probe_loss_chance", {
+                            chance: choice.probeLossChance,
+                          })}
+                        </span>
+                      )}
+                    </span>
+                  </Button>
+                );
+              })}
             </div>
           </div>
         </DialogContent>
