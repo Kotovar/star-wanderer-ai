@@ -268,8 +268,8 @@ export function StationPanel() {
         STATION_BACKGROUNDS.trade;
 
     return (
-        <div className="flex flex-col gap-4 h-full">
-            <section className="relative min-h-52 overflow-hidden rounded border border-[#00ff4155]">
+        <div className="flex flex-col gap-2 sm:gap-4 h-full">
+            <section className="relative min-h-0 sm:min-h-52 overflow-hidden rounded border border-[#00ff4155]">
                 <Image
                     src={stationBackground}
                     alt=""
@@ -293,7 +293,7 @@ export function StationPanel() {
                             "linear-gradient(0deg, rgba(5,8,16,0.9) 0%, rgba(5,8,16,0) 100%)",
                     }}
                 />
-                <div className="relative z-10 flex min-h-52 flex-col justify-between gap-4 p-4 sm:p-5">
+                <div className="relative z-10 flex min-h-0 sm:min-h-52 flex-col justify-between gap-2 sm:gap-4 p-3 sm:p-5">
                     <StationHeader
                         location={currentLocation}
                         sectorTier={sectorTier}
@@ -304,7 +304,7 @@ export function StationPanel() {
 
                     <Button
                         onClick={showSectorMap}
-                        className="w-fit cursor-pointer border-2 border-accent bg-transparent uppercase tracking-wider text-accent hover:bg-accent hover:text-[#050810]"
+                        className="w-fit cursor-pointer border-2 border-accent bg-transparent uppercase tracking-wider text-accent hover:bg-accent hover:text-[#050810] text-xs sm:text-sm py-1 sm:py-2"
                     >
                         {t("station.leave")}
                     </Button>
@@ -717,9 +717,24 @@ function StationHeader({
         return fullName;
     };
 
+    const dominantRace = location.dominantRace;
+    const hasRep = Boolean(raceReputation && dominantRace);
+    const repValue =
+        raceReputation && dominantRace
+            ? getRaceReputation(raceReputation, dominantRace)
+            : 0;
+    const repLevel = getReputationLevel(repValue);
+    const repColor = REPUTATION_COLORS[repLevel];
+    const repIcon = REPUTATION_ICONS[repLevel];
+    const repSigned = (repValue > 0 ? "+" : "") + repValue;
+    const repTextLevel =
+        raceReputation && dominantRace
+            ? getRaceReputationLevel(raceReputation, dominantRace)
+            : "";
+
     return (
         <>
-            <div className="font-['Orbitron'] font-bold text-lg text-accent">
+            <div className="font-['Orbitron'] font-bold text-sm sm:text-lg text-accent">
                 {t("station_upgrades.title", {
                     name: getStationName(location.name),
                     type: stationTypeKey
@@ -736,30 +751,41 @@ function StationHeader({
 
             {race && (
                 <div
-                    className="flex items-center gap-3 text-sm"
+                    className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm"
                     style={{
                         borderColor: race.color,
                     }}
                 >
                     <div
-                        className="flex items-center gap-2 px-3 py-1.5 rounded border"
+                        className="flex items-center gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded border"
                         style={{
                             borderColor: race.color,
                             backgroundColor: `${race.color}15`,
                         }}
                     >
                         <RaceSprite
-                            race={location.dominantRace ?? "human"}
+                            race={dominantRace ?? "human"}
                             size={40}
-                            title={t(`race_names.${location.dominantRace}`)}
+                            title={t(`race_names.${dominantRace}`)}
                         />
                         <div>
                             <div
                                 style={{ color: race.color }}
-                                className="font-bold"
+                                className="font-bold flex items-center gap-1.5"
                             >
-                                {t(`race_names.${location.dominantRace}`) ||
+                                {t(`race_names.${dominantRace}`) ||
                                     race.pluralName}
+                                {hasRep && (
+                                    <span
+                                        className="sm:hidden text-xs font-normal"
+                                        style={{ color: repColor }}
+                                        title={t(
+                                            `reputation.levels.${repTextLevel}`,
+                                        )}
+                                    >
+                                        {repIcon} {repSigned}
+                                    </span>
+                                )}
                             </div>
                             <div className="text-xs text-gray-400">
                                 {t("station_upgrades.dominant_race")}
@@ -767,74 +793,20 @@ function StationHeader({
                         </div>
                     </div>
 
-                    {/* Reputation badge */}
-                    {raceReputation && location.dominantRace && (
+                    {/* Полный бейдж репутации — только десктоп */}
+                    {hasRep && (
                         <div
-                            className="flex items-center gap-2 px-3 py-1.5 rounded border text-xs"
+                            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded border text-xs"
                             style={{
-                                borderColor:
-                                    REPUTATION_COLORS[
-                                        getReputationLevel(
-                                            getRaceReputation(
-                                                raceReputation,
-                                                location.dominantRace,
-                                            ),
-                                        )
-                                    ],
-                                backgroundColor: `${
-                                    REPUTATION_COLORS[
-                                        getReputationLevel(
-                                            getRaceReputation(
-                                                raceReputation,
-                                                location.dominantRace,
-                                            ),
-                                        )
-                                    ]
-                                }15`,
+                                borderColor: repColor,
+                                backgroundColor: `${repColor}15`,
                             }}
                         >
-                            <span>
-                                {
-                                    REPUTATION_ICONS[
-                                        getReputationLevel(
-                                            getRaceReputation(
-                                                raceReputation,
-                                                location.dominantRace,
-                                            ),
-                                        )
-                                    ]
-                                }
+                            <span>{repIcon}</span>
+                            <span style={{ color: repColor }}>
+                                {t(`reputation.levels.${repTextLevel}`)}
                             </span>
-                            <span
-                                style={{
-                                    color: REPUTATION_COLORS[
-                                        getReputationLevel(
-                                            getRaceReputation(
-                                                raceReputation,
-                                                location.dominantRace,
-                                            ),
-                                        )
-                                    ],
-                                }}
-                            >
-                                {t(
-                                    `reputation.levels.${getRaceReputationLevel(raceReputation, location.dominantRace)}`,
-                                )}
-                            </span>
-                            <span className="text-gray-400">
-                                (
-                                {getRaceReputation(
-                                    raceReputation,
-                                    location.dominantRace,
-                                ) > 0
-                                    ? "+"
-                                    : ""}
-                                {getRaceReputation(
-                                    raceReputation,
-                                    location.dominantRace,
-                                )}
-                                )
-                            </span>
+                            <span className="text-gray-400">({repSigned})</span>
                         </div>
                     )}
                 </div>

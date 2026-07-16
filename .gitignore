@@ -40,3 +40,4 @@ Thumbs.db
 *.pem
 *.log
 .codex
+.codebase-memory
