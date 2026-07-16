@@ -25,7 +25,11 @@ import type { ResearchData, TechnologyId } from "./research";
 import type { CraftingRecipeId, ModuleRecipeId } from "./crafting";
 import type { ShopItem } from "./shops";
 import type { AugmentationId } from "./augmentations";
-import type { DiveState, ExpeditionState } from "./exploration";
+import type {
+  DiveState,
+  ExpeditionScanMode,
+  ExpeditionState,
+} from "./exploration";
 import type { ActiveCrisisState, CrisisResponse } from "./crisis";
 import type {
   PendingRandomEvent,
@@ -292,7 +296,13 @@ export interface GameScouting {
   exploreDerelictShip: (locationId: string) => void;
   startExpedition: (planetId: string, crewIds: number[]) => void;
   revealExpeditionTile: (tileIndex: number) => void;
+  scanExpeditionTile: (
+    tileIndex: number,
+    scanMode?: ExpeditionScanMode,
+  ) => void;
   resolveRuinsChoice: (choiceIndex: number) => void;
+  diveDeeperIntoRuins: () => void;
+  confirmRuinsOutcome: () => void;
   endExpedition: () => void;
   startDive: (locationId: string) => void;
   resolveDiveEvent: (choiceIndex: number) => void;

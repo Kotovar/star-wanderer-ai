@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { ExploreTile, ExploreTileType } from "@/game/types/exploration";
+import type {
+  ExpeditionScanMode,
+  ExploreTile,
+  ExploreTileType,
+} from "@/game/types/exploration";
+import { isTileReachable } from "@/game/slices/locations/helpers/expedition";
 import { setupHiDPICanvas } from "./canvas-utils";
 
 interface Props {
@@ -9,7 +14,9 @@ interface Props {
   apRemaining: number;
   apTotal: number;
   canReveal: boolean;
+  scanMode: ExpeditionScanMode | null;
   onTileClick: (index: number) => void;
+  onScanClick: (index: number, scanMode: ExpeditionScanMode) => void;
 }
 
 const TILE_COLORS: Record<
@@ -500,13 +507,16 @@ export function ExpeditionMapCanvas({
   apRemaining,
   apTotal,
   canReveal,
+  scanMode,
   onTileClick,
+  onScanClick,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredTile, setHoveredTile] = useState<number | null>(null);
   const [locationSprite, setLocationSprite] = useState<HTMLImageElement | null>(
     null,
   );
+  const isOrbitalScan = scanMode === "orbital";
 
   useEffect(() => {
     const image = new Image();
@@ -560,45 +570,90 @@ export function ExpeditionMapCanvas({
         const isHovered = hoveredTile === index;
 
         if (!tile.revealed) {
-          // Draw hidden tile with terrain texture
-          const hiddenGradient = ctx.createRadialGradient(
-            x + cellSize / 2,
-            y + cellSize / 2,
-            0,
-            x + cellSize / 2,
-            y + cellSize / 2,
-            cellSize / 2,
-          );
-          hiddenGradient.addColorStop(0, "rgba(50, 60, 50, 0.7)");
-          hiddenGradient.addColorStop(1, "rgba(25, 35, 25, 0.9)");
+            const reachable = isTileReachable(grid, index);
+            // Draw hidden tile with terrain texture
+            const hiddenGradient = ctx.createRadialGradient(
+              x + cellSize / 2,
+              y + cellSize / 2,
+              0,
+              x + cellSize / 2,
+              y + cellSize / 2,
+              cellSize / 2,
+            );
+            hiddenGradient.addColorStop(0, "rgba(50, 60, 50, 0.7)");
+            hiddenGradient.addColorStop(1, "rgba(25, 35, 25, 0.9)");
 
-          ctx.beginPath();
-          ctx.roundRect(x + padding, y + padding, tileWidth, tileWidth, 4);
-          ctx.fillStyle = hiddenGradient;
-          ctx.fill();
-
-          // Hover effect for unrevealed tiles
-          if (isHovered && canReveal) {
-            ctx.fillStyle = "rgba(0, 212, 255, 0.08)";
+            ctx.beginPath();
+            ctx.roundRect(x + padding, y + padding, tileWidth, tileWidth, 4);
+            ctx.fillStyle = hiddenGradient;
             ctx.fill();
-            ctx.strokeStyle = "rgba(0, 212, 255, 0.8)";
-            ctx.lineWidth = 2;
-            ctx.shadowColor = "rgba(0, 212, 255, 0.6)";
-            ctx.shadowBlur = 8;
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-          } else {
-            ctx.strokeStyle = "rgba(80, 100, 80, 0.6)";
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-          }
 
-          // Add subtle question mark - no silhouettes to avoid hints
-          ctx.fillStyle = "rgba(120, 150, 120, 0.6)";
-          ctx.font = "bold 20px Share Tech Mono";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText("?", x + cellSize / 2, y + cellSize / 2);
+            if (tile.peeked) {
+                // Сканированная клетка: тип виден приглушённо, эффект не применён
+                ctx.save();
+                ctx.globalAlpha = 0.45;
+                if (locationSprite?.complete) {
+                    drawTileSprite(
+                        ctx,
+                        locationSprite,
+                        tile.type,
+                        x + cellSize / 2,
+                        y + cellSize / 2,
+                        cellSize * 0.72,
+                    );
+                } else {
+                    drawTileIcon(
+                        ctx,
+                        tile.type,
+                        x + cellSize / 2,
+                        y + cellSize / 2,
+                        cellSize * 0.7,
+                    );
+                }
+                ctx.restore();
+                // Пунктирная голубая рамка — признак сканирования
+                ctx.beginPath();
+                ctx.roundRect(x + padding, y + padding, tileWidth, tileWidth, 4);
+                ctx.setLineDash([5, 4]);
+                ctx.strokeStyle = "rgba(0, 212, 255, 0.75)";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.setLineDash([]);
+            } else if (!reachable && !isOrbitalScan) {
+                // Locked (out of reach) tiles are dimmed to read as inaccessible fog
+                ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+                ctx.fill();
+                ctx.strokeStyle = "rgba(60, 70, 60, 0.4)";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.fillStyle = "rgba(80, 90, 80, 0.3)";
+                ctx.font = "bold 20px Share Tech Mono";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("?", x + cellSize / 2, y + cellSize / 2);
+            } else {
+                // Reachable tile or target of an orbital scan
+                if (isHovered && (scanMode || canReveal)) {
+                    ctx.fillStyle = "rgba(0, 212, 255, 0.08)";
+                    ctx.fill();
+                    ctx.strokeStyle = "rgba(0, 212, 255, 0.8)";
+                    ctx.lineWidth = 2;
+                    ctx.shadowColor = "rgba(0, 212, 255, 0.6)";
+                    ctx.shadowBlur = 8;
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                } else {
+                    // Explorable border: signals the tile is open for survey
+                    ctx.strokeStyle = "rgba(0, 212, 255, 0.4)";
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
+                ctx.fillStyle = "rgba(120, 150, 120, 0.6)";
+                ctx.font = "bold 20px Share Tech Mono";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("?", x + cellSize / 2, y + cellSize / 2);
+            }
         } else {
           // Draw revealed tile
           const style = TILE_COLORS[tile.type];
@@ -658,11 +713,11 @@ export function ExpeditionMapCanvas({
         ctx.fillText(coordinate, x + 11, y + 17);
       }
     }
-  }, [grid, hoveredTile, canReveal, locationSprite]);
+  }, [grid, hoveredTile, canReveal, scanMode, isOrbitalScan, locationSprite]);
 
   // Handle click on tiles
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canReveal) return;
+    if (!scanMode && !canReveal) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -678,18 +733,28 @@ export function ExpeditionMapCanvas({
     const row = Math.floor(clickY / cellSize);
 
     if (col >= 0 && col < gridSize && row >= 0 && row < gridSize) {
-      const index = row * gridSize + col;
-      if (!grid[index].revealed) {
-        onTileClick(index);
-      }
+        const index = row * gridSize + col;
+        const tile = grid[index];
+        if (
+          !tile ||
+          tile.revealed ||
+          (!isOrbitalScan && !isTileReachable(grid, index))
+        ) {
+          return;
+        }
+        if (scanMode) {
+            if (!tile.peeked) onScanClick(index, scanMode);
+        } else {
+            onTileClick(index);
+        }
     }
   };
 
   // Handle mouse move for hover effect
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canReveal) {
-      setHoveredTile(null);
-      return;
+    if (!scanMode && !canReveal) {
+        setHoveredTile(null);
+        return;
     }
 
     const canvas = canvasRef.current;
@@ -706,11 +771,17 @@ export function ExpeditionMapCanvas({
     const row = Math.floor(clickY / cellSize);
 
     if (col >= 0 && col < gridSize && row >= 0 && row < gridSize) {
-      const index = row * gridSize + col;
-      if (!grid[index].revealed) {
-        setHoveredTile(index);
-        return;
-      }
+        const index = row * gridSize + col;
+        const tile = grid[index];
+        if (
+            tile &&
+            !tile.revealed &&
+            (isOrbitalScan || isTileReachable(grid, index)) &&
+            (!scanMode || !tile.peeked)
+        ) {
+            setHoveredTile(index);
+            return;
+        }
     }
     setHoveredTile(null);
   };
@@ -733,10 +804,16 @@ export function ExpeditionMapCanvas({
     const col = Math.floor(clickX / cellSize);
     const row = Math.floor(clickY / cellSize);
     if (col >= 0 && col < gridSize && row >= 0 && row < gridSize) {
-      const index = row * gridSize + col;
-      if (!grid[index].revealed) {
-        setHoveredTile(index);
-      }
+        const index = row * gridSize + col;
+        const tile = grid[index];
+        if (
+            tile &&
+            !tile.revealed &&
+            (isOrbitalScan || isTileReachable(grid, index)) &&
+            (!scanMode || !tile.peeked)
+        ) {
+            setHoveredTile(index);
+        }
     }
   };
 
@@ -746,7 +823,7 @@ export function ExpeditionMapCanvas({
         ref={canvasRef}
         width={500}
         height={500}
-        className={`expedition-map-canvas w-full max-w-125 h-auto ${canReveal ? "cursor-pointer" : "cursor-not-allowed"}`}
+        className={`expedition-map-canvas w-full max-w-125 h-auto ${canReveal || scanMode ? "cursor-pointer" : "cursor-not-allowed"}`}
         style={{ touchAction: "manipulation" }}
         onClick={handleClick}
         onMouseMove={handleMouseMove}

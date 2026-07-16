@@ -5,6 +5,7 @@ import type {
     RaceId,
     AnomalyApproach,
     DistressApproach,
+    ExpeditionScanMode,
 } from "@/game/types";
 import { RACES } from "@/game/constants";
 import { mineAsteroid } from "./helpers";
@@ -22,7 +23,10 @@ import { exploreDerelictShip as exploreDerelictShipHelper } from "./helpers";
 import {
     startExpedition as startExpeditionHelper,
     revealExpeditionTile as revealExpeditionTileHelper,
+    scanExpeditionTile as scanExpeditionTileHelper,
     resolveRuinsChoice as resolveRuinsChoiceHelper,
+    diveDeeperIntoRuins as diveDeeperIntoRuinsHelper,
+    confirmRuinsOutcome as confirmRuinsOutcomeHelper,
     endExpedition as endExpeditionHelper,
 } from "./helpers/expedition";
 import {
@@ -104,8 +108,20 @@ export interface LocationsSlice {
     /** Открывает тайл экспедиции */
     revealExpeditionTile: (tileIndex: number) => void;
 
+    /** Подсматривает тип тайла: учёные — рядом, сканер — в любой точке карты. */
+    scanExpeditionTile: (
+        tileIndex: number,
+        scanMode?: ExpeditionScanMode,
+    ) => void;
+
     /** Обрабатывает выбор игрока в событии руин */
     resolveRuinsChoice: (choiceIndex: number) => void;
+
+    /** Открывает следующую камеру руин за AP после получения добычи */
+    diveDeeperIntoRuins: () => void;
+
+    /** Подтверждает показ исхода руин и закрывает событие */
+    confirmRuinsOutcome: () => void;
 
     /** Завершает экспедицию, применяет награды и тратит 1 ход */
     endExpedition: () => void;
@@ -194,8 +210,20 @@ export const createLocationsSlice = (
         revealExpeditionTileHelper(tileIndex, set, get);
     },
 
+    scanExpeditionTile: (tileIndex, scanMode = "scientist") => {
+        scanExpeditionTileHelper(tileIndex, scanMode, set, get);
+    },
+
     resolveRuinsChoice: (choiceIndex) => {
         resolveRuinsChoiceHelper(choiceIndex, set, get);
+    },
+
+    diveDeeperIntoRuins: () => {
+        diveDeeperIntoRuinsHelper(set, get);
+    },
+
+    confirmRuinsOutcome: () => {
+        confirmRuinsOutcomeHelper(set, get);
     },
 
     endExpedition: () => {

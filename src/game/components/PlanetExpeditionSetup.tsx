@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { getTechBonusSum } from "@/game/research";
 import {
+    EXPEDITION_SCANS_PER_SCIENTIST,
+    getExpeditionEnvironment,
+} from "@/game/slices/locations/helpers/expedition/constants";
+import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
@@ -20,6 +24,9 @@ interface Props {
 
 export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
     const crew = useGameStore((s) => s.crew);
+    const planet = useGameStore((s) =>
+        s.currentSector?.locations.find((location) => location.id === planetId),
+    );
     const startExpedition = useGameStore((s) => s.startExpedition);
     const research = useGameStore((s) => s.research);
     const { t } = useTranslation();
@@ -30,8 +37,18 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
         const m = crew.find((c) => c.id === id);
         return m?.race === "synthetic";
     }).length;
+    const scoutBonus = selectedIds.filter((id) => {
+        const m = crew.find((c) => c.id === id);
+        return m?.profession === "scout";
+    }).length;
+    const scientistCount = selectedIds.filter((id) => {
+        const m = crew.find((c) => c.id === id);
+        return m?.profession === "scientist";
+    }).length;
+    const scansTotal = scientistCount * EXPEDITION_SCANS_PER_SCIENTIST;
     const techBonus = getTechBonusSum(research, "expedition_ap");
-    const totalAP = selectedIds.length + syntheticBonus + techBonus;
+    const totalAP = selectedIds.length + syntheticBonus + scoutBonus + techBonus;
+    const environment = getExpeditionEnvironment(planet?.planetType);
 
     function toggleCrew(id: number) {
         setSelectedIds((prev) =>
@@ -53,6 +70,14 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
             <div className="text-sm text-[#888]">
                 {t("planet_panel.explore_planet_desc")}
             </div>
+            {environment && (
+                <div className="text-xs text-[#ffb000] border border-[#ffb00055] bg-[rgba(255,176,0,0.05)] px-2 py-1.5 rounded-sm">
+                    {environment.icon}{" "}
+                    {t(
+                        `planet_panel.expedition_environment.${environment.labelKey}`,
+                    )}
+                </div>
+            )}
 
             <div className="text-xs text-[#ffb000] uppercase tracking-wider">
                 {t("planet_panel.expedition_crew_select")}
@@ -176,9 +201,19 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                         {t("planet_panel.expedition_synthetic_bonus", { count: syntheticBonus })}
                     </span>
                 )}
+                {scoutBonus > 0 && (
+                    <span className="text-[#00ff41]">
+                        {t("planet_panel.expedition_scout_bonus", { count: scoutBonus })}
+                    </span>
+                )}
                 {techBonus > 0 && (
                     <span className="text-[#00d4ff]">
                         {t("planet_panel.expedition_kit_bonus", { count: techBonus })}
+                    </span>
+                )}
+                {scansTotal > 0 && (
+                    <span className="text-[#00d4ffaa]">
+                        {t("planet_panel.expedition_scans_bonus", { count: scansTotal })}
                     </span>
                 )}
             </div>

@@ -2,6 +2,7 @@ import type { SetState, GameStore } from "@/game/types";
 import type { ExpeditionReward } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES } from "@/game/constants";
 import { pickRuinsEvent } from "./ruinsEvents";
+import { isTileReachable } from "./adjacency";
 import {
     EXPEDITION_MARKET_CREDITS_MIN,
     EXPEDITION_MARKET_CREDITS_MAX,
@@ -11,6 +12,11 @@ import {
     EXPEDITION_INCIDENT_DAMAGE_MAX,
     EXPEDITION_INCIDENT_MORALE_LOSS,
     EXPEDITION_GOOD_FIND_MORALE_BOOST,
+    EXPEDITION_SCIENTIST_LAB_BONUS,
+    EXPEDITION_GUNNER_DAMAGE_REDUCTION,
+    EXPEDITION_MEDIC_MORALE_REDUCTION,
+    EXPEDITION_PROFESSION_CAP,
+    getExpeditionEnvironment,
 } from "./constants";
 import { RACES } from "@/game/constants/races";
 import type { ResearchResourceType } from "@/game/types/research";
@@ -50,17 +56,30 @@ export function revealExpeditionTile(
 
     if (!expedition) return;
     if (expedition.finished) return;
-    if (expedition.apRemaining <= 0) return;
     if (expedition.activeRuinsEvent !== null) return;
+    const stepApCost = expedition.stepApCost ?? 1;
+    if (expedition.apRemaining < stepApCost) return;
 
     const tile = expedition.grid[tileIndex];
     if (!tile || tile.revealed) return;
+    // Пространственная сетка: открывать можно только смежные клетки
+    if (!isTileReachable(expedition.grid, tileIndex)) return;
+
+    // Состав отряда влияет на исходы тайлов
+    const expCrew = state.crew.filter((c) =>
+        expedition.crewIds.includes(c.id),
+    );
+    const professionCount = (p: string) =>
+        expCrew.filter((c) => c.profession === p).length;
+    const scientistCount = professionCount("scientist");
+    const gunnerCount = professionCount("gunner");
+    const medicCount = professionCount("medic");
 
     // Mark tile as revealed and spend AP
     const newGrid = expedition.grid.map((t, i) =>
         i === tileIndex ? { ...t, revealed: true } : t,
     );
-    const newApRemaining = expedition.apRemaining - 1;
+    const newApRemaining = expedition.apRemaining - stepApCost;
     const newRevealedCount = expedition.revealedCount + 1;
 
     // Update grid/ap and track expedition_survey contract progress
@@ -111,8 +130,25 @@ export function revealExpeditionTile(
         (l) => l.id === expedition.planetId,
     );
     const raceId = planet?.dominantRace;
+    const environment = getExpeditionEnvironment(planet?.planetType);
 
     const safeExpedition = expedition; // captured non-null reference for closures
+
+    const stepDamage = environment?.stepDamage;
+    if (stepDamage && expCrew.length > 0) {
+        const target =
+            expCrew[Math.floor(Math.random() * expCrew.length)];
+        set((s) => ({
+            crew: s.crew.map((c) =>
+                c.id === target.id
+                    ? {
+                          ...c,
+                          health: Math.max(0, c.health - stepDamage),
+                      }
+                    : c,
+            ),
+        }));
+    }
 
     // Helper: boost morale for expedition crew on good finds
     function boostExpeditionMorale(amount: number) {
@@ -155,10 +191,10 @@ export function revealExpeditionTile(
 
         case "lab": {
             const resType = getLabResource(raceId);
-            const qty = r(
-                EXPEDITION_LAB_RESOURCE_MIN,
-                EXPEDITION_LAB_RESOURCE_MAX,
-            );
+            // Учёные в отряде повышают выход ресурсов с лабораторий
+            const qty =
+                r(EXPEDITION_LAB_RESOURCE_MIN, EXPEDITION_LAB_RESOURCE_MAX) +
+                scientistCount * EXPEDITION_SCIENTIST_LAB_BONUS;
             set((s) => {
                 if (!s.activeExpedition) return {};
                 const existing = s.activeExpedition.rewards.researchResources;
@@ -211,9 +247,25 @@ export function revealExpeditionTile(
         }
 
         case "incident": {
-            const damage = r(
+            const baseDamage = r(
                 EXPEDITION_INCIDENT_DAMAGE_MIN,
                 EXPEDITION_INCIDENT_DAMAGE_MAX,
+            );
+            // Стрелки снижают урон от инцидентов, медики — потерю морали
+            const damageReduction = Math.min(
+                EXPEDITION_PROFESSION_CAP,
+                gunnerCount * EXPEDITION_GUNNER_DAMAGE_REDUCTION,
+            );
+            const damage = Math.max(
+                1,
+                Math.round(baseDamage * (1 - damageReduction)),
+            );
+            const moraleReduction = Math.min(
+                EXPEDITION_PROFESSION_CAP,
+                medicCount * EXPEDITION_MEDIC_MORALE_REDUCTION,
+            );
+            const moraleLoss = Math.round(
+                EXPEDITION_INCIDENT_MORALE_LOSS * (1 - moraleReduction),
             );
             const crewInExpedition = state.crew.filter((c) =>
                 expedition.crewIds.includes(c.id),
@@ -232,17 +284,17 @@ export function revealExpeditionTile(
                             ...c,
                             health: Math.max(0, c.health - damage),
                             happiness: hasHappiness
-                                ? Math.max(
-                                      0,
-                                      c.happiness -
-                                          EXPEDITION_INCIDENT_MORALE_LOSS,
-                                  )
+                                ? Math.max(0, c.happiness - moraleLoss)
                                 : c.happiness,
                         };
                     }),
                 }));
+                const mitigation =
+                    damageReduction > 0 || moraleReduction > 0
+                        ? ` (смягчено отрядом: −${Math.round(damageReduction * 100)}% урона, −${Math.round(moraleReduction * 100)}% морали)`
+                        : "";
                 get().addLog(
-                    `⚠️ Инцидент! ${target.name} получил ${damage} урона и -${EXPEDITION_INCIDENT_MORALE_LOSS} морали.`,
+                    `⚠️ Инцидент! ${target.name} получил ${damage} урона и -${moraleLoss} морали${mitigation}.`,
                     "error",
                 );
             }
@@ -276,7 +328,7 @@ export function revealExpeditionTile(
     const currentExpedition = get().activeExpedition;
     if (
         currentExpedition &&
-        newApRemaining <= 0 &&
+        newApRemaining < stepApCost &&
         !currentExpedition.activeRuinsEvent &&
         !currentExpedition.finished
     ) {

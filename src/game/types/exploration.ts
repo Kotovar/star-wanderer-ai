@@ -44,6 +44,7 @@ export type ExploreTileType =
 export interface ExploreTile {
     type: ExploreTileType;
     revealed: boolean;
+    peeked?: boolean; // подсмотрен через сканирование (тип виден, эффект не применён)
     x: number; // 0–4
     y: number; // 0–4
 }
@@ -69,6 +70,15 @@ export interface RuinsEvent {
     choices: RuinsChoice[];
 }
 
+export type RuinsDepth = 0 | 1 | 2;
+export type ExpeditionScanMode = "scientist" | "orbital";
+
+/** Краткая сводка исхода выбора в руинах — показывается игроку перед закрытием. */
+export interface RuinsOutcome {
+    summary: string;
+    kind: "good" | "bad" | "neutral";
+}
+
 export interface ExpeditionReward {
     credits: number;
     tradeGoods: { id: Goods; quantity: number }[];
@@ -81,8 +91,13 @@ export interface ExpeditionState {
     grid: ExploreTile[]; // flat array of 25 tiles, index = y*5+x
     apTotal: number;
     apRemaining: number;
+    stepApCost: number; // стоимость открытия клетки, старые сохранения считаются как 1 AP
     revealedCount: number;
+    scansRemaining: number; // доступные сканирования (от учёных в отряде)
+    orbitalScanAvailable: boolean; // один дальний скан от корабельного сканера
     activeRuinsEvent: RuinsEvent | null;
+    ruinsOutcome: RuinsOutcome | null; // исход последнего выбора в руинах
+    ruinsDepth: RuinsDepth; // дополнительные камеры в текущих руинах
     pendingTileIndex: number | null; // tile waiting for ruins choice resolution
     rewards: ExpeditionReward;
     finished: boolean;

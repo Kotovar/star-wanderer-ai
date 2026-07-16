@@ -9,9 +9,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useTranslation } from "@/lib/useTranslation";
-import type { ExploreTileType } from "@/game/types/exploration";
+import type {
+  ExpeditionScanMode,
+  ExploreTileType,
+} from "@/game/types/exploration";
 import { RESEARCH_RESOURCES, TRADE_GOODS } from "@/game/constants";
 import { PLANET_POINT_OF_INTERESTS } from "@/game/constants/planets";
+import {
+  EXPEDITION_RUINS_MAX_DEPTH,
+  getExpeditionEnvironment,
+  getRuinsDepthDamage,
+  getRuinsDepthRewardMultiplier,
+} from "@/game/slices/locations/helpers/expedition/constants";
 import { ExpeditionMapCanvas } from "./ExpeditionMapCanvas";
 import { EventIllustration } from "./EventIllustration";
 import { ProfessionSprite } from "./ProfessionSprite";
@@ -36,12 +45,20 @@ export function PlanetExplorationPanel() {
   const expedition = useGameStore((s) => s.activeExpedition);
   const currentLocation = useGameStore((s) => s.currentLocation);
   const crew = useGameStore((s) => s.crew);
+  const artifacts = useGameStore((s) => s.artifacts);
   const revealExpeditionTile = useGameStore((s) => s.revealExpeditionTile);
+  const scanExpeditionTile = useGameStore((s) => s.scanExpeditionTile);
   const resolveRuinsChoice = useGameStore((s) => s.resolveRuinsChoice);
+  const diveDeeperIntoRuins = useGameStore((s) => s.diveDeeperIntoRuins);
+  const confirmRuinsOutcome = useGameStore((s) => s.confirmRuinsOutcome);
   const endExpedition = useGameStore((s) => s.endExpedition);
   const { t } = useTranslation();
 
   const [showAbortConfirm, setShowAbortConfirm] = useState(false);
+  const [scanMode, setScanMode] = useState<ExpeditionScanMode | null>(null);
+  const [dismissedArtifactId, setDismissedArtifactId] = useState<string | null>(
+    null,
+  );
 
   if (!expedition) return null;
 
@@ -51,16 +68,36 @@ export function PlanetExplorationPanel() {
       ? currentLocation.pointOfInterest ??
         PLANET_POINT_OF_INTERESTS[currentLocation.planetType]
       : undefined;
+  const environment = getExpeditionEnvironment(currentLocation?.planetType);
 
-  const { grid, apRemaining, apTotal, rewards, activeRuinsEvent, finished, crewIds } =
+  const { grid, apRemaining, apTotal, rewards, activeRuinsEvent, ruinsOutcome, ruinsDepth: storedRuinsDepth, finished, crewIds } =
     expedition;
+  const stepApCost = expedition.stepApCost ?? 1;
+  const ruinsDepth = storedRuinsDepth ?? 0;
+  const nextRuinsDepth = ruinsDepth + 1;
+  const canDiveDeeper =
+    !!ruinsOutcome &&
+    ruinsDepth < EXPEDITION_RUINS_MAX_DEPTH &&
+    apRemaining >= stepApCost;
 
   const expeditionCrew = crew.filter((c) => crewIds.includes(c.id));
 
-  const canReveal = apRemaining > 0 && !activeRuinsEvent && !finished;
+  const canReveal = apRemaining >= stepApCost && !activeRuinsEvent && !finished;
+  const scansRemaining = expedition.scansRemaining ?? 0;
+  const orbitalScanAvailable = expedition.orbitalScanAvailable ?? false;
+  const canScientistScan =
+    scansRemaining > 0 && !activeRuinsEvent && !finished;
+  const canOrbitalScan =
+    orbitalScanAvailable && !activeRuinsEvent && !finished;
+  const effectiveScanMode =
+    scanMode === "scientist" && canScientistScan
+      ? "scientist"
+      : scanMode === "orbital" && canOrbitalScan
+        ? "orbital"
+        : null;
   const revealedCount = grid.filter((tile) => tile.revealed).length;
   const totalTiles = grid.length;
-  const apExhausted = apRemaining === 0 && !finished;
+  const apExhausted = apRemaining < stepApCost && !finished;
 
   const apPct = apTotal > 0 ? (apRemaining / apTotal) * 100 : 0;
   const apColor =
@@ -75,6 +112,13 @@ export function PlanetExplorationPanel() {
     rewards.tradeGoods.length > 0 ||
     rewards.researchResources.length > 0 ||
     rewards.artifactFound;
+  const foundArtifact = rewards.artifactFound
+    ? artifacts.find((artifact) => artifact.id === rewards.artifactFound)
+    : undefined;
+  const showArtifactFound =
+    !!foundArtifact &&
+    foundArtifact.id !== dismissedArtifactId &&
+    !activeRuinsEvent;
 
   const handleAbort = () => {
     setShowAbortConfirm(false);
@@ -93,6 +137,11 @@ export function PlanetExplorationPanel() {
             ◈ {t("planet_panel.point_of_interest_title")}: {t(
               `planet_panel.point_of_interest_types.${pointOfInterest}`,
             )}
+          </span>
+        )}
+        {environment && (
+          <span className="text-[10px] text-[#ffb000] border border-[#ffb00055] px-1.5 py-0.5 rounded-sm">
+            {environment.icon} {t(`planet_panel.expedition_environment.${environment.labelKey}`)}
           </span>
         )}
         {/* Tile counter */}
@@ -130,6 +179,49 @@ export function PlanetExplorationPanel() {
           </button>
         )}
       </div>
+
+      {/* Scan controls */}
+      {scansRemaining > 0 && !finished && (
+        <button
+          onClick={() =>
+            setScanMode((mode) =>
+              mode === "scientist" ? null : "scientist",
+            )
+          }
+          className={`self-start text-[10px] uppercase tracking-wider px-2 py-1 rounded-sm border cursor-pointer transition-colors shrink-0 ${
+            effectiveScanMode === "scientist"
+              ? "bg-[#00d4ff22] border-[#00d4ff] text-[#00d4ff]"
+              : "bg-transparent border-[#00d4ff55] text-[#00d4ff99] hover:text-[#00d4ff] hover:border-[#00d4ff]"
+          }`}
+        >
+          🔭 {t("planet_panel.expedition_scan_btn")} ({scansRemaining})
+        </button>
+      )}
+      {orbitalScanAvailable && !finished && (
+        <button
+          onClick={() =>
+            setScanMode((mode) =>
+              mode === "orbital" ? null : "orbital",
+            )
+          }
+          className={`self-start text-[10px] uppercase tracking-wider px-2 py-1 rounded-sm border cursor-pointer transition-colors shrink-0 ${
+            effectiveScanMode === "orbital"
+              ? "bg-[#00d4ff22] border-[#00d4ff] text-[#00d4ff]"
+              : "bg-transparent border-[#00d4ff55] text-[#00d4ff99] hover:text-[#00d4ff] hover:border-[#00d4ff]"
+          }`}
+        >
+          📡 {t("planet_panel.expedition_orbital_scan_btn")}
+        </button>
+      )}
+      {(scansRemaining > 0 || orbitalScanAvailable) && !finished && (
+        <div aria-live="polite" className="min-h-10 -mt-1 text-[10px] text-[#00d4ff99]">
+          {effectiveScanMode === "scientist"
+            ? t("planet_panel.expedition_scan_hint")
+            : effectiveScanMode === "orbital"
+              ? t("planet_panel.expedition_orbital_scan_hint")
+              : "\u00a0"}
+        </div>
+      )}
 
       {/* Crew panel */}
       {expeditionCrew.length > 0 && (
@@ -203,6 +295,48 @@ export function PlanetExplorationPanel() {
         </DialogContent>
       </Dialog>
 
+      {/* Artifact discovery */}
+      <Dialog
+        open={showArtifactFound}
+        onOpenChange={(open) => {
+          if (!open && foundArtifact) {
+            setDismissedArtifactId(foundArtifact.id);
+          }
+        }}
+      >
+        <DialogContent
+          className="max-w-xs bg-[#050810] p-0"
+          style={{ border: "2px solid #9933ff88" }}
+          showCloseButton={false}
+        >
+          <div className="px-4 pt-4 pb-3 border-b border-[#9933ff44] bg-[rgba(153,51,255,0.08)] text-center">
+            <div className="text-3xl mb-2">✨</div>
+            <DialogTitle className="text-[#d9a8ff] font-bold text-sm font-['Orbitron'] uppercase tracking-wider">
+              {t("planet_panel.expedition_artifact_found")}
+            </DialogTitle>
+          </div>
+          <div className="flex flex-col gap-3 p-4 text-center">
+            <div className="text-base font-bold text-[#d9a8ff]">
+              {foundArtifact?.name}
+            </div>
+            <p className="text-xs text-[#aaa] leading-relaxed">
+              {foundArtifact?.description}
+            </p>
+            <p className="text-[10px] text-[#9933ff99]">
+              {t("planet_panel.expedition_artifact_dialog_desc")}
+            </p>
+            <Button
+              onClick={() =>
+                foundArtifact && setDismissedArtifactId(foundArtifact.id)
+              }
+              className="bg-transparent border border-[#9933ff88] text-[#d9a8ff] hover:bg-[#9933ff] hover:text-[#050810] text-xs py-2 cursor-pointer uppercase tracking-wider font-bold"
+            >
+              {t("effects.close")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Ruins event modal */}
       <Dialog open={!!activeRuinsEvent}>
         <DialogContent
@@ -223,22 +357,77 @@ export function PlanetExplorationPanel() {
           </div>
           <div className="flex flex-col gap-3 p-4">
             <EventIllustration variant="ruins" accent="#ffb000" />
-            <div className="text-xs text-[#aaa] leading-relaxed border-l-2 border-[#ffb00044] pl-3">
-              {activeRuinsEvent
-                ? t(`planet_panel.${activeRuinsEvent.descKey}`)
-                : ""}
-            </div>
-            <div className="flex flex-col gap-1.5">
-              {activeRuinsEvent?.choices.map((choice, idx) => (
-                <Button
-                  key={idx}
-                  onClick={() => resolveRuinsChoice(idx)}
-                  className="bg-transparent border border-[#ffb00066] text-accent hover:bg-accent hover:text-[#050810] text-xs py-1.5 cursor-pointer text-left justify-start"
+            {ruinsOutcome ? (
+              // Фаза исхода: показываем, что произошло после выбора
+              <>
+                <div
+                  className="text-sm font-bold text-center leading-relaxed border-l-2 pl-3 py-1"
+                    style={{
+                        borderColor:
+                            ruinsOutcome.kind === "good"
+                                ? "#00ff41"
+                                : ruinsOutcome.kind === "bad"
+                                  ? "#ff0040"
+                                  : "#ffb000",
+                        color:
+                            ruinsOutcome.kind === "good"
+                                ? "#00ff41"
+                                : ruinsOutcome.kind === "bad"
+                                  ? "#ff6b6b"
+                                  : "#ffb000",
+                    }}
                 >
-                  {t(`planet_panel.${choice.labelKey}`)}
+                  {ruinsOutcome.summary}
+                </div>
+                {canDiveDeeper && (
+                  <Button
+                    onClick={() => diveDeeperIntoRuins()}
+                    className="bg-transparent border border-[#ff004066] text-[#ff6b6b] hover:bg-[#ff0040] hover:text-[#050810] text-xs py-2 cursor-pointer uppercase tracking-wider font-bold"
+                  >
+                    {t("planet_panel.expedition_ruins_deeper_btn", {
+                      ap: stepApCost,
+                      multiplier: getRuinsDepthRewardMultiplier(nextRuinsDepth),
+                      damage: getRuinsDepthDamage(nextRuinsDepth),
+                    })}
+                  </Button>
+                )}
+                <Button
+                    onClick={() => confirmRuinsOutcome()}
+                    className="bg-[#ffb000] text-[#050810] hover:bg-[#ffd060] border-0 text-xs py-2 cursor-pointer uppercase tracking-wider font-bold"
+                >
+                    {t("planet_panel.expedition_ruins_continue")}
                 </Button>
-              ))}
-            </div>
+              </>
+            ) : (
+              // Фаза выбора
+              <>
+                {ruinsDepth > 0 && (
+                  <div className="text-[10px] text-[#ff6b6b] border border-[#ff004044] bg-[rgba(255,0,64,0.05)] px-2 py-1.5 rounded-sm">
+                    {t("planet_panel.expedition_ruins_depth", {
+                      depth: ruinsDepth,
+                      multiplier: getRuinsDepthRewardMultiplier(ruinsDepth),
+                      damage: getRuinsDepthDamage(ruinsDepth),
+                    })}
+                  </div>
+                )}
+                <div className="text-xs text-[#aaa] leading-relaxed border-l-2 border-[#ffb00044] pl-3">
+                    {activeRuinsEvent
+                        ? t(`planet_panel.${activeRuinsEvent.descKey}`)
+                        : ""}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                    {activeRuinsEvent?.choices.map((choice, idx) => (
+                        <Button
+                            key={idx}
+                            onClick={() => resolveRuinsChoice(idx)}
+                            className="bg-transparent border border-[#ffb00066] text-accent hover:bg-accent hover:text-[#050810] text-xs py-1.5 cursor-pointer text-left justify-start"
+                        >
+                            {t(`planet_panel.${choice.labelKey}`)}
+                        </Button>
+                    ))}
+                </div>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -250,7 +439,9 @@ export function PlanetExplorationPanel() {
           apRemaining={apRemaining}
           apTotal={apTotal}
           canReveal={canReveal}
+          scanMode={effectiveScanMode}
           onTileClick={(idx) => revealExpeditionTile(idx)}
+          onScanClick={(idx, mode) => scanExpeditionTile(idx, mode)}
         />
       </div>
 

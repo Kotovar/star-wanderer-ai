@@ -1,5 +1,6 @@
 import type { PlanetPointOfInterest, RaceId } from "@/game/types";
 import type { ExploreTile, ExploreTileType } from "@/game/types/exploration";
+import type { PlanetType } from "@/game/types/planets";
 import {
     EXPEDITION_GRID_SIZE,
     EXPEDITION_TILE_COUNT,
@@ -10,8 +11,9 @@ import { getWeightsForRace, pickWeightedTile } from "./tileWeights";
 export function generateExpeditionGrid(
     raceId: RaceId | undefined,
     pointOfInterest?: PlanetPointOfInterest,
+    planetType?: PlanetType,
 ): ExploreTile[] {
-    const weights = getWeightsForRace(raceId, pointOfInterest);
+    const weights = getWeightsForRace(raceId, pointOfInterest, planetType);
     const types: ExploreTileType[] = [];
     let artifactCount = 0;
 

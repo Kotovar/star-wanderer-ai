@@ -1,5 +1,7 @@
 import type { PlanetPointOfInterest, RaceId } from "@/game/types";
 import type { ExploreTileType } from "@/game/types/exploration";
+import type { PlanetType } from "@/game/types/planets";
+import { getExpeditionEnvironment } from "./constants";
 
 type TileWeightMap = Record<ExploreTileType, number>;
 
@@ -101,10 +103,19 @@ const POINT_OF_INTEREST_WEIGHTS: Record<
 export function getWeightsForRace(
     raceId: RaceId | undefined,
     pointOfInterest?: PlanetPointOfInterest,
+    planetType?: PlanetType,
 ): TileWeightMap {
-    if (pointOfInterest) return POINT_OF_INTEREST_WEIGHTS[pointOfInterest];
-    if (!raceId || !(raceId in RACE_WEIGHTS)) return DEFAULT_WEIGHTS;
-    return RACE_WEIGHTS[raceId];
+    const weights = pointOfInterest
+        ? POINT_OF_INTEREST_WEIGHTS[pointOfInterest]
+        : !raceId || !(raceId in RACE_WEIGHTS)
+          ? DEFAULT_WEIGHTS
+          : RACE_WEIGHTS[raceId];
+    const artifactWeightBonus =
+        getExpeditionEnvironment(planetType)?.artifactWeightBonus ?? 0;
+
+    return artifactWeightBonus > 0
+        ? { ...weights, artifact: weights.artifact + artifactWeightBonus }
+        : weights;
 }
 
 export function pickWeightedTile(
