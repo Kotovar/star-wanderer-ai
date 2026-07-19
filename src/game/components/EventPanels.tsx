@@ -34,6 +34,7 @@ import { RandomEventPanel } from "./RandomEventPanel";
 import { RiskRewardPreview } from "./RiskRewardPreview";
 import type { TravelEventType } from "@/game/types";
 import { getActiveModule } from "@/game/modules";
+import { RESEARCH_TREE } from "@/game/constants";
 
 type PreviewItem = {
   label: string;
@@ -51,15 +52,19 @@ const TRAVEL_EVENT_UI: Record<
     riskButton: string;
     cautiousButton: string;
     cautiousFuelCost?: number;
+    specialButton?: string;
+    specialHint?: string;
   }
 > = {
   asteroids: {
     title: "Астероидный поток",
     description: "Курс проходит через плотное облако обломков.",
     risk: [
-      { label: "Быстрый проход", value: "1 модуль -5 HP", tone: "warning" },
+      { label: "Быстрый проход", value: "1 модуль -15 HP", tone: "warning" },
       { label: "Время", value: "без задержки", tone: "good" },
     ],
+    specialButton: "⛏️ Бурить попутно",
+    specialHint: "1 модуль -15 HP, минералы в трюм (зависит от уровня бура)",
     cautious: [
       { label: "Повреждения", value: "нет", tone: "good" },
       { label: "Топливо", value: "-5", tone: "warning" },
@@ -71,6 +76,8 @@ const TRAVEL_EVENT_UI: Record<
   anomaly: {
     title: "Аномальный фронт",
     description: "Перед кораблём нестабильная зона искажений.",
+    specialButton: "🔬 Изучить аномалию",
+    specialHint: "все модули -10 HP, исследовательские ресурсы (нужна лаборатория)",
     risk: [
       { label: "Прямой проход", value: "все модули -10 HP", tone: "danger" },
       { label: "Время", value: "без задержки", tone: "good" },
@@ -89,7 +96,7 @@ const TRAVEL_EVENT_UI: Record<
     risk: [
       {
         label: "Продолжить график",
-        value: "мораль экипажа -5",
+        value: "мораль экипажа -8",
         tone: "warning",
       },
       { label: "Темп", value: "без задержки", tone: "good" },
@@ -110,7 +117,7 @@ const TRAVEL_EVENT_UI: Record<
         value: "изменить курс ненадолго",
         tone: "neutral",
       },
-      { label: "Находка", value: "+15₢", tone: "good" },
+      { label: "Находка", value: "+40₢", tone: "good" },
     ],
     cautious: [
       { label: "Курс", value: "сохранён", tone: "good" },
@@ -118,6 +125,21 @@ const TRAVEL_EVENT_UI: Record<
     ],
     riskButton: "Проверить сигнал",
     cautiousButton: "Игнорировать",
+  },
+  trader: {
+    title: "Странствующий торговец",
+    description:
+      "Неизвестный корабль вышел на связь: капитан готов скупить весь ваш груз, не сходя с курса.",
+    risk: [
+      { label: "Сделка", value: "продать весь груз", tone: "neutral" },
+      { label: "Цена", value: "+20% к базовой", tone: "good" },
+    ],
+    cautious: [
+      { label: "Курс", value: "сохранён", tone: "good" },
+      { label: "Сделка", value: "нет", tone: "neutral" },
+    ],
+    riskButton: "Продать весь груз",
+    cautiousButton: "Разойтись",
   },
   emp: {
     title: "Электромагнитный импульс",
@@ -162,7 +184,7 @@ function getTravelEventCautiousItems({
         value: "расшифровать без схода с курса",
         tone: "good",
       },
-      { label: "Находка", value: "+25₢", tone: "good" },
+      { label: "Находка", value: "+75₢", tone: "good" },
     ];
   }
 
@@ -217,6 +239,7 @@ export function EventDisplay() {
   const currentSector = useGameStore((s) => s.currentSector);
   const emergencyJump = useGameStore((s) => s.emergencyJump);
   const resolveTravelEvent = useGameStore((s) => s.resolveTravelEvent);
+  const activeResearch = useGameStore((s) => s.research.activeResearch);
   const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
   const isStuckInBlackHole = useGameStore((s) => {
     if (s.currentSector?.star?.type !== "blackhole") return false;
@@ -266,6 +289,11 @@ export function EventDisplay() {
         scanRange,
         shields: shipShields,
       });
+      const specialAvailable =
+        (pendingTravelEvent.type === "asteroids" &&
+          getActiveModule(shipModules, "drill") !== undefined) ||
+        (pendingTravelEvent.type === "anomaly" &&
+          getActiveModule(shipModules, "lab") !== undefined);
       const cautiousUsesFuel =
         eventInfo.cautiousFuelCost !== undefined &&
         cautiousItems.some((item) => item.label === "Топливо");
@@ -320,6 +348,17 @@ export function EventDisplay() {
               {cautiousButton}
             </Button>
           </div>
+          {specialAvailable && eventInfo.specialButton && (
+            <div className="flex flex-col gap-1">
+              <Button
+                onClick={() => resolveTravelEvent("special")}
+                className="cursor-pointer bg-transparent border-2 border-accent text-accent hover:bg-accent hover:text-[#050810] uppercase tracking-wider"
+              >
+                {eventInfo.specialButton}
+              </Button>
+              <div className="text-xs text-[#888]">{eventInfo.specialHint}</div>
+            </div>
+          )}
           {lacksFuel && (
             <div className="text-xs text-[#ff4444]">
               Недостаточно топлива для осторожного варианта.
@@ -328,6 +367,21 @@ export function EventDisplay() {
         </div>
       );
     }
+
+    const researchTech = activeResearch
+      ? RESEARCH_TREE[activeResearch.techId]
+      : null;
+    const researchPercent =
+      activeResearch && researchTech
+        ? Math.min(
+            100,
+            Math.round(
+              (activeResearch.progress / researchTech.scienceCost) * 100,
+            ),
+          )
+        : 0;
+    const busyCrew = crew.filter((c) => c.assignment).length;
+    const damagedModules = shipModules.filter((m) => m.health < 100).length;
 
     return (
       <div className="flex flex-col gap-4">
@@ -341,6 +395,31 @@ export function EventDisplay() {
           <br />
           {t("travel.turns_left")}:{" "}
           <span className="text-ring">{traveling.turnsLeft}</span>
+          <span className="ml-2 text-xs text-[#888]">
+            {traveling.route === "detour"
+              ? "🛡️ обходной маршрут"
+              : "⚡ прямой маршрут"}
+          </span>
+        </div>
+        <div className="border border-[#00ff4133] bg-[rgba(0,255,65,0.03)] p-3 text-xs leading-relaxed text-[#9aa59a]">
+          <div className="font-['Orbitron'] text-[10px] font-bold uppercase tracking-wider text-[#00ff41]">
+            На борту
+          </div>
+          <div className="mt-1">
+            {researchTech
+              ? `🔬 Исследование: ${researchTech.name} (${researchPercent}%)`
+              : "🔬 Лаборатория простаивает"}
+          </div>
+          <div>
+            {busyCrew > 0
+              ? `👥 Экипаж на задачах: ${busyCrew}`
+              : "👥 Экипаж отдыхает"}
+          </div>
+          <div>
+            {damagedModules > 0
+              ? `🔧 Повреждённых модулей: ${damagedModules}`
+              : "🔧 Все модули исправны"}
+          </div>
         </div>
         <div className="flex gap-2.5 flex-wrap mt-5">
           <Button

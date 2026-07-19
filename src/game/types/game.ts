@@ -190,9 +190,9 @@ export interface GameActionsClick {
   skipTurn: () => void;
   resolveCrisis: (response: CrisisResponse) => void;
   resolveRandomEvent: (choice: RandomEventChoiceId) => void;
-  selectSector: (sectorId: number) => void;
+  selectSector: (sectorId: number, route?: "direct" | "detour") => void;
   selectLocation: (locationIdx: number) => void;
-  resolveTravelEvent: (choice: "risk" | "cautious") => void;
+  resolveTravelEvent: (choice: "risk" | "cautious" | "special") => void;
   travelThroughBlackHole: () => void;
   emergencyJump: () => void;
   mineAsteroid: () => void;

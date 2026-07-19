@@ -395,12 +395,19 @@ const handleTravelStart = (
     pilot: GameState["crew"][number] | undefined,
     set: (fn: (state: GameState) => Partial<GameState>) => void,
     get: () => GameStore,
+    route: "direct" | "detour" = "direct",
 ): void => {
     if (!sector) return;
 
     if (pilot) {
         get().gainExp(pilot, distance * PILOT_EXP_PER_TIER);
     }
+
+    // Редкая встреча со странствующим торговцем: один ролл за перелёт
+    const traderTurn =
+        !travelInstant && Math.random() < TRADER_ENCOUNTER_CHANCE
+            ? 1 + Math.floor(Math.random() * distance)
+            : undefined;
 
     set(() => ({
         traveling: travelInstant
@@ -409,6 +416,8 @@ const handleTravelStart = (
                   destination: sector,
                   turnsLeft: distance,
                   turnsTotal: distance,
+                  route,
+                  traderTurn,
               },
         gameMode: "galaxy_map" as GameMode,
     }));
@@ -468,10 +477,20 @@ const handleTravelStart = (
  * @param get - Функция получения состояния
  * @param sectorId - ID выбранного сектора
  */
+/** Дополнительное топливо за обходной маршрут */
+export const DETOUR_FUEL_COST = 5;
+
+/** Дополнительные ходы за обходной маршрут */
+export const DETOUR_EXTRA_TURNS = 1;
+
+/** Шанс встретить странствующего торговца (один ролл за перелёт) */
+const TRADER_ENCOUNTER_CHANCE = 0.1;
+
 export const selectSector = (
     set: (fn: (state: GameState) => Partial<GameState>) => void,
     get: () => GameStore,
     sectorId: number,
+    route: "direct" | "detour" = "direct",
 ): void => {
     const state = get();
 
@@ -542,9 +561,12 @@ export const selectSector = (
         !!warpCoil,
         !!pilotInCockpit,
     );
-    const fuelCost = fuelResult.fuelCost;
     // Варп-двигатель делает перелёт мгновенным
     const travelInstant = fuelResult.travelInstant || hasWarpDrive;
+
+    // Обходной маршрут: дороже по топливу, но спокойнее (см. processTravel)
+    const isDetour = route === "detour" && !travelInstant;
+    const fuelCost = fuelResult.fuelCost + (isDetour ? DETOUR_FUEL_COST : 0);
 
     // Логирование бонусов артефактов
     if (hasWarpDrive) {
@@ -569,7 +591,16 @@ export const selectSector = (
 
     // Ионный двигатель сокращает время межтирового перелёта на 1 ход (минимум 0)
     const hasIonDrive = state.research.researchedTechs.includes("ion_drive");
-    const travelTurns = hasIonDrive && distance > 0 ? Math.max(0, distance - 1) : distance;
+    let travelTurns = hasIonDrive && distance > 0 ? Math.max(0, distance - 1) : distance;
+
+    // Обходной маршрут длиннее
+    if (isDetour && travelTurns > 0) {
+        travelTurns += DETOUR_EXTRA_TURNS;
+        get().addLog(
+            `🛡️ Обходной маршрут: +${DETOUR_EXTRA_TURNS} ход, топливо +${DETOUR_FUEL_COST}, риск событий снижен`,
+            "info",
+        );
+    }
 
     // Обработка навигационной ошибки
     handleNavigationError(state, distance, !!pilotInCockpit, set, get);
@@ -590,6 +621,14 @@ export const selectSector = (
         if (hasIonDrive && distance > travelTurns) {
             get().addLog(`🚀 Ионный двигатель: перелёт на 1 ход быстрее!`, "info");
         }
-        handleTravelStart(sector, travelTurns, travelInstant, pilot, set, get);
+        handleTravelStart(
+            sector,
+            travelTurns,
+            travelInstant,
+            pilot,
+            set,
+            get,
+            isDetour ? "detour" : "direct",
+        );
     }
 };

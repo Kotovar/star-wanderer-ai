@@ -1,10 +1,17 @@
 import type { GameState, GameStore, SetState, TravelEventType } from "@/game/types";
-import { CONTRACT_REWARDS, MUTATION_CHANCES } from "@/game/constants";
+import { CONTRACT_REWARDS, MUTATION_CHANCES, RESEARCH_RESOURCES } from "@/game/constants";
+import { TRADE_GOODS } from "@/game/constants/goods";
 import { giveCrewExperience, giveRandomMutation } from "@/game/crew";
 import { getActiveModule } from "@/game/modules";
+import { getAnomalyResources } from "@/game/research/utils";
+import { addTradeGood } from "@/game/slices/ship/helpers";
+import { getCargoCapacity } from "@/game/slices/ship/helpers/getCargoCapacity";
 
-/** Вероятность случайного события в пути */
-const TRAVEL_EVENT_CHANCE = 0.3;
+/** Вероятность случайного события в пути (прямой маршрут) */
+const TRAVEL_EVENT_CHANCE_DIRECT = 0.45;
+
+/** Вероятность случайного события в пути (обходной маршрут) */
+const TRAVEL_EVENT_CHANCE_DETOUR = 0.15;
 
 /** Список случайных событий в пути */
 const TRAVEL_EVENTS: TravelEventType[] = [
@@ -19,16 +26,16 @@ const TRAVEL_EVENTS: TravelEventType[] = [
 const MIN_MODULE_HEALTH = 10;
 
 /** Урон от астероидов (одному модулю) */
-const ASTEROID_DAMAGE = 5;
+const ASTEROID_DAMAGE = 15;
 
 /** Урон от аномалии (всем модулям) */
 const ANOMALY_DAMAGE = 10;
 
 /** Потеря настроения от стресса */
-const STRESS_HAPPINESS_LOSS = 5;
+const STRESS_HAPPINESS_LOSS = 8;
 
 /** Награда за сигнал (кредиты) */
-const SIGNAL_REWARD = 15;
+const SIGNAL_REWARD = 40;
 
 /** Расход топлива для осторожного манёвра через астероидное поле */
 const ASTEROID_CAUTIOUS_FUEL_COST = 5;
@@ -40,7 +47,13 @@ const ANOMALY_CAUTIOUS_FUEL_COST = 5;
 const ANOMALY_CAUTIOUS_DAMAGE = 5;
 
 /** Бонусная награда за анализ слабого сигнала сканером */
-const SCANNER_SIGNAL_BONUS_REWARD = 25;
+const SCANNER_SIGNAL_BONUS_REWARD = 75;
+
+/** Минералов за уровень бура при попутном бурении астероидного потока */
+const SPECIAL_MINING_MINERALS_PER_LEVEL = 4;
+
+/** Множитель к базовой цене при продаже странствующему торговцу */
+const TRADER_PRICE_MULTIPLIER = 1.2;
 
 /**
  * Выбирает случайный элемент из массива
@@ -222,6 +235,37 @@ const handleRandomEvent = (
             }
             break;
         }
+        case "trader": {
+            const goods = getState().ship.tradeGoods;
+            if (goods.length === 0) {
+                getState().addLog(
+                    "🛸 Торговцу нечего предложить — трюм пуст. Корабли разошлись.",
+                    "info",
+                );
+                break;
+            }
+
+            const total = goods.reduce(
+                (sum, g) =>
+                    sum +
+                    Math.floor(
+                        (TRADE_GOODS[g.item].basePrice *
+                            TRADER_PRICE_MULTIPLIER *
+                            g.quantity) /
+                            5,
+                    ),
+                0,
+            );
+            setState((s) => ({
+                credits: s.credits + total,
+                ship: { ...s.ship, tradeGoods: [] },
+            }));
+            getState().addLog(
+                `🛸 Странствующий торговец скупил весь груз: +${total}₢`,
+                "info",
+            );
+            break;
+        }
     }
 };
 
@@ -338,13 +382,120 @@ const applyCautiousEventChoice = (
             );
             return true;
         }
+        case "trader": {
+            getState().addLog(
+                "🛸 Торговец пожал плечами и ушёл в гиперпространство",
+                "info",
+            );
+            return true;
+        }
+    }
+};
+
+/**
+ * Особый вариант решения, доступный при подходящем оборудовании:
+ * - астероиды + активный бур: попутное бурение (урон + минералы в трюм)
+ * - аномалия + активная лаборатория: изучение (урон + исследовательские ресурсы)
+ */
+const applySpecialEventChoice = (
+    event: TravelEventType,
+    setState: SetState,
+    getState: () => GameStore,
+): boolean => {
+    switch (event) {
+        case "asteroids": {
+            const drillLevel = getState().getDrillLevel();
+            if (drillLevel <= 0) {
+                getState().addLog("Нет активного бура для попутного бурения", "error");
+                return false;
+            }
+
+            const damage = handleAsteroidDamage(setState, getState);
+
+            const state = getState();
+            const currentCargo =
+                state.ship.cargo.reduce((s, c) => s + c.quantity, 0) +
+                state.ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
+                state.probes;
+            const freeSpace = Math.max(
+                0,
+                getCargoCapacity(state) - currentCargo,
+            );
+            const mined = Math.min(
+                freeSpace,
+                drillLevel * SPECIAL_MINING_MINERALS_PER_LEVEL,
+            );
+
+            if (mined > 0) {
+                setState((s) => ({
+                    ship: {
+                        ...s.ship,
+                        tradeGoods: addTradeGood(
+                            s.ship.tradeGoods,
+                            "minerals",
+                            mined,
+                        ),
+                    },
+                }));
+            }
+            getState().addLog(
+                mined > 0
+                    ? `⛏️ Попутное бурение: минералы +${mined}, повреждение модуля -${damage}%`
+                    : `⛏️ Попутное бурение: трюм полон, добыча потеряна. Повреждение модуля -${damage}%`,
+                mined > 0 ? "info" : "warning",
+            );
+            return true;
+        }
+        case "anomaly": {
+            const lab = getActiveModule(getState().ship.modules, "lab");
+            if (!lab) {
+                getState().addLog("Нет активной лаборатории для изучения аномалии", "error");
+                return false;
+            }
+
+            const damagedCount = handleAnomaly(setState, getState);
+
+            let resources = getAnomalyResources();
+            if (resources.length === 0) {
+                resources = [{ type: "energy_samples", quantity: 1 }];
+            }
+            setState((s) => ({
+                research: {
+                    ...s.research,
+                    resources: resources.reduce(
+                        (acc, res) => ({
+                            ...acc,
+                            [res.type]: (acc[res.type] || 0) + res.quantity,
+                        }),
+                        { ...s.research.resources },
+                    ),
+                },
+            }));
+
+            getState().addLog(
+                `🔬 Лаборатория изучила аномальный фронт: повреждено модулей ${damagedCount} (-${ANOMALY_DAMAGE}% каждое)`,
+                "warning",
+            );
+            resources.forEach((res) => {
+                const resourceData = RESEARCH_RESOURCES[res.type];
+                getState().addLog(
+                    `🔬 Получены исследовательские ресурсы: ${resourceData.icon} ${resourceData.name} x${res.quantity}`,
+                    "info",
+                );
+            });
+            return true;
+        }
+        default: {
+            getState().addLog("Для этого события нет особого варианта", "error");
+            return false;
+        }
     }
 };
 
 export const resolveTravelEvent = (
     set: SetState,
     get: () => GameStore,
-    choice: "risk" | "cautious",
+    choice: "risk" | "cautious" | "special",
 ): void => {
     const event = get().pendingTravelEvent;
     if (!event) return;
@@ -352,7 +503,9 @@ export const resolveTravelEvent = (
     const resolved =
         choice === "risk"
             ? (handleRandomEvent(event.type, set, get), true)
-            : applyCautiousEventChoice(event.type, set, get);
+            : choice === "special"
+              ? applySpecialEventChoice(event.type, set, get)
+              : applyCautiousEventChoice(event.type, set, get);
 
     if (!resolved) return;
 
@@ -458,9 +611,31 @@ export const processTravel = (
     if (!traveling) return;
     if (get().pendingTravelEvent) return;
 
+    // Встреча со странствующим торговцем (заготовлена при старте перелёта).
+    // traderTurn сразу сбрасывается, иначе событие сработает повторно:
+    // turnsLeft в этот ход не уменьшается.
+    if (traveling.traderTurn === traveling.turnsLeft) {
+        set((s) => ({
+            pendingTravelEvent: { type: "trader" },
+            traveling: s.traveling
+                ? { ...s.traveling, traderTurn: undefined }
+                : null,
+        }));
+        get().addLog(
+            "🛸 На сканере неизвестный корабль. Требуется решение капитана.",
+            "warning",
+        );
+        get().saveGame();
+        return;
+    }
+
     // Случайные события проверяются до уменьшения turnsLeft, чтобы они могли
     // появляться даже на перелётах длиной в 1 ход.
-    if (Math.random() < TRAVEL_EVENT_CHANCE) {
+    const eventChance =
+        traveling.route === "detour"
+            ? TRAVEL_EVENT_CHANCE_DETOUR
+            : TRAVEL_EVENT_CHANCE_DIRECT;
+    if (Math.random() < eventChance) {
         const event = randomElement(TRAVEL_EVENTS);
         set({ pendingTravelEvent: { type: event } });
         get().addLog(

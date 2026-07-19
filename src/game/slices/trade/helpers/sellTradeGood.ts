@@ -3,6 +3,7 @@ import { playSound } from "@/sounds";
 import type { GameStore, SetState, Goods, StationPrices } from "@/game/types";
 import type { SellValidation } from "./types";
 import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
+import { applyCrisisMarketModifier } from "@/game/stations/crisisMarket";
 import { REPUTATION_SELL_THRESHOLD } from "../constants";
 
 /**
@@ -32,11 +33,17 @@ const validateSellTradeGood = (
         return { canSell: false, error: "Недостаточно товара!" };
     }
 
-    const pricePer5 = pricesFromTrade[goodId].sell;
+    // Кризисный множитель применяется к обеим ценам — арбитраж невозможен
+    const crisisPrices = applyCrisisMarketModifier(
+        pricesFromTrade[goodId],
+        state.activeCrisis?.id,
+        goodId,
+    );
+    const pricePer5 = crisisPrices.sell;
 
     // Применяем модификатор репутации если есть доминирующая раса
     const raceId = state.currentLocation?.dominantRace;
-    const buyPrice = pricesFromTrade[goodId].buy;
+    const buyPrice = crisisPrices.buy;
     let price: number;
     if (raceId) {
         price = applyReputationPriceModifier(

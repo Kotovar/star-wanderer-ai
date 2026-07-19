@@ -11,9 +11,9 @@ import {
  * Интерфейс TravelSlice
  */
 export interface TravelSlice {
-    selectSector: (sectorId: number) => void;
+    selectSector: (sectorId: number, route?: "direct" | "detour") => void;
     selectLocation: (locationIdx: number) => void;
-    resolveTravelEvent: (choice: "risk" | "cautious") => void;
+    resolveTravelEvent: (choice: "risk" | "cautious" | "special") => void;
     travelThroughBlackHole: () => void;
     emergencyJump: () => void;
 }
@@ -25,8 +25,8 @@ export const createTravelSlice = (
     set: SetState,
     get: () => GameStore,
 ): TravelSlice => ({
-    selectSector: (sectorId) => {
-        selectSector(set, get, sectorId);
+    selectSector: (sectorId, route) => {
+        selectSector(set, get, sectorId, route);
     },
     selectLocation: (locationIdx) => {
         selectLocation(set, get, locationIdx);

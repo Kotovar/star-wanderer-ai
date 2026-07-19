@@ -13,6 +13,7 @@ import {
 } from "./helpers";
 import * as processors from "./processors";
 import { processTravel } from "@/game/slices/travel/helpers";
+import { processMarketTick } from "@/game/stations";
 import { checkContractExpiry } from "@/game/slices/contracts/helpers/checkContractExpiry";
 import { advanceCombatRound } from "@/game/slices/combat/helpers/combatTime";
 import { GLOBAL_CRISES } from "@/game/constants/globalCrises";
@@ -109,6 +110,9 @@ export const createGameLoopSlice = (
 
         // Проверка истечения расовых контрактов
         checkContractExpiry(set, get);
+
+        // Тик рынка: дрейф цен и пополнение складов станций
+        processMarketTick(set, get);
 
         // Путешествия
         processTravel(state, set, get);

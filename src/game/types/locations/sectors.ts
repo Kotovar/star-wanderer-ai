@@ -60,10 +60,16 @@ export interface Sector {
     visited?: boolean; // Has player visited this sector
 }
 
+export type TravelRoute = "direct" | "detour";
+
 export interface TravelingState {
     destination: Sector;
     turnsLeft: number;
     turnsTotal: number;
+    /** Маршрут перелёта; отсутствие поля (старые сейвы) = прямой */
+    route?: TravelRoute;
+    /** На каком значении turnsLeft встретится странствующий торговец */
+    traderTurn?: number;
 }
 
 export type TravelEventType =
@@ -71,7 +77,8 @@ export type TravelEventType =
     | "anomaly"
     | "stress"
     | "signal"
-    | "emp";
+    | "emp"
+    | "trader";
 
 export interface PendingTravelEvent {
     type: TravelEventType;

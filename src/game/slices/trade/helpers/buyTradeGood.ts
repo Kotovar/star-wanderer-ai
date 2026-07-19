@@ -11,6 +11,7 @@ import type {
 } from "@/game/types";
 import type { BuyValidation } from "./types";
 import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
+import { applyCrisisMarketModifier } from "@/game/stations/crisisMarket";
 import { REPUTATION_BUY_THRESHOLD } from "../constants";
 
 /**
@@ -38,11 +39,17 @@ const validateBuyTradeGood = (
         return { canBuy: false, error: "Недоступно для торговли" };
     }
 
-    const pricePer5 = pricesFromStation[goodId].buy;
+    // Кризисный множитель применяется к обеим ценам — арбитраж невозможен
+    const crisisPrices = applyCrisisMarketModifier(
+        pricesFromStation[goodId],
+        state.activeCrisis?.id,
+        goodId,
+    );
+    const pricePer5 = crisisPrices.buy;
 
     // Применяем модификатор репутации если есть доминирующая раса
     const raceId = state.currentLocation?.dominantRace;
-    const sellPrice = pricesFromStation[goodId].sell;
+    const sellPrice = crisisPrices.sell;
     let price: number;
     if (raceId) {
         price = applyReputationPriceModifier(

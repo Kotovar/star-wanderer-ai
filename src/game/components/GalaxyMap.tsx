@@ -18,7 +18,11 @@ import {
     STAR_SPRITE_SHEET,
 } from "@/game/assets/starSprites";
 import { getEffectiveScanRange } from "@/game/slices/scanner/helpers/getEffectiveScanRange";
-import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
+import {
+    calculateFuelCostForUI,
+    DETOUR_EXTRA_TURNS,
+    DETOUR_FUEL_COST,
+} from "@/game/slices/travel/helpers";
 import { getSectorReadiness } from "@/game/progression/sectorReadiness";
 import { setupHiDPICanvas } from "./canvas-utils";
 
@@ -186,8 +190,15 @@ export function GalaxyMap() {
     const [dangerousJump, setDangerousJump] = useState<{
         sectorId: number;
         sectorName: string;
+        sectorTier: number;
         rating: number;
         recommended: number;
+    } | null>(null);
+    const [routeChoice, setRouteChoice] = useState<{
+        sectorId: number;
+        sectorName: string;
+        turns: number;
+        fuelCost: number;
     } | null>(null);
     const [offset, setOffset] = useState(galaxyOffset);
     const [targetZoom, setTargetZoom] = useState<number | null>(null);
@@ -259,6 +270,37 @@ export function GalaxyMap() {
         const state = useGameStore.getState();
         return calculateFuelCostForUI(state, sectorId).fuelCost;
     }, []);
+
+    // Перед многоходовым перелётом предлагаем выбрать маршрут
+    const startTravelTo = useCallback(
+        (sectorId: number, sectorName: string, sectorTier: number) => {
+            const state = useGameStore.getState();
+            const distance = Math.abs(
+                sectorTier - (state.currentSector?.tier ?? 1),
+            );
+            const hasIonDrive =
+                state.research.researchedTechs.includes("ion_drive");
+            const hasWarpDrive =
+                state.research.researchedTechs.includes("warp_drive");
+            const turns =
+                hasIonDrive && distance > 0
+                    ? Math.max(0, distance - 1)
+                    : distance;
+
+            if (turns <= 0 || hasWarpDrive) {
+                selectSector(sectorId);
+                return;
+            }
+
+            setRouteChoice({
+                sectorId,
+                sectorName,
+                turns,
+                fuelCost: calculateFuelCostForUI(state, sectorId).fuelCost,
+            });
+        },
+        [selectSector],
+    );
 
     // Get set function from store to update sector positions
     const updateSectorPosition = useCallback(
@@ -839,6 +881,7 @@ export function GalaxyMap() {
                         setDangerousJump({
                             sectorId: sector.id,
                             sectorName: sector.name,
+                            sectorTier: sector.tier,
                             rating: readiness.rating,
                             recommended: readiness.recommended,
                         });
@@ -846,7 +889,11 @@ export function GalaxyMap() {
                     }
                 }
                 setDangerousJump(null);
-                selectSector(sector.id);
+                if (sector.id !== useGameStore.getState().currentSector?.id) {
+                    startTravelTo(sector.id, sector.name, sector.tier);
+                } else {
+                    selectSector(sector.id);
+                }
                 break;
             }
         }
@@ -902,12 +949,70 @@ export function GalaxyMap() {
                         </button>
                         <button
                             onClick={() => {
-                                selectSector(dangerousJump.sectorId);
+                                startTravelTo(
+                                    dangerousJump.sectorId,
+                                    dangerousJump.sectorName,
+                                    dangerousJump.sectorTier,
+                                );
                                 setDangerousJump(null);
                             }}
                             className="cursor-pointer border border-accent px-2 py-2 text-[10px] uppercase text-accent hover:bg-accent hover:text-[#050810]"
                         >
                             {t("galaxy_map_ui.danger.continue")}
+                        </button>
+                    </div>
+                </div>
+            )}
+            {routeChoice && (
+                <div
+                    role="alertdialog"
+                    aria-labelledby="route-choice-title"
+                    className="absolute left-2 right-2 top-14 z-30 mx-auto max-w-md border border-ring bg-[rgba(5,8,16,0.96)] p-3 shadow-[0_0_24px_rgba(0,212,255,0.18)]"
+                >
+                    <div
+                        id="route-choice-title"
+                        className="font-['Orbitron'] text-xs font-bold uppercase tracking-wider text-ring"
+                    >
+                        Маршрут до {routeChoice.sectorName}
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] leading-relaxed">
+                        <div className="border border-[#ff444466] p-2 text-[#b8b8b8]">
+                            <div className="font-bold text-[#ff4444]">Прямой</div>
+                            <div>{routeChoice.turns} ход(а)</div>
+                            <div>топливо {routeChoice.fuelCost}</div>
+                            <div>высокий риск событий</div>
+                        </div>
+                        <div className="border border-[#00ff4166] p-2 text-[#b8b8b8]">
+                            <div className="font-bold text-[#00ff41]">Обходной</div>
+                            <div>{routeChoice.turns + DETOUR_EXTRA_TURNS} ход(а)</div>
+                            <div>топливо {routeChoice.fuelCost + DETOUR_FUEL_COST}</div>
+                            <div>низкий риск событий</div>
+                        </div>
+                    </div>
+                    <div className="mt-3 grid grid-cols-3 gap-2">
+                        <button
+                            onClick={() => setRouteChoice(null)}
+                            className="cursor-pointer border border-[#687868] px-2 py-2 text-[10px] uppercase text-[#9aa59a] hover:border-[#00ff41] hover:text-[#00ff41]"
+                        >
+                            {t("common.cancel")}
+                        </button>
+                        <button
+                            onClick={() => {
+                                selectSector(routeChoice.sectorId, "direct");
+                                setRouteChoice(null);
+                            }}
+                            className="cursor-pointer border border-[#ff4444] px-2 py-2 text-[10px] uppercase text-[#ff4444] hover:bg-[#ff4444] hover:text-white"
+                        >
+                            Прямой
+                        </button>
+                        <button
+                            onClick={() => {
+                                selectSector(routeChoice.sectorId, "detour");
+                                setRouteChoice(null);
+                            }}
+                            className="cursor-pointer border border-[#00ff41] px-2 py-2 text-[10px] uppercase text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
+                        >
+                            Обходной
                         </button>
                     </div>
                 </div>

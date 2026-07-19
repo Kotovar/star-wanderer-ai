@@ -7,6 +7,10 @@ import type { Goods } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
 import { useGameStore } from "@/game/store";
 import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
+import {
+    applyCrisisMarketModifier,
+    getCrisisMarketMultiplier,
+} from "@/game/stations/crisisMarket";
 
 interface TradeTabProps {
     stationId: string;
@@ -46,13 +50,25 @@ export function TradeTab({
     const raceReputation = useGameStore((s) => s.raceReputation);
     const currentLocation = useGameStore((s) => s.currentLocation);
     const dominantRace = currentLocation?.dominantRace;
+    const activeCrisisId = useGameStore((s) => s.activeCrisis?.id);
 
     return (
         <div className="flex flex-col gap-2.5 flex-1 min-h-0 overflow-y-auto pr-1 pb-2">
             {stationId &&
                 tradeGoodsKeys.map((goodId) => {
                     const good = { id: goodId, ...TRADE_GOODS[goodId] };
-                    const prices = stationPrices[stationId]?.[goodId];
+                    const rawPrices = stationPrices[stationId]?.[goodId];
+                    const prices = rawPrices
+                        ? applyCrisisMarketModifier(
+                              rawPrices,
+                              activeCrisisId,
+                              goodId,
+                          )
+                        : rawPrices;
+                    const crisisMultiplier = getCrisisMarketMultiplier(
+                        activeCrisisId,
+                        goodId,
+                    );
                     const stock = stationStock[stationId]?.[goodId] || 0;
                     const playerGood = ship.tradeGoods.find(
                         (g) => g.item === goodId,
@@ -89,6 +105,7 @@ export function TradeTab({
                     return (
                         <TradeGoodRow
                             key={goodId}
+                            crisisMultiplier={crisisMultiplier}
                             good={good}
                             prices={prices}
                             pricesWithRep={{
@@ -118,6 +135,7 @@ interface TradeGoodRowProps {
     availSpace: number;
     onBuy: (goodId: Goods, quantity: number) => void;
     onSell: (goodId: Goods, quantity: number) => void;
+    crisisMultiplier: number;
 }
 
 function TradeGoodRow({
@@ -130,11 +148,13 @@ function TradeGoodRow({
     availSpace,
     onBuy,
     onSell,
+    crisisMultiplier,
 }: TradeGoodRowProps) {
     return (
         <div className="flex justify-between items-center bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3">
             <TradeGoodInfo
                 good={good}
+                crisisMultiplier={crisisMultiplier}
                 prices={prices}
                 pricesWithRep={pricesWithRep}
                 stock={stock}
@@ -160,12 +180,14 @@ function TradeGoodInfo({
     pricesWithRep,
     stock,
     playerGood,
+    crisisMultiplier,
 }: {
     good: { id: string; name: string };
     prices: { buy: number; sell: number };
     pricesWithRep: { buy: number; sell: number };
     stock: number;
     playerGood: { item: string; quantity: number } | undefined;
+    crisisMultiplier: number;
 }) {
     const { t } = useTranslation();
     // Calculate per-unit price (prices are stored as 5-ton batches)
@@ -186,7 +208,14 @@ function TradeGoodInfo({
 
     return (
         <div className="flex-1">
-            <div className="text-[#00d4ff] font-bold">{translatedName}</div>
+            <div className="text-[#00d4ff] font-bold">
+                {translatedName}
+                {crisisMultiplier !== 1 && (
+                    <span className="ml-2 text-[11px] font-bold text-[#ff4444] border border-[#ff4444] px-1">
+                        дефицит ×{crisisMultiplier}
+                    </span>
+                )}
+            </div>
             <div className="text-[#ffb000] text-xs mt-1">
                 {t("trade.buy_label")}{" "}
                 <span className={buyModified ? "text-[#00ff41] font-bold" : ""}>
