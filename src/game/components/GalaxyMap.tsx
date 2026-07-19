@@ -11,6 +11,7 @@ import {
     canSeeTier4,
     getSectorRadius,
 } from "@/game/galaxy/galaxy-map-utils";
+import { getBestByProfession } from "@/game/crew";
 import { getActiveModule } from "@/game/modules/utils";
 import {
     getStarSpriteBackgroundStyle,
@@ -228,7 +229,7 @@ export function GalaxyMap() {
     const modules = useGameStore((s) => s.ship.modules);
     const artifacts = useGameStore((s) => s.artifacts);
     const captainLevel = useGameStore(
-        (s) => s.crew.find((c) => c.profession === "pilot")?.level ?? 1,
+        (s) => getBestByProfession(s.crew, "pilot")?.level ?? 1,
     );
     const fuel = useGameStore((s) => s.ship.fuel);
     const areEnginesFunctional = useGameStore((s) => s.areEnginesFunctional);
@@ -854,8 +855,7 @@ export function GalaxyMap() {
                 const state = useGameStore.getState();
                 if (sector.id !== state.currentSector?.id) {
                     const targetCaptainLevel =
-                        state.crew.find((crew) => crew.profession === "pilot")
-                            ?.level ?? 1;
+                        getBestByProfession(state.crew, "pilot")?.level ?? 1;
                     const canTravel =
                         !state.traveling &&
                         Boolean(getActiveModule(state.ship.modules, "cockpit")) &&

@@ -3,6 +3,7 @@ import {
     CREW_TRAITS,
     MUTATION_TRAITS,
     RACE_LAST_NAMES,
+    RACES,
 } from "@/game/constants";
 import type {
     CrewMember,
@@ -281,3 +282,60 @@ export const hasAssignment = (
 
 export const hasProfession = (crew: CrewMember[], profession: Profession) =>
     crew.some((c) => c.profession === profession);
+
+/**
+ * Лучший (по уровню) член экипажа заданной профессии
+ */
+export const getBestByProfession = (
+    crew: CrewMember[],
+    profession: Profession,
+): CrewMember | undefined =>
+    crew
+        .filter((c) => c.profession === profession)
+        .sort((a, b) => (b.level ?? 1) - (a.level ?? 1))[0];
+
+/**
+ * Лучший (по уровню) пилот, находящийся в активной кабине.
+ * Единая проверка «пилот за штурвалом» для топлива, уклонения,
+ * манёвров в пути и отступления из боя.
+ */
+export const getPilotInCockpit = (
+    crew: CrewMember[],
+    modules: { id: number; type: string; disabled?: boolean; manualDisabled?: boolean; health: number }[],
+): CrewMember | undefined => {
+    const cockpitIds = new Set(
+        modules
+            .filter(
+                (m) =>
+                    m.type === "cockpit" &&
+                    !m.disabled &&
+                    !m.manualDisabled &&
+                    m.health > 0,
+            )
+            .map((m) => m.id),
+    );
+    return crew
+        .filter((c) => c.profession === "pilot" && cockpitIds.has(c.moduleId))
+        .sort((a, b) => (b.level ?? 1) - (a.level ?? 1))[0];
+};
+
+/**
+ * Меняет настроение с учётом расы: расы без эмоций (hasHappiness=false)
+ * не подвержены изменениям морали. Значение зажимается в [0, maxHappiness].
+ */
+export const shiftHappiness = (
+    crewMember: CrewMember,
+    delta: number,
+): CrewMember => {
+    if (RACES[crewMember.race]?.hasHappiness === false) return crewMember;
+    return {
+        ...crewMember,
+        happiness: Math.max(
+            0,
+            Math.min(
+                crewMember.maxHappiness ?? 100,
+                crewMember.happiness + delta,
+            ),
+        ),
+    };
+};

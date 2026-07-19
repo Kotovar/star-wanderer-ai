@@ -1,4 +1,5 @@
 import type { CrewMember } from "@/game/types";
+import { getBestByProfession } from "@/game/crew";
 
 /**
  * Вычисляет модификатор потребления топлива от трейтов пилота
@@ -9,7 +10,8 @@ import type { CrewMember } from "@/game/types";
 export const getPilotFuelConsumptionModifier = (crew: CrewMember[]) => {
     let modifier = 1;
 
-    const captain = crew.find((c) => c.profession === "pilot");
+    // Трейты лучшего пилота: именно он ведёт корабль
+    const captain = getBestByProfession(crew, "pilot");
 
     captain?.traits.forEach((t) => {
         if (t.effect?.fuelConsumption) {

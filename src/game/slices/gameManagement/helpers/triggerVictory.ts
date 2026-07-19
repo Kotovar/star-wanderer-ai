@@ -2,6 +2,7 @@ import type { GameStore, SetState } from "@/game/types";
 import { getCompletedVictoryObjective } from "@/game/constants/victoryObjectives";
 import { playSound } from "@/sounds";
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getBestByProfession } from "@/game/crew";
 
 /**
  * Сообщение о победе в игре
@@ -42,7 +43,7 @@ export const triggerVictory = (set: SetState, get: () => GameStore): void => {
     }
 
     const captainLevel =
-        state.crew.find((c) => c.profession === "pilot")?.level ?? 1;
+        getBestByProfession(state.crew, "pilot")?.level ?? 1;
     const discoveredArtifacts = state.artifacts.filter(
         (a) => a.discovered,
     ).length;

@@ -6,6 +6,7 @@ import type {
 } from "@/game/types";
 import { MUTATION_TRAITS } from "@/game/constants";
 import { getTraitById } from "@/game/crew/utils";
+import { shiftHappiness } from "@/game/crew";
 
 /**
  * Обработчик негативного эффекта проклятого артефакта
@@ -60,13 +61,7 @@ function applyStatDrain(
     value: number,
 ) {
     set((s) => ({
-        crew: s.crew.map((c) => {
-            if (c.race === "synthetic") return c;
-            return {
-                ...c,
-                happiness: Math.max(0, c.happiness - value),
-            };
-        }),
+        crew: s.crew.map((c) => shiftHappiness(c, -value)),
     }));
 }
 

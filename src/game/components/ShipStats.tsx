@@ -26,6 +26,7 @@ import { getActiveModules } from "../modules";
 import { RACES } from "@/game/constants/races";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import { StatIcon, type StatIconType } from "./StatIcon";
+import { getBestByProfession } from "@/game/crew";
 
 function SectionHeader({ label }: { label: string }) {
   return (
@@ -141,7 +142,7 @@ export function ShipStats() {
   const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
   const getCargoCapacity = useGameStore((s) => s.getCargoCapacity);
   const captain = useGameStore((s) =>
-    s.crew.find((c) => c.profession === "pilot"),
+    getBestByProfession(s.crew, "pilot"),
   );
   const research = useGameStore((s) => s.research);
 

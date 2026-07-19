@@ -23,6 +23,7 @@ import { determineScoutingOutcome } from "./determineScoutingOutcome";
 import { giveRandomMutation } from "@/game/crew";
 import { getScoutingPlanetResources } from "@/game/research/utils";
 import { typedKeys } from "@/lib";
+import { getBestByProfession } from "@/game/crew";
 
 /**
  * Отправляет разведчика на исследование планеты
@@ -131,7 +132,7 @@ const applyScoutingResult = (
     set: SetState,
     get: () => GameStore,
 ): void => {
-    const scout = get().crew.find((c) => c.profession === "scout");
+    const scout = getBestByProfession(get().crew, "scout");
     const scoutName = scout?.name || "Разведчик";
 
     switch (result.type) {

@@ -23,6 +23,7 @@ import type {
 } from "@/game/types";
 import { isModuleActive } from "@/game/modules/utils";
 import { grantTimedEffect } from "@/game/effects/timedEffects";
+import { shiftHappiness } from "@/game/crew";
 import {
     ASSIGNMENT_TIRED_AT,
     getAssignmentFatigueState,
@@ -532,19 +533,17 @@ const processHealAssignment = (
                     c.health <
                     (c.maxHealth || ASSIGNMENT_MULTIPLIERS.MAX_HEALTH);
                 return needsHeal
-                    ? {
-                          ...c,
-                          health: Math.min(
-                              c.maxHealth ||
-                                  ASSIGNMENT_MULTIPLIERS.MAX_HEALTH,
-                              c.health + bioHeal,
-                          ),
-                          happiness: Math.min(
-                              c.maxHappiness ||
-                                  ASSIGNMENT_MULTIPLIERS.MAX_HAPPINESS,
-                              c.happiness + 1,
-                          ),
-                      }
+                    ? shiftHappiness(
+                          {
+                              ...c,
+                              health: Math.min(
+                                  c.maxHealth ||
+                                      ASSIGNMENT_MULTIPLIERS.MAX_HEALTH,
+                                  c.health + bioHeal,
+                              ),
+                          },
+                          1,
+                      )
                     : c;
             }),
         }));
@@ -619,14 +618,7 @@ const processMoraleAssignment = (
     set((s) => ({
         crew: s.crew.map((c) =>
             c.moduleId === currentModule.id
-                ? {
-                      ...c,
-                      happiness: Math.min(
-                          c.maxHappiness ||
-                              ASSIGNMENT_MULTIPLIERS.MAX_HAPPINESS,
-                          c.happiness + moraleAmount,
-                      ),
-                  }
+                ? shiftHappiness(c, moraleAmount)
                 : c,
         ),
     }));

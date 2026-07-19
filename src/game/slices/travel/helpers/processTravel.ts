@@ -1,7 +1,12 @@
 import type { GameState, GameStore, SetState, TravelEventType } from "@/game/types";
 import { CONTRACT_REWARDS, MUTATION_CHANCES, RESEARCH_RESOURCES } from "@/game/constants";
 import { TRADE_GOODS } from "@/game/constants/goods";
-import { giveCrewExperience, giveRandomMutation } from "@/game/crew";
+import {
+    getPilotInCockpit,
+    giveCrewExperience,
+    giveRandomMutation,
+    shiftHappiness,
+} from "@/game/crew";
 import { getActiveModule } from "@/game/modules";
 import { getAnomalyResources } from "@/game/research/utils";
 import { addTradeGood } from "@/game/slices/ship/helpers";
@@ -130,10 +135,7 @@ const handleAnomaly = (
  */
 const handleStress = (setState: SetState): number => {
     setState((s) => ({
-        crew: s.crew.map((c) => ({
-            ...c,
-            happiness: Math.max(0, c.happiness - STRESS_HAPPINESS_LOSS),
-        })),
+        crew: s.crew.map((c) => shiftHappiness(c, -STRESS_HAPPINESS_LOSS)),
     }));
 
     return STRESS_HAPPINESS_LOSS;
@@ -152,11 +154,8 @@ const handleSignal = (setState: SetState): number => {
     return SIGNAL_REWARD;
 };
 
-const hasPilotInCockpit = (state: GameStore): boolean => {
-    const pilot = state.crew.find((c) => c.profession === "pilot");
-    const cockpit = getActiveModule(state.ship.modules, "cockpit");
-    return !!pilot && !!cockpit && pilot.moduleId === cockpit.id;
-};
+const hasPilotInCockpit = (state: GameStore): boolean =>
+    !!getPilotInCockpit(state.crew, state.ship.modules);
 
 /**
  * Обрабатывает электромагнитный импульс - сжигание щитов

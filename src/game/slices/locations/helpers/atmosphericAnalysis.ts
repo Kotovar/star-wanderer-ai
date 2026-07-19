@@ -3,6 +3,7 @@ import type { ResearchResourceType } from "@/game/types/research";
 import { RESEARCH_RESOURCES } from "@/game/constants";
 import { SCIENTIST_ATMOSPHERE_EXP } from "@/game/constants/experience";
 import { addTradeGood } from "@/game/slices/ship/helpers";
+import { getBestByProfession } from "@/game/crew";
 
 type ResourceYield = { type: ResearchResourceType; qty: number };
 
@@ -82,7 +83,7 @@ export const atmosphericAnalysis = (
     }
 
     // Проверка учёного
-    const scientist = state.crew.find((c) => c.profession === "scientist");
+    const scientist = getBestByProfession(state.crew, "scientist");
     if (!scientist) {
         get().addLog("Требуется учёный в экипаже!", "error");
         return;

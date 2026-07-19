@@ -12,9 +12,9 @@ import {
     RESEARCH_TREE,
 } from "@/game/constants";
 import { findActiveArtifact, findArtifactByEffect } from "@/game/artifacts";
-import { getActiveModule } from "@/game/modules/utils";
 import type { GameState, Sector } from "@/game/types";
 import { hasWarpTravel } from "@/game/research/specialAbilities";
+import { getPilotInCockpit } from "@/game/crew";
 
 /**
  * Множитель расхода топлива без пилота в кабине
@@ -264,10 +264,8 @@ export const calculateFuelCostForUI = (
         ARTIFACT_TYPES.WARP_COIL,
     );
 
-    // Проверяем пилота в кабине
-    const pilot = state.crew.find((c) => c.profession === "pilot");
-    const cockpit = getActiveModule(state.ship.modules, "cockpit");
-    const pilotInCockpit = pilot && cockpit && pilot.moduleId === cockpit.id;
+    // Проверяем пилота в кабине (лучший пилот в любой активной кабине)
+    const pilotInCockpit = getPilotInCockpit(state.crew, state.ship.modules);
 
     return calculateFuelCost(
         state,

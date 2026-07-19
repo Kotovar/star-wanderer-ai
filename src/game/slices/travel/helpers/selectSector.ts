@@ -5,6 +5,7 @@ import {
     PILOT_EXP_PER_TIER,
 } from "@/game/constants/experience";
 import { getActiveModule, getActiveModules } from "@/game/modules";
+import { getBestByProfession, getPilotInCockpit } from "@/game/crew";
 import { playSound } from "@/sounds";
 import { toast } from "sonner";
 import { calculateFuelCost } from "./calculateFuelCost";
@@ -114,7 +115,7 @@ const getEngineLevel = (state: GameState): number => {
  * @returns Уровень капитана или 1
  */
 const getCaptainLevel = (state: GameState) =>
-    state.crew.find((c) => c.profession === "pilot")?.level ?? 1;
+    getBestByProfession(state.crew, "pilot")?.level ?? 1;
 
 /**
  * Проверяет доступ к тиру сектора
@@ -525,10 +526,9 @@ export const selectSector = (
         }
     }
 
-    // Поиск пилота
-    const pilot = state.crew.find((c) => c.profession === "pilot");
-    const cockpit = getActiveModule(state.ship.modules, "cockpit");
-    const pilotInCockpit = pilot && cockpit && pilot.moduleId === cockpit.id;
+    // Пилот за штурвалом: лучший пилот в любой активной кабине
+    const pilot = getPilotInCockpit(state.crew, state.ship.modules);
+    const pilotInCockpit = !!pilot;
 
     // Поиск артефактов отдельно
     const fuelFree = findArtifactByEffect(state, ["fuel_free"]);

@@ -6,6 +6,7 @@ import { startDefenderCombat } from "./helpers/startDefenderCombat";
 import { advanceCombatRound, applyCombatTimeCost } from "./helpers/combatTime";
 import type { RaceId } from "@/game/types/races";
 import type { EnemyShip } from "@/game/types/enemy";
+import { getPilotInCockpit } from "@/game/crew";
 
 /**
  * Интерфейс CombatSlice
@@ -170,7 +171,8 @@ export const createCombatSlice = (
             return;
         }
 
-        const pilot = state.crew.find((c) => c.profession === "pilot");
+        // Отступлением управляет пилот за штурвалом
+        const pilot = getPilotInCockpit(state.crew, state.ship.modules);
         const retreatChance = helpers.calculateRetreatChance(pilot);
 
         if (Math.random() < retreatChance) {

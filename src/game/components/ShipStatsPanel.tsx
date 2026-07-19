@@ -3,6 +3,7 @@
 import { useGameStore } from "@/game/store";
 import { useTranslation } from "@/lib/useTranslation";
 import { StatIcon } from "./StatIcon";
+import { getBestByProfession } from "@/game/crew";
 
 interface ShipStatsPanelProps {
     title?: string;
@@ -14,7 +15,7 @@ export function ShipStatsPanel({ title, showEvasion = true }: ShipStatsPanelProp
     const ship = useGameStore((s) => s.ship);
     const crew = useGameStore((s) => s.crew);
     const captain = useGameStore((s) =>
-        s.crew.find((c) => c.profession === "pilot"),
+        getBestByProfession(s.crew, "pilot"),
     );
 
     const currentHull = ship.modules.reduce((s, m) => s + m.health, 0);

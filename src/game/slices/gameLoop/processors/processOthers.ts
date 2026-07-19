@@ -1,6 +1,7 @@
 import type { CrewTrait, GameStore, SetState } from "@/game/types";
 import { CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
 import { RACES } from "@/game/constants/races";
+import { shiftHappiness } from "@/game/crew";
 
 /** Бонус к настроению от трейта морали */
 
@@ -48,9 +49,7 @@ export const processMoraleTraits = (
 
             set((s) => ({
                 crew: s.crew.map((c) =>
-                    c.id === crewMember.id
-                        ? { ...c, happiness: Math.max(0, c.happiness - drain) }
-                        : c,
+                    c.id === crewMember.id ? shiftHappiness(c, -drain) : c,
                 ),
             }));
             get().addLog(
@@ -79,13 +78,7 @@ export const processMoraleTraits = (
             set((s) => ({
                 crew: s.crew.map((c) =>
                     c.moduleId === crewMember.moduleId && c.id !== crewMember.id
-                        ? {
-                              ...c,
-                              happiness: Math.min(
-                                  c.maxHappiness || 100,
-                                  c.happiness + moraleBonus,
-                              ),
-                          }
+                        ? shiftHappiness(c, moraleBonus)
                         : c,
                 ),
             }));
@@ -205,13 +198,9 @@ export const processPowerCheck = (
 
     // Штраф к настроению всего экипажа
     set((s) => ({
-        crew: s.crew.map((c) => ({
-            ...c,
-            happiness: Math.max(
-                0,
-                c.happiness - POWER_SHORTAGE_HAPPINESS_PENALTY,
-            ),
-        })),
+        crew: s.crew.map((c) =>
+            shiftHappiness(c, -POWER_SHORTAGE_HAPPINESS_PENALTY),
+        ),
     }));
 
     // Шанс повреждения случайного модуля

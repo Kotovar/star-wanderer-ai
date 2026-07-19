@@ -2,6 +2,7 @@ import type { GameState } from "@/game/types/game";
 import { CREW_ASSIGNMENT_BONUSES, RACES } from "@/game/constants";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import { getPilotInCockpit } from "@/game/crew";
 import { getArtifactEffectValue } from "@/game/artifacts/utils";
 import {
     ASSIGNMENT_BASES,
@@ -25,14 +26,8 @@ import { isModuleFunctional } from "../utils";
 export function getTotalEvasion(state: GameState): number {
     const { crew, artifacts, ship } = state;
 
-    // Берём самого высокоуровневого пилота в модуле типа "cockpit"
-    const cockpitIds = new Set(
-        ship.modules.filter((m) => m.type === "cockpit").map((m) => m.id),
-    );
-    const pilotsInCockpit = crew
-        .filter((c) => c.profession === "pilot" && cockpitIds.has(c.moduleId))
-        .sort((a, b) => (b.level ?? 1) - (a.level ?? 1));
-    const cockpitPilot = pilotsInCockpit[0];
+    // Берём самого высокоуровневого пилота в активной кабине
+    const cockpitPilot = getPilotInCockpit(crew, ship.modules);
     const pilotLevel = cockpitPilot?.level ?? 0;
 
     // Базовое уклонение: 3% за уровень пилота в кабине

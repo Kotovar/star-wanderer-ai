@@ -1,5 +1,6 @@
 import type { GameState, GameStore, Module } from "@/game/types";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
+import { getPilotInCockpit } from "@/game/crew";
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { COMBAT_ACCURACY_MODIFIERS } from "@/game/constants/combat";
 import { PILOT_EVASION_COMBAT_EXP } from "@/game/constants/experience";
@@ -93,7 +94,8 @@ export function handleEnemyCounterAttack(
     // Evasion check
     const evasionChance = getTotalEvasion(state) / 100;
     if (evasionChance > 0 && Math.random() < evasionChance) {
-        const pilot = state.crew.find((c) => c.profession === "pilot");
+        // Опыт за уклонение — пилоту за штурвалом (он и дал уклонение)
+        const pilot = getPilotInCockpit(state.crew, state.ship.modules);
         const hasEvasion = state.crew.some(
             (c) => c.combatAssignment === "evasion",
         );

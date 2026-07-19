@@ -1,6 +1,7 @@
 import type { GameStore, SetState } from "@/game/types";
 import { removeDeadCrew } from "@/game/slices/gameLoop/helpers/crewUtils";
 import { SCIENTIST_BLACK_HOLE_EXP } from "@/game/constants";
+import { getBestByProfession } from "@/game/crew";
 
 // ============================================================================
 // Константы
@@ -94,7 +95,7 @@ export const travelThroughBlackHole = (
         otherBlackHoles[Math.floor(Math.random() * otherBlackHoles.length)];
 
     // Проверка наличия учёного для снижения урона
-    const scientist = state.crew.find((c) => c.profession === "scientist");
+    const scientist = getBestByProfession(state.crew, "scientist");
     const damageReduction = scientist ? SCIENTIST_DAMAGE_REDUCTION : 1;
 
     // Расчёт урона

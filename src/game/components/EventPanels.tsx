@@ -34,6 +34,7 @@ import { RandomEventPanel } from "./RandomEventPanel";
 import { RiskRewardPreview } from "./RiskRewardPreview";
 import type { TravelEventType } from "@/game/types";
 import { getActiveModule } from "@/game/modules";
+import { getPilotInCockpit } from "@/game/crew";
 import { RESEARCH_TREE } from "@/game/constants";
 import { getTechTranslation } from "@/lib/techTranslations";
 
@@ -153,10 +154,7 @@ export function EventDisplay() {
       const eventType = pendingTravelEvent.type;
       const meta = TRAVEL_EVENT_META[eventType];
       const eventKey = `travel_events.${eventType}`;
-      const pilot = crew.find((c) => c.profession === "pilot");
-      const cockpit = getActiveModule(shipModules, "cockpit");
-      const hasPilotInCockpit =
-        !!pilot && !!cockpit && pilot.moduleId === cockpit.id;
+      const hasPilotInCockpit = !!getPilotInCockpit(crew, shipModules);
       const scanRange = getEffectiveScanRange();
       const cautiousOverride =
         meta.cautiousOverride &&

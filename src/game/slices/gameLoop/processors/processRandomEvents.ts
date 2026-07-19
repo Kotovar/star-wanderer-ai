@@ -14,6 +14,7 @@ import {
   scheduleRandomEventConsequence,
 } from "@/game/events/randomEventChains";
 import { pickRandomEvent } from "@/game/constants/randomEvents";
+import { shiftHappiness } from "@/game/crew";
 
 // ─── Frequency tuning ─────────────────────────────────────────
 const EVENT_TRIGGER_CHANCE = 0.05; // было 0.08
@@ -143,10 +144,7 @@ export function canUseRandomEventChoice(
 
 function changeCrewHappiness(set: SetState, amount: number): void {
   set((state) => ({
-    crew: state.crew.map((member) => ({
-      ...member,
-      happiness: Math.max(0, Math.min(100, member.happiness + amount)),
-    })),
+    crew: state.crew.map((member) => shiftHappiness(member, amount)),
   }));
 }
 
@@ -507,11 +505,12 @@ function applyBiohazardChoice(
   }
 
   set((state) => ({
-    crew: state.crew.map((member) => ({
-      ...member,
-      health: Math.max(1, member.health - event.crewDamage),
-      happiness: Math.max(0, member.happiness - 5),
-    })),
+    crew: state.crew.map((member) =>
+      shiftHappiness(
+        { ...member, health: Math.max(1, member.health - event.crewDamage) },
+        -5,
+      ),
+    ),
   }));
   get().addLog(
     i18nStore.t("random_events.logs.biohazard_standard", {

@@ -1,4 +1,5 @@
 import { RACES } from "@/game/constants";
+import { shiftHappiness } from "@/game/crew";
 import type {
     CrewMember,
     GameStore,
@@ -52,7 +53,7 @@ export const processNegativeTraits = (
             set((s) => ({
                 crew: s.crew.map((c) =>
                     c.id === crewMember.id
-                        ? { ...c, happiness: Math.max(0, Math.min(c.maxHappiness ?? 100, c.happiness - selfMoraleChange)) }
+                        ? shiftHappiness(c, -selfMoraleChange)
                         : c,
                 ),
             }));
@@ -157,13 +158,7 @@ const processRaceNegativeEffects = (
                     crew: s.crew.map((c) =>
                         c.moduleId === crewMember.moduleId &&
                         c.id !== crewMember.id
-                            ? {
-                                  ...c,
-                                  happiness: Math.max(
-                                      0,
-                                      c.happiness - moralePenalty,
-                                  ),
-                              }
+                            ? shiftHappiness(c, -moralePenalty)
                             : c,
                     ),
                 }));
