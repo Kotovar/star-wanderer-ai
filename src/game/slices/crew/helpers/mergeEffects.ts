@@ -1,4 +1,5 @@
 import { XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants/races";
+import { isModuleActive } from "@/game/modules/utils";
 import type { GameState, CrewMember, Module } from "@/game/types";
 
 /**
@@ -47,7 +48,8 @@ export const getMergeEffectsBonus = (
       (m) => m.id === crewMember.mergedModuleId,
     );
 
-    if (!moduleShip) {
+    // Разбитый, обесточенный или выключенный модуль бонусов не даёт
+    if (!moduleShip || !isModuleActive(moduleShip)) {
       return;
     }
 
