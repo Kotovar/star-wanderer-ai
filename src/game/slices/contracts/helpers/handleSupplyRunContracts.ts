@@ -53,7 +53,7 @@ export const handleSupplyRunContracts = (
             activeContracts: s.activeContracts.filter((ac) => ac.id !== c.id),
         }));
         get().addLog(
-            `📦 Контракт выполнен: ${c.desc} (доставлено на ${c.sourceName}) +${c.reward}₢`,
+            `📦 Контракт выполнен: ${c.desc} (доставлено на ${c.sourceName || loc.name}) +${c.reward}₢`,
             "info",
         );
         // Give experience to all crew members

@@ -112,7 +112,9 @@ export const createContractsSlice = (
     handleSupplyRunContracts: (locationIdx: number) => {
         const state = get();
         const loc = state.currentSector?.locations[locationIdx];
-        if (!loc || loc.type !== "planet") return;
+        // Поставки принимают и планеты, и дружественные корабли (их квесты)
+        if (!loc || (loc.type !== "planet" && loc.type !== "friendly_ship"))
+            return;
 
         handleSupplyRunContractsFn(loc, set, get);
     },

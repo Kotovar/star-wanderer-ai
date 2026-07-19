@@ -82,11 +82,26 @@ export function revealExpeditionTile(
     const newApRemaining = expedition.apRemaining - stepApCost;
     const newRevealedCount = expedition.revealedCount + 1;
 
-    // Update grid/ap and track expedition_survey contract progress
+    // Update grid/ap and track expedition_survey contract progress.
+    // В контракт идут только значимые открытия: руины, лаборатории, артефакты
+    const isSignificantDiscovery =
+        tile.type === "ruins" || tile.type === "lab" || tile.type === "artifact";
     const expeditionPlanetId = expedition.planetId;
+    // Контракты, которые ещё не были выполнены до этого вскрытия
+    const notDoneBefore = new Set(
+        state.activeContracts
+            .filter(
+                (c) =>
+                    c.type === "expedition_survey" &&
+                    c.targetPlanetId === expeditionPlanetId &&
+                    !c.expeditionDone,
+            )
+            .map((c) => c.id),
+    );
     set((s) => {
         const updatedContracts = s.activeContracts.map((c) => {
             if (
+                isSignificantDiscovery &&
                 c.type === "expedition_survey" &&
                 c.targetPlanetId === expeditionPlanetId &&
                 !c.expeditionDone
@@ -111,17 +126,13 @@ export function revealExpeditionTile(
         };
     });
 
-    // Log when a contract just became fulfilled
+    // Log when a contract just became fulfilled (ровно один раз)
     const justFulfilled = get().activeContracts.filter(
-        (c) =>
-            c.type === "expedition_survey" &&
-            c.targetPlanetId === expeditionPlanetId &&
-            c.expeditionDone &&
-            (c.tilesRevealed ?? 0) === (c.requiredDiscoveries ?? 1),
+        (c) => notDoneBefore.has(c.id) && c.expeditionDone,
     );
     for (const c of justFulfilled) {
         get().addLog(
-            `📋 Данные собраны (${c.tilesRevealed}/${c.requiredDiscoveries} клеток). Вернитесь на ${c.sourceSectorName} для сдачи задания.`,
+            `📋 Данные собраны (${c.tilesRevealed}/${c.requiredDiscoveries} значимых находок). Вернитесь на ${c.sourceSectorName} для сдачи задания.`,
             "info",
         );
     }

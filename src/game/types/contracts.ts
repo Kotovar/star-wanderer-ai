@@ -30,6 +30,8 @@ export interface Contract {
     sectorName?: string;
     requiresVisit?: number;
     visited?: number;
+    /** ID планет, уже засчитанных в scan_planet — повторный скан той же планеты не считается */
+    scannedPlanetIds?: string[];
     requiresTurns?: number;
     turnsSpent?: number;
     targetSectors?: number[];

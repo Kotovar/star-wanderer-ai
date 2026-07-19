@@ -302,6 +302,9 @@ export const selectLocation = (
                 set({ gameMode: "hostile_approach_warning" });
                 break;
             }
+            // Сдача квестов этого корабля: скан планет и поставки
+            get().completeScanContracts();
+            get().handleSupplyRunContracts(locationIdx);
             set({ gameMode: "friendly_ship" });
             break;
         }

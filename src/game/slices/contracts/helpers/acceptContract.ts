@@ -2,9 +2,13 @@ import type { GameStore, SetState, Contract } from "@/game/types";
 import { DELIVERY_GOODS } from "@/game/constants";
 import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "../constants";
 import { playSound } from "@/sounds";
+import { store as i18nStore } from "@/lib/useTranslation";
 import { getContractReputationImpact } from "@/game/reputation/utils";
+import { getActiveModule } from "@/game/modules";
+import { getCargoCapacity } from "@/game/slices/ship/helpers/getCargoCapacity";
 import { RACES } from "@/game/constants/races";
 import { isRaceContractAvailable } from "@/game/reputation/utils";
+import { isContractTargetAvailable } from "@/game/contracts/targetAvailability";
 
 /**
  * Принимает контракт
@@ -19,6 +23,18 @@ export const acceptContract = (
 ): void => {
     if (get().activeContracts.some((c) => c.id === contract.id)) {
         get().addLog("Уже принят!", "error");
+        return;
+    }
+
+    // Цель могла исчезнуть с момента генерации (враги убиты, шторм пройден)
+    if (
+        !isContractTargetAvailable(
+            contract,
+            get().galaxy.sectors,
+            get().completedLocations,
+        )
+    ) {
+        get().addLog("Цель задания больше не существует", "error");
         return;
     }
 
@@ -45,27 +61,25 @@ export const acceptContract = (
     if (contract.type === "delivery" && contract.cargo) {
         const cargoKey = contract.cargo as keyof typeof DELIVERY_GOODS;
         const cargoName = DELIVERY_GOODS[cargoKey]?.name || contract.cargo;
-        const cargoMod = get().ship.modules.find((m) => m.type === "cargo");
+        const cargoMod = getActiveModule(get().ship.modules, "cargo");
 
         if (!cargoMod) {
             get().addLog("Нет грузового отсека!", "error");
             return;
         }
 
+        // Проверяем реальный объём груза контракта против суммарной вместимости
+        const cargoAmount = contract.quantity ?? DELIVERY_CONTRACT_CARGO_AMOUNT;
+
         const cur =
             get().ship.cargo.reduce((s, c) => s + c.quantity, 0) +
             get().ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
             get().probes;
 
-        if (
-            cargoMod.capacity &&
-            cur + DELIVERY_CONTRACT_CARGO_AMOUNT > cargoMod.capacity
-        ) {
+        if (cur + cargoAmount > getCargoCapacity(get())) {
             get().addLog("Недостаточно места!", "error");
             return;
         }
-
-        const cargoAmount = contract.quantity ?? DELIVERY_CONTRACT_CARGO_AMOUNT;
         set((s) => ({
             ship: {
                 ...s.ship,
@@ -88,7 +102,8 @@ export const acceptContract = (
             { ...contract, acceptedAt: s.turn },
         ],
     }));
-    get().addLog(`Задача принята: ${contract.desc}`, "info");
+    // desc расовых квестов — ключ перевода; t() вернёт строку как есть, если это не ключ
+    get().addLog(`Задача принята: ${i18nStore.t(contract.desc)}`, "info");
 
     const reputationImpact = getContractReputationImpact(contract);
     if (reputationImpact.length > 1) {

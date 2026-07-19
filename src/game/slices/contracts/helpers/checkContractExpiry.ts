@@ -1,4 +1,5 @@
 import type { GameStore, SetState } from "@/game/types";
+import { store as i18nStore } from "@/lib/useTranslation";
 
 /**
  * Проверяет просроченные расовые контракты и применяет штраф к репутации.
@@ -30,7 +31,7 @@ export const checkContractExpiry = (
 
     expired.forEach((c) => {
         get().addLog(
-            `⌛ Задание провалено: ${c.desc} — время истекло`,
+            `⌛ Задание провалено: ${i18nStore.t(c.desc)} — время истекло`,
             "warning",
         );
         if (c.requiredRace) {

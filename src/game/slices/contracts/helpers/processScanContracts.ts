@@ -59,8 +59,21 @@ export const processScanContracts = (state: GameState) => {
             return;
         }
 
+        // Каждая планета засчитывается один раз — повторный визит не фармится
+        if (c.scannedPlanetIds?.includes(location.id)) {
+            logs.push({
+                message: "эта планета уже засчитана — найдите другую",
+                type: "info",
+            });
+            return;
+        }
+
         const newVisited = (c.visited || 0) + 1;
-        const updated = { ...c, visited: newVisited };
+        const updated = {
+            ...c,
+            visited: newVisited,
+            scannedPlanetIds: [...(c.scannedPlanetIds ?? []), location.id],
+        };
         newActiveContracts = newActiveContracts.map((ac) =>
             ac.id === c.id ? updated : ac,
         );

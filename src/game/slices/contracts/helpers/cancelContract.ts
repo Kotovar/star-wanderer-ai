@@ -1,5 +1,6 @@
 import type { GameStore, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
+import { store as i18nStore } from "@/lib/useTranslation";
 
 /**
  * Отменяет контракт
@@ -27,7 +28,7 @@ export const cancelContract = (
     set((s) => ({
         activeContracts: s.activeContracts.filter((c) => c.id !== contractId),
     }));
-    get().addLog(`Задача отменёна: ${contract.desc}`, "warning");
+    get().addLog(`Задача отменёна: ${i18nStore.t(contract.desc)}`, "warning");
 
     if (contract.isRaceQuest && contract.requiredRace) {
         get().changeReputation(contract.requiredRace, -5);

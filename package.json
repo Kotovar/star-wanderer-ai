@@ -13,6 +13,7 @@
         "check:assignments": "node --no-warnings --experimental-strip-types scripts/check-assignment-fatigue.mjs",
         "check:events": "node --no-warnings --experimental-strip-types scripts/check-random-event-chains.mjs",
         "check:market": "node --no-warnings --experimental-strip-types scripts/check-market-tick.mjs",
+        "check:contract-targets": "node --no-warnings --experimental-strip-types scripts/check-contract-targets.mjs",
         "check:expedition-environments": "node --no-warnings --experimental-strip-types scripts/check-expedition-environments.mjs",
         "check:expedition-orbital-scan": "node scripts/check-expedition-orbital-scan.mjs",
         "check:expedition-ruins": "node --no-warnings --experimental-strip-types scripts/check-expedition-ruins.mjs",

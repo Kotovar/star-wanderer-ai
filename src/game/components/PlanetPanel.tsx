@@ -32,6 +32,7 @@ import {
     getRaceReputationLevel,
     isRaceContractAvailable,
 } from "@/game/reputation/utils";
+import { isContractTargetAvailable } from "@/game/contracts/targetAvailability";
 import {
     REPUTATION_COLORS,
     REPUTATION_ICONS,
@@ -65,6 +66,8 @@ export function PlanetPanel() {
     const activeContracts = useGameStore((s) => s.activeContracts);
     const completedContractIds = useGameStore((s) => s.completedContractIds);
     const raceReputation = useGameStore((s) => s.raceReputation);
+    const sectors = useGameStore((s) => s.galaxy.sectors);
+    const completedLocations = useGameStore((s) => s.completedLocations);
     const get = useGameStore.getState;
 
     const { t } = useTranslation();
@@ -495,7 +498,8 @@ export function PlanetPanel() {
             ship.cargo.some((cargo) => cargo.contractId === c.id), // Must have the cargo
     );
 
-    // Filter available contracts - exclude completed ones and race quests with insufficient reputation
+    // Filter available contracts - exclude completed ones, race quests with
+    // insufficient reputation, and contracts whose target no longer exists
     const availableContracts = (currentLocation.contracts || []).filter(
         (c) =>
             !completedContractIds.includes(c.id) &&
@@ -504,7 +508,8 @@ export function PlanetPanel() {
                 c.isRaceQuest &&
                 c.requiredRace &&
                 !isRaceContractAvailable(raceReputation, c.requiredRace)
-            ),
+            ) &&
+            isContractTargetAvailable(c, sectors, completedLocations),
     );
 
     const currentLocationPlanetType = currentLocation.planetType;

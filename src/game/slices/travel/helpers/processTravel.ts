@@ -531,17 +531,13 @@ export const handlePatrolContracts = (
     getState: () => GameStore,
 ) => {
     let newActiveContracts = state.activeContracts;
-    let contractCompleted = false;
-    let completedContractId = "";
-    let reward = 0;
+    // Несколько patrol-контрактов могут завершиться одним прилётом —
+    // копим все ID и суммарную награду, а не последнюю
+    const completedIds: string[] = [];
+    let totalReward = 0;
 
     if (!destinationSector) {
-        return {
-            newActiveContracts,
-            contractCompleted,
-            completedContractId,
-            reward,
-        };
+        return { newActiveContracts, completedIds, totalReward };
     }
 
     contracts.forEach((c) => {
@@ -555,9 +551,8 @@ export const handlePatrolContracts = (
         ).length;
 
         if (visitedTargetCount >= targetSectors.length) {
-            contractCompleted = true;
-            completedContractId = c.id;
-            reward = c.reward;
+            completedIds.push(c.id);
+            totalReward += c.reward;
 
             getState().addLog(
                 `Сбор биообразцов завершён! +${c.reward}₢`,
@@ -588,12 +583,7 @@ export const handlePatrolContracts = (
         }
     });
 
-    return {
-        newActiveContracts,
-        contractCompleted,
-        completedContractId,
-        reward,
-    };
+    return { newActiveContracts, completedIds, totalReward };
 };
 
 /**
@@ -685,12 +675,11 @@ export const processTravel = (
                         : sector,
                 ),
             },
-            credits: patrolResult.contractCompleted
-                ? s.credits + patrolResult.reward
-                : s.credits,
-            completedContractIds: patrolResult.contractCompleted
-                ? [...s.completedContractIds, patrolResult.completedContractId]
-                : s.completedContractIds,
+            credits: s.credits + patrolResult.totalReward,
+            completedContractIds: [
+                ...s.completedContractIds,
+                ...patrolResult.completedIds,
+            ],
             activeContracts: patrolResult.newActiveContracts,
         }));
 

@@ -355,15 +355,11 @@ const handleTravelCompletion = (
             get,
         );
         set((s) => ({
-            credits: patrolResult.contractCompleted
-                ? s.credits + patrolResult.reward
-                : s.credits,
-            completedContractIds: patrolResult.contractCompleted
-                ? [
-                      ...s.completedContractIds,
-                      patrolResult.completedContractId,
-                  ]
-                : s.completedContractIds,
+            credits: s.credits + patrolResult.totalReward,
+            completedContractIds: [
+                ...s.completedContractIds,
+                ...patrolResult.completedIds,
+            ],
             activeContracts: patrolResult.newActiveContracts,
         }));
     }
@@ -443,15 +439,11 @@ const handleTravelStart = (
                 get,
             );
             set((s) => ({
-                credits: patrolResult.contractCompleted
-                    ? s.credits + patrolResult.reward
-                    : s.credits,
-                completedContractIds: patrolResult.contractCompleted
-                    ? [
-                          ...s.completedContractIds,
-                          patrolResult.completedContractId,
-                      ]
-                    : s.completedContractIds,
+                credits: s.credits + patrolResult.totalReward,
+                completedContractIds: [
+                    ...s.completedContractIds,
+                    ...patrolResult.completedIds,
+                ],
                 activeContracts: patrolResult.newActiveContracts,
             }));
         }

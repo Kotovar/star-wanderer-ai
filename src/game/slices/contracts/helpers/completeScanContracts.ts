@@ -18,7 +18,11 @@ export const completeScanContracts = (
 ) => {
     const location = state.currentLocation;
 
-    if (!location || location.type !== "planet") {
+    // Сдать скан-контракт можно у источника: планеты или дружественного корабля
+    if (
+        !location ||
+        (location.type !== "planet" && location.type !== "friendly_ship")
+    ) {
         return {
             success: false,
             message: "требуется посетить планету",
