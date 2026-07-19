@@ -255,17 +255,30 @@ export const giveRandomMutation = (
         fn: (s: { crew: CrewMember[] }) => Partial<{ crew: CrewMember[] }>,
     ) => void,
 ): string | null => {
+    // Небиологические расы (canGetSick=false) не мутируют
+    if (RACES[crewMember.race]?.canGetSick === false) return null;
+
     const existingIds = new Set(crewMember.traits.map((t) => t.id));
     const available = MUTATION_TRAITS.filter((id) => !existingIds.has(id));
     if (available.length === 0) return null;
     const newTraitId = available[Math.floor(Math.random() * available.length)];
     const newTrait = getTraitById(newTraitId);
     set((s) => ({
-        crew: s.crew.map((c) =>
-            c.id === crewMember.id
-                ? { ...c, traits: [...c.traits, newTrait] }
-                : c,
-        ),
+        crew: s.crew.map((c) => {
+            if (c.id !== crewMember.id) return c;
+            const updated = { ...c, traits: [...c.traits, newTrait] };
+            // healthPenalty мутации реально снижает максимум здоровья
+            const penalty = newTrait.effect?.healthPenalty;
+            if (penalty) {
+                const newMax = Math.max(
+                    1,
+                    Math.floor(updated.maxHealth * (1 - penalty)),
+                );
+                updated.maxHealth = newMax;
+                updated.health = Math.min(updated.health, newMax);
+            }
+            return updated;
+        }),
     }));
     return newTrait.name;
 };

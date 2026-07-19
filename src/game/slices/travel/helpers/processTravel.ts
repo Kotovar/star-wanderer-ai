@@ -586,6 +586,36 @@ export const handlePatrolContracts = (
 };
 
 /**
+ * Радиационная мутация при прибытии в сектор с нейтронной звездой.
+ * Вызывается на ВСЕХ путях прибытия: обычном (processTravel) и мгновенных
+ * (тот же тир, ионный двигатель, варп — selectSector).
+ */
+export const applyNeutronRadiation = (
+    sector: GameState["currentSector"],
+    set: SetState,
+    get: () => GameStore,
+): void => {
+    if (sector?.star?.type !== "neutron_star") return;
+
+    const chance =
+        sector.tier >= 3
+            ? MUTATION_CHANCES.NEUTRON_STAR_HIGH_TIER
+            : MUTATION_CHANCES.NEUTRON_STAR;
+
+    get().crew.forEach((crewMember) => {
+        if (Math.random() < chance) {
+            const mutationName = giveRandomMutation(crewMember, set);
+            if (mutationName) {
+                get().addLog(
+                    `☢️ ${crewMember.name} получил мутацию от радиации нейтронной звезды: ${mutationName}!`,
+                    "error",
+                );
+            }
+        }
+    });
+};
+
+/**
  * Обработка путешествий между секторами
  * @param state - Текущее состояние игры
  * @param set - Функция обновления состояния
@@ -683,23 +713,7 @@ export const processTravel = (
         }));
 
         // Радиационная мутация при прибытии в сектор с нейтронной звездой
-        if (destinationSector.star.type === "neutron_star") {
-            const isHighTier = destinationSector.tier >= 3;
-            const chance = isHighTier
-                ? MUTATION_CHANCES.NEUTRON_STAR_HIGH_TIER
-                : MUTATION_CHANCES.NEUTRON_STAR;
-            get().crew.forEach((crewMember) => {
-                if (Math.random() < chance) {
-                    const mutationName = giveRandomMutation(crewMember, set);
-                    if (mutationName) {
-                        get().addLog(
-                            `☢️ ${crewMember.name} получил мутацию от радиации нейтронной звезды: ${mutationName}!`,
-                            "error",
-                        );
-                    }
-                }
-            });
-        }
+        applyNeutronRadiation(destinationSector, set, get);
 
         get().addLog(`Прибытие в ${destinationSector.name}`, "info");
         get().updateShipStats();

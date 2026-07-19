@@ -8,7 +8,7 @@ import { getActiveModule, getActiveModules } from "@/game/modules";
 import { getBestByProfession, getPilotInCockpit } from "@/game/crew";
 import { playSound } from "@/sounds";
 import { calculateFuelCost } from "./calculateFuelCost";
-import { handlePatrolContracts } from "./processTravel";
+import { applyNeutronRadiation, handlePatrolContracts } from "./processTravel";
 import type { GameState, GameStore, GameMode, Artifact, SetState } from "@/game/types";
 
 // ============================================================================
@@ -337,6 +337,9 @@ const handleTravelCompletion = (
     markSectorVisited(sector, set);
     get().addLog(`Перелёт в ${sector.name}`, "info");
 
+    // Радиация нейтронной звезды действует и при мгновенном прибытии
+    applyNeutronRadiation(sector, set as SetState, get);
+
     // Same-tier travel (distance=0) never goes through processTravel,
     // so patrol contracts must be checked here for ALL same-tier arrivals.
     const patrolState = get();
@@ -422,6 +425,9 @@ const handleTravelStart = (
         markSectorVisited(sector, set);
         set(() => ({ gameMode: "sector_map" as GameMode }));
         get().addLog(`⚡ Мгновенный перелёт в ${sector.name}!`, "info");
+
+        // Радиация нейтронной звезды действует и при варп-прыжке
+        applyNeutronRadiation(sector, set as SetState, get);
 
         const warpPatrolState = get();
         const warpPatrolContracts = warpPatrolState.activeContracts.filter(

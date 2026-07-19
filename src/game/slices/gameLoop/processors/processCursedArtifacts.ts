@@ -4,9 +4,7 @@ import type {
     SetState,
     ArtifactNegativeType,
 } from "@/game/types";
-import { MUTATION_TRAITS } from "@/game/constants";
-import { getTraitById } from "@/game/crew/utils";
-import { shiftHappiness } from "@/game/crew";
+import { giveRandomMutation, shiftHappiness } from "@/game/crew";
 
 /**
  * Обработчик негативного эффекта проклятого артефакта
@@ -123,31 +121,13 @@ function applyCrewMutation(
 ) {
     state.crew.forEach((crewMember) => {
         if (Math.random() * 100 < value) {
-            const existingIds = new Set(crewMember.traits.map((t) => t.id));
-            const available = MUTATION_TRAITS.filter(
-                (t) => !existingIds.has(t),
-            );
-
-            if (available.length === 0) return;
-
-            const newTrait =
-                available[Math.floor(Math.random() * available.length)];
-
-            set((s) => ({
-                crew: s.crew.map((c) =>
-                    c.id === crewMember.id
-                        ? {
-                              ...c,
-                              traits: [...c.traits, getTraitById(newTrait)],
-                          }
-                        : c,
-                ),
-            }));
-
-            get().addLog(
-                `⚠️ ${artifact.name}: ${crewMember.name} мутировал`,
-                "warning",
-            );
+            const mutationName = giveRandomMutation(crewMember, set);
+            if (mutationName) {
+                get().addLog(
+                    `⚠️ ${artifact.name}: ${crewMember.name} мутировал (${mutationName})`,
+                    "warning",
+                );
+            }
         }
     });
 }

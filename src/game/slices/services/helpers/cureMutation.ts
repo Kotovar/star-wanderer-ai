@@ -18,6 +18,15 @@ export const cureMutation = (
 ): void => {
     const state = get();
 
+    // Гейт продублирован из UI: лечение мутаций требует "Ксенобиологию"
+    if (!state.research.researchedTechs.includes("xenobiology")) {
+        get().addLog(
+            "Для лечения мутаций требуется технология «Ксенобиология»!",
+            "error",
+        );
+        return;
+    }
+
     if (state.credits < MUTATION_CURE_PRICE) {
         get().addLog("Недостаточно кредитов для лечения мутации!", "error");
         return;
@@ -31,11 +40,21 @@ export const cureMutation = (
 
     set((s) => ({
         credits: s.credits - MUTATION_CURE_PRICE,
-        crew: s.crew.map((c) =>
-            c.id === crewId
-                ? { ...c, traits: c.traits.filter((t) => t.id !== traitId) }
-                : c,
-        ),
+        crew: s.crew.map((c) => {
+            if (c.id !== crewId) return c;
+            const updated = {
+                ...c,
+                traits: c.traits.filter((t) => t.id !== traitId),
+            };
+            // Возвращаем максимум здоровья, срезанный мутацией
+            const penalty = mutation.effect?.healthPenalty;
+            if (penalty && penalty < 1) {
+                updated.maxHealth = Math.round(
+                    updated.maxHealth / (1 - penalty),
+                );
+            }
+            return updated;
+        }),
     }));
 
     get().addLog(
