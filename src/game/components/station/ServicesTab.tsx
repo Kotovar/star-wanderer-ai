@@ -117,6 +117,7 @@ interface ServicesTabProps {
     isResearchStation?: boolean;
     researchResources?: Partial<Record<ResearchResourceType, number>>;
     onSellResearchResource?: (type: ResearchResourceType, qty: number) => void;
+    onBuyResearchResource?: (type: ResearchResourceType, qty: number) => void;
 }
 
 export function ServicesTab({
@@ -154,6 +155,7 @@ export function ServicesTab({
     isResearchStation,
     researchResources,
     onSellResearchResource,
+    onBuyResearchResource,
 }: ServicesTabProps) {
     const fuelNeeded = maxFuel - fuel;
 
@@ -219,6 +221,12 @@ export function ServicesTab({
                 <InstallWeaponSection
                     ship={ship}
                     onInstall={installCraftedWeapon}
+                />
+            )}
+            {isResearchStation && onBuyResearchResource && (
+                <BuyResearchSection
+                    credits={credits}
+                    onBuy={onBuyResearchResource}
                 />
             )}
             {isResearchStation && onSellResearchResource && (
@@ -1046,6 +1054,77 @@ const RESEARCH_SELL_PRICES: Record<ResearchResourceType, number> = {
     void_membrane: 300,
     quantum_crystals: 500,
 };
+
+/** Common-ресурсы, которые research-станции продают (цена = ×2 от скупки) */
+export const RESEARCH_BUY_PRICES: Partial<
+    Record<ResearchResourceType, number>
+> = {
+    tech_salvage: RESEARCH_SELL_PRICES.tech_salvage * 2,
+    rare_minerals: RESEARCH_SELL_PRICES.rare_minerals * 2,
+};
+
+function BuyResearchSection({
+    credits,
+    onBuy,
+}: {
+    credits: number;
+    onBuy: (type: ResearchResourceType, qty: number) => void;
+}) {
+    const buyTypes = Object.keys(
+        RESEARCH_BUY_PRICES,
+    ) as ResearchResourceType[];
+
+    return (
+        <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4">
+            <div className="text-[#00ff41] font-bold mb-1">
+                🔬 Закупка исследовательских материалов
+            </div>
+            <div className="text-xs text-[#888] mb-3">
+                Станция продаёт распространённые научные материалы
+            </div>
+            <div className="flex flex-col gap-2">
+                {buyTypes.map((type) => {
+                    const res = RESEARCH_RESOURCES[type];
+                    const price = RESEARCH_BUY_PRICES[type] ?? 0;
+                    return (
+                        <div
+                            key={type}
+                            className="flex items-center justify-between bg-[rgba(0,255,65,0.05)] border border-[#00ff4133] px-3 py-2"
+                        >
+                            <div className="flex-1">
+                                <span style={{ color: res.color }}>
+                                    {res.icon}
+                                </span>{" "}
+                                <span className="text-sm text-[#ccc]">
+                                    {res.name}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-[#ffb000]">
+                                    {price}₢/ед.
+                                </span>
+                                <Button
+                                    disabled={credits < price}
+                                    onClick={() => onBuy(type, 1)}
+                                    className="cursor-pointer bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] px-2 py-1 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    +1
+                                </Button>
+                                <Button
+                                    disabled={credits < price * 5}
+                                    onClick={() => onBuy(type, 5)}
+                                    className="cursor-pointer bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] px-2 py-1 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    +5
+                                </Button>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
 
 function SellResearchSection({
     credits,

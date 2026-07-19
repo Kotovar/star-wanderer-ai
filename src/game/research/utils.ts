@@ -14,14 +14,17 @@ export function getMiningResources(
 ): { type: ResearchResourceType; quantity: number }[] {
     const resources: { type: ResearchResourceType; quantity: number }[] = [];
 
-    // Quantum crystals: 15% base chance at drill level 1, +5% per additional level
-    // T1: 15%, T2: 20%, T3: 25%, T4: 30%
-    const quantumCrystalChance = 0.15 + (drillLevel - 1) * 0.05;
-    if (Math.random() < quantumCrystalChance) {
+    // Quantum crystals — основная механическая добыча кристаллов:
+    // T1: 40% шанс на 1; T2+: гарантированно, количество растёт с уровнем
+    // (T2: 1, T3: 1-2, T4: 2-3)
+    if (drillLevel >= 2) {
+        const bonus = drillLevel >= 3 ? Math.floor(Math.random() * 2) : 0;
         resources.push({
             type: "quantum_crystals",
-            quantity: drillLevel >= 3 ? Math.floor(Math.random() * 2) + 1 : 1,
+            quantity: Math.max(1, drillLevel - 2 + bonus),
         });
+    } else if (Math.random() < 0.4) {
+        resources.push({ type: "quantum_crystals", quantity: 1 });
     }
 
     return resources;
@@ -97,8 +100,14 @@ export function getCombatLootResources(
         quantity: Math.floor(Math.random() * 3) + enemyTier,
     });
 
-    // Energy samples only from tier 2+ enemies (not guaranteed)
-    if (enemyTier >= 2 && Math.random() < 0.3) {
+    // Energy samples: tier 3+ гарантированно (боттлнек науки тира 3),
+    // tier 2 — с шансом 30%
+    if (enemyTier >= 3) {
+        resources.push({
+            type: "energy_samples",
+            quantity: Math.floor(Math.random() * 2) + 1,
+        });
+    } else if (enemyTier === 2 && Math.random() < 0.3) {
         resources.push({
             type: "energy_samples",
             quantity: Math.floor(Math.random() * 2) + 1,

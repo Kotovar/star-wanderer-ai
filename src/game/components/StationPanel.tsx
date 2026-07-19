@@ -21,7 +21,7 @@ import type {
 import { ShopTab } from "./station/ShopTab";
 import { TradeTab } from "./station/TradeTab";
 import { CrewTab } from "./station/CrewTab";
-import { ServicesTab } from "./station/ServicesTab";
+import { ServicesTab, RESEARCH_BUY_PRICES } from "./station/ServicesTab";
 import { CraftingTab } from "./station/CraftingTab";
 import { ModuleUpgradeModal } from "./station/ModuleUpgradeModal";
 import { Button } from "@/components/ui/button";
@@ -513,6 +513,34 @@ export function StationPanel() {
                             }));
                             addLog(
                                 `📊 Проданы исследовательские данные: ${qty}× → +${earned}₢`,
+                                "info",
+                            );
+                        }}
+                        onBuyResearchResource={(type, qty) => {
+                            const price = RESEARCH_BUY_PRICES[type] ?? 0;
+                            const cost = price * qty;
+                            if (price <= 0) return;
+                            if (useGameStore.getState().credits < cost) {
+                                addLog(
+                                    "Недостаточно кредитов для закупки материалов!",
+                                    "error",
+                                );
+                                return;
+                            }
+                            useGameStore.setState((s) => ({
+                                credits: s.credits - cost,
+                                research: {
+                                    ...s.research,
+                                    resources: {
+                                        ...s.research.resources,
+                                        [type]:
+                                            (s.research.resources[type] ?? 0) +
+                                            qty,
+                                    },
+                                },
+                            }));
+                            addLog(
+                                `🔬 Закуплены исследовательские материалы: ${qty}× → -${cost}₢`,
                                 "info",
                             );
                         }}
