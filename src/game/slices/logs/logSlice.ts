@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import type { LogEntry } from "@/game/types/logs";
 import type { GameState } from "@/game/types/game";
 import { LOG_TYPES, createLogEntry, updateLog } from "./utils";
@@ -66,5 +67,11 @@ export const createLogSlice = (
             const newEntry = createLogEntry(message, type, state.turn);
             state.log = updateLog(state.log, newEntry);
         });
+
+        // Критические события дублируются попапом, чтобы их нельзя было
+        // пропустить в ленте лога
+        if (type === LOG_TYPES.ERROR) {
+            toast.error(message);
+        }
     },
 });

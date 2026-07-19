@@ -7,7 +7,6 @@ import {
 import { getActiveModule, getActiveModules } from "@/game/modules";
 import { getBestByProfession, getPilotInCockpit } from "@/game/crew";
 import { playSound } from "@/sounds";
-import { toast } from "sonner";
 import { calculateFuelCost } from "./calculateFuelCost";
 import { handlePatrolContracts } from "./processTravel";
 import type { GameState, GameStore, GameMode, Artifact, SetState } from "@/game/types";
@@ -50,8 +49,8 @@ const DEFAULT_CURSED_ARTIFACT_DAMAGE = 5;
 // ============================================================================
 
 const reportTravelBlocked = (message: string, get: () => GameStore): void => {
+    // Попап показывает сам addLog для типа "error"
     get().addLog(message, "error");
-    toast.error(message);
     playSound("error");
 };
 

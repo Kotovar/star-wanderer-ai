@@ -3,7 +3,6 @@ import { playSound } from "@/sounds";
 import { ARTIFACT_RESEARCH_EXP_MULTIPLIER } from "@/game/constants";
 import { getTechBonusSum } from "@/game/research";
 import { DEFAULT_ARTIFACT_SLOTS } from "../constants";
-import { toast } from "sonner";
 
 /**
  * Исследует артефакт и активирует его эффект
@@ -45,8 +44,8 @@ export const researchArtifact = (
 
     if (maxScientistLevel < artifact.requiresScientistLevel) {
         const msg = `Требуется учёный уровня ${artifact.requiresScientistLevel}!`;
+        // Попап показывает сам addLog для типа "error"
         get().addLog(msg, "error");
-        toast.error(msg);
         playSound("error");
         return;
     }
