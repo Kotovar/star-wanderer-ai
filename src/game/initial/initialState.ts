@@ -173,6 +173,7 @@ const baseState: GameState = {
   completedContractIds: [],
   shipQuestsTaken: [],
   completedLocations: [],
+  knownTradeStations: [],
   stationInventory: {},
   stationPrices: prices,
   stationStock: stock,

@@ -105,13 +105,14 @@ export function getStationTypeTranslation(
   t: (key: string) => string,
 ): string {
   const map: Record<string, string> = {
-    trade: t("station_types.trade"),
-    military: t("station_types.military"),
-    research: t("station_types.research"),
-    mining: t("station_types.mining"),
-    shipyard: t("station_types.shipyard"),
-    medical: t("station_types.medical"),
-    diplomatic: t("station_types.diplomatic"),
+    trade: t("locations.station_types.trade"),
+    military: t("locations.station_types.military"),
+    research: t("locations.station_types.research"),
+    mining: t("locations.station_types.mining"),
+    shipyard: t("locations.station_types.shipyard"),
+    medical: t("locations.station_types.medical"),
+    industrial: t("locations.station_types.industrial"),
+    diplomatic: t("locations.station_types.diplomatic"),
   };
   return map[stationType] || stationType;
 }
@@ -200,8 +201,8 @@ export function getScannerInfo(
   // Stations, planets, asteroid belts, and distress signals are always visible
   if (loc.type === "station") {
     info.push(`📍 ${getLocationName(loc.name, t)}`);
-    // Show station type with scanRange >= 3
-    if (scanRange >= 3 && loc.stationType) {
+    // Тип станции виден всегда: станции не скрываются сканером
+    if (loc.stationType) {
       info.push(`🏷️ ${getStationTypeTranslation(loc.stationType, t)}`);
     }
     return info;

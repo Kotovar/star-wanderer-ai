@@ -973,20 +973,42 @@ export function GalaxyMap() {
                         id="route-choice-title"
                         className="font-['Orbitron'] text-xs font-bold uppercase tracking-wider text-ring"
                     >
-                        Маршрут до {routeChoice.sectorName}
+                        {t("route_dialog.title", {
+                            sector: routeChoice.sectorName,
+                        })}
                     </div>
                     <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] leading-relaxed">
                         <div className="border border-[#ff444466] p-2 text-[#b8b8b8]">
-                            <div className="font-bold text-[#ff4444]">Прямой</div>
-                            <div>{routeChoice.turns} ход(а)</div>
-                            <div>топливо {routeChoice.fuelCost}</div>
-                            <div>высокий риск событий</div>
+                            <div className="font-bold text-[#ff4444]">
+                                {t("route_dialog.direct")}
+                            </div>
+                            <div>
+                                {t("route_dialog.turns", {
+                                    turns: routeChoice.turns,
+                                })}
+                            </div>
+                            <div>
+                                {t("route_dialog.fuel", {
+                                    fuel: routeChoice.fuelCost,
+                                })}
+                            </div>
+                            <div>{t("route_dialog.high_risk")}</div>
                         </div>
                         <div className="border border-[#00ff4166] p-2 text-[#b8b8b8]">
-                            <div className="font-bold text-[#00ff41]">Обходной</div>
-                            <div>{routeChoice.turns + DETOUR_EXTRA_TURNS} ход(а)</div>
-                            <div>топливо {routeChoice.fuelCost + DETOUR_FUEL_COST}</div>
-                            <div>низкий риск событий</div>
+                            <div className="font-bold text-[#00ff41]">
+                                {t("route_dialog.detour")}
+                            </div>
+                            <div>
+                                {t("route_dialog.turns", {
+                                    turns: routeChoice.turns + DETOUR_EXTRA_TURNS,
+                                })}
+                            </div>
+                            <div>
+                                {t("route_dialog.fuel", {
+                                    fuel: routeChoice.fuelCost + DETOUR_FUEL_COST,
+                                })}
+                            </div>
+                            <div>{t("route_dialog.low_risk")}</div>
                         </div>
                     </div>
                     <div className="mt-3 grid grid-cols-3 gap-2">
@@ -1003,7 +1025,7 @@ export function GalaxyMap() {
                             }}
                             className="cursor-pointer border border-[#ff4444] px-2 py-2 text-[10px] uppercase text-[#ff4444] hover:bg-[#ff4444] hover:text-white"
                         >
-                            Прямой
+                            {t("route_dialog.direct")}
                         </button>
                         <button
                             onClick={() => {
@@ -1012,7 +1034,7 @@ export function GalaxyMap() {
                             }}
                             className="cursor-pointer border border-[#00ff41] px-2 py-2 text-[10px] uppercase text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
                         >
-                            Обходной
+                            {t("route_dialog.detour")}
                         </button>
                     </div>
                 </div>

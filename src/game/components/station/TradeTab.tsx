@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { TRADE_GOODS } from "../../constants";
 import { typedKeys } from "@/lib/utils";
@@ -11,6 +12,7 @@ import {
     applyCrisisMarketModifier,
     getCrisisMarketMultiplier,
 } from "@/game/stations/crisisMarket";
+import { GoodInfoModal } from "../GoodInfoModal";
 
 interface TradeTabProps {
     stationId: string;
@@ -51,6 +53,7 @@ export function TradeTab({
     const currentLocation = useGameStore((s) => s.currentLocation);
     const dominantRace = currentLocation?.dominantRace;
     const activeCrisisId = useGameStore((s) => s.activeCrisis?.id);
+    const [infoGood, setInfoGood] = useState<Goods | null>(null);
 
     return (
         <div className="flex flex-col gap-2.5 flex-1 min-h-0 overflow-y-auto pr-1 pb-2">
@@ -106,6 +109,7 @@ export function TradeTab({
                         <TradeGoodRow
                             key={goodId}
                             crisisMultiplier={crisisMultiplier}
+                            onShowInfo={() => setInfoGood(goodId)}
                             good={good}
                             prices={prices}
                             pricesWithRep={{
@@ -121,6 +125,12 @@ export function TradeTab({
                         />
                     );
                 })}
+            {infoGood && (
+                <GoodInfoModal
+                    goodId={infoGood}
+                    onClose={() => setInfoGood(null)}
+                />
+            )}
         </div>
     );
 }
@@ -136,6 +146,7 @@ interface TradeGoodRowProps {
     onBuy: (goodId: Goods, quantity: number) => void;
     onSell: (goodId: Goods, quantity: number) => void;
     crisisMultiplier: number;
+    onShowInfo: () => void;
 }
 
 function TradeGoodRow({
@@ -149,12 +160,14 @@ function TradeGoodRow({
     onBuy,
     onSell,
     crisisMultiplier,
+    onShowInfo,
 }: TradeGoodRowProps) {
     return (
         <div className="flex justify-between items-center bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3">
             <TradeGoodInfo
                 good={good}
                 crisisMultiplier={crisisMultiplier}
+                onShowInfo={onShowInfo}
                 prices={prices}
                 pricesWithRep={pricesWithRep}
                 stock={stock}
@@ -181,6 +194,7 @@ function TradeGoodInfo({
     stock,
     playerGood,
     crisisMultiplier,
+    onShowInfo,
 }: {
     good: { id: string; name: string };
     prices: { buy: number; sell: number };
@@ -188,6 +202,7 @@ function TradeGoodInfo({
     stock: number;
     playerGood: { item: string; quantity: number } | undefined;
     crisisMultiplier: number;
+    onShowInfo: () => void;
 }) {
     const { t } = useTranslation();
     // Calculate per-unit price (prices are stored as 5-ton batches)
@@ -209,10 +224,16 @@ function TradeGoodInfo({
     return (
         <div className="flex-1">
             <div className="text-[#00d4ff] font-bold">
-                {translatedName}
+                <button
+                    onClick={onShowInfo}
+                    className="cursor-pointer underline decoration-dotted underline-offset-4 hover:text-white"
+                    title={t("good_info.open_hint")}
+                >
+                    {translatedName}
+                </button>
                 {crisisMultiplier !== 1 && (
                     <span className="ml-2 text-[11px] font-bold text-[#ff4444] border border-[#ff4444] px-1">
-                        дефицит ×{crisisMultiplier}
+                        {t("trade.shortage", { mult: crisisMultiplier })}
                     </span>
                 )}
             </div>

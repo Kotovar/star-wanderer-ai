@@ -106,6 +106,8 @@ export interface GameState {
   hiredCrewFromShips: string[]; // IDs of friendly ships where crew was hired
   distressRespondedShips: string[]; // IDs of distress ships that have been helped
   completedLocations: string[];
+  /** Станции, где игрок реально был в доке — их цены считаются известными */
+  knownTradeStations: string[];
   stationInventory: Record<string, Record<string, number>>;
   stationPrices: Record<
     string,

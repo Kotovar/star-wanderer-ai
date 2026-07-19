@@ -183,6 +183,15 @@ export const selectLocation = (
                 set({ gameMode: "hostile_approach_warning" });
                 break;
             }
+            // Док на станции: её цены становятся известными игроку
+            if (loc.stationId) {
+                const stationId = loc.stationId;
+                set((s) => ({
+                    knownTradeStations: s.knownTradeStations.includes(stationId)
+                        ? s.knownTradeStations
+                        : [...s.knownTradeStations, stationId],
+                }));
+            }
             set({ gameMode: "station" });
             break;
         }

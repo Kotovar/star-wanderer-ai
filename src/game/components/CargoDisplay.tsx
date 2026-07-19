@@ -6,7 +6,17 @@ import { TRADE_GOODS } from "../constants/goods";
 import { DELIVERY_GOODS } from "../constants/contracts";
 import { WEAPON_TYPES } from "../constants/weapons";
 import { useTranslation } from "@/lib/useTranslation";
-import type { Module } from "../types";
+import { GoodInfoModal } from "./GoodInfoModal";
+import { WeaponDetailDialog } from "./WeaponDetailDialog";
+import { ModuleDetailDialog } from "./ModuleList";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import type { CargoItem, Contract, Goods, Module } from "../types";
 
 type SectionKey = "weapons" | "modules" | "contracts" | "trade" | "probes";
 
@@ -85,6 +95,109 @@ function CargoMetric({ label, value }: { label: string; value: number }) {
     );
 }
 
+function CargoInfoDialog({
+    title,
+    onClose,
+    children,
+}: {
+    title: string;
+    onClose: () => void;
+    children: React.ReactNode;
+}) {
+    const { t } = useTranslation();
+    return (
+        <Dialog open={true} onOpenChange={onClose}>
+            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-accent text-accent max-w-md w-[calc(100%-2rem)] md:w-auto">
+                <DialogHeader>
+                    <DialogTitle className="text-accent font-['Orbitron']">
+                        {title}
+                    </DialogTitle>
+                    <DialogDescription className="sr-only">
+                        {title}
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="text-xs leading-relaxed">{children}</div>
+                <button
+                    onClick={onClose}
+                    className="mt-2 cursor-pointer border-2 border-[#00ff41] px-3 py-2 text-xs uppercase text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
+                >
+                    {t("common.close")}
+                </button>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function ContractCargoDialog({
+    cargoItem,
+    contracts,
+    turn,
+    onClose,
+}: {
+    cargoItem: CargoItem;
+    contracts: Contract[];
+    turn: number;
+    onClose: () => void;
+}) {
+    const { t } = useTranslation();
+    const contract = contracts.find(
+        (c) =>
+            (cargoItem.contractId && c.id === cargoItem.contractId) ||
+            c.cargo === cargoItem.item,
+    );
+    const cargoName =
+        t(`trade.goods.${cargoItem.item}`) !== `trade.goods.${cargoItem.item}`
+            ? t(`trade.goods.${cargoItem.item}`)
+            : DELIVERY_GOODS[cargoItem.item as keyof typeof DELIVERY_GOODS]
+                  ?.name || cargoItem.item;
+
+    const destination = contract
+        ? [contract.targetLocationName, contract.targetSectorName]
+              .filter(Boolean)
+              .join(", ")
+        : "";
+    const turnsLeft =
+        contract?.timeLimit !== undefined
+            ? contract.timeLimit -
+              (turn - (contract.startTurn ?? contract.acceptedAt ?? turn))
+            : null;
+
+    return (
+        <CargoInfoDialog
+            title={`📦 ${cargoName} x${cargoItem.quantity}т`}
+            onClose={onClose}
+        >
+            {contract ? (
+                <div className="space-y-1">
+                    {destination && (
+                        <div>
+                            {t("cargo_info.destination")}:{" "}
+                            <span className="text-[#00d4ff]">
+                                {destination}
+                            </span>
+                        </div>
+                    )}
+                    <div>
+                        {t("cargo_info.reward")}:{" "}
+                        <span className="text-[#00ff41]">
+                            {contract.reward}₢
+                        </span>
+                    </div>
+                    {turnsLeft !== null && (
+                        <div>
+                            {t("cargo_info.time_left", { count: turnsLeft })}
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="text-[#888]">
+                    {t("cargo_info.no_contract")}
+                </div>
+            )}
+        </CargoInfoDialog>
+    );
+}
+
 export function CargoDisplay() {
     const ship = useGameStore((s) => s.ship);
     const probes = useGameStore((s) => s.probes);
@@ -93,8 +206,15 @@ export function CargoDisplay() {
     const installModuleFromCargo = useGameStore(
         (s) => s.installModuleFromCargo,
     );
+    const activeContracts = useGameStore((s) => s.activeContracts);
+    const turn = useGameStore((s) => s.turn);
     const { t } = useTranslation();
 
+    const [infoGood, setInfoGood] = useState<Goods | null>(null);
+    const [weaponInfo, setWeaponInfo] = useState<string | null>(null);
+    const [moduleInfo, setModuleInfo] = useState<CargoItem | null>(null);
+    const [showProbeInfo, setShowProbeInfo] = useState(false);
+    const [contractInfo, setContractInfo] = useState<CargoItem | null>(null);
     const [collapsed, setCollapsed] = useState<Record<SectionKey, boolean>>({
         weapons: false,
         modules: false,
@@ -228,7 +348,19 @@ export function CargoDisplay() {
                                             }}
                                         >
                                             <div className="flex items-center justify-between">
-                                                <div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setWeaponInfo(
+                                                            c.weaponType ??
+                                                                null,
+                                                        )
+                                                    }
+                                                    title={t(
+                                                        "good_info.open_hint",
+                                                    )}
+                                                    className="cursor-pointer text-left underline decoration-dotted underline-offset-4"
+                                                >
                                                     <span
                                                         style={{
                                                             color: weapon?.color,
@@ -250,7 +382,7 @@ export function CargoDisplay() {
                                                             "cargo.crafted_label",
                                                         )}
                                                     </span>
-                                                </div>
+                                                </button>
                                                 <button
                                                     type="button"
                                                     onClick={() =>
@@ -346,7 +478,16 @@ export function CargoDisplay() {
                                             className="bg-[rgba(0,0,0,0.3)] border border-[#00d4ff] p-2 mb-1.5 text-xs"
                                         >
                                             <div className="flex items-center justify-between">
-                                                <div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setModuleInfo(c)
+                                                    }
+                                                    title={t(
+                                                        "good_info.open_hint",
+                                                    )}
+                                                    className="cursor-pointer text-left underline decoration-dotted underline-offset-4"
+                                                >
                                                     📦{" "}
                                                     <span>
                                                         {c.module?.name ??
@@ -360,7 +501,7 @@ export function CargoDisplay() {
                                                             "cargo.module_label",
                                                         )}
                                                     </span>
-                                                </div>
+                                                </button>
                                                 {freePos ? (
                                                     <button
                                                         type="button"
@@ -400,9 +541,14 @@ export function CargoDisplay() {
                                 onToggle={() => toggle("probes")}
                             />
                             {!collapsed.probes && (
-                                <div className="bg-[rgba(0,0,0,0.3)] border border-[#7b4fff] p-2 mb-1.5 text-xs">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowProbeInfo(true)}
+                                    title={t("good_info.open_hint")}
+                                    className="block w-full text-left cursor-pointer bg-[rgba(0,0,0,0.3)] border border-[#7b4fff] p-2 mb-1.5 text-xs hover:bg-[rgba(123,79,255,0.12)]"
+                                >
                                     🔬 {t("cargo.section_probes")} x{probes}т
-                                </div>
+                                </button>
                             )}
                         </div>
                     )}
@@ -433,15 +579,18 @@ export function CargoDisplay() {
                                             ? t(`trade.goods.${c.item}`)
                                             : cargoName;
                                     return (
-                                        <div
+                                        <button
                                             key={idx}
-                                            className="bg-[rgba(0,0,0,0.3)] border border-[#ffb000] p-2 mb-1.5 text-xs"
+                                            type="button"
+                                            onClick={() => setContractInfo(c)}
+                                            title={t("good_info.open_hint")}
+                                            className="block w-full text-left cursor-pointer bg-[rgba(0,0,0,0.3)] border border-[#ffb000] p-2 mb-1.5 text-xs hover:bg-[rgba(255,176,0,0.1)]"
                                         >
                                             📦 {translatedName} x{c.quantity}т{" "}
                                             <span className="text-[#00d4ff]">
                                                 {t("cargo.contract_label")}
                                             </span>
-                                        </div>
+                                        </button>
                                     );
                                 })}
                         </div>
@@ -466,17 +615,87 @@ export function CargoDisplay() {
                                             : TRADE_GOODS[g.item]?.name ||
                                               g.item;
                                     return (
-                                        <div
+                                        <button
                                             key={i}
-                                            className="bg-[rgba(0,0,0,0.3)] border border-[#00ff88] p-2 mb-1.5 text-xs"
+                                            onClick={() =>
+                                                setInfoGood(g.item)
+                                            }
+                                            title={t("good_info.open_hint")}
+                                            className="block w-full text-left cursor-pointer bg-[rgba(0,0,0,0.3)] border border-[#00ff88] p-2 mb-1.5 text-xs hover:bg-[rgba(0,255,136,0.1)]"
                                         >
                                             💰 {translatedName} x{g.quantity}т
-                                        </div>
+                                        </button>
                                     );
                                 })}
                         </div>
                     )}
                 </div>
+            )}
+            {infoGood && (
+                <GoodInfoModal
+                    goodId={infoGood}
+                    onClose={() => setInfoGood(null)}
+                />
+            )}
+            {weaponInfo && (
+                <WeaponDetailDialog
+                    weaponType={weaponInfo}
+                    onClose={() => setWeaponInfo(null)}
+                />
+            )}
+            {moduleInfo?.module && (
+                <ModuleDetailDialog
+                    isStationItem
+                    module={{
+                        id: -1,
+                        type: moduleInfo.module.moduleType || "reactor",
+                        name: moduleInfo.module.name,
+                        health: 100,
+                        maxHealth: 100,
+                        power: moduleInfo.module.power || 0,
+                        consumption: moduleInfo.module.consumption || 0,
+                        defense: moduleInfo.module.defense || 0,
+                        capacity: moduleInfo.module.capacity || 0,
+                        oxygen: moduleInfo.module.oxygen || 0,
+                        scanRange: moduleInfo.module.scanRange || 0,
+                        fuelEfficiency: moduleInfo.module.fuelEfficiency || 0,
+                        repairAmount: moduleInfo.module.repairAmount || 0,
+                        repairTargets: moduleInfo.module.repairTargets || 1,
+                        width: moduleInfo.module.width || 1,
+                        height: moduleInfo.module.height || 1,
+                        x: 0,
+                        y: 0,
+                        level: moduleInfo.module.level ?? 1,
+                        weapons: [],
+                        disabled: false,
+                        movedThisTurn: false,
+                    }}
+                    onClose={() => setModuleInfo(null)}
+                />
+            )}
+            {showProbeInfo && (
+                <CargoInfoDialog
+                    title={`🔬 ${t("cargo_info.probes_title")}`}
+                    onClose={() => setShowProbeInfo(false)}
+                >
+                    <div>{t("cargo_info.probes_desc")}</div>
+                    <div className="mt-2 space-y-1 text-[#888]">
+                        <div>{t("cargo_info.probes_use_1")}</div>
+                        <div>{t("cargo_info.probes_use_2")}</div>
+                        <div>{t("cargo_info.probes_use_3")}</div>
+                    </div>
+                    <div className="mt-2 text-[#00ff41]">
+                        {t("cargo_info.probes_buy_hint")}
+                    </div>
+                </CargoInfoDialog>
+            )}
+            {contractInfo && (
+                <ContractCargoDialog
+                    cargoItem={contractInfo}
+                    contracts={activeContracts}
+                    turn={turn}
+                    onClose={() => setContractInfo(null)}
+                />
             )}
         </div>
     );
