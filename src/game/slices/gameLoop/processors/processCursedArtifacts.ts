@@ -19,31 +19,16 @@ interface CurseHandler {
         artifact: { name: string },
         value: number,
     ) => void;
-    logMessage: (artifactName: string, value: number) => string;
 }
 
 /**
- * Обработчики проклятых эффектов
+ * Обработчики проклятых эффектов (каждый логирует сам)
  */
 const CURSE_HANDLERS: Record<ArtifactNegativeType, CurseHandler | undefined> = {
-    happiness_drain: {
-        process: applyStatDrain,
-        logMessage: (name, value) =>
-            `⚠️ ${name}: -${value} счастья/морали экипажу`,
-    },
-    module_damage: {
-        process: applyModuleDamage,
-        logMessage: (name, value) =>
-            `⚠️ ${name}: случайный модуль повреждён на -${value}%`,
-    },
-    crew_desertion: {
-        process: applyCrewDesertion,
-        logMessage: (name) => `⚠️ ${name}: член экипажа покинул корабль`,
-    },
-    crew_mutation: {
-        process: applyCrewMutation,
-        logMessage: (name) => `⚠️ ${name}: член экипажа мутировал`,
-    },
+    happiness_drain: { process: applyStatDrain },
+    module_damage: { process: applyModuleDamage },
+    crew_desertion: { process: applyCrewDesertion },
+    crew_mutation: { process: applyCrewMutation },
     ambush_chance: undefined, // Обрабатывается в signals/utils.ts
     self_damage: undefined, // Обрабатывается  после боя
     health_drain: undefined, // Обрабатывается при перемещении
@@ -56,13 +41,17 @@ const CURSE_HANDLERS: Record<ArtifactNegativeType, CurseHandler | undefined> = {
 function applyStatDrain(
     _state: GameState,
     set: SetState,
-    _get: () => GameStore,
-    _artifact: { name: string },
+    get: () => GameStore,
+    artifact: { name: string },
     value: number,
 ) {
     set((s) => ({
         crew: s.crew.map((c) => shiftHappiness(c, -value)),
     }));
+    get().addLog(
+        `⚠️ ${artifact.name}: -${value} счастья/морали экипажу`,
+        "warning",
+    );
 }
 
 /**
@@ -199,6 +188,5 @@ export const processCursedArtifacts = (
         }
 
         handler.process(state, set, get, artifact, negativeValue);
-        handler.logMessage(artifact.name, negativeValue);
     });
 };

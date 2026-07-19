@@ -1,6 +1,8 @@
 import type { GameStore, CrewMember, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 import { ARTIFACT_RESEARCH_EXP_MULTIPLIER } from "@/game/constants";
+import { getTechBonusSum } from "@/game/research";
+import { DEFAULT_ARTIFACT_SLOTS } from "../constants";
 import { toast } from "sonner";
 
 /**
@@ -49,6 +51,16 @@ export const researchArtifact = (
         return;
     }
 
+    // Активируем только при наличии свободного слота — изучение не должно
+    // обходить лимит активных артефактов (см. toggleArtifact)
+    const maxSlots =
+        DEFAULT_ARTIFACT_SLOTS +
+        getTechBonusSum(state.research, "artifact_slots");
+    const currentActive = state.artifacts.filter(
+        (a) => a.effect.active,
+    ).length;
+    const canActivate = currentActive < maxSlots;
+
     // Исследуем артефакт
     set((s) => ({
         artifacts: s.artifacts.map((a) =>
@@ -56,14 +68,21 @@ export const researchArtifact = (
                 ? {
                       ...a,
                       researched: true,
-                      effect: { ...a.effect, active: true },
+                      effect: { ...a.effect, active: canActivate },
                   }
                 : a,
         ),
     }));
 
     playSound("success");
-    get().addLog(`★ ${artifact.name} изучен и активирован!`, "info");
+    if (canActivate) {
+        get().addLog(`★ ${artifact.name} изучен и активирован!`, "info");
+    } else {
+        get().addLog(
+            `★ ${artifact.name} изучен. Слоты заполнены (${currentActive}/${maxSlots}) — активируйте вручную.`,
+            "warning",
+        );
+    }
     get().addLog(`Эффект: ${artifact.description}`, "info");
 
     // Начисляем опыт учёным

@@ -51,10 +51,14 @@ export const applyPlanetEffect = (
         acquiredTurn: state.turn,
         totalTurns: spec.duration,
         turnsRemaining: spec.duration,
-        effects: spec.effects.map((e) => ({
-            type: e.type as ActiveEffect["effects"][number]["type"],
-            value: e.value,
-        })),
+        // artifact_boost без targetArtifactId ничего не усиливает — ритуал
+        // Voidborn идёт через createVoidbornBoostEffect с выбором артефакта
+        effects: spec.effects
+            .filter((e) => e.type !== "artifact_boost")
+            .map((e) => ({
+                type: e.type as ActiveEffect["effects"][number]["type"],
+                value: e.value,
+            })),
     };
 
     // Применяем эффекты в зависимости от типа

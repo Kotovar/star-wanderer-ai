@@ -25,13 +25,12 @@ export const processArtifactEffects = (
 
     activeArtifacts.forEach((artifact) => {
         const effectType = artifact.effect.type;
-        const effectValue = artifact.effect.value ?? 0;
 
         switch (effectType) {
             // === ЭНЕРГИЯ ===
             case "free_power": {
                 // Вечное Ядро - бесплатная энергия (обрабатывается в getTotalPower)
-                const powerBonus = effectValue;
+                const powerBonus = getArtifactEffectValue(artifact, state);
                 get().addLog(
                     `⚡ Вечное Ядро: +${powerBonus}⚡ бесплатной энергии`,
                     "info",
@@ -41,7 +40,7 @@ export const processArtifactEffects = (
 
             case "abyss_power": {
                 // Реактор Бездны - бонус к энергии (обрабатывается в getTotalPower)
-                const powerBonus = effectValue;
+                const powerBonus = getArtifactEffectValue(artifact, state);
                 get().addLog(`⚛️ Реактор Бездны: +${powerBonus}⚡`, "info");
                 break;
             }
@@ -88,14 +87,16 @@ export const processArtifactEffects = (
             // === ЩИТЫ ===
             case "dark_shield": {
                 // Тёмный Щит - бонус к максимальным щитам (обрабатывается в updateShipStats)
-                const shieldBonus = effectValue;
+                const shieldBonus = getArtifactEffectValue(artifact, state);
                 get().addLog(`🛡️ Тёмный Щит: +${shieldBonus} к щитам`, "info");
                 break;
             }
 
             case "shield_regen_boost": {
                 // Регенератор Щитов - бонус к регенерации (обрабатывается в regenerateShields)
-                const regenBoost = Math.round(effectValue * 100);
+                const regenBoost = Math.round(
+                    getArtifactEffectValue(artifact, state) * 100,
+                );
                 get().addLog(
                     `⚡ Регенератор Щитов: +${regenBoost}% к регенерации`,
                     "info",
@@ -106,21 +107,27 @@ export const processArtifactEffects = (
             // === ОРУЖИЕ И БОЙ ===
             case "damage_boost": {
                 // Усиление урона (обрабатывается в getTotalDamage)
-                const damageBoost = Math.round(effectValue * 100);
+                const damageBoost = Math.round(
+                    getArtifactEffectValue(artifact, state) * 100,
+                );
                 get().addLog(`💥 Бонус к урону: +${damageBoost}%`, "info");
                 break;
             }
 
             case "accuracy_boost": {
                 // Бонус к точности (обрабатывается в attackEnemy)
-                const accuracyBoost = Math.round(effectValue * 100);
+                const accuracyBoost = Math.round(
+                    getArtifactEffectValue(artifact, state) * 100,
+                );
                 get().addLog(`🎯 Бонус к точности: +${accuracyBoost}%`, "info");
                 break;
             }
 
             case "crit_chance": {
                 // Шанс крита (обрабатывается в attackEnemy)
-                const critChance = Math.round(effectValue * 100);
+                const critChance = Math.round(
+                    getArtifactEffectValue(artifact, state) * 100,
+                );
                 get().addLog(`⚡ Шанс крита: ${critChance}%`, "info");
                 break;
             }
@@ -128,7 +135,7 @@ export const processArtifactEffects = (
             // === СКАНИРОВАНИЕ ===
             case "quantum_scan": {
                 // Квантовый сканер (обрабатывается в getEffectiveScanRange)
-                const scanBonus = effectValue;
+                const scanBonus = getArtifactEffectValue(artifact, state);
                 get().addLog(
                     `📡 Реликт Наблюдателей: +${scanBonus} к дальности`,
                     "info",
@@ -183,7 +190,7 @@ export const processArtifactEffects = (
             // === НАХОДКИ ===
             case "artifact_finder": {
                 // Компас Древних - шанс находок (обрабатывается в tryFindArtifact)
-                const findBonus = effectValue;
+                const findBonus = getArtifactEffectValue(artifact, state);
                 get().addLog(
                     `🧭 Компас Древних: x${findBonus} к находкам`,
                     "info",
@@ -193,7 +200,9 @@ export const processArtifactEffects = (
 
             case "credit_booster": {
                 // Чёрный Ящик - бонус к кредитам (обрабатывается при получении наград)
-                const creditBoost = Math.round(effectValue * 100);
+                const creditBoost = Math.round(
+                    getArtifactEffectValue(artifact, state) * 100,
+                );
                 get().addLog(
                     `💰 Чёрный Ящик: +${creditBoost}% к кредитам`,
                     "info",
@@ -204,7 +213,9 @@ export const processArtifactEffects = (
             // === УРОН ===
             case "crit_damage_boost": {
                 // Матрица Перегрузки - критический урон (обрабатывается в бою)
-                const critDamage = Math.round(effectValue * 100);
+                const critDamage = Math.round(
+                    getArtifactEffectValue(artifact, state) * 100,
+                );
                 get().addLog(
                     `⚡ Матрица Перегрузки: +${critDamage}% крит. урон`,
                     "info",
@@ -215,7 +226,9 @@ export const processArtifactEffects = (
             // === Уклонение ===
             case "evasion_boost": {
                 // Матрица Уклонения - бонус к уклонению (обрабатывается в getTotalEvasion)
-                const evasionBoost = Math.round(effectValue * 100);
+                const evasionBoost = Math.round(
+                    getArtifactEffectValue(artifact, state) * 100,
+                );
                 get().addLog(`💨 Бонус к уклонению: +${evasionBoost}%`, "info");
                 break;
             }
@@ -223,7 +236,7 @@ export const processArtifactEffects = (
             // === МОДУЛЬНАЯ БРОНЯ ===
             case "module_armor": {
                 // Кристаллическая Броня - бонус к защите (обрабатывается в calculateAverageDefense)
-                const armorBonus = effectValue;
+                const armorBonus = getArtifactEffectValue(artifact, state);
                 get().addLog(
                     `🛡️ Кристаллическая Броня: +${armorBonus} к защите`,
                     "info",

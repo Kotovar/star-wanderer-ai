@@ -166,7 +166,11 @@ export const getArtifactEffectValue = (
 ) => {
     if (!artifact) return 0;
 
-    let value = artifact.effect.value ?? 0;
+    const baseValue = artifact.effect.value ?? 0;
+
+    // Бусты накапливаются в один множитель и округляются ОДИН раз —
+    // последовательные Math.floor съедали малые бонусы на целых значениях
+    let multiplier = 1;
 
     // Apply permanent research-based artifact effect boost
     const researchBoost = getTechBonusSum(
@@ -174,10 +178,7 @@ export const getArtifactEffectValue = (
         "artifact_effect_boost",
     );
     if (researchBoost > 0) {
-        value =
-            value < 1
-                ? value * (1 + researchBoost)
-                : Math.floor(value * (1 + researchBoost));
+        multiplier *= 1 + researchBoost;
     }
 
     // Crystalline resonance: +15% per crystalline crew member (стакается)
@@ -191,10 +192,7 @@ export const getArtifactEffectValue = (
         }
     });
     if (crystallineBonus > 0) {
-        value =
-            value < 1
-                ? value * (1 + crystallineBonus)
-                : Math.floor(value * (1 + crystallineBonus));
+        multiplier *= 1 + crystallineBonus;
     }
 
     // Check if this artifact is boosted by voidborn ritual (stacks on top of research)
@@ -208,13 +206,12 @@ export const getArtifactEffectValue = (
         const boostValue =
             (boostEffect.effects.find((ef) => ef.type === "artifact_boost")
                 ?.value as number) ?? ARTIFACT_BOOST_BONUS;
-        value =
-            value < 1
-                ? value * (1 + boostValue)
-                : Math.floor(value * (1 + boostValue));
+        multiplier *= 1 + boostValue;
     }
 
-    return value;
+    const value = baseValue * multiplier;
+    // Дробные эффекты (доли/проценты) не округляем
+    return baseValue < 1 ? value : Math.round(value);
 };
 
 /**
