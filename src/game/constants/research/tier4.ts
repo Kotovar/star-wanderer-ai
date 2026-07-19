@@ -162,7 +162,7 @@ export const TIER4_TECHS: Partial<Record<TechnologyId, Technology>> = {
         prerequisites: ["antimatter_weapons", "quantum_torpedo"],
         resources: { tech_salvage: 15, rare_minerals: 10, quantum_crystals: 3 },
         credits: 800,
-        scienceCost: 400,
+        scienceCost: 600,
         bonuses: [
             {
                 type: "weapon_slots",

@@ -406,6 +406,37 @@ export const applyModuleBonus = (
 };
 
 /**
+ * Применяет одноразовые бонусы изученных технологий к НОВОМУ модулю.
+ * module_health и scan_range модифицируют модуль при завершении исследования,
+ * поэтому купленные позже модули должны получать их при создании
+ * (weapon_slots обрабатывается отдельно через extraWeaponSlots).
+ *
+ * @param module - Только что созданный модуль
+ * @param state - Текущее состояние игры
+ * @returns Модуль с применёнными бонусами технологий
+ */
+export const applyTechBonusesToNewModule = (
+    module: Module,
+    state: Pick<GameStore, "research">,
+): Module => {
+    let result = module;
+
+    for (const techId of state.research.researchedTechs) {
+        const tech = RESEARCH_TREE[techId as TechnologyId];
+        if (!tech) continue;
+
+        for (const bonus of tech.bonuses) {
+            if (bonus.value <= 0) continue;
+            if (bonus.type === "module_health" || bonus.type === "scan_range") {
+                [result] = applyModuleBonus([result], bonus.type, bonus.value);
+            }
+        }
+    }
+
+    return result;
+};
+
+/**
  * Применяет бонус технологии к экипажу
  *
  * @param crew - Массив членов экипажа

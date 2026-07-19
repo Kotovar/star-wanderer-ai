@@ -2,6 +2,7 @@ import type { GameStore, SetState, Module, CargoItem } from "@/game/types";
 import { playSound } from "@/sounds";
 import { createModuleFromShopItem } from "@/game/modules/createModuleFromShopItem";
 import { RESEARCH_TREE } from "@/game/constants/research";
+import { applyTechBonusesToNewModule } from "@/game/slices/research/helpers/researchHelpers";
 
 /**
  * Результат проверки позиции
@@ -83,6 +84,14 @@ const createModuleFromCargo = (
     });
 };
 
+const applyTechBonuses = (
+    module: Module | null,
+    state: GameStore,
+): Module | null => {
+    if (!module) return null;
+    return applyTechBonusesToNewModule(module, state);
+};
+
 /**
  * Устанавливает модуль из грузового отсека на корабль
  * @param set - Функция обновления состояния
@@ -126,8 +135,11 @@ export const installModuleFromCargo = (
         return;
     }
 
-    // Создание модуля
-    const newModule = createModuleFromCargo(cargoItem, x, y, getExtraWeaponSlots(state));
+    // Создание модуля (с одноразовыми бонусами изученных технологий)
+    const newModule = applyTechBonuses(
+        createModuleFromCargo(cargoItem, x, y, getExtraWeaponSlots(state)),
+        state,
+    );
 
     // Установка модуля
     if (newModule) {

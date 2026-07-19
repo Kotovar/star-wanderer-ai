@@ -9,6 +9,7 @@ import { playSound } from "@/sounds";
 import { isPositionAdjacentToModules } from "@/game/modules/adjacency";
 import { createModuleFromShopItem } from "@/game/modules/createModuleFromShopItem";
 import { RESEARCH_TREE } from "@/game/constants/research";
+import { applyTechBonusesToNewModule } from "@/game/slices/research/helpers/researchHelpers";
 import { UNIQUE_MODULE_TYPES } from "../constants";
 
 /**
@@ -30,15 +31,11 @@ const isUniqueModuleRestricted = (
     state: GameState,
 ): boolean => {
     // Проверка для обычных сканеров и буров (можно иметь только 1)
-    for (const moduleType of UNIQUE_MODULE_TYPES) {
-        if (item.moduleType !== moduleType) continue;
-
-        const hasModule = state.ship.modules.some((m) => m.type === moduleType);
-
-        if (!hasModule) continue;
-    }
-
-    return false;
+    return UNIQUE_MODULE_TYPES.some(
+        (moduleType) =>
+            item.moduleType === moduleType &&
+            state.ship.modules.some((m) => m.type === moduleType),
+    );
 };
 
 /**
@@ -64,13 +61,18 @@ const createModuleFromItem = (
     state: GameState,
     cargoBonus: number,
 ): Module => {
-    return createModuleFromShopItem(item, {
-        x: 0,
-        y: 0,
-        cargoBonus,
-        extraWeaponSlots: getExtraWeaponSlots(state),
-        generateId: () => state.ship.modules.length + 1,
-    });
+    // Date.now() — как во всех остальных путях создания модулей.
+    // ID по количеству модулей давал коллизии после утилизации.
+    return applyTechBonusesToNewModule(
+        createModuleFromShopItem(item, {
+            x: 0,
+            y: 0,
+            cargoBonus,
+            extraWeaponSlots: getExtraWeaponSlots(state),
+            generateId: () => Date.now(),
+        }),
+        state,
+    );
 };
 
 /**
