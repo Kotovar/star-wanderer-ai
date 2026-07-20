@@ -1,4 +1,5 @@
 import type { GameState, GameStore, SetState, StormType } from "@/game/types";
+import { patchLocation } from "@/game/utils/patchLocation";
 import { playSound } from "@/sounds";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { SCIENTIST_STORM_EXP } from "@/game/constants/experience";
@@ -289,14 +290,7 @@ export const handleStormEntry = (set: SetState, get: () => GameStore): void => {
     // Помечаем как пройденный и открываем на карте
     set((s) => ({
         completedLocations: [...s.completedLocations, loc.id],
-        currentSector: s.currentSector
-            ? {
-                  ...s.currentSector,
-                  locations: s.currentSector.locations.map((l) =>
-                      l.id === loc.id ? { ...l, signalRevealed: true } : l,
-                  ),
-              }
-            : s.currentSector,
+        ...patchLocation(s, loc.id, { signalRevealed: true }),
     }));
 
     const stormType: StormType = loc.stormType ?? "radiation";

@@ -6,6 +6,7 @@ import { addTradeGood } from "@/game/slices/ship/helpers";
 import { getBestByProfession } from "@/game/crew";
 import { appendSurfaceLog } from "./sendScoutingMission";
 import { planetHasFeature } from "@/game/planets";
+import { patchLocation } from "@/game/utils/patchLocation";
 
 type ResourceYield = { type: ResearchResourceType; qty: number };
 
@@ -161,30 +162,11 @@ export const atmosphericAnalysis = (
     // Помечаем как проанализированную, продвигаем ход
     set((s) => ({
         turn: s.turn + 1,
-        currentSector: s.currentSector
-            ? {
-                  ...s.currentSector,
-                  locations: s.currentSector.locations.map((l) =>
-                      l.id === planetId
-                          ? {
-                                ...l,
-                                atmosphereAnalyzed: true,
-                                lastAtmosphericResult: atmoResult,
-                                surfaceLog: appendSurfaceLog(l.surfaceLog, logEntry),
-                            }
-                          : l,
-                  ),
-              }
-            : s.currentSector,
-        currentLocation:
-            s.currentLocation?.id === planetId
-                ? {
-                      ...s.currentLocation,
-                      atmosphereAnalyzed: true,
-                      lastAtmosphericResult: atmoResult,
-                      surfaceLog: appendSurfaceLog(s.currentLocation.surfaceLog, logEntry),
-                  }
-                : s.currentLocation,
+        ...patchLocation(s, planetId, (loc) => ({
+            atmosphereAnalyzed: true,
+            lastAtmosphericResult: atmoResult,
+            surfaceLog: appendSurfaceLog(loc.surfaceLog, logEntry),
+        })),
     }));
 
     get().updateShipStats();

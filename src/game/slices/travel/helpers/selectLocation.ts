@@ -3,6 +3,7 @@ import { ARTIFACT_TYPES } from "@/game/constants";
 import { determineSignalOutcome } from "@/game/signals";
 import type { GameStore, Location, SetState } from "@/game/types";
 import { getRaceReputationLevel } from "@/game/reputation/utils";
+import { patchLocation } from "@/game/utils/patchLocation";
 
 // ============================================================================
 // Константы
@@ -26,35 +27,8 @@ const markLocationVisited = (
     set: SetState,
     get: () => GameStore,
 ): void => {
-    const sector = get().currentSector;
-    if (!sector) return;
-
-    set((s) => {
-        const updateLocations = (locations: Location[]) =>
-            locations.map((l) =>
-                l.id === loc.id ? { ...l, visited: true } : l,
-            );
-
-        return {
-            galaxy: {
-                ...s.galaxy,
-                sectors: s.galaxy.sectors.map((sec) =>
-                    sec.id === sector.id
-                        ? {
-                              ...sec,
-                              locations: updateLocations(sec.locations),
-                          }
-                        : sec,
-                ),
-            },
-            currentSector: s.currentSector
-                ? {
-                      ...s.currentSector,
-                      locations: updateLocations(s.currentSector.locations),
-                  }
-                : null,
-        };
-    });
+    if (!get().currentSector) return;
+    set((s) => patchLocation(s, loc.id, { visited: true }));
 };
 
 /**

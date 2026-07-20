@@ -1,6 +1,7 @@
 import type { SetState, GameStore } from "@/game/types";
 import { MODULE_RECIPES } from "@/game/constants/crafting";
 import { addTradeGood } from "@/game/slices/ship/helpers";
+import { patchLocation } from "@/game/utils/patchLocation";
 import { SCOUT_BASE_EXP } from "@/game/constants/experience";
 import type { ModuleRecipeId } from "@/game/types/crafting";
 
@@ -117,28 +118,10 @@ export const exploreDerelictShip = (
             turn: s.turn + 1,
             ship: { ...s.ship, tradeGoods: newTradeGoods },
             moduleRecipes: newModuleRecipes,
-            currentSector: s.currentSector
-                ? {
-                      ...s.currentSector,
-                      locations: s.currentSector.locations.map((loc) =>
-                          loc.id === locationId
-                              ? {
-                                    ...loc,
-                                    derelictExplored: true,
-                                    derelictLoot: lootResult,
-                                }
-                              : loc,
-                      ),
-                  }
-                : null,
-            currentLocation:
-                s.currentLocation?.id === locationId
-                    ? {
-                          ...s.currentLocation,
-                          derelictExplored: true,
-                          derelictLoot: lootResult,
-                      }
-                    : s.currentLocation,
+            ...patchLocation(s, locationId, {
+                derelictExplored: true,
+                derelictLoot: lootResult,
+            }),
         };
     });
 

@@ -2,6 +2,7 @@ import type { SetState, GameStore } from "@/game/types";
 import type { DiveRewards } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES } from "@/game/constants";
 import { addTradeGood } from "@/game/slices/ship/helpers";
+import { patchLocation } from "@/game/utils/patchLocation";
 
 type DiveResourceKey = keyof DiveRewards;
 
@@ -101,14 +102,6 @@ export function surfaceDive(set: SetState, get: () => GameStore): void {
                   )
                 : s.activeContracts;
 
-        // Update location with cooldown
-        const updateLocations = (locs: NonNullable<typeof s.currentSector>["locations"]) =>
-            locs.map((l) =>
-                l.id === locationId
-                    ? { ...l, gasGiantLastDiveAt: s.turn }
-                    : l,
-            );
-
         return {
             activeDive: null,
             turn: s.turn + 1,
@@ -118,24 +111,8 @@ export function surfaceDive(set: SetState, get: () => GameStore): void {
                 ...s.research,
                 resources: newResources,
             },
-            currentSector: s.currentSector
-                ? {
-                      ...s.currentSector,
-                      locations: updateLocations(s.currentSector.locations),
-                  }
-                : null,
-            currentLocation:
-                s.currentLocation?.id === locationId
-                    ? { ...s.currentLocation, gasGiantLastDiveAt: s.turn }
-                    : s.currentLocation,
-            galaxy: {
-                ...s.galaxy,
-                sectors: s.galaxy.sectors.map((sec) =>
-                    sec.id === s.currentSector?.id
-                        ? { ...sec, locations: updateLocations(sec.locations) }
-                        : sec,
-                ),
-            },
+            // Кулдаун погружения на локации
+            ...patchLocation(s, locationId, { gasGiantLastDiveAt: s.turn }),
         };
     });
 

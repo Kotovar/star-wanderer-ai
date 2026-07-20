@@ -1,6 +1,7 @@
 import type { SetState, GameStore } from "@/game/types";
 import { RACES } from "@/game/constants/races";
 import { collectExpeditionRewards } from "./collectExpeditionRewards";
+import { patchLocation } from "@/game/utils/patchLocation";
 import { EXPEDITION_CREW_SCOUT_EXP, EXPEDITION_CREW_OTHER_EXP } from "./constants";
 
 const EXPEDITION_FATIGUE_TURNS = 5;
@@ -61,18 +62,7 @@ export function endExpedition(set: SetState, get: () => GameStore): void {
     set((s) => ({
         turn: s.turn + 1,
         activeExpedition: null,
-        currentSector: s.currentSector
-            ? {
-                  ...s.currentSector,
-                  locations: s.currentSector.locations.map((l) =>
-                      l.id === planetId ? { ...l, expeditionCompleted: true } : l,
-                  ),
-              }
-            : s.currentSector,
-        currentLocation:
-            s.currentLocation?.id === planetId
-                ? { ...s.currentLocation, expeditionCompleted: true }
-                : s.currentLocation,
+        ...patchLocation(s, planetId, { expeditionCompleted: true }),
     }));
 
     get().addLog("🗺️ Экспедиция завершена.", "info");

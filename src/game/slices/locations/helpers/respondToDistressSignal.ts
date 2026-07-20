@@ -6,6 +6,7 @@ import {
     getDeepScanChance,
 } from "@/game/signals";
 import { playSound } from "@/sounds";
+import { patchLocation } from "@/game/utils/patchLocation";
 import { typedKeys } from "@/lib/utils";
 import { store as i18nStore } from "@/lib/useTranslation";
 import type {
@@ -376,34 +377,7 @@ const updateSignalLocation = (
     patch: Partial<Location>,
     set: SetState,
 ): void => {
-    const updatedLocation: Location = {
-        ...loc,
-        ...patch,
-    };
-
-    set((s) => {
-        const updatedSector = s.currentSector
-            ? {
-                  ...s.currentSector,
-                  locations: s.currentSector.locations.map((l) =>
-                      l.id === loc.id ? updatedLocation : l,
-                  ),
-              }
-            : null;
-
-        return {
-            currentLocation: updatedLocation,
-            currentSector: updatedSector,
-            galaxy: {
-                ...s.galaxy,
-                sectors: s.galaxy.sectors.map((sec) =>
-                    sec.id === s.currentSector?.id && updatedSector
-                        ? updatedSector
-                        : sec,
-                ),
-            },
-        };
-    });
+    set((s) => patchLocation(s, loc.id, patch));
 };
 
 const updateLocationState = (
@@ -650,34 +624,7 @@ const updateLocationWithLoot = (
     const loc = get().currentLocation;
     if (!loc) return;
 
-    const updatedLocation = {
-        ...loc,
-        signalLoot: loot,
-    };
-
-    set((s) => {
-        const updatedSector = s.currentSector
-            ? {
-                  ...s.currentSector,
-                  locations: s.currentSector.locations.map((l) =>
-                      l.id === loc.id ? updatedLocation : l,
-                  ),
-              }
-            : null;
-
-        return {
-            currentLocation: updatedLocation,
-            currentSector: updatedSector,
-            galaxy: {
-                ...s.galaxy,
-                sectors: s.galaxy.sectors.map((sec) =>
-                    sec.id === s.currentSector?.id && updatedSector
-                        ? updatedSector
-                        : sec,
-                ),
-            },
-        };
-    });
+    set((s) => patchLocation(s, loc.id, { signalLoot: loot }));
 };
 
 /**

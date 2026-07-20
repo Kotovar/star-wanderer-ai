@@ -1,4 +1,5 @@
 import type { SetState, GameStore } from "@/game/types";
+import { patchLocation } from "@/game/utils/patchLocation";
 import {
     addTradeGood,
     getCargoCapacity,
@@ -137,12 +138,6 @@ export function salvageWreckField(set: SetState, get: () => GameStore): void {
               }))
             : s.crew;
 
-        // — Update location in both currentLocation and sector —
-        const patchLoc = (l: typeof loc) =>
-            l.id === loc.id
-                ? { ...l, wreckPassesDone: newPassesDone, wreckExhausted: nowExhausted, wreckLastPassLoot: lootResult }
-                : l;
-
         return {
             turn: s.turn + 1,
             ship: {
@@ -153,20 +148,11 @@ export function salvageWreckField(set: SetState, get: () => GameStore): void {
             },
             crew: newCrew,
             research: { ...s.research, resources: newResources },
-            currentLocation: s.currentLocation?.id === loc.id
-                ? { ...s.currentLocation, wreckPassesDone: newPassesDone, wreckExhausted: nowExhausted, wreckLastPassLoot: lootResult }
-                : s.currentLocation,
-            currentSector: s.currentSector
-                ? { ...s.currentSector, locations: s.currentSector.locations.map(patchLoc) }
-                : null,
-            galaxy: {
-                ...s.galaxy,
-                sectors: s.galaxy.sectors.map((sec) =>
-                    sec.id === s.currentSector?.id
-                        ? { ...sec, locations: sec.locations.map(patchLoc) }
-                        : sec,
-                ),
-            },
+            ...patchLocation(s, loc.id, {
+                wreckPassesDone: newPassesDone,
+                wreckExhausted: nowExhausted,
+                wreckLastPassLoot: lootResult,
+            }),
         };
     });
 

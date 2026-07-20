@@ -6,6 +6,7 @@ import { addTradeGood } from "@/game/slices/ship/helpers";
 import { ENGINEER_DRILL_EXP } from "@/game/constants/experience";
 import { appendSurfaceLog } from "./sendScoutingMission";
 import { planetHasFeature } from "@/game/planets";
+import { patchLocation } from "@/game/utils/patchLocation";
 
 /** Кол-во проходов бурения (богатые залежи дают +1) */
 export const DRILL_MAX_PASSES = 2;
@@ -242,28 +243,10 @@ export const planetaryDrill = (
     };
     set((s) => ({
         turn: s.turn + 1,
-        currentSector: s.currentSector
-            ? {
-                  ...s.currentSector,
-                  locations: s.currentSector.locations.map((l) =>
-                      l.id === planetId
-                          ? {
-                                ...l,
-                                ...drillPatch,
-                                surfaceLog: appendSurfaceLog(l.surfaceLog, logEntry),
-                            }
-                          : l,
-                  ),
-              }
-            : s.currentSector,
-        currentLocation:
-            s.currentLocation?.id === planetId
-                ? {
-                      ...s.currentLocation,
-                      ...drillPatch,
-                      surfaceLog: appendSurfaceLog(s.currentLocation.surfaceLog, logEntry),
-                  }
-                : s.currentLocation,
+        ...patchLocation(s, planetId, (loc) => ({
+            ...drillPatch,
+            surfaceLog: appendSurfaceLog(loc.surfaceLog, logEntry),
+        })),
     }));
 
     get().updateShipStats();

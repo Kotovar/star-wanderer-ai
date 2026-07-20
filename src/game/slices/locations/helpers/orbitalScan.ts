@@ -1,5 +1,6 @@
 import type { SetState, GameStore } from "@/game/types";
 import { planetHasFeature } from "@/game/planets";
+import { patchLocation } from "@/game/utils/patchLocation";
 
 /**
  * Орбитальное сканирование пустой планеты сканером корабля.
@@ -35,18 +36,7 @@ export const orbitalScan = (
 
     set((s) => ({
         turn: s.turn + 1,
-        currentSector: s.currentSector
-            ? {
-                  ...s.currentSector,
-                  locations: s.currentSector.locations.map((l) =>
-                      l.id === planetId ? { ...l, orbitalScanned: true } : l,
-                  ),
-              }
-            : s.currentSector,
-        currentLocation:
-            s.currentLocation?.id === planetId
-                ? { ...s.currentLocation, orbitalScanned: true }
-                : s.currentLocation,
+        ...patchLocation(s, planetId, { orbitalScanned: true }),
     }));
 
     get().addLog(

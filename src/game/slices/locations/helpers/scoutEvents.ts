@@ -9,6 +9,7 @@ import { RESEARCH_RESOURCES, TRADE_GOODS } from "@/game/constants";
 import { addTradeGood } from "@/game/slices/ship/helpers";
 import { giveRandomMutation, getBestByProfession } from "@/game/crew";
 import { appendSurfaceLog } from "./sendScoutingMission";
+import { patchLocation } from "@/game/utils/patchLocation";
 
 /** Шанс, что разведка обернётся событием вместо обычного результата */
 export const SCOUT_EVENT_CHANCE = 0.12;
@@ -195,32 +196,9 @@ export const resolveScoutEvent = (
     // Записываем в журнал находок планеты и закрываем событие
     set((s) => ({
         pendingScoutEvent: null,
-        currentSector: s.currentSector
-            ? {
-                  ...s.currentSector,
-                  locations: s.currentSector.locations.map((l) =>
-                      l.id === pending.planetId
-                          ? {
-                                ...l,
-                                surfaceLog: appendSurfaceLog(
-                                    l.surfaceLog,
-                                    logEntry,
-                                ),
-                            }
-                          : l,
-                  ),
-              }
-            : s.currentSector,
-        currentLocation:
-            s.currentLocation?.id === pending.planetId
-                ? {
-                      ...s.currentLocation,
-                      surfaceLog: appendSurfaceLog(
-                          s.currentLocation.surfaceLog,
-                          logEntry,
-                      ),
-                  }
-                : s.currentLocation,
+        ...patchLocation(s, pending.planetId, (loc) => ({
+            surfaceLog: appendSurfaceLog(loc.surfaceLog, logEntry),
+        })),
     }));
     get().saveGame();
 };

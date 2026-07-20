@@ -26,6 +26,7 @@ import { getScoutingPlanetResources } from "@/game/research/utils";
 import { typedKeys } from "@/lib";
 import { getBestByProfession } from "@/game/crew";
 import { planetHasFeature } from "@/game/planets";
+import { patchLocation } from "@/game/utils/patchLocation";
 import { SCOUT_EVENTS, SCOUT_EVENT_CHANCE } from "./scoutEvents";
 
 /**
@@ -311,24 +312,15 @@ const updateScoutingState = (
 
     set((s) => ({
         turn: s.turn + 1,
-        currentSector: updateSectorLocations(
-            s.currentSector,
-            planetId,
-            newScoutedTimes,
-            isFullyExplored,
-            scoutResult,
-            pointOfInterest,
-            logEntry,
-        ),
-        currentLocation: updateCurrentLocation(
-            s.currentLocation,
-            planetId,
-            newScoutedTimes,
-            isFullyExplored,
-            scoutResult,
-            pointOfInterest,
-            logEntry,
-        ),
+        ...patchLocation(s, planetId, (loc) => ({
+            scoutedTimes: newScoutedTimes,
+            explored: isFullyExplored,
+            pointOfInterest: pointOfInterest ?? loc.pointOfInterest,
+            lastScoutResult: scoutResult ?? loc.lastScoutResult,
+            surfaceLog: logEntry
+                ? appendSurfaceLog(loc.surfaceLog, logEntry)
+                : loc.surfaceLog,
+        })),
     }));
 };
 
@@ -338,61 +330,3 @@ export const appendSurfaceLog = (
     entry: SurfaceLogEntry,
 ): SurfaceLogEntry[] => [...(log ?? []), entry].slice(-20);
 
-/**
- * Обновляет локации в секторе
- */
-const updateSectorLocations = (
-    sector: GameStore["currentSector"],
-    planetId: string,
-    scoutedTimes: number,
-    explored: boolean,
-    scoutResult: Location["lastScoutResult"] | undefined,
-    pointOfInterest: Location["pointOfInterest"],
-    logEntry: SurfaceLogEntry | undefined,
-): GameStore["currentSector"] => {
-    if (!sector) return null;
-
-    return {
-        ...sector,
-        locations: sector.locations.map((loc) =>
-            loc.id === planetId
-                ? {
-                      ...loc,
-                      scoutedTimes,
-                      explored,
-                      pointOfInterest: pointOfInterest ?? loc.pointOfInterest,
-                      lastScoutResult: scoutResult ?? loc.lastScoutResult,
-                      surfaceLog: logEntry
-                          ? appendSurfaceLog(loc.surfaceLog, logEntry)
-                          : loc.surfaceLog,
-                  }
-                : loc,
-        ),
-    };
-};
-
-/**
- * Обновляет текущую локацию
- */
-const updateCurrentLocation = (
-    location: Location | null,
-    planetId: string,
-    scoutedTimes: number,
-    explored: boolean,
-    scoutResult: Location["lastScoutResult"] | undefined,
-    pointOfInterest: Location["pointOfInterest"],
-    logEntry: SurfaceLogEntry | undefined,
-): GameStore["currentLocation"] => {
-    if (location?.id !== planetId) return location;
-
-    return {
-        ...location,
-        scoutedTimes,
-        explored,
-        pointOfInterest: pointOfInterest ?? location.pointOfInterest,
-        lastScoutResult: scoutResult ?? location.lastScoutResult,
-        surfaceLog: logEntry
-            ? appendSurfaceLog(location.surfaceLog, logEntry)
-            : location.surfaceLog,
-    };
-};

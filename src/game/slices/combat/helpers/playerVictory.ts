@@ -23,11 +23,11 @@ import type {
     GameStore,
     CargoItem,
     BattleResult,
-    Location,
 } from "@/game/types";
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import { completeBattleContracts } from "./completeBattleContracts";
 import { applyCombatTimeCost } from "./combatTime";
+import { patchLocation } from "@/game/utils/patchLocation";
 import { grantTimedEffect } from "@/game/effects/timedEffects";
 import {
     getSpaceMonsterHuntReward,
@@ -213,46 +213,18 @@ export function handleVictory(
     // Mark regular enemy as defeated
     if (!updatedCombat.enemy.isBoss && get().currentLocation) {
         set((s) => {
-            if (!s.currentSector) return;
-            s.currentSector.locations.forEach((loc) => {
-                if (loc.id === get().currentLocation?.id) loc.defeated = true;
-            });
+            if (!s.currentLocation) return {};
+            return patchLocation(s, s.currentLocation.id, { defeated: true });
         });
     }
 
     if (spaceMonsterLocation) {
-        set((s) => {
-            const markResolved = (location: Location): Location =>
-                location.id === spaceMonsterLocation.id
-                    ? {
-                          ...location,
-                          defeated: true,
-                          spaceMonsterResolved: "hunted" as const,
-                      }
-                    : location;
-            const updatedSector = s.currentSector
-                ? {
-                      ...s.currentSector,
-                      locations: s.currentSector.locations.map(markResolved),
-                  }
-                : null;
-
-            return {
-                currentLocation:
-                    s.currentLocation?.id === spaceMonsterLocation.id
-                        ? markResolved(s.currentLocation)
-                        : s.currentLocation,
-                currentSector: updatedSector,
-                galaxy: {
-                    ...s.galaxy,
-                    sectors: s.galaxy.sectors.map((sector) =>
-                        sector.id === s.currentSector?.id && updatedSector
-                            ? updatedSector
-                            : sector,
-                    ),
-                },
-            };
-        });
+        set((s) =>
+            patchLocation(s, spaceMonsterLocation.id, {
+                defeated: true,
+                spaceMonsterResolved: "hunted" as const,
+            }),
+        );
     }
 
     // Complete contracts
