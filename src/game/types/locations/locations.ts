@@ -56,6 +56,16 @@ export const SHIP_LOCATION_TYPES: LocationType[] = [
     "derelict_ship",
 ];
 
+/** Запись журнала находок на поверхности пустой планеты */
+export interface SurfaceLogEntry {
+    source: "scout" | "drill" | "analysis";
+    credits?: number;
+    tradeGood?: { name: string; quantity: number };
+    researchResources?: { type: ResearchResourceType; quantity: number }[];
+    mutationName?: string;
+    enemyThreat?: number;
+}
+
 export interface Location {
     id: string;
     type: LocationType;
@@ -67,8 +77,11 @@ export interface Location {
     planetType?: PlanetType;
     isEmpty?: boolean;
     explored?: boolean; // Fully explored empty planet (after 3 scout missions)
+    orbitalScanned?: boolean; // Orbital scan performed (reveals features and POI)
     pointOfInterest?: PlanetPointOfInterest;
-    planetaryDrilled?: boolean; // Planetary drill has been used on this planet
+    planetaryDrilled?: boolean; // Drill deposits exhausted (legacy: true after single drill)
+    drillsDone?: number; // Number of drill passes performed
+    lastDrillTurn?: number; // Turn of the last drill pass (for cooldown)
     atmosphereAnalyzed?: boolean; // Atmospheric analysis has been performed
     lastDrillResult?: {
         tradeGood?: { name: string; quantity: number };
@@ -87,6 +100,7 @@ export interface Location {
         mutationName?: string; // Mutation received during scouting
         researchResources?: { type: ResearchResourceType; quantity: number }[]; // Research resources found
     }; // Result of the last scouting mission
+    surfaceLog?: SurfaceLogEntry[]; // История находок разведки/бурения/анализа
     contracts?: Contract[];
     scoutingAvailable?: boolean;
     scoutedTimes?: number;

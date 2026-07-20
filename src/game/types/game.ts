@@ -77,6 +77,7 @@ export interface GameState {
   pendingTravelEvent: PendingTravelEvent | null;
   pendingRandomEvent: PendingRandomEvent | null;
   scheduledRandomEventConsequence: ScheduledRandomEventConsequence | null;
+  pendingScoutEvent: { planetId: string; eventId: string } | null; // Ожидающее событие разведки пустой планеты
   ship: {
     armor: number;
     shields: number;
@@ -295,6 +296,8 @@ export interface GameScouting {
   sendScoutingMission: (planetId: string) => void;
   planetaryDrill: (planetId: string) => void;
   atmosphericAnalysis: (planetId: string) => void;
+  orbitalScan: (planetId: string) => void;
+  resolveScoutEvent: (choiceIndex: number) => void;
   exploreDerelictShip: (locationId: string) => void;
   startExpedition: (planetId: string, crewIds: number[]) => void;
   revealExpeditionTile: (tileIndex: number) => void;

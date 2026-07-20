@@ -65,56 +65,6 @@ export const PLANET_DESCRIPTIONS: Record<PlanetType, string> = {
         "Мир с мощной приливной активностью. Геотермальная энергия доступна, но поверхность нестабильна.",
 };
 
-export const PLANET_COLORS: Record<
-    PlanetType,
-    { primary: string; secondary: string; accent?: string }
-> = {
-    Пустынная: { primary: "#c97f3f", secondary: "#8b5a2b", accent: "#e6a85c" },
-    Ледяная: { primary: "#5a9fd4", secondary: "#2d5a87", accent: "#a8d4f0" },
-    Лесная: { primary: "#3d8b3d", secondary: "#1a4a2a", accent: "#5cb85c" },
-    Вулканическая: {
-        primary: "#8b3a3a",
-        secondary: "#4a1a1a",
-        accent: "#ff6b35",
-    },
-    Океаническая: {
-        primary: "#2d6a87",
-        secondary: "#1a3a5a",
-        accent: "#4a9fd4",
-    },
-    Кристаллическая: {
-        primary: "#6b5cff",
-        secondary: "#2b1f6b",
-        accent: "#9ef7ff",
-    },
-    Радиоактивная: {
-        primary: "#4a8a3a",
-        secondary: "#2a4a1a",
-        accent: "#7fff00",
-    },
-    Тропическая: {
-        primary: "#2d8a5a",
-        secondary: "#1a5a3a",
-        accent: "#5cd48a",
-    },
-    Арктическая: {
-        primary: "#4a7a9a",
-        secondary: "#2a4a5a",
-        accent: "#8ab8d4",
-    },
-    "Разрушенная войной": {
-        primary: "#4a3a3a",
-        secondary: "#2a1a1a",
-        accent: "#ff4444",
-    },
-    "Планета-кольцо": {
-        primary: "#3a4a7a",
-        secondary: "#1a2a4a",
-        accent: "#8a9aba",
-    },
-    Приливная: { primary: "#2d5a8a", secondary: "#1a3a5a", accent: "#5a9fd4" },
-};
-
 export const PLANET_COLORS_IN_SECTOR: Record<
     PlanetType,
     { base: string; atmosphere: string; rings?: string }

@@ -4,6 +4,7 @@ import type {
     Location,
     ScoutingOutcome,
     ResearchResourceType,
+    SurfaceLogEntry,
 } from "@/game/types";
 import {
     MUTATION_CHANCES,
@@ -24,6 +25,8 @@ import { giveRandomMutation } from "@/game/crew";
 import { getScoutingPlanetResources } from "@/game/research/utils";
 import { typedKeys } from "@/lib";
 import { getBestByProfession } from "@/game/crew";
+import { planetHasFeature } from "@/game/planets";
+import { SCOUT_EVENTS, SCOUT_EVENT_CHANCE } from "./scoutEvents";
 
 /**
  * Отправляет разведчика на исследование планеты
@@ -49,47 +52,74 @@ export const sendScoutingMission = (
         (c.level ?? 1) > (best.level ?? 1) ? c : best,
     );
 
-    // Instant scouting - resolve immediately (takes 1 turn)
-    const outcome = Math.random();
-    const result = determineScoutingOutcome(
-        outcome,
-        state.currentSector?.tier ?? 1,
-    );
+    // Особенности планеты влияют на риск и щедрость разведки
+    const hasAggressiveFauna = planetHasFeature(planetId, "aggressive_fauna");
+    const hasAncientTraces = planetHasFeature(planetId, "ancient_traces");
 
-    // Pre-compute trade good quantity so it's available for both apply and lastScoutResult
-    if (result.type === "tradeGood") {
-        result.quantity =
-            Math.floor(
-                Math.random() *
-                    (SCOUTING_TRADE_GOOD_BASE_MAX - SCOUTING_TRADE_GOOD_BASE_MIN + 1),
-            ) +
-            SCOUTING_TRADE_GOOD_BASE_MIN +
-            (scout.level ?? 1);
+    // Шанс события вместо обычного результата разведки
+    const eventTriggered = Math.random() < SCOUT_EVENT_CHANCE;
+    let result: ScoutingOutcome | null = null;
+
+    if (!eventTriggered) {
+        // Instant scouting - resolve immediately (takes 1 turn)
+        const outcome = Math.random();
+        result = determineScoutingOutcome(
+            outcome,
+            state.currentSector?.tier ?? 1,
+        );
+
+        // Pre-compute trade good quantity so it's available for both apply and lastScoutResult
+        if (result.type === "tradeGood") {
+            result.quantity =
+                Math.floor(
+                    Math.random() *
+                        (SCOUTING_TRADE_GOOD_BASE_MAX - SCOUTING_TRADE_GOOD_BASE_MIN + 1),
+                ) +
+                SCOUTING_TRADE_GOOD_BASE_MIN +
+                (scout.level ?? 1);
+        }
+
+        // Агрессивная фауна: находки богаче в полтора раза
+        if (hasAggressiveFauna) {
+            if (result.type === "credits" && result.value) {
+                result.value = Math.round(result.value * 1.5);
+            }
+            if (result.type === "tradeGood" && result.quantity) {
+                result.quantity = Math.round(result.quantity * 1.5);
+            }
+        }
+
+        // Apply scouting result
+        applyScoutingResult(result, set, get);
+
+        // Small chance to find research resources
+        // (следы древних удваивают шанс — вторая попытка при неудаче)
+        let foundResources = applyScoutingResources(set, get);
+        if (foundResources.length === 0 && hasAncientTraces) {
+            foundResources = applyScoutingResources(set, get);
+        }
+        if (foundResources.length > 0) {
+            result.researchResources = foundResources;
+        }
+
+        // Шанс заражения чужеродными организмами при разведке
+        // (агрессивная фауна удваивает риск)
+        const infectionChance =
+            MUTATION_CHANCES.SCOUT_INFECTION * (hasAggressiveFauna ? 2 : 1);
+        if (Math.random() < infectionChance) {
+            const mutationName = giveRandomMutation(scout, set);
+            if (mutationName) {
+                result.mutationName = mutationName;
+                get().addLog(
+                    `☣️ ${scout.name} заразился чужеродными организмами при разведке: ${mutationName}!`,
+                    "error",
+                );
+            }
+        }
     }
 
     // Give experience to scout
     get().gainExp(scout, SCOUT_BASE_EXP);
-
-    // Apply scouting result
-    applyScoutingResult(result, set, get);
-
-    // Small chance to find research resources
-    const foundResources = applyScoutingResources(set, get);
-    if (foundResources.length > 0) {
-        result.researchResources = foundResources;
-    }
-
-    // Шанс заражения чужеродными организмами при разведке
-    if (Math.random() < MUTATION_CHANCES.SCOUT_INFECTION) {
-        const mutationName = giveRandomMutation(scout, set);
-        if (mutationName) {
-            result.mutationName = mutationName;
-            get().addLog(
-                `☣️ ${scout.name} заразился чужеродными организмами при разведке: ${mutationName}!`,
-                "error",
-            );
-        }
-    }
 
     // Update exploration progress (optical_implant augmentation gives +1 attempt)
     const newScoutedTimes = getScoutedTimes(state, planetId) + 1;
@@ -116,6 +146,14 @@ export const sendScoutingMission = (
         pointOfInterest,
         set,
     );
+
+    // Событие: показать игроку выбор (результат применится в resolveScoutEvent)
+    if (eventTriggered) {
+        const event =
+            SCOUT_EVENTS[Math.floor(Math.random() * SCOUT_EVENTS.length)];
+        set({ pendingScoutEvent: { planetId, eventId: event.id } });
+        get().addLog("🔦 Разведчик обнаружил нечто необычное...", "info");
+    }
 
     get().addLog(
         `Разведка завершена: ${newScoutedTimes}/${maxScoutAttempts}`,
@@ -252,11 +290,24 @@ const updateScoutingState = (
     planetId: string,
     newScoutedTimes: number,
     isFullyExplored: boolean,
-    result: ScoutingOutcome,
+    result: ScoutingOutcome | null,
     pointOfInterest: Location["pointOfInterest"],
     set: SetState,
 ): void => {
-    const scoutResult = createScoutResult(result);
+    const scoutResult = result ? createScoutResult(result) : undefined;
+    const logEntry: SurfaceLogEntry | undefined = scoutResult && {
+        source: "scout",
+        credits: scoutResult.value,
+        tradeGood:
+            scoutResult.itemName !== undefined
+                ? {
+                      name: scoutResult.itemName,
+                      quantity: scoutResult.quantity ?? 1,
+                  }
+                : undefined,
+        researchResources: scoutResult.researchResources,
+        mutationName: scoutResult.mutationName,
+    };
 
     set((s) => ({
         turn: s.turn + 1,
@@ -267,6 +318,7 @@ const updateScoutingState = (
             isFullyExplored,
             scoutResult,
             pointOfInterest,
+            logEntry,
         ),
         currentLocation: updateCurrentLocation(
             s.currentLocation,
@@ -275,9 +327,16 @@ const updateScoutingState = (
             isFullyExplored,
             scoutResult,
             pointOfInterest,
+            logEntry,
         ),
     }));
 };
+
+/** Добавляет запись в журнал находок локации (хранится последние 20) */
+export const appendSurfaceLog = (
+    log: SurfaceLogEntry[] | undefined,
+    entry: SurfaceLogEntry,
+): SurfaceLogEntry[] => [...(log ?? []), entry].slice(-20);
 
 /**
  * Обновляет локации в секторе
@@ -287,8 +346,9 @@ const updateSectorLocations = (
     planetId: string,
     scoutedTimes: number,
     explored: boolean,
-    scoutResult: NonNullable<Location["lastScoutResult"]>,
+    scoutResult: Location["lastScoutResult"] | undefined,
     pointOfInterest: Location["pointOfInterest"],
+    logEntry: SurfaceLogEntry | undefined,
 ): GameStore["currentSector"] => {
     if (!sector) return null;
 
@@ -301,7 +361,10 @@ const updateSectorLocations = (
                       scoutedTimes,
                       explored,
                       pointOfInterest: pointOfInterest ?? loc.pointOfInterest,
-                      lastScoutResult: scoutResult,
+                      lastScoutResult: scoutResult ?? loc.lastScoutResult,
+                      surfaceLog: logEntry
+                          ? appendSurfaceLog(loc.surfaceLog, logEntry)
+                          : loc.surfaceLog,
                   }
                 : loc,
         ),
@@ -316,8 +379,9 @@ const updateCurrentLocation = (
     planetId: string,
     scoutedTimes: number,
     explored: boolean,
-    scoutResult: NonNullable<Location["lastScoutResult"]>,
+    scoutResult: Location["lastScoutResult"] | undefined,
     pointOfInterest: Location["pointOfInterest"],
+    logEntry: SurfaceLogEntry | undefined,
 ): GameStore["currentLocation"] => {
     if (location?.id !== planetId) return location;
 
@@ -326,6 +390,9 @@ const updateCurrentLocation = (
         scoutedTimes,
         explored,
         pointOfInterest: pointOfInterest ?? location.pointOfInterest,
-        lastScoutResult: scoutResult,
+        lastScoutResult: scoutResult ?? location.lastScoutResult,
+        surfaceLog: logEntry
+            ? appendSurfaceLog(location.surfaceLog, logEntry)
+            : location.surfaceLog,
     };
 };

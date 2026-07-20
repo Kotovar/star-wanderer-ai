@@ -71,6 +71,7 @@ export const createGameManagementSlice = (
         saved.startModifierIds ??= [];
         saved.emergencyFuelStationIds ??= [];
         saved.knownTradeStations ??= [];
+        saved.pendingScoutEvent ??= null;
 
         // Синхронизация трейтов экипажа
         const allTraits = Object.values(CREW_TRAITS).flat();
@@ -127,6 +128,7 @@ export const createGameManagementSlice = (
         saved.startModifierIds ??= [];
         saved.emergencyFuelStationIds ??= [];
         saved.knownTradeStations ??= [];
+        saved.pendingScoutEvent ??= null;
 
         // Синхронизация трейтов
         const allTraits = Object.values(CREW_TRAITS).flat();

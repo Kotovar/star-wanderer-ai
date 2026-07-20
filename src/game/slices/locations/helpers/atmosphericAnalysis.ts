@@ -4,6 +4,8 @@ import { RESEARCH_RESOURCES } from "@/game/constants";
 import { SCIENTIST_ATMOSPHERE_EXP } from "@/game/constants/experience";
 import { addTradeGood } from "@/game/slices/ship/helpers";
 import { getBestByProfession } from "@/game/crew";
+import { appendSurfaceLog } from "./sendScoutingMission";
+import { planetHasFeature } from "@/game/planets";
 
 type ResourceYield = { type: ResearchResourceType; qty: number };
 
@@ -98,6 +100,11 @@ export const atmosphericAnalysis = (
 
     const resources = getAtmosphereResources(planet?.planetType);
 
+    // Плотная ионосфера насыщена частицами: +1 к каждому ресурсу
+    if (planetHasFeature(planetId, "dense_ionosphere")) {
+        for (const res of resources) res.qty += 1;
+    }
+
     // Применяем ресурсы: rare_minerals → трюм (торговый ресурс), остальные → исследования
     const cargoCapacity = get().getCargoCapacity();
 
@@ -146,6 +153,11 @@ export const atmosphericAnalysis = (
         })),
     };
 
+    const logEntry = {
+        source: "analysis" as const,
+        researchResources: atmoResult.researchResources,
+    };
+
     // Помечаем как проанализированную, продвигаем ход
     set((s) => ({
         turn: s.turn + 1,
@@ -154,14 +166,24 @@ export const atmosphericAnalysis = (
                   ...s.currentSector,
                   locations: s.currentSector.locations.map((l) =>
                       l.id === planetId
-                          ? { ...l, atmosphereAnalyzed: true, lastAtmosphericResult: atmoResult }
+                          ? {
+                                ...l,
+                                atmosphereAnalyzed: true,
+                                lastAtmosphericResult: atmoResult,
+                                surfaceLog: appendSurfaceLog(l.surfaceLog, logEntry),
+                            }
                           : l,
                   ),
               }
             : s.currentSector,
         currentLocation:
             s.currentLocation?.id === planetId
-                ? { ...s.currentLocation, atmosphereAnalyzed: true, lastAtmosphericResult: atmoResult }
+                ? {
+                      ...s.currentLocation,
+                      atmosphereAnalyzed: true,
+                      lastAtmosphericResult: atmoResult,
+                      surfaceLog: appendSurfaceLog(s.currentLocation.surfaceLog, logEntry),
+                  }
                 : s.currentLocation,
     }));
 

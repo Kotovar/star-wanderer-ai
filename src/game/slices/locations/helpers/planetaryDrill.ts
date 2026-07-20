@@ -4,6 +4,23 @@ import type { Goods } from "@/game/types/goods";
 import { RESEARCH_RESOURCES, TRADE_GOODS } from "@/game/constants";
 import { addTradeGood } from "@/game/slices/ship/helpers";
 import { ENGINEER_DRILL_EXP } from "@/game/constants/experience";
+import { appendSurfaceLog } from "./sendScoutingMission";
+import { planetHasFeature } from "@/game/planets";
+
+/** Кол-во проходов бурения (богатые залежи дают +1) */
+export const DRILL_MAX_PASSES = 2;
+/** Ходов между проходами бурения */
+export const DRILL_COOLDOWN_TURNS = 6;
+/** Множитель добычи на каждый следующий проход */
+const PASS_YIELD_MULTIPLIERS = [1, 0.6, 0.4];
+
+export const getDrillMaxPasses = (planetId: string): number =>
+    DRILL_MAX_PASSES + (planetHasFeature(planetId, "rich_deposits") ? 1 : 0);
+
+export const getDrillsDone = (planet: {
+    drillsDone?: number;
+    planetaryDrilled?: boolean;
+}): number => planet.drillsDone ?? (planet.planetaryDrilled ? 1 : 0);
 
 interface DrillYield {
     tradeGood?: { id: Goods; qty: number };
@@ -120,15 +137,42 @@ export const planetaryDrill = (
         return;
     }
 
-    // Проверка уже пробурено
+    // Проверка проходов и кулдауна
     const planet = state.currentSector?.locations.find((l) => l.id === planetId);
-    if (planet?.planetaryDrilled) {
-        get().addLog("Эта планета уже была пробурена.", "error");
+    if (!planet) return;
+    const drillsDone = getDrillsDone(planet);
+    const maxPasses = getDrillMaxPasses(planetId);
+    if (drillsDone >= maxPasses) {
+        get().addLog("Залежи этой планеты истощены.", "error");
+        return;
+    }
+    if (
+        planet.lastDrillTurn !== undefined &&
+        state.turn - planet.lastDrillTurn < DRILL_COOLDOWN_TURNS
+    ) {
+        get().addLog(
+            `Бур остывает: следующий проход через ${DRILL_COOLDOWN_TURNS - (state.turn - planet.lastDrillTurn)} ход(ов).`,
+            "warning",
+        );
         return;
     }
 
     const planetType = planet?.planetType;
     const yields = getDrillYield(planetType);
+
+    // Каждый следующий проход беднее; богатые залежи удваивают добычу
+    const passMultiplier =
+        (PASS_YIELD_MULTIPLIERS[drillsDone] ?? 0.4) *
+        (planetHasFeature(planetId, "rich_deposits") ? 2 : 1);
+    if (yields.tradeGood) {
+        yields.tradeGood.qty = Math.max(
+            1,
+            Math.round(yields.tradeGood.qty * passMultiplier),
+        );
+    }
+    for (const res of yields.researchResources) {
+        res.qty = Math.max(1, Math.round(res.qty * passMultiplier));
+    }
 
     // Применяем торговый товар
     if (yields.tradeGood) {
@@ -181,7 +225,21 @@ export const planetaryDrill = (
         })),
     };
 
-    // Помечаем планету как пробурённую, продвигаем ход
+    const logEntry = {
+        source: "drill" as const,
+        tradeGood: drillResult.tradeGood,
+        researchResources: drillResult.researchResources,
+    };
+
+    // Засчитываем проход бурения, продвигаем ход
+    const newDrillsDone = drillsDone + 1;
+    const exhausted = newDrillsDone >= maxPasses;
+    const drillPatch = {
+        planetaryDrilled: exhausted, // legacy-флаг: залежи истощены
+        drillsDone: newDrillsDone,
+        lastDrillTurn: state.turn,
+        lastDrillResult: drillResult,
+    };
     set((s) => ({
         turn: s.turn + 1,
         currentSector: s.currentSector
@@ -189,14 +247,22 @@ export const planetaryDrill = (
                   ...s.currentSector,
                   locations: s.currentSector.locations.map((l) =>
                       l.id === planetId
-                          ? { ...l, planetaryDrilled: true, lastDrillResult: drillResult }
+                          ? {
+                                ...l,
+                                ...drillPatch,
+                                surfaceLog: appendSurfaceLog(l.surfaceLog, logEntry),
+                            }
                           : l,
                   ),
               }
             : s.currentSector,
         currentLocation:
             s.currentLocation?.id === planetId
-                ? { ...s.currentLocation, planetaryDrilled: true, lastDrillResult: drillResult }
+                ? {
+                      ...s.currentLocation,
+                      ...drillPatch,
+                      surfaceLog: appendSurfaceLog(s.currentLocation.surfaceLog, logEntry),
+                  }
                 : s.currentLocation,
     }));
 

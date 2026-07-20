@@ -148,6 +148,7 @@ const baseState: GameState = {
   previousGameMode: null,
   traveling: null,
   pendingTravelEvent: null,
+  pendingScoutEvent: null,
   pendingRandomEvent: null,
   scheduledRandomEventConsequence: null,
   ship: {

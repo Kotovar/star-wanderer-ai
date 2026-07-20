@@ -19,6 +19,8 @@ import {
 } from "./helpers";
 import { planetaryDrill as planetaryDrillHelper } from "./helpers";
 import { atmosphericAnalysis as atmosphericAnalysisHelper } from "./helpers";
+import { orbitalScan as orbitalScanHelper } from "./helpers";
+import { resolveScoutEvent as resolveScoutEventHelper } from "./helpers";
 import { exploreDerelictShip as exploreDerelictShipHelper } from "./helpers";
 import {
     startExpedition as startExpeditionHelper,
@@ -89,6 +91,12 @@ export interface LocationsSlice {
      * @param planetId - ID планеты
      */
     atmosphericAnalysis: (planetId: string) => void;
+
+    /** Орбитальное сканирование пустой планеты сканером корабля */
+    orbitalScan: (planetId: string) => void;
+
+    /** Обрабатывает выбор игрока в событии разведки пустой планеты */
+    resolveScoutEvent: (choiceIndex: number) => void;
 
     /**
      * Исследует покинутый корабль разведчиком
@@ -196,6 +204,14 @@ export const createLocationsSlice = (
 
     atmosphericAnalysis: (planetId) => {
         atmosphericAnalysisHelper(planetId, set, get);
+    },
+
+    orbitalScan: (planetId) => {
+        orbitalScanHelper(planetId, set, get);
+    },
+
+    resolveScoutEvent: (choiceIndex) => {
+        resolveScoutEventHelper(choiceIndex, set, get);
     },
 
     exploreDerelictShip: (locationId) => {
