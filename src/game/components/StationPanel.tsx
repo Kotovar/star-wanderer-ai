@@ -299,15 +299,9 @@ export function StationPanel() {
                         sectorTier={sectorTier}
                         race={race}
                         raceReputation={raceReputation}
+                        onLeave={showSectorMap}
                         t={t}
                     />
-
-                    <Button
-                        onClick={showSectorMap}
-                        className="w-fit cursor-pointer border-2 border-accent bg-transparent uppercase tracking-wider text-accent hover:bg-accent hover:text-[#050810] text-xs sm:text-sm py-1 sm:py-2"
-                    >
-                        {t("station.leave")}
-                    </Button>
                 </div>
             </section>
 
@@ -717,12 +711,14 @@ function StationHeader({
     sectorTier,
     race,
     raceReputation,
+    onLeave,
     t,
 }: {
     location: { name: string; stationType?: string; dominantRace?: RaceId };
     sectorTier: number;
     race: (typeof RACES)[keyof typeof RACES] | null;
     raceReputation: Record<RaceId, number> | undefined;
+    onLeave: () => void;
     t: (key: string, params?: Record<string, string | number>) => string;
 }) {
     // Station type is already a translation key (trade, military, mining, research)
@@ -762,30 +758,42 @@ function StationHeader({
 
     return (
         <>
-            <div className="font-['Orbitron'] font-bold text-sm sm:text-lg text-accent">
-                {t("station_upgrades.title", {
-                    name: getStationName(location.name),
-                    type: stationTypeKey
-                        ? t(`station_upgrades.station_types.${stationTypeKey}`)
-                        : t("events.station"),
-                })}
-            </div>
-            <div className="text-xs text-[#888]">
-                {t("station.sector_tier").replace(
-                    "{{tier}}",
-                    String(sectorTier),
-                )}
+            <div className="flex items-start justify-between gap-2">
+                <div>
+                    <div className="font-['Orbitron'] font-bold text-sm sm:text-lg text-accent">
+                        {t("station_upgrades.title", {
+                            name: getStationName(location.name),
+                            type: stationTypeKey
+                                ? t(
+                                      `station_upgrades.station_types.${stationTypeKey}`,
+                                  )
+                                : t("events.station"),
+                        })}
+                    </div>
+                    <div className="text-xs text-[#888]">
+                        {t("station.sector_tier").replace(
+                            "{{tier}}",
+                            String(sectorTier),
+                        )}
+                    </div>
+                </div>
+                <Button
+                    onClick={onLeave}
+                    className="h-auto shrink-0 cursor-pointer border-2 border-accent bg-transparent px-2 py-1 text-[10px] uppercase tracking-wider text-accent hover:bg-accent hover:text-[#050810] sm:px-4 sm:py-2 sm:text-sm"
+                >
+                    {t("station.leave")}
+                </Button>
             </div>
 
             {race && (
                 <div
-                    className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm"
+                    className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm"
                     style={{
                         borderColor: race.color,
                     }}
                 >
                     <div
-                        className="flex items-center gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded border"
+                        className="flex items-center gap-1.5 px-1.5 py-0.5 sm:gap-2 sm:px-3 sm:py-1.5 rounded border"
                         style={{
                             borderColor: race.color,
                             backgroundColor: `${race.color}15`,
@@ -793,7 +801,7 @@ function StationHeader({
                     >
                         <RaceSprite
                             race={dominantRace ?? "human"}
-                            size={40}
+                            size={28}
                             title={t(`race_names.${dominantRace}`)}
                         />
                         <div>
@@ -815,7 +823,7 @@ function StationHeader({
                                     </span>
                                 )}
                             </div>
-                            <div className="text-xs text-gray-400">
+                            <div className="hidden sm:block text-xs text-gray-400">
                                 {t("station_upgrades.dominant_race")}
                             </div>
                         </div>

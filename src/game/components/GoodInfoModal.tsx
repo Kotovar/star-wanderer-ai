@@ -48,7 +48,8 @@ export function GoodInfoModal({ goodId, onClose }: GoodInfoModalProps) {
                 if (
                     loc.type !== "station" ||
                     !loc.stationId ||
-                    !known.has(loc.stationId)
+                    !known.has(loc.stationId) ||
+                    !(loc.stationConfig?.allowsTrade ?? true)
                 ) {
                     continue;
                 }

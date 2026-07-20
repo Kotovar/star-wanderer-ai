@@ -59,7 +59,7 @@ export function TechnologyDiscoveryModal() {
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md w-[calc(100%-2rem)] md:w-auto">
+            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md w-[calc(100%-2rem)] md:w-auto max-h-[85dvh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="text-[#ffb000] font-['Orbitron']">
                         {t("technology_discovery.title")}

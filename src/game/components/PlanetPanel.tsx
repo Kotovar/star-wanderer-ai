@@ -527,7 +527,7 @@ export function PlanetPanel() {
                 }}
             >
                 <section
-                    className="relative min-h-52 overflow-hidden border-b"
+                    className="relative min-h-0 sm:min-h-52 overflow-hidden border-b"
                     style={{ borderColor: raceBorder }}
                 >
                     {raceBackground && (
@@ -555,7 +555,7 @@ export function PlanetPanel() {
                                 "linear-gradient(0deg, rgba(5,8,16,0.92) 0%, rgba(5,8,16,0) 100%)",
                         }}
                     />
-                    <div className="relative z-10 flex min-h-52 flex-col justify-between gap-5 p-4 sm:p-5">
+                    <div className="relative z-10 flex min-h-0 sm:min-h-52 flex-col justify-between gap-2 sm:gap-5 p-3 sm:p-5">
                         <div className="max-w-2xl">
                             <div
                                 className="font-['Orbitron'] font-bold text-lg sm:text-xl"
@@ -579,10 +579,10 @@ export function PlanetPanel() {
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap items-end gap-2 text-sm">
+                        <div className="flex flex-wrap items-end gap-1.5 sm:gap-2 text-xs sm:text-sm">
                             {race && (
                                 <div
-                                    className="flex max-w-xl items-center gap-2 border px-3 py-2 backdrop-blur-sm"
+                                    className="flex max-w-xl items-center gap-1.5 sm:gap-2 border px-2 py-1 sm:px-3 sm:py-2 backdrop-blur-sm"
                                     style={{
                                         borderColor: race.color,
                                         backgroundColor: `${race.color}20`,
@@ -590,7 +590,7 @@ export function PlanetPanel() {
                                 >
                                     <RaceSprite
                                         race={dominantRace ?? "human"}
-                                        size={44}
+                                        size={32}
                                         title={t(`races.${dominantRace}.plural`)}
                                     />
                                     <div>

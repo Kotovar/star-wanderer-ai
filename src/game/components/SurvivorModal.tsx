@@ -24,7 +24,7 @@ export function SurvivorModal() {
 
     return (
         <Dialog open onOpenChange={(open) => !open && declineSurvivor()}>
-            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-sm w-[calc(100%-2rem)] md:w-auto">
+            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-sm w-[calc(100%-2rem)] md:w-auto max-h-[85dvh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="text-[#00ff41] font-['Orbitron']">
                         {t("survivor_modal.title")}
