@@ -87,7 +87,7 @@ export const createGameLoopSlice = (
         // Управление энергией
         managePower(get, set);
 
-        // Регенерация щитов
+        // Регенерация щитов (штраф от опасной звезды учитывается внутри)
         regenerateShields(state, get, set);
 
         // Ремонт нанитами (automated_repair / nanite_hull)

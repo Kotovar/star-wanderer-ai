@@ -18,3 +18,4 @@ export * from "./fuel";
 export * from "./experience";
 export * from "./mutationChances";
 export * from "./spaceMonsters";
+export * from "./starHazards";

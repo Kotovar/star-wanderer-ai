@@ -6,6 +6,10 @@ import { useTranslation } from "@/lib/useTranslation";
 import { getLocationName } from "@/lib/translationHelpers";
 import { RACES } from "@/game/constants/races";
 import { SPACE_MONSTERS } from "@/game/constants/spaceMonsters";
+import {
+  STAR_HAZARD_LEVEL,
+  STAR_SHIELD_REGEN_PENALTY_THRESHOLD,
+} from "@/game/constants/starHazards";
 import { getScannerRangeLabel } from "./DistressSignalPanel";
 import { STAR_SPRITE_SHEET } from "@/game/assets/starSprites";
 import type { Location, LocationType, StarType } from "@/game/types";
@@ -1470,6 +1474,13 @@ export function SectorMap() {
             <div className="px-4 py-3 text-xs text-[#99a] leading-relaxed border-b border-[#111a22]">
               {t(`star_info.${currentSector.star.type}.desc`)}
             </div>
+
+            {STAR_HAZARD_LEVEL[currentSector.star.type] >=
+              STAR_SHIELD_REGEN_PENALTY_THRESHOLD && (
+              <div className="px-4 py-2 text-[10px] leading-relaxed text-[#ff667f] bg-[rgba(255,0,64,0.06)]">
+                ☢️ {t("star_info.shield_drain_warning")}
+              </div>
+            )}
           </div>
         </div>
       )}

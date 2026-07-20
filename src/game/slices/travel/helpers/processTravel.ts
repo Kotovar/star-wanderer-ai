@@ -1,5 +1,12 @@
-import type { GameState, GameStore, SetState, TravelEventType } from "@/game/types";
-import { CONTRACT_REWARDS, MUTATION_CHANCES, RESEARCH_RESOURCES } from "@/game/constants";
+import type { GameState, GameStore, Sector, SetState, TravelEventType } from "@/game/types";
+import {
+    CONTRACT_REWARDS,
+    MUTATION_CHANCES,
+    RESEARCH_RESOURCES,
+    STAR_EVENT_CHANCE_CAP,
+    STAR_EVENT_CHANCE_PER_LEVEL,
+    STAR_HAZARD_LEVEL,
+} from "@/game/constants";
 import { TRADE_GOODS } from "@/game/constants/goods";
 import {
     getPilotInCockpit,
@@ -26,6 +33,9 @@ const TRAVEL_EVENTS: TravelEventType[] = [
     "signal",
     "emp",
 ];
+
+/** Опасные звёзды перевешивают выбор в сторону этих событий */
+const HAZARDOUS_TRAVEL_EVENTS: TravelEventType[] = ["emp", "anomaly"];
 
 /** Минимальное здоровье модуля после повреждения */
 const MIN_MODULE_HEALTH = 10;
@@ -67,6 +77,38 @@ const TRADER_PRICE_MULTIPLIER = 1.2;
  */
 const randomElement = <T>(arr: readonly T[]): T =>
     arr[Math.floor(Math.random() * arr.length)];
+
+/**
+ * Опасность звезды сектора назначения (0, если сектор/звезда неизвестны)
+ */
+const getDestinationHazardLevel = (destination: Sector | undefined): number =>
+    destination ? STAR_HAZARD_LEVEL[destination.star.type] : 0;
+
+/**
+ * Шанс случайного события в пути, увеличенный опасностью звезды назначения
+ */
+const getTravelEventChance = (
+    baseChance: number,
+    hazardLevel: number,
+): number =>
+    Math.min(
+        STAR_EVENT_CHANCE_CAP,
+        baseChance * (1 + hazardLevel * STAR_EVENT_CHANCE_PER_LEVEL),
+    );
+
+/**
+ * Выбирает случайное событие в пути; у опасных звёзд выше шанс EMP/аномалии
+ */
+const pickTravelEvent = (hazardLevel: number): TravelEventType => {
+    if (hazardLevel < 2) return randomElement(TRAVEL_EVENTS);
+    const weighted = [
+        ...TRAVEL_EVENTS,
+        ...HAZARDOUS_TRAVEL_EVENTS.flatMap((event) =>
+            Array(hazardLevel).fill(event),
+        ),
+    ];
+    return randomElement(weighted);
+};
 
 /**
  * Обрабатывает повреждение модуля от астероидов
@@ -650,12 +692,16 @@ export const processTravel = (
 
     // Случайные события проверяются до уменьшения turnsLeft, чтобы они могли
     // появляться даже на перелётах длиной в 1 ход.
-    const eventChance =
+    // Опасная звезда назначения повышает шанс события и перевешивает выбор
+    // в сторону EMP/аномалии (см. star_info.<type>.hazard во флейвор-тексте).
+    const hazardLevel = getDestinationHazardLevel(traveling.destination);
+    const baseEventChance =
         traveling.route === "detour"
             ? TRAVEL_EVENT_CHANCE_DETOUR
             : TRAVEL_EVENT_CHANCE_DIRECT;
+    const eventChance = getTravelEventChance(baseEventChance, hazardLevel);
     if (Math.random() < eventChance) {
-        const event = randomElement(TRAVEL_EVENTS);
+        const event = pickTravelEvent(hazardLevel);
         set({ pendingTravelEvent: { type: event } });
         get().addLog(
             "Обнаружено событие в пути. Требуется решение капитана.",

@@ -214,29 +214,33 @@ function rollCrit(state: GameState, get: () => GameStore): CritResult {
     critMultiplier += getArtifactEffectValue(overloadMatrix, state);
   }
 
-  // critBonus от трейта: только стрелок в оружейном отсеке
+  // critBonus от трейта/аугментации: только один стрелок в оружейном отсеке
+  // (как и бонус за уровень стрелка к точности) — иначе бонус утраивался
+  // с каждым дополнительным стрелком и обесценивал артефакт Critical Matrix
   const weaponBayIds = new Set(
     state.ship.modules
       .filter((m) => m.type === "weaponbay")
       .map((m) => m.id),
   );
-  state.crew.forEach((c) => {
-    if (c.profession === "gunner" && weaponBayIds.has(c.moduleId)) {
-      c.traits?.forEach((trait) => {
-        if (trait.effect?.critBonus) {
-          critChance += trait.effect.critBonus;
-        }
-      });
-      // Бонус аугментации targeting_eye (+5% крит для стрелка)
-      if (c.augmentation) {
-        const augEffect = AUGMENTATIONS[c.augmentation]?.effect;
-        if (augEffect?.critBonus) {
-          critChance += augEffect.critBonus;
-        }
+  const gunnerInBay = state.crew.find(
+    (c) => c.profession === "gunner" && weaponBayIds.has(c.moduleId),
+  );
+  if (gunnerInBay) {
+    gunnerInBay.traits?.forEach((trait) => {
+      if (trait.effect?.critBonus) {
+        critChance += trait.effect.critBonus;
+      }
+    });
+    // Бонус аугментации targeting_eye (+5% крит для стрелка)
+    if (gunnerInBay.augmentation) {
+      const augEffect = AUGMENTATIONS[gunnerInBay.augmentation]?.effect;
+      if (augEffect?.critBonus) {
+        critChance += augEffect.critBonus;
       }
     }
-  });
+  }
 
+  critChance = Math.min(1, critChance);
   const isCrit = Math.random() < critChance;
 
   if (isCrit) {

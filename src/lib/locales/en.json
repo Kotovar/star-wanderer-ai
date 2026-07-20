@@ -2520,6 +2520,7 @@
     "temperature": "Temperature",
     "mass": "Mass",
     "hazard": "Hazard",
+    "shield_drain_warning": "This star's radiation jams shield regeneration while you're in the system",
     "close": "Close",
     "red_dwarf": {
       "icon": "🔴",

@@ -3,9 +3,30 @@ import {
     getArtifactEffectValue,
     getArtifactShieldRegen,
 } from "@/game/artifacts";
-import { ARTIFACT_TYPES, RACES, RESEARCH_TREE } from "@/game/constants";
+import {
+    ARTIFACT_TYPES,
+    RACES,
+    RESEARCH_TREE,
+    STAR_HAZARD_LEVEL,
+    STAR_SHIELD_REGEN_PENALTY_PER_LEVEL,
+    STAR_SHIELD_REGEN_PENALTY_THRESHOLD,
+} from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import type { GameState, GameStore, SetState } from "@/game/types";
+
+/**
+ * Штраф к регенерации щитов от излучения опасной звезды (пока корабль
+ * стоит в системе; во время перелёта не действует). Множитель, а не
+ * фиксированное число — не может быть "перекачан" прокачкой щита.
+ */
+const getStarHazardRegenMultiplier = (state: GameState): number => {
+    if (state.traveling) return 1;
+    const hazardLevel = state.currentSector
+        ? STAR_HAZARD_LEVEL[state.currentSector.star.type]
+        : 0;
+    if (hazardLevel < STAR_SHIELD_REGEN_PENALTY_THRESHOLD) return 1;
+    return Math.max(0, 1 - hazardLevel * STAR_SHIELD_REGEN_PENALTY_PER_LEVEL);
+};
 
 /**
  * Вычисляет базовую регенерацию щитов как сумму shieldRegen всех активных модулей щитов
@@ -135,9 +156,14 @@ export const regenerateShields = (
     // В бою регенерация вдвое медленнее
     const combatPenalty = state.currentCombat ? COMBAT_SHIELD_REGEN_MULTIPLIER : 1;
 
+    // Излучение опасной звезды глушит реген, пока корабль стоит в системе
+    const hazardMultiplier = getStarHazardRegenMultiplier(state);
+
     // Применяем процентные бонусы к базовой регенерации
     const totalMultiplier =
-        (1 + raceMultiplier + artifactMultiplier + mergeMultiplier + techRegenMultiplier) * combatPenalty;
+        (1 + raceMultiplier + artifactMultiplier + mergeMultiplier + techRegenMultiplier) *
+        combatPenalty *
+        hazardMultiplier;
     const totalRegen = Math.floor(baseRegen * totalMultiplier);
 
     // Применяем регенерацию
@@ -149,6 +175,14 @@ export const regenerateShields = (
     }));
 
     // Логируем
+    if (baseRegen > 0 && hazardMultiplier < 1) {
+        get().addLog(
+            hazardMultiplier === 0
+                ? "☢️ Излучение звезды полностью блокирует регенерацию щитов"
+                : `☢️ Излучение звезды глушит регенерацию щитов: -${Math.round((1 - hazardMultiplier) * 100)}%`,
+            "warning",
+        );
+    }
     if (totalRegen > 0) {
         get().addLog(
             `Щиты: +${totalRegen} (${get().ship.shields}/${maxShieldsWithBonus})`,
