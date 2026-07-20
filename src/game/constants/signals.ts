@@ -1,7 +1,7 @@
 import type { SignalDetails, SignalType } from "@/game/types";
 
 // Distress signal outcomes
-export const DISTRESS_SIGNAL_OUTCOMES: Record<SignalType, SignalDetails> = {
+const DISTRESS_SIGNAL_OUTCOMES: Record<SignalType, SignalDetails> = {
     pirate_ambush: {
         name: "Засада пиратов",
         description: "Это ловушка! Пираты притворялись терпящими бедствие.",

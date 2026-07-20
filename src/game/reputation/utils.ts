@@ -8,7 +8,7 @@ import { calculateReputationRippleEffects } from "./ripple";
 /**
  * Ограничение репутации в диапазоне [-100, 100]
  */
-export function clampReputation(value: number): number {
+function clampReputation(value: number): number {
     return Math.max(-100, Math.min(100, value));
 }
 
@@ -72,7 +72,7 @@ export function changeReputation(
  * Получить список рас, которые будут затронуты при изменении репутации
  * Возвращает массив с ID рас и величиной изменения
  */
-export function getReputationRippleEffects(
+function getReputationRippleEffects(
     primaryRaceId: RaceId,
     amount: number,
 ): Array<{ raceId: RaceId; change: number }> {

@@ -13,7 +13,7 @@ import type {
 import { store as i18nStore } from "@/lib/useTranslation";
 
 // Get artifact by ID
-export const getArtifactById = (id: string): Artifact | undefined => {
+const getArtifactById = (id: string): Artifact | undefined => {
     return ANCIENT_ARTIFACTS.find((a) => a.id === id);
 };
 

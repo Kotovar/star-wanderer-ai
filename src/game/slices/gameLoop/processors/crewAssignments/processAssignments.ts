@@ -834,7 +834,7 @@ export const processMedicalModule = (
  * Применяется ко всему живому экипажу каждый ход
  * Использует общую функцию calculateHealthRegen
  */
-export const processPassiveHealthRegen = (
+const processPassiveHealthRegen = (
     set: SetState,
     get: () => GameStore,
 ): void => {

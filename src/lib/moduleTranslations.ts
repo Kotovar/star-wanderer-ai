@@ -5,7 +5,7 @@ export interface ModuleTranslation {
     name: string;
 }
 
-export const MODULE_TRANSLATIONS: Record<
+const MODULE_TRANSLATIONS: Record<
     "ru" | "en",
     Record<string, ModuleTranslation>
 > = {

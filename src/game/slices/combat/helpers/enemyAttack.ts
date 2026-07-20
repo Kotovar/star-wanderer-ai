@@ -13,7 +13,7 @@ export const calculateEnemyDamage = (enemyModules: EnemyModule[]) =>
 /**
  * Finds a random alive enemy module
  */
-export const getRandomAliveEnemyModule = (
+const getRandomAliveEnemyModule = (
     enemyModules: EnemyModule[],
 ): EnemyModule | null => {
     const aliveModules = enemyModules.filter((m) => m.health > 0);

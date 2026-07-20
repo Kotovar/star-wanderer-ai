@@ -1,7 +1,7 @@
 export const ASSIGNMENT_TIRED_AT = 4;
 export const ASSIGNMENT_EXHAUSTED_AT = 7;
-export const ASSIGNMENT_RECOVERY_PER_TURN = 2;
-export const ASSIGNMENT_REST_TURNS = 2;
+const ASSIGNMENT_RECOVERY_PER_TURN = 2;
+const ASSIGNMENT_REST_TURNS = 2;
 
 export function getAssignmentFatigueState({
   fatigue = 0,

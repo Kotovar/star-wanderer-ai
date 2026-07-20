@@ -5,6 +5,7 @@ import {
     MODULE_HEALTH_THRESHOLDS,
     RACES,
 } from "@/game/constants";
+import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import { RESEARCH_TREE } from "@/game/constants/research";
 import type { GameState, GameStore, Module } from "@/game/types";
 
@@ -125,7 +126,7 @@ export function applyModuleDamage(
     return reducedDamage;
 }
 
-export function maybeExplodeFuelTank(
+function maybeExplodeFuelTank(
     moduleId: number,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
@@ -159,7 +160,7 @@ export function maybeExplodeFuelTank(
 /**
  * Damages crew in module
  */
-export function damageCrewInModule(
+function damageCrewInModule(
     moduleId: number,
     damage: number,
     isDestruction: boolean,
@@ -201,9 +202,21 @@ export function damageCrewInModule(
             .reduce((s, b) => s + b.value, 0);
     }, 0);
 
+    // phase_step: pre-roll dodge for each crew member in the module
+    const phaseStepDodgers = new Set<number>();
+    state.crew.forEach((c) => {
+        if (c.moduleId !== moduleId || !c.augmentation) return;
+        const dodgeChance =
+            AUGMENTATIONS[c.augmentation]?.effect?.fullDodgeChance ?? 0;
+        if (dodgeChance > 0 && Math.random() < dodgeChance) {
+            phaseStepDodgers.add(c.id);
+        }
+    });
+
     set((s) => {
         s.crew.forEach((c) => {
             if (c.moduleId !== moduleId) return;
+            if (phaseStepDodgers.has(c.id)) return;
             const veteranReduction =
                 c.traits?.reduce((max, trait) => {
                     return Math.max(max, trait.effect?.combatDamageReduction ?? 0);
@@ -217,6 +230,13 @@ export function damageCrewInModule(
             if (hasImmortality && newHealth < 1) newHealth = 1;
             c.health = Math.max(0, newHealth);
         });
+    });
+
+    phaseStepDodgers.forEach((id) => {
+        const member = get().crew.find((c) => c.id === id);
+        if (member) {
+            get().addLog(`👻 ${member.name}: Фазовый шаг! Урон поглощён`, "info");
+        }
     });
 
     if (isDestruction) {

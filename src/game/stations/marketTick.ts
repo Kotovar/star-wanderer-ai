@@ -9,7 +9,7 @@ export const PRICE_DRIFT_INTERVAL = 5;
 export const RESTOCK_INTERVAL = 10;
 
 /** Максимальный сдвиг цены за тик (±15%) */
-export const MAX_PRICE_DRIFT = 0.15;
+const MAX_PRICE_DRIFT = 0.15;
 
 /** Нижняя граница цены продажи относительно базовой цены товара */
 export const PRICE_FLOOR_MULTIPLIER = 0.5;
@@ -18,7 +18,7 @@ export const PRICE_FLOOR_MULTIPLIER = 0.5;
 export const PRICE_CEIL_MULTIPLIER = 2;
 
 /** Доля недостающего товара, восполняемая за один тик */
-export const RESTOCK_RATE = 0.25;
+const RESTOCK_RATE = 0.25;
 
 /** Базовые цены товаров: goodId -> basePrice */
 export type BasePrices = Record<string, number>;

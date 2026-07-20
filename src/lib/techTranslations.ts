@@ -5,7 +5,7 @@ export interface TechTranslation {
   description: string;
 }
 
-export const TECH_TRANSLATIONS: Record<
+const TECH_TRANSLATIONS: Record<
   "ru" | "en",
   Record<string, TechTranslation>
 > = {

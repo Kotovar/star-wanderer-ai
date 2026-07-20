@@ -85,7 +85,7 @@ export interface DamageReductionInfo {
     total: number;
 }
 
-export const getCrewDamageReduction = (
+const getCrewDamageReduction = (
     member: CrewMember,
     researchedTechs: TechnologyId[],
 ): DamageReductionInfo => {
@@ -110,7 +110,7 @@ export const getCrewDamageReduction = (
     };
 };
 
-export const getCrewExpMultiplier = (
+const getCrewExpMultiplier = (
     member: CrewMember,
     researchedTechs: TechnologyId[],
 ): number => {

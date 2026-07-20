@@ -251,69 +251,6 @@ export function computeBayAccuracyModifier(state: GameState, bayId: number): num
 }
 
 /**
- * Calculates accuracy modifier from all sources
- */
-export function calculateAccuracyModifier(
-    hasGunner: boolean,
-    crewInWeaponBays: { profession: string; level?: number; name: string }[],
-    hasTargeting: boolean,
-    hasRapidfire: boolean,
-    hasCalibration: boolean,
-    hasEngineer: boolean,
-    aiCoreModules: number,
-    targetingCoreBonus: number,
-    crewAccuracyPenalties: number,
-    get: () => GameStore,
-): number {
-    let accuracyModifier = 0;
-
-    if (!hasGunner) {
-        accuracyModifier += COMBAT_ACCURACY_MODIFIERS.NO_GUNNER_PENALTY;
-    } else {
-        const gunnerInWeaponBay = crewInWeaponBays.find(
-            (c) => c.profession === "gunner",
-        );
-        if (gunnerInWeaponBay) {
-            const gunnerLevel = gunnerInWeaponBay.level || 1;
-            const gunnerAccuracyBonus = Math.min(
-                COMBAT_ACCURACY_MODIFIERS.GUNNER_LEVEL_MAX_BONUS,
-                gunnerLevel * COMBAT_ACCURACY_MODIFIERS.GUNNER_LEVEL_BONUS,
-            );
-            accuracyModifier += gunnerAccuracyBonus;
-            get().addLog(
-                `🎯 Стрелок ${gunnerInWeaponBay.name} (Ур.${gunnerLevel}): +${Math.round(gunnerAccuracyBonus * 100)}% точность`,
-                "info",
-            );
-        }
-    }
-
-    if (hasTargeting)
-        accuracyModifier += COMBAT_ACCURACY_MODIFIERS.TARGETING_BONUS;
-    if (hasRapidfire)
-        accuracyModifier += COMBAT_ACCURACY_MODIFIERS.RAPIDFIRE_PENALTY;
-    if (hasCalibration && hasEngineer)
-        accuracyModifier += COMBAT_ACCURACY_MODIFIERS.CALIBRATION_BONUS;
-
-    if (aiCoreModules > 0) {
-        accuracyModifier +=
-            aiCoreModules * COMBAT_ACCURACY_MODIFIERS.AI_CORE_BONUS;
-        get().addLog(`🤖 ИИ Ядро: +${aiCoreModules * 5}% точность`, "info");
-    }
-
-    if (targetingCoreBonus > 0) {
-        accuracyModifier += targetingCoreBonus;
-        get().addLog(
-            `🎯 Ядро Прицеливания: +${Math.round(targetingCoreBonus * 100)}% точность`,
-            "info",
-        );
-    }
-
-    accuracyModifier += crewAccuracyPenalties;
-
-    return accuracyModifier;
-}
-
-/**
  * Processes laser weapon damage
  */
 export function processLaserDamage(

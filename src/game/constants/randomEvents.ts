@@ -37,7 +37,7 @@ const fuelRatio = (state: EventState): number =>
 const sectorTier = (state: EventState): number =>
   state.currentSector?.tier ?? 1;
 
-export const EVENT_REGISTRY: Record<RandomEventType, EventMeta> = {
+const EVENT_REGISTRY: Record<RandomEventType, EventMeta> = {
   // ── BAD events ──────────────────────────────────────────────
   storm: {
     category: "bad",
@@ -132,7 +132,7 @@ export const EVENT_REGISTRY: Record<RandomEventType, EventMeta> = {
   },
 };
 
-export const RANDOM_EVENT_TYPES = Object.keys(EVENT_REGISTRY) as RandomEventType[];
+const RANDOM_EVENT_TYPES = Object.keys(EVENT_REGISTRY) as RandomEventType[];
 
 export function pickRandomEvent(state: EventState): RandomEventType {
   const weights = RANDOM_EVENT_TYPES.map((type) => {

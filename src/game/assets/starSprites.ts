@@ -1,11 +1,11 @@
 import type { StarType } from "@/game/types";
 
 export const STAR_SPRITE_SHEET = "/assets/stars.png";
-export const STAR_SPRITE_SHEET_WIDTH = 1448;
-export const STAR_SPRITE_SHEET_HEIGHT = 1086;
-export const STAR_SPRITE_COLUMNS = 4;
-export const STAR_SPRITE_ROWS = 3;
-export const STAR_SPRITE_CELL_SIZE = 362;
+const STAR_SPRITE_SHEET_WIDTH = 1448;
+const STAR_SPRITE_SHEET_HEIGHT = 1086;
+const STAR_SPRITE_COLUMNS = 4;
+const STAR_SPRITE_ROWS = 3;
+const STAR_SPRITE_CELL_SIZE = 362;
 type StarSpriteRect = { x: number; y: number; width: number; height: number };
 
 export const STAR_SPRITE_ORDER: StarType[] = [
@@ -31,7 +31,7 @@ const STAR_SPRITE_RECTS: Partial<Record<StarType, StarSpriteRect>> = {
   triple: { x: 20, y: 756, width: 308, height: 306 },
 };
 
-export function getStarSpriteRect(starType: StarType): StarSpriteRect {
+function getStarSpriteRect(starType: StarType): StarSpriteRect {
   const customRect = STAR_SPRITE_RECTS[starType];
   if (customRect) return customRect;
 

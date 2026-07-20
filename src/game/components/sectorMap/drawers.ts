@@ -43,7 +43,7 @@ const STATION_SPRITES: Record<string, SpriteRect> = {
   diplomatic: { x: 944, y: 566, width: 346, height: 358 },
 };
 
-export const seededRandom = (loc: Location, seed: number = 0): number => {
+const seededRandom = (loc: Location, seed: number = 0): number => {
   const str = loc.id || "unknown";
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -2177,7 +2177,7 @@ export function drawAsteroidBelt(
   ctx.globalAlpha = 1;
 }
 
-export function drawSparkGlyph(
+function drawSparkGlyph(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -2200,7 +2200,7 @@ export function drawSparkGlyph(
   ctx.restore();
 }
 
-export function drawBoltGlyph(
+function drawBoltGlyph(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -2221,7 +2221,7 @@ export function drawBoltGlyph(
   ctx.restore();
 }
 
-export function drawRadiationGlyph(
+function drawRadiationGlyph(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -2252,7 +2252,7 @@ export function drawRadiationGlyph(
   ctx.restore();
 }
 
-export function drawGravityGlyph(
+function drawGravityGlyph(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -2275,7 +2275,7 @@ export function drawGravityGlyph(
   ctx.restore();
 }
 
-export function drawHourglassGlyph(
+function drawHourglassGlyph(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -2299,7 +2299,7 @@ export function drawHourglassGlyph(
   ctx.restore();
 }
 
-export function drawHexGlyph(
+function drawHexGlyph(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -2325,7 +2325,7 @@ export function drawHexGlyph(
   ctx.restore();
 }
 
-export function drawStormGlyph(
+function drawStormGlyph(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -2357,7 +2357,7 @@ export function drawStormGlyph(
   }
 }
 
-export function drawGearGlyph(
+function drawGearGlyph(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,

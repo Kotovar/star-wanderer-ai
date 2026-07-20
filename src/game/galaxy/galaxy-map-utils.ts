@@ -16,7 +16,7 @@ type TierDetails = {
 };
 
 // Tier colors - names are now translated via locale files
-export const TIER_COLORS: Record<GalaxyTierAll, TierDetails> = {
+const TIER_COLORS: Record<GalaxyTierAll, TierDetails> = {
     1: {
         ring: "#00ff41",
         glow: "rgba(0, 255, 65, 0.15)",
@@ -40,7 +40,7 @@ export const TIER_COLORS: Record<GalaxyTierAll, TierDetails> = {
 };
 
 // Get engine level from modules
-export function getEngineLevel(modules: Module[]): number {
+function getEngineLevel(modules: Module[]): number {
     const engines = modules.filter(
         (m) =>
             m.type === "engine" &&
@@ -53,7 +53,7 @@ export function getEngineLevel(modules: Module[]): number {
 }
 
 // Get scanner level from modules
-export function getScannerLevel(modules: Module[]): number {
+function getScannerLevel(modules: Module[]): number {
     const scanners = modules.filter(
         (m) =>
             m.type === "scanner" &&
@@ -446,7 +446,7 @@ function drawTierRing(
 }
 
 // Draw star types
-export function drawStar(
+function drawStar(
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,

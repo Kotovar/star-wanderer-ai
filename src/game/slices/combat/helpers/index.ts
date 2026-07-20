@@ -2,7 +2,6 @@ export * from "./enemyAttack";
 export * from "./damageCalc";
 export * from "./combatSetup";
 export * from "./retreat";
-export * from "./crewDamage";
 export * from "./startCombat";
 export * from "./startBossCombat";
 export * from "./executeEnemyAttack";

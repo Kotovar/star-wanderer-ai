@@ -24,7 +24,7 @@ export const PROFESSION_NAMES: Record<Profession, string> = {
     gunner: "Стрелок",
 };
 
-export const PROFESSION_DESCRIPTIONS: Record<Profession, string> = {
+const PROFESSION_DESCRIPTIONS: Record<Profession, string> = {
     pilot: "Может улучшать маневрирование и навигацию.",
     engineer: "Может ремонтировать и улучшать системы корабля.",
     medic: "Может лечить экипаж и поддерживать мораль На корабле.",
@@ -239,7 +239,7 @@ export const INITIAL_HAPPINESS_PERCENT = 80;
 /**
  * Минимальное счастье экипажа
  */
-export const MIN_CREW_HAPPINESS = 0;
+const MIN_CREW_HAPPINESS = 0;
 
 /**
  * Максимальное счастье экипажа по умолчанию

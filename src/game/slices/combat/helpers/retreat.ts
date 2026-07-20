@@ -1,7 +1,7 @@
 import type { CrewMember } from "@/game/types";
 
-export const BASE_RETREAT_CHANCE = 0.5;
-export const PILOT_LEVEL_RETREAT_BONUS = 5; // % per level
+const BASE_RETREAT_CHANCE = 0.5;
+const PILOT_LEVEL_RETREAT_BONUS = 5; // % per level
 
 /**
  * Calculates retreat success chance based on pilot level

@@ -2,7 +2,7 @@ import { RACES } from "@/game/constants/races";
 import type { PlanetType, Race, RaceId } from "@/game/types";
 
 // Get race by ID
-export const getRaceById = (id: RaceId): Race | undefined => RACES[id];
+const getRaceById = (id: RaceId): Race | undefined => RACES[id];
 
 // Get random race weighted by rarity
 export const getRandomRace = (

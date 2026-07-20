@@ -917,12 +917,6 @@ export const WEAPONS: ShopItem[] = [
   },
 ];
 
-// Engine upgrade prices
-export const ENGINE_PRICES = {
-  2: 1500,
-  3: 3000,
-};
-
 // Generate station-specific items based on stationId hash
 export function generateStationItems(
   stationId: string,

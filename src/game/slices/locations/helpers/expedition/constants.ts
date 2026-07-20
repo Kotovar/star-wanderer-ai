@@ -8,7 +8,7 @@ type ExpeditionEnvironment = {
     artifactWeightBonus?: number;
 };
 
-export const EXPEDITION_PLANET_ENVIRONMENTS: Partial<
+const EXPEDITION_PLANET_ENVIRONMENTS: Partial<
     Record<PlanetType, ExpeditionEnvironment>
 > = {
     "Вулканическая": {
@@ -36,7 +36,7 @@ export const EXPEDITION_GRID_SIZE = 5;
 export const EXPEDITION_TILE_COUNT = 25;
 export const EXPEDITION_MAX_ARTIFACTS = 2;
 export const EXPEDITION_RUINS_MAX_DEPTH = 2;
-export const EXPEDITION_RUINS_RISK_PER_DEPTH = 8;
+const EXPEDITION_RUINS_RISK_PER_DEPTH = 8;
 
 export function getRuinsDepthRewardMultiplier(depth: number): number {
     return depth + 1;
@@ -50,7 +50,7 @@ export function getRuinsDepthDamage(depth: number): number {
 export const EXPEDITION_START_INDEX = Math.floor(EXPEDITION_TILE_COUNT / 2);
 
 // Покрытие: разведчик даёт +1 AP (эффективная навигация по поверхности).
-export const EXPEDITION_SCOUT_AP_BONUS = 1;
+const EXPEDITION_SCOUT_AP_BONUS = 1;
 
 // Эффекты профессий в отряде.
 export const EXPEDITION_SCIENTIST_LAB_BONUS = 1; // +ресурс с лаборатории за каждого учёного

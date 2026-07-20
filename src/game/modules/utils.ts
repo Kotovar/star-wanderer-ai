@@ -42,7 +42,7 @@ export const getActiveModules = <T extends ModuleType>(
  * @param type - Тип модуля для поиска
  * @returns Активный модуль или undefined
  */
-export const getActiveModuleFromState = (state: GameState, type: ModuleType) =>
+const getActiveModuleFromState = (state: GameState, type: ModuleType) =>
     getActiveModule(state.ship.modules, type);
 
 /**

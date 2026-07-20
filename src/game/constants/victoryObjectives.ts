@@ -36,7 +36,7 @@ export const COALITION_ALLY_TARGET = 3;
 export const COALITION_CONTRACT_TARGET = 8;
 export const COALITION_CREDIT_TARGET = 8000;
 
-export const countDefeatedBosses = (state: VictoryObjectiveState): number =>
+const countDefeatedBosses = (state: VictoryObjectiveState): number =>
   state.galaxy.sectors
     .flatMap((sector) => sector.locations)
     .filter(
@@ -109,7 +109,7 @@ export const VICTORY_OBJECTIVES: Record<VictoryObjectiveId, VictoryObjective> = 
   },
 };
 
-export const VICTORY_OBJECTIVE_IDS = Object.keys(
+const VICTORY_OBJECTIVE_IDS = Object.keys(
   VICTORY_OBJECTIVES,
 ) as VictoryObjectiveId[];
 

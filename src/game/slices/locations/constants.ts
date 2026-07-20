@@ -9,7 +9,7 @@ import type { AnomalyApproach } from "@/game/types";
 // ============================================================================
 
 /** Уровни буров */
-export const DRILL_LEVEL = {
+const DRILL_LEVEL = {
     BASIC: 1,
     ADVANCED: 2,
     SUPERIOR: 3,

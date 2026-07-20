@@ -1,11 +1,11 @@
 import type { Module } from "@/game/types";
 
-export const MIN_DAMAGE_AFTER_ARMOR = 1;
+const MIN_DAMAGE_AFTER_ARMOR = 1;
 
 /**
  * Applies damage to shields and returns remaining damage
  */
-export const applyShieldDamage = (
+const applyShieldDamage = (
     shields: number,
     incomingDamage: number,
 ): {
@@ -22,7 +22,7 @@ export const applyShieldDamage = (
 /**
  * Applies armor reduction to damage
  */
-export const applyArmorReduction = (
+const applyArmorReduction = (
     incomingDamage: number,
     moduleDefense: number,
     artifactDefense?: number,
@@ -45,7 +45,7 @@ export const applyArmorReduction = (
 /**
  * Finds a random active player module
  */
-export const getRandomActiveModule = (modules: Module[]): Module | null => {
+const getRandomActiveModule = (modules: Module[]): Module | null => {
     const activeModules = modules.filter((m) => m.health > 0);
     if (activeModules.length === 0) return null;
     return activeModules[Math.floor(Math.random() * activeModules.length)];

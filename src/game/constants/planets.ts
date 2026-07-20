@@ -39,7 +39,7 @@ export const PLANET_POINT_OF_INTERESTS: Record<
 };
 
 // Planet type descriptions
-export const PLANET_DESCRIPTIONS: Record<PlanetType, string> = {
+const PLANET_DESCRIPTIONS: Record<PlanetType, string> = {
     Пустынная:
         "Засушливый мир с экстремальными перепадами температур. Богата минералами, но требует импорта воды.",
     Ледяная:

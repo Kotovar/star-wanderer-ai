@@ -34,7 +34,7 @@ export interface LogSlice {
  * Начальное состояние слайса лога
  * Используется при инициализации store
  */
-export const logInitialState: Pick<LogSlice, "log"> = {
+const logInitialState: Pick<LogSlice, "log"> = {
     log: [],
 };
 

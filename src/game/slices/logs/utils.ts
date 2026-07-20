@@ -4,7 +4,7 @@ import type { LogEntry } from "@/game/types/logs";
  * Максимальное количество записей в логе
  * Старые записи автоматически удаляются при добавлении новых
  */
-export const MAX_LOG_ENTRIES = 100;
+const MAX_LOG_ENTRIES = 100;
 
 /**
  * Типы сообщений лога

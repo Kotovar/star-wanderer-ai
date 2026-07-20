@@ -466,14 +466,20 @@ export function ShipStats() {
           displayValue={available > 0 ? `+${available}` : `${available}`}
           className="col-span-2 md:col-span-1"
           detail={
-            <div className="grid grid-cols-2 gap-x-2 border-l border-[#00ff4133] pl-2 text-[8px] font-bold uppercase tracking-[0.08em]">
-              <span className="flex items-center gap-1 whitespace-nowrap text-accent">
-                <StatIcon type="power_consumption" size={14} />
-                {t("ship_stats.power_consumption")} {totalConsumption}
+            <div className="grid grid-cols-2 gap-x-2 border-l border-[#00ff4133] pl-2 text-[10px] font-bold tabular-nums">
+              <span
+                className="flex items-center gap-1 text-accent"
+                title={t("ship_stats.power_consumption")}
+              >
+                <StatIcon type="power_consumption" size={14} className="shrink-0" />
+                {totalConsumption}
               </span>
-              <span className="flex items-center gap-1 whitespace-nowrap text-ring">
-                <StatIcon type="power_generation" size={14} />
-                {t("ship_stats.power_generation")} {totalPower}
+              <span
+                className="flex items-center gap-1 text-ring"
+                title={t("ship_stats.power_generation")}
+              >
+                <StatIcon type="power_generation" size={14} className="shrink-0" />
+                {totalPower}
               </span>
             </div>
           }

@@ -75,7 +75,7 @@ export const getMergeEffectsBonus = (
  * Применяет бонусы сращивания к состоянию корабля
  * Возвращает модифицированные статы
  */
-export const applyMergeEffectsToShip = (
+const applyMergeEffectsToShip = (
   state: GameState,
   stats: {
     maxShields: number;

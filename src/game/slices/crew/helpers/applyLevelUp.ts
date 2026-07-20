@@ -10,7 +10,7 @@ import { RACES } from "@/game/constants/races";
  * @param level - Текущий уровень
  * @returns true если опыт достаточен для повышения уровня
  */
-export const shouldLevelUp = (currentExp: number, level: number) => {
+const shouldLevelUp = (currentExp: number, level: number) => {
     const expNeeded = getExpNeededForNextLevel(level);
     return currentExp >= expNeeded;
 };
@@ -22,7 +22,7 @@ export const shouldLevelUp = (currentExp: number, level: number) => {
  * @param currentLevel - Текущий уровень
  * @returns Объект с новым уровнем и остаточным опытом
  */
-export const calculateLevelUp = (
+const calculateLevelUp = (
     currentExp: number,
     currentLevel: number,
 ): { newLevel: number; remainingExp: number } => {

@@ -5,7 +5,7 @@ import type { AncientBoss, GalaxyTierAll, GalaxyTierBase } from "@/game/types";
  * Менеджер распределения боссов по галактике
  * Гарантирует уникальность боссов и минимальное количество по тирам
  */
-export class BossDistributionManager {
+class BossDistributionManager {
     private usedBossIds = new Set<string>();
     private guaranteedBossesPlaced: Record<number, boolean> = {
         1: false,

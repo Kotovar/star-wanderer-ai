@@ -28,7 +28,7 @@ const hasRewardModule = (state: GameState, module: ShopItem): boolean =>
  * Gets a random tier 4 module from MODULES_FROM_BOSSES
  * Only available for tier 2+ bosses. Excludes modules player already has installed.
  */
-export const getRandomBossReward = (
+const getRandomBossReward = (
     state: GameState,
     bossTier: number,
 ): ShopItem | null => {
@@ -58,7 +58,7 @@ export const getRandomBossReward = (
  * Gets the module configuration from MODULES_FROM_BOSSES by boss module type
  * Only 3 unique boss modules: ancient-core, conversion-core, quantum-engine
  */
-export const getBossRewardModule = (
+const getBossRewardModule = (
     moduleType: BossModuleType,
 ): ShopItem | undefined => {
     const moduleIdMap: Record<BossModuleType, string> = {
@@ -73,13 +73,13 @@ export const getBossRewardModule = (
 /**
  * Gets the display name for a boss module reward
  */
-export const getBossRewardModuleName = (moduleType: BossModuleType) =>
+const getBossRewardModuleName = (moduleType: BossModuleType) =>
     getBossRewardModule(moduleType)?.name || "Неизвестный модуль";
 
 /**
  * Gets the ship module type for a boss reward module
  */
-export const getBossRewardModuleType = (moduleType: BossModuleType) =>
+const getBossRewardModuleType = (moduleType: BossModuleType) =>
     getBossRewardModule(moduleType)?.moduleType || "reactor";
 
 /**

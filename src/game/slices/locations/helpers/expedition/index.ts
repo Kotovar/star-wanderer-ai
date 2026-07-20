@@ -11,4 +11,3 @@ export {
     getNeighborIndices,
     isTileReachable,
 } from "./adjacency";
-export { EXPEDITION_START_INDEX } from "./constants";

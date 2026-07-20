@@ -29,6 +29,20 @@ function getAliveModsWithEffect(
     );
 }
 
+/** Heals every alive boss module by `amount`, capped at its maxHealth */
+function healAllBossModules(
+    set: (fn: (s: GameState) => void) => void,
+    amount: number,
+): void {
+    set((s) => {
+        if (!s.currentCombat) return;
+        s.currentCombat.enemy.modules.forEach((m) => {
+            if (m.health > 0)
+                m.health = Math.min(m.maxHealth ?? 100, m.health + amount);
+        });
+    });
+}
+
 function getBossHealthPercent(modules: EnemyModule[]): number {
     const total = modules.reduce((s, m) => s + m.health, 0);
     const max = modules.reduce((s, m) => s + (m.maxHealth ?? 100), 0);
@@ -414,16 +428,7 @@ function applySpecialAbility(
 
             case "heal_all": {
                 const healAmount = ability.value ?? 10;
-                set((s) => {
-                    if (!s.currentCombat) return;
-                    s.currentCombat.enemy.modules.forEach((m) => {
-                        if (m.health > 0)
-                            m.health = Math.min(
-                                m.maxHealth ?? 100,
-                                m.health + healAmount,
-                            );
-                    });
-                });
+                healAllBossModules(set, healAmount);
                 get().addLog(
                     `★ ${ability.name}: +${healAmount}% ко всем модулям`,
                     "warning",
@@ -444,16 +449,7 @@ function applySpecialAbility(
                     const healAmount = Math.floor(
                         (totalDamage * (ability.value ?? 20)) / 100,
                     );
-                    set((s) => {
-                        if (!s.currentCombat) return;
-                        s.currentCombat.enemy.modules.forEach((m) => {
-                            if (m.health > 0)
-                                m.health = Math.min(
-                                    m.maxHealth ?? 100,
-                                    m.health + healAmount,
-                                );
-                        });
-                    });
+                    healAllBossModules(set, healAmount);
                     get().addLog(
                         `★ ${ability.name}: Вампиризм +${healAmount} HP`,
                         "warning",
@@ -478,14 +474,8 @@ function applySpecialAbility(
                 set((s) => {
                     if (!s.currentCombat) return;
                     s.currentCombat.bossOneShotAbilityFired = true;
-                    s.currentCombat.enemy.modules.forEach((m) => {
-                        if (m.health > 0)
-                            m.health = Math.min(
-                                m.maxHealth ?? 100,
-                                m.health + healAmount,
-                            );
-                    });
                 });
+                healAllBossModules(set, healAmount);
                 get().addLog(
                     `★ ${ability.name}: Аварийное восстановление! +${healAmount}%`,
                     "warning",
@@ -495,16 +485,7 @@ function applySpecialAbility(
 
             case "heal_all": {
                 const healAmount = ability.value ?? 25;
-                set((s) => {
-                    if (!s.currentCombat) return;
-                    s.currentCombat.enemy.modules.forEach((m) => {
-                        if (m.health > 0)
-                            m.health = Math.min(
-                                m.maxHealth ?? 100,
-                                m.health + healAmount,
-                            );
-                    });
-                });
+                healAllBossModules(set, healAmount);
                 get().addLog(
                     `★ ${ability.name}: Аварийное восстановление! +${healAmount}%`,
                     "warning",
@@ -557,16 +538,7 @@ function applySpecialAbility(
                 const chance = ability.value ?? 40;
                 if (Math.random() * 100 < chance) {
                     const healAmount = 50;
-                    set((s) => {
-                        if (!s.currentCombat) return;
-                        s.currentCombat.enemy.modules.forEach((m) => {
-                            if (m.health > 0)
-                                m.health = Math.min(
-                                    m.maxHealth ?? 100,
-                                    m.health + healAmount,
-                                );
-                        });
-                    });
+                    healAllBossModules(set, healAmount);
                     get().addLog(
                         `★ ${ability.name}: Самовосстановление +${healAmount}! (${chance}% шанс)`,
                         "warning",
@@ -603,16 +575,7 @@ export function processBossRegeneration(
     if (boss.regenRate && boss.regenRate > 0) {
         const aliveCount = boss.modules.filter((m) => m.health > 0).length;
         if (aliveCount > 0) {
-            set((s) => {
-                if (!s.currentCombat) return;
-                s.currentCombat.enemy.modules.forEach((m) => {
-                    if (m.health > 0)
-                        m.health = Math.min(
-                            m.maxHealth ?? 100,
-                            m.health + (boss.regenRate ?? 0),
-                        );
-                });
-            });
+            healAllBossModules(set, boss.regenRate);
             get().addLog(
                 `⚙️ Регенерация босса: +${boss.regenRate}/мод.`,
                 "warning",

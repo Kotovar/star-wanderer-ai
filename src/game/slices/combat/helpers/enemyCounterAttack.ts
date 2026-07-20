@@ -16,7 +16,7 @@ import {
 
 const createCombatHitEventId = () => Date.now() + Math.random();
 
-function recordPlayerHit(
+export function recordPlayerHit(
     set: (fn: (s: GameState) => void) => void,
     targetModule: Module,
     shieldDamage: number,

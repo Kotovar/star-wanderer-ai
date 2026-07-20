@@ -46,7 +46,7 @@ export const calculateTotalShields = (modules: Module[]) =>
  * @param modules - Список модулей корабля
  * @returns Суммарная ёмкость по кислороду
  */
-export const calculateTotalOxygen = (modules: Module[]) =>
+const calculateTotalOxygen = (modules: Module[]) =>
     modules
         .filter((m) => m.type === "lifesupport" && isModuleFunctional(m))
         .reduce((sum, m) => sum + (m.oxygen || 0), 0);
@@ -67,7 +67,7 @@ export const calculateTotalFuelCapacity = (modules: Module[]) =>
  * @param moduleId - ID модуля для проверки
  * @returns true если модуль является реактором
  */
-export const isReactorModule = (
+const isReactorModule = (
     modules: GameState["ship"]["modules"],
     moduleId: number,
 ) => {

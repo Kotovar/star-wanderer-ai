@@ -1,6 +1,6 @@
 import type { RuinsEvent } from "@/game/types/exploration";
 
-export const RUINS_EVENTS: RuinsEvent[] = [
+const RUINS_EVENTS: RuinsEvent[] = [
     {
         titleKey: "ruins_ancient_archive",
         descKey: "ruins_ancient_archive_desc",

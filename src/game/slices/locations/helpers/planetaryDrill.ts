@@ -9,7 +9,7 @@ import { planetHasFeature } from "@/game/planets";
 import { patchLocation } from "@/game/utils/patchLocation";
 
 /** Кол-во проходов бурения (богатые залежи дают +1) */
-export const DRILL_MAX_PASSES = 2;
+const DRILL_MAX_PASSES = 2;
 /** Ходов между проходами бурения */
 export const DRILL_COOLDOWN_TURNS = 6;
 /** Множитель добычи на каждый следующий проход */

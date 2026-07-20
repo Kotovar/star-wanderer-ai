@@ -103,7 +103,7 @@ const migrations: Record<number, Migration> = {
  * Применяет цепочку миграций от текущей версии сохранения до целевой.
  * Если версия сохранения >= целевой — возвращает как есть.
  */
-export function runMigrations(
+function runMigrations(
   persisted: PersistedState,
   targetVersion: number = CURRENT_STATE_VERSION,
 ): unknown {

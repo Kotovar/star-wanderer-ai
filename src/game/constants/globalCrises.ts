@@ -7,14 +7,14 @@ import { TRADE_GOODS } from "@/game/constants/goods";
 
 /** Первый кризис приходит в случайном окне, а не в фиксированный ход */
 export const FIRST_CRISIS_TURN_MIN = 100;
-export const FIRST_CRISIS_TURN_MAX = 120;
+const FIRST_CRISIS_TURN_MAX = 120;
 
 /** Интервал между кризисами тоже плавает */
-export const CRISIS_INTERVAL_MIN = 24;
-export const CRISIS_INTERVAL_MAX = 38;
+const CRISIS_INTERVAL_MIN = 24;
+const CRISIS_INTERVAL_MAX = 38;
 
 /** За сколько ходов до кризиса показывать предупреждение */
-export const CRISIS_WARNING_TURNS = 5;
+const CRISIS_WARNING_TURNS = 5;
 
 // ─── Значения эффектов ────────────────────────────────────────────────────────
 

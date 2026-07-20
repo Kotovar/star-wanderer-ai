@@ -29,7 +29,7 @@ interface TimedEffectDefinition {
   effects: ActiveEffect["effects"];
 }
 
-export const TIMED_EFFECTS: Record<TimedEffectId, TimedEffectDefinition> = {
+const TIMED_EFFECTS: Record<TimedEffectId, TimedEffectDefinition> = {
   coordinated_shift: {
     id: "coordinated_shift",
     source: "crew",

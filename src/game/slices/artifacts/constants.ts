@@ -10,7 +10,7 @@ export const ARTIFACT_FIND_BASE_CHANCE = 0.02;
 /**
  * Опыт учёным за изучение артефакта (за уровень требования)
  */
-export const ARTIFACT_RESEARCH_EXP_MULTIPLIER = 25;
+const ARTIFACT_RESEARCH_EXP_MULTIPLIER = 25;
 
 /**
  * Минимальный уровень учёного для снятия проклятия

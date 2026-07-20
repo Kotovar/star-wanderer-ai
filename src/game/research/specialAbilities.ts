@@ -1,6 +1,6 @@
 import type { TechnologyId } from "@/game/types";
 
-export const PHASE_SHIELD_ABSORB_CHANCE = 0.2;
+const PHASE_SHIELD_ABSORB_CHANCE = 0.2;
 
 export function hasWarpTravel(researchedTechs: readonly TechnologyId[]): boolean {
   return researchedTechs.includes("warp_drive");

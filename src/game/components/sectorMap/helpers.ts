@@ -79,7 +79,7 @@ export function getStarGlowColor(starType: StarType | undefined): string {
   }
 }
 
-export function getPlanetTypeTranslation(
+function getPlanetTypeTranslation(
   planetType: string,
   t: (key: string) => string,
 ): string {
@@ -100,7 +100,7 @@ export function getPlanetTypeTranslation(
   return map[planetType] || planetType;
 }
 
-export function getStationTypeTranslation(
+function getStationTypeTranslation(
   stationType: string,
   t: (key: string) => string,
 ): string {
@@ -555,7 +555,7 @@ export function getScannerInfo(
  * - anomaly tier 4: scanRange >= 15
  * - storm: scanRange >= 5
  */
-export function canDetectObject(
+function canDetectObject(
   type: LocationType,
   scanRange: number,
   tier: number = 1,

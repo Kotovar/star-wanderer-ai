@@ -25,12 +25,12 @@ export const CONTRACT_REWARDS = {
 /**
  * Интервал начисления пассивного опыта (какие ходы)
  */
-export const PASSIVE_EXP_INTERVAL = 5;
+const PASSIVE_EXP_INTERVAL = 5;
 
 /**
  * Количество пассивного опыта за одно начисление
  */
-export const PASSIVE_EXP_AMOUNT = 2;
+const PASSIVE_EXP_AMOUNT = 2;
 
 // ============================================================================
 // Опыт за назначения экипажа

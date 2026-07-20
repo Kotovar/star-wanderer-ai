@@ -283,17 +283,17 @@ export const giveRandomMutation = (
     return newTrait.name;
 };
 
-export const hasCombatAssignment = (
+const hasCombatAssignment = (
     crew: CrewMember[],
     assignment: CrewMemberCombatAssignment,
 ) => crew.some((c) => c.combatAssignment === assignment);
 
-export const hasAssignment = (
+const hasAssignment = (
     crew: CrewMember[],
     assignment: CrewMemberAssignment,
 ) => crew.some((c) => c.assignment === assignment);
 
-export const hasProfession = (crew: CrewMember[], profession: Profession) =>
+const hasProfession = (crew: CrewMember[], profession: Profession) =>
     crew.some((c) => c.profession === profession);
 
 /**
