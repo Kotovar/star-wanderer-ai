@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from "react";
 
-const RACE_SPRITE_SHEET = "/assets/races.png";
+const RACE_SPRITE_SHEET = "/assets/races.webp";
 const RACE_SPRITE_SHEET_WIDTH = 2172;
 const RACE_SPRITE_SHEET_HEIGHT = 722;
 

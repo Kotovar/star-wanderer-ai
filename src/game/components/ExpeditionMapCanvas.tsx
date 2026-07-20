@@ -50,7 +50,7 @@ const TILE_COLORS: Record<
   },
 };
 
-const EXPEDITION_LOCATION_SPRITE = "/assets/expedition_locations.png";
+const EXPEDITION_LOCATION_SPRITE = "/assets/expedition_locations.webp";
 const EXPEDITION_LOCATION_SPRITE_COUNT = 5;
 
 const TILE_SPRITE_INDEX: Record<ExploreTileType, number> = {

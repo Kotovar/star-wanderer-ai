@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import type { TechnologyId } from "@/game/types";
 
-const TECH_SPRITE_SHEET = "/assets/tech.png";
+const TECH_SPRITE_SHEET = "/assets/tech.webp";
 const TECH_SPRITE_WIDTH = 1586;
 const TECH_SPRITE_HEIGHT = 992;
 

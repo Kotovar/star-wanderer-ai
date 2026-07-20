@@ -241,7 +241,7 @@ export function GalaxyMap() {
 
     useEffect(() => {
         const image = new Image();
-        image.src = "/assets/ship.png";
+        image.src = "/assets/ship.webp";
         image.onload = () => {
             playerShipImageRef.current = image;
             setPlayerShipImageReady(true);
@@ -1150,7 +1150,7 @@ export function GalaxyMap() {
                                             <span
                                                 aria-hidden="true"
                                                 className="block h-4 w-4 bg-contain bg-center bg-no-repeat"
-                                                style={{ backgroundImage: "url('/assets/ship.png')" }}
+                                                style={{ backgroundImage: "url('/assets/ship.webp')" }}
                                             />
                                             <span>{t("galaxy.legend.current_sector")}</span>
                                         </div>

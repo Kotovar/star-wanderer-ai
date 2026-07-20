@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import type { ReactNode } from "react";
-import { GAME_IMAGE_PRELOADS } from "@/game/assets/preload";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -69,15 +68,6 @@ export default function RootLayout({
                     href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap"
                     rel="stylesheet"
                 />
-                {GAME_IMAGE_PRELOADS.map((href) => (
-                    <link
-                        key={href}
-                        rel="preload"
-                        as="image"
-                        href={href}
-                        fetchPriority="high"
-                    />
-                ))}
             </head>
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}

@@ -5,6 +5,7 @@ import { GameHeader } from "@/game/components/header";
 import { preloadGasGiantBackgrounds } from "@/game/components/GasGiantPanel";
 import { preloadModuleArt, ShipGrid } from "@/game/components/ShipGrid";
 import { preloadRacePlanetBackgrounds } from "@/game/components/PlanetPanel";
+import { preloadGameImages } from "@/game/assets/preload";
 import { ModuleList } from "@/game/components/ModuleList";
 import { CrewList } from "@/game/components/CrewList";
 import { ShipStats } from "@/game/components/ShipStats";
@@ -105,6 +106,7 @@ export default function Home() {
     preloadModuleArt();
     preloadRacePlanetBackgrounds();
     preloadGasGiantBackgrounds();
+    preloadGameImages();
   }, []);
 
   // ── Мобильная навигация: одно полноэкранное представление за раз ──

@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-const CREW_ICON_SPRITE_SHEET = "/assets/icons-crew.png";
+const CREW_ICON_SPRITE_SHEET = "/assets/icons-crew.webp";
 const CREW_ICON_SPRITE_WIDTH = 2804;
 const CREW_ICON_SPRITE_HEIGHT = 561;
 const CREW_ICON_COUNT = 5;

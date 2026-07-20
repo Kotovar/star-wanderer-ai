@@ -48,9 +48,9 @@ const NEEDS_SCANNER_LOCATIONS: LocationType[] = [
   "boss",
   "space_monster",
 ];
-const PLANET_SPRITE_SHEET = "/assets/plantes/planets.png";
-const GAS_PLANET_SPRITE_SHEET = "/assets/plantes/gas-planets.png";
-const STATION_SPRITE_SHEET = "/assets/stations.png";
+const PLANET_SPRITE_SHEET = "/assets/plantes/planets.webp";
+const GAS_PLANET_SPRITE_SHEET = "/assets/plantes/gas-planets.webp";
+const STATION_SPRITE_SHEET = "/assets/stations.webp";
 
 const getSectorMapRadius = (width: number, height: number) =>
   Math.min(width, height) * (width < 768 ? 0.7 : 0.45);

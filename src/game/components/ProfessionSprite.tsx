@@ -111,7 +111,7 @@ export function ProfessionSprite({
         >
             {title && <title>{title}</title>}
             <image
-                href={`/assets/professions/${safeRace}.png`}
+                href={`/assets/professions/${safeRace}.webp`}
                 x={0}
                 y={0}
                 width={PROFESSION_SPRITE_WIDTH}

@@ -1,9 +1,9 @@
 import type { CSSProperties } from "react";
 
-const ICON_SPRITE_SHEET = "/assets/icons.png";
+const ICON_SPRITE_SHEET = "/assets/icons.webp";
 const ICON_SPRITE_WIDTH = 1448;
 const ICON_SPRITE_HEIGHT = 1086;
-const EXTRA_ICON_SPRITE_SHEET = "/assets/icons-add.png";
+const EXTRA_ICON_SPRITE_SHEET = "/assets/icons-add.webp";
 const EXTRA_ICON_SPRITE_WIDTH = 1672;
 const EXTRA_ICON_SPRITE_HEIGHT = 941;
 

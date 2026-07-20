@@ -1,6 +1,6 @@
 import type { StarType } from "@/game/types";
 
-export const STAR_SPRITE_SHEET = "/assets/stars.png";
+export const STAR_SPRITE_SHEET = "/assets/stars.webp";
 const STAR_SPRITE_SHEET_WIDTH = 1448;
 const STAR_SPRITE_SHEET_HEIGHT = 1086;
 const STAR_SPRITE_COLUMNS = 4;
