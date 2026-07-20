@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { RESEARCH_RESOURCES } from "@/game/constants";
@@ -374,6 +374,7 @@ export function GasGiantPanel() {
   const { t } = useTranslation();
   const [showAbandonWarning, setShowAbandonWarning] = useState(false);
   const [showProbeLost, setShowProbeLost] = useState(false);
+  const [prevProbeLost, setPrevProbeLost] = useState(false);
   const probeLost = Boolean(
     activeDive?.finished &&
       activeDive.rewards.alien_biology === 0 &&
@@ -381,9 +382,10 @@ export function GasGiantPanel() {
       activeDive.rewards.void_membrane === 0,
   );
 
-  useEffect(() => {
+  if (probeLost !== prevProbeLost) {
+    setPrevProbeLost(probeLost);
     setShowProbeLost(probeLost);
-  }, [probeLost]);
+  }
 
   if (!currentLocation || currentLocation.type !== "gas_giant") return null;
 
