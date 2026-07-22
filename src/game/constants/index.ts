@@ -2,7 +2,6 @@ export * from "./artifacts";
 export * from "./bosses";
 export * from "./combat";
 export * from "./crew";
-export * from "./signals";
 export * from "./modules";
 export * from "./planets";
 export * from "./races";

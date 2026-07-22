@@ -6,7 +6,10 @@ import {
   PRICE_CEIL_MULTIPLIER,
 } from "../src/game/stations/marketTick.ts";
 import { TRADE_GOODS } from "../src/game/constants/goods.ts";
-import { STOCK_RANGE } from "../src/game/slices/trade/constants.ts";
+import {
+  STOCK_RANGE,
+  getTierPriceMultiplier,
+} from "../src/game/slices/trade/constants.ts";
 
 const goodIds = Object.keys(TRADE_GOODS);
 const basePrices = Object.fromEntries(
@@ -41,6 +44,31 @@ const up = driftStationPrices(makePrices(), basePrices, () => 1); // макси�
 assert.ok(up.st1.water.sell > TRADE_GOODS.water.basePrice, "дрейф вверх не сработал");
 const down = driftStationPrices(makePrices(), basePrices, () => 0); // максимум вниз
 assert.ok(down.st1.water.sell < TRADE_GOODS.water.basePrice, "дрейф вниз не сработал");
+
+// 2а. Тир сектора расширяет коридор дрейфа: цены станции тира 3 живут в коридоре base×2
+const tierMult = getTierPriceMultiplier(3);
+assert.equal(tierMult, 2, "множитель тира 3 должен быть ×2");
+let tierPrices = {
+  st1: Object.fromEntries(
+    goodIds.map((id) => [
+      id,
+      {
+        sell: TRADE_GOODS[id].basePrice * tierMult,
+        buy: Math.floor(TRADE_GOODS[id].basePrice * tierMult * 1.6),
+      },
+    ]),
+  ),
+};
+for (let i = 0; i < 200; i++) {
+  tierPrices = driftStationPrices(tierPrices, basePrices, Math.random, { st1: tierMult });
+  for (const id of goodIds) {
+    const { buy, sell } = tierPrices.st1[id];
+    const base = TRADE_GOODS[id].basePrice * tierMult;
+    assert.ok(sell >= Math.floor(base * PRICE_FLOOR_MULTIPLIER), `${id}: tier-sell ${sell} ниже пола`);
+    assert.ok(sell <= Math.floor(base * PRICE_CEIL_MULTIPLIER), `${id}: tier-sell ${sell} выше потолка`);
+    assert.ok(buy > sell, `${id}: tier buy ${buy} <= sell ${sell} (арбитраж)`);
+  }
+}
 
 // 3. Restock тянет пустой склад к цели и не превышает её
 let stock = { st1: Object.fromEntries(goodIds.map((id) => [id, 0])) };

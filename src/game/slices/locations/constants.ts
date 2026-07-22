@@ -8,14 +8,6 @@ import type { AnomalyApproach } from "@/game/types";
 // Константы для добычи астероидов
 // ============================================================================
 
-/** Уровни буров */
-const DRILL_LEVEL = {
-    BASIC: 1,
-    ADVANCED: 2,
-    SUPERIOR: 3,
-    ANCIENT: 4,
-} as const;
-
 /** Тиры астероидов */
 export const ASTEROID_TIER = {
     BASIC: 1,

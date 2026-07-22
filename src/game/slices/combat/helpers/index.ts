@@ -1,5 +1,4 @@
 export * from "./enemyAttack";
-export * from "./damageCalc";
 export * from "./combatSetup";
 export * from "./retreat";
 export * from "./startCombat";

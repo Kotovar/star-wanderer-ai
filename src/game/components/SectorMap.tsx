@@ -20,6 +20,7 @@ import {
 } from "./sectorMap/helpers";
 import { LegendIcon } from "./sectorMap/LegendIcon";
 import { setupHiDPICanvas } from "./canvas-utils";
+import { useMapZoomPan, DRAG_THRESHOLD } from "./useMapZoomPan";
 import {
   drawAncientBoss,
   drawAnomaly,
@@ -42,10 +43,6 @@ import {
   drawWreckField,
 } from "./sectorMap/drawers";
 
-const MIN_ZOOM = 0.5;
-const MAX_ZOOM = 3;
-const ZOOM_SENSITIVITY = 0.001;
-const DRAG_THRESHOLD = 5;
 const NEEDS_SCANNER_LOCATIONS: LocationType[] = [
   "storm",
   "anomaly",
@@ -67,7 +64,6 @@ type SectorSpriteImages = {
 };
 
 export function SectorMap() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const currentSector = useGameStore((s) => s.currentSector);
   const selectLocation = useGameStore((s) => s.selectLocation);
@@ -96,20 +92,29 @@ export function SectorMap() {
   const sectorOffset = useGameStore((s) => s.sectorOffset);
   const setZoomState = useGameStore((s) => s.setSectorZoom);
   const setOffsetState = useGameStore((s) => s.setSectorOffset);
-  const [zoom, setZoom] = useState(sectorZoom);
-  const [offset, setOffset] = useState(sectorOffset);
-  const [targetZoom, setTargetZoom] = useState<number | null>(null);
-  const zoomAnimationRef = useRef<number | null>(null);
+  const {
+    canvasRef,
+    zoom,
+    offset,
+    setOffset,
+    isPinchingRef,
+    beginPinch,
+    movePinch,
+    handleZoomIn,
+    handleZoomOut,
+    handleReset,
+  } = useMapZoomPan({
+    initialZoom: sectorZoom,
+    initialOffset: sectorOffset,
+    persistZoom: setZoomState,
+    persistOffset: setOffsetState,
+  });
   const [isDragging, setIsDragging] = useState(false);
   const isDraggingRef = useRef(false); // Ref for sync access in animation loop
   const dragStartRef = useRef({ x: 0, y: 0 });
   const offsetStartRef = useRef({ x: 0, y: 0 });
   const offsetRef = useRef(sectorOffset); // Ref for smooth dragging — initialized from store
   const hasMovedRef = useRef(false);
-  // Pinch-to-zoom state
-  const pinchStartDist = useRef(0);
-  const pinchStartZoom = useRef(1);
-  const isPinching = useRef(false);
   const animationFrameRef = useRef<number | null>(null);
   const dragStartTimeRef = useRef<number>(0); // Store animation time when drag starts
 
@@ -414,6 +419,7 @@ export function SectorMap() {
     ctx.restore();
   }, [
     canScanObject,
+    canvasRef,
     completedLocations,
     currentSector,
     hasTelepathy,
@@ -618,6 +624,13 @@ export function SectorMap() {
     // Initial draw
     drawCanvas();
 
+    // Без анимаций RAF-цикл не нужен: карта перерисовывается эффектом
+    // при изменении состояния, анимационный слой просто очищаем.
+    if (!animationsEnabled) {
+      animCtx.clearRect(0, 0, newWidth, newHeight);
+      return;
+    }
+
     // Start animation loop
     const animate = () => {
       const animState = animationStateRef.current;
@@ -704,25 +717,7 @@ export function SectorMap() {
         cancelAnimationFrame(animationFrameIdRef.current);
       }
     };
-  }, [animationsEnabled, currentSector, drawCanvas, offset, zoom]);
-
-  // Handle wheel zoom — native non-passive listener so preventDefault works
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const delta = -e.deltaY * ZOOM_SENSITIVITY;
-      const newZoom = Math.min(
-        MAX_ZOOM,
-        Math.max(MIN_ZOOM, zoom * (1 + delta)),
-      );
-      setTargetZoom(newZoom);
-    };
-    canvas.addEventListener("wheel", handleWheel, { passive: false });
-    return () => canvas.removeEventListener("wheel", handleWheel);
-  }, [zoom]);
+  }, [animationsEnabled, canvasRef, currentSector, drawCanvas, offset, zoom]);
 
   // Handle mouse down for dragging
   const handleMouseDown = useCallback(
@@ -874,7 +869,7 @@ export function SectorMap() {
         setHoveredLocation(null);
       }
     },
-    [animationsEnabled, currentSector, drawCanvas, offset, zoom],
+    [animationsEnabled, canvasRef, currentSector, drawCanvas, offset, zoom],
   );
 
   // Handle mouse up to stop dragging
@@ -891,7 +886,7 @@ export function SectorMap() {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
-  }, [setOffsetState]);
+  }, [setOffset, setOffsetState]);
 
   // Handle mouse leave to stop dragging
   const handleMouseLeave = useCallback(() => {
@@ -906,23 +901,19 @@ export function SectorMap() {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
-  }, [setOffsetState]);
+  }, [setOffset, setOffsetState]);
 
   // Touch handlers for mobile (pan + pinch-to-zoom)
   const handleTouchStart = useCallback(
     (e: React.TouchEvent<HTMLCanvasElement>) => {
       if (e.touches.length === 2) {
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        pinchStartDist.current = Math.hypot(dx, dy);
-        pinchStartZoom.current = zoom;
-        isPinching.current = true;
+        beginPinch(e.touches);
         hasMovedRef.current = true;
         setIsDragging(false);
         isDraggingRef.current = false;
         return;
       }
-      if (isPinching.current) return;
+      if (isPinchingRef.current) return;
       const touch = e.touches[0];
       setIsDragging(true);
       isDraggingRef.current = true;
@@ -931,28 +922,13 @@ export function SectorMap() {
       offsetStartRef.current = { ...offsetRef.current };
       dragStartTimeRef.current = animationStateRef.current.time;
     },
-    [zoom],
+    [beginPinch, isPinchingRef],
   );
 
   const handleTouchMove = useCallback(
     (e: React.TouchEvent<HTMLCanvasElement>) => {
       // Pinch-to-zoom: два пальца
-      if (isPinching.current && e.touches.length === 2) {
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const dist = Math.hypot(dx, dy);
-        if (pinchStartDist.current > 0) {
-          const ratio = dist / pinchStartDist.current;
-          const newZoom = Math.min(
-            MAX_ZOOM,
-            Math.max(MIN_ZOOM, pinchStartZoom.current * ratio),
-          );
-          setZoom(newZoom);
-          setTargetZoom(null);
-          setZoomState(newZoom);
-        }
-        return;
-      }
+      if (movePinch(e.touches)) return;
 
       if (!isDraggingRef.current) return;
 
@@ -1026,13 +1002,13 @@ export function SectorMap() {
         drawCanvas();
       });
     },
-    [animationsEnabled, drawCanvas, setZoomState],
+    [animationsEnabled, drawCanvas, movePinch],
   );
 
   const handleTouchEnd = useCallback(
     (e: React.TouchEvent<HTMLCanvasElement>) => {
-      if (isPinching.current) {
-        isPinching.current = false;
+      if (isPinchingRef.current) {
+        isPinchingRef.current = false;
         if (e.touches.length === 1) {
           const touch = e.touches[0];
           setIsDragging(true);
@@ -1096,66 +1072,15 @@ export function SectorMap() {
         }
       }
     },
-    [setOffsetState, currentSector, zoom],
+    [
+      canvasRef,
+      currentSector,
+      isPinchingRef,
+      setOffset,
+      setOffsetState,
+      zoom,
+    ],
   );
-
-  // Zoom animation effect
-  useEffect(() => {
-    if (targetZoom === null) return;
-
-    const animateZoom = () => {
-      setZoom((prevZoom) => {
-        const diff = targetZoom - prevZoom;
-        const step = diff * 0.15; // Smooth easing
-
-        if (Math.abs(diff) < 0.001) {
-          setZoom(targetZoom);
-          setTargetZoom(null);
-          setZoomState(targetZoom);
-          return targetZoom;
-        }
-
-        return prevZoom + step;
-      });
-      zoomAnimationRef.current = requestAnimationFrame(animateZoom);
-    };
-
-    zoomAnimationRef.current = requestAnimationFrame(animateZoom);
-
-    return () => {
-      if (zoomAnimationRef.current) {
-        cancelAnimationFrame(zoomAnimationRef.current);
-      }
-    };
-  }, [targetZoom, setZoomState]);
-
-  // Zoom in/out buttons
-  const handleZoomIn = useCallback(() => {
-    setTargetZoom((prev) => {
-      const currentZoom = prev !== null ? prev : zoom;
-      const newZoom = Math.min(MAX_ZOOM, currentZoom * 1.3);
-      setZoomState(newZoom);
-      return newZoom;
-    });
-  }, [zoom, setZoomState]);
-
-  const handleZoomOut = useCallback(() => {
-    setTargetZoom((prev) => {
-      const currentZoom = prev !== null ? prev : zoom;
-      const newZoom = Math.max(MIN_ZOOM, currentZoom / 1.3);
-      setZoomState(newZoom);
-      return newZoom;
-    });
-  }, [zoom, setZoomState]);
-
-  // Reset zoom and pan
-  const handleReset = useCallback(() => {
-    setTargetZoom(1);
-    setZoomState(1);
-    const resetOffset = { x: 0, y: 0 };
-    setOffset(resetOffset);
-    setOffsetState(resetOffset);
-  }, [setZoomState, setOffsetState]);
 
   // Keep offsetRef in sync with offset state so drag always starts from the correct position
   useEffect(() => {

@@ -1,4 +1,4 @@
-import i18n from "./i18n";
+import { store } from "./useTranslation";
 
 // Helper function to get translated planet type name
 export function getPlanetTypeName(
@@ -23,8 +23,8 @@ export function getPlanetTypeName(
 
     const key = ruToEn[planetType] || planetType.toLowerCase();
 
-    // Use provided t function or fallback to i18n.t
-    const translate = t || i18n.t.bind(i18n);
+    // Use provided t function or fallback to the translation store
+    const translate = t || store.t.bind(store);
     return translate(`locations.planet_types.${key}`);
 }
 
@@ -51,8 +51,8 @@ export function getPlanetDescription(
 
     const key = ruToEn[planetType] || planetType.toLowerCase();
 
-    // Use provided t function or fallback to i18n.t
-    const translate = t || i18n.t.bind(i18n);
+    // Use provided t function or fallback to the translation store
+    const translate = t || store.t.bind(store);
     return translate(`planet_descriptions.${key}`);
 }
 

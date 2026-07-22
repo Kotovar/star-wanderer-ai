@@ -24,15 +24,6 @@ export const PROFESSION_NAMES: Record<Profession, string> = {
     gunner: "Стрелок",
 };
 
-const PROFESSION_DESCRIPTIONS: Record<Profession, string> = {
-    pilot: "Может улучшать маневрирование и навигацию.",
-    engineer: "Может ремонтировать и улучшать системы корабля.",
-    medic: "Может лечить экипаж и поддерживать мораль На корабле.",
-    scout: "Может исследовать пустые планеты и находить ресурсы.",
-    scientist: "Может исследовать аномалии. Может исследовать технолонии",
-    gunner: "Управляет огнём корабля. Может выбирать цели в бою",
-};
-
 type ActiveCrewAssignment = Exclude<NonNullable<CrewMemberAssignment>, "">;
 
 export const CREW_ASSIGNMENT_ICONS: Record<ActiveCrewAssignment, string> = {
@@ -235,11 +226,6 @@ export const BASE_CREW_HEALTH = 100;
  * Базовое счастье экипажа при найме (в процентах от максимального)
  */
 export const INITIAL_HAPPINESS_PERCENT = 80;
-
-/**
- * Минимальное счастье экипажа
- */
-const MIN_CREW_HAPPINESS = 0;
 
 /**
  * Максимальное счастье экипажа по умолчанию

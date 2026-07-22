@@ -7,6 +7,7 @@ import {
     MIN_STOCK_AMOUNT,
     MAX_STOCK_VARIATION,
     DEFAULT_DISCOUNT,
+    getTierPriceMultiplier,
 } from "@/game/slices/trade/constants";
 import type { Sector, Goods, StationPrices, StationStock } from "@/game/types";
 
@@ -33,6 +34,8 @@ export const initializeStationData = (sectors: Sector[]) => {
                 >;
                 stock[loc.stationId] = {} as Record<Goods, number>;
 
+                // Цены растут с тиром сектора: дальние станции торгуют дороже
+                const tierMultiplier = getTierPriceMultiplier(sector.tier);
                 const stationConfig = loc.stationConfig;
                 const mineralDiscount =
                     stationConfig?.mineralDiscount ?? DEFAULT_DISCOUNT;
@@ -48,7 +51,10 @@ export const initializeStationData = (sectors: Sector[]) => {
                         MIN_PRICE_VARIATION +
                         Math.random() * MAX_PRICE_VARIATION;
                     const sellPrice = Math.floor(
-                        good.basePrice * priceVar * priceDiscount,
+                        good.basePrice *
+                            tierMultiplier *
+                            priceVar *
+                            priceDiscount,
                     );
 
                     let buyPrice = Math.floor(

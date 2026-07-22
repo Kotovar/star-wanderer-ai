@@ -1,5 +1,8 @@
 import { TRADE_GOODS } from "@/game/constants/goods";
-import { STOCK_RANGE } from "@/game/slices/trade/constants";
+import {
+    STOCK_RANGE,
+    getTierPriceMultiplier,
+} from "@/game/slices/trade/constants";
 import type { GameStore, SetState } from "@/game/types";
 import {
     driftStationPrices,
@@ -7,6 +10,7 @@ import {
     PRICE_DRIFT_INTERVAL,
     RESTOCK_INTERVAL,
     type BasePrices,
+    type StationTierMultipliers,
 } from "./marketTick";
 
 const BASE_PRICES: BasePrices = Object.fromEntries(
@@ -28,8 +32,24 @@ export const processMarketTick = (
     const turn = get().turn;
 
     if (turn > 0 && turn % PRICE_DRIFT_INTERVAL === 0) {
+        // Коридор дрейфа учитывает тир сектора станции
+        const tierMultipliers: StationTierMultipliers = {};
+        for (const sector of get().galaxy.sectors) {
+            for (const loc of sector.locations) {
+                if (loc.type === "station" && loc.stationId) {
+                    tierMultipliers[loc.stationId] = getTierPriceMultiplier(
+                        sector.tier,
+                    );
+                }
+            }
+        }
         set((s) => ({
-            stationPrices: driftStationPrices(s.stationPrices, BASE_PRICES),
+            stationPrices: driftStationPrices(
+                s.stationPrices,
+                BASE_PRICES,
+                Math.random,
+                tierMultipliers,
+            ),
         }));
     }
 

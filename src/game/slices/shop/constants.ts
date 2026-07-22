@@ -5,9 +5,6 @@
 /** Максимальный уровень улучшения модуля (через улучшение) */
 export const MAX_UPGRADE_LEVEL = 3;
 
-/** Уровень модуля LV4 (можно только найти, нельзя улучшить) */
-const LEGENDARY_MODULE_LEVEL = 4;
-
 /** Здоровье модуля по уровням */
 export const MODULE_HEALTH_BY_LEVEL: Record<number, number> = {
     1: 100,
@@ -26,9 +23,6 @@ export const MODULE_DEFENSE_BY_LEVEL: Record<number, number> = {
 
 /** Прирост здоровья за уровень улучшения */
 export const UPGRADE_HEALTH_BONUS = 20;
-
-/** Базовый размер сетки корабля */
-const DEFAULT_GRID_SIZE = 5;
 
 /** Типы модулей, которые можно иметь только в одном экземпляре */
 export const UNIQUE_MODULE_TYPES = ["scanner", "drill"] as const;

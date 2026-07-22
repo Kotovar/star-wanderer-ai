@@ -105,5 +105,3 @@ export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
         installCost: 700,
     },
 };
-
-const AUGMENTATION_INSTALL_BASE_COST = 600;

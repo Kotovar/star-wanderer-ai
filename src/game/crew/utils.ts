@@ -7,8 +7,6 @@ import {
 } from "@/game/constants";
 import type {
     CrewMember,
-    CrewMemberAssignment,
-    CrewMemberCombatAssignment,
     CrewTrait,
     Profession,
     Quality,
@@ -282,19 +280,6 @@ export const giveRandomMutation = (
     }));
     return newTrait.name;
 };
-
-const hasCombatAssignment = (
-    crew: CrewMember[],
-    assignment: CrewMemberCombatAssignment,
-) => crew.some((c) => c.combatAssignment === assignment);
-
-const hasAssignment = (
-    crew: CrewMember[],
-    assignment: CrewMemberAssignment,
-) => crew.some((c) => c.assignment === assignment);
-
-const hasProfession = (crew: CrewMember[], profession: Profession) =>
-    crew.some((c) => c.profession === profession);
 
 /**
  * Лучший (по уровню) член экипажа заданной профессии

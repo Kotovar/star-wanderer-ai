@@ -9,7 +9,6 @@ import {
     Portal,
     Root,
     Title,
-    Trigger,
 } from "@radix-ui/react-dialog";
 import { XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,16 +17,8 @@ export function Dialog({ ...props }: ComponentProps<typeof Root>) {
     return <Root data-slot="dialog" {...props} />;
 }
 
-function DialogTrigger({ ...props }: ComponentProps<typeof Trigger>) {
-    return <Trigger data-slot="dialog-trigger" {...props} />;
-}
-
 function DialogPortal({ ...props }: ComponentProps<typeof Portal>) {
     return <Portal data-slot="dialog-portal" {...props} />;
-}
-
-function DialogClose({ ...props }: ComponentProps<typeof Close>) {
-    return <Close data-slot="dialog-close" {...props} />;
 }
 
 function DialogOverlay({

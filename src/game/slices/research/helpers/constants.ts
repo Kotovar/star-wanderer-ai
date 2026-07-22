@@ -1,14 +1,4 @@
 /**
- * Множитель скорости исследования от технологии
- */
-const RESEARCH_SPEED_TECH_MULTIPLIER = 1.2;
-
-/**
- * Максимальное значение прогресса исследования (в процентах)
- */
-const MAX_RESEARCH_PROGRESS = 100;
-
-/**
  * Значение по умолчанию для здоровья модуля
  */
 export const DEFAULT_MODULE_HEALTH = 100;

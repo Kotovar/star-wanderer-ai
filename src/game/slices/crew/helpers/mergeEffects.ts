@@ -1,6 +1,6 @@
 import { XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants/races";
 import { isModuleActive } from "@/game/modules/utils";
-import type { GameState, CrewMember, Module } from "@/game/types";
+import type { CrewMember, Module } from "@/game/types";
 
 /**
  * Суммарные бонусы от сращивания ксеноморфов
@@ -71,86 +71,3 @@ export const getMergeEffectsBonus = (
   return bonus;
 };
 
-/**
- * Применяет бонусы сращивания к состоянию корабля
- * Возвращает модифицированные статы
- */
-const applyMergeEffectsToShip = (
-  state: GameState,
-  stats: {
-    maxShields: number;
-    power: number;
-    evasion: number;
-    oxygenCapacity: number;
-    cargoCapacity: number;
-    fuelCapacity: number;
-    scanRange: number;
-    researchSpeed: number;
-    weaponDamage: number;
-    weaponAccuracy: number;
-    healing: number;
-    miningSpeed: number;
-    resourceYield: number;
-    glitchResistance: number;
-    initiative: number;
-  },
-): typeof stats => {
-  const bonus = getMergeEffectsBonus(state.crew, state.ship.modules);
-
-  return {
-    ...stats,
-    maxShields: applyPercentageBonus(
-      stats.maxShields,
-      bonus.shieldCapacity,
-    ),
-    power: applyPercentageBonus(stats.power, bonus.powerOutput),
-    evasion: applyPercentageBonus(stats.evasion, bonus.evasionBonus),
-    oxygenCapacity: applyPercentageBonus(
-      stats.oxygenCapacity,
-      bonus.oxygenEfficiency,
-    ),
-    cargoCapacity: applyPercentageBonus(
-      stats.cargoCapacity,
-      bonus.cargoCapacity,
-    ),
-    fuelCapacity: applyPercentageBonus(
-      stats.fuelCapacity,
-      bonus.fuelCapacity,
-    ),
-    scanRange: stats.scanRange + (bonus.scanRange ?? 0),
-    researchSpeed: applyPercentageBonus(
-      stats.researchSpeed,
-      bonus.researchSpeed,
-    ),
-    weaponDamage: applyPercentageBonus(
-      stats.weaponDamage,
-      bonus.weaponDamage,
-    ),
-    weaponAccuracy: applyPercentageBonus(
-      stats.weaponAccuracy,
-      bonus.weaponAccuracy,
-    ),
-    healing: applyPercentageBonus(stats.healing, bonus.healing),
-    miningSpeed: applyPercentageBonus(stats.miningSpeed, bonus.miningSpeed),
-    resourceYield: applyPercentageBonus(
-      stats.resourceYield,
-      bonus.resourceYield,
-    ),
-    glitchResistance: applyPercentageBonus(
-      stats.glitchResistance,
-      bonus.glitchResistance,
-    ),
-    initiative: applyPercentageBonus(
-      stats.initiative,
-      bonus.initiativeBonus,
-    ),
-  };
-};
-
-/**
- * Применяет процентный бонус к значению
- */
-const applyPercentageBonus = (base: number, bonusPercent?: number) => {
-  if (!bonusPercent || bonusPercent <= 0) return base;
-  return Math.floor(base * (1 + bonusPercent / 100));
-};

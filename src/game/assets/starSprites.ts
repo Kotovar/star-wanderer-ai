@@ -4,7 +4,6 @@ export const STAR_SPRITE_SHEET = "/assets/stars.webp";
 const STAR_SPRITE_SHEET_WIDTH = 1448;
 const STAR_SPRITE_SHEET_HEIGHT = 1086;
 const STAR_SPRITE_COLUMNS = 4;
-const STAR_SPRITE_ROWS = 3;
 const STAR_SPRITE_CELL_SIZE = 362;
 type StarSpriteRect = { x: number; y: number; width: number; height: number };
 

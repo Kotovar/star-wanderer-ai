@@ -20,6 +20,13 @@ export const MAX_STOCK_VARIATION = 30;
 /** Значение скидки по умолчанию (без скидки) */
 export const DEFAULT_DISCOUNT = 1;
 
+/** Прирост цен товаров за каждый тир сектора выше первого (+50% за тир) */
+export const TIER_PRICE_STEP = 0.5;
+
+/** Множитель цен станции по тиру сектора: тир 1 → ×1, тир 2 → ×1.5, тир 3 → ×2, тир 4 → ×2.5 */
+export const getTierPriceMultiplier = (tier: number): number =>
+    1 + TIER_PRICE_STEP * (Math.max(1, tier) - 1);
+
 /**
  * Диапазон множителей цены для расчёта цен
  */

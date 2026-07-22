@@ -60,8 +60,6 @@ export const MODULES_BY_PRIOTITY = [
 export const EMERGENCY_SHUTDOWN_DAMAGE = 0.1; // 10% урона модулю, когда он аварийно выключен из-за отсутствия энергии
 export const DEFAULT_MAX_HEALTH_MODULE = 100;
 export const MIN_MODULE_HEALTH = 0;
-const BASE_SHIELD_REGEN_MIN = 5;
-const BASE_SHIELD_REGEN_MAX = 10;
 
 export const MODULES_FROM_BOSSES: ShopItem[] = [
     {

@@ -51,15 +51,3 @@ export const ASSIGNMENT_MULTIPLIERS = {
     MIN_HAPPINESS: 0,
     ZERO_HAPPINESS: 0,
 } as const;
-
-/** Шансы и коэффициенты */
-const ASSIGNMENT_CHANCES = {
-    GLITCH_REDUCTION_FROM_MERGE: 0.5, // -50% шанс сбоя ИИ
-} as const;
-
-/** Пороги для эффектов */
-const ASSIGNMENT_THRESHOLDS = {
-    CRITICAL_HEALTH: 30,
-    BROKEN_MODULE: 0,
-    ZERO_HAPPINESS: 0,
-} as const;

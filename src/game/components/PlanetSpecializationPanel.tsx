@@ -6,7 +6,7 @@ import { PLANET_SPECIALIZATIONS } from "@/game/constants/planets";
 import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
 import { createVoidbornBoostEffect } from "@/game/slices/artifacts/helpers";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/lib/useTranslation";
 
 interface PlanetSpecializationPanelProps {
     onClose: () => void;

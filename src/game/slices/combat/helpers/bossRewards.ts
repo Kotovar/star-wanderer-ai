@@ -1,5 +1,5 @@
 import { MODULES_FROM_BOSSES } from "@/game/constants/modules";
-import type { BossModuleType, GameState, ShopItem } from "@/game/types";
+import type { GameState, ShopItem } from "@/game/types";
 
 interface BossReward {
     artifactId?: string;
@@ -53,34 +53,6 @@ const getRandomBossReward = (
     const randomIndex = Math.floor(Math.random() * availableModules.length);
     return availableModules[randomIndex];
 };
-
-/**
- * Gets the module configuration from MODULES_FROM_BOSSES by boss module type
- * Only 3 unique boss modules: ancient-core, conversion-core, quantum-engine
- */
-const getBossRewardModule = (
-    moduleType: BossModuleType,
-): ShopItem | undefined => {
-    const moduleIdMap: Record<BossModuleType, string> = {
-        ancient_core: "ancient-core",
-        conversion_core: "conversion-core",
-        quantum_engine: "quantum-engine",
-    };
-
-    return MODULES_FROM_BOSSES.find((m) => m.id === moduleIdMap[moduleType]);
-};
-
-/**
- * Gets the display name for a boss module reward
- */
-const getBossRewardModuleName = (moduleType: BossModuleType) =>
-    getBossRewardModule(moduleType)?.name || "Неизвестный модуль";
-
-/**
- * Gets the ship module type for a boss reward module
- */
-const getBossRewardModuleType = (moduleType: BossModuleType) =>
-    getBossRewardModule(moduleType)?.moduleType || "reactor";
 
 /**
  * Determines boss rewards based on boss configuration

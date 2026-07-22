@@ -49,9 +49,6 @@ export function getRuinsDepthDamage(depth: number): number {
 // Индекс центральной клетки — зона высадки, точка старта исследования.
 export const EXPEDITION_START_INDEX = Math.floor(EXPEDITION_TILE_COUNT / 2);
 
-// Покрытие: разведчик даёт +1 AP (эффективная навигация по поверхности).
-const EXPEDITION_SCOUT_AP_BONUS = 1;
-
 // Эффекты профессий в отряде.
 export const EXPEDITION_SCIENTIST_LAB_BONUS = 1; // +ресурс с лаборатории за каждого учёного
 export const EXPEDITION_SCANS_PER_SCIENTIST = 1; // сканирований поверхности за каждого учёного

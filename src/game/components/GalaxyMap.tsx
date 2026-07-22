@@ -26,6 +26,7 @@ import {
 } from "@/game/slices/travel/helpers";
 import { getSectorReadiness } from "@/game/progression/sectorReadiness";
 import { setupHiDPICanvas } from "./canvas-utils";
+import { useMapZoomPan, DRAG_THRESHOLD } from "./useMapZoomPan";
 
 // Animation constants
 const TWINKLING_STARS_COUNT = 40;
@@ -127,11 +128,6 @@ function generateCosmicParticles() {
     return particles;
 }
 
-const MIN_ZOOM = 0.5;
-const MAX_ZOOM = 3;
-const ZOOM_SENSITIVITY = 0.001;
-const DRAG_THRESHOLD = 5; // Minimum pixels to move before considering it a drag
-
 const STAR_TYPES = STAR_SPRITE_ORDER;
 
 function GalaxyStarIcon({ type }: { type: (typeof STAR_TYPES)[number] }) {
@@ -145,7 +141,6 @@ function GalaxyStarIcon({ type }: { type: (typeof STAR_TYPES)[number] }) {
 }
 
 export function GalaxyMap() {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
     const starsRef = useRef<Array<{
@@ -186,7 +181,24 @@ export function GalaxyMap() {
     const galaxyOffset = useGameStore((s) => s.galaxyOffset);
     const setZoomState = useGameStore((s) => s.setGalaxyZoom);
     const setOffsetState = useGameStore((s) => s.setGalaxyOffset);
-    const [zoom, setZoom] = useState(galaxyZoom);
+    const {
+        canvasRef,
+        zoom,
+        setZoom,
+        offset,
+        setOffset,
+        isPinchingRef,
+        beginPinch,
+        movePinch,
+        handleZoomIn,
+        handleZoomOut,
+        handleReset,
+    } = useMapZoomPan({
+        initialZoom: galaxyZoom,
+        initialOffset: galaxyOffset,
+        persistZoom: setZoomState,
+        persistOffset: setOffsetState,
+    });
     const [legendOpen, setLegendOpen] = useState(false);
     const [dangerousJump, setDangerousJump] = useState<{
         sectorId: number;
@@ -201,11 +213,8 @@ export function GalaxyMap() {
         turns: number;
         fuelCost: number;
     } | null>(null);
-    const [offset, setOffset] = useState(galaxyOffset);
-    const [targetZoom, setTargetZoom] = useState<number | null>(null);
     const [playerShipImageReady, setPlayerShipImageReady] = useState(false);
     const [starSpriteImageReady, setStarSpriteImageReady] = useState(false);
-    const zoomAnimationRef = useRef<number | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const hintDismissed = useSyncExternalStore(
         () => () => {},
@@ -214,10 +223,6 @@ export function GalaxyMap() {
     );
     const dragStartRef = useRef({ x: 0, y: 0 });
     const offsetStartRef = useRef({ x: 0, y: 0 });
-    // Pinch-to-zoom state
-    const pinchStartDist = useRef(0);
-    const pinchStartZoom = useRef(1);
-    const isPinching = useRef(false);
 
     const dismissHint = () => {
         localStorage.setItem("sw_galaxy_hint_done", "1");
@@ -345,36 +350,6 @@ export function GalaxyMap() {
         return () => observer.disconnect();
     }, []);
 
-    // Zoom animation effect
-    useEffect(() => {
-        if (targetZoom === null) return;
-
-        const animateZoom = () => {
-            setZoom((prevZoom) => {
-                const diff = targetZoom - prevZoom;
-                const step = diff * 0.15; // Smooth easing
-
-                if (Math.abs(diff) < 0.001) {
-                    setZoom(targetZoom);
-                    setTargetZoom(null);
-                    setZoomState(targetZoom);
-                    return targetZoom;
-                }
-
-                return prevZoom + step;
-            });
-            zoomAnimationRef.current = requestAnimationFrame(animateZoom);
-        };
-
-        zoomAnimationRef.current = requestAnimationFrame(animateZoom);
-
-        return () => {
-            if (zoomAnimationRef.current) {
-                cancelAnimationFrame(zoomAnimationRef.current);
-            }
-        };
-    }, [targetZoom, setZoomState]);
-
     // Reset zoom on new game only (when galaxy is regenerated)
     const prevGalaxySignatureRef = useRef<string>("");
     useEffect(() => {
@@ -396,7 +371,7 @@ export function GalaxyMap() {
             }
         }
         prevGalaxySignatureRef.current = galaxySignature;
-    }, [sectors]);
+    }, [sectors, setZoom, setOffset]);
 
     const drawGalaxyCanvas = useCallback(() => {
         const canvas = canvasRef.current;
@@ -508,6 +483,7 @@ export function GalaxyMap() {
         ctx.restore();
     }, [
         animationsEnabled,
+        canvasRef,
         areEnginesFunctional,
         areFuelTanksFunctional,
         artifacts,
@@ -549,6 +525,13 @@ export function GalaxyMap() {
         }
         if (!particlesRef.current) {
             particlesRef.current = generateCosmicParticles();
+        }
+
+        // Без анимаций RAF-цикл не нужен: карта перерисовывается отдельным
+        // эффектом при изменении состояния, анимационный слой просто очищаем.
+        if (!animationsEnabled) {
+            animCtx.clearRect(0, 0, width, height);
+            return;
         }
 
         // Animation loop
@@ -627,24 +610,6 @@ export function GalaxyMap() {
         };
     }, [animationsEnabled, drawGalaxyCanvas]);
 
-    // Handle wheel zoom — native non-passive listener so preventDefault works
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const handleWheel = (e: WheelEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const delta = -e.deltaY * ZOOM_SENSITIVITY;
-            const newZoom = Math.min(
-                MAX_ZOOM,
-                Math.max(MIN_ZOOM, zoom * (1 + delta)),
-            );
-            setTargetZoom(newZoom);
-        };
-        canvas.addEventListener("wheel", handleWheel, { passive: false });
-        return () => canvas.removeEventListener("wheel", handleWheel);
-    }, [zoom]);
-
     // Handle mouse down for dragging
     const handleMouseDown = useCallback(
         (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -677,7 +642,7 @@ export function GalaxyMap() {
                 y: offsetStartRef.current.y + dy,
             });
         },
-        [isDragging],
+        [isDragging, setOffset],
     );
 
     // Handle mouse up to stop dragging
@@ -700,44 +665,25 @@ export function GalaxyMap() {
     const handleTouchStart = useCallback(
         (e: React.TouchEvent<HTMLCanvasElement>) => {
             if (e.touches.length === 2) {
-                const dx = e.touches[0].clientX - e.touches[1].clientX;
-                const dy = e.touches[0].clientY - e.touches[1].clientY;
-                pinchStartDist.current = Math.hypot(dx, dy);
-                pinchStartZoom.current = zoom;
-                isPinching.current = true;
+                beginPinch(e.touches);
                 hasMovedRef.current = true; // suppress click after pinch
                 setIsDragging(false);
                 return;
             }
-            if (isPinching.current) return;
+            if (isPinchingRef.current) return;
             const touch = e.touches[0];
             setIsDragging(true);
             hasMovedRef.current = false;
             dragStartRef.current = { x: touch.clientX, y: touch.clientY };
             offsetStartRef.current = { ...offset };
         },
-        [offset, zoom],
+        [offset, beginPinch, isPinchingRef],
     );
 
     const handleTouchMove = useCallback(
         (e: React.TouchEvent<HTMLCanvasElement>) => {
             // Pinch-to-zoom: два пальца
-            if (isPinching.current && e.touches.length === 2) {
-                const dx = e.touches[0].clientX - e.touches[1].clientX;
-                const dy = e.touches[0].clientY - e.touches[1].clientY;
-                const dist = Math.hypot(dx, dy);
-                if (pinchStartDist.current > 0) {
-                    const ratio = dist / pinchStartDist.current;
-                    const newZoom = Math.min(
-                        MAX_ZOOM,
-                        Math.max(MIN_ZOOM, pinchStartZoom.current * ratio),
-                    );
-                    setZoom(newZoom);
-                    setTargetZoom(null);
-                    setZoomState(newZoom);
-                }
-                return;
-            }
+            if (movePinch(e.touches)) return;
 
             if (!isDragging) return;
 
@@ -757,13 +703,13 @@ export function GalaxyMap() {
                 y: offsetStartRef.current.y + dy,
             });
         },
-        [isDragging, setZoomState],
+        [isDragging, movePinch, setOffset],
     );
 
     const handleTouchEnd = useCallback(
         (e: React.TouchEvent<HTMLCanvasElement>) => {
-            if (isPinching.current) {
-                isPinching.current = false;
+            if (isPinchingRef.current) {
+                isPinchingRef.current = false;
                 // Если остался один палец — продолжаем пан одним пальцем
                 if (e.touches.length === 1) {
                     const touch = e.touches[0];
@@ -779,36 +725,8 @@ export function GalaxyMap() {
             }
             setIsDragging(false);
         },
-        [isDragging, offset, setOffsetState],
+        [isDragging, offset, setOffsetState, isPinchingRef, setIsDragging],
     );
-
-    // Zoom in/out buttons
-    const handleZoomIn = useCallback(() => {
-        setTargetZoom((prev) => {
-            const currentZoom = prev !== null ? prev : zoom;
-            const newZoom = Math.min(MAX_ZOOM, currentZoom * 1.3);
-            setZoomState(newZoom);
-            return newZoom;
-        });
-    }, [zoom, setZoomState]);
-
-    const handleZoomOut = useCallback(() => {
-        setTargetZoom((prev) => {
-            const currentZoom = prev !== null ? prev : zoom;
-            const newZoom = Math.max(MIN_ZOOM, currentZoom / 1.3);
-            setZoomState(newZoom);
-            return newZoom;
-        });
-    }, [zoom, setZoomState]);
-
-    // Reset zoom and pan
-    const handleReset = useCallback(() => {
-        setTargetZoom(1);
-        setZoomState(1);
-        const resetOffset = { x: 0, y: 0 };
-        setOffset(resetOffset);
-        setOffsetState(resetOffset);
-    }, [setZoomState, setOffsetState]);
 
     const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
         // Don't click if we were dragging (moved mouse)

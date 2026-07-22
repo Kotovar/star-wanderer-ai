@@ -13,9 +13,6 @@ const FIRST_CRISIS_TURN_MAX = 120;
 const CRISIS_INTERVAL_MIN = 24;
 const CRISIS_INTERVAL_MAX = 38;
 
-/** За сколько ходов до кризиса показывать предупреждение */
-const CRISIS_WARNING_TURNS = 5;
-
 // ─── Значения эффектов ────────────────────────────────────────────────────────
 
 const MIN_MODULE_HEALTH = 10;

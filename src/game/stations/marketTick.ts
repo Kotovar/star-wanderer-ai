@@ -23,27 +23,33 @@ const RESTOCK_RATE = 0.25;
 /** Базовые цены товаров: goodId -> basePrice */
 export type BasePrices = Record<string, number>;
 
+/** Множители цен станций по тиру сектора: stationId -> multiplier */
+export type StationTierMultipliers = Record<string, number>;
+
 /**
  * Дрейф цен всех станций: каждая цена смещается на случайный множитель
  * в пределах ±MAX_PRICE_DRIFT. Цена продажи зажимается в коридор
- * [basePrice × PRICE_FLOOR, basePrice × PRICE_CEIL], цена покупки двигается
- * тем же фактическим множителем — соотношение buy > sell (анти-арбитраж)
- * и станционные скидки сохраняются.
+ * [basePrice × tierMult × PRICE_FLOOR, basePrice × tierMult × PRICE_CEIL],
+ * цена покупки двигается тем же фактическим множителем — соотношение
+ * buy > sell (анти-арбитраж) и станционные скидки сохраняются.
  *
  * @param prices - Текущие цены станций
  * @param basePrices - Базовые цены товаров (для коридора)
  * @param random - Источник случайности (подменяется в тестах)
+ * @param tierMultipliers - Множители цен по тиру сектора станции
  * @returns Новые цены станций
  */
 export const driftStationPrices = (
     prices: StationPrices,
     basePrices: BasePrices,
     random: () => number = Math.random,
+    tierMultipliers: StationTierMultipliers = {},
 ): StationPrices => {
     const next: StationPrices = {};
 
     for (const stationId of Object.keys(prices)) {
         const stationPrices = prices[stationId];
+        const tierMult = tierMultipliers[stationId] ?? 1;
         next[stationId] = { ...stationPrices };
 
         for (const goodId of Object.keys(stationPrices)) {
@@ -53,8 +59,12 @@ export const driftStationPrices = (
 
             const drift = 1 + (random() * 2 - 1) * MAX_PRICE_DRIFT;
 
-            const minSell = Math.floor(basePrice * PRICE_FLOOR_MULTIPLIER);
-            const maxSell = Math.floor(basePrice * PRICE_CEIL_MULTIPLIER);
+            const minSell = Math.floor(
+                basePrice * tierMult * PRICE_FLOOR_MULTIPLIER,
+            );
+            const maxSell = Math.floor(
+                basePrice * tierMult * PRICE_CEIL_MULTIPLIER,
+            );
             const sell = Math.min(
                 maxSell,
                 Math.max(minSell, Math.floor(current.sell * drift)),

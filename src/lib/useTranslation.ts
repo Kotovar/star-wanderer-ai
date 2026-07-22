@@ -2,18 +2,29 @@
 
 import { useCallback, useSyncExternalStore, useEffect } from "react";
 
-// Translation resources
+// Translation resources: русский (язык по умолчанию и fallback) в бандле,
+// английский подгружается лениво отдельным чанком.
 import translationRU from "./locales/ru.json";
-import translationEN from "./locales/en.json";
 
-const resources: Record<"ru" | "en", Record<string, unknown>> = {
+const resources: Record<"ru" | "en", Record<string, unknown> | null> = {
     ru: translationRU,
-    en: translationEN,
+    en: null,
+};
+
+const loadEnglish = () => {
+    if (resources.en) return;
+    import("./locales/en.json").then((m) => {
+        resources.en = m.default;
+        store.rev++;
+        store.listeners.forEach((l) => l());
+    });
 };
 
 // Simple translation store
 export const store = {
     lng: "ru" as "ru" | "en",
+    // Растёт при каждом изменении языка/каталога, чтобы useSyncExternalStore видел обновление
+    rev: 0,
     isHydrated: false,
     listeners: new Set<() => void>(),
 
@@ -29,13 +40,16 @@ export const store = {
             this.isHydrated = true;
             this.lng =
                 (localStorage.getItem("i18nextLng") as "ru" | "en") || "ru";
+            if (this.lng === "en") loadEnglish();
+            this.rev++;
             this.listeners.forEach((l) => l());
         }
     },
 
     t(key: string, params?: Record<string, string | number>): string {
         const keys = key.split(".");
-        let value: unknown = resources[this.lng];
+        // Пока английский каталог не загружен, показываем русский
+        let value: unknown = resources[this.lng] ?? resources.ru;
         for (const k of keys) {
             if (value && typeof value === "object" && k in value) {
                 value = (value as Record<string, unknown>)[k];
@@ -62,6 +76,8 @@ export const store = {
         this.lng = lng;
         this.isHydrated = true;
         localStorage.setItem("i18nextLng", lng);
+        if (lng === "en") loadEnglish();
+        this.rev++;
         this.listeners.forEach((l) => l());
     },
 
@@ -73,7 +89,8 @@ export const store = {
     },
 
     getSnapshot() {
-        return this.lng;
+        // rev в снапшоте заставляет подписчиков перерисоваться при загрузке каталога
+        return `${this.lng}:${this.rev}`;
     },
 };
 
@@ -83,12 +100,13 @@ if (typeof window !== "undefined") {
 }
 
 export function useTranslation() {
-    const lng = useSyncExternalStore(
+    const snapshot = useSyncExternalStore(
         store.subscribe.bind(store),
         store.getSnapshot.bind(store),
         // Server snapshot - always return 'ru' to match SSR
-        () => "ru" as "ru" | "en",
+        () => "ru:0",
     );
+    const lng = snapshot.split(":")[0] as "ru" | "en";
 
     // Hydrate after initial render - this will read from localStorage and trigger update if needed
     useEffect(() => {

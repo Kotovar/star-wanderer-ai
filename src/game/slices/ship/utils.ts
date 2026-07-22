@@ -42,16 +42,6 @@ export const calculateTotalShields = (modules: Module[]) =>
         .reduce((sum, m) => sum + (m.shields ?? 0), 0);
 
 /**
- * Вычисляет общую мощность систем жизнеобеспечения
- * @param modules - Список модулей корабля
- * @returns Суммарная ёмкость по кислороду
- */
-const calculateTotalOxygen = (modules: Module[]) =>
-    modules
-        .filter((m) => m.type === "lifesupport" && isModuleFunctional(m))
-        .reduce((sum, m) => sum + (m.oxygen || 0), 0);
-
-/**
  * Вычисляет общую ёмкость топливных баков
  * @param modules - Список модулей корабля
  * @returns Суммарная ёмкость топлива
@@ -60,20 +50,6 @@ export const calculateTotalFuelCapacity = (modules: Module[]) =>
     modules
         .filter((m) => m.type === "fueltank" && isModuleFunctional(m))
         .reduce((sum, m) => sum + (m.capacity || 0), 0);
-
-/**
- * Проверяет, является ли модуль реактором
- * @param modules - Список всех модулей корабля
- * @param moduleId - ID модуля для проверки
- * @returns true если модуль является реактором
- */
-const isReactorModule = (
-    modules: GameState["ship"]["modules"],
-    moduleId: number,
-) => {
-    const shipModule = modules.find((m) => m.id === moduleId);
-    return shipModule?.type === "reactor";
-};
 
 /**
  * Вычисляет суммарный бонус к энергии от всех активных артефактов
