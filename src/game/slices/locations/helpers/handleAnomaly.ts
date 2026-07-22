@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore, Location, AnomalyApproach } from "@/game/types";
 import { RESEARCH_RESOURCES } from "@/game/constants";
 import { getAnomalyResources } from "@/game/research/utils";
@@ -28,8 +29,7 @@ export const handleAnomaly = (
     // Check if scientists meet the level requirement
     const { canResearch } = checkScientistLevel(scientists, requiredLevel);
     if (!canResearch) {
-        get().addLog(
-            `Аномалия слишком сложна! Требуется учёный уровня ${requiredLevel}`,
+        get().addLog( i18nStore.t("game_logs.handleAnomaly_1", { requiredLevel }),
             "error",
         );
         return;
@@ -54,8 +54,7 @@ export const handleAnomaly = (
         if (analyzingScientists.length > 0) {
             addResearchResources(set, get, config.guaranteedResources);
             analyzingScientists.forEach((s) => {
-                get().addLog(
-                    `🔬 ${s.name}: Углублённый анализ — дополнительные ресурсы!`,
+                get().addLog( i18nStore.t("game_logs.handleAnomaly_2", { s_name: s.name }),
                     "info",
                 );
             });
@@ -121,8 +120,7 @@ const addResearchResources = (
     anomalyResources.forEach((res) => {
         if (res.quantity > 0) {
             const resourceData = RESEARCH_RESOURCES[res.type];
-            get().addLog(
-                `🔬 Найдены исследовательские ресурсы: ${resourceData.icon} ${resourceData.name} x${res.quantity}`,
+            get().addLog( i18nStore.t("game_logs.handleAnomaly_3", { icon: resourceData.icon, resourceData_name: resourceData.name, quantity: res.quantity }),
                 "info",
             );
         }

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore, Location } from "@/game/types";
 import { playSound } from "@/sounds";
 import * as helpers from "./helpers";
@@ -90,8 +91,7 @@ export const createCombatSlice = (
         // Immediate reputation penalty for attacking civilians
         if (race) {
             get().changeReputation(race, -20);
-            get().addLog(
-                `☠️ Вы напали на мирный корабль! Репутация с расой: -20`,
+            get().addLog( i18nStore.t("game_logs.combatSlice_1"),
                 "error",
             );
         }
@@ -142,11 +142,11 @@ export const createCombatSlice = (
             return;
         }
         if (loc.type === "station") {
-            get().addLog(`⚔️ Охрана станции атакует нарушителей!`, "error");
+            get().addLog( i18nStore.t("game_logs.combatSlice_2"), "error");
         } else if (loc.type === "planet") {
-            get().addLog(`⚔️ Охрана планеты атакует нарушителей!`, "error");
+            get().addLog( i18nStore.t("game_logs.combatSlice_3"), "error");
         } else {
-            get().addLog(`⚔️ ${loc.name} открывает огонь — вы враги!`, "error");
+            get().addLog( i18nStore.t("game_logs.combatSlice_4", { loc_name: loc.name }), "error");
         }
         playSound("alert");
         startDefenderCombat(race, set, get);
@@ -156,7 +156,7 @@ export const createCombatSlice = (
         set((s) => {
             s.gameMode = "sector_map";
         });
-        get().addLog(`↩ Вы отступили от враждебной территории`, "info");
+        get().addLog( i18nStore.t("game_logs.combatSlice_5"), "info");
     },
 
     retreat: () => {
@@ -167,7 +167,7 @@ export const createCombatSlice = (
             state.currentCombat.isAmbush &&
             !state.currentCombat.ambushAttackDone
         ) {
-            get().addLog("Нельзя сбежать из засады!", "error");
+            get().addLog( i18nStore.t("game_logs.combatSlice_6"), "error");
             return;
         }
 
@@ -187,9 +187,9 @@ export const createCombatSlice = (
                 });
             });
             applyCombatTimeCost(combatRound, set, get);
-            get().addLog("Побег успешен!", "info");
+            get().addLog( i18nStore.t("game_logs.combatSlice_7"), "info");
         } else {
-            get().addLog("Побег не удался! Враг атакует!", "warning");
+            get().addLog( i18nStore.t("game_logs.combatSlice_8"), "warning");
             get().processEnemyAttack();
             advanceCombatRound(set, get);
         }

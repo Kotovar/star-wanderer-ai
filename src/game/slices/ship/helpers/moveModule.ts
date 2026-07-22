@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import { canPlaceModule as canPlaceModuleHelper } from "./canPlaceModule";
 
@@ -21,7 +22,7 @@ export const moveModule = (
 
     // Check if any module was already moved this turn
     if (state.ship.moduleMovedThisTurn) {
-        get().addLog("Модуль уже перемещался в этот ход!", "warning");
+        get().addLog( i18nStore.t("game_logs.moveModule_1"), "warning");
         return;
     }
 
@@ -40,10 +41,9 @@ export const moveModule = (
                 moduleMovedThisTurn: true,
             },
         }));
-        get().addLog(`Модуль ${mod.name} перемещён`, "info");
+        get().addLog( i18nStore.t("game_logs.moveModule_2", { mod_name: mod.name }), "info");
     } else {
-        get().addLog(
-            "Невозможно разместить: нарушена связность",
+        get().addLog( i18nStore.t("game_logs.moveModule_3"),
             "error",
         );
     }

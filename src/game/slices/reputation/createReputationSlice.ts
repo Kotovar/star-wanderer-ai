@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore, RaceId } from "@/game/types";
 import type { ReputationLevel } from "@/game/types/reputation";
 import {
@@ -52,20 +53,18 @@ export const createReputationSlice = (
         // Логируем изменение
         if (amount !== 0) {
             const sign = amount > 0 ? "+" : "";
-            const raceName = raceId.charAt(0).toUpperCase() + raceId.slice(1);
+            const raceName = i18nStore.t(`races.${raceId}.plural`);
             const logType: "info" | "warning" | "error" =
                 amount > 0 ? "info" : "warning";
 
             if (result.levelChanged) {
                 const oldLevelName = getReputationLevelName(result.oldLevel);
                 const newLevelName = getReputationLevelName(result.newLevel);
-                get().addLog(
-                    `Репутация с ${raceName}: ${sign}${amount} (${oldLevelName} → ${newLevelName})`,
+                get().addLog( i18nStore.t("game_logs.createReputationSlice_1", { raceName, sign, amount, oldLevelName, newLevelName }),
                     logType,
                 );
             } else {
-                get().addLog(
-                    `Репутация с ${raceName}: ${sign}${amount}`,
+                get().addLog( i18nStore.t("game_logs.createReputationSlice_2", { raceName, sign, amount }),
                     logType,
                 );
             }
@@ -106,8 +105,7 @@ export const createReputationSlice = (
     sendDiplomaticGift: (raceId: RaceId, amount: number) => {
         const currentRep = get().raceReputation[raceId] ?? 0;
         if (currentRep >= MAX_DIPLOMATIC_REP) {
-            get().addLog(
-                `Максимальный дипломатический уровень уже достигнут`,
+            get().addLog( i18nStore.t("game_logs.createReputationSlice_3"),
                 "warning",
             );
             return;
@@ -119,7 +117,7 @@ export const createReputationSlice = (
         );
         const cost = getDiplomacyCost(currentRep, effectiveAmount);
         if (get().credits < cost) {
-            get().addLog(`Недостаточно кредитов (нужно ${cost}₢)`, "error");
+            get().addLog( i18nStore.t("game_logs.createReputationSlice_4", { cost }), "error");
             return;
         }
         set((state) => {
@@ -127,8 +125,7 @@ export const createReputationSlice = (
             return state;
         });
         get().changeReputation(raceId, effectiveAmount);
-        get().addLog(
-            `🤝 Дипломатический контакт установлен — репутация улучшена`,
+        get().addLog( i18nStore.t("game_logs.createReputationSlice_5"),
             "info",
         );
     },
@@ -136,14 +133,13 @@ export const createReputationSlice = (
     removePlanetBan: (locationId: string) => {
         const COST = 2000;
         if (get().credits < COST) {
-            get().addLog(
-                `Недостаточно кредитов для снятия блокировки (${COST}₢)`,
+            get().addLog( i18nStore.t("game_logs.createReputationSlice_6", { COST }),
                 "error",
             );
             return;
         }
         if (!get().bannedPlanets.includes(locationId)) {
-            get().addLog(`Эта планета не находится под блокировкой`, "warning");
+            get().addLog( i18nStore.t("game_logs.createReputationSlice_7"), "warning");
             return;
         }
         set((state) => {
@@ -153,7 +149,7 @@ export const createReputationSlice = (
             );
             return state;
         });
-        get().addLog(`🔓 Блокировка с планеты снята — охрана отозвана`, "info");
+        get().addLog( i18nStore.t("game_logs.createReputationSlice_8"), "info");
     },
 
     showReputation: () => {
@@ -180,12 +176,5 @@ export const createReputationSlice = (
  * Получить название уровня репутации на русском
  */
 function getReputationLevelName(level: ReputationLevel): string {
-    const names: Record<ReputationLevel, string> = {
-        hostile: "Враждебный",
-        unfriendly: "Недружелюбный",
-        neutral: "Нейтральный",
-        friendly: "Дружелюбный",
-        allied: "Союзный",
-    };
-    return names[level];
+    return i18nStore.t(`reputation.levels.${level}`);
 }

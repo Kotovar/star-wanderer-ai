@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import {
     ARTIFACT_TYPES,
     CONTRACT_REWARDS,
@@ -62,7 +63,7 @@ export function handleVictory(
         const resurrectChance =
             (updatedCombat.enemy.specialAbility.value ?? 20) / 100;
         if (Math.random() < resurrectChance) {
-            get().addLog(`⚠️ ${updatedCombat.enemy.name} ВОСКРЕСАЕТ!`, "error");
+            get().addLog( i18nStore.t("game_logs.playerVictory_1", { updatedCombat_name: updatedCombat.enemy.name }), "error");
             set((s) => {
                 if (!s.currentCombat) return;
                 s.currentCombat.enemy.modules.forEach((m) => {
@@ -72,7 +73,7 @@ export function handleVictory(
                     s.currentCombat.enemy.maxShields * 0.3,
                 );
             });
-            get().addLog(`Босс восстановил 30% здоровья!`, "warning");
+            get().addLog( i18nStore.t("game_logs.playerVictory_2"), "warning");
             return;
         }
     }
@@ -116,14 +117,12 @@ export function handleVictory(
     set((s) => ({ credits: s.credits + creditsAmount }));
 
     if (blackBox && creditsAmount > loot.credits) {
-        get().addLog(
-            `📦 Чёрный Ящик: +${creditsAmount - loot.credits}₢ бонус`,
+        get().addLog( i18nStore.t("game_logs.playerVictory_3", { credits: creditsAmount - loot.credits }),
             "info",
         );
     }
     if (lootBonus > 0) {
-        get().addLog(
-            `★ Удачливый экипаж: +${Math.round(lootBonus * 100)}% к награде)`,
+        get().addLog( i18nStore.t("game_logs.playerVictory_4", { value: Math.round(lootBonus * 100) }),
             "info",
         );
     }
@@ -156,8 +155,7 @@ export function handleVictory(
         set((s) => ({
             credits: s.credits + (miningContract.reward || 0),
         }));
-        get().addLog(
-            `💎 Контракт "${miningContract.desc}" выполнен! +${miningContract.reward}₢`,
+        get().addLog( i18nStore.t("game_logs.playerVictory_5", { desc: miningContract.desc, reward: miningContract.reward }),
             "info",
         );
         giveCrewExperience(
@@ -189,12 +187,10 @@ export function handleVictory(
         set((s) => ({
             ship: { ...s.ship, cargo: [...s.ship.cargo, newCargoItem] },
         }));
-        get().addLog(
-            `🎁 Награда за босса: Получен модуль "${moduleName}"!`,
+        get().addLog( i18nStore.t("game_logs.playerVictory_6", { moduleName }),
             "info",
         );
-        get().addLog(
-            `📦 Модуль помещён в трюм. Посетите станцию для установки.`,
+        get().addLog( i18nStore.t("game_logs.playerVictory_7"),
             "info",
         );
     }
@@ -262,8 +258,7 @@ export function handleVictory(
         });
         combatResources.forEach((res) => {
             if (res.quantity > 0) {
-                get().addLog(
-                    `🔧 Получены исследовательские ресурсы: ${RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].icon} ${RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].name} x${res.quantity}`,
+                get().addLog( i18nStore.t("game_logs.playerVictory_8", { icon: RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].icon, name: RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].name, quantity: res.quantity }),
                     "info",
                 );
             }
@@ -282,7 +277,7 @@ export function handleVictory(
             gunner,
             BASE_GUNNER_COMBAT_EXP + enemyTier * GUNNER_COMBAT_EXP_PER_TIER,
         );
-        get().addLog(`${gunner.name} получил боевой опыт!`, "info");
+        get().addLog( i18nStore.t("game_logs.playerVictory_9", { gunner_name: gunner.name }), "info");
     }
 
     const weaponBayCrew = state.crew.filter(
@@ -302,8 +297,7 @@ export function handleVictory(
             if (Math.random() < mutationChance) {
                 const mutationName = giveRandomMutation(crewMember, set);
                 if (mutationName) {
-                    get().addLog(
-                        `☣️ ${crewMember.name} получил мутацию от контакта с боссом: ${mutationName}!`,
+                    get().addLog( i18nStore.t("game_logs.playerVictory_10", { crewMember_name: crewMember.name, mutationName }),
                         "error",
                     );
                 }
@@ -361,8 +355,7 @@ export function handleVictory(
                 if (mod) mod.health = Math.max(1, mod.health - damageValue);
             });
             const targetModule = state.ship.modules[randomModuleIdx];
-            get().addLog(
-                `⚠️ ${artifact.name}: ${targetModule.name} повреждён на -${damageValue}% после боя`,
+            get().addLog( i18nStore.t("game_logs.playerVictory_11", { artifact_name: artifact.name, targetModule_name: targetModule.name, damageValue }),
                 "warning",
             );
         }
@@ -372,8 +365,7 @@ export function handleVictory(
     // But NOT if player attacked a friendly ship (combatTargetLocationId is set)
     if (updatedCombat.defenderRace && !updatedCombat.combatTargetLocationId) {
         get().changeReputation(updatedCombat.defenderRace, 60);
-        get().addLog(
-            `⚔️ Защитники повержены! Репутация с расой улучшена`,
+        get().addLog( i18nStore.t("game_logs.playerVictory_12"),
             "info",
         );
         // If the defended location was a planet, permanently ban it
@@ -385,8 +377,7 @@ export function handleVictory(
                     s.bannedPlanets.push(planetId);
                 }
             });
-            get().addLog(
-                `⛔ ${defLoc.name}: вас здесь больше не рады`,
+            get().addLog( i18nStore.t("game_logs.playerVictory_13", { defLoc_name: defLoc.name }),
                 "warning",
             );
         }
@@ -415,7 +406,7 @@ export function handleVictory(
                 );
             }
         });
-        get().addLog(`💥 Мирный корабль уничтожен`, "warning");
+        get().addLog( i18nStore.t("game_logs.playerVictory_14"), "warning");
     }
 
     set((s) => ({

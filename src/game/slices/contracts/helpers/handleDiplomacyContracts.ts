@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
 import type { GameState, GameStore, Location } from "@/game/types";
@@ -34,8 +35,7 @@ export const handleDiplomacyContracts = (
     set((s) => ({
         credits: s.credits + (diplomacyContract.reward || 0),
     }));
-    get().addLog(
-        `Дипломатическая миссия выполнена! +${diplomacyContract.reward}₢`,
+    get().addLog( i18nStore.t("game_logs.handleDiplomacyContracts_1", { reward: diplomacyContract.reward }),
         "info",
     );
     get().changeReputation("human", 10);

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import type { DiveState } from "@/game/types/exploration";
 import { pickDiveEvent } from "./events";
@@ -10,8 +11,7 @@ export function startDive(
     const state = get();
 
     if (state.probes <= 0) {
-        get().addLog(
-            "🚫 Нет зондов. Купите зонды на ближайшей станции.",
+        get().addLog( i18nStore.t("game_logs.startDive_1"),
             "warning",
         );
         return;
@@ -22,7 +22,7 @@ export function startDive(
     );
 
     if (!location || location.type !== "gas_giant") {
-        get().addLog("Локация не найдена", "error");
+        get().addLog( i18nStore.t("game_logs.startDive_2"), "error");
         return;
     }
 
@@ -32,8 +32,7 @@ export function startDive(
             : 0;
 
     if (cooldownRemaining > 0) {
-        get().addLog(
-            `Зонд восстанавливается. Погружение доступно через ${cooldownRemaining} ходов.`,
+        get().addLog( i18nStore.t("game_logs.startDive_3", { cooldownRemaining }),
             "warning",
         );
         return;
@@ -52,5 +51,5 @@ export function startDive(
     };
 
     set((s) => ({ activeDive: initialDive, probes: s.probes - 1 }));
-    get().addLog("🪸 Зонд погружается в атмосферу газового гиганта...", "info");
+    get().addLog( i18nStore.t("game_logs.startDive_4"), "info");
 }

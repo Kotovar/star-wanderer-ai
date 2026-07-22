@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore, ModuleType } from "@/game/types";
 import { playSound } from "@/sounds";
 import { MODULES_BY_LEVEL } from "@/game/components/station/station-data";
@@ -69,8 +70,7 @@ export const scrapModule = (
     // Check if any crew member is in this module
     const crewInModule = state.crew.filter((c) => c.moduleId === moduleId);
     if (crewInModule.length > 0) {
-        get().addLog(
-            `Нельзя уничтожить модуль "${mod.name}" - в нём находится экипаж (${crewInModule.length} чел.)!`,
+        get().addLog( i18nStore.t("game_logs.scrapModule_1", { mod_name: mod.name, crewInModule_length: crewInModule.length }),
             "error",
         );
         return;
@@ -92,7 +92,7 @@ export const scrapModule = (
         ).length;
 
         if (sameTypeCount <= 1) {
-            get().addLog(`Нельзя уничтожить последний ${mod.name}!`, "error");
+            get().addLog( i18nStore.t("game_logs.scrapModule_2", { mod_name: mod.name }), "error");
             return;
         }
     }
@@ -112,8 +112,7 @@ export const scrapModule = (
         credits: s.credits + scrapValue,
     }));
 
-    get().addLog(
-        `♻️ Модуль "${mod.name}" уничтожен. Получено ${scrapValue}₢`,
+    get().addLog( i18nStore.t("game_logs.scrapModule_3", { mod_name: mod.name, scrapValue }),
         "warning",
     );
     playSound("destroy");

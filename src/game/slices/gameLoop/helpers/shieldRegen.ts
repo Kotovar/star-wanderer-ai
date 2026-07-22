@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import {
     findActiveArtifact,
     getArtifactEffectValue,
@@ -178,14 +179,13 @@ export const regenerateShields = (
     if (baseRegen > 0 && hazardMultiplier < 1) {
         get().addLog(
             hazardMultiplier === 0
-                ? "☢️ Излучение звезды полностью блокирует регенерацию щитов"
-                : `☢️ Излучение звезды глушит регенерацию щитов: -${Math.round((1 - hazardMultiplier) * 100)}%`,
+                ? i18nStore.t("game_logs.star_regen_blocked")
+                : i18nStore.t("game_logs.star_regen_reduced", { percent: Math.round((1 - hazardMultiplier) * 100) }),
             "warning",
         );
     }
     if (totalRegen > 0) {
-        get().addLog(
-            `Щиты: +${totalRegen} (${get().ship.shields}/${maxShieldsWithBonus})`,
+        get().addLog( i18nStore.t("game_logs.shieldRegen_1", { totalRegen, shields: get().ship.shields, maxShieldsWithBonus }),
             "info",
         );
     }

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { RACES, XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants/races";
 import type { GameState, GameStore, CrewMember } from "@/game/types";
 import { getCargoCapacity } from "@/game/slices/ship/helpers/getCargoCapacity";
@@ -54,8 +55,7 @@ export const mergeWithModule = (
         (c) => c.isMerged && c.mergedModuleId === moduleId,
     );
     if (existingMerge) {
-        get().addLog(
-            `⚠️ Модуль "${moduleShip.name}" уже занят другим ксеноморфом`,
+        get().addLog( i18nStore.t("game_logs.merge_1", { moduleShip_name: moduleShip.name }),
             "warning",
         );
         return false;
@@ -73,8 +73,7 @@ export const mergeWithModule = (
         ),
     }));
 
-    get().addLog(
-        `🧬 ${crewMember.name} срастился с "${moduleShip.name}" (${mergeEffect.name})`,
+    get().addLog( i18nStore.t("game_logs.merge_2", { crewMember_name: crewMember.name, moduleShip_name: moduleShip.name, mergeEffect_name: mergeEffect.name }),
         "info",
     );
 
@@ -115,8 +114,7 @@ export const unmergeFromModule = (
             ),
         });
         if (currentCargo > capacityAfter) {
-            get().addLog(
-                `⚠️ Груз (${currentCargo}т) превышает вместимость после отмены сращивания (${capacityAfter}т). Продайте излишки!`,
+            get().addLog( i18nStore.t("game_logs.merge_3", { currentCargo, capacityAfter }),
                 "warning",
             );
         }
@@ -135,8 +133,7 @@ export const unmergeFromModule = (
     }));
 
     if (moduleShip) {
-        get().addLog(
-            `🧬 ${crewMember.name} отсоединился от "${moduleShip.name}"`,
+        get().addLog( i18nStore.t("game_logs.merge_4", { crewMember_name: crewMember.name, moduleShip_name: moduleShip.name }),
             "info",
         );
     }

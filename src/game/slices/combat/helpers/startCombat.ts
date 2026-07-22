@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { RACES } from "@/game/constants";
 import type { GameState, GameStore, Location } from "@/game/types";
 import * as combatSetup from "./combatSetup";
@@ -44,13 +45,13 @@ export function initializeCombat(
         s.gameMode = "combat";
     });
 
-    get().addLog(`Щиты восстановлены: ${get().ship.shields}`, "combat");
+    get().addLog( i18nStore.t("game_logs.startCombat_1", { shields: get().ship.shields }), "combat");
 
     if (isAmbush) {
-        get().addLog(`⚠️ ЗАСАДА! ${enemy.name} атакует первым!`, "error");
+        get().addLog( i18nStore.t("game_logs.startCombat_2", { enemy_name: enemy.name }), "error");
         get().executeAmbushAttack();
     } else {
-        get().addLog(`Бой с ${enemy.name}!`, "combat");
+        get().addLog( i18nStore.t("game_logs.startCombat_3", { enemy_name: enemy.name }), "combat");
     }
 
     // Apply combatStartMoraleDrain trait
@@ -81,8 +82,7 @@ export function applyRebelTrait(
             set((s) => {
                 s.crew = s.crew.filter((c) => c.id !== crewMember.id);
             });
-            get().addLog(
-                `😤 ${crewMember.name} (Бунтарь) испугался и сбежал с корабля!`,
+            get().addLog( i18nStore.t("game_logs.startCombat_4", { crewMember_name: crewMember.name }),
                 "error",
             );
         }
@@ -108,8 +108,7 @@ export function applyPessimistTrait(
             const c = s.crew.find((x) => x.id === crewMember.id);
             if (c) c.happiness = Math.max(0, c.happiness - moraleDrain);
         });
-        get().addLog(
-            `😟 ${crewMember.name} (Пессимист): -${moraleDrain} морали`,
+        get().addLog( i18nStore.t("game_logs.startCombat_5", { crewMember_name: crewMember.name, moraleDrain }),
             "warning",
         );
     });

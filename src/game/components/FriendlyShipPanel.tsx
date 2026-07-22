@@ -13,6 +13,7 @@ import { Profession } from "@/game/types/crew";
 import { useTranslation } from "@/lib/useTranslation";
 import { getRaceReputationLevel } from "@/game/reputation/utils";
 import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
+import { getTierPriceMultiplier } from "@/game/slices/trade/constants";
 import type { Quality, RaceId } from "@/game/types";
 import { RaceSprite } from "./RaceSprite";
 import { ProfessionSprite } from "./ProfessionSprite";
@@ -22,6 +23,7 @@ const INITIAL_STOCK: Goods[] = ["water", "food", "medicine"];
 
 export function FriendlyShipPanel() {
   const currentLocation = useGameStore((s) => s.currentLocation);
+  const sectorTier = useGameStore((s) => s.currentSector?.tier ?? 1);
   const credits = useGameStore((s) => s.credits);
   const ship = useGameStore((s) => s.ship);
   const crew = useGameStore((s) => s.crew);
@@ -221,11 +223,14 @@ export function FriendlyShipPanel() {
       ship.cargo.some((cargo) => cargo.contractId === c.id),
   );
 
+  // Цены торговца привязаны к тиру сектора, как и у станций (анти-арбитраж)
   const tradeGoods = INITIAL_STOCK.map((gid, idx) => ({
     id: gid,
     ...TRADE_GOODS[gid],
     price: Math.floor(
-      TRADE_GOODS[gid].basePrice * (0.9 + seedRandom(seed + idx) * 0.4),
+      TRADE_GOODS[gid].basePrice *
+        getTierPriceMultiplier(sectorTier) *
+        (0.9 + seedRandom(seed + idx) * 0.4),
     ),
     stock: getShipStock(gid),
   }));

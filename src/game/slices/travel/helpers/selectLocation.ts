@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { determineSignalOutcome } from "@/game/signals";
@@ -134,7 +135,7 @@ export const selectLocation = (
 
     // Локация уже посещена
     if (state.completedLocations.includes(loc.id)) {
-        get().addLog(`${loc.name} уже посещена`, "warning");
+        get().addLog( i18nStore.t("game_logs.selectLocation_1", { loc_name: loc.name }), "warning");
         return;
     }
 
@@ -195,7 +196,7 @@ export const selectLocation = (
 
         case "enemy": {
             if (loc.defeated) {
-                get().addLog(`${loc.name} уже побеждён`, "info");
+                get().addLog( i18nStore.t("game_logs.selectLocation_2", { loc_name: loc.name }), "info");
                 break;
             }
             const enemyTier = loc.threat ?? 1;
@@ -203,8 +204,7 @@ export const selectLocation = (
 
             if (!canScan && !loc.signalRevealed) {
                 if (checkEarlyWarning(enemyTier, get)) {
-                    get().addLog(
-                        "📡 Сканер обнаружил засаду! Будьте осторожны.",
+                    get().addLog( i18nStore.t("game_logs.selectLocation_3"),
                         "warning",
                     );
                     const revealedLoc = { ...loc, signalRevealed: true };
@@ -228,15 +228,14 @@ export const selectLocation = (
 
         case "boss": {
             if (loc.bossDefeated) {
-                get().addLog(`${loc.name} уже уничтожен`, "info");
+                get().addLog( i18nStore.t("game_logs.selectLocation_4", { loc_name: loc.name }), "info");
                 return;
             }
 
             const canScan = isObjectScanned(loc, get);
             if (!canScan && !loc.signalRevealed) {
                 if (checkEarlyWarning(BOSS_TIER, get)) {
-                    get().addLog(
-                        "📡 Сканер обнаружил ДРЕВНЮЮ УГРОЗУ! Готовьтесь к бою.",
+                    get().addLog( i18nStore.t("game_logs.selectLocation_5"),
                         "warning",
                     );
                     const revealedLoc = { ...loc, signalRevealed: true };
@@ -292,7 +291,7 @@ export const selectLocation = (
             if (!canScan && !loc.signalRevealed) {
                 set({ currentLocation: loc, gameMode: "storm" });
             } else {
-                get().addLog("📡 Сканер обнаружил шторм впереди!", "warning");
+                get().addLog( i18nStore.t("game_logs.selectLocation_6"), "warning");
                 set({ currentLocation: loc, gameMode: "storm" });
             }
             break;

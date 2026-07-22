@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore, Contract } from "@/game/types";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
@@ -57,15 +58,13 @@ export const handleResearchContract = (
     const currentProgress =
         updatedContract?.visitedAnomalies ?? contract.requiresAnomalies;
 
-    get().addLog(
-        `Исследование: ${currentProgress}/${contract.requiresAnomalies} аномалий`,
+    get().addLog( i18nStore.t("game_logs.handleResearchContract_1", { currentProgress: currentProgress ?? 0, requiresAnomalies: contract.requiresAnomalies ?? 0 }),
         "info",
     );
 
     if (!updatedContract) {
         // Contract completed - show completion message
-        get().addLog(
-            `Задача "${contract.desc}" выполнена! +${contract.reward}₢`,
+        get().addLog( i18nStore.t("game_logs.handleResearchContract_2", { desc: contract.desc, reward: contract.reward }),
             "info",
         );
 

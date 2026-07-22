@@ -1,4 +1,4 @@
-import { TRADE_GOODS } from "@/game/constants";
+import { store as i18nStore } from "@/lib/useTranslation";
 import { playSound } from "@/sounds";
 import type { GameStore, SetState, Goods, StationPrices } from "@/game/types";
 import type { SellValidation } from "./types";
@@ -25,12 +25,12 @@ const validateSellTradeGood = (
     const pricesFromTrade = stationPrices[stationId];
 
     if (!pricesFromTrade) {
-        return { canSell: false, error: "Недоступно для торговли" };
+        return { canSell: false, error: i18nStore.t("game_logs.err_no_trade") };
     }
 
     const playerGood = state.ship.tradeGoods.find((g) => g.item === goodId);
     if (!playerGood || playerGood.quantity < quantity) {
-        return { canSell: false, error: "Недостаточно товара!" };
+        return { canSell: false, error: i18nStore.t("game_logs.err_no_goods") };
     }
 
     // Кризисный множитель применяется к обеим ценам — арбитраж невозможен
@@ -103,7 +103,7 @@ export const sellTradeGood = (
     const stationId = state.currentLocation?.stationId;
 
     if (!stationId) {
-        get().addLog("Не на станции!", "error");
+        get().addLog( i18nStore.t("game_logs.sellTradeGood_1"), "error");
         return;
     }
 
@@ -162,15 +162,13 @@ export const sellTradeGood = (
     }
 
     // Логирование
-    get().addLog(
-        `Продано: ${TRADE_GOODS[goodId].name} ${quantity}т за ${validation.price}₢`,
+    get().addLog( i18nStore.t("game_logs.sellTradeGood_2", { name: i18nStore.t(`trade.goods.${goodId}`), quantity, price: validation.price ?? 0 }),
         "info",
     );
 
     // Предупреждение о жадном экипаже
     if (validation.greedyCrewCount && validation.greedyCrewCount > 0) {
-        get().addLog(
-            `⚠️ Жадный экипаж (${validation.greedyCrewCount} сущ.): -${validation.greedyCrewCount}₢ к цене продажи`,
+        get().addLog( i18nStore.t("game_logs.sellTradeGood_3", { greedyCrewCount: validation.greedyCrewCount, greedyCrewCount2: validation.greedyCrewCount }),
             "warning",
         );
     }

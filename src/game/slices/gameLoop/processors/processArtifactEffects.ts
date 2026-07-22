@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { getArtifactEffectValue } from "@/game/artifacts";
 import type { GameState, GameStore, SetState } from "@/game/types";
 
@@ -31,8 +32,7 @@ export const processArtifactEffects = (
             case "free_power": {
                 // Вечное Ядро - бесплатная энергия (обрабатывается в getTotalPower)
                 const powerBonus = getArtifactEffectValue(artifact, state);
-                get().addLog(
-                    `⚡ Вечное Ядро: +${powerBonus}⚡ бесплатной энергии`,
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_1", { powerBonus }),
                     "info",
                 );
                 break;
@@ -41,7 +41,7 @@ export const processArtifactEffects = (
             case "abyss_power": {
                 // Реактор Бездны - бонус к энергии (обрабатывается в getTotalPower)
                 const powerBonus = getArtifactEffectValue(artifact, state);
-                get().addLog(`⚛️ Реактор Бездны: +${powerBonus}⚡`, "info");
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_2", { powerBonus }), "info");
                 break;
             }
 
@@ -58,8 +58,7 @@ export const processArtifactEffects = (
                         })),
                     },
                 }));
-                get().addLog(
-                    `🔧 Нанитовая Обшивка: ремонт +${repairAmount}%`,
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_3", { repairAmount }),
                     "info",
                 );
                 break;
@@ -77,8 +76,7 @@ export const processArtifactEffects = (
                         })),
                     },
                 }));
-                get().addLog(
-                    `🔧 Паразитические Наниты: ремонт +${repairAmount}%`,
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_4", { repairAmount }),
                     "info",
                 );
                 break;
@@ -88,7 +86,7 @@ export const processArtifactEffects = (
             case "dark_shield": {
                 // Тёмный Щит - бонус к максимальным щитам (обрабатывается в updateShipStats)
                 const shieldBonus = getArtifactEffectValue(artifact, state);
-                get().addLog(`🛡️ Тёмный Щит: +${shieldBonus} к щитам`, "info");
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_5", { shieldBonus }), "info");
                 break;
             }
 
@@ -97,8 +95,7 @@ export const processArtifactEffects = (
                 const regenBoost = Math.round(
                     getArtifactEffectValue(artifact, state) * 100,
                 );
-                get().addLog(
-                    `⚡ Регенератор Щитов: +${regenBoost}% к регенерации`,
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_6", { regenBoost }),
                     "info",
                 );
                 break;
@@ -110,7 +107,7 @@ export const processArtifactEffects = (
                 const damageBoost = Math.round(
                     getArtifactEffectValue(artifact, state) * 100,
                 );
-                get().addLog(`💥 Бонус к урону: +${damageBoost}%`, "info");
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_7", { damageBoost }), "info");
                 break;
             }
 
@@ -119,7 +116,7 @@ export const processArtifactEffects = (
                 const accuracyBoost = Math.round(
                     getArtifactEffectValue(artifact, state) * 100,
                 );
-                get().addLog(`🎯 Бонус к точности: +${accuracyBoost}%`, "info");
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_8", { accuracyBoost }), "info");
                 break;
             }
 
@@ -128,7 +125,7 @@ export const processArtifactEffects = (
                 const critChance = Math.round(
                     getArtifactEffectValue(artifact, state) * 100,
                 );
-                get().addLog(`⚡ Шанс крита: ${critChance}%`, "info");
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_9", { critChance }), "info");
                 break;
             }
 
@@ -136,8 +133,7 @@ export const processArtifactEffects = (
             case "quantum_scan": {
                 // Квантовый сканер (обрабатывается в getEffectiveScanRange)
                 const scanBonus = getArtifactEffectValue(artifact, state);
-                get().addLog(
-                    `📡 Реликт Наблюдателей: +${scanBonus} к дальности`,
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_10", { scanBonus }),
                     "info",
                 );
                 break;
@@ -145,15 +141,14 @@ export const processArtifactEffects = (
 
             case "all_seeing": {
                 // Око Сингулярности - все враги видны (обрабатывается в selectLocation)
-                get().addLog(`👁️ Око Сингулярности: все враги видны`, "info");
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_11"), "info");
                 break;
             }
 
             // === ПЕРЕДВИЖЕНИЕ ===
             case "void_engine": {
                 // Вакуумный Двигатель - бесплатные перелёты (обрабатывается в selectSector)
-                get().addLog(
-                    `🌀 Вакуумный Двигатель: бесплатные перелёты`,
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_12"),
                     "info",
                 );
                 break;
@@ -161,27 +156,26 @@ export const processArtifactEffects = (
 
             case "fuel_free": {
                 // Варп-Катушка - мгновенные перемещения (обрабатывается в selectSector)
-                get().addLog(`⚡ Варп-Катушка: мгновенные перемещения`, "info");
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_13"), "info");
                 break;
             }
 
             // === ЭКИПАЖ ===
             case "crew_immortal": {
                 // Кристалл Жизни - бессмертие (обрабатывается в checkOxygen/moduleDamage)
-                get().addLog(`💖 Кристалл Жизни: экипаж бессмертен`, "info");
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_14"), "info");
                 break;
             }
 
             case "undying_crew": {
                 // Биосфера Древних - бессмертие с мутациями
-                get().addLog(`🧬 Биосфера Древних: экипаж не умирает`, "info");
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_15"), "info");
                 break;
             }
 
             case "ai_control": {
                 // ИИ Нейросеть - управление без экипажа
-                get().addLog(
-                    `🤖 ИИ Нейросеть: корабль управляется автоматически`,
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_16"),
                     "info",
                 );
                 break;
@@ -191,8 +185,7 @@ export const processArtifactEffects = (
             case "artifact_finder": {
                 // Компас Древних - шанс находок (обрабатывается в tryFindArtifact)
                 const findBonus = getArtifactEffectValue(artifact, state);
-                get().addLog(
-                    `🧭 Компас Древних: x${findBonus} к находкам`,
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_17", { findBonus }),
                     "info",
                 );
                 break;
@@ -203,8 +196,7 @@ export const processArtifactEffects = (
                 const creditBoost = Math.round(
                     getArtifactEffectValue(artifact, state) * 100,
                 );
-                get().addLog(
-                    `💰 Чёрный Ящик: +${creditBoost}% к кредитам`,
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_18", { creditBoost }),
                     "info",
                 );
                 break;
@@ -216,8 +208,7 @@ export const processArtifactEffects = (
                 const critDamage = Math.round(
                     getArtifactEffectValue(artifact, state) * 100,
                 );
-                get().addLog(
-                    `⚡ Матрица Перегрузки: +${critDamage}% крит. урон`,
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_19", { critDamage }),
                     "info",
                 );
                 break;
@@ -229,7 +220,7 @@ export const processArtifactEffects = (
                 const evasionBoost = Math.round(
                     getArtifactEffectValue(artifact, state) * 100,
                 );
-                get().addLog(`💨 Бонус к уклонению: +${evasionBoost}%`, "info");
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_20", { evasionBoost }), "info");
                 break;
             }
 
@@ -237,8 +228,7 @@ export const processArtifactEffects = (
             case "module_armor": {
                 // Кристаллическая Броня - бонус к защите (обрабатывается в calculateAverageDefense)
                 const armorBonus = getArtifactEffectValue(artifact, state);
-                get().addLog(
-                    `🛡️ Кристаллическая Броня: +${armorBonus} к защите`,
+                get().addLog( i18nStore.t("game_logs.processArtifactEffects_21", { armorBonus }),
                     "info",
                 );
                 break;

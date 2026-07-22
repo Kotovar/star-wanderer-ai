@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState, CraftingWeapon } from "@/game/types";
 import { CRAFTING_RECIPES, MODULE_RECIPES, HYBRID_MODULE_SHOP_ITEMS } from "@/game/constants/crafting";
 import type { ModuleRecipeId } from "@/game/types/crafting";
@@ -17,18 +18,17 @@ export const createCraftingSlice = (
         const recipe = CRAFTING_RECIPES[recipeId];
 
         if (!recipe) {
-            get().addLog(`Рецепт "${recipeId}" не найден`, "error");
+            get().addLog( i18nStore.t("game_logs.craftingSlice_1", { recipeId }), "error");
             return;
         }
 
         if (!state.research.unlockedRecipes.includes(recipeId)) {
-            get().addLog("Рецепт не разблокирован", "error");
+            get().addLog( i18nStore.t("game_logs.craftingSlice_2"), "error");
             return;
         }
 
         if (state.credits < recipe.credits) {
-            get().addLog(
-                `Недостаточно кредитов: нужно ${recipe.credits}₢`,
+            get().addLog( i18nStore.t("game_logs.craftingSlice_3", { credits: recipe.credits }),
                 "error",
             );
             return;
@@ -40,8 +40,7 @@ export const createCraftingSlice = (
                     resType as keyof typeof state.research.resources
                 ] ?? 0;
             if (available < (required ?? 0)) {
-                get().addLog(
-                    `Недостаточно ресурса "${resType}": нужно ${required}, есть ${available}`,
+                get().addLog( i18nStore.t("game_logs.craftingSlice_4", { resType, required, available }),
                     "error",
                 );
                 return;
@@ -79,8 +78,7 @@ export const createCraftingSlice = (
             };
         });
 
-        get().addLog(
-            `🔧 Создано: ${recipe.name} — добавлено в грузовой отсек`,
+        get().addLog( i18nStore.t("game_logs.craftingSlice_5", { recipe_name: recipe.name }),
             "info",
         );
     },
@@ -90,7 +88,7 @@ export const createCraftingSlice = (
         const cargoItem = state.ship.cargo[cargoIndex];
 
         if (!cargoItem?.isCraftedWeapon || !cargoItem.weaponType) {
-            get().addLog("Этот предмет не является оружием", "error");
+            get().addLog( i18nStore.t("game_logs.craftingSlice_6"), "error");
             return;
         }
 
@@ -99,7 +97,7 @@ export const createCraftingSlice = (
         );
 
         if (!weaponBay) {
-            get().addLog("Орудийный отсек не найден", "error");
+            get().addLog( i18nStore.t("game_logs.craftingSlice_7"), "error");
             return;
         }
 
@@ -107,7 +105,7 @@ export const createCraftingSlice = (
         const slotIndex = weaponBay.weapons?.findIndex((w) => !w) ?? -1;
 
         if (slotIndex === -1) {
-            get().addLog("Орудийный отсек заполнен", "error");
+            get().addLog( i18nStore.t("game_logs.craftingSlice_8"), "error");
             return;
         }
 
@@ -140,8 +138,7 @@ export const createCraftingSlice = (
             };
         });
 
-        get().addLog(
-            `⚔️ Установлено: ${cargoItem.item.replace("crafted_weapon_", "")} в орудийный отсек`,
+        get().addLog( i18nStore.t("game_logs.craftingSlice_9", { value: cargoItem.item.replace("crafted_weapon_", "") }),
             "info",
         );
         get().updateShipStats();
@@ -153,17 +150,17 @@ export const createCraftingSlice = (
         const moduleTemplate = HYBRID_MODULE_SHOP_ITEMS[recipeId];
 
         if (!recipe || !moduleTemplate) {
-            get().addLog(`Рецепт "${recipeId}" не найден`, "error");
+            get().addLog( i18nStore.t("game_logs.craftingSlice_10", { recipeId }), "error");
             return;
         }
 
         if (!state.moduleRecipes.includes(recipeId)) {
-            get().addLog("Чертёж не найден в инвентаре", "error");
+            get().addLog( i18nStore.t("game_logs.craftingSlice_11"), "error");
             return;
         }
 
         if (state.credits < recipe.credits) {
-            get().addLog(`Недостаточно кредитов: нужно ${recipe.credits}₢`, "error");
+            get().addLog( i18nStore.t("game_logs.craftingSlice_12", { credits: recipe.credits }), "error");
             return;
         }
 
@@ -172,7 +169,7 @@ export const createCraftingSlice = (
             const available = state.ship.tradeGoods.find((g) => g.item === goodId)?.quantity ?? 0;
             if (available < (required ?? 0)) {
                 const goodName = goodId;
-                get().addLog(`Недостаточно ресурса "${goodName}": нужно ${required}, есть ${available}`, "error");
+                get().addLog( i18nStore.t("game_logs.craftingSlice_13", { goodName, required, available }), "error");
                 return;
             }
         }
@@ -206,6 +203,6 @@ export const createCraftingSlice = (
             };
         });
 
-        get().addLog(`🔧 Собран модуль: ${recipe.icon} ${recipe.name} — добавлен в грузовой отсек`, "info");
+        get().addLog( i18nStore.t("game_logs.craftingSlice_14", { icon: recipe.icon, recipe_name: recipe.name }), "info");
     },
 });

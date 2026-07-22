@@ -2,6 +2,7 @@ import type { Sector } from "../types";
 import type { Contract } from "../types/contracts";
 import { TRADE_GOODS } from "../constants/goods";
 import { DELIVERY_GOODS } from "../constants/contracts";
+import { getTierPriceMultiplier } from "@/game/slices/trade/constants";
 import { typedKeys } from "@/lib/utils";
 
 const PLANET_TYPES = [
@@ -62,7 +63,12 @@ const generateShipQuest = (
         const cargoKey = goodsKeys[Math.floor(Math.random() * goodsKeys.length)];
         const cargo = TRADE_GOODS[cargoKey];
         const quantity = [10, 15, 20][Math.floor(Math.random() * 3)];
-        const stationBuyPrice = Math.floor(cargo.basePrice * 0.4);
+        // Закупка дорожает с тиром сектора корабля — награда масштабируется той же ставкой
+        const shipTier =
+            allSectors.find((s) => s.id === shipSectorId)?.tier ?? 1;
+        const stationBuyPrice = Math.floor(
+            cargo.basePrice * getTierPriceMultiplier(shipTier) * 0.4,
+        );
         const reward = Math.floor(stationBuyPrice * quantity * 1.3);
         return {
             id: `ship-${shipId}-supply-${Date.now()}-${Math.random()}`,

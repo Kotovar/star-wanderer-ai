@@ -1,6 +1,7 @@
 import type { ArtifactRarity } from "@/game/types/artifacts";
 import type { Contract, PlanetType, RaceId, Sector } from "@/game/types";
 import { TRADE_GOODS } from "@/game/constants/goods";
+import { getTierPriceMultiplier } from "@/game/slices/trade/constants";
 import { typedKeys } from "@/lib/utils";
 import { DELIVERY_GOODS } from "../constants/contracts";
 import { CONTRACT_REWARDS as REWARD } from "./rewards";
@@ -324,7 +325,10 @@ export const generatePlanetContracts = (
                 const quantity =
                     SUPPLY_RUN_QTY.min[tier - 1] +
                     Math.floor(Math.random() * SUPPLY_RUN_QTY.range[tier - 1]);
-                const stationBuyPrice = Math.floor(cargo.basePrice * STATION_BUY_PRICE_MULT);
+                // Закупка на станциях дорожает с тиром — награда масштабируется той же ставкой
+                const stationBuyPrice = Math.floor(
+                    cargo.basePrice * getTierPriceMultiplier(tier) * STATION_BUY_PRICE_MULT,
+                );
                 const reward = Math.floor(stationBuyPrice * quantity * SUPPLY_RUN_TIER_MULT[tier - 1]);
 
                 // Find the actual planet name from the sector

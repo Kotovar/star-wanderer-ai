@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import { calculateFuelCostForUI } from "./calculateFuelCost";
 
@@ -32,7 +33,7 @@ export const emergencyJump = (set: SetState, get: () => GameStore): void => {
     const currentSector = state.currentSector;
 
     if (!currentSector || currentSector.star?.type !== "blackhole") {
-        get().addLog("Аварийный прыжок доступен только в секторе с чёрной дырой!", "error");
+        get().addLog( i18nStore.t("game_logs.emergencyJump_1"), "error");
         return;
     }
 
@@ -44,7 +45,7 @@ export const emergencyJump = (set: SetState, get: () => GameStore): void => {
         : Infinity;
 
     if (state.ship.fuel >= minFuelNeeded) {
-        get().addLog("Топлива достаточно для обычного прыжка!", "error");
+        get().addLog( i18nStore.t("game_logs.emergencyJump_2"), "error");
         return;
     }
 
@@ -61,7 +62,7 @@ export const emergencyJump = (set: SetState, get: () => GameStore): void => {
     );
 
     if (normalSectors.length === 0) {
-        get().addLog("Нет доступных секторов для аварийного прыжка!", "error");
+        get().addLog( i18nStore.t("game_logs.emergencyJump_3"), "error");
         return;
     }
 
@@ -95,10 +96,9 @@ export const emergencyJump = (set: SetState, get: () => GameStore): void => {
         gameMode: "sector_map",
     });
 
-    get().addLog("⚡ АВАРИЙНЫЙ ПРЫЖОК активирован!", "warning");
-    get().addLog(`Прибытие в ${destination.name}`, "info");
-    get().addLog(
-        `Перегрузка систем: все модули повреждены на -${damage}%`,
+    get().addLog( i18nStore.t("game_logs.emergencyJump_4"), "warning");
+    get().addLog( i18nStore.t("game_logs.emergencyJump_5", { destination_name: destination.name }), "info");
+    get().addLog( i18nStore.t("game_logs.emergencyJump_6", { damage }),
         "error",
     );
 

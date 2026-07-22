@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import type { ExpeditionReward } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES } from "@/game/constants";
@@ -131,8 +132,7 @@ export function revealExpeditionTile(
         (c) => notDoneBefore.has(c.id) && c.expeditionDone,
     );
     for (const c of justFulfilled) {
-        get().addLog(
-            `📋 Данные собраны (${c.tilesRevealed}/${c.requiredDiscoveries} значимых находок). Вернитесь на ${c.sourceSectorName} для сдачи задания.`,
+        get().addLog( i18nStore.t("game_logs.revealExpeditionTile_1", { tilesRevealed: c.tilesRevealed ?? 0, requiredDiscoveries: c.requiredDiscoveries ?? 0, sourceSectorName: c.sourceSectorName ?? "" }),
             "info",
         );
     }
@@ -196,7 +196,7 @@ export function revealExpeditionTile(
                     : null,
             }));
             boostExpeditionMorale(EXPEDITION_GOOD_FIND_MORALE_BOOST);
-            get().addLog(`🏪 Рынок: +${credits}₢`, "info");
+            get().addLog( i18nStore.t("game_logs.revealExpeditionTile_2", { credits }), "info");
             break;
         }
 
@@ -235,8 +235,7 @@ export function revealExpeditionTile(
             });
             const rd = RESEARCH_RESOURCES[resType];
             boostExpeditionMorale(EXPEDITION_GOOD_FIND_MORALE_BOOST);
-            get().addLog(
-                `🔬 Лаборатория: ${rd?.icon ?? ""} ${rd?.name ?? resType} x${qty}`,
+            get().addLog( i18nStore.t("game_logs.revealExpeditionTile_3", { value: rd?.icon ?? "", resType: rd?.name ?? resType, qty }),
                 "info",
             );
             break;
@@ -304,8 +303,7 @@ export function revealExpeditionTile(
                     damageReduction > 0 || moraleReduction > 0
                         ? ` (смягчено отрядом: −${Math.round(damageReduction * 100)}% урона, −${Math.round(moraleReduction * 100)}% морали)`
                         : "";
-                get().addLog(
-                    `⚠️ Инцидент! ${target.name} получил ${damage} урона и -${moraleLoss} морали${mitigation}.`,
+                get().addLog( i18nStore.t("game_logs.revealExpeditionTile_4", { target_name: target.name, damage, moraleLoss, mitigation }),
                     "error",
                 );
             }
@@ -327,9 +325,9 @@ export function revealExpeditionTile(
                         : null,
                 }));
                 boostExpeditionMorale(EXPEDITION_GOOD_FIND_MORALE_BOOST * 2);
-                get().addLog(`✨ Найден артефакт: ${artifact.name}!`, "info");
+                get().addLog( i18nStore.t("game_logs.revealExpeditionTile_5", { artifact_name: artifact.name }), "info");
             } else {
-                get().addLog("🗿 Место оказалось пустым.", "info");
+                get().addLog( i18nStore.t("game_logs.revealExpeditionTile_6"), "info");
             }
             break;
         }

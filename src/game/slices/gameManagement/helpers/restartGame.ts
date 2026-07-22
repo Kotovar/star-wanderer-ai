@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { generateGalaxy } from "@/game/galaxy";
 import { initializeStationData } from "@/game/stations";
 import { initialState } from "@/game/initial";
@@ -12,7 +13,6 @@ import {
   pickWeightedCrisis,
   rollNextCrisisTurn,
 } from "@/game/constants/globalCrises";
-import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 
 /**
@@ -76,8 +76,7 @@ export const restartGame = (
 
   if (patch.startingTechId) {
     set(applyResearchedTechs(get(), [patch.startingTechId]));
-    get().addLog(
-      `🔬 Стартовая технология: ${RESEARCH_TREE[patch.startingTechId]?.name ?? patch.startingTechId}`,
+    get().addLog( i18nStore.t("game_logs.restartGame_1", { startingTechId: RESEARCH_TREE[patch.startingTechId]?.name ?? patch.startingTechId }),
       "info",
     );
   }
@@ -101,17 +100,15 @@ export const restartGame = (
       nextCrisisTurn: rollNextCrisisTurn(state.turn, stateAfterStart),
       nextCrisisId: nextCrisis.id,
     }));
-    get().addLog(
-      `🚨 ГАЛАКТИЧЕСКИЙ КРИЗИС: ${crisis.icon} ${i18nStore.t(crisis.nameKey)} · длительность ${crisis.duration} хода`,
+    get().addLog( i18nStore.t("game_logs.restartGame_2", { icon: crisis.icon, value: i18nStore.t(crisis.nameKey), duration: crisis.duration }),
       "error",
     );
   }
 
-  get().addLog("Новая игра", "info");
-  get().addLog(
-    `Способы победы: ${getVictoryObjectives()
+  get().addLog( i18nStore.t("game_logs.restartGame_3"), "info");
+  get().addLog( i18nStore.t("game_logs.restartGame_4", { value: getVictoryObjectives()
       .map((objective) => i18nStore.t(objective.titleKey))
-      .join(" / ")}`,
+      .join(" / ") }),
     "info",
   );
   playSound("success");

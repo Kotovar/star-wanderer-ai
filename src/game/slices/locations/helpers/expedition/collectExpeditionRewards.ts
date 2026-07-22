@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import type { ExpeditionReward } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES, TRADE_GOODS } from "@/game/constants";
@@ -14,7 +15,7 @@ export function collectExpeditionRewards(
     // Credits
     if (rewards.credits > 0) {
         set((s) => ({ credits: s.credits + rewards.credits }));
-        get().addLog(`🗺️ Экспедиция: +${rewards.credits}₢`, "info");
+        get().addLog( i18nStore.t("game_logs.collectExpeditionRewards_1", { credits: rewards.credits }), "info");
     }
 
     // Trade goods
@@ -28,7 +29,7 @@ export function collectExpeditionRewards(
         });
         for (const tg of rewards.tradeGoods) {
             const name = TRADE_GOODS[tg.id]?.name ?? tg.id;
-            get().addLog(`🗺️ Экспедиция: ${name} x${tg.quantity}`, "info");
+            get().addLog( i18nStore.t("game_logs.collectExpeditionRewards_2", { name, quantity: tg.quantity }), "info");
         }
     }
 
@@ -69,8 +70,7 @@ export function collectExpeditionRewards(
 
         for (const res of rewards.researchResources) {
             const rd = RESEARCH_RESOURCES[res.type];
-            get().addLog(
-                `🗺️ Экспедиция: ${rd?.icon ?? ""} ${rd?.name ?? res.type} x${res.quantity}`,
+            get().addLog( i18nStore.t("game_logs.collectExpeditionRewards_3", { value: rd?.icon ?? "", type: rd?.name ?? res.type, quantity: res.quantity }),
                 "info",
             );
         }

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
@@ -26,7 +27,7 @@ export const completeDeliveryContract = (
         activeContracts: s.activeContracts.filter((c) => c.id !== contractId),
         completedContractIds: [...s.completedContractIds, contractId],
     }));
-    get().addLog(`Задача выполнена! +${contract.reward}₢`, "info");
+    get().addLog( i18nStore.t("game_logs.completeDeliveryContract_1", { reward: contract.reward }), "info");
 
     // Give experience to all crew members
     const expReward = CONTRACT_REWARDS.delivery.baseExp;

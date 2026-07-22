@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { getBossById } from "@/game/bosses";
 import { determineBossRewards } from "./bossRewards";
 import * as combatSetup from "./combatSetup";
@@ -70,8 +71,8 @@ export function initializeBossCombat(
         s.gameMode = "combat";
     });
 
-    get().addLog(`Щиты восстановлены: ${get().ship.shields}`, "combat");
-    get().addLog(`⚠️ БОСС: ${boss.name}!`, "error");
+    get().addLog( i18nStore.t("game_logs.startBossCombat_1", { shields: get().ship.shields }), "combat");
+    get().addLog( i18nStore.t("game_logs.startBossCombat_2", { boss_name: boss.name }), "error");
 
     applyPessimistTrait(get, set);
     applyRebelTrait(get, set);

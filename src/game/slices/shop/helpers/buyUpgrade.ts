@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type {
     GameState,
     GameStore,
@@ -41,7 +42,7 @@ const validateUpgrade = (
     if (!item.targetType) {
         return {
             canUpgrade: false,
-            error: "Не указан тип модуля для улучшения",
+            error: i18nStore.t("game_logs.err_no_module_type"),
         };
     }
 
@@ -64,7 +65,7 @@ const validateUpgrade = (
     if (currentLevel >= MAX_UPGRADE_LEVEL) {
         return {
             canUpgrade: false,
-            error: "Максимальный уровень улучшения! (LV3)",
+            error: i18nStore.t("game_logs.err_max_upgrade"),
             module: tgt,
         };
     }
@@ -115,8 +116,7 @@ const upgradeEngine = (
     }));
 
     const updatedModule = get().ship.modules.find((m) => m.id === module.id);
-    get().addLog(
-        `Модуль "${updatedModule?.name}" улучшен до LV${updatedModule?.level}`,
+    get().addLog( i18nStore.t("game_logs.buyUpgrade_1", { name: updatedModule?.name ?? "", level: updatedModule?.level ?? 0 }),
         "info",
     );
     get().updateShipStats();
@@ -198,7 +198,7 @@ const upgradeModule = (
     );
 
     if (!targetModuleTemplate) {
-        get().addLog(`Нет модуля ${nextLevel} уровня для улучшения!`, "error");
+        get().addLog( i18nStore.t("game_logs.buyUpgrade_2", { nextLevel }), "error");
         return;
     }
 
@@ -221,8 +221,7 @@ const upgradeModule = (
     );
 
     if (!newPos) {
-        get().addLog(
-            `⚠ Недостаточно места для улучшения! Модуль станет ${newWidth}x${newHeight}, но на корабле нет подходящего места.`,
+        get().addLog( i18nStore.t("game_logs.buyUpgrade_3", { newWidth, newHeight }),
             "error",
         );
         return;
@@ -298,13 +297,11 @@ const upgradeModule = (
     }));
 
     const updatedModule = get().ship.modules.find((m) => m.id === module.id);
-    get().addLog(
-        `Модуль "${updatedModule?.name}" улучшен до LV${updatedModule?.level}`,
+    get().addLog( i18nStore.t("game_logs.buyUpgrade_4", { name: updatedModule?.name ?? "", level: updatedModule?.level ?? 0 }),
         "info",
     );
     if (moved) {
-        get().addLog(
-            `⚠ Модуль перемещён на позицию (${newPos.x}, ${newPos.y}) из-за увеличения размера`,
+        get().addLog( i18nStore.t("game_logs.buyUpgrade_5", { x: newPos.x, y: newPos.y }),
             "warning",
         );
     }
@@ -333,8 +330,7 @@ export const buyUpgrade = (
         if (validation.error) {
             get().addLog(validation.error, "error");
             if (validation.module) {
-                get().addLog(
-                    "Модули LV4 можно только найти в секторах тир 3 или у боссов.",
+                get().addLog( i18nStore.t("game_logs.buyUpgrade_6"),
                     "warning",
                 );
             }

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type {
   GameState,
   GameStore,
@@ -168,7 +169,7 @@ function resolveTarget(
   if (!hasGunner) {
     const target =
       aliveModules[Math.floor(Math.random() * aliveModules.length)];
-    get().addLog(`Случайная цель: ${target.name}`, "warning");
+    get().addLog( i18nStore.t("game_logs.playerAttack_1", { target_name: target.name }), "warning");
     return target;
   }
 
@@ -183,7 +184,7 @@ function resolveTarget(
   );
 
   if (!selectedTarget || selectedTarget.health <= 0) {
-    get().addLog("Выберите цель!", "error");
+    get().addLog( i18nStore.t("game_logs.playerAttack_2"), "error");
     return null;
   }
 
@@ -244,22 +245,19 @@ function rollCrit(state: GameState, get: () => GameStore): CritResult {
   const isCrit = Math.random() < critChance;
 
   if (isCrit) {
-    get().addLog(
-      `💥 КРИТИЧЕСКИЙ УДАР! x${critMultiplier.toFixed(1)} урон!`,
+    get().addLog( i18nStore.t("game_logs.playerAttack_3", { value: critMultiplier.toFixed(1) }),
       "combat",
     );
 
     if (criticalMatrix) {
       const bonus = getArtifactEffectValue(criticalMatrix, state);
-      get().addLog(
-        `💎 Критическая Матрица: +${Math.round(bonus * 100)}% шанс крита`,
+      get().addLog( i18nStore.t("game_logs.playerAttack_4", { value: Math.round(bonus * 100) }),
         "info",
       );
     }
     if (overloadMatrix) {
       const bonus = getArtifactEffectValue(overloadMatrix, state);
-      get().addLog(
-        `💥 Матрица Перегрузки: +${Math.round(bonus * 100)}% крит. урон`,
+      get().addLog( i18nStore.t("game_logs.playerAttack_5", { value: Math.round(bonus * 100) }),
         "info",
       );
     }
@@ -286,8 +284,7 @@ function resolveAccuracy(
   if (gunnerInBay) {
     const gunnerLevel = gunnerInBay.level || 1;
     const gunnerBonus = Math.min(0.2, gunnerLevel * 0.02);
-    get().addLog(
-      `🎯 Стрелок ${gunnerInBay.name} (Ур.${gunnerLevel}): +${Math.round(gunnerBonus * 100)}% точность`,
+    get().addLog( i18nStore.t("game_logs.playerAttack_6", { gunnerInBay_name: gunnerInBay.name, gunnerLevel, value: Math.round(gunnerBonus * 100) }),
       "info",
     );
   }
@@ -295,7 +292,7 @@ function resolveAccuracy(
     (m) => m.type === "ai_core" && isModuleActive(m),
   ).length;
   if (aiCoreCount > 0) {
-    get().addLog(`🤖 ИИ Ядро: +${aiCoreCount * 5}% точность`, "info");
+    get().addLog( i18nStore.t("game_logs.playerAttack_7", { value: aiCoreCount * 5 }), "info");
   }
   const targetingCore = findActiveArtifact(
     state.artifacts,
@@ -303,8 +300,7 @@ function resolveAccuracy(
   );
   if (targetingCore) {
     const bonus = getArtifactEffectValue(targetingCore, state);
-    get().addLog(
-      `🎯 Ядро Прицеливания: +${Math.round(bonus)}% точность`,
+    get().addLog( i18nStore.t("game_logs.playerAttack_8", { value: Math.round(bonus) }),
       "info",
     );
   }
@@ -549,7 +545,7 @@ function applyDamageToEnemy(
         s.currentCombat.enemyShieldsJustBroken = true;
       }
     });
-    get().addLog(`Урон щитам врага: ${damage.totalShieldDamage}`, "combat");
+    get().addLog( i18nStore.t("game_logs.playerAttack_9", { totalShieldDamage: damage.totalShieldDamage }), "combat");
     playSound("shield");
   }
 
@@ -636,7 +632,11 @@ function applyDamageToEnemy(
     });
 
     get().addLog(
-      `Пробитие! Модуль "${tgtMod.name}": -${finalDamage}%${weaponCounts.kinetic > 0 ? ` (броня -${moduleDefense})` : ""}`,
+      i18nStore.t("game_logs.pierce_hit", {
+        name: tgtMod.name,
+        damage: finalDamage,
+        armor: weaponCounts.kinetic > 0 ? i18nStore.t("game_logs.pierce_armor", { moduleDefense }) : "",
+      }),
       "combat",
     );
     playSound("damage");
@@ -721,7 +721,7 @@ export function executePlayerAttack(
       if (!s.currentCombat) return;
       s.currentCombat.skipPlayerTurn = false;
     });
-    get().addLog(`⏭️ Ваш ход пропущен! Эффект оглушения босса.`, "error");
+    get().addLog( i18nStore.t("game_logs.playerAttack_10"), "error");
     return;
   }
 
@@ -757,7 +757,7 @@ export function executePlayerAttack(
     ? currentState.currentCombat.enemy.modules.filter((m) => m.health > 0)
     : [];
   if (currentState.currentCombat.enemy.isBoss && checkBossModuleDodge(aliveBossMods, get)) {
-    get().addLog(`⚡ Модуль "${tgtMod.name}" уклонился от атаки!`, "warning");
+    get().addLog( i18nStore.t("game_logs.playerAttack_11", { tgtMod_name: tgtMod.name }), "warning");
     recordEnemyMiss(set, tgtMod);
     handleEnemyCounterAttack(currentState, set, get);
     return;
@@ -836,7 +836,7 @@ export function executePlayerAttack(
   // Early return if everything missed
   if (damage.totalShieldDamage === 0 && damage.totalModuleDamage === 0) {
     damage.logs.forEach((log) => get().addLog(log, "combat"));
-    get().addLog("Все выстрелы промахнулись!", "warning");
+    get().addLog( i18nStore.t("game_logs.playerAttack_12"), "warning");
     recordEnemyMiss(set, tgtMod);
     handleEnemyCounterAttack(currentState, set, get);
     return;
@@ -880,7 +880,7 @@ export function executePlayerAttack(
                 );
               }
             });
-            get().addLog(`🧬 ${c.name} симбиоз: +${healAmount} HP`, "info");
+            get().addLog( i18nStore.t("game_logs.playerAttack_13", { c_name: c.name, healAmount }), "info");
           }
         }
       }
@@ -913,9 +913,12 @@ export function executePlayerAttack(
           s.currentCombat.enemy.shieldRegenRate = newRegen > 0 ? newRegen : undefined;
         });
         get().addLog(
-          updatedTgtMod.isBiological
-            ? `🫧 Защитная мембрана разрушена! Биобарьер существа: ${newMax}, восстановление: ${newRegen}/ход`
-            : `🛡 Щитовой модуль уничтожен! Макс. щиты врага: ${newMax}, регенерация: ${newRegen}/ход`,
+          i18nStore.t(
+            updatedTgtMod.isBiological
+              ? "game_logs.shield_module_destroyed_bio"
+              : "game_logs.shield_module_destroyed",
+            { newMax, newRegen },
+          ),
           "combat",
         );
       }
@@ -999,7 +1002,7 @@ export function executePlayerAttackWithBayTargets(
       if (!s.currentCombat) return;
       s.currentCombat.skipPlayerTurn = false;
     });
-    get().addLog(`⏭️ Ваш ход пропущен! Эффект оглушения босса.`, "error");
+    get().addLog( i18nStore.t("game_logs.playerAttack_14"), "error");
     return;
   }
 
@@ -1070,7 +1073,7 @@ export function executePlayerAttackWithBayTargets(
     if (!tgtMod) {
       tgtMod = aliveModules[Math.floor(Math.random() * aliveModules.length)];
       if (!assignedId) {
-        get().addLog(`[Отсек ${bay.id}] Цель не выбрана — случайный выстрел: ${tgtMod.name}`, "warning");
+        get().addLog( i18nStore.t("game_logs.playerAttack_15", { bay_id: bay.id, tgtMod_name: tgtMod.name }), "warning");
       }
     }
 
@@ -1079,7 +1082,7 @@ export function executePlayerAttackWithBayTargets(
       ? aliveModules
       : [];
     if (combatNow.enemy.isBoss && checkBossModuleDodge(aliveBossMods, get)) {
-      get().addLog(`⚡ Модуль "${tgtMod.name}" уклонился!`, "warning");
+      get().addLog( i18nStore.t("game_logs.playerAttack_16", { tgtMod_name: tgtMod.name }), "warning");
       recordEnemyMiss(set, tgtMod);
       continue;
     }
@@ -1162,7 +1165,7 @@ export function executePlayerAttackWithBayTargets(
                 const m = s.crew.find((x) => x.id === c.id);
                 if (m) m.health = Math.min(m.maxHealth ?? 100, m.health + heal);
               });
-              get().addLog(`🧬 ${c.name} симбиоз: +${heal} HP`, "info");
+              get().addLog( i18nStore.t("game_logs.playerAttack_17", { c_name: c.name, heal }), "info");
             }
           }
         }
@@ -1212,7 +1215,7 @@ export function executePlayerAttackWithBayTargets(
   }
 
   if (!anyHit) {
-    get().addLog("Все выстрелы промахнулись!", "warning");
+    get().addLog( i18nStore.t("game_logs.playerAttack_18"), "warning");
   }
 
   handleEnemyCounterAttack(currentState, set, get);

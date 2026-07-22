@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore, Sector, SetState, TravelEventType } from "@/game/types";
 import {
     CONTRACT_REWARDS,
@@ -8,6 +9,7 @@ import {
     STAR_HAZARD_LEVEL,
 } from "@/game/constants";
 import { TRADE_GOODS } from "@/game/constants/goods";
+import { getTierPriceMultiplier } from "@/game/slices/trade/constants";
 import {
     getPilotInCockpit,
     giveCrewExperience,
@@ -231,32 +233,28 @@ const handleRandomEvent = (
     switch (event) {
         case "asteroids": {
             const damage = handleAsteroidDamage(setState, getState);
-            getState().addLog(
-                `☄️ Корабль вошёл в астероидный поток! Повреждение модулей: -${damage}%`,
+            getState().addLog( i18nStore.t("game_logs.processTravel_1", { damage }),
                 "warning",
             );
             break;
         }
         case "anomaly": {
             const damagedCount = handleAnomaly(setState, getState);
-            getState().addLog(
-                `🌀 Аномальный фронт! Повреждено модулей: ${damagedCount} (-${ANOMALY_DAMAGE}% каждое)`,
+            getState().addLog( i18nStore.t("game_logs.processTravel_2", { damagedCount, ANOMALY_DAMAGE }),
                 "warning",
             );
             break;
         }
         case "stress": {
             const loss = handleStress(setState);
-            getState().addLog(
-                `😰 Стресс от долгого перелёта! Настроение экипажа: -${loss}`,
+            getState().addLog( i18nStore.t("game_logs.processTravel_3", { loss }),
                 "warning",
             );
             break;
         }
         case "signal": {
             const reward = handleSignal(setState);
-            getState().addLog(
-                `📶 Во время перелёта был получен сигнал! Найдены ресурсы: +${reward}₢`,
+            getState().addLog( i18nStore.t("game_logs.processTravel_4", { reward }),
                 "info",
             );
             break;
@@ -264,13 +262,11 @@ const handleRandomEvent = (
         case "emp": {
             const shieldsLost = handleEMP(setState, getState);
             if (shieldsLost > 0) {
-                getState().addLog(
-                    `⚡ Электромагнитный импульс! Щиты разряжены: -${shieldsLost}`,
+                getState().addLog( i18nStore.t("game_logs.processTravel_5", { shieldsLost }),
                     "warning",
                 );
             } else {
-                getState().addLog(
-                    `⚡ Электромагнитный импульс прошёл без последствий`,
+                getState().addLog( i18nStore.t("game_logs.processTravel_6"),
                     "info",
                 );
             }
@@ -279,19 +275,23 @@ const handleRandomEvent = (
         case "trader": {
             const goods = getState().ship.tradeGoods;
             if (goods.length === 0) {
-                getState().addLog(
-                    "🛸 Торговцу нечего предложить — трюм пуст. Корабли разошлись.",
+                getState().addLog( i18nStore.t("game_logs.processTravel_7"),
                     "info",
                 );
                 break;
             }
 
+            // Торговец платит по ценам тира текущего сектора, как и станции
+            const traderTierMult = getTierPriceMultiplier(
+                getState().currentSector?.tier ?? 1,
+            );
             const total = goods.reduce(
                 (sum, g) =>
                     sum +
                     Math.floor(
                         (TRADE_GOODS[g.item].basePrice *
                             TRADER_PRICE_MULTIPLIER *
+                            traderTierMult *
                             g.quantity) /
                             5,
                     ),
@@ -301,8 +301,7 @@ const handleRandomEvent = (
                 credits: s.credits + total,
                 ship: { ...s.ship, tradeGoods: [] },
             }));
-            getState().addLog(
-                `🛸 Странствующий торговец скупил весь груз: +${total}₢`,
+            getState().addLog( i18nStore.t("game_logs.processTravel_8", { total }),
                 "info",
             );
             break;
@@ -318,15 +317,14 @@ const applyCautiousEventChoice = (
     switch (event) {
         case "asteroids": {
             if (hasPilotInCockpit(getState())) {
-                getState().addLog(
-                    "☄️ Пилот в кабине провёл корабль через астероидный поток без повреждений",
+                getState().addLog( i18nStore.t("game_logs.processTravel_9"),
                     "info",
                 );
                 return true;
             }
 
             if (getState().ship.fuel < ASTEROID_CAUTIOUS_FUEL_COST) {
-                getState().addLog("Недостаточно топлива для обходного манёвра", "error");
+                getState().addLog( i18nStore.t("game_logs.processTravel_10"), "error");
                 return false;
             }
             setState((s) => ({
@@ -335,15 +333,14 @@ const applyCautiousEventChoice = (
                     fuel: Math.max(0, s.ship.fuel - ASTEROID_CAUTIOUS_FUEL_COST),
                 },
             }));
-            getState().addLog(
-                `☄️ Обходной манёвр: астероидный поток пройден без повреждений, топливо -${ASTEROID_CAUTIOUS_FUEL_COST}`,
+            getState().addLog( i18nStore.t("game_logs.processTravel_11", { ASTEROID_CAUTIOUS_FUEL_COST }),
                 "info",
             );
             return true;
         }
         case "anomaly": {
             if (getState().ship.fuel < ANOMALY_CAUTIOUS_FUEL_COST) {
-                getState().addLog("Недостаточно топлива для обхода аномалии", "error");
+                getState().addLog( i18nStore.t("game_logs.processTravel_12"), "error");
                 return false;
             }
             const damagedCount = getState().ship.modules.filter(
@@ -362,8 +359,7 @@ const applyCautiousEventChoice = (
                     })),
                 },
             }));
-            getState().addLog(
-                `🌀 Осторожный обход аномалии: повреждено модулей ${damagedCount} (-${ANOMALY_CAUTIOUS_DAMAGE}% каждое), топливо -${ANOMALY_CAUTIOUS_FUEL_COST}`,
+            getState().addLog( i18nStore.t("game_logs.processTravel_13", { damagedCount, ANOMALY_CAUTIOUS_DAMAGE, ANOMALY_CAUTIOUS_FUEL_COST }),
                 "warning",
             );
             return true;
@@ -378,8 +374,7 @@ const applyCautiousEventChoice = (
                       }
                     : null,
             }));
-            getState().addLog(
-                "😌 Экипаж получил дополнительную смену отдыха. Перелёт дольше на 1 ход, мораль не потеряна.",
+            getState().addLog( i18nStore.t("game_logs.processTravel_14"),
                 "info",
             );
             return true;
@@ -389,20 +384,18 @@ const applyCautiousEventChoice = (
                 setState((s) => ({
                     credits: s.credits + SCANNER_SIGNAL_BONUS_REWARD,
                 }));
-                getState().addLog(
-                    `📶 Сканер расшифровал слабый сигнал без схода с курса: +${SCANNER_SIGNAL_BONUS_REWARD}₢`,
+                getState().addLog( i18nStore.t("game_logs.processTravel_15", { SCANNER_SIGNAL_BONUS_REWARD }),
                     "info",
                 );
                 return true;
             }
 
-            getState().addLog("📶 Сигнал проигнорирован, курс сохранён", "info");
+            getState().addLog( i18nStore.t("game_logs.processTravel_16"), "info");
             return true;
         }
         case "emp": {
             if (getState().ship.shields > 0) {
-                getState().addLog(
-                    "⚡ Щиты приняли электромагнитный импульс без потерь",
+                getState().addLog( i18nStore.t("game_logs.processTravel_17"),
                     "info",
                 );
                 return true;
@@ -417,15 +410,14 @@ const applyCautiousEventChoice = (
             }));
             getState().addLog(
                 shieldsLost > 0
-                    ? `⚡ Перенастройка контуров: потеряна половина щитов (-${shieldsLost})`
-                    : "⚡ Перенастройка контуров: импульс прошёл без последствий",
+                    ? i18nStore.t("game_logs.emp_retune_lost", { shieldsLost })
+                    : i18nStore.t("game_logs.emp_retune_ok"),
                 shieldsLost > 0 ? "warning" : "info",
             );
             return true;
         }
         case "trader": {
-            getState().addLog(
-                "🛸 Торговец пожал плечами и ушёл в гиперпространство",
+            getState().addLog( i18nStore.t("game_logs.processTravel_18"),
                 "info",
             );
             return true;
@@ -447,7 +439,7 @@ const applySpecialEventChoice = (
         case "asteroids": {
             const drillLevel = getState().getDrillLevel();
             if (drillLevel <= 0) {
-                getState().addLog("Нет активного бура для попутного бурения", "error");
+                getState().addLog( i18nStore.t("game_logs.processTravel_19"), "error");
                 return false;
             }
 
@@ -481,8 +473,8 @@ const applySpecialEventChoice = (
             }
             getState().addLog(
                 mined > 0
-                    ? `⛏️ Попутное бурение: минералы +${mined}, повреждение модуля -${damage}%`
-                    : `⛏️ Попутное бурение: трюм полон, добыча потеряна. Повреждение модуля -${damage}%`,
+                    ? i18nStore.t("game_logs.mining_ok", { mined, damage })
+                    : i18nStore.t("game_logs.mining_full", { damage }),
                 mined > 0 ? "info" : "warning",
             );
             return true;
@@ -490,7 +482,7 @@ const applySpecialEventChoice = (
         case "anomaly": {
             const lab = getActiveModule(getState().ship.modules, "lab");
             if (!lab) {
-                getState().addLog("Нет активной лаборатории для изучения аномалии", "error");
+                getState().addLog( i18nStore.t("game_logs.processTravel_20"), "error");
                 return false;
             }
 
@@ -513,21 +505,19 @@ const applySpecialEventChoice = (
                 },
             }));
 
-            getState().addLog(
-                `🔬 Лаборатория изучила аномальный фронт: повреждено модулей ${damagedCount} (-${ANOMALY_DAMAGE}% каждое)`,
+            getState().addLog( i18nStore.t("game_logs.processTravel_21", { damagedCount, ANOMALY_DAMAGE }),
                 "warning",
             );
             resources.forEach((res) => {
                 const resourceData = RESEARCH_RESOURCES[res.type];
-                getState().addLog(
-                    `🔬 Получены исследовательские ресурсы: ${resourceData.icon} ${resourceData.name} x${res.quantity}`,
+                getState().addLog( i18nStore.t("game_logs.processTravel_22", { icon: resourceData.icon, resourceData_name: resourceData.name, quantity: res.quantity }),
                     "info",
                 );
             });
             return true;
         }
         default: {
-            getState().addLog("Для этого события нет особого варианта", "error");
+            getState().addLog( i18nStore.t("game_logs.processTravel_23"), "error");
             return false;
         }
     }
@@ -595,8 +585,7 @@ export const handlePatrolContracts = (
             completedIds.push(c.id);
             totalReward += c.reward;
 
-            getState().addLog(
-                `Сбор биообразцов завершён! +${c.reward}₢`,
+            getState().addLog( i18nStore.t("game_logs.processTravel_24", { reward: c.reward }),
                 "info",
             );
 
@@ -617,8 +606,7 @@ export const handlePatrolContracts = (
             newActiveContracts = newActiveContracts.map((ac) =>
                 ac.id === c.id ? { ...ac, visitedSectors } : ac,
             );
-            getState().addLog(
-                `Биообразцы: ${visitedTargetCount}/${targetSectors.length} секторов`,
+            getState().addLog( i18nStore.t("game_logs.processTravel_25", { visitedTargetCount, targetSectors_length: targetSectors.length }),
                 "info",
             );
         }
@@ -648,8 +636,7 @@ export const applyNeutronRadiation = (
         if (Math.random() < chance) {
             const mutationName = giveRandomMutation(crewMember, set);
             if (mutationName) {
-                get().addLog(
-                    `☢️ ${crewMember.name} получил мутацию от радиации нейтронной звезды: ${mutationName}!`,
+                get().addLog( i18nStore.t("game_logs.processTravel_26", { crewMember_name: crewMember.name, mutationName }),
                     "error",
                 );
             }
@@ -682,8 +669,7 @@ export const processTravel = (
                 ? { ...s.traveling, traderTurn: undefined }
                 : null,
         }));
-        get().addLog(
-            "🛸 На сканере неизвестный корабль. Требуется решение капитана.",
+        get().addLog( i18nStore.t("game_logs.processTravel_27"),
             "warning",
         );
         get().saveGame();
@@ -703,8 +689,7 @@ export const processTravel = (
     if (Math.random() < eventChance) {
         const event = pickTravelEvent(hazardLevel);
         set({ pendingTravelEvent: { type: event } });
-        get().addLog(
-            "Обнаружено событие в пути. Требуется решение капитана.",
+        get().addLog( i18nStore.t("game_logs.processTravel_28"),
             "warning",
         );
         get().saveGame();
@@ -761,7 +746,7 @@ export const processTravel = (
         // Радиационная мутация при прибытии в сектор с нейтронной звездой
         applyNeutronRadiation(destinationSector, set, get);
 
-        get().addLog(`Прибытие в ${destinationSector.name}`, "info");
+        get().addLog( i18nStore.t("game_logs.processTravel_29", { destinationSector_name: destinationSector.name }), "info");
         get().updateShipStats();
         set(() => ({ gameMode: "sector_map" }));
 

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type {
     GameStore,
     SetState,
@@ -25,7 +26,7 @@ export const applyPlanetEffect = (
 ): boolean => {
     const spec = PLANET_SPECIALIZATIONS[raceId];
     if (!spec) {
-        get().addLog(`Эффект для расы ${raceId} не найден!`, "error");
+        get().addLog( i18nStore.t("game_logs.applyEffect_1", { raceId }), "error");
         return false;
     }
 
@@ -33,8 +34,7 @@ export const applyPlanetEffect = (
 
     // Проверка достаточности кредитов
     if (state.credits < spec.cost) {
-        get().addLog(
-            `Недостаточно кредитов для ${spec.name}! Нужно ${spec.cost}₢`,
+        get().addLog( i18nStore.t("game_logs.applyEffect_2", { spec_name: spec.name, cost: spec.cost }),
             "error",
         );
         return false;
@@ -176,8 +176,7 @@ const applyXenosymbiontEffect = (
     }));
 
     // Лог о регенерации (будет применяться через систему активных эффектов)
-    get().addLog(
-        `🧬 Биоулучшение: +${regenValue} к регенерации здоровья за ход на ${spec.duration} ходов`,
+    get().addLog( i18nStore.t("game_logs.applyEffect_3", { regenValue, duration: spec.duration }),
         "info",
     );
 };
@@ -239,8 +238,7 @@ const applyCrystallineEffect = (spec: PlanetSpecialization, set: SetState) => {
 const applyHumanEffect = (set: SetState, get: () => GameStore) => {
     // Эффект людей требует выбора члена экипажа для обучения
     // Вызывается через trainCrew из UI после выбора
-    get().addLog(
-        `🎓 Космическая Академия: выберите члена экипажа для обучения`,
+    get().addLog( i18nStore.t("game_logs.applyEffect_4"),
         "info",
     );
 };

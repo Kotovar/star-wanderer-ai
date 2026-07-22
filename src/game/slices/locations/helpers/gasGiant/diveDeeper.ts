@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import type { DiveDepth } from "@/game/types/exploration";
 import { pickDiveEvent } from "./events";
@@ -9,7 +10,7 @@ export function diveDeeper(set: SetState, get: () => GameStore): void {
     if (!dive || dive.currentEvent || dive.finished) return;
 
     if (dive.currentDepth >= GAS_GIANT_MAX_DEPTH) {
-        get().addLog("Глубже нырнуть невозможно — достигнуто ядро шторма.", "warning");
+        get().addLog( i18nStore.t("game_logs.diveDeeper_1"), "warning");
         return;
     }
 
@@ -33,5 +34,5 @@ export function diveDeeper(set: SetState, get: () => GameStore): void {
         3: "Абиссальная зона",
         4: "Ядро шторма",
     };
-    get().addLog(`🔽 Погружение на слой ${nextDepth}: ${depthNames[nextDepth]}`, "info");
+    get().addLog( i18nStore.t("game_logs.diveDeeper_2", { nextDepth, value: depthNames[nextDepth] }), "info");
 }

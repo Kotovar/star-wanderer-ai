@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, CrewMember, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 import { getTechBonusSum } from "@/game/research";
@@ -37,8 +38,7 @@ export const toggleArtifact = (
             (a) => a.effect.active,
         ).length;
         if (currentActive >= maxSlots) {
-            get().addLog(
-                `⚠️ Слоты артефактов заполнены (${currentActive}/${maxSlots}). Исследуйте "Изучение Артефактов" для расширения.`,
+            get().addLog( i18nStore.t("game_logs.toggleArtifact_1", { currentActive, maxSlots }),
                 "error",
             );
             playSound("error");
@@ -51,8 +51,7 @@ export const toggleArtifact = (
         const scientist = findQualifiedScientist(state.crew);
 
         if (!scientist) {
-            get().addLog(
-                "⚠️ Нельзя отключить проклятый артефакт без учёного 3+ уровня!",
+            get().addLog( i18nStore.t("game_logs.toggleArtifact_2"),
                 "error",
             );
             playSound("error");
@@ -65,8 +64,7 @@ export const toggleArtifact = (
 
     // Предупреждение при активации проклятого артефакта
     if (newActive && artifact.cursed && artifact.negativeEffect) {
-        get().addLog(
-            `☠️ ВНИМАНИЕ! ${artifact.name} — ПРОКЛЯТЫЙ АРТЕФАКТ! Эффект проклятья: ${artifact.negativeEffect.description}`,
+        get().addLog( i18nStore.t("game_logs.toggleArtifact_3", { artifact_name: artifact.name, description: artifact.negativeEffect.description }),
             "error",
         );
     }
@@ -84,7 +82,7 @@ export const toggleArtifact = (
     }));
 
     get().addLog(
-        `${artifact.name}: ${newActive ? "активирован" : "деактивирован"}`,
+        `${artifact.name}: ${i18nStore.t(newActive ? "game_logs.toggleArtifact_on" : "game_logs.toggleArtifact_off")}`,
         "info",
     );
     playSound(newActive ? "artifact" : "error");
@@ -127,8 +125,7 @@ const damageScientist = (
 
     const scientist = get().crew.find((c) => c.id === scientistId);
     if (scientist) {
-        get().addLog(
-            `⚠️ ${scientist.name} пострадал от проклятия! -${CURSE_REMOVAL_DAMAGE} здоровья`,
+        get().addLog( i18nStore.t("game_logs.toggleArtifact_4", { scientist_name: scientist.name, CURSE_REMOVAL_DAMAGE }),
             "warning",
         );
     }

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState } from "@/game/types/game";
 import type { LogEntry } from "@/game/types/logs";
 import { playSound } from "@/sounds";
@@ -32,12 +33,12 @@ export const refuel = (
     const actualAmount = Math.min(amount, spaceAvailable);
 
     if (actualAmount <= 0) {
-        addLog("Топливные баки полны!", "warning");
+        addLog( i18nStore.t("game_logs.refuel_1"), "warning");
         return { success: false, actualAmount: 0 };
     }
 
     if (state.credits < price) {
-        addLog("Недостаточно кредитов!", "error");
+        addLog( i18nStore.t("game_logs.refuel_2"), "error");
         return { success: false, actualAmount: 0 };
     }
 
@@ -45,7 +46,7 @@ export const refuel = (
         credits: s.credits - price,
         ship: { ...s.ship, fuel: (s.ship.fuel || 0) + actualAmount },
     }));
-    addLog(`Заправка: +${actualAmount} топлива за ${price}₢`, "info");
+    addLog( i18nStore.t("game_logs.refuel_3", { actualAmount, price }), "info");
     playSound("energy");
 
     return { success: true, actualAmount };

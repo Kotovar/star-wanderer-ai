@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import { MODULE_RECIPES } from "@/game/constants/crafting";
 import { addTradeGood } from "@/game/slices/ship/helpers";
@@ -31,7 +32,7 @@ export const exploreDerelictShip = (
 
     const scouts = state.crew.filter((c) => c.profession === "scout");
     if (scouts.length === 0) {
-        get().addLog("Нет разведчика для исследования обломков!", "error");
+        get().addLog( i18nStore.t("game_logs.exploreDerelictShip_1"), "error");
         return;
     }
 
@@ -39,12 +40,12 @@ export const exploreDerelictShip = (
         (l) => l.id === locationId,
     );
     if (!location || location.type !== "derelict_ship") {
-        get().addLog("Локация не найдена", "error");
+        get().addLog( i18nStore.t("game_logs.exploreDerelictShip_2"), "error");
         return;
     }
 
     if (location.derelictExplored) {
-        get().addLog("Обломки уже исследованы", "warning");
+        get().addLog( i18nStore.t("game_logs.exploreDerelictShip_3"), "warning");
         return;
     }
 
@@ -133,21 +134,18 @@ export const exploreDerelictShip = (
         lootParts.push(`Редкие минералы ×${rareMineralsQty}`);
 
     if (lootParts.length > 0) {
-        get().addLog(
-            `🔍 ${scout.name} обыскал обломки: ${lootParts.join(", ")}`,
+        get().addLog( i18nStore.t("game_logs.exploreDerelictShip_4", { scout_name: scout.name, value: lootParts.join(", ") }),
             "info",
         );
     } else {
-        get().addLog(
-            `🔍 ${scout.name} обыскал обломки — ничего ценного`,
+        get().addLog( i18nStore.t("game_logs.exploreDerelictShip_5", { scout_name: scout.name }),
             "info",
         );
     }
 
     if (foundRecipe) {
         const recipe = MODULE_RECIPES[foundRecipe];
-        get().addLog(
-            `📐 Найден чертёж: ${recipe.icon} ${recipe.name}!`,
+        get().addLog( i18nStore.t("game_logs.exploreDerelictShip_6", { icon: recipe.icon, recipe_name: recipe.name }),
             "info",
         );
     }

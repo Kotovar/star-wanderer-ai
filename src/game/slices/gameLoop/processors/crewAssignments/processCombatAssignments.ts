@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import {
     BASE_EXP_REWARDS,
     ASSIGNMENT_BASES,
@@ -52,37 +53,33 @@ export const processCombatAssignment = (
             processCombatEvasion(crewMember, set, get);
             break;
         case "targeting":
-            get().addLog(`${crewMember.name}: Прицельный огонь`, "combat");
+            get().addLog( i18nStore.t("game_logs.processCombatAssignments_1", { crewMember_name: crewMember.name }), "combat");
             get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
             break;
         case "overclock":
-            get().addLog(
-                `${crewMember.name}: Перегрузка оружия (+15% урон, броня модуля = 0)`,
+            get().addLog( i18nStore.t("game_logs.processCombatAssignments_2", { crewMember_name: crewMember.name }),
                 "combat",
             );
             get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
             break;
         case "rapidfire":
-            get().addLog(
-                `${crewMember.name}: Учащённая стрельба (+25% урон, -10% точность)`,
+            get().addLog( i18nStore.t("game_logs.processCombatAssignments_3", { crewMember_name: crewMember.name }),
                 "combat",
             );
             get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
             break;
         case "calibration":
-            get().addLog(`${crewMember.name}: Калибровка оружия (+10% точность)`, "combat");
+            get().addLog( i18nStore.t("game_logs.processCombatAssignments_4", { crewMember_name: crewMember.name }), "combat");
             get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
             break;
         case "analysis":
-            get().addLog(
-                `${crewMember.name}: Анализ уязвимостей врага`,
+            get().addLog( i18nStore.t("game_logs.processCombatAssignments_5", { crewMember_name: crewMember.name }),
                 "combat",
             );
             get().gainExp(crewMember, BASE_EXP_REWARDS.ANALYSIS_SABOTAGE);
             break;
         case "sabotage":
-            get().addLog(
-                `${crewMember.name}: Диверсии (-5% точность врага)`,
+            get().addLog( i18nStore.t("game_logs.processCombatAssignments_6", { crewMember_name: crewMember.name }),
                 "combat",
             );
             get().gainExp(crewMember, BASE_EXP_REWARDS.ANALYSIS_SABOTAGE);
@@ -111,8 +108,7 @@ const processVentFuel = (
             shields: s.ship.shields + restored,
         },
     }));
-    get().addLog(
-        `♨️ ${crewMember.name}: -10 топлива, +${restored} щита`,
+    get().addLog( i18nStore.t("game_logs.processCombatAssignments_7", { crewMember_name: crewMember.name, restored }),
         "combat",
     );
     get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
@@ -144,8 +140,7 @@ const processCombatRepair = (
         currentModule.maxHealth || ASSIGNMENT_MULTIPLIERS.MAX_HEALTH;
 
     if (currentModule.health >= maxHealth) {
-        get().addLog(
-            `${crewMember.name}: Модуль "${currentModule.name}" полностью цел`,
+        get().addLog( i18nStore.t("game_logs.processCombatAssignments_8", { crewMember_name: crewMember.name, currentModule_name: currentModule.name }),
             "combat",
         );
         return;
@@ -164,8 +159,7 @@ const processCombatRepair = (
             ),
         },
     }));
-    get().addLog(
-        `${crewMember.name}: Экстренный ремонт "${currentModule.name}" +${repairAmount}%`,
+    get().addLog( i18nStore.t("game_logs.processCombatAssignments_9", { crewMember_name: crewMember.name, currentModule_name: currentModule.name, repairAmount }),
         "combat",
     );
     get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_REPAIR);
@@ -215,8 +209,7 @@ const processCombatHeal = (
         ),
     }));
 
-    get().addLog(
-        `${crewMember.name}: Экстренная помощь +${healAmount}❤️`,
+    get().addLog( i18nStore.t("game_logs.processCombatAssignments_10", { crewMember_name: crewMember.name, healAmount }),
         "combat",
     );
     get().gainExp(crewMember, BASE_EXP_REWARDS.HEAL);
@@ -245,8 +238,7 @@ const processCombatFirstAid = (
         ),
     }));
 
-    get().addLog(
-        `${crewMember.name}: Медпаки готовы (защита экипажа)`,
+    get().addLog( i18nStore.t("game_logs.processCombatAssignments_11", { crewMember_name: crewMember.name }),
         "combat",
     );
 };

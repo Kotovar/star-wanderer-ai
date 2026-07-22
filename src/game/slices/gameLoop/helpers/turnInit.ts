@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore, SetState } from "@/game/types";
 
 // === Constants ===
@@ -42,8 +43,7 @@ export const processPassiveExperience = (
         get().gainExp(c, PASSIVE_EXP_AMOUNT);
     });
 
-    get().addLog(
-        `📋 Экипаж получил +${PASSIVE_EXP_AMOUNT} опыта (службу на корабле)`,
+    get().addLog( i18nStore.t("game_logs.turnInit_1", { PASSIVE_EXP_AMOUNT }),
         "info",
     );
 };

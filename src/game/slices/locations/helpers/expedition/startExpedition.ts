@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import type { ExpeditionState } from "@/game/types/exploration";
 import { PLANET_POINT_OF_INTERESTS } from "@/game/constants/planets";
@@ -21,19 +22,19 @@ export function startExpedition(
     get: () => GameStore,
 ): void {
     if (crewIds.length === 0) {
-        get().addLog("Выберите хотя бы одного члена экипажа для экспедиции.", "error");
+        get().addLog( i18nStore.t("game_logs.startExpedition_1"), "error");
         return;
     }
 
     const state = get();
     const planet = state.currentSector?.locations.find((l) => l.id === planetId);
     if (!planet) {
-        get().addLog("Планета не найдена.", "error");
+        get().addLog( i18nStore.t("game_logs.startExpedition_2"), "error");
         return;
     }
 
     if (planet.isEmpty && !planet.explored) {
-        get().addLog("Сначала завершите разведку поверхности.", "error");
+        get().addLog( i18nStore.t("game_logs.startExpedition_3"), "error");
         return;
     }
 
@@ -41,15 +42,14 @@ export function startExpedition(
         planet.isEmpty &&
         !state.research.researchedTechs.includes("expedition_kits")
     ) {
-        get().addLog(
-            "Для экспедиции на пустую планету нужна технология «Комплекты экспедиции».",
+        get().addLog( i18nStore.t("game_logs.startExpedition_4"),
             "error",
         );
         return;
     }
 
     if (planet.expeditionCompleted) {
-        get().addLog("Эта планета уже была исследована.", "error");
+        get().addLog( i18nStore.t("game_logs.startExpedition_5"), "error");
         return;
     }
 
@@ -60,7 +60,7 @@ export function startExpedition(
     });
 
     if (validCrewIds.length === 0) {
-        get().addLog("Все выбранные члены экипажа устали. Выберите других.", "error");
+        get().addLog( i18nStore.t("game_logs.startExpedition_6"), "error");
         return;
     }
 
@@ -134,16 +134,24 @@ export function startExpedition(
     };
 
     const bonusInfo: string[] = [];
-    if (syntheticCount > 0) bonusInfo.push(`+${syntheticCount} (синтетики)`);
-    if (scoutCount > 0) bonusInfo.push(`+${scoutCount} (разведчики)`);
-    if (techBonus > 0) bonusInfo.push(`+${techBonus} (комплекты)`);
+    if (syntheticCount > 0)
+        bonusInfo.push(i18nStore.t("game_logs.expedition_bonus_synthetics", { count: syntheticCount }));
+    if (scoutCount > 0)
+        bonusInfo.push(i18nStore.t("game_logs.expedition_bonus_scouts", { count: scoutCount }));
+    if (techBonus > 0)
+        bonusInfo.push(i18nStore.t("game_logs.expedition_bonus_kits", { count: techBonus }));
     const bonusStr = bonusInfo.length > 0 ? ` [${bonusInfo.join(", ")}]` : "";
 
     set(() => ({ activeExpedition: expedition }));
     get().addLog(
-        `🗺️ Экспедиция начата. AP: ${apTotal}${bonusStr}${
-            scansRemaining > 0 ? `, сканов: ${scansRemaining}` : ""
-        }`,
+        i18nStore.t("game_logs.expedition_started", {
+            apTotal,
+            bonusStr,
+            scans:
+                scansRemaining > 0
+                    ? i18nStore.t("game_logs.expedition_scans", { scansRemaining })
+                    : "",
+        }),
         "info",
     );
 }

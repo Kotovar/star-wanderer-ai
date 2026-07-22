@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
 import type { GameState, GameStore, Location } from "@/game/types";
@@ -28,8 +29,7 @@ export const handleExpeditionSurveyContracts = (
             completedContractIds: [...s.completedContractIds, c.id],
             activeContracts: s.activeContracts.filter((ac) => ac.id !== c.id),
         }));
-        get().addLog(
-            `🗺️ Контракт выполнен: планетарное исследование сдано +${c.reward}₢`,
+        get().addLog( i18nStore.t("game_logs.handleExpeditionSurveyContracts_1", { reward: c.reward }),
             "info",
         );
         const expReward = CONTRACT_REWARDS.expedition_survey.baseExp;

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES, MIN_HEALTH_WITH_IMMORTALITY } from "@/game/constants";
 import { RACES } from "@/game/constants/races";
@@ -47,8 +48,7 @@ const applyOxygenDamage = (
         }),
     }));
 
-    get().addLog(
-        `⚠️ НЕХВАТКА КИСЛОРОДА! Экипаж получил -${OXYGEN_DAMAGE_PERCENT}% урона (${crewCount}/${oxygenCapacity})`,
+    get().addLog( i18nStore.t("game_logs.oxygenCheck_1", { OXYGEN_DAMAGE_PERCENT, crewCount, oxygenCapacity }),
         "error",
     );
 };
@@ -86,8 +86,7 @@ export const checkOxygen = (
 
     // Обработка последствий
     if (hasImmortality) {
-        get().addLog(
-            "💖 Бессмертный экипаж выжил благодаря артефакту!",
+        get().addLog( i18nStore.t("game_logs.oxygenCheck_2"),
             "info",
         );
         return false;
@@ -96,7 +95,7 @@ export const checkOxygen = (
     const { isGameOver } = handleDeadCrew(
         hasAIControl,
         (reason) => {
-            get().addLog("💀 ВЕСЬ ЭКИПАЖ ПОГИБ! Игра окончена.", "error");
+            get().addLog( i18nStore.t("game_logs.oxygenCheck_3"), "error");
             set(() => ({
                 gameOver: true,
                 gameOverReason: `${reason} из-за нехватки кислорода`,

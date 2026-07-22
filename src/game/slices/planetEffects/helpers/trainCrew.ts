@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import {
     BASE_CREW_HEALTH_PER_LEVEL,
@@ -24,15 +25,14 @@ export const trainCrewMember = (
     const crewMember = state.crew.find((c) => c.id === crewMemberId);
 
     if (!crewMember) {
-        get().addLog("Член экипажа не найден!", "error");
+        get().addLog( i18nStore.t("game_logs.trainCrew_1"), "error");
         return false;
     }
 
     // Прогрессивная стоимость: уровень 1→2 = 500, 2→3 = 1500, макс. уровень 3
     const currentLevel = crewMember.level || 1;
     if (currentLevel >= 3) {
-        get().addLog(
-            "Максимальный уровень обучения в академии (ур.3)!",
+        get().addLog( i18nStore.t("game_logs.trainCrew_2"),
             "error",
         );
         return false;
@@ -43,8 +43,7 @@ export const trainCrewMember = (
             ? PLANET_SPECIALIZATIONS.human.cost
             : PLANET_SPECIALIZATIONS.human.cost * 3;
     if (state.credits < cost) {
-        get().addLog(
-            `Недостаточно кредитов для обучения! Нужно ${cost}₢`,
+        get().addLog( i18nStore.t("game_logs.trainCrew_3", { cost }),
             "error",
         );
         return false;
@@ -102,8 +101,7 @@ export const trainCrewMember = (
         ),
     }));
 
-    get().addLog(
-        `🎓 ${crewMember.name} повышен до уровня ${crewMember.level + 1}!`,
+    get().addLog( i18nStore.t("game_logs.trainCrew_4", { crewMember_name: crewMember.name, value: crewMember.level + 1 }),
         "info",
     );
     playSound("success");

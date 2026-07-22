@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { RACES, XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import { LAB_MODULE_TYPES } from "@/game/constants/modules";
@@ -86,8 +87,7 @@ export const processCrewAssignments = (
             crewMember.assignment &&
             !crewMember.assignmentRestTurns
         ) {
-            get().addLog(
-                `💤 ${crewMember.name}: усталость, задача пропущена в этом ходу`,
+            get().addLog( i18nStore.t("game_logs.processAssignments_1", { crewMember_name: crewMember.name }),
                 "warning",
             );
         }
@@ -119,14 +119,12 @@ export const processCrewAssignments = (
                 crewMember.assignment &&
                 crewMember.assignmentFatigue === ASSIGNMENT_TIRED_AT - 1
             ) {
-                get().addLog(
-                    `⚠️ ${crewMember.name} устал: эффективность задачи снижена`,
+                get().addLog( i18nStore.t("game_logs.processAssignments_2", { crewMember_name: crewMember.name }),
                     "warning",
                 );
             }
             if (crewMember.assignment && fatigueState.startedRest) {
-                get().addLog(
-                    `🛌 ${crewMember.name} уходит отдыхать; задача возобновится автоматически`,
+                get().addLog( i18nStore.t("game_logs.processAssignments_3", { crewMember_name: crewMember.name }),
                     "warning",
                 );
             }
@@ -199,8 +197,7 @@ const checkAiGlitch = (
     }
 
     if (Math.random() < glitchChance) {
-        get().addLog(
-            `⚠️ ${crewMember.name}: Сбой ИИ! Действие не выполнено`,
+        get().addLog( i18nStore.t("game_logs.processAssignments_4", { crewMember_name: crewMember.name }),
             "warning",
         );
         return false;
@@ -319,8 +316,7 @@ const processRepairAssignment = (
         currentModule.maxHealth || ASSIGNMENT_MULTIPLIERS.MAX_HEALTH;
 
     if (currentModule.health >= maxHealth) {
-        get().addLog(
-            `${crewMember.name}: Модуль "${currentModule.name}" полностью цел`,
+        get().addLog( i18nStore.t("game_logs.processAssignments_5", { crewMember_name: crewMember.name, currentModule_name: currentModule.name }),
             "info",
         );
         return;
@@ -339,8 +335,7 @@ const processRepairAssignment = (
             ),
         },
     }));
-    get().addLog(
-        `${crewMember.name}: Ремонт "${currentModule.name}" +${repairAmount}%`,
+    get().addLog( i18nStore.t("game_logs.processAssignments_6", { crewMember_name: crewMember.name, currentModule_name: currentModule.name, repairAmount }),
         "info",
     );
     get().gainExp(crewMember, BASE_EXP_REWARDS.REPAIR);
@@ -379,8 +374,7 @@ const processMergeAssignment = (
             c.mergedModuleId === currentModule.id,
     );
     if (existingMerge) {
-        get().addLog(
-            `⚠️ ${crewMember.name}: модуль "${currentModule.name}" уже занят другим ксеноморфом`,
+        get().addLog( i18nStore.t("game_logs.processAssignments_7", { crewMember_name: crewMember.name, currentModule_name: currentModule.name }),
             "warning",
         );
         return;
@@ -398,8 +392,7 @@ const processMergeAssignment = (
         ),
     }));
 
-    get().addLog(
-        `🧬 ${crewMember.name}: Сращивание с "${currentModule.name}"`,
+    get().addLog( i18nStore.t("game_logs.processAssignments_8", { crewMember_name: crewMember.name, currentModule_name: currentModule.name }),
         "info",
     );
 };
@@ -416,8 +409,7 @@ const processPowerAssignment = (
 ): void => {
     // Проверяем что экипаж в реакторе
     if (currentModule.type !== "reactor") {
-        get().addLog(
-            `${crewMember.name}: Разгон реактора возможен только в реакторе`,
+        get().addLog( i18nStore.t("game_logs.processAssignments_9", { crewMember_name: crewMember.name }),
             "warning",
         );
         return;
@@ -427,8 +419,7 @@ const processPowerAssignment = (
     const powerBonus = Math.round(
         ASSIGNMENT_BASES.POWER_BONUS * getTaskBonusMultiplier(crewMember),
     );
-    get().addLog(
-        `⚡ ${crewMember.name}: Разгон реактора +${powerBonus}⚡`,
+    get().addLog( i18nStore.t("game_logs.processAssignments_10", { crewMember_name: crewMember.name, powerBonus }),
         "info",
     );
     get().gainExp(crewMember, BASE_EXP_REWARDS.REACTOR_OVERLOAD);
@@ -445,16 +436,14 @@ const processNavigationAssignment = (
     get: () => GameStore,
 ): void => {
     if (currentModule.type !== "cockpit") {
-        get().addLog(
-            `${crewMember.name}: Навигация возможна только в кабине`,
+        get().addLog( i18nStore.t("game_logs.processAssignments_11", { crewMember_name: crewMember.name }),
             "warning",
         );
         return;
     }
 
     // Бонус считается динамически в getTotalConsumption — здесь только лог
-    get().addLog(
-        `🧭 ${crewMember.name}: Навигация -${ASSIGNMENT_BASES.NAVIGATION_CONSUMPTION}⚡ потребление`,
+    get().addLog( i18nStore.t("game_logs.processAssignments_12", { crewMember_name: crewMember.name, NAVIGATION_CONSUMPTION: ASSIGNMENT_BASES.NAVIGATION_CONSUMPTION }),
         "info",
     );
 };
@@ -471,16 +460,14 @@ const processEvasionAssignment = (
 ): void => {
     // Проверяем что экипаж в двигателе
     if (currentModule.type !== "engine") {
-        get().addLog(
-            `${crewMember.name}: Манёвры возможны только в двигателе`,
+        get().addLog( i18nStore.t("game_logs.processAssignments_13", { crewMember_name: crewMember.name }),
             "warning",
         );
         return;
     }
 
     // Бонус считается динамически в getTotalEvasion — здесь только лог и опыт
-    get().addLog(
-        `💨 ${crewMember.name}: Манёвры +${ASSIGNMENT_BASES.EVADE_BONUS}% уклонение`,
+    get().addLog( i18nStore.t("game_logs.processAssignments_14", { crewMember_name: crewMember.name, EVADE_BONUS: ASSIGNMENT_BASES.EVADE_BONUS }),
         "info",
     );
     get().gainExp(crewMember, BASE_EXP_REWARDS.EVADE);
@@ -524,7 +511,7 @@ const processHealAssignment = (
                 c.health < (c.maxHealth || ASSIGNMENT_MULTIPLIERS.MAX_HEALTH),
         );
         if (crewToHeal.length === 0) {
-            get().addLog(`${crewMember.name}: Экипаж здоров`, "info");
+            get().addLog( i18nStore.t("game_logs.processAssignments_15", { crewMember_name: crewMember.name }), "info");
             return;
         }
         set((s) => ({
@@ -547,8 +534,7 @@ const processHealAssignment = (
                     : c;
             }),
         }));
-        get().addLog(
-            `🌿 ${crewMember.name}: Био-регенерация +${bioHeal}❤️ всему экипажу`,
+        get().addLog( i18nStore.t("game_logs.processAssignments_16", { crewMember_name: crewMember.name, bioHeal }),
             "info",
         );
         get().gainExp(crewMember, BASE_EXP_REWARDS.HEAL);
@@ -562,7 +548,7 @@ const processHealAssignment = (
     );
 
     if (crewToHeal.length === 0) {
-        get().addLog(`${crewMember.name}: Все здоровы`, "info");
+        get().addLog( i18nStore.t("game_logs.processAssignments_17", { crewMember_name: crewMember.name }), "info");
         return;
     }
 
@@ -580,8 +566,7 @@ const processHealAssignment = (
         ),
     }));
 
-    get().addLog(
-        `💉 ${crewMember.name}: Лечение экипажа +${healAmount}❤️`,
+    get().addLog( i18nStore.t("game_logs.processAssignments_18", { crewMember_name: crewMember.name, healAmount }),
         "info",
     );
     get().gainExp(crewMember, BASE_EXP_REWARDS.HEAL);
@@ -611,7 +596,7 @@ const processMoraleAssignment = (
     );
 
     if (crewToHelp.length === 0) {
-        get().addLog(`${crewMember.name}: Настроение в порядке`, "info");
+        get().addLog( i18nStore.t("game_logs.processAssignments_19", { crewMember_name: crewMember.name }), "info");
         return;
     }
 
@@ -623,8 +608,7 @@ const processMoraleAssignment = (
         ),
     }));
 
-    get().addLog(
-        `★ ${crewMember.name}: Поддержка настроения +${moraleAmount}`,
+    get().addLog( i18nStore.t("game_logs.processAssignments_20", { crewMember_name: crewMember.name, moraleAmount }),
         "info",
     );
     get().gainExp(crewMember, BASE_EXP_REWARDS.MORALE);
@@ -641,8 +625,7 @@ const processResearchAssignment = (
 ): void => {
     // Проверяем есть ли лаборатория в модуле (включая гибридные)
     if (!LAB_MODULE_TYPES.includes(currentModule.type)) {
-        get().addLog(
-            `${crewMember.name}: Для исследований нужна лаборатория`,
+        get().addLog( i18nStore.t("game_logs.processAssignments_21", { crewMember_name: crewMember.name }),
             "warning",
         );
         return;
@@ -699,8 +682,7 @@ const processPatrolAssignment = (
     const credits =
         Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
     set((s) => ({ credits: s.credits + credits }));
-    get().addLog(
-        `🔍 ${crewMember.name}: Патруль — найдены ресурсы +${credits}₢`,
+    get().addLog( i18nStore.t("game_logs.processAssignments_22", { crewMember_name: crewMember.name, credits }),
         "info",
     );
     get().gainExp(crewMember, BASE_EXP_REWARDS.PATROL);
@@ -715,13 +697,12 @@ const processTrainingAssignment = (
     get: () => GameStore,
 ): void => {
     if (currentModule.type !== "weaponbay") {
-        get().addLog(
-            `${crewMember.name}: Тренировка возможна только в оружейной палубе`,
+        get().addLog( i18nStore.t("game_logs.processAssignments_23", { crewMember_name: crewMember.name }),
             "warning",
         );
         return;
     }
-    get().addLog(`🎯 ${crewMember.name}: Тренировка — получен опыт`, "info");
+    get().addLog( i18nStore.t("game_logs.processAssignments_24", { crewMember_name: crewMember.name }), "info");
     get().gainExp(crewMember, BASE_EXP_REWARDS.TRAINING);
 };
 
@@ -759,7 +740,7 @@ const processFuelSynthesisAssignment = (
                 : member,
         ),
     }));
-    get().addLog(`⛽ ${crewMember.name}: +1 топливо, -2 морали`, "info");
+    get().addLog( i18nStore.t("game_logs.processAssignments_25", { crewMember_name: crewMember.name }), "info");
     get().gainExp(crewMember, BASE_EXP_REWARDS.COMBAT_OTHER);
 };
 

@@ -1,10 +1,10 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { PLANET_SPECIALIZATIONS } from "@/game/constants";
 import {
     getArchiveHintLocations,
     getRandomUndiscoveredArtifact,
 } from "@/game/artifacts/utils";
 import type { Artifact, GameStore, SetState } from "@/game/types";
-import { store as i18nStore } from "@/lib/useTranslation";
 import { playSound } from "@/sounds";
 
 /**
@@ -20,7 +20,7 @@ export const scanSector = (set: SetState, get: () => GameStore): boolean => {
     const cost = PLANET_SPECIALIZATIONS.synthetic.cost;
 
     if (state.credits < cost) {
-        get().addLog("Недостаточно кредитов для сканирования!", "error");
+        get().addLog( i18nStore.t("game_logs.scanSector_1"), "error");
         return false;
     }
 
@@ -117,8 +117,7 @@ export const scanSector = (set: SetState, get: () => GameStore): boolean => {
             : s.galaxy,
     }));
 
-    get().addLog(
-        `📚 Архивы синтетиков: все локации в секторе отсканированы!`,
+    get().addLog( i18nStore.t("game_logs.scanSector_2"),
         "info",
     );
 
@@ -130,22 +129,19 @@ export const scanSector = (set: SetState, get: () => GameStore): boolean => {
     }
 
     if (bossHint) {
-        get().addLog(
-            `🔍 Разведданные: в секторе "${bossHint.sectorName}" обнаружен мощный сигнал (${bossHint.locationName}) — возможно наличие ценных артефактов`,
+        get().addLog( i18nStore.t("game_logs.scanSector_3", { sectorName: bossHint.sectorName, locationName: bossHint.locationName }),
             "warning",
         );
     }
 
     if (anomalyHint) {
-        get().addLog(
-            `🔍 Разведданные: в секторе "${anomalyHint.sectorName}" зафиксированы аномальные сигналы — рекомендуется исследование`,
+        get().addLog( i18nStore.t("game_logs.scanSector_4", { sectorName: anomalyHint.sectorName }),
             "warning",
         );
     }
 
     if (!bossHint && !anomalyHint) {
-        get().addLog(
-            `🔍 Разведданные: необычных сигналов в близлежащих секторах не обнаружено`,
+        get().addLog( i18nStore.t("game_logs.scanSector_5"),
             "info",
         );
     }

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore, WeaponType } from "@/game/types";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import {
@@ -76,8 +77,7 @@ export function calculateFinalDamagePerWeapon(
         finalDamagePerWeapon = Math.floor(
             finalDamagePerWeapon * (1 + 0.1 + scientistLevel * 0.01),
         );
-        get().addLog(
-            `🔬 Анализ уязвимостей: +${10 + scientistLevel}% урон по цели`,
+        get().addLog( i18nStore.t("game_logs.playerDamage_1", { scientistLevel: 10 + scientistLevel }),
             "info",
         );
     }

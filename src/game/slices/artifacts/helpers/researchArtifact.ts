@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, CrewMember, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 import { ARTIFACT_RESEARCH_EXP_MULTIPLIER } from "@/game/constants";
@@ -22,17 +23,17 @@ export const researchArtifact = (
     const artifact = state.artifacts.find((a) => a.id === artifactId);
 
     if (!artifact) {
-        get().addLog("Артефакт не найден!", "error");
+        get().addLog( i18nStore.t("game_logs.researchArtifact_1"), "error");
         return;
     }
 
     if (!artifact.discovered) {
-        get().addLog("Артефакт ещё не обнаружен!", "error");
+        get().addLog( i18nStore.t("game_logs.researchArtifact_2"), "error");
         return;
     }
 
     if (artifact.researched) {
-        get().addLog("Артефакт уже изучен!", "warning");
+        get().addLog( i18nStore.t("game_logs.researchArtifact_3"), "warning");
         return;
     }
 
@@ -75,14 +76,13 @@ export const researchArtifact = (
 
     playSound("success");
     if (canActivate) {
-        get().addLog(`★ ${artifact.name} изучен и активирован!`, "info");
+        get().addLog( i18nStore.t("game_logs.researchArtifact_4", { artifact_name: artifact.name }), "info");
     } else {
-        get().addLog(
-            `★ ${artifact.name} изучен. Слоты заполнены (${currentActive}/${maxSlots}) — активируйте вручную.`,
+        get().addLog( i18nStore.t("game_logs.researchArtifact_5", { artifact_name: artifact.name, currentActive, maxSlots }),
             "warning",
         );
     }
-    get().addLog(`Эффект: ${artifact.description}`, "info");
+    get().addLog( i18nStore.t("game_logs.researchArtifact_6", { description: artifact.description }), "info");
 
     // Начисляем опыт учёным
     giveExperienceToScientists(

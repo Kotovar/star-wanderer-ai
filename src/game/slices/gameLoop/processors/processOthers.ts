@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { CrewTrait, GameStore, SetState } from "@/game/types";
 import { CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
 import { RACES } from "@/game/constants/races";
@@ -52,8 +53,7 @@ export const processMoraleTraits = (
                     c.id === crewMember.id ? shiftHappiness(c, -drain) : c,
                 ),
             }));
-            get().addLog(
-                `😨 ${crewMember.name} (Трус): -${drain} морали`,
+            get().addLog( i18nStore.t("game_logs.processOthers_1", { crewMember_name: crewMember.name, drain }),
                 "warning",
             );
         });
@@ -83,8 +83,7 @@ export const processMoraleTraits = (
                 ),
             }));
 
-            get().addLog(
-                `★ ${crewMember.name} (${trait.name}): +${moraleBonus} настроения модулю`,
+            get().addLog( i18nStore.t("game_logs.processOthers_2", { crewMember_name: crewMember.name, trait_name: trait.name, moraleBonus }),
                 "info",
             );
         });
@@ -134,14 +133,12 @@ export const processOvercrowding = (
     }));
 
     if (affectedOrganic.length > 0) {
-        get().addLog(
-            `😤 Перенаселённость: ${crewCount}/${crewCapacity}. Мораль экипажа -${OVERCROWDING_HAPPINESS_PENALTY}`,
+        get().addLog( i18nStore.t("game_logs.processOthers_3", { crewCount, crewCapacity, OVERCROWDING_HAPPINESS_PENALTY }),
             "warning",
         );
     }
     if (affectedSynthetic.length > 0) {
-        get().addLog(
-            `🤖 Перегрев систем от скученности: синтетики -${OVERCROWDING_HARDWARE_DAMAGE} HP`,
+        get().addLog( i18nStore.t("game_logs.processOthers_4", { OVERCROWDING_HARDWARE_DAMAGE }),
             "warning",
         );
     }
@@ -163,7 +160,7 @@ export const processUnhappyCrew = (
     );
 
     unhappyCrew.forEach((crewMember) => {
-        get().addLog(`${crewMember.name} покинул корабль!`, "error");
+        get().addLog( i18nStore.t("game_logs.processOthers_5", { crewMember_name: crewMember.name }), "error");
         set((s) => ({
             crew: s.crew.filter((c) => c.id !== crewMember.id),
         }));
@@ -194,7 +191,7 @@ export const processPowerCheck = (
     // Энергии достаточно
     if (available >= 0) return;
 
-    get().addLog("КРИТИЧНО: Недостаток энергии!", "error");
+    get().addLog( i18nStore.t("game_logs.processOthers_6"), "error");
 
     // Штраф к настроению всего экипажа
     set((s) => ({
@@ -226,6 +223,6 @@ export const processPowerCheck = (
             },
         }));
 
-        get().addLog(`"${targetModule.name}" повреждён перегрузкой!`, "error");
+        get().addLog( i18nStore.t("game_logs.processOthers_7", { targetModule_name: targetModule.name }), "error");
     }
 };

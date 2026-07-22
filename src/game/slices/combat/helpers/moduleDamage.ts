@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
 import {
     ARTIFACT_TYPES,
@@ -31,21 +32,18 @@ export function applyModuleDamage(
             ? 0
             : (targetModule.defense ?? 0);
     if (ignoreDefense && (targetModule.defense ?? 0) > 0) {
-        get().addLog(
-            `💀 Игнорирование брони: "${targetModule.name}" - броня пробита!`,
+        get().addLog( i18nStore.t("game_logs.moduleDamage_1", { targetModule_name: targetModule.name }),
             "error",
         );
     } else if (hasOverclockInModule && (targetModule.defense ?? 0) > 0) {
-        get().addLog(
-            `⚠️ Перегрузка: броня "${targetModule.name}" отключена!`,
+        get().addLog( i18nStore.t("game_logs.moduleDamage_2", { targetModule_name: targetModule.name }),
             "warning",
         );
     }
     const damageAfterArmor = Math.max(1, damage - moduleDefense);
 
     if (moduleDefense > 0 && damageAfterArmor < damage) {
-        get().addLog(
-            `🛡️ Броня модуля "${targetModule.name}": -${damage - damageAfterArmor} урона`,
+        get().addLog( i18nStore.t("game_logs.moduleDamage_3", { targetModule_name: targetModule.name, damageAfterArmor: damage - damageAfterArmor }),
             "info",
         );
     }
@@ -57,8 +55,7 @@ export function applyModuleDamage(
     let artifactDefense = 0;
     if (crystalArmor) {
         artifactDefense = getArtifactEffectValue(crystalArmor, state);
-        get().addLog(
-            `💎 Кристаллическая Броня: -${artifactDefense} урона (артефакт)`,
+        get().addLog( i18nStore.t("game_logs.moduleDamage_4", { artifactDefense }),
             "info",
         );
     }
@@ -88,13 +85,11 @@ export function applyModuleDamage(
     });
 
     if (moduleDefense > 0 && reducedDamage < damageAfterArtifact) {
-        get().addLog(
-            `💎 Кристаллическая раса: -${damageAfterArtifact - reducedDamage} урона (%)`,
+        get().addLog( i18nStore.t("game_logs.moduleDamage_5", { reducedDamage: damageAfterArtifact - reducedDamage }),
             "info",
         );
     }
-    get().addLog(
-        `Враг по "${targetModule.name}": -${reducedDamage}%`,
+    get().addLog( i18nStore.t("game_logs.moduleDamage_6", { targetModule_name: targetModule.name, reducedDamage }),
         "warning",
     );
 
@@ -107,8 +102,7 @@ export function applyModuleDamage(
         crewDamage = Math.floor(
             crewDamage * CREW_DAMAGE_MODIFIERS.CRITICAL_MULTIPLIER,
         );
-        get().addLog(
-            `⚠️ Модуль повреждён! Экипаж получает повышенный урон!`,
+        get().addLog( i18nStore.t("game_logs.moduleDamage_7"),
             "error",
         );
     }
@@ -151,8 +145,7 @@ function maybeExplodeFuelTank(
                 module.health = Math.max(0, module.health - 15);
         });
     });
-    get().addLog(
-        `💥 Топливный бак «${tank.name}» взорвался: соседние модули получили 15 урона`,
+    get().addLog( i18nStore.t("game_logs.moduleDamage_8", { tank_name: tank.name }),
         "error",
     );
 }
@@ -235,42 +228,39 @@ function damageCrewInModule(
     phaseStepDodgers.forEach((id) => {
         const member = get().crew.find((c) => c.id === id);
         if (member) {
-            get().addLog(`👻 ${member.name}: Фазовый шаг! Урон поглощён`, "info");
+            get().addLog( i18nStore.t("game_logs.moduleDamage_9", { member_name: member.name }), "info");
         }
     });
 
     if (isDestruction) {
-        get().addLog(
-            `💥 Модуль уничтожен! Экипаж получает критический урон: -${actualDamage}`,
+        get().addLog( i18nStore.t("game_logs.moduleDamage_10", { actualDamage }),
             "error",
         );
     } else {
-        get().addLog(
-            `👤 Экипаж в модуле получил урон: -${actualDamage}`,
+        get().addLog( i18nStore.t("game_logs.moduleDamage_11", { actualDamage }),
             "warning",
         );
     }
 
     if (hasFirstAid) {
-        get().addLog(`🩹 Первая помощь: урон снижен на 50%!`, "info");
+        get().addLog( i18nStore.t("game_logs.moduleDamage_12"), "info");
     }
     if (geneticsReduction > 0) {
-        get().addLog(`⭐ Звёздная генетика: урон по экипажу снижен на ${Math.round(geneticsReduction * 100)}%`, "info");
+        get().addLog( i18nStore.t("game_logs.moduleDamage_13", { value: Math.round(geneticsReduction * 100) }), "info");
     }
     if (hasImmortality) {
-        get().addLog(`✨ Экипаж выжил благодаря артефакту бессмертия!`, "info");
+        get().addLog( i18nStore.t("game_logs.moduleDamage_14"), "info");
     }
 
     const remainingCrew = get().crew.filter((c) => c.health > 0);
     if (remainingCrew.length === 0 && !hasAIArtifact && !hasImmortality) {
-        get().addLog("💀 ВЕСЬ ЭКИПАЖ ПОГИБ! Игра окончена.", "error");
+        get().addLog( i18nStore.t("game_logs.moduleDamage_15"), "error");
         set(() => ({
             gameOver: true,
             gameOverReason: "Весь экипаж погиб в бою",
         }));
     } else if (remainingCrew.length === 0 && hasAIArtifact) {
-        get().addLog(
-            "💀 ВЕСЬ ЭКИПАЖ ПОГИБ! Но ИИ Нейросеть управляет кораблём.",
+        get().addLog( i18nStore.t("game_logs.moduleDamage_16"),
             "warning",
         );
     }

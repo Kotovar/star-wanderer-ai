@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type {
     Artifact,
     CrewMember,
@@ -74,7 +75,7 @@ export const checkGameOver = (set: SetState, get: () => GameStore): void => {
             gameOverReason:
                 "💥 Корпус корабля разрушен! Все модули уничтожены. Корабль не может продолжать полёт.",
         });
-        get().addLog("ИГРА ОКОНЧЕНА: Корпус разрушен", "error");
+        get().addLog( i18nStore.t("game_logs.checkGameOver_1"), "error");
         return;
     }
 
@@ -95,7 +96,7 @@ export const checkGameOver = (set: SetState, get: () => GameStore): void => {
             gameOver: true,
             gameOverReason: reason,
         });
-        get().addLog("ИГРА ОКОНЧЕНА: Корабль без экипажа", "error");
+        get().addLog( i18nStore.t("game_logs.checkGameOver_2"), "error");
         return;
     }
 };

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type {
     GameState,
     GameStore,
@@ -151,7 +152,7 @@ export const buyModule = (
 
     // Проверка уникальности модуля
     if (isUniqueModuleRestricted(item, state)) {
-        get().addLog("Можно иметь только один такой модуль!", "error");
+        get().addLog( i18nStore.t("game_logs.buyModule_1"), "error");
         return;
     }
 
@@ -171,7 +172,7 @@ export const buyModule = (
     );
 
     if (!bestPosition) {
-        get().addLog("Нет места!", "error");
+        get().addLog( i18nStore.t("game_logs.buyModule_2"), "error");
         return;
     }
 
@@ -190,7 +191,7 @@ export const buyModule = (
         },
     }));
 
-    get().addLog(`Установлен: ${item.name}`, "info");
+    get().addLog( i18nStore.t("game_logs.buyModule_3", { item_name: item.name }), "info");
 
     // Обновление статистики для топливного бака
     if (item.moduleType === "fueltank") {

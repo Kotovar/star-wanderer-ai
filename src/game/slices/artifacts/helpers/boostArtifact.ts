@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState, RaceId, ActiveEffect } from "@/game/types";
 import { playSound } from "@/sounds";
 import {
@@ -23,7 +24,7 @@ export const boostArtifact = (
     const artifact = state.artifacts.find((a) => a.id === artifactId);
 
     if (!artifact || !artifact.effect.active) {
-        get().addLog("Выберите активный артефакт!", "error");
+        get().addLog( i18nStore.t("game_logs.boostArtifact_1"), "error");
         return;
     }
 
@@ -34,7 +35,7 @@ export const boostArtifact = (
         ),
     }));
 
-    get().addLog(`🔮 ${artifact.name} готов к усилению!`, "info");
+    get().addLog( i18nStore.t("game_logs.boostArtifact_2", { artifact_name: artifact.name }), "info");
     playSound("success");
 };
 

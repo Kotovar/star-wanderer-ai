@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore } from "@/game/types/game";
 import type { CrewMember, CrewMemberAssignment } from "@/game/types";
 import { gainExp as gainExpHelper, isValidCrewAssignment } from "./helpers";
@@ -115,8 +116,7 @@ export const createCrewSlice = (
             (crewMember.assignmentRestTurns ?? 0) > 0 &&
             task !== crewMember.assignment
         ) {
-            get().addLog(
-                `${crewMember.name} отдыхает и пока не может взять новую задачу`,
+            get().addLog( i18nStore.t("game_logs.crewSlice_1", { crewMember_name: crewMember.name }),
                 "warning",
             );
             return;
@@ -137,7 +137,7 @@ export const createCrewSlice = (
             );
             if (!validation.valid) {
                 get().addLog(
-                    validation.error || "Неверное назначение!",
+                    validation.error || i18nStore.t("game_logs.invalid_assignment"),
                     "error",
                 );
                 return;
@@ -192,8 +192,7 @@ export const createCrewSlice = (
 
         // Check if crew member already moved this turn
         if (crewMember.movedThisTurn) {
-            get().addLog(
-                `${crewMember.name} уже перемещался в этот ход!`,
+            get().addLog( i18nStore.t("game_logs.crewSlice_2", { crewMember_name: crewMember.name }),
                 "error",
             );
             return;
@@ -204,20 +203,19 @@ export const createCrewSlice = (
             (m) => m.id === targetModuleId,
         );
         if (!targetModule) {
-            get().addLog("Модуль не найден!", "error");
+            get().addLog( i18nStore.t("game_logs.crewSlice_3"), "error");
             return;
         }
 
         // Check if target module is disabled (manually turned off, not destroyed)
         if (targetModule.manualDisabled) {
-            get().addLog("Нельзя переместиться в отключённый модуль!", "error");
+            get().addLog( i18nStore.t("game_logs.crewSlice_4"), "error");
             return;
         }
 
         // Check if target module is adjacent to current module
         if (!get().isModuleAdjacent(crewMember.moduleId, targetModuleId)) {
-            get().addLog(
-                "Модуль не соседний! Можно переместиться только в соседний модуль.",
+            get().addLog( i18nStore.t("game_logs.crewSlice_5"),
                 "error",
             );
             return;
@@ -241,8 +239,7 @@ export const createCrewSlice = (
             ),
         }));
 
-        get().addLog(
-            `${crewMember.name} переместился в "${targetModule.name}"`,
+        get().addLog( i18nStore.t("game_logs.crewSlice_6", { crewMember_name: crewMember.name, targetModule_name: targetModule.name }),
             "info",
         );
         playSound("click");

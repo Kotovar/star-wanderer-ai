@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import type { DiveRewards } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES } from "@/game/constants";
@@ -117,12 +118,11 @@ export function surfaceDive(set: SetState, get: () => GameStore): void {
     });
 
     if (logParts.length > 0) {
-        get().addLog(
-            `🪸 Зонд всплыл. Собрано: ${logParts.join(", ")}`,
+        get().addLog( i18nStore.t("game_logs.surfaceDive_1", { value: logParts.join(", ") }),
             "info",
         );
     } else {
-        get().addLog("🪸 Зонд всплыл. Ничего не найдено.", "info");
+        get().addLog( i18nStore.t("game_logs.surfaceDive_2"), "info");
     }
 
     get().updateShipStats();

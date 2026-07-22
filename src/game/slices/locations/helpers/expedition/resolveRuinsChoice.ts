@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import type { RuinsDepth, RuinsOutcome } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES, TRADE_GOODS } from "@/game/constants";
@@ -68,7 +69,7 @@ export function resolveRuinsChoice(
             }));
             parts.push(`⚠️ ${target.name}: −${damage} HP`);
             riskApplied = true;
-            get().addLog(`⚠️ ${target.name} пострадал: -${damage} HP`, "error");
+            get().addLog( i18nStore.t("game_logs.resolveRuinsChoice_1", { target_name: target.name, damage }), "error");
         }
     }
 
@@ -79,7 +80,7 @@ export function resolveRuinsChoice(
             rewards = { ...rewards, credits: rewards.credits + val };
             parts.push(`+${val}₢`);
             gained = val > 0;
-            get().addLog(`🏚️ Руины: +${val}₢`, "info");
+            get().addLog( i18nStore.t("game_logs.resolveRuinsChoice_2", { val }), "info");
             break;
         }
         case "research_resource": {
@@ -95,8 +96,7 @@ export function resolveRuinsChoice(
                     `${rd?.icon ?? ""} ${rd?.name ?? choice.rewardResourceType} ×${quantity}`,
                 );
                 gained = true;
-                get().addLog(
-                    `🏚️ Руины: ${rd?.icon ?? ""} ${rd?.name ?? choice.rewardResourceType} x${quantity}`,
+                get().addLog( i18nStore.t("game_logs.resolveRuinsChoice_3", { value: rd?.icon ?? "", rewardResourceType: rd?.name ?? choice.rewardResourceType, quantity }),
                     "info",
                 );
             }
@@ -115,8 +115,7 @@ export function resolveRuinsChoice(
                     choice.rewardGoodId;
                 parts.push(`${name} ×${quantity}`);
                 gained = true;
-                get().addLog(
-                    `🏚️ Руины: ${name} x${quantity}`,
+                get().addLog( i18nStore.t("game_logs.resolveRuinsChoice_4", { name, quantity }),
                     "info",
                 );
             }
@@ -128,17 +127,17 @@ export function resolveRuinsChoice(
                 rewards = { ...rewards, artifactFound: artifact.id };
                 parts.push(`✨ ${artifact.name}`);
                 gained = true;
-                get().addLog(`✨ Найден артефакт: ${artifact.name}!`, "info");
+                get().addLog( i18nStore.t("game_logs.resolveRuinsChoice_5", { artifact_name: artifact.name }), "info");
             } else {
                 parts.push("🗿 Артефакт не обнаружен");
-                get().addLog("🗿 Артефакт не обнаружен.", "info");
+                get().addLog( i18nStore.t("game_logs.resolveRuinsChoice_6"), "info");
             }
             break;
         }
         case "nothing":
         default:
             parts.push("Ушли ни с чем");
-            get().addLog("🏚️ Руины: вы ушли ни с чем.", "info");
+            get().addLog( i18nStore.t("game_logs.resolveRuinsChoice_7"), "info");
             break;
     }
 

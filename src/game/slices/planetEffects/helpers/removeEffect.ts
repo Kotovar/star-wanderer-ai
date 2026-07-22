@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 
 /**
@@ -71,7 +72,7 @@ export const removeExpiredEffects = (set: SetState, get: () => GameStore) => {
 
         // Логируем истёкшие эффекты
         expiringEffects.forEach((effect) => {
-            get().addLog(`⏱️ Эффект "${effect.name}" истёк`, "warning");
+            get().addLog( i18nStore.t("game_logs.removeEffect_1", { effect_name: effect.name }), "warning");
         });
 
         return {

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import { removeDeadCrew } from "@/game/slices/gameLoop/helpers/crewUtils";
 import { SCIENTIST_BLACK_HOLE_EXP } from "@/game/constants";
@@ -76,7 +77,7 @@ export const travelThroughBlackHole = (
 
     // Проверка: в текущем секторе есть чёрная дыра
     if (!currentSector || currentSector.star?.type !== "blackhole") {
-        get().addLog("В этом секторе нет чёрной дыры!", "error");
+        get().addLog( i18nStore.t("game_logs.travelThroughBlackHole_1"), "error");
         return;
     }
 
@@ -86,7 +87,7 @@ export const travelThroughBlackHole = (
     );
 
     if (otherBlackHoles.length === 0) {
-        get().addLog("Нет другой чёрной дыры для телепортации!", "error");
+        get().addLog( i18nStore.t("game_logs.travelThroughBlackHole_2"), "error");
         return;
     }
 
@@ -141,19 +142,17 @@ export const travelThroughBlackHole = (
     });
 
     // Логирование
-    get().addLog("🕳️ ТЕЛЕПОРТАЦИЯ через чёрную дыру!", "warning");
-    get().addLog(`Прибытие в ${destination.name}`, "info");
-    get().addLog(
-        `Модули повреждены: -${baseModuleDamage}% каждому из ${numModulesToDamage} модулей`,
+    get().addLog( i18nStore.t("game_logs.travelThroughBlackHole_3"), "warning");
+    get().addLog( i18nStore.t("game_logs.travelThroughBlackHole_4", { destination_name: destination.name }), "info");
+    get().addLog( i18nStore.t("game_logs.travelThroughBlackHole_5", { baseModuleDamage, numModulesToDamage }),
         "error",
     );
-    get().addLog(`Экипаж пострадал: -${baseCrewDamage} здоровья`, "error");
+    get().addLog( i18nStore.t("game_logs.travelThroughBlackHole_6", { baseCrewDamage }), "error");
 
     // Опыт учёному
     if (scientist) {
         get().gainExp(scientist, SCIENTIST_BLACK_HOLE_EXP);
-        get().addLog(
-            `${scientist.name} изучил чёрную дыру! +${SCIENTIST_BLACK_HOLE_EXP} опыта`,
+        get().addLog( i18nStore.t("game_logs.travelThroughBlackHole_7", { scientist_name: scientist.name, SCIENTIST_BLACK_HOLE_EXP }),
             "info",
         );
     }

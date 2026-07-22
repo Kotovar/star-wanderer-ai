@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import { MUTATION_CURE_PRICE } from "../constants";
 
@@ -20,15 +21,14 @@ export const cureMutation = (
 
     // Гейт продублирован из UI: лечение мутаций требует "Ксенобиологию"
     if (!state.research.researchedTechs.includes("xenobiology")) {
-        get().addLog(
-            "Для лечения мутаций требуется технология «Ксенобиология»!",
+        get().addLog( i18nStore.t("game_logs.cureMutation_1"),
             "error",
         );
         return;
     }
 
     if (state.credits < MUTATION_CURE_PRICE) {
-        get().addLog("Недостаточно кредитов для лечения мутации!", "error");
+        get().addLog( i18nStore.t("game_logs.cureMutation_2"), "error");
         return;
     }
 
@@ -57,8 +57,7 @@ export const cureMutation = (
         }),
     }));
 
-    get().addLog(
-        `💊 Мутация "${mutation.name}" у ${crewMember.name} вылечена! -${MUTATION_CURE_PRICE}₢`,
+    get().addLog( i18nStore.t("game_logs.cureMutation_3", { mutation_name: mutation.name, crewMember_name: crewMember.name, MUTATION_CURE_PRICE }),
         "info",
     );
 };

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { findActiveArtifact, findArtifactByEffect } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
 import {
@@ -171,8 +172,7 @@ const applyVoidEngineBonus = (
         ? "Варп Бездны"
         : "Вакуумный двигатель";
 
-    get().addLog(
-        `⚡ ${artifactName}! Бесплатный межсекторный перелёт!`,
+    get().addLog( i18nStore.t("game_logs.selectSector_1", { artifactName }),
         "info",
     );
 
@@ -189,8 +189,7 @@ const applyVoidEngineBonus = (
                 health: Math.max(1, c.health - negativeValue),
             })),
         }));
-        get().addLog(
-            `⚠️ ${artifactName}: Экипаж пострадал на -${negativeValue} здоровья`,
+        get().addLog( i18nStore.t("game_logs.selectSector_2", { artifactName, negativeValue }),
             "warning",
         );
     }
@@ -290,8 +289,7 @@ const handleNavigationError = (
         },
     }));
 
-    get().addLog(
-        `⚠ Навигационная ошибка! "${damagedModule.name}" повреждён: -${damage}%`,
+    get().addLog( i18nStore.t("game_logs.selectSector_3", { damagedModule_name: damagedModule.name, damage }),
         "error",
     );
 };
@@ -335,7 +333,7 @@ const handleTravelCompletion = (
     if (!sector) return;
 
     markSectorVisited(sector, set);
-    get().addLog(`Перелёт в ${sector.name}`, "info");
+    get().addLog( i18nStore.t("game_logs.selectSector_4", { sector_name: sector.name }), "info");
 
     // Радиация нейтронной звезды действует и при мгновенном прибытии
     applyNeutronRadiation(sector, set as SetState, get);
@@ -424,7 +422,7 @@ const handleTravelStart = (
     if (travelInstant) {
         markSectorVisited(sector, set);
         set(() => ({ gameMode: "sector_map" as GameMode }));
-        get().addLog(`⚡ Мгновенный перелёт в ${sector.name}!`, "info");
+        get().addLog( i18nStore.t("game_logs.selectSector_5", { sector_name: sector.name }), "info");
 
         // Радиация нейтронной звезды действует и при варп-прыжке
         applyNeutronRadiation(sector, set as SetState, get);
@@ -458,8 +456,7 @@ const handleTravelStart = (
             get().checkVictory();
         }
     } else {
-        get().addLog(
-            `Начато путешествие в ${sector.name} (${distance} ходов)`,
+        get().addLog( i18nStore.t("game_logs.selectSector_6", { sector_name: sector.name, distance }),
             "info",
         );
     }
@@ -567,14 +564,13 @@ export const selectSector = (
 
     // Логирование бонусов артефактов
     if (hasWarpDrive) {
-        get().addLog(`🚀 Варп-двигатель! Мгновенный прыжок в любой сектор!`, "info");
+        get().addLog( i18nStore.t("game_logs.selectSector_7"), "info");
     } else if (warpCoil) {
-        get().addLog(
-            `⚡ Варп-Катушка! Мгновенный межсекторный перелёт!`,
+        get().addLog( i18nStore.t("game_logs.selectSector_8"),
             "info",
         );
     } else if (!pilotInCockpit) {
-        get().addLog(`⚠ Пилот не в кабине! Расход топлива +50%`, "warning");
+        get().addLog( i18nStore.t("game_logs.selectSector_9"), "warning");
     }
 
     // Проверка наличия топлива
@@ -593,8 +589,7 @@ export const selectSector = (
     // Обходной маршрут длиннее
     if (isDetour && travelTurns > 0) {
         travelTurns += DETOUR_EXTRA_TURNS;
-        get().addLog(
-            `🛡️ Обходной маршрут: +${DETOUR_EXTRA_TURNS} ход, топливо +${DETOUR_FUEL_COST}, риск событий снижен`,
+        get().addLog( i18nStore.t("game_logs.selectSector_10", { DETOUR_EXTRA_TURNS, DETOUR_FUEL_COST }),
             "info",
         );
     }
@@ -611,12 +606,12 @@ export const selectSector = (
             get().gainExp(pilot, distance === 0 ? PILOT_EXP_SAME_SECTOR : distance * PILOT_EXP_PER_TIER);
         }
         if (hasIonDrive && distance > 0) {
-            get().addLog(`🚀 Ионный двигатель: перелёт на 1 ход быстрее!`, "info");
+            get().addLog( i18nStore.t("game_logs.selectSector_11"), "info");
         }
         handleTravelCompletion(sector, travelInstant, set, get);
     } else {
         if (hasIonDrive && distance > travelTurns) {
-            get().addLog(`🚀 Ионный двигатель: перелёт на 1 ход быстрее!`, "info");
+            get().addLog( i18nStore.t("game_logs.selectSector_12"), "info");
         }
         handleTravelStart(
             sector,

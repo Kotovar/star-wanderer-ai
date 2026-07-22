@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { DEFAULT_MAX_HEALTH, MIN_CREW_HEALTH } from "@/game/constants";
 import { removeDeadCrew } from "./crewUtils";
 import type {
@@ -68,8 +69,7 @@ const applyDamageToCrewMember = (
 
     const healthPercent = getModuleHealthPercent(shipModule);
     const logType = healthPercent <= 0 ? "error" : "warning";
-    get().addLog(
-        `⚠️ ${crewMember.name} получил -${damage}% урона в ${shipModule.name} (${Math.round(healthPercent)}% ❤️)`,
+    get().addLog( i18nStore.t("game_logs.moduleDamage_1", { crewMember_name: crewMember.name, damage, shipModule_name: shipModule.name, value: Math.round(healthPercent) }),
         logType,
     );
 };

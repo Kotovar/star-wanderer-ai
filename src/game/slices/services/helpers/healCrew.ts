@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { RACES } from "@/game/constants/races";
 import { HEAL_CONFIG } from "../constants";
 import { calculateHealCost } from "./calculateHealCost";
@@ -22,7 +23,7 @@ export const healCrew = (set: SetState, get: () => GameStore): void => {
 
     // Проверка кредитов
     if (state.credits < cost) {
-        get().addLog("Недостаточно кредитов!", "error");
+        get().addLog( i18nStore.t("game_logs.healCrew_1"), "error");
         return;
     }
 
@@ -44,6 +45,6 @@ export const healCrew = (set: SetState, get: () => GameStore): void => {
         })),
     }));
 
-    get().addLog(`Экипаж вылечен за ${cost}₢`, "info");
+    get().addLog( i18nStore.t("game_logs.healCrew_2", { cost }), "info");
     playSound("heal");
 };

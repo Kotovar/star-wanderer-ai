@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore, PlanetType } from "@/game/types";
 import type { ResearchResourceType } from "@/game/types/research";
 import { RESEARCH_RESOURCES } from "@/game/constants";
@@ -81,21 +82,21 @@ export const atmosphericAnalysis = (
 
     // Проверка технологии
     if (!state.research.researchedTechs.includes("atmospheric_analysis")) {
-        get().addLog("Требуется технология: Атмосферный анализ", "error");
+        get().addLog( i18nStore.t("game_logs.atmosphericAnalysis_1"), "error");
         return;
     }
 
     // Проверка учёного
     const scientist = getBestByProfession(state.crew, "scientist");
     if (!scientist) {
-        get().addLog("Требуется учёный в экипаже!", "error");
+        get().addLog( i18nStore.t("game_logs.atmosphericAnalysis_2"), "error");
         return;
     }
 
     // Проверка уже проанализировано
     const planet = state.currentSector?.locations.find((l) => l.id === planetId);
     if (planet?.atmosphereAnalyzed) {
-        get().addLog("Атмосфера этой планеты уже была проанализирована.", "error");
+        get().addLog( i18nStore.t("game_logs.atmosphericAnalysis_3"), "error");
         return;
     }
 
@@ -137,8 +138,7 @@ export const atmosphericAnalysis = (
     resources.forEach((res) => {
         const rd = RESEARCH_RESOURCES[res.type];
         const destination = res.type === "rare_minerals" ? " → трюм" : "";
-        get().addLog(
-            `🌫️ Атмосферный анализ: ${rd?.icon ?? ""} ${rd?.name ?? res.type} x${res.qty}${destination}`,
+        get().addLog( i18nStore.t("game_logs.atmosphericAnalysis_4", { value: rd?.icon ?? "", type: rd?.name ?? res.type, qty: res.qty, destination }),
             "info",
         );
     });

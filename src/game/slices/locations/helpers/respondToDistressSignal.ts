@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { ARTIFACT_TYPES } from "@/game/constants/artifacts";
 import { TRADE_GOODS } from "@/game/constants";
 import { findActiveArtifact } from "@/game/artifacts/utils";
@@ -8,7 +9,6 @@ import {
 import { playSound } from "@/sounds";
 import { patchLocation } from "@/game/utils/patchLocation";
 import { typedKeys } from "@/lib/utils";
-import { store as i18nStore } from "@/lib/useTranslation";
 import type {
     SetState,
     GameStore,
@@ -429,7 +429,7 @@ const handlePirateAmbush = (
     get().addLog(
         guardedApproach
             ? i18nStore.t("distress_signal.logs.guarded_ambush")
-            : "🚨 ЗАСАДА! Это пираты!",
+            : i18nStore.t("game_logs.pirate_ambush"),
         guardedApproach ? "warning" : "error",
     );
 
@@ -482,11 +482,11 @@ const handleSurvivors = (
         };
     });
 
-    get().addLog("✓ Выжившие спасены!", "info");
+    get().addLog( i18nStore.t("game_logs.respondToDistressSignal_1"), "info");
     if (medicalProtocol) {
         get().addLog(i18nStore.t("distress_signal.logs.medical_stabilized"), "info");
     }
-    get().addLog(`Награда за спасение: +${reward}₢`, "info");
+    get().addLog( i18nStore.t("game_logs.respondToDistressSignal_2", { reward }), "info");
     if (alienBioQty > 0) {
         const rd = RESEARCH_RESOURCES["alien_biology"];
         get().addLog(`🔬 ${rd.icon} ${rd.name} x${alienBioQty}`, "info");
@@ -538,8 +538,7 @@ const addSurvivorToCrew = (set: SetState, get: () => GameStore): void => {
     });
 
     set(() => ({ pendingSurvivor: newCrew }));
-    get().addLog(
-        `Выживший ${newCrew.name} (${getRaceName(newCrew.race)}) просит принять его на борт.`,
+    get().addLog( i18nStore.t("game_logs.respondToDistressSignal_3", { newCrew_name: newCrew.name, value: getRaceName(newCrew.race) }),
         "info",
     );
 };
@@ -547,17 +546,8 @@ const addSurvivorToCrew = (set: SetState, get: () => GameStore): void => {
 /**
  * Получает название расы для отображения
  */
-const getRaceName = (raceId: RaceId): string => {
-    const raceNames: Record<RaceId, string> = {
-        human: "Человек",
-        synthetic: "Синтетик",
-        xenosymbiont: "Ксеноморф",
-        voidborn: "Рождённый в Пустоте",
-        crystalline: "Кристаллоид",
-        krylorian: "Крилорианец",
-    };
-    return raceNames[raceId] || raceId;
-};
+const getRaceName = (raceId: RaceId): string =>
+    i18nStore.t(`races.${raceId}.name`);
 
 /**
  * Обработка заброшенного груза
@@ -567,7 +557,7 @@ const handleAbandonedCargo = (set: SetState, get: () => GameStore): void => {
     const keys = typedKeys(TRADE_GOODS);
     const goodId = keys[Math.floor(Math.random() * keys.length)];
     const quantity = getRandomQuantity(ABANDONED_CARGO_QUANTITY);
-    const goodName = TRADE_GOODS[goodId].name;
+    const goodName = i18nStore.t(`trade.goods.${goodId}`);
 
     // Технологический лом из заброшенного груза (гарантировано 1–3)
     const techSalvageQty = Math.floor(Math.random() * 3) + 1;
@@ -585,8 +575,8 @@ const handleAbandonedCargo = (set: SetState, get: () => GameStore): void => {
         };
     });
 
-    get().addLog("📦 Найден заброшенный груз!", "info");
-    get().addLog(`Кредиты: +${creditsReward}₢`, "info");
+    get().addLog( i18nStore.t("game_logs.respondToDistressSignal_4"), "info");
+    get().addLog( i18nStore.t("game_logs.respondToDistressSignal_5", { creditsReward }), "info");
     get().addLog(`${goodName}: +${quantity}`, "info");
     const rdSalvage = RESEARCH_RESOURCES["tech_salvage"];
     get().addLog(`🔬 ${rdSalvage.icon} ${rdSalvage.name} x${techSalvageQty}`, "info");
@@ -595,7 +585,7 @@ const handleAbandonedCargo = (set: SetState, get: () => GameStore): void => {
     const artifact = get().tryFindArtifact();
     let foundArtifact: string | undefined;
     if (artifact && Math.random() < ABANDONED_CARGO_ARTIFACT_CHANCE) {
-        get().addLog(`★ АРТЕФАКТ НАЙДЕН: ${artifact.name}!`, "info");
+        get().addLog( i18nStore.t("game_logs.respondToDistressSignal_6", { artifact_name: artifact.name }), "info");
         foundArtifact = artifact.name;
     }
 

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { ANCIENT_DRILL_BONUS, RESEARCH_RESOURCES } from "@/game/constants";
 import { BASE_ENGINEER_EXP } from "@/game/constants/experience";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
@@ -45,8 +46,7 @@ const allocateCargoSpace = (
 
     // Нет места
     if (cargoSpaceLeft === 0) {
-        get().addLog(
-            "⚠️ Нет места в грузовом отсеке! Ресурсы потеряны.",
+        get().addLog( i18nStore.t("game_logs.mineAsteroid_1"),
             "warning",
         );
         return { addedMinerals: 0, addedRare: 0 };
@@ -66,8 +66,7 @@ const allocateCargoSpace = (
     // Минералы заполняют всё оставшееся место
     const addedMinerals = Math.min(mineralsGained, cargoSpaceLeft - addedRare);
 
-    get().addLog(
-        `⚠️ Недостаточно места! Получено: ${addedMinerals + addedRare} из ${totalNeeded}т`,
+    get().addLog( i18nStore.t("game_logs.mineAsteroid_2", { addedRare: addedMinerals + addedRare, totalNeeded }),
         "warning",
     );
 
@@ -117,13 +116,13 @@ export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
 
     // Проверка: это пояс астероидов
     if (!loc || loc.type !== "asteroid_belt") {
-        get().addLog("Это не пояс астероидов!", "error");
+        get().addLog( i18nStore.t("game_logs.mineAsteroid_3"), "error");
         return;
     }
 
     // Проверка: пояс уже разработан
     if (loc.mined) {
-        get().addLog("Этот пояс уже разработан!", "warning");
+        get().addLog( i18nStore.t("game_logs.mineAsteroid_4"), "warning");
         return;
     }
 
@@ -132,8 +131,7 @@ export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
 
     // Проверка уровня бура
     if (drillLevel < asteroidTier) {
-        get().addLog(
-            `Нужен бур уровня ${asteroidTier}! У вас: уровень ${drillLevel}`,
+        get().addLog( i18nStore.t("game_logs.mineAsteroid_5", { asteroidTier, drillLevel }),
             "error",
         );
         playSound("error");
@@ -143,7 +141,7 @@ export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
     // Проверка наличия инженера
     const hasEngineer = state.crew.some((c) => c.profession === "engineer");
     if (!hasEngineer) {
-        get().addLog("Для разработки астероидов нужен инженер на борту!", "error");
+        get().addLog( i18nStore.t("game_logs.mineAsteroid_6"), "error");
         playSound("error");
         return;
     }
@@ -220,7 +218,7 @@ export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
         if (res.quantity > 0) {
             const label = `${RESEARCH_RESOURCES[res.type].icon} ${RESEARCH_RESOURCES[res.type].name} x${res.quantity}`;
             researchLines.push(label);
-            get().addLog(`💎 Получены исследовательские ресурсы: ${label}`, "info");
+            get().addLog( i18nStore.t("game_logs.mineAsteroid_7", { label }), "info");
         }
     });
 
@@ -255,9 +253,9 @@ export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
     playSound("success");
 
     // Логирование результатов
-    get().addLog(`Кредиты: +${creditsGained}₢`, "info");
-    if (rareGained > 0) get().addLog(`Редкие минералы: +${rareGained}`, "info");
-    get().addLog(`Минералы: +${mineralsGained}`, "info");
+    get().addLog( i18nStore.t("game_logs.mineAsteroid_8", { creditsGained }), "info");
+    if (rareGained > 0) get().addLog( i18nStore.t("game_logs.mineAsteroid_9", { rareGained }), "info");
+    get().addLog( i18nStore.t("game_logs.mineAsteroid_10", { mineralsGained }), "info");
 
     // Опыт инженеру
     const engineer = state.crew.find((c) => c.profession === "engineer");

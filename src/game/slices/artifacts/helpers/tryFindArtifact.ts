@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, Artifact, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 import { getRandomUndiscoveredArtifact } from "@/game/artifacts";
@@ -146,5 +147,5 @@ const completeMiningContractIfActive = (
         ),
     }));
 
-    get().addLog(`Артефакт для задания найден! +${reward}₢`, "info");
+    get().addLog( i18nStore.t("game_logs.tryFindArtifact_1", { reward }), "info");
 };

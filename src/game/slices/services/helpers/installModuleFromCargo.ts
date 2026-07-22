@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState, Module, CargoItem } from "@/game/types";
 import { playSound } from "@/sounds";
 import { createModuleFromShopItem } from "@/game/modules/createModuleFromShopItem";
@@ -112,7 +113,7 @@ export const installModuleFromCargo = (
 
     // Проверка: это модуль и есть данные ShopItem
     if (!cargoItem || !cargoItem.isModule || !cargoItem.module) {
-        get().addLog("Ошибка: это не модуль!", "error");
+        get().addLog( i18nStore.t("game_logs.installModuleFromCargo_1"), "error");
         return;
     }
 
@@ -128,8 +129,7 @@ export const installModuleFromCargo = (
     );
 
     if (isOccupied) {
-        get().addLog(
-            `Место занято модулем "${occupyingModule?.name}"!`,
+        get().addLog( i18nStore.t("game_logs.installModuleFromCargo_2", { name: occupyingModule?.name ?? "" }),
             "error",
         );
         return;
@@ -150,8 +150,7 @@ export const installModuleFromCargo = (
                 modules: [...s.ship.modules, newModule],
             },
         }));
-        get().addLog(
-            `✅ Модуль "${cargoItem.module?.name || cargoItem.item}" установлен на позицию (${x}, ${y})!`,
+        get().addLog( i18nStore.t("game_logs.installModuleFromCargo_3", { item: cargoItem.module?.name || cargoItem.item, x, y }),
             "info",
         );
         playSound("success");

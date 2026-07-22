@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { RESEARCH_TREE, RESEARCH_RESOURCES } from "@/game/constants";
 import { playSound } from "@/sounds";
 import {
@@ -193,6 +194,6 @@ export const startResearch = (
     });
 
     // Логирование
-    get().addLog(`🔬 Начато исследование: ${tech.name}`, "info");
+    get().addLog( i18nStore.t("game_logs.startResearch_1", { tech_name: tech.name }), "info");
     playSound("success");
 };

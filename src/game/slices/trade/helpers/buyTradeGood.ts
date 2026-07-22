@@ -1,4 +1,4 @@
-import { TRADE_GOODS } from "@/game/constants";
+import { store as i18nStore } from "@/lib/useTranslation";
 import { getActiveModule } from "@/game/modules";
 import { getCargoCapacity } from "@/game/slices/ship/helpers/getCargoCapacity";
 import { playSound } from "@/sounds";
@@ -36,7 +36,7 @@ const validateBuyTradeGood = (
     const stockFromStation = stationStock[stationId];
 
     if (!pricesFromStation || !stockFromStation) {
-        return { canBuy: false, error: "Недоступно для торговли" };
+        return { canBuy: false, error: i18nStore.t("game_logs.err_no_trade") };
     }
 
     // Кризисный множитель применяется к обеим ценам — арбитраж невозможен
@@ -67,18 +67,18 @@ const validateBuyTradeGood = (
     const available = stockFromStation[goodId] || 0;
 
     if (available < quantity) {
-        return { canBuy: false, error: "Недостаточно товара на станции!" };
+        return { canBuy: false, error: i18nStore.t("game_logs.err_station_no_stock") };
     }
 
     if (state.credits < price) {
-        return { canBuy: false, error: "Недостаточно кредитов!" };
+        return { canBuy: false, error: i18nStore.t("game_logs.err_no_credits") };
     }
 
     // Проверка грузового модуля
     const cargoModule = getActiveModule(state.ship.modules, "cargo");
 
     if (!cargoModule) {
-        return { canBuy: false, error: "Склад отключен или отсутствует!" };
+        return { canBuy: false, error: i18nStore.t("game_logs.err_cargo_off") };
     }
 
     // Проверка места в грузовом отсеке
@@ -90,7 +90,7 @@ const validateBuyTradeGood = (
     const cargoCapacity = getCargoCapacity(state);
 
     if (currentCargo + quantity > cargoCapacity) {
-        return { canBuy: false, error: "Недостаточно места!" };
+        return { canBuy: false, error: i18nStore.t("game_logs.err_no_space") };
     }
 
     return { canBuy: true, price: Math.floor(price) };
@@ -113,7 +113,7 @@ export const buyTradeGood = (
     const stationId = state.currentLocation?.stationId;
 
     if (!stationId) {
-        get().addLog("Не на станции!", "error");
+        get().addLog( i18nStore.t("game_logs.buyTradeGood_1"), "error");
         return;
     }
 
@@ -181,8 +181,7 @@ export const buyTradeGood = (
         get().changeReputation(dominantRace, reputationGain);
     }
 
-    get().addLog(
-        `Куплено: ${TRADE_GOODS[goodId].name} ${quantity}т за ${validation.price}₢`,
+    get().addLog( i18nStore.t("game_logs.buyTradeGood_2", { name: i18nStore.t(`trade.goods.${goodId}`), quantity, price: validation.price ?? 0 }),
         "info",
     );
     playSound("shop");

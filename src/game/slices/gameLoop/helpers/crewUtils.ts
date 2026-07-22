@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 
 /**
@@ -32,8 +33,7 @@ export const handleDeadCrew = (
     }
 
     // Логируем погибших
-    get().addLog(
-        `☠️ Погибли: ${deadCrew.map((c) => c.name).join(", ")}`,
+    get().addLog( i18nStore.t("game_logs.crewUtils_1", { value: deadCrew.map((c) => c.name).join(", ") }),
         "error",
     );
 
@@ -45,8 +45,7 @@ export const handleDeadCrew = (
     // Проверяем, остался ли экипаж
     if (get().crew.length === 0) {
         if (hasAIControl) {
-            get().addLog(
-                "💀 ВЕСЬ ЭКИПАЖ ПОГИБ! Но ИИ управляет кораблём.",
+            get().addLog( i18nStore.t("game_logs.crewUtils_2"),
                 "warning",
             );
             return { deadCount: deadCrew.length, isGameOver: false };
@@ -75,8 +74,7 @@ export const removeDeadCrew = (set: SetState, get: () => GameStore): number => {
         crew: s.crew.filter((c) => c.health > 0),
     }));
 
-    get().addLog(
-        `☠️ Погибли: ${deadCrew.map((c) => c.name).join(", ")}`,
+    get().addLog( i18nStore.t("game_logs.crewUtils_3", { value: deadCrew.map((c) => c.name).join(", ") }),
         "error",
     );
 

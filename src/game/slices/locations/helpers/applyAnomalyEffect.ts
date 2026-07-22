@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore, AnomalyApproach } from "@/game/types";
 import {
     ANOMALY_BASE_REWARD_PER_LEVEL,
@@ -57,8 +58,7 @@ export const applyAnomalyEffect = (
                 if (Math.random() < mutationChance) {
                     const mutationName = giveRandomMutation(scientist, set);
                     if (mutationName) {
-                        get().addLog(
-                            `☣️ ${scientist.name} заразился мутацией от аномалии: ${mutationName}!`,
+                        get().addLog( i18nStore.t("game_logs.applyAnomalyEffect_1", { scientist_name: scientist.name, mutationName }),
                             "error",
                         );
                     }
@@ -89,7 +89,7 @@ const applyGoodAnomaly = (
             ? ` (бонус науки: +${Math.round(scienceBonus * 100)}%)`
             : "";
 
-    get().addLog(`Аномалия: +${reward}₢${bonusText}`, "info");
+    get().addLog( i18nStore.t("game_logs.applyAnomalyEffect_2", { reward, bonusText }), "info");
 };
 
 /**
@@ -131,7 +131,7 @@ const applyBadAnomaly = (
         },
     }));
 
-    get().addLog(`Аномалия: "${randomModule.name}" -${damage}%`, "warning");
+    get().addLog( i18nStore.t("game_logs.applyAnomalyEffect_3", { randomModule_name: randomModule.name, damage }), "warning");
 
     // Редкая награда за риск
     applyBadAnomalyBonus(anomalyLevel, artifactBonus, set, get);
@@ -157,7 +157,7 @@ const applyBadAnomalyBonus = (
         const bonus = Math.floor(Math.random() * ANOMALY_RANDOM_REWARD_MAX);
         const reward = Math.floor(base + bonus);
         set((s) => ({ credits: s.credits + reward }));
-        get().addLog(`💰 Редкая находка в аномалии: +${reward}₢`, "info");
+        get().addLog( i18nStore.t("game_logs.applyAnomalyEffect_4", { reward }), "info");
     } else if (roll < resourceChance) {
         // ~30% (меньше при deep dive): редкие научные ресурсы
         const quantumCount = Math.floor(Math.random() * anomalyLevel) + 1;
@@ -172,8 +172,7 @@ const applyBadAnomalyBonus = (
                 },
             },
         }));
-        get().addLog(
-            `🔬 Редкие образцы из аномалии: Квантовые кристаллы x${quantumCount}, Древние данные x${ancientCount}`,
+        get().addLog( i18nStore.t("game_logs.applyAnomalyEffect_5", { quantumCount, ancientCount }),
             "info",
         );
     } else {
@@ -193,15 +192,14 @@ const applyBadAnomalyBonus = (
                         : a,
                 ),
             }));
-            get().addLog(
-                `✨ Аномалия скрывала артефакт: "${artifact.name}"!`,
+            get().addLog( i18nStore.t("game_logs.applyAnomalyEffect_6", { artifact_name: artifact.name }),
                 "info",
             );
         } else {
             // Все артефакты уже найдены — компенсация кредитами
             const reward = Math.floor(ANOMALY_BASE_REWARD_PER_LEVEL * anomalyLevel * 2);
             set((s) => ({ credits: s.credits + reward }));
-            get().addLog(`💰 Редкая находка в аномалии: +${reward}₢`, "info");
+            get().addLog( i18nStore.t("game_logs.applyAnomalyEffect_7", { reward }), "info");
         }
     }
 };

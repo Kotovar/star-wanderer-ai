@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { processCrewAssignments } from "@/game/slices/gameLoop/processors";
 import type { GameState, GameStore, SetState } from "@/game/types";
 
@@ -35,8 +36,7 @@ export function applyCombatTimeCost(
         s.turn += cost;
     });
 
-    get().addLog(
-        `⏱️ Бой занял ${round} раунд(ов): время кампании +${cost} ход(а)`,
+    get().addLog( i18nStore.t("game_logs.combatTime_1", { round, cost }),
         "info",
     );
     get().saveGame();

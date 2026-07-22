@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore, Module } from "@/game/types";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
 import { getPilotInCockpit } from "@/game/crew";
@@ -59,8 +60,7 @@ export function handleEnemyCounterAttack(
     );
 
     if (eDmg <= 0) {
-        get().addLog(
-            "⚠️ Враг не может атаковать - все орудия уничтожены!",
+        get().addLog( i18nStore.t("game_logs.enemyCounterAttack_1"),
             "info",
         );
         return;
@@ -81,7 +81,7 @@ export function handleEnemyCounterAttack(
         if (bossModifiers.isGuaranteedCrit) {
             finalDamage = Math.floor(finalDamage * 1.5);
             isCrit = true;
-            get().addLog(`💥 Гарантированный крит босса!`, "error");
+            get().addLog( i18nStore.t("game_logs.enemyCounterAttack_2"), "error");
         }
         finalDamage = Math.floor(finalDamage * bossModifiers.multiHitCount);
     }
@@ -99,11 +99,14 @@ export function handleEnemyCounterAttack(
         const hasEvasion = state.crew.some(
             (c) => c.combatAssignment === "evasion",
         );
-        const evasionSource = hasEvasion
-            ? `Боевые маневры (${Math.round(evasionChance * 100)}% шанс)`
-            : `Уклонение (${Math.round(evasionChance * 100)}% шанс)`;
+        const evasionSource = i18nStore.t(
+            hasEvasion ? "game_logs.evade_maneuvers" : "game_logs.evade_plain",
+            { chance: Math.round(evasionChance * 100) },
+        );
         get().addLog(
-            `✈️ ${pilot ? `Пилот ${pilot.name} уклонился` : `Корабль уклонился`} от атаки! ${evasionSource}`,
+            pilot
+                ? i18nStore.t("game_logs.evade_pilot", { name: pilot.name, source: evasionSource })
+                : i18nStore.t("game_logs.evade_ship", { source: evasionSource }),
             "info",
         );
         recordPlayerHit(set, tgt, 0, 0, false, true);
@@ -120,7 +123,7 @@ export function handleEnemyCounterAttack(
             Math.abs(COMBAT_ACCURACY_MODIFIERS.SABOTAGE_PENALTY) +
             (scoutWithSabotage.level ?? 1) * 0.01;
         if (Math.random() < sabotageChance) {
-            get().addLog(`🔧 Диверсия! Враг промахнулся!`, "info");
+            get().addLog( i18nStore.t("game_logs.enemyCounterAttack_3"), "info");
             recordPlayerHit(set, tgt, 0, 0, false, true);
             return;
         }
@@ -147,7 +150,7 @@ export function handleEnemyCounterAttack(
             state.ship.maxShields,
         )
     ) {
-        get().addLog(`🔷 Фазовый щит! Атака полностью поглощена! (20% шанс)`, "info");
+        get().addLog( i18nStore.t("game_logs.enemyCounterAttack_4"), "info");
         recordPlayerHit(set, tgt, 0, 0, false, true);
         return;
     }
@@ -184,7 +187,7 @@ export function handleEnemyCounterAttack(
         set((s) => {
             s.ship.shields = Math.max(0, s.ship.shields - bossModifiers.shieldBreakAmount);
         });
-        get().addLog(`⚡ Разрушение щитов: -${bossModifiers.shieldBreakAmount}`, "warning");
+        get().addLog( i18nStore.t("game_logs.enemyCounterAttack_5", { shieldBreakAmount: bossModifiers.shieldBreakAmount }), "warning");
     }
 
     // Heal on damage
@@ -198,7 +201,7 @@ export function handleEnemyCounterAttack(
                         m.health = Math.min(m.maxHealth ?? 100, m.health + healAmount);
                 });
             });
-            get().addLog(`🩸 Вампиризм модуля: +${healAmount} HP`, "warning");
+            get().addLog( i18nStore.t("game_logs.enemyCounterAttack_6", { healAmount }), "warning");
         }
     }
 
@@ -212,15 +215,14 @@ export function handleEnemyCounterAttack(
             if (!s.currentCombat) return;
             s.currentCombat.skipPlayerTurn = true;
         });
-        get().addLog(`⏭️ Пропуск хода! Следующая атака будет пропущена!`, "error");
+        get().addLog( i18nStore.t("game_logs.enemyCounterAttack_7"), "error");
     }
 
     // Remove dead crew
     const deadCrew = get().crew.filter((c) => c.health <= 0);
     if (deadCrew.length > 0) {
         set((s) => ({ crew: s.crew.filter((c) => c.health > 0) }));
-        get().addLog(
-            `☠️ Потери экипажа: ${deadCrew.map((c) => c.name).join(", ")}`,
+        get().addLog( i18nStore.t("game_logs.enemyCounterAttack_8", { value: deadCrew.map((c) => c.name).join(", ") }),
             "error",
         );
     }
@@ -289,7 +291,7 @@ export function reflectAttack(
             s.currentCombat.enemy.shields -= shieldAbsorb;
         });
         remainingDamage -= shieldAbsorb;
-        get().addLog(`🛡️ Щиты врага поглотили: -${shieldAbsorb}`, "info");
+        get().addLog( i18nStore.t("game_logs.enemyCounterAttack_9", { shieldAbsorb }), "info");
     }
 
     if (remainingDamage > 0) {
@@ -300,8 +302,7 @@ export function reflectAttack(
             );
             if (mod) mod.health = Math.max(0, mod.health - remainingDamage);
         });
-        get().addLog(
-            `🛡️ ЗЕРКАЛЬНЫЙ ЩИТ! Атака отражена в "${reflectedTarget.name}"! -${remainingDamage}%`,
+        get().addLog( i18nStore.t("game_logs.enemyCounterAttack_10", { reflectedTarget_name: reflectedTarget.name, remainingDamage }),
             "info",
         );
     }
@@ -330,7 +331,7 @@ export function applyDamageWithShields(
     let hullDamageDealt = 0;
 
     if (piercingDamage > 0) {
-        get().addLog(`🔱 Пробитие щитов: ${piercingDamage} урона игнорирует щиты`, "warning");
+        get().addLog( i18nStore.t("game_logs.enemyCounterAttack_11", { piercingDamage }), "warning");
         hullDamageDealt += applyModuleDamage(
             state,
             set,
@@ -346,7 +347,7 @@ export function applyDamageWithShields(
         const sDmg = Math.min(get().ship.shields, normalDamage);
         shieldDamageDealt = sDmg;
         set((s) => ({ ship: { ...s.ship, shields: s.ship.shields - sDmg } }));
-        get().addLog(`Враг по щитам: -${sDmg}`, "warning");
+        get().addLog( i18nStore.t("game_logs.enemyCounterAttack_12", { sDmg }), "warning");
 
         const overflow = normalDamage - sDmg;
         if (overflow > 0) {
@@ -396,8 +397,7 @@ function processEnemyShieldRegen(
         if (!s.currentCombat) return;
         s.currentCombat.enemy.shields = current + restored;
     });
-    get().addLog(
-        `🛡 Щиты врага восстановились: +${restored} (${current + restored}/${max})`,
+    get().addLog( i18nStore.t("game_logs.enemyCounterAttack_13", { restored, restored2: current + restored, max }),
         "info",
     );
 }

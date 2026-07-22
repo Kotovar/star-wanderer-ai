@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
 import { getPilotInCockpit } from "@/game/crew";
 import {
@@ -35,8 +36,7 @@ export function executeEnemyAttack(
     // Calculate enemy damage from alive modules
     const eDmg = enemyAttack.calculateEnemyDamage(combat.enemy.modules);
     if (eDmg <= 0) {
-        get().addLog(
-            "⚠️ Враг не может атаковать - все орудия уничтожены!",
+        get().addLog( i18nStore.t("game_logs.executeEnemyAttack_1"),
             "info",
         );
         return;
@@ -60,7 +60,7 @@ export function executeEnemyAttack(
         if (bossModifiers.isGuaranteedCrit) {
             finalDamage = Math.floor(finalDamage * 1.5);
             isCrit = true;
-            get().addLog(`💥 Гарантированный крит босса!`, "error");
+            get().addLog( i18nStore.t("game_logs.executeEnemyAttack_2"), "error");
         }
         finalDamage = Math.floor(finalDamage * bossModifiers.multiHitCount);
     }
@@ -76,7 +76,9 @@ export function executeEnemyAttack(
         // Опыт за уклонение — пилоту за штурвалом (он и дал уклонение)
         const pilot = getPilotInCockpit(state.crew, state.ship.modules);
         get().addLog(
-            `✈️ ${pilot ? `Пилот ${pilot.name} уклонился` : "Корабль уклонился"} от атаки! (${Math.round(evasionChance * 100)}% шанс)`,
+            pilot
+                ? i18nStore.t("game_logs.evade_pilot_pct", { name: pilot.name, chance: Math.round(evasionChance * 100) })
+                : i18nStore.t("game_logs.evade_ship_pct", { chance: Math.round(evasionChance * 100) }),
             "info",
         );
         recordPlayerHit(set, targetModule, 0, 0, false, true);
@@ -95,7 +97,7 @@ export function executeEnemyAttack(
             Math.abs(COMBAT_ACCURACY_MODIFIERS.SABOTAGE_PENALTY) +
             (scoutWithSabotage.level ?? 1) * 0.01;
         if (Math.random() < sabotageChance) {
-            get().addLog(`🔧 Диверсия! Враг промахнулся!`, "info");
+            get().addLog( i18nStore.t("game_logs.executeEnemyAttack_3"), "info");
             recordPlayerHit(set, targetModule, 0, 0, false, true);
             return;
         }
@@ -122,8 +124,7 @@ export function executeEnemyAttack(
             state.ship.maxShields,
         )
     ) {
-        get().addLog(
-            `🔷 Фазовый щит! Атака полностью поглощена! (20% шанс)`,
+        get().addLog( i18nStore.t("game_logs.executeEnemyAttack_4"),
             "info",
         );
         recordPlayerHit(set, targetModule, 0, 0, false, true);
@@ -177,8 +178,7 @@ export function executeEnemyAttack(
                 s.ship.shields - bossModifiers.shieldBreakAmount,
             );
         });
-        get().addLog(
-            `⚡ Разрушение щитов: -${bossModifiers.shieldBreakAmount}`,
+        get().addLog( i18nStore.t("game_logs.executeEnemyAttack_5", { shieldBreakAmount: bossModifiers.shieldBreakAmount }),
             "warning",
         );
     }
@@ -199,7 +199,7 @@ export function executeEnemyAttack(
                         );
                 });
             });
-            get().addLog(`🩸 Вампиризм модуля: +${healAmount} HP`, "warning");
+            get().addLog( i18nStore.t("game_logs.executeEnemyAttack_6", { healAmount }), "warning");
         }
     }
 
@@ -213,8 +213,7 @@ export function executeEnemyAttack(
             if (!s.currentCombat) return;
             s.currentCombat.skipPlayerTurn = true;
         });
-        get().addLog(
-            `⏭️ Пропуск хода! Следующая атака будет пропущена!`,
+        get().addLog( i18nStore.t("game_logs.executeEnemyAttack_7"),
             "error",
         );
     }
@@ -223,8 +222,7 @@ export function executeEnemyAttack(
     const deadCrew = get().crew.filter((c) => c.health <= 0);
     if (deadCrew.length > 0) {
         set((s) => ({ crew: s.crew.filter((c) => c.health > 0) }));
-        get().addLog(
-            `☠️ Потери экипажа: ${deadCrew.map((c) => c.name).join(", ")}`,
+        get().addLog( i18nStore.t("game_logs.executeEnemyAttack_8", { value: deadCrew.map((c) => c.name).join(", ") }),
             "error",
         );
     }

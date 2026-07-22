@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import type { AugmentationId } from "@/game/types/augmentations";
@@ -15,26 +16,25 @@ export const createAugmentationsSlice = (
         const state = get();
 
         if (!state.research.researchedTechs.includes("cybernetic_augmentation")) {
-            get().addLog("Требуется технология: Кибернетические аугментации", "error");
+            get().addLog( i18nStore.t("game_logs.augmentationsSlice_1"), "error");
             return;
         }
 
         const augmentation = AUGMENTATIONS[augmentationId];
         if (!augmentation) {
-            get().addLog(`Аугментация "${augmentationId}" не найдена`, "error");
+            get().addLog( i18nStore.t("game_logs.augmentationsSlice_2", { augmentationId }), "error");
             return;
         }
 
         const crewMember = state.crew.find((c) => c.id === crewId);
         if (!crewMember) {
-            get().addLog("Член экипажа не найден", "error");
+            get().addLog( i18nStore.t("game_logs.augmentationsSlice_3"), "error");
             return;
         }
 
         // Check profession restriction
         if (augmentation.forProfession && crewMember.profession !== augmentation.forProfession) {
-            get().addLog(
-                `${augmentation.name} доступна только для: ${augmentation.forProfession}`,
+            get().addLog( i18nStore.t("game_logs.augmentationsSlice_4", { augmentation_name: augmentation.name, forProfession: augmentation.forProfession }),
                 "error",
             );
             return;
@@ -42,16 +42,14 @@ export const createAugmentationsSlice = (
 
         // Check race restriction
         if (augmentation.forRace && crewMember.race !== augmentation.forRace) {
-            get().addLog(
-                `${augmentation.name} доступна только для расы: ${augmentation.forRace}`,
+            get().addLog( i18nStore.t("game_logs.augmentationsSlice_5", { augmentation_name: augmentation.name, forRace: i18nStore.t(`races.${augmentation.forRace}.name`) }),
                 "error",
             );
             return;
         }
 
         if (state.credits < augmentation.installCost) {
-            get().addLog(
-                `Недостаточно кредитов: нужно ${augmentation.installCost}₢`,
+            get().addLog( i18nStore.t("game_logs.augmentationsSlice_6", { installCost: augmentation.installCost }),
                 "error",
             );
             return;
@@ -69,13 +67,11 @@ export const createAugmentationsSlice = (
         if (hasExisting) {
             const existingId = crewMember.augmentation ?? augmentationId;
             const old = AUGMENTATIONS[existingId];
-            get().addLog(
-                `🦾 ${crewMember.name}: аугментация "${old?.name ?? crewMember.augmentation}" заменена на "${augmentation.name}"`,
+            get().addLog( i18nStore.t("game_logs.augmentationsSlice_7", { crewMember_name: crewMember.name, augmentation: old?.name ?? crewMember.augmentation, augmentation_name: augmentation.name }),
                 "info",
             );
         } else {
-            get().addLog(
-                `🦾 ${crewMember.name}: установлена аугментация "${augmentation.name}"`,
+            get().addLog( i18nStore.t("game_logs.augmentationsSlice_8", { crewMember_name: crewMember.name, augmentation_name: augmentation.name }),
                 "info",
             );
         }
@@ -86,12 +82,12 @@ export const createAugmentationsSlice = (
         const crewMember = state.crew.find((c) => c.id === crewId);
 
         if (!crewMember) {
-            get().addLog("Член экипажа не найден", "error");
+            get().addLog( i18nStore.t("game_logs.augmentationsSlice_9"), "error");
             return;
         }
 
         if (!crewMember.augmentation) {
-            get().addLog("У члена экипажа нет аугментации", "error");
+            get().addLog( i18nStore.t("game_logs.augmentationsSlice_10"), "error");
             return;
         }
 
@@ -103,6 +99,6 @@ export const createAugmentationsSlice = (
             ),
         }));
 
-        get().addLog(`🔧 ${crewMember.name}: аугментация "${augName}" удалена`, "info");
+        get().addLog( i18nStore.t("game_logs.augmentationsSlice_11", { crewMember_name: crewMember.name, augName }), "info");
     },
 });

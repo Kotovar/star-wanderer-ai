@@ -1,12 +1,11 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState, Contract } from "@/game/types";
 import { DELIVERY_GOODS } from "@/game/constants";
 import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "../constants";
 import { playSound } from "@/sounds";
-import { store as i18nStore } from "@/lib/useTranslation";
 import { getContractReputationImpact } from "@/game/reputation/utils";
 import { getActiveModule } from "@/game/modules";
 import { getCargoCapacity } from "@/game/slices/ship/helpers/getCargoCapacity";
-import { RACES } from "@/game/constants/races";
 import { isRaceContractAvailable } from "@/game/reputation/utils";
 import { isContractTargetAvailable } from "@/game/contracts/targetAvailability";
 
@@ -22,7 +21,7 @@ export const acceptContract = (
     get: () => GameStore,
 ): void => {
     if (get().activeContracts.some((c) => c.id === contract.id)) {
-        get().addLog("Уже принят!", "error");
+        get().addLog( i18nStore.t("game_logs.acceptContract_1"), "error");
         return;
     }
 
@@ -34,7 +33,7 @@ export const acceptContract = (
             get().completedLocations,
         )
     ) {
-        get().addLog("Цель задания больше не существует", "error");
+        get().addLog( i18nStore.t("game_logs.acceptContract_2"), "error");
         return;
     }
 
@@ -47,11 +46,8 @@ export const acceptContract = (
         );
 
         if (!isAvailable) {
-            const raceName =
-                contract.requiredRace.charAt(0).toUpperCase() +
-                contract.requiredRace.slice(1);
-            get().addLog(
-                `${raceName} не доверяют вам достаточно для этой задачи`,
+            const raceName = i18nStore.t(`races.${contract.requiredRace}.plural`);
+            get().addLog( i18nStore.t("game_logs.acceptContract_3", { raceName }),
                 "error",
             );
             return;
@@ -60,11 +56,13 @@ export const acceptContract = (
 
     if (contract.type === "delivery" && contract.cargo) {
         const cargoKey = contract.cargo as keyof typeof DELIVERY_GOODS;
-        const cargoName = DELIVERY_GOODS[cargoKey]?.name || contract.cargo;
+        const cargoName = DELIVERY_GOODS[cargoKey]
+            ? i18nStore.t(`delivery_goods.${cargoKey}`)
+            : contract.cargo;
         const cargoMod = getActiveModule(get().ship.modules, "cargo");
 
         if (!cargoMod) {
-            get().addLog("Нет грузового отсека!", "error");
+            get().addLog( i18nStore.t("game_logs.acceptContract_4"), "error");
             return;
         }
 
@@ -77,7 +75,7 @@ export const acceptContract = (
             get().probes;
 
         if (cur + cargoAmount > getCargoCapacity(get())) {
-            get().addLog("Недостаточно места!", "error");
+            get().addLog( i18nStore.t("game_logs.acceptContract_5"), "error");
             return;
         }
         set((s) => ({
@@ -93,7 +91,7 @@ export const acceptContract = (
                 ],
             },
         }));
-        get().addLog(`Загружен: ${cargoName} (${cargoAmount}т)`, "info");
+        get().addLog( i18nStore.t("game_logs.acceptContract_6", { cargoName, cargoAmount }), "info");
     }
 
     set((s) => ({
@@ -103,24 +101,25 @@ export const acceptContract = (
         ],
     }));
     // desc расовых квестов — ключ перевода; t() вернёт строку как есть, если это не ключ
-    get().addLog(`Задача принята: ${i18nStore.t(contract.desc)}`, "info");
+    get().addLog( i18nStore.t("game_logs.acceptContract_7", { value: i18nStore.t(contract.desc) }), "info");
 
     const reputationImpact = getContractReputationImpact(contract);
     if (reputationImpact.length > 1) {
         get().addLog(
-            `Дипломатические последствия: ${reputationImpact
-                .map(({ raceId, change }) =>
-                    `${RACES[raceId].name} ${change > 0 ? "+" : ""}${change}`,
-                )
-                .join(" · ")}`,
+            i18nStore.t("game_logs.diplomacy_consequences", {
+                list: reputationImpact
+                    .map(({ raceId, change }) =>
+                        `${i18nStore.t(`races.${raceId}.name`)} ${change > 0 ? "+" : ""}${change}`,
+                    )
+                    .join(" · "),
+            }),
             "warning",
         );
     }
 
     // Special message for supply_run contracts
     if (contract.type === "supply_run") {
-        get().addLog(
-            `📍 Доставить на: ${contract.sourceType === "planet" ? "Планета" : "Корабль"} "${contract.sourceName}" (${contract.sourceSectorName})`,
+        get().addLog( i18nStore.t("game_logs.acceptContract_8", { value: i18nStore.t(contract.sourceType === "planet" ? "game_logs.deliver_to_planet" : "game_logs.deliver_to_ship"), sourceName: contract.sourceName ?? "", sourceSectorName: contract.sourceSectorName ?? "" }),
             "warning",
         );
     }

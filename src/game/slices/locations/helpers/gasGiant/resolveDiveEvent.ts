@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import { RESEARCH_RESOURCES } from "@/game/constants";
 
@@ -38,15 +39,14 @@ export function resolveDiveEvent(
                     ),
                 },
             }));
-            get().addLog(
-                `⚡ Зонд получил урон: модуль «${target.name}» −${damage} HP`,
+            get().addLog( i18nStore.t("game_logs.resolveDiveEvent_1", { target_name: target.name, damage }),
                 "warning",
             );
         } else {
             set((s) => ({
                 ship: { ...s.ship, armor: Math.max(0, s.ship.armor - damage) },
             }));
-            get().addLog(`⚡ Корпус корабля получил урон: −${damage}`, "warning");
+            get().addLog( i18nStore.t("game_logs.resolveDiveEvent_2", { damage }), "warning");
         }
     }
 
@@ -86,8 +86,7 @@ export function resolveDiveEvent(
                 },
             };
         });
-        get().addLog(
-            "💥 Зонд уничтожен! Давление/разряд разрушили корпус. Все собранные данные потеряны.",
+        get().addLog( i18nStore.t("game_logs.resolveDiveEvent_3"),
             "error",
         );
         return;
@@ -116,6 +115,6 @@ export function resolveDiveEvent(
     });
 
     if (logParts.length > 0) {
-        get().addLog(`📦 Получено: ${logParts.join(", ")}`, "info");
+        get().addLog( i18nStore.t("game_logs.resolveDiveEvent_4", { value: logParts.join(", ") }), "info");
     }
 }

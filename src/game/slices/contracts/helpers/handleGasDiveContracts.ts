@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
 import type { GameState, GameStore, Location } from "@/game/types";
@@ -45,8 +46,7 @@ export const handleGasDiveContracts = (
                         : ac,
                 ),
         }));
-        get().addLog(
-            `🪸 Контракт выполнен: образцы мембран сданы (${c.collectedMembranes}/${c.requiredMembranes}) +${c.reward}₢`,
+        get().addLog( i18nStore.t("game_logs.handleGasDiveContracts_1", { collectedMembranes: c.collectedMembranes ?? 0, requiredMembranes: c.requiredMembranes ?? 0, reward: c.reward }),
             "info",
         );
         const expReward = CONTRACT_REWARDS.gas_dive.baseExp;

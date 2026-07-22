@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore, PlanetType } from "@/game/types";
 import type { ResearchResourceType } from "@/game/types/research";
 import type { Goods } from "@/game/types/goods";
@@ -125,7 +126,7 @@ export const planetaryDrill = (
 
     // Проверка технологии
     if (!state.research.researchedTechs.includes("planetary_drill")) {
-        get().addLog("Требуется технология: Планетарный бур", "error");
+        get().addLog( i18nStore.t("game_logs.planetaryDrill_1"), "error");
         return;
     }
 
@@ -134,7 +135,7 @@ export const planetaryDrill = (
         (m) => m.type === "drill" && m.health > 0 && !m.disabled && !m.manualDisabled,
     );
     if (!hasDrill) {
-        get().addLog("Требуется активный модуль дрели!", "error");
+        get().addLog( i18nStore.t("game_logs.planetaryDrill_2"), "error");
         return;
     }
 
@@ -144,15 +145,14 @@ export const planetaryDrill = (
     const drillsDone = getDrillsDone(planet);
     const maxPasses = getDrillMaxPasses(planetId);
     if (drillsDone >= maxPasses) {
-        get().addLog("Залежи этой планеты истощены.", "error");
+        get().addLog( i18nStore.t("game_logs.planetaryDrill_3"), "error");
         return;
     }
     if (
         planet.lastDrillTurn !== undefined &&
         state.turn - planet.lastDrillTurn < DRILL_COOLDOWN_TURNS
     ) {
-        get().addLog(
-            `Бур остывает: следующий проход через ${DRILL_COOLDOWN_TURNS - (state.turn - planet.lastDrillTurn)} ход(ов).`,
+        get().addLog( i18nStore.t("game_logs.planetaryDrill_4", { value: DRILL_COOLDOWN_TURNS - (state.turn - planet.lastDrillTurn) }),
             "warning",
         );
         return;
@@ -178,14 +178,14 @@ export const planetaryDrill = (
     // Применяем торговый товар
     if (yields.tradeGood) {
         const { id, qty } = yields.tradeGood;
-        const goodName = TRADE_GOODS[id]?.name ?? id;
+        const goodName = TRADE_GOODS[id] ? i18nStore.t(`trade.goods.${id}`) : id;
         set((s) => ({
             ship: {
                 ...s.ship,
                 tradeGoods: addTradeGood(s.ship.tradeGoods, id, qty),
             },
         }));
-        get().addLog(`⛏️ Буровые работы: добыто ${goodName} x${qty}`, "info");
+        get().addLog( i18nStore.t("game_logs.planetaryDrill_5", { goodName, qty }), "info");
     }
 
     // Применяем исследовательские ресурсы
@@ -199,8 +199,7 @@ export const planetaryDrill = (
         });
         yields.researchResources.forEach((res) => {
             const rd = RESEARCH_RESOURCES[res.type];
-            get().addLog(
-                `⛏️ Буровые работы: ${rd?.icon ?? ""} ${rd?.name ?? res.type} x${res.qty}`,
+            get().addLog( i18nStore.t("game_logs.planetaryDrill_6", { value: rd?.icon ?? "", type: rd?.name ?? res.type, qty: res.qty }),
                 "info",
             );
         });

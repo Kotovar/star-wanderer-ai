@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 
 /**
@@ -28,7 +29,7 @@ export const toggleModule = (
                 ),
             },
         }));
-        get().addLog(`Модуль "${mod.name}" отключён вручную`, "warning");
+        get().addLog( i18nStore.t("game_logs.toggleModule_1", { mod_name: mod.name }), "warning");
     } else {
         // Re-enabling module
         set((s) => ({
@@ -39,7 +40,7 @@ export const toggleModule = (
                 ),
             },
         }));
-        get().addLog(`Модуль "${mod.name}" включён`, "info");
+        get().addLog( i18nStore.t("game_logs.toggleModule_2", { mod_name: mod.name }), "info");
 
         // Check if we now have enough power to re-enable auto-disabled modules
         const currentPower = get().getTotalPower();
@@ -66,8 +67,7 @@ export const toggleModule = (
                         ),
                     },
                 }));
-                get().addLog(
-                    `⚡ Включено модулей: ${autoDisabledModules.length}. Баланс: ${get().getTotalPower() - get().getTotalConsumption()}`,
+                get().addLog( i18nStore.t("game_logs.toggleModule_3", { autoDisabledModules_length: autoDisabledModules.length, value: get().getTotalPower() - get().getTotalConsumption() }),
                     "info",
                 );
             }

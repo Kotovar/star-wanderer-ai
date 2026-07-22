@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import { patchLocation } from "@/game/utils/patchLocation";
 import {
@@ -32,7 +33,7 @@ export function salvageWreckField(set: SetState, get: () => GameStore): void {
 
     if (!loc || loc.type !== "wreck_field") return;
     if (loc.wreckExhausted) {
-        get().addLog("Поле обломков уже полностью обыскано.", "warning");
+        get().addLog( i18nStore.t("game_logs.salvageWreckField_1"), "warning");
         return;
     }
 
@@ -165,28 +166,25 @@ export function salvageWreckField(set: SetState, get: () => GameStore): void {
     if (ancientData > 0) parts.push(`📡 Древние данные ×${ancientData}`);
 
     const lootStr = parts.length > 0 ? parts.join(", ") : "ничего ценного";
-    get().addLog(
-        `🔧 Обыскано поле обломков (проход ${newPassesDone}/${passesTotal}): ${lootStr}. Щиты -${shieldDmg}.`,
+    get().addLog( i18nStore.t("game_logs.salvageWreckField_2", { newPassesDone, passesTotal, lootStr, shieldDmg }),
         shieldDmg > 20 ? "warning" : "info",
     );
 
     if (cargoTrimmed) {
-        get().addLog("⚠️ Трюм переполнен — часть находок не влезла.", "warning");
+        get().addLog( i18nStore.t("game_logs.salvageWreckField_3"), "warning");
     }
     if (moduleDamageAmt > 0 && damagedModuleName) {
-        get().addLog(
-            `☢ Радиация пробила щиты! Модуль «${damagedModuleName}» повреждён на ${moduleDamageAmt}.`,
+        get().addLog( i18nStore.t("game_logs.salvageWreckField_4", { damagedModuleName, moduleDamageAmt }),
             "warning",
         );
     }
     if (crewRadDamage > 0) {
-        get().addLog(
-            `☢ Радиационный фон повредил экипаж (−${crewRadDamage} здоровья).`,
+        get().addLog( i18nStore.t("game_logs.salvageWreckField_5", { crewRadDamage }),
             "warning",
         );
     }
     if (nowExhausted) {
-        get().addLog("💀 Поле обломков полностью обыскано. Радиация нарастает — пора уходить.", "warning");
+        get().addLog( i18nStore.t("game_logs.salvageWreckField_6"), "warning");
     }
 
     get().updateShipStats();

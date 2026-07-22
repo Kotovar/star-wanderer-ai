@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type {
     SetState,
     GameStore,
@@ -140,7 +141,7 @@ export const resolveScoutEvent = (
         const value = roll(...outcome.credits);
         set((s) => ({ credits: s.credits + value }));
         logEntry.credits = value;
-        get().addLog(`💰 Находка: +${value}₢`, "info");
+        get().addLog( i18nStore.t("game_logs.scoutEvents_1", { value }), "info");
     }
 
     if (outcome.tradeGood) {
@@ -152,9 +153,9 @@ export const resolveScoutEvent = (
                 tradeGoods: addTradeGood(s.ship.tradeGoods, goodId, qty),
             },
         }));
-        const goodName = TRADE_GOODS[goodId]?.name ?? goodId;
+        const goodName = TRADE_GOODS[goodId] ? i18nStore.t(`trade.goods.${goodId}`) : goodId;
         logEntry.tradeGood = { name: goodName, quantity: qty };
-        get().addLog(`📦 Находка: ${goodName} x${qty}`, "info");
+        get().addLog( i18nStore.t("game_logs.scoutEvents_2", { goodName, qty }), "info");
     }
 
     if (outcome.researchResources?.length) {
@@ -171,8 +172,7 @@ export const resolveScoutEvent = (
         });
         found.forEach((res) => {
             const rd = RESEARCH_RESOURCES[res.type];
-            get().addLog(
-                `🔬 Находка: ${rd?.icon ?? ""} ${rd?.name ?? res.type} x${res.quantity}`,
+            get().addLog( i18nStore.t("game_logs.scoutEvents_3", { value: rd?.icon ?? "", type: rd?.name ?? res.type, quantity: res.quantity }),
                 "info",
             );
         });
@@ -185,8 +185,7 @@ export const resolveScoutEvent = (
             const mutationName = giveRandomMutation(scout, set);
             if (mutationName) {
                 logEntry.mutationName = mutationName;
-                get().addLog(
-                    `☣️ ${scout.name} заразился чужеродными организмами: ${mutationName}!`,
+                get().addLog( i18nStore.t("game_logs.scoutEvents_4", { scout_name: scout.name, mutationName }),
                     "error",
                 );
             }

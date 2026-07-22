@@ -1,8 +1,8 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { getArchiveHintLocations } from "@/game/artifacts/utils";
 import { SPACE_MONSTERS } from "@/game/constants/spaceMonsters";
 import { grantTimedEffect } from "@/game/effects/timedEffects";
 import type { Artifact, GameStore, Location, SetState } from "@/game/types";
-import { store as i18nStore } from "@/lib/useTranslation";
 
 type ArtifactHint = {
     artifactId: string;

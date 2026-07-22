@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore, SetState } from "@/game/types";
 import {
   FIRST_CRISIS_TURN_MIN,
@@ -6,7 +7,6 @@ import {
   rollInitialCrisisTurn,
   rollNextCrisisTurn,
 } from "@/game/constants/globalCrises";
-import { store as i18nStore } from "@/lib/useTranslation";
 
 /**
  * Выбирает случайный кризис, исключая только что завершившийся
@@ -43,7 +43,7 @@ export const processGlobalCrises = (
         nextCrisisTurn: rollInitialCrisisTurn(),
         nextCrisisId,
       }));
-      get().addLog("⚠️ Ранний галактический кризис отложен: система кризисов перебалансирована", "info");
+      get().addLog( i18nStore.t("game_logs.processGlobalCrises_1"), "info");
       return;
     }
 
@@ -72,7 +72,10 @@ export const processGlobalCrises = (
       }
       set(() => ({ activeCrisis: null }));
       get().addLog(
-        `✅ Кризис завершён: ${crisis?.icon ?? ""} ${crisis ? i18nStore.t(crisis.nameKey) : ""}`.trim(),
+        i18nStore.t("game_logs.crisis_ended", {
+          icon: crisis?.icon ?? "",
+          name: crisis ? i18nStore.t(crisis.nameKey) : "",
+        }).trim(),
         "info",
       );
     } else {
@@ -101,8 +104,7 @@ export const processGlobalCrises = (
       nextCrisisTurn: rollNextCrisisTurn(turn, freshState),
       nextCrisisId: nextPlannedCrisis.id,
     }));
-    get().addLog(
-      `🚨 ГАЛАКТИЧЕСКИЙ КРИЗИС: ${crisis.icon} ${i18nStore.t(crisis.nameKey)} · длительность ${crisis.duration} хода`,
+    get().addLog( i18nStore.t("game_logs.processGlobalCrises_2", { icon: crisis.icon, value: i18nStore.t(crisis.nameKey), duration: crisis.duration }),
       "error",
     );
   }

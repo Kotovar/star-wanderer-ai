@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
 import type { GameState, SetState, GameStore } from "@/game/types";
@@ -64,8 +65,7 @@ export const completeScanContracts = (
             ),
         }));
 
-        get().addLog(
-            `📡 Контракт выполнен: ${c.desc} +${c.reward}₢`,
+        get().addLog( i18nStore.t("game_logs.completeScanContracts_1", { desc: c.desc, reward: c.reward }),
             "info",
         );
 

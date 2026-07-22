@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore, SetState, StormType } from "@/game/types";
 import { patchLocation } from "@/game/utils/patchLocation";
 import { playSound } from "@/sounds";
@@ -277,13 +278,13 @@ export const handleStormEntry = (set: SetState, get: () => GameStore): void => {
 
     // Проверка: это шторм
     if (!loc || loc.type !== "storm") {
-        get().addLog("Это не шторм!", "error");
+        get().addLog( i18nStore.t("game_logs.enterStorm_1"), "error");
         return;
     }
 
     // Проверка: шторм уже пройден
     if (state.completedLocations.includes(loc.id)) {
-        get().addLog(`${loc.name} уже исследован`, "warning");
+        get().addLog( i18nStore.t("game_logs.enterStorm_2", { loc_name: loc.name }), "warning");
         return;
     }
 
@@ -311,7 +312,7 @@ export const handleStormEntry = (set: SetState, get: () => GameStore): void => {
             moduleDamage: effects.moduleDamage * 0.5,
             crewDamage: effects.crewDamage * 0.5,
         };
-        get().addLog(`🌪️ Штормовые щиты: урон снижен на 50%`, "info");
+        get().addLog( i18nStore.t("game_logs.enterStorm_3"), "info");
     }
 
     // Жизнеобеспечение фильтрует экологические угрозы
@@ -327,8 +328,7 @@ export const handleStormEntry = (set: SetState, get: () => GameStore): void => {
                 moduleDamage: effects.moduleDamage * (1 - resistance),
                 crewDamage: effects.crewDamage * (1 - resistance),
             };
-            get().addLog(
-                `🌿 Жизнеобеспечение: экологический урон снижен на ${Math.round(resistance * 100)}%`,
+            get().addLog( i18nStore.t("game_logs.enterStorm_4", { value: Math.round(resistance * 100) }),
                 "info",
             );
         }
@@ -425,8 +425,7 @@ export const handleStormEntry = (set: SetState, get: () => GameStore): void => {
         set((s) => ({
             credits: s.credits + (rescueContract.reward || 0),
         }));
-        get().addLog(
-            `Путешествие в Пустоту завершено! +${rescueContract.reward}₢`,
+        get().addLog( i18nStore.t("game_logs.enterStorm_5", { reward: rescueContract.reward }),
             "info",
         );
 

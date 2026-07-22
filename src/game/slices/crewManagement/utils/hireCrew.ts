@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, CrewMember, RaceId, SetState } from "@/game/types";
 import { RACES } from "@/game/constants/races";
 import { RESEARCH_TREE } from "@/game/constants/research";
@@ -131,11 +132,11 @@ interface HireValidation {
 const validateHireCrew = (state: GameStore, price: number): HireValidation => {
     // Проверка цены
     if (isNaN(price) || price < 0) {
-        return { canHire: false, error: "Некорректная цена!" };
+        return { canHire: false, error: i18nStore.t("game_logs.err_invalid_price") };
     }
 
     if (state.credits < price) {
-        return { canHire: false, error: "Недостаточно кредитов!" };
+        return { canHire: false, error: i18nStore.t("game_logs.err_no_credits") };
     }
 
     return { canHire: true };
@@ -224,13 +225,12 @@ export const hireCrew = (
     if (newCrew.race) {
         const reputationGain = Math.min(3, Math.max(1, newCrew.level || 1)); // +1~3 за уровень
         get().changeReputation(newCrew.race, reputationGain);
-        get().addLog(
-            `Репутация с ${getRaceName(newCrew.race)}: +${reputationGain} (наём экипажа)`,
+        get().addLog( i18nStore.t("game_logs.hireCrew_1", { value: getRaceName(newCrew.race), reputationGain }),
             "info",
         );
     }
 
-    get().addLog(`Нанят: ${newCrew.name} за ${crewData.price}₢`, "info");
+    get().addLog( i18nStore.t("game_logs.hireCrew_2", { newCrew_name: newCrew.name, price: crewData.price }), "info");
     playSound("success");
 };
 
@@ -238,13 +238,5 @@ export const hireCrew = (
  * Получить название расы
  */
 function getRaceName(raceId: string): string {
-    const names: Record<string, string> = {
-        human: "Людьми",
-        synthetic: "Синтетиками",
-        xenosymbiont: "Ксеноморфами",
-        krylorian: "Крилорианцами",
-        voidborn: "Порождёнными Пустотой",
-        crystalline: "Кристаллоидами",
-    };
-    return names[raceId] || raceId;
+    return i18nStore.t(`races.${raceId}.plural`);
 }

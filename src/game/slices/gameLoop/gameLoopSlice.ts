@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore, SetState } from "@/game/types";
 import type { CrisisResponse } from "@/game/types/crisis";
 import type { RandomEventChoiceId } from "@/game/types/randomEvents";
@@ -18,7 +19,6 @@ import { checkContractExpiry } from "@/game/slices/contracts/helpers/checkContra
 import { advanceCombatRound } from "@/game/slices/combat/helpers/combatTime";
 import { GLOBAL_CRISES } from "@/game/constants/globalCrises";
 import { getCrisisResponseDefinition } from "@/game/constants/crisisResponses";
-import { store as i18nStore } from "@/lib/useTranslation";
 
 /**
  * Интерфейс GameLoopSlice
@@ -146,7 +146,7 @@ export const createGameLoopSlice = (
         }
 
         if (get().currentCombat) {
-            get().addLog("Боевой раунд пропущен - враг атакует", "combat");
+            get().addLog( i18nStore.t("game_logs.gameLoopSlice_1"), "combat");
             get().processEnemyAttack();
             advanceCombatRound(
                 set as unknown as (fn: (state: GameState) => void) => void,
@@ -155,7 +155,7 @@ export const createGameLoopSlice = (
             return;
         }
 
-        get().addLog("Ход пропущен - задачи выполняются", "info");
+        get().addLog( i18nStore.t("game_logs.gameLoopSlice_2"), "info");
         get().nextTurn();
     },
 
@@ -170,23 +170,20 @@ export const createGameLoopSlice = (
         const crisis = GLOBAL_CRISES.find((item) => item.id === activeCrisis.id);
         const responseDefinition = getCrisisResponseDefinition(response);
         if (!crisis?.allowedResponses.includes(response)) {
-            get().addLog(
-                `Кризис: ${responseDefinition.label.toLowerCase()} не подходит для этой угрозы`,
+            get().addLog( i18nStore.t("game_logs.gameLoopSlice_3", { value: responseDefinition.label.toLowerCase() }),
                 "warning",
             );
             return;
         }
         if (!responseDefinition.pay(state, set)) {
-            get().addLog(
-                `Кризис: не хватает условий для решения через ${responseDefinition.label.toLowerCase()}`,
+            get().addLog( i18nStore.t("game_logs.gameLoopSlice_4", { value: responseDefinition.label.toLowerCase() }),
                 "warning",
             );
             return;
         }
 
         if (Math.random() > responseDefinition.getChance(state)) {
-            get().addLog(
-                `Кризис: ${responseDefinition.label.toLowerCase()} не сработал, кризис продолжается`,
+            get().addLog( i18nStore.t("game_logs.gameLoopSlice_5", { value: responseDefinition.label.toLowerCase() }),
                 "warning",
             );
             get().saveGame();
@@ -195,8 +192,7 @@ export const createGameLoopSlice = (
 
         crisis?.onEndEffect?.(set, get, activeCrisis);
         set(() => ({ activeCrisis: null }));
-        get().addLog(
-            `✅ Кризис подавлен: ${crisis?.icon ?? ""} ${crisis ? i18nStore.t(crisis.nameKey) : ""} через ${responseDefinition.label.toLowerCase()}`,
+        get().addLog( i18nStore.t("game_logs.gameLoopSlice_6", { value: crisis?.icon ?? "", value2: crisis ? i18nStore.t(crisis.nameKey) : "", value3: responseDefinition.label.toLowerCase() }),
             "info",
         );
         get().saveGame();

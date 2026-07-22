@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore } from "@/game/types";
 import type { EnemyModule } from "@/game/types/enemy";
 import { applyModuleDamage } from "./moduleDamage";
@@ -131,8 +132,7 @@ export function checkBossModuleDodge(
     if (dodgeMods.length === 0) return false;
     const maxDodge = Math.max(...dodgeMods.map((m) => m.specialEffect?.value ?? 0));
     if (Math.random() * 100 < maxDodge) {
-        get().addLog(
-            `⚡ Уклонение модуля босса! (${maxDodge}% шанс)`,
+        get().addLog( i18nStore.t("game_logs.bossAbilities_1", { maxDodge }),
             "warning",
         );
         return true;
@@ -156,8 +156,7 @@ export function checkBossPhaseShift(
         ...phaseMods.map((m) => m.specialEffect?.value ?? 0),
     );
     if (Math.random() * 100 < maxPhaseShift) {
-        get().addLog(
-            `🔮 Фазовый сдвиг! Критический удар заблокирован! (${maxPhaseShift}%)`,
+        get().addLog( i18nStore.t("game_logs.bossAbilities_2", { maxPhaseShift }),
             "info",
         );
         return true;
@@ -180,8 +179,7 @@ export function checkBossEvasionBoost(
         return false;
     const chance = ability.value ?? 30;
     if (Math.random() * 100 < chance) {
-        get().addLog(
-            `★ ${ability.name}: Босс уклонился от атаки! (${chance}% шанс)`,
+        get().addLog( i18nStore.t("game_logs.bossAbilities_3", { ability_name: ability.name, chance }),
             "warning",
         );
         return true;
@@ -222,8 +220,7 @@ export function applyBossTakeDamageEffects(
                     s.currentCombat.enemy.shields + absorbed,
                 );
             });
-            get().addLog(
-                `🔋 Поглощение урона: +${absorbed} щитов боссу`,
+            get().addLog( i18nStore.t("game_logs.bossAbilities_4", { absorbed }),
                 "warning",
             );
         }
@@ -247,8 +244,7 @@ export function applyBossTakeDamageEffects(
                         Math.floor(Math.random() * playerActiveMods.length)
                     ];
                 applyModuleDamage(state, set, get, reflected, target);
-                get().addLog(
-                    `🔄 Отражение урона: ${reflected} → "${target.name}"`,
+                get().addLog( i18nStore.t("game_logs.bossAbilities_5", { reflected, target_name: target.name }),
                     "warning",
                 );
             }
@@ -284,8 +280,7 @@ export function checkBossResurrect(
             m.health = Math.floor((m.maxHealth ?? 100) * 0.3);
         });
     });
-    get().addLog(
-        `♾️ ${ability.name}: БОСС ВОСКРЕС! (${chance}% шанс)`,
+    get().addLog( i18nStore.t("game_logs.bossAbilities_6", { ability_name: ability.name, chance }),
         "error",
     );
     return true;
@@ -332,7 +327,7 @@ function applyModulePassives(
                 return `${m?.name ?? "?"} +${heal}`;
             })
             .join(", ");
-        get().addLog(`♻️ Пассивная рег. модулей: ${names}`, "warning");
+        get().addLog( i18nStore.t("game_logs.bossAbilities_7", { names }), "warning");
     }
 
     // damage_aura: sum of all alive aura modules → apply to player each turn
@@ -351,7 +346,7 @@ function applyModulePassives(
             });
             remaining -= shieldAbsorb;
             if (shieldAbsorb > 0) {
-                get().addLog(`🔥 Аура урона: щиты -${shieldAbsorb}`, "warning");
+                get().addLog( i18nStore.t("game_logs.bossAbilities_8", { shieldAbsorb }), "warning");
             }
         }
 
@@ -366,8 +361,7 @@ function applyModulePassives(
                         Math.floor(Math.random() * playerActiveMods.length)
                     ];
                 applyModuleDamage(freshState2, set, get, remaining, target);
-                get().addLog(
-                    `🔥 Аура урона: "${target.name}" -${remaining}`,
+                get().addLog( i18nStore.t("game_logs.bossAbilities_9", { target_name: target.name, remaining }),
                     "error",
                 );
             }
@@ -405,8 +399,7 @@ function applySpecialAbility(
                         s.ship.shields = Math.max(0, s.ship.shields - absorb);
                     });
                     remaining -= absorb;
-                    get().addLog(
-                        `★ ${ability.name}: Щиты поглотили ${absorb} АоЕ урона`,
+                    get().addLog( i18nStore.t("game_logs.bossAbilities_10", { ability_name: ability.name, absorb }),
                         "warning",
                     );
                 }
@@ -418,8 +411,7 @@ function applySpecialAbility(
                     for (const mod of activeMods) {
                         applyModuleDamage(get(), set, get, remaining, mod);
                     }
-                    get().addLog(
-                        `★ ${ability.name}: АоЕ ${remaining} урона по всем модулям!`,
+                    get().addLog( i18nStore.t("game_logs.bossAbilities_11", { ability_name: ability.name, remaining }),
                         "error",
                     );
                 }
@@ -429,8 +421,7 @@ function applySpecialAbility(
             case "heal_all": {
                 const healAmount = ability.value ?? 10;
                 healAllBossModules(set, healAmount);
-                get().addLog(
-                    `★ ${ability.name}: +${healAmount}% ко всем модулям`,
+                get().addLog( i18nStore.t("game_logs.bossAbilities_12", { ability_name: ability.name, healAmount }),
                     "warning",
                 );
                 break;
@@ -450,8 +441,7 @@ function applySpecialAbility(
                         (totalDamage * (ability.value ?? 20)) / 100,
                     );
                     healAllBossModules(set, healAmount);
-                    get().addLog(
-                        `★ ${ability.name}: Вампиризм +${healAmount} HP`,
+                    get().addLog( i18nStore.t("game_logs.bossAbilities_13", { ability_name: ability.name, healAmount }),
                         "warning",
                     );
                 }
@@ -476,8 +466,7 @@ function applySpecialAbility(
                     s.currentCombat.bossOneShotAbilityFired = true;
                 });
                 healAllBossModules(set, healAmount);
-                get().addLog(
-                    `★ ${ability.name}: Аварийное восстановление! +${healAmount}%`,
+                get().addLog( i18nStore.t("game_logs.bossAbilities_14", { ability_name: ability.name, healAmount }),
                     "warning",
                 );
                 break;
@@ -486,8 +475,7 @@ function applySpecialAbility(
             case "heal_all": {
                 const healAmount = ability.value ?? 25;
                 healAllBossModules(set, healAmount);
-                get().addLog(
-                    `★ ${ability.name}: Аварийное восстановление! +${healAmount}%`,
+                get().addLog( i18nStore.t("game_logs.bossAbilities_15", { ability_name: ability.name, healAmount }),
                     "warning",
                 );
                 break;
@@ -509,8 +497,7 @@ function applySpecialAbility(
                             s.currentCombat.enemy.shields + amount,
                         );
                     });
-                    get().addLog(
-                        `★ ${ability.name}: Восстановление щитов! +${ability.value ?? 50}% (1 раз за бой)`,
+                    get().addLog( i18nStore.t("game_logs.bossAbilities_16", { ability_name: ability.name, value: ability.value ?? 50 }),
                         "warning",
                     );
                 }
@@ -527,8 +514,7 @@ function applySpecialAbility(
                         s.currentCombat.enemy.shields + regenAmount,
                     );
                 });
-                get().addLog(
-                    `★ ${ability.name}: Регенерация щитов +${regenAmount}`,
+                get().addLog( i18nStore.t("game_logs.bossAbilities_17", { ability_name: ability.name, regenAmount }),
                     "warning",
                 );
                 break;
@@ -539,8 +525,7 @@ function applySpecialAbility(
                 if (Math.random() * 100 < chance) {
                     const healAmount = 50;
                     healAllBossModules(set, healAmount);
-                    get().addLog(
-                        `★ ${ability.name}: Самовосстановление +${healAmount}! (${chance}% шанс)`,
+                    get().addLog( i18nStore.t("game_logs.bossAbilities_18", { ability_name: ability.name, healAmount, chance }),
                         "warning",
                     );
                 }
@@ -576,8 +561,7 @@ export function processBossRegeneration(
         const aliveCount = boss.modules.filter((m) => m.health > 0).length;
         if (aliveCount > 0) {
             healAllBossModules(set, boss.regenRate);
-            get().addLog(
-                `⚙️ Регенерация босса: +${boss.regenRate}/мод.`,
+            get().addLog( i18nStore.t("game_logs.bossAbilities_19", { regenRate: boss.regenRate }),
                 "warning",
             );
         }

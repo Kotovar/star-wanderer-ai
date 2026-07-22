@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { RESEARCH_TREE } from "@/game/constants";
 import { getAdjacentTechs } from "@/game/research/utils";
 import { playSound } from "@/sounds";
@@ -71,9 +72,8 @@ const handleResearchCompletion = (
     }));
 
     // Логирование завершения
-    get().addLog(`✅ Исследование завершено: ${completedTech.name}`, "info");
-    get().addLog(
-        `Получены бонусы: ${getTechnologyBonusesDescription(completedTech)}`,
+    get().addLog( i18nStore.t("game_logs.processResearch_1", { completedTech_name: completedTech.name }), "info");
+    get().addLog( i18nStore.t("game_logs.processResearch_2", { value: getTechnologyBonusesDescription(completedTech) }),
         "info",
     );
 
@@ -109,8 +109,7 @@ const handleResearchCompletion = (
         }));
         const expReward = CONTRACT_REWARDS.research.baseExp;
         giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
-        get().addLog(
-            `🤖 Исследование для задания завершено! +${reward}₢`,
+        get().addLog( i18nStore.t("game_logs.processResearch_3", { reward }),
             "info",
         );
         get().changeReputation("synthetic", 10);
@@ -120,8 +119,7 @@ const handleResearchCompletion = (
     const adjacent = getAdjacentTechs(techId);
     adjacent.forEach((adjTechId) => {
         if (!state.research.discoveredTechs.includes(adjTechId)) {
-            get().addLog(
-                `📖 Открыта технология: ${RESEARCH_TREE[adjTechId as TechnologyId].name}`,
+            get().addLog( i18nStore.t("game_logs.processResearch_4", { name: RESEARCH_TREE[adjTechId as TechnologyId].name }),
                 "info",
             );
         }

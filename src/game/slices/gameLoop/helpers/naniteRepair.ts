@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { RESEARCH_TREE } from "@/game/constants";
 import type { GameStore, SetState } from "@/game/types";
 
@@ -43,8 +44,7 @@ export const processNaniteRepair = (
     });
 
     if (totalRepaired > 0) {
-        get().addLog(
-            `🔧 Наниты отремонтировали модули (+${repairPercent}% за ход, +${totalRepaired} HP)`,
+        get().addLog( i18nStore.t("game_logs.naniteRepair_1", { repairPercent, totalRepaired }),
             "info",
         );
     }

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 import { calculateRepairCost } from "./calculateRepairCost";
@@ -20,7 +21,7 @@ export const repairShip = (set: SetState, get: () => GameStore): void => {
 
     // Проверка кредитов
     if (state.credits < cost) {
-        get().addLog("Недостаточно кредитов!", "error");
+        get().addLog( i18nStore.t("game_logs.repairShip_1"), "error");
         return;
     }
 
@@ -36,7 +37,7 @@ export const repairShip = (set: SetState, get: () => GameStore): void => {
         },
     }));
 
-    get().addLog(`Корабль отремонтирован за ${cost}₢`, "info");
+    get().addLog( i18nStore.t("game_logs.repairShip_2", { cost }), "info");
     playSound("upgrade");
     get().updateShipStats();
 };

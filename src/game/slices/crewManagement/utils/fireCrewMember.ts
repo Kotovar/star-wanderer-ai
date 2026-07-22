@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 
@@ -21,14 +22,14 @@ const validateFireCrew = (state: GameStore, crewId: number): FireValidation => {
     const crewMember = state.crew.find((c) => c.id === crewId);
 
     if (!crewMember) {
-        return { canFire: false, error: "Член экипажа не найден!" };
+        return { canFire: false, error: i18nStore.t("game_logs.err_crew_not_found") };
     }
 
     // Нельзя уволить последнего члена экипажа
     if (state.crew.length <= 1) {
         return {
             canFire: false,
-            error: "Нельзя уволить последнего члена экипажа!",
+            error: i18nStore.t("game_logs.err_last_crew"),
         };
     }
 
@@ -65,7 +66,7 @@ export const fireCrewMember = (
     }));
 
     if (crewMember) {
-        get().addLog(`${crewMember.name} уволен`, "warning");
+        get().addLog( i18nStore.t("game_logs.fireCrewMember_1", { crewMember_name: crewMember.name }), "warning");
         playSound("error");
     }
 };

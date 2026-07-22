@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, CrewMember, SetState } from "@/game/types";
 import { hireCrew as hireCrewAction } from "./utils";
 import { fireCrewMember as fireCrewMemberAction } from "./utils";
@@ -42,8 +43,7 @@ export const createCrewManagementSlice = (
         const survivor = get().pendingSurvivor;
         if (!survivor) return;
         set((s) => ({ crew: [...s.crew, survivor], pendingSurvivor: null }));
-        get().addLog(
-            `${survivor.name} принят на борт и присоединился к экипажу!`,
+        get().addLog( i18nStore.t("game_logs.createCrewManagementSlice_1", { survivor_name: survivor.name }),
             "info",
         );
     },
@@ -52,6 +52,6 @@ export const createCrewManagementSlice = (
         const survivor = get().pendingSurvivor;
         if (!survivor) return;
         set(() => ({ pendingSurvivor: null }));
-        get().addLog(`${survivor.name} отказано в посадке на борт.`, "warning");
+        get().addLog( i18nStore.t("game_logs.createCrewManagementSlice_2", { survivor_name: survivor.name }), "warning");
     },
 });

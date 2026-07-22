@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore, WeaponType } from "@/game/types";
 import { playSound } from "@/sounds";
 
@@ -29,13 +30,13 @@ export const removeWeapon = (
     const mod = state.ship.modules.find((m) => m.id === moduleId);
 
     if (!mod || mod.type !== "weaponbay") {
-        get().addLog("Модуль не найден или не является боевой палубой.", "info");
+        get().addLog( i18nStore.t("game_logs.removeWeapon_1"), "info");
         return;
     }
 
     const weapon = mod.weapons?.[weaponIndex];
     if (!weapon) {
-        get().addLog("Оружие в этом слоте не установлено.", "info");
+        get().addLog( i18nStore.t("game_logs.removeWeapon_2"), "info");
         return;
     }
 
@@ -56,8 +57,7 @@ export const removeWeapon = (
         };
     });
 
-    get().addLog(
-        `🔧 Снято: ${weaponType} (+${scrapValue}₢)`,
+    get().addLog( i18nStore.t("game_logs.removeWeapon_3", { weaponType, scrapValue }),
         "info",
     );
     playSound("shop");

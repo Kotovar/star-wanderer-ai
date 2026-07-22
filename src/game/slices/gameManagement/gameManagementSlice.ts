@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import { checkGameOver, checkVictory, triggerVictory, restartGame } from "./helpers";
 import {
@@ -42,7 +43,7 @@ export const createGameManagementSlice = (
     loadGame: () => {
         const saved = loadFromLocalStorage();
         if (!saved) {
-            get().addLog("Нет сохранённой игры", "warning");
+            get().addLog( i18nStore.t("game_logs.gameManagementSlice_1"), "warning");
             get().updateShipStats();
             return false;
         }
@@ -93,14 +94,14 @@ export const createGameManagementSlice = (
     saveToSlot: (slotId: ManualSlotId) => {
         const state = get();
         saveSlot(slotId, state);
-        get().addLog(`💾 Сохранено в слот ${slotId.replace("manual", "")}`, "info");
+        get().addLog( i18nStore.t("game_logs.gameManagementSlice_2", { value: slotId.replace("manual", "") }), "info");
     },
 
     /** Загрузить из любого слота */
     loadFromSlot: (slotId: SaveSlotId) => {
         const saved = loadSlot(slotId);
         if (!saved) {
-            get().addLog("Сохранение не найдено", "warning");
+            get().addLog( i18nStore.t("game_logs.gameManagementSlice_3"), "warning");
             return;
         }
 
@@ -145,8 +146,8 @@ export const createGameManagementSlice = (
         set({ ...saved });
         get().addLog(
             slotId === "auto"
-                ? "📂 Загружено автосохранение"
-                : `📂 Загружено сохранение ${slotId.replace("manual", "")}`,
+                ? i18nStore.t("game_logs.load_auto")
+                : i18nStore.t("game_logs.load_slot", { slot: slotId.replace("manual", "") }),
             "info",
         );
     },

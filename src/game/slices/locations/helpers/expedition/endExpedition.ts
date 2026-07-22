@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import { RACES } from "@/game/constants/races";
 import { collectExpeditionRewards } from "./collectExpeditionRewards";
@@ -52,8 +53,7 @@ export function endExpedition(set: SetState, get: () => GameStore): void {
         }),
     }));
 
-    get().addLog(
-        `😴 Участники экспедиции устали: ${EXPEDITION_FATIGUE_TURNS} ходов отдыха, -${EXPEDITION_HAPPINESS_PENALTY} морали.`,
+    get().addLog( i18nStore.t("game_logs.endExpedition_1", { EXPEDITION_FATIGUE_TURNS, EXPEDITION_HAPPINESS_PENALTY }),
         "warning",
     );
 
@@ -65,6 +65,6 @@ export function endExpedition(set: SetState, get: () => GameStore): void {
         ...patchLocation(s, planetId, { expeditionCompleted: true }),
     }));
 
-    get().addLog("🗺️ Экспедиция завершена.", "info");
+    get().addLog( i18nStore.t("game_logs.endExpedition_2"), "info");
     get().updateShipStats();
 }

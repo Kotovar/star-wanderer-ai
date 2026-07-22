@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState, ShopItem } from "@/game/types";
 import { WEAPON_TYPES } from "@/game/constants";
 import { playSound } from "@/sounds";
@@ -65,7 +66,7 @@ export const buyWeapon = (
     const weaponBayCount = getModulesFromState(state, "weaponbay").length;
 
     if (!weaponBayCount) {
-        get().addLog("Нет оружейной палубы!", "error");
+        get().addLog( i18nStore.t("game_logs.buyWeapon_1"), "error");
         return;
     }
 
@@ -73,13 +74,13 @@ export const buyWeapon = (
     const slot = findWeaponSlot(state);
 
     if (!slot) {
-        get().addLog("Нет слотов!", "error");
+        get().addLog( i18nStore.t("game_logs.buyWeapon_2"), "error");
         return;
     }
 
     const weaponType = item.weaponType;
     if (!weaponType) {
-        get().addLog("Не указан тип оружия!", "error");
+        get().addLog( i18nStore.t("game_logs.buyWeapon_3"), "error");
         return;
     }
 
@@ -107,6 +108,6 @@ export const buyWeapon = (
         },
     }));
 
-    get().addLog(`Установлено ${WEAPON_TYPES[weaponType].name}`, "info");
+    get().addLog( i18nStore.t("game_logs.buyWeapon_4", { name: WEAPON_TYPES[weaponType].name }), "info");
     playSound("shop");
 };

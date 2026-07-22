@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState, ShopItem } from "@/game/types";
 import { buyUpgrade } from "./helpers/buyUpgrade";
 import { buyModule } from "./helpers/buyModule";
@@ -27,7 +28,7 @@ export const createShopSlice = (
 
         // Проверка кредитов
         if (state.credits < item.price) {
-            get().addLog("Недостаточно кредитов!", "error");
+            get().addLog( i18nStore.t("game_logs.createShopSlice_1"), "error");
             return;
         }
 
@@ -44,7 +45,7 @@ export const createShopSlice = (
         // Проверка-stock для товаров (не для улучшений)
         if (item.type !== "upgrade") {
             if (bought >= item.stock) {
-                get().addLog("Товар распродан!", "error");
+                get().addLog( i18nStore.t("game_logs.createShopSlice_2"), "error");
                 return;
             }
         }
@@ -57,7 +58,7 @@ export const createShopSlice = (
         } else if (item.type === "weapon") {
             buyWeapon(set, get, item, stationId, inv, bought);
         } else {
-            get().addLog("Неизвестный тип товара!", "error");
+            get().addLog( i18nStore.t("game_logs.createShopSlice_3"), "error");
             return;
         }
 

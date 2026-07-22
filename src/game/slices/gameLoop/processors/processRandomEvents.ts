@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import { isModuleActive } from "@/game/modules";
 import type {
   GameState,
@@ -7,7 +8,6 @@ import type {
   RandomEventType,
   SetState,
 } from "@/game/types";
-import { store as i18nStore } from "@/lib/useTranslation";
 import { grantTimedEffect } from "@/game/effects/timedEffects";
 import {
   isRandomEventConsequenceDue,

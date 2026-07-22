@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type {
     GameStore,
     SetState,
@@ -279,7 +280,7 @@ export const createLocationsSlice = (
         const state = get();
         const total = PROBE_PRICE * count;
         if (state.credits < total) {
-            get().addLog("Недостаточно кредитов для покупки зонда.", "warning");
+            get().addLog( i18nStore.t("game_logs.createLocationsSlice_1"), "warning");
             return;
         }
         const currentCargo =
@@ -288,12 +289,11 @@ export const createLocationsSlice = (
             state.probes;
         const cargoCapacity = get().getCargoCapacity();
         if (currentCargo + count > cargoCapacity) {
-            get().addLog("Недостаточно места в грузовом отсеке!", "warning");
+            get().addLog( i18nStore.t("game_logs.createLocationsSlice_2"), "warning");
             return;
         }
         set((s) => ({ credits: s.credits - total, probes: s.probes + count }));
-        get().addLog(
-            `🔬 Куплено зондов: ${count} (−${total}₢). Всего: ${state.probes + count}`,
+        get().addLog( i18nStore.t("game_logs.createLocationsSlice_3", { count, total, count2: state.probes + count }),
             "info",
         );
     },
@@ -303,8 +303,7 @@ export const createLocationsSlice = (
             if (state.knownRaces.includes(raceId)) return state;
             const race = RACES[raceId];
             if (race) {
-                get().addLog(
-                    `Открыта новая раса: ${race.icon} ${race.pluralName}!`,
+                get().addLog( i18nStore.t("game_logs.createLocationsSlice_4", { icon: race.icon, pluralName: i18nStore.t(`races.${raceId}.plural`) }),
                     "info",
                 );
             }

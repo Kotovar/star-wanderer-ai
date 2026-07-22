@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type {
     GameState,
     GameStore,
@@ -46,8 +47,7 @@ function applyStatDrain(
     set((s) => ({
         crew: s.crew.map((c) => shiftHappiness(c, -value)),
     }));
-    get().addLog(
-        `⚠️ ${artifact.name}: -${value} счастья/морали экипажу`,
+    get().addLog( i18nStore.t("game_logs.processCursedArtifacts_1", { artifact_name: artifact.name, value }),
         "warning",
     );
 }
@@ -80,8 +80,7 @@ function applyModuleDamage(
         },
     }));
 
-    get().addLog(
-        `⚠️ ${artifact.name}: ${targetModule.name} повреждён на -${value}%`,
+    get().addLog( i18nStore.t("game_logs.processCursedArtifacts_2", { artifact_name: artifact.name, targetModule_name: targetModule.name, value }),
         "warning",
     );
 }
@@ -101,8 +100,7 @@ function applyCrewDesertion(
             set((s) => ({
                 crew: s.crew.filter((c) => c.id !== crewMember.id),
             }));
-            get().addLog(
-                `⚠️ ${artifact.name}: ${crewMember.name} покинул корабль`,
+            get().addLog( i18nStore.t("game_logs.processCursedArtifacts_3", { artifact_name: artifact.name, crewMember_name: crewMember.name }),
                 "warning",
             );
         }
@@ -123,8 +121,7 @@ function applyCrewMutation(
         if (Math.random() * 100 < value) {
             const mutationName = giveRandomMutation(crewMember, set);
             if (mutationName) {
-                get().addLog(
-                    `⚠️ ${artifact.name}: ${crewMember.name} мутировал (${mutationName})`,
+                get().addLog( i18nStore.t("game_logs.processCursedArtifacts_4", { artifact_name: artifact.name, crewMember_name: crewMember.name, mutationName }),
                     "warning",
                 );
             }

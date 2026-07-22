@@ -1,7 +1,7 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import { getCompletedVictoryObjective } from "@/game/constants/victoryObjectives";
 import { playSound } from "@/sounds";
-import { store as i18nStore } from "@/lib/useTranslation";
 import { getBestByProfession } from "@/game/crew";
 
 /**

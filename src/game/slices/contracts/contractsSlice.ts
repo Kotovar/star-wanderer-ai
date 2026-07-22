@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState, Contract } from "@/game/types";
 import {
     processScanContracts as processScanContractsFn,
@@ -84,7 +85,7 @@ export const createContractsSlice = (
         // Логируем сообщения только если есть контракты на сканирование
         if (result.logs) {
             result.logs.forEach((log) => {
-                get().addLog(`📡 Сканирование: ${log.message}`, log.type);
+                get().addLog( i18nStore.t("game_logs.contractsSlice_1", { message: log.message }), log.type);
             });
         }
 

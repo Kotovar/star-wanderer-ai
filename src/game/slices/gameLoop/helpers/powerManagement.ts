@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import {
     DEFAULT_MAX_HEALTH_MODULE,
     EMERGENCY_SHUTDOWN_DAMAGE,
@@ -87,8 +88,7 @@ const handlePowerDeficit = (
                 Object.assign(modules, result.modules);
                 remainingDeficit -= powerSaved;
                 disabledCount++;
-                get().addLog(
-                    `⚠️ ${priority.name} отключен (нехватка энергии, -${result.damage}❤️)`,
+                get().addLog( i18nStore.t("game_logs.powerManagement_1", { priority_name: priority.name, damage: result.damage }),
                     "warning",
                 );
             }
@@ -101,14 +101,12 @@ const handlePowerDeficit = (
         }));
         get().updateShipStats();
         const { currentPower, currentConsumption } = getPowerStatus(get);
-        get().addLog(
-            `⚡ Отключено модулей: ${disabledCount}. Доступно энергии: ${currentPower - currentConsumption}`,
+        get().addLog( i18nStore.t("game_logs.powerManagement_2", { disabledCount, currentConsumption: currentPower - currentConsumption }),
             "warning",
         );
     } else {
         const { currentPower, currentConsumption } = getPowerStatus(get);
-        get().addLog(
-            `⚡ КРИТИЧЕСКАЯ НЕХВАТКА ЭНЕРГИИ! Потребление: ${currentConsumption}, Генерация: ${currentPower}`,
+        get().addLog( i18nStore.t("game_logs.powerManagement_3", { currentConsumption, currentPower }),
             "error",
         );
     }
@@ -143,8 +141,7 @@ const handlePowerSurplus = (get: () => GameStore, set: SetStateFn): void => {
     get().updateShipStats();
     const { currentPower: newPower, currentConsumption: newConsumption } =
         getPowerStatus(get);
-    get().addLog(
-        `⚡ Включено модулей: ${disabledModules.length}. Баланс: ${newPower - newConsumption}`,
+    get().addLog( i18nStore.t("game_logs.powerManagement_4", { disabledModules_length: disabledModules.length, newConsumption: newPower - newConsumption }),
         "info",
     );
 };

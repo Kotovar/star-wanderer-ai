@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore } from "@/game/types";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
@@ -20,7 +21,7 @@ export function completeBattleContracts(
     );
     completedCombat.forEach((c) => {
         set((s) => ({ credits: s.credits + c.reward }));
-        get().addLog(`Задача выполнена! +${c.reward}₢`, "info");
+        get().addLog( i18nStore.t("game_logs.completeBattleContracts_1", { reward: c.reward }), "info");
         const rewardConfig = CONTRACT_REWARDS.combat;
         const expReward =
             rewardConfig.baseExp +
@@ -51,7 +52,7 @@ export function completeBattleContracts(
         raceCombat.forEach((c) => {
             if (remainingEnemies.length === 0) {
                 set((s) => ({ credits: s.credits + c.reward }));
-                get().addLog(`🦎 Дуэль чести завершена! +${c.reward}₢`, "info");
+                get().addLog( i18nStore.t("game_logs.completeBattleContracts_2", { reward: c.reward }), "info");
                 const rewardConfig = CONTRACT_REWARDS.combat;
                 const expReward =
                     rewardConfig.baseExp +
@@ -72,8 +73,7 @@ export function completeBattleContracts(
                     ),
                 }));
             } else {
-                get().addLog(
-                    `🦎 Осталось врагов в секторе: ${remainingEnemies.length}`,
+                get().addLog( i18nStore.t("game_logs.completeBattleContracts_3", { remainingEnemies_length: remainingEnemies.length }),
                     "info",
                 );
             }
@@ -89,7 +89,7 @@ export function completeBattleContracts(
     );
     completedBounty.forEach((c) => {
         set((s) => ({ credits: s.credits + c.reward }));
-        get().addLog(`Охота выполнена! +${c.reward}₢`, "info");
+        get().addLog( i18nStore.t("game_logs.completeBattleContracts_4", { reward: c.reward }), "info");
         const rewardConfig = CONTRACT_REWARDS.bounty;
         const expReward =
             rewardConfig.baseExp +
@@ -122,7 +122,7 @@ export function completeBattleContracts(
         }));
         const expReward = CONTRACT_REWARDS.mining.baseExp;
         giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
-        get().addLog(`Артефакт для задания найден! +${reward}₢`, "info");
+        get().addLog( i18nStore.t("game_logs.completeBattleContracts_5", { reward }), "info");
         if (miningContract.requiredRace) {
             get().changeReputation(miningContract.requiredRace, 10);
         }

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type {
     SetState,
     GameStore,
@@ -46,7 +47,7 @@ export const sendScoutingMission = (
     // Find the highest-level scout
     const scouts = state.crew.filter((c) => c.profession === "scout");
     if (scouts.length === 0) {
-        get().addLog("Нет разведчика!", "error");
+        get().addLog( i18nStore.t("game_logs.sendScoutingMission_1"), "error");
         return;
     }
     const scout = scouts.reduce((best, c) =>
@@ -111,8 +112,7 @@ export const sendScoutingMission = (
             const mutationName = giveRandomMutation(scout, set);
             if (mutationName) {
                 result.mutationName = mutationName;
-                get().addLog(
-                    `☣️ ${scout.name} заразился чужеродными организмами при разведке: ${mutationName}!`,
+                get().addLog( i18nStore.t("game_logs.sendScoutingMission_2", { scout_name: scout.name, mutationName }),
                     "error",
                 );
             }
@@ -153,11 +153,10 @@ export const sendScoutingMission = (
         const event =
             SCOUT_EVENTS[Math.floor(Math.random() * SCOUT_EVENTS.length)];
         set({ pendingScoutEvent: { planetId, eventId: event.id } });
-        get().addLog("🔦 Разведчик обнаружил нечто необычное...", "info");
+        get().addLog( i18nStore.t("game_logs.sendScoutingMission_3"), "info");
     }
 
-    get().addLog(
-        `Разведка завершена: ${newScoutedTimes}/${maxScoutAttempts}`,
+    get().addLog( i18nStore.t("game_logs.sendScoutingMission_4", { newScoutedTimes, maxScoutAttempts }),
         "info",
     );
     get().updateShipStats();
@@ -182,7 +181,7 @@ const applyScoutingResult = (
             applyTradeGoodReward(result.itemName, result.quantity ?? 1, scoutName, set, get);
             break;
         default:
-            get().addLog(`Разведка: ${scoutName} ничего не нашёл`, "info");
+            get().addLog( i18nStore.t("game_logs.sendScoutingMission_5", { scoutName }), "info");
     }
 };
 
@@ -198,7 +197,7 @@ const applyCreditReward = (
     if (value === undefined) return;
 
     set((s) => ({ credits: s.credits + value }));
-    get().addLog(`Разведка: ${scoutName} нашёл ресурсы! +${value}₢`, "info");
+    get().addLog( i18nStore.t("game_logs.sendScoutingMission_6", { scoutName, value }), "info");
 };
 
 /**
@@ -225,7 +224,7 @@ const applyTradeGoodReward = (
             tradeGoods: addTradeGood(s.ship.tradeGoods, goodId, quantity),
         },
     }));
-    get().addLog(`Разведка: ${scoutName} нашёл ${itemName} x${quantity}!`, "info");
+    get().addLog( i18nStore.t("game_logs.sendScoutingMission_7", { scoutName, itemName: i18nStore.t(`trade.goods.${goodId}`), quantity }), "info");
 };
 
 /**
@@ -256,8 +255,7 @@ const applyScoutingResources = (
 
     resources.forEach((res) => {
         const resourceData = RESEARCH_RESOURCES[res.type];
-        get().addLog(
-            `🔬 Разведка: обнаружены образцы ${resourceData.icon} ${resourceData.name} x${res.quantity}`,
+        get().addLog( i18nStore.t("game_logs.sendScoutingMission_8", { icon: resourceData.icon, resourceData_name: resourceData.name, quantity: res.quantity }),
             "info",
         );
     });

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import { planetHasFeature } from "@/game/planets";
 import { patchLocation } from "@/game/utils/patchLocation";
@@ -23,7 +24,7 @@ export const orbitalScan = (
             !m.manualDisabled,
     );
     if (!hasScanner) {
-        get().addLog("Требуется рабочий модуль сканера!", "error");
+        get().addLog( i18nStore.t("game_logs.orbitalScan_1"), "error");
         return;
     }
 
@@ -40,9 +41,7 @@ export const orbitalScan = (
     }));
 
     get().addLog(
-        blocked
-            ? "🌩️ Плотная ионосфера искажает сигнал — сканирование с орбиты невозможно."
-            : "📡 Орбитальное сканирование завершено: данные о поверхности получены.",
+        i18nStore.t(blocked ? "game_logs.orbital_blocked" : "game_logs.orbital_done"),
         blocked ? "warning" : "info",
     );
     get().updateShipStats();

@@ -1,3 +1,4 @@
+import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import { getActiveModules } from "@/game/modules/utils";
 import { XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants/races";
@@ -67,8 +68,7 @@ export const processRepairBay = (
     }));
 
     if (totalRepaired > 0) {
-        get().addLog(
-            `🔧 Ремонтные дроны восстановили ${targets.length} модул${targets.length === 1 ? "ь" : "и"} (+${totalRepaired} HP)`,
+        get().addLog( i18nStore.t("game_logs.repairBay_1", { targets_length: targets.length, totalRepaired }),
             "info",
         );
     }
