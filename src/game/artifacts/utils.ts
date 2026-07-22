@@ -21,38 +21,42 @@ export const getArchiveHintLocations = (
     sectors: Sector[],
     currentSectorId?: number,
 ): NonNullable<Artifact["hintedAt"]>[] => {
-    const bossSector = sectors
-        .filter((sector) =>
-            sector.locations.some(
-                (location) => location.type === "boss" && !location.bossDefeated,
-            ),
-        )
-        .sort((a, b) => a.danger - b.danger)[0];
+    const locations: NonNullable<Artifact["hintedAt"]>[] = [];
+    const usedSectorIds = new Set<number>();
+    const sortedSectors = [...sectors].sort((a, b) => a.danger - b.danger);
+
+    const bossSector = sortedSectors.find((sector) =>
+        sector.locations.some(
+            (location) => location.type === "boss" && !location.bossDefeated,
+        ),
+    );
     const bossLocation = bossSector?.locations.find(
         (location) => location.type === "boss" && !location.bossDefeated,
     );
-    const anomalySector = sectors
-        .filter((sector) =>
-            sector.locations.some((location) => location.type === "anomaly"),
-        )
-        .filter((sector) => sector.id !== currentSectorId)
-        .sort((a, b) => a.danger - b.danger)[0];
-    const anomalyLocation = anomalySector?.locations.find(
-        (location) => location.type === "anomaly",
-    );
-    const locations: NonNullable<Artifact["hintedAt"]>[] = [];
 
     if (bossSector && bossLocation) {
+        usedSectorIds.add(bossSector.id);
         locations.push({
             sectorName: bossSector.name,
             locationName: bossLocation.name,
             locationType: "boss",
         });
     }
-    if (anomalySector && anomalyLocation) {
+
+    for (const sector of sortedSectors) {
+        if (usedSectorIds.has(sector.id) || sector.id === currentSectorId) {
+            continue;
+        }
+
+        const anomaly = sector.locations.find(
+            (location) => location.type === "anomaly",
+        );
+        if (!anomaly) continue;
+
+        usedSectorIds.add(sector.id);
         locations.push({
-            sectorName: anomalySector.name,
-            locationName: anomalyLocation.name,
+            sectorName: sector.name,
+            locationName: anomaly.name,
             locationType: "anomaly",
         });
     }

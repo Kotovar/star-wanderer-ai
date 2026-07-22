@@ -1,6 +1,7 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
+import { formatContractDescription } from "@/game/contracts/formatContractDescription";
 
 /**
  * Отменяет контракт
@@ -28,7 +29,9 @@ export const cancelContract = (
     set((s) => ({
         activeContracts: s.activeContracts.filter((c) => c.id !== contractId),
     }));
-    get().addLog( i18nStore.t("game_logs.cancelContract_1", { value: i18nStore.t(contract.desc) }), "warning");
+    get().addLog( i18nStore.t("game_logs.cancelContract_1", {
+        value: formatContractDescription(contract, i18nStore.t.bind(i18nStore)),
+    }), "warning");
 
     if (contract.isRaceQuest && contract.requiredRace) {
         get().changeReputation(contract.requiredRace, -5);

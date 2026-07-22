@@ -81,12 +81,9 @@ export function revealExpeditionTile(
         i === tileIndex ? { ...t, revealed: true } : t,
     );
     const newApRemaining = expedition.apRemaining - stepApCost;
-    const newRevealedCount = expedition.revealedCount + 1;
+    const newRevealedCount = newGrid.filter((t) => t.revealed).length;
 
     // Update grid/ap and track expedition_survey contract progress.
-    // В контракт идут только значимые открытия: руины, лаборатории, артефакты
-    const isSignificantDiscovery =
-        tile.type === "ruins" || tile.type === "lab" || tile.type === "artifact";
     const expeditionPlanetId = expedition.planetId;
     // Контракты, которые ещё не были выполнены до этого вскрытия
     const notDoneBefore = new Set(
@@ -102,12 +99,11 @@ export function revealExpeditionTile(
     set((s) => {
         const updatedContracts = s.activeContracts.map((c) => {
             if (
-                isSignificantDiscovery &&
                 c.type === "expedition_survey" &&
                 c.targetPlanetId === expeditionPlanetId &&
                 !c.expeditionDone
             ) {
-                const newTiles = (c.tilesRevealed ?? 0) + 1;
+                const newTiles = newRevealedCount;
                 const done = newTiles >= (c.requiredDiscoveries ?? 1);
                 return { ...c, tilesRevealed: newTiles, expeditionDone: done };
             }

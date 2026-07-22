@@ -18,6 +18,12 @@ import { useTranslation } from "@/lib/useTranslation";
 import { RaceSprite } from "./RaceSprite";
 import { ContractReputationImpact } from "./ContractReputationImpact";
 import { getContractReputationImpact } from "@/game/reputation/utils";
+import { getContractTurnsRemaining } from "@/game/contracts/contractDeadline";
+
+type TFunction = (
+    key: string,
+    params?: Record<string, string | number>,
+) => string;
 
 function stripLeadingEmoji(text: string): string {
     return text.replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u, "");
@@ -52,10 +58,37 @@ function ContractMetric({ label, value }: { label: string; value: number }) {
     );
 }
 
+function DeadlineBadge({
+    contract,
+    currentTurn,
+    t,
+}: {
+    contract: Contract;
+    currentTurn: number;
+    t: TFunction;
+}) {
+    const turnsRemaining = getContractTurnsRemaining(contract, currentTurn);
+    if (turnsRemaining === null) return null;
+
+    const urgent = turnsRemaining <= 2;
+    return (
+        <span
+            className={`inline-flex shrink-0 items-center border px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${
+                urgent
+                    ? "border-[#ff444488] bg-[rgba(255,68,68,0.1)] text-[#ff7777]"
+                    : "border-[#ffb00077] bg-[rgba(255,176,0,0.08)] text-accent"
+            }`}
+        >
+            ⏳ {t("contracts.turns_left", { count: turnsRemaining })}
+        </span>
+    );
+}
+
 export function ContractsList() {
     const activeContracts = useGameStore((s) => s.activeContracts);
     const completedContractIds = useGameStore((s) => s.completedContractIds);
     const cancelContract = useGameStore((s) => s.cancelContract);
+    const turn = useGameStore((s) => s.turn);
     const get = useGameStore.getState;
     const { t } = useTranslation();
     const [selectedContract, setSelectedContract] = useState<Contract | null>(
@@ -820,11 +853,18 @@ export function ContractsList() {
                                         </div>
                                     </div>
                                 </div>
-                                {ready && (
-                                    <span className="shrink-0 text-[10px] font-bold text-[#050810] bg-[#00ff41] px-1.5 py-0.5 rounded-sm">
-                                        {t("contracts.ready_badge")}
-                                    </span>
-                                )}
+                                <div className="flex shrink-0 flex-wrap justify-end gap-1">
+                                    <DeadlineBadge
+                                        contract={contract}
+                                        currentTurn={turn}
+                                        t={t}
+                                    />
+                                    {ready && (
+                                        <span className="text-[10px] font-bold text-[#050810] bg-[#00ff41] px-1.5 py-0.5 rounded-sm">
+                                            {t("contracts.ready_badge")}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                             <div className="pl-1 text-[11px] mt-1 text-[#99aa99] leading-snug">
                                 {statusText}
@@ -935,6 +975,12 @@ export function ContractsList() {
 
                                     <ContractReputationImpact
                                         contract={selectedContract}
+                                    />
+
+                                    <DeadlineBadge
+                                        contract={selectedContract}
+                                        currentTurn={turn}
+                                        t={t}
                                     />
 
                                     <div className="flex items-center justify-between border border-[#ffb00044] bg-[rgba(255,176,0,0.06)] px-3 py-2">

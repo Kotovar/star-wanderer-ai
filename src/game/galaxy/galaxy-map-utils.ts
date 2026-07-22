@@ -15,6 +15,18 @@ type TierDetails = {
     name: string;
 };
 
+export type GalaxyMapObjectiveKind =
+    | "contract"
+    | "artifact"
+    | "boss"
+    | "final";
+
+export type GalaxyMapObjective = {
+    sectorId: number;
+    kind: GalaxyMapObjectiveKind;
+    label: string;
+};
+
 // Tier colors - names are now translated via locale files
 const TIER_COLORS: Record<GalaxyTierAll, TierDetails> = {
     1: {
@@ -108,6 +120,96 @@ export function getSectorRadius(maxRadius: number, tier: number): number {
     return maxRadius * 0.9;
 }
 
+const OBJECTIVE_COLORS: Record<GalaxyMapObjectiveKind, string> = {
+    contract: "#ffb000",
+    artifact: "#00d4ff",
+    boss: "#ff0040",
+    final: "#ff00ff",
+};
+
+/** Рисует компактные маркеры уже известных целей рядом со звёздными системами. */
+export function drawGalaxyObjectiveMarkers(
+    ctx: CanvasRenderingContext2D,
+    sectors: Sector[],
+    objectives: GalaxyMapObjective[],
+    centerX: number,
+    centerY: number,
+    maxRadius: number,
+    canvasWidth: number,
+    canvasHeight: number,
+    time: number = 0,
+) {
+    if (objectives.length === 0) return;
+
+    const objectiveKindsBySector = new Map<
+        number,
+        GalaxyMapObjectiveKind[]
+    >();
+    for (const objective of objectives) {
+        const kinds = objectiveKindsBySector.get(objective.sectorId) ?? [];
+        if (!kinds.includes(objective.kind)) {
+            kinds.push(objective.kind);
+            objectiveKindsBySector.set(objective.sectorId, kinds);
+        }
+    }
+
+    const isMobile = Math.min(canvasWidth, canvasHeight) < 450;
+    const markerSize = isMobile ? 3 : 5;
+    const markerOffset = isMobile ? 12 : 21;
+
+    for (const sector of sectors) {
+        const kinds = objectiveKindsBySector.get(sector.id);
+        if (!kinds || sector.mapAngle === undefined) continue;
+
+        const radius = getSectorRadius(maxRadius, sector.tier);
+        const x = centerX + Math.cos(sector.mapAngle) * radius;
+        const y = centerY + Math.sin(sector.mapAngle) * radius;
+
+        kinds.forEach((kind, index) => {
+            const angle =
+                Math.PI / 2 + (index - (kinds.length - 1) / 2) * 0.65;
+            const markerX = x + Math.cos(angle) * markerOffset;
+            const markerY = y + Math.sin(angle) * markerOffset;
+            const pulse = 1 + Math.sin(time * 0.003 + index) * 0.12;
+            const size = markerSize * pulse;
+
+            ctx.save();
+            ctx.translate(markerX, markerY);
+            ctx.strokeStyle = OBJECTIVE_COLORS[kind];
+            ctx.fillStyle = "#050810";
+            ctx.lineWidth = isMobile ? 1 : 1.5;
+            ctx.shadowColor = OBJECTIVE_COLORS[kind];
+            ctx.shadowBlur = isMobile ? 3 : 7;
+
+            ctx.beginPath();
+            if (kind === "contract") {
+                ctx.moveTo(0, -size);
+                ctx.lineTo(size, size);
+                ctx.lineTo(-size, size);
+                ctx.closePath();
+            } else if (kind === "artifact") {
+                ctx.moveTo(0, -size);
+                ctx.lineTo(size, 0);
+                ctx.lineTo(0, size);
+                ctx.lineTo(-size, 0);
+                ctx.closePath();
+            } else if (kind === "boss") {
+                ctx.moveTo(-size, 0);
+                ctx.lineTo(size, 0);
+                ctx.moveTo(0, -size);
+                ctx.lineTo(0, size);
+            } else {
+                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                ctx.moveTo(-size * 0.45, 0);
+                ctx.lineTo(size * 0.45, 0);
+            }
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        });
+    }
+}
+
 // Draw static legend (fuel, engine, captain info) - drawn BEFORE transform
 export function drawStaticLegend(
     ctx: CanvasRenderingContext2D,
@@ -119,7 +221,7 @@ export function drawStaticLegend(
     canvasHeight: number,
 ) {
     const legendX = 10;
-    const legendY = 48;
+    const legendY = 8;
     const engineLevel = getEngineLevel(modules);
 
     const minDim = Math.min(canvasWidth, canvasHeight);
@@ -127,8 +229,10 @@ export function drawStaticLegend(
     const fontSize = Math.max(10, Math.round(13 * scale));
     const lineH = Math.round(fontSize * 1.5);
 
+    ctx.save();
     ctx.font = `${fontSize}px Share Tech Mono`;
     ctx.textAlign = "left";
+    ctx.textBaseline = "top";
 
     // Safeguard against NaN or undefined fuel
     const displayFuel = fuel !== undefined && !isNaN(fuel) ? fuel : 0;
@@ -136,25 +240,26 @@ export function drawStaticLegend(
     ctx.fillText(
         `${t("galaxy.legend.fuel")}: ${displayFuel}`,
         legendX,
-        legendY + lineH,
+        legendY,
     );
 
     ctx.fillStyle = "#00ff41";
     ctx.fillText(
         `${t("galaxy.legend.engine")}: Ур.${engineLevel}`,
         legendX,
-        legendY + lineH * 2,
+        legendY + lineH,
     );
 
     ctx.fillStyle = "#70808a";
     ctx.fillText(
         `${t("galaxy.legend.captain")}: Ур.${captainLevel}`,
         legendX,
-        legendY + lineH * 3,
+        legendY + lineH * 2,
     );
-    ctx.fillText(t("galaxy.legend.sector_info_1"), legendX, legendY + lineH * 4.3);
-    ctx.fillText(t("galaxy.legend.sector_info_2"), legendX, legendY + lineH * 5.3);
-    ctx.fillText(t("galaxy.legend.sector_info_3"), legendX, legendY + lineH * 6.3);
+    ctx.fillText(t("galaxy.legend.sector_info_1"), legendX, legendY + lineH * 3.3);
+    ctx.fillText(t("galaxy.legend.sector_info_2"), legendX, legendY + lineH * 4.3);
+    ctx.fillText(t("galaxy.legend.sector_info_3"), legendX, legendY + lineH * 5.3);
+    ctx.restore();
 }
 
 // Draw a sector on the galaxy map

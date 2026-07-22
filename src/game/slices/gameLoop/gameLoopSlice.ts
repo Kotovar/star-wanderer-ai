@@ -108,14 +108,14 @@ export const createGameLoopSlice = (
         // Проверка конца игры после ухода экипажа
         get().checkGameOver();
 
-        // Проверка истечения расовых контрактов
+        // Проверка истечения срочных контрактов
         checkContractExpiry(set, get);
 
         // Тик рынка: дрейф цен и пополнение складов станций
         processMarketTick(set, get);
 
         // Путешествия
-        processTravel(state, set, get);
+        processTravel(set, get);
 
         // Случайные события
         processors.processRandomEvents(state, set, get);

@@ -1,7 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import {
     ARTIFACT_TYPES,
-    CONTRACT_REWARDS,
     RESEARCH_RESOURCES,
     MUTATION_CHANCES,
 } from "@/game/constants";
@@ -15,7 +14,6 @@ import {
     getBossLootResources,
 } from "@/game/research/utils";
 import {
-    giveCrewExperience,
     getActiveAssignment,
     giveRandomMutation,
 } from "@/game/crew";
@@ -145,32 +143,6 @@ export function handleVictory(
                 });
             });
         }
-    }
-
-    // Complete mining contract (Crystalline race quest - find artifact after boss defeat)
-    const miningContract = get().activeContracts.find(
-        (c) => c.type === "mining" && c.isRaceQuest && c.bossDefeated,
-    );
-    if (miningContract) {
-        set((s) => ({
-            credits: s.credits + (miningContract.reward || 0),
-        }));
-        get().addLog( i18nStore.t("game_logs.playerVictory_5", { desc: miningContract.desc, reward: miningContract.reward }),
-            "info",
-        );
-        giveCrewExperience(
-            CONTRACT_REWARDS.mining.baseExp,
-            `Экипаж получил опыт: +${CONTRACT_REWARDS.mining.baseExp} ед.`,
-        );
-        set((s) => ({
-            completedContractIds: [
-                ...s.completedContractIds,
-                miningContract.id,
-            ],
-            activeContracts: s.activeContracts.filter(
-                (ac) => ac.id !== miningContract.id,
-            ),
-        }));
     }
 
     // Check for module drop

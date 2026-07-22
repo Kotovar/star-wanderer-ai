@@ -4,7 +4,7 @@ import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
 
 /**
- * Completes combat, bounty and mining contracts after battle victory
+ * Completes combat and bounty contracts after battle victory
  */
 export function completeBattleContracts(
     set: (fn: (s: GameState) => void) => void,
@@ -13,12 +13,14 @@ export function completeBattleContracts(
     isBoss: boolean,
 ) {
     // Standard combat contracts (defeat any enemy in target sector)
-    const completedCombat = get().activeContracts.filter(
-        (c) =>
-            c.type === "combat" &&
-            !c.isRaceQuest &&
-            c.sectorId === get().currentSector?.id,
-    );
+    const completedCombat = isBoss
+        ? []
+        : get().activeContracts.filter(
+              (c) =>
+                  c.type === "combat" &&
+                  !c.isRaceQuest &&
+                  c.sectorId === get().currentSector?.id,
+          );
     completedCombat.forEach((c) => {
         set((s) => ({ credits: s.credits + c.reward }));
         get().addLog( i18nStore.t("game_logs.completeBattleContracts_1", { reward: c.reward }), "info");
@@ -81,12 +83,14 @@ export function completeBattleContracts(
     }
 
     // Bounty contracts (defeat enemy with required threat in target sector)
-    const completedBounty = get().activeContracts.filter(
-        (c) =>
-            c.type === "bounty" &&
-            c.targetSector === get().currentSector?.id &&
-            enemyThreat >= (c.targetThreat ?? 1),
-    );
+    const completedBounty = isBoss
+        ? []
+        : get().activeContracts.filter(
+              (c) =>
+                  c.type === "bounty" &&
+                  c.targetSector === get().currentSector?.id &&
+                  enemyThreat >= (c.targetThreat ?? 1),
+          );
     completedBounty.forEach((c) => {
         set((s) => ({ credits: s.credits + c.reward }));
         get().addLog( i18nStore.t("game_logs.completeBattleContracts_4", { reward: c.reward }), "info");
@@ -103,28 +107,4 @@ export function completeBattleContracts(
             activeContracts: s.activeContracts.filter((ac) => ac.id !== c.id),
         }));
     });
-
-    // Mining contract (Crystalline race quest - boss defeat completes the quest)
-    const miningContract = get().activeContracts.find(
-        (c) => c.type === "mining" && c.isRaceQuest,
-    );
-    if (miningContract && isBoss) {
-        const reward = miningContract.reward || 0;
-        set((s) => ({
-            credits: s.credits + reward,
-            completedContractIds: [
-                ...s.completedContractIds,
-                miningContract.id,
-            ],
-            activeContracts: s.activeContracts.filter(
-                (ac) => ac.id !== miningContract.id,
-            ),
-        }));
-        const expReward = CONTRACT_REWARDS.mining.baseExp;
-        giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
-        get().addLog( i18nStore.t("game_logs.completeBattleContracts_5", { reward }), "info");
-        if (miningContract.requiredRace) {
-            get().changeReputation(miningContract.requiredRace, 10);
-        }
-    }
 }

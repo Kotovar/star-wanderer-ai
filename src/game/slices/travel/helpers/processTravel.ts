@@ -651,7 +651,6 @@ export const applyNeutronRadiation = (
  * @param get - Функция получения состояния
  */
 export const processTravel = (
-    state: GameState,
     set: SetState,
     get: () => GameStore,
 ): void => {
@@ -707,8 +706,9 @@ export const processTravel = (
     // Прибытие в сектор назначения
     if (nextTurnsLeft <= 0) {
         const destinationSector = traveling.destination;
+        const currentState = get();
 
-        const patrolContracts = state.activeContracts.filter(
+        const patrolContracts = currentState.activeContracts.filter(
             (c) =>
                 c.type === "patrol" &&
                 c.isRaceQuest &&
@@ -719,7 +719,7 @@ export const processTravel = (
         const patrolResult = handlePatrolContracts(
             patrolContracts,
             destinationSector,
-            state,
+            currentState,
             set,
             get,
         );

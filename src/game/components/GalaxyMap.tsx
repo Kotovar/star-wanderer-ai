@@ -1,15 +1,24 @@
 "use client";
 
-import { useRef, useEffect, useState, useCallback, useSyncExternalStore } from "react";
+import {
+    useRef,
+    useEffect,
+    useState,
+    useCallback,
+    useMemo,
+    useSyncExternalStore,
+} from "react";
 import { useGameStore } from "../store";
 import { useTranslation } from "@/lib/useTranslation";
 import {
     canAccessTier,
     drawStaticLegend,
     drawSector,
+    drawGalaxyObjectiveMarkers,
     drawTierRings,
     canSeeTier4,
     getSectorRadius,
+    type GalaxyMapObjective,
 } from "@/game/galaxy/galaxy-map-utils";
 import { getBestByProfession } from "@/game/crew";
 import { getActiveModule } from "@/game/modules/utils";
@@ -26,6 +35,7 @@ import {
 } from "@/game/slices/travel/helpers";
 import { getSectorReadiness } from "@/game/progression/sectorReadiness";
 import { setupHiDPICanvas } from "./canvas-utils";
+import { getGalaxyMapObjectives } from "./galaxyMapObjectives";
 import { useMapZoomPan, DRAG_THRESHOLD } from "./useMapZoomPan";
 
 // Animation constants
@@ -129,6 +139,23 @@ function generateCosmicParticles() {
 }
 
 const STAR_TYPES = STAR_SPRITE_ORDER;
+
+const OBJECTIVE_PRIORITY: Record<GalaxyMapObjective["kind"], number> = {
+    final: 0,
+    boss: 1,
+    artifact: 2,
+    contract: 3,
+};
+
+const OBJECTIVE_MARKERS: Record<
+    GalaxyMapObjective["kind"],
+    { icon: string; color: string }
+> = {
+    contract: { icon: "▲", color: "#ffb000" },
+    artifact: { icon: "◆", color: "#00d4ff" },
+    boss: { icon: "✚", color: "#ff0040" },
+    final: { icon: "◎", color: "#ff00ff" },
+};
 
 function GalaxyStarIcon({ type }: { type: (typeof STAR_TYPES)[number] }) {
     return (
@@ -243,6 +270,64 @@ export function GalaxyMap() {
     );
     const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
     const scanRange = useGameStore((s) => getEffectiveScanRange(s));
+    const activeContracts = useGameStore((s) => s.activeContracts);
+    const completedLocations = useGameStore((s) => s.completedLocations);
+    const bossesVisible = useGameStore((s) => s.canScanObject("boss"));
+    const canSeeT4 = canSeeTier4(modules, artifacts, scanRange);
+    const mapObjectives = useMemo(
+        () =>
+            getGalaxyMapObjectives({
+                sectors,
+                activeContracts,
+                artifacts,
+                completedLocations,
+                bossesVisible,
+            }),
+        [
+            activeContracts,
+            artifacts,
+            bossesVisible,
+            completedLocations,
+            sectors,
+        ],
+    );
+    const visibleMapObjectives = useMemo(() => {
+        const visibleSectorIds = new Set(
+            sectors
+                .filter((sector) => sector.tier !== 4 || canSeeT4)
+                .map((sector) => sector.id),
+        );
+        return mapObjectives.filter((objective) =>
+            visibleSectorIds.has(objective.sectorId),
+        );
+    }, [canSeeT4, mapObjectives, sectors]);
+    const objectiveTargets = useMemo(() => {
+        const sectorsById = new Map(sectors.map((sector) => [sector.id, sector]));
+        const objectiveBySector = new Map<number, GalaxyMapObjective>();
+
+        for (const objective of visibleMapObjectives) {
+            const current = objectiveBySector.get(objective.sectorId);
+            if (
+                !current ||
+                OBJECTIVE_PRIORITY[objective.kind] <
+                    OBJECTIVE_PRIORITY[current.kind]
+            ) {
+                objectiveBySector.set(objective.sectorId, objective);
+            }
+        }
+
+        return [...objectiveBySector.values()]
+            .flatMap((objective) => {
+                const sector = sectorsById.get(objective.sectorId);
+                return sector ? [{ objective, sector }] : [];
+            })
+            .sort(
+                (a, b) =>
+                    OBJECTIVE_PRIORITY[a.objective.kind] -
+                        OBJECTIVE_PRIORITY[b.objective.kind] ||
+                    a.sector.tier - b.sector.tier,
+            );
+    }, [sectors, visibleMapObjectives]);
 
     useEffect(() => {
         const image = new Image();
@@ -479,6 +564,17 @@ export function GalaxyMap() {
             starSpriteImageRef.current,
             markerTime,
         );
+        drawGalaxyObjectiveMarkers(
+            ctx,
+            sectors,
+            visibleMapObjectives,
+            centerX,
+            centerY,
+            baseMaxRadius,
+            width,
+            height,
+            markerTime,
+        );
 
         ctx.restore();
     }, [
@@ -498,6 +594,7 @@ export function GalaxyMap() {
         sectors,
         t,
         updateSectorPosition,
+        visibleMapObjectives,
         zoom,
     ]);
 
@@ -957,6 +1054,62 @@ export function GalaxyMap() {
                     </div>
                 </div>
             )}
+            {objectiveTargets.length > 0 && (
+                <details className="absolute top-14 right-2 z-20 max-w-[calc(100vw-1rem)] text-xs text-[#dfe8ef]">
+                    <summary
+                        aria-label={t("galaxy.legend.markers_section")}
+                        className="cursor-pointer border border-ring bg-[rgba(5,8,16,0.88)] px-2 py-1 font-['Orbitron'] text-[10px] text-ring shadow-[0_0_14px_rgba(0,212,255,0.15)]"
+                    >
+                        ⌖ {objectiveTargets.length}
+                    </summary>
+                    <div className="mt-1 max-h-[38dvh] min-w-44 overflow-y-auto border border-ring bg-[rgba(5,8,16,0.94)] p-1 shadow-[0_0_18px_rgba(0,212,255,0.12)]">
+                        {objectiveTargets.map(({ objective, sector }) => {
+                            const marker = OBJECTIVE_MARKERS[objective.kind];
+                            const routeLabel = t("route_dialog.title", {
+                                sector: sector.name,
+                            });
+
+                            return (
+                                <button
+                                    key={sector.id}
+                                    type="button"
+                                    onClick={() =>
+                                        startTravelTo(
+                                            sector.id,
+                                            sector.name,
+                                            sector.tier,
+                                        )
+                                    }
+                                    aria-label={routeLabel}
+                                    title={routeLabel}
+                                    className="flex w-full items-center gap-2 border-b border-[#00d4ff22] px-2 py-1.5 text-left last:border-b-0 hover:bg-[rgba(0,212,255,0.12)]"
+                                >
+                                    <span
+                                        aria-hidden="true"
+                                        className="font-bold"
+                                        style={{ color: marker.color }}
+                                    >
+                                        {marker.icon}
+                                    </span>
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block truncate text-[#dfe8ef]">
+                                            {sector.name}
+                                        </span>
+                                        {objective.label !== sector.name && (
+                                            <span className="block truncate text-[10px] text-[#81909a]">
+                                                {objective.label}
+                                            </span>
+                                        )}
+                                    </span>
+                                    <span aria-hidden="true" className="text-ring">
+                                        →
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </details>
+            )}
             <canvas
                 ref={canvasRef}
                 className="radar-canvas cursor-grab w-full h-full touch-none"
@@ -1071,6 +1224,14 @@ export function GalaxyMap() {
                                                 style={{ backgroundImage: "url('/assets/ship.webp')" }}
                                             />
                                             <span>{t("galaxy.legend.current_sector")}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span style={{ color: "#ffb000" }} className="font-mono font-bold">▲</span>
+                                            <span>{t("mobile_nav.contracts")}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span style={{ color: "#00d4ff" }} className="font-mono font-bold">◆</span>
+                                            <span>{t("game.artifacts")}</span>
                                         </div>
                                     </div>
                                 </div>

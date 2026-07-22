@@ -1,4 +1,5 @@
 import { CURRENT_STATE_VERSION } from "@/game/constants/version";
+import { getArchiveHintLocations } from "@/game/artifacts/utils";
 import { generateSpaceMonster } from "@/game/galaxy/generate";
 import { assignGridPositions } from "@/game/sectorGrid";
 import type { GameState, Location, Sector } from "@/game/types";
@@ -95,6 +96,66 @@ const migrations: Record<number, Migration> = {
       completedLocations: state.completedLocations.filter(
         (id) => !legacyPactIds.has(id),
       ),
+    };
+  },
+  4: (raw) => {
+    const state = raw as Record<string, unknown>;
+    return {
+      ...state,
+      stateVersion: 5,
+      completedVictoryObjectiveIds: [],
+    };
+  },
+  5: (raw) => {
+    const state = raw as GameState;
+    const locations = getArchiveHintLocations(
+      state.galaxy.sectors,
+      state.currentSector?.id,
+    );
+    let index = 0;
+
+    return {
+      ...state,
+      stateVersion: 6,
+      artifacts: state.artifacts.map((artifact) => {
+        if (
+          !artifact.hinted ||
+          artifact.discovered ||
+          artifact.hintSource !== "archives"
+        ) {
+          return artifact;
+        }
+
+        const hintedAt = locations[index++];
+        return hintedAt ? { ...artifact, hintedAt } : artifact;
+      }),
+    };
+  },
+  6: (raw) => {
+    const state = raw as GameState;
+    const expedition = state.activeExpedition;
+    if (!expedition) return { ...state, stateVersion: 7 };
+
+    const revealedCount = expedition.grid.filter((tile) => tile.revealed).length;
+    return {
+      ...state,
+      stateVersion: 7,
+      activeExpedition: { ...expedition, revealedCount },
+      activeContracts: state.activeContracts.map((contract) => {
+        if (
+          contract.type !== "expedition_survey" ||
+          contract.targetPlanetId !== expedition.planetId
+        ) {
+          return contract;
+        }
+
+        return {
+          ...contract,
+          tilesRevealed: revealedCount,
+          expeditionDone:
+            revealedCount >= (contract.requiredDiscoveries ?? 1),
+        };
+      }),
     };
   },
 };

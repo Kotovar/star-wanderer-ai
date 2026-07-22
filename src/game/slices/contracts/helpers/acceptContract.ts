@@ -8,6 +8,7 @@ import { getActiveModule } from "@/game/modules";
 import { getCargoCapacity } from "@/game/slices/ship/helpers/getCargoCapacity";
 import { isRaceContractAvailable } from "@/game/reputation/utils";
 import { isContractTargetAvailable } from "@/game/contracts/targetAvailability";
+import { formatContractDescription } from "@/game/contracts/formatContractDescription";
 
 /**
  * Принимает контракт
@@ -100,8 +101,9 @@ export const acceptContract = (
             { ...contract, acceptedAt: s.turn },
         ],
     }));
-    // desc расовых квестов — ключ перевода; t() вернёт строку как есть, если это не ключ
-    get().addLog( i18nStore.t("game_logs.acceptContract_7", { value: i18nStore.t(contract.desc) }), "info");
+    get().addLog( i18nStore.t("game_logs.acceptContract_7", {
+        value: formatContractDescription(contract, i18nStore.t.bind(i18nStore)),
+    }), "info");
 
     const reputationImpact = getContractReputationImpact(contract);
     if (reputationImpact.length > 1) {

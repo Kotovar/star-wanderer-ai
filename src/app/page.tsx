@@ -45,6 +45,7 @@ import { StartMenu } from "@/game/components/StartMenu";
 import { useTranslation } from "@/lib/useTranslation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useIsMobile } from "@/game/hooks/useIsMobile";
+import { getContractTurnsRemaining } from "@/game/contracts/contractDeadline";
 
 type LeftTab =
   | "ship"
@@ -94,6 +95,13 @@ export default function Home() {
   const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
   const setSoundEnabled = useGameStore((s) => s.setSoundEnabled);
   const gameMode = useGameStore((s) => s.gameMode);
+  const log = useGameStore((s) => s.log);
+  const hasUrgentContract = useGameStore((s) =>
+    s.activeContracts.some((contract) => {
+      const turnsRemaining = getContractTurnsRemaining(contract, s.turn);
+      return turnsRemaining !== null && turnsRemaining <= 2;
+    }),
+  );
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<LeftTab>("ship");
   const [shipSubTab, setShipSubTab] = useState<ShipSubTab>("layout");
@@ -101,6 +109,17 @@ export default function Home() {
   // Скрываем окно создания игры, пока проигрывается интро-анимация титульного экрана
   const [setupReady, setSetupReady] = useState(false);
   const [newGameOpen, setNewGameOpen] = useState(false);
+  const [acknowledgedLogEntry, setAcknowledgedLogEntry] = useState(
+    () => log[0] ?? null,
+  );
+  const acknowledgedLogIndex = acknowledgedLogEntry
+    ? log.indexOf(acknowledgedLogEntry)
+    : -1;
+  const unreadLogEntries =
+    acknowledgedLogIndex === -1 ? log : log.slice(0, acknowledgedLogIndex);
+  const hasLogAlert = unreadLogEntries.some(
+    (entry) => entry.type === "warning" || entry.type === "error",
+  );
 
   useEffect(() => {
     preloadModuleArt();
@@ -164,6 +183,16 @@ export default function Home() {
     return () => window.removeEventListener("sw:showTutorial", handler);
   }, []);
 
+  useEffect(() => {
+    const handler = () => {
+      setActiveTab("progress");
+      setMobileShowMap(false);
+      setMoreOpen(false);
+    };
+    window.addEventListener("sw:showCampaignProgress", handler);
+    return () => window.removeEventListener("sw:showCampaignProgress", handler);
+  }, []);
+
   const isTitleSetup = phase === "title_setup";
 
   // Показываем окно создания игры только после завершения интро-анимации
@@ -197,6 +226,13 @@ export default function Home() {
     { id: "blueprints", icon: "📐", label: t("ship.craft") },
     { id: "log", icon: "📜", label: t("ship.event_log") },
   ];
+
+  const selectTab = (tab: LeftTab) => {
+    setActiveTab(tab);
+    if (tab === "log") {
+      setAcknowledgedLogEntry(log[0] ?? null);
+    }
+  };
 
   // ── Содержимое вкладок управления (переиспользуется десктопом и мобильным) ──
   const renderManagementContent = () => (
@@ -288,12 +324,13 @@ export default function Home() {
                   {leftTabs.map((tab, idx) => {
                     const isActive = activeTab === tab.id;
                     const hasAlert =
-                      tab.id === "ship" &&
-                      moduleMovedThisTurn;
+                      (tab.id === "ship" && moduleMovedThisTurn) ||
+                      (tab.id === "contracts" && hasUrgentContract) ||
+                      (tab.id === "log" && hasLogAlert);
                     return (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
+                        onClick={() => selectTab(tab.id)}
                         title={tab.label}
                         className={`relative flex-1 flex flex-col items-center justify-center py-2.5 min-h-11 gap-0.5 text-[10px] font-['Orbitron'] font-bold transition-all duration-150 cursor-pointer select-none
                                                 ${idx < leftTabs.length - 1 ? "border-r border-[#1a3320]" : ""}
@@ -334,24 +371,36 @@ export default function Home() {
             <nav className="relative shrink-0 z-30 border-t border-[#00ff4155] bg-[rgba(1,8,12,0.97)] backdrop-blur-sm pb-[env(safe-area-inset-bottom)]">
               {moreOpen && (
                 <div className="grid grid-cols-3 gap-1 p-2 border-b border-[#00ff4155]">
-                  {leftTabs.filter((tab) => ["progress", "blueprints", "log"].includes(tab.id)).map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => { setActiveTab(tab.id); setMobileShowMap(false); setMoreOpen(false); }}
-                      className={`flex flex-col items-center gap-0.5 py-2 rounded text-[10px] font-['Orbitron'] font-bold ${activeTab === tab.id && !showEventStage ? "text-accent bg-[rgba(255,176,0,0.1)]" : "text-muted-foreground"}`}
-                    >
-                      <span className="text-base leading-none">{tab.icon}</span>
-                      <span className="truncate w-full text-center px-0.5 leading-tight">{tab.label}</span>
-                    </button>
-                  ))}
+                  {leftTabs
+                    .filter((tab) => ["progress", "blueprints", "log"].includes(tab.id))
+                    .map((tab) => {
+                      const hasAlert = tab.id === "log" && hasLogAlert;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            selectTab(tab.id);
+                            setMobileShowMap(false);
+                            setMoreOpen(false);
+                          }}
+                          className={`relative flex flex-col items-center gap-0.5 py-2 rounded text-[10px] font-['Orbitron'] font-bold ${activeTab === tab.id && !showEventStage ? "text-accent bg-[rgba(255,176,0,0.1)]" : "text-muted-foreground"}`}
+                        >
+                          <span className="text-base leading-none">{tab.icon}</span>
+                          <span className="truncate w-full text-center px-0.5 leading-tight">{tab.label}</span>
+                          {hasAlert && (
+                            <span className="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-destructive" />
+                          )}
+                        </button>
+                      );
+                    })}
                 </div>
               )}
               <div className="grid grid-cols-5">
                 <MobileNavButton icon="🗺️" label={t("mobile_nav.map")} active={showEventStage} onClick={() => { setMobileShowMap(true); setMoreOpen(false); }} />
                 <MobileNavButton icon="🚀" label={t("mobile_nav.ship")} alert={moduleMovedThisTurn && !showEventStage} active={!showEventStage && activeTab === "ship"} onClick={() => { setActiveTab("ship"); setMobileShowMap(false); setMoreOpen(false); }} />
                 <MobileNavButton icon="👥" label={t("mobile_nav.crew")} active={!showEventStage && activeTab === "crew"} onClick={() => { setActiveTab("crew"); setMobileShowMap(false); setMoreOpen(false); }} />
-                <MobileNavButton icon="📋" label={t("mobile_nav.contracts")} active={!showEventStage && activeTab === "contracts"} onClick={() => { setActiveTab("contracts"); setMobileShowMap(false); setMoreOpen(false); }} />
-                <MobileNavButton icon="⋯" label={t("mobile_nav.more")} active={!showEventStage && ["progress", "blueprints", "log"].includes(activeTab)} onClick={() => setMoreOpen((o) => !o)} />
+                <MobileNavButton icon="📋" label={t("mobile_nav.contracts")} alert={hasUrgentContract && !showEventStage} active={!showEventStage && activeTab === "contracts"} onClick={() => { setActiveTab("contracts"); setMobileShowMap(false); setMoreOpen(false); }} />
+                <MobileNavButton icon="⋯" label={t("mobile_nav.more")} alert={hasLogAlert && !showEventStage} active={!showEventStage && ["progress", "blueprints", "log"].includes(activeTab)} onClick={() => setMoreOpen((o) => !o)} />
               </div>
             </nav>
           )}
@@ -359,7 +408,15 @@ export default function Home() {
           <RaceDiscoveryModal />
           <TechnologyDiscoveryModal />
           <SurvivorModal />
-          <WelcomeTutorial forceShow={showTutorial} onDismissed={() => setShowTutorial(false)} />
+          <WelcomeTutorial
+            forceShow={showTutorial}
+            onDismissed={() => setShowTutorial(false)}
+            onCompleted={() => {
+              setActiveTab("progress");
+              setMobileShowMap(false);
+              setMoreOpen(false);
+            }}
+          />
         </>
       )}
     </div>

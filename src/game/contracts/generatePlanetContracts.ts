@@ -5,6 +5,7 @@ import { getTierPriceMultiplier } from "@/game/slices/trade/constants";
 import { typedKeys } from "@/lib/utils";
 import { DELIVERY_GOODS } from "../constants/contracts";
 import { CONTRACT_REWARDS as REWARD } from "./rewards";
+import { getGeneratedContractTimeLimit } from "./contractDeadline";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Reward scaling constants (index = tier - 1)
@@ -15,7 +16,7 @@ const GAS_DIVE_MEMBRANES = {
     range: [2, 3, 4],
 } as const;
 
-/** Мин. значимых клеток (руины+лаб+артефакт) для expedition_survey по тирам */
+/** Количество клеток для expedition_survey по тирам */
 const EXPEDITION_DISCOVERIES = [3, 5, 7] as const;
 
 /** Количество тонн груза для delivery по тирам */
@@ -92,6 +93,7 @@ export const generatePlanetContracts = (
                 desc: "contracts.desc_diplomacy_human",
                 targetSector: targetSector?.id,
                 targetSectorName: targetSector?.name,
+                targetPlanetId: target.id,
                 targetPlanetName: target.name,
                 targetPlanetType: target.planetType,
                 sourcePlanetId: planetId,
@@ -406,6 +408,11 @@ export const generatePlanetContracts = (
                     sourcePlanetId: planetId,
                     sourceSectorName: sector.name,
                     sourceType: "planet",
+                    timeLimit: getGeneratedContractTimeLimit(
+                        "delivery",
+                        tier,
+                        tgtSector.tier ?? tier,
+                    ),
                     reward: rewardBase + Math.floor(Math.random() * rewardRange),
                 };
             },
@@ -430,6 +437,11 @@ export const generatePlanetContracts = (
                     sectorName: tgt.name,
                     sourcePlanetId: planetId,
                     sourceSectorName: sector.name,
+                    timeLimit: getGeneratedContractTimeLimit(
+                        "combat",
+                        sector.tier ?? 1,
+                        tgt.tier ?? sector.tier ?? 1,
+                    ),
                     reward: REWARD.combat.base + Math.floor(Math.random() * REWARD.combat.range),
                 };
             },
@@ -485,6 +497,11 @@ export const generatePlanetContracts = (
                     sourceSectorName: sector.name,
                     targetSector: tgt.id,
                     targetSectorName: tgt.name,
+                    timeLimit: getGeneratedContractTimeLimit(
+                        "bounty",
+                        sector.tier ?? 1,
+                        tgt.tier ?? sector.tier ?? 1,
+                    ),
                     reward:
                         REWARD.bounty.baseFlat +
                         threat * REWARD.bounty.threatMult +
@@ -524,6 +541,11 @@ export const generatePlanetContracts = (
                     targetSectorName: pick.sector.name,
                     requiredDiscoveries,
                     expeditionDone: false,
+                    timeLimit: getGeneratedContractTimeLimit(
+                        "expedition_survey",
+                        tier,
+                        pick.sector.tier ?? tier,
+                    ),
                     reward:
                         REWARD.expedition_survey.base[tier - 1] +
                         Math.floor(Math.random() * REWARD.expedition_survey.range[tier - 1]),

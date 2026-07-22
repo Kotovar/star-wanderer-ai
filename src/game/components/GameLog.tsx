@@ -318,6 +318,9 @@ function getJournalCategory(
 ): Exclude<JournalFilter, "all"> {
     const message = entry.message.toLowerCase();
 
+    if (hasAny(message, EXPEDITION_TILE_LOG_MARKERS)) {
+        return "exploration";
+    }
     if (entry.type === "combat" || hasAny(message, COMBAT_MARKERS)) {
         return "combat";
     }
@@ -450,6 +453,13 @@ const EXPLORATION_MARKERS = [
     "wreck",
     "dive",
     "drill",
+];
+
+const EXPEDITION_TILE_LOG_MARKERS = [
+    "🏪 рынок:",
+    "🔬 лаборатория:",
+    "🏪 market:",
+    "🔬 laboratory:",
 ];
 
 const REPUTATION_MARKERS = [

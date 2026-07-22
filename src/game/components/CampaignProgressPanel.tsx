@@ -10,6 +10,7 @@ import {
   COALITION_CREDIT_TARGET,
   SCIENCE_ARTIFACT_TARGET,
   SCIENCE_TECH_TARGET,
+  canRevealLateCampaign,
   countAlliedRaces,
   getVictoryObjectives,
 } from "@/game/constants/victoryObjectives";
@@ -182,29 +183,35 @@ export function CampaignProgressPanel() {
   const artifacts = useGameStore((s) => s.artifacts);
   const activeContracts = useGameStore((s) => s.activeContracts);
   const completedContractIds = useGameStore((s) => s.completedContractIds);
+  const completedVictoryObjectiveIds = useGameStore(
+    (s) => s.completedVictoryObjectiveIds,
+  );
   const completedLocations = useGameStore((s) => s.completedLocations);
   const credits = useGameStore((s) => s.credits);
   const knownRaces = useGameStore((s) => s.knownRaces);
   const raceReputation = useGameStore((s) => s.raceReputation);
   const startModifierIds = useGameStore((s) => s.startModifierIds);
-  const gameVictory = useGameStore((s) => s.gameVictory);
-  const victoryTriggered = useGameStore((s) => s.victoryTriggered);
   const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
 
   const scanRange = getEffectiveScanRange();
   const currentTier = currentSector?.tier ?? 1;
-  const victoryDone = gameVictory || victoryTriggered;
+  const victoryDone = completedVictoryObjectiveIds.length > 0;
   const canSeeHiddenRim =
     victoryDone ||
     currentTier === 4 ||
     canSeeTier4(shipModules, artifacts, scanRange);
+  const revealLateCampaign = canRevealLateCampaign(
+    currentTier,
+    victoryDone,
+  );
+  const showHiddenRim = revealLateCampaign && canSeeHiddenRim;
 
   const stats = useMemo(() => {
-    const visibleSectors = canSeeHiddenRim
+    const visibleSectors = showHiddenRim
       ? sectors
       : sectors.filter((sector) => sector.tier < 4);
 
-    const tiers = [1, 2, 3, ...(canSeeHiddenRim ? [4] : [])].map((tier) => {
+    const tiers = [1, 2, 3, ...(showHiddenRim ? [4] : [])].map((tier) => {
       const tierSectors = sectors.filter((sector) => sector.tier === tier);
       const visited = tierSectors.filter((sector) => sector.visited).length;
       return {
@@ -244,7 +251,7 @@ export function CampaignProgressPanel() {
       researchedArtifacts,
       activeArtifacts,
     };
-  }, [artifacts, canSeeHiddenRim, completedLocations, sectors]);
+  }, [artifacts, completedLocations, sectors, showHiddenRim]);
   const selectedDoctrineId = startModifierIds.find((id) =>
     id.startsWith("doctrine_"),
   );
@@ -252,6 +259,7 @@ export function CampaignProgressPanel() {
     () => ({
       artifacts,
       completedContractIds,
+      completedVictoryObjectiveIds,
       completedLocations,
       credits,
       currentSector,
@@ -264,6 +272,7 @@ export function CampaignProgressPanel() {
     [
       artifacts,
       completedContractIds,
+      completedVictoryObjectiveIds,
       completedLocations,
       credits,
       currentSector,
@@ -282,9 +291,9 @@ export function CampaignProgressPanel() {
     () =>
       getVictoryObjectives().map((objective) => ({
         ...objective,
-        done: objective.isComplete(victoryState),
+        done: completedVictoryObjectiveIds.includes(objective.id),
       })),
-    [victoryState],
+    [completedVictoryObjectiveIds],
   );
 
   const techTotal = Object.keys(RESEARCH_TREE).length;
@@ -305,48 +314,61 @@ export function CampaignProgressPanel() {
           {t("ship.progress")}
         </div>
         <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          Сводка текущей кампании: насколько далеко открыт маршрут, какие
-          системы уже закрыты, и что ещё остаётся до финального прорыва.
+          {t("campaign_progress.summary")}
         </div>
       </div>
 
-      <div className="border border-[#ffb00066] bg-[rgba(255,176,0,0.06)] p-3">
-        <div className="font-['Orbitron'] text-[10px] uppercase tracking-[0.16em] text-accent">
-          Способы победы
-        </div>
-        <div className="mt-2 grid gap-2">
-          {victoryObjectives.map((objective) => (
-            <Milestone
-              key={objective.id}
-              label={t(objective.titleKey)}
-              done={victoryDone || objective.done}
-              recommended={
-                selectedDoctrineId !== undefined &&
-                objective.doctrineIds.includes(selectedDoctrineId)
-              }
-              detail={`${t(objective.descriptionKey)}${
-                objective.id === "scientific_ascension"
-                  ? ` · ${t("victory_paths.scientific_ascension.progress", {
-                      tech: research.researchedTechs.length,
-                      techTarget: SCIENCE_TECH_TARGET,
-                      artifacts: researchedArtifacts,
-                      artifactTarget: SCIENCE_ARTIFACT_TARGET,
-                    })}`
-                  : objective.id === "galactic_coalition"
-                    ? ` · ${t("victory_paths.galactic_coalition.progress", {
-                        allies: alliedRaces,
-                        allyTarget: COALITION_ALLY_TARGET,
-                        contracts: completedContractIds.length,
-                        contractTarget: COALITION_CONTRACT_TARGET,
-                        credits: Math.floor(credits),
-                        creditTarget: COALITION_CREDIT_TARGET,
+      {revealLateCampaign ? (
+        <div className="border border-[#ffb00066] bg-[rgba(255,176,0,0.06)] p-3">
+          <div className="font-['Orbitron'] text-[10px] uppercase tracking-[0.16em] text-accent">
+            Способы победы
+          </div>
+          <div className="mt-2 grid gap-2">
+            {victoryObjectives.map((objective) => (
+              <Milestone
+                key={objective.id}
+                label={t(objective.titleKey)}
+                done={objective.done}
+                recommended={
+                  selectedDoctrineId !== undefined &&
+                  objective.doctrineIds.includes(selectedDoctrineId)
+                }
+                detail={`${t(objective.descriptionKey)}${
+                  objective.id === "scientific_ascension"
+                    ? ` · ${t("victory_paths.scientific_ascension.progress", {
+                        tech: research.researchedTechs.length,
+                        techTarget: SCIENCE_TECH_TARGET,
+                        artifacts: researchedArtifacts,
+                        artifactTarget: SCIENCE_ARTIFACT_TARGET,
                       })}`
-                    : ""
-              }`}
-            />
-          ))}
+                    : objective.id === "galactic_coalition"
+                      ? ` · ${t("victory_paths.galactic_coalition.progress", {
+                          allies: alliedRaces,
+                          allyTarget: COALITION_ALLY_TARGET,
+                          contracts: completedContractIds.length,
+                          contractTarget: COALITION_CONTRACT_TARGET,
+                          credits: Math.floor(credits),
+                          creditTarget: COALITION_CREDIT_TARGET,
+                        })}`
+                      : ""
+                }`}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="border border-[#ffb00066] bg-[rgba(255,176,0,0.06)] p-3">
+          <div className="font-['Orbitron'] text-[10px] uppercase tracking-[0.16em] text-accent">
+            {t("campaign_directive.label")}
+          </div>
+          <div className="mt-1 text-xs font-bold text-[#ffe0a0]">
+            {t("campaign_directive.explore.title")}
+          </div>
+          <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            {t("campaign_directive.explore.description")}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-2">
         <MetricCard
@@ -367,16 +389,18 @@ export function CampaignProgressPanel() {
           hint="исследовано"
           tone={techDone > 0 ? "good" : "neutral"}
         />
-        <MetricCard
-          label="Боссы"
-          value={
-            stats.defeatedBosses > 0
-              ? `${stats.defeatedBosses} побеждено`
-              : "не побеждены"
-          }
-          hint="древние угрозы"
-          tone={stats.defeatedBosses > 0 ? "warning" : "neutral"}
-        />
+        {revealLateCampaign && (
+          <MetricCard
+            label="Боссы"
+            value={
+              stats.defeatedBosses > 0
+                ? `${stats.defeatedBosses} побеждено`
+                : "не побеждены"
+            }
+            hint="древние угрозы"
+            tone={stats.defeatedBosses > 0 ? "warning" : "neutral"}
+          />
+        )}
       </div>
 
       <Section title="Маршрут по галактике">
@@ -402,7 +426,7 @@ export function CampaignProgressPanel() {
               />
             </div>
           ))}
-          {!canSeeHiddenRim && (
+          {revealLateCampaign && !showHiddenRim && (
             <div className="border border-[#333] bg-[rgba(255,255,255,0.02)] p-2 text-xs">
               <div className="font-['Orbitron'] text-[10px] uppercase tracking-[0.16em] text-[#666]">
                 Неразмеченный рубеж
@@ -433,31 +457,37 @@ export function CampaignProgressPanel() {
               (tier) => tier.tier >= 2 && tier.visited > 0,
             )}
           />
-          <Milestone
-            label="Достичь внешних рубежей"
-            done={stats.tiers.some(
-              (tier) => tier.tier >= 3 && tier.visited > 0,
-            )}
-          />
-          <Milestone
-            label="Победить первого древнего босса"
-            done={stats.defeatedBosses > 0}
-            detail={
-              stats.defeatedBosses > 0
-                ? `побеждено: ${stats.defeatedBosses}`
-                : "любой древний босс"
-            }
-          />
-          <Milestone
-            label="Открыть неразмеченный рубеж"
-            done={canSeeHiddenRim}
-            detail="глубокое сканирование или артефакт всевидения"
-          />
-          <Milestone
-            label="Финал"
-            done={victoryDone}
-            detail="выполнить любой способ победы"
-          />
+          {currentTier >= 2 && (
+            <Milestone
+              label="Достичь внешних рубежей"
+              done={stats.tiers.some(
+                (tier) => tier.tier >= 3 && tier.visited > 0,
+              )}
+            />
+          )}
+          {revealLateCampaign && (
+            <>
+              <Milestone
+                label="Победить первого древнего босса"
+                done={stats.defeatedBosses > 0}
+                detail={
+                  stats.defeatedBosses > 0
+                    ? `побеждено: ${stats.defeatedBosses}`
+                    : "любой древний босс"
+                }
+              />
+              <Milestone
+                label="Открыть неразмеченный рубеж"
+                done={showHiddenRim}
+                detail="глубокое сканирование или артефакт всевидения"
+              />
+              <Milestone
+                label="Финал"
+                done={victoryDone}
+                detail="выполнить любой способ победы"
+              />
+            </>
+          )}
         </div>
       </Section>
 

@@ -15,20 +15,26 @@ const getServerSnapshot = () => false;
 interface WelcomeTutorialProps {
   forceShow?: boolean;
   onDismissed?: () => void;
+  onCompleted?: () => void;
 }
 
-export function WelcomeTutorial({ forceShow, onDismissed }: WelcomeTutorialProps) {
+export function WelcomeTutorial({
+  forceShow,
+  onDismissed,
+  onCompleted,
+}: WelcomeTutorialProps) {
   const shouldShow = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [dismissed, setDismissed] = useState(false);
   const [step, setStep] = useState(0);
   const { t } = useTranslation();
 
-  const dismiss = () => {
+  const dismiss = (completed = false) => {
     if (!forceShow) {
       localStorage.setItem(TUTORIAL_KEY, "1");
     }
     setDismissed(true);
     onDismissed?.();
+    if (completed) onCompleted?.();
   };
 
   const isVisible = forceShow || (shouldShow && !dismissed);
@@ -137,7 +143,7 @@ export function WelcomeTutorial({ forceShow, onDismissed }: WelcomeTutorialProps
         {/* Footer */}
         <div className="px-5 py-3 border-t border-[#112] flex justify-between items-center">
           <button
-            onClick={dismiss}
+            onClick={() => dismiss()}
             className="text-[#445] hover:text-[#778] text-xs cursor-pointer transition-colors px-2 py-1 uppercase tracking-wider"
           >
             {t("tutorial.skip")}
@@ -160,7 +166,7 @@ export function WelcomeTutorial({ forceShow, onDismissed }: WelcomeTutorialProps
               </button>
             ) : (
               <button
-                onClick={dismiss}
+                onClick={() => dismiss(true)}
                 className="px-5 py-2 bg-[#00ff41] text-[#050810] hover:bg-[#00ee38] text-xs cursor-pointer transition-all font-['Orbitron'] font-bold tracking-widest uppercase"
                 style={{
                   boxShadow: "0 0 14px rgba(0,255,65,0.4)",

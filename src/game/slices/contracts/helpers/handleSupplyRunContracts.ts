@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
 import type { GameState, GameStore, Location } from "@/game/types";
+import { formatContractDescription } from "@/game/contracts/formatContractDescription";
 
 // Тип для set с поддержкой immer (позволяет и мутации, и объекты)
 type SetState = {
@@ -20,20 +21,18 @@ export const handleSupplyRunContracts = (
     set: SetState,
     get: () => GameStore,
 ): void => {
-    const state = get();
-
     const supplyComplete = get().activeContracts.filter(
         (c) =>
             c.type === "supply_run" && c.sourcePlanetId === loc.id && c.cargo,
     );
 
-    supplyComplete.forEach((c) => {
-        const cargoOwned = state.ship.tradeGoods.find(
+    for (const c of supplyComplete) {
+        const cargoOwned = get().ship.tradeGoods.find(
             (g) => g.item === c.cargo,
         );
         const requiredQty = c.quantity || 15;
 
-        if (!cargoOwned || cargoOwned.quantity < requiredQty) return;
+        if (!cargoOwned || cargoOwned.quantity < requiredQty) continue;
 
         set((s) => ({
             credits: s.credits + (c.reward || 0),
@@ -53,7 +52,11 @@ export const handleSupplyRunContracts = (
             completedContractIds: [...s.completedContractIds, c.id],
             activeContracts: s.activeContracts.filter((ac) => ac.id !== c.id),
         }));
-        get().addLog( i18nStore.t("game_logs.handleSupplyRunContracts_1", { desc: c.desc, loc_name: c.sourceName || loc.name, reward: c.reward }),
+        get().addLog( i18nStore.t("game_logs.handleSupplyRunContracts_1", {
+            desc: formatContractDescription(c, i18nStore.t.bind(i18nStore)),
+            loc_name: c.sourceName || loc.name,
+            reward: c.reward,
+        }),
             "info",
         );
         // Give experience to all crew members
@@ -62,5 +65,5 @@ export const handleSupplyRunContracts = (
         if (c.sourceDominantRace) {
             get().changeReputation(c.sourceDominantRace, 2);
         }
-    });
+    }
 };

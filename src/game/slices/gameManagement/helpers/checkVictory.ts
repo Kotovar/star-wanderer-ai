@@ -5,7 +5,7 @@ import { triggerVictory } from "./triggerVictory";
 export const checkVictory = (set: SetState, get: () => GameStore): void => {
     const state = get();
 
-    if (state.gameVictory || state.victoryTriggered) {
+    if (state.gameVictory) {
         return;
     }
 

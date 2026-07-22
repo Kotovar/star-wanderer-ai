@@ -205,6 +205,7 @@ const baseState: GameState = {
   gameVictory: false,
   gameVictoryReason: null,
   victoryTriggered: false,
+  completedVictoryObjectiveIds: [],
   activeEffects: [],
   planetCooldowns: {},
   research: {

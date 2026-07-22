@@ -4,6 +4,7 @@ import { TRADE_GOODS } from "../constants/goods";
 import { DELIVERY_GOODS } from "../constants/contracts";
 import { getTierPriceMultiplier } from "@/game/slices/trade/constants";
 import { typedKeys } from "@/lib/utils";
+import { getGeneratedContractTimeLimit } from "./contractDeadline";
 
 const PLANET_TYPES = [
     "Пустынная",
@@ -21,7 +22,9 @@ const generateShipQuest = (
     shipSectorId: number,
     allSectors: Sector[],
 ): Contract | null => {
-    const otherSectors = allSectors.filter((s) => s.id !== shipSectorId);
+    const otherSectors = allSectors.filter(
+        (s) => s.id !== shipSectorId && s.tier < 4,
+    );
     if (otherSectors.length === 0) return null;
 
     const roll = Math.random();
@@ -97,6 +100,7 @@ const generateShipQuest = (
     const dest = validDestinations[Math.floor(Math.random() * validDestinations.length)];
     const destType =
         dest.type === "planet" ? "planet" : dest.type === "station" ? "station" : "ship";
+    const shipTier = allSectors.find((s) => s.id === shipSectorId)?.tier ?? 1;
     return {
         id: `ship-${shipId}-delivery-${Date.now()}-${Math.random()}`,
         type: "delivery",
@@ -111,6 +115,11 @@ const generateShipQuest = (
         sourcePlanetId: shipId,
         sourceName: "",
         sourceType: "ship",
+        timeLimit: getGeneratedContractTimeLimit(
+            "delivery",
+            shipTier,
+            targetSector.tier ?? shipTier,
+        ),
     };
 };
 

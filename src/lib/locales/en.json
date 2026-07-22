@@ -685,6 +685,8 @@
     "contracts": {
         "reputation_impact": "Reputation consequences",
         "active": "Active contracts",
+        "turns_left": "{{count}} turns left",
+        "expired_toast": "Race contract expired: {{contract}}",
         "failed": "Failed",
         "reward": "Reward",
         "delivery": "Delivery",
@@ -3112,10 +3114,10 @@
         "title": "WELCOME, CAPTAIN",
         "skip": "Skip",
         "next": "NEXT",
-        "start": "LAUNCH",
+        "start": "OPEN CAMPAIGN PLAN",
         "step1_title": "Your Ship",
-        "step1_desc": "The left panel is your ship control. Switch tabs: ship grid, status, crew, modules, cargo, contracts, blueprints and event log.",
-        "step1_highlight": "Click 📊 STATUS to see your ship's combat stats",
+        "step1_desc": "The left panel is your ship control. Ship holds the layout, stats, modules and cargo; beside it are crew, contracts, progress, blueprints and the log.",
+        "step1_highlight": "Open Ship → Stats to check combat readiness",
         "step2_title": "Map & Navigation",
         "step2_desc": "The right panel shows the game world. Click SECTOR MAP to see all available locations. Click any object — your ship will fly there.",
         "step2_highlight": "Mouse wheel to zoom, click and drag to pan the map",
@@ -3127,9 +3129,9 @@
         "step3_highlight": "Without a reactor and engine your ship won't fly — check their condition!",
         "step4_title": "Crew is Your Power",
         "step4_desc": "Hire specialists: Pilot improves evasion, Engineer repairs per turn, Medic heals crew, Scout explores planets, Scientist boosts research output.",
-        "step5_title": "Path to Victory",
-        "step5_desc": "Victory through research! The 🔬 SCIENCE button opens the tech tree. Gather resources, analyze anomalies, mine asteroids. Reach Tier 4 to win!",
-        "step5_highlight": "Watch the event log 📜 — important hints appear there"
+        "step5_title": "Next Route",
+        "step5_desc": "Explore available systems, take contracts, and develop your ship. New objectives will appear as you progress.",
+        "step5_highlight": "Open Progress to see the current objective and its next step"
     },
     "travel": {
         "title": "TRAVELING",
@@ -3185,6 +3187,22 @@
             "completion": "The allied worlds recognized the ship as the center of a new galactic coalition.",
             "progress": "allies {{allies}}/{{allyTarget}}, contracts {{contracts}}/{{contractTarget}}, credits {{credits}}/{{creditTarget}}"
         }
+    },
+    "campaign_directive": {
+        "label": "OPERATION",
+        "open_progress": "Open campaign plan",
+        "explore": {
+            "title": "Reconnaissance",
+            "description": "Explore available systems, complete contracts, and strengthen your ship."
+        },
+        "reach_tier4": "Look for a route beyond the known sectors.",
+        "defeat_void_oracle": "Find and destroy the Oracle of the Void.",
+        "defeat_3_bosses": "Destroy three ancient bosses.",
+        "scientific_ascension": "Technologies {{tech}}/{{techTarget}}, artifacts {{artifacts}}/{{artifactTarget}}.",
+        "galactic_coalition": "Allies {{allies}}/{{allyTarget}}, contracts {{contracts}}/{{contractTarget}}, credits {{credits}}/{{creditTarget}}."
+    },
+    "campaign_progress": {
+        "summary": "Campaign overview: which routes are open, which systems are charted, and where to explore next."
     },
     "save_load": {
         "menu_title": "MENU",
@@ -4255,7 +4273,7 @@
         "resolveRuinsChoice_5": "✨ Artifact found: {{artifact_name}}!",
         "resolveRuinsChoice_6": "🗿 No artifact discovered.",
         "resolveRuinsChoice_7": "🏚️ Ruins: you left empty-handed.",
-        "revealExpeditionTile_1": "📋 Data collected ({{tilesRevealed}}/{{requiredDiscoveries}} significant finds). Return to {{sourceSectorName}} to turn in the contract.",
+        "revealExpeditionTile_1": "📋 Tiles revealed: {{tilesRevealed}}/{{requiredDiscoveries}}. Return to {{sourceSectorName}} to turn in the contract.",
         "revealExpeditionTile_2": "🏪 Market: +{{credits}}₢",
         "revealExpeditionTile_3": "🔬 Laboratory: {{value}} {{resType}} x{{qty}}",
         "revealExpeditionTile_4": "⚠️ Incident! {{target_name}} took {{damage}} damage and -{{moraleLoss}} morale{{mitigation}}.",

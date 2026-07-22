@@ -27,7 +27,9 @@ export const handleDiplomacyContracts = (
         (c) =>
             c.type === "diplomacy" &&
             c.isRaceQuest &&
-            c.targetSector === state.currentSector?.id,
+            c.targetSector === state.currentSector?.id &&
+            (c.targetPlanetId === loc.id ||
+                (!c.targetPlanetId && c.targetPlanetName === loc.name)),
     );
 
     if (!diplomacyContract) return;

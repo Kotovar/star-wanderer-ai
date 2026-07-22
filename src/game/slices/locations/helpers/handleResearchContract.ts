@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore, Contract } from "@/game/types";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
+import { formatContractDescription } from "@/game/contracts/formatContractDescription";
 
 /**
  * Обрабатывает прогресс контракта на исследование аномалий
@@ -64,7 +65,10 @@ export const handleResearchContract = (
 
     if (!updatedContract) {
         // Contract completed - show completion message
-        get().addLog( i18nStore.t("game_logs.handleResearchContract_2", { desc: contract.desc, reward: contract.reward }),
+        get().addLog( i18nStore.t("game_logs.handleResearchContract_2", {
+            desc: formatContractDescription(contract, i18nStore.t.bind(i18nStore)),
+            reward: contract.reward,
+        }),
             "info",
         );
 

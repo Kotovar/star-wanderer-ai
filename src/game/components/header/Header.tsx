@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
+import { getCampaignDirective } from "@/game/constants/victoryObjectives";
 
 export function GameHeader() {
   const [showHelp, setShowHelp] = useState(false);
@@ -34,6 +35,16 @@ export function GameHeader() {
   const traveling = useGameStore((s) => s.traveling);
   const artifacts = useGameStore((s) => s.artifacts);
   const activeEffects = useGameStore((s) => s.activeEffects);
+  const completedContractIds = useGameStore((s) => s.completedContractIds);
+  const completedLocations = useGameStore((s) => s.completedLocations);
+  const completedVictoryObjectiveIds = useGameStore(
+    (s) => s.completedVictoryObjectiveIds,
+  );
+  const galaxy = useGameStore((s) => s.galaxy);
+  const knownRaces = useGameStore((s) => s.knownRaces);
+  const raceReputation = useGameStore((s) => s.raceReputation);
+  const research = useGameStore((s) => s.research);
+  const startModifierIds = useGameStore((s) => s.startModifierIds);
   const showArtifacts = useGameStore((s) => s.showArtifacts);
   const showEffects = useGameStore((s) => s.showEffects);
   const showResearch = useGameStore((s) => s.showResearch);
@@ -53,6 +64,20 @@ export function GameHeader() {
   const isDraggingCrisisRef = useRef(false);
   const crisisWidgetKey = activeCrisis ? `active:${activeCrisis.id}` : "none";
   const crisisWidgetDismissed = dismissedCrisisWidgetKey === crisisWidgetKey;
+  const campaignDirective = getCampaignDirective({
+    artifacts,
+    completedContractIds,
+    completedLocations,
+    completedVictoryObjectiveIds,
+    credits,
+    currentSector,
+    galaxy,
+    knownRaces,
+    raceReputation,
+    research,
+    startModifierIds,
+    traveling,
+  });
 
   const handleRestartClick = () => {
     setShowSettings(false);
@@ -149,9 +174,32 @@ export function GameHeader() {
   return (
     <>
       <header className="cockpit-header select-none px-4 py-3 md:px-5 md:py-4 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0">
-        <h1 className="cockpit-header__title font-['Orbitron'] font-black text-lg md:text-2xl tracking-[2px] md:tracking-[3px] text-[#00ff41] text-center md:text-left">
-          ◆ {t("game.title")} ◆
-        </h1>
+        <div className="flex flex-col items-center gap-1 md:items-start">
+          <h1 className="cockpit-header__title font-['Orbitron'] font-black text-lg md:text-2xl tracking-[2px] md:tracking-[3px] text-[#00ff41] text-center md:text-left">
+            ◆ {t("game.title")} ◆
+          </h1>
+          {campaignDirective && (
+            <button
+              type="button"
+              onClick={() =>
+                window.dispatchEvent(new CustomEvent("sw:showCampaignProgress"))
+              }
+              title={t("campaign_directive.open_progress")}
+              className="max-w-[min(92vw,25rem)] border border-[#ffb00077] bg-[rgba(255,176,0,0.06)] px-2 py-1 text-left text-[10px] leading-snug text-[#ffcc66] transition-colors hover:bg-[rgba(255,176,0,0.14)] cursor-pointer"
+            >
+              <span className="mr-2 font-bold tracking-[0.16em] text-accent">
+                {t("campaign_directive.label")}
+              </span>
+              <span className="font-bold text-[#ffe0a0]">
+                {t(
+                  campaignDirective.displayTitleKey ??
+                    campaignDirective.objective.titleKey,
+                )}
+              </span>
+              <span className="hidden lg:inline"> — {t(campaignDirective.detail.key, campaignDirective.detail.params)}</span>
+            </button>
+          )}
+        </div>
         <div className="flex gap-2 md:gap-4 text-xs md:text-sm items-center flex-wrap justify-center md:justify-normal">
           {/* ── Статистика ── */}
           <div className="flex items-center gap-2 md:gap-3">

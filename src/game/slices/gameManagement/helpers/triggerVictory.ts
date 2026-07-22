@@ -38,7 +38,7 @@ ${objectiveText}
 export const triggerVictory = (set: SetState, get: () => GameStore): void => {
     const state = get();
 
-    if (state.victoryTriggered) {
+    if (state.gameVictory) {
         return;
     }
 
@@ -59,6 +59,10 @@ export const triggerVictory = (set: SetState, get: () => GameStore): void => {
     set({
         gameVictory: true,
         victoryTriggered: true,
+        completedVictoryObjectiveIds: [
+            ...state.completedVictoryObjectiveIds,
+            objective.id,
+        ],
         gameVictoryReason: getVictoryMessage(
             state.turn,
             captainLevel,

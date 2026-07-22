@@ -131,7 +131,8 @@ export interface GameState {
   gameOverReason: string | null; // Reason for game over
   gameVictory: boolean; // Victory state
   gameVictoryReason: string | null; // Reason for victory
-  victoryTriggered: boolean; // Persistent flag — prevents re-triggering after "Continue"
+  victoryTriggered: boolean; // At least one victory was triggered in this campaign
+  completedVictoryObjectiveIds: string[]; // Final paths already recorded
   activeEffects: ActiveEffect[]; // Active effects from planets and gameplay
   planetCooldowns: Record<string, number>; // Track cooldowns per planet (planetId -> turnsRemaining)
   research: ResearchData; // Research system data
