@@ -452,7 +452,7 @@
         },
         "legend": {
             "name": "Legend",
-            "description": "+50% max health and morale"
+            "description": "+50% max health, +15% strength of the ship's artifact effects"
         },
         "lucky": {
             "name": "Lucky",
@@ -476,7 +476,7 @@
         },
         "leader": {
             "name": "Leader",
-            "description": "+20 crew morale, +10% efficiency"
+            "description": "+20 morale in-module, +10 in adjacent modules, +10% efficiency"
         },
         "experienced": {
             "name": "Experienced",
@@ -492,7 +492,7 @@
         },
         "genius": {
             "name": "Genius",
-            "description": "+30% efficiency, +20% experience"
+            "description": "+30% research from this scientist, +20% experience"
         },
         "prodigy": {
             "name": "Prodigy",
@@ -2057,6 +2057,8 @@
         }
     },
     "crew_member": {
+        "morale_efficiency_hint": "Task efficiency bonus/penalty from morale",
+        "morale_efficiency": "Morale efficiency:",
         "assignment_fatigue": "Fatigue {{value}}/{{max}}",
         "assignment_rest": "Resting: {{turns}} turns",
         "moved": "MOVED",
@@ -2147,6 +2149,28 @@
             "rapidfire": "Rapid fire - +25% damage, -10% accuracy, random target"
         }
     },
+    "merge_effects": {
+        "shieldRegenBonus": "Shield regeneration",
+        "shieldCapacity": "Shield capacity",
+        "repairBonus": "Drone repair",
+        "energyReduction": "Power consumption",
+        "powerOutput": "Power output",
+        "evasionBonus": "Ship evasion",
+        "initiativeBonus": "Initiative",
+        "oxygenEfficiency": "Oxygen",
+        "crewHealthRegen": "Crew HP regeneration",
+        "cargoCapacity": "Cargo capacity",
+        "fuelEfficiency": "Fuel efficiency",
+        "fuelCapacity": "Fuel capacity",
+        "scanRange": "Scan range",
+        "researchSpeed": "Research speed",
+        "weaponDamage": "Weapon damage",
+        "weaponAccuracy": "Weapon accuracy",
+        "healing": "Healing speed",
+        "miningSpeed": "Mining speed",
+        "resourceYield": "Resource yield",
+        "glitchResistance": "AI glitch chance"
+    },
     "module_list": {
         "search_per_turn": "res/turn",
         "quantum": "Quantum",
@@ -2199,7 +2223,9 @@
         "damage_bonus": "Damage bonus",
         "crew_slots": "Crew slots",
         "repair_per_turn": "🔧 Repair per turn",
-        "modules": "modules"
+        "modules": "modules",
+        "xenosymbiont_merged": "Merged with xenosymbiont",
+        "xenosymbiont_no_effect": "This module type does not support merging"
     },
     "game_log": {
         "turn_label": "TURN"
@@ -3139,6 +3165,15 @@
         "step5_title": "Next Route",
         "step5_desc": "Explore available systems, take contracts, and develop your ship. New objectives will appear as you progress.",
         "step5_highlight": "Open Progress to see the current objective and its next step"
+    },
+    "hints": {
+        "station": "At a station you can hire crew, buy modules, repair your ship, and sell/buy cargo.",
+        "combat": "Place a Gunner in a weapon bay (weaponbay) — it boosts accuracy and damage for all onboard weapons.",
+        "research": "Build a lab and assign a Scientist to it to start researching technologies.",
+        "contracts": "Contracts give credits, reputation with a race, and crew experience — take ones your ship can handle.",
+        "low_happiness": "A crew member's happiness is low. At 0 happiness for 3 turns straight they desert — assign a Morale task or let them rest.",
+        "xenosymbiont_merge": "A xenosymbiont is aboard! Assign it the \"🧬 Merge\" task in a module — it grants a permanent bonus depending on the module type.",
+        "first_mutation": "A crew member has mutated — a permanent random trait (can be helpful or harmful). See details in the crew card's Profile tab."
     },
     "travel": {
         "title": "TRAVELING",
@@ -4233,6 +4268,7 @@
         "processGlobalCrises_2": "🚨 GALACTIC CRISIS: {{icon}} {{value}} · duration {{duration}} turns",
         "processOthers_1": "😨 {{crewMember_name}} (Coward): -{{drain}} morale",
         "processOthers_2": "★ {{crewMember_name}} ({{trait_name}}): +{{moraleBonus}} morale to the module",
+        "processOthers_3": "★ {{crewMember_name}} ({{trait_name}}): +{{adjacentBonus}} morale to adjacent modules",
         "processOthers_3": "😤 Overcrowding: {{crewCount}}/{{crewCapacity}}. Crew morale -{{OVERCROWDING_HAPPINESS_PENALTY}}",
         "processOthers_4": "🤖 Systems overheating from crowding: synthetics -{{OVERCROWDING_HARDWARE_DAMAGE}} HP",
         "processOthers_5": "{{crewMember_name}} left the ship!",

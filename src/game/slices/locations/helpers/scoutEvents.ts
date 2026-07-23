@@ -9,6 +9,7 @@ import type { Goods } from "@/game/types/goods";
 import { RESEARCH_RESOURCES, TRADE_GOODS } from "@/game/constants";
 import { addTradeGood } from "@/game/slices/ship/helpers";
 import { giveRandomMutation, getBestByProfession } from "@/game/crew";
+import { showHintOnce } from "@/game/hints/showHint";
 import { appendSurfaceLog } from "./sendScoutingMission";
 import { patchLocation } from "@/game/utils/patchLocation";
 
@@ -188,6 +189,7 @@ export const resolveScoutEvent = (
                 get().addLog( i18nStore.t("game_logs.scoutEvents_4", { scout_name: scout.name, mutationName }),
                     "error",
                 );
+                showHintOnce(get().addLog, "first_mutation", "hints.first_mutation");
             }
         }
     }

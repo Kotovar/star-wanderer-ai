@@ -1,8 +1,9 @@
 "use client";
 
 import { calculateResearchOutput } from "@/game/slices/research/helpers/researchHelpers";
+import { showHintOnce } from "@/game/hints/showHint";
 
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { useGameStore } from "@/game/store";
 import {
   RESEARCH_TREE,
@@ -1128,7 +1129,12 @@ export function ResearchPanel() {
   const ship = useGameStore((s) => s.ship);
   const startResearch = useGameStore((s) => s.startResearch);
   const showSectorMap = useGameStore((s) => s.showSectorMap);
+  const addLog = useGameStore((s) => s.addLog);
   const { t, currentLanguage } = useTranslation();
+
+  useEffect(() => {
+    showHintOnce(addLog, "research", "hints.research");
+  }, [addLog]);
 
   // Ensure credits are always displayed as integers
   const displayCredits = Math.floor(credits);

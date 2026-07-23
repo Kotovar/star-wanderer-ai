@@ -2,6 +2,7 @@ import { useGameStore } from "@/game/store";
 import {
     CREW_TRAITS,
     MUTATION_TRAITS,
+    MUTATION_CHANCES,
     RACE_LAST_NAMES,
     RACES,
 } from "@/game/constants";
@@ -59,6 +60,8 @@ export const generateCrewTraits = (
     quality: Quality = "average",
     seed: number = 0,
     hasHappiness: boolean = true,
+    profession?: Profession,
+    race?: RaceId,
 ): { traits: CrewTrait[]; priceModifier: number } => {
     const traits: CrewTrait[] = [];
     let priceModifier = 1;
@@ -93,21 +96,26 @@ export const generateCrewTraits = (
     const moraleFilter = (t: { effect: CrewTrait["effect"] }) =>
         hasHappiness || !hasPersonalMoraleEffect(t.effect);
 
+    /** Трейты, ограниченные профессией/расой (например, меткий стрелок — только для стрелков) */
+    const scopeFilter = (t: { forProfession?: Profession; forRace?: RaceId }) =>
+        (!t.forProfession || t.forProfession === profession) &&
+        (!t.forRace || t.forRace === race);
+
     // Add positive trait
     if (seededRandom(100) < positiveChance) {
         const roll = seededRandom(101);
         let pool;
         if (roll < legendaryChance) {
             pool = CREW_TRAITS.positive.filter(
-                (t) => t.rarity === "legendary" && moraleFilter(t),
+                (t) => t.rarity === "legendary" && moraleFilter(t) && scopeFilter(t),
             );
         } else if (roll < rareChance) {
             pool = CREW_TRAITS.positive.filter(
-                (t) => t.rarity === "rare" && moraleFilter(t),
+                (t) => t.rarity === "rare" && moraleFilter(t) && scopeFilter(t),
             );
         } else {
             pool = CREW_TRAITS.positive.filter(
-                (t) => t.rarity === "common" && moraleFilter(t),
+                (t) => t.rarity === "common" && moraleFilter(t) && scopeFilter(t),
             );
         }
         if (pool.length > 0) {
@@ -129,11 +137,11 @@ export const generateCrewTraits = (
         let pool;
         if (roll < 0.2) {
             pool = CREW_TRAITS.negative.filter(
-                (t) => t.rarity === "rare" && moraleFilter(t),
+                (t) => t.rarity === "rare" && moraleFilter(t) && scopeFilter(t),
             );
         } else {
             pool = CREW_TRAITS.negative.filter(
-                (t) => t.rarity === "common" && moraleFilter(t),
+                (t) => t.rarity === "common" && moraleFilter(t) && scopeFilter(t),
             );
         }
         pool = pool.filter((t) => !conflictsWithExisting(t.id, traits));
@@ -145,6 +153,26 @@ export const generateCrewTraits = (
                 desc: trait.desc,
                 effect: trait.effect,
                 type: "negative",
+            });
+            priceModifier *= trait.priceMod;
+        }
+    }
+
+    // Мутация — "подпорченный товар": редкая, чаще у дешёвых кандидатов,
+    // независима от позитивного/негативного слота выше
+    const mutationChance = MUTATION_CHANCES.HIRE_MUTATION_BY_QUALITY[quality];
+    if (seededRandom(300) < mutationChance) {
+        const pool = CREW_TRAITS.mutation
+            .filter(moraleFilter)
+            .filter((t) => !conflictsWithExisting(t.id, traits));
+        if (pool.length > 0) {
+            const trait = pool[Math.floor(seededRandom(301) * pool.length)];
+            traits.push({
+                id: trait.id,
+                name: trait.name,
+                desc: trait.desc,
+                effect: trait.effect,
+                type: "mutation",
             });
             priceModifier *= trait.priceMod;
         }

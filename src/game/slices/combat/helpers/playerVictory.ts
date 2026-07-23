@@ -17,6 +17,7 @@ import {
     getActiveAssignment,
     giveRandomMutation,
 } from "@/game/crew";
+import { showHintOnce } from "@/game/hints/showHint";
 import type {
     GameState,
     GameStore,
@@ -272,6 +273,7 @@ export function handleVictory(
                     get().addLog( i18nStore.t("game_logs.playerVictory_10", { crewMember_name: crewMember.name, mutationName }),
                         "error",
                     );
+                    showHintOnce(get().addLog, "first_mutation", "hints.first_mutation");
                 }
             }
         });

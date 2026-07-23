@@ -6,10 +6,29 @@ import { CREW_ASSIGNMENT_EXP } from "@/game/constants/experience";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import type { CrewMember } from "@/game/types/crew";
 
+/** Настроение выше этой доли от максимума — нейтрально (не растёт бонус дальше по прямой от 50%) */
+const HAPPINESS_EFFICIENCY_MAX_BONUS = 0.1; // +10% при 100% настроения
+const HAPPINESS_EFFICIENCY_MAX_PENALTY = 0.15; // -15% при 0% настроения
+
 /**
- * Возвращает итоговый множитель задания с учётом трейтов (taskBonus, doubleTaskEffect)
- * и аугментации (actionSpeedBonus — например, Разгон ядра у синтетика).
- * Используется всеми типами назначений.
+ * Множитель эффективности от текущего настроения экипажа: линейно от -15%
+ * (настроение на нуле) до +10% (настроение на максимуме), 0% на середине
+ * шкалы — счастливый экипаж работает эффективнее, несчастный хуже (отдельно
+ * от дезертирства при затяжном нуле настроения). Расы без настроения
+ * (maxHappiness = 0, например синтетики) не затрагиваются.
+ */
+export function getHappinessEfficiencyModifier(crewMember: CrewMember): number {
+    if (!crewMember.maxHappiness) return 0;
+    const centered = (crewMember.happiness / crewMember.maxHappiness - 0.5) * 2;
+    return centered >= 0
+        ? centered * HAPPINESS_EFFICIENCY_MAX_BONUS
+        : centered * HAPPINESS_EFFICIENCY_MAX_PENALTY;
+}
+
+/**
+ * Возвращает итоговый множитель задания с учётом трейтов (taskBonus, doubleTaskEffect),
+ * аугментации (actionSpeedBonus — например, Разгон ядра у синтетика) и настроения
+ * экипажа. Используется всеми типами назначений.
  */
 export function getTaskBonusMultiplier(crewMember: CrewMember): number {
     let taskBonus = 0;
@@ -22,6 +41,7 @@ export function getTaskBonusMultiplier(crewMember: CrewMember): number {
     });
     if (hasDoubleEffect) taskBonus = Math.max(taskBonus, 1);
     taskBonus += getAugmentationBonus(crewMember, "actionSpeedBonus");
+    taskBonus += getHappinessEfficiencyModifier(crewMember);
     return Math.max(0, 1 + taskBonus - taskPenalty);
 }
 

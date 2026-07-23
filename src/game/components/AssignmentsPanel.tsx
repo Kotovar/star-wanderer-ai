@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGameStore } from "../store";
+import { showHintOnce } from "@/game/hints/showHint";
 
 import { Button } from "@/components/ui/button";
-import { RACES } from "@/game/constants/races";
+import { RACES, XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants/races";
+import { formatMergeEffectSummary } from "@/game/races/mergeEffectLabels";
 import { CREW_ACTIONS, PROFESSION_NAMES } from "@/game/constants/crew";
 import { getAvailableTasksForModule } from "@/game/slices/crew/helpers";
 import type {
@@ -39,7 +41,14 @@ export function AssignmentsPanel() {
     const moveCrewMember = useGameStore((s) => s.moveCrewMember);
     const isModuleAdjacent = useGameStore((s) => s.isModuleAdjacent);
     const showGalaxyMap = useGameStore((s) => s.showGalaxyMap);
+    const addLog = useGameStore((s) => s.addLog);
     const { t } = useTranslation();
+
+    useEffect(() => {
+        if (crew.some((c) => c.race === "xenosymbiont")) {
+            showHintOnce(addLog, "xenosymbiont_merge", "hints.xenosymbiont_merge");
+        }
+    }, [crew, addLog]);
 
     const [assignments, setAssignments] = useState<
         Record<number, PendingAssignment>
@@ -113,14 +122,22 @@ export function AssignmentsPanel() {
                             { value: "", label: "ОЖИДАНИЕ", effect: null },
                         ];
 
-                    // Добавляем "Сращивание" для ксеноморфов
+                    // Добавляем "Сращивание" для ксеноморфов — эффект превью
+                    // рассчитан для модуля, куда экипаж реально попадёт с учётом
+                    // запланированного перемещения (effectiveModule)
                     if (c.race === "xenosymbiont") {
+                        const mergeDef = effectiveModule
+                            ? XENOSYMBIONT_MERGE_EFFECTS[effectiveModule.type]
+                            : undefined;
+                        const mergeSummary = mergeDef
+                            ? formatMergeEffectSummary(mergeDef.effects)
+                            : "";
                         allActions = [
                             ...allActions,
                             {
                                 value: "merge",
                                 label: "🧬 Сращивание",
-                                effect: "Бонус модулю",
+                                effect: mergeSummary || "Нет эффекта в этом модуле",
                             },
                         ];
                     }

@@ -163,6 +163,18 @@ export const getEffectDescription = (
     }
 };
 
+/** Личный бонус экипажа к силе эффектов артефактов (трейт legend), суммируется */
+const getCrewTraitArtifactBonus = (crew: GameState["crew"]): number =>
+    crew.reduce(
+        (sum, c) =>
+            sum +
+            (c.traits?.reduce(
+                (s, tr) => s + (tr.effect.artifactBonus ?? 0),
+                0,
+            ) ?? 0),
+        0,
+    );
+
 // Helper function to get artifact effect value with active boost bonus
 export const getArtifactEffectValue = (
     artifact: Artifact | undefined,
@@ -197,6 +209,12 @@ export const getArtifactEffectValue = (
     });
     if (crystallineBonus > 0) {
         multiplier *= 1 + crystallineBonus;
+    }
+
+    // Личный трейт-бонус экипажа (legend)
+    const traitArtifactBonus = getCrewTraitArtifactBonus(state.crew);
+    if (traitArtifactBonus > 0) {
+        multiplier *= 1 + traitArtifactBonus;
     }
 
     // Check if this artifact is boosted by voidborn ritual (stacks on top of research)
@@ -251,6 +269,12 @@ export const getArtifactShieldRegen = (
     });
     if (crystallineBonus > 0) {
         shieldRegen = Math.floor(shieldRegen * (1 + crystallineBonus));
+    }
+
+    // Личный трейт-бонус экипажа (legend)
+    const traitArtifactBonus = getCrewTraitArtifactBonus(state.crew);
+    if (traitArtifactBonus > 0) {
+        shieldRegen = Math.floor(shieldRegen * (1 + traitArtifactBonus));
     }
 
     // Check if this artifact is boosted by voidborn ritual (stacks on top of research)

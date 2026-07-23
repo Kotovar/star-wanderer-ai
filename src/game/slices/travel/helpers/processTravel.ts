@@ -16,6 +16,7 @@ import {
     giveRandomMutation,
     shiftHappiness,
 } from "@/game/crew";
+import { showHintOnce } from "@/game/hints/showHint";
 import { getActiveModule } from "@/game/modules";
 import { getAnomalyResources } from "@/game/research/utils";
 import { addTradeGood } from "@/game/slices/ship/helpers";
@@ -639,6 +640,7 @@ export const applyNeutronRadiation = (
                 get().addLog( i18nStore.t("game_logs.processTravel_26", { crewMember_name: crewMember.name, mutationName }),
                     "error",
                 );
+                showHintOnce(get().addLog, "first_mutation", "hints.first_mutation");
             }
         }
     });

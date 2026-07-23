@@ -88,6 +88,37 @@ export const processMoraleTraits = (
             );
         });
     });
+
+    // Мораль в соседних модулях (leader и т.п.) — тот же принцип, что moduleMorale,
+    // но зона действия — не сам модуль, а физически смежные с ним
+    crew.forEach((crewMember) => {
+        crewMember.traits?.forEach((trait: CrewTrait) => {
+            const adjacentBonus = trait.effect.adjacentMorale;
+            if (!adjacentBonus) return;
+
+            const affectedCrew = crew.filter(
+                (c) =>
+                    c.id !== crewMember.id &&
+                    c.happiness < (c.maxHappiness || 100) &&
+                    get().isModuleAdjacent(crewMember.moduleId, c.moduleId),
+            );
+
+            if (affectedCrew.length === 0) return;
+
+            set((s) => ({
+                crew: s.crew.map((c) =>
+                    c.id !== crewMember.id &&
+                    get().isModuleAdjacent(crewMember.moduleId, c.moduleId)
+                        ? shiftHappiness(c, adjacentBonus)
+                        : c,
+                ),
+            }));
+
+            get().addLog( i18nStore.t("game_logs.processOthers_3", { crewMember_name: crewMember.name, trait_name: trait.name, adjacentBonus }),
+                "info",
+            );
+        });
+    });
 };
 
 /**

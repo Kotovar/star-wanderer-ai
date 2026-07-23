@@ -1,10 +1,19 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { showHintOnce } from "@/game/hints/showHint";
 import type { CrewMember, GameStore, SetState } from "@/game/types";
 
 /**
  * Конфигурация дезертирства
  */
 const TURNS_AT_ZERO_HAPPINESS = 3;
+
+/** Порог раннего предупреждения о низком счастье (доля от maxHappiness) */
+const LOW_HAPPINESS_WARNING_RATIO = 0.3;
+
+const isLowHappiness = (crewMember: CrewMember) =>
+    crewMember.race !== "synthetic" &&
+    crewMember.happiness > 0 &&
+    crewMember.happiness < crewMember.maxHappiness * LOW_HAPPINESS_WARNING_RATIO;
 
 /**
  * Проверяет, должен ли член экипажа покинуть корабль
@@ -45,6 +54,10 @@ const updateTurnsAtZeroHappiness = (crewMember: CrewMember): number => {
  * @param get - Функция получения состояния
  */
 export const processDesertion = (set: SetState, get: () => GameStore): void => {
+    if (get().crew.some(isLowHappiness)) {
+        showHintOnce(get().addLog, "low_happiness", "hints.low_happiness");
+    }
+
     set((s) => {
         // Фильтруем экипаж, оставляем только тех, кто не дезертировал
         const crewToKeep = s.crew.filter((crewMember) => {

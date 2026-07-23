@@ -105,10 +105,22 @@ export const calculateResearchOutput = (
             );
         }
 
-        // Трейт бонус (experienced +15%, genius +30%, etc.)
+        // Трейт бонус (experienced +15%, master и т.д.)
         scientistContribution = Math.floor(
             scientistContribution * getTaskBonusMultiplier(scientist),
         );
+
+        // Личный бонус к науке (genius +30%, только этому учёному)
+        const researchTraitBonus =
+            scientist.traits?.reduce(
+                (sum, tr) => sum + (tr.effect.researchBonus ?? 0),
+                0,
+            ) ?? 0;
+        if (researchTraitBonus > 0) {
+            scientistContribution = Math.floor(
+                scientistContribution * (1 + researchTraitBonus),
+            );
+        }
 
         scientistBonus += scientistContribution;
     });

@@ -4,6 +4,7 @@ import {
     getMergeEffectsBonus,
 } from "@/game/slices/crew/helpers";
 import { getTechBonusSum } from "@/game/research";
+import { getHappinessEfficiencyModifier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import type {
     ActiveEffect,
     CrewMember,
@@ -156,6 +157,29 @@ export const CrewExpBonusRow = ({
             <span>{t("crew_member.exp_bonus")}</span>{" "}
             <span className="font-bold">
                 ×{expMult.toFixed(2).replace(/\.?0+$/, "")}
+            </span>
+        </div>
+    );
+};
+
+export const CrewMoraleEfficiencyRow = ({
+    member,
+    t,
+}: {
+    member: CrewMember;
+    t: TFn;
+}) => {
+    const eff = getHappinessEfficiencyModifier(member);
+    if (Math.abs(eff) < 0.005) return null;
+    const pct = Math.round(eff * 100);
+    return (
+        <div
+            className={`text-[10px] flex flex-wrap items-center gap-1 ${eff > 0 ? "text-[#00ff41]" : "text-[#ff0040]"}`}
+        >
+            <span>{t("crew_member.morale_efficiency")}</span>{" "}
+            <span className="font-bold">
+                {pct > 0 ? "+" : ""}
+                {pct}%
             </span>
         </div>
     );

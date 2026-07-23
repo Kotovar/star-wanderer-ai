@@ -10,6 +10,7 @@ import {
 } from "../constants";
 import { calculateScienceBonus } from "./calculateScienceBonus";
 import { getCrewByProfession, giveRandomMutation } from "@/game/crew";
+import { showHintOnce } from "@/game/hints/showHint";
 import { MUTATION_CHANCES } from "@/game/constants";
 import { getRandomUndiscoveredArtifact } from "@/game/artifacts";
 import { grantTimedEffect } from "@/game/effects/timedEffects";
@@ -61,6 +62,7 @@ export const applyAnomalyEffect = (
                         get().addLog( i18nStore.t("game_logs.applyAnomalyEffect_1", { scientist_name: scientist.name, mutationName }),
                             "error",
                         );
+                        showHintOnce(get().addLog, "first_mutation", "hints.first_mutation");
                     }
                 }
             });

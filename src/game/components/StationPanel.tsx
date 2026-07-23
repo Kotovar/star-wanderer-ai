@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useGameStore } from "../store";
+import { showHintOnce } from "@/game/hints/showHint";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RACES } from "../constants/races";
 import {
@@ -110,6 +111,11 @@ export function StationPanel() {
     const buyProbe = useGameStore((s) => s.buyProbe);
     const research = useGameStore((s) => s.research);
     const addLog = useGameStore((s) => s.addLog);
+
+    useEffect(() => {
+        showHintOnce(addLog, "station", "hints.station");
+    }, [addLog]);
+
     const getCrewCapacity = useGameStore((s) => s.getCrewCapacity);
     const getCargoCapacity = useGameStore((s) => s.getCargoCapacity);
     const crew = useGameStore((s) => s.crew);

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useGameStore } from "../store";
+import { showHintOnce } from "@/game/hints/showHint";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CombatShipVisual } from "./CombatShipVisual";
@@ -123,6 +124,11 @@ export function CombatPanel() {
   const isModuleAdjacent = useGameStore((s) => s.isModuleAdjacent);
   const lastEnemyHit = useGameStore((s) => s.currentCombat?.lastEnemyHit);
   const lastPlayerHit = useGameStore((s) => s.currentCombat?.lastPlayerHit);
+  const addLog = useGameStore((s) => s.addLog);
+
+  useEffect(() => {
+    showHintOnce(addLog, "combat", "hints.combat");
+  }, [addLog]);
 
   const [bayTargets, setBayTargets] = useState<Record<number, number | null>>({});
   const [activeBayId, setActiveBayId] = useState<number | null>(null);

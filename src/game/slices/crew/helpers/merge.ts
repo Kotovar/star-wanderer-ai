@@ -21,6 +21,15 @@ export const canUnmerge = (crewMember: CrewMember): boolean => {
 };
 
 /**
+ * Находит ксеноморфа, сращённого с конкретным модулем (если есть)
+ */
+export const getMergedCrewMember = (
+    crew: CrewMember[],
+    moduleId: number,
+): CrewMember | undefined =>
+    crew.find((c) => c.isMerged && c.mergedModuleId === moduleId);
+
+/**
  * Сращивает члена экипажа с модулем
  * @returns true если сращивание успешно
  */

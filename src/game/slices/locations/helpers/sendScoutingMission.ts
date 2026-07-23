@@ -23,6 +23,7 @@ import { SCOUT_BASE_EXP } from "@/game/constants/experience";
 import { addTradeGood } from "@/game/slices/ship/helpers";
 import { determineScoutingOutcome } from "./determineScoutingOutcome";
 import { giveRandomMutation } from "@/game/crew";
+import { showHintOnce } from "@/game/hints/showHint";
 import { getScoutingPlanetResources } from "@/game/research/utils";
 import { typedKeys } from "@/lib";
 import { getBestByProfession } from "@/game/crew";
@@ -115,6 +116,7 @@ export const sendScoutingMission = (
                 get().addLog( i18nStore.t("game_logs.sendScoutingMission_2", { scout_name: scout.name, mutationName }),
                     "error",
                 );
+                showHintOnce(get().addLog, "first_mutation", "hints.first_mutation");
             }
         }
     }

@@ -152,6 +152,10 @@ export type CrewTraitEffect = {
     maxHappinessBonus?: number;
     seeHostility?: number;
     pilotEvasionBonus?: number;
+    /** Личный бонус к науке этого учёного (genius) — множитель поверх его вклада */
+    researchBonus?: number;
+    /** Личный бонус к силе эффектов артефактов (legend) — как расовый resonance, но от трейта */
+    artifactBonus?: number;
 };
 
 export interface CrewTrait {
@@ -169,4 +173,8 @@ export type TraitDetails = {
     effect: CrewTraitEffect;
     rarity: string;
     priceMod: number;
+    /** Ограничивает выпадение трейта при найме этой профессией (иначе — любая) */
+    forProfession?: Profession;
+    /** Ограничивает выпадение трейта при найме этой расой (иначе — любая) */
+    forRace?: RaceId;
 };

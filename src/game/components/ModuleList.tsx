@@ -14,7 +14,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
-import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import { getMergedCrewMember } from "@/game/slices/crew/helpers";
+import { XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants/races";
+import {
+    getStandaloneMergeEffectEntries,
+    computeMergePercentDelta,
+    type MergeEffectKey,
+} from "@/game/races/mergeEffectLabels";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import { getModuleImageUrl } from "./moduleArt";
 import { GameImage } from "./GameImage";
@@ -80,6 +86,7 @@ function getModuleDescription(module: Module): string {
 
 export function ModuleList() {
     const modules = useGameStore((s) => s.ship.modules);
+    const crew = useGameStore((s) => s.crew);
     const [selectedModule, setSelectedModule] = useState<Module | null>(null);
 
     return (
@@ -89,6 +96,7 @@ export function ModuleList() {
                     <ModuleCard
                         key={module.id}
                         module={module}
+                        isMerged={!!getMergedCrewMember(crew, module.id)}
                         onClick={() => setSelectedModule(module)}
                     />
                 ))}
@@ -105,6 +113,7 @@ export function ModuleList() {
 interface ModuleCardProps {
     module: Module;
     onClick: () => void;
+    isMerged?: boolean;
 }
 
 function CompactModuleStat({ module }: { module: Module }) {
@@ -175,7 +184,7 @@ function CompactModuleStat({ module }: { module: Module }) {
     return <span className="text-[#555]">{t("module_list.condition")} —</span>;
 }
 
-function ModuleCard({ module, onClick }: ModuleCardProps) {
+function ModuleCard({ module, onClick, isMerged }: ModuleCardProps) {
     const { t } = useTranslation();
 
     const getModuleTier = () => {
@@ -207,7 +216,11 @@ function ModuleCard({ module, onClick }: ModuleCardProps) {
     const isOff = module.disabled || module.manualDisabled;
     const isBroken = module.health <= 0;
     const borderClass =
-        isOff || isBroken ? "border-[#ff0040]" : "border-[#00ff41]";
+        isOff || isBroken
+            ? "border-[#ff0040]"
+            : isMerged
+              ? "border-[#aa55ff]"
+              : "border-[#00ff41]";
 
     const artUrl = getModuleImageUrl(
         module.type,
@@ -217,7 +230,7 @@ function ModuleCard({ module, onClick }: ModuleCardProps) {
 
     return (
         <div
-            className={`bg-[rgba(0,255,65,0.05)] border ${borderClass} p-1.5 text-xs cursor-pointer transition-all hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_8px_rgba(0,255,65,0.4)] flex gap-2.5 ${isOff ? "opacity-50" : ""}`}
+            className={`${isMerged ? "bg-[rgba(170,85,255,0.08)]" : "bg-[rgba(0,255,65,0.05)]"} border ${borderClass} p-1.5 text-xs cursor-pointer transition-all hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_8px_rgba(0,255,65,0.4)] flex gap-2.5 ${isOff ? "opacity-50" : ""}`}
             onClick={onClick}
         >
             {/* Thumbnail */}
@@ -237,6 +250,14 @@ function ModuleCard({ module, onClick }: ModuleCardProps) {
                     {getTranslatedModuleName(module.type, t)}
                     {tier && (
                         <span className="text-[#555] font-normal"> {tier}</span>
+                    )}
+                    {isMerged && (
+                        <span
+                            className="ml-1 text-[#aa55ff]"
+                            title={t("module_list.xenosymbiont_merged")}
+                        >
+                            🧬
+                        </span>
                     )}
                 </div>
 
@@ -276,18 +297,29 @@ export function ModuleDetailDialog({
 }: ModuleDetailDialogProps) {
     const { t } = useTranslation();
     const crew = useGameStore((s) => s.crew);
-    const shipModules = useGameStore((s) => s.ship.modules);
-    const mergeBonus = getMergeEffectsBonus(crew, shipModules);
     const toggleModule = useGameStore((s) => s.toggleModule);
 
     if (!module) return null;
+
+    const mergedCrewMember = isStationItem
+        ? undefined
+        : getMergedCrewMember(crew, module.id);
+    const mergeEffects = mergedCrewMember
+        ? XENOSYMBIONT_MERGE_EFFECTS[module.type].effects
+        : undefined;
+    const hasMergeEffect = !!mergeEffects && Object.keys(mergeEffects).length > 0;
+    const mergeEntries = mergeEffects
+        ? getStandaloneMergeEffectEntries(module.type, mergeEffects)
+        : [];
 
     // Check if level is valid (not NaN)
     const isValidLevel = module.level && !isNaN(module.level);
 
     return (
         <Dialog open={!!module} onOpenChange={onClose}>
-            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md w-[calc(100%-2rem)] md:w-auto">
+            <DialogContent
+                className={`${mergedCrewMember ? "bg-[rgba(30,10,40,0.95)] border-[#aa55ff]" : "bg-[rgba(10,20,30,0.95)] border-[#00ff41]"} border-2 text-[#00ff41] max-w-md w-[calc(100%-2rem)] md:w-auto`}
+            >
                 <DialogHeader>
                     <DialogTitle className="text-accent font-['Orbitron']">
                         {getTranslatedModuleName(module.type, t)}
@@ -333,7 +365,38 @@ export function ModuleDetailDialog({
                             </div>
                         );
                     })()}
-                    <ModuleDetailedStats module={module} />
+                    <ModuleDetailedStats module={module} mergeEffects={mergeEffects} />
+
+                    {mergedCrewMember && (
+                        <div className="border border-[#aa55ff66] bg-[rgba(170,85,255,0.08)] p-2 space-y-1.5">
+                            <div className="text-[#aa55ff] font-bold text-[11px] flex items-center gap-1.5">
+                                🧬 {t("module_list.xenosymbiont_merged")}
+                                <span className="text-[#c9a0ff] font-normal">
+                                    ({mergedCrewMember.name})
+                                </span>
+                            </div>
+                            {mergeEntries.length > 0 && (
+                                <div className="space-y-0.5">
+                                    {mergeEntries.map((entry) => (
+                                        <div
+                                            key={entry.key}
+                                            className="flex justify-between text-[11px] text-[#dcc4ff]"
+                                        >
+                                            <span>{entry.label}</span>
+                                            <span className="font-bold">
+                                                {entry.valueText}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {!hasMergeEffect && (
+                                <div className="text-[11px] text-[#c9a0ff]">
+                                    {t("module_list.xenosymbiont_no_effect")}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {module.type === "scanner" && (
                         <ScannerDescription scanRange={module.scanRange} />
@@ -342,17 +405,9 @@ export function ModuleDetailDialog({
                     {module.type === "medical" &&
                         module.healing &&
                         module.healing > 0 && (
-                            <div>
-                                <span className="inline-flex items-center gap-1.5">
-                                    <StatIcon type="health" size={32} /> +{module.healing} HP
-                                </span>
-                                {mergeBonus.healing &&
-                                    mergeBonus.healing > 0 && (
-                                        <span className="text-ring">
-                                            {" "}
-                                            (+{mergeBonus.healing}%)
-                                        </span>
-                                    )}
+                            <div className="inline-flex items-center gap-1.5">
+                                <StatIcon type="health" size={32} /> +{module.healing} HP
+                                <MergeDelta delta={computeMergePercentDelta(module.healing, mergeEffects?.healing)} />
                             </div>
                         )}
 
@@ -422,6 +477,8 @@ export function ModuleDetailDialog({
 
 interface ModuleDetailedStatsProps {
     module: Module;
+    /** Эффекты сращённого с этим модулем ксеноморфа (если есть) */
+    mergeEffects?: Partial<Record<MergeEffectKey, number>>;
 }
 
 function DetailedStatLabel({
@@ -435,6 +492,18 @@ function DetailedStatLabel({
         <span className="text-accent inline-flex items-center gap-1.5">
             <StatIcon type={icon} size={32} />
             <span>{children}</span>
+        </span>
+    );
+}
+
+/** Прибавка от сращивания ксеноморфа рядом с базовым значением стата, фиолетовым */
+function MergeDelta({ delta }: { delta: number | null }) {
+    if (!delta) return null;
+    return (
+        <span className="text-[#aa55ff] font-bold">
+            {" "}
+            ({delta > 0 ? "+" : ""}
+            {delta})
         </span>
     );
 }
@@ -456,9 +525,12 @@ function DetailedStatRow({
     );
 }
 
-function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
+function ModuleDetailedStats({ module, mergeEffects }: ModuleDetailedStatsProps) {
     const { t } = useTranslation();
     const descriptionKey = getModuleDescription(module);
+    const percentDelta = (key: MergeEffectKey, base: number) =>
+        computeMergePercentDelta(base, mergeEffects?.[key]);
+    const flatDelta = (key: MergeEffectKey) => mergeEffects?.[key] || null;
     const artifactArmor = useGameStore((s) => {
         const artifact = s.artifacts.find(
             (a) => a.effect.type === "module_armor" && a.effect.active,
@@ -477,6 +549,7 @@ function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
             {module.type === "reactor" && module.power && module.power > 0 && (
                 <DetailedStatRow icon="power_generation" label={`${t("module_list.generation")}:`}>
                     +{module.power}
+                    <MergeDelta delta={percentDelta("powerOutput", module.power)} />
                 </DetailedStatRow>
             )}
             {module.type !== "reactor" &&
@@ -490,6 +563,7 @@ function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
             {module.type === "fueltank" && module.capacity && (
                 <DetailedStatRow icon="capacity" label={`${t("module_list.fuel")}:`}>
                     {module.capacity}
+                    <MergeDelta delta={percentDelta("fuelCapacity", module.capacity)} />
                 </DetailedStatRow>
             )}
             {module.type === "cargo" &&
@@ -497,6 +571,7 @@ function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
                 module.capacity > 0 && (
                     <DetailedStatRow icon="cargo" label={`${t("module_list.capacity")}:`}>
                         {module.capacity}т
+                        <MergeDelta delta={percentDelta("cargoCapacity", module.capacity)} />
                     </DetailedStatRow>
                 )}
             {module.type === "engine" && module.fuelEfficiency && (
@@ -534,12 +609,14 @@ function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
                         </div>
                         <DetailedStatRow icon="scan_range" label={`${t("module_list.scan_range")}:`}>
                             {module.scanRange}
+                            <MergeDelta delta={flatDelta("scanRange")} />
                         </DetailedStatRow>
                     </>
                 )}
             {module.type === "lab" && (
                 <DetailedStatRow icon="research" label={`${t("module_list.research")}:`}>
-                    {module.researchOutput || 5}{" "}
+                    {module.researchOutput || 5}
+                    <MergeDelta delta={percentDelta("researchSpeed", module.researchOutput || 5)} />{" "}
                     {t("module_list.search_per_turn")}
                 </DetailedStatRow>
             )}
@@ -548,13 +625,16 @@ function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
                 module.shields > 0 && (
                     <DetailedStatRow icon="shields" label={`${t("module_list.shields")}:`}>
                         {module.shields}
+                        <MergeDelta delta={percentDelta("shieldCapacity", module.shields)} />
                     </DetailedStatRow>
                 )}
             {module.type === "lifesupport" &&
                 module.oxygen &&
                 module.oxygen > 0 && (
                     <DetailedStatRow icon="oxygen" label={`${t("module_list.oxygen")}:`}>
-                        {module.oxygen} {t("module_list.creatures")}
+                        {module.oxygen}
+                        <MergeDelta delta={percentDelta("oxygenEfficiency", module.oxygen)} />{" "}
+                        {t("module_list.creatures")}
                     </DetailedStatRow>
                 )}
             {module.type === "quarters" &&
@@ -568,8 +648,9 @@ function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
                 module.repairAmount !== undefined &&
                 module.repairAmount > 0 && (
                     <DetailedStatRow icon="repair" label={`${t("module_list.repair_per_turn")}:`}>
-                        {module.repairAmount} HP × {module.repairTargets ?? 1}{" "}
-                        {t("module_list.modules")}
+                        {module.repairAmount}
+                        <MergeDelta delta={percentDelta("repairBonus", module.repairAmount)} /> HP
+                        × {module.repairTargets ?? 1} {t("module_list.modules")}
                     </DetailedStatRow>
                 )}
             {module.type === "weaponbay" && (
@@ -585,16 +666,20 @@ function ModuleDetailedStats({ module }: ModuleDetailedStatsProps) {
             {module.type === "habitat_module" && module.healing && module.healing > 0 && (
                 <div className="inline-flex items-center gap-1.5">
                     <StatIcon type="health" size={32} /> +{module.healing} HP
+                    <MergeDelta delta={percentDelta("healing", module.healing)} />
                 </div>
             )}
             {(module.type === "bio_research_lab" || module.type === "deep_survey_array") && module.researchOutput && module.researchOutput > 0 && (
                 <DetailedStatRow icon="research" label={`${t("module_list.research")}:`}>
-                    {module.researchOutput} {t("module_list.search_per_turn")}
+                    {module.researchOutput}
+                    <MergeDelta delta={percentDelta("researchSpeed", module.researchOutput)} />{" "}
+                    {t("module_list.search_per_turn")}
                 </DetailedStatRow>
             )}
             {module.type === "deep_survey_array" && module.scanRange && module.scanRange > 0 && (
                 <DetailedStatRow icon="scan_range" label={`${t("module_list.scan_range")}:`}>
                     {module.scanRange}
+                    <MergeDelta delta={flatDelta("scanRange")} />
                 </DetailedStatRow>
             )}
             {module.type === "pulse_drive" && module.power && module.power > 0 && (

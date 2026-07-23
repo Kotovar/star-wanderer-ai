@@ -24,6 +24,7 @@ export const CREW_TRAITS: Record<
             effect: { accuracyBonus: 0.05 },
             rarity: "common",
             priceMod: 1.1,
+            forProfession: "gunner",
         },
         {
             id: "experienced",
@@ -78,16 +79,17 @@ export const CREW_TRAITS: Record<
         {
             id: "genius",
             name: "Гений",
-            desc: "+30% эффективность, +20% опыт",
-            effect: { taskBonus: 0.3, expBonus: 0.2 },
+            desc: "+30% к науке от этого учёного, +20% опыт",
+            effect: { researchBonus: 0.3, expBonus: 0.2 },
             rarity: "rare",
             priceMod: 1.5,
+            forProfession: "scientist",
         },
         {
             id: "leader",
             name: "Лидер",
-            desc: "+20 настроение команды, +10% эффективность",
-            effect: { moduleMorale: 20, taskBonus: 0.1 },
+            desc: "+20 настроение команды в модуле, +10 в соседних модулях, +10% эффективность",
+            effect: { moduleMorale: 20, adjacentMorale: 10, taskBonus: 0.1 },
             rarity: "rare",
             priceMod: 1.4,
         },
@@ -111,8 +113,8 @@ export const CREW_TRAITS: Record<
         {
             id: "legend",
             name: "Легенда",
-            desc: "+50% к макс. здоровью и морали",
-            effect: { healthBonus: 0.5, maxHappinessBonus: 0.5 },
+            desc: "+50% к макс. здоровью, +15% к силе эффектов артефактов корабля",
+            effect: { healthBonus: 0.5, artifactBonus: 0.15 },
             rarity: "legendary",
             priceMod: 2.5,
         },
@@ -167,6 +169,7 @@ export const CREW_TRAITS: Record<
             effect: { accuracyPenalty: 0.1 },
             rarity: "rare",
             priceMod: 0.65,
+            forProfession: "gunner",
         },
         {
             id: "pessimist",
@@ -207,8 +210,13 @@ export const CREW_TRAITS: Record<
         {
             id: "third_eye",
             name: "Мутация: Третий глаз",
-            desc: "+15% шанс крита (стрелок в оружейном отсеке), -15% макс. здоровья, -5 морали экипажу в модуле",
-            effect: { critBonus: 0.15, healthPenalty: 0.15, teamMorale: -5 },
+            desc: "+15% шанс крита (стрелок в оружейном отсеке), +5% трофеев после боя (любая профессия), -15% макс. здоровья, -5 морали экипажу в модуле",
+            effect: {
+                critBonus: 0.15,
+                lootBonus: 0.05,
+                healthPenalty: 0.15,
+                teamMorale: -5,
+            },
             rarity: "mutation",
             priceMod: 1.0,
         },
@@ -251,10 +259,11 @@ export const CREW_TRAITS: Record<
         {
             id: "paranoid",
             name: "Мутация: Паранойя",
-            desc: "-15 морали себе каждый ход, +10% уклонение (пилот в кабине), -5 морали экипажу в модуле",
+            desc: "-15 морали себе каждый ход, +10% уклонение (пилот в кабине), -10% урона по себе в бою (любая профессия), -5 морали экипажу в модуле",
             effect: {
                 moralePenalty: 15,
                 pilotEvasionBonus: 0.1,
+                combatDamageReduction: 0.1,
                 teamMorale: -5,
             },
             rarity: "mutation",

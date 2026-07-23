@@ -24,10 +24,12 @@ import {
     getAdjacentModules,
     CrewDamageReductionRow,
     CrewExpBonusRow,
+    CrewMoraleEfficiencyRow,
 } from "./CrewListHelpers";
 import { ProfessionSprite } from "./ProfessionSprite";
 import { CrewStatusIcon } from "./CrewStatusIcon";
 import { ASSIGNMENT_EXHAUSTED_AT } from "@/game/crew/assignmentFatigue";
+import { getHappinessEfficiencyModifier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 
 const stripLeadingSymbol = (value: string) =>
     value.replace(/^[^\p{L}\p{N}]+/u, "");
@@ -76,11 +78,15 @@ export function CrewList() {
                             : member.health < 60
                               ? "bg-[#ffb000]"
                               : "bg-[#00ff41]";
+                    const mutationTraits = member.traits.filter(
+                        (tr) => tr.type === "mutation",
+                    );
+                    const hasMutation = mutationTraits.length > 0;
 
                     return (
                         <div
                             key={member.id}
-                            className="group bg-[rgba(0,255,65,0.045)] border border-[#00ff4155] p-2 text-xs cursor-pointer transition-all hover:border-[#00ff41] hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_10px_rgba(0,255,65,0.32)] flex flex-col gap-1.5"
+                            className={`group ${hasMutation ? "bg-[rgba(204,68,255,0.06)] border-[#cc44ff66] hover:border-[#cc44ff] hover:bg-[rgba(204,68,255,0.12)] hover:shadow-[0_0_10px_rgba(204,68,255,0.35)]" : "bg-[rgba(0,255,65,0.045)] border-[#00ff4155] hover:border-[#00ff41] hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_10px_rgba(0,255,65,0.32)]"} border p-2 text-xs cursor-pointer transition-all flex flex-col gap-1.5`}
                             onClick={() => setSelectedCrew(member)}
                         >
                             {/* Name row */}
@@ -111,6 +117,16 @@ export function CrewList() {
                                     >
                                         {AUGMENTATIONS[member.augmentation]
                                             ?.icon ?? "🔧"}
+                                    </span>
+                                )}
+                                {hasMutation && (
+                                    <span
+                                        className="shrink-0 text-[9px] text-[#cc44ff]"
+                                        title={mutationTraits
+                                            .map((tr) => tr.name)
+                                            .join(", ")}
+                                    >
+                                        ☣
                                     </span>
                                 )}
                             </div>
@@ -182,6 +198,20 @@ export function CrewList() {
                                     <span className="text-[#555] text-[9px] shrink-0 tabular-nums">
                                         ☺{member.happiness}
                                     </span>
+                                    {(() => {
+                                        const eff = getHappinessEfficiencyModifier(member);
+                                        if (Math.abs(eff) < 0.005) return null;
+                                        const pct = Math.round(eff * 100);
+                                        return (
+                                            <span
+                                                className={`text-[9px] shrink-0 tabular-nums font-bold ${eff > 0 ? "text-[#00ff41]" : "text-[#ff0040]"}`}
+                                                title={t("crew_member.morale_efficiency_hint")}
+                                            >
+                                                {pct > 0 ? "+" : ""}
+                                                {pct}%
+                                            </span>
+                                        );
+                                    })()}
                                 </div>
                             )}
 
@@ -332,6 +362,10 @@ export function CrewList() {
                                         <CrewExpBonusRow
                                             member={selectedCrew}
                                             researchedTechs={researchedTechs}
+                                            t={t}
+                                        />
+                                        <CrewMoraleEfficiencyRow
+                                            member={selectedCrew}
                                             t={t}
                                         />
                                         {race?.hasHappiness ? (

@@ -6,6 +6,7 @@ import type {
     ArtifactNegativeType,
 } from "@/game/types";
 import { giveRandomMutation, shiftHappiness } from "@/game/crew";
+import { showHintOnce } from "@/game/hints/showHint";
 
 /**
  * Обработчик негативного эффекта проклятого артефакта
@@ -124,6 +125,7 @@ function applyCrewMutation(
                 get().addLog( i18nStore.t("game_logs.processCursedArtifacts_4", { artifact_name: artifact.name, crewMember_name: crewMember.name, mutationName }),
                     "warning",
                 );
+                showHintOnce(get().addLog, "first_mutation", "hints.first_mutation");
             }
         }
     });

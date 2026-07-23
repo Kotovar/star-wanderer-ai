@@ -1119,6 +1119,8 @@ export function generateStationCrew(
       quality,
       traitSeed,
       hasHappiness,
+      profession,
+      raceId,
     );
 
     const basePrice = CREW_BASE_PRICES[profession];

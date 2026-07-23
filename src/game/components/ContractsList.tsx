@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGameStore } from "@/game/store";
+import { showHintOnce } from "@/game/hints/showHint";
 import type { ArtifactRarity, Contract, Goods } from "@/game/types";
 import {
     Dialog,
@@ -90,7 +91,14 @@ export function ContractsList() {
     const cancelContract = useGameStore((s) => s.cancelContract);
     const turn = useGameStore((s) => s.turn);
     const get = useGameStore.getState;
+    const addLog = useGameStore((s) => s.addLog);
     const { t } = useTranslation();
+
+    useEffect(() => {
+        if (activeContracts.length > 0) {
+            showHintOnce(addLog, "contracts", "hints.contracts");
+        }
+    }, [activeContracts.length, addLog]);
     const [selectedContract, setSelectedContract] = useState<Contract | null>(
         null,
     );

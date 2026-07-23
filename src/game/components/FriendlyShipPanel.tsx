@@ -178,6 +178,8 @@ export function FriendlyShipPanel() {
       quality,
       0,
       crewRace.hasHappiness,
+      availableProfession,
+      crewRaceId,
     );
     const basePrice = CREW_BASE_PRICES[availableProfession];
     const levelMod = availableLevel ? 1 + (availableLevel - 1) * 0.2 : 1;

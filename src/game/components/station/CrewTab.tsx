@@ -323,14 +323,18 @@ function CrewTraits({ traits }: { traits: CrewTrait[] }) {
                                     ? "#00ff41"
                                     : trait.type === "negative"
                                       ? "#ff4444"
-                                      : "#ffb000",
+                                      : trait.type === "mutation"
+                                        ? "#cc44ff"
+                                        : "#ffb000",
                         }}
                     >
                         {trait.type === "positive"
                             ? "✓"
                             : trait.type === "negative"
                               ? "✗"
-                              : "⚡"}{" "}
+                              : trait.type === "mutation"
+                                ? "☣"
+                                : "⚡"}{" "}
                         {translatedName}: {translatedDesc}
                     </div>
                 );
@@ -546,14 +550,18 @@ function CrewDetailDialog({
                                                 ? "#00ff41"
                                                 : trait.type === "negative"
                                                   ? "#ff4444"
-                                                  : "#ffb000",
+                                                  : trait.type === "mutation"
+                                                    ? "#cc44ff"
+                                                    : "#ffb000",
                                     }}
                                 >
                                     {trait.type === "positive"
                                         ? "✓"
                                         : trait.type === "negative"
                                           ? "✗"
-                                          : "⚡"}{" "}
+                                          : trait.type === "mutation"
+                                            ? "☣"
+                                            : "⚡"}{" "}
                                     {translatedName}: {translatedDesc}
                                 </div>
                             );
