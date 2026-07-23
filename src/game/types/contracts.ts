@@ -81,7 +81,6 @@ export type ContractType =
     | "bounty"
     | "supply_run"
     | "diplomacy"
-    | "rescueSurvivors"
     | "research"
     | "gas_dive"
     | "expedition_survey"

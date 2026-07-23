@@ -12,7 +12,6 @@ export const CONTRACT_REWARDS = {
     bounty: { baseExp: 20, threatBonus: 8 },
     supply_run: { baseExp: 15 },
     diplomacy: { baseExp: 15 },
-    rescueSurvivors: { baseExp: 15 },
     research: { baseExp: 20 },
     gas_dive: { baseExp: 22 },
     expedition_survey: { baseExp: 25 },

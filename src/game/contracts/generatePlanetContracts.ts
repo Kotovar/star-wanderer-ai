@@ -1,6 +1,7 @@
 import type { ArtifactRarity } from "@/game/types/artifacts";
-import type { Contract, PlanetType, RaceId, Sector } from "@/game/types";
+import type { Contract, RaceId, Sector } from "@/game/types";
 import { TRADE_GOODS } from "@/game/constants/goods";
+import { PLANET_TYPES } from "@/game/constants/planets";
 import { getTierPriceMultiplier } from "@/game/slices/trade/constants";
 import { typedKeys } from "@/lib/utils";
 import { DELIVERY_GOODS } from "../constants/contracts";
@@ -59,6 +60,13 @@ export const generatePlanetContracts = (
     const availableSectors = allSectors.filter(
         (s) => s.id !== sector.id && s.tier < 4,
     );
+    const scannablePlanets = allSectors
+        .filter((candidateSector) => (candidateSector.tier ?? 1) < 4)
+        .flatMap((candidateSector) =>
+            candidateSector.locations.filter(
+                (location) => location.type === "planet",
+            ),
+        );
 
     if (availableSectors.length === 0) return contracts;
 
@@ -190,30 +198,29 @@ export const generatePlanetContracts = (
             // Voidborn: Void exploration - enter a storm to collect void energy
             const tier = sector.tier ?? 1;
             const requiredStormIntensity = tier;
-            const stormSectors = availableSectors.filter((s) =>
-                s.locations.some(
-                    (l) =>
-                        l.type === "storm" &&
-                        (l.stormIntensity ?? 1) >= requiredStormIntensity,
-                ),
+            const stormTargets = availableSectors.flatMap((candidateSector) =>
+                candidateSector.locations
+                    .filter(
+                        (location) =>
+                            location.type === "storm" &&
+                            (location.stormIntensity ?? 1) >=
+                                requiredStormIntensity,
+                    )
+                    .map((storm) => ({ sector: candidateSector, storm })),
             );
-            if (stormSectors.length === 0) return null;
-            const tgt =
-                stormSectors[Math.floor(Math.random() * stormSectors.length)];
-            const storm = tgt.locations.find(
-                (l) =>
-                    l.type === "storm" &&
-                    (l.stormIntensity ?? 1) >= requiredStormIntensity,
-            );
+            if (stormTargets.length === 0) return null;
+            const target =
+                stormTargets[Math.floor(Math.random() * stormTargets.length)];
             const rewardBase = REWARD.voidborn.base[tier - 1];
             const rewardRange = REWARD.voidborn.range[tier - 1];
             return {
                 id: `c-${planetId}-void-${Date.now()}-${Math.random()}`,
                 type: "rescue",
                 desc: "contracts.desc_rescue_void",
-                sectorId: tgt.id,
-                sectorName: tgt.name,
-                stormName: storm?.name,
+                sectorId: target.sector.id,
+                sectorName: target.sector.name,
+                targetLocationId: target.storm.id,
+                stormName: target.storm.name,
                 sourcePlanetId: planetId,
                 sourceSectorName: sector.name,
                 requiresVisit: 1,
@@ -265,24 +272,16 @@ export const generatePlanetContracts = (
         {
             type: "scan_planet" as const,
             gen: (): Contract | null => {
-                // Scan planet - find any planet of specified type in any sector
-                const planetTypes: PlanetType[] = [
-                    "Пустынная",
-                    "Ледяная",
-                    "Лесная",
-                    "Вулканическая",
-                    "Океаническая",
-                    "Радиоактивная",
-                    "Тропическая",
-                    "Арктическая",
-                    "Разрушенная войной",
-                    "Планета-кольцо",
-                    "Приливная",
-                ];
-
-                const availableTypes = planetTypes.filter(
-                    (t) => t !== planetType,
+                const tier = sector.tier ?? 1;
+                const requiresVisit = Math.min(tier, 3);
+                const availableTypes = PLANET_TYPES.filter(
+                    (type) =>
+                        type !== planetType &&
+                        scannablePlanets.filter(
+                            (location) => location.planetType === type,
+                        ).length >= requiresVisit,
                 );
+                if (availableTypes.length === 0) return null;
                 const targetType =
                     availableTypes[
                         Math.floor(Math.random() * availableTypes.length)
@@ -293,8 +292,6 @@ export const generatePlanetContracts = (
                     (l) => l.type === "planet" && l.id === planetId,
                 );
 
-                const tier = sector.tier ?? 1;
-                const requiresVisit = Math.min(tier, 3);
                 const reward =
                     REWARD.scan_planet.base[tier - 1] +
                     Math.floor(Math.random() * REWARD.scan_planet.range[tier - 1]);
@@ -453,6 +450,11 @@ export const generatePlanetContracts = (
                 const requiresAnomalies =
                     RESEARCH_ANOMALIES.min[tier - 1] +
                     Math.floor(Math.random() * RESEARCH_ANOMALIES.range[tier - 1]);
+                const availableAnomalies = allSectors
+                    .filter((candidateSector) => (candidateSector.tier ?? 1) < 4)
+                    .flatMap((candidateSector) => candidateSector.locations)
+                    .filter((location) => location.type === "anomaly");
+                if (availableAnomalies.length < requiresAnomalies) return null;
                 const rewardBase = REWARD.research.base[tier - 1];
                 const rewardRange = REWARD.research.range[tier - 1];
                 return {
@@ -515,7 +517,12 @@ export const generatePlanetContracts = (
                 // Find sectors that have inhabited (non-empty) planets other than the source
                 const candidatePlanets = availableSectors.flatMap((s) =>
                     s.locations
-                        .filter((l) => l.type === "planet" && !l.isEmpty)
+                        .filter(
+                            (l) =>
+                                l.type === "planet" &&
+                                !l.isEmpty &&
+                                !l.expeditionCompleted,
+                        )
                         .map((l) => ({ planet: l, sector: s })),
                 );
                 if (candidatePlanets.length === 0) return null;

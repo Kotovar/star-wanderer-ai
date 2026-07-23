@@ -89,30 +89,36 @@ const handleResearchCompletion = (
     playSound("success");
 
     // Завершаем квест синтетиков (исследование технологии нужного тира)
-    const synthContract = get().activeContracts.find((c) => {
-        if (!(c.type === "research" && c.isRaceQuest && c.requiresTechResearch))
-            return false;
-        const minTier = c.requiredTechTier ?? 1;
-        return completedTech.tier >= minTier;
-    });
-    if (synthContract) {
-        const reward = synthContract.reward || 0;
+    const synthContracts = get().activeContracts.filter(
+        (contract) =>
+            contract.type === "research" &&
+            contract.isRaceQuest &&
+            contract.requiresTechResearch &&
+            completedTech.tier >= (contract.requiredTechTier ?? 1),
+    );
+    if (synthContracts.length > 0) {
+        const completedIds = new Set(
+            synthContracts.map((contract) => contract.id),
+        );
+        const reward = synthContracts.reduce(
+            (total, contract) => total + (contract.reward ?? 0),
+            0,
+        );
         set((s) => ({
             credits: s.credits + reward,
-            completedContractIds: [
-                ...s.completedContractIds,
-                synthContract.id,
-            ],
+            completedContractIds: [...s.completedContractIds, ...completedIds],
             activeContracts: s.activeContracts.filter(
-                (ac) => ac.id !== synthContract.id,
+                (contract) => !completedIds.has(contract.id),
             ),
         }));
         const expReward = CONTRACT_REWARDS.research.baseExp;
-        giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
-        get().addLog( i18nStore.t("game_logs.processResearch_3", { reward }),
-            "info",
-        );
-        get().changeReputation("synthetic", 10);
+        synthContracts.forEach((contract) => {
+            giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+            get().addLog( i18nStore.t("game_logs.processResearch_3", { reward: contract.reward }),
+                "info",
+            );
+            get().changeReputation("synthetic", 10);
+        });
     }
 
     // Логирование открытия новых технологий

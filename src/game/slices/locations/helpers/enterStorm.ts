@@ -412,37 +412,39 @@ export const handleStormEntry = (set: SetState, get: () => GameStore): void => {
         get().gainExp(scientist, SCIENTIST_STORM_EXP * intensity);
     });
 
-    // Завершаем контракты на спасение (voidborn quest - выжить в шторме)
-    const rescueContract = get().activeContracts.find(
-        (c) =>
-            c.type === "rescue" &&
-            c.isRaceQuest &&
-            c.sectorId === state.currentSector?.id &&
-            intensity >= (c.requiredStormIntensity ?? 1),
+    const rescueContracts = get().activeContracts.filter(
+        (contract) =>
+            contract.type === "rescue" &&
+            contract.isRaceQuest &&
+            contract.sectorId === state.currentSector?.id &&
+            (contract.targetLocationId
+                ? contract.targetLocationId === loc.id
+                : intensity >= (contract.requiredStormIntensity ?? 1)),
     );
-
-    if (rescueContract) {
-        set((s) => ({
-            credits: s.credits + (rescueContract.reward || 0),
-        }));
-        get().addLog( i18nStore.t("game_logs.enterStorm_5", { reward: rescueContract.reward }),
-            "info",
+    if (rescueContracts.length > 0) {
+        const completedIds = new Set(
+            rescueContracts.map((contract) => contract.id),
         );
-
-        // Даём опыт всему экипажу
-        const expReward = CONTRACT_REWARDS.rescue.baseExp;
-        giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
-
+        const reward = rescueContracts.reduce(
+            (total, contract) => total + (contract.reward ?? 0),
+            0,
+        );
         set((s) => ({
-            completedContractIds: [
-                ...s.completedContractIds,
-                rescueContract.id,
-            ],
+            credits: s.credits + reward,
+            completedContractIds: [...s.completedContractIds, ...completedIds],
             activeContracts: s.activeContracts.filter(
-                (ac) => ac.id !== rescueContract.id,
+                (contract) => !completedIds.has(contract.id),
             ),
         }));
-        get().changeReputation("voidborn", 10);
+
+        const expReward = CONTRACT_REWARDS.rescue.baseExp;
+        rescueContracts.forEach((contract) => {
+            get().addLog( i18nStore.t("game_logs.enterStorm_5", { reward: contract.reward }),
+                "info",
+            );
+            giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+            get().changeReputation("voidborn", 10);
+        });
     }
 
     // Обновляем статистику корабля и переходим к следующему ходу

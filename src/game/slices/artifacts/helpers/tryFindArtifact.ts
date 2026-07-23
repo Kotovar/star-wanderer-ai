@@ -47,7 +47,7 @@ export const tryFindArtifact = (
     }));
 
     // Завершаем контракт на добычу (кристаллический квест)
-    completeMiningContractIfActive(set, get, artifact);
+    completeMiningContracts(set, get, artifact);
 
     playSound("success");
     return artifact;
@@ -119,33 +119,35 @@ const getBaseArtifactFinderBonus = (state: GameStore): number => {
  * @param set - Функция обновления состояния
  * @param get - Функция получения состояния
  */
-const completeMiningContractIfActive = (
+export const completeMiningContracts = (
     set: SetState,
     get: () => GameStore,
     artifact: Artifact,
 ): void => {
-    const miningContract = get().activeContracts.find(
-        (c) => c.type === "mining" && c.isRaceQuest,
+    const ready = get().activeContracts.filter(
+        (contract) =>
+            contract.type === "mining" &&
+            contract.isRaceQuest &&
+            (!contract.requiredRarities ||
+                contract.requiredRarities.includes(artifact.rarity)),
     );
+    if (ready.length === 0) return;
 
-    if (!miningContract) return;
-
-    // Проверяем, подходит ли редкость артефакта для задания
-    if (
-        miningContract.requiredRarities &&
-        !miningContract.requiredRarities.includes(artifact.rarity)
-    )
-        return;
-
-    const reward = miningContract.reward || 0;
+    const completedIds = new Set(ready.map((contract) => contract.id));
+    const reward = ready.reduce(
+        (total, contract) => total + (contract.reward ?? 0),
+        0,
+    );
 
     set((s) => ({
         credits: s.credits + reward,
-        completedContractIds: [...s.completedContractIds, miningContract.id],
+        completedContractIds: [...s.completedContractIds, ...completedIds],
         activeContracts: s.activeContracts.filter(
-            (ac) => ac.id !== miningContract.id,
+            (contract) => !completedIds.has(contract.id),
         ),
     }));
 
-    get().addLog( i18nStore.t("game_logs.tryFindArtifact_1", { reward }), "info");
+    ready.forEach((contract) => {
+        get().addLog( i18nStore.t("game_logs.tryFindArtifact_1", { reward: contract.reward }), "info");
+    });
 };

@@ -183,8 +183,8 @@ export const selectLocation = (
                 break;
             }
             set({ gameMode: "planet" });
+            get().processScanContracts();
             if (!loc.isEmpty) {
-                get().processScanContracts();
                 get().completeScanContracts();
                 get().handleDiplomacyContracts(locationIdx);
                 get().handleSupplyRunContracts(locationIdx);

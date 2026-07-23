@@ -1,5 +1,6 @@
 import { CURRENT_STATE_VERSION } from "@/game/constants/version";
 import { getArchiveHintLocations } from "@/game/artifacts/utils";
+import { isContractTargetAvailable } from "@/game/contracts/targetAvailability";
 import { generateSpaceMonster } from "@/game/galaxy/generate";
 import { assignGridPositions } from "@/game/sectorGrid";
 import type { GameState, Location, Sector } from "@/game/types";
@@ -156,6 +157,29 @@ const migrations: Record<number, Migration> = {
             revealedCount >= (contract.requiredDiscoveries ?? 1),
         };
       }),
+    };
+  },
+  7: (raw) => {
+    const state = raw as Partial<GameState>;
+    const sectors = state.galaxy?.sectors;
+    if (!sectors || !state.activeContracts) {
+      return { ...state, stateVersion: 8 };
+    }
+
+    return {
+      ...state,
+      stateVersion: 8,
+      activeContracts: state.activeContracts.filter((contract) =>
+        isContractTargetAvailable(
+          contract,
+          sectors,
+          state.completedLocations ?? [],
+          {
+            artifacts: state.artifacts ?? [],
+            researchedTechs: state.research?.researchedTechs ?? [],
+          },
+        ),
+      ),
     };
   },
 };

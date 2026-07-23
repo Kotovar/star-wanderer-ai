@@ -20,27 +20,31 @@ export const acceptContract = (
     contract: Contract,
     set: SetState,
     get: () => GameStore,
-): void => {
-    if (get().activeContracts.some((c) => c.id === contract.id)) {
+): boolean => {
+    const state = get();
+    if (state.activeContracts.some((c) => c.id === contract.id)) {
         get().addLog( i18nStore.t("game_logs.acceptContract_1"), "error");
-        return;
+        return false;
     }
 
     // Цель могла исчезнуть с момента генерации (враги убиты, шторм пройден)
     if (
         !isContractTargetAvailable(
             contract,
-            get().galaxy.sectors,
-            get().completedLocations,
+            state.galaxy.sectors,
+            state.completedLocations,
+            {
+                artifacts: state.artifacts,
+                researchedTechs: state.research.researchedTechs,
+            },
         )
     ) {
         get().addLog( i18nStore.t("game_logs.acceptContract_2"), "error");
-        return;
+        return false;
     }
 
     // Проверка репутации для расовых контрактов
     if (contract.requiredRace && contract.isRaceQuest) {
-        const state = get();
         const isAvailable = isRaceContractAvailable(
             state.raceReputation,
             contract.requiredRace,
@@ -51,7 +55,7 @@ export const acceptContract = (
             get().addLog( i18nStore.t("game_logs.acceptContract_3", { raceName }),
                 "error",
             );
-            return;
+            return false;
         }
     }
 
@@ -60,24 +64,24 @@ export const acceptContract = (
         const cargoName = DELIVERY_GOODS[cargoKey]
             ? i18nStore.t(`delivery_goods.${cargoKey}`)
             : contract.cargo;
-        const cargoMod = getActiveModule(get().ship.modules, "cargo");
+        const cargoMod = getActiveModule(state.ship.modules, "cargo");
 
         if (!cargoMod) {
             get().addLog( i18nStore.t("game_logs.acceptContract_4"), "error");
-            return;
+            return false;
         }
 
         // Проверяем реальный объём груза контракта против суммарной вместимости
         const cargoAmount = contract.quantity ?? DELIVERY_CONTRACT_CARGO_AMOUNT;
 
         const cur =
-            get().ship.cargo.reduce((s, c) => s + c.quantity, 0) +
-            get().ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
-            get().probes;
+            state.ship.cargo.reduce((s, c) => s + c.quantity, 0) +
+            state.ship.tradeGoods.reduce((s, g) => s + g.quantity, 0) +
+            state.probes;
 
-        if (cur + cargoAmount > getCargoCapacity(get())) {
+        if (cur + cargoAmount > getCargoCapacity(state)) {
             get().addLog( i18nStore.t("game_logs.acceptContract_5"), "error");
-            return;
+            return false;
         }
         set((s) => ({
             ship: {
@@ -127,4 +131,5 @@ export const acceptContract = (
     }
 
     playSound("success");
+    return true;
 };

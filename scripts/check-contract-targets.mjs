@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { isContractTargetAvailable } from "../src/game/contracts/targetAvailability.ts";
 import {
   getContractTurnsRemaining,
   getGeneratedContractTimeLimit,
@@ -17,6 +16,10 @@ const root = path.resolve(path.dirname(scriptPath), "..");
 const jiti = require("jiti")(scriptPath, {
   alias: { "@": path.join(root, "src") },
 });
+const { isContractTargetAvailable } = jiti(
+  "../src/game/contracts/targetAvailability.ts",
+);
+const { RESEARCH_TREE } = jiti("../src/game/constants/research/index.ts");
 const { checkContractExpiry } = jiti(
   "../src/game/slices/contracts/helpers/checkContractExpiry.ts",
 );
@@ -25,6 +28,15 @@ const { revealExpeditionTile } = jiti(
 );
 const { handleDerelictRecoveryContracts } = jiti(
   "../src/game/slices/contracts/helpers/handleDerelictRecoveryContracts.ts",
+);
+const { completeMiningContracts } = jiti(
+  "../src/game/slices/artifacts/helpers/tryFindArtifact.ts",
+);
+const { generatePlanetContracts } = jiti(
+  "../src/game/contracts/generatePlanetContracts.ts",
+);
+const { processScanContracts } = jiti(
+  "../src/game/slices/contracts/helpers/processScanContracts.ts",
 );
 const { loadWithMigrations } = jiti("../src/game/saves/migrations.ts");
 
@@ -36,6 +48,19 @@ const sectors = [
       { id: "1-1", type: "enemy", threat: 5, defeated: true },
       { id: "1-2", type: "storm", stormIntensity: 2 },
       { id: "1-3", type: "derelict_ship", derelictExplored: false },
+      { id: "1-ice-1", type: "planet", planetType: "Ледяная" },
+      {
+        id: "1-ice-2",
+        type: "planet",
+        planetType: "Ледяная",
+        isEmpty: true,
+      },
+      { id: "1-anomaly-1", type: "anomaly" },
+      {
+        id: "1-expedition",
+        type: "planet",
+        planetType: "Океаническая",
+      },
     ],
   },
   {
@@ -44,11 +69,20 @@ const sectors = [
       { id: "2-0", type: "enemy", threat: 1, defeated: true },
       { id: "2-1", type: "storm", stormIntensity: 1 },
       { id: "2-2", type: "derelict_ship", derelictExplored: true },
+      { id: "2-anomaly-1", type: "anomaly" },
+      {
+        id: "2-expedition-done",
+        type: "planet",
+        planetType: "Лесная",
+        expeditionCompleted: true,
+      },
     ],
   },
 ];
 
-const ok = (c, completed = []) => isContractTargetAvailable(c, sectors, completed);
+const defaultContext = { artifacts: [], researchedTechs: [] };
+const ok = (c, completed = [], context = defaultContext) =>
+  isContractTargetAvailable(c, sectors, completed, context);
 
 // combat: живой враг есть в секторе 1, в секторе 2 все убиты
 assert.ok(ok({ type: "combat", sectorId: 1 }), "combat: живой враг не найден");
@@ -66,6 +100,216 @@ assert.ok(
   "rescue: пройденный шторм засчитан",
 );
 assert.ok(!ok({ type: "rescue", sectorId: 2, requiredStormIntensity: 2 }), "rescue: слабый шторм засчитан");
+assert.ok(
+  ok({
+    type: "rescue",
+    sectorId: 1,
+    targetLocationId: "1-2",
+    requiredStormIntensity: 2,
+  }),
+  "rescue: конкретный шторм не найден",
+);
+assert.ok(
+  !ok(
+    {
+      type: "rescue",
+      sectorId: 1,
+      targetLocationId: "1-2",
+      requiredStormIntensity: 2,
+    },
+    ["1-2"],
+  ),
+  "rescue: пройденный конкретный шторм засчитан",
+);
+
+// scan_planet: нужно достаточно разных планет, включая пустые
+assert.ok(
+  ok({ type: "scan_planet", planetType: "Ледяная", requiresVisit: 2 }),
+  "scan_planet: доступные планеты не найдены",
+);
+assert.ok(
+  !ok({ type: "scan_planet", planetType: "Ледяная", requiresVisit: 3 }),
+  "scan_planet: недостаток планет не замечен",
+);
+assert.ok(
+  !ok({
+    type: "scan_planet",
+    planetType: "Ледяная",
+    requiresVisit: 2,
+    scannedPlanetIds: ["1-ice-1"],
+  }),
+  "scan_planet: повторный скан засчитан как новая цель",
+);
+const emptyPlanetScan = processScanContracts({
+  currentLocation: {
+    id: "empty-scan-target",
+    type: "planet",
+    planetType: "Ледяная",
+    isEmpty: true,
+  },
+  activeContracts: [
+    {
+      id: "empty-scan-contract",
+      type: "scan_planet",
+      planetType: "Ледяная",
+      requiresVisit: 1,
+      visited: 0,
+    },
+  ],
+  ship: {
+    modules: [
+      { type: "scanner", disabled: false, manualDisabled: false, health: 100 },
+    ],
+  },
+});
+assert.equal(
+  emptyPlanetScan.contracts[0].visited,
+  1,
+  "scan_planet: пустая планета не засчитана",
+);
+
+// expedition_survey: завершённую экспедицию нельзя выдать повторно
+assert.ok(
+  ok({ type: "expedition_survey", targetPlanetId: "1-expedition" }),
+  "expedition_survey: доступная планета не найдена",
+);
+assert.ok(
+  !ok({ type: "expedition_survey", targetPlanetId: "2-expedition-done" }),
+  "expedition_survey: завершённая экспедиция засчитана",
+);
+
+// research и mining: остаётся хотя бы одна выполнимая цель
+assert.ok(
+  ok({ type: "research", requiresAnomalies: 2 }),
+  "research: доступные аномалии не найдены",
+);
+assert.ok(
+  !ok({ type: "research", requiresAnomalies: 3 }),
+  "research: недостаток аномалий не замечен",
+);
+assert.ok(
+  !ok({ type: "research", requiresAnomalies: 2 }, ["1-anomaly-1"]),
+  "research: пройденная аномалия засчитана",
+);
+const tierThreeTech = Object.entries(RESEARCH_TREE).find(
+  ([, technology]) => technology.tier === 3,
+);
+assert.ok(tierThreeTech, "research: в дереве нет технологий третьего тира");
+const allTechIds = Object.keys(RESEARCH_TREE);
+assert.ok(
+  !ok(
+    { type: "research", requiresTechResearch: true, requiredTechTier: 3 },
+    [],
+    { artifacts: [], researchedTechs: allTechIds },
+  ),
+  "synthetic research: завершённое дерево засчитано",
+);
+assert.ok(
+  ok(
+    { type: "research", requiresTechResearch: true, requiredTechTier: 3 },
+    [],
+    {
+      artifacts: [],
+      researchedTechs: allTechIds.filter((techId) => techId !== tierThreeTech[0]),
+    },
+  ),
+  "synthetic research: оставшаяся технология не найдена",
+);
+assert.ok(
+  ok(
+    { type: "mining", requiredRarities: ["mythic"] },
+    [],
+    { artifacts: [{ discovered: false, rarity: "mythic" }], researchedTechs: [] },
+  ),
+  "mining: подходящий артефакт не найден",
+);
+assert.ok(
+  !ok(
+    { type: "mining", requiredRarities: ["mythic"] },
+    [],
+    { artifacts: [{ discovered: false, rarity: "rare" }], researchedTechs: [] },
+  ),
+  "mining: неподходящий артефакт засчитан",
+);
+
+const generationSectors = [
+  {
+    id: 1,
+    name: "Source",
+    tier: 3,
+    locations: [
+      {
+        id: "source-planet",
+        type: "planet",
+        name: "Source",
+        planetType: "Пустынная",
+      },
+    ],
+  },
+  {
+    id: 2,
+    name: "Targets",
+    tier: 3,
+    locations: [
+      { id: "ice-1", type: "planet", planetType: "Ледяная", isEmpty: true },
+      { id: "ice-2", type: "planet", planetType: "Ледяная", isEmpty: true },
+      { id: "ice-3", type: "planet", planetType: "Ледяная", isEmpty: true },
+      {
+        id: "survey-ready",
+        type: "planet",
+        planetType: "Океаническая",
+      },
+      {
+        id: "survey-done",
+        type: "planet",
+        planetType: "Лесная",
+        expeditionCompleted: true,
+      },
+    ],
+  },
+];
+let generatedScan = false;
+let generatedSurvey = false;
+const originalRandom = Math.random;
+let randomSeed = 12345;
+Math.random = () => {
+  randomSeed = (randomSeed * 1664525 + 1013904223) >>> 0;
+  return randomSeed / 2 ** 32;
+};
+try {
+  for (let index = 0; index < 100; index += 1) {
+    const contracts = generatePlanetContracts(
+      "Пустынная",
+      generationSectors[0],
+      "source-planet",
+      0,
+      generationSectors,
+    );
+    for (const contract of contracts) {
+      if (contract.type === "scan_planet") {
+        generatedScan = true;
+        assert.equal(
+          contract.planetType,
+          "Ледяная",
+          "генератор выдал scan_planet без нужного числа целей",
+        );
+        assert.equal(contract.requiresVisit, 3, "scan_planet: неверное число целей");
+      }
+      if (contract.type === "expedition_survey") {
+        generatedSurvey = true;
+        assert.equal(
+          contract.targetPlanetId,
+          "survey-ready",
+          "генератор выдал уже завершённую экспедицию",
+        );
+      }
+    }
+  }
+} finally {
+  Math.random = originalRandom;
+}
+assert.ok(generatedScan, "генератор не выдал scan_planet для проверки");
+assert.ok(generatedSurvey, "генератор не выдал expedition_survey для проверки");
 
 // derelict_recovery: нужен конкретный ещё не исследованный покинутый корабль
 assert.ok(
@@ -276,6 +520,51 @@ assert.equal(
   "derelict_recovery: награда выдана повторно",
 );
 
+let miningState = {
+  credits: 10,
+  completedContractIds: [],
+  activeContracts: [
+    {
+      id: "mining-wrong-rarity",
+      type: "mining",
+      isRaceQuest: true,
+      requiredRarities: ["mythic"],
+      reward: 100,
+    },
+    {
+      id: "mining-match-a",
+      type: "mining",
+      isRaceQuest: true,
+      requiredRarities: ["rare"],
+      reward: 20,
+    },
+    {
+      id: "mining-match-b",
+      type: "mining",
+      isRaceQuest: true,
+      requiredRarities: ["rare"],
+      reward: 30,
+    },
+  ],
+};
+const miningGet = () => ({ ...miningState, addLog: () => undefined });
+const miningSet = (updater) => {
+  miningState = { ...miningState, ...updater(miningState) };
+};
+
+completeMiningContracts(miningSet, miningGet, { rarity: "rare" });
+assert.equal(miningState.credits, 60, "mining: награды не суммированы");
+assert.deepEqual(
+  miningState.completedContractIds,
+  ["mining-match-a", "mining-match-b"],
+  "mining: подходящие контракты не завершены",
+);
+assert.deepEqual(
+  miningState.activeContracts.map((contract) => contract.id),
+  ["mining-wrong-rarity"],
+  "mining: снят контракт с неподходящей редкостью",
+);
+
 const surveyGrid = (revealed = []) =>
   Array.from({ length: 25 }, (_, index) => ({
     type: index === 12 ? "market" : "incident",
@@ -384,6 +673,48 @@ assert.deepEqual(
     ["survey-other-contract", 0, false],
   ],
   "миграция должна восстановить прогресс только целевого контракта",
+);
+
+const migratedContracts = loadWithMigrations(
+  JSON.stringify({
+    version: 7,
+    state: {
+      galaxy: { sectors },
+      completedLocations: [],
+      artifacts: [],
+      research: { researchedTechs: [] },
+      activeContracts: [
+        {
+          id: "migrated-scan-valid",
+          type: "scan_planet",
+          planetType: "Ледяная",
+          requiresVisit: 2,
+        },
+        {
+          id: "migrated-scan-impossible",
+          type: "scan_planet",
+          planetType: "Несуществующая",
+          requiresVisit: 1,
+        },
+        {
+          id: "migrated-survey-valid",
+          type: "expedition_survey",
+          targetPlanetId: "1-expedition",
+        },
+        {
+          id: "migrated-survey-impossible",
+          type: "expedition_survey",
+          targetPlanetId: "2-expedition-done",
+        },
+      ],
+    },
+  }),
+);
+assert.ok(migratedContracts, "сохранение с недостижимыми контрактами не загрузилось");
+assert.deepEqual(
+  migratedContracts.activeContracts.map((contract) => contract.id),
+  ["migrated-scan-valid", "migrated-survey-valid"],
+  "миграция должна снять только недостижимые контракты",
 );
 
 const mapObjectives = getGalaxyMapObjectives({

@@ -238,13 +238,11 @@ export function FriendlyShipPanel() {
   // Handle accepting quest from ship
   const handleAcceptQuest = () => {
     if (!shipQuest) return;
+    if (!acceptContract(shipQuest)) return;
 
-    // Mark this ship as having its quest taken
     useGameStore.setState((s) => ({
       shipQuestsTaken: [...s.shipQuestsTaken, currentLocation.id],
     }));
-
-    acceptContract(shipQuest);
   };
 
   const raceAccent = race?.color ?? "#ffb000";

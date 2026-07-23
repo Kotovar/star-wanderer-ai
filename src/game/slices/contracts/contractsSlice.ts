@@ -21,7 +21,7 @@ export interface ContractsSlice {
      * Принимает контракт
      * @param contract - Контракт для принятия
      */
-    acceptContract: (contract: Contract) => void;
+    acceptContract: (contract: Contract) => boolean;
 
     /**
      * Выполняет контракт на доставку
@@ -137,7 +137,7 @@ export const createContractsSlice = (
     },
 
     acceptContract: (contract) => {
-        acceptContractFn(contract, set, get);
+        return acceptContractFn(contract, set, get);
     },
 
     completeDeliveryContract: (contractId) => {

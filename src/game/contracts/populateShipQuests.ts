@@ -2,20 +2,10 @@ import type { Sector } from "../types";
 import type { Contract } from "../types/contracts";
 import { TRADE_GOODS } from "../constants/goods";
 import { DELIVERY_GOODS } from "../constants/contracts";
+import { PLANET_TYPES } from "../constants/planets";
 import { getTierPriceMultiplier } from "@/game/slices/trade/constants";
 import { typedKeys } from "@/lib/utils";
 import { getGeneratedContractTimeLimit } from "./contractDeadline";
-
-const PLANET_TYPES = [
-    "Пустынная",
-    "Ледяная",
-    "Лесная",
-    "Вулканическая",
-    "Океаническая",
-    "Кристаллическая",
-    "Тропическая",
-    "Арктическая",
-];
 
 const generateShipQuest = (
     shipId: string,

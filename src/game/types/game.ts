@@ -272,7 +272,7 @@ export interface GameCrew {
 }
 
 export interface GameContracts {
-  acceptContract: (contract: Contract) => void;
+  acceptContract: (contract: Contract) => boolean;
   completeDeliveryContract: (contractId: string) => void;
   cancelContract: (contractId: string) => void;
 }

@@ -62,6 +62,8 @@ export function PlanetPanel() {
     const raceReputation = useGameStore((s) => s.raceReputation);
     const sectors = useGameStore((s) => s.galaxy.sectors);
     const completedLocations = useGameStore((s) => s.completedLocations);
+    const artifacts = useGameStore((s) => s.artifacts);
+    const researchedTechs = useGameStore((s) => s.research.researchedTechs);
     const get = useGameStore.getState;
 
     const { t } = useTranslation();
@@ -147,7 +149,10 @@ export function PlanetPanel() {
                 c.requiredRace &&
                 !isRaceContractAvailable(raceReputation, c.requiredRace)
             ) &&
-            isContractTargetAvailable(c, sectors, completedLocations),
+            isContractTargetAvailable(c, sectors, completedLocations, {
+                artifacts,
+                researchedTechs,
+            }),
     );
 
     const currentLocationPlanetType = currentLocation.planetType;

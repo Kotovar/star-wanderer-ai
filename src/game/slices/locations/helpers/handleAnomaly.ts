@@ -132,7 +132,7 @@ const addResearchResources = (
  */
 const handleResearchContracts = (set: SetState, get: () => GameStore): void => {
     const researchContracts = get().activeContracts.filter(
-        (c) => c.type === "research",
+        (c) => c.type === "research" && !c.requiresTechResearch,
     );
 
     researchContracts.forEach((contract) => {
