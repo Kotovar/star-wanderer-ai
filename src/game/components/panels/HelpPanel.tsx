@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "@/lib/useTranslation";
 import { Button } from "@/components/ui/button";
 
@@ -127,58 +128,31 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                   {t("help.modules_title")}
                 </h3>
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
-                    <span className="text-[#00ff41] font-bold">
-                      {t("help.reactor")}
-                    </span>
+                  <HelpEntry color="#00ff41" titleKey="help.reactor">
                     <p className="text-[#888]">{t("help.reactor_desc")}</p>
-                  </div>
-                  <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
-                    <span className="text-[#00ff41] font-bold">
-                      {t("help.cockpit")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#00ff41" titleKey="help.cockpit">
                     <p className="text-[#888]">{t("help.cockpit_desc")}</p>
-                  </div>
-                  <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
-                    <span className="text-[#00ff41] font-bold">
-                      {t("help.life_support")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#00ff41" titleKey="help.life_support">
                     <p className="text-[#888]">{t("help.life_support_desc")}</p>
-                  </div>
-                  <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
-                    <span className="text-[#00ff41] font-bold">
-                      {t("help.cargo")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#00ff41" titleKey="help.cargo">
                     <p className="text-[#888]">{t("help.cargo_desc")}</p>
-                  </div>
-                  <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
-                    <span className="text-[#00ff41] font-bold">
-                      {t("help.engine")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#00ff41" titleKey="help.engine">
                     <p className="text-[#888]">{t("help.engine_desc")}</p>
-                  </div>
-                  <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
-                    <span className="text-[#00ff41] font-bold">
-                      {t("help.fuel_tank")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#00ff41" titleKey="help.fuel_tank">
                     <p className="text-[#888]">{t("help.fuel_tank_desc")}</p>
-                  </div>
-                  <div className="p-2 bg-[rgba(255,0,64,0.1)] border border-[#ff0040]">
-                    <span className="text-[#ff0040] font-bold">
-                      {t("help.weapon_bay")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#ff0040" titleKey="help.weapon_bay">
                     <p className="text-[#888]">{t("help.weapon_bay_desc")}</p>
-                  </div>
-                  <div className="p-2 bg-[rgba(0,128,255,0.1)] border border-[#0080ff]">
-                    <span className="text-[#0080ff] font-bold">
-                      {t("help.shield")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#0080ff" titleKey="help.shield">
                     <p className="text-[#888]">{t("help.shield_desc")}</p>
-                  </div>
-                  <div className="p-2 bg-[rgba(0,212,255,0.1)] border border-[#00d4ff]">
-                    <span className="text-[#00d4ff] font-bold">
-                      {t("help.scanner")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#00d4ff" titleKey="help.scanner">
                     <p className="text-[#888] text-xs mt-1">
                       {t("help.scanner_detail_1")}
                     </p>
@@ -190,37 +164,22 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                       <li>{t("help.scanner_detail_4")}</li>
                       <li>{t("help.scanner_detail_5")}</li>
                     </ul>
-                  </div>
-                  <div className="p-2 bg-[rgba(255,170,0,0.1)] border border-[#ffaa00]">
-                    <span className="text-[#ffaa00] font-bold">
-                      {t("help.drill")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#ffaa00" titleKey="help.drill">
                     <p className="text-[#888]">{t("help.drill_desc")}</p>
-                  </div>
-                  <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
-                    <span className="text-[#00ff41] font-bold">
-                      {t("help.lab")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#00ff41" titleKey="help.lab">
                     <p className="text-[#888]">{t("help.lab_desc")}</p>
-                  </div>
-                  <div className="p-2 bg-[rgba(255,0,64,0.1)] border border-[#ff0040]">
-                    <span className="text-[#ff0040] font-bold">
-                      {t("help.medical")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#ff0040" titleKey="help.medical">
                     <p className="text-[#888]">{t("help.medical_desc")}</p>
-                  </div>
-                  <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
-                    <span className="text-[#00ff41] font-bold">
-                      {t("help.quarters")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#00ff41" titleKey="help.quarters">
                     <p className="text-[#888]">{t("help.quarters_desc")}</p>
-                  </div>
-                  <div className="p-2 bg-[rgba(0,212,255,0.1)] border border-[#00d4ff]">
-                    <span className="text-[#00d4ff] font-bold">
-                      {t("help.repair_bay")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#00d4ff" titleKey="help.repair_bay">
                     <p className="text-[#888]">{t("help.repair_bay_desc")}</p>
-                  </div>
+                  </HelpEntry>
                 </div>
                 <div className="mt-3 p-3 bg-[rgba(255,176,0,0.1)] border border-[#ffb000] text-xs">
                   <div className="text-[#ffb000] font-bold mb-1">
@@ -256,54 +215,36 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                   {t("help.crew_title")}
                 </h3>
                 <div className="space-y-2 text-xs">
-                  <div className="p-2 bg-[rgba(255,170,0,0.1)] border border-[#ffaa00]">
-                    <span className="text-[#ffaa00] font-bold">
-                      {t("professions.pilot")}
-                    </span>
+                  <HelpEntry color="#ffaa00" titleKey="professions.pilot">
                     <span className="text-[#888] ml-2">
                       {t("help.pilot_desc")}
                     </span>
-                  </div>
-                  <div className="p-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41]">
-                    <span className="text-[#00ff41] font-bold">
-                      {t("professions.engineer")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#00ff41" titleKey="professions.engineer">
                     <span className="text-[#888] ml-2">
                       {t("help.engineer_desc")}
                     </span>
-                  </div>
-                  <div className="p-2 bg-[rgba(255,0,64,0.1)] border border-[#ff0040]">
-                    <span className="text-[#ff0040] font-bold">
-                      {t("professions.medic")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#ff0040" titleKey="professions.medic">
                     <span className="text-[#888] ml-2">
                       {t("help.medic_desc")}
                     </span>
-                  </div>
-                  <div className="p-2 bg-[rgba(0,212,255,0.1)] border border-[#00d4ff]">
-                    <span className="text-[#00d4ff] font-bold">
-                      {t("professions.scientist")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#00d4ff" titleKey="professions.scientist">
                     <span className="text-[#888] ml-2">
                       {t("help.scientist_desc")}
                     </span>
-                  </div>
-                  <div className="p-2 bg-[rgba(0,128,255,0.1)] border border-[#0080ff]">
-                    <span className="text-[#0080ff] font-bold">
-                      {t("professions.scout")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#0080ff" titleKey="professions.scout">
                     <span className="text-[#888] ml-2">
                       {t("help.scout_desc")}
                     </span>
-                  </div>
-                  <div className="p-2 bg-[rgba(255,0,64,0.1)] border border-[#ff0040]">
-                    <span className="text-[#ff0040] font-bold">
-                      {t("professions.gunner")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#ff0040" titleKey="professions.gunner">
                     <span className="text-[#888] ml-2">
                       {t("help.gunner_desc")}
                     </span>
-                  </div>
+                  </HelpEntry>
                 </div>
               </section>
 
@@ -312,54 +253,36 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                   {t("help.races_title")}
                 </h3>
                 <div className="space-y-2 text-xs">
-                  <div className="p-2 bg-[rgba(74,144,217,0.1)] border border-[#4a90d9]">
-                    <span className="text-[#4a90d9] font-bold">
-                      {t("races.human.name")}
-                    </span>
+                  <HelpEntry color="#4a90d9" titleKey="races.human.name">
                     <span className="text-[#888] ml-2">
                       {t("help.human_desc")}
                     </span>
-                  </div>
-                  <div className="p-2 bg-[rgba(0,212,255,0.1)] border border-[#00d4ff]">
-                    <span className="text-[#00d4ff] font-bold">
-                      {t("races.synthetic.name")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#00d4ff" titleKey="races.synthetic.name">
                     <span className="text-[#888] ml-2">
                       {t("help.synthetic_desc")}
                     </span>
-                  </div>
-                  <div className="p-2 bg-[rgba(170,85,255,0.1)] border border-[#aa55ff]">
-                    <span className="text-[#aa55ff] font-bold">
-                      {t("races.xenosymbiont.name")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#aa55ff" titleKey="races.xenosymbiont.name">
                     <span className="text-[#888] ml-2">
                       {t("help.xenosymbiont_desc")}
                     </span>
-                  </div>
-                  <div className="p-2 bg-[rgba(255,102,0,0.1)] border border-[#ff6600]">
-                    <span className="text-[#ff6600] font-bold">
-                      {t("races.krylorian.name")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#ff6600" titleKey="races.krylorian.name">
                     <span className="text-[#888] ml-2">
                       {t("help.krylorian_desc")}
                     </span>
-                  </div>
-                  <div className="p-2 bg-[rgba(153,51,255,0.1)] border border-[#9933ff]">
-                    <span className="text-[#9933ff] font-bold">
-                      {t("races.voidborn.name")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#9933ff" titleKey="races.voidborn.name">
                     <span className="text-[#888] ml-2">
                       {t("help.voidborn_desc")}
                     </span>
-                  </div>
-                  <div className="p-2 bg-[rgba(0,255,170,0.1)] border border-[#00ffaa]">
-                    <span className="text-[#00ffaa] font-bold">
-                      {t("races.crystalline.name")}
-                    </span>
+                  </HelpEntry>
+                  <HelpEntry color="#00ffaa" titleKey="races.crystalline.name">
                     <span className="text-[#888] ml-2">
                       {t("help.crystalline_desc")}
                     </span>
-                  </div>
+                  </HelpEntry>
                 </div>
               </section>
 
@@ -570,6 +493,37 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Цветная плитка глоссария (заголовок + описание) — единая структура для
+ * ~26 почти идентичных блоков (модули, профессии, расы), различающихся
+ * только цветом и содержимым.
+ */
+function HelpEntry({
+  color,
+  titleKey,
+  children,
+}: {
+  color: string;
+  titleKey: string;
+  children: ReactNode;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div
+      className="p-2 border"
+      style={{
+        backgroundColor: `rgba(${hexToRgb(color)}, 0.1)`,
+        borderColor: color,
+      }}
+    >
+      <span className="font-bold" style={{ color }}>
+        {t(titleKey)}
+      </span>
+      {children}
     </div>
   );
 }

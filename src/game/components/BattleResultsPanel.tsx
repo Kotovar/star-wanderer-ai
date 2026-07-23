@@ -4,6 +4,7 @@ import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { RESEARCH_RESOURCES } from "@/game/constants/research";
+import { SectionPanel } from "./SectionPanel";
 
 export function BattleResultsPanel() {
   const battleResult = useGameStore((s) => s.battleResult);
@@ -35,7 +36,7 @@ export function BattleResultsPanel() {
 
       <div className="space-y-4">
         {/* Rewards */}
-        <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4">
+        <SectionPanel>
           <div className="text-[#ffb000] font-bold mb-2">
             {t("battle_results.rewards_title")}
           </div>
@@ -77,7 +78,7 @@ export function BattleResultsPanel() {
                 )}
               </div>
             )}
-        </div>
+        </SectionPanel>
 
         {/* Module damage */}
         {(battleResult.modulesDamaged.length > 0 ||

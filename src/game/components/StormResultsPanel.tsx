@@ -2,6 +2,7 @@
 
 import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
+import { SectionPanel } from "./SectionPanel";
 
 export function StormResultsPanel() {
     const stormResult = useGameStore((s) => s.stormResult);
@@ -60,7 +61,7 @@ export function StormResultsPanel() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Rewards */}
-                <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4">
+                <SectionPanel>
                     <div className="text-[#ffb000] font-bold mb-2">
                         💰 Награды:
                     </div>
@@ -85,7 +86,7 @@ export function StormResultsPanel() {
                                     `+${res.amount} Древних данных`}
                             </div>
                         ))}
-                </div>
+                </SectionPanel>
 
                 {/* Damage */}
                 <div className="bg-[rgba(255,0,64,0.05)] border border-[#ff0040] p-4">

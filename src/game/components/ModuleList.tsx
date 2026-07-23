@@ -7,11 +7,11 @@ import { WEAPON_TYPES } from "../constants";
 import type { Module, Weapon } from "../types";
 import {
     Dialog,
-    DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { GameDialogContent } from "./GameDialog";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { getMergedCrewMember } from "@/game/slices/crew/helpers";
@@ -317,8 +317,9 @@ export function ModuleDetailDialog({
 
     return (
         <Dialog open={!!module} onOpenChange={onClose}>
-            <DialogContent
-                className={`${mergedCrewMember ? "bg-[rgba(30,10,40,0.95)] border-[#aa55ff]" : "bg-[rgba(10,20,30,0.95)] border-[#00ff41]"} border-2 text-[#00ff41] max-w-md w-[calc(100%-2rem)] md:w-auto`}
+            <GameDialogContent
+                variant={mergedCrewMember ? "merge" : "default"}
+                className="max-w-md"
             >
                 <DialogHeader>
                     <DialogTitle className="text-accent font-['Orbitron']">
@@ -470,7 +471,7 @@ export function ModuleDetailDialog({
                         </div>
                     )}
                 </div>
-            </DialogContent>
+            </GameDialogContent>
         </Dialog>
     );
 }

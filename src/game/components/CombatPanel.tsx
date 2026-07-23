@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { CombatShipVisual } from "./CombatShipVisual";
 import { CombatShipGrid } from "./CombatShipGrid";
 import { CrewMemberCard } from "./CrewMemberCard";
+import { SectionPanel } from "./SectionPanel";
 import type { CrewMember, CrewMemberCombatAssignment } from "../types";
 import { getTotalEvasion } from "@/game/slices";
 import { useTranslation } from "@/lib/useTranslation";
@@ -305,7 +306,7 @@ export function CombatPanel() {
 
       {/* Ship stats summary */}
       <div className="grid grid-cols-2 gap-4 my-3">
-        <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4">
+        <SectionPanel>
           <div className="text-base font-bold mb-3 text-ring">
             {t("combat.your_ship")}
           </div>
@@ -346,7 +347,7 @@ export function CombatPanel() {
               </div>
             )}
           </div>
-        </div>
+        </SectionPanel>
 
         <div
           className={`${isBoss ? "bg-[rgba(255,0,255,0.05)] border-[#ff00ff]" : "bg-[rgba(255,0,64,0.05)] border-destructive"} border p-4`}

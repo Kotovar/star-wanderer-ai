@@ -10,6 +10,7 @@ import { MODULES_FROM_BOSSES } from "@/game/constants/modules";
 import type { ModuleType, Module, WeaponType } from "@/game/types";
 import { WEAPON_TYPES } from "@/game/constants/weapons";
 import { WEAPON_SCRAP_VALUES } from "@/game/slices/services/helpers/removeWeapon";
+import { SectionPanel } from "../SectionPanel";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import type { AugmentationId } from "@/game/types/augmentations";
 import type { Profession } from "@/game/types/crew";
@@ -392,7 +393,7 @@ function RepairSection({
     const { t } = useTranslation();
 
     return (
-        <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4">
+        <SectionPanel>
             <div className="text-[#00d4ff] font-bold mb-2">
                 {t("services.repair_title")}
             </div>
@@ -414,7 +415,7 @@ function RepairSection({
                     {t("services.repair_button")}
                 </Button>
             </div>
-        </div>
+        </SectionPanel>
     );
 }
 
@@ -432,7 +433,7 @@ function HealSection({
     const { t } = useTranslation();
 
     return (
-        <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4">
+        <SectionPanel>
             <div className="text-[#00d4ff] font-bold mb-2">
                 {t("services.heal_title")}
             </div>
@@ -452,7 +453,7 @@ function HealSection({
                     {t("services.heal_button")}
                 </Button>
             </div>
-        </div>
+        </SectionPanel>
     );
 }
 
@@ -833,7 +834,7 @@ function InstallWeaponSection({
     );
 
     return (
-        <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-4">
+        <SectionPanel tone="cyan">
             <div className="text-[#00d4ff] font-bold mb-2">
                 ⚔️ {t("services.install_weapon_title")}
             </div>
@@ -891,7 +892,7 @@ function InstallWeaponSection({
                     );
                 })}
             </div>
-        </div>
+        </SectionPanel>
     );
 }
 
@@ -911,7 +912,7 @@ function AugmentationSection({
     const allAugmentations = Object.values(AUGMENTATIONS);
 
     return (
-        <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-4">
+        <SectionPanel tone="cyan">
             <div className="text-[#00d4ff] font-bold mb-1">
                 {t("services.aug_title")}
             </div>
@@ -1041,7 +1042,7 @@ function AugmentationSection({
                     );
                 })}
             </div>
-        </div>
+        </SectionPanel>
     );
 }
 
@@ -1075,7 +1076,7 @@ function BuyResearchSection({
     ) as ResearchResourceType[];
 
     return (
-        <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4">
+        <SectionPanel>
             <div className="text-[#00ff41] font-bold mb-1">
                 🔬 Закупка исследовательских материалов
             </div>
@@ -1122,7 +1123,7 @@ function BuyResearchSection({
                     );
                 })}
             </div>
-        </div>
+        </SectionPanel>
     );
 }
 
@@ -1144,7 +1145,7 @@ function SellResearchSection({
     );
 
     return (
-        <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-4">
+        <SectionPanel tone="cyan">
             <div className="text-[#00d4ff] font-bold mb-1">
                 📊 Продажа исследовательских данных
             </div>
@@ -1201,6 +1202,6 @@ function SellResearchSection({
                     })}
                 </div>
             )}
-        </div>
+        </SectionPanel>
     );
 }

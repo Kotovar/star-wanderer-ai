@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SectionPanel } from "../SectionPanel";
 import { TRADE_GOODS } from "../../constants";
 import { typedKeys } from "@/lib/utils";
 import type { Goods } from "@/game/types";
@@ -163,7 +164,7 @@ function TradeGoodRow({
     onShowInfo,
 }: TradeGoodRowProps) {
     return (
-        <div className="flex justify-between items-center bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3">
+        <SectionPanel padding="sm" className="flex justify-between items-center">
             <TradeGoodInfo
                 good={good}
                 crisisMultiplier={crisisMultiplier}
@@ -183,7 +184,7 @@ function TradeGoodRow({
                 onBuy={onBuy}
                 onSell={onSell}
             />
-        </div>
+        </SectionPanel>
     );
 }
 

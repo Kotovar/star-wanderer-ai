@@ -6,11 +6,11 @@ import { showHintOnce } from "@/game/hints/showHint";
 import type { ArtifactRarity, Contract, Goods } from "@/game/types";
 import {
     Dialog,
-    DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { GameDialogContent } from "./GameDialog";
 import { Button } from "@/components/ui/button";
 import { TRADE_GOODS, DELIVERY_GOODS } from "@/game/constants";
 import { RACES } from "@/game/constants/races";
@@ -946,7 +946,7 @@ export function ContractsList() {
                 open={!!selectedContract}
                 onOpenChange={() => setSelectedContract(null)}
             >
-                <DialogContent className="bg-[rgba(10,20,30,0.96)] border-2 border-[#00ff41] text-[#00ff41] max-w-lg w-[calc(100%-2rem)] md:w-auto">
+                <GameDialogContent className="bg-[rgba(10,20,30,0.96)] max-w-lg">
                     <DialogHeader>
                         <DialogTitle className="text-accent font-['Orbitron'] flex items-center gap-2">
                             {selectedContract &&
@@ -1056,7 +1056,7 @@ export function ContractsList() {
                                 </div>
                             );
                         })()}
-                </DialogContent>
+                </GameDialogContent>
             </Dialog>
         </>
     );

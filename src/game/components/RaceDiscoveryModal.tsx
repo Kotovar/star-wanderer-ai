@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { GameDialogContent } from "./GameDialog";
 import { useGameStore } from "../store";
 import { RACES } from "../constants/races";
 import type { RaceId } from "../types";
@@ -87,7 +87,10 @@ export function RaceDiscoveryModal() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="bg-[rgba(10,20,30,0.97)] border-2 border-[#ffb000] text-[#00ff41] max-w-lg w-[calc(100%-2rem)] md:w-auto max-h-[85dvh] overflow-y-auto">
+      <GameDialogContent
+        variant="warning"
+        className="bg-[rgba(10,20,30,0.97)] max-w-lg max-h-[85dvh] overflow-y-auto"
+      >
         <DialogHeader>
           <DialogTitle className="text-[#ffb000] font-['Orbitron'] text-lg">
             {t("race_discovery.title")}
@@ -211,7 +214,7 @@ export function RaceDiscoveryModal() {
             </div>
           )}
         </div>
-      </DialogContent>
+      </GameDialogContent>
     </Dialog>
   );
 }

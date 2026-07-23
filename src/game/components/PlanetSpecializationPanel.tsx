@@ -5,6 +5,7 @@ import { useGameStore } from "@/game/store";
 import { PLANET_SPECIALIZATIONS } from "@/game/constants/planets";
 import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
+import { SectionPanel } from "./SectionPanel";
 import { createVoidbornBoostEffect } from "@/game/slices/artifacts/helpers";
 import { useTranslation } from "@/lib/useTranslation";
 
@@ -143,7 +144,7 @@ export function PlanetSpecializationPanel({
             </div>
 
             {/* Effects */}
-            <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3">
+            <SectionPanel padding="sm">
                 <div className="text-accent font-bold text-sm mb-2">
                     Эффекты:
                 </div>
@@ -154,7 +155,7 @@ export function PlanetSpecializationPanel({
                         </li>
                     ))}
                 </ul>
-            </div>
+            </SectionPanel>
 
             {/* Cost and duration */}
             <div className="flex gap-4 text-sm">

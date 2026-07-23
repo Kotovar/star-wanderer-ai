@@ -7,11 +7,11 @@ import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import type { CrewMember } from "@/game/types";
 import {
     Dialog,
-    DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { GameDialogContent } from "./GameDialog";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -233,7 +233,7 @@ export function CrewList() {
                 open={!!selectedCrew}
                 onOpenChange={() => setSelectedCrew(null)}
             >
-                <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] w-[calc(100%-2rem)] md:w-[28rem] overflow-hidden">
+                <GameDialogContent className="md:w-[28rem] overflow-hidden">
                     <DialogHeader>
                         <DialogTitle className="text-[#ffb000] font-['Orbitron']">
                             ▸ {selectedCrew?.name}
@@ -784,7 +784,7 @@ export function CrewList() {
                                 </Tabs>
                             );
                         })()}
-                </DialogContent>
+                </GameDialogContent>
             </Dialog>
         </>
     );

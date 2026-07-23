@@ -11,11 +11,11 @@ import { WeaponDetailDialog } from "./WeaponDetailDialog";
 import { ModuleDetailDialog } from "./ModuleList";
 import {
     Dialog,
-    DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { GameDialogContent } from "./GameDialog";
 import type { CargoItem, Contract, Goods, Module } from "../types";
 
 type SectionKey = "weapons" | "modules" | "contracts" | "trade" | "probes";
@@ -107,7 +107,7 @@ function CargoInfoDialog({
     const { t } = useTranslation();
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-accent text-accent max-w-md w-[calc(100%-2rem)] md:w-auto">
+            <GameDialogContent variant="accent" className="max-w-md">
                 <DialogHeader>
                     <DialogTitle className="text-accent font-['Orbitron']">
                         {title}
@@ -123,7 +123,7 @@ function CargoInfoDialog({
                 >
                     {t("common.close")}
                 </button>
-            </DialogContent>
+            </GameDialogContent>
         </Dialog>
     );
 }

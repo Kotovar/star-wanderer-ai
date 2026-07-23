@@ -2,11 +2,11 @@
 
 import {
     Dialog,
-    DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { GameDialogContent } from "./GameDialog";
 import { Button } from "@/components/ui/button";
 import { useGameStore } from "../store";
 import { useTranslation } from "@/lib/useTranslation";
@@ -24,7 +24,7 @@ export function SurvivorModal() {
 
     return (
         <Dialog open onOpenChange={(open) => !open && declineSurvivor()}>
-            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-sm w-[calc(100%-2rem)] md:w-auto max-h-[85dvh] overflow-y-auto">
+            <GameDialogContent className="max-w-sm max-h-[85dvh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="text-[#00ff41] font-['Orbitron']">
                         {t("survivor_modal.title")}
@@ -110,7 +110,7 @@ export function SurvivorModal() {
                         {t("survivor_modal.decline")}
                     </Button>
                 </div>
-            </DialogContent>
+            </GameDialogContent>
         </Dialog>
     );
 }

@@ -2,11 +2,11 @@
 
 import {
     Dialog,
-    DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { GameDialogContent } from "../GameDialog";
 import type { ShopItem, Module } from "../../types";
 import { MODULES_BY_LEVEL } from "./station-data";
 import { useTranslation } from "@/lib/useTranslation";
@@ -118,7 +118,7 @@ export function ModuleUpgradeModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ffb000] text-[#00ff41] max-w-md w-[calc(100%-2rem)] md:w-auto">
+            <GameDialogContent variant="warning" className="max-w-md">
                 <DialogHeader>
                     <DialogTitle className="text-[#ffb000] font-['Orbitron']">
                         {t("station_upgrades.select_module")}
@@ -143,7 +143,7 @@ export function ModuleUpgradeModal({
                         onClose={onOpenChange}
                     />
                 </div>
-            </DialogContent>
+            </GameDialogContent>
         </Dialog>
     );
 }

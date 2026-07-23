@@ -7,6 +7,7 @@ import { PLANET_SPECIALIZATIONS } from "@/game/constants/planets";
 import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
 import { PlanetSpecializationPanel } from "./PlanetSpecializationPanel";
+import { SectionPanel } from "./SectionPanel";
 import { DELIVERY_GOODS } from "@/game/constants/contracts";
 import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "@/game/slices/contracts/constants";
 import type { DeliveryGoods } from "@/game/types/contracts";
@@ -403,9 +404,10 @@ export function PlanetPanel() {
                         </div>
                         <div className="flex flex-col gap-2">
                             {deliveryContracts.map((c) => (
-                                <div
+                                <SectionPanel
                                     key={c.id}
-                                    className="flex justify-between items-center bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3"
+                                    padding="sm"
+                                    className="flex justify-between items-center"
                                 >
                                     <div className="flex-1">
                                         <div className="text-ring font-bold">
@@ -434,7 +436,7 @@ export function PlanetPanel() {
                                     >
                                         {t("planet_panel.submit")}
                                     </Button>
-                                </div>
+                                </SectionPanel>
                             ))}
                         </div>
                     </>

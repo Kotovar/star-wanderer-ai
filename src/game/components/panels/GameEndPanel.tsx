@@ -5,6 +5,7 @@ import { useGameStore } from "@/game/store";
 import { Button } from "@/components/ui/button";
 import { NewGameSetupModal } from "@/game/components/NewGameSetupModal";
 import { useTranslation } from "@/lib/useTranslation";
+import { SectionPanel } from "../SectionPanel";
 
 interface GameEndPanelProps {
     type: "victory" | "gameover";
@@ -89,7 +90,7 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                         </div>
                     </div>
 
-                    <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-4">
+                    <SectionPanel>
                         <div className="text-[#00ff41] font-bold text-lg mb-3">
                             📊 {t("game_end.ship_status")}:
                         </div>
@@ -140,7 +141,7 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                                 </span>
                             </div>
                         </div>
-                    </div>
+                    </SectionPanel>
 
                     {!isVictory && crew.length === 0 && (
                         <div className="bg-[rgba(255,0,64,0.1)] border border-[#ff0040] p-4">
@@ -154,7 +155,7 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                     )}
 
                     {isVictory && (
-                        <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-4">
+                        <SectionPanel tone="cyan">
                             <div className="text-[#00d4ff] font-bold text-lg mb-3">
                                 👥 {t("ship.crew")}:
                             </div>
@@ -178,7 +179,7 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                                     </div>
                                 ))}
                             </div>
-                        </div>
+                        </SectionPanel>
                     )}
 
                     <div className="pt-4 space-y-2">

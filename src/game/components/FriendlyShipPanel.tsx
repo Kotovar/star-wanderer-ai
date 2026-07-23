@@ -5,6 +5,7 @@ import { useGameStore } from "@/game/store";
 import { TRADE_GOODS } from "@/game/constants/goods";
 import { RACES } from "@/game/constants/races";
 import { Button } from "@/components/ui/button";
+import { SectionPanel } from "./SectionPanel";
 import { getRandomName } from "@/game/crew/utils";
 import { generateCrewTraits } from "@/game/crew/utils";
 import { PROFESSION_NAMES, CREW_BASE_PRICES } from "@/game/constants/crew";
@@ -384,7 +385,10 @@ export function FriendlyShipPanel() {
             <div className="font-['Orbitron'] font-bold text-sm text-[#ffb000] mb-2 uppercase tracking-wider">
               {t("friendly_ship.crew_section")}
             </div>
-            <div className="flex justify-between items-start bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3">
+            <SectionPanel
+              padding="sm"
+              className="flex justify-between items-start"
+            >
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <ProfessionSprite
@@ -511,7 +515,7 @@ export function FriendlyShipPanel() {
               >
                 {t("friendly_ship.hire")}
               </Button>
-            </div>
+            </SectionPanel>
           </div>
         </>
       )}
@@ -527,9 +531,10 @@ export function FriendlyShipPanel() {
           </div>
           <div className="flex flex-col gap-2">
             {completableContracts.map((c) => (
-              <div
+              <SectionPanel
                 key={c.id}
-                className="flex justify-between items-center bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3"
+                padding="sm"
+                className="flex justify-between items-center"
               >
                 <div className="flex-1">
                   <div className="text-[#00d4ff] font-bold text-sm">
@@ -548,7 +553,7 @@ export function FriendlyShipPanel() {
                 >
                   {t("friendly_ship.deliver")}
                 </Button>
-              </div>
+              </SectionPanel>
             ))}
           </div>
         </div>

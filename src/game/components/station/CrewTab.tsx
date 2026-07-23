@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SectionPanel } from "../SectionPanel";
 import {
     Dialog,
-    DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { GameDialogContent } from "../GameDialog";
 import { RACES } from "@/game/constants/races";
 import type { CrewTrait, Profession, RaceId } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
@@ -71,7 +72,7 @@ export function CrewTab({
                 open={!!selectedCrew}
                 onOpenChange={() => setSelectedCrew(null)}
             >
-                <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#00ff41] text-[#00ff41] max-w-md max-h-[90vh] overflow-y-auto w-[calc(100%-2rem)] md:w-auto">
+                <GameDialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-[#ffb000] font-['Orbitron']">
                             ▸ {selectedCrew?.member.name}
@@ -90,7 +91,7 @@ export function CrewTab({
                             onClose={() => setSelectedCrew(null)}
                         />
                     )}
-                </DialogContent>
+                </GameDialogContent>
             </Dialog>
         </>
     );
@@ -126,7 +127,7 @@ function CrewCard({
     const { t } = useTranslation();
 
     return (
-        <div className="bg-[rgba(0,255,65,0.05)] border border-[#00ff41] p-3">
+        <SectionPanel padding="sm">
             <div className="flex justify-between items-start">
                 <div className="flex-1 cursor-pointer" onClick={onViewDetails}>
                     <CrewHeader crew={crew} race={race} />
@@ -148,7 +149,7 @@ function CrewCard({
                     {t("station.hire_button")}
                 </Button>
             </div>
-        </div>
+        </SectionPanel>
     );
 }
 

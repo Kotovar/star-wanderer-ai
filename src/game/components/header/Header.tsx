@@ -7,12 +7,12 @@ import { SettingsPanel } from "../SaveLoadPanel";
 import { GLOBAL_CRISES } from "@/game/constants/globalCrises";
 import {
   Dialog,
-  DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { GameDialogContent } from "../GameDialog";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { getCampaignDirective } from "@/game/constants/victoryObjectives";
@@ -419,7 +419,7 @@ export function GameHeader() {
         />
       )}
       <Dialog open={showRestartDialog} onOpenChange={setShowRestartDialog}>
-        <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-[#ff4444] text-[#00ff41] max-w-md">
+        <GameDialogContent variant="danger" className="max-w-md">
           <DialogHeader>
             <DialogTitle className="cursor-pointer text-xl font-['Orbitron'] text-[#ff4444]">
               {t("ship.confirm_restart_title")}
@@ -443,7 +443,7 @@ export function GameHeader() {
               {t("ship.confirm")}
             </Button>
           </DialogFooter>
-        </DialogContent>
+        </GameDialogContent>
       </Dialog>
 
     </>

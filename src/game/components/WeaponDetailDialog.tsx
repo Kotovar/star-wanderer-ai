@@ -3,11 +3,11 @@
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
-    DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { GameDialogContent } from "./GameDialog";
 import { WEAPON_TYPES, WEAPON_ART } from "../constants";
 import { useTranslation } from "@/lib/useTranslation";
 import { GameImage } from "./GameImage";
@@ -31,7 +31,7 @@ export function WeaponDetailDialog({
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="bg-[rgba(10,20,30,0.95)] border-2 border-accent text-accent max-w-md w-[calc(100%-2rem)] md:w-auto">
+            <GameDialogContent variant="accent" className="max-w-md">
                 <DialogHeader>
                     <DialogTitle className="text-accent font-['Orbitron'] flex items-center gap-2">
                         <span
@@ -138,7 +138,7 @@ export function WeaponDetailDialog({
                         </Button>
                     </div>
                 </div>
-            </DialogContent>
+            </GameDialogContent>
         </Dialog>
     );
 }
