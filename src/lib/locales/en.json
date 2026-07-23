@@ -3127,6 +3127,26 @@
         "probe_lost_confirm": "Understood",
         "probe_loss_chance": "💥 probe {{chance}}%"
     },
+    "wreck_field": {
+        "choose_approach": "Salvage approach",
+        "radiation_notice": "Radiation: a standard pass costs {{damage}} shields; surface salvage costs about half, deep salvage costs one and a half times more.",
+        "scanner_bonus": "📡 Scanner (range {{range}}): +{{bonus}}% chance for valuable finds during deep breach.",
+        "lab_bonus": "🔬 Laboratory: Ancient Data is doubled when found.",
+        "approach": {
+            "surface": {
+                "name": "Surface salvage",
+                "description": "Less loot and radiation; the crew is protected."
+            },
+            "standard": {
+                "name": "Standard salvage",
+                "description": "The usual balance of rewards and risk."
+            },
+            "deep": {
+                "name": "Deep breach",
+                "description": "More loot and better odds for rare finds; more radiation."
+            }
+        }
+    },
     "blueprints": {
         "title": "BLUEPRINTS",
         "no_blueprints": "No unlocked blueprints",

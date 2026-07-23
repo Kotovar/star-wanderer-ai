@@ -7,6 +7,7 @@ import type {
     AnomalyApproach,
     DistressApproach,
     ExpeditionScanMode,
+    WreckApproach,
 } from "@/game/types";
 import { RACES } from "@/game/constants";
 import { mineAsteroid } from "./helpers";
@@ -150,8 +151,8 @@ export interface LocationsSlice {
     /** Прерывает погружение: зонд утерян, ресурсы не получены, ход не тратится */
     abandonDive: () => void;
 
-    /** Один проход по полю обломков: лут + урон щитам */
-    salvageWreckField: () => void;
+    /** Один проход по полю обломков с выбранным уровнем риска. */
+    salvageWreckField: (approach?: WreckApproach) => void;
 
     /** Отправляет зонд для временного резонанса с космическим существом */
     resonateWithSpaceMonster: () => void;
@@ -267,8 +268,8 @@ export const createLocationsSlice = (
         abandonDiveHelper(set, get);
     },
 
-    salvageWreckField: () => {
-        salvageWreckFieldHelper(set, get);
+    salvageWreckField: (approach) => {
+        salvageWreckFieldHelper(set, get, approach);
     },
 
     resonateWithSpaceMonster: () => {

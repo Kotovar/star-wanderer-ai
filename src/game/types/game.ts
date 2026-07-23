@@ -15,6 +15,7 @@ import type {
   LocationType,
   AnomalyApproach,
   DistressApproach,
+  WreckApproach,
 } from "./locations/locations";
 import type { LogEntry } from "./logs";
 import type { Module, WeaponCounts } from "./modules";
@@ -315,7 +316,7 @@ export interface GameScouting {
   diveDeeper: () => void;
   surfaceDive: () => void;
   abandonDive: () => void;
-  salvageWreckField: () => void;
+  salvageWreckField: (approach?: WreckApproach) => void;
   buyProbe: (count: number) => void;
 }
 

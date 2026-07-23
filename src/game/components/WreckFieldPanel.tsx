@@ -3,6 +3,11 @@
 import Image from "next/image";
 import { useGameStore } from "@/game/store";
 import { Button } from "@/components/ui/button";
+import { LAB_MODULE_TYPES } from "@/game/constants/modules";
+import { getWreckScannerRareChanceMultiplier } from "@/game/slices/locations/constants";
+import { isModuleActive } from "@/game/modules/utils";
+import type { WreckApproach } from "@/game/types";
+import { useTranslation } from "@/lib/useTranslation";
 import { Database, Radio, ShieldAlert, Wrench, Zap } from "lucide-react";
 
 const TIER_COLORS: Record<1 | 2 | 3, string> = {
@@ -22,6 +27,12 @@ const TIER_DESCRIPTIONS: Record<1 | 2 | 3, string> = {
   2: "Место жестокого столкновения флотов. Можно найти интересные предметы, но радиация ощутима.",
   3: "Огромное кладбище кораблей, окутанное аномальными излучениями. Исследование опасно, но может принести редкие предметы.",
 };
+
+const WRECK_APPROACHES: { id: WreckApproach; color: string }[] = [
+  { id: "surface", color: "#00d4ff" },
+  { id: "standard", color: "#a0785a" },
+  { id: "deep", color: "#ff6644" },
+];
 
 const WRECK_FIELD_BACKGROUNDS: Record<string, string> = {
   "Поле обломков": "/assets/wreck-fields/debris-field.webp",
@@ -74,6 +85,8 @@ export function WreckFieldPanel() {
   const ship = useGameStore((s) => s.ship);
   const probes = useGameStore((s) => s.probes);
   const getCargoCapacity = useGameStore((s) => s.getCargoCapacity);
+  const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
+  const { t } = useTranslation();
 
   if (!currentLocation || currentLocation.type !== "wreck_field") return null;
 
@@ -82,6 +95,22 @@ export function WreckFieldPanel() {
     ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0) +
     probes;
   const cargoFull = currentCargo >= getCargoCapacity();
+  const scanRange = getEffectiveScanRange();
+  const hasActiveScanner = ship.modules.some(
+    (module) =>
+      isModuleActive(module) &&
+      (module.type === "scanner" || module.type === "deep_survey_array"),
+  );
+  const scannerRareChanceMultiplier = hasActiveScanner
+    ? getWreckScannerRareChanceMultiplier(scanRange)
+    : 1;
+  const scannerBonusPercent = Math.round(
+    (scannerRareChanceMultiplier - 1) * 100,
+  );
+  const hasActiveLab = ship.modules.some(
+    (module) =>
+      isModuleActive(module) && LAB_MODULE_TYPES.includes(module.type),
+  );
 
   const tier = (currentLocation.wreckTier ?? 1) as 1 | 2 | 3;
   const total = currentLocation.wreckPassesTotal ?? 2;
@@ -152,6 +181,7 @@ export function WreckFieldPanel() {
         <div className="border border-[#1a1a2e] p-2 bg-[rgba(0,0,0,0.3)] text-xs shrink-0">
           <div className="text-[10px] text-[#555] uppercase tracking-wider mb-1.5">
             Последний проход
+            {lastLoot.approach && ` · ${t(`wreck_field.approach.${lastLoot.approach}.name`)}`}
           </div>
           <div className="flex flex-wrap gap-x-3 gap-y-1 text-[#aaa]">
             {lastLoot.spares && <span className="flex items-center gap-1"><Wrench size={12} /> Запчасти ×{lastLoot.spares}</span>}
@@ -171,7 +201,7 @@ export function WreckFieldPanel() {
       {/* Предупреждение о радиации */}
       {!exhausted && (
         <div className="text-[10px] text-[#ff6644] border border-[#ff664422] p-2 bg-[rgba(255,68,0,0.04)] shrink-0">
-          Радиационный фон — каждый проход наносит <strong>{shieldWarning}</strong> урона щитам.
+          {t("wreck_field.radiation_notice", { damage: shieldWarning })}
         </div>
       )}
 
@@ -185,16 +215,41 @@ export function WreckFieldPanel() {
       {/* Кнопки */}
       <div className="flex flex-col gap-2 shrink-0">
         {!exhausted ? (
-          <Button
-            onClick={salvageWreckField}
-            className="w-full bg-transparent border-2 uppercase tracking-wider text-xs cursor-pointer transition-colors"
-            style={{
-              borderColor: tierColor,
-              color: tierColor,
-            }}
-          >
-            <Wrench size={14} /> Обыскать обломки ({done}/{total})
-          </Button>
+          <>
+            <div className="text-[10px] text-[#555] uppercase tracking-wider">
+              {t("wreck_field.choose_approach")}
+            </div>
+            {scannerBonusPercent > 0 && (
+              <div className="border border-[#00d4ff33] bg-[#00d4ff0a] p-2 text-[10px] text-[#8cecff]">
+                {t("wreck_field.scanner_bonus", {
+                  range: scanRange,
+                  bonus: scannerBonusPercent,
+                })}
+              </div>
+            )}
+            {hasActiveLab && (
+              <div className="border border-[#cc44ff33] bg-[#cc44ff0a] p-2 text-[10px] text-[#d89cff]">
+                {t("wreck_field.lab_bonus")}
+              </div>
+            )}
+            {WRECK_APPROACHES.map(({ id, color }) => (
+              <Button
+                key={id}
+                onClick={() => salvageWreckField(id)}
+                className="h-auto w-full justify-start border bg-transparent px-3 py-2 text-left transition-colors hover:bg-white/5 cursor-pointer"
+                style={{ borderColor: `${color}88` }}
+              >
+                <span className="flex flex-col gap-0.5">
+                  <span className="text-xs font-bold uppercase tracking-wider" style={{ color }}>
+                    {t(`wreck_field.approach.${id}.name`)} ({done}/{total})
+                  </span>
+                  <span className="text-[10px] font-normal leading-tight text-[#888]">
+                    {t(`wreck_field.approach.${id}.description`)}
+                  </span>
+                </span>
+              </Button>
+            ))}
+          </>
         ) : (
           <div className="text-xs text-center text-[#444] border border-[#1a1a2e] p-2">
             Поле обломков полностью обыскано

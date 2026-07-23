@@ -30,6 +30,7 @@
     "check:income": "node --no-warnings --experimental-strip-types scripts/check-income-sources.mjs",
     "check:space-monsters": "node --no-warnings --experimental-strip-types scripts/check-space-monsters.mjs",
     "check:distress-signals": "node --no-warnings --experimental-strip-types scripts/check-distress-signals.mjs",
+    "check:wreck-field": "node --no-warnings --experimental-strip-types scripts/check-wreck-field-approaches.mjs",
     "check:scanner-tooltips": "node scripts/check-scanner-tooltips.mjs"
   },
   "dependencies": {

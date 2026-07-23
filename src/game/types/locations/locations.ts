@@ -10,6 +10,8 @@ export type AsteroidTier = 1 | 2 | 3 | 4;
 
 export type AnomalyApproach = "cautious" | "standard" | "deep";
 
+export type WreckApproach = "surface" | "standard" | "deep";
+
 export type StormType =
     | "radiation"
     | "ionic"
@@ -178,6 +180,7 @@ export interface Location {
     wreckPassesDone?: number;          // passes already completed
     wreckExhausted?: boolean;          // all passes done, nothing left
     wreckLastPassLoot?: {              // loot from last pass (for display)
+        approach?: WreckApproach;
         spares?: number;
         electronics?: number;
         rare_minerals?: number;

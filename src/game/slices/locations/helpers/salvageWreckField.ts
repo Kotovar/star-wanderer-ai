@@ -1,7 +1,16 @@
 import { toast } from "sonner";
 import { store as i18nStore } from "@/lib/useTranslation";
-import type { SetState, GameStore } from "@/game/types";
+import type { SetState, GameStore, WreckApproach } from "@/game/types";
 import { patchLocation } from "@/game/utils/patchLocation";
+import { LAB_MODULE_TYPES } from "@/game/constants/modules";
+import {
+    getWreckScannerRareChanceMultiplier,
+    getWreckSpecialLootChance,
+    WRECK_APPROACH_CONFIG,
+    WRECK_LAB_ANCIENT_DATA_MULTIPLIER,
+} from "@/game/slices/locations/constants";
+import { isModuleActive } from "@/game/modules/utils";
+import { getEffectiveScanRange } from "@/game/slices/scanner/helpers/getEffectiveScanRange";
 import {
     addTradeGood,
     getCargoCapacity,
@@ -22,13 +31,19 @@ const rng = (min: number, max: number) =>
     min + Math.floor(Math.random() * (max - min + 1));
 
 /**
- * Один проход по полю обломков: собирает лут и получает урон по щитам от радиации.
+ * Один проход по полю обломков с выбранным уровнем риска.
  * - Если щитов не хватает — радиационный overflow бьёт по случайному модулю.
  * - Тир 3: если есть overflow — лёгкий урон радиацией по всему экипажу.
+ * - Активный сканер усиливает ценные находки при глубоком вскрытии.
+ * - Активная лаборатория удваивает найденные данные Древних.
  * - Лут ограничен свободным местом в трюме.
  * После последнего прохода поле помечается как истощённое.
  */
-export function salvageWreckField(set: SetState, get: () => GameStore): void {
+export function salvageWreckField(
+    set: SetState,
+    get: () => GameStore,
+    approach: WreckApproach = "standard",
+): void {
     const state = get();
     const loc = state.currentLocation;
 
@@ -40,11 +55,27 @@ export function salvageWreckField(set: SetState, get: () => GameStore): void {
 
     const tier = (loc.wreckTier ?? 1) as 1 | 2 | 3;
     const config = LOOT_BY_TIER[tier];
+    const approachConfig = WRECK_APPROACH_CONFIG[approach];
+    const hasActiveScanner = state.ship.modules.some(
+        (module) =>
+            isModuleActive(module) &&
+            (module.type === "scanner" || module.type === "deep_survey_array"),
+    );
+    const scannerRareChanceMultiplier =
+        approach === "deep" && hasActiveScanner
+            ? getWreckScannerRareChanceMultiplier(getEffectiveScanRange(state))
+            : 1;
+    const hasActiveLab = state.ship.modules.some(
+        (module) =>
+            isModuleActive(module) && LAB_MODULE_TYPES.includes(module.type),
+    );
     const passesTotal = loc.wreckPassesTotal ?? 2;
     const passesDone = loc.wreckPassesDone ?? 0;
 
     // — Урон по щитам / overflow —
-    const shieldDmg   = rng(config.shieldDmg[0], config.shieldDmg[1]);
+    const shieldDmg   = Math.max(1, Math.round(
+        rng(config.shieldDmg[0], config.shieldDmg[1]) * approachConfig.damageMult,
+    ));
     const curShields   = state.ship.shields;
     const overflow     = Math.max(0, shieldDmg - curShields);
     const newShields   = Math.max(0, curShields - shieldDmg);
@@ -59,16 +90,27 @@ export function salvageWreckField(set: SetState, get: () => GameStore): void {
 
     // — Урон экипажу от радиации (тир 3 + overflow) —
     let crewRadDamage = 0;
-    if (tier === 3 && overflow > 0) {
+    if (tier === 3 && overflow > 0 && !approachConfig.crewProtected) {
         crewRadDamage = Math.max(1, Math.floor(overflow * 0.2));
     }
 
     // — Лут: базовые значения —
-    const sparesRaw        = rng(config.spares[0], config.spares[1]);
-    const electronicsRaw   = rng(config.electronics[0], config.electronics[1]);
-    const rareMineralsRaw  = rng(config.rare_minerals[0], config.rare_minerals[1]);
-    const techSalvage      = Math.random() < config.tech_salvage ? 1 : 0;
-    const ancientData      = Math.random() < config.ancient_data  ? 1 : 0;
+    const sparesRaw        = Math.round(rng(config.spares[0], config.spares[1]) * approachConfig.rewardMult);
+    const electronicsRaw   = Math.round(rng(config.electronics[0], config.electronics[1]) * approachConfig.rewardMult);
+    const rareMineralsRaw  = Math.round(rng(config.rare_minerals[0], config.rare_minerals[1]) * approachConfig.rewardMult);
+    const techSalvage      = Math.random() < getWreckSpecialLootChance(
+        config.tech_salvage,
+        approachConfig.rareChanceMult,
+        scannerRareChanceMultiplier,
+    ) ? 1 : 0;
+    const ancientDataFound = Math.random() < getWreckSpecialLootChance(
+        config.ancient_data,
+        approachConfig.rareChanceMult,
+        scannerRareChanceMultiplier,
+    );
+    const ancientData = ancientDataFound
+        ? hasActiveLab ? WRECK_LAB_ANCIENT_DATA_MULTIPLIER : 1
+        : 0;
 
     // — Ограничение по трюму —
     const capacity = getCargoCapacity(state);
@@ -90,6 +132,7 @@ export function salvageWreckField(set: SetState, get: () => GameStore): void {
     const nowExhausted  = newPassesDone >= passesTotal;
 
     const lootResult = {
+        approach,
         spares:        spares        > 0 ? spares        : undefined,
         electronics:   electronics   > 0 ? electronics   : undefined,
         rare_minerals: rareMinerals  > 0 ? rareMinerals  : undefined,

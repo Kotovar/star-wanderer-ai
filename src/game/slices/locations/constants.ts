@@ -2,7 +2,7 @@
 // Константы для локаций
 // ============================================================================
 
-import type { AnomalyApproach } from "@/game/types";
+import type { AnomalyApproach, WreckApproach } from "@/game/types";
 
 // ============================================================================
 // Константы для добычи астероидов
@@ -220,6 +220,59 @@ export const ANOMALY_APPROACH_CONFIG: Record<
         guaranteedResources: true,
     },
 };
+
+// ============================================================================
+// Подходы к разбору поля обломков
+// ============================================================================
+
+/** Стандартный подход сохраняет прежний баланс поля обломков. */
+export const WRECK_APPROACH_CONFIG: Record<
+    WreckApproach,
+    {
+        rewardMult: number;
+        damageMult: number;
+        rareChanceMult: number;
+        crewProtected: boolean;
+    }
+> = {
+    surface: {
+        rewardMult: 0.6,
+        damageMult: 0.5,
+        rareChanceMult: 0.5,
+        crewProtected: true,
+    },
+    standard: {
+        rewardMult: 1,
+        damageMult: 1,
+        rareChanceMult: 1,
+        crewProtected: false,
+    },
+    deep: {
+        rewardMult: 1.5,
+        damageMult: 1.5,
+        rareChanceMult: 1.5,
+        crewProtected: false,
+    },
+};
+
+export const WRECK_SPECIAL_LOOT_CHANCE_CAP = 0.95;
+export const WRECK_LAB_ANCIENT_DATA_MULTIPLIER = 2;
+
+/** Бонус активного сканера к ценным находкам при глубоком вскрытии. */
+export const getWreckScannerRareChanceMultiplier = (scanRange: number): number => {
+    if (scanRange >= 8) return 1.25;
+    if (scanRange >= 5) return 1.1;
+    return 1;
+};
+
+export const getWreckSpecialLootChance = (
+    baseChance: number,
+    approachMultiplier: number,
+    scannerMultiplier: number,
+): number => Math.min(
+    WRECK_SPECIAL_LOOT_CHANCE_CAP,
+    baseChance * approachMultiplier * scannerMultiplier,
+);
 
 // ============================================================================
 // Константы для разведки планет
