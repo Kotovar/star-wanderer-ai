@@ -232,6 +232,10 @@ export function ContractsList() {
                     ? `🗺️ ${t("contracts.expedition_tiles_progress", { current: String(revealed), total: String(required) })}`
                     : `🗺️ ${t("contracts.expedition_pending", { planet: contract.targetPlanetName ?? "?", sector: contract.targetSectorName ?? "?" })}`;
             }
+            case "derelict_recovery":
+                return `🛸 ${t("contracts.derelict_recovery_pending", {
+                    sector: contract.targetSectorName ?? t("contracts.unknown"),
+                })}`;
             default:
                 return t("contracts.default");
         }
@@ -296,6 +300,8 @@ export function ContractsList() {
                 return t("contracts.name_gas_dive");
             case "expedition_survey":
                 return t("contracts.name_expedition_survey");
+            case "derelict_recovery":
+                return t("contracts.name_derelict_recovery");
             default:
                 return contract.desc;
         }
@@ -707,6 +713,30 @@ export function ContractsList() {
                     ],
                 };
             }
+            case "derelict_recovery":
+                return {
+                    type: t("contracts.type_derelict_recovery"),
+                    tasks: [
+                        {
+                            label: t("contracts.task_what"),
+                            value: t("contracts.derelict_recovery_task"),
+                        },
+                        {
+                            label: t("contracts.task_sector"),
+                            value:
+                                contract.targetSectorName ??
+                                t("contracts.unknown"),
+                        },
+                        {
+                            label: t("contracts.task_requirements"),
+                            value: t("contracts.derelict_recovery_scout"),
+                        },
+                        {
+                            label: t("contracts.task_where"),
+                            value: t("contracts.derelict_recovery_auto"),
+                        },
+                    ],
+                };
             case "diplomacy":
                 return {
                     type: t("contracts.type_diplomacy"),

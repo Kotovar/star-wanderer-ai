@@ -23,6 +23,9 @@ const { checkContractExpiry } = jiti(
 const { revealExpeditionTile } = jiti(
   "../src/game/slices/locations/helpers/expedition/revealExpeditionTile.ts",
 );
+const { handleDerelictRecoveryContracts } = jiti(
+  "../src/game/slices/contracts/helpers/handleDerelictRecoveryContracts.ts",
+);
 const { loadWithMigrations } = jiti("../src/game/saves/migrations.ts");
 
 const sectors = [
@@ -32,6 +35,7 @@ const sectors = [
       { id: "1-0", type: "enemy", threat: 2 },
       { id: "1-1", type: "enemy", threat: 5, defeated: true },
       { id: "1-2", type: "storm", stormIntensity: 2 },
+      { id: "1-3", type: "derelict_ship", derelictExplored: false },
     ],
   },
   {
@@ -39,6 +43,7 @@ const sectors = [
     locations: [
       { id: "2-0", type: "enemy", threat: 1, defeated: true },
       { id: "2-1", type: "storm", stormIntensity: 1 },
+      { id: "2-2", type: "derelict_ship", derelictExplored: true },
     ],
   },
 ];
@@ -61,6 +66,20 @@ assert.ok(
   "rescue: пройденный шторм засчитан",
 );
 assert.ok(!ok({ type: "rescue", sectorId: 2, requiredStormIntensity: 2 }), "rescue: слабый шторм засчитан");
+
+// derelict_recovery: нужен конкретный ещё не исследованный покинутый корабль
+assert.ok(
+  ok({ type: "derelict_recovery", targetLocationId: "1-3" }),
+  "derelict_recovery: доступный дереликт не найден",
+);
+assert.ok(
+  !ok({ type: "derelict_recovery", targetLocationId: "2-2" }),
+  "derelict_recovery: исследованный дереликт засчитан",
+);
+assert.ok(
+  !ok({ type: "derelict_recovery", targetLocationId: "missing" }),
+  "derelict_recovery: отсутствующая цель засчитана",
+);
 
 // прочие типы не трогаем
 assert.ok(ok({ type: "delivery", targetSector: 2 }), "delivery не должен фильтроваться");
@@ -175,6 +194,11 @@ assert.equal(
   "срок дальней доставки не учитывает путь",
 );
 assert.equal(
+  getGeneratedContractTimeLimit("derelict_recovery", 1, 1),
+  8,
+  "срок контракта на дереликт разбалансирован",
+);
+assert.equal(
   getGeneratedContractTimeLimit("scan_planet", 1, 3),
   undefined,
   "свободный контракт не должен получить искусственный срок",
@@ -186,6 +210,70 @@ assert.equal(
   ),
   "📡 Сканирование: Ледяная",
   "описание контракта не передаёт параметры перевода",
+);
+
+let derelictState = {
+  credits: 10,
+  completedContractIds: [],
+  activeContracts: [
+    {
+      id: "derelict-target",
+      type: "derelict_recovery",
+      targetLocationId: "1-3",
+      reward: 42,
+      sourceDominantRace: "human",
+    },
+    {
+      id: "derelict-other",
+      type: "derelict_recovery",
+      targetLocationId: "2-2",
+      reward: 99,
+    },
+    {
+      id: "derelict-same-target",
+      type: "derelict_recovery",
+      targetLocationId: "1-3",
+      reward: 8,
+      sourceDominantRace: "synthetic",
+    },
+  ],
+};
+const derelictReputationChanges = [];
+const derelictGet = () => ({
+  ...derelictState,
+  addLog: () => undefined,
+  changeReputation: (raceId, amount) =>
+    derelictReputationChanges.push([raceId, amount]),
+});
+const derelictSet = (updater) => {
+  derelictState = { ...derelictState, ...updater(derelictState) };
+};
+
+handleDerelictRecoveryContracts("1-3", derelictSet, derelictGet);
+assert.equal(derelictState.credits, 60, "derelict_recovery: награда не выдана");
+assert.deepEqual(
+  derelictState.completedContractIds,
+  ["derelict-target", "derelict-same-target"],
+  "derelict_recovery: ID выполненного контракта не сохранён",
+);
+assert.deepEqual(
+  derelictState.activeContracts.map((contract) => contract.id),
+  ["derelict-other"],
+  "derelict_recovery: снят нецелевой контракт",
+);
+assert.deepEqual(
+  derelictReputationChanges,
+  [
+    ["human", 2],
+    ["synthetic", 2],
+  ],
+  "derelict_recovery: репутация заказчика не обновлена",
+);
+handleDerelictRecoveryContracts("1-3", derelictSet, derelictGet);
+assert.equal(
+  derelictState.credits,
+  60,
+  "derelict_recovery: награда выдана повторно",
 );
 
 const surveyGrid = (revealed = []) =>

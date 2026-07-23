@@ -52,6 +52,17 @@ export const isContractTargetAvailable = (
                     !completedLocations.includes(l.id),
             );
         }
+        case "derelict_recovery": {
+            if (!contract.targetLocationId) return false;
+            return sectors.some((sector) =>
+                sector.locations.some(
+                    (location) =>
+                        location.id === contract.targetLocationId &&
+                        location.type === "derelict_ship" &&
+                        !location.derelictExplored,
+                ),
+            );
+        }
         default:
             return true;
     }

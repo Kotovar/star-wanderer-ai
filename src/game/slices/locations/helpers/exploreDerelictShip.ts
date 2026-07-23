@@ -5,6 +5,7 @@ import { addTradeGood } from "@/game/slices/ship/helpers";
 import { patchLocation } from "@/game/utils/patchLocation";
 import { SCOUT_BASE_EXP } from "@/game/constants/experience";
 import type { ModuleRecipeId } from "@/game/types/crafting";
+import { handleDerelictRecoveryContracts } from "@/game/slices/contracts/helpers/handleDerelictRecoveryContracts";
 
 // Шанс найти рецепт модуля при исследовании обломков (10%)
 const DERELICT_RECIPE_CHANCE = 0.99;
@@ -125,6 +126,8 @@ export const exploreDerelictShip = (
             }),
         };
     });
+
+    handleDerelictRecoveryContracts(locationId, set, get);
 
     // Лог-сообщения
     const lootParts: string[] = [];

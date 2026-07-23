@@ -13,7 +13,7 @@ export interface Contract {
     quantity?: number; // For supply_run contracts
     targetSector?: number;
     targetSectorName?: string;
-    targetLocationId?: string; // Specific location to deliver to (planet, station, ship)
+    targetLocationId?: string; // Specific contract target location
     targetLocationName?: string; // Name of target location
     targetLocationType?: ContactSourceType; // Type of target location
     sourcePlanetId?: string;
@@ -84,7 +84,8 @@ export type ContractType =
     | "rescueSurvivors"
     | "research"
     | "gas_dive"
-    | "expedition_survey";
+    | "expedition_survey"
+    | "derelict_recovery";
 
 // Special delivery goods (quest items - given to player, not trade goods)
 export type DeliveryGoods =

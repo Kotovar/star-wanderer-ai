@@ -553,6 +553,53 @@ export const generatePlanetContracts = (
             },
         },
         {
+            type: "derelict_recovery" as const,
+            gen: (): Contract | null => {
+                const candidates = availableSectors.flatMap((candidateSector) =>
+                    candidateSector.locations
+                        .filter(
+                            (location) =>
+                                location.type === "derelict_ship" &&
+                                !location.derelictExplored,
+                        )
+                        .map((location) => ({ location, sector: candidateSector })),
+                );
+                if (candidates.length === 0) return null;
+
+                const target =
+                    candidates[Math.floor(Math.random() * candidates.length)];
+                const tier = sector.tier ?? 1;
+                const sourcePlanet = sector.locations.find(
+                    (location) =>
+                        location.type === "planet" && location.id === planetId,
+                );
+
+                return {
+                    id: `c-${planetId}-derelict-${Date.now()}-${Math.random()}`,
+                    type: "derelict_recovery",
+                    desc: "contracts.desc_derelict_recovery",
+                    sourcePlanetId: planetId,
+                    sourcePlanetName: sourcePlanet?.name,
+                    sourceSectorName: sector.name,
+                    sourceType: "planet",
+                    targetLocationId: target.location.id,
+                    targetSector: target.sector.id,
+                    targetSectorName: target.sector.name,
+                    timeLimit: getGeneratedContractTimeLimit(
+                        "derelict_recovery",
+                        tier,
+                        target.sector.tier ?? tier,
+                    ),
+                    reward:
+                        REWARD.derelict_recovery.base[tier - 1] +
+                        Math.floor(
+                            Math.random() *
+                                REWARD.derelict_recovery.range[tier - 1],
+                        ),
+                };
+            },
+        },
+        {
             type: "gas_dive" as const,
             gen: (): Contract | null => {
                 // Only generate if there are gas planets anywhere in reachable sectors

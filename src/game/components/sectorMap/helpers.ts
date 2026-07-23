@@ -136,6 +136,24 @@ export function getScannerInfo(
     crystalline: t("races.crystalline.name"),
   };
 
+  if (loc.type === "distress_signal") {
+    info.push(`🆘 ${t("locations.distress_signal")}`);
+    if (loc.signalType && loc.signalRevealed) {
+      if (loc.signalType === "pirate_ambush") {
+        info.push(`⚔️ ${t("locations.pirate_ambush")}`);
+      } else if (loc.signalType === "survivors") {
+        info.push(`👥 ${t("locations.survivors")}`);
+      } else if (loc.signalType === "abandoned_cargo") {
+        info.push(`📦 ${t("locations.abandoned_cargo")}`);
+      }
+    } else if (scanRange >= 15 && !loc.signalResolved) {
+      info.push(
+        `⚡ ${t("locations.ambush_prob")} (35%) / ${t("locations.survivors_prob")} (30%) / ${t("locations.cargo_prob")} (35%)`,
+      );
+    }
+    return info;
+  }
+
   // If location was revealed (e.g., approached without scanner), show full info
   if (isRevealed) {
     info.push(`📍 ${getLocationName(loc.name, t)}`);
@@ -198,17 +216,50 @@ export function getScannerInfo(
     return info;
   }
 
-  // Stations, planets, asteroid belts, and distress signals are always visible
+  // Stations are always visible; their type requires a level-3 scanner.
   if (loc.type === "station") {
     info.push(`📍 ${getLocationName(loc.name, t)}`);
-    // Тип станции виден всегда: станции не скрываются сканером
-    if (loc.stationType) {
+    if (scanRange >= 3 && loc.stationType) {
       info.push(`🏷️ ${getStationTypeTranslation(loc.stationType, t)}`);
     }
     return info;
   }
 
-  // For other objects, check if scanner can detect them
+  if (loc.type === "planet") {
+    info.push(`📍 ${getLocationName(loc.name, t)}`);
+    if (scanRange >= 3 && loc.planetType) {
+      info.push(`🏷️ ${getPlanetTypeTranslation(loc.planetType, t)}`);
+    }
+    if (scanRange >= 5) {
+      if (loc.isEmpty) {
+        info.push(`🏜️ ${t("locations.deserted")}`);
+      } else if (loc.dominantRace) {
+        const raceName = raceNames[loc.dominantRace] || loc.dominantRace;
+        info.push(`🧬 ${raceName}`);
+        if (scanRange >= 8 && loc.population) {
+          info.push(`👥 ${t("locations.population")}: ${loc.population}k`);
+        }
+      }
+    }
+    return info;
+  }
+
+  if (loc.type === "asteroid_belt") {
+    info.push(`📍 ${getLocationName(loc.name, t)}`);
+    if (scanRange >= 3) {
+      info.push(`🏷️ ${t("locations.tier")}: ${loc.asteroidTier || 1}`);
+    }
+    if (scanRange >= 15 && loc.resources && !completed) {
+      info.push(`📦 ${t("locations.minerals")}: ~${loc.resources.minerals}`);
+      if (loc.resources.rare > 0) {
+        info.push(`💎 ${t("locations.rare")}: ~${loc.resources.rare}`);
+      }
+      info.push(`₢ ~${loc.resources.credits}₢`);
+    }
+    return info;
+  }
+
+  // For objects whose identity requires a scanner, check the detection threshold.
   const locTier = loc.threat || loc.anomalyTier || 1;
   const canDetect = canDetectObject(loc.type, scanRange, locTier);
 
@@ -217,10 +268,6 @@ export function getScannerInfo(
     // Ships (enemy, friendly, boss, derelict) show as "Unknown ship" because they use ship icon
     if (SHIP_LOCATION_TYPES.includes(loc.type)) {
       info.push(`❓ ${t("locations.unknown_ship")}`);
-    } else if (loc.type === "planet") {
-      info.push(`🌏 ${t("locations.planet")}`);
-    } else if (loc.type === "asteroid_belt") {
-      info.push(`🪨 ${t("locations.asteroid_belt")}`);
     } else if (loc.type === "gas_giant") {
       info.push(`🪸 ${t("locations.gas_giant")}`);
     } else if (loc.type === "wreck_field") {
@@ -231,51 +278,6 @@ export function getScannerInfo(
     return info;
   }
 
-  if (loc.type === "planet") {
-    info.push(`📍 ${getLocationName(loc.name, t)}`);
-    // Planet type requires scanRange >= 3 to detect
-    if (scanRange >= 3 && loc.planetType) {
-      info.push(`🏷️ ${getPlanetTypeTranslation(loc.planetType, t)}`);
-    }
-    // Planet details (empty or colonized) requires scanRange >= 5
-    if (scanRange >= 5) {
-      if (loc.isEmpty) {
-        info.push(`🏜️ ${t("locations.deserted")}`);
-      } else if (loc.dominantRace) {
-        const raceName =
-          raceNames[loc.dominantRace] || loc.dominantRace;
-        info.push(`🧬 ${raceName}`);
-        // Population amount requires scanRange >= 8
-        if (scanRange >= 8 && loc.population) {
-          info.push(
-            `👥 ${t("locations.population")}: ${loc.population}k`,
-          );
-        }
-      }
-    }
-    return info;
-  }
-  if (loc.type === "asteroid_belt") {
-    info.push(`📍 ${getLocationName(loc.name, t)}`);
-    // Always show asteroid tier with any scanner detection
-    info.push(`🏷️ ${t("locations.tier")}: ${loc.asteroidTier || 1}`);
-    if (scanRange >= 15 && loc.resources && !completed) {
-      info.push(
-        `📦 ${t("locations.minerals")}: ~${loc.resources.minerals}`,
-      );
-      if (loc.resources.rare > 0)
-        info.push(`💎 ${t("locations.rare")}: ~${loc.resources.rare}`);
-      info.push(`₢ ~${loc.resources.credits}₢`);
-    }
-    // Hidden rewards for ancient asteroid belts
-    if (scanRange >= 8 && loc.asteroidTier === 4 && !completed) {
-      const detectionChance = Math.min(100, 50 + (scanRange - 8) * 5);
-      if (Math.random() * 100 < detectionChance) {
-        info.push(`★ Древние артефакты!`);
-      }
-    }
-    return info;
-  }
   if (loc.type === "derelict_ship") {
     info.push(`🛸 ${t("locations.derelict_ship")}`);
     if (loc.derelictExplored) {
@@ -313,26 +315,6 @@ export function getScannerInfo(
     }
     return info;
   }
-  if (loc.type === "distress_signal") {
-    info.push(`🆘 ${t("locations.distress_signal")}`);
-    // Show specific type if revealed by scanner or after interaction
-    if (loc.signalType && loc.signalRevealed) {
-      if (loc.signalType === "pirate_ambush") {
-        info.push(`⚔️ ${t("locations.pirate_ambush")}`);
-      } else if (loc.signalType === "survivors") {
-        info.push(`👥 ${t("locations.survivors")}`);
-      } else if (loc.signalType === "abandoned_cargo") {
-        info.push(`📦 ${t("locations.abandoned_cargo")}`);
-      }
-    } else if (scanRange >= 15 && !loc.signalResolved) {
-      // Quantum scanner shows probabilities if type not yet revealed
-      info.push(
-        `⚡ ${t("locations.ambush_prob")} (35%) / ${t("locations.survivors_prob")} (30%) / ${t("locations.cargo_prob")} (35%)`,
-      );
-    }
-    return info;
-  }
-
   // Show name for scanned objects (except storms; friendly ships handle their own name below)
   if (loc.type !== "storm" && loc.type !== "friendly_ship") {
     info.push(`📍 ${getLocationName(loc.name, t)}`);
@@ -441,13 +423,6 @@ export function getScannerInfo(
               : 2;
       info.push(`💰 ${t("locations.loot")}: x${lootMult}`);
     }
-    // Hidden rewards for storms
-    if (scanRange >= 8 && !completed) {
-      const detectionChance = Math.min(100, 50 + (scanRange - 8) * 5);
-      if (Math.random() * 100 < detectionChance) {
-        info.push(t("locations.rare_resources"));
-      }
-    }
   }
 
   // Enemy info
@@ -527,13 +502,6 @@ export function getScannerInfo(
       }
       const moduleNames = boss.modules.map((m) => m.name).join(", ");
       info.push(`📋 ${moduleNames}`);
-    }
-
-    if (scanRange >= 8 && !loc.bossDefeated) {
-      const detectionChance = Math.min(100, 50 + (scanRange - 8) * 5);
-      if (Math.random() * 100 < detectionChance) {
-        info.push(`★ Древний артефакт!`);
-      }
     }
 
     if (scanRange >= 15 && boss) {

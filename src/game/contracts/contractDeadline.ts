@@ -7,6 +7,7 @@ const STANDARD_CONTRACT_DEADLINES: Partial<Record<Contract["type"], number>> = {
   combat: 7,
   bounty: 7,
   expedition_survey: 10,
+  derelict_recovery: 8,
 };
 
 const getRawTurnsRemaining = (
