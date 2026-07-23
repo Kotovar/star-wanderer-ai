@@ -1,7 +1,7 @@
 import { getRaceCrewBonus } from "@/game/races";
 import { store as i18nStore } from "@/lib/useTranslation";
 import { RACES, XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants";
-import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { LAB_MODULE_TYPES } from "@/game/constants/modules";
 import {
     getMergeEffectsBonus,
@@ -184,12 +184,7 @@ const checkAiGlitch = (
     let glitchChance = Number(glitchTrait.effects.glitchChance);
 
     // Дополнительный шанс сбоя от аугментации overclock_core (+5%)
-    if (crewMember.augmentation) {
-        const augEffect = AUGMENTATIONS[crewMember.augmentation]?.effect;
-        if (augEffect?.aiGlitchChance) {
-            glitchChance += augEffect.aiGlitchChance;
-        }
-    }
+    glitchChance += getAugmentationBonus(crewMember, "aiGlitchChance");
 
     // Бонус от сращивания ксеноморфа с ai_core (-50% шанс сбоя)
     const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);
@@ -305,11 +300,9 @@ const processRepairAssignment = (
     }
 
     // Бонус аугментации nano_hands (+15% ремонт для инженера)
-    if (crewMember.augmentation) {
-        const augEffect = AUGMENTATIONS[crewMember.augmentation]?.effect;
-        if (augEffect?.repairBonus) {
-            repairAmount = Math.floor(repairAmount * (1 + augEffect.repairBonus));
-        }
+    const augRepairBonus = getAugmentationBonus(crewMember, "repairBonus");
+    if (augRepairBonus) {
+        repairAmount = Math.floor(repairAmount * (1 + augRepairBonus));
     }
 
     const maxHealth =
@@ -497,11 +490,9 @@ const processHealAssignment = (
     }
 
     // Бонус аугментации accelerated_regen (+15% лечение для медика)
-    if (crewMember.augmentation) {
-        const augEffect = AUGMENTATIONS[crewMember.augmentation]?.effect;
-        if (augEffect?.healingBonus) {
-            healAmount = Math.floor(healAmount * (1 + augEffect.healingBonus));
-        }
+    const augHealingBonus = getAugmentationBonus(crewMember, "healingBonus");
+    if (augHealingBonus) {
+        healAmount = Math.floor(healAmount * (1 + augHealingBonus));
     }
 
     // Био-регенерация: lifesupport лечит весь экипаж на 50% + бонус к настроению

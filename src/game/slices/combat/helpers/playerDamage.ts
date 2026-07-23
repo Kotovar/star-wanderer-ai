@@ -1,6 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore, WeaponType } from "@/game/types";
-import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import { getAugmentationBonus } from "@/game/constants/augmentations";
 import {
     BASE_ACCURACY,
     MIN_ACCURACY,
@@ -166,15 +166,8 @@ export function computeAccuracyModifier(state: GameState): number {
 
     // Бонус аугментации targeting_eye (+10% точность для стрелка в оружейном отсеке)
     state.crew.forEach((c) => {
-        if (
-            c.profession === "gunner" &&
-            weaponBayIds.has(c.moduleId) &&
-            c.augmentation
-        ) {
-            const augEffect = AUGMENTATIONS[c.augmentation]?.effect;
-            if (augEffect?.accuracyBonus) {
-                modifier += augEffect.accuracyBonus;
-            }
+        if (c.profession === "gunner" && weaponBayIds.has(c.moduleId)) {
+            modifier += getAugmentationBonus(c, "accuracyBonus");
         }
     });
 
@@ -202,10 +195,7 @@ export function computeBayAccuracyModifier(state: GameState, bayId: number): num
             gunnerLevel * COMBAT_ACCURACY_MODIFIERS.GUNNER_LEVEL_BONUS,
         );
         // Augmentation bonus on this gunner
-        if (gunnerInBay.augmentation) {
-            const augEffect = AUGMENTATIONS[gunnerInBay.augmentation]?.effect;
-            if (augEffect?.accuracyBonus) modifier += augEffect.accuracyBonus;
-        }
+        modifier += getAugmentationBonus(gunnerInBay, "accuracyBonus");
         // Trait bonuses/penalties on this gunner
         gunnerInBay.traits?.forEach((trait) => {
             if (trait.effect?.accuracyPenalty) modifier -= Number(trait.effect.accuracyPenalty);

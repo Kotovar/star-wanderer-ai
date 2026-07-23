@@ -3,7 +3,7 @@
  */
 
 import { CREW_ASSIGNMENT_EXP } from "@/game/constants/experience";
-import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import { getAugmentationBonus } from "@/game/constants/augmentations";
 import type { CrewMember } from "@/game/types/crew";
 
 /**
@@ -21,10 +21,7 @@ export function getTaskBonusMultiplier(crewMember: CrewMember): number {
         if (trait.effect?.doubleTaskEffect) hasDoubleEffect = true;
     });
     if (hasDoubleEffect) taskBonus = Math.max(taskBonus, 1);
-    if (crewMember.augmentation) {
-        const augEffect = AUGMENTATIONS[crewMember.augmentation]?.effect;
-        if (augEffect?.actionSpeedBonus) taskBonus += augEffect.actionSpeedBonus;
-    }
+    taskBonus += getAugmentationBonus(crewMember, "actionSpeedBonus");
     return Math.max(0, 1 + taskBonus - taskPenalty);
 }
 

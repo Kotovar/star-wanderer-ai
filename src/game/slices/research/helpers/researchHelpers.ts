@@ -10,7 +10,7 @@ import {
 } from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getTechBonusSum } from "@/game/research";
-import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { typedKeys } from "@/lib/utils";
 import {
     DEFAULT_MODULE_HEALTH,
@@ -132,12 +132,9 @@ export const calculateResearchOutput = (
     // Бонус аугментации memory_core (+20% скорость исследований для учёного)
     let augSpeedBonus = 0;
     scientists.forEach((scientist) => {
-        if (scientist.augmentation) {
-            const augEffect = AUGMENTATIONS[scientist.augmentation]?.effect;
-            if (augEffect?.researchSpeedBonus) {
-                const bonus = Math.floor(totalOutput * augEffect.researchSpeedBonus);
-                augSpeedBonus += bonus;
-            }
+        const speedBonus = getAugmentationBonus(scientist, "researchSpeedBonus");
+        if (speedBonus) {
+            augSpeedBonus += Math.floor(totalOutput * speedBonus);
         }
     });
     if (augSpeedBonus > 0) {

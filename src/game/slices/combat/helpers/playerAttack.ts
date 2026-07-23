@@ -36,7 +36,15 @@ import {
   checkBossResurrect,
 } from "./bossAbilities";
 import { advanceCombatRound } from "./combatTime";
-import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import { getAugmentationBonus } from "@/game/constants/augmentations";
+import type { CrewMember } from "@/game/types";
+
+// prismatic_lens: суммарный бонус к урону лазеров от аугментаций экипажа
+const getCrewLaserDamageBonus = (crew: CrewMember[]): number =>
+  crew.reduce(
+    (bonus, c) => bonus + getAugmentationBonus(c, "laserDamageBonus"),
+    0,
+  );
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -97,6 +105,161 @@ function recordEnemyMiss(
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Пропуск хода игрока (эффект оглушения босса). Сбрасывает флаг и логирует.
+ * Возвращает true, если ход был пропущен.
+ */
+function consumeSkippedTurn(
+  set: (fn: (s: GameState) => void) => void,
+  get: () => GameStore,
+): boolean {
+  if (!get().currentCombat?.skipPlayerTurn) return false;
+  set((s) => {
+    if (!s.currentCombat) return;
+    s.currentCombat.skipPlayerTurn = false;
+  });
+  get().addLog(i18nStore.t("game_logs.playerAttack_10"), "error");
+  return true;
+}
+
+/**
+ * symbiotic_armor: ксеноморфы лечатся на % от суммарного нанесённого урона.
+ */
+function applyXenoLifesteal(
+  totalDealt: number,
+  crew: CrewMember[],
+  set: (fn: (s: GameState) => void) => void,
+  get: () => GameStore,
+): void {
+  if (totalDealt <= 0) return;
+  crew.forEach((c) => {
+    if (c.race !== "xenosymbiont") return;
+    const damageToHp = getAugmentationBonus(c, "damageToHp");
+    if (!damageToHp) return;
+    const healAmount = Math.floor(totalDealt * damageToHp);
+    if (healAmount <= 0) return;
+    set((s) => {
+      const member = s.crew.find((m) => m.id === c.id);
+      if (member) {
+        member.health = Math.min(
+          member.maxHealth ?? 100,
+          member.health + healAmount,
+        );
+      }
+    });
+    get().addLog(
+      i18nStore.t("game_logs.playerAttack_13", { c_name: c.name, healAmount }),
+      "info",
+    );
+  });
+}
+
+/**
+ * Пересчитывает щитовой пул врага, если атакованный щитовой модуль уничтожен.
+ * Возвращает актуальное значение щитов врага после пересчёта или null,
+ * если модуль жив и пересчёт не требуется.
+ */
+function recalcEnemyShieldPoolIfDestroyed(
+  set: (fn: (s: GameState) => void) => void,
+  get: () => GameStore,
+  tgtModId: number,
+): number | null {
+  const updatedTgt = get().currentCombat?.enemy.modules.find(
+    (m) => m.id === tgtModId,
+  );
+  if (!updatedTgt || updatedTgt.health > 0) return null;
+
+  const aliveShieldMods =
+    get().currentCombat?.enemy.modules.filter(
+      (m) => m.type === "shield" && m.health > 0,
+    ) ?? [];
+
+  if (aliveShieldMods.length === 0) {
+    set((s) => {
+      if (!s.currentCombat) return;
+      s.currentCombat.enemy.shields = 0;
+      s.currentCombat.enemy.maxShields = 0;
+      s.currentCombat.enemy.shieldRegenRate = undefined;
+    });
+    get().addLog(getBarrierDestroyedLog(updatedTgt.isBiological), "combat");
+    return 0;
+  }
+
+  const newMax = aliveShieldMods.reduce(
+    (sum, m) => sum + (m.shieldContribution ?? 0),
+    0,
+  );
+  const newRegen = aliveShieldMods.reduce(
+    (sum, m) => sum + (m.regenContribution ?? 0),
+    0,
+  );
+  set((s) => {
+    if (!s.currentCombat) return;
+    s.currentCombat.enemy.maxShields = newMax;
+    if (s.currentCombat.enemy.shields > newMax)
+      s.currentCombat.enemy.shields = newMax;
+    s.currentCombat.enemy.shieldRegenRate = newRegen > 0 ? newRegen : undefined;
+  });
+  get().addLog(
+    i18nStore.t(
+      updatedTgt.isBiological
+        ? "game_logs.shield_module_destroyed_bio"
+        : "game_logs.shield_module_destroyed",
+      { newMax, newRegen },
+    ),
+    "combat",
+  );
+  return get().currentCombat?.enemy.shields ?? 0;
+}
+
+/**
+ * Проверка победы: ядро/реактор уничтожен = мгновенная победа
+ * (fallback: все модули мертвы). Учитывает воскрешение босса.
+ * Возвращает true, если бой завершён победой.
+ */
+function resolveVictoryIfCoreDestroyed(
+  currentState: GameStore,
+  set: (fn: (s: GameState) => void) => void,
+  get: () => GameStore,
+  weaponBays: GameState["ship"]["modules"],
+): boolean {
+  const updatedCombat = get().currentCombat;
+  if (!updatedCombat) return false;
+  const core = findEnemyCore(updatedCombat.enemy.modules);
+  const isVictory = core
+    ? core.health <= 0
+    : updatedCombat.enemy.modules.every((m) => m.health <= 0);
+  if (!isVictory) return false;
+
+  // Boss resurrect_chance: one-time chance to come back from defeat
+  if (updatedCombat.enemy.isBoss && checkBossResurrect(set, get)) return false;
+
+  if (core && core.health <= 0) {
+    get().addLog(getCoreDestroyedLog(core.isBiological), "combat");
+  }
+  handleVictory(currentState, set, get, updatedCombat, weaponBays);
+  return true;
+}
+
+/**
+ * Финал хода игрока: контратака врага, сброс выбранной цели,
+ * пересчёт статов, продвижение раунда, штраф чужого присутствия.
+ */
+function finishPlayerTurn(
+  currentState: GameStore,
+  set: (fn: (s: GameState) => void) => void,
+  get: () => GameStore,
+): void {
+  handleEnemyCounterAttack(currentState, set, get);
+  set((s) => {
+    if (!s.currentCombat) return;
+    s.currentCombat.enemy.selectedModule = null;
+  });
+  get().updateShipStats();
+  advanceCombatRound(set, get);
+  applyAlienPresencePenalty(set, get);
+}
 
 /**
  * Collects crew members assigned to active weapon bays
@@ -233,12 +396,7 @@ function rollCrit(state: GameState, get: () => GameStore): CritResult {
       }
     });
     // Бонус аугментации targeting_eye (+5% крит для стрелка)
-    if (gunnerInBay.augmentation) {
-      const augEffect = AUGMENTATIONS[gunnerInBay.augmentation]?.effect;
-      if (augEffect?.critBonus) {
-        critChance += augEffect.critBonus;
-      }
-    }
+    critChance += getAugmentationBonus(gunnerInBay, "critBonus");
   }
 
   critChance = Math.min(1, critChance);
@@ -716,14 +874,7 @@ export function executePlayerAttack(
   if (!currentState.currentCombat) return;
 
   // 0. Skip turn check (boss turn_skip effect)
-  if (currentState.currentCombat.skipPlayerTurn) {
-    set((s) => {
-      if (!s.currentCombat) return;
-      s.currentCombat.skipPlayerTurn = false;
-    });
-    get().addLog( i18nStore.t("game_logs.playerAttack_10"), "error");
-    return;
-  }
+  if (consumeSkippedTurn(set, get)) return;
 
   // 1. Crew & weapon setup
   const { weaponBays, crewInWeaponBays } = getWeaponBayCrew(currentState);
@@ -798,13 +949,7 @@ export function executePlayerAttack(
   const droneStacks = currentState.currentCombat.droneStacks;
 
   // prismatic_lens: +5% laser damage for any crew member with this augmentation
-  const laserDamageBonus = currentState.crew.reduce((bonus, c) => {
-    if (c.augmentation) {
-      const augEffect = AUGMENTATIONS[c.augmentation]?.effect;
-      if (augEffect?.laserDamageBonus) return bonus + augEffect.laserDamageBonus;
-    }
-    return bonus;
-  }, 0);
+  const laserDamageBonus = getCrewLaserDamageBonus(currentState.crew);
 
   // Build per-type damage using fullMultiplier = finalDamagePerWeapon / rawBaseTotal,
   // where rawBaseTotal is the unmodified sum of per-type bases (no racial/artifact/tech bonuses).
@@ -862,104 +1007,24 @@ export function executePlayerAttack(
   // 8. Flush logs
   damage.logs.forEach((log) => get().addLog(log, "combat"));
 
-  // 8b. symbiotic_armor: xenosymbiont crew heal for 5% of total damage dealt
-  const totalDamageDealt = damage.totalShieldDamage + damage.totalModuleDamage;
-  if (totalDamageDealt > 0) {
-    currentState.crew.forEach((c) => {
-      if (c.race === "xenosymbiont" && c.augmentation) {
-        const augEffect = AUGMENTATIONS[c.augmentation]?.effect;
-        if (augEffect?.damageToHp) {
-          const healAmount = Math.floor(totalDamageDealt * augEffect.damageToHp);
-          if (healAmount > 0) {
-            set((s) => {
-              const member = s.crew.find((m) => m.id === c.id);
-              if (member) {
-                member.health = Math.min(
-                  member.maxHealth ?? 100,
-                  member.health + healAmount,
-                );
-              }
-            });
-            get().addLog( i18nStore.t("game_logs.playerAttack_13", { c_name: c.name, healAmount }), "info");
-          }
-        }
-      }
-    });
-  }
+  // 8b. symbiotic_armor: xenosymbiont crew heal for % of total damage dealt
+  applyXenoLifesteal(
+    damage.totalShieldDamage + damage.totalModuleDamage,
+    currentState.crew,
+    set,
+    get,
+  );
 
   // 8a. If a shield module was just destroyed, recalculate enemy shield pool
-  if (damage.totalModuleDamage > 0 && tgtMod.type === "shield" && tgtMod.health > 0) {
-    const updatedTgtMod = get().currentCombat?.enemy.modules.find((m) => m.id === tgtMod.id);
-    if (updatedTgtMod && updatedTgtMod.health <= 0) {
-      const aliveShields = get().currentCombat?.enemy.modules.filter(
-        (m) => m.type === "shield" && m.health > 0,
-      ) ?? [];
-      if (aliveShields.length === 0) {
-        set((s) => {
-          if (!s.currentCombat) return;
-          s.currentCombat.enemy.shields = 0;
-          s.currentCombat.enemy.maxShields = 0;
-          s.currentCombat.enemy.shieldRegenRate = undefined;
-        });
-        get().addLog(getBarrierDestroyedLog(updatedTgtMod.isBiological), "combat");
-      } else {
-        const newMax = aliveShields.reduce((sum, m) => sum + (m.shieldContribution ?? 0), 0);
-        const newRegen = aliveShields.reduce((sum, m) => sum + (m.regenContribution ?? 0), 0);
-        set((s) => {
-          if (!s.currentCombat) return;
-          s.currentCombat.enemy.maxShields = newMax;
-          if (s.currentCombat.enemy.shields > newMax)
-            s.currentCombat.enemy.shields = newMax;
-          s.currentCombat.enemy.shieldRegenRate = newRegen > 0 ? newRegen : undefined;
-        });
-        get().addLog(
-          i18nStore.t(
-            updatedTgtMod.isBiological
-              ? "game_logs.shield_module_destroyed_bio"
-              : "game_logs.shield_module_destroyed",
-            { newMax, newRegen },
-          ),
-          "combat",
-        );
-      }
-    }
+  if (damage.totalModuleDamage > 0 && tgtMod.type === "shield") {
+    recalcEnemyShieldPoolIfDestroyed(set, get, tgtMod.id);
   }
 
-  // 9. Victory check — reactor/core destroyed = instant win; fallback: all modules dead
-  const updatedCombat = get().currentCombat;
-  const reactorModule = updatedCombat ? findEnemyCore(updatedCombat.enemy.modules) : undefined;
-  const isVictory = reactorModule
-    ? reactorModule.health <= 0
-    : updatedCombat?.enemy.modules.every((m) => m.health <= 0) ?? false;
-  if (isVictory) {
-    // Boss resurrect_chance: one-time chance to come back from defeat
-    if (updatedCombat?.enemy.isBoss && checkBossResurrect(set, get)) {
-      // Boss resurrected — continue combat (no victory yet)
-    } else {
-      if (reactorModule && reactorModule.health <= 0) {
-        get().addLog(getCoreDestroyedLog(reactorModule.isBiological), "combat");
-      }
-      if (updatedCombat) {
-        handleVictory(currentState, set, get, updatedCombat, weaponBays);
-      }
-      return;
-    }
-  }
+  // 9. Victory check
+  if (resolveVictoryIfCoreDestroyed(currentState, set, get, weaponBays)) return;
 
-  // 10. Enemy counter-attack
-  handleEnemyCounterAttack(currentState, set, get);
-
-  // 11. Cleanup
-  set((s) => {
-    if (!s.currentCombat) return;
-    s.currentCombat.enemy.selectedModule = null;
-  });
-
-  get().updateShipStats();
-  advanceCombatRound(set, get);
-
-  // 12. Alien presence penalty
-  applyAlienPresencePenalty(set, get);
+  // 10-12. Counter-attack, cleanup, round advance
+  finishPlayerTurn(currentState, set, get);
 }
 
 // ─── Per-bay attack ────────────────────────────────────────────────────────────
@@ -997,14 +1062,7 @@ export function executePlayerAttackWithBayTargets(
   if (!currentState.currentCombat) return;
 
   // 0. Skip turn check
-  if (currentState.currentCombat.skipPlayerTurn) {
-    set((s) => {
-      if (!s.currentCombat) return;
-      s.currentCombat.skipPlayerTurn = false;
-    });
-    get().addLog( i18nStore.t("game_logs.playerAttack_14"), "error");
-    return;
-  }
+  if (consumeSkippedTurn(set, get)) return;
 
   // 1. Crew & weapon setup
   const { weaponBays, crewInWeaponBays } = getWeaponBayCrew(currentState);
@@ -1040,13 +1098,7 @@ export function executePlayerAttackWithBayTargets(
   );
 
   // 6. Laser bonus
-  const laserDamageBonus = currentState.crew.reduce((bonus, c) => {
-    if (c.augmentation) {
-      const augEffect = AUGMENTATIONS[c.augmentation]?.effect;
-      if (augEffect?.laserDamageBonus) return bonus + augEffect.laserDamageBonus;
-    }
-    return bonus;
-  }, 0);
+  const laserDamageBonus = getCrewLaserDamageBonus(currentState.crew);
 
   // 7. Process each bay sequentially, sharing shields
   // fullMultiplier = finalDamagePerWeapon / rawBaseTotal where rawBaseTotal = sum of per-type raw bases.
@@ -1153,64 +1205,24 @@ export function executePlayerAttackWithBayTargets(
     damage.logs.forEach((log) => get().addLog(log, "combat"));
 
     // Symbiotic armor heal
-    const totalDealt = damage.totalShieldDamage + damage.totalModuleDamage;
-    if (totalDealt > 0) {
-      currentState.crew.forEach((c) => {
-        if (c.race === "xenosymbiont" && c.augmentation) {
-          const augEffect = AUGMENTATIONS[c.augmentation]?.effect;
-          if (augEffect?.damageToHp) {
-            const heal = Math.floor(totalDealt * augEffect.damageToHp);
-            if (heal > 0) {
-              set((s) => {
-                const m = s.crew.find((x) => x.id === c.id);
-                if (m) m.health = Math.min(m.maxHealth ?? 100, m.health + heal);
-              });
-              get().addLog( i18nStore.t("game_logs.playerAttack_17", { c_name: c.name, heal }), "info");
-            }
-          }
-        }
-      });
-    }
+    applyXenoLifesteal(
+      damage.totalShieldDamage + damage.totalModuleDamage,
+      currentState.crew,
+      set,
+      get,
+    );
 
     // Shield module destroyed: recalc enemy shield pool
     if (damage.totalModuleDamage > 0 && tgtMod.type === "shield") {
-      const updatedTgt = get().currentCombat?.enemy.modules.find((m) => m.id === tgtMod.id);
-      if (updatedTgt && updatedTgt.health <= 0) {
-        const aliveShieldMods = get().currentCombat?.enemy.modules.filter(
-          (m) => m.type === "shield" && m.health > 0,
-        ) ?? [];
-        if (aliveShieldMods.length === 0) {
-          set((s) => {
-            if (!s.currentCombat) return;
-            s.currentCombat.enemy.shields = 0;
-            s.currentCombat.enemy.maxShields = 0;
-            s.currentCombat.enemy.shieldRegenRate = undefined;
-          });
-          get().addLog(getBarrierDestroyedLog(updatedTgt.isBiological), "combat");
-          remainingShields = 0;
-        }
+      const newShields = recalcEnemyShieldPoolIfDestroyed(set, get, tgtMod.id);
+      if (newShields !== null) {
+        remainingShields = Math.min(remainingShields, newShields);
       }
     }
 
     // Victory check after each bay
-    const updatedCombat = get().currentCombat;
-    const reactorMod = updatedCombat ? findEnemyCore(updatedCombat.enemy.modules) : undefined;
-    const isVictory = reactorMod
-      ? reactorMod.health <= 0
-      : updatedCombat?.enemy.modules.every((m) => m.health <= 0) ?? false;
-
-    if (isVictory) {
-      if (updatedCombat?.enemy.isBoss && checkBossResurrect(set, get)) {
-        // Boss resurrected — continue
-      } else {
-        if (reactorMod && reactorMod.health <= 0) {
-          get().addLog(getCoreDestroyedLog(reactorMod.isBiological), "combat");
-        }
-        if (updatedCombat) {
-          handleVictory(currentState, set, get, updatedCombat, weaponBays);
-        }
-        return;
-      }
+    if (resolveVictoryIfCoreDestroyed(currentState, set, get, weaponBays)) {
+      return;
     }
   }
 
@@ -1218,14 +1230,5 @@ export function executePlayerAttackWithBayTargets(
     get().addLog( i18nStore.t("game_logs.playerAttack_18"), "warning");
   }
 
-  handleEnemyCounterAttack(currentState, set, get);
-
-  set((s) => {
-    if (!s.currentCombat) return;
-    s.currentCombat.enemy.selectedModule = null;
-  });
-
-  get().updateShipStats();
-  advanceCombatRound(set, get);
-  applyAlienPresencePenalty(set, get);
+  finishPlayerTurn(currentState, set, get);
 }

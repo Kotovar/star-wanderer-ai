@@ -1,4 +1,20 @@
-import type { Augmentation, AugmentationId } from "@/game/types/augmentations";
+import type {
+    Augmentation,
+    AugmentationEffect,
+    AugmentationId,
+} from "@/game/types/augmentations";
+
+/**
+ * Бонус аугментации члена экипажа с дефолтом 0.
+ * Единственная точка чтения effect в формулах — не дублировать по коду.
+ */
+export const getAugmentationBonus = (
+    crewMember: { augmentation?: AugmentationId | null } | undefined | null,
+    key: keyof AugmentationEffect,
+): number =>
+    crewMember?.augmentation
+        ? (AUGMENTATIONS[crewMember.augmentation]?.effect?.[key] ?? 0)
+        : 0;
 
 export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
     // ─── Profession augmentations ──────────────────────────────────────────

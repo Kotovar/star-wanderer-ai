@@ -6,7 +6,7 @@ import {
     MODULE_HEALTH_THRESHOLDS,
     RACES,
 } from "@/game/constants";
-import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { getTechBonusSum } from "@/game/research";
 import type { GameState, GameStore, Module } from "@/game/types";
 
@@ -196,9 +196,8 @@ function damageCrewInModule(
     // phase_step: pre-roll dodge for each crew member in the module
     const phaseStepDodgers = new Set<number>();
     state.crew.forEach((c) => {
-        if (c.moduleId !== moduleId || !c.augmentation) return;
-        const dodgeChance =
-            AUGMENTATIONS[c.augmentation]?.effect?.fullDodgeChance ?? 0;
+        if (c.moduleId !== moduleId) return;
+        const dodgeChance = getAugmentationBonus(c, "fullDodgeChance");
         if (dodgeChance > 0 && Math.random() < dodgeChance) {
             phaseStepDodgers.add(c.id);
         }

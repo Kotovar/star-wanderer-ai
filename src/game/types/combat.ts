@@ -33,6 +33,8 @@ export interface CombatState {
     bossOneShotAbilityFired?: boolean; // Track if one-shot low_health ability (shield_restore, emergency_repair) has fired
     // Set when player's attack brings enemy shields to 0 this turn (suppresses regen on counter-attack)
     enemyShieldsJustBroken?: boolean;
+    // Set when enemy's attack brings player shields to 0 this turn (suppresses player shield regen for one turn)
+    playerShieldsJustBroken?: boolean;
     // Set when combat is triggered by entering a hostile race's location
     defenderRace?: RaceId;
     // Set when player actively attacks a friendly ship (location will be removed on victory)

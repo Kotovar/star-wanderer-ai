@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useGameStore } from "@/game/store";
 import { PLANET_POINT_OF_INTERESTS } from "@/game/constants/planets";
 import { RESEARCH_RESOURCES } from "@/game/constants";
-import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { Button } from "@/components/ui/button";
 import { PlanetExpeditionSetup } from "./PlanetExpeditionSetup";
 import {
@@ -220,10 +220,8 @@ export function EmptyPlanetPanel() {
     const bestScout = crew
         .filter((c) => c.profession === "scout")
         .sort((a, b) => (b.level ?? 1) - (a.level ?? 1))[0];
-    const scoutHasOptical = bestScout?.augmentation
-        ? (AUGMENTATIONS[bestScout.augmentation]?.effect?.extraScoutAttempts ??
-              0) > 0
-        : false;
+    const scoutHasOptical =
+        getAugmentationBonus(bestScout, "extraScoutAttempts") > 0;
     const maxScoutAttempts = 3 + (scoutHasOptical ? 1 : 0);
     const canScout = scoutedTimes < maxScoutAttempts;
 

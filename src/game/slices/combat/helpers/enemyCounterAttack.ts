@@ -344,9 +344,18 @@ export function applyDamageWithShields(
     let shieldDamageDealt = 0;
 
     if (normalDamage > 0) {
-        const sDmg = Math.min(get().ship.shields, normalDamage);
+        const shieldsBefore = get().ship.shields;
+        const sDmg = Math.min(shieldsBefore, normalDamage);
         shieldDamageDealt = sDmg;
         set((s) => ({ ship: { ...s.ship, shields: s.ship.shields - sDmg } }));
+        // Пробитие: щиты упали в 0 — реген игрока пропустит один ход
+        // (зеркально enemyShieldsJustBroken)
+        if (sDmg > 0 && shieldsBefore - sDmg === 0) {
+            set((s) => {
+                if (!s.currentCombat) return;
+                s.currentCombat.playerShieldsJustBroken = true;
+            });
+        }
         get().addLog( i18nStore.t("game_logs.enemyCounterAttack_12", { sDmg }), "warning");
 
         const overflow = normalDamage - sDmg;

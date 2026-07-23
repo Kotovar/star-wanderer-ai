@@ -1,6 +1,6 @@
 import type { GameState } from "@/game/types/game";
 import { CREW_ASSIGNMENT_BONUSES, RACES } from "@/game/constants";
-import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getPilotInCockpit } from "@/game/crew";
 import { getArtifactEffectValue } from "@/game/artifacts/utils";
@@ -80,12 +80,7 @@ export function getTotalEvasion(state: GameState): number {
     });
 
     // Бонус аугментации neural_reflex (пилот в кабине, +10% уклонения)
-    if (cockpitPilot?.augmentation) {
-        const augEffect = AUGMENTATIONS[cockpitPilot.augmentation]?.effect;
-        if (augEffect?.evasionBonus) {
-            evasion += augEffect.evasionBonus * 100;
-        }
-    }
+    evasion += getAugmentationBonus(cockpitPilot, "evasionBonus") * 100;
 
     // Бонус от сращивания ксеноморфа с cockpit
     const mergeBonus = getMergeEffectsBonus(crew, state.ship.modules);

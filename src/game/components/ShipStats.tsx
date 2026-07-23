@@ -1,4 +1,5 @@
 "use client";
+import { calculateShieldRegen } from "@/game/slices/gameLoop/helpers/shieldRegen";
 
 import { useMemo } from "react";
 import type { ReactNode } from "react";
@@ -7,7 +8,6 @@ import { useGameStore } from "@/game/store";
 import {
   findActiveArtifact,
   getArtifactEffectValue,
-  getArtifactShieldRegen,
 } from "@/game/artifacts/utils";
 import { useTranslation } from "@/lib/useTranslation";
 import {
@@ -20,11 +20,10 @@ import {
 } from "@/game/constants";
 import { computeAccuracyModifier } from "@/game/slices/combat/helpers/playerDamage";
 import type { GameState, WeaponType } from "@/game/types";
-import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getTechBonusSum } from "@/game/research";
 import { getActiveModules } from "../modules";
 import { RACES } from "@/game/constants/races";
-import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import { getBestByProfession } from "@/game/crew";
 
@@ -167,60 +166,12 @@ export function ShipStats() {
     artifacts,
     ARTIFACT_TYPES.SHIELD_REGENERATOR,
   );
-  const darkShield = findActiveArtifact(artifacts, ARTIFACT_TYPES.DARK_SHIELD);
 
-  const mergeBonus = useMemo(
-    () => getMergeEffectsBonus(crew, ship.modules),
-    [crew, ship],
-  );
-
-  const shieldRegen = useMemo(() => {
-    const activeShieldModules = ship.modules.filter(
-      (m) => m.type === "shield" && m.health > 0 && !m.disabled,
-    );
-    let regen = activeShieldModules.reduce(
-      (sum, m) => sum + (m.shieldRegen ?? 4),
-      0,
-    );
-    regen += ship.bonusShieldRegen ?? 0;
-    if (darkShield) {
-      regen += getArtifactShieldRegen(darkShield, useGameStore.getState());
-    }
-    if (regen > 0) {
-      let raceMultiplier = 0;
-      crew.forEach((c) => {
-        const race = RACES[c.race];
-        const shieldTrait = race?.specialTraits?.find(
-          (trait) => trait.effects.shieldRegen,
-        );
-        if (shieldTrait?.effects.shieldRegen) {
-          raceMultiplier +=
-            Number(shieldTrait.effects.shieldRegen) / 100;
-        }
-      });
-      if (raceMultiplier > 0) {
-        regen = Math.floor(regen * (1 + raceMultiplier));
-      }
-      if (shieldRegenerator) {
-        const regenBoost = getArtifactEffectValue(
-          shieldRegenerator,
-          useGameStore.getState(),
-        );
-        regen = Math.floor(regen * (1 + regenBoost));
-      }
-      if (mergeBonus.shieldRegenBonus) {
-        regen = Math.floor(
-          regen * (1 + mergeBonus.shieldRegenBonus / 100),
-        );
-      }
-      const techRegenMultiplier = getTechBonusSum(research, "shield_regen");
-      if (techRegenMultiplier > 0) {
-        regen = Math.floor(regen * (1 + techRegenMultiplier));
-      }
-    }
-    return regen;
+  const shieldRegen = useMemo(
+    () => calculateShieldRegen(useGameStore.getState()).totalRegen,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ship, crew, artifacts, research, mergeBonus]);
+    [ship, crew, artifacts, research],
+  );
 
   const researchRepair = getTechBonusSum(research, "nanite_repair");
   const moduleRepairPercent = useMemo(() => {
@@ -251,14 +202,10 @@ export function ShipStats() {
     const rawBaseSum = weaponTypeKeys.reduce((s, type) => s + dmg[type], 0);
     // multiplier = total (with all bonuses) / raw base sum — same ratio applied to per-type display
     const multiplier = rawBaseSum > 0 ? dmg.total / rawBaseSum : 1;
-    const laserDamageBonus = crew.reduce((bonus, c) => {
-      if (c.augmentation) {
-        const augEffect = AUGMENTATIONS[c.augmentation]?.effect;
-        if (augEffect?.laserDamageBonus)
-          return bonus + augEffect.laserDamageBonus;
-      }
-      return bonus;
-    }, 0);
+    const laserDamageBonus = crew.reduce(
+      (bonus, c) => bonus + getAugmentationBonus(c, "laserDamageBonus"),
+      0,
+    );
     const laserDisplay =
       laserDamageBonus > 0
         ? Math.floor(dmg.laser * multiplier * (1 + laserDamageBonus))
@@ -338,10 +285,7 @@ export function ShipStats() {
         c.traits?.forEach((trait) => {
           critChance += trait.effect?.critBonus ?? 0;
         });
-        if (c.augmentation) {
-          critChance +=
-            AUGMENTATIONS[c.augmentation]?.effect?.critBonus ?? 0;
-        }
+        critChance += getAugmentationBonus(c, "critBonus");
       }
     });
     let critDmg = BASE_CRIT_MULTIPLIER;

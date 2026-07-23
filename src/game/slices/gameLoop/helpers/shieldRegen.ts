@@ -119,16 +119,18 @@ const getArtifactRegenBonus = (
 const COMBAT_SHIELD_REGEN_MULTIPLIER = 0.5;
 
 /**
- * Регенерация щитов (и в бою, и вне боя; в бою — вдвое медленнее)
+ * Чистый расчёт регенерации щитов за ход (все бонусы аддитивны).
+ * Единственная точка формулы — UI (ShipStats) и геймплей используют её же.
  */
-export const regenerateShields = (
+export const calculateShieldRegen = (
     state: GameState,
-    get: () => GameStore,
-    set: SetState,
-): void => {
-    const oldShields = state.ship.shields;
-    if (oldShields >= state.ship.maxShields) return;
-
+): {
+    baseRegen: number;
+    totalRegen: number;
+    maxShieldsWithBonus: number;
+    hazardMultiplier: number;
+    artifactLogs: string[];
+} => {
     // Собираем все бонусы
     const baseRegen = getBaseShieldRegen(state);
     const raceMultiplier = getRaceRegenMultiplier(state);
@@ -160,7 +162,51 @@ export const regenerateShields = (
         (1 + raceMultiplier + artifactMultiplier + mergeMultiplier + techRegenMultiplier) *
         combatPenalty *
         hazardMultiplier;
-    const totalRegen = Math.floor(baseRegen * totalMultiplier);
+
+    return {
+        baseRegen,
+        totalRegen: Math.floor(baseRegen * totalMultiplier),
+        maxShieldsWithBonus,
+        hazardMultiplier,
+        artifactLogs: logs,
+    };
+};
+
+/**
+ * Регенерация щитов (и в бою, и вне боя; в бою — вдвое медленнее)
+ */
+export const regenerateShields = (
+    state: GameState,
+    get: () => GameStore,
+    set: SetState,
+): void => {
+    const oldShields = state.ship.shields;
+    if (oldShields >= state.ship.maxShields) return;
+
+    // Окно пробития: щиты сломаны врагом в этом раунде — реген пропускается
+    // (зеркально пропуску регена врага при enemyShieldsJustBroken)
+    if (state.currentCombat?.playerShieldsJustBroken) {
+        set((s) =>
+            s.currentCombat
+                ? {
+                      currentCombat: {
+                          ...s.currentCombat,
+                          playerShieldsJustBroken: false,
+                      },
+                  }
+                : {},
+        );
+        get().addLog(i18nStore.t("game_logs.player_shields_broken"), "warning");
+        return;
+    }
+
+    const {
+        baseRegen,
+        totalRegen,
+        maxShieldsWithBonus,
+        hazardMultiplier,
+        artifactLogs: logs,
+    } = calculateShieldRegen(state);
 
     // Применяем регенерацию
     set((s) => ({
