@@ -30,6 +30,7 @@ import { ProfessionSprite } from "./ProfessionSprite";
 import { CrewStatusIcon } from "./CrewStatusIcon";
 import { ASSIGNMENT_EXHAUSTED_AT } from "@/game/crew/assignmentFatigue";
 import { getHappinessEfficiencyModifier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
+import { getDesertionTurnsLeft } from "@/game/slices/gameLoop/processors/processDesertion";
 
 const stripLeadingSymbol = (value: string) =>
     value.replace(/^[^\p{L}\p{N}]+/u, "");
@@ -215,6 +216,18 @@ export function CrewList() {
                                 </div>
                             )}
 
+                            {(() => {
+                                const desertionTurns = getDesertionTurnsLeft(member);
+                                if (desertionTurns === null) return null;
+                                return (
+                                    <div className="text-[9px] text-[#ff0040] font-bold">
+                                        {t("crew_member.desertion_warning", {
+                                            turns: desertionTurns,
+                                        })}
+                                    </div>
+                                );
+                            })()}
+
                             {/* EXP bar */}
                             <div className="flex items-center gap-1">
                                 <div className="flex-1 h-0.5 bg-[rgba(0,0,0,0.6)] rounded-full overflow-hidden">
@@ -384,6 +397,22 @@ export function CrewList() {
                                                     }
                                                     className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${selectedCrew.happiness < 30 ? "[&>div]:bg-[#ff0040]" : selectedCrew.happiness < 60 ? "[&>div]:bg-[#ffb000]" : "[&>div]:bg-[#00ff41]"}`}
                                                 />
+                                                {(() => {
+                                                    const desertionTurns =
+                                                        getDesertionTurnsLeft(
+                                                            selectedCrew,
+                                                        );
+                                                    if (desertionTurns === null)
+                                                        return null;
+                                                    return (
+                                                        <div className="text-[10px] text-[#ff0040] font-bold mt-1">
+                                                            {t(
+                                                                "crew_member.desertion_warning",
+                                                                { turns: desertionTurns },
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })()}
                                             </div>
                                         ) : (
                                             <div className="text-[#00d4ff] text-xs flex items-center gap-1">

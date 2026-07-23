@@ -5,7 +5,7 @@ import type { CrewMember, GameStore, SetState } from "@/game/types";
 /**
  * Конфигурация дезертирства
  */
-const TURNS_AT_ZERO_HAPPINESS = 3;
+export const TURNS_AT_ZERO_HAPPINESS = 3;
 
 /** Порог раннего предупреждения о низком счастье (доля от maxHappiness) */
 const LOW_HAPPINESS_WARNING_RATIO = 0.3;
@@ -30,6 +30,19 @@ const shouldDesert = (crewMember: CrewMember) => {
     }
 
     return false;
+};
+
+/**
+ * Сколько ходов осталось до дезертирства при сохранении нулевого настроения,
+ * или null если член экипажа сейчас не в зоне риска (счастье > 0 или синтетик).
+ */
+export const getDesertionTurnsLeft = (crewMember: CrewMember): number | null => {
+    if (crewMember.race === "synthetic") return null;
+    if (crewMember.happiness > 0) return null;
+    return Math.max(
+        1,
+        TURNS_AT_ZERO_HAPPINESS - (crewMember.turnsAtZeroHappiness || 0),
+    );
 };
 
 /**

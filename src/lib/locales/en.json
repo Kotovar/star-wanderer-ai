@@ -2059,6 +2059,7 @@
     "crew_member": {
         "morale_efficiency_hint": "Task efficiency bonus/penalty from morale",
         "morale_efficiency": "Morale efficiency:",
+        "desertion_warning": "⚠ Deserts in {{turns}} turn(s)!",
         "assignment_fatigue": "Fatigue {{value}}/{{max}}",
         "assignment_rest": "Resting: {{turns}} turns",
         "moved": "MOVED",
@@ -2183,6 +2184,8 @@
         "empty_slot": "Slot {{number}}: empty",
         "status": "Status",
         "disabled": "DISABLED",
+        "disabled_power": "DISABLED (power shortage)",
+        "power_shortage_hint": "Automatically disabled due to power shortage",
         "damaged": "DAMAGED",
         "active": "ACTIVE",
         "module_damaged_warning": "⚠️ Module is damaged and not working!",

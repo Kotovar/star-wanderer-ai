@@ -264,7 +264,19 @@ function ModuleCard({ module, onClick, isMerged }: ModuleCardProps) {
                 {/* Key stat */}
                 <div className="text-[#00ff41] text-[10px] leading-tight">
                     <CompactModuleStat module={module} />
-                    {isOff && <span className="text-destructive ml-1">OFF</span>}
+                    {module.disabled && (
+                        <span
+                            className="text-destructive ml-1"
+                            title={t("module_list.power_shortage_hint")}
+                        >
+                            ⚡{t("module_list.off")}
+                        </span>
+                    )}
+                    {!module.disabled && module.manualDisabled && (
+                        <span className="text-[#888] ml-1">
+                            {t("module_list.off")}
+                        </span>
+                    )}
                 </div>
 
                 {/* Condition bar */}
@@ -432,11 +444,13 @@ export function ModuleDetailDialog({
                                               : "text-[#00ff41]"
                                     }
                                 >
-                                    {module.disabled || module.manualDisabled
-                                        ? t("module_list.disabled")
-                                        : module.health <= 0
-                                          ? t("module_list.damaged")
-                                          : t("module_list.active")}
+                                    {module.disabled
+                                        ? t("module_list.disabled_power")
+                                        : module.manualDisabled
+                                          ? t("module_list.disabled")
+                                          : module.health <= 0
+                                            ? t("module_list.damaged")
+                                            : t("module_list.active")}
                                 </span>
                             </div>
 

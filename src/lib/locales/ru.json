@@ -2059,6 +2059,7 @@
     "crew_member": {
         "morale_efficiency_hint": "Бонус/штраф к эффективности задач от настроения",
         "morale_efficiency": "Эффективность от настроения:",
+        "desertion_warning": "⚠ Дезертирство через {{turns}} х.!",
         "assignment_fatigue": "Усталость {{value}}/{{max}}",
         "assignment_rest": "Отдых: {{turns}} х.",
         "moved": "ПЕРЕМЕЩЁН",
@@ -2183,6 +2184,8 @@
         "empty_slot": "Слот {{number}}: пусто",
         "status": "Статус",
         "disabled": "ОТКЛЮЧЁН",
+        "disabled_power": "ОТКЛЮЧЁН (нехватка энергии)",
+        "power_shortage_hint": "Автоматически отключён из-за нехватки энергии",
         "damaged": "ПОВРЕЖДЁН",
         "active": "АКТИВЕН",
         "module_damaged_warning": "⚠️ Модуль повреждён и не работает!",
