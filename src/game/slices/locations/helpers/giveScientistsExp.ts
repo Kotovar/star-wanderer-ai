@@ -1,5 +1,5 @@
+import { getRaceCrewBonus } from "@/game/races";
 import type { CrewMember, RaceId } from "@/game/types";
-import { RACES } from "@/game/constants/races";
 import { ANOMALY_BASE_EXP_PER_LEVEL } from "@/game/constants/experience";
 
 /**
@@ -35,10 +35,9 @@ const calculateScientistExp = (
     anomalyLevel: number,
     raceId: RaceId,
 ): number => {
-    const race = RACES[raceId];
     let expGain = ANOMALY_BASE_EXP_PER_LEVEL * anomalyLevel;
 
-    const scienceBonus = race?.crewBonuses?.science || 0;
+    const scienceBonus = getRaceCrewBonus(raceId, "science");
     if (scienceBonus > 0) {
         expGain = Math.floor(expGain * (1 + scienceBonus));
     }

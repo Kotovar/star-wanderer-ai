@@ -1,9 +1,9 @@
+import { calculateExpMultiplier } from "@/game/slices/crew/helpers/calculateExpMultiplier";
 import {
     calculateHealthRegen,
     getMergeEffectsBonus,
 } from "@/game/slices/crew/helpers";
-import { RACES } from "@/game/constants/races";
-import { RESEARCH_TREE } from "@/game/constants";
+import { getTechBonusSum } from "@/game/research";
 import type {
     ActiveEffect,
     CrewMember,
@@ -95,14 +95,10 @@ const getCrewDamageReduction = (
                 Math.max(max, trait.effect?.combatDamageReduction ?? 0),
             0,
         ) ?? 0;
-    const techReduction = researchedTechs.reduce((sum, techId) => {
-        return (
-            sum +
-            RESEARCH_TREE[techId].bonuses
-                .filter((b) => b.type === "crew_damage_reduction")
-                .reduce((s, b) => s + b.value, 0)
-        );
-    }, 0);
+    const techReduction = getTechBonusSum(
+        { researchedTechs },
+        "crew_damage_reduction",
+    );
     return {
         traitReduction,
         techReduction,
@@ -113,22 +109,7 @@ const getCrewDamageReduction = (
 const getCrewExpMultiplier = (
     member: CrewMember,
     researchedTechs: TechnologyId[],
-): number => {
-    let expMult = 1;
-    const race = RACES[member.race];
-    const raceExpTrait = race?.specialTraits?.find((t) => t.effects?.expBonus);
-    if (raceExpTrait?.effects.expBonus)
-        expMult += raceExpTrait.effects.expBonus;
-    member.traits?.forEach((trait) => {
-        if (trait.effect?.expBonus) expMult += trait.effect.expBonus;
-    });
-    researchedTechs.forEach((techId) => {
-        RESEARCH_TREE[techId].bonuses
-            .filter((b) => b.type === "crew_exp")
-            .forEach((b) => (expMult += b.value));
-    });
-    return expMult;
-};
+): number => calculateExpMultiplier(member, { researchedTechs });
 
 export const CrewDamageReductionRow = ({
     member,

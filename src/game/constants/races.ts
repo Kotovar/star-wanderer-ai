@@ -41,6 +41,9 @@ export const RACES: Record<RaceId, Race> = {
     relations: {
       synthetic: -10, // Some distrust of AI
       xenosymbiont: 5, // Friendly curiosity
+      krylorian: 0,
+      voidborn: -5,
+      crystalline: 10,
     },
     hasHappiness: true,
     hasFatigue: true,
@@ -99,6 +102,8 @@ export const RACES: Record<RaceId, Race> = {
     relations: {
       human: -10,
       xenosymbiont: -20,
+      krylorian: -15,
+      crystalline: 5,
     },
     hasHappiness: false,
     hasFatigue: false,

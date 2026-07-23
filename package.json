@@ -8,6 +8,8 @@
     "start": "NODE_ENV=production node .next/standalone/server.js 2>&1 | tee server.log",
     "lint": "eslint",
     "type-check": "tsc --noEmit --pretty false",
+    "check:data": "node --no-warnings scripts/check-data-consistency.mjs",
+    "check:prices": "node --no-warnings scripts/check-price-modifier.mjs",
     "check:victory": "node --no-warnings --experimental-strip-types scripts/check-victory-paths.mjs",
     "check:reputation": "node --no-warnings --experimental-strip-types scripts/check-reputation-ripple.mjs",
     "check:assignments": "node --no-warnings --experimental-strip-types scripts/check-assignment-fatigue.mjs",

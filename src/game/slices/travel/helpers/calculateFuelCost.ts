@@ -1,3 +1,4 @@
+import { getTechBonusSum } from "@/game/research";
 import {
     getFuelEfficiency,
     getRaceFuelEfficiencyModifier,
@@ -9,7 +10,6 @@ import {
     BASE_FUEL_COST_MULTIPLIER,
     DEFAULT_FUEL_COST,
     ARTIFACT_TYPES,
-    RESEARCH_TREE,
 } from "@/game/constants";
 import { findActiveArtifact, findArtifactByEffect } from "@/game/artifacts";
 import type { GameState, Sector } from "@/game/types";
@@ -100,21 +100,10 @@ const collectFuelModifiers = (state: GameState): number => {
  * @returns Суммарный бонус от 0 до MAX_FUEL_EFFICIENCY_BONUS
  */
 const getTechFuelBonus = (state: GameState): number => {
-    const techFuelBonus = state.research.researchedTechs.reduce(
-        (sum, techId) => {
-            // warp_drive обрабатывается отдельно (бесплатные прыжки)
-            if (techId === "warp_drive") return sum;
-
-            const tech = RESEARCH_TREE[techId];
-            return (
-                sum +
-                tech.bonuses
-                    .filter((b) => b.type === "fuel_efficiency")
-                    .reduce((s, b) => s + b.value, 0)
-            );
-        },
-        0,
-    );
+    // warp_drive обрабатывается отдельно (бесплатные прыжки)
+    const techFuelBonus = getTechBonusSum(state.research, "fuel_efficiency", [
+        "warp_drive",
+    ]);
 
     // Ограничиваем максимальный бонус технологий
     return Math.min(techFuelBonus, MAX_FUEL_EFFICIENCY_BONUS);

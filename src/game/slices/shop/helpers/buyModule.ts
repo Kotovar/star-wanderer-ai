@@ -1,3 +1,4 @@
+import { getTechBonusSum } from "@/game/research";
 import { store as i18nStore } from "@/lib/useTranslation";
 import type {
     GameState,
@@ -9,7 +10,6 @@ import type {
 import { playSound } from "@/sounds";
 import { isPositionAdjacentToModules } from "@/game/modules/adjacency";
 import { createModuleFromShopItem } from "@/game/modules/createModuleFromShopItem";
-import { RESEARCH_TREE } from "@/game/constants/research";
 import { applyTechBonusesToNewModule } from "@/game/slices/research/helpers/researchHelpers";
 import { UNIQUE_MODULE_TYPES } from "../constants";
 
@@ -47,15 +47,7 @@ const isUniqueModuleRestricted = (
  * @returns Новый модуль
  */
 const getExtraWeaponSlots = (state: GameState): number =>
-    state.research.researchedTechs.reduce((sum, techId) => {
-        const tech = RESEARCH_TREE[techId];
-        return (
-            sum +
-            tech.bonuses
-                .filter((b: { type: string }) => b.type === "weapon_slots")
-                .reduce((s: number, b: { value: number }) => s + b.value, 0)
-        );
-    }, 0);
+    getTechBonusSum(state.research, "weapon_slots");
 
 const createModuleFromItem = (
     item: ShopItem,

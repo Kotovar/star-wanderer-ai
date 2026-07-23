@@ -101,6 +101,18 @@ export function getContractReputationImpact(
 }
 
 /**
+ * Можно ли нанимать членов экипажа этой расы.
+ * Враждебные расы не нанимаются — единая проверка для всех точек найма.
+ */
+export function canHireRace(
+    raceReputation: Record<RaceId, number>,
+    raceId: RaceId | undefined,
+): boolean {
+    if (!raceId) return true;
+    return getRaceReputationLevel(raceReputation, raceId) !== "hostile";
+}
+
+/**
  * Проверить, доступен ли контракт расы.
  * Требует хотя бы нейтральной репутации.
  */

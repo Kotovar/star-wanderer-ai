@@ -1,5 +1,5 @@
+import { getRaceCrewBonus } from "@/game/races";
 import type { CrewMember } from "@/game/types";
-import { RACES } from "@/game/constants/races";
 
 /**
  * Рассчитывает максимальный бонус науки от всех учёных
@@ -11,8 +11,7 @@ export const calculateScienceBonus = (scientists: CrewMember[]): number => {
     let maxBonus = 0;
 
     scientists.forEach((scientist) => {
-        const race = RACES[scientist.race];
-        const raceBonus = race?.crewBonuses?.science || 0;
+        const raceBonus = getRaceCrewBonus(scientist.race, "science");
         maxBonus = Math.max(maxBonus, raceBonus);
     });
 

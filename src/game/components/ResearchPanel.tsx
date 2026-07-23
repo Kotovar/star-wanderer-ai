@@ -1,16 +1,15 @@
 "use client";
 
+import { calculateResearchOutput } from "@/game/slices/research/helpers/researchHelpers";
+
 import { useState, useRef, useCallback, useMemo } from "react";
 import { useGameStore } from "@/game/store";
 import {
   RESEARCH_TREE,
   RESEARCH_RESOURCES,
-  RACES,
   canResearchTech,
 } from "@/game/constants";
-import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import { LAB_MODULE_TYPES } from "@/game/constants/modules";
-import { getTaskBonusMultiplier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import type {
   ResearchCategory,
   Module,
@@ -1292,75 +1291,10 @@ export function ResearchPanel() {
     [activeResearchId, canResearch, canStartResearch, startResearch],
   );
 
-  const sciencePerTurn = useMemo(() => {
-    const labs = ship.modules.filter(
-      (m: Module) =>
-        LAB_MODULE_TYPES.includes(m.type) &&
-        m.health > 0 &&
-        !m.disabled &&
-        !m.manualDisabled,
-    );
-    const labOutput = labs.reduce(
-      (s: number, m: Module) => s + (m.researchOutput ?? 0),
-      0,
-    );
-
-    let scientistBonus = 0;
-    const cappedScientists = [...scientists]
-      .sort((a: CrewMember, b: CrewMember) => {
-        if (
-          (a.assignment === "research") !==
-          (b.assignment === "research")
-        )
-          return a.assignment === "research" ? -1 : 1;
-        return (b.level ?? 1) - (a.level ?? 1);
-      })
-      .slice(0, labs.length);
-    cappedScientists.forEach((s: CrewMember) => {
-      let scientistContribution = 5 + (s.level ?? 1);
-      if (s.assignment === "research") {
-        scientistContribution *= 2;
-      }
-      const raceScienceBonus = RACES[s.race]?.crewBonuses?.science || 0;
-      if (raceScienceBonus > 0) {
-        scientistContribution = Math.floor(
-          scientistContribution * (1 + raceScienceBonus),
-        );
-      }
-      scientistContribution = Math.floor(
-        scientistContribution * getTaskBonusMultiplier(s),
-      );
-      scientistBonus += scientistContribution;
-    });
-
-    const techSpeedBonus = researchedTechs.reduce((sum, techId) => {
-      const tech = RESEARCH_TREE[techId];
-      return (
-        sum +
-        tech.bonuses
-          .filter((b) => b.type === "research_speed")
-          .reduce((s, b) => s + b.value, 0)
-      );
-    }, 0);
-
-    let totalOutput = labOutput + scientistBonus;
-    if (techSpeedBonus > 0) {
-      totalOutput += Math.floor(totalOutput * techSpeedBonus);
-    }
-
-    cappedScientists.forEach((s: CrewMember) => {
-      if (s.augmentation) {
-        const augEffect = AUGMENTATIONS[s.augmentation]?.effect;
-        if (augEffect?.researchSpeedBonus) {
-          totalOutput += Math.floor(
-            totalOutput * augEffect.researchSpeedBonus,
-          );
-        }
-      }
-    });
-
-    return totalOutput;
-  }, [ship, scientists, researchedTechs]);
+  const sciencePerTurn = useMemo(
+    () => calculateResearchOutput({ ship, crew, research }).totalOutput,
+    [ship, crew, research],
+  );
 
   const selectedTechnology = selectedTech
     ? RESEARCH_TREE[selectedTech]

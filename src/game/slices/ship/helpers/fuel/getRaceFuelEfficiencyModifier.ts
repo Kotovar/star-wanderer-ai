@@ -1,4 +1,4 @@
-import { RACES } from "@/game/constants";
+import { getRaceCrewBonus } from "@/game/races";
 import type { CrewMember } from "@/game/types";
 
 /**
@@ -18,8 +18,7 @@ export const getRaceFuelEfficiencyModifier = (crew: CrewMember[]) => {
     const raceBonuses = new Map<string, number[]>();
 
     crew.forEach((c) => {
-        const race = RACES[c.race];
-        const fuelBonus = race?.crewBonuses.fuelEfficiency;
+        const fuelBonus = getRaceCrewBonus(c.race, "fuelEfficiency");
 
         if (fuelBonus && fuelBonus > 0) {
             const raceKey = c.race;

@@ -1,8 +1,8 @@
+import { getRaceCrewBonus } from "@/game/races";
+import { getTechBonusSum } from "@/game/research";
 import { getArtifactEffectValue } from "@/game/artifacts";
 import {
     CREW_ASSIGNMENT_BONUSES,
-    RACES,
-    RESEARCH_TREE,
     WEAPON_TYPES,
 } from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
@@ -56,10 +56,10 @@ function getBaseWeaponDamage(modules: GameState["ship"]["modules"]) {
  * Вычисляет максимальный бонус от расы экипажа
  */
 const getMaxRaceCombatBonus = (crew: GameState["crew"]) =>
-    crew.reduce((maxBonus, c) => {
-        const raceBonus = RACES[c.race]?.crewBonuses.combat ?? 0;
-        return Math.max(maxBonus, raceBonus);
-    }, 0);
+    crew.reduce(
+        (maxBonus, c) => Math.max(maxBonus, getRaceCrewBonus(c.race, "combat")),
+        0,
+    );
 
 /**
  * Вычисляет бонус от артефактов на урон
@@ -80,17 +80,7 @@ const getArtifactDamageBonus = (
  * Вычисляет бонус от технологий на урон
  */
 const getTechDamageBonus = (research: GameState["research"]) =>
-    research.researchedTechs.reduce((totalBonus, techId) => {
-        const tech = RESEARCH_TREE[techId];
-        const techBonus =
-            tech.bonuses
-                .filter((b: { type: string }) => b.type === "weapon_damage")
-                .reduce(
-                    (sum: number, b: { value: number }) => sum + b.value,
-                    0,
-                ) || 0;
-        return totalBonus + techBonus;
-    }, 0);
+    getTechBonusSum(research, "weapon_damage");
 
 /**
  * Применяет процентный бонус к урону

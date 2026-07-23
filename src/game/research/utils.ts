@@ -198,19 +198,23 @@ export const getAdjacentTechs = (techId: TechnologyId) => {
 };
 
 /**
- * Вычисляет суммарный бонус от исследованных технологий
+ * Вычисляет суммарный бонус от исследованных технологий.
+ * Единственная точка суммирования тех-бонусов — не дублировать этот reduce по коду.
  *
- * @param research - Данные об исследованиях
+ * @param research - Данные об исследованиях (достаточно researchedTechs)
  * @param bonusType - Тип бонуса для поиска (например, "scan_range")
+ * @param exclude - Технологии, которые не учитывать (например, warp_drive в топливе)
  * @returns Суммарное значение бонуса
  */
 export const getTechBonusSum = (
-    research: ResearchData,
+    research: Pick<ResearchData, "researchedTechs">,
     bonusType: ResearchBonusType,
+    exclude?: TechnologyId[],
 ): number => {
     let totalBonus = 0;
 
     research.researchedTechs.forEach((techId) => {
+        if (exclude?.includes(techId)) return;
         const tech = RESEARCH_TREE[techId as TechnologyId];
         if (!tech) return;
         tech.bonuses.forEach((bonus) => {

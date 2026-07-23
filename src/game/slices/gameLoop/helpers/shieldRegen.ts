@@ -1,3 +1,4 @@
+import { getTechBonusSum } from "@/game/research";
 import { store as i18nStore } from "@/lib/useTranslation";
 import {
     findActiveArtifact,
@@ -7,7 +8,6 @@ import {
 import {
     ARTIFACT_TYPES,
     RACES,
-    RESEARCH_TREE,
     STAR_HAZARD_LEVEL,
     STAR_SHIELD_REGEN_PENALTY_PER_LEVEL,
     STAR_SHIELD_REGEN_PENALTY_THRESHOLD,
@@ -140,12 +140,7 @@ export const regenerateShields = (
     const mergeMultiplier = (mergeBonus.shieldRegenBonus ?? 0) / 100;
 
     // Бонус от технологий (shield_regen)
-    const techRegenMultiplier = state.research.researchedTechs.reduce((sum, techId) => {
-        const tech = RESEARCH_TREE[techId];
-        return sum + tech.bonuses
-            .filter((b) => b.type === "shield_regen")
-            .reduce((s, b) => s + b.value, 0);
-    }, 0);
+    const techRegenMultiplier = getTechBonusSum(state.research, "shield_regen");
 
     // Итоговая ёмкость щита с бонусом от сращивания
     const maxShieldsWithBonus = mergeBonus.shieldCapacity

@@ -4526,6 +4526,7 @@
         "deliver_to_ship": "Ship",
         "err_invalid_price": "Invalid price!",
         "err_no_credits": "Not enough credits!",
+        "err_hostile_race": "This race is hostile — hiring is impossible!",
         "err_crew_not_found": "Crew member not found!",
         "err_last_crew": "Cannot dismiss the last crew member!",
         "err_no_trade": "Trading unavailable",

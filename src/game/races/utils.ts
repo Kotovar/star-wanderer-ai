@@ -1,5 +1,14 @@
 import { RACES } from "@/game/constants/races";
-import type { PlanetType, RaceId } from "@/game/types";
+import type { PlanetType, Race, RaceId } from "@/game/types";
+
+/**
+ * Расовый бонус экипажа (crewBonuses) с дефолтом 0.
+ * Единственная точка чтения crewBonuses в формулах — не дублировать по коду.
+ */
+export const getRaceCrewBonus = (
+    raceId: RaceId | undefined,
+    bonus: keyof Race["crewBonuses"],
+): number => (raceId ? (RACES[raceId]?.crewBonuses?.[bonus] ?? 0) : 0);
 
 // Get random race weighted by rarity
 export const getRandomRace = (

@@ -1,8 +1,8 @@
+import { getTechBonusSum } from "@/game/research";
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState, Module, CargoItem } from "@/game/types";
 import { playSound } from "@/sounds";
 import { createModuleFromShopItem } from "@/game/modules/createModuleFromShopItem";
-import { RESEARCH_TREE } from "@/game/constants/research";
 import { applyTechBonusesToNewModule } from "@/game/slices/research/helpers/researchHelpers";
 
 /**
@@ -55,15 +55,7 @@ const checkPositionOccupied = (
  * @returns Новый модуль или null если нет данных
  */
 const getExtraWeaponSlots = (state: GameStore): number =>
-    state.research.researchedTechs.reduce((sum, techId) => {
-        const tech = RESEARCH_TREE[techId];
-        return (
-            sum +
-            tech.bonuses
-                .filter((b: { type: string }) => b.type === "weapon_slots")
-                .reduce((s: number, b: { value: number }) => s + b.value, 0)
-        );
-    }, 0);
+    getTechBonusSum(state.research, "weapon_slots");
 
 const createModuleFromCargo = (
     cargoItem: CargoItem,

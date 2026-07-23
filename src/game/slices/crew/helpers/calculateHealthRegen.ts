@@ -1,5 +1,5 @@
+import { getRaceCrewBonus } from "@/game/races";
 import type { CrewMember, GameState } from "@/game/types";
-import { RACES } from "@/game/constants/races";
 
 /**
  * Вычисляет пассивную регенерацию здоровья для члена экипажа за ход
@@ -23,13 +23,12 @@ export const calculateHealthRegen = (
     crewMember: CrewMember,
     state?: Pick<GameState, "activeEffects">,
 ): number => {
-    const race = RACES[crewMember.race];
 
     // Базовая регенерация: 0 HP
     let regenAmount = 0;
 
     // Пассивная регенерация от расы (healthRegen)
-    const raceHealthRegen = race?.crewBonuses?.healthRegen ?? 0;
+    const raceHealthRegen = getRaceCrewBonus(crewMember.race, "healthRegen");
     regenAmount += raceHealthRegen;
 
     // Процентные бонусы от трейтов (например, "Регенерация" +50%)

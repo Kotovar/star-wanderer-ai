@@ -1,3 +1,4 @@
+import { getRaceCrewBonus } from "@/game/races";
 import { store as i18nStore } from "@/lib/useTranslation";
 import {
     BASE_EXP_REWARDS,
@@ -130,8 +131,7 @@ const processCombatRepair = (
     );
 
     // Расовый бонус
-    const repairBonus = (crewRace?.crewBonuses as Record<string, number>)
-        .repair;
+    const repairBonus = getRaceCrewBonus(crewMember.race, "repair");
     if (repairBonus) {
         repairAmount = Math.floor(repairAmount * (1 + repairBonus));
     }
@@ -183,8 +183,9 @@ const processCombatHeal = (
     );
 
     // Расовый бонус к лечению
-    if (crewRace?.crewBonuses.heal) {
-        healAmount = Math.floor(healAmount * (1 + crewRace.crewBonuses.heal));
+    const raceHealBonus = getRaceCrewBonus(crewMember.race, "heal");
+    if (raceHealBonus) {
+        healAmount = Math.floor(healAmount * (1 + raceHealBonus));
     }
 
     const crewNeedingHealing = get().crew.filter(

@@ -1,3 +1,4 @@
+import { getRaceCrewBonus } from "@/game/races";
 import { store as i18nStore } from "@/lib/useTranslation";
 import { RACES, XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
@@ -298,10 +299,9 @@ const processRepairAssignment = (
     );
 
     // Расовый бонус
-    if (crewRace?.crewBonuses.repair) {
-        repairAmount = Math.floor(
-            repairAmount * (1 + crewRace.crewBonuses.repair),
-        );
+    const raceRepairBonus = getRaceCrewBonus(crewMember.race, "repair");
+    if (raceRepairBonus) {
+        repairAmount = Math.floor(repairAmount * (1 + raceRepairBonus));
     }
 
     // Бонус аугментации nano_hands (+15% ремонт для инженера)
@@ -491,8 +491,9 @@ const processHealAssignment = (
     );
 
     // Расовый бонус к лечению
-    if (crewRace?.crewBonuses.heal) {
-        healAmount = Math.floor(healAmount * (1 + crewRace.crewBonuses.heal));
+    const raceHealBonus = getRaceCrewBonus(crewMember.race, "heal");
+    if (raceHealBonus) {
+        healAmount = Math.floor(healAmount * (1 + raceHealBonus));
     }
 
     // Бонус аугментации accelerated_regen (+15% лечение для медика)

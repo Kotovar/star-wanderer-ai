@@ -1,3 +1,4 @@
+import { getRaceCrewBonus } from "@/game/races";
 import type { CrewMember } from "@/game/types";
 import { getExpNeededForNextLevel } from "./getExpNeededForNextLevel";
 import { BASE_CREW_HEALTH_PER_LEVEL } from "@/game/constants/crew";
@@ -96,7 +97,7 @@ export const applyLevelUp = (
     });
 
     // Добавляем фиксированный бонус расы (human +5, xenosymbiont +10, krylorian +15)
-    const raceHealthBonus = raceData?.crewBonuses?.health ?? 0;
+    const raceHealthBonus = getRaceCrewBonus(crewMember.race, "health");
     healthGain += raceHealthBonus;
 
     const newMaxHealth = crewMember.maxHealth + healthGain;

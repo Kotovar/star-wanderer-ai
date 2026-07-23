@@ -1,7 +1,8 @@
+import { getRaceCrewBonus } from "@/game/races";
+import { getTechBonusSum } from "@/game/research";
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, CrewMember, RaceId, SetState } from "@/game/types";
 import { RACES } from "@/game/constants/races";
-import { RESEARCH_TREE } from "@/game/constants/research";
 import { playSound } from "@/sounds";
 import {
     BASE_CREW_HEALTH_PER_LEVEL,
@@ -9,6 +10,7 @@ import {
     BASE_CREW_HEALTH,
 } from "@/game/constants/crew";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
+import { canHireRace } from "@/game/reputation/utils";
 
 /**
  * Опции для расчёта характеристик экипажа
@@ -40,7 +42,7 @@ export const calculateCrewStats = (options: CrewStatsOptions): CrewStats => {
     // === ЗДОРОВЬЕ ===
 
     // Бонус здоровья от расы (фиксированное число: human +5, xenosymbiont +10, krylorian +15)
-    const raceHealthBonus = raceData?.crewBonuses?.health || 0;
+    const raceHealthBonus = getRaceCrewBonus(race, "health");
 
     // Процентный штраф от специальных способностей расы (voidborn -20%, crystalline -15%)
     let raceHealthPenaltyPercent = 0;
@@ -90,7 +92,7 @@ export const calculateCrewStats = (options: CrewStatsOptions): CrewStats => {
     // === СЧАСТЬЕ ===
 
     // Бонус счастья от расы (human +10, voidborn -10)
-    const raceHappinessBonus = raceData?.crewBonuses?.happiness || 0;
+    const raceHappinessBonus = getRaceCrewBonus(race, "happiness");
 
     // Бонусы от трейтов (процентный множитель, как healthBonus)
     const baseMaxHappiness = DEFAULT_MAX_HAPPINESS + raceHappinessBonus;
@@ -129,7 +131,11 @@ interface HireValidation {
  * @param price - Цена найма
  * @returns Результат проверки
  */
-const validateHireCrew = (state: GameStore, price: number): HireValidation => {
+const validateHireCrew = (
+    state: GameStore,
+    price: number,
+    race?: RaceId,
+): HireValidation => {
     // Проверка цены
     if (isNaN(price) || price < 0) {
         return { canHire: false, error: i18nStore.t("game_logs.err_invalid_price") };
@@ -137,6 +143,10 @@ const validateHireCrew = (state: GameStore, price: number): HireValidation => {
 
     if (state.credits < price) {
         return { canHire: false, error: i18nStore.t("game_logs.err_no_credits") };
+    }
+
+    if (!canHireRace(state.raceReputation, race)) {
+        return { canHire: false, error: i18nStore.t("game_logs.err_hostile_race") };
     }
 
     return { canHire: true };
@@ -158,7 +168,7 @@ export const hireCrew = (
     const state = get();
 
     // Проверка возможности найма
-    const validation = validateHireCrew(state, crewData.price);
+    const validation = validateHireCrew(state, crewData.price, crewData.race);
     if (!validation.canHire) {
         if (validation.error) {
             get().addLog(validation.error, "error");
@@ -184,18 +194,7 @@ export const hireCrew = (
     });
 
     // Применяем crew_health бонус от исследований к новому члену экипажа
-    const crewHealthBonus = state.research.researchedTechs.reduce(
-        (sum, techId) => {
-            const tech = RESEARCH_TREE[techId];
-            return (
-                sum +
-                tech.bonuses
-                    .filter((b) => b.type === "crew_health")
-                    .reduce((s, b) => s + b.value, 0)
-            );
-        },
-        0,
-    );
+    const crewHealthBonus = getTechBonusSum(state.research, "crew_health");
     if (crewHealthBonus > 0) {
         newCrew.maxHealth = Math.floor(
             newCrew.maxHealth * (1 + crewHealthBonus),

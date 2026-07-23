@@ -1,3 +1,4 @@
+import { getRaceCrewBonus } from "@/game/races";
 import { isModuleActive } from "@/game/modules";
 import { LAB_MODULE_TYPES } from "@/game/constants/modules";
 import { getTaskBonusMultiplier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
@@ -7,8 +8,8 @@ import {
     SCIENTIST_BASE_BONUS,
     RESEARCH_ASSIGNMENT_MULTIPLIER,
 } from "@/game/constants";
-import { RACES } from "@/game/constants/races";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import { getTechBonusSum } from "@/game/research";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import { typedKeys } from "@/lib/utils";
 import {
@@ -65,7 +66,7 @@ export interface ResearchOutputData {
  * @returns Данные о производительности исследования
  */
 export const calculateResearchOutput = (
-    state: GameStore,
+    state: Pick<GameStore, "ship" | "crew" | "research">,
 ): ResearchOutputData => {
     // Производительность от лабораторий (включая гибридные модули с researchOutput)
     const labs = state.ship.modules.filter(
@@ -97,8 +98,7 @@ export const calculateResearchOutput = (
         }
 
         // Расовый бонус к науке (synthetic +25%, crystalline +20%)
-        const raceScienceBonus =
-            RACES[scientist.race]?.crewBonuses?.science ?? 0;
+        const raceScienceBonus = getRaceCrewBonus(scientist.race, "science");
         if (raceScienceBonus > 0) {
             scientistContribution = Math.floor(
                 scientistContribution * (1 + raceScienceBonus),
@@ -118,19 +118,9 @@ export const calculateResearchOutput = (
 
     // Бонус от технологий скорости исследования (суммируем реальные значения)
     let techSpeedBonus = 0;
-    const researchSpeedMultiplier = state.research.researchedTechs.reduce(
-        (sum, techId) => {
-            const tech = RESEARCH_TREE[techId];
-            return (
-                sum +
-                tech.bonuses
-                    .filter(
-                        (b: { type: string }) => b.type === "research_speed",
-                    )
-                    .reduce((s: number, b: { value: number }) => s + b.value, 0)
-            );
-        },
-        0,
+    const researchSpeedMultiplier = getTechBonusSum(
+        state.research,
+        "research_speed",
     );
 
     if (researchSpeedMultiplier > 0) {

@@ -7,7 +7,7 @@ import {
     RACES,
 } from "@/game/constants";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
-import { RESEARCH_TREE } from "@/game/constants/research";
+import { getTechBonusSum } from "@/game/research";
 import type { GameState, GameStore, Module } from "@/game/types";
 
 /**
@@ -188,12 +188,10 @@ function damageCrewInModule(
     const firstAidReduction = hasFirstAid ? 0.5 : 0;
 
     // === Бонус от stellar_genetics: -30% урон по экипажу ===
-    const geneticsReduction = state.research.researchedTechs.reduce((sum, techId) => {
-        const tech = RESEARCH_TREE[techId];
-        return sum + tech.bonuses
-            .filter((b) => b.type === "crew_damage_reduction")
-            .reduce((s, b) => s + b.value, 0);
-    }, 0);
+    const geneticsReduction = getTechBonusSum(
+        state.research,
+        "crew_damage_reduction",
+    );
 
     // phase_step: pre-roll dodge for each crew member in the module
     const phaseStepDodgers = new Set<number>();

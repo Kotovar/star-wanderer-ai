@@ -1,5 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
-import { RESEARCH_TREE } from "@/game/constants";
+import { getTechBonusSum } from "@/game/research";
 import type { GameStore, SetState } from "@/game/types";
 
 /**
@@ -13,18 +13,7 @@ export const processNaniteRepair = (
     const state = get();
 
     // Суммируем nanite_repair от researched techs (automated_repair: 2%, nanite_hull: 5%)
-    const repairPercent = state.research.researchedTechs.reduce(
-        (sum, techId) => {
-            const tech = RESEARCH_TREE[techId];
-            return (
-                sum +
-                tech.bonuses
-                    .filter((b) => b.type === "nanite_repair")
-                    .reduce((s, b) => s + b.value, 0)
-            );
-        },
-        0,
-    );
+    const repairPercent = getTechBonusSum(state.research, "nanite_repair");
 
     if (repairPercent <= 0) return;
 

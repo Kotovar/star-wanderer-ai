@@ -26,7 +26,11 @@ import { CraftingTab } from "./station/CraftingTab";
 import { ModuleUpgradeModal } from "./station/ModuleUpgradeModal";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
-import { getRaceReputation, getRaceReputationLevel } from "../reputation/utils";
+import {
+    canHireRace,
+    getRaceReputation,
+    getRaceReputationLevel,
+} from "../reputation/utils";
 import {
     getDiplomacyCost,
     MAX_DIPLOMATIC_REP,
@@ -202,14 +206,7 @@ export function StationPanel() {
         ).filter((c) => {
             if (hiredCrewNames.includes(c.member.name)) return false;
             // Block hiring crew from races that are hostile to us
-            const crewRace = c.member.race as RaceId;
-            if (
-                crewRace &&
-                getRaceReputationLevel(raceReputation, crewRace) === "hostile"
-            ) {
-                return false;
-            }
-            return true;
+            return canHireRace(raceReputation, c.member.race as RaceId);
         });
     }, [
         currentLocation?.dominantRace,

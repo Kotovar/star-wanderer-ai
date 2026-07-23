@@ -1,4 +1,5 @@
-import { CREW_ASSIGNMENT_BONUSES, RACES } from "@/game/constants";
+import { getRaceCrewBonus } from "@/game/races";
+import { CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
 import { getTaskBonusMultiplier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import { isModuleFunctional } from "../utils";
 import type { GameState } from "@/game/types";
@@ -56,8 +57,7 @@ export function getTotalConsumption(state: GameState): number {
         const crewInModule = crew.filter((c) => c.moduleId === shipModule.id);
 
         for (const crewMember of crewInModule) {
-            const race = RACES[crewMember.race];
-            const energyBonus = race?.crewBonuses.energy;
+            const energyBonus = getRaceCrewBonus(crewMember.race, "energy");
 
             // Отрицательный бонус к энергии означает снижение потребления
             // Например, ксеносимбионт: -25% потребления

@@ -33,10 +33,13 @@ graph TD
     subgraph Мир
         PLANET[Планеты<br/>constants/planets.ts]
         GAL[Галактика/сектора<br/>galaxy/generate.ts]
+        STAR[Звёзды/опасности<br/>starHazards.ts]
         STATION[Станции]
         EXPED[Экспедиции]
         EVENT[Случайные события<br/>randomEvents.ts]
+        CRISIS[Глобальные кризисы<br/>globalCrises.ts + crisisResponses.ts]
         BOSS[Боссы/монстры]
+        ART[Артефакты<br/>constants/artifacts.ts]
     end
 
     subgraph Экономика
@@ -83,8 +86,9 @@ graph TD
     CONTR --> CRED
     CONTR -->|baseExp| EXP
     REP -->|каскад на союзников/соперников| REP
-    REP -->|модификатор цен| TRADE
-    REP -->|доступ к станциям, найм| STATION
+    REP -->|модификатор цен: товары, ремонт, лечение| TRADE
+    REP -->|hostile блокирует найм| STATION
+    STATION -->|найм даёт +1..3 репутации расе| REP
     REP -->|galactic_coalition| VICT
     TRADE --> CRED
 
@@ -95,9 +99,25 @@ graph TD
     STATION -->|найм экипажа, ресурсы исследований| CREW
     EXPED -->|усталость, опыт, ресурсы| CREW
     EXPED -->|tileWeights зависят от расы| RACE
-    EVENT -->|мутации, урон, находки| CREW
+    EVENT -->|урон, находки| CREW
     BOSS -->|defeat_* цели| VICT
     WPN -->|бой| BOSS
+
+    %% Мутации и счастье
+    EVENT -->|аномалии: шанс мутации| TRAIT
+    BOSS -->|шанс мутации за тир| TRAIT
+    ART -->|проклятые: мутации, дезертирство,<br/>дрейн счастья/HP| CREW
+    ART -->|эффекты: энергия, криты,<br/>уклонение, щиты| SHIPSTAT
+    RACE -->|crystalline: artifactBonus| ART
+    BOSS -.->|подсказки об артефактах| ART
+    PLANET -->|environmentPreference| HAPPY[Счастье экипажа]
+    HAPPY -->|happiness ≤ 0 → дезертирство<br/>processDesertion.ts| CREW
+
+    %% Кризисы и опасности
+    CRISIS -->|болезни: race.canGetSick| CREW
+    CRISIS -->|урон модулям, дефицит товаров| MOD
+    MOD -->|наличие модулей → варианты ответа<br/>crisisResponses.ts| CRISIS
+    STAR -->|уровень опасности звезды| SHIPSTAT
 ```
 
 ---
@@ -110,6 +130,10 @@ graph TD
 - **Ксеноморф → модуль**: сращивание даёт бонус в зависимости от типа модуля (см. `docs/XENOSYMBIONT_MERGE.md`). Новый тип модуля = нужен эффект сращивания.
 - **Репутация → каскад**: изменение репутации с расой пересчитывается на её `relations` (см. `docs/REPUTATION_TRADEOFFS.md`), влияет на цены, контракты, враждебность в секторах.
 - **Исследования → всё**: `ResearchBonusType` покрывает модули, оружие, экипаж, груз, щиты, экспедиции, артефакты; технологии открывают рецепты крафта и новые модули.
+- **Счастье → дезертирство**: при `happiness ≤ 0` член экипажа дезертирует (`processDesertion.ts`). Источники счастья: среда планет (`environmentPreference` расы), назначение `morale`, проклятые артефакты (дрейн), черты.
+- **Мутации** приходят из трёх источников (`constants/mutationChances.ts`): аномалии, боссы, проклятые артефакты — и становятся чертами экипажа (`MutationTraitId`).
+- **Глобальные кризисы** (с ~100 хода): болезни экипажа фильтруются по `race.canGetSick`, варианты ответа (`crisisResponses.ts`) зависят от наличия живых включённых модулей.
+- **Найм ↔ репутация двусторонний**: `hostile`-уровень блокирует найм расы на станции (`StationPanel.tsx`), а успешный найм даёт +1..3 репутации расе нанятого (`hireCrew.ts`).
 
 ---
 
@@ -134,6 +158,8 @@ graph TD
 | Экспедиции: веса тайлов | `slices/locations/helpers/expedition/tileWeights.ts` |
 | Контракты (расовые), станции | `contracts/generatePlanetContracts.ts`, `components/station/station-data.ts` |
 | Стартовые модификаторы (если завязаны на расу) | `constants/launchModifiers.ts` |
+| `canGetSick` — участвует ли раса в кризисах-эпидемиях | `constants/races.ts`, проверяется в `globalCrises.ts` |
+| Открытие расы игроком (`knownRaces`) | `components/RaceDiscoveryModal.tsx` |
 | Документация | `docs/` (при наличии спец-механики) |
 
 ### ➕ Новый тип модуля
