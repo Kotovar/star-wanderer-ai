@@ -9,11 +9,17 @@ import { CombatShipVisual } from "./CombatShipVisual";
 import { CombatShipGrid } from "./CombatShipGrid";
 import { CrewMemberCard } from "./CrewMemberCard";
 import { SectionPanel } from "./SectionPanel";
-import type { CrewMember, CrewMemberCombatAssignment } from "../types";
+import type { CrewMember, CrewMemberCombatAssignment, WeaponType } from "../types";
+import type { EnemyModule } from "@/game/types/enemy";
 import { getTotalEvasion } from "@/game/slices";
 import { useTranslation } from "@/lib/useTranslation";
 import { WEAPON_TYPES, DRONE_MAX_STACKS, DRONE_STACK_BONUS } from "@/game/constants";
 import { calculateCombatTimeCost } from "@/game/slices/combat/helpers/combatTime";
+import { getBossModulePassives } from "@/game/slices/combat/helpers/bossEffectLabels";
+import {
+  computeBayAccuracyModifier,
+  getWeaponAccuracy,
+} from "@/game/slices/combat/helpers/playerDamage";
 
 interface WeaponHint {
   text: string;
@@ -27,8 +33,10 @@ const COMBAT_PHASES: { id: CombatPhaseId; label: string; caption: string }[] = [
   { id: "salvo", label: "Залп", caption: "ваш выстрел" },
 ];
 
-function getWeaponHints(type: string): WeaponHint[] {
-  const w = WEAPON_TYPES[type as keyof typeof WEAPON_TYPES];
+function getWeaponHints(
+  type: string,
+  w: (typeof WEAPON_TYPES)[keyof typeof WEAPON_TYPES] | undefined,
+): WeaponHint[] {
   if (!w) return [];
   const hints: WeaponHint[] = [];
   if (w.shieldOnly) {
@@ -50,6 +58,27 @@ function getWeaponHints(type: string): WeaponHint[] {
   if (type === "drones")
     hints.push({ text: `+${DRONE_STACK_BONUS * 100}%/стак (макс ${DRONE_MAX_STACKS} = ×2)`, color: "#00ff41" });
   return hints;
+}
+
+/** Полоса щитов — общая разметка для «своего корабля» и «врага» ниже */
+function ShieldBar({
+  value,
+  max,
+  colorClass,
+}: {
+  value: number;
+  max: number;
+  colorClass: string;
+}) {
+  const pct = Math.min(100, Math.max(0, (value / Math.max(1, max)) * 100));
+  return (
+    <div className="h-2 rounded-full mt-1 bg-[rgba(0,0,0,0.5)] relative">
+      <div
+        className={`absolute rounded-full top-0 left-0 h-full ${colorClass}`}
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  );
 }
 
 function CombatPhaseStrip({
@@ -304,6 +333,13 @@ export function CombatPanel() {
         />
       )}
 
+      {isBoss && (
+        <BossModulePassivesCard
+          modules={currentCombat.enemy.modules}
+          t={t}
+        />
+      )}
+
       {/* Ship stats summary */}
       <div className="grid grid-cols-2 gap-4 my-3">
         <SectionPanel>
@@ -317,14 +353,7 @@ export function CombatPanel() {
             <div>
               {t("ship_stats.shields")} {ship.shields}/
               {ship.maxShields}
-              <div className="h-2 rounded-full mt-1 bg-[rgba(0,0,0,0.5)] relative">
-                <div
-                  className="absolute rounded-full top-0 left-0 h-full bg-[#0080ff]"
-                  style={{
-                    width: `${(ship.shields / Math.max(1, ship.maxShields)) * 100}%`,
-                  }}
-                />
-              </div>
+              <ShieldBar value={ship.shields} max={ship.maxShields} colorClass="bg-[#0080ff]" />
             </div>
             <div>
               {t("combat.hull")} {playerHP}/{playerMaxHP}
@@ -367,14 +396,11 @@ export function CombatPanel() {
                 : t("combat.shields")}{" "}
               {currentCombat.enemy.shields || 0}/
               {currentCombat.enemy.maxShields || 0}
-              <div className="h-2 rounded-full mt-1 bg-[rgba(0,0,0,0.5)] relative">
-                <div
-                  className={`absolute rounded-full top-0 left-0 h-full ${isBoss ? "bg-[#ff00ff]" : "bg-[#0080ff]"}`}
-                  style={{
-                    width: `${Math.min(100, Math.max(0, ((currentCombat.enemy.shields || 0) / Math.max(1, currentCombat.enemy.maxShields || 0)) * 100))}%`,
-                  }}
-                />
-              </div>
+              <ShieldBar
+                value={currentCombat.enemy.shields || 0}
+                max={currentCombat.enemy.maxShields || 0}
+                colorClass={isBoss ? "bg-[#ff00ff]" : "bg-[#0080ff]"}
+              />
             </div>
             <div>
               {t("combat.hull")} {eHP}/{eMaxHP}
@@ -427,6 +453,20 @@ export function CombatPanel() {
               : null;
             const isActive = activeBayId === bay.id;
             const bayWeapons = bay.weapons?.filter(Boolean) ?? [];
+            const bayAccuracyModifier = computeBayAccuracyModifier(
+              useGameStore.getState(),
+              bay.id,
+            );
+            // Один поиск WEAPON_TYPES на тип оружия — переиспользуется в обоих
+            // проходах рендера (урон/точность и бонус-подсказки) ниже
+            const weaponDefsByType = new Map<
+              string,
+              (typeof WEAPON_TYPES)[keyof typeof WEAPON_TYPES]
+            >();
+            bayWeapons.forEach((w) => {
+              if (w && !weaponDefsByType.has(w.type))
+                weaponDefsByType.set(w.type, WEAPON_TYPES[w.type]);
+            });
 
             // Group weapons by type
             const weaponGroups = bayWeapons.reduce(
@@ -453,7 +493,7 @@ export function CombatPanel() {
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 flex-wrap">
                     {weaponGroups.map((g) => {
-                      const wdef = WEAPON_TYPES[g.type as keyof typeof WEAPON_TYPES];
+                      const wdef = weaponDefsByType.get(g.type);
                       const color = wdef?.color ?? "#888";
                       const icon = wdef?.icon ?? "?";
                       const name = t(`weapon_types.${g.type}`) || g.type;
@@ -466,6 +506,11 @@ export function CombatPanel() {
                           <span>{icon}{g.count > 1 ? `×${g.count}` : ""}</span>
                           <span className="opacity-80">{name}</span>
                           <span className="opacity-60 ml-0.5">{dmg}</span>
+                          <span className="opacity-60 ml-0.5">
+                            ({Math.round(
+                              getWeaponAccuracy(g.type as WeaponType, bayAccuracyModifier) * 100,
+                            )}%)
+                          </span>
                         </span>
                       );
                     })}
@@ -475,10 +520,12 @@ export function CombatPanel() {
                   </span>
                 </div>
                 {/* Bottom row: bonus hints */}
-                {weaponGroups.some((g) => getWeaponHints(g.type).length > 0) && (
+                {weaponGroups.some(
+                  (g) => getWeaponHints(g.type, weaponDefsByType.get(g.type)).length > 0,
+                ) && (
                   <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1">
                     {weaponGroups.flatMap((g) =>
-                      getWeaponHints(g.type).map((hint, i) => (
+                      getWeaponHints(g.type, weaponDefsByType.get(g.type)).map((hint, i) => (
                         <span key={`${g.type}-${i}`} style={{ color: hint.color }} className="opacity-70">
                           {hint.text}
                         </span>
@@ -621,6 +668,40 @@ function BossAbilityCard({ ability, regenRate, t }: BossAbilityCardProps) {
           {t("combat.regen").replace("{{rate}}", String(regenRate))}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Показывает пассивные способности живых модулей босса (уклонение, гашение
+ * крита, прожиг щитов и т.п.) ДО того, как они впервые сработают — раньше
+ * игрок узнавал о них только постфактум, из лога боя.
+ */
+function BossModulePassivesCard({
+  modules,
+  t,
+}: {
+  modules: EnemyModule[];
+  t: (key: string, params?: Record<string, string | number>) => string;
+}) {
+  const passives = getBossModulePassives(modules.filter((m) => m.health > 0));
+  if (passives.length === 0) return null;
+
+  return (
+    <div className="bg-[rgba(255,0,255,0.06)] border border-[#ff00ff66] p-3 text-sm">
+      <div className="text-[#ff00ff] font-bold mb-1">
+        {t("combat.boss_module_passives_title")}
+      </div>
+      <div className="space-y-0.5">
+        {passives.map((p) => (
+          <div key={p.moduleId} className="flex justify-between text-xs text-[#cccccc]">
+            <span>
+              {p.moduleName}: {p.label}
+            </span>
+            {p.valueText && <span className="text-[#ffaa00]">{p.valueText}</span>}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

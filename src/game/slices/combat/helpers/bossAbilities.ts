@@ -30,6 +30,28 @@ function getAliveModsWithEffect(
     );
 }
 
+/**
+ * Общий бросок для пассивных способностей босса вида "найти живые модули с
+ * эффектом X → взять максимальное значение → бросить шанс → залогировать при
+ * успехе". Используется dodge и phase_shift — обе имеют одну и ту же форму.
+ */
+function rollBossModuleAbility(
+    aliveBossModules: EnemyModule[],
+    effectType: string,
+    get: () => GameStore,
+    logKey: string,
+    logLevel: "warning" | "info",
+): boolean {
+    const mods = getAliveModsWithEffect(aliveBossModules, effectType);
+    if (mods.length === 0) return false;
+    const value = Math.max(...mods.map((m) => m.specialEffect?.value ?? 0));
+    if (Math.random() * 100 < value) {
+        get().addLog(i18nStore.t(logKey, { value }), logLevel);
+        return true;
+    }
+    return false;
+}
+
 /** Heals every alive boss module by `amount`, capped at its maxHealth */
 function healAllBossModules(
     set: (fn: (s: GameState) => void) => void,
@@ -128,16 +150,13 @@ export function checkBossModuleDodge(
     aliveBossModules: EnemyModule[],
     get: () => GameStore,
 ): boolean {
-    const dodgeMods = getAliveModsWithEffect(aliveBossModules, "dodge");
-    if (dodgeMods.length === 0) return false;
-    const maxDodge = Math.max(...dodgeMods.map((m) => m.specialEffect?.value ?? 0));
-    if (Math.random() * 100 < maxDodge) {
-        get().addLog( i18nStore.t("game_logs.bossAbilities_1", { maxDodge }),
-            "warning",
-        );
-        return true;
-    }
-    return false;
+    return rollBossModuleAbility(
+        aliveBossModules,
+        "dodge",
+        get,
+        "game_logs.bossAbilities_1",
+        "warning",
+    );
 }
 
 // ─── 3. Phase shift check (passive) ──────────────────────────────────────────
@@ -150,18 +169,13 @@ export function checkBossPhaseShift(
     aliveBossModules: EnemyModule[],
     get: () => GameStore,
 ): boolean {
-    const phaseMods = getAliveModsWithEffect(aliveBossModules, "phase_shift");
-    if (phaseMods.length === 0) return false;
-    const maxPhaseShift = Math.max(
-        ...phaseMods.map((m) => m.specialEffect?.value ?? 0),
+    return rollBossModuleAbility(
+        aliveBossModules,
+        "phase_shift",
+        get,
+        "game_logs.bossAbilities_2",
+        "info",
     );
-    if (Math.random() * 100 < maxPhaseShift) {
-        get().addLog( i18nStore.t("game_logs.bossAbilities_2", { maxPhaseShift }),
-            "info",
-        );
-        return true;
-    }
-    return false;
 }
 
 // ─── 4. Evasion boost check (active ability) ─────────────────────────────────

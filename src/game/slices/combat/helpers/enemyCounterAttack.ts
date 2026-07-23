@@ -9,6 +9,7 @@ import { getTotalEvasion } from "@/game/slices/ship/helpers/getTotalEvasion";
 import { shouldPhaseShieldAbsorb } from "@/game/research/specialAbilities";
 import { applyModuleDamage } from "./moduleDamage";
 import { getBossAttackModifiers, processBossRegeneration } from "./bossAbilities";
+import * as enemyAttack from "./enemyAttack";
 import {
     DEFAULT_MODULE_PRIORITY,
     MODULE_HEALTH_PRIORITY,
@@ -40,24 +41,44 @@ export function recordPlayerHit(
 }
 
 /**
- * Handles enemy counter-attack after player attack
+ * Handles enemy counter-attack after player attack (used mid-round, following
+ * the player's own attack — regenerates enemy shields first, per round rules).
  */
 export function handleEnemyCounterAttack(
     state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
 ) {
+    performEnemyAttack(state, set, get, { regenShieldsFirst: true });
+}
+
+/**
+ * Executes a full enemy attack against the player's ship: target selection,
+ * evasion/sabotage/artifact/phase-shield checks, damage application, and all
+ * boss-modifier side effects (shield break, heal-on-damage, turn skip).
+ *
+ * Shared by two call shapes:
+ * - `handleEnemyCounterAttack` — enemy's counter-turn after the player attacks
+ *   (regenerates enemy shields first, per round rules).
+ * - `executeEnemyAttack` (executeEnemyAttack.ts) — a standalone forced enemy
+ *   attack (ambush, `processEnemyAttack` action) that does NOT regen shields
+ *   first, since it isn't part of the normal round structure.
+ */
+export function performEnemyAttack(
+    state: GameState,
+    set: (fn: (s: GameState) => void) => void,
+    get: () => GameStore,
+    options: { regenShieldsFirst: boolean },
+) {
     const combat = state.currentCombat;
     if (!combat) return;
 
-    // Shield regen at the START of enemy's turn, before they attack.
-    // Skipped if player broke shields to 0 this round (see enemyShieldsJustBroken flag).
-    processEnemyShieldRegen(set, get);
+    if (options.regenShieldsFirst) {
+        // Skipped if player broke shields to 0 this round (see enemyShieldsJustBroken flag).
+        processEnemyShieldRegen(set, get);
+    }
 
-    const eDmg = combat.enemy.modules.reduce(
-        (s, m) => s + (m.health > 0 ? (m.damage ?? 0) : 0),
-        0,
-    );
+    const eDmg = enemyAttack.calculateEnemyDamage(combat.enemy.modules);
 
     if (eDmg <= 0) {
         get().addLog( i18nStore.t("game_logs.enemyCounterAttack_1"),
@@ -231,6 +252,13 @@ export function handleEnemyCounterAttack(
     processBossRegeneration(state, set, get);
 
     get().checkGameOver();
+
+    // Clear selection (harmless no-op if already cleared elsewhere, e.g.
+    // finishPlayerTurn after handleEnemyCounterAttack)
+    set((s) => {
+        if (!s.currentCombat) return;
+        s.currentCombat.enemy.selectedModule = null;
+    });
 }
 
 /**

@@ -482,17 +482,15 @@ export function getScannerInfo(
     );
   }
 
-  // Boss detailed info
+  // Boss detailed info — обнаружение самого объекта уже требует scanRange >= 8
+  // (см. canDetectObject), так что здесь это единственный реальный порог входа
   if (loc.type === "boss" && !loc.bossDefeated) {
     const boss = loc.bossId ? ANCIENT_BOSSES.find((b) => b.id === loc.bossId) : null;
 
-    if (scanRange >= 5 && boss) {
+    if (scanRange >= 8 && boss) {
       info.push(`🛸 ${boss.name}`);
       info.push(`🔩 ${t("locations.scan_modules")}: ${boss.modules.length}`);
       info.push(`🛡 ${t("locations.scan_has_shields")} ${boss.shields}`);
-    }
-
-    if (scanRange >= 8 && boss) {
       const totalHp = boss.modules.reduce((sum, m) => sum + m.health, 0);
       const totalDmg = boss.modules.reduce((sum, m) => sum + (m.damage ?? 0), 0);
       info.push(`💀 ${t("locations.scan_total_hp")}${totalHp}`);
@@ -533,12 +531,17 @@ function canDetectObject(
   if (type === "friendly_ship") return scanRange >= 3;
   if (type === "storm") return scanRange >= 5;
 
-  // enemy, monster, anomaly, boss, derelict
+  // Босс всегда требует scanRange >= 8, как в canScanObject (слайс сканера,
+  // используется для иконки на карте) — у boss-локации нет loc.threat, так
+  // что через общую tier-ветку ниже он тихо получал tier=1 и раскрывался при
+  // scanRange >= 3, рассинхронизируясь с иконкой на карте.
+  if (type === "boss") return scanRange >= 8;
+
+  // enemy, monster, anomaly, derelict
   if (
     type === "enemy" ||
     type === "space_monster" ||
     type === "anomaly" ||
-    type === "boss" ||
     type === "derelict_ship"
   ) {
     if (tier <= 1) return scanRange >= 3;

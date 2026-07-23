@@ -289,8 +289,12 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
         health: 160,
         defense: 6,
         isAncient: true,
-        specialEffect: { type: "dodge", value: 25 },
-        description: "25% шанс уклонения",
+        // Снижено с 25% — вместе с корабельной evasion_boost (30%, "Фазовый
+        // Сдвиг") давало 47.5% шанс полностью избежать атаки ДО броска
+        // точности оружия. Оставили именную способность боссу нетронутой,
+        // срезали вторичный слой (модуль).
+        specialEffect: { type: "dodge", value: 12 },
+        description: "12% шанс уклонения",
       },
       {
         type: "void_cannon",
@@ -420,8 +424,12 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
         health: 250,
         defense: 8,
         isAncient: true,
-        specialEffect: { type: "dodge", value: 30 },
-        description: "30% шанс уклонения",
+        // Снижено с 30% — вместе с корабельной evasion_boost (25%,
+        // "Предвидение") давало 47.5% шанс полностью избежать атаки ДО
+        // броска точности оружия. Оставили именную способность боссу
+        // нетронутой, срезали вторичный слой (модуль).
+        specialEffect: { type: "dodge", value: 15 },
+        description: "15% шанс уклонения",
       },
       {
         type: "entropy_cannon",
@@ -707,5 +715,9 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
       value: 20,
     },
     guaranteedArtifactRarity: "cursed",
+    // Сильнее любого рядового tier-3 босса (суммарно ~1050 HP модулей + regen/heal_on_damage/
+    // damage_aura/turn_skip одновременно, плюс шанс воскрешения) — стандартная tier-формула
+    // calculateBossLoot недоплачивает за этот бой, поэтому кредитная награда увеличена.
+    lootMultiplier: 1.5,
   },
 ];

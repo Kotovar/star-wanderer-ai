@@ -236,8 +236,8 @@ export const calculateCombatLoot = (
  * Calculates boss combat loot based on tier
  * Includes random variation: ±25%
  */
-export const calculateBossLoot = (tier: number) => {
-    const baseLoot = LOOT_BOSS_BASE * tier;
+export const calculateBossLoot = (tier: number, lootMultiplier = 1) => {
+    const baseLoot = LOOT_BOSS_BASE * tier * lootMultiplier;
     const variation =
         LOOT_BOSS_VARIATION_MIN + Math.random() * LOOT_BOSS_VARIATION_RANGE;
     return Math.floor(baseLoot * variation);

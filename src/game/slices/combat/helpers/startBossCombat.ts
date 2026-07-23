@@ -37,7 +37,10 @@ export function initializeBossCombat(
 
     // Determine boss rewards (artifact rarity and module by tier)
     const rewards = determineBossRewards(boss.id, boss.tier, get());
-    const lootCredits = combatSetup.calculateBossLoot(boss.tier);
+    const lootCredits = combatSetup.calculateBossLoot(
+        boss.tier,
+        boss.lootMultiplier,
+    );
 
     set((s) => {
         s.ship.shields = s.ship.maxShields;

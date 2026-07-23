@@ -316,3 +316,15 @@ export const DISTRESS_MEDICAL_SURVIVOR_JOINS_CHANCE = 0.8;
 
 /** Репутация за спасение с медицинским протоколом. */
 export const DISTRESS_MEDICAL_REPUTATION = 5;
+
+/** Изменение морали экипажа при принятии выжившего на борт. */
+export const SURVIVOR_ACCEPT_MORALE_BONUS = 5;
+
+/** Изменение морали экипажа при отказе выжившему. */
+export const SURVIVOR_DECLINE_MORALE_PENALTY = 5;
+
+/** Репутация с расой выжившего при принятии на борт. */
+export const SURVIVOR_ACCEPT_REPUTATION = 5;
+
+/** Репутация с расой выжившего при отказе. */
+export const SURVIVOR_DECLINE_REPUTATION = -5;

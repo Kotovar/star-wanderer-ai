@@ -77,6 +77,8 @@ export interface AncientBoss {
     regenRate: number; // HP regenerated per turn in combat
     specialAbility: BossAbility;
     guaranteedArtifactRarity: ArtifactRarity;
+    /** Множитель кредитной награды сверх стандартной tier-формулы (см. calculateBossLoot). По умолчанию 1 — для боссов вне обычной tier-прогрессии, чей боевой потенциал превышает их tier. */
+    lootMultiplier?: number;
     // Note: Module reward is randomly selected from MODULES_FROM_BOSSES
 }
 

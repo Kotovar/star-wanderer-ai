@@ -2,6 +2,12 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, CrewMember, SetState } from "@/game/types";
 import { hireCrew as hireCrewAction } from "./utils";
 import { fireCrewMember as fireCrewMemberAction } from "./utils";
+import {
+    SURVIVOR_ACCEPT_MORALE_BONUS,
+    SURVIVOR_DECLINE_MORALE_PENALTY,
+    SURVIVOR_ACCEPT_REPUTATION,
+    SURVIVOR_DECLINE_REPUTATION,
+} from "@/game/slices/locations/constants";
 
 /**
  * Интерфейс CrewManagementSlice
@@ -42,7 +48,20 @@ export const createCrewManagementSlice = (
     acceptSurvivor: () => {
         const survivor = get().pendingSurvivor;
         if (!survivor) return;
-        set((s) => ({ crew: [...s.crew, survivor], pendingSurvivor: null }));
+        set((s) => ({
+            crew: [
+                ...s.crew.map((c) => ({
+                    ...c,
+                    happiness: Math.min(
+                        c.maxHappiness,
+                        c.happiness + SURVIVOR_ACCEPT_MORALE_BONUS,
+                    ),
+                })),
+                survivor,
+            ],
+            pendingSurvivor: null,
+        }));
+        get().changeReputation(survivor.race, SURVIVOR_ACCEPT_REPUTATION);
         get().addLog( i18nStore.t("game_logs.createCrewManagementSlice_1", { survivor_name: survivor.name }),
             "info",
         );
@@ -51,7 +70,17 @@ export const createCrewManagementSlice = (
     declineSurvivor: () => {
         const survivor = get().pendingSurvivor;
         if (!survivor) return;
-        set(() => ({ pendingSurvivor: null }));
+        set((s) => ({
+            crew: s.crew.map((c) => ({
+                ...c,
+                happiness: Math.max(
+                    0,
+                    c.happiness - SURVIVOR_DECLINE_MORALE_PENALTY,
+                ),
+            })),
+            pendingSurvivor: null,
+        }));
+        get().changeReputation(survivor.race, SURVIVOR_DECLINE_REPUTATION);
         get().addLog( i18nStore.t("game_logs.createCrewManagementSlice_2", { survivor_name: survivor.name }), "warning");
     },
 });

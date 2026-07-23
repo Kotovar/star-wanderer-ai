@@ -61,6 +61,17 @@ assert.deepEqual(
   "раскрытый сигнал должен показывать свой тип",
 );
 
+const bossLoc = { name: "Ancient Guardian", type: "boss", bossId: ANCIENT_BOSSES[0].id };
+assert.deepEqual(
+  infoFor(bossLoc, 5),
+  ["❓ locations.unknown_ship"],
+  "тултип босса не должен раскрывать данные при scanRange < 8 (см. canScanObject)",
+);
+assert.ok(
+  infoFor(bossLoc, 8).some((line) => line.includes(ANCIENT_BOSSES[0].name)),
+  "тултип босса должен раскрывать данные при scanRange >= 8, синхронно со значком на карте",
+);
+
 const originalRandom = Math.random;
 Math.random = () => {
   throw new Error("тултип не должен бросать случайный кубик");

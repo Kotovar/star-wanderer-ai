@@ -10,17 +10,17 @@ import { GameDialogContent } from "./GameDialog";
 import { Button } from "@/components/ui/button";
 import { useGameStore } from "../store";
 import { useTranslation } from "@/lib/useTranslation";
-import { RACES } from "../constants/races";
+import { ProfessionSprite } from "./ProfessionSprite";
+import { TraitRow, useTraitTranslation } from "./CrewListHelpers";
 
 export function SurvivorModal() {
     const { t } = useTranslation();
+    const translateTrait = useTraitTranslation(t);
     const pendingSurvivor = useGameStore((s) => s.pendingSurvivor);
     const acceptSurvivor = useGameStore((s) => s.acceptSurvivor);
     const declineSurvivor = useGameStore((s) => s.declineSurvivor);
 
     if (!pendingSurvivor) return null;
-
-    const race = RACES[pendingSurvivor.race];
 
     return (
         <Dialog open onOpenChange={(open) => !open && declineSurvivor()}>
@@ -35,9 +35,15 @@ export function SurvivorModal() {
                 </DialogHeader>
 
                 <div className="space-y-3 p-2">
-                    {/* Name + icon */}
+                    {/* Name + portrait */}
                     <div className="flex items-center gap-3">
-                        <span className="text-2xl">{race?.icon ?? "👤"}</span>
+                        <ProfessionSprite
+                            race={pendingSurvivor.race}
+                            profession={pendingSurvivor.profession}
+                            size={48}
+                            className="border border-[#00ff4155] bg-[rgba(0,255,65,0.05)] rounded"
+                            title={`${t(`professions.${pendingSurvivor.profession}`)}: ${t(`races.${pendingSurvivor.race}.name`)}`}
+                        />
                         <div className="font-bold text-lg">
                             {pendingSurvivor.name}
                         </div>
@@ -67,25 +73,26 @@ export function SurvivorModal() {
 
                     {/* Traits */}
                     {pendingSurvivor.traits.length > 0 && (
-                        <div className="text-sm">
-                            <span className="text-[#666]">
-                                {t("survivor_modal.traits_label")}:{" "}
+                        <div>
+                            <span className="text-[#666] text-sm">
+                                {t("survivor_modal.traits_label")}
                             </span>
-                            {pendingSurvivor.traits.map((trait) => (
-                                <span
-                                    key={trait.name}
-                                    className={
-                                        trait.type === "positive"
-                                            ? "text-[#00ff41]"
-                                            : trait.type === "negative"
-                                              ? "text-[#ff0040]"
-                                              : "text-[#ff00ff]"
-                                    }
-                                    title={trait.desc}
-                                >
-                                    {trait.name}{" "}
-                                </span>
-                            ))}
+                            {pendingSurvivor.traits.map((trait, idx) => {
+                                const { name, desc } = translateTrait(
+                                    trait.id ?? "",
+                                    trait.name,
+                                    trait.desc,
+                                );
+                                return (
+                                    <TraitRow
+                                        key={`survivor-trait-${idx}-${trait.type}`}
+                                        itemKey={`survivor-trait-${idx}`}
+                                        name={name}
+                                        desc={desc}
+                                        type={trait.type}
+                                    />
+                                );
+                            })}
                         </div>
                     )}
                     {pendingSurvivor.traits.length === 0 && (
@@ -94,6 +101,10 @@ export function SurvivorModal() {
                             {t("survivor_modal.no_traits")}
                         </div>
                     )}
+                </div>
+
+                <div className="text-[10px] text-[#666] px-2">
+                    {t("survivor_modal.consequences_hint")}
                 </div>
 
                 <div className="flex gap-3 mt-2">
