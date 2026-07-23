@@ -1,5 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { RACES } from "@/game/constants";
+import { SPACE_MONSTERS } from "@/game/constants/spaceMonsters";
 import type { GameState, GameStore, Location } from "@/game/types";
 import * as combatSetup from "./combatSetup";
 import { calculateShieldsFromModules } from "./combatSetup";
@@ -14,9 +15,14 @@ export function initializeCombat(
     get: () => GameStore,
 ) {
     const threat = enemy.threat ?? 1;
+    const moduleEffect =
+        enemy.enemyType === "space_monster" && enemy.spaceMonsterType
+            ? SPACE_MONSTERS[enemy.spaceMonsterType].moduleEffect
+            : undefined;
     const enemyModules = combatSetup.generateEnemyModules(
         threat,
         enemy.enemyType,
+        moduleEffect,
     );
     const lootCredits = combatSetup.calculateCombatLoot(
         threat,

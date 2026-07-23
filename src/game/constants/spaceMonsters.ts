@@ -1,5 +1,6 @@
 import type { TimedEffectId } from "@/game/effects/timedEffects";
 import type {
+  BossModuleEffect,
   ResearchResourceType,
   SpaceMonsterType,
   StarType,
@@ -36,6 +37,8 @@ export type SpaceMonsterDefinition = {
   huntReward: ResearchResourceType;
   huntRewardBase: number;
   firstContact: SpaceMonsterFirstContact;
+  /** Signature combat passive on the monster's weapon module — makes hunts feel distinct, not just a tougher pirate. */
+  moduleEffect: BossModuleEffect;
 };
 
 export const SPACE_MONSTERS: Record<
@@ -56,6 +59,7 @@ export const SPACE_MONSTERS: Record<
       type: "reveal_sector",
       descriptionKey: "space_monsters.void_ray.first_contact",
     },
+    moduleEffect: { type: "dodge", value: 15 },
   },
   nebula_manta: {
     nameKey: "space_monsters.nebula_manta.name",
@@ -72,6 +76,7 @@ export const SPACE_MONSTERS: Record<
       descriptionKey: "space_monsters.nebula_manta.first_contact",
       value: 8,
     },
+    moduleEffect: { type: "heal_on_damage", value: 20 },
   },
   plasma_leviathan: {
     nameKey: "space_monsters.plasma_leviathan.name",
@@ -88,6 +93,7 @@ export const SPACE_MONSTERS: Record<
       descriptionKey: "space_monsters.plasma_leviathan.first_contact",
       value: 30,
     },
+    moduleEffect: { type: "damage_aura", value: 5 },
   },
   crystal_hydra: {
     nameKey: "space_monsters.crystal_hydra.name",
@@ -103,6 +109,7 @@ export const SPACE_MONSTERS: Record<
       type: "artifact_hint",
       descriptionKey: "space_monsters.crystal_hydra.first_contact",
     },
+    moduleEffect: { type: "regen", value: 10 },
   },
 };
 

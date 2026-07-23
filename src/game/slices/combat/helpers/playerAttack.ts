@@ -903,11 +903,11 @@ export function executePlayerAttack(
     return;
   }
 
-  // 2b. Boss module dodge passive
-  const aliveBossMods = currentState.currentCombat.enemy.isBoss
-    ? currentState.currentCombat.enemy.modules.filter((m) => m.health > 0)
-    : [];
-  if (currentState.currentCombat.enemy.isBoss && checkBossModuleDodge(aliveBossMods, get)) {
+  // 2b. Module dodge passive (boss or space monster)
+  const aliveBossMods = currentState.currentCombat.enemy.modules.filter(
+    (m) => m.health > 0,
+  );
+  if (checkBossModuleDodge(aliveBossMods, get)) {
     get().addLog( i18nStore.t("game_logs.playerAttack_11", { tgtMod_name: tgtMod.name }), "warning");
     recordEnemyMiss(set, tgtMod);
     handleEnemyCounterAttack(currentState, set, get);
@@ -918,8 +918,8 @@ export function executePlayerAttack(
   const crit = rollCrit(currentState, get);
   let damageMultiplier = crit.isCrit ? crit.multiplier : 1;
 
-  // 3a. Boss phase_shift: negate critical hit
-  if (crit.isCrit && currentState.currentCombat.enemy.isBoss && checkBossPhaseShift(aliveBossMods, get)) {
+  // 3a. Module phase_shift: negate critical hit
+  if (crit.isCrit && checkBossPhaseShift(aliveBossMods, get)) {
     damageMultiplier = 1;
   }
 
@@ -1129,11 +1129,9 @@ export function executePlayerAttackWithBayTargets(
       }
     }
 
-    // Boss module dodge per bay
-    const aliveBossMods = combatNow.enemy.isBoss
-      ? aliveModules
-      : [];
-    if (combatNow.enemy.isBoss && checkBossModuleDodge(aliveBossMods, get)) {
+    // Module dodge per bay (boss or space monster)
+    const aliveBossMods = aliveModules;
+    if (checkBossModuleDodge(aliveBossMods, get)) {
       get().addLog( i18nStore.t("game_logs.playerAttack_16", { tgtMod_name: tgtMod.name }), "warning");
       recordEnemyMiss(set, tgtMod);
       continue;
@@ -1142,7 +1140,7 @@ export function executePlayerAttackWithBayTargets(
     // Per-bay crit roll
     const bayCrit = rollCrit(currentState, get);
     let bayDamageMultiplier = bayCrit.isCrit ? bayCrit.multiplier : 1;
-    if (bayCrit.isCrit && combatNow.enemy.isBoss) {
+    if (bayCrit.isCrit) {
       const aliveBossModsForCrit = combatNow.enemy.modules.filter((m) => m.health > 0);
       if (checkBossPhaseShift(aliveBossModsForCrit, get)) bayDamageMultiplier = 1;
     }

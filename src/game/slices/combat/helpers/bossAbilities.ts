@@ -566,7 +566,7 @@ export function processBossRegeneration(
     get: () => GameStore,
 ): void {
     const combat = state.currentCombat;
-    if (!combat?.enemy.isBoss) return;
+    if (!combat) return;
 
     const boss = combat.enemy;
 

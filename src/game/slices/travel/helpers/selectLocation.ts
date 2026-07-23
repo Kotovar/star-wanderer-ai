@@ -222,7 +222,11 @@ export const selectLocation = (
                 set({ gameMode: "sector_map" });
                 break;
             }
-            set({ gameMode: "space_monster" });
+            const canScan = isObjectScanned(loc, get);
+            set({
+                gameMode:
+                    canScan || loc.signalRevealed ? "space_monster" : "unknown_ship",
+            });
             break;
         }
 

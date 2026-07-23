@@ -1,4 +1,5 @@
 import type {
+    BossModuleEffect,
     EnemyModule,
     EnemyModuleType,
     EnemyShip,
@@ -93,6 +94,7 @@ export const ENEMY_TYPE_MODIFIERS: Record<EnemyShip, EnemyStats> = {
 export const generateEnemyModules = (
     threat: number,
     enemyType?: EnemyShip,
+    moduleEffect?: BossModuleEffect,
 ): EnemyModule[] => {
     const isBiological = enemyType === "space_monster";
     const modifiers = enemyType
@@ -136,6 +138,7 @@ export const generateEnemyModules = (
         damage: Math.floor(threat * MODULE_DAMAGE_PER_THREAT * damageMultiplier),
         defense: 0,
         isBiological,
+        specialEffect: moduleEffect,
     });
 
     // id=2+: Random modules — weapon or shield only

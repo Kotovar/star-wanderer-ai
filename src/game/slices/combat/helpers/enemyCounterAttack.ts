@@ -87,13 +87,12 @@ export function performEnemyAttack(
         return;
     }
 
-    // Boss attack modifiers (from alive passive modules)
-    const aliveBossMods = combat.enemy.isBoss
-        ? combat.enemy.modules.filter((m) => m.health > 0)
-        : [];
-    const bossModifiers = combat.enemy.isBoss
-        ? getBossAttackModifiers(aliveBossMods, combat.enemy.bossAttackCount ?? 0)
-        : null;
+    // Attack modifiers from alive passive modules (bosses and space monsters alike)
+    const aliveBossMods = combat.enemy.modules.filter((m) => m.health > 0);
+    const bossModifiers = getBossAttackModifiers(
+        aliveBossMods,
+        combat.enemy.bossAttackCount ?? 0,
+    );
 
     // Apply guaranteed crit and multi_hit
     let finalDamage = eDmg;

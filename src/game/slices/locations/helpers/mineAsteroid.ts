@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { store as i18nStore } from "@/lib/useTranslation";
 import { ANCIENT_DRILL_BONUS, RESEARCH_RESOURCES } from "@/game/constants";
 import { BASE_ENGINEER_EXP } from "@/game/constants/experience";
@@ -46,9 +47,9 @@ const allocateCargoSpace = (
 
     // Нет места
     if (cargoSpaceLeft === 0) {
-        get().addLog( i18nStore.t("game_logs.mineAsteroid_1"),
-            "warning",
-        );
+        const cargoFullMsg = i18nStore.t("game_logs.mineAsteroid_1");
+        get().addLog(cargoFullMsg, "warning");
+        toast(cargoFullMsg);
         return { addedMinerals: 0, addedRare: 0 };
     }
 
@@ -66,9 +67,9 @@ const allocateCargoSpace = (
     // Минералы заполняют всё оставшееся место
     const addedMinerals = Math.min(mineralsGained, cargoSpaceLeft - addedRare);
 
-    get().addLog( i18nStore.t("game_logs.mineAsteroid_2", { addedRare: addedMinerals + addedRare, totalNeeded }),
-        "warning",
-    );
+    const cargoFullMsg = i18nStore.t("game_logs.mineAsteroid_2", { addedRare: addedMinerals + addedRare, totalNeeded });
+    get().addLog(cargoFullMsg, "warning");
+    toast(cargoFullMsg);
 
     return { addedMinerals, addedRare };
 };

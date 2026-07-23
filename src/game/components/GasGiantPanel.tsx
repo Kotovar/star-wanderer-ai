@@ -371,6 +371,8 @@ export function GasGiantPanel() {
   const abandonDive = useGameStore((s) => s.abandonDive);
   const probes = useGameStore((s) => s.probes);
   const showSectorMap = useGameStore((s) => s.showSectorMap);
+  const ship = useGameStore((s) => s.ship);
+  const getCargoCapacity = useGameStore((s) => s.getCargoCapacity);
   const { t } = useTranslation();
   const [showAbandonWarning, setShowAbandonWarning] = useState(false);
   const [showProbeLost, setShowProbeLost] = useState(false);
@@ -397,6 +399,11 @@ export function GasGiantPanel() {
       ? Math.max(0, GAS_GIANT_DIVE_COOLDOWN - (turn - lastDiveAt))
       : 0;
   const canDive = cooldownRemaining === 0 && !activeDive && probes > 0;
+  const currentCargo =
+    ship.cargo.reduce((sum, c) => sum + c.quantity, 0) +
+    ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0) +
+    probes;
+  const cargoFull = currentCargo >= getCargoCapacity();
   const atmosphereBonusKey: Partial<
     Record<GasGiantAtmosphere, "alien_biology" | "rare_minerals" | "void_membrane">
   > = {
@@ -540,6 +547,11 @@ export function GasGiantPanel() {
 
           {activeDive && !activeDive.currentEvent && (
             <>
+              {cargoFull && (
+                <div className="text-[10px] text-[#ffaa00] sm:text-xs">
+                  {t("common.cargo_full_hint")}
+                </div>
+              )}
               {activeDive.currentDepth < 4 && !activeDive.finished && (
                 <Button
                   onClick={diveDeeper}

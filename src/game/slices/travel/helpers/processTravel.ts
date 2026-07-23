@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore, Sector, SetState, TravelEventType } from "@/game/types";
 import {
@@ -472,12 +473,12 @@ const applySpecialEventChoice = (
                     },
                 }));
             }
-            getState().addLog(
+            const miningMsg =
                 mined > 0
                     ? i18nStore.t("game_logs.mining_ok", { mined, damage })
-                    : i18nStore.t("game_logs.mining_full", { damage }),
-                mined > 0 ? "info" : "warning",
-            );
+                    : i18nStore.t("game_logs.mining_full", { damage });
+            getState().addLog(miningMsg, mined > 0 ? "info" : "warning");
+            if (mined === 0) toast(miningMsg);
             return true;
         }
         case "anomaly": {

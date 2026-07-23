@@ -73,6 +73,8 @@ export function UnknownShipPanel() {
             useGameStore.setState({ gameMode: "storm" });
         } else if (currentLocation.type === "derelict_ship") {
             useGameStore.setState({ gameMode: "derelict_ship" });
+        } else if (currentLocation.type === "space_monster") {
+            useGameStore.setState({ gameMode: "space_monster" });
         }
     };
 

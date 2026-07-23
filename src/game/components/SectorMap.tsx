@@ -230,7 +230,7 @@ export function SectorMap() {
       const { x, y } = computeLocationPosition(loc);
 
       const completed = completedLocations.includes(loc.id);
-      const isRevealed = loc.signalRevealed; // Location was approached and revealed
+      const isRevealed = loc.signalRevealed || loc.visited; // Location was approached and revealed
 
       // Check if scanner can detect this object type
       const canScan = canScanObject(
@@ -264,14 +264,19 @@ export function SectorMap() {
           drawEnemy(ctx, x, y, loc, completed);
         }
       } else if (loc.type === "space_monster") {
-        drawSpaceMonster(
-          ctx,
-          x,
-          y,
-          loc,
-          completed,
-          animationStateRef.current.time,
-        );
+        // Without scanner AND not revealed - show as unknown (unless telepathy)
+        if (!canScan && !isRevealed && !hasTelepathy) {
+          drawUnknown(ctx, x, y, completed);
+        } else {
+          drawSpaceMonster(
+            ctx,
+            x,
+            y,
+            loc,
+            completed,
+            animationStateRef.current.time,
+          );
+        }
       } else if (loc.type === "anomaly") {
         if (canScan || isRevealed) {
           drawAnomaly(ctx, x, y, loc, completed);
@@ -404,7 +409,7 @@ export function SectorMap() {
             ? "#ffb000"
             : loc.type === "gas_giant"
               ? "#cc88ff"
-              : loc.type === "space_monster"
+              : loc.type === "space_monster" && (canScan || isRevealed)
                 ? SPACE_MONSTERS[loc.spaceMonsterType ?? "void_ray"].color
               : "#00ff41";
       ctx.fillText(finalDisplayName, x, y + 28);

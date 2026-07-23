@@ -333,12 +333,10 @@ export function CombatPanel() {
         />
       )}
 
-      {isBoss && (
-        <BossModulePassivesCard
-          modules={currentCombat.enemy.modules}
-          t={t}
-        />
-      )}
+      <BossModulePassivesCard
+        modules={currentCombat.enemy.modules}
+        t={t}
+      />
 
       {/* Ship stats summary */}
       <div className="grid grid-cols-2 gap-4 my-3">

@@ -269,6 +269,9 @@ export function AsteroidBeltPanel() {
   const hasEngineer = useGameStore((s) =>
     s.crew.some((c) => c.profession === "engineer"),
   );
+  const ship = useGameStore((s) => s.ship);
+  const probes = useGameStore((s) => s.probes);
+  const getCargoCapacity = useGameStore((s) => s.getCargoCapacity);
   const { t } = useTranslation();
 
   if (!currentLocation || currentLocation.type !== "asteroid_belt") return null;
@@ -283,6 +286,11 @@ export function AsteroidBeltPanel() {
   };
   const bonusPercent = getMiningBonus(drillLevel, asteroidTier);
   const canMine = bonusPercent >= 0 && !currentLocation.mined && hasEngineer;
+  const currentCargo =
+    ship.cargo.reduce((sum, c) => sum + c.quantity, 0) +
+    ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0) +
+    probes;
+  const cargoFull = currentCargo >= getCargoCapacity();
   const miningResult = currentLocation.miningResult;
   const isAncient = asteroidTier === 4;
   const locationName = getLocationName(currentLocation.name, t);
@@ -515,6 +523,11 @@ export function AsteroidBeltPanel() {
         </div>
 
         {/* Actions */}
+        {canMine && cargoFull && (
+          <p className="text-[#ffaa00] text-xs text-center">
+            {t("common.cargo_full_hint")}
+          </p>
+        )}
         {canMine ? (
           <div className="flex gap-3">
             <Button

@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import { patchLocation } from "@/game/utils/patchLocation";
@@ -171,7 +172,9 @@ export function salvageWreckField(set: SetState, get: () => GameStore): void {
     );
 
     if (cargoTrimmed) {
-        get().addLog( i18nStore.t("game_logs.salvageWreckField_3"), "warning");
+        const cargoFullMsg = i18nStore.t("game_logs.salvageWreckField_3");
+        get().addLog(cargoFullMsg, "warning");
+        toast(cargoFullMsg);
     }
     if (moduleDamageAmt > 0 && damagedModuleName) {
         get().addLog( i18nStore.t("game_logs.salvageWreckField_4", { damagedModuleName, moduleDamageAmt }),

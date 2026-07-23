@@ -71,8 +71,17 @@ export function WreckFieldPanel() {
   const currentLocation = useGameStore((s) => s.currentLocation);
   const salvageWreckField = useGameStore((s) => s.salvageWreckField);
   const showSectorMap = useGameStore((s) => s.showSectorMap);
+  const ship = useGameStore((s) => s.ship);
+  const probes = useGameStore((s) => s.probes);
+  const getCargoCapacity = useGameStore((s) => s.getCargoCapacity);
 
   if (!currentLocation || currentLocation.type !== "wreck_field") return null;
+
+  const currentCargo =
+    ship.cargo.reduce((sum, c) => sum + c.quantity, 0) +
+    ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0) +
+    probes;
+  const cargoFull = currentCargo >= getCargoCapacity();
 
   const tier = (currentLocation.wreckTier ?? 1) as 1 | 2 | 3;
   const total = currentLocation.wreckPassesTotal ?? 2;
@@ -163,6 +172,13 @@ export function WreckFieldPanel() {
       {!exhausted && (
         <div className="text-[10px] text-[#ff6644] border border-[#ff664422] p-2 bg-[rgba(255,68,0,0.04)] shrink-0">
           Радиационный фон — каждый проход наносит <strong>{shieldWarning}</strong> урона щитам.
+        </div>
+      )}
+
+      {/* Предупреждение о трюме */}
+      {!exhausted && cargoFull && (
+        <div className="text-[10px] text-[#ffaa00] border border-[#ffaa0022] p-2 bg-[rgba(255,170,0,0.04)] shrink-0">
+          ⚠️ Трюм полон — часть находок может не поместиться.
         </div>
       )}
 
