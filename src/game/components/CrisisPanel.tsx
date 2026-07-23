@@ -1,7 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { GLOBAL_CRISES } from "@/game/constants/globalCrises";
+import {
+  GLOBAL_CRISES,
+} from "@/game/constants/globalCrises";
+import {
+  getCrisisResponseChance,
+  getCrisisStage,
+} from "@/game/crises/escalation";
 import { CRISIS_RESPONSES } from "@/game/constants/crisisResponses";
 import { useGameStore } from "@/game/store";
 import { useTranslation } from "@/lib/useTranslation";
@@ -16,6 +22,8 @@ export function CrisisPanel() {
   const active = activeCrisis
     ? GLOBAL_CRISES.find((crisis) => crisis.id === activeCrisis.id)
     : null;
+  const currentStage =
+    active && activeCrisis ? getCrisisStage(activeCrisis, active.duration) : null;
   const availableResponses = active
     ? CRISIS_RESPONSES.filter((response) =>
         active.allowedResponses.includes(response.id),
@@ -127,6 +135,30 @@ export function CrisisPanel() {
               <div className="mt-2 border-l-2 border-[#ff6680] pl-3 text-xs leading-relaxed text-[#ff8da2]">
                 {t(active.effectsKey)}
               </div>
+              {currentStage && (
+                <div className="mt-3 border border-[#ff668055] bg-[rgba(255,68,68,0.08)] p-2 text-xs">
+                  <div className="font-bold uppercase tracking-[0.12em] text-[#ff8da2]">
+                    {t("crisis_panel.stage.label")}{" "}
+                    <span className="text-[#ffd6de]">
+                      {t(`crisis_panel.stage.stages.${currentStage.id}.name`)}
+                    </span>
+                  </div>
+                  <div className="mt-1 leading-relaxed text-[#ffb6c4]">
+                    {t(
+                      `crisis_panel.stage.stages.${currentStage.id}.description`,
+                    )}
+                  </div>
+                  {currentStage.responseChanceMultiplier < 1 && (
+                    <div className="mt-1 text-[11px] text-[#ff8da2]">
+                      {t("crisis_panel.stage.response_penalty", {
+                        percent: Math.round(
+                          (1 - currentStage.responseChanceMultiplier) * 100,
+                        ),
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           ) : (
             <div className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -172,7 +204,13 @@ export function CrisisPanel() {
           <div className="grid gap-2 lg:grid-cols-2">
             {availableResponses.map((response) => {
               const canPay = response.canPay(state);
-              const chance = response.getChance(state);
+              const chance = activeCrisis
+                ? getCrisisResponseChance(
+                    response.getChance(state),
+                    activeCrisis,
+                    active.duration,
+                  )
+                : response.getChance(state);
               const note = t(
                 `crisis_panel.response_notes.${active.id}.${response.id}`,
               );

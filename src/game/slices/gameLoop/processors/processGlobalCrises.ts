@@ -7,6 +7,7 @@ import {
   rollInitialCrisisTurn,
   rollNextCrisisTurn,
 } from "@/game/constants/globalCrises";
+import { getCrisisStage } from "@/game/crises/escalation";
 
 /**
  * Выбирает случайный кризис, исключая только что завершившийся
@@ -56,19 +57,19 @@ export const processGlobalCrises = (
   // ── Активный кризис ────────────────────────────────────────────────────────
   if (activeCrisis) {
     const crisis = getCrisisById(activeCrisis.id);
+    let updatedData = activeCrisis.data;
     if (crisis) {
-      const updatedData = crisis.onTurnEffect(set, get, activeCrisis);
-      if (updatedData !== undefined) {
-        set(() => ({
-          activeCrisis: { ...activeCrisis, data: { ...activeCrisis.data, ...updatedData } },
-        }));
+      const crisisData = crisis.onTurnEffect(set, get, activeCrisis);
+      if (crisisData !== undefined) {
+        updatedData = { ...activeCrisis.data, ...crisisData };
       }
     }
 
+    const crisisAfterTurn = { ...activeCrisis, data: updatedData };
     const newRemaining = activeCrisis.turnsRemaining - 1;
     if (newRemaining <= 0) {
       if (crisis?.onEndEffect) {
-        crisis.onEndEffect(set, get, activeCrisis);
+        crisis.onEndEffect(set, get, crisisAfterTurn);
       }
       set(() => ({ activeCrisis: null }));
       get().addLog(
@@ -79,9 +80,24 @@ export const processGlobalCrises = (
         "info",
       );
     } else {
+      const currentStage = getCrisisStage(activeCrisis, crisis?.duration ?? newRemaining);
+      const nextStage = getCrisisStage(
+        { ...crisisAfterTurn, turnsRemaining: newRemaining },
+        crisis?.duration ?? newRemaining,
+      );
       set(() => ({
-        activeCrisis: { ...activeCrisis, turnsRemaining: newRemaining },
+        activeCrisis: { ...crisisAfterTurn, turnsRemaining: newRemaining },
       }));
+      if (crisis && currentStage.id !== nextStage.id) {
+        get().addLog(
+          i18nStore.t("game_logs.crisis_escalates", {
+            icon: crisis.icon,
+            name: i18nStore.t(crisis.nameKey),
+            stage: i18nStore.t(`crisis_panel.stage.stages.${nextStage.id}.name`),
+          }),
+          "error",
+        );
+      }
     }
     return;
   }

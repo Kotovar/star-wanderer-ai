@@ -3900,6 +3900,28 @@
         "subtitle": "Threat monitoring without schedule forecasts. Crises are treated as unexpected events.",
         "current_alert": "Current alert",
         "turns_remaining": "Turns remaining:",
+        "stage": {
+            "label": "Stage:",
+            "response_penalty": "Response chance is reduced by {{percent}}%.",
+            "stages": {
+                "incident": {
+                    "name": "Outbreak",
+                    "description": "The threat is already active. This is the best window for an organized response."
+                },
+                "escalation": {
+                    "name": "Escalation",
+                    "description": "Consequences intensify; delaying action rapidly becomes more expensive."
+                },
+                "critical": {
+                    "name": "Critical",
+                    "description": "The ship is losing stability. The crisis's core systems take heavy damage."
+                },
+                "catastrophic": {
+                    "name": "Catastrophic",
+                    "description": "Containment is at its limit: without intervention, damage will be maximal."
+                }
+            }
+        },
         "no_active": "There is no active crisis. The center shows ship readiness and response protocols without revealing future events.",
         "readiness": {
             "title": "Readiness",
@@ -3984,25 +4006,25 @@
             "name": "Raider Wave",
             "warning": "Raiders are preparing an attack",
             "description": "Raiders become unusually active in the region and start pressuring your ship's supplies.",
-            "effects": "At the start they may steal cargo and damage modules. Then each turn brings raids that cost credits or fuel, damage a random system, and reduce crew morale."
+            "effects": "At the start they may steal cargo and damage modules. Then each turn brings raids that cost credits or fuel, damage a random system, and reduce crew morale. With every stage, raiders take a larger share of funds and hit harder."
         },
         "solar_flare": {
             "name": "Solar Flare",
             "warning": "Solar activity detected",
             "description": "A powerful stellar flare overloads sensitive electronics and strips away shield stability.",
-            "effects": "Sensitive modules are disabled at the start and shields are dropped to zero. While the crisis lasts, those systems keep taking damage. They come back online when it ends."
+            "effects": "Sensitive modules are disabled at the start and shields are dropped to zero. While the crisis lasts, those systems take accelerating damage. They come back online when it ends, but the repair bill remains yours."
         },
         "epidemic": {
             "name": "Epidemic",
             "warning": "First infection cases reported",
             "description": "Disease spreads aboard the ship: some crew become infected and the rest begin to panic.",
-            "effects": "Specific organic crew members become infected. They lose health and morale each turn, while the rest of the crew also suffers morale loss. A medic significantly reduces the severity."
+            "effects": "Specific organic crew members become infected. They lose health and morale each turn, while the rest of the crew also suffers morale loss. At critical stages the infection breaches quarantine and infects new crew. A medic significantly reduces the severity."
         },
         "fuel_shortage": {
             "name": "Fuel Crisis",
             "warning": "Fuel markets are unstable",
             "description": "Fuel reserves become unreliable and parts of the propulsion chain must be throttled.",
-            "effects": "You immediately lose some fuel and engine or fuel systems may be temporarily limited. Then each turn drains more fuel, wears down those systems, and lightly hurts morale."
+            "effects": "You immediately lose some fuel and engine or fuel systems may be temporarily limited. Then each turn drains fuel, wears down those systems, and hurts morale. Consumption and wear accelerate sharply in later stages."
         }
     },
     "planet_features": {
@@ -4221,8 +4243,9 @@
         "gameLoopSlice_2": "Turn skipped — tasks are being carried out",
         "gameLoopSlice_3": "Crisis: {{value}} is not suitable for this threat",
         "gameLoopSlice_4": "Crisis: conditions not met to resolve it via {{value}}",
-        "gameLoopSlice_5": "Crisis: {{value}} failed, the crisis continues",
+        "gameLoopSlice_5": "Crisis: suppression failed, the crisis continues",
         "gameLoopSlice_6": "✅ Crisis suppressed: {{value}} {{value2}} via {{value3}}",
+        "crisis_escalates": "🚨 {{icon}} {{name}} escalates to: {{stage}}",
         "crewUtils_1": "☠️ Died: {{value}}",
         "crewUtils_2": "💀 THE ENTIRE CREW HAS DIED! But the AI pilots the ship.",
         "crewUtils_3": "☠️ Died: {{value}}",

@@ -1,7 +1,8 @@
-import type { GlobalCrisis } from "@/game/types/crisis";
+import type { ActiveCrisisState, GlobalCrisis } from "@/game/types/crisis";
 import type { GameState } from "@/game/types";
 import { RACES } from "@/game/constants/races";
 import { TRADE_GOODS } from "@/game/constants/goods";
+import { getCrisisStage } from "@/game/crises/escalation";
 
 // ─── Константы ────────────────────────────────────────────────────────────────
 
@@ -12,6 +13,13 @@ const FIRST_CRISIS_TURN_MAX = 120;
 /** Интервал между кризисами тоже плавает */
 const CRISIS_INTERVAL_MIN = 24;
 const CRISIS_INTERVAL_MAX = 38;
+
+const CRISIS_DURATIONS = {
+  raider_wave: 32,
+  solar_flare: 28,
+  epidemic: 36,
+  fuel_shortage: 32,
+} as const;
 
 // ─── Значения эффектов ────────────────────────────────────────────────────────
 
@@ -112,6 +120,13 @@ const getCrisisIntensity = (state: GameState) => {
 
 const scaled = (state: GameState, value: number) =>
   Math.max(1, Math.round(value * getCrisisIntensity(state)));
+
+const crisisScaled = (
+  state: GameState,
+  activeCrisis: ActiveCrisisState,
+  duration: number,
+  value: number,
+) => scaled(state, value * getCrisisStage(activeCrisis, duration).effectMultiplier);
 
 export const rollInitialCrisisTurn = () =>
   randomInt(FIRST_CRISIS_TURN_MIN, FIRST_CRISIS_TURN_MAX);
@@ -236,7 +251,7 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
     descriptionKey: "crises.raider_wave.description",
     effectsKey: "crises.raider_wave.effects",
     icon: "🏴‍☠️",
-    duration: 32,
+    duration: CRISIS_DURATIONS.raider_wave,
     allowedResponses: ["combat", "diplomacy", "resources"],
     responseNotes: {
       combat: "Перехватить рейдерские группы и сорвать налёты силой.",
@@ -288,16 +303,32 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
         );
       }
     },
-    onTurnEffect: (set, get) => {
+    onTurnEffect: (set, get, activeCrisis) => {
       const state = get();
       const targets = pickRandomItems(getOperationalModules(state), 1);
-      const fuelLoss = scaled(state, 3);
+      const escalation = getCrisisStage(
+        activeCrisis,
+        CRISIS_DURATIONS.raider_wave,
+      ).effectMultiplier;
+      const fuelLoss = crisisScaled(
+        state,
+        activeCrisis,
+        CRISIS_DURATIONS.raider_wave,
+        3,
+      );
       const creditLoss = Math.min(
-        scaled(state, 65),
+        state.credits,
         Math.max(
-          scaled(state, 12),
+          crisisScaled(
+            state,
+            activeCrisis,
+            CRISIS_DURATIONS.raider_wave,
+            35,
+          ),
           Math.round(
-            (state.credits || 0) * (0.055 + getCrisisIntensity(state) * 0.018),
+            state.credits *
+              (0.03 + getCrisisIntensity(state) * 0.012) *
+              escalation,
           ),
         ),
       );
@@ -316,19 +347,35 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       damageModules(
         set,
         targets.map((module) => module.id),
-        scaled(state, 5),
+        crisisScaled(
+          state,
+          activeCrisis,
+          CRISIS_DURATIONS.raider_wave,
+          5,
+        ),
       );
       const targetName = targets[0]?.name;
+      const lossLabel =
+        state.credits > 0 ? `-${creditLoss}₢` : `-${fuelLoss} топлива`;
       set((s: GameState) => ({
         crew: s.crew.map((crewMember) => ({
           ...crewMember,
-          happiness: Math.max(0, crewMember.happiness - scaled(state, 2)),
+          happiness: Math.max(
+            0,
+            crewMember.happiness -
+              crisisScaled(
+                state,
+                activeCrisis,
+                CRISIS_DURATIONS.raider_wave,
+                2,
+              ),
+          ),
         })),
       }));
       get().addLog(
         targetName
-          ? `🏴‍☠️ Рейдерский налёт: -${state.credits > 0 ? creditLoss : 0}₢, повреждён ${targetName}`
-          : `🏴‍☠️ Рейдерский налёт: ${state.credits > 0 ? `-${creditLoss}₢` : `-${fuelLoss} топлива`}, экипаж на взводе`,
+          ? `🏴‍☠️ Рейдерский налёт: ${lossLabel}, повреждён ${targetName}`
+          : `🏴‍☠️ Рейдерский налёт: ${lossLabel}, экипаж на взводе`,
         "error",
       );
     },
@@ -342,7 +389,7 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
     descriptionKey: "crises.solar_flare.description",
     effectsKey: "crises.solar_flare.effects",
     icon: "☀️",
-    duration: 28,
+    duration: CRISIS_DURATIONS.solar_flare,
     allowedResponses: ["science", "resources"],
     responseNotes: {
       science: "Пересчитать защитные контуры и стабилизировать электронику.",
@@ -384,7 +431,11 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       const state = get();
       const disruptedIds =
         (activeCrisis.data?.disabledModuleIds as number[] | undefined) ?? [];
-      damageModules(set, disruptedIds, scaled(state, 3));
+      damageModules(
+        set,
+        disruptedIds,
+        crisisScaled(state, activeCrisis, CRISIS_DURATIONS.solar_flare, 3),
+      );
       set((s: GameState) => ({
         ship: {
           ...s.ship,
@@ -419,7 +470,7 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
     descriptionKey: "crises.epidemic.description",
     effectsKey: "crises.epidemic.effects",
     icon: "🦠",
-    duration: 36,
+    duration: CRISIS_DURATIONS.epidemic,
     allowedResponses: ["science", "diplomacy", "resources"],
     responseNotes: {
       science:
@@ -448,34 +499,79 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
       const state = get();
       const infectedIds =
         (activeCrisis.data?.infectedCrewIds as number[] | undefined) ?? [];
+      const stage = getCrisisStage(activeCrisis, CRISIS_DURATIONS.epidemic);
+      const previousSpreadStage = activeCrisis.data?.epidemicSpreadStage;
+      const canSpread =
+        (stage.id === "critical" || stage.id === "catastrophic") &&
+        previousSpreadStage !== stage.id;
+      const newlyInfected = canSpread
+        ? pickRandomItems(
+            state.crew.filter(
+              (crewMember) =>
+                RACES[crewMember.race]?.canGetSick !== false &&
+                !infectedIds.includes(crewMember.id),
+            ),
+            1,
+          )
+        : [];
+      const currentInfectedIds = [
+        ...new Set([...infectedIds, ...newlyInfected.map((crewMember) => crewMember.id)]),
+      ];
       const hasMedicSupport = get().crew.some(
         (crewMember) =>
           crewMember.profession === "medic" && crewMember.health > 0,
       );
-      const infectedHealthLoss = scaled(state, hasMedicSupport ? 2 : 5);
-      const infectedMoraleLoss = scaled(state, hasMedicSupport ? 3 : 6);
-      const backgroundMoraleLoss = scaled(state, hasMedicSupport ? 1 : 2);
+      const infectedHealthLoss = crisisScaled(
+        state,
+        activeCrisis,
+        CRISIS_DURATIONS.epidemic,
+        hasMedicSupport ? 2 : 5,
+      );
+      const infectedMoraleLoss = crisisScaled(
+        state,
+        activeCrisis,
+        CRISIS_DURATIONS.epidemic,
+        hasMedicSupport ? 3 : 6,
+      );
+      const backgroundMoraleLoss = crisisScaled(
+        state,
+        activeCrisis,
+        CRISIS_DURATIONS.epidemic,
+        hasMedicSupport ? 1 : 2,
+      );
       set((s: GameState) => ({
         crew: s.crew.map((c) => ({
           ...c,
           happiness: Math.max(
             0,
             c.happiness -
-              (infectedIds.includes(c.id)
+              (currentInfectedIds.includes(c.id)
                 ? infectedMoraleLoss
                 : backgroundMoraleLoss),
           ),
-          health: infectedIds.includes(c.id)
+          health: currentInfectedIds.includes(c.id)
             ? Math.max(1, c.health - infectedHealthLoss)
             : c.health,
         })),
       }));
+      if (newlyInfected.length > 0) {
+        get().addLog(
+          `🦠 Карантин прорван: заражён ${formatNames(newlyInfected.map((crewMember) => crewMember.name))}`,
+          "error",
+        );
+      }
       get().addLog(
         hasMedicSupport
           ? "🦠 Эпидемия сдерживается медиками, но заражённые всё ещё слабеют"
           : "🦠 Эпидемия распространяется по жилым отсекам и давит на мораль экипажа",
         "error",
       );
+      return newlyInfected.length > 0
+        ? {
+            infectedCrewIds: currentInfectedIds,
+            epidemicSpreadStage: stage.id,
+          }
+        : undefined;
     },
     onEndEffect: (set, get) => {
       set((s: GameState) => ({
@@ -500,7 +596,7 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
     descriptionKey: "crises.fuel_shortage.description",
     effectsKey: "crises.fuel_shortage.effects",
     icon: "⛽",
-    duration: 32,
+    duration: CRISIS_DURATIONS.fuel_shortage,
     allowedResponses: ["science", "diplomacy", "resources"],
     responseNotes: {
       science: "Перенастроить двигатели и снизить потери в топливной цепи.",
@@ -546,8 +642,18 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
         (activeCrisis.data?.throttledModuleIds as number[] | undefined) ?? [];
       const activeCrew = state.crew.length;
       const drain = Math.min(
-        scaled(state, 11),
-        scaled(state, 3 + Math.floor(activeCrew / 4)),
+        crisisScaled(
+          state,
+          activeCrisis,
+          CRISIS_DURATIONS.fuel_shortage,
+          11,
+        ),
+        crisisScaled(
+          state,
+          activeCrisis,
+          CRISIS_DURATIONS.fuel_shortage,
+          3 + Math.floor(activeCrew / 4),
+        ),
       );
       set((s: GameState) => ({
         ship: {
@@ -556,10 +662,28 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
         },
         crew: s.crew.map((crewMember) => ({
           ...crewMember,
-          happiness: Math.max(0, crewMember.happiness - scaled(state, 1)),
+          happiness: Math.max(
+            0,
+            crewMember.happiness -
+              crisisScaled(
+                state,
+                activeCrisis,
+                CRISIS_DURATIONS.fuel_shortage,
+                1,
+              ),
+          ),
         })),
       }));
-      damageModules(set, throttledIds, scaled(state, 2));
+      damageModules(
+        set,
+        throttledIds,
+        crisisScaled(
+          state,
+          activeCrisis,
+          CRISIS_DURATIONS.fuel_shortage,
+          2,
+        ),
+      );
       get().addLog(
         `⛽ Нормирование топлива: -${drain} топлива, экипажу урезаны перелёты и пайки`,
         "warning",

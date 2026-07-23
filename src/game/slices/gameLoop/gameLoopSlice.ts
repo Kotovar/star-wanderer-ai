@@ -17,7 +17,10 @@ import { processTravel } from "@/game/slices/travel/helpers";
 import { processMarketTick } from "@/game/stations";
 import { checkContractExpiry } from "@/game/slices/contracts/helpers/checkContractExpiry";
 import { advanceCombatRound } from "@/game/slices/combat/helpers/combatTime";
-import { GLOBAL_CRISES } from "@/game/constants/globalCrises";
+import {
+    GLOBAL_CRISES,
+} from "@/game/constants/globalCrises";
+import { getCrisisResponseChance } from "@/game/crises/escalation";
 import { getCrisisResponseDefinition } from "@/game/constants/crisisResponses";
 
 /**
@@ -169,7 +172,7 @@ export const createGameLoopSlice = (
 
         const crisis = GLOBAL_CRISES.find((item) => item.id === activeCrisis.id);
         const responseDefinition = getCrisisResponseDefinition(response);
-        if (!crisis?.allowedResponses.includes(response)) {
+        if (!crisis || !crisis.allowedResponses.includes(response)) {
             get().addLog( i18nStore.t("game_logs.gameLoopSlice_3", { value: responseDefinition.label.toLowerCase() }),
                 "warning",
             );
@@ -182,8 +185,13 @@ export const createGameLoopSlice = (
             return;
         }
 
-        if (Math.random() > responseDefinition.getChance(state)) {
-            get().addLog( i18nStore.t("game_logs.gameLoopSlice_5", { value: responseDefinition.label.toLowerCase() }),
+        const chance = getCrisisResponseChance(
+            responseDefinition.getChance(state),
+            activeCrisis,
+            crisis.duration,
+        );
+        if (Math.random() > chance) {
+            get().addLog( i18nStore.t("game_logs.gameLoopSlice_5"),
                 "warning",
             );
             get().saveGame();
