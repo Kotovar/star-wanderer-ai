@@ -50,6 +50,7 @@ export function GameHeader() {
   const showResearch = useGameStore((s) => s.showResearch);
   const showReputation = useGameStore((s) => s.showReputation);
   const showCrises = useGameStore((s) => s.showCrises);
+  const showEnemyCodex = useGameStore((s) => s.showEnemyCodex);
   const showSectorMap = useGameStore((s) => s.showSectorMap);
   const gameMode = useGameStore((s) => s.gameMode);
   const { t } = useTranslation();
@@ -120,6 +121,14 @@ export function GameHeader() {
       showSectorMap();
     } else {
       showEffects();
+    }
+  };
+
+  const handleEnemyCodexClick = () => {
+    if (gameMode === "enemy_codex") {
+      showSectorMap();
+    } else {
+      showEnemyCodex();
     }
   };
 
@@ -285,6 +294,16 @@ export function GameHeader() {
               <span className="text-[#9933ff]">🔬</span>
               <span className="text-[#9933ff] hidden lg:inline">
                 {t("game.science")}
+              </span>
+            </button>
+            <button
+              onClick={handleEnemyCodexClick}
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.16)] transition-colors cursor-pointer"
+              title={t("enemy_codex.button")}
+            >
+              <span className="text-ring">👾</span>
+              <span className="text-ring hidden lg:inline">
+                {t("enemy_codex.button")}
               </span>
             </button>
             <button

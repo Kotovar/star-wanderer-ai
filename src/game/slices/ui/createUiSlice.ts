@@ -17,6 +17,8 @@ export interface UiSlice {
     showAssignments: () => void;
     /** Показать экран кризисов */
     showCrises: () => void;
+    /** Показать каталог врагов */
+    showEnemyCodex: () => void;
     /** Показать активные эффекты */
     showEffects: () => void;
     /** Показать панель артефактов */
@@ -79,6 +81,16 @@ export const createUiSlice = (set: SetState): UiSlice => ({
                 ? state.previousGameMode
                 : state.gameMode,
             gameMode: GAME_MODES.MANAGEMENT.CRISES,
+        })),
+
+    showEnemyCodex: () =>
+        set((state) => ({
+            previousGameMode: PANELS_RETURNING_TO_NAVIGATION.includes(
+                state.gameMode as (typeof PANELS_RETURNING_TO_NAVIGATION)[number],
+            )
+                ? state.previousGameMode
+                : state.gameMode,
+            gameMode: GAME_MODES.MANAGEMENT.ENEMY_CODEX,
         })),
 
     showEffects: () =>

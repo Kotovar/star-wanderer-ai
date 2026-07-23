@@ -29,6 +29,7 @@ import { WreckFieldPanel } from "./WreckFieldPanel";
 import { SpaceMonsterPanel } from "./SpaceMonsterPanel";
 import { HostileApproachWarningPanel } from "./HostileApproachWarningPanel";
 import { CrisisPanel } from "./CrisisPanel";
+import { EnemyCodexPanel } from "./EnemyCodexPanel";
 import { ActiveEffectsPanel } from "./panels/ActiveEffectsPanel";
 import { RandomEventPanel } from "./RandomEventPanel";
 import { RiskRewardPreview } from "./RiskRewardPreview";
@@ -484,6 +485,9 @@ export function EventDisplay() {
 
     case "crises":
       return <CrisisPanel />;
+
+    case "enemy_codex":
+      return <EnemyCodexPanel />;
 
     default:
       return null;

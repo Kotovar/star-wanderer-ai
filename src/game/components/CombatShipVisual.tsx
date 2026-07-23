@@ -319,7 +319,7 @@ export function CombatShipVisual({
     : "none";
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex min-w-0 max-w-full flex-col items-center">
       {title && (
         <div
           className={`text-base font-bold mb-4 px-4 py-2 rounded ${
@@ -334,12 +334,13 @@ export function CombatShipVisual({
         </div>
       )}
       <div
-        className={`combat-vessel-visual relative ${isEnemy ? "combat-vessel-visual--enemy" : "combat-vessel-visual--player"}`}
+        className={`combat-vessel-visual relative max-w-full ${isEnemy ? "combat-vessel-visual--enemy" : "combat-vessel-visual--player"}`}
         style={{ boxShadow: shieldGlow, transition: "box-shadow 0.4s ease" }}
       >
         <canvas
           ref={canvasRef}
           className={`combat-vessel-canvas max-w-full ${onModuleClick ? "cursor-pointer" : "cursor-default"}`}
+          style={{ width: visualCanvasSize, height: "auto" }}
           onClick={handleCanvasClick}
         />
         {hitFlash && (

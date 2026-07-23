@@ -1,5 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { RACES } from "@/game/constants";
+import { addEnemyCodexEntry, getEnemyCodexId } from "@/game/constants/enemyCodex";
 import { SPACE_MONSTERS } from "@/game/constants/spaceMonsters";
 import type { GameState, GameStore, Location } from "@/game/types";
 import * as combatSetup from "./combatSetup";
@@ -29,9 +30,14 @@ export function initializeCombat(
         enemy.enemyType,
     );
     const { maxShields, shieldRegenRate } = calculateShieldsFromModules(enemyModules);
+    const enemyCodexId = getEnemyCodexId(enemy);
 
     set((s) => {
         s.ship.shields = s.ship.maxShields;
+        s.discoveredEnemyCodexIds = addEnemyCodexEntry(
+            s.discoveredEnemyCodexIds,
+            enemyCodexId,
+        );
         s.currentCombat = {
             enemy: {
                 name: enemy.name,

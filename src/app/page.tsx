@@ -69,6 +69,7 @@ const GLOBAL_OVERLAY_MODES = new Set([
   "research",
   "reputation",
   "crises",
+  "enemy_codex",
 ]);
 
 /**

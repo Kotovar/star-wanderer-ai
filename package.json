@@ -26,6 +26,7 @@
     "check:new-game": "node --no-warnings --experimental-strip-types scripts/check-new-game-setup.mjs",
     "check:dev-template": "NODE_ENV=development node --no-warnings --experimental-strip-types scripts/check-new-game-setup.mjs && NODE_ENV=production node --no-warnings --experimental-strip-types scripts/check-new-game-setup.mjs",
     "check:enemy-progression": "node --no-warnings --experimental-strip-types scripts/check-enemy-progression.mjs",
+    "check:enemy-codex": "node --no-warnings --experimental-strip-types scripts/check-enemy-codex.mjs",
     "check:economy": "node --no-warnings --experimental-strip-types scripts/check-campaign-economy.mjs",
     "check:income": "node --no-warnings --experimental-strip-types scripts/check-income-sources.mjs",
     "check:space-monsters": "node --no-warnings --experimental-strip-types scripts/check-space-monsters.mjs",

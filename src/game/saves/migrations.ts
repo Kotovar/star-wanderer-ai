@@ -182,6 +182,14 @@ const migrations: Record<number, Migration> = {
       ),
     };
   },
+  8: (raw) => {
+    const state = raw as Record<string, unknown>;
+    return {
+      ...state,
+      stateVersion: 9,
+      discoveredEnemyCodexIds: [],
+    };
+  },
 };
 
 /**

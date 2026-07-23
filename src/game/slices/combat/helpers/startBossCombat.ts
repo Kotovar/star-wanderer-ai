@@ -1,5 +1,9 @@
 import { store as i18nStore } from "@/lib/useTranslation";
-import { getBossById } from "@/game/bosses";
+import { getBossById, getBossCombatModules } from "@/game/bosses";
+import {
+    addEnemyCodexEntry,
+    getBossCodexId,
+} from "@/game/constants/enemyCodex";
 import { determineBossRewards } from "./bossRewards";
 import * as combatSetup from "./combatSetup";
 import { calculateShieldsFromModules } from "./combatSetup";
@@ -17,19 +21,7 @@ export function initializeBossCombat(
     const boss = getBossById(bossLocation.bossId ?? "");
     if (!boss) return;
 
-    const bossModules = boss.modules.map((m, idx) => ({
-        id: idx,
-        type: m.type,
-        name: m.name,
-        health: m.health,
-        maxHealth: m.health,
-        damage: m.damage ?? 0,
-        defense: m.defense ?? 0,
-        isAncient: m.isAncient,
-        specialEffect: m.specialEffect,
-        shieldContribution: m.shieldContribution,
-        regenContribution: m.regenContribution,
-    }));
+    const bossModules = getBossCombatModules(boss);
 
     // Shields driven by shield modules — same logic as regular enemies, but bosses are mightier
     const { maxShields: moduleShields, shieldRegenRate } = calculateShieldsFromModules(bossModules);
@@ -44,6 +36,10 @@ export function initializeBossCombat(
 
     set((s) => {
         s.ship.shields = s.ship.maxShields;
+        s.discoveredEnemyCodexIds = addEnemyCodexEntry(
+            s.discoveredEnemyCodexIds,
+            getBossCodexId(boss.id),
+        );
         s.currentCombat = {
             enemy: {
                 name: boss.name,

@@ -58,6 +58,7 @@ export type GameMode =
   | "research"
   | "reputation"
   | "crises"
+  | "enemy_codex"
   | "derelict_ship"
   | "gas_giant"
   | "wreck_field"
@@ -155,6 +156,7 @@ export interface GameState {
   startModifierIds: string[]; // Launch modifiers and selected doctrine
   activeCrisis: ActiveCrisisState | null; // Currently active global crisis
   discoveredCrisisIds: string[]; // Crises already encountered by the player
+  discoveredEnemyCodexIds: string[]; // Enemy types already encountered by the player
   nextCrisisTurn: number; // Turn on which the next global crisis triggers
   nextCrisisId: string | null; // Crisis selected to trigger next
 }
@@ -209,6 +211,7 @@ export interface GameModeChanges {
   showSectorMap: () => void;
   showAssignments: () => void;
   showCrises: () => void;
+  showEnemyCodex: () => void;
   showEffects: () => void;
   closeArtifactsPanel: () => void;
   closeResearchPanel: () => void;

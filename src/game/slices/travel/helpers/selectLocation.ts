@@ -1,6 +1,7 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
+import { addEnemyCodexEntry, getEnemyCodexId } from "@/game/constants/enemyCodex";
 import { determineSignalOutcome } from "@/game/signals";
 import type { GameStore, Location, SetState } from "@/game/types";
 import { getRaceReputationLevel } from "@/game/reputation/utils";
@@ -223,10 +224,17 @@ export const selectLocation = (
                 break;
             }
             const canScan = isObjectScanned(loc, get);
-            set({
-                gameMode:
-                    canScan || loc.signalRevealed ? "space_monster" : "unknown_ship",
-            });
+            if (canScan || loc.signalRevealed) {
+                set((s) => ({
+                    discoveredEnemyCodexIds: addEnemyCodexEntry(
+                        s.discoveredEnemyCodexIds,
+                        getEnemyCodexId(loc),
+                    ),
+                    gameMode: "space_monster",
+                }));
+            } else {
+                set({ gameMode: "unknown_ship" });
+            }
             break;
         }
 

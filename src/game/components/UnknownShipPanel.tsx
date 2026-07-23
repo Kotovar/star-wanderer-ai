@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { ShipStatsPanel } from "./ShipStatsPanel";
 import { getRaceReputationLevel } from "@/game/reputation/utils";
+import { addEnemyCodexEntry, getEnemyCodexId } from "@/game/constants/enemyCodex";
 import type { RaceId } from "@/game/types";
 
 export function UnknownShipPanel() {
@@ -48,6 +49,13 @@ export function UnknownShipPanel() {
                 return {
                     currentLocation: revealedLocation,
                     currentSector: updatedSector,
+                    discoveredEnemyCodexIds:
+                        currentLocation.type === "space_monster"
+                            ? addEnemyCodexEntry(
+                                  s.discoveredEnemyCodexIds,
+                                  getEnemyCodexId(currentLocation),
+                              )
+                            : s.discoveredEnemyCodexIds,
                 };
             });
         }

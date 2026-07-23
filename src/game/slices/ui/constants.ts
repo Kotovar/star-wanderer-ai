@@ -32,6 +32,7 @@ export const GAME_MODES: GameModeObj = {
         EFFECTS: "effects",
         RESEARCH: "research",
         CRISES: "crises",
+        ENEMY_CODEX: "enemy_codex",
     },
 };
 
@@ -48,4 +49,5 @@ export const PANELS_RETURNING_TO_NAVIGATION = [
     GAME_MODES.MANAGEMENT.EFFECTS,
     GAME_MODES.MANAGEMENT.RESEARCH,
     GAME_MODES.MANAGEMENT.CRISES,
+    GAME_MODES.MANAGEMENT.ENEMY_CODEX,
 ] as const;
