@@ -45,7 +45,7 @@ export const processScanContracts = (state: GameState) => {
     }
 
     let newActiveContracts = state.activeContracts;
-    const logs: { message: string; type: LogEntry["type"] }[] = [];
+    const logs: { message: string; type: LogEntry["type"]; toast?: boolean }[] = [];
 
     scanContracts.forEach((c) => {
         const required = c.requiresVisit ?? 1;
@@ -82,10 +82,13 @@ export const processScanContracts = (state: GameState) => {
             // Все планеты отсканированы — возвращаемся
             const returnLocation = c.sourcePlanetName
                 ? `${c.sourceSectorName}, ${c.sourcePlanetName}`
-                : c.sourceSectorName || "базу";
+                : c.sourceName && c.sourceSectorName
+                  ? `${c.sourceName} (${c.sourceSectorName})`
+                  : c.sourceSectorName || "базу";
             logs.push({
                 message: `${location.planetType} отсканирована! Возвращайтесь на ${returnLocation}`,
                 type: "info",
+                toast: true,
             });
         } else {
             // Ещё нужно сканировать

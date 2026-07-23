@@ -412,8 +412,10 @@ export function ContractsList() {
                             label: t("contracts.task_where"),
                             value: contract.sourcePlanetName
                                 ? `${contract.sourceSectorName}, ${contract.sourcePlanetName}`
-                                : contract.sourceSectorName ||
-                                  t("contracts.unknown"),
+                                : contract.sourceName && contract.sourceSectorName
+                                  ? `${contract.sourceType === "planet" ? t("events.planet") : t("events.friendly_ship")} "${contract.sourceName}" (${contract.sourceSectorName})`
+                                  : contract.sourceSectorName ||
+                                    t("contracts.unknown"),
                         },
                         {
                             label: t("contracts.task_status"),
@@ -455,11 +457,10 @@ export function ContractsList() {
                         },
                         {
                             label: t("contracts.task_where"),
-                            value: t("contracts.supply_find_location"),
-                        },
-                        {
-                            label: t("contracts.task_where"),
-                            value: `${contract.sourceType === "planet" ? t("events.planet") : t("events.friendly_ship")} "${contract.sourceName}" (${contract.sourceSectorName})`,
+                            value:
+                                contract.sourceName && contract.sourceSectorName
+                                    ? `${t("contracts.supply_find_location")}. ${contract.sourceType === "planet" ? t("events.planet") : t("events.friendly_ship")} "${contract.sourceName}" (${contract.sourceSectorName})`
+                                    : t("contracts.supply_find_location"),
                         },
                     ],
                 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useGameStore } from "@/game/store";
 import { TRADE_GOODS } from "@/game/constants/goods";
 import { RACES } from "@/game/constants/races";
@@ -8,17 +8,19 @@ import { Button } from "@/components/ui/button";
 import { SectionPanel } from "./SectionPanel";
 import { getRandomName } from "@/game/crew/utils";
 import { generateCrewTraits } from "@/game/crew/utils";
-import { PROFESSION_NAMES, CREW_BASE_PRICES } from "@/game/constants/crew";
+import { CREW_BASE_PRICES } from "@/game/constants/crew";
 import { Goods } from "@/game/types/goods";
 import { Profession } from "@/game/types/crew";
 import { useTranslation } from "@/lib/useTranslation";
 import { getRaceReputationLevel } from "@/game/reputation/utils";
 import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
 import { getTierPriceMultiplier } from "@/game/slices/trade/constants";
-import type { Quality, RaceId } from "@/game/types";
+import type { CrewMember, Quality, RaceId } from "@/game/types";
 import { RaceSprite } from "./RaceSprite";
-import { ProfessionSprite } from "./ProfessionSprite";
 import { ContractReputationImpact } from "./ContractReputationImpact";
+import { CrewTab } from "./station/CrewTab";
+import { TradeGoodRow } from "./station/TradeTab";
+import { GoodInfoModal } from "./GoodInfoModal";
 
 const INITIAL_STOCK: Goods[] = ["water", "food", "medicine"];
 
@@ -54,6 +56,8 @@ export function FriendlyShipPanel() {
     (s) => s.distressRespondedShips,
   );
   const addLog = useGameStore((s) => s.addLog);
+
+  const [infoGood, setInfoGood] = useState<Goods | null>(null);
 
   const dominantRace = currentLocation?.dominantRace;
   const race = dominantRace ? RACES[dominantRace] : null;
@@ -204,10 +208,10 @@ export function FriendlyShipPanel() {
 
   const {
     crewRaceId,
-    crewRace,
     crewName,
     availableProfession,
     availableLevel,
+    quality,
     traits,
     crewPrice,
   } = crewData;
@@ -249,6 +253,35 @@ export function FriendlyShipPanel() {
   };
 
   const raceAccent = race?.color ?? "#ffb000";
+  const raceBg = race ? `${race.color}12` : "rgba(0,0,0,0)";
+  const raceBorder = race ? `${race.color}55` : "#333";
+
+  const availableCrew = [
+    {
+      member: {
+        name: crewName,
+        race: crewRaceId,
+        profession: availableProfession,
+        level: availableLevel,
+        traits,
+      },
+      price: crewPrice,
+      quality,
+    },
+  ];
+
+  const handleHireCrew = (
+    member: unknown,
+    price: number,
+    locationId?: string,
+  ) => {
+    hireCrew(
+      { ...(member as Partial<CrewMember>), price } as Partial<CrewMember> & {
+        price: number;
+      },
+      locationId ?? currentLocation.id,
+    );
+  };
 
   return (
     <div className="flex flex-col gap-4 h-full overflow-y-auto pr-2">
@@ -279,245 +312,79 @@ export function FriendlyShipPanel() {
 
       {/* Trader */}
       {currentLocation.hasTrader && (
-        <>
-          <div className="border-t border-[#333] pt-3">
-            <div className="font-['Orbitron'] font-bold text-sm text-[#00ff41] mb-2 uppercase tracking-wider">
-              {t("friendly_ship.trade")}
-            </div>
-            <div className="flex flex-col gap-2">
-              {tradeGoods.map((g) => {
-                const playerGood = ship.tradeGoods.find(
-                  (tg) => tg.item === g.id,
-                );
-                const baseBuyPrice = g.price;
-                const baseSellPrice = Math.floor(g.price * 0.6);
-                const buyPriceFor5 = dominantRace
-                  ? applyReputationPriceModifier(raceReputation, dominantRace, baseBuyPrice, "buy", baseSellPrice, 5)
-                  : baseBuyPrice;
-                const sellPriceFor5 = dominantRace
-                  ? applyReputationPriceModifier(raceReputation, dominantRace, baseSellPrice, "sell", baseBuyPrice, 5)
-                  : baseSellPrice;
-                const buyPricePerUnit = Math.floor(buyPriceFor5 / 5);
-                const sellPricePerUnit = Math.floor(sellPriceFor5 / 5);
-                const baseBuyPerUnit = Math.floor(baseBuyPrice / 5);
-                const baseSellPerUnit = Math.floor(baseSellPrice / 5);
-                const buyModified = buyPricePerUnit !== baseBuyPerUnit;
-                const sellModified = sellPricePerUnit !== baseSellPerUnit;
-
-                const makeBuy = (qty: number, cost: number) => () => {
-                  useGameStore.setState((s) => ({
-                    friendlyShipStock: { ...s.friendlyShipStock, [shipId]: { ...s.friendlyShipStock[shipId], [g.id]: (s.friendlyShipStock[shipId]?.[g.id] || 0) - qty } },
-                    credits: s.credits - cost,
-                    ship: { ...s.ship, tradeGoods: s.ship.tradeGoods.some((tg) => tg.item === g.id) ? s.ship.tradeGoods.map((tg) => tg.item === g.id ? { ...tg, quantity: tg.quantity + qty } : tg) : [...s.ship.tradeGoods, { item: g.id, quantity: qty, buyPrice: g.price }] },
-                  }));
-                };
-                const makeSell = (qty: number, revenue: number) => () => {
-                  useGameStore.setState((s) => ({
-                    friendlyShipStock: { ...s.friendlyShipStock, [shipId]: { ...s.friendlyShipStock[shipId], [g.id]: (s.friendlyShipStock[shipId]?.[g.id] || 0) + qty } },
-                    credits: s.credits + revenue,
-                    ship: { ...s.ship, tradeGoods: s.ship.tradeGoods.map((tg) => tg.item === g.id ? { ...tg, quantity: tg.quantity - qty } : tg).filter((tg) => tg.quantity > 0) },
-                  }));
-                };
-
-                return (
-                  <div key={g.id} className="bg-[rgba(0,255,65,0.03)] border border-[#1a3a1a] p-3">
-                    {/* Item header */}
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-[#00d4ff] font-bold">{g.name}</span>
-                      <div className="flex gap-3 text-[11px]">
-                        <span className="text-[#555]">{t("friendly_ship.in_stock")}: <span className="text-[#00ff41]">{g.stock}т</span></span>
-                        {playerGood && <span className="text-[#555]">{t("friendly_ship.in_hold")}: <span className="text-[#00d4ff]">{playerGood.quantity}т</span></span>}
-                      </div>
-                    </div>
-                    {/* Buy / Sell rows */}
-                    <div className="grid grid-cols-2 gap-2">
-                      {/* Buy */}
-                      <div className="bg-[rgba(0,255,65,0.06)] border border-[#00ff4133] p-2 rounded-sm">
-                        <div className="text-[10px] text-[#00ff41] font-bold mb-1.5 uppercase">
-                          {t("friendly_ship.buy")}{" "}
-                          <span className={buyModified ? "text-[#00ff41]" : "text-[#888]"}>
-                            {buyPricePerUnit}₢/т
-                          </span>
-                          {buyModified && <span className="text-[#555] ml-1 line-through">{baseBuyPerUnit}₢</span>}
-                        </div>
-                        <div className="flex gap-1">
-                          {([1, 5, 15] as const).map((qty) => (
-                            <Button key={qty}
-                              disabled={availSpace < qty || displayCredits < buyPricePerUnit * qty || g.stock < qty}
-                              onClick={makeBuy(qty, buyPricePerUnit * qty)}
-                              className="flex-1 bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-[10px] px-1 py-0.5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                            >+{qty}</Button>
-                          ))}
-                        </div>
-                      </div>
-                      {/* Sell */}
-                      <div className="bg-[rgba(255,176,0,0.06)] border border-[#ffb00033] p-2 rounded-sm">
-                        <div className="text-[10px] text-[#ffb000] font-bold mb-1.5 uppercase">
-                          {t("friendly_ship.sell")}{" "}
-                          <span className={sellModified ? "text-[#00ff41]" : "text-[#888]"}>
-                            {sellPricePerUnit}₢/т
-                          </span>
-                          {sellModified && <span className="text-[#555] ml-1 line-through">{baseSellPerUnit}₢</span>}
-                        </div>
-                        <div className="flex gap-1">
-                          {([1, 5, 15] as const).map((qty) => (
-                            <Button key={qty}
-                              disabled={!playerGood || playerGood.quantity < qty}
-                              onClick={makeSell(qty, sellPricePerUnit * qty)}
-                              className="flex-1 bg-transparent border border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] text-[10px] px-1 py-0.5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                            >-{qty}</Button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+        <div className="border-t border-[#333] pt-3">
+          <div className="font-['Orbitron'] font-bold text-sm text-[#00ff41] mb-2 uppercase tracking-wider">
+            {t("friendly_ship.trade")}
           </div>
-        </>
+          <div className="flex flex-col gap-2.5">
+            {tradeGoods.map((g) => {
+              const playerGood = ship.tradeGoods.find(
+                (tg) => tg.item === g.id,
+              );
+              const baseBuyPrice = g.price;
+              const baseSellPrice = Math.floor(g.price * 0.6);
+              const buyPriceFor5 = dominantRace
+                ? applyReputationPriceModifier(raceReputation, dominantRace, baseBuyPrice, "buy", baseSellPrice, 5)
+                : baseBuyPrice;
+              const sellPriceFor5 = dominantRace
+                ? applyReputationPriceModifier(raceReputation, dominantRace, baseSellPrice, "sell", baseBuyPrice, 5)
+                : baseSellPrice;
+              const buyPricePerUnit = Math.floor(buyPriceFor5 / 5);
+              const sellPricePerUnit = Math.floor(sellPriceFor5 / 5);
+
+              const makeBuy = (qty: number, cost: number) => () => {
+                useGameStore.setState((s) => ({
+                  friendlyShipStock: { ...s.friendlyShipStock, [shipId]: { ...s.friendlyShipStock[shipId], [g.id]: (s.friendlyShipStock[shipId]?.[g.id] || 0) - qty } },
+                  credits: s.credits - cost,
+                  ship: { ...s.ship, tradeGoods: s.ship.tradeGoods.some((tg) => tg.item === g.id) ? s.ship.tradeGoods.map((tg) => tg.item === g.id ? { ...tg, quantity: tg.quantity + qty } : tg) : [...s.ship.tradeGoods, { item: g.id, quantity: qty, buyPrice: g.price }] },
+                }));
+              };
+              const makeSell = (qty: number, revenue: number) => () => {
+                useGameStore.setState((s) => ({
+                  friendlyShipStock: { ...s.friendlyShipStock, [shipId]: { ...s.friendlyShipStock[shipId], [g.id]: (s.friendlyShipStock[shipId]?.[g.id] || 0) + qty } },
+                  credits: s.credits + revenue,
+                  ship: { ...s.ship, tradeGoods: s.ship.tradeGoods.map((tg) => tg.item === g.id ? { ...tg, quantity: tg.quantity - qty } : tg).filter((tg) => tg.quantity > 0) },
+                }));
+              };
+
+              return (
+                <TradeGoodRow
+                  key={g.id}
+                  good={{ id: g.id, name: g.name }}
+                  prices={{ buy: baseBuyPrice, sell: baseSellPrice }}
+                  pricesWithRep={{ buy: buyPriceFor5, sell: sellPriceFor5 }}
+                  stock={g.stock}
+                  playerGood={playerGood}
+                  credits={displayCredits}
+                  availSpace={availSpace}
+                  onBuy={(_goodId, qty) => makeBuy(qty, buyPricePerUnit * qty)()}
+                  onSell={(_goodId, qty) => makeSell(qty, sellPricePerUnit * qty)()}
+                  crisisMultiplier={1}
+                  onShowInfo={() => setInfoGood(g.id)}
+                />
+              );
+            })}
+          </div>
+          {infoGood && (
+            <GoodInfoModal goodId={infoGood} onClose={() => setInfoGood(null)} />
+          )}
+        </div>
       )}
 
       {/* Crew */}
       {currentLocation.hasCrew && !crewAlreadyHired && (
-        <>
-          <div className="border-t border-[#333] pt-3">
-            <div className="font-['Orbitron'] font-bold text-sm text-[#ffb000] mb-2 uppercase tracking-wider">
-              {t("friendly_ship.crew_section")}
-            </div>
-            <SectionPanel
-              padding="sm"
-              className="flex justify-between items-start"
-            >
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <ProfessionSprite
-                    race={crewRaceId}
-                    profession={availableProfession}
-                    size={24}
-                    title={`${PROFESSION_NAMES[availableProfession]}: ${crewRace.name}`}
-                  />
-                  <span className="text-[#00d4ff] font-bold">
-                    {crewName}
-                    {availableLevel
-                      ? ` LV${availableLevel}`
-                      : ""}
-                  </span>
-                  <span
-                    className="text-[10px] px-1.5 py-0.5 rounded border"
-                    style={{
-                      borderColor: crewRace.color,
-                      color: crewRace.color,
-                    }}
-                  >
-                    {crewRace.name}
-                  </span>
-                </div>
-                <div className="text-xs mt-1">
-                  <span className="text-[#ffb000]">
-                    💰 {crewPrice}₢
-                  </span>
-                </div>
-                <div className="text-xs text-gray-400 mt-1">
-                  {PROFESSION_NAMES[availableProfession]}
-                </div>
-                {crewRace.crewBonuses &&
-                  Object.keys(crewRace.crewBonuses).length >
-                  0 && (
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {crewRace.crewBonuses.combat && (
-                        <span className="text-[10px] bg-[#ff004020] text-[#ff0040] px-1 rounded">
-                          ⚔️ +
-                          {Math.round(
-                            crewRace.crewBonuses
-                              .combat * 100,
-                          )}
-                          %
-                        </span>
-                      )}
-                      {crewRace.crewBonuses.repair && (
-                        <span className="text-[10px] bg-[#ffb00020] text-[#ffb000] px-1 rounded">
-                          🔧 +
-                          {Math.round(
-                            crewRace.crewBonuses
-                              .repair * 100,
-                          )}
-                          %
-                        </span>
-                      )}
-                      {crewRace.crewBonuses.science && (
-                        <span className="text-[10px] bg-[#00d4ff20] text-[#00d4ff] px-1 rounded">
-                          🔬 +
-                          {Math.round(
-                            crewRace.crewBonuses
-                              .science * 100,
-                          )}
-                          %
-                        </span>
-                      )}
-                      {crewRace.crewBonuses.adaptation && (
-                        <span className="text-[10px] bg-[#00ff4120] text-[#00ff41] px-1 rounded">
-                          🌍 +
-                          {Math.round(
-                            crewRace.crewBonuses
-                              .adaptation * 100,
-                          )}
-                          %
-                        </span>
-                      )}
-                    </div>
-                  )}
-                {traits.length > 0 && (
-                  <div className="text-[10px] mt-2 space-y-1">
-                    {traits.map((trait, ti) => (
-                      <div
-                        key={ti}
-                        style={{
-                          color:
-                            trait.type === "positive"
-                              ? "#00ff41"
-                              : trait.type ===
-                                "negative"
-                                ? "#ff4444"
-                                : "#ffb000",
-                        }}
-                      >
-                        {trait.type === "positive"
-                          ? "✓"
-                          : trait.type === "negative"
-                            ? "✗"
-                            : "⚡"}{" "}
-                        {trait.name}: {trait.desc}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <Button
-                disabled={
-                  displayCredits < crewPrice ||
-                  crew.length >= getCrewCapacity()
-                }
-                onClick={() =>
-                  hireCrew(
-                    {
-                      name: crewName,
-                      race: crewRaceId,
-                      profession: availableProfession,
-                      level: availableLevel,
-                      price: crewPrice,
-                      traits,
-                    },
-                    currentLocation.id,
-                  )
-                }
-                className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs"
-              >
-                {t("friendly_ship.hire")}
-              </Button>
-            </SectionPanel>
+        <div className="border-t border-[#333] pt-3">
+          <div className="font-['Orbitron'] font-bold text-sm text-[#ffb000] mb-2 uppercase tracking-wider">
+            {t("friendly_ship.crew_section")}
           </div>
-        </>
+          <CrewTab
+            availableCrew={availableCrew}
+            hasSpace={crew.length < getCrewCapacity()}
+            credits={displayCredits}
+            locationId={currentLocation.id}
+            hireCrew={handleHireCrew}
+          />
+        </div>
       )}
 
       {/* Complete delivery contracts at this ship */}
@@ -565,34 +432,57 @@ export function FriendlyShipPanel() {
           <div className="font-['Orbitron'] font-bold text-sm text-[#ffb000] mb-2 uppercase tracking-wider">
             {t("friendly_ship.contract")}
           </div>
-          <div className="text-sm p-2.5">
-            {shipQuest ? (
-              <>
-                <div className="mb-2">{shipQuest.desc}</div>
-                {shipQuest.type === "delivery" && (
-                  <div className="text-[11px] text-[#888]">
-                    {t("contracts.quest_delivery_cargo")}
+          {shipQuest ? (
+            <div
+              className="border p-3"
+              style={{ background: raceBg, borderColor: raceBorder }}
+            >
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="text-ring font-bold flex items-center gap-2 flex-wrap">
+                    {shipQuest.desc}
+                    {dominantRace && (
+                      <span
+                        className="inline-flex items-center gap-1 text-xs px-1 py-0.5 rounded"
+                        style={{
+                          backgroundColor: `${raceAccent}20`,
+                          color: raceAccent,
+                        }}
+                      >
+                        <RaceSprite
+                          race={dominantRace}
+                          size={18}
+                          title={t(`races.${dominantRace}.plural`)}
+                        />
+                        {t(`races.${dominantRace}.plural`)}
+                      </span>
+                    )}
                   </div>
-                )}
-                <div className="text-[#ffb000] text-xs mt-2">
-                  {t("contracts.reward_label")}{" "}
-                  {shipQuest.reward}₢
                 </div>
-                <ContractReputationImpact contract={shipQuest} />
-              </>
-            ) : (
-              <div className="text-[#888] text-xs">
-                {t("contracts.no_quests")}
+                <Button
+                  onClick={handleAcceptQuest}
+                  className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs ml-2"
+                >
+                  {t("contracts.accept")}
+                </Button>
               </div>
-            )}
-          </div>
-          <Button
-            onClick={handleAcceptQuest}
-            disabled={!shipQuest}
-            className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {t("contracts.accept")}
-          </Button>
+
+              {shipQuest.type === "delivery" && (
+                <div className="text-[11px] text-[#888] mt-1.5">
+                  {t("contracts.quest_delivery_cargo")}
+                </div>
+              )}
+              <div className="text-[#ffb000] text-xs mt-2">
+                {t("contracts.reward_label")}{" "}
+                {shipQuest.reward}₢
+              </div>
+              <ContractReputationImpact contract={shipQuest} />
+            </div>
+          ) : (
+            <div className="text-[#888] text-xs p-2.5">
+              {t("contracts.no_quests")}
+            </div>
+          )}
         </div>
       )}
 

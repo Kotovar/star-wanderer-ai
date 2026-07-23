@@ -84,18 +84,18 @@ function getPlanetTypeTranslation(
   t: (key: string) => string,
 ): string {
   const map: Record<string, string> = {
-    Пустынная: t("planet_types.desert"),
-    Ледяная: t("planet_types.ice"),
-    Лесная: t("planet_types.forest"),
-    Вулканическая: t("planet_types.volcanic"),
-    Океаническая: t("planet_types.ocean"),
-    Кристаллическая: t("planet_types.crystalline"),
-    Радиоактивная: t("planet_types.radioactive"),
-    Тропическая: t("planet_types.tropical"),
-    Арктическая: t("planet_types.arctic"),
-    "Разрушенная войной": t("planet_types.war_torn"),
-    "Планета-кольцо": t("planet_types.ring"),
-    Приливная: t("planet_types.tidal"),
+    Пустынная: t("locations.planet_types.desert"),
+    Ледяная: t("locations.planet_types.ice"),
+    Лесная: t("locations.planet_types.forest"),
+    Вулканическая: t("locations.planet_types.volcanic"),
+    Океаническая: t("locations.planet_types.oceanic"),
+    Кристаллическая: t("locations.planet_types.crystalline"),
+    Радиоактивная: t("locations.planet_types.radioactive"),
+    Тропическая: t("locations.planet_types.tropical"),
+    Арктическая: t("locations.planet_types.arctic"),
+    "Разрушенная войной": t("locations.planet_types.war_torn"),
+    "Планета-кольцо": t("locations.planet_types.ringed"),
+    Приливная: t("locations.planet_types.tidal"),
   };
   return map[planetType] || planetType;
 }

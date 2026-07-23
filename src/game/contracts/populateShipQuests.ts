@@ -9,9 +9,11 @@ import { getGeneratedContractTimeLimit } from "./contractDeadline";
 
 const generateShipQuest = (
     shipId: string,
+    shipName: string,
     shipSectorId: number,
     allSectors: Sector[],
 ): Contract | null => {
+    const shipSectorName = allSectors.find((s) => s.id === shipSectorId)?.name ?? "";
     const otherSectors = allSectors.filter(
         (s) => s.id !== shipSectorId && s.tier < 4,
     );
@@ -42,7 +44,8 @@ const generateShipQuest = (
             targetPlanetId: targetPlanet?.id,
             targetPlanetName: targetPlanet?.name,
             sourcePlanetId: shipId,
-            sourceName: "",
+            sourceName: shipName,
+            sourceSectorName: shipSectorName,
             sourceType: "ship",
             requiresVisit: 1,
             visited: 0,
@@ -70,7 +73,8 @@ const generateShipQuest = (
             cargo: cargoKey,
             quantity,
             sourcePlanetId: shipId,
-            sourceName: "",
+            sourceName: shipName,
+            sourceSectorName: shipSectorName,
             sourceType: "ship",
             reward,
         };
@@ -103,7 +107,8 @@ const generateShipQuest = (
         targetLocationName: dest.name,
         targetLocationType: destType,
         sourcePlanetId: shipId,
-        sourceName: "",
+        sourceName: shipName,
+        sourceSectorName: shipSectorName,
         sourceType: "ship",
         timeLimit: getGeneratedContractTimeLimit(
             "delivery",
@@ -122,7 +127,7 @@ export const populateShipQuests = (sectors: Sector[]): void => {
         sector.locations.forEach((loc) => {
             if (loc.type === "friendly_ship" && loc.hasQuest) {
                 loc.pregeneratedQuest =
-                    generateShipQuest(loc.id, sector.id, sectors) ?? undefined;
+                    generateShipQuest(loc.id, loc.name, sector.id, sectors) ?? undefined;
             }
         });
     });

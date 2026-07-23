@@ -150,7 +150,7 @@ interface TradeGoodRowProps {
     onShowInfo: () => void;
 }
 
-function TradeGoodRow({
+export function TradeGoodRow({
     good,
     prices,
     pricesWithRep,
