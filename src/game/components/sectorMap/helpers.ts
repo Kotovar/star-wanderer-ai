@@ -1,6 +1,7 @@
 import { getLocationName } from "@/lib/translationHelpers";
 import { ANCIENT_BOSSES } from "@/game/constants/bosses";
 import { RACES } from "@/game/constants/races";
+import { canDetectObject } from "@/game/slices/scanner/helpers/canDetectObject";
 import {
   ENEMY_TYPE_MODIFIERS,
   MODULE_DAMAGE_PER_THREAT,
@@ -9,7 +10,7 @@ import {
   SHIELD_CONTRIBUTION_PER_THREAT,
 } from "@/game/slices/combat/helpers/combatSetup";
 import { SHIP_LOCATION_TYPES } from "@/game/types/locations/locations";
-import type { Location, LocationType, RaceId, StarType, StormType } from "@/game/types";
+import type { Location, RaceId, StarType, StormType } from "@/game/types";
 
 /**
  * Возвращает цвет фона для сектора на основе типа звезды
@@ -260,7 +261,7 @@ export function getScannerInfo(
   }
 
   // For objects whose identity requires a scanner, check the detection threshold.
-  const locTier = loc.threat || loc.anomalyTier || 1;
+  const locTier = loc.threat ?? loc.anomalyTier ?? 1;
   const canDetect = canDetectObject(loc.type, scanRange, locTier);
 
   if (!canDetect) {
@@ -509,46 +510,4 @@ export function getScannerInfo(
   }
 
   return info;
-}
-
-/**
- * Проверяет, может ли сканер обнаружить объект на основе scanRange
- * Пороги scanRange для обнаружения:
- * - friendly_ship: scanRange >= 3
- * - enemy/anomaly tier 1: scanRange >= 3
- * - enemy/anomaly tier 2: scanRange >= 5
- * - enemy/anomaly tier 3, boss: scanRange >= 8
- * - anomaly tier 4: scanRange >= 15
- * - storm: scanRange >= 5
- */
-function canDetectObject(
-  type: LocationType,
-  scanRange: number,
-  tier: number = 1,
-): boolean {
-  if (scanRange >= 15) return true; // Quantum scanner detects everything
-
-  if (type === "friendly_ship") return scanRange >= 3;
-  if (type === "storm") return scanRange >= 5;
-
-  // Босс всегда требует scanRange >= 8, как в canScanObject (слайс сканера,
-  // используется для иконки на карте) — у boss-локации нет loc.threat, так
-  // что через общую tier-ветку ниже он тихо получал tier=1 и раскрывался при
-  // scanRange >= 3, рассинхронизируясь с иконкой на карте.
-  if (type === "boss") return scanRange >= 8;
-
-  // enemy, monster, anomaly, derelict
-  if (
-    type === "enemy" ||
-    type === "space_monster" ||
-    type === "anomaly" ||
-    type === "derelict_ship"
-  ) {
-    if (tier <= 1) return scanRange >= 3;
-    if (tier === 2) return scanRange >= 5;
-    if (tier === 3) return scanRange >= 8;
-    if (tier >= 4) return scanRange >= 15;
-  }
-
-  return false;
 }

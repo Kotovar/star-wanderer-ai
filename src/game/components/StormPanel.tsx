@@ -220,7 +220,7 @@ export function StormPanel() {
     const log = useGameStore((s) => s.log);
     const enterStorm = useGameStore((s) => s.enterStorm);
     const showSectorMap = useGameStore((s) => s.showSectorMap);
-    const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
+    const canScanObject = useGameStore((s) => s.canScanObject);
     const hasStormShields = useGameStore((s) =>
         s.research.researchedTechs.includes("storm_shields"),
     );
@@ -230,8 +230,7 @@ export function StormPanel() {
     const stormType = currentLocation.stormType || "radiation";
     const intensity = currentLocation.stormIntensity || 1;
     const info = STORM_INFO[stormType];
-    const scanRange = getEffectiveScanRange();
-    const canScan = scanRange >= 5; // Storm detection requires scanRange >= 5
+    const canScan = canScanObject("storm");
 
     const intensityLabels = [
         "",

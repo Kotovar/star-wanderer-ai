@@ -21,7 +21,7 @@ export function UnknownShipPanel() {
     const isShip = ["enemy", "friendly_ship", "derelict_ship"].includes(currentLocation.type);
     const canScan = canScanObject(
         currentLocation.type,
-        currentLocation.threat || currentLocation.anomalyTier,
+        currentLocation.threat ?? currentLocation.anomalyTier,
     );
     const isRevealed = canScan || !!currentLocation.signalRevealed;
 

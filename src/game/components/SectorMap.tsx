@@ -49,6 +49,13 @@ const NEEDS_SCANNER_LOCATIONS: LocationType[] = [
   "boss",
   "space_monster",
 ];
+const TELEPATHY_REVEALED_LOCATIONS: LocationType[] = [
+  "enemy",
+  "space_monster",
+  "friendly_ship",
+  "derelict_ship",
+  "boss",
+];
 const PLANET_SPRITE_SHEET = "/assets/plantes/planets.webp";
 const GAS_PLANET_SPRITE_SHEET = "/assets/plantes/gas-planets.webp";
 const STATION_SPRITE_SHEET = "/assets/stations.webp";
@@ -230,12 +237,15 @@ export function SectorMap() {
       const { x, y } = computeLocationPosition(loc);
 
       const completed = completedLocations.includes(loc.id);
-      const isRevealed = loc.signalRevealed || loc.visited; // Location was approached and revealed
+      // visited means that the location was entered, not that its identity was revealed.
+      const isRevealed = loc.signalRevealed === true;
+      const isTelepathicallyRevealed =
+        hasTelepathy && TELEPATHY_REVEALED_LOCATIONS.includes(loc.type);
 
       // Check if scanner can detect this object type
       const canScan = canScanObject(
         loc.type,
-        loc.threat || loc.anomalyTier,
+        loc.threat ?? loc.anomalyTier,
       );
 
       if (loc.type === "station") {
@@ -258,14 +268,14 @@ export function SectorMap() {
         );
       } else if (loc.type === "enemy") {
         // Without scanner AND not revealed - show as unknown (unless telepathy)
-        if (!canScan && !isRevealed && !hasTelepathy) {
+        if (!canScan && !isRevealed && !isTelepathicallyRevealed) {
           drawUnknownShip(ctx, x, y, completed);
         } else {
           drawEnemy(ctx, x, y, loc, completed);
         }
       } else if (loc.type === "space_monster") {
         // Without scanner AND not revealed - show as unknown (unless telepathy)
-        if (!canScan && !isRevealed && !hasTelepathy) {
+        if (!canScan && !isRevealed && !isTelepathicallyRevealed) {
           drawUnknown(ctx, x, y, completed);
         } else {
           drawSpaceMonster(
@@ -285,7 +295,7 @@ export function SectorMap() {
         }
       } else if (loc.type === "friendly_ship") {
         // Without scanner AND not revealed - show as unknown (unless telepathy)
-        if (!canScan && !isRevealed && !hasTelepathy) {
+        if (!canScan && !isRevealed && !isTelepathicallyRevealed) {
           drawUnknownShip(ctx, x, y, completed);
         } else {
           drawFriendlyShip(ctx, x, y, loc, completed);
@@ -309,7 +319,7 @@ export function SectorMap() {
           animationStateRef.current.time,
         );
       } else if (loc.type === "derelict_ship") {
-        if (!canScan && !isRevealed && !hasTelepathy) {
+        if (!canScan && !isRevealed && !isTelepathicallyRevealed) {
           drawUnknownShip(ctx, x, y, completed);
         } else {
           drawDerelictShip(ctx, x, y, loc, completed);
@@ -326,7 +336,7 @@ export function SectorMap() {
       } else if (loc.type === "wreck_field") {
         drawWreckField(ctx, x, y, loc, completed);
       } else if (loc.type === "boss") {
-        if (canScan || isRevealed || hasTelepathy) {
+        if (canScan || isRevealed || isTelepathicallyRevealed) {
           drawAncientBoss(ctx, x, y, loc, completed);
         } else {
           drawUnknownShip(ctx, x, y, completed);
@@ -345,11 +355,15 @@ export function SectorMap() {
         !canScan &&
         !isRevealed &&
         !completed &&
-        !hasTelepathy;
+        !isTelepathicallyRevealed;
 
       const displayName = isUnknownBoss
         ? t("sector_map.unknown_ship")
-        : needsScanner && !canScan && !isRevealed && !completed
+        : needsScanner &&
+            !canScan &&
+            !isRevealed &&
+            !completed &&
+            !isTelepathicallyRevealed
           ? t("sector_map.unknown_object")
           : getLocationName(loc.name, t);
 
@@ -359,7 +373,7 @@ export function SectorMap() {
         !canScan &&
         !isRevealed &&
         !completed &&
-        !hasTelepathy;
+        !isTelepathicallyRevealed;
 
       // Check for fully explored empty planet
       const isExploredEmptyPlanet =
@@ -409,7 +423,8 @@ export function SectorMap() {
             ? "#ffb000"
             : loc.type === "gas_giant"
               ? "#cc88ff"
-              : loc.type === "space_monster" && (canScan || isRevealed)
+              : loc.type === "space_monster" &&
+                  (canScan || isRevealed || isTelepathicallyRevealed)
                 ? SPACE_MONSTERS[loc.spaceMonsterType ?? "void_ray"].color
               : "#00ff41";
       ctx.fillText(finalDisplayName, x, y + 28);
@@ -1427,9 +1442,9 @@ export function SectorMap() {
           {getScannerInfo(
             hoveredLocation.loc,
             scanRange,
-            hoveredLocation.loc.signalRevealed ||
-            hoveredLocation.loc.visited ||
-            false,
+            hoveredLocation.loc.signalRevealed === true ||
+              (hasTelepathy &&
+                TELEPATHY_REVEALED_LOCATIONS.includes(hoveredLocation.loc.type)),
             t,
           ).map((line, i) => (
             <div

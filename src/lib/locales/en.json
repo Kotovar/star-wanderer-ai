@@ -279,12 +279,12 @@
         "gunner": "Gunner"
     },
     "profession_descriptions": {
-        "pilot": "Can improve maneuvering and navigation.",
-        "engineer": "Can repair and upgrade ship systems.",
-        "medic": "Can heal crew and maintain morale on ship.",
-        "scout": "Can scout empty planets and find resources.",
-        "scientist": "Can investigate anomalies and technologies.",
-        "gunner": "Controls ship fire. Can select targets in combat."
+        "pilot": "From the cockpit, reduces jump fuel use; in combat, maneuvers improve evasion.",
+        "engineer": "Repairs modules; boosts reactor power and weapon accuracy or damage; in the fuel tank, synthesizes fuel or turns it into shields in combat.",
+        "medic": "Heals crew and raises morale; in combat, heals a compartment and enables first aid to reduce damage.",
+        "scout": "Patrols for credits; in combat, sabotages enemy systems to reduce their chance to hit.",
+        "scientist": "Accelerates research in a lab, studies anomalies, and with a gunner analyzes vulnerabilities in combat to boost damage.",
+        "gunner": "From the weapon bay, targets enemies, fires faster for more damage at lower accuracy, and trains."
     },
     "combat_actions": {
         "waiting": "WAITING",

@@ -415,6 +415,9 @@ function CrewDetailDialog({
                     {t(`professions.${crew.member.profession}`)}
                     {crew.member.level ? ` [LV${crew.member.level}]` : ""}
                 </span>
+                <p className="mt-1 text-xs text-[#aaa]">
+                    {t(`profession_descriptions.${crew.member.profession}`)}
+                </p>
             </div>
 
             {/* Price */}

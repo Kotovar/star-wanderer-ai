@@ -28,22 +28,23 @@ export const getEffectiveScanRange = (state: GameState) => {
         (m) => m.type === "deep_survey_array" && isActive(m),
     );
     const surveyBonus = surveyScanners.reduce((sum, m) => sum + (m.scanRange ?? 0), 0);
+    const eyeOfSingularity = findActiveArtifact(
+        state.artifacts,
+        ARTIFACT_TYPES.EYE_OF_SINGULARITY,
+    );
+    const eyeRange = eyeOfSingularity?.scanRange ?? 0;
 
     if (regularScanners.length === 0 && surveyBonus === 0) {
-        const eyeOfSingularity = findActiveArtifact(
-            state.artifacts,
-            ARTIFACT_TYPES.EYE_OF_SINGULARITY,
-        );
-
-        if (eyeOfSingularity) {
-            return eyeOfSingularity.scanRange ?? 0;
-        }
-        return 0;
+        return eyeRange;
     }
 
-    const baseRange = regularScanners.length > 0
-        ? Math.max(...regularScanners.map((s) => s.scanRange ?? 0))
-        : 0;
+    // Око Сингулярности заменяет сканер диапазона 8, не становясь отдельным бонусом.
+    const baseRange = Math.max(
+        eyeRange,
+        regularScanners.length > 0
+            ? Math.max(...regularScanners.map((s) => s.scanRange ?? 0))
+            : 0,
+    );
     let maxRange = baseRange + surveyBonus;
     const quantumScanner = findActiveArtifact(
         state.artifacts,

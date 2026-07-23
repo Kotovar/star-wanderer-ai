@@ -69,6 +69,11 @@ export function SurvivorModal() {
                             </span>
                             {pendingSurvivor.level}
                         </div>
+                        <div className="col-span-2 text-xs text-[#aaa]">
+                            {t(
+                                `profession_descriptions.${pendingSurvivor.profession}`,
+                            )}
+                        </div>
                     </div>
 
                     {/* Traits */}
