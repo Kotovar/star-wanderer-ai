@@ -2445,6 +2445,9 @@
         "bar_max": "Союзный",
         "out_of": "из 100",
         "trade_label": "Торговля",
+        "progress": "Открыто рас: {{found}} / {{total}}",
+        "unknown_name": "Неизвестная раса",
+        "unknown_description": "Познакомьтесь с этой расой, чтобы увидеть подробности.",
         "levels": {
             "hostile": "Враждебный",
             "unfriendly": "Недружелюбный",

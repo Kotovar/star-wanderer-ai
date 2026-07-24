@@ -13,7 +13,7 @@ import { useTranslation } from "@/lib/useTranslation";
 import { RaceSprite } from "./RaceSprite";
 
 /** Форматирует бонусы расы в список строк */
-function formatCrewBonuses(
+export function formatCrewBonuses(
   bonuses: Record<string, number>,
   t: (key: string, params?: Record<string, string | number>) => string,
 ): string[] {

@@ -2445,6 +2445,9 @@
         "bar_max": "Allied",
         "out_of": "of 100",
         "trade_label": "Trade",
+        "progress": "Races known: {{found}} / {{total}}",
+        "unknown_name": "Unknown race",
+        "unknown_description": "Meet this race to reveal its details.",
         "levels": {
             "hostile": "Hostile",
             "unfriendly": "Unfriendly",
