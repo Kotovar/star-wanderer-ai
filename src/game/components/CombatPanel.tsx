@@ -4,11 +4,9 @@ import { useState, useEffect } from "react";
 import { useGameStore } from "../store";
 import { showHintOnce } from "@/game/hints/showHint";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { CombatShipVisual } from "./CombatShipVisual";
 import { CombatShipGrid } from "./CombatShipGrid";
 import { CrewMemberCard } from "./CrewMemberCard";
-import { SectionPanel } from "./SectionPanel";
 import type { CrewMember, CrewMemberCombatAssignment, WeaponType } from "../types";
 import type { EnemyModule } from "@/game/types/enemy";
 import { getTotalEvasion } from "@/game/slices";
@@ -60,23 +58,43 @@ function getWeaponHints(
   return hints;
 }
 
-/** Полоса щитов — общая разметка для «своего корабля» и «врага» ниже */
-function ShieldBar({
+/** Компактный чип статистики корабля — число + опциональная полоса заполнения под ним. */
+function StatChip({
+  label,
   value,
-  max,
-  colorClass,
+  color,
+  bar,
 }: {
-  value: number;
-  max: number;
-  colorClass: string;
+  label: string;
+  value: string | number;
+  color: string;
+  bar?: { value: number; max: number; colorClass: string };
 }) {
-  const pct = Math.min(100, Math.max(0, (value / Math.max(1, max)) * 100));
+  const pct = bar
+    ? Math.min(100, Math.max(0, (bar.value / Math.max(1, bar.max)) * 100))
+    : undefined;
   return (
-    <div className="h-2 rounded-full mt-1 bg-[rgba(0,0,0,0.5)] relative">
+    <div
+      className="min-w-0 border bg-[rgba(0,0,0,0.26)] px-2 py-1"
+      style={{ borderColor: `${color}66` }}
+    >
+      <div className="truncate text-[9px] uppercase tracking-wide text-[#667]">
+        {label}
+      </div>
       <div
-        className={`absolute rounded-full top-0 left-0 h-full ${colorClass}`}
-        style={{ width: `${pct}%` }}
-      />
+        className="font-['Orbitron'] text-xs font-bold truncate"
+        style={{ color }}
+      >
+        {value}
+      </div>
+      {bar && (
+        <div className="h-1 mt-1 rounded-full bg-[rgba(0,0,0,0.5)] relative">
+          <div
+            className={`absolute rounded-full top-0 left-0 h-full ${bar.colorClass}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -338,79 +356,124 @@ export function CombatPanel() {
         t={t}
       />
 
-      {/* Ship stats summary */}
-      <div className="grid grid-cols-2 gap-4 my-3">
-        <SectionPanel>
-          <div className="text-base font-bold mb-3 text-ring">
+      {/* Ship visuals - side by side, with compact stats folded into each panel header */}
+      <div className="combat-visual-stage grid grid-cols-2 gap-4 my-2 items-start">
+        <div className="combat-vessel-panel combat-vessel-panel--player flex min-w-0 flex-col items-center">
+          <div className="combat-vessel-label text-base font-bold mb-2 px-4 py-2 text-ring min-h-11 flex items-center justify-center">
             {t("combat.your_ship")}
           </div>
-          <div className="text-sm space-y-2">
-            <div className="text-[#00ff41]">
-              {t("ship_stats.damage")} {actualDamage}
-            </div>
-            <div>
-              {t("ship_stats.shields")} {ship.shields}/
-              {ship.maxShields}
-              <ShieldBar value={ship.shields} max={ship.maxShields} colorClass="bg-[#0080ff]" />
-            </div>
-            <div>
-              {t("combat.hull")} {playerHP}/{playerMaxHP}
-              <Progress
-                value={
-                  (playerHP / Math.max(1, playerMaxHP)) * 100
-                }
-                className="h-2 mt-1 bg-[rgba(0,0,0,0.5)] [&>div]:bg-[#00ff41]"
-              />
-            </div>
-            <div>
-              {t("combat.defense")} {playerDefense}
-            </div>
-            <div className="text-xs text-[#00ff41]">
-              {t("combat.evasion")} {evasionChance}%
-            </div>
-            {hasGunner && (
-              <div className="text-xs text-[#00ff41]">
-                {t("combat.gunner")} {gunnerInWeaponBay.name}
-              </div>
-            )}
+          <div className="mb-3 grid w-full grid-cols-3 gap-1 sm:grid-cols-5">
+            <StatChip label={t("ship_stats.damage")} value={actualDamage} color="#00ff41" />
+            <StatChip
+              label={t("ship_stats.shields")}
+              value={`${ship.shields}/${ship.maxShields}`}
+              color="#4488ff"
+              bar={{ value: ship.shields, max: ship.maxShields, colorClass: "bg-[#0080ff]" }}
+            />
+            <StatChip
+              label={t("combat.hull")}
+              value={`${playerHP}/${playerMaxHP}`}
+              color="#00ff41"
+              bar={{ value: playerHP, max: playerMaxHP, colorClass: "bg-[#00ff41]" }}
+            />
+            <StatChip label={t("combat.defense")} value={playerDefense} color="#ffb000" />
+            <StatChip label={t("combat.evasion")} value={`${evasionChance}%`} color="#00ff41" />
           </div>
-        </SectionPanel>
-
-        <div
-          className={`${isBoss ? "bg-[rgba(255,0,255,0.05)] border-[#ff00ff]" : "bg-[rgba(255,0,64,0.05)] border-destructive"} border p-4`}
-        >
+          {hasGunner && (
+            <div className="mb-2 text-xs text-[#00ff41]">
+              {t("combat.gunner")} {gunnerInWeaponBay.name}
+            </div>
+          )}
+          <div className="flex items-center gap-2 mb-3">
+            <Button
+              onClick={() =>
+                setZoomLevel((z) => Math.max(0.5, z - 0.1))
+              }
+              disabled={zoomLevel <= 0.5}
+              className="radar-control cursor-pointer border w-10 h-10 p-0 text-lg disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Уменьшить"
+            >
+              −
+            </Button>
+            <span className="text-[#00ff41] text-xs w-12 text-center">
+              {Math.round(zoomLevel * 100)}%
+            </span>
+            <Button
+              onClick={() =>
+                setZoomLevel((z) => Math.min(1, z + 0.1))
+              }
+              disabled={zoomLevel >= 1}
+              className="radar-control cursor-pointer border w-10 h-10 p-0 text-lg disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Увеличить"
+            >
+              +
+            </Button>
+          </div>
+          <CombatShipGrid scale={zoomLevel} />
+        </div>
+        <div className="combat-vessel-panel combat-vessel-panel--enemy flex min-w-0 flex-col items-center">
           <div
-            className={`text-base font-bold mb-3 ${isBoss ? "text-[#ff00ff]" : "text-destructive"}`}
+            className={`combat-vessel-label text-base font-bold mb-2 px-4 py-2 min-h-11 flex items-center justify-center text-center ${isBoss
+              ? "text-[#ff00ff]"
+              : "text-destructive"
+              }`}
           >
             {currentCombat.enemy.name}
           </div>
-          <div className="text-sm space-y-2">
-            <div>
-              {t("ship_stats.damage")} {eDmg}
-            </div>
-            <div>
-              {isBiologicalEnemy
-                ? t("space_monsters.protective_membrane")
-                : t("combat.shields")}{" "}
-              {currentCombat.enemy.shields || 0}/
-              {currentCombat.enemy.maxShields || 0}
-              <ShieldBar
-                value={currentCombat.enemy.shields || 0}
-                max={currentCombat.enemy.maxShields || 0}
-                colorClass={isBoss ? "bg-[#ff00ff]" : "bg-[#0080ff]"}
-              />
-            </div>
-            <div>
-              {t("combat.hull")} {eHP}/{eMaxHP}
-              <Progress
-                value={(eHP / eMaxHP) * 100}
-                className={`h-2 mt-1 bg-[rgba(0,0,0,0.5)] ${isBoss ? "[&>div]:bg-[#ff00ff]" : "[&>div]:bg-destructive"}`}
-              />
-            </div>
-            <div>
-              {t("combat.defense")} {eDef}
-            </div>
+          <div className="mb-3 grid w-full grid-cols-2 gap-1 sm:grid-cols-4">
+            <StatChip
+              label={t("ship_stats.damage")}
+              value={eDmg}
+              color={isBoss ? "#ff00ff" : "#ff4d6d"}
+            />
+            <StatChip
+              label={
+                isBiologicalEnemy
+                  ? t("space_monsters.protective_membrane")
+                  : t("combat.shields")
+              }
+              value={`${currentCombat.enemy.shields || 0}/${currentCombat.enemy.maxShields || 0}`}
+              color={isBoss ? "#ff00ff" : "#4488ff"}
+              bar={{
+                value: currentCombat.enemy.shields || 0,
+                max: currentCombat.enemy.maxShields || 0,
+                colorClass: isBoss ? "bg-[#ff00ff]" : "bg-[#0080ff]",
+              }}
+            />
+            <StatChip
+              label={t("combat.hull")}
+              value={`${eHP}/${eMaxHP}`}
+              color={isBoss ? "#ff00ff" : "#ff4d6d"}
+              bar={{
+                value: eHP,
+                max: eMaxHP,
+                colorClass: isBoss ? "bg-[#ff00ff]" : "bg-destructive",
+              }}
+            />
+            <StatChip
+              label={t("combat.defense")}
+              value={eDef}
+              color={isBoss ? "#ff00ff" : "#ff4d6d"}
+            />
           </div>
+          <div className="flex items-center gap-2 h-11 mb-3" />
+          <CombatShipVisual
+            modules={currentCombat.enemy.modules}
+            crew={[]}
+            isEnemy={true}
+            isBoss={isBoss}
+            onModuleClick={handleEnemyModuleClick}
+            title=""
+            shields={currentCombat.enemy.shields}
+            hitFlash={enemyFlash}
+            selectedModuleId={activeBayTargetId ?? undefined}
+            damageHit={lastEnemyHit ?? null}
+          />
+          {activeBayId !== null && (
+            <div className="text-[10px] text-ring mt-2 text-center animate-pulse">
+              Выбор цели...
+            </div>
+          )}
         </div>
       </div>
 
@@ -541,69 +604,6 @@ export function CombatPanel() {
           )}
         </div>
       )}
-
-      {/* Ship visuals - side by side */}
-      <div className="combat-visual-stage grid grid-cols-2 gap-4 my-2 items-start">
-        <div className="combat-vessel-panel combat-vessel-panel--player flex min-w-0 flex-col items-center">
-          <div className="combat-vessel-label text-base font-bold mb-4 px-4 py-2 text-ring min-h-11 flex items-center justify-center">
-            {t("combat.your_ship")}
-          </div>
-          <div className="flex items-center gap-2 mb-3">
-            <Button
-              onClick={() =>
-                setZoomLevel((z) => Math.max(0.5, z - 0.1))
-              }
-              disabled={zoomLevel <= 0.5}
-              className="radar-control cursor-pointer border w-10 h-10 p-0 text-lg disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Уменьшить"
-            >
-              −
-            </Button>
-            <span className="text-[#00ff41] text-xs w-12 text-center">
-              {Math.round(zoomLevel * 100)}%
-            </span>
-            <Button
-              onClick={() =>
-                setZoomLevel((z) => Math.min(1, z + 0.1))
-              }
-              disabled={zoomLevel >= 1}
-              className="radar-control cursor-pointer border w-10 h-10 p-0 text-lg disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Увеличить"
-            >
-              +
-            </Button>
-          </div>
-          <CombatShipGrid scale={zoomLevel} />
-        </div>
-        <div className="combat-vessel-panel combat-vessel-panel--enemy flex min-w-0 flex-col items-center">
-          <div
-            className={`combat-vessel-label text-base font-bold mb-4 px-4 py-2 min-h-11 flex items-center justify-center text-center ${isBoss
-              ? "text-[#ff00ff]"
-              : "text-destructive"
-              }`}
-          >
-            {currentCombat.enemy.name}
-          </div>
-          <div className="flex items-center gap-2 h-11" />
-          <CombatShipVisual
-            modules={currentCombat.enemy.modules}
-            crew={[]}
-            isEnemy={true}
-            isBoss={isBoss}
-            onModuleClick={handleEnemyModuleClick}
-            title=""
-            shields={currentCombat.enemy.shields}
-            hitFlash={enemyFlash}
-            selectedModuleId={activeBayTargetId ?? undefined}
-            damageHit={lastEnemyHit ?? null}
-          />
-          {activeBayId !== null && (
-            <div className="text-[10px] text-ring mt-2 text-center animate-pulse">
-              Выбор цели...
-            </div>
-          )}
-        </div>
-      </div>
 
       <CrewManagement
         crew={crew}
