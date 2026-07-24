@@ -2882,43 +2882,53 @@
         "ships": {
             "pirate": {
                 "name": "Pirates",
-                "description": "Fragile raiders with extra weapons and valuable cargo."
+                "description": "Fragile raiders with extra weapons and valuable cargo.",
+                "lore": "Most pirate crews trace their line to workers left jobless after the Partition Wars — now they take by force what they used to get by contract."
             },
             "raider": {
                 "name": "Raiders",
-                "description": "Strike ships that rely on high damage before a battle drags on."
+                "description": "Strike ships that rely on high damage before a battle drags on.",
+                "lore": "Raiders don't loot — they crash the market: rumor holds their first captains were trade pilots who preferred speed to negotiation."
             },
             "mercenary": {
                 "name": "Mercenaries",
-                "description": "Balanced professional fighters with reinforced shields."
+                "description": "Balanced professional fighters with reinforced shields.",
+                "lore": "Mercenary cartels swear loyalty to no race — their one code is to finish the contract, even if the client changes halfway through."
             },
             "marauder": {
                 "name": "Marauders",
-                "description": "Weaker in a direct fight, but unpredictable and seldom carry valuable loot."
+                "description": "Weaker in a direct fight, but unpredictable and seldom carry valuable loot.",
+                "lore": "Marauders are feared for unpredictability, not power — their ships are welded from so many broken fleets that no engineer will guess what fails first."
             },
             "human_guard": {
                 "name": "Human guard",
-                "description": "A standard human patrol ship with reliable shields."
+                "description": "A standard human patrol ship with reliable shields.",
+                "lore": "Human patrols are crewed by volunteers from border colonies — most sign up not for the pay, but to see home from orbit one more time."
             },
             "synthetic_guard": {
                 "name": "Synthetic guard",
-                "description": "A heavy automated defender with a durable hull and strong shields."
+                "description": "A heavy automated defender with a durable hull and strong shields.",
+                "lore": "Synthetic guards have taken no outside orders in decades — they still enforce protocols whose author no one remembers."
             },
             "xenosymbiont_guard": {
                 "name": "Biological guard",
-                "description": "A mobile living ship with an additional predatory organ."
+                "description": "A mobile living ship with an additional predatory organ.",
+                "lore": "A biological guard is neither ship nor creature but a willing fusion — pilot and hull merge so completely that records stop distinguishing who is steering whom."
             },
             "krylorian_guard": {
                 "name": "Krylorian warrior",
-                "description": "An aggressive military ship that is dangerous from the first exchange of fire."
+                "description": "An aggressive military ship that is dangerous from the first exchange of fire.",
+                "lore": "To a Krylorian warrior, defeat is worse than death — by their honor code, a crew that retreats without orders forfeits the right to its own name."
             },
             "voidborn_guard": {
                 "name": "Voidborn guard",
-                "description": "A balanced defender combining conventional weapons and shields."
+                "description": "A balanced defender combining conventional weapons and shields.",
+                "lore": "Voidborn guards need no contact with base — some have held their watch so long they've forgotten why they were sent."
             },
             "crystalline_guard": {
                 "name": "Crystalline guard",
-                "description": "A slow but extremely durable defender with layered shields."
+                "description": "A slow but extremely durable defender with layered shields.",
+                "lore": "A crystalline guard thinks slower than any other defender — but crystalloids insist every one of its decisions was already right a thousand years ago."
             }
         }
     },

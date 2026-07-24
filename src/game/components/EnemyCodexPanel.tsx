@@ -403,15 +403,20 @@ export function EnemyCodexPanel() {
                 }
                 actionLabel={known ? t("enemy_codex.details") : undefined}
                 details={
-                  <div className="flex flex-wrap gap-1">
-                    {statSummary(ENEMY_TYPE_MODIFIERS[entry.id]).map((stat) => (
-                      <span
-                        key={stat}
-                        className="border border-[#00d4ff33] bg-[rgba(0,0,0,0.2)] px-1.5 py-0.5 text-[10px] text-[#9edfeb]"
-                      >
-                        {stat}
-                      </span>
-                    ))}
+                  <div className="space-y-1.5">
+                    <div className="flex flex-wrap gap-1">
+                      {statSummary(ENEMY_TYPE_MODIFIERS[entry.id]).map((stat) => (
+                        <span
+                          key={stat}
+                          className="border border-[#00d4ff33] bg-[rgba(0,0,0,0.2)] px-1.5 py-0.5 text-[10px] text-[#9edfeb]"
+                        >
+                          {stat}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="text-[11px] italic leading-relaxed text-[#748092]">
+                      {t(entry.loreKey)}
+                    </div>
                   </div>
                 }
               />
@@ -514,6 +519,13 @@ export function EnemyCodexPanel() {
                     : undefined
                 }
                 actionLabel={known ? t("enemy_codex.details") : undefined}
+                details={
+                  known ? (
+                    <div className="border-l-2 border-[#00d4ff66] pl-2 text-[11px] italic leading-relaxed text-[#8fa0aa]">
+                      {boss.lore}
+                    </div>
+                  ) : undefined
+                }
               />
             );
           })}

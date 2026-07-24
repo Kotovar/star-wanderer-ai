@@ -14,6 +14,8 @@ export type EnemyCodexShipEntry = {
   icon: string;
   nameKey: string;
   descriptionKey: string;
+  /** One-line in-universe rumor about the faction — flavor only, shown in the codex. */
+  loreKey: string;
 };
 
 export const ENEMY_CODEX_SHIP_ENTRIES = [
@@ -22,60 +24,70 @@ export const ENEMY_CODEX_SHIP_ENTRIES = [
     icon: "☠️",
     nameKey: "enemy_codex.ships.pirate.name",
     descriptionKey: "enemy_codex.ships.pirate.description",
+    loreKey: "enemy_codex.ships.pirate.lore",
   },
   {
     id: "raider",
     icon: "⚔️",
     nameKey: "enemy_codex.ships.raider.name",
     descriptionKey: "enemy_codex.ships.raider.description",
+    loreKey: "enemy_codex.ships.raider.lore",
   },
   {
     id: "mercenary",
     icon: "🎯",
     nameKey: "enemy_codex.ships.mercenary.name",
     descriptionKey: "enemy_codex.ships.mercenary.description",
+    loreKey: "enemy_codex.ships.mercenary.lore",
   },
   {
     id: "marauder",
     icon: "🛠️",
     nameKey: "enemy_codex.ships.marauder.name",
     descriptionKey: "enemy_codex.ships.marauder.description",
+    loreKey: "enemy_codex.ships.marauder.lore",
   },
   {
     id: "human_guard",
     icon: "🛡️",
     nameKey: "enemy_codex.ships.human_guard.name",
     descriptionKey: "enemy_codex.ships.human_guard.description",
+    loreKey: "enemy_codex.ships.human_guard.lore",
   },
   {
     id: "synthetic_guard",
     icon: "🤖",
     nameKey: "enemy_codex.ships.synthetic_guard.name",
     descriptionKey: "enemy_codex.ships.synthetic_guard.description",
+    loreKey: "enemy_codex.ships.synthetic_guard.lore",
   },
   {
     id: "xenosymbiont_guard",
     icon: "🧬",
     nameKey: "enemy_codex.ships.xenosymbiont_guard.name",
     descriptionKey: "enemy_codex.ships.xenosymbiont_guard.description",
+    loreKey: "enemy_codex.ships.xenosymbiont_guard.lore",
   },
   {
     id: "krylorian_guard",
     icon: "🦗",
     nameKey: "enemy_codex.ships.krylorian_guard.name",
     descriptionKey: "enemy_codex.ships.krylorian_guard.description",
+    loreKey: "enemy_codex.ships.krylorian_guard.lore",
   },
   {
     id: "voidborn_guard",
     icon: "🌌",
     nameKey: "enemy_codex.ships.voidborn_guard.name",
     descriptionKey: "enemy_codex.ships.voidborn_guard.description",
+    loreKey: "enemy_codex.ships.voidborn_guard.lore",
   },
   {
     id: "crystalline_guard",
     icon: "💠",
     nameKey: "enemy_codex.ships.crystalline_guard.name",
     descriptionKey: "enemy_codex.ships.crystalline_guard.description",
+    loreKey: "enemy_codex.ships.crystalline_guard.lore",
   },
 ] as const satisfies readonly EnemyCodexShipEntry[];
 

@@ -69,6 +69,8 @@ export interface AncientBoss {
     id: string;
     name: string;
     description: string;
+    /** Short in-universe legend/rumor about the boss — flavor only, shown in the codex. */
+    lore: string;
     tier: GalaxyTierAll; // Minimum sector tier to spawn
     bossType: BossType; // Type identifier for rendering
 

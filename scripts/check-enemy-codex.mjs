@@ -81,7 +81,16 @@ for (const locale of ["ru", "en"]) {
       "string",
       `${locale}/${entry.id}: no description`,
     );
+    assert.equal(
+      typeof translation?.lore,
+      "string",
+      `${locale}/${entry.id}: no lore`,
+    );
   }
+}
+
+for (const boss of ANCIENT_BOSSES) {
+  assert.equal(typeof boss.lore, "string", `${boss.id}: no lore`);
 }
 
 console.log("Enemy codex checks passed");
