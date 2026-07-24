@@ -70,6 +70,35 @@ type SectorSpriteImages = {
   stars?: HTMLImageElement;
 };
 
+// Module-level cache: sprite sheets are decoded once per session and reused
+// across every SectorMap mount. Without this, leaving and re-entering the
+// sector map (e.g. quickly hopping between locations) reset the ref to `{}`
+// on each mount, so the first frame drew fallback vector shapes before the
+// "real" sprites re-loaded a beat later — a visible pop that broke immersion.
+const spriteImageCache: SectorSpriteImages = {};
+const spriteImageLoadPromises: Partial<Record<keyof SectorSpriteImages, Promise<void>>> = {};
+
+function loadSpriteImage(
+  key: keyof SectorSpriteImages,
+  src: string,
+): Promise<void> {
+  if (spriteImageCache[key]) return Promise.resolve();
+  const pending = spriteImageLoadPromises[key];
+  if (pending) return pending;
+
+  const promise = new Promise<void>((resolve) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = () => {
+      spriteImageCache[key] = image;
+      resolve();
+    };
+    image.src = src;
+  });
+  spriteImageLoadPromises[key] = promise;
+  return promise;
+}
+
 export function SectorMap() {
   const containerRef = useRef<HTMLDivElement>(null);
   const currentSector = useGameStore((s) => s.currentSector);
@@ -177,7 +206,7 @@ export function SectorMap() {
 
   // Ref for animation canvas
   const animCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const spriteImagesRef = useRef<SectorSpriteImages>({});
+  const spriteImagesRef = useRef<SectorSpriteImages>({ ...spriteImageCache });
   const [, setSpriteImagesReady] = useState(0);
 
   const scanRange = getEffectiveScanRange();
@@ -451,28 +480,24 @@ export function SectorMap() {
   useEffect(() => {
     let cancelled = false;
 
-    const loadImage = (
-      key: keyof SectorSpriteImages,
-      src: string,
-    ) => {
-      const image = new Image();
-      image.decoding = "async";
-      image.src = src;
-      image.onload = () => {
+    const sheets: [keyof SectorSpriteImages, string][] = [
+      ["planets", PLANET_SPRITE_SHEET],
+      ["gasPlanets", GAS_PLANET_SPRITE_SHEET],
+      ["stations", STATION_SPRITE_SHEET],
+      ["stars", STAR_SPRITE_SHEET],
+    ];
+
+    sheets.forEach(([key, src]) => {
+      loadSpriteImage(key, src).then(() => {
         if (cancelled) return;
         spriteImagesRef.current = {
           ...spriteImagesRef.current,
-          [key]: image,
+          [key]: spriteImageCache[key],
         };
         setSpriteImagesReady((value) => value + 1);
         requestAnimationFrame(drawCanvas);
-      };
-    };
-
-    loadImage("planets", PLANET_SPRITE_SHEET);
-    loadImage("gasPlanets", GAS_PLANET_SPRITE_SHEET);
-    loadImage("stations", STATION_SPRITE_SHEET);
-    loadImage("stars", STAR_SPRITE_SHEET);
+      });
+    });
 
     return () => {
       cancelled = true;

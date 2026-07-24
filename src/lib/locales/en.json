@@ -711,6 +711,7 @@
         "type_gas_dive": "Deep Probe Survey",
         "type_expedition_survey": "Planetary Survey",
         "type_derelict_recovery": "Derelict Recovery",
+        "type_cleanse_curse": "Curse Cleansing",
         "task_what": "What to do",
         "task_where": "Where to complete",
         "task_destination": "Destination",
@@ -810,6 +811,7 @@
         "gas_dive_task": "Dive into gas planets and collect {{count}} void membranes",
         "name_expedition_survey": "🗺️ Planetary Survey",
         "name_derelict_recovery": "🛸 Derelict Recovery",
+        "name_cleanse_curse": "✨ Curse Cleansing",
         "expedition_done": "Data collected — return to client",
         "expedition_pending": "Run expedition: {{planet}} ({{sector}})",
         "expedition_tiles_progress": "Tiles revealed: {{current}}/{{total}}",
@@ -818,6 +820,10 @@
         "derelict_recovery_scout": "At least one scout is required",
         "derelict_recovery_auto": "Automatically after exploration",
         "derelict_recovery_pending": "Explore the derelict ship in {{sector}}",
+        "cleanse_curse_task": "Bring a discovered cursed artifact to the Crystal Hydra",
+        "cleanse_curse_requirement": "Requires a discovered cursed artifact aboard",
+        "cleanse_curse_manual": "Use the \"Cleanse Curse\" action at the creature's panel",
+        "cleanse_curse_pending": "Bring a cursed artifact to the Crystal Hydra in {{sector}}",
         "reward_short": "💰 Reward: {{reward}}₢",
         "cargo": "Cargo",
         "close": "CLOSE",
@@ -840,7 +846,9 @@
         "desc_bounty_generic": "🎯 Pirate Hunt",
         "desc_gas_dive": "🪸 Void Membrane Collection",
         "desc_expedition_survey": "🗺️ Planetary Survey",
-        "desc_derelict_recovery": "🛸 Explore a derelict ship"
+        "desc_derelict_recovery": "🛸 Explore a derelict ship",
+        "desc_cleanse_curse": "✨ Bring a cursed artifact to the Crystal Hydra in {{sector}}",
+        "desc_cleanse_curse_offer": "✨ Bring a cursed artifact to the Crystal Hydra ({{sector}}) — it will lift the curse"
     },
     "locations": {
         "enemy_ship": "Enemy ship",
@@ -2708,6 +2716,7 @@
         "resonance_active_hint": "Resonance is already active. Return after the effect ends.",
         "first_contact": "UNIQUE RESPONSE",
         "first_contact_used": "This biosignal has already been studied. Further contacts only refresh the temporary effect.",
+        "lore_title": "ARCHIVE RECORD",
         "protective_membrane": "Protective membrane",
         "organs": {
             "reactor": "Living core",
@@ -2715,42 +2724,64 @@
             "shield": "Protective membrane"
         },
         "not_enough_probes": "A resonance probe is required",
+        "cleanse_title": "CURSE CLEANSING",
+        "cleanse_none": "Requires a discovered cursed artifact aboard. Find one in an anomaly or from an ancient boss.",
+        "cleanse_button": "CLEANSE CURSE",
+        "cleanse_hint": "The Crystal Hydra permanently lifts the curse from the selected artifact. Its positive effect remains.",
         "withdraw": "WITHDRAW",
         "logs": {
             "insufficient_probes": "Not enough probes for a resonance contact.",
             "resonance_active": "Resonance with this creature is already active.",
             "resonance": "📡 The resonance probe recorded {{name}}'s biosignal. A temporary effect was gained.",
-            "first_contact_sector_scan": "🪼 The Void Ray's wake revealed every signal in the current sector.",
-            "first_contact_crew_heal": "🦋 Nebula Manta dust restored {{value}} crew health.",
-            "first_contact_crew_healthy": "🦋 The Nebula Manta wrapped the crew in charged dust, but no treatment was needed.",
-            "first_contact_refuel": "🐉 Leviathan ion wake: +{{value}} fuel.",
-            "first_contact_fuel_full": "🐉 The Leviathan's ion wake dissipated: the fuel tanks are already full.",
-            "first_contact_artifact_hint": "💠 Crystal Hydra stored an artifact clue: {{sector}} · {{location}}.",
-            "first_contact_crystal_shard": "💠 The Hydra found no new artifact trail and shed a quantum shard."
+            "first_contact_sector_scan": "📡 Resonance with {{name}} revealed every signal in the current sector.",
+            "first_contact_crew_heal": "📡 Resonance with {{name}} restored {{value}} crew health.",
+            "first_contact_crew_healthy": "📡 Resonance with {{name}} wrapped the crew in charged dust, but no treatment was needed.",
+            "first_contact_refuel": "📡 Resonance with {{name}} refilled the tanks: +{{value}} fuel.",
+            "first_contact_fuel_full": "📡 Resonance with {{name}} faded: the fuel tanks are already full.",
+            "first_contact_artifact_hint": "📡 Resonance with {{name}} stored an artifact clue: {{sector}} · {{location}}.",
+            "first_contact_crystal_shard": "📡 Resonance with {{name}} found no new artifact trail and shed a quantum shard."
         },
         "void_ray": {
             "name": "Void Ray",
             "description": "A translucent creature glides along a gravity field and studies the ship's electromagnetic wake.",
             "behavior": "A resonance probe can map its route, while hunting cuts off its way to the rift.",
-            "first_contact": "The Ray's wake reveals every signal in the current sector once."
+            "first_contact": "The Ray's wake reveals every signal in the current sector once.",
+            "lore": "Old archive entries call it \"a ripple that outlived its star\" — wanderers of the Void claim rays are born the moment a star collapses so slowly that its last light is still trying to escape."
         },
         "nebula_manta": {
             "name": "Nebula Manta",
             "description": "A giant bioluminescent manta gathers charged dust around the star.",
             "behavior": "A resonance probe maps its charged dust, while hunting yields rare biological samples.",
-            "first_contact": "Charged dust restores up to {{value}} health to every living crew member."
+            "first_contact": "Charged dust fully restores every living crew member's health.",
+            "lore": "Wandering traders call it \"the keeper of stardust\" — said to have drifted since the first nebulae cooled, patiently gathering the ash of dead suns into new light."
         },
         "plasma_leviathan": {
             "name": "Plasma Leviathan",
             "description": "A knot of living plasma crosses stellar flares and leaves a burning trail behind it.",
             "behavior": "It reacts dangerously to weapon targeting, but a probe can safely record its plasma wake.",
-            "first_contact": "Its ion wake refills fuel tanks by {{value}}% of their capacity."
+            "first_contact": "Its ion wake fully refills the fuel tanks.",
+            "lore": "Frontier pilots call it \"the star's own shadow\" — a living echo of the flare that birthed it, forever chasing a light it can never rejoin."
         },
         "crystal_hydra": {
             "name": "Crystal Hydra",
             "description": "Several crystalline heads read the ship's signals in unison and reflect the surrounding light.",
             "behavior": "A probe records its crystalline pattern; destroying it leaves valuable quantum crystals.",
-            "first_contact": "Its crystalline pattern stores an exact clue to one undiscovered artifact."
+            "first_contact": "Its crystalline pattern stores an exact clue to one undiscovered artifact.",
+            "lore": "Xenoscholars argue over whether each of its heads holds the memory of a different collapsed star — but all agree that touching its resonant pattern feels, for a heartbeat, like remembering a life you never lived."
+        },
+        "ember_wisp": {
+            "name": "Ember Wisp",
+            "description": "A small knot of stellar flame drifts around ordinary yellow and red dwarf stars, feeding on their faint glow.",
+            "behavior": "A resonance probe reads its heat pattern; hunting yields rare minerals from its core.",
+            "first_contact": "Its heat trail fully refills the fuel tanks.",
+            "lore": "The least mythologized of the six — veteran pilots dismiss it as \"a spark with delusions of grandeur.\" And yet it's the only one known to approach ships that look abandoned, as if drawn to loneliness."
+        },
+        "binary_wyrm": {
+            "name": "Binary Wyrm",
+            "description": "A long gravitational creature coils around the shared center of mass of binary and triple star systems.",
+            "behavior": "A resonance probe maps its gravitational currents; hunting yields ancient data drawn from both stars.",
+            "first_contact": "Its gravity map reveals every signal in the current sector.",
+            "lore": "Xenobiologists describe it as the frozen shape of an orbit that refused to end — forever coiled around the point two stars share but neither can claim."
         }
     },
     "enemy_codex": {
@@ -2785,6 +2816,64 @@
             "shields": "Shields +{{value}}",
             "weapons": "Weapons +{{value}}",
             "loot": "Loot {{value}}%"
+        },
+        "module_effects": {
+            "regen": {
+                "name": "Regeneration",
+                "description": "Restores {{value}}% health every turn"
+            },
+            "damage_aura": {
+                "name": "Damage Aura",
+                "description": "Deals {{value}} damage every turn"
+            },
+            "heal_on_damage": {
+                "name": "Damage Healing",
+                "description": "Heals for {{value}}% of damage dealt"
+            },
+            "shield_break": {
+                "name": "Shield Break",
+                "description": "Strips {{value}} shields on every hit"
+            },
+            "shield_pierce": {
+                "name": "Shield Pierce",
+                "description": "Ignores {{value}}% of the target's shields"
+            },
+            "multi_hit": {
+                "name": "Multi-Strike",
+                "description": "Attacks {{value}} times per turn"
+            },
+            "damage_absorb": {
+                "name": "Damage Absorption",
+                "description": "Converts {{value}}% of damage taken into shields"
+            },
+            "dodge": {
+                "name": "Dodge",
+                "description": "{{value}}% chance to fully evade an attack"
+            },
+            "ignore_defense": {
+                "name": "Defense Ignore",
+                "description": "Ignores {{value}}% of the target's module defense"
+            },
+            "damage_mirror": {
+                "name": "Damage Mirror",
+                "description": "Reflects {{value}}% of damage taken"
+            },
+            "shield_regen": {
+                "name": "Shield Regeneration",
+                "description": "Restores {{value}} shields every turn"
+            },
+            "guaranteed_crit": {
+                "name": "Guaranteed Crit",
+                "description": "Every {{value}}th attack is a critical hit"
+            },
+            "phase_shift": {
+                "name": "Phase Shift",
+                "description": "{{value}}% chance to avoid a critical hit"
+            },
+            "turn_skip": {
+                "name": "Turn Skip",
+                "description": "{{value}}% chance to skip the enemy's turn"
+            }
         },
         "ancient_boss": {
             "name": "Ancient combat complex",
@@ -4292,6 +4381,9 @@
         "handleExpeditionSurveyContracts_1": "🗺️ Contract complete: planetary survey delivered +{{reward}}₢",
         "handleGasDiveContracts_1": "🪸 Contract complete: membrane samples delivered ({{collectedMembranes}}/{{requiredMembranes}}) +{{reward}}₢",
         "completeDerelictRecoveryContracts_1": "🛸 Contract complete: derelict explored +{{reward}}₢",
+        "cleanseCursedArtifact_1": "No active curse-cleansing contract found here.",
+        "cleanseCursedArtifact_2": "That artifact is not a discovered cursed artifact.",
+        "cleanseCursedArtifact_3": "✨ The Crystal Hydra lifted the curse from \"{{artifact_name}}\"! +{{reward}}₢",
         "handleSupplyRunContracts_1": "📦 Contract complete: {{desc}} (delivered to {{loc_name}}) +{{reward}}₢",
         "craftingSlice_1": "Recipe \"{{recipeId}}\" not found",
         "craftingSlice_2": "Recipe not unlocked",

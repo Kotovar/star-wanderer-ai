@@ -28,7 +28,9 @@ export type SpaceMonsterType =
     | "void_ray"
     | "nebula_manta"
     | "plasma_leviathan"
-    | "crystal_hydra";
+    | "crystal_hydra"
+    | "ember_wisp"
+    | "binary_wyrm";
 
 export type SignalDetails = {
     name: string;

@@ -295,6 +295,7 @@ export interface GameAnomaly {
 
 export interface GameSpaceMonsters {
   resonateWithSpaceMonster: () => void;
+  cleanseCursedArtifact: (artifactId: string) => void;
 }
 
 export interface GameScouting {

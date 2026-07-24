@@ -6,6 +6,9 @@ import type {
   StarType,
 } from "@/game/types";
 
+// Every variant fully resolves its effect (full heal, full refuel, guaranteed
+// hint) — first contact with one of these beings is meant to feel like a
+// singular gift, not a partial top-up.
 export type SpaceMonsterFirstContact =
   | {
       type: "reveal_sector";
@@ -14,22 +17,25 @@ export type SpaceMonsterFirstContact =
   | {
       type: "heal_crew";
       descriptionKey: string;
-      value: number;
     }
   | {
       type: "refuel";
       descriptionKey: string;
-      value: number;
     }
   | {
       type: "artifact_hint";
       descriptionKey: string;
     };
 
+/** Bonus units of the monster's own research resource granted on first contact, on top of its unique effect. */
+export const FIRST_CONTACT_RESOURCE_BONUS = 2;
+
 export type SpaceMonsterDefinition = {
   nameKey: string;
   descriptionKey: string;
   behaviorKey: string;
+  /** Short in-universe legend/rumor about the creature — flavor only, no mechanical effect. */
+  loreKey: string;
   icon: string;
   color: string;
   threatBonus: number;
@@ -49,6 +55,7 @@ export const SPACE_MONSTERS: Record<
     nameKey: "space_monsters.void_ray.name",
     descriptionKey: "space_monsters.void_ray.description",
     behaviorKey: "space_monsters.void_ray.behavior",
+    loreKey: "space_monsters.void_ray.lore",
     icon: "🪼",
     color: "#8b5cf6",
     threatBonus: 1,
@@ -65,6 +72,7 @@ export const SPACE_MONSTERS: Record<
     nameKey: "space_monsters.nebula_manta.name",
     descriptionKey: "space_monsters.nebula_manta.description",
     behaviorKey: "space_monsters.nebula_manta.behavior",
+    loreKey: "space_monsters.nebula_manta.lore",
     icon: "🦋",
     color: "#22d3ee",
     threatBonus: 0,
@@ -74,7 +82,6 @@ export const SPACE_MONSTERS: Record<
     firstContact: {
       type: "heal_crew",
       descriptionKey: "space_monsters.nebula_manta.first_contact",
-      value: 8,
     },
     moduleEffect: { type: "heal_on_damage", value: 20 },
   },
@@ -82,6 +89,7 @@ export const SPACE_MONSTERS: Record<
     nameKey: "space_monsters.plasma_leviathan.name",
     descriptionKey: "space_monsters.plasma_leviathan.description",
     behaviorKey: "space_monsters.plasma_leviathan.behavior",
+    loreKey: "space_monsters.plasma_leviathan.lore",
     icon: "🐉",
     color: "#fb923c",
     threatBonus: 1,
@@ -91,7 +99,6 @@ export const SPACE_MONSTERS: Record<
     firstContact: {
       type: "refuel",
       descriptionKey: "space_monsters.plasma_leviathan.first_contact",
-      value: 30,
     },
     moduleEffect: { type: "damage_aura", value: 5 },
   },
@@ -99,6 +106,7 @@ export const SPACE_MONSTERS: Record<
     nameKey: "space_monsters.crystal_hydra.name",
     descriptionKey: "space_monsters.crystal_hydra.description",
     behaviorKey: "space_monsters.crystal_hydra.behavior",
+    loreKey: "space_monsters.crystal_hydra.lore",
     icon: "💠",
     color: "#c084fc",
     threatBonus: 1,
@@ -111,6 +119,40 @@ export const SPACE_MONSTERS: Record<
     },
     moduleEffect: { type: "regen", value: 10 },
   },
+  ember_wisp: {
+    nameKey: "space_monsters.ember_wisp.name",
+    descriptionKey: "space_monsters.ember_wisp.description",
+    behaviorKey: "space_monsters.ember_wisp.behavior",
+    loreKey: "space_monsters.ember_wisp.lore",
+    icon: "✨",
+    color: "#ffcc55",
+    threatBonus: 0,
+    resonanceEffect: "ember_wisp_pact",
+    huntReward: "rare_minerals",
+    huntRewardBase: 1,
+    firstContact: {
+      type: "refuel",
+      descriptionKey: "space_monsters.ember_wisp.first_contact",
+    },
+    moduleEffect: { type: "regen", value: 6 },
+  },
+  binary_wyrm: {
+    nameKey: "space_monsters.binary_wyrm.name",
+    descriptionKey: "space_monsters.binary_wyrm.description",
+    behaviorKey: "space_monsters.binary_wyrm.behavior",
+    loreKey: "space_monsters.binary_wyrm.lore",
+    icon: "♊",
+    color: "#6c5ce7",
+    threatBonus: 1,
+    resonanceEffect: "binary_wyrm_pact",
+    huntReward: "ancient_data",
+    huntRewardBase: 1,
+    firstContact: {
+      type: "reveal_sector",
+      descriptionKey: "space_monsters.binary_wyrm.first_contact",
+    },
+    moduleEffect: { type: "damage_aura", value: 6 },
+  },
 };
 
 const STAR_MONSTERS: Partial<Record<StarType, SpaceMonsterType>> = {
@@ -122,6 +164,10 @@ const STAR_MONSTERS: Partial<Record<StarType, SpaceMonsterType>> = {
   red_supergiant: "plasma_leviathan",
   neutron_star: "crystal_hydra",
   white_dwarf: "crystal_hydra",
+  red_dwarf: "ember_wisp",
+  yellow_dwarf: "ember_wisp",
+  double: "binary_wyrm",
+  triple: "binary_wyrm",
 };
 
 const FALLBACK_MONSTERS: SpaceMonsterType[] = [

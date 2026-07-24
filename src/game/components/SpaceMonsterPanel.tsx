@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowLeft, Radio, ShieldAlert, Sparkles, Swords } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, BookOpen, Radio, ShieldAlert, Sparkles, Swords, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RESEARCH_RESOURCES } from "@/game/constants/research/resources";
 import {
@@ -14,12 +15,18 @@ export function SpaceMonsterPanel() {
   const currentLocation = useGameStore((s) => s.currentLocation);
   const probes = useGameStore((s) => s.probes);
   const activeEffects = useGameStore((s) => s.activeEffects);
+  const activeContracts = useGameStore((s) => s.activeContracts);
+  const artifacts = useGameStore((s) => s.artifacts);
   const startCombat = useGameStore((s) => s.startCombat);
   const resonateWithSpaceMonster = useGameStore(
     (s) => s.resonateWithSpaceMonster,
   );
+  const cleanseCursedArtifact = useGameStore((s) => s.cleanseCursedArtifact);
   const showSectorMap = useGameStore((s) => s.showSectorMap);
   const { t } = useTranslation();
+  const [selectedArtifactId, setSelectedArtifactId] = useState<string | null>(
+    null,
+  );
 
   if (
     !currentLocation ||
@@ -37,11 +44,17 @@ export function SpaceMonsterPanel() {
     (effect) => effect.definitionId === monster.resonanceEffect,
   );
   const canResonate = probes > 0 && !resonanceActive;
-  const firstContactDescription = "value" in monster.firstContact
-    ? t(monster.firstContact.descriptionKey, {
-        value: monster.firstContact.value,
-      })
-    : t(monster.firstContact.descriptionKey);
+  const firstContactDescription = t(monster.firstContact.descriptionKey);
+
+  const cleanseContract = activeContracts.find(
+    (c) =>
+      c.type === "cleanse_curse" && c.targetLocationId === currentLocation.id,
+  );
+  const cursedArtifacts = artifacts.filter((a) => a.discovered && a.cursed);
+  const activeSelectedArtifactId =
+    selectedArtifactId && cursedArtifacts.some((a) => a.id === selectedArtifactId)
+      ? selectedArtifactId
+      : (cursedArtifacts[0]?.id ?? null);
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -75,6 +88,15 @@ export function SpaceMonsterPanel() {
         </p>
         <p className="relative mt-3 border-l-2 pl-3 text-xs leading-relaxed text-[#8b92a5]" style={{ borderColor: monster.color }}>
           {t(monster.behaviorKey)}
+        </p>
+      </div>
+
+      <div className="border border-[#33405544] bg-[rgba(0,0,0,0.22)] p-3">
+        <div className="flex items-center gap-2 font-['Orbitron'] text-[10px] font-bold uppercase tracking-[0.1em] text-[#8b92a5]">
+          <BookOpen size={13} /> {t("space_monsters.lore_title")}
+        </div>
+        <p className="relative mt-2 text-xs italic leading-relaxed text-[#9aa3b2]">
+          {t(monster.loreKey)}
         </p>
       </div>
 
@@ -149,6 +171,52 @@ export function SpaceMonsterPanel() {
           )}
         </div>
       </div>
+
+      {cleanseContract && (
+        <div className="space-y-2 border border-[#202c3a] bg-[#050810] p-3">
+          <div className="flex items-center gap-2 font-['Orbitron'] text-[11px] font-bold text-[#c084fc]">
+            <Wand2 size={14} /> {t("space_monsters.cleanse_title")}
+          </div>
+          {cursedArtifacts.length === 0 ? (
+            <p className="px-1 text-[11px] leading-relaxed text-[#8b92a5]">
+              {t("space_monsters.cleanse_none")}
+            </p>
+          ) : (
+            <>
+              {cursedArtifacts.length > 1 ? (
+                <select
+                  value={activeSelectedArtifactId ?? ""}
+                  onChange={(e) => setSelectedArtifactId(e.target.value)}
+                  className="w-full border border-[#c084fc44] bg-[#050810] p-2 text-xs text-[#e7d3ff]"
+                >
+                  {cursedArtifacts.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="border border-[#c084fc44] bg-[#050810] p-2 text-xs text-[#e7d3ff]">
+                  {cursedArtifacts[0].name}
+                </div>
+              )}
+              <Button
+                onClick={() =>
+                  activeSelectedArtifactId &&
+                  cleanseCursedArtifact(activeSelectedArtifactId)
+                }
+                disabled={!activeSelectedArtifactId}
+                className="w-full border-2 border-[#c084fc] bg-transparent text-[#c084fc] uppercase tracking-wider hover:bg-[#c084fc] hover:text-[#050810]"
+              >
+                <Wand2 size={15} /> {t("space_monsters.cleanse_button")}
+              </Button>
+              <p className="px-1 text-[11px] leading-relaxed text-[#8b92a5]">
+                {t("space_monsters.cleanse_hint")}
+              </p>
+            </>
+          )}
+        </div>
+      )}
 
       <Button
         onClick={showSectorMap}

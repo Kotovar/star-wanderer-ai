@@ -244,6 +244,10 @@ export function ContractsList() {
                 return `🛸 ${t("contracts.derelict_recovery_pending", {
                     sector: contract.targetSectorName ?? t("contracts.unknown"),
                 })}`;
+            case "cleanse_curse":
+                return `✨ ${t("contracts.cleanse_curse_pending", {
+                    sector: contract.targetSectorName ?? t("contracts.unknown"),
+                })}`;
             default:
                 return t("contracts.default");
         }
@@ -310,6 +314,8 @@ export function ContractsList() {
                 return t("contracts.name_expedition_survey");
             case "derelict_recovery":
                 return t("contracts.name_derelict_recovery");
+            case "cleanse_curse":
+                return t("contracts.name_cleanse_curse");
             default:
                 return contract.desc;
         }
@@ -743,6 +749,30 @@ export function ContractsList() {
                         {
                             label: t("contracts.task_where"),
                             value: t("contracts.derelict_recovery_auto"),
+                        },
+                    ],
+                };
+            case "cleanse_curse":
+                return {
+                    type: t("contracts.type_cleanse_curse"),
+                    tasks: [
+                        {
+                            label: t("contracts.task_what"),
+                            value: t("contracts.cleanse_curse_task"),
+                        },
+                        {
+                            label: t("contracts.task_sector"),
+                            value:
+                                contract.targetSectorName ??
+                                t("contracts.unknown"),
+                        },
+                        {
+                            label: t("contracts.task_requirements"),
+                            value: t("contracts.cleanse_curse_requirement"),
+                        },
+                        {
+                            label: t("contracts.task_where"),
+                            value: t("contracts.cleanse_curse_manual"),
                         },
                     ],
                 };

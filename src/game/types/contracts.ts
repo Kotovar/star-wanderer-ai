@@ -84,7 +84,8 @@ export type ContractType =
     | "research"
     | "gas_dive"
     | "expedition_survey"
-    | "derelict_recovery";
+    | "derelict_recovery"
+    | "cleanse_curse";
 
 // Special delivery goods (quest items - given to player, not trade goods)
 export type DeliveryGoods =

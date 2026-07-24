@@ -1,6 +1,9 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { getArchiveHintLocations } from "@/game/artifacts/utils";
-import { SPACE_MONSTERS } from "@/game/constants/spaceMonsters";
+import {
+    FIRST_CONTACT_RESOURCE_BONUS,
+    SPACE_MONSTERS,
+} from "@/game/constants/spaceMonsters";
 import { grantTimedEffect } from "@/game/effects/timedEffects";
 import type { Artifact, GameStore, Location, SetState } from "@/game/types";
 
@@ -62,16 +65,14 @@ export const resonateWithSpaceMonster = (
         firstContact?.type === "artifact_hint"
             ? getCrystalHydraArtifactHint(state)
             : null;
+    // First contact is a one-time gift, not a partial top-up — heal and refuel go to full.
     const crewHealing =
         firstContact?.type === "heal_crew"
             ? state.crew.reduce(
                   (total, crewMember) =>
                       total +
                       (crewMember.health > 0
-                          ? Math.min(
-                                firstContact.value,
-                                crewMember.maxHealth - crewMember.health,
-                            )
+                          ? crewMember.maxHealth - crewMember.health
                           : 0),
                   0,
               )
@@ -82,10 +83,7 @@ export const resonateWithSpaceMonster = (
     );
     const fuelRestored =
         firstContact?.type === "refuel"
-            ? Math.min(
-                  Math.max(3, Math.floor((fuelCapacity * firstContact.value) / 100)),
-                  Math.max(0, fuelCapacity - state.ship.fuel),
-              )
+            ? Math.max(0, fuelCapacity - state.ship.fuel)
             : 0;
 
     set((s) => {
@@ -112,6 +110,8 @@ export const resonateWithSpaceMonster = (
                   locations: s.currentSector.locations.map(updateLocation),
               }
             : null;
+        // Every first contact also grants a taste of the creature's own resource —
+        // meeting a being like this should feel generous, not just a resource top-up.
         const baseUpdate = {
             probes: s.probes - 1,
             gameMode: "sector_map" as const,
@@ -125,6 +125,15 @@ export const resonateWithSpaceMonster = (
                       ),
                   }
                 : s.galaxy,
+            research: {
+                ...s.research,
+                resources: {
+                    ...s.research.resources,
+                    [monster.huntReward]:
+                        (s.research.resources[monster.huntReward] ?? 0) +
+                        FIRST_CONTACT_RESOURCE_BONUS,
+                },
+            },
         };
 
         switch (firstContact.type) {
@@ -137,10 +146,7 @@ export const resonateWithSpaceMonster = (
                         ...crewMember,
                         health:
                             crewMember.health > 0
-                                ? Math.min(
-                                      crewMember.maxHealth,
-                                      crewMember.health + firstContact.value,
-                                  )
+                                ? crewMember.maxHealth
                                 : crewMember.health,
                     })),
                 };
@@ -167,26 +173,18 @@ export const resonateWithSpaceMonster = (
                                   : artifact,
                           )
                         : s.artifacts,
-                    research: artifactHint
-                        ? s.research
-                        : {
-                              ...s.research,
-                              resources: {
-                                  ...s.research.resources,
-                                  quantum_crystals:
-                                      (s.research.resources.quantum_crystals ??
-                                          0) + 1,
-                              },
-                          },
                 };
         }
     });
 
     if (firstContact) {
+        const monsterName = i18nStore.t(monster.nameKey);
         switch (firstContact.type) {
             case "reveal_sector":
                 get().addLog(
-                    i18nStore.t("space_monsters.logs.first_contact_sector_scan"),
+                    i18nStore.t("space_monsters.logs.first_contact_sector_scan", {
+                        name: monsterName,
+                    }),
                     "info",
                 );
                 break;
@@ -195,10 +193,11 @@ export const resonateWithSpaceMonster = (
                     crewHealing > 0
                         ? i18nStore.t(
                               "space_monsters.logs.first_contact_crew_heal",
-                              { value: crewHealing },
+                              { name: monsterName, value: crewHealing },
                           )
                         : i18nStore.t(
                               "space_monsters.logs.first_contact_crew_healthy",
+                              { name: monsterName },
                           ),
                     "info",
                 );
@@ -208,10 +207,11 @@ export const resonateWithSpaceMonster = (
                     fuelRestored > 0
                         ? i18nStore.t(
                               "space_monsters.logs.first_contact_refuel",
-                              { value: fuelRestored },
+                              { name: monsterName, value: fuelRestored },
                           )
                         : i18nStore.t(
                               "space_monsters.logs.first_contact_fuel_full",
+                              { name: monsterName },
                           ),
                     "info",
                 );
@@ -222,12 +222,14 @@ export const resonateWithSpaceMonster = (
                         ? i18nStore.t(
                               "space_monsters.logs.first_contact_artifact_hint",
                               {
+                                  name: monsterName,
                                   sector: artifactHint.hintedAt.sectorName,
                                   location: artifactHint.hintedAt.locationName,
                               },
                           )
                         : i18nStore.t(
                               "space_monsters.logs.first_contact_crystal_shard",
+                              { name: monsterName },
                           ),
                     "info",
                 );

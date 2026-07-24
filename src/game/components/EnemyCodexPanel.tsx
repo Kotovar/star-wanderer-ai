@@ -48,7 +48,7 @@ type CombatPreview = {
   modules: EnemyModule[];
   shields: number;
   isBoss?: boolean;
-  specialAbility?: AncientBoss["specialAbility"];
+  specialAbility?: { name: string; description: string };
 };
 
 function getBossDisplay(name: string) {
@@ -56,6 +56,19 @@ function getBossDisplay(name: string) {
   return nameParts.length > 0
     ? { icon, name: nameParts.join(" ") }
     : { icon: "⚙️", name };
+}
+
+/** Переводит пассивный boss-module эффект существа в читаемую способность для карточки боя. */
+function getModuleEffectAbility(
+  moduleEffect: SpaceMonsterDefinition["moduleEffect"],
+  t: (key: string, params?: Record<string, string | number>) => string,
+): { name: string; description: string } {
+  return {
+    name: t(`enemy_codex.module_effects.${moduleEffect.type}.name`),
+    description: t(`enemy_codex.module_effects.${moduleEffect.type}.description`, {
+      value: moduleEffect.value,
+    }),
+  };
 }
 
 type CodexCardProps = {
@@ -307,6 +320,9 @@ export function EnemyCodexPanel() {
       profileHint: t("enemy_codex.combat_profile_hint"),
       modules,
       shields: calculateShieldsFromModules(modules).maxShields,
+      specialAbility: moduleEffect
+        ? getModuleEffectAbility(moduleEffect, t)
+        : undefined,
     });
   };
   const createBossPreview = (
@@ -436,8 +452,13 @@ export function EnemyCodexPanel() {
                 }
                 actionLabel={known ? t("enemy_codex.details") : undefined}
                 details={
-                  <div className="border-l-2 border-[#00d4ff66] pl-2 text-[11px] leading-relaxed text-[#8fa0aa]">
-                    {t(creature.behaviorKey)}
+                  <div className="space-y-1.5">
+                    <div className="border-l-2 border-[#00d4ff66] pl-2 text-[11px] leading-relaxed text-[#8fa0aa]">
+                      {t(creature.behaviorKey)}
+                    </div>
+                    <div className="border-l-2 border-[#33405577] pl-2 text-[11px] italic leading-relaxed text-[#748092]">
+                      {t(creature.loreKey)}
+                    </div>
                   </div>
                 }
               />

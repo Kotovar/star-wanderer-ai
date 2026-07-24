@@ -149,6 +149,17 @@ export const isContractTargetAvailable = (
                 ),
             );
         }
+        case "cleanse_curse": {
+            if (!contract.targetLocationId) return false;
+            return sectors.some((sector) =>
+                sector.locations.some(
+                    (location) =>
+                        location.id === contract.targetLocationId &&
+                        location.type === "space_monster" &&
+                        location.spaceMonsterResolved !== "hunted",
+                ),
+            );
+        }
         default:
             return true;
     }

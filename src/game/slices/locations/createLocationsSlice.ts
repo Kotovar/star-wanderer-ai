@@ -42,6 +42,7 @@ import {
 } from "./helpers/gasGiant";
 import { salvageWreckField as salvageWreckFieldHelper } from "./helpers/salvageWreckField";
 import { resonateWithSpaceMonster as resonateWithSpaceMonsterHelper } from "./helpers/spaceMonster";
+import { cleanseCursedArtifact as cleanseCursedArtifactHelper } from "./helpers/cleanseCursedArtifact";
 
 /**
  * Интерфейс LocationsSlice
@@ -156,6 +157,9 @@ export interface LocationsSlice {
 
     /** Отправляет зонд для временного резонанса с космическим существом */
     resonateWithSpaceMonster: () => void;
+
+    /** Снимает проклятие с обнаруженного артефакта через Кристальную Гидру */
+    cleanseCursedArtifact: (artifactId: string) => void;
 
     /** Покупает исследовательские зонды на станции */
     buyProbe: (count: number) => void;
@@ -274,6 +278,10 @@ export const createLocationsSlice = (
 
     resonateWithSpaceMonster: () => {
         resonateWithSpaceMonsterHelper(set, get);
+    },
+
+    cleanseCursedArtifact: (artifactId) => {
+        cleanseCursedArtifactHelper(artifactId, set, get);
     },
 
     buyProbe: (count: number) => {

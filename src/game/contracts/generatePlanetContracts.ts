@@ -607,6 +607,50 @@ export const generatePlanetContracts = (
             },
         },
         {
+            type: "cleanse_curse" as const,
+            gen: (): Contract | null => {
+                // Target any Crystal Hydra found in the galaxy — the only creature
+                // whose resonance is attuned enough to lift an artifact's curse.
+                const candidates = allSectors
+                    .filter((candidateSector) => (candidateSector.tier ?? 1) < 4)
+                    .flatMap((candidateSector) =>
+                        candidateSector.locations
+                            .filter(
+                                (location) =>
+                                    location.type === "space_monster" &&
+                                    location.spaceMonsterType === "crystal_hydra" &&
+                                    location.spaceMonsterResolved !== "hunted",
+                            )
+                            .map((location) => ({ location, sector: candidateSector })),
+                    );
+                if (candidates.length === 0) return null;
+
+                const target =
+                    candidates[Math.floor(Math.random() * candidates.length)];
+                const tier = sector.tier ?? 1;
+                const sourcePlanet = sector.locations.find(
+                    (location) =>
+                        location.type === "planet" && location.id === planetId,
+                );
+                const rewardBase = REWARD.cleanse_curse.base[tier - 1];
+                const rewardRange = REWARD.cleanse_curse.range[tier - 1];
+
+                return {
+                    id: `c-${planetId}-cleanse-${Date.now()}-${Math.random()}`,
+                    type: "cleanse_curse",
+                    desc: "contracts.desc_cleanse_curse",
+                    sourcePlanetId: planetId,
+                    sourcePlanetName: sourcePlanet?.name,
+                    sourceSectorName: sector.name,
+                    sourceType: "planet",
+                    targetLocationId: target.location.id,
+                    targetSector: target.sector.id,
+                    targetSectorName: target.sector.name,
+                    reward: rewardBase + Math.floor(Math.random() * rewardRange),
+                };
+            },
+        },
+        {
             type: "gas_dive" as const,
             gen: (): Contract | null => {
                 // Only generate if there are gas planets anywhere in reachable sectors

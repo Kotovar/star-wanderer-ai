@@ -13,4 +13,5 @@ export const CONTRACT_REWARDS = {
   gas_dive: { base: [600, 1000, 1500], range: [200, 300, 500] },
   expedition_survey: { base: [700, 1100, 1700], range: [300, 400, 500] },
   derelict_recovery: { base: [500, 800, 1200], range: [200, 300, 400] },
+  cleanse_curse: { base: [700, 1100, 1600], range: [300, 400, 500] },
 } as const;

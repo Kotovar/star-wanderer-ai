@@ -374,10 +374,6 @@ export function StormPanel() {
                     </h2>
                 </div>
 
-                <div className="mb-4">
-                    <EventIllustration variant="storm" accent="#777" muted />
-                </div>
-
                 <div className="bg-[rgba(0,0,0,0.4)] p-3 mb-4 border border-[#666]">
                     <p className="text-[#888] mb-2">
                         {t("storm.sensors_unknown")}

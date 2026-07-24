@@ -17,7 +17,9 @@ export type TimedEffectId =
   | "void_ray_pact"
   | "nebula_manta_pact"
   | "plasma_leviathan_pact"
-  | "crystal_hydra_pact";
+  | "crystal_hydra_pact"
+  | "ember_wisp_pact"
+  | "binary_wyrm_pact";
 
 interface TimedEffectDefinition {
   id: TimedEffectId;
@@ -133,6 +135,30 @@ const TIMED_EFFECTS: Record<TimedEffectId, TimedEffectDefinition> = {
     effects: [
       { type: "combat_bonus", value: 0.08 },
       { type: "evasion_bonus", value: 0.1 },
+    ],
+  },
+  ember_wisp_pact: {
+    id: "ember_wisp_pact",
+    source: "event",
+    polarity: "positive",
+    icon: "✨",
+    color: "#ffcc55",
+    duration: 15,
+    effects: [
+      { type: "fuel_efficiency", value: 0.1 },
+      { type: "power_boost", value: 1 },
+    ],
+  },
+  binary_wyrm_pact: {
+    id: "binary_wyrm_pact",
+    source: "event",
+    polarity: "positive",
+    icon: "♊",
+    color: "#6c5ce7",
+    duration: 15,
+    effects: [
+      { type: "combat_bonus", value: 0.1 },
+      { type: "fuel_efficiency", value: 0.08 },
     ],
   },
 };

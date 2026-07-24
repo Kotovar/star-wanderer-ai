@@ -3497,6 +3497,94 @@ export function drawSpaceMonster(
       break;
     }
 
+    case "ember_wisp": {
+      const flicker = 1 + Math.sin(time * 0.006) * 0.15;
+
+      for (let index = 0; index < 4; index += 1) {
+        const phase = time * 0.0035 + index * 1.9;
+        const orbit = 13 + index * 2.4;
+        ctx.fillStyle = `rgba(255, 204, 85, ${0.5 - index * 0.09})`;
+        ctx.beginPath();
+        ctx.arc(
+          Math.cos(phase) * orbit,
+          Math.sin(phase) * orbit * 0.7,
+          1.3,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+
+      const flame = ctx.createRadialGradient(0, 2, 0, 0, 0, 12 * flicker);
+      flame.addColorStop(0, "#fff7d6");
+      flame.addColorStop(0.45, "#ffcc55");
+      flame.addColorStop(0.8, "#e07a1f");
+      flame.addColorStop(1, "rgba(224, 122, 31, 0)");
+      ctx.fillStyle = flame;
+      ctx.beginPath();
+      ctx.moveTo(0, -11 * flicker);
+      ctx.quadraticCurveTo(7 * flicker, -3, 5, 8);
+      ctx.quadraticCurveTo(0, 12, -5, 8);
+      ctx.quadraticCurveTo(-7 * flicker, -3, 0, -11 * flicker);
+      ctx.closePath();
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 9;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      const core = ctx.createRadialGradient(0, 0, 0, 0, 0, 4);
+      core.addColorStop(0, "#ffffff");
+      core.addColorStop(1, "rgba(255, 247, 214, 0)");
+      ctx.fillStyle = core;
+      ctx.beginPath();
+      ctx.arc(0, -1, 4, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
+    case "binary_wyrm": {
+      ctx.rotate(sway * 0.5);
+
+      [1, -1].forEach((dir) => {
+        const strand = ctx.createLinearGradient(-18 * dir, -14, 18 * dir, 14);
+        strand.addColorStop(0, "#2a1f5c");
+        strand.addColorStop(0.5, "#6c5ce7");
+        strand.addColorStop(1, "#c4b8ff");
+        ctx.beginPath();
+        ctx.moveTo(-16 * dir, -11);
+        ctx.bezierCurveTo(
+          -4 * dir,
+          -16,
+          4 * dir,
+          16,
+          16 * dir,
+          11,
+        );
+        ctx.strokeStyle = "#1a123f";
+        ctx.lineWidth = 6;
+        ctx.stroke();
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 7;
+        ctx.strokeStyle = strand;
+        ctx.lineWidth = 3.4;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      });
+
+      const gravityWell = ctx.createRadialGradient(0, 0, 0, 0, 0, 5.5);
+      gravityWell.addColorStop(0, "#f3f0ff");
+      gravityWell.addColorStop(0.5, "#a29bfe");
+      gravityWell.addColorStop(1, "#2a1f5c");
+      ctx.fillStyle = gravityWell;
+      ctx.beginPath();
+      ctx.arc(0, 0, 5.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#e0dbff";
+      ctx.lineWidth = 0.9;
+      ctx.stroke();
+      break;
+    }
+
     default:
       ctx.fillStyle = "#111427";
       ctx.strokeStyle = color;
