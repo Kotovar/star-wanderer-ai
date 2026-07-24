@@ -9,6 +9,8 @@ import { MODULE_TYPES } from "../constants/modules";
 import { useTranslation } from "@/lib/useTranslation";
 import { getModuleTranslation } from "@/lib/moduleTranslations";
 import { getActiveAssignment } from "@/game/crew/assignments";
+import { isCrewHealthCritical } from "@/game/crew/utils";
+import { isModuleCritical } from "@/game/modules/utils";
 import { ProfessionSprite } from "./ProfessionSprite";
 import { getCrewIconLayout } from "./crewIconLayout";
 import {
@@ -669,6 +671,7 @@ function ModuleRenderer({
           h={h}
           isCombatMode={isCombatMode}
           onCrewPointerDown={onCrewPointerDown}
+          moduleCritical={isModuleCritical(module)}
         />
       )}
     </g>
@@ -790,6 +793,7 @@ function CrewIcons({
   h,
   isCombatMode,
   onCrewPointerDown,
+  moduleCritical,
 }: {
   crew: CrewMember[];
   x: number;
@@ -801,6 +805,7 @@ function CrewIcons({
     e: React.PointerEvent<SVGGElement>,
     member: CrewMember,
   ) => void;
+  moduleCritical: boolean;
 }) {
   const layout = getCrewIconLayout({
     count: crew.length,
@@ -829,6 +834,7 @@ function CrewIcons({
             size={icon.size}
             isCombatMode={isCombatMode}
             onPointerDown={onCrewPointerDown}
+            atRisk={moduleCritical || isCrewHealthCritical(c)}
           />
         );
       })}
@@ -843,6 +849,7 @@ function CrewIcon({
   size,
   isCombatMode,
   onPointerDown,
+  atRisk,
 }: {
   crewMember: CrewMember;
   x: number;
@@ -853,10 +860,11 @@ function CrewIcon({
     e: React.PointerEvent<SVGGElement>,
     member: CrewMember,
   ) => void;
+  atRisk: boolean;
 }) {
   const { t } = useTranslation();
   const race = RACES[crewMember.race];
-  const raceColor = race?.color || "#00ff41";
+  const raceColor = atRisk ? "#ff2b4d" : race?.color || "#00ff41";
   const badgeR = size * 0.19;
   const activeTask = getActiveAssignment(crewMember, isCombatMode);
   const hasActiveTask = !!activeTask;
@@ -871,6 +879,23 @@ function CrewIcon({
         WebkitUserSelect: "none",
       }}
     >
+      {atRisk && (
+        <rect
+          className="animate-pulse"
+          x={x - 2.5}
+          y={y - 2.5}
+          width={size + 5}
+          height={size + 5}
+          rx={3}
+          fill="none"
+          stroke="#ff2b4d"
+          strokeWidth={1.5}
+          strokeDasharray="3 2"
+          pointerEvents="none"
+        >
+          <title>{t("crew.at_risk_hint")}</title>
+        </rect>
+      )}
       <rect
         x={x - 0.5}
         y={y - 0.5}
@@ -881,7 +906,7 @@ function CrewIcon({
         fillOpacity={0.82}
         stroke={raceColor}
         strokeOpacity={0.9}
-        strokeWidth={1}
+        strokeWidth={atRisk ? 1.75 : 1}
         pointerEvents="none"
       />
       <ProfessionSprite

@@ -1,11 +1,11 @@
 {
     "schema_version": 1,
-    "commit": "07901b15ec99b196e69844fd2b6231bc0445ba83",
-    "indexed_at": "2026-07-24T17:45:55Z",
+    "commit": "7a6b4b7de63f3d71a1f21223dd5dd05e40aa3225",
+    "indexed_at": "2026-07-24T18:02:30Z",
     "project": "home-kotovar-code-star-wanderer-ai",
-    "nodes": 9587,
-    "edges": 16191,
-    "original_size": 18743296,
-    "compressed_size": 2938657,
+    "nodes": 9593,
+    "edges": 16082,
+    "original_size": 17629184,
+    "compressed_size": 2616035,
     "compression_level": 3
 }

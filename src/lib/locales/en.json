@@ -127,6 +127,7 @@
         "assignment": "Assignment",
         "active_task": "Active assignment",
         "no_active_task": "No active assignment",
+        "at_risk_hint": "⚠ Critical health or a wrecked module — this crew member takes damage every turn",
         "idle_count": "Unassigned",
         "movement": "🚶 Movement",
         "moved_this_turn": "Already moved this turn",

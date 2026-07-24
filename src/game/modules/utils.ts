@@ -1,5 +1,6 @@
 import type { GameState, ModuleType } from "../types";
 import type { Module } from "@/game/types/modules";
+import { DEFAULT_MAX_HEALTH_MODULE } from "@/game/constants/modules";
 
 /**
  * Проверяет, активен ли модуль
@@ -10,6 +11,17 @@ import type { Module } from "@/game/types/modules";
  */
 export const isModuleActive = (module: Module) =>
     !module.disabled && !module.manualDisabled && module.health > 0;
+
+/** Процент здоровья, ниже которого модуль начинает наносить урон приписанному экипажу каждый ход. */
+export const CRITICAL_MODULE_HEALTH_PERCENT = 30;
+
+/**
+ * Проверяет, находится ли модуль в критическом состоянии — экипаж, приписанный
+ * к такому модулю, получает урон каждый ход (см. checkModuleDamage).
+ */
+export const isModuleCritical = (module: Module): boolean =>
+    (module.health / (module.maxHealth || DEFAULT_MAX_HEALTH_MODULE)) * 100 <
+    CRITICAL_MODULE_HEALTH_PERCENT;
 
 /**
  * Находит активный модуль по типу

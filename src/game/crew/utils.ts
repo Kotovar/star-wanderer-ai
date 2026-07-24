@@ -1,19 +1,50 @@
 import { useGameStore } from "@/game/store";
 import {
     CREW_TRAITS,
+    DEFAULT_MAX_HEALTH,
     MUTATION_TRAITS,
     MUTATION_CHANCES,
     RACE_LAST_NAMES,
     RACES,
 } from "@/game/constants";
+import { isModuleCritical } from "@/game/modules/utils";
 import type {
     CrewMember,
     CrewTrait,
+    Module,
     Profession,
     Quality,
     RaceId,
     TraitId,
 } from "@/game/types";
+
+/** Процент здоровья, ниже которого член экипажа считается критически раненым — вне зависимости от причины. */
+export const CRITICAL_CREW_HEALTH_PERCENT = 30;
+
+/**
+ * Член экипажа критически ранен прямо сейчас — неважно, почему (бой,
+ * проклятый артефакт, болезнь): урон превышает лечение/регенерацию.
+ * Не учитывает состояние приписанного модуля — см. isCrewAtRisk.
+ */
+export const isCrewHealthCritical = (crewMember: CrewMember): boolean =>
+    crewMember.health > 0 &&
+    (crewMember.health / (crewMember.maxHealth || DEFAULT_MAX_HEALTH)) * 100 <
+        CRITICAL_CREW_HEALTH_PERCENT;
+
+/**
+ * Кто-то из экипажа нуждается во внимании: либо стоит в модуле, который вот-вот
+ * (или уже) начал наносить урон, либо уже критически ранен по любой другой причине.
+ */
+export const isCrewAtRisk = (
+    crewMember: CrewMember,
+    modules: Module[],
+): boolean => {
+    if (isCrewHealthCritical(crewMember)) return true;
+    if (crewMember.health <= 0 || crewMember.moduleId === undefined) return false;
+
+    const assignedModule = modules.find((m) => m.id === crewMember.moduleId);
+    return !!assignedModule && isModuleCritical(assignedModule);
+};
 
 /**
  * Конвертирует случайное число [0, 1) в Quality.

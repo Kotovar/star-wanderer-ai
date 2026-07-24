@@ -1,5 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { DEFAULT_MAX_HEALTH, MIN_CREW_HEALTH } from "@/game/constants";
+import { isModuleCritical } from "@/game/modules/utils";
 import { removeDeadCrew } from "./crewUtils";
 import type {
     GameState,
@@ -10,7 +11,6 @@ import type {
 } from "@/game/types";
 
 // === Constants ===
-const CRITICAL_HEALTH_THRESHOLD = 30;
 const DAMAGE_IN_CRITICAL_MODULE = 5;
 const DAMAGE_IN_BROKEN_MODULE = 20;
 
@@ -30,10 +30,7 @@ const isCrewInDamagedModule = (crewMember: CrewMember, state: GameState) => {
         (m) => m.id === crewMember.moduleId,
     );
 
-    if (!shipModule) return false;
-
-    const healthPercent = getModuleHealthPercent(shipModule);
-    return healthPercent < CRITICAL_HEALTH_THRESHOLD;
+    return !!shipModule && isModuleCritical(shipModule);
 };
 
 /**
