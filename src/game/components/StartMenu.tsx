@@ -9,6 +9,7 @@ import {
   type SaveSlotMeta,
 } from "@/game/saves/utils";
 import { useTranslation } from "@/lib/useTranslation";
+import { AchievementsPanel } from "@/game/components/AchievementsPanel";
 
 const SLOT_IDS: SaveSlotId[] = ["auto", "manual1", "manual2", "manual3"];
 
@@ -47,7 +48,7 @@ export function StartMenu({
       : t("start_menu.legacy_save");
 
   return (
-    <section className="fixed inset-x-2 bottom-2 z-20 mx-auto flex max-h-[58dvh] max-w-4xl flex-col overflow-hidden border border-[#00d4ff] bg-[rgba(3,8,14,0.96)] font-['Share_Tech_Mono'] shadow-[0_0_50px_rgba(0,212,255,0.18)] sm:inset-x-6 sm:bottom-6">
+    <section className="fixed inset-x-2 bottom-2 z-20 mx-auto flex h-[58dvh] max-w-4xl flex-col overflow-hidden border border-[#00d4ff] bg-[rgba(3,8,14,0.96)] font-['Share_Tech_Mono'] shadow-[0_0_50px_rgba(0,212,255,0.18)] sm:inset-x-6 sm:bottom-6">
       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#00d4ff55] px-3 py-2 sm:px-4">
         <div>
           <div className="font-['Orbitron'] text-[10px] font-bold uppercase tracking-[0.22em] text-[#00d4ff]">
@@ -64,8 +65,8 @@ export function StartMenu({
       </header>
 
       <Tabs defaultValue="start" className="flex min-h-0 flex-1 flex-col">
-        <TabsList className="grid h-auto shrink-0 grid-cols-4 rounded-none border-b border-[#122a32] bg-transparent p-0">
-          {(["start", "saves", "settings", "help"] as const).map((tab) => (
+        <TabsList className="grid h-auto shrink-0 grid-cols-5 rounded-none border-b border-[#122a32] bg-transparent p-0">
+          {(["start", "saves", "settings", "achievements", "help"] as const).map((tab) => (
             <TabsTrigger
               key={tab}
               value={tab}
@@ -110,6 +111,10 @@ export function StartMenu({
                 {t("start_menu.resume")} ▶
               </Button>
             </LaunchCard>
+          </TabsContent>
+
+          <TabsContent value="achievements" className="m-0">
+            <AchievementsPanel />
           </TabsContent>
 
           <TabsContent value="saves" className="m-0 grid gap-2 sm:grid-cols-2">

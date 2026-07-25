@@ -24,6 +24,7 @@
         "status": "Navigation and ship systems ready",
         "online": "SYSTEM ONLINE",
         "tab_start": "LAUNCH",
+        "tab_achievements": "ACHIEVEMENTS",
         "tab_saves": "SAVES",
         "tab_settings": "SETTINGS",
         "tab_help": "CONTROLS",
