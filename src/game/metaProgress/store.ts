@@ -77,9 +77,9 @@ export function recordRunResult(summary: RunSummary): void {
 
   const newlyUnlockedShips = Object.entries(SHIP_UNLOCK_RULES)
     .filter(
-      ([shipId, isUnlocked]) =>
+      ([shipId, rule]) =>
         !updatedCounters.unlockedShipIds.includes(shipId) &&
-        isUnlocked(updatedCounters),
+        rule.isUnlocked(updatedCounters),
     )
     .map(([shipId]) => shipId);
 

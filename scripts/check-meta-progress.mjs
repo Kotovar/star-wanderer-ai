@@ -240,13 +240,22 @@ for (const [id, belowOverrides, atOverrides] of perRunCases) {
   );
 }
 
-// ── SHIP_UNLOCK_RULES: boundary check ──
-assert.equal(SHIP_UNLOCK_RULES.scientist(baseLifetime({ runsCompleted: 0 })), false);
-assert.equal(SHIP_UNLOCK_RULES.scientist(baseLifetime({ runsCompleted: 1 })), true);
-assert.equal(SHIP_UNLOCK_RULES.engineer(baseLifetime({ runsCompleted: 0 })), false);
-assert.equal(SHIP_UNLOCK_RULES.engineer(baseLifetime({ runsCompleted: 1 })), true);
-assert.equal(SHIP_UNLOCK_RULES.fighter(baseLifetime({ wins: 0 })), false);
-assert.equal(SHIP_UNLOCK_RULES.fighter(baseLifetime({ wins: 1 })), true);
+// ── SHIP_UNLOCK_RULES: boundary check + progress shape ──
+assert.equal(SHIP_UNLOCK_RULES.scientist.isUnlocked(baseLifetime({ runsCompleted: 0 })), false);
+assert.equal(SHIP_UNLOCK_RULES.scientist.isUnlocked(baseLifetime({ runsCompleted: 1 })), true);
+assert.equal(SHIP_UNLOCK_RULES.engineer.isUnlocked(baseLifetime({ runsCompleted: 0 })), false);
+assert.equal(SHIP_UNLOCK_RULES.engineer.isUnlocked(baseLifetime({ runsCompleted: 1 })), true);
+assert.equal(SHIP_UNLOCK_RULES.fighter.isUnlocked(baseLifetime({ wins: 0 })), false);
+assert.equal(SHIP_UNLOCK_RULES.fighter.isUnlocked(baseLifetime({ wins: 1 })), true);
+assert.deepEqual(
+  SHIP_UNLOCK_RULES.fighter.getProgress(baseLifetime({ wins: 0 })),
+  { current: 0, target: 1 },
+);
+assert.deepEqual(
+  SHIP_UNLOCK_RULES.fighter.getProgress(baseLifetime({ wins: 5 })),
+  { current: 1, target: 1 },
+  "getProgress must clamp current to target, not overshoot",
+);
 
 // ── recordRunResult: idempotent on repeated runId ──
 function fakeSummary(overrides) {

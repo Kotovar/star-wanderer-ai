@@ -28,7 +28,7 @@ interface PersistedMetaProgress {
   state: unknown;
 }
 
-function emptyMetaProgress(): MetaProgressState {
+export function emptyMetaProgress(): MetaProgressState {
   return {
     metaVersion: CURRENT_META_VERSION,
     runsCompleted: 0,

@@ -21,6 +21,13 @@ import {
 } from "../constants/launchModifiers";
 import { useTranslation } from "@/lib/useTranslation";
 import type { Module, ModuleType, ResearchResourceType } from "@/game/types";
+import { useMetaProgress } from "@/game/metaProgress/useMetaProgress";
+import { ACHIEVEMENTS } from "@/game/metaProgress/achievements";
+import {
+  ALWAYS_UNLOCKED_SHIP_IDS,
+  SHIP_UNLOCK_RULES,
+} from "@/game/metaProgress/shipUnlocks";
+import type { MetaProgressState } from "@/game/metaProgress/types";
 
 interface NewGameSetupModalProps {
   open: boolean;
@@ -54,6 +61,23 @@ const DOCTRINE_MODIFIERS = LAUNCH_MODIFIERS.filter(
 const REGULAR_MODIFIERS = LAUNCH_MODIFIERS.filter(
   (mod) => mod.group !== "doctrine",
 );
+
+/** Каждый модификатор/доктрина разблокируется своей ачивкой 1:1 по id (см. META_PROGRESSION_PLAN.md). */
+const ACHIEVEMENTS_BY_ID = new Map(
+  ACHIEVEMENTS.map((achievement) => [achievement.id, achievement]),
+);
+
+function isModifierUnlocked(id: string, meta: MetaProgressState): boolean {
+  return meta.unlockedAchievementIds.includes(id);
+}
+
+function isShipUnlocked(id: string, meta: MetaProgressState): boolean {
+  if (ALWAYS_UNLOCKED_SHIP_IDS.includes(id)) return true;
+  // Корабли вне прогрессии (напр. dev_arsenal_fixture, гейтится NODE_ENV,
+  // а не ачивками) не участвуют в SHIP_UNLOCK_RULES — по умолчанию открыты.
+  if (!(id in SHIP_UNLOCK_RULES)) return true;
+  return meta.unlockedShipIds.includes(id);
+}
 
 const MODULE_NAME_KEYS: Partial<Record<ModuleType, string>> = {
   reactor: "new_game_setup.mod_reactor",
@@ -194,6 +218,31 @@ function Pill({
   );
 }
 
+function LockedHint({
+  t,
+  conditionText,
+  progress,
+}: {
+  t: TFn;
+  conditionText: string;
+  progress?: { current: number; target: number };
+}) {
+  return (
+    <div className="mt-1 text-[10px] leading-snug text-[#665]">
+      <span className="text-[#ffb000]">
+        🔒 {t("new_game_setup.locked_badge")}
+      </span>
+      {" — "}
+      {conditionText}
+      {progress && (
+        <span className="ml-1 font-mono text-[#888]">
+          ({progress.current}/{progress.target})
+        </span>
+      )}
+    </div>
+  );
+}
+
 export function NewGameSetupModal({
   open,
   onClose,
@@ -202,6 +251,7 @@ export function NewGameSetupModal({
 }: NewGameSetupModalProps) {
   const { t } = useTranslation();
   const restartGame = useGameStore((s) => s.restartGame);
+  const meta = useMetaProgress();
 
   const [selectedTemplateId, setSelectedTemplateId] =
     useState(DEFAULT_TEMPLATE_ID);
@@ -274,6 +324,7 @@ export function NewGameSetupModal({
   const toggleModifier = (id: string) => {
     setSelectedModifiers((prev) => {
       if (prev.includes(id)) return prev.filter((m) => m !== id);
+      if (!isModifierUnlocked(id, meta)) return prev;
 
       const modifier = LAUNCH_MODIFIERS.find((mod) => mod.id === id);
       if (!modifier || getBlockingModifier(modifier, prev)) return prev;
@@ -292,6 +343,36 @@ export function NewGameSetupModal({
   };
 
   const renderModifierButton = (mod: LaunchModifier) => {
+    const unlocked = isModifierUnlocked(mod.id, meta);
+
+    if (!unlocked) {
+      const achievement = ACHIEVEMENTS_BY_ID.get(mod.id);
+      return (
+        <button
+          key={mod.id}
+          type="button"
+          disabled
+          className="min-w-0 cursor-not-allowed border border-[#1a3320] bg-[rgba(0,0,0,0.18)] p-2.5 text-left opacity-70"
+        >
+          <div className="font-bold text-xs leading-snug text-[#556]">
+            {mod.group === "doctrine" && (
+              <span className="mr-1 text-[10px] uppercase tracking-[0.12em] text-[#556]">
+                {t("new_game_setup.doctrine_badge")}
+              </span>
+            )}
+            {t(mod.nameKey)}
+          </div>
+          {achievement && (
+            <LockedHint
+              t={t}
+              conditionText={t(achievement.descriptionKey)}
+              progress={achievement.getProgress?.(meta)}
+            />
+          )}
+        </button>
+      );
+    }
+
     const isActive = selectedModifiers.includes(mod.id);
     const blockingModifier = getBlockingModifier(mod, selectedModifiers);
     const isBlocked = !isActive && blockingModifier !== null;
@@ -412,8 +493,47 @@ export function NewGameSetupModal({
 
               <div className="grid min-w-0 gap-2 sm:grid-cols-2 min-[980px]:grid-cols-1!">
                 {SHIP_TEMPLATES.map((tmpl) => {
-                  const isSelected = tmpl.id === selectedTemplateId;
                   const dc = DIFFICULTY_COLORS[tmpl.difficulty];
+                  const unlocked = isShipUnlocked(tmpl.id, meta);
+
+                  if (!unlocked) {
+                    const rule = SHIP_UNLOCK_RULES[tmpl.id];
+                    return (
+                      <button
+                        key={tmpl.id}
+                        type="button"
+                        disabled
+                        className="min-w-0 cursor-not-allowed border border-[#1a3320] bg-[rgba(0,0,0,0.18)] p-2.5 text-left opacity-70"
+                      >
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                          <div className="min-w-0 max-w-full wrap-break-word pr-1 font-bold text-xs leading-snug text-[#556] sm:text-sm">
+                            {t(tmpl.nameKey)}
+                          </div>
+                          <span
+                            className="grid h-5 w-5 shrink-0 place-items-center whitespace-nowrap border text-[10px] font-bold leading-none"
+                            style={{ color: dc.text, borderColor: dc.border }}
+                            title={t(
+                              `new_game_setup.difficulty_${tmpl.difficulty}`,
+                            )}
+                            aria-label={t(
+                              `new_game_setup.difficulty_${tmpl.difficulty}`,
+                            )}
+                          >
+                            {DIFFICULTY_SYMBOLS[tmpl.difficulty]}
+                          </span>
+                        </div>
+                        {rule && (
+                          <LockedHint
+                            t={t}
+                            conditionText={t(rule.hintKey)}
+                            progress={rule.getProgress(meta)}
+                          />
+                        )}
+                      </button>
+                    );
+                  }
+
+                  const isSelected = tmpl.id === selectedTemplateId;
 
                   return (
                     <button
