@@ -99,32 +99,6 @@ function getCrewSummary(crew: (typeof SHIP_TEMPLATES)[number]["crew"], t: TFn) {
     .join(", ");
 }
 
-function getCrewLevelSummary(
-  crew: (typeof SHIP_TEMPLATES)[number]["crew"],
-  overrideLevel: number | null,
-  t: TFn,
-) {
-  if (crew.length === 0) return t("new_game_setup.none");
-  if (overrideLevel !== null) return `LV${overrideLevel}`;
-
-  const levels = [
-    ...new Set(
-      crew.map((member) => {
-        const level = member.level ?? 1;
-        return Array.isArray(level) ? `${level[0]}-${level[1]}` : String(level);
-      }),
-    ),
-  ].sort();
-
-  return levels.length === 1
-    ? `LV${levels[0]}`
-    : `${t("new_game_setup.levels_label")} ${levels.map((level) => `LV${level}`).join(", ")}`;
-}
-
-function joinLabels(labels: string[]) {
-  return labels.join(", ");
-}
-
 function getResearchResourceSummary(
   resources: Partial<Record<ResearchResourceType, number>> | undefined,
   t: TFn,
@@ -232,6 +206,7 @@ export function NewGameSetupModal({
   const [selectedTemplateId, setSelectedTemplateId] =
     useState(DEFAULT_TEMPLATE_ID);
   const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const selectedTemplate = SHIP_TEMPLATES.find(
     (tmpl) => tmpl.id === selectedTemplateId,
@@ -249,10 +224,6 @@ export function NewGameSetupModal({
   const crewLimit = selectedModifierItems.reduce<number | null>((acc, mod) => {
     if (mod.crewLimit === undefined) return acc;
     return acc === null ? mod.crewLimit : Math.min(acc, mod.crewLimit);
-  }, null);
-  const crewLevel = selectedModifierItems.reduce<number | null>((acc, mod) => {
-    if (mod.crewLevel === undefined) return acc;
-    return acc === null ? mod.crewLevel : Math.max(acc, mod.crewLevel);
   }, null);
   const finalCrew =
     crewLimit !== null
@@ -466,6 +437,11 @@ export function NewGameSetupModal({
                           >
                             {t(tmpl.nameKey)}
                           </div>
+                          {tmpl.id === DEFAULT_TEMPLATE_ID && (
+                            <div className="mt-0.5 text-[9px] uppercase tracking-[0.1em] text-accent">
+                              {t("new_game_setup.recommended_badge")}
+                            </div>
+                          )}
                           <div className="mt-1 text-[10px] text-[#777] line-clamp-2">
                             {t(tmpl.descriptionKey)}
                           </div>
@@ -545,67 +521,17 @@ export function NewGameSetupModal({
                   <InfoMetric
                     label={t("new_game_setup.crew_label")}
                     value={String(finalCrew.length)}
+                    hint={getCrewSummary(finalCrew, t)}
                   />
                   <InfoMetric
                     label={t("new_game_setup.probes_label")}
                     value={String(selectedTemplate.probes)}
                   />
-                </div>
-
-                <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2">
-                  <div className="min-w-0">
-                    <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                      {t("new_game_setup.crew_composition")}
-                    </div>
-                    <div className="wrap-break-word text-xs text-ring">
-                      {getCrewSummary(finalCrew, t)}
-                    </div>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                      {t("new_game_setup.crew_level")}
-                    </div>
-                    <div className="wrap-break-word text-xs text-[#00ff41]">
-                      {getCrewLevelSummary(finalCrew, crewLevel, t)}
-                    </div>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                      {t("new_game_setup.research_resources")}
-                    </div>
-                    <div className="wrap-break-word text-xs text-[#a855f7]">
-                      {researchSummary ?? t("new_game_setup.none")}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-3 min-h-14">
-                  <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                    {t("new_game_setup.final_effects")}
-                  </div>
-                  {selectedModifierItems.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
-                      {selectedModifierItems.flatMap((mod) =>
-                        getModifierDetails(mod, t).map((detail) => (
-                          <Pill
-                            key={`${mod.id}-${detail}`}
-                            tone={
-                              mod.type === "bonus"
-                                ? "good"
-                                : mod.type === "challenge"
-                                  ? "danger"
-                                  : "warning"
-                            }
-                          >
-                            {detail}
-                          </Pill>
-                        )),
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-[10px] text-[#555]">
-                      {t("new_game_setup.no_final_effects")}
-                    </div>
+                  {researchSummary && (
+                    <InfoMetric
+                      label={t("new_game_setup.research_resources")}
+                      value={researchSummary}
+                    />
                   )}
                 </div>
 
@@ -623,38 +549,79 @@ export function NewGameSetupModal({
                 </div>
               </section>
 
-              <section className="min-w-0 border border-[#00ff4133] bg-[rgba(0,255,65,0.02)] p-3">
-                <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+              <section className="min-w-0 border border-[#00ff4133] bg-[rgba(0,255,65,0.02)]">
+                <button
+                  type="button"
+                  onClick={() => setAdvancedOpen((v) => !v)}
+                  aria-expanded={advancedOpen}
+                  className="flex w-full min-w-0 cursor-pointer items-center justify-between gap-2 p-3 text-left"
+                >
                   <div className="min-w-0">
                     <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-[0.18em] text-accent">
-                      {t("new_game_setup.modifiers_section")}
-                      <span className="ml-2 font-mono text-[10px] font-normal normal-case tracking-normal text-[#888]">
-                        {t("new_game_setup.modifiers_hint")}
-                      </span>
+                      {t("new_game_setup.advanced_setup_title")}
+                      {selectedModifiers.length > 0 && (
+                        <span className="ml-2 font-mono text-[10px] font-normal normal-case tracking-normal text-ring">
+                          {selectedModifiers.length}{" "}
+                          {t("new_game_setup.modifiers_active").toLowerCase()}
+                        </span>
+                      )}
                     </div>
                     <div className="mt-1 text-[10px] text-[#666]">
-                      {t("new_game_setup.modifiers_beginner_tip")}
+                      {t("new_game_setup.advanced_setup_subtitle")}
                     </div>
                   </div>
-                  <div className="text-[10px] text-muted-foreground">
-                    {t("new_game_setup.modifiers_active")}:{" "}
-                    {selectedModifiers.length}
+                  <span className="shrink-0 opacity-60">
+                    {advancedOpen ? "▼" : "▲"}
+                  </span>
+                </button>
+
+                {advancedOpen && (
+                  <div className="min-w-0 border-t border-[#00ff4122] p-3 pt-2">
+                    <div className="mb-2 text-[10px] text-[#666]">
+                      {t("new_game_setup.modifiers_beginner_tip")}
+                    </div>
+
+                    <div className="mb-2 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                      {t("new_game_setup.doctrine_section")}
+                    </div>
+                    <div className="grid min-w-0 gap-2 min-[1180px]:grid-cols-2">
+                      {DOCTRINE_MODIFIERS.map(renderModifierButton)}
+                    </div>
+
+                    <div className="mb-2 mt-4 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                      {t("new_game_setup.regular_modifiers_section")}
+                    </div>
+                    <div className="grid min-w-0 gap-2 min-[1180px]:grid-cols-2">
+                      {REGULAR_MODIFIERS.map(renderModifierButton)}
+                    </div>
+
+                    {selectedModifierItems.length > 0 && (
+                      <div className="mt-4">
+                        <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                          {t("new_game_setup.final_effects")}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {selectedModifierItems.flatMap((mod) =>
+                            getModifierDetails(mod, t).map((detail) => (
+                              <Pill
+                                key={`${mod.id}-${detail}`}
+                                tone={
+                                  mod.type === "bonus"
+                                    ? "good"
+                                    : mod.type === "challenge"
+                                      ? "danger"
+                                      : "warning"
+                                }
+                              >
+                                {detail}
+                              </Pill>
+                            )),
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-
-                <div className="mb-2 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                  {t("new_game_setup.doctrine_section")}
-                </div>
-                <div className="grid min-w-0 gap-2 min-[1180px]:grid-cols-2">
-                  {DOCTRINE_MODIFIERS.map(renderModifierButton)}
-                </div>
-
-                <div className="mb-2 mt-4 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                  {t("new_game_setup.regular_modifiers_section")}
-                </div>
-                <div className="grid min-w-0 gap-2 min-[1180px]:grid-cols-2">
-                  {REGULAR_MODIFIERS.map(renderModifierButton)}
-                </div>
+                )}
               </section>
             </div>
           </div>
@@ -672,14 +639,6 @@ export function NewGameSetupModal({
                 </span>
                 <span className="text-[#444]">/</span>
                 <span className="text-[#888]">
-                  {t("new_game_setup.modifiers_active")}:
-                </span>
-                <span className="font-bold text-accent">
-                  {selectedModifiers.length}
-                </span>
-              </div>
-              <div className="mt-1 flex flex-wrap items-center gap-2">
-                <span className="text-[#888]">
                   {t("new_game_setup.start_credits")}:
                 </span>
                 <span
@@ -688,16 +647,6 @@ export function NewGameSetupModal({
                 >
                   ₢{totalCredits}
                 </span>
-                {selectedModifierItems.length > 0 && (
-                  <>
-                    <span className="text-[#444]">•</span>
-                    <span className="min-w-0 wrap-break-word text-[#555]">
-                      {joinLabels(
-                        selectedModifierItems.map((mod) => t(mod.nameKey)),
-                      )}
-                    </span>
-                  </>
-                )}
               </div>
               {!hasSufficientCredits && (
                 <p
@@ -727,7 +676,15 @@ export function NewGameSetupModal({
   );
 }
 
-function InfoMetric({ label, value }: { label: string; value: string }) {
+function InfoMetric({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+}) {
   return (
     <div className="border border-[#1a3320] bg-[rgba(0,0,0,0.25)] p-2">
       <div className="text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
@@ -736,6 +693,11 @@ function InfoMetric({ label, value }: { label: string; value: string }) {
       <div className="mt-1 font-['Orbitron'] text-sm font-bold text-[#00ff41]">
         {value}
       </div>
+      {hint && (
+        <div className="mt-0.5 wrap-break-word text-[9px] leading-snug text-[#666]">
+          {hint}
+        </div>
+      )}
     </div>
   );
 }
