@@ -44,16 +44,44 @@
 }
 
 @keyframes cockpit-wordmark-in {
-    from {
+    0% {
         opacity: 0;
         letter-spacing: 0.18em;
         transform: translateY(8px);
     }
-    to {
+    55% {
         opacity: 1;
         letter-spacing: 0.08em;
         transform: translateY(0);
     }
+    64% { opacity: 0.35; }
+    72% { opacity: 1; }
+    79% { opacity: 0.5; }
+    100% {
+        opacity: 1;
+        letter-spacing: 0.08em;
+        transform: translateY(0);
+    }
+}
+
+@keyframes title-boot-line-in {
+    from { opacity: 0; transform: translateX(-6px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes title-cursor-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+@keyframes title-fade-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes title-divider-in {
+    from { transform: scaleX(0); opacity: 0; }
+    to { transform: scaleX(1); opacity: 0.4; }
 }
 
 @keyframes cockpit-radar-sweep {
@@ -130,7 +158,29 @@ button:focus-visible,
     margin-inline: auto;
     max-width: 80vw;
     text-shadow: 0 0 18px rgba(0, 255, 65, 0.58), 0 0 54px rgba(0, 212, 255, 0.16);
-    animation: cockpit-wordmark-in 2.2s ease-out both;
+    animation: cockpit-wordmark-in 1.5s ease-out 0.85s both;
+}
+
+.title-boot-line {
+    opacity: 0;
+    animation: title-boot-line-in 0.45s ease-out forwards;
+}
+
+.title-boot-cursor {
+    display: inline-block;
+    margin-left: 2px;
+    animation: title-cursor-blink 1s steps(1) infinite;
+}
+
+.title-fade-in {
+    opacity: 0;
+    animation: title-fade-in 0.6s ease-out forwards;
+}
+
+.title-divider {
+    transform: scaleX(0);
+    opacity: 0;
+    animation: title-divider-in 0.6s ease-out 1.7s forwards;
 }
 
 .title-radar {
@@ -1024,6 +1074,19 @@ button:focus-visible,
 [data-animations="off"] .ship-power-link,
 [data-animations="off"] .combat-impact-overlay {
     animation: none !important;
+}
+
+[data-animations="off"] .title-boot-line,
+[data-animations="off"] .title-fade-in,
+[data-animations="off"] .title-divider {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+[data-animations="off"] .title-boot-cursor {
+    animation: none !important;
+    opacity: 1 !important;
 }
 
 [data-animations="off"] .title-radar::after,

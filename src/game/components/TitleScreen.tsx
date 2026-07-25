@@ -63,23 +63,41 @@ export function TitleScreen() {
 
       {/* Title */}
       <div className="relative z-10 -translate-y-[24vh] text-center px-4">
+        {/* Boot sequence readout */}
+        <div className="mb-4 font-['Share_Tech_Mono'] text-[9px] sm:text-[11px] tracking-[0.15em] text-[#00d4ff]/70 space-y-1">
+          <p className="title-boot-line" style={{ animationDelay: "0s" }}>
+            &gt; {t("title_screen.boot_line_1")}
+          </p>
+          <p className="title-boot-line" style={{ animationDelay: "0.35s" }}>
+            &gt; {t("title_screen.boot_line_2")}
+          </p>
+          <p className="title-boot-line" style={{ animationDelay: "0.7s" }}>
+            &gt; {t("title_screen.boot_line_3")}
+            <span className="title-boot-cursor">_</span>
+          </p>
+        </div>
+
         <h1 className="title-wordmark font-['Orbitron'] font-black uppercase leading-none tracking-[0.08em] text-[#00ff41]">
           {t("title_screen.title")}
         </h1>
         <p
-          className="font-['Orbitron'] text-xs sm:text-base tracking-[0.3em] text-[#ffb000] mt-4"
+          className="title-fade-in font-['Orbitron'] text-xs sm:text-base tracking-[0.3em] text-[#ffb000] mt-4"
           style={{
             textShadow: "0 0 10px rgba(255,176,0,0.4)",
+            animationDelay: "1.45s",
           }}
         >
           {t("title_screen.subtitle")}
         </p>
 
         {/* Decorative line */}
-        <div className="mt-6 mx-auto w-48 h-px bg-linear-to-r from-transparent via-[#00ff41] to-transparent opacity-40" />
+        <div className="title-divider mt-6 mx-auto w-48 h-px bg-linear-to-r from-transparent via-[#00ff41] to-transparent" />
 
         {/* Flavor text */}
-        <p className="mt-6 text-[#556] text-xs sm:text-sm font-['Share_Tech_Mono'] max-w-md mx-auto leading-relaxed">
+        <p
+          className="title-fade-in mt-6 text-[#556] text-xs sm:text-sm font-['Share_Tech_Mono'] max-w-md mx-auto leading-relaxed"
+          style={{ animationDelay: "2.05s" }}
+        >
           {t("title_screen.flavor")}
         </p>
       </div>

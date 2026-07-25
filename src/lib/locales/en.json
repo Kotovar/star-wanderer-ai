@@ -14,7 +14,10 @@
     "title_screen": {
         "title": "STAR WANDERER",
         "subtitle": "A SPACE ADVENTURE",
-        "flavor": "The void between stars holds both danger and opportunity. Choose your ship wisely, Captain — the galaxy awaits."
+        "flavor": "The void between stars holds both danger and opportunity. Choose your ship wisely, Captain — the galaxy awaits.",
+        "boot_line_1": "INITIALIZING SHIP SYSTEMS",
+        "boot_line_2": "LONG-RANGE SCANNER · ONLINE",
+        "boot_line_3": "NAVIGATION MODULE · READY"
     },
     "start_menu": {
         "console": "LAUNCH CONSOLE",
