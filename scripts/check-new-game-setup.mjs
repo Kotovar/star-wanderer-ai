@@ -119,9 +119,9 @@ assert.equal(
   40,
 );
 
-assert.equal(modifiersById.weakened_reactor.creditDelta, 100);
-assert.equal(modifiersById.stranded.creditDelta, 200);
-assert.equal(modifiersById.damaged_ship.creditDelta, 200);
+assert.equal(modifiersById.weakened_reactor.creditDelta, 300);
+assert.equal(modifiersById.stranded.creditDelta, 210);
+assert.equal(modifiersById.damaged_ship.creditDelta, 210);
 assert.deepEqual(modifiersById.stranded.conflictsWith, ["damaged_ship"]);
 assert.deepEqual(modifiersById.damaged_ship.conflictsWith, ["stranded"]);
 

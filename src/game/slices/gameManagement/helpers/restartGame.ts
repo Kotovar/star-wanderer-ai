@@ -72,6 +72,11 @@ export const restartGame = (
     knownRaces,
     startTemplateId: templateId,
     startModifierIds: modifierIds,
+    // initialState — модульный синглтон, вычисляется один раз при импорте,
+    // поэтому его runId нельзя переиспользовать между забегами — иначе все
+    // рестарты, которые не проходят через loadFromSlot, получили бы один и
+    // тот же id и recordRunResult() молча схлопнул бы их в один забег.
+    runId: crypto.randomUUID(),
   });
 
   if (patch.startingTechId) {

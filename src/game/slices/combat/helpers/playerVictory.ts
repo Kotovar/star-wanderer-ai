@@ -129,6 +129,17 @@ export function handleVictory(
     // an inconsistency that only mattered if threat were ever 0).
     const enemyTier = updatedCombat.enemy.threat ?? 1;
 
+    // Мета-прогрессия: счётчики забега для карьерных ачивок (см. META_PROGRESSION_PLAN.md)
+    set((s) => {
+        if (updatedCombat.enemy.isBoss) {
+            s.bossesDefeatedThisRun += 1;
+        }
+        s.maxEnemyThreatDefeatedThisRun = Math.max(
+            s.maxEnemyThreatDefeatedThisRun,
+            enemyTier,
+        );
+    });
+
     // Complete contracts
     completeBattleContracts(
         set,

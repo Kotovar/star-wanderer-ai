@@ -6,6 +6,8 @@ import type {
     Module,
     SetState,
 } from "@/game/types";
+import { buildRunSummary } from "@/game/metaProgress/runSummary";
+import { recordRunResult } from "@/game/metaProgress/store";
 import { findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
 
@@ -75,6 +77,7 @@ export const checkGameOver = (set: SetState, get: () => GameStore): void => {
             gameOverReason:
                 "💥 Корпус корабля разрушен! Все модули уничтожены. Корабль не может продолжать полёт.",
         });
+        recordRunResult(buildRunSummary(state, "defeat"));
         get().addLog( i18nStore.t("game_logs.checkGameOver_1"), "error");
         return;
     }
@@ -96,6 +99,7 @@ export const checkGameOver = (set: SetState, get: () => GameStore): void => {
             gameOver: true,
             gameOverReason: reason,
         });
+        recordRunResult(buildRunSummary(state, "defeat"));
         get().addLog( i18nStore.t("game_logs.checkGameOver_2"), "error");
         return;
     }

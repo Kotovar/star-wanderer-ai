@@ -3646,6 +3646,72 @@
             "description": "Ship cobbled together from scraps: modules damaged 20%, but +10 tech salvage in the hold for research."
         }
     },
+    "achievements": {
+        "doctrine_explorer": {
+            "name": "Explorer's Path",
+            "description": "Win 2 separate expeditions, each having explored at least 15 sectors."
+        },
+        "doctrine_boss_hunter": {
+            "name": "Terror of the Ancients",
+            "description": "Defeat 3 ancient bosses total across your career."
+        },
+        "doctrine_trader": {
+            "name": "Business Instinct",
+            "description": "Finish 2 separate expeditions with a balance of at least ₢3000."
+        },
+        "doctrine_exile": {
+            "name": "Path of the Exile",
+            "description": "Win 2 separate expeditions, each ending with hostile reputation with one of the races."
+        },
+        "veteran_crew": {
+            "name": "Battle-Hardened",
+            "description": "Win 3 expeditions total across your career."
+        },
+        "extra_fuel": {
+            "name": "The Long Road",
+            "description": "Survive at least 100 turns in a single expedition."
+        },
+        "research_head_start": {
+            "name": "Scientific Leap",
+            "description": "Research at least 5 technologies in a single expedition."
+        },
+        "random_starting_tech": {
+            "name": "Lucky Find",
+            "description": "Find 2 legendary or mythic rarity artifacts total across your career."
+        },
+        "solo_mission": {
+            "name": "Last of the Crew",
+            "description": "Win an expedition, finishing it with exactly one crew member alive."
+        },
+        "weakened_reactor": {
+            "name": "Frontier's Edge",
+            "description": "Reach a tier 3 or higher sector in a single expedition."
+        },
+        "crisis_start": {
+            "name": "Chronicles of Catastrophe",
+            "description": "Encounter all 4 types of global crises across your career."
+        },
+        "cursed_relic": {
+            "name": "Cursed but Alive",
+            "description": "Win an expedition while holding an active cursed artifact."
+        },
+        "stranded": {
+            "name": "Saved in the Nick of Time",
+            "description": "Use a free emergency fuel bailout at a station."
+        },
+        "damaged_ship": {
+            "name": "Victory at Any Cost",
+            "description": "Win a battle against an enemy with threat 5 or higher."
+        },
+        "wanted": {
+            "name": "Double Threat",
+            "description": "Reach hostile reputation with 2 races at once in a single expedition."
+        },
+        "salvaged_parts": {
+            "name": "Master of Improvisation",
+            "description": "Complete 10 contracts total across your career."
+        }
+    },
     "random_events": {
         "signal": "Unscheduled signal",
         "captain_decision": "Captain's decision required",

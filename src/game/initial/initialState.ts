@@ -244,6 +244,9 @@ const baseState: GameState = {
   nextCrisisTurn: rollInitialCrisisTurn(),
   nextCrisisId:
     GLOBAL_CRISES[Math.floor(Math.random() * GLOBAL_CRISES.length)]?.id ?? null,
+  runId: crypto.randomUUID(),
+  bossesDefeatedThisRun: 0,
+  maxEnemyThreatDefeatedThisRun: 0,
 };
 
 /**

@@ -33,7 +33,8 @@
     "check:distress-signals": "node --no-warnings --experimental-strip-types scripts/check-distress-signals.mjs",
     "check:wreck-field": "node --no-warnings --experimental-strip-types scripts/check-wreck-field-approaches.mjs",
     "check:scanner-tooltips": "node scripts/check-scanner-tooltips.mjs",
-    "check:crises": "node --no-warnings --experimental-strip-types scripts/check-crisis-escalation.mjs"
+    "check:crises": "node --no-warnings --experimental-strip-types scripts/check-crisis-escalation.mjs",
+    "check:meta-progress": "node --no-warnings --experimental-strip-types scripts/check-meta-progress.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.20",

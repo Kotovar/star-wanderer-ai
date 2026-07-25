@@ -159,6 +159,13 @@ export interface GameState {
   discoveredEnemyCodexIds: string[]; // Enemy types already encountered by the player
   nextCrisisTurn: number; // Turn on which the next global crisis triggers
   nextCrisisId: string | null; // Crisis selected to trigger next
+  // ── Мета-прогрессия (см. META_PROGRESSION_PLAN.md) ──
+  /** Уникальный id текущего забега, генерируется в restartGame. Нужен для идемпотентности recordRunResult. */
+  runId: string;
+  /** Боссов повержено в этом забеге — сбрасывается рестартом, суммируется в мета-стор при конце забега */
+  bossesDefeatedThisRun: number;
+  /** Максимальный threat/tier врага, побеждённого в этом забеге */
+  maxEnemyThreatDefeatedThisRun: number;
 }
 
 export interface GameActions {

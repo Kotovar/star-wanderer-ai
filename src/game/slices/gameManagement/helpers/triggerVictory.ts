@@ -3,6 +3,8 @@ import type { GameStore, SetState } from "@/game/types";
 import { getCompletedVictoryObjective } from "@/game/constants/victoryObjectives";
 import { playSound } from "@/sounds";
 import { getBestByProfession } from "@/game/crew";
+import { buildRunSummary } from "@/game/metaProgress/runSummary";
+import { recordRunResult } from "@/game/metaProgress/store";
 
 /**
  * Сообщение о победе в игре
@@ -72,6 +74,7 @@ export const triggerVictory = (set: SetState, get: () => GameStore): void => {
             i18nStore.t(objective.completionKey),
         ),
     });
+    recordRunResult(buildRunSummary(state, "victory"));
 
     get().addLog(
         `🎉 ${i18nStore.t("game.victory")}! ${i18nStore.t(objective.titleKey)}`,
