@@ -3650,6 +3650,12 @@
         }
     },
     "achievements": {
+        "tab_label": "Achievements",
+        "panel_title": "Achievements",
+        "panel_summary": "Unlocked {{unlocked}}/{{total}} achievements and {{ships}}/{{shipsTotal}} ships",
+        "ships_section": "Ships",
+        "doctrines_section": "Doctrines",
+        "modifiers_section": "Modifiers",
         "doctrine_explorer": {
             "name": "Explorer's Path",
             "description": "Win 2 separate expeditions, each having explored at least 15 sectors."

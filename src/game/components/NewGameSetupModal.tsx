@@ -256,7 +256,9 @@ export function NewGameSetupModal({
   const [selectedTemplateId, setSelectedTemplateId] =
     useState(DEFAULT_TEMPLATE_ID);
   const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [mobileSection, setMobileSection] = useState<"ship" | "settings">(
+    "ship",
+  );
 
   const selectedTemplate = SHIP_TEMPLATES.find(
     (tmpl) => tmpl.id === selectedTemplateId,
@@ -464,7 +466,7 @@ export function NewGameSetupModal({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="bg-[rgba(5,8,16,0.98)] border-2 border-[#00ff41] text-[#00ff41] w-[calc(100vw-1rem)] min-[900px]:w-[calc(100vw-2rem)] min-[1280px]:w-[min(1280px,calc(100vw-2rem))] max-w-none! max-h-[calc(100dvh-1rem)] overflow-hidden p-0 gap-0 grid-rows-[auto_minmax(0,1fr)_auto]"
+        className="bg-[rgba(5,8,16,0.98)] border-2 border-[#00ff41] text-[#00ff41] h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] min-[900px]:w-[calc(100vw-2rem)] min-[1280px]:w-[min(1280px,calc(100vw-2rem))] max-w-none! overflow-hidden p-0 gap-0 grid-rows-[auto_minmax(0,1fr)_auto]"
         showCloseButton={!required}
       >
         <DialogHeader className="min-w-0 px-4 pt-4 pb-3 sm:px-5 border-b border-[rgba(0,255,65,0.2)]">
@@ -480,8 +482,37 @@ export function NewGameSetupModal({
         </DialogHeader>
 
         <div className="min-h-0 overflow-y-auto overflow-x-hidden px-2 py-3 sm:p-4">
-          <div className="grid min-w-0 gap-3 min-[980px]:grid-cols-[minmax(260px,0.72fr)_minmax(0,1.55fr)]">
-            <section className="min-w-0 border border-[#00ff4133] bg-[rgba(0,255,65,0.02)] p-3">
+          <div className="sticky top-0 z-10 mb-3 grid grid-cols-2 border border-[#00ff4133] bg-[rgba(5,8,16,0.98)] p-1 min-[980px]:hidden">
+            <button
+              type="button"
+              aria-pressed={mobileSection === "ship"}
+              onClick={() => setMobileSection("ship")}
+              className={`min-w-0 cursor-pointer px-2 py-2 text-[9px] font-bold uppercase tracking-[0.1em] ${
+                mobileSection === "ship"
+                  ? "bg-[rgba(0,255,65,0.14)] text-[#00ff41]"
+                  : "text-[#777]"
+              }`}
+            >
+              {t("new_game_setup.template_section")}
+            </button>
+            <button
+              type="button"
+              aria-pressed={mobileSection === "settings"}
+              onClick={() => setMobileSection("settings")}
+              className={`min-w-0 cursor-pointer px-2 py-2 text-[9px] font-bold uppercase tracking-[0.1em] ${
+                mobileSection === "settings"
+                  ? "bg-[rgba(0,255,65,0.14)] text-[#00ff41]"
+                  : "text-[#777]"
+              }`}
+            >
+              {t("new_game_setup.advanced_setup_title")}
+            </button>
+          </div>
+
+          <div className="grid min-w-0 gap-3 min-[980px]:h-full min-[980px]:min-h-0 min-[980px]:grid-cols-[minmax(260px,0.72fr)_minmax(0,1.55fr)]">
+            <section
+              className={`${mobileSection === "ship" ? "flex" : "hidden"} min-w-0 flex-col border border-[#00ff4133] bg-[rgba(0,255,65,0.02)] p-3 min-[980px]:flex min-[980px]:min-h-0`}
+            >
               <div className="mb-2 flex items-center justify-between gap-2">
                 <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-[0.18em] text-accent">
                   {t("new_game_setup.template_section")}
@@ -491,7 +522,7 @@ export function NewGameSetupModal({
                 </div>
               </div>
 
-              <div className="grid min-w-0 gap-2 sm:grid-cols-2 min-[980px]:grid-cols-1!">
+              <div className="grid min-w-0 gap-2 sm:grid-cols-2 min-[980px]:min-h-0 min-[980px]:flex-1 min-[980px]:grid-cols-1! min-[980px]:overflow-y-auto min-[980px]:pr-1">
                 {SHIP_TEMPLATES.map((tmpl) => {
                   const dc = DIFFICULTY_COLORS[tmpl.difficulty];
                   const unlocked = isShipUnlocked(tmpl.id, meta);
@@ -601,8 +632,10 @@ export function NewGameSetupModal({
               </div>
             </section>
 
-            <div className="grid min-w-0 gap-3">
-              <section className="min-w-0 border border-[#00ff4133] bg-[rgba(0,255,65,0.02)] p-3">
+            <div
+              className={`${mobileSection === "settings" ? "grid" : "hidden"} min-w-0 gap-3 min-[980px]:grid min-[980px]:min-h-0 min-[980px]:grid-rows-[auto_minmax(0,1fr)]`}
+            >
+              <section className="order-2 min-w-0 border border-[#00ff4133] bg-[rgba(0,255,65,0.02)] p-3 min-[980px]:order-none">
                 <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="font-['Orbitron'] text-sm font-bold uppercase tracking-[0.16em] text-accent">
@@ -669,79 +702,73 @@ export function NewGameSetupModal({
                 </div>
               </section>
 
-              <section className="min-w-0 border border-[#00ff4133] bg-[rgba(0,255,65,0.02)]">
-                <button
-                  type="button"
-                  onClick={() => setAdvancedOpen((v) => !v)}
-                  aria-expanded={advancedOpen}
-                  className="flex w-full min-w-0 cursor-pointer items-center justify-between gap-2 p-3 text-left"
-                >
-                  <div className="min-w-0">
-                    <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-[0.18em] text-accent">
-                      {t("new_game_setup.advanced_setup_title")}
-                      {selectedModifiers.length > 0 && (
-                        <span className="ml-2 font-mono text-[10px] font-normal normal-case tracking-normal text-ring">
-                          {selectedModifiers.length}{" "}
-                          {t("new_game_setup.modifiers_active").toLowerCase()}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-1 text-[10px] text-[#666]">
-                      {t("new_game_setup.advanced_setup_subtitle")}
-                    </div>
-                  </div>
-                  <span className="shrink-0 opacity-60">
-                    {advancedOpen ? "▼" : "▲"}
-                  </span>
-                </button>
-
-                {advancedOpen && (
-                  <div className="min-w-0 border-t border-[#00ff4122] p-3 pt-2">
-                    <div className="mb-2 text-[10px] text-[#666]">
-                      {t("new_game_setup.modifiers_beginner_tip")}
-                    </div>
-
-                    <div className="mb-2 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                      {t("new_game_setup.doctrine_section")}
-                    </div>
-                    <div className="grid min-w-0 gap-2 min-[1180px]:grid-cols-2">
-                      {DOCTRINE_MODIFIERS.map(renderModifierButton)}
-                    </div>
-
-                    <div className="mb-2 mt-4 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                      {t("new_game_setup.regular_modifiers_section")}
-                    </div>
-                    <div className="grid min-w-0 gap-2 min-[1180px]:grid-cols-2">
-                      {REGULAR_MODIFIERS.map(renderModifierButton)}
-                    </div>
-
-                    {selectedModifierItems.length > 0 && (
-                      <div className="mt-4">
-                        <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                          {t("new_game_setup.final_effects")}
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {selectedModifierItems.flatMap((mod) =>
-                            getModifierDetails(mod, t).map((detail) => (
-                              <Pill
-                                key={`${mod.id}-${detail}`}
-                                tone={
-                                  mod.type === "bonus"
-                                    ? "good"
-                                    : mod.type === "challenge"
-                                      ? "danger"
-                                      : "warning"
-                                }
-                              >
-                                {detail}
-                              </Pill>
-                            )),
-                          )}
-                        </div>
-                      </div>
+              <section
+                aria-labelledby="new-game-advanced-title"
+                className="order-1 flex min-w-0 flex-col border border-[#00ff4133] bg-[rgba(0,255,65,0.02)] min-[980px]:order-none min-[980px]:min-h-0"
+              >
+                <div className="min-w-0 border-b border-[#00ff4122] p-3">
+                  <div
+                    id="new-game-advanced-title"
+                    className="font-['Orbitron'] text-xs font-bold uppercase tracking-[0.18em] text-accent"
+                  >
+                    {t("new_game_setup.advanced_setup_title")}
+                    {selectedModifiers.length > 0 && (
+                      <span className="ml-2 font-mono text-[10px] font-normal normal-case tracking-normal text-ring">
+                        {selectedModifiers.length}{" "}
+                        {t("new_game_setup.modifiers_active").toLowerCase()}
+                      </span>
                     )}
                   </div>
-                )}
+                  <div className="mt-1 text-[10px] text-[#666]">
+                    {t("new_game_setup.advanced_setup_subtitle")}
+                  </div>
+                </div>
+
+                <div className="min-w-0 p-3 pt-2 min-[980px]:min-h-0 min-[980px]:flex-1 min-[980px]:overflow-y-auto min-[980px]:pr-2">
+                  <div className="mb-2 text-[10px] text-[#666]">
+                    {t("new_game_setup.modifiers_beginner_tip")}
+                  </div>
+
+                  <div className="mb-2 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                    {t("new_game_setup.doctrine_section")}
+                  </div>
+                  <div className="grid min-w-0 gap-2 min-[1180px]:grid-cols-2">
+                    {DOCTRINE_MODIFIERS.map(renderModifierButton)}
+                  </div>
+
+                  <div className="mb-2 mt-4 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                    {t("new_game_setup.regular_modifiers_section")}
+                  </div>
+                  <div className="grid min-w-0 gap-2 min-[1180px]:grid-cols-2">
+                    {REGULAR_MODIFIERS.map(renderModifierButton)}
+                  </div>
+
+                  {selectedModifierItems.length > 0 && (
+                    <div className="mt-4">
+                      <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                        {t("new_game_setup.final_effects")}
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedModifierItems.flatMap((mod) =>
+                          getModifierDetails(mod, t).map((detail) => (
+                            <Pill
+                              key={`${mod.id}-${detail}`}
+                              tone={
+                                mod.type === "bonus"
+                                  ? "good"
+                                  : mod.type === "challenge"
+                                    ? "danger"
+                                    : "warning"
+                              }
+                            >
+                              {detail}
+                            </Pill>
+                          )),
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </section>
             </div>
           </div>

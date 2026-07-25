@@ -10,6 +10,7 @@ import { SHIP_TEMPLATES } from "@/game/constants/shipTemplates";
 interface Props {
   onClose: () => void;
   onGuide: () => void;
+  onAchievements: () => void;
   onTutorial: () => void;
   onRestart: () => void;
 }
@@ -160,7 +161,7 @@ function SlotCard({
   );
 }
 
-export function SettingsPanel({ onClose, onGuide, onTutorial, onRestart }: Props) {
+export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, onRestart }: Props) {
   const saveToSlot = useGameStore((s) => s.saveToSlot);
   const loadFromSlot = useGameStore((s) => s.loadFromSlot);
   const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
@@ -364,6 +365,13 @@ export function SettingsPanel({ onClose, onGuide, onTutorial, onRestart }: Props
               className="col-span-2 cursor-pointer border border-[#00d4ff] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#00d4ff] hover:bg-[rgba(0,212,255,0.15)]"
             >
               📖 {t("game.logbook")}
+            </button>
+            <button
+              type="button"
+              onClick={onAchievements}
+              className="col-span-2 cursor-pointer border border-[#00ff41] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#00ff41] hover:bg-[rgba(0,255,65,0.15)]"
+            >
+              🏆 {t("achievements.panel_title")}
             </button>
             <button
               type="button"

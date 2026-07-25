@@ -49,7 +49,7 @@ export function ReputationPanel() {
                 })}
             </div>
 
-            <div className="grid grid-cols-1 gap-3 overflow-y-auto pr-2">
+            <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto pr-2 scrollbar-gutter-stable">
                 {ALL_RACE_IDS.map((raceId) => {
                     const race = RACES[raceId];
                     if (!race) return null;
@@ -168,7 +168,7 @@ export function ReputationPanel() {
                             </div>
 
                             {/* Description */}
-                            <p className="text-xs text-gray-300 flex-1">
+                            <p className="text-xs text-gray-300">
                                 {description}
                             </p>
 
@@ -186,16 +186,20 @@ export function ReputationPanel() {
                                 </span>
                                 <button
                                     type="button"
+                                    aria-expanded={expanded}
                                     onClick={() =>
                                         setExpandedRaceId(
                                             expanded ? null : raceId,
                                         )
                                     }
-                                    className="cursor-pointer text-[10px] font-bold uppercase tracking-[0.1em] text-[#d9b8ff] underline decoration-dotted"
+                                    className="inline-flex h-4 items-center gap-0.5 cursor-pointer text-[10px] font-bold uppercase leading-none tracking-[0.1em] text-[#d9b8ff] underline decoration-dotted"
                                 >
-                                    {expanded
-                                        ? "▾"
-                                        : "▸"}{" "}
+                                    <span
+                                        aria-hidden="true"
+                                        className={`inline-block w-2 text-center transition-transform ${expanded ? "rotate-90" : ""}`}
+                                    >
+                                        ▸
+                                    </span>
                                     {t("enemy_codex.details")}
                                 </button>
                             </div>

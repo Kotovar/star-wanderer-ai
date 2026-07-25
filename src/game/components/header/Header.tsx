@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useGameStore } from "@/game/store";
 import { HelpPanel } from "../panels";
 import { SettingsPanel } from "../SaveLoadPanel";
+import { AchievementsDialog } from "../AchievementsDialog";
 import { GLOBAL_CRISES } from "@/game/constants/globalCrises";
 import {
   Dialog,
@@ -19,6 +20,7 @@ import { getCampaignDirective } from "@/game/constants/victoryObjectives";
 
 export function GameHeader() {
   const [showHelp, setShowHelp] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
   const [showRestartDialog, setShowRestartDialog] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [dismissedCrisisWidgetKey, setDismissedCrisisWidgetKey] = useState<
@@ -93,6 +95,11 @@ export function GameHeader() {
   const handleGuideClick = () => {
     setShowSettings(false);
     setShowHelp(true);
+  };
+
+  const handleAchievementsClick = () => {
+    setShowSettings(false);
+    setShowAchievements(true);
   };
 
   const handleRestartConfirm = () => {
@@ -429,10 +436,14 @@ export function GameHeader() {
       ) : null}
 
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
+      {showAchievements && (
+        <AchievementsDialog onClose={() => setShowAchievements(false)} />
+      )}
       {showSettings && (
         <SettingsPanel
           onClose={() => setShowSettings(false)}
           onGuide={handleGuideClick}
+          onAchievements={handleAchievementsClick}
           onTutorial={handleTutorialClick}
           onRestart={handleRestartClick}
         />
