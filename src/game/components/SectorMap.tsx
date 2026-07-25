@@ -21,6 +21,7 @@ import {
 import { LegendIcon } from "./sectorMap/LegendIcon";
 import { setupHiDPICanvas } from "./canvas-utils";
 import { useMapZoomPan, DRAG_THRESHOLD } from "./useMapZoomPan";
+import { useIsMobile } from "@/game/hooks/useIsMobile";
 import {
   drawAncientBoss,
   drawAnomaly,
@@ -62,6 +63,110 @@ const STATION_SPRITE_SHEET = "/assets/stations.webp";
 
 const getSectorMapRadius = (width: number, height: number) =>
   Math.min(width, height) * (width < 768 ? 0.7 : 0.45);
+
+/**
+ * Позиция локации на карте сектора (полярные координаты вокруг звезды).
+ * Общая формула для отрисовки, наведения мыши и клика — раньше была
+ * скопирована трижды, что рискует разъехаться при правке одной из копий.
+ */
+/** Название и цвет подписи локации под её значком на карте сектора. */
+function getLocationLabelInfo(
+  loc: Location,
+  visibility: {
+    canScan: boolean;
+    isRevealed: boolean;
+    isTelepathicallyRevealed: boolean;
+    completed: boolean;
+  },
+  t: (key: string) => string,
+): { text: string; color: string } {
+  const { canScan, isRevealed, isTelepathicallyRevealed, completed } = visibility;
+  const needsScanner = NEEDS_SCANNER_LOCATIONS.includes(loc.type);
+
+  // Boss shows as "Unknown ship" (not "Unknown object") because it uses ship icon
+  const isUnknownBoss =
+    loc.type === "boss" &&
+    !canScan &&
+    !isRevealed &&
+    !completed &&
+    !isTelepathicallyRevealed;
+
+  const displayName = isUnknownBoss
+    ? t("sector_map.unknown_ship")
+    : needsScanner &&
+        !canScan &&
+        !isRevealed &&
+        !completed &&
+        !isTelepathicallyRevealed
+      ? t("sector_map.unknown_object")
+      : getLocationName(loc.name, t);
+
+  // Also hide enemy/friendly/derelict ship names without scanner and not revealed (unless telepathy)
+  const isUnknownShip =
+    ["enemy", "friendly_ship", "derelict_ship"].includes(loc.type) &&
+    !canScan &&
+    !isRevealed &&
+    !completed &&
+    !isTelepathicallyRevealed;
+
+  const isExploredEmptyPlanet =
+    loc.type === "planet" && loc.isEmpty && loc.explored;
+  const isVisitedColonizedPlanet =
+    loc.type === "planet" && !loc.isEmpty && loc.visited;
+  const isVisitedStation = loc.type === "station" && loc.visited;
+  const isDivedGasPlanet =
+    loc.type === "gas_giant" && loc.gasGiantLastDiveAt !== undefined;
+
+  // Strip race adjective from friendly ship labels (e.g. "Человеческий Торговец" → "Торговец")
+  let baseName = displayName;
+  if (loc.type === "friendly_ship" && loc.shipRace) {
+    const raceInfo = RACES[loc.shipRace];
+    const prefix = raceInfo?.adjective || raceInfo?.name;
+    if (prefix && baseName.startsWith(prefix + " ")) {
+      baseName = baseName.slice(prefix.length + 1);
+    }
+  }
+  const text = isUnknownShip
+    ? t("sector_map.unknown_ship")
+    : isExploredEmptyPlanet
+      ? `${baseName} ${t("sector_map.explored")}`
+      : isVisitedColonizedPlanet || isVisitedStation || isDivedGasPlanet
+        ? `${baseName} ${t("sector_map.visited")}`
+        : baseName;
+
+  const color = completed
+    ? "#888"
+    : isExploredEmptyPlanet ||
+        isVisitedColonizedPlanet ||
+        isVisitedStation ||
+        isDivedGasPlanet
+      ? "#00ff41"
+      : loc.type === "planet" && !loc.isEmpty
+        ? "#ffb000"
+        : loc.type === "gas_giant"
+          ? "#cc88ff"
+          : loc.type === "space_monster" &&
+              (canScan || isRevealed || isTelepathicallyRevealed)
+            ? SPACE_MONSTERS[loc.spaceMonsterType ?? "void_ray"].color
+            : "#00ff41";
+
+  return { text, color };
+}
+
+function computeLocationPosition(
+  loc: Pick<Location, "distanceRatio" | "angle">,
+  centerX: number,
+  centerY: number,
+  baseMaxRadius: number,
+): { x: number; y: number } {
+  const distanceRatio = loc.distanceRatio ?? 0.5;
+  const distance = baseMaxRadius * distanceRatio;
+  const angle = loc.angle ?? 0;
+  return {
+    x: centerX + Math.cos(angle) * distance,
+    y: centerY + Math.sin(angle) * distance,
+  };
+}
 
 type SectorSpriteImages = {
   planets?: HTMLImageElement;
@@ -114,6 +219,7 @@ export function SectorMap() {
   );
   const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
   const [hoveredLocation, setHoveredLocation] = useState<{
     loc: Location;
@@ -252,18 +358,8 @@ export function SectorMap() {
     // Draw locations at grid-based positions
     const locations = currentSector.locations;
 
-    // Helper function to compute location position
-    const computeLocationPosition = (loc: (typeof locations)[0]) => {
-      const distanceRatio = loc.distanceRatio ?? 0.5;
-      const distance = baseMaxRadius * distanceRatio;
-      const angle = loc.angle ?? 0;
-      const x = centerX + Math.cos(angle) * distance;
-      const y = centerY + Math.sin(angle) * distance;
-      return { x, y };
-    };
-
     locations.forEach((loc) => {
-      const { x, y } = computeLocationPosition(loc);
+      const { x, y } = computeLocationPosition(loc, centerX, centerY, baseMaxRadius);
 
       const completed = completedLocations.includes(loc.id);
       // visited means that the location was entered, not that its identity was revealed.
@@ -375,87 +471,15 @@ export function SectorMap() {
       // Draw label below the location
       // Without scanner, certain locations show as "Unknown object"
       // Distress signals are always visible (SOS beacon broadcasts location)
-
-      const needsScanner = NEEDS_SCANNER_LOCATIONS.includes(loc.type);
-
-      // Boss shows as "Unknown ship" (not "Unknown object") because it uses ship icon
-      const isUnknownBoss =
-        loc.type === "boss" &&
-        !canScan &&
-        !isRevealed &&
-        !completed &&
-        !isTelepathicallyRevealed;
-
-      const displayName = isUnknownBoss
-        ? t("sector_map.unknown_ship")
-        : needsScanner &&
-            !canScan &&
-            !isRevealed &&
-            !completed &&
-            !isTelepathicallyRevealed
-          ? t("sector_map.unknown_object")
-          : getLocationName(loc.name, t);
-
-      // Also hide enemy/friendly/derelict ship names without scanner and not revealed (unless telepathy)
-      const isUnknownShip =
-        ["enemy", "friendly_ship", "derelict_ship"].includes(loc.type) &&
-        !canScan &&
-        !isRevealed &&
-        !completed &&
-        !isTelepathicallyRevealed;
-
-      // Check for fully explored empty planet
-      const isExploredEmptyPlanet =
-        loc.type === "planet" && loc.isEmpty && loc.explored;
-
-      // Check for visited colonized planet (opened planet panel at least once)
-      const isVisitedColonizedPlanet =
-        loc.type === "planet" && !loc.isEmpty && loc.visited;
-
-      // Check for visited station (opened station panel at least once)
-      const isVisitedStation = loc.type === "station" && loc.visited;
-
-      // Check for dived gas planet
-      const isDivedGasPlanet =
-        loc.type === "gas_giant" &&
-        loc.gasGiantLastDiveAt !== undefined;
-
-      // Strip race adjective from friendly ship labels (e.g. "Человеческий Торговец" → "Торговец")
-      let baseName = displayName;
-      if (loc.type === "friendly_ship" && loc.shipRace) {
-        const raceInfo = RACES[loc.shipRace];
-        const prefix = raceInfo?.adjective || raceInfo?.name;
-        if (prefix && baseName.startsWith(prefix + " ")) {
-          baseName = baseName.slice(prefix.length + 1);
-        }
-      }
-      const finalDisplayName = isUnknownShip
-        ? t("sector_map.unknown_ship")
-        : isExploredEmptyPlanet
-          ? `${baseName} ${t("sector_map.explored")}`
-          : isVisitedColonizedPlanet ||
-            isVisitedStation ||
-            isDivedGasPlanet
-            ? `${baseName} ${t("sector_map.visited")}`
-            : baseName;
+      const { text: finalDisplayName, color: labelColor } = getLocationLabelInfo(
+        loc,
+        { canScan, isRevealed, isTelepathicallyRevealed, completed },
+        t,
+      );
 
       ctx.font = "11px Share Tech Mono";
       ctx.textAlign = "center";
-      ctx.fillStyle = completed
-        ? "#888"
-        : isExploredEmptyPlanet ||
-          isVisitedColonizedPlanet ||
-          isVisitedStation ||
-          isDivedGasPlanet
-          ? "#00ff41"
-          : loc.type === "planet" && !loc.isEmpty
-            ? "#ffb000"
-            : loc.type === "gas_giant"
-              ? "#cc88ff"
-              : loc.type === "space_monster" &&
-                  (canScan || isRevealed || isTelepathicallyRevealed)
-                ? SPACE_MONSTERS[loc.spaceMonsterType ?? "void_ray"].color
-              : "#00ff41";
+      ctx.fillStyle = labelColor;
       ctx.fillText(finalDisplayName, x, y + 28);
 
       if (completed) {
@@ -879,25 +903,14 @@ export function SectorMap() {
       const worldMouseY =
         (mouseY - centerY - currentOffset.y) / zoom + centerY;
 
-      // Helper function to compute location position
-      const computeLocationPosition = (
-        loc: (typeof currentSector.locations)[0],
-      ) => {
-        const distanceRatio = loc.distanceRatio ?? 0.5;
-        const baseMaxRadius = getSectorMapRadius(
-          canvasSizeRef.current.width,
-          canvasSizeRef.current.height,
-        );
-        const distance = baseMaxRadius * distanceRatio;
-        const angle = loc.angle ?? 0;
-        const x = centerX + Math.cos(angle) * distance;
-        const y = centerY + Math.sin(angle) * distance;
-        return { x, y };
-      };
+      const baseMaxRadius = getSectorMapRadius(
+        canvasSizeRef.current.width,
+        canvasSizeRef.current.height,
+      );
 
       let found = false;
       currentSector.locations.forEach((loc) => {
-        const { x, y } = computeLocationPosition(loc);
+        const { x, y } = computeLocationPosition(loc, centerX, centerY, baseMaxRadius);
         const dist = Math.sqrt(
           (worldMouseX - x) ** 2 + (worldMouseY - y) ** 2,
         );
@@ -1181,24 +1194,13 @@ export function SectorMap() {
       return;
     }
 
-    // Helper function to compute location position
     const baseMaxRadius = getSectorMapRadius(
       canvasSizeRef.current.width,
       canvasSizeRef.current.height,
     );
-    const computeLocationPosition = (
-      loc: (typeof currentSector.locations)[0],
-    ) => {
-      const distanceRatio = loc.distanceRatio ?? 0.5;
-      const distance = baseMaxRadius * distanceRatio;
-      const angle = loc.angle ?? 0;
-      const x = centerX + Math.cos(angle) * distance;
-      const y = centerY + Math.sin(angle) * distance;
-      return { x, y };
-    };
 
     currentSector.locations.forEach((loc, idx) => {
-      const { x, y } = computeLocationPosition(loc);
+      const { x, y } = computeLocationPosition(loc, centerX, centerY, baseMaxRadius);
       const dist = Math.sqrt(
         (worldClickX - x) ** 2 + (worldClickY - y) ** 2,
       );
@@ -1232,41 +1234,43 @@ export function SectorMap() {
       className="radar-viewport w-full h-full relative"
       data-animations={animationsEnabled ? "on" : "off"}
     >
-      {/* First-visit navigation hint */}
-      {!hintDismissed && (
-        <div className="absolute top-2 left-2 right-2 bg-[rgba(0,212,255,0.08)] border border-ring px-3 py-2 text-xs text-ring z-20 flex items-center justify-between gap-2">
-          <span>💡 {t("sector_map_ui.hint")}</span>
-          <button
-            onClick={dismissHint}
-            className="text-ring hover:text-white cursor-pointer shrink-0 opacity-70 hover:opacity-100 transition-opacity"
-            title={t("effects.close")}
-          >
-            ✕
-          </button>
-        </div>
-      )}
+      {/* Top overlay stack: hint (variable height, wraps on narrow screens) then
+          the sector/scanner badge row right below it — normal flex flow instead
+          of a hardcoded top offset, so the badges never overlap a wrapped hint. */}
+      <div className="absolute top-2 left-2 right-2 z-20 flex flex-col gap-1.5 pointer-events-none">
+        {!hintDismissed && (
+          <div className="pointer-events-auto bg-[rgba(0,212,255,0.08)] border border-ring px-3 py-2 text-xs text-ring flex items-center justify-between gap-2">
+            <span>💡 {t(isMobile ? "sector_map_ui.hint_mobile" : "sector_map_ui.hint")}</span>
+            <button
+              onClick={dismissHint}
+              className="text-ring hover:text-white cursor-pointer shrink-0 opacity-70 hover:opacity-100 transition-opacity"
+              title={t("effects.close")}
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
-      {/* Current sector indicator */}
-      <div
-        className={`absolute left-2 bg-[rgba(255,176,0,0.15)] border-2 border-accent px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm font-['Orbitron'] font-bold text-accent z-20 shadow-[0_0_15px_rgba(255,176,0,0.3)] ${!hintDismissed ? "top-12" : "top-2"}`}
-      >
-        <span className="text-[10px] md:text-xs opacity-70 mr-1">
-          {t("game.sector")}:
-        </span>
-        <span className="text-[#00ff41]">
-          {currentSector?.name ?? "START"}
-        </span>
+        <div className="flex items-start justify-between gap-2">
+          {/* Current sector indicator */}
+          <div className="pointer-events-auto bg-[rgba(255,176,0,0.15)] border-2 border-accent px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm font-['Orbitron'] font-bold text-accent shadow-[0_0_15px_rgba(255,176,0,0.3)]">
+            <span className="text-[10px] md:text-xs opacity-70 mr-1">
+              {t("game.sector")}:
+            </span>
+            <span className="text-[#00ff41]">
+              {currentSector?.name ?? "START"}
+            </span>
+          </div>
+
+          {/* Scanner range indicator */}
+          {scanRange >= 0 && (
+            <div className="pointer-events-auto bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-2 py-1 text-xs text-[#00ff41]">
+              {t("galaxy.labels.scanner")}:{" "}
+              {getScannerRangeLabel(scanRange, t)}
+            </div>
+          )}
+        </div>
       </div>
-
-      {/* Scanner range indicator */}
-      {scanRange >= 0 && (
-        <div
-          className={`absolute right-2 bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-2 py-1 text-xs text-[#00ff41] z-10 ${!hintDismissed ? "top-12" : "top-2"}`}
-        >
-          {t("galaxy.labels.scanner")}:{" "}
-          {getScannerRangeLabel(scanRange, t)}
-        </div>
-      )}
 
       <canvas
         ref={canvasRef}

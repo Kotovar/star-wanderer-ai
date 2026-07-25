@@ -219,9 +219,10 @@ export function drawStaticLegend(
     t: (key: string) => string,
     canvasWidth: number,
     canvasHeight: number,
+    topOffset = 0,
 ) {
     const legendX = 10;
-    const legendY = 8;
+    const legendY = 8 + topOffset;
     const engineLevel = getEngineLevel(modules);
 
     const minDim = Math.min(canvasWidth, canvasHeight);

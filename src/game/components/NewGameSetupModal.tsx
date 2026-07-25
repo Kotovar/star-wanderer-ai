@@ -689,11 +689,14 @@ export function NewGameSetupModal({
                   ₢{totalCredits}
                 </span>
                 {selectedModifierItems.length > 0 && (
-                  <span className="min-w-0 wrap-break-word text-[#555]">
-                    {joinLabels(
-                      selectedModifierItems.map((mod) => t(mod.nameKey)),
-                    )}
-                  </span>
+                  <>
+                    <span className="text-[#444]">•</span>
+                    <span className="min-w-0 wrap-break-word text-[#555]">
+                      {joinLabels(
+                        selectedModifierItems.map((mod) => t(mod.nameKey)),
+                      )}
+                    </span>
+                  </>
                 )}
               </div>
               {!hasSufficientCredits && (

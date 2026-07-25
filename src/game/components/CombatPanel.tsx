@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CombatShipVisual } from "./CombatShipVisual";
 import { CombatShipGrid } from "./CombatShipGrid";
 import { CrewMemberCard } from "./CrewMemberCard";
-import type { CrewMember, CrewMemberCombatAssignment, WeaponType } from "../types";
+import type { CrewMember, CrewMemberCombatAssignment, Module, WeaponType } from "../types";
 import type { EnemyModule } from "@/game/types/enemy";
 import { getTotalEvasion } from "@/game/slices";
 import { useTranslation } from "@/lib/useTranslation";
@@ -56,6 +56,192 @@ function getWeaponHints(
   if (type === "drones")
     hints.push({ text: `+${DRONE_STACK_BONUS * 100}%/стак (макс ${DRONE_MAX_STACKS} = ×2)`, color: "#00ff41" });
   return hints;
+}
+
+type TFn = (key: string, params?: Record<string, string | number>) => string;
+type Ship = ReturnType<typeof useGameStore.getState>["ship"];
+type Combat = NonNullable<ReturnType<typeof useGameStore.getState>["currentCombat"]>;
+
+/** Оружейные отсеки корабля и наличие наводчика — используется в статах и в проверке "нечем стрелять". */
+function getWeaponBayStats(ship: Ship, crew: CrewMember[]) {
+  const weaponBays = ship.modules.filter(
+    (m) => m.type === "weaponbay" && !m.disabled && m.health > 0,
+  );
+  const hasWeaponBay =
+    weaponBays.length > 0 &&
+    weaponBays.some((wb) => wb.weapons && wb.weapons.some((w) => w));
+  const gunnerInWeaponBay = crew.find(
+    (c) =>
+      weaponBays.some((wb) => wb.id === c.moduleId) &&
+      (c.profession === "gunner" ||
+        (c.profession === "pilot" &&
+          (c.combatAssignment === "targeting" ||
+            c.assignment === "targeting"))),
+  );
+  return { weaponBays, hasWeaponBay, gunnerInWeaponBay, hasGunner: !!gunnerInWeaponBay };
+}
+
+/** Суммарные хиты/урон/защита игрока и врага для строки статов боя. */
+function getCombatTotals(currentCombat: Combat, ship: Ship) {
+  const eDmg = currentCombat.enemy.modules.reduce(
+    (s, m) => s + (m.health > 0 ? m.damage || 0 : 0),
+    0,
+  );
+  const eDef = currentCombat.enemy.modules.reduce(
+    (s, m) => s + (m.health > 0 ? m.defense || 0 : 0),
+    0,
+  );
+  const eHP = currentCombat.enemy.modules.reduce((s, m) => s + m.health, 0);
+  const eMaxHP = currentCombat.enemy.modules.reduce(
+    (s, m) => s + (m.maxHealth || 100),
+    0,
+  );
+  const isBiologicalEnemy = currentCombat.enemy.modules.some(
+    (module) => module.isBiological,
+  );
+  const playerMaxHP = ship.modules.reduce(
+    (s, m) => s + (m.maxHealth || m.health),
+    0,
+  );
+  const playerHP = ship.modules.reduce((s, m) => s + m.health, 0);
+  return {
+    eDmg,
+    eDef,
+    eHP,
+    eMaxHP,
+    isBiologicalEnemy,
+    playerMaxHP,
+    playerHP,
+    playerDefense: ship.armor,
+  };
+}
+
+/** Текущая фаза боя (засада/наведение/залп/контратака) по состоянию боя и назначенных целей. */
+function computeCombatPhase(
+  currentCombat: Combat,
+  activeBayId: number | null,
+  assignedTargetCount: number,
+  armedBayCount: number,
+): CombatPhaseId {
+  return currentCombat.isAmbush && !currentCombat.ambushAttackDone
+    ? "ambush"
+    : currentCombat.skipPlayerTurn
+      ? "counter"
+      : activeBayId !== null || assignedTargetCount < armedBayCount
+        ? "targeting"
+        : "salvo";
+}
+
+/** Пояснение для текущей фазы боя. */
+function getPhaseNote(
+  phase: CombatPhaseId,
+  activeBayId: number | null,
+  targetingProgress: string,
+): string {
+  return phase === "counter"
+    ? "Следующий залп будет пропущен эффектом оглушения: враг получает инициативу."
+    : phase === "salvo"
+      ? "Цели назначены. После атаки игра автоматически разыграет ответ врага и конец хода."
+      : activeBayId !== null
+        ? "Выберите модуль врага для активного оружейного отсека."
+        : `Назначьте цели оружейным отсекам. Готово: ${targetingProgress}.`;
+}
+
+/** Строка выбора цели для одного оружейного отсека: оружие, урон/точность, подсказки бонусов. */
+function WeaponBayTargetRow({
+  bay,
+  targetMod,
+  isActive,
+  dmgMultiplier,
+  bayAccuracyModifier,
+  onSelect,
+  t,
+}: {
+  bay: Module;
+  targetMod: EnemyModule | null | undefined;
+  isActive: boolean;
+  dmgMultiplier: number;
+  bayAccuracyModifier: number;
+  onSelect: () => void;
+  t: TFn;
+}) {
+  const bayWeapons = bay.weapons?.filter(Boolean) ?? [];
+  // Один поиск WEAPON_TYPES на тип оружия — переиспользуется в обоих
+  // проходах рендера (урон/точность и бонус-подсказки) ниже
+  const weaponDefsByType = new Map<
+    string,
+    (typeof WEAPON_TYPES)[keyof typeof WEAPON_TYPES]
+  >();
+  bayWeapons.forEach((w) => {
+    if (w && !weaponDefsByType.has(w.type))
+      weaponDefsByType.set(w.type, WEAPON_TYPES[w.type]);
+  });
+
+  const weaponGroups = bayWeapons.reduce(
+    (acc, w) => {
+      if (!w) return acc;
+      const g = acc.find((x) => x.type === w.type);
+      if (g) g.count++;
+      else acc.push({ type: w.type, count: 1 });
+      return acc;
+    },
+    [] as { type: string; count: number }[],
+  );
+
+  return (
+    <button
+      onClick={onSelect}
+      className={`cursor-pointer w-full text-left border px-3 py-2 text-xs transition-colors ${isActive
+        ? "border-ring bg-[rgba(0,212,255,0.12)]"
+        : "border-[#333] bg-[rgba(0,0,0,0.3)] hover:border-[#555]"
+        }`}
+    >
+      {/* Top row: weapons + target */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {weaponGroups.map((g) => {
+            const wdef = weaponDefsByType.get(g.type);
+            const color = wdef?.color ?? "#888";
+            const icon = wdef?.icon ?? "?";
+            const name = t(`weapon_types.${g.type}`) || g.type;
+            const bayLevelBonus = 1 + ((bay.level ?? 1) - 1) * 0.1;
+            const dmg = Math.floor(
+              Math.floor((wdef?.damage ?? 0) * bayLevelBonus) * g.count * dmgMultiplier,
+            );
+            return (
+              <span key={g.type} className="flex items-center gap-0.5" style={{ color }}>
+                <span>{icon}{g.count > 1 ? `×${g.count}` : ""}</span>
+                <span className="opacity-80">{name}</span>
+                <span className="opacity-60 ml-0.5">{dmg}</span>
+                <span className="opacity-60 ml-0.5">
+                  ({Math.round(
+                    getWeaponAccuracy(g.type as WeaponType, bayAccuracyModifier) * 100,
+                  )}%)
+                </span>
+              </span>
+            );
+          })}
+        </div>
+        <span className={`shrink-0 ${targetMod ? "border-accent" : "text-[#444]"}`}>
+          → {targetMod ? targetMod.name : "случайная цель"}
+        </span>
+      </div>
+      {/* Bottom row: bonus hints */}
+      {weaponGroups.some(
+        (g) => getWeaponHints(g.type, weaponDefsByType.get(g.type)).length > 0,
+      ) && (
+        <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1">
+          {weaponGroups.flatMap((g) =>
+            getWeaponHints(g.type, weaponDefsByType.get(g.type)).map((hint, i) => (
+              <span key={`${g.type}-${i}`} style={{ color: hint.color }} className="opacity-70">
+                {hint.text}
+              </span>
+            )),
+          )}
+        </div>
+      )}
+    </button>
+  );
 }
 
 /** Компактный чип статистики корабля — число + опциональная полоса заполнения под ним. */
@@ -198,22 +384,8 @@ export function CombatPanel() {
   // Suppress unused warning — lastPlayerHit is consumed by CombatShipGrid directly from store
   void lastPlayerHit;
 
-  const weaponBays = ship.modules.filter(
-    (m) => m.type === "weaponbay" && !m.disabled && m.health > 0,
-  );
-  const hasWeaponBay =
-    weaponBays.length > 0 &&
-    weaponBays.some((wb) => wb.weapons && wb.weapons.some((w) => w));
-
-  const gunnerInWeaponBay = crew.find(
-    (c) =>
-      weaponBays.some((wb) => wb.id === c.moduleId) &&
-      (c.profession === "gunner" ||
-        (c.profession === "pilot" &&
-          (c.combatAssignment === "targeting" ||
-            c.assignment === "targeting"))),
-  );
-  const hasGunner = !!gunnerInWeaponBay;
+  const { weaponBays, hasWeaponBay, gunnerInWeaponBay } =
+    getWeaponBayStats(ship, crew);
 
   const pDmg = getTotalDamage();
   const actualDamage = pDmg.total;
@@ -237,28 +409,16 @@ export function CombatPanel() {
 
   if (!currentCombat) return null;
 
-  const eDmg = currentCombat.enemy.modules.reduce(
-    (s, m) => s + (m.health > 0 ? m.damage || 0 : 0),
-    0,
-  );
-  const eDef = currentCombat.enemy.modules.reduce(
-    (s, m) => s + (m.health > 0 ? m.defense || 0 : 0),
-    0,
-  );
-  const eHP = currentCombat.enemy.modules.reduce((s, m) => s + m.health, 0);
-  const eMaxHP = currentCombat.enemy.modules.reduce(
-    (s, m) => s + (m.maxHealth || 100),
-    0,
-  );
-  const isBiologicalEnemy = currentCombat.enemy.modules.some(
-    (module) => module.isBiological,
-  );
-  const playerMaxHP = ship.modules.reduce(
-    (s, m) => s + (m.maxHealth || m.health),
-    0,
-  );
-  const playerHP = ship.modules.reduce((s, m) => s + m.health, 0);
-  const playerDefense = ship.armor;
+  const {
+    eDmg,
+    eDef,
+    eHP,
+    eMaxHP,
+    isBiologicalEnemy,
+    playerMaxHP,
+    playerHP,
+    playerDefense,
+  } = getCombatTotals(currentCombat, ship);
 
   const handleEnemyModuleClick = (moduleId: number) => {
     // Always update enemy selected module (for legacy compatibility)
@@ -294,22 +454,13 @@ export function CombatPanel() {
     armedBayIds.length > 0
       ? `${Math.min(assignedTargetCount, armedBayIds.length)}/${armedBayIds.length}`
       : "0/0";
-  const activeCombatPhase: CombatPhaseId =
-    currentCombat.isAmbush && !currentCombat.ambushAttackDone
-      ? "ambush"
-      : currentCombat.skipPlayerTurn
-        ? "counter"
-        : activeBayId !== null || assignedTargetCount < armedBayIds.length
-          ? "targeting"
-          : "salvo";
-  const phaseNote =
-    activeCombatPhase === "counter"
-      ? "Следующий залп будет пропущен эффектом оглушения: враг получает инициативу."
-      : activeCombatPhase === "salvo"
-        ? "Цели назначены. После атаки игра автоматически разыграет ответ врага и конец хода."
-        : activeBayId !== null
-          ? "Выберите модуль врага для активного оружейного отсека."
-          : `Назначьте цели оружейным отсекам. Готово: ${targetingProgress}.`;
+  const activeCombatPhase = computeCombatPhase(
+    currentCombat,
+    activeBayId,
+    assignedTargetCount,
+    armedBayIds.length,
+  );
+  const phaseNote = getPhaseNote(activeCombatPhase, activeBayId, targetingProgress);
 
   return (
     <div className="flex flex-col gap-4 h-full overflow-y-auto pr-2">
@@ -379,7 +530,7 @@ export function CombatPanel() {
             <StatChip label={t("combat.defense")} value={playerDefense} color="#ffb000" />
             <StatChip label={t("combat.evasion")} value={`${evasionChance}%`} color="#00ff41" />
           </div>
-          {hasGunner && (
+          {gunnerInWeaponBay && (
             <div className="mb-2 text-xs text-[#00ff41]">
               {t("combat.gunner")} {gunnerInWeaponBay.name}
             </div>
@@ -513,88 +664,22 @@ export function CombatPanel() {
               ? currentCombat.enemy.modules.find((m) => m.id === targetId)
               : null;
             const isActive = activeBayId === bay.id;
-            const bayWeapons = bay.weapons?.filter(Boolean) ?? [];
             const bayAccuracyModifier = computeBayAccuracyModifier(
               useGameStore.getState(),
               bay.id,
             );
-            // Один поиск WEAPON_TYPES на тип оружия — переиспользуется в обоих
-            // проходах рендера (урон/точность и бонус-подсказки) ниже
-            const weaponDefsByType = new Map<
-              string,
-              (typeof WEAPON_TYPES)[keyof typeof WEAPON_TYPES]
-            >();
-            bayWeapons.forEach((w) => {
-              if (w && !weaponDefsByType.has(w.type))
-                weaponDefsByType.set(w.type, WEAPON_TYPES[w.type]);
-            });
-
-            // Group weapons by type
-            const weaponGroups = bayWeapons.reduce(
-              (acc, w) => {
-                if (!w) return acc;
-                const g = acc.find((x) => x.type === w.type);
-                if (g) g.count++;
-                else acc.push({ type: w.type, count: 1 });
-                return acc;
-              },
-              [] as { type: string; count: number }[],
-            );
 
             return (
-              <button
+              <WeaponBayTargetRow
                 key={bay.id}
-                onClick={() => setActiveBayId(isActive ? null : bay.id)}
-                className={`cursor-pointer w-full text-left border px-3 py-2 text-xs transition-colors ${isActive
-                  ? "border-ring bg-[rgba(0,212,255,0.12)]"
-                  : "border-[#333] bg-[rgba(0,0,0,0.3)] hover:border-[#555]"
-                  }`}
-              >
-                {/* Top row: weapons + target */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {weaponGroups.map((g) => {
-                      const wdef = weaponDefsByType.get(g.type);
-                      const color = wdef?.color ?? "#888";
-                      const icon = wdef?.icon ?? "?";
-                      const name = t(`weapon_types.${g.type}`) || g.type;
-                      const bayLevelBonus = 1 + ((bay.level ?? 1) - 1) * 0.1;
-                      const dmg = Math.floor(
-                        Math.floor((wdef?.damage ?? 0) * bayLevelBonus) * g.count * dmgMultiplier,
-                      );
-                      return (
-                        <span key={g.type} className="flex items-center gap-0.5" style={{ color }}>
-                          <span>{icon}{g.count > 1 ? `×${g.count}` : ""}</span>
-                          <span className="opacity-80">{name}</span>
-                          <span className="opacity-60 ml-0.5">{dmg}</span>
-                          <span className="opacity-60 ml-0.5">
-                            ({Math.round(
-                              getWeaponAccuracy(g.type as WeaponType, bayAccuracyModifier) * 100,
-                            )}%)
-                          </span>
-                        </span>
-                      );
-                    })}
-                  </div>
-                  <span className={`shrink-0 ${targetMod ? "border-accent" : "text-[#444]"}`}>
-                    → {targetMod ? targetMod.name : "случайная цель"}
-                  </span>
-                </div>
-                {/* Bottom row: bonus hints */}
-                {weaponGroups.some(
-                  (g) => getWeaponHints(g.type, weaponDefsByType.get(g.type)).length > 0,
-                ) && (
-                  <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1">
-                    {weaponGroups.flatMap((g) =>
-                      getWeaponHints(g.type, weaponDefsByType.get(g.type)).map((hint, i) => (
-                        <span key={`${g.type}-${i}`} style={{ color: hint.color }} className="opacity-70">
-                          {hint.text}
-                        </span>
-                      )),
-                    )}
-                  </div>
-                )}
-              </button>
+                bay={bay}
+                targetMod={targetMod}
+                isActive={isActive}
+                dmgMultiplier={dmgMultiplier}
+                bayAccuracyModifier={bayAccuracyModifier}
+                onSelect={() => setActiveBayId(isActive ? null : bay.id)}
+                t={t}
+              />
             );
           })}
           {activeBayId !== null && (

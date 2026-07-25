@@ -2309,6 +2309,7 @@
         "bio_research_lab": "★ Bio Research Lab",
         "pulse_drive": "★ Pulse Drive",
         "medical_corps": "★ Medical Corps",
+        "habitat_module": "★ Medical Corps",
         "deep_survey_array": "★ Deep Survey Array",
         "weaponShed": "Shed"
     },
@@ -3420,12 +3421,14 @@
         "animations_off": "Disable animations",
         "animations_on": "Enable animations",
         "hint": "Click a location to fly there. Click and drag to pan. Mouse wheel to zoom.",
+        "hint_mobile": "Tap a location to fly there. Drag to pan, pinch to zoom.",
         "legend": "LEGEND",
         "unknown_markers_hint_line_1": "Unknown ships and objects appear when scanner coverage is insufficient",
         "unknown_markers_hint_line_2": "and may conceal other locations until you get closer or detect them with the scanner."
     },
     "galaxy_map_ui": {
         "hint": "Select a sector to jump to. Mouse wheel to zoom. Click and drag to pan.",
+        "hint_mobile": "Tap a sector to jump to. Pinch to zoom, drag to pan.",
         "danger": {
             "title": "Low combat readiness",
             "description": "Sector “{{sector}}”: readiness score {{rating}}, recommended {{recommended}}. Travel is possible, but enemies in this tier may be too strong.",

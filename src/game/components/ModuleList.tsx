@@ -48,7 +48,7 @@ function getTranslatedModuleName(
         repair_bay: t("module_names.repair_bay"),
         bio_research_lab: t("module_names.bio_research_lab"),
         pulse_drive: t("module_names.pulse_drive"),
-        habitat_module: t("module_names.medical_corps"),
+        habitat_module: t("module_names.habitat_module"),
         deep_survey_array: t("module_names.deep_survey_array"),
     };
     return nameMap[moduleType] || moduleType;
@@ -77,11 +77,28 @@ function getModuleDescription(module: Module): string {
         repair_bay: "module_descriptions.repair_bay",
         bio_research_lab: "module_descriptions.bio_research_lab",
         pulse_drive: "module_descriptions.pulse_drive",
-        habitat_module: "module_descriptions.medical_corps",
+        habitat_module: "module_descriptions.habitat_module",
         deep_survey_array: "module_descriptions.deep_survey_array",
     };
 
     return descriptionMap[moduleType] || "";
+}
+
+/** Индекс уровня сканера по дальности: 0 (базовый) .. 4 (квантовый). Общий порог для всех мест, где показывается тир сканера. */
+function getScannerTierIndex(scanRange: number): number {
+    if (scanRange >= 15) return 4;
+    if (scanRange >= 8) return 3;
+    if (scanRange >= 5) return 2;
+    if (scanRange >= 3) return 1;
+    return 0;
+}
+
+/** Процент прочности модуля (0-100), с защитой от деления на ноль. */
+function getConditionPercent(module: Module): number {
+    return Math.min(
+        100,
+        Math.round((module.health / (module.maxHealth || 100)) * 100),
+    );
 }
 
 export function ModuleList() {
@@ -91,7 +108,7 @@ export function ModuleList() {
 
     return (
         <>
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {modules.map((module) => (
                     <ModuleCard
                         key={module.id}
@@ -116,19 +133,14 @@ interface ModuleCardProps {
     isMerged?: boolean;
 }
 
-function CompactModuleStat({ module }: { module: Module }) {
-    const { t } = useTranslation();
-    const cons = module.consumption && module.consumption > 0
-        ? <span className="text-[#888] inline-flex items-center gap-0.5 ml-1"><StatIcon type="power_consumption" size={24} />-{module.consumption}</span>
-        : null;
+type StatFn = (icon: StatIconType, value: ReactNode) => ReactNode;
 
-    const stat = (icon: StatIconType, value: ReactNode) => (
-        <span className="inline-flex items-center gap-0.5">
-            <StatIcon type={icon} size={24} />
-            {value}
-        </span>
-    );
-
+/** Простые модули с одним ключевым статом (реактор, щит, движок и т.д.). */
+function renderPrimaryCompactStat(
+    module: Module,
+    stat: StatFn,
+    cons: ReactNode,
+): ReactNode | null {
     if (module.type === "reactor" && module.power)
         return <>{stat("power_generation", <>+{module.power}</>)}</>;
     if (module.type === "shield" && module.shields)
@@ -155,6 +167,15 @@ function CompactModuleStat({ module }: { module: Module }) {
         return <>{stat("oxygen", module.oxygen)}{cons}</>;
     if (module.type === "quarters" && module.capacity)
         return <>{stat("crew", <>+{module.capacity}</>)}{cons}</>;
+    return null;
+}
+
+/** Гибридные модули с несколькими независимыми статами. */
+function renderHybridCompactStat(
+    module: Module,
+    stat: StatFn,
+    cons: ReactNode,
+): ReactNode | null {
     if (module.type === "bio_research_lab")
         return <>
             {module.researchOutput ? stat("research", module.researchOutput) : null}
@@ -179,9 +200,29 @@ function CompactModuleStat({ module }: { module: Module }) {
             {module.healing ? <span className="ml-1">{stat("health", <>+{module.healing}</>)}</span> : null}
             {cons}
         </>;
-    if (module.consumption && module.consumption > 0)
-        return <span className="inline-flex items-center gap-0.5"><StatIcon type="power_consumption" size={24} />-{module.consumption}</span>;
-    return <span className="text-[#555]">{t("module_list.condition")} —</span>;
+    return null;
+}
+
+function CompactModuleStat({ module }: { module: Module }) {
+    const { t } = useTranslation();
+    const cons = module.consumption && module.consumption > 0
+        ? <span className="text-[#888] inline-flex items-center gap-0.5 ml-1"><StatIcon type="power_consumption" size={24} />-{module.consumption}</span>
+        : null;
+
+    const stat: StatFn = (icon, value) => (
+        <span className="inline-flex items-center gap-0.5">
+            <StatIcon type={icon} size={24} />
+            {value}
+        </span>
+    );
+
+    return (
+        renderPrimaryCompactStat(module, stat, cons) ??
+        renderHybridCompactStat(module, stat, cons) ??
+        (module.consumption && module.consumption > 0
+            ? <span className="inline-flex items-center gap-0.5"><StatIcon type="power_consumption" size={24} />-{module.consumption}</span>
+            : <span className="text-[#555]">{t("module_list.condition")} —</span>)
+    );
 }
 
 function ModuleCard({ module, onClick, isMerged }: ModuleCardProps) {
@@ -189,12 +230,14 @@ function ModuleCard({ module, onClick, isMerged }: ModuleCardProps) {
 
     const getModuleTier = () => {
         if (module.type === "scanner") {
-            const scanRange = module.scanRange || 0;
-            if (scanRange >= 15) return t("module_list.quantum");
-            if (scanRange >= 8) return t("module_list.mk_3");
-            if (scanRange >= 5) return t("module_list.mk_2");
-            if (scanRange >= 3) return t("module_list.mk_1");
-            return "";
+            const scannerTierLabels = [
+                "",
+                t("module_list.mk_1"),
+                t("module_list.mk_2"),
+                t("module_list.mk_3"),
+                t("module_list.quantum"),
+            ];
+            return scannerTierLabels[getScannerTierIndex(module.scanRange || 0)];
         }
         if (!module.level) return "";
         const displayLevel = Math.min(module.level, 4);
@@ -203,10 +246,7 @@ function ModuleCard({ module, onClick, isMerged }: ModuleCardProps) {
     };
 
     const tier = getModuleTier();
-    const healthPct = Math.min(
-        100,
-        Math.round((module.health / (module.maxHealth || 100)) * 100),
-    );
+    const healthPct = getConditionPercent(module);
     const hpColor =
         healthPct < 30
             ? "bg-[#ff0040]"
@@ -246,7 +286,7 @@ function ModuleCard({ module, onClick, isMerged }: ModuleCardProps) {
 
             <div className="flex-1 min-w-0 flex flex-col gap-1">
                 {/* Name + tier */}
-                <div className="text-ring font-bold text-[10px] truncate leading-tight">
+                <div className="text-ring font-bold text-[10px] leading-tight">
                     {getTranslatedModuleName(module.type, t)}
                     {tier && (
                         <span className="text-[#555] font-normal"> {tier}</span>
@@ -540,27 +580,18 @@ function DetailedStatRow({
     );
 }
 
-function ModuleDetailedStats({ module, mergeEffects }: ModuleDetailedStatsProps) {
-    const { t } = useTranslation();
-    const descriptionKey = getModuleDescription(module);
-    const percentDelta = (key: MergeEffectKey, base: number) =>
-        computeMergePercentDelta(base, mergeEffects?.[key]);
-    const flatDelta = (key: MergeEffectKey) => mergeEffects?.[key] || null;
-    const artifactArmor = useGameStore((s) => {
-        const artifact = s.artifacts.find(
-            (a) => a.effect.type === "module_armor" && a.effect.active,
-        );
-        if (!artifact) return 0;
-        return artifact.effect.value || 0;
-    });
+type PercentDeltaFn = (key: MergeEffectKey, base: number) => number | null;
+type FlatDeltaFn = (key: MergeEffectKey) => number | null;
 
+/** Статы, специфичные для конкретного типа модуля (энергия, груз, сканер и т.д.). */
+function renderModuleTypeDetailStats(
+    module: Module,
+    percentDelta: PercentDeltaFn,
+    flatDelta: FlatDeltaFn,
+    t: (key: string, params?: Record<string, string | number>) => string,
+): ReactNode {
     return (
-        <div className="space-y-2">
-            {/* Module purpose description */}
-            {descriptionKey && (
-                <div className="text-[#888] text-xs">{t(descriptionKey)}</div>
-            )}
-
+        <>
             {module.type === "reactor" && module.power && module.power > 0 && (
                 <DetailedStatRow icon="power_generation" label={`${t("module_list.generation")}:`}>
                     +{module.power}
@@ -614,13 +645,13 @@ function ModuleDetailedStats({ module, mergeEffects }: ModuleDetailedStatsProps)
                             <span className="text-accent">
                                 ★ {t("module_list.level")}:
                             </span>{" "}
-                            {module.scanRange >= 15
-                                ? t("module_list.scanner_quantum")
-                                : module.scanRange >= 8
-                                  ? t("module_list.scanner_mk3")
-                                  : module.scanRange >= 5
-                                    ? t("module_list.scanner_mk2")
-                                    : t("module_list.scanner_mk1")}
+                            {[
+                                t("module_list.scanner_mk1"),
+                                t("module_list.scanner_mk1"),
+                                t("module_list.scanner_mk2"),
+                                t("module_list.scanner_mk3"),
+                                t("module_list.scanner_quantum"),
+                            ][getScannerTierIndex(module.scanRange)]}
                         </div>
                         <DetailedStatRow icon="scan_range" label={`${t("module_list.scan_range")}:`}>
                             {module.scanRange}
@@ -707,6 +738,33 @@ function ModuleDetailedStats({ module, mergeEffects }: ModuleDetailedStatsProps)
                     {module.fuelEfficiency} {t("module_list.efficiency_note")}
                 </DetailedStatRow>
             )}
+        </>
+    );
+}
+
+function ModuleDetailedStats({ module, mergeEffects }: ModuleDetailedStatsProps) {
+    const { t } = useTranslation();
+    const descriptionKey = getModuleDescription(module);
+    const percentDelta: PercentDeltaFn = (key, base) =>
+        computeMergePercentDelta(base, mergeEffects?.[key]);
+    const flatDelta: FlatDeltaFn = (key) => mergeEffects?.[key] || null;
+    const artifactArmor = useGameStore((s) => {
+        const artifact = s.artifacts.find(
+            (a) => a.effect.type === "module_armor" && a.effect.active,
+        );
+        if (!artifact) return 0;
+        return artifact.effect.value || 0;
+    });
+
+    return (
+        <div className="space-y-2">
+            {/* Module purpose description */}
+            {descriptionKey && (
+                <div className="text-[#888] text-xs">{t(descriptionKey)}</div>
+            )}
+
+            {renderModuleTypeDetailStats(module, percentDelta, flatDelta, t)}
+
             {/* Defense/Armor for all modules - for shields use level */}
             {module.defense !== undefined && module.defense > 0 && (
                 <DetailedStatRow icon="armor" label={`${t("module_list.armor")}:`}>
@@ -723,13 +781,7 @@ function ModuleDetailedStats({ module, mergeEffects }: ModuleDetailedStatsProps)
                 <span className="text-accent">
                     {t("module_list.condition")}:
                 </span>{" "}
-                {Math.min(
-                    100,
-                    Math.round(
-                        (module.health / (module.maxHealth || 100)) * 100,
-                    ),
-                )}
-                %
+                {getConditionPercent(module)}%
             </div>
         </div>
     );
@@ -740,12 +792,14 @@ function ScannerDescription({ scanRange }: { scanRange?: number }) {
 
     // Determine scanner level based on scanRange
     const getScannerLevel = () => {
-        const range = scanRange || 0;
-        if (range >= 15) return t("module_list.scanner_quantum");
-        if (range >= 8) return t("module_list.scanner_mk3");
-        if (range >= 5) return t("module_list.scanner_mk2");
-        if (range >= 3) return t("module_list.scanner_mk1");
-        return t("module_list.scanner_default");
+        const scannerTierLabels = [
+            t("module_list.scanner_default"),
+            t("module_list.scanner_mk1"),
+            t("module_list.scanner_mk2"),
+            t("module_list.scanner_mk3"),
+            t("module_list.scanner_quantum"),
+        ];
+        return scannerTierLabels[getScannerTierIndex(scanRange || 0)];
     };
 
     return (

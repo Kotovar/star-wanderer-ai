@@ -6,6 +6,7 @@ import type {
     ScoutingOutcome,
     ResearchResourceType,
     SurfaceLogEntry,
+    CrewMember,
 } from "@/game/types";
 import {
     MUTATION_CHANCES,
@@ -83,14 +84,7 @@ export const sendScoutingMission = (
         }
 
         // Агрессивная фауна: находки богаче в полтора раза
-        if (hasAggressiveFauna) {
-            if (result.type === "credits" && result.value) {
-                result.value = Math.round(result.value * 1.5);
-            }
-            if (result.type === "tradeGood" && result.quantity) {
-                result.quantity = Math.round(result.quantity * 1.5);
-            }
-        }
+        applyAggressiveFaunaBonus(result, hasAggressiveFauna);
 
         // Apply scouting result
         applyScoutingResult(result, set, get);
@@ -106,38 +100,15 @@ export const sendScoutingMission = (
         }
 
         // Шанс заражения чужеродными организмами при разведке
-        // (агрессивная фауна удваивает риск)
-        const infectionChance =
-            MUTATION_CHANCES.SCOUT_INFECTION * (hasAggressiveFauna ? 2 : 1);
-        if (Math.random() < infectionChance) {
-            const mutationName = giveRandomMutation(scout, set);
-            if (mutationName) {
-                result.mutationName = mutationName;
-                get().addLog( i18nStore.t("game_logs.sendScoutingMission_2", { scout_name: scout.name, mutationName }),
-                    "error",
-                );
-                showHintOnce(get().addLog, "first_mutation", "hints.first_mutation");
-            }
-        }
+        resolveScoutingInfectionRisk(scout, hasAggressiveFauna, result, set, get);
     }
 
     // Give experience to scout
     get().gainExp(scout, SCOUT_BASE_EXP);
 
     // Update exploration progress (optical_implant augmentation gives +1 attempt)
-    const newScoutedTimes = getScoutedTimes(state, planetId) + 1;
-    const maxScoutAttempts =
-        SCOUTING_REQUIRED_VISITS +
-        (getAugmentationBonus(scout, "extraScoutAttempts") > 0 ? 1 : 0);
-    const isFullyExplored = newScoutedTimes >= maxScoutAttempts;
-    const planet = state.currentSector?.locations.find(
-        (location) => location.id === planetId,
-    );
-    const pointOfInterest =
-        isFullyExplored && planet?.isEmpty && planet.planetType
-            ? planet.pointOfInterest ??
-              PLANET_POINT_OF_INTERESTS[planet.planetType]
-            : planet?.pointOfInterest;
+    const { newScoutedTimes, maxScoutAttempts, isFullyExplored, pointOfInterest } =
+        computeExplorationProgress(state, planetId, scout);
 
     // Update state
     updateScoutingState(
@@ -161,6 +132,72 @@ export const sendScoutingMission = (
         "info",
     );
     get().updateShipStats();
+};
+
+/** Агрессивная фауна планеты: находки богаче в полтора раза. Мутирует result. */
+const applyAggressiveFaunaBonus = (
+    result: ScoutingOutcome,
+    hasAggressiveFauna: boolean,
+): void => {
+    if (!hasAggressiveFauna) return;
+    if (result.type === "credits" && result.value) {
+        result.value = Math.round(result.value * 1.5);
+    }
+    if (result.type === "tradeGood" && result.quantity) {
+        result.quantity = Math.round(result.quantity * 1.5);
+    }
+};
+
+/** Шанс заражения чужеродными организмами при разведке (агрессивная фауна удваивает риск). Мутирует result. */
+const resolveScoutingInfectionRisk = (
+    scout: CrewMember,
+    hasAggressiveFauna: boolean,
+    result: ScoutingOutcome,
+    set: SetState,
+    get: () => GameStore,
+): void => {
+    const infectionChance =
+        MUTATION_CHANCES.SCOUT_INFECTION * (hasAggressiveFauna ? 2 : 1);
+    if (Math.random() >= infectionChance) return;
+
+    const mutationName = giveRandomMutation(scout, set);
+    if (mutationName) {
+        result.mutationName = mutationName;
+        get().addLog( i18nStore.t("game_logs.sendScoutingMission_2", { scout_name: scout.name, mutationName }),
+            "error",
+        );
+        showHintOnce(get().addLog, "first_mutation", "hints.first_mutation");
+    }
+};
+
+/**
+ * Прогресс разведки планеты после очередной попытки
+ * (аугментация optical_implant даёт +1 попытку)
+ */
+const computeExplorationProgress = (
+    state: GameStore,
+    planetId: string,
+    scout: CrewMember,
+): {
+    newScoutedTimes: number;
+    maxScoutAttempts: number;
+    isFullyExplored: boolean;
+    pointOfInterest: Location["pointOfInterest"];
+} => {
+    const newScoutedTimes = getScoutedTimes(state, planetId) + 1;
+    const maxScoutAttempts =
+        SCOUTING_REQUIRED_VISITS +
+        (getAugmentationBonus(scout, "extraScoutAttempts") > 0 ? 1 : 0);
+    const isFullyExplored = newScoutedTimes >= maxScoutAttempts;
+    const planet = state.currentSector?.locations.find(
+        (location) => location.id === planetId,
+    );
+    const pointOfInterest =
+        isFullyExplored && planet?.isEmpty && planet.planetType
+            ? planet.pointOfInterest ??
+              PLANET_POINT_OF_INTERESTS[planet.planetType]
+            : planet?.pointOfInterest;
+    return { newScoutedTimes, maxScoutAttempts, isFullyExplored, pointOfInterest };
 };
 
 /**

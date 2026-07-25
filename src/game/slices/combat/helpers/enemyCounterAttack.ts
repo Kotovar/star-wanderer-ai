@@ -40,6 +40,10 @@ function recordPlayerHit(
     });
 }
 
+/** Записывает промах по цели (0 урона, флаг missed) — общий случай уклонения/саботажа/фазового щита. */
+const recordMiss = (set: (fn: (s: GameState) => void) => void, tgt: Module) =>
+    recordPlayerHit(set, tgt, 0, 0, false, true);
+
 /**
  * Handles enemy counter-attack after player attack (used mid-round, following
  * the player's own attack — regenerates enemy shields first, per round rules).
@@ -129,7 +133,7 @@ export function performEnemyAttack(
                 : i18nStore.t("game_logs.evade_ship", { source: evasionSource }),
             "info",
         );
-        recordPlayerHit(set, tgt, 0, 0, false, true);
+        recordMiss(set, tgt);
         if (pilot) get().gainExp(pilot, PILOT_EVASION_COMBAT_EXP);
         return;
     }
@@ -144,7 +148,7 @@ export function performEnemyAttack(
             (scoutWithSabotage.level ?? 1) * 0.01;
         if (Math.random() < sabotageChance) {
             get().addLog( i18nStore.t("game_logs.enemyCounterAttack_3"), "info");
-            recordPlayerHit(set, tgt, 0, 0, false, true);
+            recordMiss(set, tgt);
             return;
         }
     }
@@ -171,7 +175,7 @@ export function performEnemyAttack(
         )
     ) {
         get().addLog( i18nStore.t("game_logs.enemyCounterAttack_4"), "info");
-        recordPlayerHit(set, tgt, 0, 0, false, true);
+        recordMiss(set, tgt);
         return;
     }
 
@@ -193,6 +197,18 @@ export function performEnemyAttack(
         applyDamageNoShields(state, set, get, finalDamage, tgt, ignoreDefense, isCrit);
     }
 
+    applyBossAttackSideEffects(bossModifiers, finalDamage, combat, set, get);
+    cleanupAfterEnemyAttack(state, set, get);
+}
+
+/** Побочные эффекты атаки босса: счётчик атак, пробитие щита, лечение от урона, пропуск хода игрока. */
+function applyBossAttackSideEffects(
+    bossModifiers: ReturnType<typeof getBossAttackModifiers>,
+    finalDamage: number,
+    combat: NonNullable<GameState["currentCombat"]>,
+    set: (fn: (s: GameState) => void) => void,
+    get: () => GameStore,
+) {
     // Increment boss attack count
     if (combat.enemy.isBoss) {
         set((s) => {
@@ -237,7 +253,14 @@ export function performEnemyAttack(
         });
         get().addLog( i18nStore.t("game_logs.enemyCounterAttack_7"), "error");
     }
+}
 
+/** Уборка после атаки врага: погибший экипаж, регенерация босса, проверка поражения, сброс выделения. */
+function cleanupAfterEnemyAttack(
+    state: GameState,
+    set: (fn: (s: GameState) => void) => void,
+    get: () => GameStore,
+) {
     // Remove dead crew
     const deadCrew = get().crew.filter((c) => c.health <= 0);
     if (deadCrew.length > 0) {

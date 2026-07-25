@@ -257,10 +257,10 @@ export function GameHeader() {
           <div className="w-px h-5 bg-[rgba(0,255,65,0.3)] hidden md:block" />
 
           {/* ── Панели ── */}
-          <div className="flex items-center gap-1 md:gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-center">
             <button
               onClick={handleEffectsClick}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer relative"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer relative"
               title={t("header.tooltip_effects")}
             >
               <span className="text-[#9933ff]">⚡</span>
@@ -275,7 +275,7 @@ export function GameHeader() {
             </button>
             <button
               onClick={handleArtifactsClick}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#ff00ff] hover:bg-[rgba(255,0,255,0.2)] transition-colors cursor-pointer"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#ff00ff] hover:bg-[rgba(255,0,255,0.2)] transition-colors cursor-pointer"
               title={t("header.tooltip_artifacts")}
             >
               <span className="text-[#ff00ff]">★</span>
@@ -288,7 +288,7 @@ export function GameHeader() {
             </button>
             <button
               onClick={handleResearchClick}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
               title={t("header.tooltip_research")}
             >
               <span className="text-[#9933ff]">🔬</span>
@@ -298,7 +298,7 @@ export function GameHeader() {
             </button>
             <button
               onClick={handleEnemyCodexClick}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.16)] transition-colors cursor-pointer"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.16)] transition-colors cursor-pointer"
               title={t("enemy_codex.button")}
             >
               <span className="text-ring">👾</span>
@@ -314,7 +314,7 @@ export function GameHeader() {
                   showReputation();
                 }
               }}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
               title={t("reputation.button_tooltip")}
             >
               <span className="text-[#9933ff] lg:hidden">🤝</span>
@@ -330,7 +330,7 @@ export function GameHeader() {
                   showCrises();
                 }
               }}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-[#ff4444] hover:bg-[rgba(255,68,68,0.2)] transition-colors cursor-pointer"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#ff4444] hover:bg-[rgba(255,68,68,0.2)] transition-colors cursor-pointer"
               title={t("crisis_panel.title")}
             >
               <span className="text-[#ff4444]">🚨</span>
@@ -346,7 +346,7 @@ export function GameHeader() {
           <div className="flex items-center gap-1 md:gap-2">
             <button
               onClick={() => setShowSettings(true)}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 border border-ring hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-ring hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
               title={t("save_load.menu_title")}
             >
               <span className="text-ring">☰</span>

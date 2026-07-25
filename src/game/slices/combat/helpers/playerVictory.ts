@@ -90,83 +90,9 @@ export function handleVictory(
         .crew.filter((c) => c.health < 100)
         .map((c) => ({ name: c.name, damage: 100 - c.health }));
 
-    // Calculate credits
-    let creditsAmount = loot.credits;
+    calculateVictoryCredits(state, loot, set, get);
 
-    const blackBox = findActiveArtifact(
-        state.artifacts,
-        ARTIFACT_TYPES.BLACK_BOX,
-    );
-
-    if (blackBox) {
-        const boostValue = getArtifactEffectValue(blackBox, state);
-        creditsAmount = Math.floor(creditsAmount * (1 + boostValue));
-    }
-
-    let lootBonus = 0;
-    get().crew.forEach((c) => {
-        c.traits?.forEach((trait) => {
-            if (trait.effect.lootBonus) lootBonus += trait.effect.lootBonus;
-        });
-    });
-    if (lootBonus > 0) {
-        creditsAmount = Math.floor(creditsAmount * (1 + lootBonus));
-    }
-
-    set((s) => ({ credits: s.credits + creditsAmount }));
-
-    if (blackBox && creditsAmount > loot.credits) {
-        get().addLog( i18nStore.t("game_logs.playerVictory_3", { credits: creditsAmount - loot.credits }),
-            "info",
-        );
-    }
-    if (lootBonus > 0) {
-        get().addLog( i18nStore.t("game_logs.playerVictory_4", { value: Math.round(lootBonus * 100) }),
-            "info",
-        );
-    }
-
-    // Check for artifact
-    let artifactName: string | undefined;
-    if (updatedCombat.enemy.isBoss && loot.guaranteedArtifact) {
-        const artifact = get().artifacts.find(
-            (a) => a.id === loot.guaranteedArtifact,
-        );
-        if (artifact && !artifact.discovered) {
-            artifactName = artifact.name;
-            set((s) => {
-                s.artifacts.forEach((a) => {
-                    if (a.id === loot.guaranteedArtifact) {
-                        a.discovered = true;
-                        a.hinted = false;
-                        a.hintedAt = undefined;
-                    }
-                });
-            });
-        }
-    }
-
-    // Check for module drop
-    if (updatedCombat.enemy.isBoss && loot.module) {
-        const moduleName = loot.module.name;
-
-        const newCargoItem: CargoItem = {
-            item: moduleName,
-            quantity: 1,
-            isModule: true,
-            moduleLevel: loot.module.level ?? 4,
-            module: loot.module, // Store full ShopItem data
-        };
-        set((s) => ({
-            ship: { ...s.ship, cargo: [...s.ship.cargo, newCargoItem] },
-        }));
-        get().addLog( i18nStore.t("game_logs.playerVictory_6", { moduleName }),
-            "info",
-        );
-        get().addLog( i18nStore.t("game_logs.playerVictory_7"),
-            "info",
-        );
-    }
+    const artifactName = revealBossLoot(updatedCombat, set, get);
 
     // Mark boss as defeated
     if (updatedCombat.enemy.isBoss && get().currentLocation) {
@@ -196,47 +122,28 @@ export function handleVictory(
         );
     }
 
+    // Threat/tier of the defeated enemy — drives contract completion, research
+    // loot, and mutation risk below. `threat` is never explicitly 0 in practice
+    // (only unset), so `??` is the correct fallback (was previously computed
+    // with two different operators — `??` here, `||` for research/mutation —
+    // an inconsistency that only mattered if threat were ever 0).
+    const enemyTier = updatedCombat.enemy.threat ?? 1;
+
     // Complete contracts
-    const enemyThreat = updatedCombat.enemy.threat ?? 1;
     completeBattleContracts(
         set,
         get,
-        enemyThreat,
+        enemyTier,
         updatedCombat.enemy.isBoss ?? false,
     );
 
-    // Research resources
-    const enemyTier = updatedCombat.enemy.threat || 1;
-    const combatResources = updatedCombat.enemy.isBoss
-        ? getBossLootResources(enemyTier)
-        : getCombatLootResources(enemyTier);
-
-    if (spaceMonster) {
-        combatResources.push({
-            type: spaceMonster.huntReward,
-            quantity: getSpaceMonsterHuntReward(spaceMonster, enemyTier),
-        });
-    }
-
-    if (combatResources.length > 0) {
-        set((s) => {
-            combatResources.forEach((res) => {
-                s.research.resources[
-                    res.type as keyof typeof s.research.resources
-                ] =
-                    (s.research.resources[
-                        res.type as keyof typeof s.research.resources
-                    ] || 0) + res.quantity;
-            });
-        });
-        combatResources.forEach((res) => {
-            if (res.quantity > 0) {
-                get().addLog( i18nStore.t("game_logs.playerVictory_8", { icon: RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].icon, name: RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].name, quantity: res.quantity }),
-                    "info",
-                );
-            }
-        });
-    }
+    const combatResources = grantVictoryResearchResources(
+        updatedCombat,
+        spaceMonster,
+        enemyTier,
+        set,
+        get,
+    );
 
     // Crew experience
     const gunner = state.crew.find(
@@ -311,6 +218,166 @@ export function handleVictory(
         researchResources: combatResources,
     };
 
+    applyVictoryAftermath(state, updatedCombat, set, get);
+
+    set((s) => ({
+        battleResult,
+        currentCombat: null,
+        ship: { ...s.ship, shields: s.ship.maxShields },
+        gameMode: "battle_results",
+    }));
+
+    applyCombatTimeCost(combatRound, set, get);
+    get().updateShipStats();
+}
+
+/** Кредиты за победу: базовый лут + бонус «Чёрного ящика» + бонус трейтов экипажа (loot bonus). */
+function calculateVictoryCredits(
+    state: GameState,
+    loot: NonNullable<GameState["currentCombat"]>["loot"],
+    set: (fn: (s: GameState) => void) => void,
+    get: () => GameStore,
+) {
+    let creditsAmount = loot.credits;
+
+    const blackBox = findActiveArtifact(
+        state.artifacts,
+        ARTIFACT_TYPES.BLACK_BOX,
+    );
+
+    if (blackBox) {
+        const boostValue = getArtifactEffectValue(blackBox, state);
+        creditsAmount = Math.floor(creditsAmount * (1 + boostValue));
+    }
+
+    let lootBonus = 0;
+    get().crew.forEach((c) => {
+        c.traits?.forEach((trait) => {
+            if (trait.effect.lootBonus) lootBonus += trait.effect.lootBonus;
+        });
+    });
+    if (lootBonus > 0) {
+        creditsAmount = Math.floor(creditsAmount * (1 + lootBonus));
+    }
+
+    set((s) => ({ credits: s.credits + creditsAmount }));
+
+    if (blackBox && creditsAmount > loot.credits) {
+        get().addLog( i18nStore.t("game_logs.playerVictory_3", { credits: creditsAmount - loot.credits }),
+            "info",
+        );
+    }
+    if (lootBonus > 0) {
+        get().addLog( i18nStore.t("game_logs.playerVictory_4", { value: Math.round(lootBonus * 100) }),
+            "info",
+        );
+    }
+}
+
+/** Гарантированный дроп артефакта и/или модуля с побеждённого босса. Возвращает имя открытого артефакта, если он был. */
+function revealBossLoot(
+    updatedCombat: NonNullable<GameState["currentCombat"]>,
+    set: (fn: (s: GameState) => void) => void,
+    get: () => GameStore,
+): string | undefined {
+    const loot = updatedCombat.loot;
+    let artifactName: string | undefined;
+
+    if (updatedCombat.enemy.isBoss && loot.guaranteedArtifact) {
+        const artifact = get().artifacts.find(
+            (a) => a.id === loot.guaranteedArtifact,
+        );
+        if (artifact && !artifact.discovered) {
+            artifactName = artifact.name;
+            set((s) => {
+                s.artifacts.forEach((a) => {
+                    if (a.id === loot.guaranteedArtifact) {
+                        a.discovered = true;
+                        a.hinted = false;
+                        a.hintedAt = undefined;
+                    }
+                });
+            });
+        }
+    }
+
+    if (updatedCombat.enemy.isBoss && loot.module) {
+        const moduleName = loot.module.name;
+
+        const newCargoItem: CargoItem = {
+            item: moduleName,
+            quantity: 1,
+            isModule: true,
+            moduleLevel: loot.module.level ?? 4,
+            module: loot.module, // Store full ShopItem data
+        };
+        set((s) => ({
+            ship: { ...s.ship, cargo: [...s.ship.cargo, newCargoItem] },
+        }));
+        get().addLog( i18nStore.t("game_logs.playerVictory_6", { moduleName }),
+            "info",
+        );
+        get().addLog( i18nStore.t("game_logs.playerVictory_7"),
+            "info",
+        );
+    }
+
+    return artifactName;
+}
+
+/** Начисляет исследовательские ресурсы за победу (бой/босс/охота на монстра) и логирует. Возвращает список для battleResult. */
+function grantVictoryResearchResources(
+    updatedCombat: NonNullable<GameState["currentCombat"]>,
+    spaceMonster: (typeof SPACE_MONSTERS)[keyof typeof SPACE_MONSTERS] | null,
+    enemyTier: number,
+    set: (fn: (s: GameState) => void) => void,
+    get: () => GameStore,
+) {
+    const combatResources = updatedCombat.enemy.isBoss
+        ? getBossLootResources(enemyTier)
+        : getCombatLootResources(enemyTier);
+
+    if (spaceMonster) {
+        combatResources.push({
+            type: spaceMonster.huntReward,
+            quantity: getSpaceMonsterHuntReward(spaceMonster, enemyTier),
+        });
+    }
+
+    if (combatResources.length > 0) {
+        set((s) => {
+            combatResources.forEach((res) => {
+                s.research.resources[
+                    res.type as keyof typeof s.research.resources
+                ] =
+                    (s.research.resources[
+                        res.type as keyof typeof s.research.resources
+                    ] || 0) + res.quantity;
+            });
+        });
+        combatResources.forEach((res) => {
+            if (res.quantity > 0) {
+                get().addLog( i18nStore.t("game_logs.playerVictory_8", { icon: RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].icon, name: RESEARCH_RESOURCES[res.type as keyof typeof RESEARCH_RESOURCES].name, quantity: res.quantity }),
+                    "info",
+                );
+            }
+        });
+    }
+
+    return combatResources;
+}
+
+/**
+ * Последствия победы, не связанные напрямую с наградой: самоурон от
+ * проклятого артефакта, репутация/бан планеты при защите расы, удаление
+ * локации при атаке на дружеский корабль.
+ */
+function applyVictoryAftermath(
+    state: GameState,
+    updatedCombat: NonNullable<GameState["currentCombat"]>,
+    set: (fn: (s: GameState) => void) => void,
+    get: () => GameStore,
+) {
     // Handle self_damage negative effect (e.g., Overload Matrix)
     state.artifacts.forEach((artifact) => {
         if (
@@ -382,14 +449,4 @@ export function handleVictory(
         });
         get().addLog( i18nStore.t("game_logs.playerVictory_14"), "warning");
     }
-
-    set((s) => ({
-        battleResult,
-        currentCombat: null,
-        ship: { ...s.ship, shields: s.ship.maxShields },
-        gameMode: "battle_results",
-    }));
-
-    applyCombatTimeCost(combatRound, set, get);
-    get().updateShipStats();
 }

@@ -13,6 +13,7 @@ import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "@/game/slices/contracts/constant
 import type { DeliveryGoods } from "@/game/types/contracts";
 import { TRADE_GOODS } from "@/game/constants/goods";
 import type { Goods } from "@/game/types/goods";
+import type { Contract, GameStore } from "@/game/types";
 import { EmptyPlanetPanel } from "./EmptyPlanetPanel";
 import { PlanetExpeditionSetup } from "./PlanetExpeditionSetup";
 import { PlanetExplorationPanel } from "./PlanetExplorationPanel";
@@ -47,6 +48,216 @@ const RACE_PLANET_BACKGROUNDS = {
 } satisfies Record<keyof typeof RACES, string>;
 
 const RACE_PLANET_BACKGROUND_URLS = Object.values(RACE_PLANET_BACKGROUNDS);
+
+/** Цветовая тема планеты по доминирующей расе (акцент/фон/рамка/картинка). */
+function getPlanetTheme(dominantRace: keyof typeof RACES | undefined) {
+    const race = dominantRace ? RACES[dominantRace] : null;
+    return {
+        race,
+        raceAccent: race?.color ?? "#ffb000",
+        raceBg: race ? `${race.color}12` : "rgba(0,0,0,0)",
+        raceBorder: race ? `${race.color}55` : "#333",
+        raceBackground: dominantRace ? RACE_PLANET_BACKGROUNDS[dominantRace] : null,
+    };
+}
+
+/** Текст места назначения контракта (планета/станция/корабль в нужном секторе). */
+function getContractDestinationText(
+    contract: { targetLocationType?: string; targetLocationName?: string; targetSectorName?: string },
+    t: (key: string) => string,
+): string {
+    if (!contract.targetLocationType) {
+        return contract.targetSectorName || t("contracts.unknown");
+    }
+    const typeText =
+        contract.targetLocationType === "planet"
+            ? t("contracts.location_planet")
+            : contract.targetLocationType === "station"
+              ? t("contracts.location_station")
+              : t("contracts.location_ship");
+    return `${contract.targetLocationName} (${typeText}), сектор ${contract.targetSectorName}`;
+}
+
+type TFn = (key: string, params?: Record<string, string | number>) => string;
+
+/** Описание задания по его типу (доставка/бой/исследование/...). */
+function ContractDescription({
+    contract: c,
+    get,
+    t,
+}: {
+    contract: Contract;
+    get: () => GameStore;
+    t: TFn;
+}) {
+    return (
+        <>
+            {c.type === "delivery" && c.cargo &&
+                t("contracts.desc_delivery", {
+                    cargo: DELIVERY_GOODS[c.cargo as DeliveryGoods].name,
+                    amount: String(c.quantity ?? DELIVERY_CONTRACT_CARGO_AMOUNT),
+                    destination: getContractDestinationText(c, t) || "",
+                })}
+            {c.type === "combat" &&
+                t(
+                    c.isRaceQuest ? "contracts.desc_combat_race" : "contracts.desc_combat",
+                    { sector: c.sectorName || "" },
+                )}
+            {c.type === "research" &&
+                (c.requiresTechResearch
+                    ? stripRaceQuestEmoji(t("contracts.desc_research_synth"), c.isRaceQuest)
+                    : t("contracts.desc_research", { count: c.requiresAnomalies || 0 }))}
+            {c.type === "bounty" &&
+                t("contracts.desc_bounty", {
+                    threat: c.targetThreat || 1,
+                    sector: c.targetSectorName || "",
+                })}
+            {c.type === "diplomacy" &&
+                t("contracts.desc_diplomacy", {
+                    planet: c.targetPlanetName || "",
+                    type: c.targetPlanetType || "",
+                    sector: c.targetSectorName || "",
+                })}
+            {c.type === "patrol" &&
+                t("contracts.desc_patrol", {
+                    sectors: c.targetSectorNames || "",
+                    visited: c.visitedSectors?.length || 0,
+                    target: c.targetSectors?.length || 0,
+                })}
+            {c.type === "rescue" && (
+                <>
+                    {t("contracts.desc_rescue", {
+                        stormName: c.stormName || t("storm.radiation_cloud"),
+                        sectorName: c.sectorName || "",
+                    })}
+                    {(c.requiredStormIntensity ?? 1) > 1 && (
+                        <span className="ml-1 text-yellow-400">
+                            {t("contracts.rescue_intensity").replace(
+                                "{{intensity}}",
+                                String(c.requiredStormIntensity),
+                            )}
+                        </span>
+                    )}
+                </>
+            )}
+            {c.type === "mining" && t("contracts.desc_mining")}
+            {c.type === "scan_planet" &&
+                ((c.requiresVisit ?? 1) > 1
+                    ? t("contracts.desc_scan_multi", {
+                          count: String(c.requiresVisit),
+                          planetType: c.planetType || "",
+                      })
+                    : t("contracts.desc_scan", {
+                          planetType: c.planetType || "",
+                          sector: c.targetSectorName || "",
+                      }))}
+            {c.type === "supply_run" && c.cargo && (() => {
+                const cargoOwned =
+                    get().ship.tradeGoods.find((g) => g.item === c.cargo)?.quantity ?? 0;
+                return t("contracts.desc_supply", {
+                    cargo: TRADE_GOODS[c.cargo as Goods]?.name || "",
+                    quantity: c.quantity || 0,
+                    progress: cargoOwned,
+                    destination: c.sourceName || c.sourceSectorName || "",
+                });
+            })()}
+            {c.type === "expedition_survey" &&
+                t("contracts.desc_expedition_survey_offer", {
+                    planet: c.targetPlanetName ?? "",
+                    sector: c.targetSectorName ?? "",
+                    count: String(c.requiredDiscoveries ?? 1),
+                })}
+            {c.type === "gas_dive" &&
+                t("contracts.desc_gas_dive_offer", {
+                    count: String(c.requiredMembranes ?? 1),
+                })}
+            {c.type === "cleanse_curse" &&
+                t("contracts.desc_cleanse_curse_offer", {
+                    sector: c.targetSectorName || "",
+                })}
+        </>
+    );
+}
+
+/** Карточка доступного задания: заголовок, кнопка принять, описание, награда. */
+function AvailableContractCard({
+    contract: c,
+    isActive,
+    credits,
+    raceBg,
+    raceBorder,
+    onAccept,
+    get,
+    t,
+}: {
+    contract: Contract;
+    isActive: boolean;
+    credits: number;
+    raceBg: string;
+    raceBorder: string;
+    onAccept: (contract: Contract) => void;
+    get: () => GameStore;
+    t: TFn;
+}) {
+    const raceInfo = c.requiredRace ? RACES[c.requiredRace] : null;
+    const rawTitle = c.desc.startsWith("contracts.")
+        ? t(c.desc, {
+              planetType: c.planetType ? getPlanetTypeName(c.planetType, t) : "",
+          })
+        : c.desc;
+    const title = c.isRaceQuest ? stripLeadingEmoji(rawTitle) : rawTitle;
+
+    return (
+        <div
+            className={`border p-3 ${isActive ? "opacity-40" : ""} ${c.isRaceQuest ? "border-[#9933ff]" : ""}`}
+            style={{
+                background: raceBg,
+                ...(c.isRaceQuest ? {} : { borderColor: raceBorder }),
+            }}
+        >
+            <div className="flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                    <div className="text-ring font-bold flex items-center gap-2 flex-wrap">
+                        {title}
+                        {c.isRaceQuest && raceInfo && (
+                            <span
+                                className="inline-flex items-center gap-1 text-xs px-1 py-0.5 rounded"
+                                style={{
+                                    backgroundColor: `${raceInfo.color}20`,
+                                    color: raceInfo.color,
+                                }}
+                            >
+                                <RaceSprite
+                                    race={c.requiredRace ?? "human"}
+                                    size={18}
+                                    title={t(`races.${c.requiredRace}.plural`)}
+                                />
+                                {t(`races.${c.requiredRace}.plural`)}
+                            </span>
+                        )}
+                    </div>
+                </div>
+                <Button
+                    disabled={isActive || credits < 50}
+                    onClick={() => onAccept(c)}
+                    className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs ml-2"
+                >
+                    {isActive ? t("contracts.accepted") : t("contracts.accept")}
+                </Button>
+            </div>
+
+            <ContractReputationImpact contract={c} />
+
+            {/* Quest details */}
+            <div className="text-[11px] mt-1.5 space-y-0.5">
+                <div className="text-[#00ff41]">
+                    <ContractDescription contract={c} get={get} t={t} />
+                </div>
+                <div className="text-[#ffaa00] font-bold">💰 {c.reward}₢</div>
+            </div>
+        </div>
+    );
+}
 
 export function preloadRacePlanetBackgrounds() {
     for (const backgroundUrl of RACE_PLANET_BACKGROUND_URLS) {
@@ -88,13 +299,8 @@ export function PlanetPanel() {
 
     // Discover race when visiting (useEffect to avoid setState during render)
     const dominantRace = currentLocation?.dominantRace;
-    const race = dominantRace ? RACES[dominantRace] : null;
-    const raceAccent = race?.color ?? "#ffb000";
-    const raceBg = race ? `${race.color}12` : "rgba(0,0,0,0)";
-    const raceBorder = race ? `${race.color}55` : "#333";
-    const raceBackground = dominantRace
-        ? RACE_PLANET_BACKGROUNDS[dominantRace]
-        : null;
+    const { race, raceAccent, raceBg, raceBorder, raceBackground } =
+        getPlanetTheme(dominantRace);
 
     useEffect(() => {
         if (dominantRace && race && !knownRaces.includes(dominantRace)) {
@@ -269,75 +475,31 @@ export function PlanetPanel() {
                                 </div>
                             )}
 
-                            {raceReputation && dominantRace && (
+                            {raceReputation && dominantRace && (() => {
+                                const repValue = getRaceReputation(raceReputation, dominantRace);
+                                const repLevel = getReputationLevel(repValue);
+                                const repColor = REPUTATION_COLORS[repLevel];
+                                return (
                                 <div
                                     className="flex items-center gap-2 border px-3 py-2 text-xs backdrop-blur-sm"
                                     style={{
-                                        borderColor:
-                                            REPUTATION_COLORS[
-                                                getReputationLevel(
-                                                    getRaceReputation(
-                                                        raceReputation,
-                                                        dominantRace,
-                                                    ),
-                                                )
-                                            ],
-                                        backgroundColor: `${
-                                            REPUTATION_COLORS[
-                                                getReputationLevel(
-                                                    getRaceReputation(
-                                                        raceReputation,
-                                                        dominantRace,
-                                                    ),
-                                                )
-                                            ]
-                                        }20`,
+                                        borderColor: repColor,
+                                        backgroundColor: `${repColor}20`,
                                     }}
                                 >
-                                    <span>
-                                        {
-                                            REPUTATION_ICONS[
-                                                getReputationLevel(
-                                                    getRaceReputation(
-                                                        raceReputation,
-                                                        dominantRace,
-                                                    ),
-                                                )
-                                            ]
-                                        }
-                                    </span>
-                                    <span
-                                        style={{
-                                            color: REPUTATION_COLORS[
-                                                getReputationLevel(
-                                                    getRaceReputation(
-                                                        raceReputation,
-                                                        dominantRace,
-                                                    ),
-                                                )
-                                            ],
-                                        }}
-                                    >
+                                    <span>{REPUTATION_ICONS[repLevel]}</span>
+                                    <span style={{ color: repColor }}>
                                         {t(
                                             `reputation.levels.${getRaceReputationLevel(raceReputation, dominantRace)}`,
                                         )}
                                     </span>
                                     <span className="text-[#c0ccd0]">
-                                        (
-                                        {getRaceReputation(
-                                            raceReputation,
-                                            dominantRace,
-                                        ) > 0
-                                            ? "+"
-                                            : ""}
-                                        {getRaceReputation(
-                                            raceReputation,
-                                            dominantRace,
-                                        )}
-                                        )
+                                        ({repValue > 0 ? "+" : ""}
+                                        {repValue})
                                     </span>
                                 </div>
-                            )}
+                                );
+                            })()}
                         </div>
                     </div>
                 </section>
@@ -468,314 +630,18 @@ export function PlanetPanel() {
                                     completedContractIds.includes(c.id);
                                 if (isCompleted) return null;
 
-                                // Get race info for race-specific quests
-                                const raceInfo = c.requiredRace
-                                    ? RACES[c.requiredRace]
-                                    : null;
-
-                                // Determine destination type text
-                                const getDestText = (contract: typeof c) => {
-                                    if (!contract.targetLocationType)
-                                        return (
-                                            contract.targetSectorName ||
-                                            "Неизвестно"
-                                        );
-                                    const typeText =
-                                        contract.targetLocationType === "planet"
-                                            ? "планете"
-                                            : contract.targetLocationType ===
-                                                "station"
-                                              ? "станции"
-                                              : "кораблю";
-                                    return `${contract.targetLocationName} (${typeText}), сектор ${contract.targetSectorName}`;
-                                };
-                                const rawTitle = c.desc.startsWith(
-                                    "contracts.",
-                                )
-                                    ? t(c.desc, {
-                                          planetType: c.planetType
-                                              ? getPlanetTypeName(
-                                                    c.planetType,
-                                                    t,
-                                                )
-                                              : "",
-                                      })
-                                    : c.desc;
-                                const title = c.isRaceQuest
-                                    ? stripLeadingEmoji(rawTitle)
-                                    : rawTitle;
-
                                 return (
-                                    <div
+                                    <AvailableContractCard
                                         key={c.id}
-                                        className={`border p-3 ${isActive ? "opacity-40" : ""} ${c.isRaceQuest ? "border-[#9933ff]" : ""}`}
-                                        style={{
-                                            background: raceBg,
-                                            ...(c.isRaceQuest
-                                                ? {}
-                                                : { borderColor: raceBorder }),
-                                        }}
-                                    >
-                                        <div className="flex justify-between items-start gap-2">
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-ring font-bold flex items-center gap-2 flex-wrap">
-                                                    {title}
-                                                    {c.isRaceQuest &&
-                                                        raceInfo && (
-                                                            <span
-                                                                className="inline-flex items-center gap-1 text-xs px-1 py-0.5 rounded"
-                                                                style={{
-                                                                    backgroundColor: `${raceInfo.color}20`,
-                                                                    color: raceInfo.color,
-                                                                }}
-                                                            >
-                                                                <RaceSprite
-                                                                    race={
-                                                                        c.requiredRace ??
-                                                                        "human"
-                                                                    }
-                                                                    size={18}
-                                                                    title={t(
-                                                                        `races.${c.requiredRace}.plural`,
-                                                                    )}
-                                                                />
-                                                                {t(
-                                                                    `races.${c.requiredRace}.plural`,
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                </div>
-                                            </div>
-                                            <Button
-                                                disabled={
-                                                    isActive || credits < 50
-                                                }
-                                                onClick={() =>
-                                                    acceptContract(c)
-                                                }
-                                                className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-xs ml-2"
-                                            >
-                                                {isActive
-                                                    ? t("contracts.accepted")
-                                                    : t("contracts.accept")}
-                                            </Button>
-                                        </div>
-
-                                        <ContractReputationImpact contract={c} />
-
-                                        {/* Quest details */}
-                                        <div className="text-[11px] mt-1.5 space-y-0.5">
-                                            {/* What to do */}
-                                            <div className="text-[#00ff41]">
-                                                {c.type === "delivery" &&
-                                                    c.cargo &&
-                                                    t(
-                                                        "contracts.desc_delivery",
-                                                        {
-                                                            cargo: DELIVERY_GOODS[
-                                                                c.cargo as DeliveryGoods
-                                                            ].name,
-                                                            amount: String(
-                                                                c.quantity ??
-                                                                    DELIVERY_CONTRACT_CARGO_AMOUNT,
-                                                            ),
-                                                            destination:
-                                                                getDestText(
-                                                                    c,
-                                                                ) || "",
-                                                        },
-                                                    )}
-                                                {c.type === "combat" &&
-                                                    t(
-                                                        c.isRaceQuest
-                                                            ? "contracts.desc_combat_race"
-                                                            : "contracts.desc_combat",
-                                                        {
-                                                            sector:
-                                                                c.sectorName ||
-                                                                "",
-                                                        },
-                                                    )}
-                                                {c.type === "research" &&
-                                                    (c.requiresTechResearch
-                                                        ? stripRaceQuestEmoji(
-                                                              t(
-                                                                  "contracts.desc_research_synth",
-                                                              ),
-                                                              c.isRaceQuest,
-                                                          )
-                                                        : t(
-                                                              "contracts.desc_research",
-                                                              {
-                                                                  count:
-                                                                      c.requiresAnomalies ||
-                                                                      0,
-                                                              },
-                                                          ))}
-                                                {c.type === "bounty" &&
-                                                    t("contracts.desc_bounty", {
-                                                        threat:
-                                                            c.targetThreat || 1,
-                                                        sector:
-                                                            c.targetSectorName ||
-                                                            "",
-                                                    })}
-                                                {c.type === "diplomacy" &&
-                                                    t(
-                                                        "contracts.desc_diplomacy",
-                                                        {
-                                                            planet:
-                                                                c.targetPlanetName ||
-                                                                "",
-                                                            type:
-                                                                c.targetPlanetType ||
-                                                                "",
-                                                            sector:
-                                                                c.targetSectorName ||
-                                                                "",
-                                                        },
-                                                    )}
-                                                {c.type === "patrol" &&
-                                                    t("contracts.desc_patrol", {
-                                                        sectors:
-                                                            c.targetSectorNames ||
-                                                            "",
-                                                        visited:
-                                                            c.visitedSectors
-                                                                ?.length || 0,
-                                                        target:
-                                                            c.targetSectors
-                                                                ?.length || 0,
-                                                    })}
-                                                {c.type === "rescue" && (
-                                                    <>
-                                                        {t(
-                                                            "contracts.desc_rescue",
-                                                            {
-                                                                stormName:
-                                                                    c.stormName ||
-                                                                    t(
-                                                                        "storm.radiation_cloud",
-                                                                    ),
-                                                                sectorName:
-                                                                    c.sectorName ||
-                                                                    "",
-                                                            },
-                                                        )}
-                                                        {(c.requiredStormIntensity ??
-                                                            1) > 1 && (
-                                                            <span className="ml-1 text-yellow-400">
-                                                                {t(
-                                                                    "contracts.rescue_intensity",
-                                                                ).replace(
-                                                                    "{{intensity}}",
-                                                                    String(
-                                                                        c.requiredStormIntensity,
-                                                                    ),
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                    </>
-                                                )}
-                                                {c.type === "mining" &&
-                                                    t("contracts.desc_mining")}
-                                                {c.type === "scan_planet" &&
-                                                    ((c.requiresVisit ?? 1) > 1
-                                                        ? t(
-                                                              "contracts.desc_scan_multi",
-                                                              {
-                                                                  count: String(
-                                                                      c.requiresVisit,
-                                                                  ),
-                                                                  planetType:
-                                                                      c.planetType ||
-                                                                      "",
-                                                              },
-                                                          )
-                                                        : t(
-                                                              "contracts.desc_scan",
-                                                              {
-                                                                  planetType:
-                                                                      c.planetType ||
-                                                                      "",
-                                                                  sector:
-                                                                      c.targetSectorName ||
-                                                                      "",
-                                                              },
-                                                          ))}
-                                                {c.type === "supply_run" &&
-                                                    c.cargo &&
-                                                    (() => {
-                                                        const cargoOwned =
-                                                            get().ship.tradeGoods.find(
-                                                                (g) =>
-                                                                    g.item ===
-                                                                    c.cargo,
-                                                            )?.quantity ?? 0;
-                                                        return t(
-                                                            "contracts.desc_supply",
-                                                            {
-                                                                cargo:
-                                                                    TRADE_GOODS[
-                                                                        c.cargo as Goods
-                                                                    ]?.name ||
-                                                                    "",
-                                                                quantity:
-                                                                    c.quantity ||
-                                                                    0,
-                                                                progress:
-                                                                    cargoOwned,
-                                                                destination:
-                                                                    c.sourceName ||
-                                                                    c.sourceSectorName ||
-                                                                    "",
-                                                            },
-                                                        );
-                                                    })()}
-                                                {c.type ===
-                                                    "expedition_survey" &&
-                                                    t(
-                                                        "contracts.desc_expedition_survey_offer",
-                                                        {
-                                                            planet:
-                                                                c.targetPlanetName ??
-                                                                "",
-                                                            sector:
-                                                                c.targetSectorName ??
-                                                                "",
-                                                            count: String(
-                                                                c.requiredDiscoveries ??
-                                                                    1,
-                                                            ),
-                                                        },
-                                                    )}
-                                                {c.type === "gas_dive" &&
-                                                    t(
-                                                        "contracts.desc_gas_dive_offer",
-                                                        {
-                                                            count: String(
-                                                                c.requiredMembranes ??
-                                                                    1,
-                                                            ),
-                                                        },
-                                                    )}
-                                                {c.type === "cleanse_curse" &&
-                                                    t(
-                                                        "contracts.desc_cleanse_curse_offer",
-                                                        {
-                                                            sector:
-                                                                c.targetSectorName ||
-                                                                "",
-                                                        },
-                                                    )}
-                                            </div>
-
-                                            {/* Reward */}
-                                            <div className="text-[#ffaa00] font-bold">
-                                                💰 {c.reward}₢
-                                            </div>
-                                        </div>
-                                    </div>
+                                        contract={c}
+                                        isActive={isActive}
+                                        credits={credits}
+                                        raceBg={raceBg}
+                                        raceBorder={raceBorder}
+                                        onAccept={acceptContract}
+                                        get={get}
+                                        t={t}
+                                    />
                                 );
                             })}
                         </div>

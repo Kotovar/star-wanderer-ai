@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { GameHeader } from "@/game/components/header";
 import { preloadGasGiantBackgrounds } from "@/game/components/GasGiantPanel";
 import { preloadModuleArt, ShipGrid } from "@/game/components/ShipGrid";
@@ -46,6 +47,7 @@ import { useTranslation } from "@/lib/useTranslation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useIsMobile } from "@/game/hooks/useIsMobile";
 import { getContractTurnsRemaining } from "@/game/contracts/contractDeadline";
+import type { LogEntry } from "@/game/types";
 
 type LeftTab =
   | "ship"
@@ -80,6 +82,81 @@ const GLOBAL_OVERLAY_MODES = new Set([
  */
 type FlowPhase = "title_setup" | "game";
 
+/**
+ * Управляет фазой заголовок/настройка ↔ игра и связанными с ней окнами
+ * (модалка новой игры, обучение), реагируя на глобальные события из шапки.
+ */
+function useGameFlowPhase(animationsEnabled: boolean) {
+  const [phase, setPhase] = useState<FlowPhase>("title_setup");
+  const [showTutorial, setShowTutorial] = useState(false);
+  // Скрываем окно создания игры, пока проигрывается интро-анимация титульного экрана
+  const [setupReady, setSetupReady] = useState(false);
+  const [newGameOpen, setNewGameOpen] = useState(false);
+
+  // Listen for restart signal from Header (restart confirmed)
+  useEffect(() => {
+    const handler = () => {
+      setSetupReady(false);
+      setNewGameOpen(false);
+      setPhase("title_setup");
+    };
+    window.addEventListener("sw:showTitleSetup", handler);
+    return () => window.removeEventListener("sw:showTitleSetup", handler);
+  }, []);
+
+  // Listen for tutorial show signal from Header
+  useEffect(() => {
+    const handler = () => setShowTutorial(true);
+    window.addEventListener("sw:showTutorial", handler);
+    return () => window.removeEventListener("sw:showTutorial", handler);
+  }, []);
+
+  const isTitleSetup = phase === "title_setup";
+
+  // Показываем окно создания игры только после завершения интро-анимации
+  // (длительность radar-sweep). setState — в колбэке таймера, не в теле эффекта.
+  useEffect(() => {
+    if (!isTitleSetup || !animationsEnabled) return;
+    const id = setTimeout(() => setSetupReady(true), 2800);
+    return () => clearTimeout(id);
+  }, [isTitleSetup, animationsEnabled]);
+
+  // При выключенных анимациях модалка доступна сразу
+  const showSetupModal = !animationsEnabled || setupReady;
+
+  return {
+    phase,
+    setPhase,
+    isTitleSetup,
+    showSetupModal,
+    setSetupReady,
+    newGameOpen,
+    setNewGameOpen,
+    showTutorial,
+    setShowTutorial,
+  };
+}
+
+/** Индикатор новых записей в журнале с потенциально важными событиями (предупреждения/ошибки). */
+function useLogAlerts(log: LogEntry[]) {
+  const [acknowledgedLogEntry, setAcknowledgedLogEntry] = useState(
+    () => log[0] ?? null,
+  );
+  const acknowledgedLogIndex = acknowledgedLogEntry
+    ? log.indexOf(acknowledgedLogEntry)
+    : -1;
+  const unreadLogEntries =
+    acknowledgedLogIndex === -1 ? log : log.slice(0, acknowledgedLogIndex);
+  const hasLogAlert = unreadLogEntries.some(
+    (entry) => entry.type === "warning" || entry.type === "error",
+  );
+
+  return {
+    hasLogAlert,
+    acknowledgeLog: () => setAcknowledgedLogEntry(log[0] ?? null),
+  };
+}
+
 export default function Home() {
   const { gameOver, gameOverReason, gameVictory, gameVictoryReason } = useGameStore(
     useShallow((s) => ({
@@ -106,21 +183,7 @@ export default function Home() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<LeftTab>("ship");
   const [shipSubTab, setShipSubTab] = useState<ShipSubTab>("layout");
-  const [showTutorial, setShowTutorial] = useState(false);
-  // Скрываем окно создания игры, пока проигрывается интро-анимация титульного экрана
-  const [setupReady, setSetupReady] = useState(false);
-  const [newGameOpen, setNewGameOpen] = useState(false);
-  const [acknowledgedLogEntry, setAcknowledgedLogEntry] = useState(
-    () => log[0] ?? null,
-  );
-  const acknowledgedLogIndex = acknowledgedLogEntry
-    ? log.indexOf(acknowledgedLogEntry)
-    : -1;
-  const unreadLogEntries =
-    acknowledgedLogIndex === -1 ? log : log.slice(0, acknowledgedLogIndex);
-  const hasLogAlert = unreadLogEntries.some(
-    (entry) => entry.type === "warning" || entry.type === "error",
-  );
+  const { hasLogAlert, acknowledgeLog } = useLogAlerts(log);
 
   useEffect(() => {
     preloadModuleArt();
@@ -164,25 +227,16 @@ export default function Home() {
         : shipSubTab;
 
   // ── Phase state machine ────────────────────────────────────────
-  const [phase, setPhase] = useState<FlowPhase>("title_setup");
-
-  // Listen for restart signal from Header (restart confirmed)
-  useEffect(() => {
-    const handler = () => {
-      setSetupReady(false);
-      setNewGameOpen(false);
-      setPhase("title_setup");
-    };
-    window.addEventListener("sw:showTitleSetup", handler);
-    return () => window.removeEventListener("sw:showTitleSetup", handler);
-  }, []);
-
-  // Listen for tutorial show signal from Header
-  useEffect(() => {
-    const handler = () => setShowTutorial(true);
-    window.addEventListener("sw:showTutorial", handler);
-    return () => window.removeEventListener("sw:showTutorial", handler);
-  }, []);
+  const {
+    setPhase,
+    isTitleSetup,
+    showSetupModal,
+    setSetupReady,
+    newGameOpen,
+    setNewGameOpen,
+    showTutorial,
+    setShowTutorial,
+  } = useGameFlowPhase(animationsEnabled);
 
   useEffect(() => {
     const handler = () => {
@@ -193,19 +247,6 @@ export default function Home() {
     window.addEventListener("sw:showCampaignProgress", handler);
     return () => window.removeEventListener("sw:showCampaignProgress", handler);
   }, []);
-
-  const isTitleSetup = phase === "title_setup";
-
-  // Показываем окно создания игры только после завершения интро-анимации
-  // (длительность radar-sweep). setState — в колбэке таймера, не в теле эффекта.
-  useEffect(() => {
-    if (!isTitleSetup || !animationsEnabled) return;
-    const id = setTimeout(() => setSetupReady(true), 2800);
-    return () => clearTimeout(id);
-  }, [isTitleSetup, animationsEnabled]);
-
-  // При выключенных анимациях модалка доступна сразу
-  const showSetupModal = !animationsEnabled || setupReady;
 
   // ── Resize handler (unchanged) ─────────────────────────────────
   useEffect(() => {
@@ -231,40 +272,37 @@ export default function Home() {
   const selectTab = (tab: LeftTab) => {
     setActiveTab(tab);
     if (tab === "log") {
-      setAcknowledgedLogEntry(log[0] ?? null);
+      acknowledgeLog();
     }
   };
 
   // ── Содержимое вкладок управления (переиспользуется десктопом и мобильным) ──
-  const renderManagementContent = () => (
-    <>
-      {effectiveActiveTab === "ship" && (
-        <Tabs value={effectiveShipSubTab} onValueChange={(v) => setShipSubTab(v as ShipSubTab)} className="h-full flex flex-col">
-          <TabsList className="grid grid-cols-4 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] rounded-none h-8 shrink-0">
-            <TabsTrigger value="layout" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_layout")}</TabsTrigger>
-            <TabsTrigger value="stats" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_stats")}</TabsTrigger>
-            <TabsTrigger value="modules" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_modules")}</TabsTrigger>
-            <TabsTrigger value="cargo" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_cargo")}</TabsTrigger>
-          </TabsList>
-          <TabsContent value="layout" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ShipGrid /></TabsContent>
-          <TabsContent value="stats" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ShipStats /></TabsContent>
-          <TabsContent value="modules" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ModuleList /></TabsContent>
-          <TabsContent value="cargo" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><CargoDisplay /></TabsContent>
-        </Tabs>
-      )}
-      {effectiveActiveTab === "crew" && <div className="tab-transition"><CrewList /></div>}
-      {effectiveActiveTab === "contracts" && (
-        <div className="tab-transition"><ContractsList /></div>
-      )}
-      {effectiveActiveTab === "progress" && (
-        <div className="tab-transition"><CampaignProgressPanel /></div>
-      )}
-      {effectiveActiveTab === "blueprints" && (
-        <div className="tab-transition"><BlueprintsTab /></div>
-      )}
-      {effectiveActiveTab === "log" && <div className="tab-transition"><GameLog /></div>}
-    </>
-  );
+  // Каждой вкладке управления соответствует ровно одна панель — простой
+  // поиск по ключу вместо цепочки independent `effectiveActiveTab === "x"`.
+  const managementContentByTab: Record<
+    Exclude<LeftTab, "stats" | "modules" | "cargo">,
+    ReactNode
+  > = {
+    ship: (
+      <Tabs value={effectiveShipSubTab} onValueChange={(v) => setShipSubTab(v as ShipSubTab)} className="h-full flex flex-col">
+        <TabsList className="grid grid-cols-4 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] rounded-none h-8 shrink-0">
+          <TabsTrigger value="layout" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_layout")}</TabsTrigger>
+          <TabsTrigger value="stats" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_stats")}</TabsTrigger>
+          <TabsTrigger value="modules" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_modules")}</TabsTrigger>
+          <TabsTrigger value="cargo" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_cargo")}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="layout" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ShipGrid /></TabsContent>
+        <TabsContent value="stats" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ShipStats /></TabsContent>
+        <TabsContent value="modules" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ModuleList /></TabsContent>
+        <TabsContent value="cargo" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><CargoDisplay /></TabsContent>
+      </Tabs>
+    ),
+    crew: <div className="tab-transition"><CrewList /></div>,
+    contracts: <div className="tab-transition"><ContractsList /></div>,
+    progress: <div className="tab-transition"><CampaignProgressPanel /></div>,
+    blueprints: <div className="tab-transition"><BlueprintsTab /></div>,
+    log: <div className="tab-transition"><GameLog /></div>,
+  };
 
   // ── Render ──────────────────────────────────────────────────────
   return (
@@ -298,6 +336,9 @@ export default function Home() {
               onSoundChange={setSoundEnabled}
               onNewGame={() => setNewGameOpen(true)}
               onLoad={(slotId) => {
+                // loadFromSlot overwrites settings from the save file itself;
+                // re-apply the toggle values the user currently has selected
+                // in the StartMenu so a load doesn't silently flip them.
                 loadFromSlot(slotId);
                 setAnimationsEnabled(animationsEnabled);
                 setSoundEnabled(soundEnabled);
@@ -352,7 +393,14 @@ export default function Home() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-2 scrollbar-gutter-stable min-h-0">
-                  {renderManagementContent()}
+                  {
+                    managementContentByTab[
+                      effectiveActiveTab as Exclude<
+                        LeftTab,
+                        "stats" | "modules" | "cargo"
+                      >
+                    ]
+                  }
                 </div>
               </div>
             )}

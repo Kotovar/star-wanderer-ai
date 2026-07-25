@@ -11,6 +11,7 @@ import {
 import { useGameStore } from "../store";
 import type { Sector } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
+import { useIsMobile } from "@/game/hooks/useIsMobile";
 import {
     canAccessTier,
     drawStaticLegend,
@@ -171,6 +172,7 @@ function GalaxyStarIcon({ type }: { type: (typeof STAR_TYPES)[number] }) {
 export function GalaxyMap() {
     const containerRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
+    const isMobile = useIsMobile();
     const starsRef = useRef<Array<{
         x: number;
         y: number;
@@ -251,6 +253,25 @@ export function GalaxyMap() {
     );
     const dragStartRef = useRef({ x: 0, y: 0 });
     const offsetStartRef = useRef({ x: 0, y: 0 });
+    // Measures the first-visit hint banner (DOM) so the canvas-drawn legend
+    // (fuel/engine/captain info, top-left) can start below it instead of
+    // overlapping — the hint's height varies with text wrapping, so a fixed
+    // canvas offset would drift out of sync on narrow screens.
+    const hintBannerRef = useRef<HTMLDivElement | null>(null);
+    const hintBannerHeightRef = useRef(0);
+
+    useEffect(() => {
+        const el = hintBannerRef.current;
+        if (!el) {
+            hintBannerHeightRef.current = 0;
+            return;
+        }
+        const observer = new ResizeObserver(([entry]) => {
+            hintBannerHeightRef.current = entry.contentRect.height;
+        });
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [hintDismissed]);
 
     const dismissHint = () => {
         localStorage.setItem("sw_galaxy_hint_done", "1");
@@ -522,7 +543,19 @@ export function GalaxyMap() {
         }
 
         // Draw static legend (fuel, engine, captain info) BEFORE transform
-        drawStaticLegend(ctx, modules, captainLevel, fuel, t, width, height);
+        const legendTopOffset = hintDismissed
+            ? 0
+            : hintBannerHeightRef.current + 16;
+        drawStaticLegend(
+            ctx,
+            modules,
+            captainLevel,
+            fuel,
+            t,
+            width,
+            height,
+            legendTopOffset,
+        );
 
         // Apply transform for zoom and pan
         ctx.save();
@@ -588,6 +621,7 @@ export function GalaxyMap() {
         captainLevel,
         currentSector,
         fuel,
+        hintDismissed,
         modules,
         offset.x,
         offset.y,
@@ -923,8 +957,11 @@ export function GalaxyMap() {
         >
             {/* First-visit galaxy navigation hint */}
             {!hintDismissed && (
-                <div className="absolute top-2 left-2 right-2 bg-[rgba(0,212,255,0.08)] border border-ring px-3 py-2 text-xs text-ring z-20 flex items-center justify-between gap-2">
-                    <span>💡 {t("galaxy_map_ui.hint")}</span>
+                <div
+                    ref={hintBannerRef}
+                    className="absolute top-2 left-2 right-2 bg-[rgba(0,212,255,0.08)] border border-ring px-3 py-2 text-xs text-ring z-20 flex items-center justify-between gap-2"
+                >
+                    <span>💡 {t(isMobile ? "galaxy_map_ui.hint_mobile" : "galaxy_map_ui.hint")}</span>
                     <button
                         onClick={dismissHint}
                         className="text-ring hover:text-white cursor-pointer shrink-0 opacity-70 hover:opacity-100 transition-opacity"
