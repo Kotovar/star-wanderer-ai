@@ -11,7 +11,7 @@ import {
 import { useTranslation } from "@/lib/useTranslation";
 import { AchievementsPanel } from "@/game/components/AchievementsPanel";
 
-const SLOT_IDS: SaveSlotId[] = ["auto", "manual1", "manual2", "manual3"];
+const SLOT_IDS: SaveSlotId[] = ["auto", "manual1", "manual2", "manual3", "manual4", "manual5"];
 
 interface StartMenuProps {
   animationsEnabled: boolean;
@@ -129,11 +129,16 @@ export function StartMenu({
                   className="min-w-0 border border-[#1c3944] bg-[rgba(0,212,255,0.025)] p-3 text-left transition-colors hover:border-[#00d4ff] hover:bg-[rgba(0,212,255,0.07)] disabled:cursor-not-allowed disabled:opacity-35"
                 >
                   <div className="flex items-center justify-between gap-2 text-xs font-bold text-[#00d4ff]">
-                    <span>{t(`start_menu.slot_${slotId}`)}</span>
+                    <span>{meta?.name || t(`start_menu.slot_${slotId}`)}</span>
                     <span className="text-[9px] text-[#526b75]">
                       {meta ? formatDate(meta.timestamp) : t("start_menu.empty")}
                     </span>
                   </div>
+                  {meta?.name && (
+                    <div className="mt-0.5 text-[9px] uppercase tracking-wide text-[#526b75]">
+                      {t(`start_menu.slot_${slotId}`)}
+                    </div>
+                  )}
                   <div className="mt-2 text-[11px] text-[#91a0a8]">
                     {meta
                       ? `${meta.sectorName} · ${t("start_menu.turn")} ${meta.turn} · ₢${meta.credits}`

@@ -407,8 +407,8 @@ export interface GameManagement {
   restartGame: (templateId?: string, modifierIds?: string[]) => void;
   saveGame: () => void;
   loadGame: () => boolean;
-  saveToSlot: (slotId: "manual1" | "manual2" | "manual3") => void;
-  loadFromSlot: (slotId: "auto" | "manual1" | "manual2" | "manual3") => void;
+  saveToSlot: (slotId: "manual1" | "manual2" | "manual3" | "manual4" | "manual5", name?: string) => void;
+  loadFromSlot: (slotId: "auto" | "manual1" | "manual2" | "manual3" | "manual4" | "manual5") => void;
 }
 
 export type GameStore = GameState &

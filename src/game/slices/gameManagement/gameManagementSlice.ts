@@ -18,7 +18,7 @@ export interface GameManagementSlice {
     restartGame: (templateId?: string, modifierIds?: string[]) => void;
     saveGame: () => void;
     loadGame: () => boolean;
-    saveToSlot: (slotId: ManualSlotId) => void;
+    saveToSlot: (slotId: ManualSlotId, name?: string) => void;
     loadFromSlot: (slotId: SaveSlotId) => void;
 }
 
@@ -91,9 +91,9 @@ export const createGameManagementSlice = (
     },
 
     /** Сохранить в ручной слот (1/2/3) */
-    saveToSlot: (slotId: ManualSlotId) => {
+    saveToSlot: (slotId: ManualSlotId, name?: string) => {
         const state = get();
-        saveSlot(slotId, state);
+        saveSlot(slotId, state, name);
         get().addLog( i18nStore.t("game_logs.gameManagementSlice_2", { value: slotId.replace("manual", "") }), "info");
     },
 

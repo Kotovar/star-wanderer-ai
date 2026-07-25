@@ -40,7 +40,7 @@ export const clearLocalStorage = () => {
 // Multi-slot save system
 // ──────────────────────────────────────────────
 
-export type ManualSlotId = "manual1" | "manual2" | "manual3";
+export type ManualSlotId = "manual1" | "manual2" | "manual3" | "manual4" | "manual5";
 export type SaveSlotId = "auto" | ManualSlotId;
 
 export interface SaveSlotMeta {
@@ -50,6 +50,7 @@ export interface SaveSlotMeta {
   sectorName: string;
   timestamp: number; // Date.now()
   templateId?: string; // Ship template used (undefined = old save without template info)
+  name?: string; // Custom name given by the player when saving (manual slots only)
 }
 
 const SLOT_KEYS: Record<SaveSlotId, string> = {
@@ -57,6 +58,8 @@ const SLOT_KEYS: Record<SaveSlotId, string> = {
   manual1: "star-wanderer-save-1",
   manual2: "star-wanderer-save-2",
   manual3: "star-wanderer-save-3",
+  manual4: "star-wanderer-save-4",
+  manual5: "star-wanderer-save-5",
 };
 
 const META_KEYS: Record<SaveSlotId, string> = {
@@ -64,9 +67,11 @@ const META_KEYS: Record<SaveSlotId, string> = {
   manual1: "star-wanderer-meta-1",
   manual2: "star-wanderer-meta-2",
   manual3: "star-wanderer-meta-3",
+  manual4: "star-wanderer-meta-4",
+  manual5: "star-wanderer-meta-5",
 };
 
-export const saveSlot = (id: SaveSlotId, state: GameState): void => {
+export const saveSlot = (id: SaveSlotId, state: GameState, name?: string): void => {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(SLOT_KEYS[id], serializeWithVersion(state));
@@ -78,6 +83,7 @@ export const saveSlot = (id: SaveSlotId, state: GameState): void => {
       sectorName: state.currentSector?.name ?? "—",
       timestamp: Date.now(),
       templateId: state.startTemplateId,
+      name: name?.trim() || undefined,
     };
     localStorage.setItem(META_KEYS[id], JSON.stringify(meta));
   } catch (e) {
@@ -139,4 +145,6 @@ export const getAllSlotMeta = (): Record<SaveSlotId, SaveSlotMeta | null> => ({
   manual1: getSlotMeta("manual1"),
   manual2: getSlotMeta("manual2"),
   manual3: getSlotMeta("manual3"),
+  manual4: getSlotMeta("manual4"),
+  manual5: getSlotMeta("manual5"),
 });

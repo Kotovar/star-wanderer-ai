@@ -212,7 +212,7 @@ export function GameHeader() {
                     campaignDirective.objective.titleKey,
                 )}
               </span>
-              <span className="hidden lg:inline"> — {t(campaignDirective.detail.key, campaignDirective.detail.params)}</span>
+              <span className="hidden xl:inline"> — {t(campaignDirective.detail.key, campaignDirective.detail.params)}</span>
             </button>
           )}
         </div>
@@ -299,7 +299,7 @@ export function GameHeader() {
               title={t("header.tooltip_research")}
             >
               <span className="text-[#9933ff]">🔬</span>
-              <span className="text-[#9933ff] hidden lg:inline">
+              <span className="text-[#9933ff] hidden xl:inline">
                 {t("game.science")}
               </span>
             </button>
@@ -309,7 +309,7 @@ export function GameHeader() {
               title={t("enemy_codex.button")}
             >
               <span className="text-ring">👾</span>
-              <span className="text-ring hidden lg:inline">
+              <span className="text-ring hidden xl:inline">
                 {t("enemy_codex.button")}
               </span>
             </button>
@@ -324,8 +324,8 @@ export function GameHeader() {
               className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
               title={t("reputation.button_tooltip")}
             >
-              <span className="text-[#9933ff] lg:hidden">🤝</span>
-              <span className="text-[#9933ff] hidden lg:inline">
+              <span className="text-[#9933ff] xl:hidden">🤝</span>
+              <span className="text-[#9933ff] hidden xl:inline">
                 {t("reputation.button")}
               </span>
             </button>
@@ -341,7 +341,7 @@ export function GameHeader() {
               title={t("crisis_panel.title")}
             >
               <span className="text-[#ff4444]">🚨</span>
-              <span className="text-[#ff4444] hidden lg:inline">
+              <span className="text-[#ff4444] hidden xl:inline">
                 {t("crisis_panel.button")}
               </span>
             </button>
