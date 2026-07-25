@@ -6,7 +6,7 @@ const CREW_ICON_SPRITE_HEIGHT = 561;
 const CREW_ICON_COUNT = 5;
 const CREW_ICON_WIDTH = CREW_ICON_SPRITE_WIDTH / CREW_ICON_COUNT;
 
-export type CrewStatusIconType =
+type CrewStatusIconType =
     | "regen"
     | "experience"
     | "movement"

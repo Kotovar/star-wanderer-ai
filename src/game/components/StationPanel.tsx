@@ -46,16 +46,6 @@ import { RaceSprite } from "./RaceSprite";
 import { getEmergencyFuelAmount } from "@/game/progression/emergencyFuel";
 import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
 
-// Re-export these from the original file - they contain complex logic
-export {
-    MODULES_BY_LEVEL,
-    UPGRADES_BY_TIER,
-    WEAPONS,
-    generateStationItems,
-    getStationCrewCount,
-    generateStationCrew,
-} from "./station/station-data";
-
 import {
     generateStationItems,
     generateStationCrew,

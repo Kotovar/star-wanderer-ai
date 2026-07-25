@@ -7,11 +7,9 @@ import {
     RACE_LAST_NAMES,
     RACES,
 } from "@/game/constants";
-import { isModuleCritical } from "@/game/modules/utils";
 import type {
     CrewMember,
     CrewTrait,
-    Module,
     Profession,
     Quality,
     RaceId,
@@ -19,7 +17,7 @@ import type {
 } from "@/game/types";
 
 /** Процент здоровья, ниже которого член экипажа считается критически раненым — вне зависимости от причины. */
-export const CRITICAL_CREW_HEALTH_PERCENT = 30;
+const CRITICAL_CREW_HEALTH_PERCENT = 30;
 
 /**
  * Член экипажа критически ранен прямо сейчас — неважно, почему (бой,
@@ -30,21 +28,6 @@ export const isCrewHealthCritical = (crewMember: CrewMember): boolean =>
     crewMember.health > 0 &&
     (crewMember.health / (crewMember.maxHealth || DEFAULT_MAX_HEALTH)) * 100 <
         CRITICAL_CREW_HEALTH_PERCENT;
-
-/**
- * Кто-то из экипажа нуждается во внимании: либо стоит в модуле, который вот-вот
- * (или уже) начал наносить урон, либо уже критически ранен по любой другой причине.
- */
-export const isCrewAtRisk = (
-    crewMember: CrewMember,
-    modules: Module[],
-): boolean => {
-    if (isCrewHealthCritical(crewMember)) return true;
-    if (crewMember.health <= 0 || crewMember.moduleId === undefined) return false;
-
-    const assignedModule = modules.find((m) => m.id === crewMember.moduleId);
-    return !!assignedModule && isModuleCritical(assignedModule);
-};
 
 /**
  * Конвертирует случайное число [0, 1) в Quality.
@@ -350,6 +333,17 @@ export const getBestByProfession = (
     crew
         .filter((c) => c.profession === profession)
         .sort((a, b) => (b.level ?? 1) - (a.level ?? 1))[0];
+
+/**
+ * Максимальный уровень среди учёных в экипаже (0, если учёных нет).
+ * Используется для проверки требований к исследованию аномалий/артефактов.
+ */
+export const getMaxScientistLevel = (crew: CrewMember[]): number => {
+    const scientists = crew.filter((c) => c.profession === "scientist");
+    return scientists.length > 0
+        ? Math.max(...scientists.map((s) => s.level || 1))
+        : 0;
+};
 
 /**
  * Лучший (по уровню) пилот, находящийся в активной кабине.

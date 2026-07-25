@@ -28,6 +28,7 @@ import {
 } from "./CrewListHelpers";
 import { ProfessionSprite } from "./ProfessionSprite";
 import { CrewStatusIcon } from "./CrewStatusIcon";
+import { ModuleMoveButtons } from "./CrewMemberCard";
 import { ASSIGNMENT_EXHAUSTED_AT } from "@/game/crew/assignmentFatigue";
 import { getHappinessEfficiencyModifier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import { getDesertionTurnsLeft } from "@/game/slices/gameLoop/processors/processDesertion";
@@ -554,73 +555,14 @@ export function CrewList() {
                                                     )}
                                                 </span>
                                             </div>
-                                            {selectedCrew.movedThisTurn ? (
-                                                <div className="text-[#ff0040] text-xs">
-                                                    {t("crew_member.moved_already")}
-                                                </div>
-                                            ) : adjacentModules.length > 0 ? (
-                                                <div className="flex flex-wrap gap-1">
-                                                    {/* Number modules by type for easier identification */}
-                                                    {(() => {
-                                                        const modulesWithTypeIndex =
-                                                            adjacentModules.map(
-                                                                (mod, index) => {
-                                                                    const sameTypeBefore =
-                                                                        adjacentModules
-                                                                            .slice(
-                                                                                0,
-                                                                                index,
-                                                                            )
-                                                                            .filter(
-                                                                                (
-                                                                                    m,
-                                                                                ) =>
-                                                                                    m.type ===
-                                                                                    mod.type,
-                                                                            ).length;
-                                                                    return {
-                                                                        module: mod,
-                                                                        typeIndex:
-                                                                            sameTypeBefore +
-                                                                            1,
-                                                                    };
-                                                                },
-                                                            );
-                                                        return modulesWithTypeIndex.map(
-                                                            ({
-                                                                module,
-                                                                typeIndex,
-                                                            }) => (
-                                                                <Button
-                                                                    key={module.id}
-                                                                    onClick={() => {
-                                                                        moveCrewMember(
-                                                                            selectedCrew.id,
-                                                                            module.id,
-                                                                        );
-                                                                        setSelectedCrew(
-                                                                            null,
-                                                                        );
-                                                                    }}
-                                                                    className="cursor-pointer bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-xs py-1 px-2 h-auto"
-                                                                >
-                                                                    →{" "}
-                                                                    {getModuleNameById(
-                                                                        module.id,
-                                                                    )}{" "}
-                                                                    #{typeIndex} (
-                                                                    {module.x},
-                                                                    {module.y})
-                                                                </Button>
-                                                            ),
-                                                        );
-                                                    })()}
-                                                </div>
-                                            ) : (
-                                                <div className="text-[#888] text-xs">
-                                                    {t("crew_member.no_adjacent")}
-                                                </div>
-                                            )}
+                                            <ModuleMoveButtons
+                                                crewMember={selectedCrew}
+                                                adjacentModules={
+                                                    adjacentModules
+                                                }
+                                                onMove={moveCrewMember}
+                                                onSelect={setSelectedCrew}
+                                            />
                                         </div>
                                     </TabsContent>
                                     <TabsContent value="bonuses" className="mt-2 space-y-4 text-sm leading-relaxed overflow-y-auto pr-1">

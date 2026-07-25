@@ -1,6 +1,7 @@
 "use client";
 
 import { useGameStore } from "../store";
+import { useCargoStatus } from "@/game/hooks/useCargoStatus";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { getLocationName } from "@/lib/translationHelpers";
@@ -269,10 +270,8 @@ export function AsteroidBeltPanel() {
   const hasEngineer = useGameStore((s) =>
     s.crew.some((c) => c.profession === "engineer"),
   );
-  const ship = useGameStore((s) => s.ship);
-  const probes = useGameStore((s) => s.probes);
-  const getCargoCapacity = useGameStore((s) => s.getCargoCapacity);
   const { t } = useTranslation();
+  const { cargoFull } = useCargoStatus();
 
   if (!currentLocation || currentLocation.type !== "asteroid_belt") return null;
 
@@ -286,11 +285,6 @@ export function AsteroidBeltPanel() {
   };
   const bonusPercent = getMiningBonus(drillLevel, asteroidTier);
   const canMine = bonusPercent >= 0 && !currentLocation.mined && hasEngineer;
-  const currentCargo =
-    ship.cargo.reduce((sum, c) => sum + c.quantity, 0) +
-    ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0) +
-    probes;
-  const cargoFull = currentCargo >= getCargoCapacity();
   const miningResult = currentLocation.miningResult;
   const isAncient = asteroidTier === 4;
   const locationName = getLocationName(currentLocation.name, t);

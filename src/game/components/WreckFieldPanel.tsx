@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useGameStore } from "@/game/store";
+import { useCargoStatus } from "@/game/hooks/useCargoStatus";
 import { Button } from "@/components/ui/button";
 import { LAB_MODULE_TYPES } from "@/game/constants/modules";
 import { getWreckScannerRareChanceMultiplier } from "@/game/slices/locations/constants";
@@ -83,18 +84,12 @@ export function WreckFieldPanel() {
   const salvageWreckField = useGameStore((s) => s.salvageWreckField);
   const showSectorMap = useGameStore((s) => s.showSectorMap);
   const ship = useGameStore((s) => s.ship);
-  const probes = useGameStore((s) => s.probes);
-  const getCargoCapacity = useGameStore((s) => s.getCargoCapacity);
   const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
   const { t } = useTranslation();
+  const { cargoFull } = useCargoStatus();
 
   if (!currentLocation || currentLocation.type !== "wreck_field") return null;
 
-  const currentCargo =
-    ship.cargo.reduce((sum, c) => sum + c.quantity, 0) +
-    ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0) +
-    probes;
-  const cargoFull = currentCargo >= getCargoCapacity();
   const scanRange = getEffectiveScanRange();
   const hasActiveScanner = ship.modules.some(
     (module) =>

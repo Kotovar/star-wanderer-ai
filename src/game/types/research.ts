@@ -110,23 +110,6 @@ export type ResearchBonusType =
     | "shield_regen";
 
 /**
- * Research resource in cargo
- */
-export interface ResearchResourceItem {
-    type: ResearchResourceType;
-    quantity: number;
-}
-
-/**
- * Research assignment for scientist crew
- */
-export type ResearchAssignment =
-    | "analyzing"
-    | "experimenting"
-    | "theorizing"
-    | "";
-
-/**
  * Active research project
  */
 export interface ActiveResearch {

@@ -5,13 +5,13 @@ import { generateSpaceMonster } from "@/game/galaxy/generate";
 import { assignGridPositions } from "@/game/sectorGrid";
 import type { GameState, Location, Sector } from "@/game/types";
 
-export interface PersistedState {
+interface PersistedState {
   version: number;
   state: unknown;
 }
 
 /** Тип миграции: принимает сырой объект, возвращает мигрированный */
-export type Migration = (state: unknown) => unknown;
+type Migration = (state: unknown) => unknown;
 
 /** Реестр миграций. Ключ — версия, с которой мигрируем (откуда). */
 const migrations: Record<number, Migration> = {

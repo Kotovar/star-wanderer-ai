@@ -13,7 +13,7 @@ export const isModuleActive = (module: Module) =>
     !module.disabled && !module.manualDisabled && module.health > 0;
 
 /** Процент здоровья, ниже которого модуль начинает наносить урон приписанному экипажу каждый ход. */
-export const CRITICAL_MODULE_HEALTH_PERCENT = 30;
+const CRITICAL_MODULE_HEALTH_PERCENT = 30;
 
 /**
  * Проверяет, находится ли модуль в критическом состоянии — экипаж, приписанный

@@ -6,7 +6,7 @@ import { useTranslation } from "@/lib/useTranslation";
 import { ShipStatsPanel } from "./ShipStatsPanel";
 import { getRaceReputationLevel } from "@/game/reputation/utils";
 import { addEnemyCodexEntry, getEnemyCodexId } from "@/game/constants/enemyCodex";
-import type { RaceId } from "@/game/types";
+import type { Location, RaceId } from "@/game/types";
 
 export function UnknownShipPanel() {
     const { t } = useTranslation();
@@ -39,7 +39,7 @@ export function UnknownShipPanel() {
                 const updatedSector = s.currentSector
                     ? {
                           ...s.currentSector,
-                          locations: s.currentSector.locations.map((l) =>
+                          locations: s.currentSector.locations.map((l: Location) =>
                               l.id === currentLocation.id
                                   ? revealedLocation
                                   : l,

@@ -5,11 +5,6 @@
 import type { ArtifactRarity } from "./artifacts";
 import type { GalaxyTierAll } from "./locations/galaxy";
 
-export type BossModuleType =
-    | "ancient_core"
-    | "conversion_core"
-    | "quantum_engine";
-
 // ═══════════════════════════════════════════════════════════════
 // PASSIVE MODULE EFFECTS
 // Effects that boss modules have (passive bonuses)

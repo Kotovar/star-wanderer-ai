@@ -24,6 +24,11 @@ import {
 } from "@/components/ui/tooltip";
 import { WeaponSlotsRenderer } from "./WeaponSlotsRenderer";
 import { MODULE_ART } from "./moduleArt";
+import {
+  HealthBar,
+  DisabledOverlay,
+  LevelBadge,
+} from "./shipGrid/ModuleCellParts";
 
 const CELL_SIZE = 100;
 
@@ -642,7 +647,7 @@ function ModuleRenderer({
         className="select-none"
         style={{ userSelect: "none", WebkitUserSelect: "none" }}
       >
-        {getModuleTranslation(module.type, currentLanguage).name}
+        {getModuleTranslation(module.type, currentLanguage, module.name).name}
       </text>
 
       {module.type === "weaponbay" && module.weapons && (
@@ -655,10 +660,19 @@ function ModuleRenderer({
         />
       )}
 
-      <HealthBar module={module} x={x} y={y} w={w} h={h} />
+      <HealthBar
+        module={module}
+        x={x}
+        y={y}
+        w={w}
+        h={h}
+        sidePadding={HEALTH_BAR_SIDE_PADDING}
+        bottomOffset={HEALTH_BAR_BOTTOM_OFFSET}
+        barHeight={HEALTH_BAR_HEIGHT}
+      />
 
       {(module.disabled || module.manualDisabled) && (
-        <DisabledOverlay x={x} y={y} w={w} h={h} />
+        <DisabledOverlay x={x} y={y} w={w} h={h} fontSize={24} />
       )}
       {module.health < 30 && <DamageOverlay x={x} y={y} w={w} h={h} />}
 
@@ -675,78 +689,6 @@ function ModuleRenderer({
         />
       )}
     </g>
-  );
-}
-
-function HealthBar({
-  module,
-  x,
-  y,
-  w,
-  h,
-}: {
-  module: Module;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}) {
-  const healthBarWidth = w - HEALTH_BAR_SIDE_PADDING * 2;
-  const healthWidth =
-    (module.health / (module.maxHealth || 100)) * healthBarWidth;
-
-  return (
-    <>
-      <rect
-        x={x + HEALTH_BAR_SIDE_PADDING}
-        y={y + h - HEALTH_BAR_BOTTOM_OFFSET}
-        width={healthBarWidth}
-        height={HEALTH_BAR_HEIGHT}
-        fill="#ff0040"
-      />
-      <rect
-        x={x + HEALTH_BAR_SIDE_PADDING}
-        y={y + h - HEALTH_BAR_BOTTOM_OFFSET}
-        width={healthWidth}
-        height={HEALTH_BAR_HEIGHT}
-        fill={module.health > 50 ? "#00ff41" : "#ffb000"}
-      />
-    </>
-  );
-}
-
-function DisabledOverlay({
-  x,
-  y,
-  w,
-  h,
-}: {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}) {
-  return (
-    <>
-      <rect
-        x={x + 2}
-        y={y + 2}
-        width={w - 4}
-        height={h - 4}
-        fill="rgba(255,0,64,0.3)"
-      />
-      <text
-        x={x + w / 2}
-        y={y + h / 2}
-        fill="#ff0040"
-        fontSize="24"
-        fontFamily="Share Tech Mono"
-        textAnchor="middle"
-        fontWeight="bold"
-      >
-        ⚠
-      </text>
-    </>
   );
 }
 
@@ -946,39 +888,14 @@ function CrewIcon({
         </text>
       </g>
 
-      {/* Level badge — shown only when level > 1 */}
-      {crewMember.level > 1 && (
-        <g className="select-none">
-          <circle
-            cx={x + size - badgeR}
-            cy={y + badgeR}
-            r={badgeR}
-            fill="#050810"
-          />
-          <circle
-            cx={x + size - badgeR}
-            cy={y + badgeR}
-            r={badgeR}
-            fill="none"
-            stroke={raceColor}
-            strokeWidth={0.7}
-          />
-          <text
-            x={x + size - badgeR}
-            y={y + badgeR}
-            fill={raceColor}
-            fontSize={size * 0.25}
-            fontFamily="Share Tech Mono"
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fontWeight="bold"
-            className="select-none"
-            style={{ userSelect: "none", WebkitUserSelect: "none" }}
-          >
-            {crewMember.level}
-          </text>
-        </g>
-      )}
+      <LevelBadge
+        x={x}
+        y={y}
+        size={size}
+        badgeR={badgeR}
+        raceColor={raceColor}
+        level={crewMember.level}
+      />
     </g>
   );
 }

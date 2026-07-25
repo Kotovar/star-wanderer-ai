@@ -5,7 +5,7 @@ import {
 } from "./constants";
 
 /** Ортогональные соседи клетки (вверх/вниз/влево/вправо). */
-export function getNeighborIndices(index: number): number[] {
+function getNeighborIndices(index: number): number[] {
     const row = Math.floor(index / EXPEDITION_GRID_SIZE);
     const col = index % EXPEDITION_GRID_SIZE;
     const neighbors: number[] = [];

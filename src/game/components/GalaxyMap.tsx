@@ -9,6 +9,7 @@ import {
     useSyncExternalStore,
 } from "react";
 import { useGameStore } from "../store";
+import type { Sector } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
 import {
     canAccessTier,
@@ -398,7 +399,7 @@ export function GalaxyMap() {
         (sectorId: number, x: number, y: number) => {
             useGameStore.setState((state) => {
                 const sector = state.galaxy.sectors.find(
-                    (s) => s.id === sectorId,
+                    (s: Sector) => s.id === sectorId,
                 );
                 if (sector) {
                     sector.mapX = x;

@@ -7,7 +7,4 @@ export {
     confirmRuinsOutcome,
 } from "./resolveRuinsChoice";
 export { endExpedition } from "./endExpedition";
-export {
-    getNeighborIndices,
-    isTileReachable,
-} from "./adjacency";
+export { isTileReachable } from "./adjacency";

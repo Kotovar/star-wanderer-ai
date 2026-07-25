@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useGameStore } from "@/game/store";
+import { useCargoStatus } from "@/game/hooks/useCargoStatus";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -50,12 +51,10 @@ export function PlanetExplorationPanel() {
   const scanExpeditionTile = useGameStore((s) => s.scanExpeditionTile);
   const resolveRuinsChoice = useGameStore((s) => s.resolveRuinsChoice);
   const diveDeeperIntoRuins = useGameStore((s) => s.diveDeeperIntoRuins);
-  const ship = useGameStore((s) => s.ship);
-  const probes = useGameStore((s) => s.probes);
-  const getCargoCapacity = useGameStore((s) => s.getCargoCapacity);
   const confirmRuinsOutcome = useGameStore((s) => s.confirmRuinsOutcome);
   const endExpedition = useGameStore((s) => s.endExpedition);
   const { t } = useTranslation();
+  const { cargoFull } = useCargoStatus();
 
   const [showAbortConfirm, setShowAbortConfirm] = useState(false);
   const [scanMode, setScanMode] = useState<ExpeditionScanMode | null>(null);
@@ -82,11 +81,6 @@ export function PlanetExplorationPanel() {
     !!ruinsOutcome &&
     ruinsDepth < EXPEDITION_RUINS_MAX_DEPTH &&
     apRemaining >= stepApCost;
-  const currentCargo =
-    ship.cargo.reduce((sum, c) => sum + c.quantity, 0) +
-    ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0) +
-    probes;
-  const cargoFull = currentCargo >= getCargoCapacity();
 
   const expeditionCrew = crew.filter((c) => crewIds.includes(c.id));
 

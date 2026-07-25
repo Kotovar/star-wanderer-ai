@@ -37,7 +37,7 @@ export interface MergeEffectEntry {
  * Разворачивает объект эффектов сращивания в список подписанных строк —
  * единая точка форматирования для меню задач и карточки модуля.
  */
-export function getMergeEffectEntries(
+function getMergeEffectEntries(
     effects: MergeEffects,
 ): MergeEffectEntry[] {
     return (Object.entries(effects) as [MergeEffectKey, number | undefined][])

@@ -11,15 +11,6 @@ import {
     MAX_DIPLOMATIC_REP,
 } from "@/game/reputation/diplomacy";
 
-export interface ReputationSlice {
-    changeReputation: (raceId: RaceId, amount: number) => void;
-    setReputation: (raceId: RaceId, value: number) => void;
-    getReputation: (raceId: RaceId) => number;
-    getReputationLevel: (raceId: RaceId) => ReputationLevel;
-    sendDiplomaticGift: (raceId: RaceId, amount: number) => void;
-    removePlanetBan: (locationId: string) => void;
-}
-
 export const createReputationSlice = (
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,

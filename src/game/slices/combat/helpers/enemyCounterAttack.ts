@@ -18,7 +18,7 @@ import {
 
 const createCombatHitEventId = () => Date.now() + Math.random();
 
-export function recordPlayerHit(
+function recordPlayerHit(
     set: (fn: (s: GameState) => void) => void,
     targetModule: Module,
     shieldDamage: number,
@@ -263,7 +263,7 @@ export function performEnemyAttack(
 /**
  * Selects target module by priority
  */
-export function selectTargetModule(
+function selectTargetModule(
     activeMods: Module[],
     get: () => GameStore,
 ): Module | null {
@@ -297,7 +297,7 @@ export function selectTargetModule(
 /**
  * Reflects attack with Mirror Shield
  */
-export function reflectAttack(
+function reflectAttack(
     state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
@@ -340,7 +340,7 @@ export function reflectAttack(
  * @param shieldPiercePercent - % of damage that bypasses shields
  * @param ignoreDefense - bypass module armor
  */
-export function applyDamageWithShields(
+function applyDamageWithShields(
     state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
@@ -441,7 +441,7 @@ function processEnemyShieldRegen(
 /**
  * Applies damage without shields
  */
-export function applyDamageNoShields(
+function applyDamageNoShields(
     state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
-export const MIN_ZOOM = 0.5;
-export const MAX_ZOOM = 3;
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 3;
 const ZOOM_SENSITIVITY = 0.001;
 export const DRAG_THRESHOLD = 5; // Minimum pixels to move before considering it a drag
 

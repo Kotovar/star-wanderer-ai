@@ -7,14 +7,14 @@ const SECTION_PANEL_TONE_CHROME = {
     cyan: "bg-[rgba(0,212,255,0.05)] border-[#00d4ff]",
 } as const;
 
-export type SectionPanelTone = keyof typeof SECTION_PANEL_TONE_CHROME;
+type SectionPanelTone = keyof typeof SECTION_PANEL_TONE_CHROME;
 
 const SECTION_PANEL_PADDING = {
     sm: "p-3",
     md: "p-4",
 } as const;
 
-export type SectionPanelPadding = keyof typeof SECTION_PANEL_PADDING;
+type SectionPanelPadding = keyof typeof SECTION_PANEL_PADDING;
 
 interface SectionPanelProps extends ComponentProps<"div"> {
     tone?: SectionPanelTone;

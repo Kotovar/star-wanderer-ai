@@ -2,7 +2,7 @@
 
 type PreviewTone = "danger" | "warning" | "good" | "neutral";
 
-export interface RiskRewardPreviewItem {
+interface RiskRewardPreviewItem {
     label: string;
     value: string;
     tone?: PreviewTone;

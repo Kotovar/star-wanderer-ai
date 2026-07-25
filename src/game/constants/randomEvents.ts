@@ -8,7 +8,7 @@ type EventState = Pick<
   "crew" | "ship" | "credits" | "currentSector" | "artifacts"
 >;
 
-export interface EventMeta {
+interface EventMeta {
   category: EventCategory;
   baseWeight: number;
   weightFn?: (state: EventState) => number;

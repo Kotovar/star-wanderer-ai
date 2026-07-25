@@ -18,7 +18,7 @@ const GAME_DIALOG_VARIANT_CHROME = {
     merge: "bg-[rgba(30,10,40,0.95)] border-[#aa55ff] text-[#00ff41]",
 } as const;
 
-export type GameDialogVariant = keyof typeof GAME_DIALOG_VARIANT_CHROME;
+type GameDialogVariant = keyof typeof GAME_DIALOG_VARIANT_CHROME;
 
 interface GameDialogContentProps extends ComponentProps<typeof DialogContent> {
     variant?: GameDialogVariant;

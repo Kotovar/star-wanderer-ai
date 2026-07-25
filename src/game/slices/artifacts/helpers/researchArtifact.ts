@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getMaxScientistLevel } from "@/game/crew/utils";
 import type { GameStore, CrewMember, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 import { ARTIFACT_RESEARCH_EXP_MULTIPLIER } from "@/game/constants";
@@ -38,10 +39,7 @@ export const researchArtifact = (
     }
 
     const scientists = state.crew.filter((c) => c.profession === "scientist");
-    const maxScientistLevel =
-        scientists.length > 0
-            ? Math.max(...scientists.map((s) => s.level || 1))
-            : 0;
+    const maxScientistLevel = getMaxScientistLevel(state.crew);
 
     if (maxScientistLevel < artifact.requiresScientistLevel) {
         const msg = `Требуется учёный уровня ${artifact.requiresScientistLevel}!`;

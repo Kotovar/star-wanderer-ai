@@ -9,7 +9,7 @@ export type EnemyCodexId =
   | BossEnemyCodexId
   | "ancient_boss";
 
-export type EnemyCodexShipEntry = {
+type EnemyCodexShipEntry = {
   id: ShipEnemyCodexId;
   icon: string;
   nameKey: string;

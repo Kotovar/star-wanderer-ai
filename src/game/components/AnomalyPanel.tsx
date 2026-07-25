@@ -1,6 +1,7 @@
 "use client";
 
 import { useGameStore } from "../store";
+import { getMaxScientistLevel } from "@/game/crew/utils";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import {
@@ -341,9 +342,8 @@ export function AnomalyPanel() {
     const aType     = currentLocation.anomalyType; // "good" | "bad" | undefined
     const tierColor = TIER_COLOR[tier] ?? TIER_COLOR[1];
 
-    const scientists       = crew.filter((c) => c.profession === "scientist");
-    const maxScientistLevel =
-        scientists.length > 0 ? Math.max(...scientists.map((s) => s.level || 1)) : 0;
+    const scientists = crew.filter((c) => c.profession === "scientist");
+    const maxScientistLevel = getMaxScientistLevel(crew);
     const canResearch = maxScientistLevel >= reqLevel;
 
     const anomalyCompleted = completedLocations.includes(currentLocation.id);

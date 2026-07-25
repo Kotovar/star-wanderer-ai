@@ -32,12 +32,6 @@ export type SpaceMonsterType =
     | "ember_wisp"
     | "binary_wyrm";
 
-export type SignalDetails = {
-    name: string;
-    description: string;
-    chance: number;
-};
-
 export type LocationType =
     | "station"
     | "planet"

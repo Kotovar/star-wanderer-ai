@@ -5,7 +5,7 @@ import type { CrewMember, GameStore, SetState } from "@/game/types";
 /**
  * Конфигурация дезертирства
  */
-export const TURNS_AT_ZERO_HAPPINESS = 3;
+const TURNS_AT_ZERO_HAPPINESS = 3;
 
 /** Порог раннего предупреждения о низком счастье (доля от maxHappiness) */
 const LOW_HAPPINESS_WARNING_RATIO = 0.3;

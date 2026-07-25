@@ -584,7 +584,7 @@ export const MODULES_BY_LEVEL: Record<number, ShopItem[]> = {
 
 // Upgrades - всегда доступны, но ограничены по тиру
 // Улучшения должны соответствовать разнице между модулями разных тиров
-export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
+const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
   1: [
     {
       id: "reactor-upgrade-1",
@@ -881,7 +881,7 @@ export const UPGRADES_BY_TIER: Record<number, ShopItem[]> = {
 
 
 // Weapons - available at all stations
-export const WEAPONS: ShopItem[] = [
+const WEAPONS: ShopItem[] = [
   {
     id: "weapon-kinetic",
     name: "Кинетическое оружие",
@@ -1043,7 +1043,7 @@ export function generateStationItems(
 }
 
 // Get station-specific crew availability
-export function getStationCrewCount(stationId: string): number {
+function getStationCrewCount(stationId: string): number {
   let hash = 0;
   for (let i = 0; i < stationId.length; i++) {
     hash = (hash << 5) - hash + stationId.charCodeAt(i);

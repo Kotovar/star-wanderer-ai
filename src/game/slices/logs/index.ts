@@ -3,5 +3,4 @@
  */
 
 export { createLogSlice } from "./logSlice";
-export type { LogSlice } from "./logSlice";
 

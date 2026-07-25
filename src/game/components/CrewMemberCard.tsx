@@ -19,6 +19,7 @@ import { COMBAT_ACTIONS } from "@/game/constants/crew";
 import { getAvailableTasksForModule } from "@/game/slices/crew/helpers";
 import { useTranslation } from "@/lib/useTranslation";
 import { CrewStatusIcon } from "./CrewStatusIcon";
+import { getModuleName } from "./CrewListHelpers";
 
 interface CrewMemberCardProps {
   crewMember: CrewMember;
@@ -113,14 +114,14 @@ export function CrewMemberCard({
   );
 }
 
-interface MovementRowProps {
+export interface MovementRowProps {
   crewMember: CrewMember;
   adjacentModules: Module[];
   onMove: (_crewMemberId: number, _moduleId: number) => void;
   onSelect: (crewMember: CrewMember | null) => void;
 }
 
-function MovementRow({
+export function ModuleMoveButtons({
   crewMember,
   adjacentModules,
   onMove,
@@ -141,34 +142,53 @@ function MovementRow({
   });
 
   return (
+    <div className="flex flex-wrap gap-1">
+      {!crewMember.movedThisTurn && adjacentModules.length > 0 ? (
+        modulesWithTypeIndex.map(({ module, typeIndex }) => (
+          <Button
+            key={module.id}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMove(crewMember.id, module.id);
+              onSelect(null);
+            }}
+            className="cursor-pointer bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-[9px] px-2 h-6 rounded-none"
+          >
+            {getModuleName(adjacentModules, t, module.id)} #{typeIndex} (
+            {module.x},{module.y})
+          </Button>
+        ))
+      ) : (
+        <span className="text-[#888] text-[9px] pt-0.5">
+          {crewMember.movedThisTurn
+            ? t("crew_member.moved_already")
+            : t("crew_member.no_modules")}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function MovementRow({
+  crewMember,
+  adjacentModules,
+  onMove,
+  onSelect,
+}: MovementRowProps) {
+  const { t } = useTranslation();
+
+  return (
     <div className="flex items-start gap-2 mb-1.5">
       <span className="text-[#00ff41] min-w-27.5 pt-0.5 inline-flex items-center gap-1">
         <CrewStatusIcon type="movement" size={18} />
         {t("crew_member.move_to")}
       </span>
-      <div className="flex flex-wrap gap-1">
-        {!crewMember.movedThisTurn && adjacentModules.length > 0 ? (
-          modulesWithTypeIndex.map(({ module, typeIndex }) => (
-            <Button
-              key={module.id}
-              onClick={(e) => {
-                e.stopPropagation();
-                onMove(crewMember.id, module.id);
-                onSelect(null);
-              }}
-              className="cursor-pointer bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-[9px] px-2 h-6 rounded-none"
-            >
-              {module.name} #{typeIndex} ({module.x},{module.y})
-            </Button>
-          ))
-        ) : (
-          <span className="text-[#888] text-[9px] pt-0.5">
-            {crewMember.movedThisTurn
-              ? t("crew_member.moved_already")
-              : t("crew_member.no_modules")}
-          </span>
-        )}
-      </div>
+      <ModuleMoveButtons
+        crewMember={crewMember}
+        adjacentModules={adjacentModules}
+        onMove={onMove}
+        onSelect={onSelect}
+      />
     </div>
   );
 }

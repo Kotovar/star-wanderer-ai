@@ -14,6 +14,11 @@ import {
   SymbiosisModuleOverlay,
 } from "./SymbiosisModuleOverlay";
 import { WeaponSlotsRenderer } from "./WeaponSlotsRenderer";
+import {
+  HealthBar,
+  DisabledOverlay,
+  LevelBadge,
+} from "./shipGrid/ModuleCellParts";
 
 const BASE_CELL_SIZE = 60;
 
@@ -336,10 +341,19 @@ function ModuleRenderer({
         <WeaponSlotsRenderer weapons={module.weapons} x={x} y={y} w={w} h={h} />
       )}
 
-      <HealthBar module={module} x={x} y={y} w={w} h={h} />
+      <HealthBar
+        module={module}
+        x={x}
+        y={y}
+        w={w}
+        h={h}
+        sidePadding={10}
+        bottomOffset={10}
+        barHeight={4}
+      />
 
       {(module.disabled || module.manualDisabled) && (
-        <DisabledOverlay x={x} y={y} w={w} h={h} />
+        <DisabledOverlay x={x} y={y} w={w} h={h} fontSize={22} />
       )}
       {healthPct < 0.7 && (
         <DamageScars
@@ -367,78 +381,6 @@ function ModuleRenderer({
         <CrewIcons crew={crewInModule} x={x} y={y} w={w} h={h} />
       )}
     </g>
-  );
-}
-
-function HealthBar({
-  module,
-  x,
-  y,
-  w,
-  h,
-}: {
-  module: Module;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}) {
-  const healthBarWidth = w - 20;
-  const healthWidth =
-    (module.health / (module.maxHealth || 100)) * healthBarWidth;
-
-  return (
-    <>
-      <rect
-        x={x + 10}
-        y={y + h - 10}
-        width={healthBarWidth}
-        height={4}
-        fill="#ff0040"
-      />
-      <rect
-        x={x + 10}
-        y={y + h - 10}
-        width={healthWidth}
-        height={4}
-        fill={module.health > 50 ? "#00ff41" : "#ffb000"}
-      />
-    </>
-  );
-}
-
-function DisabledOverlay({
-  x,
-  y,
-  w,
-  h,
-}: {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}) {
-  return (
-    <>
-      <rect
-        x={x + 2}
-        y={y + 2}
-        width={w - 4}
-        height={h - 4}
-        fill="rgba(255,0,64,0.3)"
-      />
-      <text
-        x={x + w / 2}
-        y={y + h / 2}
-        fill="#ff0040"
-        fontSize="22"
-        fontFamily="Share Tech Mono"
-        textAnchor="middle"
-        fontWeight="bold"
-      >
-        ⚠
-      </text>
-    </>
   );
 }
 
@@ -634,38 +576,14 @@ function CrewIcon({
         />
       )}
 
-      {crewMember.level > 1 && (
-        <g className="select-none">
-          <circle
-            cx={x + size - badgeR}
-            cy={y + badgeR}
-            r={badgeR}
-            fill="#050810"
-          />
-          <circle
-            cx={x + size - badgeR}
-            cy={y + badgeR}
-            r={badgeR}
-            fill="none"
-            stroke={raceColor}
-            strokeWidth={0.7}
-          />
-          <text
-            x={x + size - badgeR}
-            y={y + badgeR}
-            fill={raceColor}
-            fontSize={size * 0.25}
-            fontFamily="Share Tech Mono"
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fontWeight="bold"
-            className="select-none"
-            style={{ userSelect: "none", WebkitUserSelect: "none" }}
-          >
-            {crewMember.level}
-          </text>
-        </g>
-      )}
+      <LevelBadge
+        x={x}
+        y={y}
+        size={size}
+        badgeR={badgeR}
+        raceColor={raceColor}
+        level={crewMember.level}
+      />
     </g>
   );
 }

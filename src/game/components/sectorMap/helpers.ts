@@ -210,8 +210,8 @@ export function getScannerInfo(
       info.push(`🪸 ${t("locations.gas_giant")}`);
     } else if (loc.type === "wreck_field") {
       const tier = loc.wreckTier ?? 1;
-      info.push(`💀 Поле обломков (тир ${tier})`);
-      info.push(`☢ Радиационный фон`);
+      info.push(`💀 ${t("locations.wreck_field")} (${t("locations.tier")} ${tier})`);
+      info.push(`☢ ${t("locations.radiation_background")}`);
     }
 
     return info;
@@ -272,7 +272,7 @@ export function getScannerInfo(
     } else if (loc.type === "gas_giant") {
       info.push(`🪸 ${t("locations.gas_giant")}`);
     } else if (loc.type === "wreck_field") {
-      info.push(`💀 Поле обломков`);
+      info.push(`💀 ${t("locations.wreck_field")}`);
     } else {
       info.push(`❓ ${t("locations.unknown_object")}`);
     }
@@ -282,9 +282,9 @@ export function getScannerInfo(
   if (loc.type === "derelict_ship") {
     info.push(`🛸 ${t("locations.derelict_ship")}`);
     if (loc.derelictExplored) {
-      info.push(`✓ Исследовано`);
+      info.push(`✓ ${t("locations.explored")}`);
     } else {
-      info.push(`📐 Возможен чертёж модуля`);
+      info.push(`📐 ${t("locations.module_blueprint_possible")}`);
     }
     return info;
   }
@@ -305,14 +305,14 @@ export function getScannerInfo(
   if (loc.type === "wreck_field") {
     info.push(`💀 ${getLocationName(loc.name, t)}`);
     const tier = loc.wreckTier ?? 1;
-    info.push(`🏷️ Тир: ${tier}`);
+    info.push(`🏷️ ${t("locations.tier")}: ${tier}`);
     if (loc.wreckExhausted) {
-      info.push(`✓ Обыскано`);
+      info.push(`✓ ${t("locations.searched")}`);
     } else {
       const done = loc.wreckPassesDone ?? 0;
       const total = loc.wreckPassesTotal ?? 2;
-      info.push(`🔩 Проходов: ${done}/${total}`);
-      info.push(`☢ Радиационный фон`);
+      info.push(`🔩 ${t("locations.passes")}: ${done}/${total}`);
+      info.push(`☢ ${t("locations.radiation_background")}`);
     }
     return info;
   }

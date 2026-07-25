@@ -13,6 +13,35 @@ import type { CraftingRecipe, ModuleRecipe } from "@/game/types";
 
 type ExpandedId = string | null;
 
+function RecipeRequirements({
+  resources,
+  credits,
+  t,
+}: {
+  resources: Record<string, number>;
+  credits: number;
+  t: (key: string) => string;
+}) {
+  return (
+    <div className="border-t border-[#1a1a1a] pt-2">
+      <div className="text-[#444] text-[9px] uppercase tracking-wider mb-1">
+        {t("blueprints.details_requires")}
+      </div>
+      <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+        {Object.entries(resources).map(([key, qty]) => (
+          <span key={key} className="text-[#aaa] text-[10px]">
+            {t(`blueprints.resources.${key}`)}{" "}
+            <span className="text-[#ffb000] font-bold">×{qty}</span>
+          </span>
+        ))}
+        <span className="text-[#ffb000] font-bold text-[10px]">
+          {credits}₢
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function WeaponPreview({
   recipe,
   t,
@@ -95,23 +124,11 @@ function WeaponPreview({
         )}
       </div>
 
-      {/* Requirements */}
-      <div className="border-t border-[#1a1a1a] pt-2">
-        <div className="text-[#444] text-[9px] uppercase tracking-wider mb-1">
-          {t("blueprints.details_requires")}
-        </div>
-        <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-          {Object.entries(recipe.resources).map(([key, qty]) => (
-            <span key={key} className="text-[#aaa] text-[10px]">
-              {t(`blueprints.resources.${key}`)}{" "}
-              <span className="text-[#ffb000] font-bold">×{qty}</span>
-            </span>
-          ))}
-          <span className="text-[#ffb000] font-bold text-[10px]">
-            {recipe.credits}₢
-          </span>
-        </div>
-      </div>
+      <RecipeRequirements
+        resources={recipe.resources}
+        credits={recipe.credits}
+        t={t}
+      />
 
       <div className="text-[#00ff41] text-[9px] mt-2">
         🏭 {t("blueprints.details_shipyard")}
@@ -215,23 +232,11 @@ function ModulePreview({
         </div>
       )}
 
-      {/* Requirements */}
-      <div className="border-t border-[#1a1a1a] pt-2">
-        <div className="text-[#444] text-[9px] uppercase tracking-wider mb-1">
-          {t("blueprints.details_requires")}
-        </div>
-        <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-          {Object.entries(recipe.goods).map(([key, qty]) => (
-            <span key={key} className="text-[#aaa] text-[10px]">
-              {t(`blueprints.resources.${key}`)}{" "}
-              <span className="text-[#ffb000] font-bold">×{qty}</span>
-            </span>
-          ))}
-          <span className="text-[#ffb000] font-bold text-[10px]">
-            {recipe.credits}₢
-          </span>
-        </div>
-      </div>
+      <RecipeRequirements
+        resources={recipe.goods}
+        credits={recipe.credits}
+        t={t}
+      />
 
       <div className="text-[#00ff41] text-[9px] mt-2">
         🏭 {t("blueprints.details_shipyard")}

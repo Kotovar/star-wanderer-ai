@@ -14,7 +14,7 @@ export function preloadGameImages() {
   }
 }
 
-export const GAME_IMAGE_PRELOADS = [
+const GAME_IMAGE_PRELOADS = [
   "/assets/ship.webp",
   "/assets/races.webp",
   "/assets/professions/human.webp",

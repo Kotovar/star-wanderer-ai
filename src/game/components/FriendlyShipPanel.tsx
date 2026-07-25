@@ -15,7 +15,7 @@ import { useTranslation } from "@/lib/useTranslation";
 import { getRaceReputationLevel } from "@/game/reputation/utils";
 import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
 import { getTierPriceMultiplier } from "@/game/slices/trade/constants";
-import type { CrewMember, Quality, RaceId } from "@/game/types";
+import type { CargoItem, CrewMember, Quality, RaceId, TradeGood } from "@/game/types";
 import { RaceSprite } from "./RaceSprite";
 import { ContractReputationImpact } from "./ContractReputationImpact";
 import { CrewTab } from "./station/CrewTab";
@@ -336,14 +336,14 @@ export function FriendlyShipPanel() {
                 useGameStore.setState((s) => ({
                   friendlyShipStock: { ...s.friendlyShipStock, [shipId]: { ...s.friendlyShipStock[shipId], [g.id]: (s.friendlyShipStock[shipId]?.[g.id] || 0) - qty } },
                   credits: s.credits - cost,
-                  ship: { ...s.ship, tradeGoods: s.ship.tradeGoods.some((tg) => tg.item === g.id) ? s.ship.tradeGoods.map((tg) => tg.item === g.id ? { ...tg, quantity: tg.quantity + qty } : tg) : [...s.ship.tradeGoods, { item: g.id, quantity: qty, buyPrice: g.price }] },
+                  ship: { ...s.ship, tradeGoods: s.ship.tradeGoods.some((tg: TradeGood) => tg.item === g.id) ? s.ship.tradeGoods.map((tg: TradeGood) => tg.item === g.id ? { ...tg, quantity: tg.quantity + qty } : tg) : [...s.ship.tradeGoods, { item: g.id, quantity: qty, buyPrice: g.price }] },
                 }));
               };
               const makeSell = (qty: number, revenue: number) => () => {
                 useGameStore.setState((s) => ({
                   friendlyShipStock: { ...s.friendlyShipStock, [shipId]: { ...s.friendlyShipStock[shipId], [g.id]: (s.friendlyShipStock[shipId]?.[g.id] || 0) + qty } },
                   credits: s.credits + revenue,
-                  ship: { ...s.ship, tradeGoods: s.ship.tradeGoods.map((tg) => tg.item === g.id ? { ...tg, quantity: tg.quantity - qty } : tg).filter((tg) => tg.quantity > 0) },
+                  ship: { ...s.ship, tradeGoods: s.ship.tradeGoods.map((tg: TradeGood) => tg.item === g.id ? { ...tg, quantity: tg.quantity - qty } : tg).filter((tg: TradeGood) => tg.quantity > 0) },
                 }));
               };
 
@@ -560,26 +560,26 @@ export function FriendlyShipPanel() {
                 // Deduct from cargo first, then tradeGoods for the remainder
                 const fromCargo = Math.min(
                   amount,
-                  s.ship.cargo.find((c) => c.item === "medicine")?.quantity ?? 0,
+                  s.ship.cargo.find((c: CargoItem) => c.item === "medicine")?.quantity ?? 0,
                 );
                 const fromTrade = amount - fromCargo;
                 if (fromCargo > 0) {
                   newCargo = s.ship.cargo
-                    .map((c) =>
+                    .map((c: CargoItem) =>
                       c.item === "medicine"
                         ? { ...c, quantity: c.quantity - fromCargo }
                         : c,
                     )
-                    .filter((c) => c.quantity > 0);
+                    .filter((c: CargoItem) => c.quantity > 0);
                 }
                 if (fromTrade > 0) {
                   newTradeGoods = s.ship.tradeGoods
-                    .map((tg) =>
+                    .map((tg: TradeGood) =>
                       tg.item === "medicine"
                         ? { ...tg, quantity: tg.quantity - fromTrade }
                         : tg,
                     )
-                    .filter((tg) => tg.quantity > 0);
+                    .filter((tg: TradeGood) => tg.quantity > 0);
                 }
               }
 

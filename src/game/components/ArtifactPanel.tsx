@@ -1,6 +1,7 @@
 "use client";
 
 import { useGameStore } from "@/game/store";
+import { getMaxScientistLevel } from "@/game/crew/utils";
 import { Button } from "@/components/ui/button";
 import { useMemo, useState } from "react";
 import { useTranslation } from "@/lib/useTranslation";
@@ -286,11 +287,7 @@ export function ArtifactPanel() {
     const [artifactFilter, setArtifactFilter] =
         useState<ArtifactFilter>("all");
 
-    const scientists = crew.filter((c) => c.profession === "scientist");
-    const maxScientistLevel =
-        scientists.length > 0
-            ? Math.max(...scientists.map((s) => s.level || 1))
-            : 0;
+    const maxScientistLevel = getMaxScientistLevel(crew);
     const discoveredCount = artifacts.filter((a) => a.discovered).length;
     const researchedCount = artifacts.filter((a) => a.researched).length;
     const activeCount = artifacts.filter((a) => a.effect.active).length;
@@ -418,7 +415,7 @@ export function ArtifactPanel() {
 
                 <div className="text-xs text-[#888]">
                     {t("artifacts.scientists_onboard")}:{" "}
-                    {scientists.length > 0
+                    {maxScientistLevel > 0
                         ? `${t("crew.level")} ${maxScientistLevel}`
                         : t("artifacts.no_scientists")}
                 </div>

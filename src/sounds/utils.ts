@@ -206,39 +206,3 @@ export const playSound = (type: SoundType, volumeMultiplier: number = 1) => {
     osc.stop(startTime + noteLength + 0.02);
   });
 };
-
-// Utility function to play a custom sound
-export const playCustomSound = (
-  frequencies: number[],
-  duration: number,
-  waveType: OscillatorType = "sine",
-  volume: number = 0.15,
-) => {
-  if (!soundEnabled) return;
-
-  const ctx = getAudioContext();
-  if (!ctx || frequencies.length === 0) return;
-
-  const noteDuration = duration / frequencies.length;
-
-  frequencies.forEach((freq, index) => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.frequency.value = freq;
-    osc.type = waveType;
-
-    const startTime = ctx.currentTime + index * noteDuration;
-    const noteLength = noteDuration * 0.8;
-
-    gain.gain.setValueAtTime(0, startTime);
-    gain.gain.linearRampToValueAtTime(volume, startTime + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.01, startTime + noteLength);
-
-    osc.start(startTime);
-    osc.stop(startTime + noteLength + 0.02);
-  });
-};

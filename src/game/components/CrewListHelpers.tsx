@@ -80,7 +80,7 @@ export const getRegen = (
     return base;
 };
 
-export interface DamageReductionInfo {
+interface DamageReductionInfo {
     traitReduction: number;
     techReduction: number;
     total: number;
