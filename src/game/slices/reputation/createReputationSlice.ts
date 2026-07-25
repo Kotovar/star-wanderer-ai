@@ -9,6 +9,7 @@ import {
 import {
     getDiplomacyCost,
     MAX_DIPLOMATIC_REP,
+    TRANSLATOR_HIRE_COST,
 } from "@/game/reputation/diplomacy";
 
 export const createReputationSlice = (
@@ -106,7 +107,8 @@ export const createReputationSlice = (
             amount,
             MAX_DIPLOMATIC_REP - currentRep,
         );
-        const cost = getDiplomacyCost(currentRep, effectiveAmount);
+        const hasTranslator = get().diplomaticTranslatorRaceIds.includes(raceId);
+        const cost = getDiplomacyCost(currentRep, effectiveAmount, hasTranslator);
         if (get().credits < cost) {
             get().addLog( i18nStore.t("game_logs.createReputationSlice_4", { cost }), "error");
             return;
@@ -141,6 +143,35 @@ export const createReputationSlice = (
             return state;
         });
         get().addLog( i18nStore.t("game_logs.createReputationSlice_8"), "info");
+    },
+
+    hireTranslator: (raceId: RaceId) => {
+        if (get().diplomaticTranslatorRaceIds.includes(raceId)) {
+            return;
+        }
+        if (get().credits < TRANSLATOR_HIRE_COST) {
+            get().addLog(
+                i18nStore.t("game_logs.createReputationSlice_9", {
+                    cost: TRANSLATOR_HIRE_COST,
+                }),
+                "error",
+            );
+            return;
+        }
+        set((state) => {
+            state.credits -= TRANSLATOR_HIRE_COST;
+            state.diplomaticTranslatorRaceIds = [
+                ...state.diplomaticTranslatorRaceIds,
+                raceId,
+            ];
+            return state;
+        });
+        get().addLog(
+            i18nStore.t("game_logs.createReputationSlice_10", {
+                raceName: i18nStore.t(`races.${raceId}.plural`),
+            }),
+            "info",
+        );
     },
 
     showReputation: () => {

@@ -29,11 +29,16 @@ export type PlanetEffectType =
     | "artifact_boost";
 
 /**
+ * Типы эффектов станций (разовые покупки на станции, напр. буст исследований)
+ */
+export type StationEffectType = "research_speed";
+
+/**
  * Объединённый тип для всех эффектов в игре
  */
-export type EffectType = ArtifactEffectType | PlanetEffectType;
+export type EffectType = ArtifactEffectType | PlanetEffectType | StationEffectType;
 
-export type EffectSource = "planet" | "crew" | "combat" | "anomaly" | "event";
+export type EffectSource = "planet" | "crew" | "combat" | "anomaly" | "event" | "station";
 export type EffectPolarity = "positive" | "negative" | "mixed";
 
 export interface ActiveEffect {

@@ -5,9 +5,8 @@ import { RACES } from "@/game/constants/races";
 import type {
     ActiveEffect,
     Artifact,
-    ArtifactEffectType,
+    EffectType,
     GameState,
-    PlanetEffectType,
     Sector,
 } from "@/game/types";
 import { store as i18nStore } from "@/lib/useTranslation";
@@ -97,7 +96,7 @@ export const getRandomUndiscoveredArtifact = (
 
 export const getEffectDescription = (
     effect: {
-        type: ArtifactEffectType | PlanetEffectType;
+        type: EffectType;
         value: number | string;
     },
     activeEffect?: ActiveEffect,
@@ -156,6 +155,12 @@ export const getEffectDescription = (
         case "artifact_hints":
             return i18nStore.t("planet_effects.effects.artifact_hints", {
                 value,
+            });
+
+        // Эффекты станций
+        case "research_speed":
+            return i18nStore.t("planet_effects.effects.research_speed", {
+                value: valuePercent,
             });
 
         default:

@@ -4,6 +4,7 @@ import type {
     SetState,
     Location,
     RaceId,
+    StationName,
     AnomalyApproach,
     DistressApproach,
     ExpeditionScanMode,
@@ -112,6 +113,9 @@ export interface LocationsSlice {
      * @param raceId - ID расы
      */
     discoverRace: (raceId: RaceId) => void;
+
+    /** Открывает тип станции в каталоге после первой стыковки. */
+    discoverStationType: (stationType: StationName) => void;
 
     /** Начинает экспедицию на поверхность населённой планеты */
     startExpedition: (planetId: string, crewIds: number[]) => void;
@@ -318,6 +322,20 @@ export const createLocationsSlice = (
             }
             return {
                 knownRaces: [...state.knownRaces, raceId],
+            };
+        });
+    },
+
+    discoverStationType: (stationType) => {
+        set((state) => {
+            if (state.discoveredStationTypes.includes(stationType)) {
+                return state;
+            }
+            return {
+                discoveredStationTypes: [
+                    ...state.discoveredStationTypes,
+                    stationType,
+                ],
             };
         });
     },

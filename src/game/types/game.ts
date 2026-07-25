@@ -22,6 +22,7 @@ import type { Module, WeaponCounts } from "./modules";
 import type { RaceId } from "./races";
 import type { ReputationLevel } from "./reputation";
 import type { ShipMergeTrait } from "./ships";
+import type { StationName } from "./stations";
 import type { ResearchData, TechnologyId } from "./research";
 import type { CraftingRecipeId, ModuleRecipeId } from "./crafting";
 import type { ShopItem } from "./shops";
@@ -152,11 +153,13 @@ export interface GameState {
   galaxyOffset: { x: number; y: number }; // Galaxy map pan offset
   sectorOffset: { x: number; y: number }; // Sector map pan offset
   bannedPlanets: string[]; // Planet location IDs permanently hostile (guard killed there)
+  diplomaticTranslatorRaceIds: RaceId[]; // Races with a hired translator (permanent diplomacy cost discount)
   startTemplateId?: string; // Ship template used to start this game (undefined = old save)
   startModifierIds: string[]; // Launch modifiers and selected doctrine
   activeCrisis: ActiveCrisisState | null; // Currently active global crisis
   discoveredCrisisIds: string[]; // Crises already encountered by the player
   discoveredEnemyCodexIds: string[]; // Enemy types already encountered by the player
+  discoveredStationTypes: StationName[]; // Station types already docked with in this run
   nextCrisisTurn: number; // Turn on which the next global crisis triggers
   nextCrisisId: string | null; // Crisis selected to trigger next
   // ── Мета-прогрессия (см. META_PROGRESSION_PLAN.md) ──
@@ -348,6 +351,7 @@ export interface GameArtifacts {
 
 export interface GameRaces {
   discoverRace: (raceId: RaceId) => void;
+  discoverStationType: (stationType: StationName) => void;
 }
 
 export interface GameReputation {
@@ -359,6 +363,7 @@ export interface GameReputation {
   closeReputationPanel: () => void;
   sendDiplomaticGift: (raceId: RaceId, amount: number) => void; // Pay variable credits to improve rep (diplomatic station)
   removePlanetBan: (locationId: string) => void; // Pay to lift a permanent planet ban (diplomatic station)
+  hireTranslator: (raceId: RaceId) => void; // Permanent diplomacy cost discount for one race (diplomatic station)
 }
 
 export interface GamePlanetSpecializations {
@@ -378,6 +383,7 @@ export interface GameFinish {
 export interface GameResearch {
   startResearch: (techId: TechnologyId) => void;
   processResearch: () => void;
+  activateResearchBoost: () => void;
 }
 
 export interface GameCrafting {

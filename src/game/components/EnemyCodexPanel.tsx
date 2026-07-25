@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getBossCombatModules } from "@/game/bosses";
 import { CombatShipVisual } from "@/game/components/CombatShipVisual";
 import { GameDialogContent } from "@/game/components/GameDialog";
@@ -21,6 +22,8 @@ import {
   SPACE_MONSTERS,
   type SpaceMonsterDefinition,
 } from "@/game/constants/spaceMonsters";
+import { STATION_CONFIG } from "@/game/galaxy/config";
+import { STATION_TYPES } from "@/game/galaxy/consts";
 import {
   calculateShieldsFromModules,
   ENEMY_TYPE_MODIFIERS,
@@ -33,8 +36,15 @@ import type {
   EnemyShip,
   EnemyStats,
   SpaceMonsterType,
+  StationName,
 } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
+import {
+  getStationRateValue,
+  getStationRates,
+  getStationServiceKeys,
+  STATION_DISCOVERY_ICONS,
+} from "@/game/stations/discovery";
 
 const CODEX_PREVIEW_THREAT = 2;
 const EMPTY_CREW: [] = [];
@@ -50,6 +60,8 @@ type CombatPreview = {
   isBoss?: boolean;
   specialAbility?: { name: string; description: string };
 };
+
+type CatalogSection = "ships" | "stations";
 
 function getBossDisplay(name: string) {
   const [icon, ...nameParts] = name.split(/\s+/);
@@ -147,6 +159,102 @@ function CodexCard({
         </div>
       )}
       {known && details && <div className="mt-3">{details}</div>}
+    </article>
+  );
+}
+
+function StationCodexCard({ stationType }: { stationType: StationName }) {
+  const { t } = useTranslation();
+  const config = STATION_CONFIG[stationType];
+  const rates = getStationRates(config);
+  const guaranteedRows = [
+    {
+      label: t("station_catalog.crew"),
+      values:
+        config.guaranteedProfessions?.map((profession) =>
+          t(`professions.${profession}`),
+        ) ?? [],
+    },
+    {
+      label: t("station_catalog.modules"),
+      values: config.guaranteedModules.map((module) =>
+        t(`module_names.${module}`),
+      ),
+    },
+    {
+      label: t("station_catalog.weapons"),
+      values: config.guaranteedWeapons.map((weapon) =>
+        t(`weapon_types.${weapon}`),
+      ),
+    },
+  ];
+  const services = getStationServiceKeys(stationType, config).map((service) =>
+    t(`station_discovery.service_${service}`),
+  );
+
+  return (
+    <article className="border border-[#00d4ff55] bg-[rgba(0,212,255,0.04)] p-3">
+      <div className="flex items-start gap-3">
+        <div className="grid h-10 w-10 shrink-0 place-items-center border border-[#00d4ff66] bg-[rgba(0,212,255,0.08)] text-xl">
+          {STATION_DISCOVERY_ICONS[stationType]}
+        </div>
+        <div>
+          <h2 className="font-['Orbitron'] text-sm font-bold text-[#d7f8ff]">
+            {t(`locations.station_types.${stationType}`)}
+          </h2>
+          <p className="mt-1 text-xs leading-relaxed text-[#8fa0aa]">
+            {t(`station_catalog.summary.${stationType}`)}
+          </p>
+        </div>
+      </div>
+
+      {rates.length > 0 && (
+        <div className="mt-3 grid grid-cols-2 gap-px border border-[#00d4ff33] bg-[#00d4ff33]">
+          {rates.map((rate) => (
+            <div key={rate.key} className="bg-[#071019] px-2 py-1.5">
+              <div
+                className={`font-['Orbitron'] text-sm font-bold ${
+                  rate.kind === "discount" ? "text-[#00ff41]" : "text-[#ffb000]"
+                }`}
+              >
+                {getStationRateValue(rate)}
+              </div>
+              <div className="text-[10px] uppercase tracking-wide text-[#8fa3aa]">
+                {t(`station_discovery.rate_${rate.key}`)}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-3 border-y border-[#00ff4133] py-2">
+        {guaranteedRows.map((row) => (
+          <div
+            key={row.label}
+            className="grid grid-cols-[5.25rem_1fr] gap-2 py-1 text-xs"
+          >
+            <div className="text-[10px] font-bold uppercase tracking-wide text-[#8fa3aa]">
+              {row.label}
+            </div>
+            <div className="text-[#b8dfc2]">
+              {row.values.length > 0
+                ? row.values.join(" · ")
+                : t("station_catalog.no_guarantees")}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {services.map((service) => (
+          <span
+            key={service}
+            className="border border-[#ffb00055] bg-[rgba(255,176,0,0.07)] px-1.5 py-0.5 text-[10px] text-[#ffd27a]"
+          >
+            {service}
+          </span>
+        ))}
+      </div>
     </article>
   );
 }
@@ -249,12 +357,20 @@ function EnemyCombatCard({
 
 export function EnemyCodexPanel() {
   const discoveredIds = useGameStore((s) => s.discoveredEnemyCodexIds);
+  const discoveredStationTypes = useGameStore(
+    (s) => s.discoveredStationTypes ?? [],
+  );
   const showSectorMap = useGameStore((s) => s.showSectorMap);
   const { t } = useTranslation();
   const [combatPreview, setCombatPreview] = useState<CombatPreview | null>(
     null,
   );
+  const [catalogSection, setCatalogSection] =
+    useState<CatalogSection>("ships");
   const knownIds = new Set(discoveredIds);
+  const knownStationTypes = STATION_TYPES.filter((stationType) =>
+    discoveredStationTypes.includes(stationType),
+  );
   const creatureEntries = Object.entries(SPACE_MONSTERS) as [
     SpaceMonsterType,
     SpaceMonsterDefinition,
@@ -297,6 +413,11 @@ export function EnemyCodexPanel() {
     setCombatPreview((current) =>
       current?.id === preview.id ? null : preview,
     );
+  };
+  const handleCatalogSectionChange = (section: string) => {
+    if (section !== "ships" && section !== "stations") return;
+    setCatalogSection(section);
+    setCombatPreview(null);
   };
   const showGeneratedCombatPreview = (
     id: string,
@@ -355,7 +476,9 @@ export function EnemyCodexPanel() {
             {t("enemy_codex.title")}
           </div>
           <div className="mt-1 text-xs text-[#888]">
-            {t("enemy_codex.subtitle")}
+            {catalogSection === "ships"
+              ? t("enemy_codex.ships_subtitle")
+              : t("station_catalog.subtitle")}
           </div>
         </div>
         <Button
@@ -366,12 +489,33 @@ export function EnemyCodexPanel() {
         </Button>
       </div>
 
-      <div className="border border-[#00d4ff44] bg-[rgba(0,212,255,0.04)] px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-[#a8eaff]">
+      <Tabs
+        value={catalogSection}
+        onValueChange={handleCatalogSectionChange}
+        className="min-h-0"
+      >
+        <TabsList className="w-full border border-[#00d4ff44] bg-[rgba(0,212,255,0.04)]">
+          <TabsTrigger
+            value="ships"
+            className="flex-1 cursor-pointer text-xs text-[#8fa0aa] data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810]"
+          >
+            {t("enemy_codex.tabs.ships")}
+          </TabsTrigger>
+          <TabsTrigger
+            value="stations"
+            className="flex-1 cursor-pointer text-xs text-[#8fa0aa] data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810]"
+          >
+            {t("enemy_codex.tabs.stations")}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="ships" className="mt-4 space-y-4">
+          <div className="border border-[#00d4ff44] bg-[rgba(0,212,255,0.04)] px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-[#a8eaff]">
         {t("enemy_codex.progress", {
           found: foundEntries,
           total: totalEntries,
         })}
-      </div>
+          </div>
 
       <section>
         <h2 className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#65cce5]">
@@ -538,6 +682,28 @@ export function EnemyCodexPanel() {
           onClose={() => setCombatPreview(null)}
         />
       )}
+        </TabsContent>
+
+        <TabsContent value="stations" className="mt-4 space-y-3">
+          <div className="border border-[#00d4ff44] bg-[rgba(0,212,255,0.04)] px-3 py-2 text-xs text-[#a8eaff]">
+            {t("station_catalog.hint")}
+          </div>
+          {knownStationTypes.length > 0 ? (
+            <div className="grid gap-2 lg:grid-cols-2">
+              {knownStationTypes.map((stationType) => (
+                <StationCodexCard
+                  key={stationType}
+                  stationType={stationType}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="border border-[#303840] bg-[rgba(0,0,0,0.18)] px-3 py-5 text-center text-sm text-[#8fa0aa]">
+              {t("station_catalog.empty")}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

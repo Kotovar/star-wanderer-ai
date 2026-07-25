@@ -29,6 +29,9 @@ import type {
 } from "@/game/types";
 import { getCrewByProfession } from "@/game/crew";
 
+/** +20% к скорости исследований от станционного буста (см. activateResearchBoost.ts) */
+export const RESEARCH_STATION_BOOST_MULTIPLIER = 0.2;
+
 /**
  * Интерфейс с данными о производительности исследования
  */
@@ -57,6 +60,11 @@ export interface ResearchOutputData {
      * Бонус от сращивания ксеноморфа
      */
     mergeBonus: number;
+
+    /**
+     * Бонус от активного станционного буста исследований (research-станция)
+     */
+    stationBoostBonus: number;
 }
 
 /**
@@ -66,7 +74,7 @@ export interface ResearchOutputData {
  * @returns Данные о производительности исследования
  */
 export const calculateResearchOutput = (
-    state: Pick<GameStore, "ship" | "crew" | "research">,
+    state: Pick<GameStore, "ship" | "crew" | "research" | "activeEffects">,
 ): ResearchOutputData => {
     // Производительность от лабораторий (включая гибридные модули с researchOutput)
     const labs = state.ship.modules.filter(
@@ -165,12 +173,27 @@ export const calculateResearchOutput = (
         mergeBonusValue = bonus;
     }
 
+    // Станционный буст (разовая покупка на research-станции, см. activateResearchBoost.ts) —
+    // обычная запись в activeEffects, тикает и удаляется через removeExpiredEffects()
+    // наравне со всеми остальными временными эффектами игры.
+    let stationBoostBonus = 0;
+    const boostMultiplier = state.activeEffects
+        .flatMap((e) => e.effects)
+        .filter((ef) => ef.type === "research_speed")
+        .reduce((sum, ef) => sum + Number(ef.value), 0);
+    if (boostMultiplier > 0) {
+        const bonus = Math.floor(totalOutput * boostMultiplier);
+        totalOutput += bonus;
+        stationBoostBonus = bonus;
+    }
+
     return {
         totalOutput,
         labOutput,
         scientistBonus,
         techSpeedBonus,
         mergeBonus: mergeBonusValue,
+        stationBoostBonus,
     };
 };
 

@@ -1,6 +1,7 @@
 import type { GameStore, SetState, TechnologyId } from "@/game/types";
 import { startResearch as startResearchMethod } from "./methods/startResearch";
 import { processResearch as processResearchMethod } from "./methods/processResearch";
+import { activateResearchBoost as activateResearchBoostMethod } from "./methods/activateResearchBoost";
 
 /**
  * Интерфейс ResearchSlice
@@ -17,6 +18,11 @@ export interface ResearchSlice {
      * Обрабатывает исследование каждый ход
      */
     processResearch: () => void;
+
+    /**
+     * Покупает временный буст скорости исследований на research-станции
+     */
+    activateResearchBoost: () => void;
 }
 
 /**
@@ -36,5 +42,9 @@ export const createResearchSlice = (
 
     processResearch: () => {
         processResearchMethod(set, get);
+    },
+
+    activateResearchBoost: () => {
+        activateResearchBoostMethod(set, get);
     },
 });

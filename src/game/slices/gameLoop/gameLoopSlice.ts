@@ -75,7 +75,8 @@ export const createGameLoopSlice = (
         // Пассивный опыт каждые 5 ходов
         processPassiveExperience(state, get);
 
-        // Удаление просроченных эффектов планеты
+        // Удаление просроченных эффектов планеты (включая станционный буст
+        // исследований — обычная запись в activeEffects, см. activateResearchBoost.ts)
         get().removeExpiredEffects();
         get().updateShipStats();
         get().processResearch();

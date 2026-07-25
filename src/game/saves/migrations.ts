@@ -190,6 +190,25 @@ const migrations: Record<number, Migration> = {
       discoveredEnemyCodexIds: [],
     };
   },
+  9: (raw) => {
+    const state = raw as Partial<GameState>;
+    const visitedStationTypes = new Set(
+      [
+        ...(state.galaxy?.sectors ?? []).flatMap((sector) => sector.locations),
+        ...(state.currentSector?.locations ?? []),
+        ...(state.currentLocation ? [state.currentLocation] : []),
+      ].flatMap((location) =>
+        location.type === "station" && location.visited && location.stationType
+          ? [location.stationType]
+          : [],
+      ),
+    );
+    return {
+      ...state,
+      stateVersion: 10,
+      discoveredStationTypes: [...visitedStationTypes],
+    };
+  },
 };
 
 /**

@@ -60,6 +60,7 @@ export const createGameManagementSlice = (
         if (!saved.bannedPlanets) {
             saved.bannedPlanets = [];
         }
+        saved.diplomaticTranslatorRaceIds ??= [];
         if (saved.pendingTravelEvent === undefined) {
             saved.pendingTravelEvent = null;
         }
@@ -72,6 +73,7 @@ export const createGameManagementSlice = (
         saved.startModifierIds ??= [];
         saved.emergencyFuelStationIds ??= [];
         saved.knownTradeStations ??= [];
+        saved.discoveredStationTypes ??= [];
         saved.pendingScoutEvent ??= null;
 
         // Синхронизация трейтов экипажа
@@ -117,6 +119,7 @@ export const createGameManagementSlice = (
         if (!saved.bannedPlanets) {
             saved.bannedPlanets = [];
         }
+        saved.diplomaticTranslatorRaceIds ??= [];
         if (saved.pendingTravelEvent === undefined) {
             saved.pendingTravelEvent = null;
         }
@@ -129,6 +132,7 @@ export const createGameManagementSlice = (
         saved.startModifierIds ??= [];
         saved.emergencyFuelStationIds ??= [];
         saved.knownTradeStations ??= [];
+        saved.discoveredStationTypes ??= [];
         saved.pendingScoutEvent ??= null;
 
         // Синхронизация трейтов

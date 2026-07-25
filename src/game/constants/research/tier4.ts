@@ -46,32 +46,6 @@ export const TIER4_TECHS: Partial<Record<TechnologyId, Technology>> = {
         researchProgress: 0,
     },
 
-    // Biology
-    cybernetic_augmentation: {
-        id: "cybernetic_augmentation",
-        name: "Кибернетические аугментации",
-        description:
-            "Кибернетические импланты усиливают способности экипажа. Открывает установку аугментаций на медицинских станциях.",
-        tier: 4,
-        category: "biology",
-        prerequisites: ["genetic_enhancement"],
-        resources: { alien_biology: 12, quantum_crystals: 4, tech_salvage: 15 },
-        credits: 1200,
-        scienceCost: 600,
-        bonuses: [
-            {
-                type: "special_ability",
-                value: 1,
-                description: "Разблокирует установку аугментаций экипажу",
-            },
-        ],
-        icon: "🦾",
-        color: "#00d4ff",
-        discovered: false,
-        researched: false,
-        researchProgress: 0,
-    },
-
     stellar_genetics: {
         id: "stellar_genetics",
         name: "Звёздная генетика",

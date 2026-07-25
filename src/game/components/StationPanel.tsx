@@ -1,9 +1,14 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Image from "next/image";
 import { useGameStore } from "../store";
-import { showHintOnce } from "@/game/hints/showHint";
+import {
+    Dialog,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RACES } from "../constants/races";
 import {
@@ -18,6 +23,7 @@ import type {
     Profession,
     CrewTrait,
     StationName,
+    StationConfig,
 } from "@/game/types";
 import { ShopTab } from "./station/ShopTab";
 import { TradeTab } from "./station/TradeTab";
@@ -36,6 +42,8 @@ import {
     getDiplomacyCost,
     MAX_DIPLOMATIC_REP,
     DIPLOMACY_BLOCK_SIZE,
+    TRANSLATOR_HIRE_COST,
+    TRANSLATOR_DIPLOMACY_DISCOUNT,
 } from "../reputation/diplomacy";
 import {
     REPUTATION_COLORS,
@@ -45,6 +53,7 @@ import {
 import { RaceSprite } from "./RaceSprite";
 import { getEmergencyFuelAmount } from "@/game/progression/emergencyFuel";
 import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
+import { GameDialogContent } from "./GameDialog";
 
 import {
     generateStationItems,
@@ -52,6 +61,13 @@ import {
 } from "./station/station-data";
 import { DELIVERY_GOODS } from "@/game/constants";
 import { DELIVERY_CONTRACT_CARGO_AMOUNT } from "@/game/slices/contracts/constants";
+import { RESEARCH_BOOST_EFFECT_ID } from "@/game/slices/research/methods/activateResearchBoost";
+import {
+    getStationRateValue,
+    getStationRates,
+    getStationServiceKeys,
+    STATION_DISCOVERY_ICONS,
+} from "@/game/stations/discovery";
 
 const STATION_BACKGROUNDS = {
     trade: "/assets/station-backgrounds/trade-hub.webp",
@@ -62,6 +78,159 @@ const STATION_BACKGROUNDS = {
     medical: "/assets/station-backgrounds/medical-bay.webp",
     diplomatic: "/assets/station-backgrounds/diplomatic-forum.webp",
 } satisfies Record<StationName, string>;
+
+function StationDiscoveryModal({
+    stationType,
+    stationConfig,
+    onClose,
+}: {
+    stationType: StationName | null;
+    stationConfig?: StationConfig;
+    onClose: () => void;
+}) {
+    const { t } = useTranslation();
+    if (!stationType) return null;
+
+    const marketRates = getStationRates(stationConfig).map((rate) => ({
+        label: t(`station_discovery.rate_${rate.key}`),
+        value: getStationRateValue(rate),
+        color:
+            rate.kind === "discount" ? "text-[#00ff41]" : "text-[#ffb000]",
+    }));
+
+    const guaranteedRows = [
+        {
+            label: t("station_discovery.guaranteed_crew"),
+            values: stationConfig?.guaranteedProfessions?.map((profession) =>
+                t(`professions.${profession}`),
+            ) ?? [],
+            color: "border-[#00d4ff66] text-[#00d4ff]",
+        },
+        {
+            label: t("station_discovery.guaranteed_modules"),
+            values: stationConfig?.guaranteedModules.map((module) =>
+                t(`module_names.${module}`),
+            ) ?? [],
+            color: "border-[#00ff4166] text-[#00ff41]",
+        },
+        {
+            label: t("station_discovery.guaranteed_weapons"),
+            values: stationConfig?.guaranteedWeapons.map((weapon) =>
+                t(`weapon_types.${weapon}`),
+            ) ?? [],
+            color: "border-[#ffb00066] text-[#ffb000]",
+        },
+    ];
+
+    const services = getStationServiceKeys(stationType, stationConfig).map(
+        (service) => t(`station_discovery.service_${service}`),
+    );
+
+    return (
+        <Dialog open onOpenChange={(open) => !open && onClose()}>
+            <GameDialogContent className="max-h-[85dvh] max-w-xl overflow-y-auto bg-[rgba(5,12,20,0.98)]">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-3 font-['Orbitron'] text-[#00d4ff]">
+                        <span className="flex size-10 items-center justify-center border border-[#00d4ff88] bg-[rgba(0,212,255,0.1)] text-2xl">
+                            {STATION_DISCOVERY_ICONS[stationType]}
+                        </span>
+                        <span>
+                            {t("station_discovery.title", {
+                                type: t(`locations.station_types.${stationType}`),
+                            })}
+                        </span>
+                    </DialogTitle>
+                    <DialogDescription className="text-xs uppercase tracking-[0.16em] text-[#6b8791]">
+                        {t("station_discovery.manifest")}
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 p-4">
+                    <section>
+                        <div className="mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.16em] text-[#00d4ff]">
+                            <span>{t("station_discovery.market_conditions")}</span>
+                            <span className="text-[#4c6873]">MARKET</span>
+                        </div>
+                        {marketRates.length > 0 ? (
+                            <div className="grid grid-cols-2 gap-px border border-[#00d4ff44] bg-[#00d4ff44] sm:grid-cols-3">
+                                {marketRates.map((rate) => (
+                                    <div
+                                        key={rate.label}
+                                        className="bg-[rgba(5,12,20,0.98)] px-3 py-2"
+                                    >
+                                        <div className={`font-['Orbitron'] text-lg ${rate.color}`}>
+                                            {rate.value}
+                                        </div>
+                                        <div className="text-[10px] uppercase tracking-wide text-[#8fa3aa]">
+                                            {rate.label}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="border border-[#00d4ff44] bg-[rgba(0,212,255,0.05)] px-3 py-2 text-sm text-[#8fa3aa]">
+                                {t("station_discovery.standard_rates")}
+                            </div>
+                        )}
+                    </section>
+
+                    <section className="overflow-hidden border border-[#00ff4144]">
+                        <div className="border-b border-[#00ff4144] bg-[rgba(0,255,65,0.06)] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#00ff41]">
+                            {t("station_discovery.guaranteed_stock")}
+                        </div>
+                        {guaranteedRows.map((row) => (
+                            <div
+                                key={row.label}
+                                className="grid grid-cols-[7rem_1fr] gap-2 border-b border-[#00ff4122] px-3 py-2 last:border-b-0 sm:grid-cols-[9rem_1fr]"
+                            >
+                                <div className="pt-0.5 text-[10px] font-bold uppercase tracking-wide text-[#8fa3aa]">
+                                    {row.label}
+                                </div>
+                                {row.values.length > 0 ? (
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {row.values.map((value) => (
+                                            <span
+                                                key={value}
+                                                className={`border px-1.5 py-0.5 text-xs ${row.color}`}
+                                            >
+                                                {value}
+                                            </span>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <span className="text-xs text-[#576b72]">
+                                        {t("station_discovery.no_guarantees")}
+                                    </span>
+                                )}
+                            </div>
+                        ))}
+                    </section>
+
+                    <section>
+                        <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#ffb000]">
+                            {t("station_discovery.available_services")}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                            {services.map((service) => (
+                                <span
+                                    key={service}
+                                    className="border border-[#ffb00055] bg-[rgba(255,176,0,0.07)] px-2 py-1 text-xs text-[#ffd27a]"
+                                >
+                                    {service}
+                                </span>
+                            ))}
+                        </div>
+                    </section>
+                    <Button
+                        onClick={onClose}
+                        className="w-full cursor-pointer border border-[#00ff41] bg-transparent text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
+                    >
+                        {t("station_discovery.continue")}
+                    </Button>
+                </div>
+            </GameDialogContent>
+        </Dialog>
+    );
+}
 
 export function StationPanel() {
     const { t } = useTranslation();
@@ -100,11 +269,11 @@ export function StationPanel() {
     const probes = useGameStore((s) => s.probes);
     const buyProbe = useGameStore((s) => s.buyProbe);
     const research = useGameStore((s) => s.research);
+    const activateResearchBoost = useGameStore((s) => s.activateResearchBoost);
+    const researchBoostEffect = useGameStore((s) =>
+        s.activeEffects.find((e) => e.id === RESEARCH_BOOST_EFFECT_ID),
+    );
     const addLog = useGameStore((s) => s.addLog);
-
-    useEffect(() => {
-        showHintOnce(addLog, "station", "hints.station");
-    }, [addLog]);
 
     const getCrewCapacity = useGameStore((s) => s.getCrewCapacity);
     const getCargoCapacity = useGameStore((s) => s.getCargoCapacity);
@@ -112,12 +281,20 @@ export function StationPanel() {
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const discoverRace = useGameStore((s) => s.discoverRace);
     const knownRaces = useGameStore((s) => s.knownRaces);
+    const discoverStationType = useGameStore((s) => s.discoverStationType);
+    const discoveredStationTypes = useGameStore(
+        (s) => s.discoveredStationTypes ?? [],
+    );
     const bannedPlanets = useGameStore((s) => s.bannedPlanets);
     const emergencyFuelStationIds = useGameStore(
         (s) => s.emergencyFuelStationIds,
     );
     const sendDiplomaticGift = useGameStore((s) => s.sendDiplomaticGift);
     const removePlanetBan = useGameStore((s) => s.removePlanetBan);
+    const hireTranslator = useGameStore((s) => s.hireTranslator);
+    const diplomaticTranslatorRaceIds = useGameStore(
+        (s) => s.diplomaticTranslatorRaceIds,
+    );
     const activeContracts = useGameStore((s) => s.activeContracts);
     const completeDeliveryContract = useGameStore(
         (s) => s.completeDeliveryContract,
@@ -126,11 +303,16 @@ export function StationPanel() {
     const [activeTab, setActiveTab] = useState("shop");
     const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
     const [pendingUpgrade, setPendingUpgrade] = useState<ShopItem | null>(null);
+    const [discoveredStationType, setDiscoveredStationType] =
+        useState<StationName | null>(null);
+    const pendingStationTypeRef = useRef<StationName | null>(null);
 
     const stationId = currentLocation?.stationId || "";
     const sectorTier = currentSector?.tier || 1;
+    const stationType = currentLocation?.stationType ?? null;
     const stationConfig = currentLocation?.stationConfig;
-    const isResearchStation = currentLocation?.stationType === "research";
+    const isResearchStation = stationType === "research";
+    const isMiningStation = stationType === "mining";
 
     // Station service flags (default true for backwards compat with old saves)
     const allowsTrade = stationConfig?.allowsTrade ?? true;
@@ -142,7 +324,7 @@ export function StationPanel() {
     const allowsAugmentation =
         allowsCrewHeal && researchedTechs.includes("cybernetic_augmentation");
 
-    const isDiplomaticStation = currentLocation?.stationType === "diplomatic";
+    const isDiplomaticStation = stationType === "diplomatic";
     const hasDiplomacy = isDiplomaticStation;
 
     const stationItems = useMemo(
@@ -178,11 +360,53 @@ export function StationPanel() {
     const dominantRace = currentLocation?.dominantRace;
     const race = dominantRace ? RACES[dominantRace] : null;
 
+    const showStationDiscovery = useCallback((nextStationType: StationName) => {
+        setDiscoveredStationType(nextStationType);
+    }, []);
+
     useEffect(() => {
         if (dominantRace && race && !knownRaces.includes(dominantRace)) {
             discoverRace(dominantRace);
         }
     }, [dominantRace, race, knownRaces, discoverRace]);
+
+    useEffect(() => {
+        const showPendingStation = () => {
+            const pendingStationType = pendingStationTypeRef.current;
+            if (!pendingStationType) return;
+
+            pendingStationTypeRef.current = null;
+            showStationDiscovery(pendingStationType);
+        };
+
+        window.addEventListener("race-discovery:closed", showPendingStation);
+        return () =>
+            window.removeEventListener(
+                "race-discovery:closed",
+                showPendingStation,
+            );
+    }, [showStationDiscovery]);
+
+    useEffect(() => {
+        if (!stationType || discoveredStationTypes.includes(stationType)) {
+            return;
+        }
+
+        discoverStationType(stationType);
+        if (dominantRace && !knownRaces.includes(dominantRace)) {
+            pendingStationTypeRef.current = stationType;
+            return;
+        }
+
+        queueMicrotask(() => showStationDiscovery(stationType));
+    }, [
+        stationType,
+        dominantRace,
+        knownRaces,
+        discoveredStationTypes,
+        discoverStationType,
+        showStationDiscovery,
+    ]);
 
     const deliveryContracts = activeContracts.filter(
         (c) =>
@@ -328,6 +552,14 @@ export function StationPanel() {
                             {t("station.trade_tab")}
                         </TabsTrigger>
                     )}
+                    {isMiningStation && (
+                        <TabsTrigger
+                            value="minerals"
+                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2 shrink-0 whitespace-nowrap px-3"
+                        >
+                            {t("station.minerals_tab")}
+                        </TabsTrigger>
+                    )}
                     <TabsTrigger
                         value="crew"
                         className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2 shrink-0 whitespace-nowrap px-3"
@@ -391,6 +623,26 @@ export function StationPanel() {
                             cargoCapacity={getCargoCapacity()}
                             buyTradeGood={buyTradeGood}
                             sellTradeGood={sellTradeGood}
+                        />
+                    </TabsContent>
+                )}
+
+                {isMiningStation && (
+                    <TabsContent
+                        value="minerals"
+                        className="mt-4 min-h-0 overflow-hidden flex flex-col"
+                    >
+                        <TradeTab
+                            stationId={stationId}
+                            stationPrices={stationPrices}
+                            stationStock={stationStock}
+                            credits={displayCredits}
+                            ship={ship}
+                            cargoCapacity={getCargoCapacity()}
+                            buyTradeGood={buyTradeGood}
+                            sellTradeGood={sellTradeGood}
+                            onlyGoods={["minerals", "rare_minerals"]}
+                            sellOnly
                         />
                     </TabsContent>
                 )}
@@ -472,6 +724,10 @@ export function StationPanel() {
                         onBuyProbe={buyProbe}
                         isResearchStation={isResearchStation}
                         researchResources={research.resources}
+                        researchBoostTurnsRemaining={
+                            researchBoostEffect?.turnsRemaining ?? 0
+                        }
+                        onActivateResearchBoost={activateResearchBoost}
                         onSellResearchResource={(type, qty) => {
                             const price =
                                 {
@@ -556,11 +812,16 @@ export function StationPanel() {
                                     const raceData = RACES[raceId];
                                     const rep = raceReputation[raceId] ?? 0;
                                     const atCap = rep >= MAX_DIPLOMATIC_REP;
+                                    const hasTranslator =
+                                        diplomaticTranslatorRaceIds.includes(
+                                            raceId,
+                                        );
                                     const cost = atCap
                                         ? 0
                                         : getDiplomacyCost(
                                               rep,
                                               DIPLOMACY_BLOCK_SIZE,
+                                              hasTranslator,
                                           );
                                     const repColor =
                                         getRaceReputationLevel(
@@ -604,34 +865,77 @@ export function StationPanel() {
                                                             },
                                                         )}
                                                     </div>
+                                                    {hasTranslator && (
+                                                        <div className="text-[10px] text-[#00d4ff]">
+                                                            🗣️{" "}
+                                                            {t(
+                                                                "station.diplomacy_translator_hired",
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
-                                            {atCap ? (
-                                                <span className="text-xs text-[#888]">
-                                                    {t(
-                                                        "station.diplomacy_max_reached",
-                                                    )}
-                                                </span>
-                                            ) : (
-                                                <Button
-                                                    onClick={() =>
-                                                        sendDiplomaticGift(
-                                                            raceId,
-                                                            DIPLOMACY_BLOCK_SIZE,
-                                                        )
-                                                    }
-                                                    disabled={credits < cost}
-                                                    className="bg-transparent border border-accent text-accent hover:bg-accent hover:text-[#050810] text-xs px-2 py-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                                                >
-                                                    {t(
-                                                        "station.diplomacy_buy_rep",
-                                                        {
-                                                            amount: DIPLOMACY_BLOCK_SIZE,
-                                                        },
-                                                    )}{" "}
-                                                    / {cost}₢
-                                                </Button>
-                                            )}
+                                            <div className="flex flex-col items-end gap-1.5">
+                                                {atCap ? (
+                                                    <span className="text-xs text-[#888]">
+                                                        {t(
+                                                            "station.diplomacy_max_reached",
+                                                        )}
+                                                    </span>
+                                                ) : (
+                                                    <Button
+                                                        onClick={() =>
+                                                            sendDiplomaticGift(
+                                                                raceId,
+                                                                DIPLOMACY_BLOCK_SIZE,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            credits < cost
+                                                        }
+                                                        className="bg-transparent border border-accent text-accent hover:bg-accent hover:text-[#050810] text-xs px-2 py-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    >
+                                                        {t(
+                                                            "station.diplomacy_buy_rep",
+                                                            {
+                                                                amount: DIPLOMACY_BLOCK_SIZE,
+                                                            },
+                                                        )}{" "}
+                                                        / {cost}₢
+                                                    </Button>
+                                                )}
+                                                {!hasTranslator && (
+                                                    <Button
+                                                        onClick={() =>
+                                                            hireTranslator(
+                                                                raceId,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            credits <
+                                                            TRANSLATOR_HIRE_COST
+                                                        }
+                                                        title={t(
+                                                            "station.diplomacy_translators_desc",
+                                                            {
+                                                                percent: Math.round(
+                                                                    (1 -
+                                                                        TRANSLATOR_DIPLOMACY_DISCOUNT) *
+                                                                        100,
+                                                                ),
+                                                            },
+                                                        )}
+                                                        className="bg-transparent border border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] text-xs px-2 py-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    >
+                                                        {t(
+                                                            "station.diplomacy_hire_translator",
+                                                            {
+                                                                cost: TRANSLATOR_HIRE_COST,
+                                                            },
+                                                        )}
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </div>
                                     );
                                 })}
@@ -694,6 +998,11 @@ export function StationPanel() {
                 stationItems={stationItems}
                 shipModules={ship.modules}
                 buyItem={buyItem}
+            />
+            <StationDiscoveryModal
+                stationType={discoveredStationType}
+                stationConfig={stationConfig}
+                onClose={() => setDiscoveredStationType(null)}
             />
         </div>
     );

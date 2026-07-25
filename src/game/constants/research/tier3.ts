@@ -240,6 +240,31 @@ export const TIER3_TECHS: Partial<Record<TechnologyId, Technology>> = {
         researchProgress: 0,
     },
 
+    cybernetic_augmentation: {
+        id: "cybernetic_augmentation",
+        name: "Кибернетические аугментации",
+        description:
+            "Кибернетические импланты усиливают способности экипажа. Открывает установку аугментаций на медицинских станциях.",
+        tier: 3,
+        category: "biology",
+        prerequisites: ["xenobiology"],
+        resources: { alien_biology: 10, quantum_crystals: 2, tech_salvage: 8 },
+        credits: 800,
+        scienceCost: 400,
+        bonuses: [
+            {
+                type: "special_ability",
+                value: 1,
+                description: "Разблокирует установку аугментаций экипажу",
+            },
+        ],
+        icon: "🦾",
+        color: "#00d4ff",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
     // Engineering
     nanite_hull: {
         id: "nanite_hull",

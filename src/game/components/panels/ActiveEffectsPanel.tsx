@@ -18,6 +18,7 @@ const SOURCE_ICONS: Record<EffectSource, string> = {
   combat: "⚔",
   anomaly: "◈",
   event: "◆",
+  station: "▣",
 };
 
 function getPlanetEffectKey(raceId: string): string {

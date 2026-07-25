@@ -137,7 +137,7 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
         allowsCrewHeal: false,
     },
     military: {
-        priceDiscount: 0.9,
+        weaponDiscount: 0.85,
         guaranteedWeapons: ["kinetic", "laser", "missile"],
         guaranteedModules: ["weaponbay", "shield", "reactor"],
         allowsTrade: false,
@@ -146,7 +146,6 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
         allowsCrewHeal: false,
     },
     research: {
-        priceDiscount: 0.9,
         guaranteedProfessions: ["scientist"],
         guaranteedWeapons: ["laser"],
         guaranteedModules: ["scanner", "reactor", "lifesupport", "lab"],
@@ -156,8 +155,8 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
         allowsCrewHeal: false,
     },
     mining: {
-        mineralDiscount: 0.5,
-        rareMineralDiscount: 0.5,
+        mineralSellBonus: 1.2,
+        rareMineralSellBonus: 1.15,
         guaranteedProfessions: ["engineer"],
         guaranteedWeapons: ["kinetic"],
         guaranteedModules: ["drill", "cargo", "fueltank"],
@@ -167,7 +166,7 @@ export const STATION_CONFIG: Record<string, StationConfig> = {
         allowsCrewHeal: false,
     },
     shipyard: {
-        priceDiscount: 0.9,
+        moduleDiscount: 0.9,
         guaranteedProfessions: ["engineer"],
         guaranteedWeapons: [],
         guaranteedModules: ["reactor", "shield", "cargo"],

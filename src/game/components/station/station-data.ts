@@ -1039,6 +1039,22 @@ export function generateStationItems(
     }
   }
 
+  // Скидки станции на оружие (военные) и модули (верфи) — применяются
+  // к уже собранному списку, независимо от того, гарантированный товар или случайный
+  const weaponDiscount = stationConfig?.weaponDiscount;
+  const moduleDiscount = stationConfig?.moduleDiscount;
+  if (weaponDiscount || moduleDiscount) {
+    return items.map((item) => {
+      if (weaponDiscount && item.type === "weapon") {
+        return { ...item, price: Math.floor(item.price * weaponDiscount) };
+      }
+      if (moduleDiscount && item.type === "module") {
+        return { ...item, price: Math.floor(item.price * moduleDiscount) };
+      }
+      return item;
+    });
+  }
+
   return items;
 }
 

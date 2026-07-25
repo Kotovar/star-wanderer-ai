@@ -12,9 +12,13 @@ export type StationName =
 
 export type StationConfig = {
     cargoBonus?: number; // Множитель вместимости грузового отсека (1.5 = +50%)
-    priceDiscount?: number; // Множитель цен на товары (0.85 = -15%)
-    mineralDiscount?: number; // Скидка на покупку минералов
-    rareMineralDiscount?: number; // Скидка на покупку редких минералов
+    priceDiscount?: number; // Множитель цен на обычные товары в торговле (0.85 = -15%). Влияет только на allowsTrade-станциях
+    weaponDiscount?: number; // Множитель цены оружия в магазине станции (0.85 = -15%)
+    moduleDiscount?: number; // Множитель цены модулей (без апгрейдов) в магазине станции (0.9 = -10%)
+    mineralDiscount?: number; // Множитель цены покупки минералов игроком у станции (0.9 = -10%, trade)
+    rareMineralDiscount?: number; // Множитель цены покупки редких минералов игроком у станции (trade)
+    mineralSellBonus?: number; // Множитель цены продажи минералов игроком станции (1.2 = +20%, mining)
+    rareMineralSellBonus?: number; // Множитель цены продажи редких минералов игроком станции (mining)
     guaranteedProfessions?: Profession[]; // Профессии, которые гарантированно есть на станции
     guaranteedWeapons: WeaponType[]; // Типы оружия, которые гарантированно есть в продаже
     guaranteedModules: ModuleType[]; // Модули, которые гарантированно есть в продаже

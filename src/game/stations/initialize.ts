@@ -16,7 +16,9 @@ import type { Sector, Goods, StationPrices, StationStock } from "@/game/types";
  *
  * Генерирует начальные цены и запасы товаров для каждой станции.
  * Цены рассчитываются на основе базовой цены товара с учётом случайной
- * вариации и скидок станции (для минералов и редких минералов на шахтёрских станциях).
+ * вариации, priceDiscount станции, скидки торговых станций на покупку
+ * минералов/редких минералов (mineralDiscount/rareMineralDiscount) и надбавки
+ * шахтёрских станций к цене продажи минералов игроком (mineralSellBonus/rareMineralSellBonus).
  *
  * @param sectors - Массив секторов, содержащих станции для инициализации
  * @returns Объект с ценами и запасами товаров для каждой станции
@@ -41,6 +43,10 @@ export const initializeStationData = (sectors: Sector[]) => {
                     stationConfig?.mineralDiscount ?? DEFAULT_DISCOUNT;
                 const rareMineralDiscount =
                     stationConfig?.rareMineralDiscount ?? DEFAULT_DISCOUNT;
+                const mineralSellBonus =
+                    stationConfig?.mineralSellBonus ?? DEFAULT_DISCOUNT;
+                const rareMineralSellBonus =
+                    stationConfig?.rareMineralSellBonus ?? DEFAULT_DISCOUNT;
                 const priceDiscount =
                     stationConfig?.priceDiscount ?? DEFAULT_DISCOUNT;
 
@@ -50,7 +56,7 @@ export const initializeStationData = (sectors: Sector[]) => {
                     const priceVar =
                         MIN_PRICE_VARIATION +
                         Math.random() * MAX_PRICE_VARIATION;
-                    const sellPrice = Math.floor(
+                    const baseSellPrice = Math.floor(
                         good.basePrice *
                             tierMultiplier *
                             priceVar *
@@ -58,13 +64,29 @@ export const initializeStationData = (sectors: Sector[]) => {
                     );
 
                     let buyPrice = Math.floor(
-                        sellPrice * BASE_BUY_PRICE_MULTIPLIER,
+                        baseSellPrice * BASE_BUY_PRICE_MULTIPLIER,
                     );
 
+                    // Торговые станции продают минералы/редкие минералы игроку
+                    // дешевле (mineralDiscount/rareMineralDiscount)
                     if (goodId === "minerals") {
                         buyPrice = Math.floor(buyPrice * mineralDiscount);
                     } else if (goodId === "rare_minerals") {
                         buyPrice = Math.floor(buyPrice * rareMineralDiscount);
+                    }
+
+                    // Шахтёрские станции платят больше за сырую руду, сданную игроком
+                    // (mineralSellBonus/rareMineralSellBonus) — считается от baseSellPrice,
+                    // buyPrice (цена покупки игроком) при этом не растёт.
+                    let sellPrice = baseSellPrice;
+                    if (goodId === "minerals") {
+                        sellPrice = Math.floor(
+                            baseSellPrice * mineralSellBonus,
+                        );
+                    } else if (goodId === "rare_minerals") {
+                        sellPrice = Math.floor(
+                            baseSellPrice * rareMineralSellBonus,
+                        );
                     }
 
                     prices[loc.stationId][goodId] = {

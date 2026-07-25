@@ -15,6 +15,11 @@ import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import type { AugmentationId } from "@/game/types/augmentations";
 import type { Profession } from "@/game/types/crew";
 import type { RaceId } from "@/game/types/races";
+import { RESEARCH_STATION_BOOST_MULTIPLIER } from "@/game/slices/research/helpers/researchHelpers";
+import {
+    RESEARCH_BOOST_COST,
+    RESEARCH_BOOST_DURATION,
+} from "@/game/slices/research/methods/activateResearchBoost";
 
 /**
  * Calculates scrap value for a module (70% of base price)
@@ -119,6 +124,8 @@ interface ServicesTabProps {
     researchResources?: Partial<Record<ResearchResourceType, number>>;
     onSellResearchResource?: (type: ResearchResourceType, qty: number) => void;
     onBuyResearchResource?: (type: ResearchResourceType, qty: number) => void;
+    researchBoostTurnsRemaining?: number;
+    onActivateResearchBoost?: () => void;
 }
 
 export function ServicesTab({
@@ -157,6 +164,8 @@ export function ServicesTab({
     researchResources,
     onSellResearchResource,
     onBuyResearchResource,
+    researchBoostTurnsRemaining,
+    onActivateResearchBoost,
 }: ServicesTabProps) {
     const fuelNeeded = maxFuel - fuel;
 
@@ -235,6 +244,13 @@ export function ServicesTab({
                     credits={credits}
                     researchResources={researchResources ?? {}}
                     onSell={onSellResearchResource}
+                />
+            )}
+            {isResearchStation && onActivateResearchBoost && (
+                <ResearchBoostSection
+                    credits={credits}
+                    turnsRemaining={researchBoostTurnsRemaining ?? 0}
+                    onActivate={onActivateResearchBoost}
                 />
             )}
         </div>
@@ -1202,6 +1218,54 @@ function SellResearchSection({
                     })}
                 </div>
             )}
+        </SectionPanel>
+    );
+}
+
+function ResearchBoostSection({
+    credits,
+    turnsRemaining,
+    onActivate,
+}: {
+    credits: number;
+    turnsRemaining: number;
+    onActivate: () => void;
+}) {
+    const { t } = useTranslation();
+    const active = turnsRemaining > 0;
+
+    return (
+        <SectionPanel tone="cyan">
+            <div className="text-[#00d4ff] font-bold mb-1">
+                {t("station.research_boost_title", {
+                    percent: Math.round(RESEARCH_STATION_BOOST_MULTIPLIER * 100),
+                })}
+            </div>
+            <div className="text-xs text-[#888] mb-3">
+                {t("station.research_boost_desc", {
+                    turns: RESEARCH_BOOST_DURATION,
+                })}
+            </div>
+            <div className="flex items-center justify-between bg-[rgba(0,212,255,0.05)] border border-[#00d4ff33] px-3 py-2">
+                <div className="text-sm text-[#ccc]">
+                    {active
+                        ? t("station.research_boost_active", { turnsRemaining })
+                        : t("station.research_boost_inactive")}
+                </div>
+                <Button
+                    disabled={credits < RESEARCH_BOOST_COST}
+                    onClick={onActivate}
+                    className="cursor-pointer bg-transparent border border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase text-[10px] px-2 py-1 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {active
+                        ? t("station.research_boost_extend", {
+                              cost: RESEARCH_BOOST_COST,
+                          })
+                        : t("station.research_boost_activate", {
+                              cost: RESEARCH_BOOST_COST,
+                          })}
+                </Button>
+            </div>
         </SectionPanel>
     );
 }

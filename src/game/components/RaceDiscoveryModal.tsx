@@ -71,6 +71,13 @@ export function RaceDiscoveryModal() {
     prevLengthRef.current = knownRaces.length;
   }, [knownRaces]);
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (!nextOpen) {
+      window.dispatchEvent(new Event("race-discovery:closed"));
+    }
+  };
+
   if (!open || !raceId) return null;
 
   const race = RACES[raceId];
@@ -86,7 +93,7 @@ export function RaceDiscoveryModal() {
   const hasTip = !!t(`races.${raceId}.special_tip`) && t(`races.${raceId}.special_tip`) !== `races.${raceId}.special_tip`;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <GameDialogContent
         variant="warning"
         className="bg-[rgba(10,20,30,0.97)] max-w-lg max-h-[85dvh] overflow-y-auto"

@@ -21,6 +21,8 @@
     "check:expedition-orbital-scan": "node scripts/check-expedition-orbital-scan.mjs",
     "check:expedition-ruins": "node --no-warnings --experimental-strip-types scripts/check-expedition-ruins.mjs",
     "check:research-abilities": "node --no-warnings --experimental-strip-types scripts/check-research-special-abilities.mjs",
+    "check:augmentation-research": "node --no-warnings --experimental-strip-types scripts/check-augmentation-research.mjs",
+    "check:station-discovery": "node --no-warnings --experimental-strip-types scripts/check-station-discovery.mjs",
     "check:sector-readiness": "node --no-warnings --experimental-strip-types scripts/check-sector-readiness.mjs",
     "check:crew-layout": "node --no-warnings --experimental-strip-types scripts/check-crew-layout.mjs",
     "check:new-game": "node --no-warnings --experimental-strip-types scripts/check-new-game-setup.mjs",

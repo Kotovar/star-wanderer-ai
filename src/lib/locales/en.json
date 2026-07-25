@@ -969,6 +969,7 @@
         "scientists": "👨‍🔬 Scientists",
         "no_scientists": "⚠️ No scientists",
         "lab_status": "🔬 Lab active · Scientists: {{count}} · {{science}} ⚗/turn",
+        "boost_active": "Accelerator: {{turnsRemaining}} turn(s) left",
         "build_module": "Build module",
         "science": "🔬 Science",
         "per_turn": "/turn",
@@ -1133,9 +1134,14 @@
             "crew": "Crew tasks",
             "combat": "Combat",
             "anomaly": "Anomaly",
-            "event": "Event decision"
+            "event": "Event decision",
+            "station": "Station"
         },
         "items": {
+            "research_boost": {
+                "name": "Research Accelerator",
+                "description": "The lab works faster thanks to a one-time purchase at a research station."
+            },
             "coordinated_shift": {
                 "name": "Coordinated Shift",
                 "description": "The crew has found a shared rhythm: systems respond faster and routine injuries are treated immediately."
@@ -1367,6 +1373,7 @@
         "submit": "SUBMIT",
         "modules_tab": "MODULES",
         "trade_tab": "TRADE",
+        "minerals_tab": "ORE BUYBACK",
         "crew_tab": "CREW",
         "services_tab": "SERVICES",
         "craft": "CRAFT",
@@ -1389,7 +1396,71 @@
         "diplomacy_banned_planets": "Banned Planets",
         "diplomacy_no_banned": "No banned planets",
         "diplomacy_lift_ban": "Lift ban — 2000₢",
-        "diplomacy_insufficient_credits": "Insufficient credits"
+        "diplomacy_insufficient_credits": "Insufficient credits",
+        "diplomacy_translators_desc": "A hired translator permanently lowers the cost of buying reputation with that race by {{percent}}%",
+        "diplomacy_hire_translator": "Hire — {{cost}}₢",
+        "diplomacy_translator_hired": "Translator hired",
+        "research_boost_title": "Accelerated research (+{{percent}}%)",
+        "research_boost_desc": "A one-time purchase speeds up research for {{turns}} turns",
+        "research_boost_active": "Active for {{turnsRemaining}} more turn(s)",
+        "research_boost_inactive": "Not active",
+        "research_boost_activate": "Activate — {{cost}}₢",
+        "research_boost_extend": "Extend — {{cost}}₢"
+    },
+    "station_discovery": {
+        "title": "New station: {{type}}",
+        "manifest": "Docking manifest · verified on arrival",
+        "market_conditions": "Trade and module bonuses",
+        "standard_rates": "No special trade terms or module bonuses.",
+        "guaranteed_stock": "Guaranteed stock",
+        "guaranteed_crew": "Crew",
+        "guaranteed_modules": "Modules",
+        "guaranteed_weapons": "Weapons",
+        "no_guarantees": "No permanent guarantee",
+        "available_services": "Available services",
+        "rate_goods": "buying trade goods from the station",
+        "rate_minerals": "buying minerals from the station",
+        "rate_rare_minerals": "buying rare minerals from the station",
+        "rate_weapons": "buying weapons from the station",
+        "rate_modules": "buying modules from the station",
+        "rate_mineral_sale": "station buys your minerals",
+        "rate_rare_mineral_sale": "station buys your rare minerals",
+        "rate_cargo_modules": "to cargo modules bought here",
+        "service_refuel": "Refuelling",
+        "service_repairs": "Repairs",
+        "service_shop": "Modules and weapons shop",
+        "service_hiring": "Crew hiring",
+        "service_probes": "Research probe purchase",
+        "service_scrap": "Module scrapping — 70% of value",
+        "service_weapon_removal": "Weapon removal — 50% of value",
+        "service_trade": "Goods trading",
+        "service_crafting": "Blueprint crafting",
+        "service_install": "Install cargo modules and weapons",
+        "service_healing": "Crew healing",
+        "service_augmentation": "Augmentations — after Cybernetic Augmentation",
+        "service_mutation_cure": "Mutation treatment — after Xenobiology",
+        "service_research": "Research resources and boost",
+        "service_mineral_buyback": "Mineral buyback",
+        "service_diplomacy": "Reputation and translators",
+        "continue": "GOT IT"
+    },
+    "station_catalog": {
+        "subtitle": "Station-type reference. Each rate states whether you buy from the station or it buys from you.",
+        "hint": "Permanent services, stock, and purchase or buyback terms. Random goods can vary.",
+        "empty": "Meet a station to unlock its catalog entry.",
+        "crew": "Crew",
+        "modules": "Modules",
+        "weapons": "Weapons",
+        "no_guarantees": "no guarantee",
+        "summary": {
+            "trade": "Discounted goods and minerals, plus cargo modules with increased capacity.",
+            "military": "Discounted weapons and blueprint crafting.",
+            "research": "Research resources, laboratory modules, and scientists.",
+            "mining": "Higher mineral buyback from the player and extraction equipment.",
+            "shipyard": "Discounted modules, crafting, and cargo installation.",
+            "medical": "Crew healing and medical equipment.",
+            "diplomatic": "Race reputation, translators, and lifted visit bans."
+        }
     },
     "trade": {
         "buy_label": "Buy:",
@@ -2535,7 +2606,8 @@
             "power_boost": "+{{value}} reactor power",
             "shield_boost": "+{{value}} max shields",
             "fuel_efficiency": "+{{value}}% fuel efficiency",
-            "artifact_boost": "Artifact boost (+50%)"
+            "artifact_boost": "Artifact boost (+50%)",
+            "research_speed": "+{{value}}% research speed"
         }
     },
     "battle_results": {
@@ -2799,9 +2871,13 @@
         }
     },
     "enemy_codex": {
-        "title": "THREAT CATALOG",
-        "subtitle": "Records unlock only after direct contact with an enemy.",
+        "title": "CATALOG",
+        "ships_subtitle": "Records unlock only after direct contact with an enemy.",
         "button": "CATALOG",
+        "tabs": {
+            "ships": "SHIPS",
+            "stations": "STATIONS"
+        },
         "progress": "Discovered: {{found}} / {{total}}",
         "details": "Details",
         "combat_profile": "COMBAT PROFILE · THREAT {{threat}}",
@@ -4747,11 +4823,15 @@
         "createReputationSlice_6": "Not enough credits to lift the blockade ({{COST}}₢)",
         "createReputationSlice_7": "This planet is not under blockade",
         "createReputationSlice_8": "🔓 Planetary blockade lifted — security recalled",
+        "createReputationSlice_9": "Not enough credits to hire a translator ({{cost}}₢)",
+        "createReputationSlice_10": "🗣️ Translator hired: diplomacy discount with the {{raceName}}",
         "processResearch_1": "✅ Research complete: {{completedTech_name}}",
         "processResearch_2": "Bonuses received: {{value}}",
         "processResearch_3": "🤖 Contract research complete! +{{reward}}₢",
         "processResearch_4": "📖 Technology unlocked: {{name}}",
         "startResearch_1": "🔬 Research started: {{tech_name}}",
+        "activateResearchBoost_1": "🔬 Research accelerator activated for {{turns}} turns",
+        "activateResearchBoost_2": "Not enough credits for the research accelerator ({{cost}}₢)",
         "cureMutation_1": "Curing mutations requires the \"Xenobiology\" technology!",
         "cureMutation_2": "Not enough credits to cure the mutation!",
         "cureMutation_3": "💊 Mutation \"{{mutation_name}}\" of {{crewMember_name}} cured! -{{MUTATION_CURE_PRICE}}₢",

@@ -30,6 +30,10 @@ interface TradeTabProps {
     cargoCapacity: number;
     buyTradeGood: (goodId: Goods, quantity: number) => void;
     sellTradeGood: (goodId: Goods, quantity: number) => void;
+    /** Ограничить список товаров (напр. только руда на шахтёрских станциях) */
+    onlyGoods?: Goods[];
+    /** Скрыть покупку — только продажа из трюма (шахтёрские станции) */
+    sellOnly?: boolean;
 }
 
 export function TradeTab({
@@ -41,6 +45,8 @@ export function TradeTab({
     cargoCapacity,
     buyTradeGood,
     sellTradeGood,
+    onlyGoods,
+    sellOnly,
 }: TradeTabProps) {
     const probes = useGameStore((s) => s.probes);
     const currentCargo =
@@ -49,7 +55,7 @@ export function TradeTab({
         probes;
     const availSpace = cargoCapacity - currentCargo;
 
-    const tradeGoodsKeys = typedKeys(TRADE_GOODS);
+    const tradeGoodsKeys = onlyGoods ?? typedKeys(TRADE_GOODS);
     const raceReputation = useGameStore((s) => s.raceReputation);
     const currentLocation = useGameStore((s) => s.currentLocation);
     const dominantRace = currentLocation?.dominantRace;
@@ -123,6 +129,7 @@ export function TradeTab({
                             availSpace={availSpace}
                             onBuy={buyTradeGood}
                             onSell={sellTradeGood}
+                            sellOnly={sellOnly}
                         />
                     );
                 })}
@@ -148,6 +155,7 @@ interface TradeGoodRowProps {
     onSell: (goodId: Goods, quantity: number) => void;
     crisisMultiplier: number;
     onShowInfo: () => void;
+    sellOnly?: boolean;
 }
 
 export function TradeGoodRow({
@@ -162,6 +170,7 @@ export function TradeGoodRow({
     onSell,
     crisisMultiplier,
     onShowInfo,
+    sellOnly,
 }: TradeGoodRowProps) {
     return (
         <SectionPanel padding="sm" className="flex justify-between items-center">
@@ -173,6 +182,7 @@ export function TradeGoodRow({
                 pricesWithRep={pricesWithRep}
                 stock={stock}
                 playerGood={playerGood}
+                sellOnly={sellOnly}
             />
             <TradeButtons
                 goodId={good.id}
@@ -183,6 +193,7 @@ export function TradeGoodRow({
                 availSpace={availSpace}
                 onBuy={onBuy}
                 onSell={onSell}
+                sellOnly={sellOnly}
             />
         </SectionPanel>
     );
@@ -196,6 +207,7 @@ function TradeGoodInfo({
     playerGood,
     crisisMultiplier,
     onShowInfo,
+    sellOnly,
 }: {
     good: { id: string; name: string };
     prices: { buy: number; sell: number };
@@ -204,6 +216,7 @@ function TradeGoodInfo({
     playerGood: { item: string; quantity: number } | undefined;
     crisisMultiplier: number;
     onShowInfo: () => void;
+    sellOnly?: boolean;
 }) {
     const { t } = useTranslation();
     // Calculate per-unit price (prices are stored as 5-ton batches)
@@ -239,17 +252,29 @@ function TradeGoodInfo({
                 )}
             </div>
             <div className="text-[#ffb000] text-xs mt-1">
-                {t("trade.buy_label")}{" "}
-                <span className={buyModified ? "text-[#00ff41] font-bold" : ""}>
-                    {t("trade.per_ton", { price: buyPerUnit })}
-                </span>
-                {!buyModified && " | "}
-                {buyModified && (
-                    <span className="text-[#888] ml-1">
-                        ({t("trade.per_ton", { price: baseBuyPerUnit })})
-                    </span>
+                {!sellOnly && (
+                    <>
+                        {t("trade.buy_label")}{" "}
+                        <span
+                            className={
+                                buyModified ? "text-[#00ff41] font-bold" : ""
+                            }
+                        >
+                            {t("trade.per_ton", { price: buyPerUnit })}
+                        </span>
+                        {!buyModified && " | "}
+                        {buyModified && (
+                            <span className="text-[#888] ml-1">
+                                (
+                                {t("trade.per_ton", {
+                                    price: baseBuyPerUnit,
+                                })}
+                                )
+                            </span>
+                        )}
+                        {" | "}
+                    </>
                 )}
-                {" | "}
                 {t("trade.sell_label")}{" "}
                 <span
                     className={sellModified ? "text-[#00ff41] font-bold" : ""}
@@ -286,6 +311,7 @@ function TradeButtons({
     availSpace,
     onBuy,
     onSell,
+    sellOnly,
 }: {
     goodId: Goods;
     prices: { buy: number; sell: number };
@@ -295,32 +321,39 @@ function TradeButtons({
     availSpace: number;
     onBuy: (goodId: Goods, quantity: number) => void;
     onSell: (goodId: Goods, quantity: number) => void;
+    sellOnly?: boolean;
 }) {
     return (
         <div className="flex flex-wrap gap-1.5">
-            <BuyButton
-                quantity={1}
-                disabled={
-                    availSpace < 1 ||
-                    credits < Math.floor(prices.buy / 5) ||
-                    stock < 1
-                }
-                onBuy={() => onBuy(goodId, 1)}
-            />
-            <BuyButton
-                quantity={5}
-                disabled={availSpace < 5 || credits < prices.buy || stock < 5}
-                onBuy={() => onBuy(goodId, 5)}
-            />
-            <BuyButton
-                quantity={15}
-                disabled={
-                    availSpace < 15 ||
-                    credits < Math.floor(prices.buy * 3) ||
-                    stock < 15
-                }
-                onBuy={() => onBuy(goodId, 15)}
-            />
+            {!sellOnly && (
+                <>
+                    <BuyButton
+                        quantity={1}
+                        disabled={
+                            availSpace < 1 ||
+                            credits < Math.floor(prices.buy / 5) ||
+                            stock < 1
+                        }
+                        onBuy={() => onBuy(goodId, 1)}
+                    />
+                    <BuyButton
+                        quantity={5}
+                        disabled={
+                            availSpace < 5 || credits < prices.buy || stock < 5
+                        }
+                        onBuy={() => onBuy(goodId, 5)}
+                    />
+                    <BuyButton
+                        quantity={15}
+                        disabled={
+                            availSpace < 15 ||
+                            credits < Math.floor(prices.buy * 3) ||
+                            stock < 15
+                        }
+                        onBuy={() => onBuy(goodId, 15)}
+                    />
+                </>
+            )}
             <SellButton
                 quantity={15}
                 disabled={!playerGood || playerGood.quantity < 15}

@@ -969,6 +969,7 @@
         "scientists": "👨‍🔬 Учёных",
         "no_scientists": "⚠️ Нет учёных",
         "lab_status": "🔬 Лаб активна · Учёных: {{count}} · {{science}} ⚗/ход",
+        "boost_active": "Ускоритель: ещё {{turnsRemaining}} х.",
         "build_module": "Постройте модуль",
         "science": "🔬 Наука",
         "per_turn": "/ход",
@@ -1133,9 +1134,14 @@
             "crew": "Задачи экипажа",
             "combat": "Бой",
             "anomaly": "Аномалия",
-            "event": "Решение в событии"
+            "event": "Решение в событии",
+            "station": "Станция"
         },
         "items": {
+            "research_boost": {
+                "name": "Ускоритель исследований",
+                "description": "Лаборатория работает быстрее благодаря разовой покупке на исследовательской станции."
+            },
             "coordinated_shift": {
                 "name": "Слаженная смена",
                 "description": "Экипаж вошёл в общий ритм: системы реагируют быстрее, а лёгкие травмы лечатся сразу."
@@ -1367,6 +1373,7 @@
         "submit": "СДАТЬ",
         "modules_tab": "МОДУЛИ",
         "trade_tab": "ТОРГОВЛЯ",
+        "minerals_tab": "СКУПКА РУДЫ",
         "crew_tab": "ЭКИПАЖ",
         "services_tab": "УСЛУГИ",
         "craft": "ЧЕРТЕЖИ",
@@ -1389,7 +1396,71 @@
         "diplomacy_banned_planets": "Запрещённые планеты",
         "diplomacy_no_banned": "Нет запрещённых планет",
         "diplomacy_lift_ban": "Снять запрет — 2000₢",
-        "diplomacy_insufficient_credits": "Недостаточно кредитов"
+        "diplomacy_insufficient_credits": "Недостаточно кредитов",
+        "diplomacy_translators_desc": "Нанятый переводчик снижает стоимость покупки репутации с расой на {{percent}}% навсегда",
+        "diplomacy_hire_translator": "Нанять — {{cost}}₢",
+        "diplomacy_translator_hired": "Переводчик нанят",
+        "research_boost_title": "Ускоренные исследования (+{{percent}}%)",
+        "research_boost_desc": "Разовая покупка ускоряет исследования на {{turns}} ходов",
+        "research_boost_active": "Активно ещё {{turnsRemaining}} х.",
+        "research_boost_inactive": "Не активировано",
+        "research_boost_activate": "Активировать — {{cost}}₢",
+        "research_boost_extend": "Продлить — {{cost}}₢"
+    },
+    "station_discovery": {
+        "title": "Новая станция: {{type}}",
+        "manifest": "Бортовой манифест · проверено при стыковке",
+        "market_conditions": "Торговля и бонусы модулей",
+        "standard_rates": "Особых торговых условий и бонусов модулей нет.",
+        "guaranteed_stock": "Гарантированный ассортимент",
+        "guaranteed_crew": "Экипаж",
+        "guaranteed_modules": "Модули",
+        "guaranteed_weapons": "Оружие",
+        "no_guarantees": "Нет постоянной гарантии",
+        "available_services": "Доступные сервисы",
+        "rate_goods": "покупка товаров на станции",
+        "rate_minerals": "покупка минералов на станции",
+        "rate_rare_minerals": "покупка редких минералов на станции",
+        "rate_weapons": "покупка оружия на станции",
+        "rate_modules": "покупка модулей на станции",
+        "rate_mineral_sale": "станция выкупает минералы",
+        "rate_rare_mineral_sale": "станция выкупает редкие минералы",
+        "rate_cargo_modules": "к вместимости грузовых модулей, купленных здесь",
+        "service_refuel": "Заправка",
+        "service_repairs": "Ремонт",
+        "service_shop": "Покупка модулей и оружия",
+        "service_hiring": "Найм экипажа",
+        "service_probes": "Покупка исследовательских зондов",
+        "service_scrap": "Утилизация модулей — 70% стоимости",
+        "service_weapon_removal": "Снятие оружия — 50% стоимости",
+        "service_trade": "Торговля товарами",
+        "service_crafting": "Крафт по чертежам",
+        "service_install": "Установка модулей и оружия из трюма",
+        "service_healing": "Лечение экипажа",
+        "service_augmentation": "Аугментации — после «Кибернетических аугментаций»",
+        "service_mutation_cure": "Лечение мутаций — после «Ксенобиологии»",
+        "service_research": "Ресурсы и ускоритель науки",
+        "service_mineral_buyback": "Скупка минералов",
+        "service_diplomacy": "Репутация и переводчики",
+        "continue": "ПОНЯТНО"
+    },
+    "station_catalog": {
+        "subtitle": "Справочник типов станций. Для каждой ставки указано: вы покупаете у станции или она выкупает у вас.",
+        "hint": "Постоянные услуги, ассортимент и условия покупки или выкупа. Случайный товар может отличаться.",
+        "empty": "Встретьтесь со станцией, чтобы открыть её запись в каталоге.",
+        "crew": "Экипаж",
+        "modules": "Модули",
+        "weapons": "Оружие",
+        "no_guarantees": "нет гарантии",
+        "summary": {
+            "trade": "Скидки на покупку товаров и минералов, грузовые модули повышенной вместимости.",
+            "military": "Скидка на покупку оружия и крафт по чертежам.",
+            "research": "Научные ресурсы, лабораторные модули и учёные.",
+            "mining": "Повышенный выкуп минералов у игрока и добычное оснащение.",
+            "shipyard": "Скидка на покупку модулей, крафт и установка из трюма.",
+            "medical": "Лечение экипажа и медицинское оснащение.",
+            "diplomatic": "Репутация с расами, переводчики и снятие запретов."
+        }
     },
     "trade": {
         "buy_label": "Купить:",
@@ -2535,7 +2606,8 @@
             "power_boost": "+{{value}} к энергии реактора",
             "shield_boost": "+{{value}} к максимальным щитам",
             "fuel_efficiency": "+{{value}}% к эффективности топлива",
-            "artifact_boost": "Усиление артефакта (+50%)"
+            "artifact_boost": "Усиление артефакта (+50%)",
+            "research_speed": "+{{value}}% к скорости исследований"
         }
     },
     "battle_results": {
@@ -2799,9 +2871,13 @@
         }
     },
     "enemy_codex": {
-        "title": "КАТАЛОГ УГРОЗ",
-        "subtitle": "Записи открываются при непосредственной встрече с противником.",
+        "title": "КАТАЛОГ",
+        "ships_subtitle": "Записи открываются при непосредственной встрече с противником.",
         "button": "КАТАЛОГ",
+        "tabs": {
+            "ships": "КОРАБЛИ",
+            "stations": "СТАНЦИИ"
+        },
         "progress": "Открыто: {{found}} / {{total}}",
         "details": "Подробнее",
         "combat_profile": "БОЕВОЙ ПРОФИЛЬ · УГРОЗА {{threat}}",
@@ -4747,11 +4823,15 @@
         "createReputationSlice_6": "Недостаточно кредитов для снятия блокировки ({{COST}}₢)",
         "createReputationSlice_7": "Эта планета не находится под блокировкой",
         "createReputationSlice_8": "🔓 Блокировка с планеты снята — охрана отозвана",
+        "createReputationSlice_9": "Недостаточно кредитов для найма переводчика ({{cost}}₢)",
+        "createReputationSlice_10": "🗣️ Переводчик нанят: скидка на дипломатию с расой «{{raceName}}»",
         "processResearch_1": "✅ Исследование завершено: {{completedTech_name}}",
         "processResearch_2": "Получены бонусы: {{value}}",
         "processResearch_3": "🤖 Исследование для задания завершено! +{{reward}}₢",
         "processResearch_4": "📖 Открыта технология: {{name}}",
         "startResearch_1": "🔬 Начато исследование: {{tech_name}}",
+        "activateResearchBoost_1": "🔬 Ускоритель исследований активирован на {{turns}} ходов",
+        "activateResearchBoost_2": "Недостаточно кредитов для ускорителя исследований ({{cost}}₢)",
         "cureMutation_1": "Для лечения мутаций требуется технология «Ксенобиология»!",
         "cureMutation_2": "Недостаточно кредитов для лечения мутации!",
         "cureMutation_3": "💊 Мутация \"{{mutation_name}}\" у {{crewMember_name}} вылечена! -{{MUTATION_CURE_PRICE}}₢",

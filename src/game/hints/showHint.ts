@@ -12,6 +12,19 @@ function getSeenHints(): string[] {
 }
 
 /**
+ * Резервирует одноразовую подсказку без показа toast — для модальных окон.
+ */
+export function claimHintOnce(hintId: string): boolean {
+    if (typeof window === "undefined") return false;
+
+    const seen = getSeenHints();
+    if (seen.includes(hintId)) return false;
+
+    localStorage.setItem(HINTS_KEY, JSON.stringify([...seen, hintId]));
+    return true;
+}
+
+/**
  * Показывает контекстную подсказку один раз за игрока (флаг в localStorage),
  * в момент, когда он впервые сталкивается с механикой — вместо стены текста
  * в стартовом туториале. Дублируется в toast (не пропустишь на экране) и в
@@ -22,11 +35,7 @@ export function showHintOnce(
     hintId: string,
     messageKey: string,
 ): void {
-    if (typeof window === "undefined") return;
-
-    const seen = getSeenHints();
-    if (seen.includes(hintId)) return;
-    localStorage.setItem(HINTS_KEY, JSON.stringify([...seen, hintId]));
+    if (!claimHintOnce(hintId)) return;
 
     const message = i18nStore.t(messageKey);
     toast(message, { duration: 6000 });
