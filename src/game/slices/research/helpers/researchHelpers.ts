@@ -85,13 +85,16 @@ export const calculateResearchOutput = (
     // Бонус от учёных (не более одного учёного на лабораторию)
     let scientistBonus = 0;
     const allScientists = getCrewByProfession(state.crew, "scientist");
+    const activeLabIds = new Set(labs.map((lab) => lab.id));
+    const isActivelyResearching = (scientist: (typeof allScientists)[number]) =>
+        scientist.assignment === "research" && activeLabIds.has(scientist.moduleId);
 
     // Сортируем: сначала назначенные на исследование, потом по убыванию уровня
     // Берём не больше учёных, чем активных лабораторий
     const scientists = allScientists
         .sort((a, b) => {
-            if ((a.assignment === "research") !== (b.assignment === "research"))
-                return a.assignment === "research" ? -1 : 1;
+            if (isActivelyResearching(a) !== isActivelyResearching(b))
+                return isActivelyResearching(a) ? -1 : 1;
             return (b.level ?? 1) - (a.level ?? 1);
         })
         .slice(0, labs.length);
@@ -101,7 +104,7 @@ export const calculateResearchOutput = (
         let scientistContribution = SCIENTIST_BASE_BONUS + (scientist.level ?? 1);
 
         // Множитель за назначение на исследование (+100% = ×2)
-        if (scientist.assignment === "research") {
+        if (isActivelyResearching(scientist)) {
             scientistContribution *= RESEARCH_ASSIGNMENT_MULTIPLIER;
         }
 

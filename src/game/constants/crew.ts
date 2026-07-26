@@ -63,7 +63,7 @@ export const COMBAT_ACTIONS: Record<
         {
             value: "evasion",
             label: "Маневры",
-            effect: "+уровень% уклонение",
+            effect: "+1% за уровень к уклонению",
             moduleType: "cockpit",
         },
         {
@@ -75,17 +75,17 @@ export const COMBAT_ACTIONS: Record<
     ],
     engineer: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
-        { value: "repair", label: "Ремонт", effect: "+15% корпуса за ход" },
+        { value: "repair", label: "Ремонт", effect: "+15 корпуса, +1 за уровень" },
         {
             value: "calibration",
             label: "Калибровка",
-            effect: "+10% точность",
+            effect: "+10% точность, +1% за уровень",
             moduleType: "weaponbay",
         },
         {
             value: "overclock",
             label: "Перегрузка",
-            effect: "+15% урон, -броня модуля",
+            effect: "+15% урон, +1% за уровень, -10% броня цели",
             moduleType: "weaponbay",
         },
         {
@@ -97,7 +97,7 @@ export const COMBAT_ACTIONS: Record<
     ],
     medic: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
-        { value: "heal", label: "Лечение", effect: "+20 здоровье" },
+        { value: "heal", label: "Лечение", effect: "+20 здоровья, +1 за уровень" },
         {
             value: "firstaid",
             label: "Медпаки",
@@ -109,7 +109,7 @@ export const COMBAT_ACTIONS: Record<
         {
             value: "sabotage",
             label: "Диверсии",
-            effect: "-5% шанс попадания врага",
+            effect: "-5% шанс попадания врага, -1% за уровень",
         },
     ],
     scientist: [
@@ -117,7 +117,7 @@ export const COMBAT_ACTIONS: Record<
         {
             value: "analysis",
             label: "Анализ уязвимостей",
-            effect: "+10% урон по цели",
+            effect: "+10% урон по цели, +1% за уровень",
         },
     ],
     gunner: [
@@ -125,13 +125,13 @@ export const COMBAT_ACTIONS: Record<
         {
             value: "targeting",
             label: "Прицеливание",
-            effect: "Выбор цели",
+            effect: "Выбор цели, +5% точность",
             moduleType: "weaponbay",
         },
         {
             value: "rapidfire",
             label: "Скорострельность",
-            effect: "+25% урон, -5% точность",
+            effect: "+25% урон, +1% за уровень, -10% точность",
             moduleType: "weaponbay",
         },
     ],
@@ -147,15 +147,15 @@ export const CREW_ACTIONS: Record<
 > = {
     pilot: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
-        { value: "navigation", label: "Навигация", effect: "+1⚡ потребление" },
+        { value: "navigation", label: "Навигация", effect: "-1⚡ потребление" },
     ],
     engineer: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
-        { value: "repair", label: "Ремонт", effect: "+15% броня за ход" },
+        { value: "repair", label: "Ремонт", effect: "+15 корпуса, +1 за уровень" },
         {
             value: "reactor_overload",
             label: "Разгон реактора",
-            effect: "+5⚡ энергии реактору",
+            effect: "+5⚡, +1⚡ за уровень",
         },
         {
             value: "fuel_synthesis",
@@ -165,12 +165,12 @@ export const CREW_ACTIONS: Record<
     ],
     medic: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
-        { value: "heal", label: "Лечение", effect: "+20 здоровье" },
-        { value: "morale", label: "Мораль", effect: "+15 настроение" },
+        { value: "heal", label: "Лечение", effect: "+20 здоровья, +1 за уровень" },
+        { value: "morale", label: "Мораль", effect: "+15 настроения, +1 за уровень" },
     ],
     scout: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },
-        { value: "patrol", label: "Патруль", effect: "+шанс найти кредиты" },
+        { value: "patrol", label: "Патруль", effect: "+5 кредитов за уровень после 1" },
     ],
     scientist: [
         { value: "", label: "ОЖИДАНИЕ", effect: null },

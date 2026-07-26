@@ -129,34 +129,60 @@ export function getTotalDamage(state: GameState) {
     damage.total = applyDamageBonus(damage.total, techBonus);
 
     // === Бонусы от боевых заданий (только в бою) ===
+    const activeWeaponBayIds = new Set(
+        ship.modules
+            .filter(
+                (m) =>
+                    m.type === "weaponbay" &&
+                    !m.disabled &&
+                    !m.manualDisabled &&
+                    m.health > 0,
+            )
+            .map((m) => m.id),
+    );
+    const overclockEngineer = crew.find(
+        (c) =>
+            c.profession === "engineer" &&
+            c.combatAssignment === "overclock" &&
+            activeWeaponBayIds.has(c.moduleId),
+    );
+    const rapidfireGunner = crew.find(
+        (c) =>
+            c.profession === "gunner" &&
+            c.combatAssignment === "rapidfire" &&
+            activeWeaponBayIds.has(c.moduleId),
+    );
+    const analysisScientist = crew.find(
+        (c) => c.profession === "scientist" && c.combatAssignment === "analysis",
+    );
+    const hasTargetingGunner = crew.some(
+        (c) =>
+            c.profession === "gunner" &&
+            c.combatAssignment === "targeting" &&
+            activeWeaponBayIds.has(c.moduleId),
+    );
     const combatBonuses = {
-        overclock: crew.some((c) => c.combatAssignment === "overclock"),
-        rapidfire: crew.some((c) => c.combatAssignment === "rapidfire"),
-        analysis:
-            crew.some((c) => c.combatAssignment === "analysis") &&
-            crew.some((c) => c.profession === "gunner") &&
-            crew.some((c) => c.combatAssignment === "targeting"),
+        overclock: overclockEngineer !== undefined,
+        rapidfire: rapidfireGunner !== undefined,
+        analysis: analysisScientist !== undefined && hasTargetingGunner,
     };
 
     if (combatBonuses.overclock) {
-        const engineerLevel =
-            crew.find((c) => c.combatAssignment === "overclock")?.level ?? 1;
+        const engineerLevel = overclockEngineer?.level ?? 1;
         damage.total = applyDamageBonus(
             damage.total,
             CREW_ASSIGNMENT_BONUSES.OVERCLOCK_DAMAGE + engineerLevel * 0.01,
         );
     }
     if (combatBonuses.rapidfire) {
-        const gunnerLevel =
-            crew.find((c) => c.combatAssignment === "rapidfire")?.level ?? 1;
+        const gunnerLevel = rapidfireGunner?.level ?? 1;
         damage.total = applyDamageBonus(
             damage.total,
             CREW_ASSIGNMENT_BONUSES.RAPIDFIRE_DAMAGE + gunnerLevel * 0.01,
         );
     }
     if (combatBonuses.analysis) {
-        const scientistLevel =
-            crew.find((c) => c.combatAssignment === "analysis")?.level ?? 1;
+        const scientistLevel = analysisScientist?.level ?? 1;
         damage.total = applyDamageBonus(
             damage.total,
             CREW_ASSIGNMENT_BONUSES.ANALYSIS_DAMAGE + scientistLevel * 0.01,

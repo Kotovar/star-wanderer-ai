@@ -55,11 +55,18 @@ export const ASSIGNMENT_BASES = {
     MORALE_AMOUNT: 15,
     POWER_BONUS: 5,
     NAVIGATION_CONSUMPTION: 1,
-    EVADE_BONUS: 3,
     PATROL_CREDITS_PER_LEVEL: 5,
     FUEL_SYNTHESIS_AMOUNT: 1,
     FUEL_SYNTHESIS_HAPPINESS_COST: 2,
 } as const;
+
+/** Дополнительная энергия от инженера в реакторе: +5 на первом уровне, +1 за уровень выше. */
+export function getReactorOverloadPower(crewMember: CrewMember): number {
+    return Math.round(
+        (ASSIGNMENT_BASES.POWER_BONUS + Math.max(0, (crewMember.level ?? 1) - 1)) *
+            getTaskBonusMultiplier(crewMember),
+    );
+}
 
 /** Множители и лимиты */
 export const ASSIGNMENT_MULTIPLIERS = {

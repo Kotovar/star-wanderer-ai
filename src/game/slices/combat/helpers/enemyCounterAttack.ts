@@ -120,9 +120,7 @@ export function performEnemyAttack(
     if (evasionChance > 0 && Math.random() < evasionChance) {
         // Опыт за уклонение — пилоту за штурвалом (он и дал уклонение)
         const pilot = getPilotInCockpit(state.crew, state.ship.modules);
-        const hasEvasion = state.crew.some(
-            (c) => c.combatAssignment === "evasion",
-        );
+        const hasEvasion = pilot?.combatAssignment === "evasion";
         const evasionSource = i18nStore.t(
             hasEvasion ? "game_logs.evade_maneuvers" : "game_logs.evade_plain",
             { chance: Math.round(evasionChance * 100) },
@@ -140,7 +138,8 @@ export function performEnemyAttack(
 
     // Sabotage check (scales with scout level)
     const scoutWithSabotage = state.crew.find(
-        (c) => c.combatAssignment === "sabotage",
+        (c) =>
+            c.profession === "scout" && c.combatAssignment === "sabotage",
     );
     if (scoutWithSabotage) {
         const sabotageChance =

@@ -858,19 +858,21 @@ function resolveCombatFlags(
   return {
     hasGunner,
     hasEngineer,
-    hasTargeting: state.crew.some(
-      (c) => c.combatAssignment === "targeting",
+    hasTargeting: crewInWeaponBays.some(
+      (c) => c.profession === "gunner" && c.combatAssignment === "targeting",
     ),
-    hasOverclock: state.crew.some(
-      (c) => c.combatAssignment === "overclock",
+    hasOverclock: crewInWeaponBays.some(
+      (c) => c.profession === "engineer" && c.combatAssignment === "overclock",
     ),
-    hasRapidfire: state.crew.some(
-      (c) => c.combatAssignment === "rapidfire",
+    hasRapidfire: crewInWeaponBays.some(
+      (c) => c.profession === "gunner" && c.combatAssignment === "rapidfire",
     ),
-    hasCalibration: state.crew.some(
-      (c) => c.combatAssignment === "calibration",
+    hasCalibration: crewInWeaponBays.some(
+      (c) => c.profession === "engineer" && c.combatAssignment === "calibration",
     ),
-    hasAnalysis: state.crew.some((c) => c.combatAssignment === "analysis"),
+    hasAnalysis: state.crew.some(
+      (c) => c.profession === "scientist" && c.combatAssignment === "analysis",
+    ),
     hasGunnerWithTargeting: crewInWeaponBays.some(
       (c) =>
         c.profession === "gunner" && c.combatAssignment === "targeting",
@@ -954,12 +956,6 @@ export function executePlayerAttack(
   const finalDamagePerWeapon = calculateFinalDamagePerWeapon(
     baseWeaponDamage,
     combatFlags.hasGunner,
-    combatFlags.hasOverclock,
-    combatFlags.hasRapidfire,
-    combatFlags.hasAnalysis,
-    combatFlags.hasTargeting,
-    combatFlags.hasGunnerWithTargeting,
-    get,
   );
 
   // 6. Calculate all damage
@@ -1110,12 +1106,6 @@ export function executePlayerAttackWithBayTargets(
   const finalDamagePerWeapon = calculateFinalDamagePerWeapon(
     baseWeaponDamage,
     combatFlags.hasGunner,
-    combatFlags.hasOverclock,
-    combatFlags.hasRapidfire,
-    combatFlags.hasAnalysis,
-    combatFlags.hasTargeting,
-    combatFlags.hasGunnerWithTargeting,
-    get,
   );
 
   // 6. Laser bonus

@@ -1,5 +1,4 @@
-import { store as i18nStore } from "@/lib/useTranslation";
-import type { GameState, GameStore, WeaponType } from "@/game/types";
+import type { GameState, WeaponType } from "@/game/types";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import {
     BASE_ACCURACY,
@@ -38,51 +37,12 @@ export function getWeaponAccuracy(
 export function calculateFinalDamagePerWeapon(
     baseWeaponDamage: number,
     hasGunner: boolean,
-    hasOverclock: boolean,
-    hasRapidfire: boolean,
-    hasAnalysis: boolean,
-    hasTargeting: boolean,
-    hasGunnerWithTargeting: boolean,
-    get: () => GameStore,
 ): number {
-    let finalDamagePerWeapon = hasGunner
+    return hasGunner
         ? Math.floor(baseWeaponDamage * COMBAT_DAMAGE_MODIFIERS.GUNNER_BONUS)
         : Math.floor(
               baseWeaponDamage * COMBAT_DAMAGE_MODIFIERS.NO_GUNNER_PENALTY,
           );
-
-    // Combat assignment bonuses (scale with crew level: base + level * 1%)
-    if (hasOverclock) {
-        const engineerLevel =
-            get().crew.find((c) => c.combatAssignment === "overclock")?.level ??
-            1;
-        finalDamagePerWeapon = Math.floor(
-            finalDamagePerWeapon * (1 + 0.15 + engineerLevel * 0.01),
-        );
-    }
-    if (hasRapidfire) {
-        const gunnerLevel =
-            get().crew.find((c) => c.combatAssignment === "rapidfire")?.level ??
-            1;
-        finalDamagePerWeapon = Math.floor(
-            finalDamagePerWeapon * (1 + 0.25 + gunnerLevel * 0.01),
-        );
-    }
-
-    // Analysis bonus (requires gunner with targeting, scales with scientist level)
-    if (hasAnalysis && hasGunnerWithTargeting) {
-        const scientistLevel =
-            get().crew.find((c) => c.combatAssignment === "analysis")?.level ??
-            1;
-        finalDamagePerWeapon = Math.floor(
-            finalDamagePerWeapon * (1 + 0.1 + scientistLevel * 0.01),
-        );
-        get().addLog( i18nStore.t("game_logs.playerDamage_1", { scientistLevel: 10 + scientistLevel }),
-            "info",
-        );
-    }
-
-    return finalDamagePerWeapon;
 }
 
 /**
@@ -93,10 +53,29 @@ export function calculateFinalDamagePerWeapon(
  */
 function computeGlobalAccuracyBonuses(state: GameState): number {
     let modifier = 0;
+    const activeWeaponBayIds = new Set(
+        state.ship.modules
+            .filter((module) => module.type === "weaponbay" && isModuleActive(module))
+            .map((module) => module.id),
+    );
 
-    if (state.crew.some((c) => c.combatAssignment === "targeting"))
+    if (
+        state.crew.some(
+            (c) =>
+                c.profession === "gunner" &&
+                c.combatAssignment === "targeting" &&
+                activeWeaponBayIds.has(c.moduleId),
+        )
+    )
         modifier += COMBAT_ACCURACY_MODIFIERS.TARGETING_BONUS;
-    if (state.crew.some((c) => c.combatAssignment === "rapidfire"))
+    if (
+        state.crew.some(
+            (c) =>
+                c.profession === "gunner" &&
+                c.combatAssignment === "rapidfire" &&
+                activeWeaponBayIds.has(c.moduleId),
+        )
+    )
         modifier += COMBAT_ACCURACY_MODIFIERS.RAPIDFIRE_PENALTY;
 
     const aiCoreCount = state.ship.modules.filter(
@@ -190,7 +169,17 @@ export function computeAccuracyModifier(state: GameState): number {
 export function computeBayAccuracyModifier(state: GameState, bayId: number): number {
     const crewInBay = state.crew.filter((c) => c.moduleId === bayId);
     const gunnerInBay = crewInBay.find((c) => c.profession === "gunner");
-    const hasGlobalTargeting = state.crew.some((c) => c.combatAssignment === "targeting");
+    const hasGlobalTargeting = state.crew.some(
+        (c) =>
+            c.profession === "gunner" &&
+            c.combatAssignment === "targeting" &&
+            state.ship.modules.some(
+                (module) =>
+                    module.id === c.moduleId &&
+                    module.type === "weaponbay" &&
+                    isModuleActive(module),
+            ),
+    );
 
     let modifier = 0;
 

@@ -1,6 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { CrewTrait, GameStore, SetState } from "@/game/types";
-import { CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
 import { RACES } from "@/game/constants/races";
 import { shiftHappiness } from "@/game/crew";
 
@@ -20,9 +19,6 @@ const POWER_OVERLOAD_CHANCE = 0.4;
 
 /** Урон модулю от перегрузки */
 const POWER_OVERLOAD_DAMAGE = 15;
-
-/** Бонус энергии от назначения экипажа на разгон реактора */
-const POWER_ASSIGNMENT_BONUS = CREW_ASSIGNMENT_BONUSES.REACTOR_OVERLOAD;
 
 /**
  * Обрабатывает трейты морали экипажа
@@ -212,12 +208,8 @@ export const processPowerCheck = (
     get: () => GameStore,
 ): void => {
     const power = get().getTotalPower();
-    const hasReactorOverload = get().crew.some(
-        (c) => c.assignment === "reactor_overload",
-    );
-    const powerBonus = hasReactorOverload ? POWER_ASSIGNMENT_BONUS : 0;
     const consumption = get().getTotalConsumption();
-    const available = power + powerBonus - consumption;
+    const available = power - consumption;
 
     // Энергии достаточно
     if (available >= 0) return;

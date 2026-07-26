@@ -2,10 +2,9 @@ import {
     calculateArtifactPowerBonus,
     isModuleFunctional,
 } from "../utils";
-import { CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
 import { getTechBonusSum } from "@/game/research";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
-import { getTaskBonusMultiplier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
+import { getReactorOverloadPower } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import type { GameState } from "@/game/types/game";
 
 /**
@@ -13,7 +12,7 @@ import type { GameState } from "@/game/types/game";
  *
  * Учитывает:
  * - Базовую энергию от реакторов и других модулей
- * - Бонус от назначения экипажа на энергию (+5)
+ * - Бонус от назначения экипажа на энергию (+5, затем +1 за уровень)
  * - Бонусы от артефактов (Реактор Бездны, Вечное ядро)
  * - Бонус от эффектов планет (временные эффекты от специализации)
  * - Бонус от инженеров в реакторах (+3 к энергии за каждого)
@@ -38,12 +37,12 @@ export function getTotalPower(state: GameState): number {
             .map((m) => m.id),
     );
     crew.filter(
-        (c) => c.assignment === "reactor_overload" && reactorIds.has(c.moduleId),
+        (c) =>
+            c.profession === "engineer" &&
+            c.assignment === "reactor_overload" &&
+            reactorIds.has(c.moduleId),
     ).forEach((c) => {
-        power += Math.round(
-            CREW_ASSIGNMENT_BONUSES.REACTOR_OVERLOAD *
-                getTaskBonusMultiplier(c),
-        );
+        power += getReactorOverloadPower(c);
     });
 
     // === Бонус от исследований (module_power) — runtime ===

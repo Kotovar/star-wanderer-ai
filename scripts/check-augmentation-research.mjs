@@ -195,9 +195,17 @@ const combatEngineer = (augmentation) => ({
   combatAssignment: "repair",
 });
 const damagedModule = { id: 1, type: "reactor", name: "Reactor", health: 10, maxHealth: 100 };
-assert.equal(
-  runCombatAssignment(combatEngineer("nano_hands"), damagedModule).ship.modules[0].health,
-  28,
+const baseCombatRepair = runCombatAssignment(
+  combatEngineer(undefined),
+  damagedModule,
+).ship.modules[0].health;
+const nanoHandsCombatRepair = runCombatAssignment(
+  combatEngineer("nano_hands"),
+  damagedModule,
+).ship.modules[0].health;
+assert.equal(nanoHandsCombatRepair, 27);
+assert.ok(
+  nanoHandsCombatRepair > baseCombatRepair,
   "nano hands must increase combat repair",
 );
 

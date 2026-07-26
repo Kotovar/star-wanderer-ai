@@ -27,11 +27,14 @@ export function getTotalConsumption(state: GameState): number {
             .filter((m) => m.type === "cockpit" && isModuleFunctional(m))
             .map((m) => m.id),
     );
-    const navCrewInEngine = crew.filter(
-        (c) => c.assignment === "navigation" && cockpitIds.has(c.moduleId),
+    const navPilotsInCockpit = crew.filter(
+        (c) =>
+            c.profession === "pilot" &&
+            c.assignment === "navigation" &&
+            cockpitIds.has(c.moduleId),
     );
-    const pilotRed = navCrewInEngine.length > 0
-        ? navCrewInEngine.reduce(
+    const pilotRed = navPilotsInCockpit.length > 0
+        ? navPilotsInCockpit.reduce(
               (sum, c) =>
                   sum +
                   Math.round(

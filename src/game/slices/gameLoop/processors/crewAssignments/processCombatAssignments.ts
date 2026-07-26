@@ -1,5 +1,6 @@
 import { getRaceCrewBonus } from "@/game/races";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
+import { isValidCrewAssignment } from "@/game/slices/crew/helpers/validateAssignment";
 import { store as i18nStore } from "@/lib/useTranslation";
 import {
     BASE_EXP_REWARDS,
@@ -36,6 +37,17 @@ export const processCombatAssignment = (
     get: () => GameStore,
 ): void => {
     if (!currentModule) return;
+    if (
+        crewMember.combatAssignment &&
+        !isValidCrewAssignment(
+            crewMember,
+            currentModule,
+            crewMember.combatAssignment,
+            "combat",
+        ).valid
+    ) {
+        return;
+    }
 
     const crewInSameModule = get().crew.filter(
         (c) => c.moduleId === crewMember.moduleId && c.id !== crewMember.id,
@@ -127,7 +139,7 @@ const processCombatRepair = (
     get: () => GameStore,
 ): void => {
     let repairAmount: number = Math.floor(
-        (ASSIGNMENT_BASES.REPAIR_AMOUNT + (crewMember.level ?? 1)) *
+        (ASSIGNMENT_BASES.REPAIR_AMOUNT + Math.max(0, (crewMember.level ?? 1) - 1)) *
             getTaskBonusMultiplier(crewMember),
     );
 

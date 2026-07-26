@@ -1,6 +1,10 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore } from "@/game/types/game";
-import type { CrewMember, CrewMemberAssignment } from "@/game/types";
+import type {
+    CrewMember,
+    CrewMemberAssignment,
+    CrewMemberCombatAssignment,
+} from "@/game/types";
 import { gainExp as gainExpHelper, isValidCrewAssignment } from "./helpers";
 import {
     canMergeWithModule,
@@ -60,7 +64,7 @@ export interface CrewSlice {
      */
     assignCombatTask: (
         crewId: number,
-        task: string | null,
+        task: CrewMemberCombatAssignment | null,
         effect: string | null,
     ) => void;
 
@@ -134,6 +138,7 @@ export const createCrewSlice = (
                 crewMember,
                 currentModule,
                 task,
+                "civilian",
             );
             if (!validation.valid) {
                 get().addLog(
@@ -166,6 +171,27 @@ export const createCrewSlice = (
         const state = get();
         const crewMember = state.crew.find((c) => c.id === crewId);
         if (!crewMember) return;
+
+        if (task) {
+            const currentModule = state.ship.modules.find(
+                (module) => module.id === crewMember.moduleId,
+            );
+            if (!currentModule) return;
+
+            const validation = isValidCrewAssignment(
+                crewMember,
+                currentModule,
+                task,
+                "combat",
+            );
+            if (!validation.valid) {
+                get().addLog(
+                    validation.error || i18nStore.t("game_logs.invalid_assignment"),
+                    "error",
+                );
+                return;
+            }
+        }
 
         // Update combat assignment
         set((s) => ({

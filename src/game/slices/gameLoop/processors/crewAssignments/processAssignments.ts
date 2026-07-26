@@ -11,6 +11,7 @@ import {
     ASSIGNMENT_BASES,
     ASSIGNMENT_MULTIPLIERS,
     BASE_EXP_REWARDS,
+    getReactorOverloadPower,
     getTaskBonusMultiplier,
 } from "./constants";
 import { processCombatAssignment } from "./processCombatAssignments";
@@ -239,9 +240,6 @@ const processNonCombatAssignment = (
         case "navigation":
             processNavigationAssignment(crewMember, currentModule, set, get);
             break;
-        case "evasion":
-            processEvasionAssignment(crewMember, currentModule, set, get);
-            break;
         case "heal":
             processHealAssignment(
                 crewMember,
@@ -289,7 +287,7 @@ const processRepairAssignment = (
     get: () => GameStore,
 ): void => {
     let repairAmount: number = Math.floor(
-        (ASSIGNMENT_BASES.REPAIR_AMOUNT + (crewMember.level ?? 1)) *
+        (ASSIGNMENT_BASES.REPAIR_AMOUNT + Math.max(0, (crewMember.level ?? 1) - 1)) *
             getTaskBonusMultiplier(crewMember),
     );
 
@@ -391,7 +389,7 @@ const processMergeAssignment = (
 };
 
 /**
- * Назначение на энергию (+5 к генерации)
+ * Назначение на энергию (+5 к генерации, затем +1 за уровень)
  * Работает только в реакторе
  */
 const processPowerAssignment = (
@@ -409,9 +407,7 @@ const processPowerAssignment = (
     }
 
     // Бонус считается динамически в getTotalPower — здесь только лог и опыт
-    const powerBonus = Math.round(
-        ASSIGNMENT_BASES.POWER_BONUS * getTaskBonusMultiplier(crewMember),
-    );
+    const powerBonus = getReactorOverloadPower(crewMember);
     get().addLog( i18nStore.t("game_logs.processAssignments_10", { crewMember_name: crewMember.name, powerBonus }),
         "info",
     );
@@ -439,31 +435,6 @@ const processNavigationAssignment = (
     get().addLog( i18nStore.t("game_logs.processAssignments_12", { crewMember_name: crewMember.name, NAVIGATION_CONSUMPTION: ASSIGNMENT_BASES.NAVIGATION_CONSUMPTION }),
         "info",
     );
-};
-
-/**
- * Назначение на уклонение
- * Работает только в двигателе
- */
-const processEvasionAssignment = (
-    crewMember: CrewMember,
-    currentModule: Module,
-    set: SetState,
-    get: () => GameStore,
-): void => {
-    // Проверяем что экипаж в двигателе
-    if (currentModule.type !== "engine") {
-        get().addLog( i18nStore.t("game_logs.processAssignments_13", { crewMember_name: crewMember.name }),
-            "warning",
-        );
-        return;
-    }
-
-    // Бонус считается динамически в getTotalEvasion — здесь только лог и опыт
-    get().addLog( i18nStore.t("game_logs.processAssignments_14", { crewMember_name: crewMember.name, EVADE_BONUS: ASSIGNMENT_BASES.EVADE_BONUS }),
-        "info",
-    );
-    get().gainExp(crewMember, BASE_EXP_REWARDS.EVADE);
 };
 
 /**
@@ -576,7 +547,7 @@ const processMoraleAssignment = (
     get: () => GameStore,
 ): void => {
     const moraleAmount: number = Math.floor(
-        (ASSIGNMENT_BASES.MORALE_AMOUNT + (crewMember.level ?? 1)) *
+        (ASSIGNMENT_BASES.MORALE_AMOUNT + Math.max(0, (crewMember.level ?? 1) - 1)) *
             getTaskBonusMultiplier(crewMember),
     );
 
@@ -672,7 +643,10 @@ const processPatrolAssignment = (
     }
 
     const credits =
-        Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+        Math.floor(Math.random() * (config.max - config.min + 1)) +
+        config.min +
+        Math.max(0, (crewMember.level ?? 1) - 1) *
+            ASSIGNMENT_BASES.PATROL_CREDITS_PER_LEVEL;
     set((s) => ({ credits: s.credits + credits }));
     get().addLog( i18nStore.t("game_logs.processAssignments_22", { crewMember_name: crewMember.name, credits }),
         "info",
