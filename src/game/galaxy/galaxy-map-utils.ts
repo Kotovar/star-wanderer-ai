@@ -216,7 +216,6 @@ export function drawStaticLegend(
     modules: Module[],
     captainLevel: number,
     fuel: number,
-    scanRange: number,
     t: (key: string) => string,
     canvasWidth: number,
     canvasHeight: number,
@@ -258,23 +257,21 @@ export function drawStaticLegend(
         legendX,
         legendY + lineH * 2,
     );
-    ctx.fillText(t("galaxy.legend.sector_info_1"), legendX, legendY + lineH * 3.3);
 
-    const scannerStatus =
-        scanRange === 0
-            ? `${t("galaxy.legend.scanner")}: ${t("galaxy.labels.scanner_absent")} · ${t("galaxy.legend.boss_detection_required")}`
-            : scanRange < 8
-                ? `${t("galaxy.legend.scanner")}: ${scanRange} · ${t("galaxy.legend.boss_detection_remaining")} +${8 - scanRange}`
-                : `${t("galaxy.legend.scanner")}: ${scanRange} · ${t("galaxy.legend.boss_detection_ready")}`;
-
-    ctx.fillStyle = scanRange >= 8 ? "#00ff41" : "#ffb000";
-    ctx.fillText(
-        scannerStatus,
-        legendX,
-        legendY + lineH * 6.6,
-    );
-    ctx.fillText(t("galaxy.legend.sector_info_2"), legendX, legendY + lineH * 4.3);
-    ctx.fillText(t("galaxy.legend.sector_info_3"), legendX, legendY + lineH * 5.3);
+    // Per-tier jump requirements, colored by whether the current engine/captain
+    // already clear them — this is how a player learns "why is tier 2 locked"
+    // straight from the map, without needing to attempt the jump first.
+    const tierRequirementKeys = ["sector_info_1", "sector_info_2", "sector_info_3"] as const;
+    tierRequirementKeys.forEach((key, i) => {
+        const tier = i + 1;
+        const unlocked = canAccessTier(tier, modules, captainLevel);
+        ctx.fillStyle = unlocked ? "#00ff41" : "#ff6a00";
+        ctx.fillText(
+            `${t(`galaxy.legend.${key}`)}${unlocked ? " ✓" : ""}`,
+            legendX,
+            legendY + lineH * (3.3 + i),
+        );
+    });
     ctx.restore();
 }
 
