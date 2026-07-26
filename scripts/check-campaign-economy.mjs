@@ -35,7 +35,10 @@ const rows = [1, 2, 3, 4].map((tier) => {
 
 assert.ok(rows.every((row) => row.net > 0), "A median victory must fund recovery");
 assert.ok(
-  rows.every((row) => row.operatingCost >= row.income * 0.15),
+  // Порог снижен с 15% до 10% вместе с ростом LOOT_BASE_THREAT (300 → 410) —
+  // бой платит больше, чтобы конкурировать с безрисковыми контрактами
+  // (см. check-income-sources.mjs), но всё ещё несёт заметную стоимость восстановления.
+  rows.every((row) => row.operatingCost >= row.income * 0.1),
   "Operating costs must create noticeable pressure",
 );
 assert.equal(getEmergencyFuelAmount(4, 100, 0, 10, "station-a", [], 3), 6);

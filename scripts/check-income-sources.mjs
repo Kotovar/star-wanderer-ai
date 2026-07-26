@@ -34,7 +34,13 @@ const rows = [1, 2, 3].map((tier) => ({
 }));
 
 assert.ok(rows.every((row) => row.scouting < row.battle));
-assert.ok(rows.every((row) => row.contract >= row.battle));
+// Контракт остаётся безрисковой подстраховкой на тире 1, но с тира 2 бой
+// (после LOOT_BASE_THREAT 300 → 410) выгоднее — риск должен окупаться.
+assert.ok(rows[0].contract >= rows[0].battle, "Tier 1 contract stays a safe-income floor");
+assert.ok(
+  rows.slice(1).every((row) => row.battle > row.contract),
+  "Combat must outpay contracts from tier 2 onward to reward risk",
+);
 assert.ok(rows.every((row) => row.trade > 0 && row.trade < row.battle));
 assert.ok(
   rows.every((row, index) => index === 0 || row.scouting > rows[index - 1].scouting),

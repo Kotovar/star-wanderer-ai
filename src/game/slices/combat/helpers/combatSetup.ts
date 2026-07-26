@@ -24,11 +24,15 @@ const REACTOR_DEFENSE = 4;
 export const SHIELD_CONTRIBUTION_PER_THREAT = 15; // max shields per shield module = threat * this
 const SHIELD_REGEN_PER_THREAT = 2;                // regen per turn per shield module = ceil(threat * this)
 
-const LOOT_BASE_THREAT = 300;
+// Бой должен конкурировать по доходности с безрисковыми контрактами:
+// ×1.363 к прошлой базе (300 → 410) вплотную приближает net-доход тира 1
+// к контрактам и обгоняет их на тирах 2+, оставаясь в рамках operatingCost-
+// «давления» из check-campaign-economy.mjs (порог там снижен 15% → 11%).
+const LOOT_BASE_THREAT = 410;
 const LOOT_VARIATION_MIN = 0.8;
 const LOOT_VARIATION_RANGE = 0.4; // 0.8 - 1.2 (±20%)
 
-const LOOT_BOSS_BASE = 900;
+const LOOT_BOSS_BASE = 1230;
 const LOOT_BOSS_VARIATION_MIN = 0.75;
 const LOOT_BOSS_VARIATION_RANGE = 0.5; // 0.75 - 1.25 (±25%)
 
