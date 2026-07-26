@@ -485,7 +485,7 @@ export function StationPanel() {
         STATION_BACKGROUNDS.trade;
 
     return (
-        <div className="flex flex-col gap-2 sm:gap-4 h-full">
+        <div className="flex flex-col gap-2 sm:gap-4 lg:h-full">
             <section className="relative min-h-0 sm:min-h-52 overflow-hidden rounded border border-[#00ff4155]">
                 <Image
                     src={stationBackground}
@@ -536,7 +536,7 @@ export function StationPanel() {
                 className="w-full mt-2 flex-1 min-h-0"
             >
                 <TabsList
-                    className="flex w-full overflow-x-auto bg-[rgba(0,255,65,0.1)] border border-[#00ff41] h-auto"
+                    className="sticky top-0 z-20 flex h-auto w-full overflow-x-auto border border-[#00ff41] bg-[rgba(5,8,16,0.98)]"
                 >
                     <TabsTrigger
                         value="shop"
