@@ -169,7 +169,7 @@ export const getEffectDescription = (
 };
 
 /** Личный бонус экипажа к силе эффектов артефактов (трейт legend), суммируется */
-const getCrewTraitArtifactBonus = (crew: GameState["crew"]): number =>
+export const getCrewTraitArtifactBonus = (crew: GameState["crew"]): number =>
     crew.reduce(
         (sum, c) =>
             sum +

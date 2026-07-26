@@ -1092,6 +1092,7 @@
         "hint_text_unknown": "A lead was received for this artifact",
         "hint_location": "Search",
         "active_label": "ACTIVE",
+        "boosted_label": "✨ BOOSTED",
         "research_btn": "RESEARCH",
         "research_btn_dangerous": "⚠️ RESEARCH (DANGEROUS)",
         "deactivate_btn": "DEACTIVATE",

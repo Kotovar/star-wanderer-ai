@@ -22,6 +22,7 @@ export interface Artifact {
     };
     cursed?: boolean; // Is this a cursed artifact with negative effects
     canBoost?: boolean; // Can be enhanced by voidborn ritual (default: true if has numeric value)
+    boosted?: boolean; // Currently enhanced by an active voidborn ritual effect
     scanRange?: number; // Scan range value for artifacts that provide scan range
 }
 

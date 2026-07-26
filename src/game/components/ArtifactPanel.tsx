@@ -131,6 +131,11 @@ function ArtifactCard({
                             {t("artifacts.active_label")}
                         </span>
                     )}
+                    {artifact.boosted && (
+                        <span className="text-xs text-[#ffb000] bg-[rgba(255,176,0,0.2)] px-2 py-1">
+                            {t("artifacts.boosted_label")}
+                        </span>
+                    )}
                 </div>
             </div>
 

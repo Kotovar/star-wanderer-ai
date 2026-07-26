@@ -1,7 +1,10 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, Artifact, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
-import { getRandomUndiscoveredArtifact } from "@/game/artifacts";
+import {
+    getRandomUndiscoveredArtifact,
+    getCrewTraitArtifactBonus,
+} from "@/game/artifacts";
 import { RACES } from "@/game/constants/races";
 import { ARTIFACT_FIND_BASE_CHANCE, ARTIFACT_BOOST_BONUS } from "../constants";
 import { getTechBonusSum } from "@/game/research";
@@ -97,6 +100,11 @@ const getBaseArtifactFinderBonus = (state: GameStore): number => {
 
     const researchBoost = getTechBonusSum(state.research, "artifact_effect_boost");
     if (researchBoost > 0) value *= 1 + researchBoost;
+
+    // Личный трейт-бонус экипажа (legend) — та же логика, что и getArtifactEffectValue,
+    // просто не применялась здесь раньше (эту функцию не переиспользовали ради точности без округления).
+    const traitArtifactBonus = getCrewTraitArtifactBonus(state.crew);
+    if (traitArtifactBonus > 0) value *= 1 + traitArtifactBonus;
 
     const boostEffect = state.activeEffects.find(
         (e) =>

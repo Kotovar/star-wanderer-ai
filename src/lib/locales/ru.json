@@ -1092,6 +1092,7 @@
         "hint_text_unknown": "Получена подсказка для поиска этого артефакта",
         "hint_location": "Искать",
         "active_label": "АКТИВЕН",
+        "boosted_label": "✨ УСИЛЕН",
         "research_btn": "ИЗУЧИТЬ",
         "research_btn_dangerous": "⚠️ ИЗУЧИТЬ (ОПАСНО)",
         "deactivate_btn": "ДЕАКТИВИРОВАТЬ",

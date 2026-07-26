@@ -15,6 +15,7 @@ import { GameDialogContent } from "./GameDialog";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { getMergedCrewMember } from "@/game/slices/crew/helpers";
+import { getArtifactEffectValue } from "@/game/artifacts";
 import { XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants/races";
 import {
     getStandaloneMergeEffectEntries,
@@ -853,7 +854,7 @@ function ModuleDetailedStats({
             (a) => a.effect.type === "module_armor" && a.effect.active,
         );
         if (!artifact) return 0;
-        return artifact.effect.value || 0;
+        return getArtifactEffectValue(artifact, s);
     });
 
     return (
