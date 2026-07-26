@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -11,11 +12,26 @@ const jiti = require("jiti")(scriptPath, {
   alias: { "@": path.join(root, "src") },
 });
 const { AUGMENTATIONS } = jiti("../src/game/constants/augmentations.ts");
+const { getExtraScoutAttempts } = jiti(
+  "../src/game/constants/augmentations.ts",
+);
+const { getMaxExtraScoutAttempts } = jiti(
+  "../src/game/constants/augmentations.ts",
+);
+const { getDiminishingResearchSpeedBonus } = jiti(
+  "../src/game/constants/augmentations.ts",
+);
 const { getMedicalAugmentationCatalog } = jiti(
   "../src/game/stations/medicalAugmentations.ts",
 );
 const { createAugmentationsSlice } = jiti(
   "../src/game/slices/augmentations/augmentationsSlice.ts",
+);
+const { processCombatAssignment } = jiti(
+  "../src/game/slices/gameLoop/processors/crewAssignments/processCombatAssignments.ts",
+);
+const { getTaskBonusMultiplier } = jiti(
+  "../src/game/slices/gameLoop/processors/crewAssignments/constants.ts",
 );
 
 const augmentationResearch = TIER3_TECHS.cybernetic_augmentation;
@@ -43,6 +59,165 @@ assert.equal(
   getMedicalAugmentationCatalog("legacy-medical").length,
   3,
   "legacy stations without a dominant race keep three professional implants",
+);
+
+const rareOrLegendaryCount = (tier) => {
+  let count = 0;
+  for (let index = 0; index < 500; index++) {
+    const stationCatalog = getMedicalAugmentationCatalog(
+      `medical-${index}`,
+      undefined,
+      tier,
+    );
+    count += stationCatalog.filter((id) =>
+      ["rare", "legendary"].includes(AUGMENTATIONS[id].rarity),
+    ).length;
+  }
+  return count;
+};
+
+assert.ok(
+  rareOrLegendaryCount(4) > rareOrLegendaryCount(1),
+  "higher-tier systems must offer rare augmentations more often",
+);
+
+const costsByRarity = Object.values(AUGMENTATIONS).reduce(
+  (costs, augmentation) => {
+    costs[augmentation.rarity].push(augmentation.installCost);
+    return costs;
+  },
+  { common: [], uncommon: [], rare: [], legendary: [] },
+);
+assert.ok(
+  Math.max(...costsByRarity.common) < Math.min(...costsByRarity.uncommon) &&
+    Math.max(...costsByRarity.uncommon) < Math.min(...costsByRarity.rare) &&
+    Math.max(...costsByRarity.rare) < Math.min(...costsByRarity.legendary),
+  "each higher rarity must be noticeably more expensive",
+);
+
+assert.equal(getExtraScoutAttempts({ augmentation: "survey_uplink" }), 2);
+assert.equal(
+  getMaxExtraScoutAttempts([
+    { augmentation: "optical_implant" },
+    { augmentation: "survey_uplink" },
+  ]),
+  2,
+  "the best scouting implant in the team must set the sortie count",
+);
+assert.equal(
+  getDiminishingResearchSpeedBonus([
+    { augmentation: "memory_core" },
+    { augmentation: "quantum_memory_core" },
+  ]),
+  0.52,
+  "research augmentations must have diminishing returns",
+);
+assert.equal(AUGMENTATIONS.symbiotic_armor.effect.damageToHp, 0.1);
+assert.equal(
+  getTaskBonusMultiplier({ augmentation: "adaptive_neural_link" }),
+  1.15,
+  "human task augmentation should apply its task multiplier",
+);
+assert.equal(
+  getTaskBonusMultiplier({ augmentation: "overclock_core" }), 1.5);
+assert.equal(AUGMENTATIONS.quantum_memory_core.effect.researchSpeedBonus, 0.4);
+assert.equal(AUGMENTATIONS.combat_cognition.effect.accuracyBonus, 0.25);
+assert.equal(AUGMENTATIONS.combat_cognition.effect.critBonus, 0.15);
+
+const source = (file) => readFileSync(path.join(root, file), "utf8");
+assert.match(
+  source("src/game/slices/locations/helpers/sendScoutingMission.ts"),
+  /getMaxExtraScoutAttempts\(scouts\)/,
+  "scouting action must use the best implant in the scouting team",
+);
+assert.match(
+  source("src/game/components/EmptyPlanetPanel.tsx"),
+  /getMaxExtraScoutAttempts\(scouts\)/,
+  "scouting UI must use the best implant in the scouting team",
+);
+assert.match(
+  source("src/game/slices/research/helpers/researchHelpers.ts"),
+  /getDiminishingResearchSpeedBonus\(scientists\)/,
+  "research output must apply diminishing returns to memory cores",
+);
+assert.match(
+  source("src/game/slices/combat/helpers/playerAttack.ts"),
+  /laserWeaponBayIds\.has\(crewMember\.moduleId\)/,
+  "prismatic lens must require the wearer to be in a laser weapon bay",
+);
+assert.match(
+  source("src/game/slices/combat/helpers/playerDamage.ts"),
+  /getAugmentationBonus\(c, "accuracyBonus"\)/,
+  "combat accuracy must apply combat foresight",
+);
+assert.match(
+  source("src/game/slices/combat/helpers/playerAttack.ts"),
+  /getAugmentationBonus\(gunnerInBay, "critBonus"\)/,
+  "combat critical chance must apply combat foresight",
+);
+assert.match(
+  source("src/game/slices/travel/helpers/selectLocation.ts"),
+  /discoveredAugmentationIds/,
+  "medical station visits must record encountered augmentations",
+);
+
+const runCombatAssignment = (crewMember, module) => {
+  let combatState = {
+    crew: [crewMember],
+    ship: { modules: [module] },
+    addLog: () => {},
+    gainExp: () => {},
+  };
+  const combatSet = (update) => {
+    const patch = typeof update === "function" ? update(combatState) : update;
+    combatState = { ...combatState, ...patch };
+  };
+  processCombatAssignment(
+    combatState.crew[0],
+    combatState.ship.modules[0],
+    undefined,
+    combatSet,
+    () => combatState,
+  );
+  return combatState;
+};
+
+const combatEngineer = (augmentation) => ({
+  id: 1,
+  name: "Engineer",
+  race: "human",
+  profession: "engineer",
+  moduleId: 1,
+  level: 1,
+  health: 100,
+  maxHealth: 100,
+  augmentation,
+  combatAssignment: "repair",
+});
+const damagedModule = { id: 1, type: "reactor", name: "Reactor", health: 10, maxHealth: 100 };
+assert.equal(
+  runCombatAssignment(combatEngineer("nano_hands"), damagedModule).ship.modules[0].health,
+  28,
+  "nano hands must increase combat repair",
+);
+
+const combatMedic = (augmentation) => ({
+  id: 1,
+  name: "Medic",
+  race: "human",
+  profession: "medic",
+  moduleId: 1,
+  level: 1,
+  health: 50,
+  maxHealth: 100,
+  augmentation,
+  combatAssignment: "heal",
+});
+const medicalModule = { id: 1, type: "medical", name: "Medical", health: 100, maxHealth: 100 };
+assert.equal(
+  runCombatAssignment(combatMedic("accelerated_regen"), medicalModule).crew[0].health,
+  73,
+  "accelerated regeneration must increase combat healing",
 );
 
 let state = {
@@ -85,6 +260,30 @@ assert.equal(
   state.crew[0].augmentation,
   "adaptive_neural_link",
   "level 3 crew may receive a catalog augmentation",
+);
+const surveyStationId = Array.from({ length: 500 }, (_, index) =>
+  `survey-medical-${index}`,
+).find((stationId) =>
+  getMedicalAugmentationCatalog(stationId, "human", 4).includes(
+    "survey_uplink",
+  ),
+);
+assert.ok(surveyStationId, "a tier 4 station must be able to offer survey uplink");
+state = {
+  ...state,
+  currentLocation: {
+    ...state.currentLocation,
+    id: surveyStationId,
+    stationId: surveyStationId,
+  },
+  currentSector: { tier: 4 },
+  crew: [{ ...state.crew[0], profession: "scout" }],
+};
+augmentations.installAugmentation(1, "survey_uplink");
+assert.equal(
+  state.crew[0].augmentation,
+  "survey_uplink",
+  "a catalog rare augmentation must be installable through the store action",
 );
 assert.equal(AUGMENTATIONS.combat_targeting_matrix.effect.critBonus, 0.1);
 

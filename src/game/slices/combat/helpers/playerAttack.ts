@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import type {
   GameState,
   GameStore,
+  Module,
   WeaponCounts,
   WeaponType,
 } from "@/game/types";
@@ -39,12 +40,29 @@ import { advanceCombatRound } from "./combatTime";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import type { CrewMember } from "@/game/types";
 
-// prismatic_lens: суммарный бонус к урону лазеров от аугментаций экипажа
-const getCrewLaserDamageBonus = (crew: CrewMember[]): number =>
-  crew.reduce(
-    (bonus, c) => bonus + getAugmentationBonus(c, "laserDamageBonus"),
+// Призматическая линза работает только из оружейной палубы с лазером.
+const getCrewLaserDamageBonus = (
+  crew: CrewMember[],
+  modules: Module[],
+): number => {
+  const laserWeaponBayIds = new Set(
+    modules
+      .filter(
+        (module) =>
+          module.type === "weaponbay" &&
+          module.weapons?.some((weapon) => weapon?.type === "laser"),
+      )
+      .map((module) => module.id),
+  );
+
+  return crew.reduce(
+    (bonus, crewMember) =>
+      laserWeaponBayIds.has(crewMember.moduleId)
+        ? bonus + getAugmentationBonus(crewMember, "laserDamageBonus")
+        : bonus,
     0,
   );
+};
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -948,8 +966,11 @@ export function executePlayerAttack(
   const enemyShields = currentState.currentCombat.enemy.shields;
   const droneStacks = currentState.currentCombat.droneStacks;
 
-  // prismatic_lens: +5% laser damage for any crew member with this augmentation
-  const laserDamageBonus = getCrewLaserDamageBonus(currentState.crew);
+  // Призматическая линза: носитель должен быть в палубе с лазером.
+  const laserDamageBonus = getCrewLaserDamageBonus(
+    currentState.crew,
+    currentState.ship.modules,
+  );
 
   // Build per-type damage using fullMultiplier = finalDamagePerWeapon / rawBaseTotal,
   // where rawBaseTotal is the unmodified sum of per-type bases (no racial/artifact/tech bonuses).
@@ -1098,7 +1119,10 @@ export function executePlayerAttackWithBayTargets(
   );
 
   // 6. Laser bonus
-  const laserDamageBonus = getCrewLaserDamageBonus(currentState.crew);
+  const laserDamageBonus = getCrewLaserDamageBonus(
+    currentState.crew,
+    currentState.ship.modules,
+  );
 
   // 7. Process each bay sequentially, sharing shields
   // fullMultiplier = finalDamagePerWeapon / rawBaseTotal where rawBaseTotal = sum of per-type raw bases.

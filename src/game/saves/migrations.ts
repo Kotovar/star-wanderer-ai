@@ -5,6 +5,7 @@ import { isContractTargetAvailable } from "@/game/contracts/targetAvailability";
 import { generateSpaceMonster } from "@/game/galaxy/generate";
 import { assignGridPositions } from "@/game/sectorGrid";
 import { MODULE_HEALTH_BY_LEVEL } from "@/game/slices/shop/constants";
+import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import type { GameState, Location, Sector } from "@/game/types";
 
 interface PersistedState {
@@ -258,6 +259,24 @@ const migrations: Record<number, Migration> = {
           return { ...module, maxHealth, health: maxHealth };
         }),
       },
+    };
+  },
+  12: (raw) => {
+    const state = raw as Partial<GameState>;
+    const installedAugmentations = (state.crew ?? []).flatMap((crewMember) =>
+      crewMember.augmentation && AUGMENTATIONS[crewMember.augmentation]
+        ? [crewMember.augmentation]
+        : [],
+    );
+    return {
+      ...state,
+      stateVersion: 13,
+      discoveredAugmentationIds: [
+        ...new Set([
+          ...(state.discoveredAugmentationIds ?? []),
+          ...installedAugmentations,
+        ]),
+      ],
     };
   },
 };

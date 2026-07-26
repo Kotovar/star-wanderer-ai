@@ -1,4 +1,5 @@
 import { getRaceCrewBonus } from "@/game/races";
+import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { store as i18nStore } from "@/lib/useTranslation";
 import {
     BASE_EXP_REWARDS,
@@ -135,6 +136,15 @@ const processCombatRepair = (
     if (repairBonus) {
         repairAmount = Math.floor(repairAmount * (1 + repairBonus));
     }
+    const augmentationRepairBonus = getAugmentationBonus(
+        crewMember,
+        "repairBonus",
+    );
+    if (augmentationRepairBonus) {
+        repairAmount = Math.floor(
+            repairAmount * (1 + augmentationRepairBonus),
+        );
+    }
 
     const maxHealth =
         currentModule.maxHealth || ASSIGNMENT_MULTIPLIERS.MAX_HEALTH;
@@ -186,6 +196,15 @@ const processCombatHeal = (
     const raceHealBonus = getRaceCrewBonus(crewMember.race, "heal");
     if (raceHealBonus) {
         healAmount = Math.floor(healAmount * (1 + raceHealBonus));
+    }
+    const augmentationHealingBonus = getAugmentationBonus(
+        crewMember,
+        "healingBonus",
+    );
+    if (augmentationHealingBonus) {
+        healAmount = Math.floor(
+            healAmount * (1 + augmentationHealingBonus),
+        );
     }
 
     const crewNeedingHealing = get().crew.filter(

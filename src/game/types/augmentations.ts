@@ -10,7 +10,10 @@ export type ProfessionAugmentationId =
     | "accelerated_regen"   // Medic
     | "optical_implant"     // Scout
     | "memory_core"         // Scientist
-    | "targeting_eye";      // Gunner
+    | "targeting_eye" // Gunner
+    | "survey_uplink" // Scout
+    | "quantum_memory_core" // Scientist
+    | "combat_cognition";  // Gunner
 
 /**
  * Racial augmentation IDs
@@ -24,6 +27,12 @@ export type RacialAugmentationId =
     | "prismatic_lens";     // Crystalline
 
 export type AugmentationId = ProfessionAugmentationId | RacialAugmentationId;
+
+export type AugmentationRarity =
+    | "common"
+    | "uncommon"
+    | "rare"
+    | "legendary";
 
 export interface AugmentationEffect {
     /** Bonus to evasion (pilot, %) */
@@ -61,6 +70,8 @@ export interface Augmentation {
     forProfession?: Profession;
     forRace?: RaceId;
     effect: AugmentationEffect;
+    /** Rarity controls station catalog odds and installation price. */
+    rarity: AugmentationRarity;
     /** Credit cost at medical station */
     installCost: number;
 }

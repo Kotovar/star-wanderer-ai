@@ -10,7 +10,7 @@ import {
 } from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getTechBonusSum } from "@/game/research";
-import { getAugmentationBonus } from "@/game/constants/augmentations";
+import { getDiminishingResearchSpeedBonus } from "@/game/constants/augmentations";
 import { typedKeys } from "@/lib/utils";
 import {
     DEFAULT_MODULE_HEALTH,
@@ -149,14 +149,10 @@ export const calculateResearchOutput = (
         techSpeedBonus = bonus;
     }
 
-    // Бонус аугментации memory_core (+20% скорость исследований для учёного)
-    let augSpeedBonus = 0;
-    scientists.forEach((scientist) => {
-        const speedBonus = getAugmentationBonus(scientist, "researchSpeedBonus");
-        if (speedBonus) {
-            augSpeedBonus += Math.floor(totalOutput * speedBonus);
-        }
-    });
+    // Несколько ядер памяти дают убывающую отдачу.
+    const augSpeedBonus = Math.floor(
+        totalOutput * getDiminishingResearchSpeedBonus(scientists),
+    );
     if (augSpeedBonus > 0) {
         totalOutput += augSpeedBonus;
     }

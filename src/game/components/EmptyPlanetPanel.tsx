@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useGameStore } from "@/game/store";
 import { PLANET_POINT_OF_INTERESTS } from "@/game/constants/planets";
 import { RESEARCH_RESOURCES } from "@/game/constants";
-import { getAugmentationBonus } from "@/game/constants/augmentations";
+import { getMaxExtraScoutAttempts } from "@/game/constants/augmentations";
 import { Button } from "@/components/ui/button";
 import { PlanetExpeditionSetup } from "./PlanetExpeditionSetup";
 import {
@@ -217,12 +217,8 @@ export function EmptyPlanetPanel() {
     // Разведка
     const hasScout = crew.some((c) => c.profession === "scout");
     const scoutedTimes = currentLocation.scoutedTimes || 0;
-    const bestScout = crew
-        .filter((c) => c.profession === "scout")
-        .sort((a, b) => (b.level ?? 1) - (a.level ?? 1))[0];
-    const scoutHasOptical =
-        getAugmentationBonus(bestScout, "extraScoutAttempts") > 0;
-    const maxScoutAttempts = 3 + (scoutHasOptical ? 1 : 0);
+    const scouts = crew.filter((c) => c.profession === "scout");
+    const maxScoutAttempts = 3 + getMaxExtraScoutAttempts(scouts);
     const canScout = scoutedTimes < maxScoutAttempts;
 
     // Бурение (многопроходное, с кулдауном)

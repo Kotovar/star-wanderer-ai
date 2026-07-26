@@ -13,7 +13,10 @@ import { WEAPON_SCRAP_VALUES } from "@/game/slices/services/helpers/removeWeapon
 import { SectionPanel } from "../SectionPanel";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import { getMedicalAugmentationCatalog } from "@/game/stations/medicalAugmentations";
-import type { AugmentationId } from "@/game/types/augmentations";
+import type {
+    AugmentationId,
+    AugmentationRarity,
+} from "@/game/types/augmentations";
 import type { Profession } from "@/game/types/crew";
 import type { RaceId } from "@/game/types/races";
 import { RESEARCH_STATION_BOOST_MULTIPLIER } from "@/game/slices/research/helpers/researchHelpers";
@@ -22,6 +25,13 @@ import {
     RESEARCH_BOOST_DURATION,
 } from "@/game/slices/research/methods/activateResearchBoost";
 import { RESEARCH_STATION_BUY_PRICES } from "@/game/stations/researchMaterials";
+
+const AUGMENTATION_RARITY_COLORS: Record<AugmentationRarity, string> = {
+    common: "text-[#8a8a8a]",
+    uncommon: "text-[#00ff41]",
+    rare: "text-[#00d4ff]",
+    legendary: "text-[#ffb000]",
+};
 
 /**
  * Calculates scrap value for a module (70% of base price)
@@ -130,6 +140,7 @@ interface ServicesTabProps {
     allowsAugmentation: boolean;
     stationId: string;
     dominantRace?: RaceId;
+    sectorTier: number;
     crewWithMutations: MutationCrewMember[];
     crewWithNegativeTraits: NegativeTraitCrewMember[];
     onInstallAugmentation: (crewId: number, augId: AugmentationId) => void;
@@ -177,6 +188,7 @@ export function ServicesTab({
     allowsAugmentation,
     stationId,
     dominantRace,
+    sectorTier,
     crewWithMutations,
     crewWithNegativeTraits,
     onInstallAugmentation,
@@ -249,6 +261,7 @@ export function ServicesTab({
                     credits={credits}
                     stationId={stationId}
                     dominantRace={dominantRace}
+                    sectorTier={sectorTier}
                     onInstall={onInstallAugmentation}
                     onRemove={onRemoveAugmentation}
                 />
@@ -1014,6 +1027,7 @@ function AugmentationSection({
     credits,
     stationId,
     dominantRace,
+    sectorTier,
     onInstall,
     onRemove,
 }: {
@@ -1021,12 +1035,17 @@ function AugmentationSection({
     credits: number;
     stationId: string;
     dominantRace?: RaceId;
+    sectorTier: number;
     onInstall: (crewId: number, augId: AugmentationId) => void;
     onRemove: (crewId: number) => void;
 }) {
     const { t } = useTranslation();
     const [selectedCrew, setSelectedCrew] = useState<number | null>(null);
-    const catalog = getMedicalAugmentationCatalog(stationId, dominantRace);
+    const catalog = getMedicalAugmentationCatalog(
+        stationId,
+        dominantRace,
+        sectorTier,
+    );
 
     return (
         <SectionPanel tone="cyan">
@@ -1137,6 +1156,11 @@ function AugmentationSection({
                                                 <div className="flex-1">
                                                     <div className="font-bold text-[#00d4ff]">
                                                         {t(`augmentations.${aug.id}.name`)}
+                                                    </div>
+                                                    <div
+                                                        className={`text-[10px] font-bold ${AUGMENTATION_RARITY_COLORS[aug.rarity]}`}
+                                                    >
+                                                        {t(`augmentations.rarity.${aug.rarity}`)}
                                                     </div>
                                                     <div className="text-[#888] text-[10px]">
                                                         {t(`augmentations.${aug.id}.description`)}

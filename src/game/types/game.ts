@@ -160,6 +160,7 @@ export interface GameState {
   discoveredCrisisIds: string[]; // Crises already encountered by the player
   discoveredEnemyCodexIds: string[]; // Enemy types already encountered by the player
   discoveredStationTypes: StationName[]; // Station types already docked with in this run
+  discoveredAugmentationIds: AugmentationId[]; // Augmentations seen at medical stations or installed on crew
   nextCrisisTurn: number; // Turn on which the next global crisis triggers
   nextCrisisId: string | null; // Crisis selected to trigger next
   // ── Мета-прогрессия (см. META_PROGRESSION_PLAN.md) ──

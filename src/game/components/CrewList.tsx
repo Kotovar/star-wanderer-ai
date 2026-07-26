@@ -5,6 +5,7 @@ import { useGameStore } from "@/game/store";
 import { RACES } from "@/game/constants/races";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import type { CrewMember } from "@/game/types";
+import type { AugmentationRarity } from "@/game/types/augmentations";
 import {
     Dialog,
     DialogDescription,
@@ -35,6 +36,13 @@ import { getDesertionTurnsLeft } from "@/game/slices/gameLoop/processors/process
 
 const stripLeadingSymbol = (value: string) =>
     value.replace(/^[^\p{L}\p{N}]+/u, "");
+
+const AUGMENTATION_CARD_STYLES: Record<AugmentationRarity, string> = {
+    common: "bg-[rgba(148,163,184,0.07)] border-[#94a3b866] hover:border-[#94a3b8] hover:bg-[rgba(148,163,184,0.13)] hover:shadow-[0_0_10px_rgba(148,163,184,0.28)]",
+    uncommon: "bg-[rgba(0,255,65,0.06)] border-[#00ff4166] hover:border-[#00ff41] hover:bg-[rgba(0,255,65,0.12)] hover:shadow-[0_0_10px_rgba(0,255,65,0.32)]",
+    rare: "bg-[rgba(0,212,255,0.07)] border-[#00d4ff66] hover:border-[#00d4ff] hover:bg-[rgba(0,212,255,0.13)] hover:shadow-[0_0_10px_rgba(0,212,255,0.35)]",
+    legendary: "bg-[rgba(255,176,0,0.08)] border-[#ffb00077] hover:border-[#ffb000] hover:bg-[rgba(255,176,0,0.14)] hover:shadow-[0_0_12px_rgba(255,176,0,0.4)]",
+};
 
 export function CrewList() {
     const { t } = useTranslation();
@@ -84,11 +92,19 @@ export function CrewList() {
                         (tr) => tr.type === "mutation",
                     );
                     const hasMutation = mutationTraits.length > 0;
+                    const augmentation = member.augmentation
+                        ? AUGMENTATIONS[member.augmentation]
+                        : null;
+                    const cardStyle = augmentation
+                        ? AUGMENTATION_CARD_STYLES[augmentation.rarity]
+                        : hasMutation
+                          ? "bg-[rgba(204,68,255,0.06)] border-[#cc44ff66] hover:border-[#cc44ff] hover:bg-[rgba(204,68,255,0.12)] hover:shadow-[0_0_10px_rgba(204,68,255,0.35)]"
+                          : "bg-[rgba(0,255,65,0.045)] border-[#00ff4155] hover:border-[#00ff41] hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_10px_rgba(0,255,65,0.32)]";
 
                     return (
                         <div
                             key={member.id}
-                            className={`group ${hasMutation ? "bg-[rgba(204,68,255,0.06)] border-[#cc44ff66] hover:border-[#cc44ff] hover:bg-[rgba(204,68,255,0.12)] hover:shadow-[0_0_10px_rgba(204,68,255,0.35)]" : "bg-[rgba(0,255,65,0.045)] border-[#00ff4155] hover:border-[#00ff41] hover:bg-[rgba(0,255,65,0.1)] hover:shadow-[0_0_10px_rgba(0,255,65,0.32)]"} border p-2 text-xs cursor-pointer transition-all flex flex-col gap-1.5`}
+                            className={`group ${cardStyle} border p-2 text-xs cursor-pointer transition-all flex flex-col gap-1.5`}
                             onClick={() => setSelectedCrew(member)}
                         >
                             {/* Name row */}
@@ -109,16 +125,12 @@ export function CrewList() {
                                         ●
                                     </span>
                                 )}
-                                {member.augmentation && (
+                                {augmentation && (
                                     <span
                                         className="shrink-0 text-[9px]"
-                                        title={
-                                            AUGMENTATIONS[member.augmentation]
-                                                ?.name
-                                        }
+                                        title={augmentation.name}
                                     >
-                                        {AUGMENTATIONS[member.augmentation]
-                                            ?.icon ?? "🔧"}
+                                        {augmentation.icon}
                                     </span>
                                 )}
                                 {hasMutation && (

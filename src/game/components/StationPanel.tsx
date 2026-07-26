@@ -759,6 +759,7 @@ export function StationPanel() {
                         allowsAugmentation={allowsAugmentation}
                         stationId={stationId}
                         dominantRace={dominantRace}
+                        sectorTier={sectorTier}
                         crewWithMutations={crewWithMutations}
                         crewWithNegativeTraits={crewWithNegativeTraits}
                         onInstallAugmentation={installAugmentation}

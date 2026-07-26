@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import { findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { addEnemyCodexEntry, getEnemyCodexId } from "@/game/constants/enemyCodex";
+import { getMedicalAugmentationCatalog } from "@/game/stations/medicalAugmentations";
 import { determineSignalOutcome } from "@/game/signals";
 import type { GameStore, Location, SetState } from "@/game/types";
 import { getRaceReputationLevel } from "@/game/reputation/utils";
@@ -158,6 +159,25 @@ export const selectLocation = (
             ) {
                 set({ gameMode: "hostile_approach_warning" });
                 break;
+            }
+            if (
+                loc.stationType === "medical" &&
+                (loc.stationConfig?.allowsCrewHeal ?? true) &&
+                state.research.researchedTechs.includes("cybernetic_augmentation")
+            ) {
+                const catalog = getMedicalAugmentationCatalog(
+                    loc.stationId ?? loc.id,
+                    loc.dominantRace,
+                    state.currentSector?.tier ?? 1,
+                );
+                set((s) => ({
+                    discoveredAugmentationIds: [
+                        ...new Set([
+                            ...(s.discoveredAugmentationIds ?? []),
+                            ...catalog,
+                        ]),
+                    ],
+                }));
             }
             // Док на станции с торговлей: её цены становятся известными игроку
             if (loc.stationId && (loc.stationConfig?.allowsTrade ?? true)) {

@@ -1320,9 +1320,9 @@
         "augmentation_memory_core": "🧬 Memory Core (scientist) — +50% research speed",
         "augmentation_targeting_eye": "🎯 Targeting Eye (gunner) — +10% accuracy, +5% crit chance",
         "augmentation_overclock_core": "⚙️ Overclock Core (synthetic) — +50% to task effects, 5% AI glitch chance",
-        "augmentation_symbiotic_armor": "🦠 Symbiotic Armor (xenosymbiont) — 5% of damage dealt restored as HP",
+        "augmentation_symbiotic_armor": "🦠 Symbiotic Armor (xenosymbiont) — 10% of damage dealt restored as HP",
         "augmentation_phase_step": "👻 Phase Step (voidborn) — 50% chance to avoid damage when module is hit",
-        "augmentation_prismatic_lens": "💎 Prismatic Lens (crystalline) — +5% laser weapon damage",
+        "augmentation_prismatic_lens": "💎 Prismatic Lens (crystalline) — +5% laser damage while the wearer is in a laser bay",
         "reputation_title": "🤝 RACE REPUTATION",
         "reputation_text": "Relations with races affect trade, available contracts, and behavior in space.",
         "reputation_levels": "Reputation levels:",
@@ -1644,12 +1644,21 @@
         "optical_implant": { "name": "Optical Implant", "description": "Enhanced vision lets a scout make 4 sorties per turn instead of 3." },
         "memory_core": { "name": "Memory Core", "description": "Synthetic memory storage speeds up data processing. +20% research speed." },
         "targeting_eye": { "name": "Targeting Eye", "description": "An optical sight integrated into the retina. +10% accuracy, +5% critical chance." },
+        "survey_uplink": { "name": "Survey Uplink", "description": "A route-survey neural network grants the scout 2 additional sorties per turn." },
+        "quantum_memory_core": { "name": "Quantum Memory Core", "description": "Quantum memory accelerates the scientist's research by 40%." },
+        "combat_cognition": { "name": "Combat Foresight", "description": "A predictive combat loop grants the gunner +25% accuracy and +15% critical chance." },
         "adaptive_neural_link": { "name": "Adaptive Neural Link", "description": "A neural network synchronizes crew actions. +15% task effects." },
         "overclock_core": { "name": "Overclock Core", "description": "Processor limiters removed. +50% task effects, but 5% AI glitch chance per turn." },
-        "symbiotic_armor": { "name": "Symbiotic Armor", "description": "The organism converts 5% of damage dealt to enemies into its own HP." },
+        "symbiotic_armor": { "name": "Symbiotic Armor", "description": "The organism converts 10% of damage dealt to enemies into its own HP." },
         "combat_targeting_matrix": { "name": "Combat Targeting Matrix", "description": "Reptilian reflexes enhance combat telemetry. +5% accuracy, +10% critical chance." },
         "phase_step": { "name": "Phase Step", "description": "Partial body phase shift. 50% chance to avoid module-hit damage entirely." },
-        "prismatic_lens": { "name": "Prismatic Lens", "description": "A crystal lens focuses laser weapons. +5% laser weapon damage." }
+        "prismatic_lens": { "name": "Prismatic Lens", "description": "A crystal lens boosts laser weapons while its wearer is in a laser weapon bay. +5% damage." },
+        "rarity": {
+            "common": "Common",
+            "uncommon": "Uncommon",
+            "rare": "Rare",
+            "legendary": "Legendary"
+        }
     },
     "services": {
         "emergency_fuel": "Emergency reserve +{{amount}}",
@@ -2914,8 +2923,12 @@
         "button": "CATALOG",
         "tabs": {
             "ships": "SHIPS",
-            "stations": "STATIONS"
+            "stations": "STATIONS",
+            "augmentations": "AUGMENTATIONS"
         },
+        "augmentations_subtitle": "Augmentations unlock after visiting a medical station with cybernetics researched.",
+        "augmentation_progress": "Discovered: {{found}} / {{total}}",
+        "augmentation_empty": "Visit a medical station after researching Cybernetic Augmentations.",
         "progress": "Discovered: {{found}} / {{total}}",
         "details": "Details",
         "combat_profile": "COMBAT PROFILE · THREAT {{threat}}",

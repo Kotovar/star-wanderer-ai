@@ -16,6 +16,33 @@ export const getAugmentationBonus = (
         ? (AUGMENTATIONS[crewMember.augmentation]?.effect?.[key] ?? 0)
         : 0;
 
+/** Number of additional scouting sorties granted by the installed implant. */
+export const getExtraScoutAttempts = (
+    crewMember: { augmentation?: AugmentationId | null } | undefined | null,
+): number => Math.max(0, Math.floor(getAugmentationBonus(crewMember, "extraScoutAttempts")));
+
+/** Лучший имплант разведгруппы определяет число вылазок за ход. */
+export const getMaxExtraScoutAttempts = (
+    crewMembers: { augmentation?: AugmentationId | null }[],
+): number =>
+    crewMembers.reduce(
+        (maxAttempts, crewMember) =>
+            Math.max(maxAttempts, getExtraScoutAttempts(crewMember)),
+        0,
+    );
+
+/** Несколько исследовательских имплантов дают убывающую отдачу. */
+export const getDiminishingResearchSpeedBonus = (
+    crewMembers: { augmentation?: AugmentationId | null }[],
+): number =>
+    1 -
+    crewMembers.reduce(
+        (remainingBonus, crewMember) =>
+            remainingBonus *
+            (1 - getAugmentationBonus(crewMember, "researchSpeedBonus")),
+        1,
+    );
+
 export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
     // ─── Profession augmentations ──────────────────────────────────────────
 
@@ -26,7 +53,8 @@ export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
         icon: "⚡",
         forProfession: "pilot",
         effect: { evasionBonus: 0.1 },
-        installCost: 600,
+        rarity: "common",
+        installCost: 650,
     },
 
     nano_hands: {
@@ -36,7 +64,8 @@ export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
         icon: "🔩",
         forProfession: "engineer",
         effect: { repairBonus: 0.15 },
-        installCost: 600,
+        rarity: "common",
+        installCost: 650,
     },
 
     accelerated_regen: {
@@ -46,7 +75,8 @@ export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
         icon: "💉",
         forProfession: "medic",
         effect: { healingBonus: 0.15 },
-        installCost: 600,
+        rarity: "common",
+        installCost: 650,
     },
 
     optical_implant: {
@@ -56,6 +86,7 @@ export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
         icon: "👁️",
         forProfession: "scout",
         effect: { extraScoutAttempts: 1 },
+        rarity: "common",
         installCost: 700,
     },
 
@@ -66,7 +97,8 @@ export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
         icon: "🧬",
         forProfession: "scientist",
         effect: { researchSpeedBonus: 0.2 },
-        installCost: 650,
+        rarity: "uncommon",
+        installCost: 1000,
     },
 
     targeting_eye: {
@@ -76,7 +108,41 @@ export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
         icon: "🎯",
         forProfession: "gunner",
         effect: { accuracyBonus: 0.1, critBonus: 0.05 },
-        installCost: 650,
+        rarity: "uncommon",
+        installCost: 1100,
+    },
+
+    survey_uplink: {
+        id: "survey_uplink",
+        name: "Картографический аплинк",
+        description: "Нейросеть маршрутной разведки даёт разведчику ещё 2 вылазки за ход.",
+        icon: "🛰️",
+        forProfession: "scout",
+        effect: { extraScoutAttempts: 2 },
+        rarity: "rare",
+        installCost: 2200,
+    },
+
+    quantum_memory_core: {
+        id: "quantum_memory_core",
+        name: "Квантовое память-ядро",
+        description: "Квантовая память учёного ускоряет исследования на 40%.",
+        icon: "🔬",
+        forProfession: "scientist",
+        effect: { researchSpeedBonus: 0.4 },
+        rarity: "rare",
+        installCost: 2500,
+    },
+
+    combat_cognition: {
+        id: "combat_cognition",
+        name: "Боевое предвидение",
+        description: "Предиктивный боевой контур даёт стрелку +25% точности и +15% шанса крита.",
+        icon: "🧿",
+        forProfession: "gunner",
+        effect: { accuracyBonus: 0.25, critBonus: 0.15 },
+        rarity: "legendary",
+        installCost: 5000,
     },
 
     // ─── Racial augmentations ──────────────────────────────────────────────
@@ -88,7 +154,8 @@ export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
         icon: "🧠",
         forRace: "human",
         effect: { actionSpeedBonus: 0.15 },
-        installCost: 700,
+        rarity: "uncommon",
+        installCost: 1100,
     },
 
     overclock_core: {
@@ -98,17 +165,19 @@ export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
         icon: "⚙️",
         forRace: "synthetic",
         effect: { actionSpeedBonus: 0.5, aiGlitchChance: 0.05 },
-        installCost: 800,
+        rarity: "legendary",
+        installCost: 5000,
     },
 
     symbiotic_armor: {
         id: "symbiotic_armor",
         name: "Симбиотическая броня",
-        description: "Организм преобразует 5% нанесённого урона во врагов в собственные ХП.",
+        description: "Организм преобразует 10% нанесённого урона во врагов в собственные ХП.",
         icon: "🦠",
         forRace: "xenosymbiont",
-        effect: { damageToHp: 0.05 },
-        installCost: 750,
+        effect: { damageToHp: 0.1 },
+        rarity: "rare",
+        installCost: 2400,
     },
 
     combat_targeting_matrix: {
@@ -118,7 +187,8 @@ export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
         icon: "🦎",
         forRace: "krylorian",
         effect: { accuracyBonus: 0.05, critBonus: 0.1 },
-        installCost: 750,
+        rarity: "rare",
+        installCost: 2400,
     },
 
     phase_step: {
@@ -128,7 +198,8 @@ export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
         icon: "👻",
         forRace: "voidborn",
         effect: { fullDodgeChance: 0.5 },
-        installCost: 750,
+        rarity: "legendary",
+        installCost: 5000,
     },
 
     prismatic_lens: {
@@ -138,6 +209,7 @@ export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
         icon: "💎",
         forRace: "crystalline",
         effect: { laserDamageBonus: 0.05 },
+        rarity: "common",
         installCost: 700,
     },
 };

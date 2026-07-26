@@ -13,6 +13,7 @@ import { getBossCombatModules } from "@/game/bosses";
 import { CombatShipVisual } from "@/game/components/CombatShipVisual";
 import { GameDialogContent } from "@/game/components/GameDialog";
 import { ANCIENT_BOSSES } from "@/game/constants/bosses";
+import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import {
   ANCIENT_BOSS_CODEX_ENTRY,
   ENEMY_CODEX_SHIP_ENTRIES,
@@ -30,6 +31,7 @@ import {
   generateEnemyModules,
 } from "@/game/slices/combat/helpers/combatSetup";
 import { useGameStore } from "@/game/store";
+import type { AugmentationRarity } from "@/game/types/augmentations";
 import type {
   AncientBoss,
   EnemyModule,
@@ -61,7 +63,14 @@ type CombatPreview = {
   specialAbility?: { name: string; description: string };
 };
 
-type CatalogSection = "ships" | "stations";
+type CatalogSection = "ships" | "stations" | "augmentations";
+
+const AUGMENTATION_CODEX_STYLES: Record<AugmentationRarity, string> = {
+  common: "border-[#94a3b866] bg-[rgba(148,163,184,0.06)]",
+  uncommon: "border-[#00ff4166] bg-[rgba(0,255,65,0.05)]",
+  rare: "border-[#00d4ff66] bg-[rgba(0,212,255,0.06)]",
+  legendary: "border-[#ffb00077] bg-[rgba(255,176,0,0.07)]",
+};
 
 function getBossDisplay(name: string) {
   const [icon, ...nameParts] = name.split(/\s+/);
@@ -360,6 +369,9 @@ export function EnemyCodexPanel() {
   const discoveredStationTypes = useGameStore(
     (s) => s.discoveredStationTypes ?? [],
   );
+  const discoveredAugmentationIds = useGameStore(
+    (s) => s.discoveredAugmentationIds ?? [],
+  );
   const showSectorMap = useGameStore((s) => s.showSectorMap);
   const { t } = useTranslation();
   const [combatPreview, setCombatPreview] = useState<CombatPreview | null>(
@@ -370,6 +382,9 @@ export function EnemyCodexPanel() {
   const knownIds = new Set(discoveredIds);
   const knownStationTypes = STATION_TYPES.filter((stationType) =>
     discoveredStationTypes.includes(stationType),
+  );
+  const knownAugmentations = Object.values(AUGMENTATIONS).filter(
+    (augmentation) => discoveredAugmentationIds.includes(augmentation.id),
   );
   const creatureEntries = Object.entries(SPACE_MONSTERS) as [
     SpaceMonsterType,
@@ -415,7 +430,12 @@ export function EnemyCodexPanel() {
     );
   };
   const handleCatalogSectionChange = (section: string) => {
-    if (section !== "ships" && section !== "stations") return;
+    if (
+      section !== "ships" &&
+      section !== "stations" &&
+      section !== "augmentations"
+    )
+      return;
     setCatalogSection(section);
     setCombatPreview(null);
   };
@@ -478,7 +498,9 @@ export function EnemyCodexPanel() {
           <div className="mt-1 text-xs text-[#888]">
             {catalogSection === "ships"
               ? t("enemy_codex.ships_subtitle")
-              : t("station_catalog.subtitle")}
+              : catalogSection === "stations"
+                ? t("station_catalog.subtitle")
+                : t("enemy_codex.augmentations_subtitle")}
           </div>
         </div>
         <Button
@@ -506,6 +528,12 @@ export function EnemyCodexPanel() {
             className="flex-1 cursor-pointer text-xs text-[#8fa0aa] data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810]"
           >
             {t("enemy_codex.tabs.stations")}
+          </TabsTrigger>
+          <TabsTrigger
+            value="augmentations"
+            className="flex-1 cursor-pointer text-xs text-[#8fa0aa] data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810]"
+          >
+            {t("enemy_codex.tabs.augmentations")}
           </TabsTrigger>
         </TabsList>
 
@@ -700,6 +728,51 @@ export function EnemyCodexPanel() {
           ) : (
             <div className="border border-[#303840] bg-[rgba(0,0,0,0.18)] px-3 py-5 text-center text-sm text-[#8fa0aa]">
               {t("station_catalog.empty")}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="augmentations" className="mt-4 space-y-3">
+          <div className="border border-[#00d4ff44] bg-[rgba(0,212,255,0.04)] px-3 py-2 text-xs text-[#a8eaff]">
+            {t("enemy_codex.augmentation_progress", {
+              found: knownAugmentations.length,
+              total: Object.keys(AUGMENTATIONS).length,
+            })}
+          </div>
+          {knownAugmentations.length > 0 ? (
+            <div className="grid gap-2 lg:grid-cols-2">
+              {knownAugmentations.map((augmentation) => (
+                <article
+                  key={augmentation.id}
+                  className={`border p-3 ${AUGMENTATION_CODEX_STYLES[augmentation.rarity]}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center border border-[#00d4ff66] bg-[rgba(0,0,0,0.2)] text-xl">
+                      {augmentation.icon}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-bold text-[#d7ffe0]">
+                        {t(`augmentations.${augmentation.id}.name`)}
+                      </div>
+                      <div className="mt-0.5 text-[10px] font-bold text-[#ffb000]">
+                        {t(`augmentations.rarity.${augmentation.rarity}`)}
+                      </div>
+                      <div className="mt-1 text-xs text-[#8fa0aa]">
+                        {t(`augmentations.${augmentation.id}.description`)}
+                      </div>
+                      <div className="mt-2 text-[10px] text-[#65cce5]">
+                        {augmentation.forProfession
+                          ? t(`professions.${augmentation.forProfession}`)
+                          : t(`races.${augmentation.forRace}.name`)}
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="border border-[#303840] bg-[rgba(0,0,0,0.18)] px-3 py-5 text-center text-sm text-[#8fa0aa]">
+              {t("enemy_codex.augmentation_empty")}
             </div>
           )}
         </TabsContent>

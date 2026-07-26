@@ -19,7 +19,7 @@ import {
     SCOUTING_TRADE_GOOD_BASE_MAX,
     SCOUTING_REQUIRED_VISITS,
 } from "../constants";
-import { getAugmentationBonus } from "@/game/constants/augmentations";
+import { getMaxExtraScoutAttempts } from "@/game/constants/augmentations";
 import { SCOUT_BASE_EXP } from "@/game/constants/experience";
 import { addTradeGood } from "@/game/slices/ship/helpers";
 import { determineScoutingOutcome } from "./determineScoutingOutcome";
@@ -108,7 +108,11 @@ export const sendScoutingMission = (
 
     // Update exploration progress (optical_implant augmentation gives +1 attempt)
     const { newScoutedTimes, maxScoutAttempts, isFullyExplored, pointOfInterest } =
-        computeExplorationProgress(state, planetId, scout);
+        computeExplorationProgress(
+            state,
+            planetId,
+            getMaxExtraScoutAttempts(scouts),
+        );
 
     // Update state
     updateScoutingState(
@@ -172,12 +176,12 @@ const resolveScoutingInfectionRisk = (
 
 /**
  * Прогресс разведки планеты после очередной попытки
- * (аугментация optical_implant даёт +1 попытку)
+ * (лучший имплант разведгруппы даёт дополнительные попытки)
  */
 const computeExplorationProgress = (
     state: GameStore,
     planetId: string,
-    scout: CrewMember,
+    extraScoutAttempts: number,
 ): {
     newScoutedTimes: number;
     maxScoutAttempts: number;
@@ -187,7 +191,7 @@ const computeExplorationProgress = (
     const newScoutedTimes = getScoutedTimes(state, planetId) + 1;
     const maxScoutAttempts =
         SCOUTING_REQUIRED_VISITS +
-        (getAugmentationBonus(scout, "extraScoutAttempts") > 0 ? 1 : 0);
+        extraScoutAttempts;
     const isFullyExplored = newScoutedTimes >= maxScoutAttempts;
     const planet = state.currentSector?.locations.find(
         (location) => location.id === planetId,
@@ -365,4 +369,3 @@ export const appendSurfaceLog = (
     log: SurfaceLogEntry[] | undefined,
     entry: SurfaceLogEntry,
 ): SurfaceLogEntry[] => [...(log ?? []), entry].slice(-20);
-

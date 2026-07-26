@@ -43,6 +43,7 @@ export const createAugmentationsSlice = (
         const catalog = getMedicalAugmentationCatalog(
             station.stationId ?? station.id,
             station.dominantRace,
+            state.currentSector?.tier ?? 1,
         );
         if (!catalog.includes(augmentationId)) {
             get().addLog(i18nStore.t("game_logs.augmentationsSlice_13"), "error");
