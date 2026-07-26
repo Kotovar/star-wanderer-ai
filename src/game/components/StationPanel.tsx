@@ -25,6 +25,7 @@ import type {
     CrewTrait,
     StationName,
     StationConfig,
+    WeaponType,
 } from "@/game/types";
 import { ShopTab } from "./station/ShopTab";
 import { TradeTab } from "./station/TradeTab";
@@ -290,6 +291,7 @@ export function StationPanel() {
     const discoverRace = useGameStore((s) => s.discoverRace);
     const knownRaces = useGameStore((s) => s.knownRaces);
     const discoverStationType = useGameStore((s) => s.discoverStationType);
+    const discoverWeaponTypes = useGameStore((s) => s.discoverWeaponTypes);
     const discoveredStationTypes = useGameStore(
         (s) => s.discoveredStationTypes ?? [],
     );
@@ -444,6 +446,15 @@ export function StationPanel() {
         discoverStationType,
         showStationDiscovery,
     ]);
+
+    // Каталог оружия: типы, впервые увиденные в продаже на станции
+    useEffect(() => {
+        const weaponTypesForSale = stationItems
+            .filter((item) => item.type === "weapon" && item.weaponType)
+            .map((item) => item.weaponType as WeaponType);
+        if (weaponTypesForSale.length === 0) return;
+        discoverWeaponTypes(weaponTypesForSale);
+    }, [stationItems, discoverWeaponTypes]);
 
     const deliveryContracts = activeContracts.filter(
         (c) =>

@@ -2924,11 +2924,16 @@
         "tabs": {
             "ships": "КОРАБЛИ",
             "stations": "СТАНЦИИ",
-            "augmentations": "АУГМЕНТАЦИИ"
+            "augmentations": "АУГМЕНТАЦИИ",
+            "weapons": "ОРУЖИЕ"
         },
         "augmentations_subtitle": "Аугментации открываются после посещения медицинской станции с изученной кибернетикой.",
         "augmentation_progress": "Открыто: {{found}} / {{total}}",
         "augmentation_empty": "Посетите медицинскую станцию после изучения кибернетических аугментаций.",
+        "weapons_subtitle": "Оружие открывается, когда оно установлено на вашем корабле.",
+        "weapon_progress": "Открыто: {{found}} / {{total}}",
+        "weapon_damage": "Урон: {{value}}",
+        "weapon_empty": "Оружие открывается, когда оно установлено на вашем корабле.",
         "progress": "Открыто: {{found}} / {{total}}",
         "details": "Подробнее",
         "combat_profile": "БОЕВОЙ ПРОФИЛЬ · УГРОЗА {{threat}}",

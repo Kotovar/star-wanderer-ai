@@ -9,6 +9,7 @@ import type {
     DistressApproach,
     ExpeditionScanMode,
     WreckApproach,
+    WeaponType,
 } from "@/game/types";
 import { RACES } from "@/game/constants";
 import { mineAsteroid } from "./helpers";
@@ -116,6 +117,9 @@ export interface LocationsSlice {
 
     /** Открывает тип станции в каталоге после первой стыковки. */
     discoverStationType: (stationType: StationName) => void;
+
+    /** Открывает типы оружия в каталоге при появлении в продаже на станции. */
+    discoverWeaponTypes: (weaponTypes: WeaponType[]) => void;
 
     /** Начинает экспедицию на поверхность населённой планеты */
     startExpedition: (planetId: string, crewIds: number[]) => void;
@@ -336,6 +340,17 @@ export const createLocationsSlice = (
                     ...state.discoveredStationTypes,
                     stationType,
                 ],
+            };
+        });
+    },
+
+    discoverWeaponTypes: (weaponTypes) => {
+        set((state) => {
+            const known = state.discoveredWeaponTypes ?? [];
+            const newTypes = weaponTypes.filter((t) => !known.includes(t));
+            if (newTypes.length === 0) return state;
+            return {
+                discoveredWeaponTypes: [...known, ...newTypes],
             };
         });
     },

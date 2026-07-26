@@ -18,7 +18,7 @@ import type {
   WreckApproach,
 } from "./locations/locations";
 import type { LogEntry } from "./logs";
-import type { Module, WeaponCounts } from "./modules";
+import type { Module, WeaponCounts, WeaponType } from "./modules";
 import type { RaceId } from "./races";
 import type { ReputationLevel } from "./reputation";
 import type { ShipMergeTrait } from "./ships";
@@ -161,6 +161,7 @@ export interface GameState {
   discoveredEnemyCodexIds: string[]; // Enemy types already encountered by the player
   discoveredStationTypes: StationName[]; // Station types already docked with in this run
   discoveredAugmentationIds: AugmentationId[]; // Augmentations seen at medical stations or installed on crew
+  discoveredWeaponTypes: WeaponType[]; // Weapon types ever equipped on the player's ship
   nextCrisisTurn: number; // Turn on which the next global crisis triggers
   nextCrisisId: string | null; // Crisis selected to trigger next
   // ── Мета-прогрессия (см. META_PROGRESSION_PLAN.md) ──
@@ -355,6 +356,7 @@ export interface GameArtifacts {
 export interface GameRaces {
   discoverRace: (raceId: RaceId) => void;
   discoverStationType: (stationType: StationName) => void;
+  discoverWeaponTypes: (weaponTypes: WeaponType[]) => void;
 }
 
 export interface GameReputation {

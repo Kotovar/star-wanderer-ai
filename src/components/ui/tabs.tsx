@@ -20,7 +20,7 @@ export function TabsList({ className, ...props }: ComponentProps<typeof List>) {
         <List
             data-slot="tabs-list"
             className={cn(
-                "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-0.75",
+                "bg-muted text-muted-foreground inline-flex h-9 w-fit shrink-0 items-center justify-center rounded-lg p-0.75",
                 className,
             )}
             {...props}

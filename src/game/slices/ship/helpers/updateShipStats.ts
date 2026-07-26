@@ -85,4 +85,14 @@ export const updateShipStats = (state: GameState): void => {
     ship.crewCapacity = modules.filter((m) => m.type !== "quarters" && m.type !== "habitat_module").length + quartersBonus;
     ship.maxFuel = totalFuelCapacity;
     ship.fuel = Math.min(currentFuel, totalFuelCapacity);
+
+    // === Каталог оружия: фиксируем типы, когда-либо стоявшие на корабле ===
+    const equippedWeaponTypes = modules.flatMap(
+        (m) => m.weapons?.flatMap((w) => (w ? [w.type] : [])) ?? [],
+    );
+    if (equippedWeaponTypes.length > 0) {
+        state.discoveredWeaponTypes = [
+            ...new Set([...(state.discoveredWeaponTypes ?? []), ...equippedWeaponTypes]),
+        ];
+    }
 };

@@ -2924,11 +2924,16 @@
         "tabs": {
             "ships": "SHIPS",
             "stations": "STATIONS",
-            "augmentations": "AUGMENTATIONS"
+            "augmentations": "AUGMENTATIONS",
+            "weapons": "WEAPONS"
         },
         "augmentations_subtitle": "Augmentations unlock after visiting a medical station with cybernetics researched.",
         "augmentation_progress": "Discovered: {{found}} / {{total}}",
         "augmentation_empty": "Visit a medical station after researching Cybernetic Augmentations.",
+        "weapons_subtitle": "Weapons unlock once installed on your ship.",
+        "weapon_progress": "Discovered: {{found}} / {{total}}",
+        "weapon_damage": "Damage: {{value}}",
+        "weapon_empty": "Weapons unlock once installed on your ship.",
         "progress": "Discovered: {{found}} / {{total}}",
         "details": "Details",
         "combat_profile": "COMBAT PROFILE · THREAT {{threat}}",

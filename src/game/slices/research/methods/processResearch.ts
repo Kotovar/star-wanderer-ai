@@ -69,6 +69,15 @@ const handleResearchCompletion = (
                 ? [...(s.research.unlockedRecipes ?? []), unlockedRecipeId]
                 : (s.research.unlockedRecipes ?? []),
         },
+        discoveredWeaponTypes:
+            unlockedRecipeId && newWeaponBonus
+                ? [
+                      ...new Set([
+                          ...(s.discoveredWeaponTypes ?? []),
+                          unlockedRecipeId,
+                      ]),
+                  ]
+                : s.discoveredWeaponTypes,
     }));
 
     // Логирование завершения

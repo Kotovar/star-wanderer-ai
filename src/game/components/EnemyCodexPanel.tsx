@@ -14,6 +14,7 @@ import { CombatShipVisual } from "@/game/components/CombatShipVisual";
 import { GameDialogContent } from "@/game/components/GameDialog";
 import { ANCIENT_BOSSES } from "@/game/constants/bosses";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import { WEAPON_TYPES } from "@/game/constants/weapons";
 import {
   ANCIENT_BOSS_CODEX_ENTRY,
   ENEMY_CODEX_SHIP_ENTRIES,
@@ -39,6 +40,7 @@ import type {
   EnemyStats,
   SpaceMonsterType,
   StationName,
+  WeaponType,
 } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
 import {
@@ -63,7 +65,7 @@ type CombatPreview = {
   specialAbility?: { name: string; description: string };
 };
 
-type CatalogSection = "ships" | "stations" | "augmentations";
+type CatalogSection = "ships" | "stations" | "augmentations" | "weapons";
 
 const AUGMENTATION_CODEX_STYLES: Record<AugmentationRarity, string> = {
   common: "border-[#94a3b866] bg-[rgba(148,163,184,0.06)]",
@@ -372,6 +374,9 @@ export function EnemyCodexPanel() {
   const discoveredAugmentationIds = useGameStore(
     (s) => s.discoveredAugmentationIds ?? [],
   );
+  const discoveredWeaponTypes = useGameStore(
+    (s) => s.discoveredWeaponTypes ?? [],
+  );
   const showSectorMap = useGameStore((s) => s.showSectorMap);
   const { t } = useTranslation();
   const [combatPreview, setCombatPreview] = useState<CombatPreview | null>(
@@ -385,6 +390,9 @@ export function EnemyCodexPanel() {
   );
   const knownAugmentations = Object.values(AUGMENTATIONS).filter(
     (augmentation) => discoveredAugmentationIds.includes(augmentation.id),
+  );
+  const knownWeaponTypes = (Object.keys(WEAPON_TYPES) as WeaponType[]).filter(
+    (weaponType) => discoveredWeaponTypes.includes(weaponType),
   );
   const creatureEntries = Object.entries(SPACE_MONSTERS) as [
     SpaceMonsterType,
@@ -433,7 +441,8 @@ export function EnemyCodexPanel() {
     if (
       section !== "ships" &&
       section !== "stations" &&
-      section !== "augmentations"
+      section !== "augmentations" &&
+      section !== "weapons"
     )
       return;
     setCatalogSection(section);
@@ -489,7 +498,7 @@ export function EnemyCodexPanel() {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-2 text-[#d7ffe0]">
+    <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-2 scrollbar-gutter-stable text-[#d7ffe0]">
       <div className="flex items-start justify-between gap-3 border-b border-[#00d4ff44] pb-3">
         <div>
           <div className="font-['Orbitron'] text-lg font-bold uppercase tracking-[0.14em] text-ring">
@@ -500,7 +509,9 @@ export function EnemyCodexPanel() {
               ? t("enemy_codex.ships_subtitle")
               : catalogSection === "stations"
                 ? t("station_catalog.subtitle")
-                : t("enemy_codex.augmentations_subtitle")}
+                : catalogSection === "augmentations"
+                  ? t("enemy_codex.augmentations_subtitle")
+                  : t("enemy_codex.weapons_subtitle")}
           </div>
         </div>
         <Button
@@ -534,6 +545,12 @@ export function EnemyCodexPanel() {
             className="flex-1 cursor-pointer text-xs text-[#8fa0aa] data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810]"
           >
             {t("enemy_codex.tabs.augmentations")}
+          </TabsTrigger>
+          <TabsTrigger
+            value="weapons"
+            className="flex-1 cursor-pointer text-xs text-[#8fa0aa] data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810]"
+          >
+            {t("enemy_codex.tabs.weapons")}
           </TabsTrigger>
         </TabsList>
 
@@ -773,6 +790,56 @@ export function EnemyCodexPanel() {
           ) : (
             <div className="border border-[#303840] bg-[rgba(0,0,0,0.18)] px-3 py-5 text-center text-sm text-[#8fa0aa]">
               {t("enemy_codex.augmentation_empty")}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="weapons" className="mt-4 space-y-3">
+          <div className="border border-[#00d4ff44] bg-[rgba(0,212,255,0.04)] px-3 py-2 text-xs text-[#a8eaff]">
+            {t("enemy_codex.weapon_progress", {
+              found: knownWeaponTypes.length,
+              total: Object.keys(WEAPON_TYPES).length,
+            })}
+          </div>
+          {knownWeaponTypes.length > 0 ? (
+            <div className="grid gap-2 lg:grid-cols-2">
+              {knownWeaponTypes.map((weaponType) => {
+                const weapon = WEAPON_TYPES[weaponType];
+                return (
+                  <article
+                    key={weaponType}
+                    className="border p-3"
+                    style={{
+                      borderColor: `${weapon.color}66`,
+                      backgroundColor: `${weapon.color}0f`,
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="grid h-10 w-10 shrink-0 place-items-center border bg-[rgba(0,0,0,0.2)] text-xl"
+                        style={{ borderColor: `${weapon.color}66`, color: weapon.color }}
+                      >
+                        {weapon.icon}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-[#d7ffe0]">
+                          {t(`weapon_types.${weaponType}`)}
+                        </div>
+                        <div className="mt-0.5 text-[10px] font-bold text-[#ffb000]">
+                          {t("enemy_codex.weapon_damage", { value: weapon.damage })}
+                        </div>
+                        <div className="mt-1 text-xs text-[#8fa0aa]">
+                          {weapon.description}
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="border border-[#303840] bg-[rgba(0,0,0,0.18)] px-3 py-5 text-center text-sm text-[#8fa0aa]">
+              {t("enemy_codex.weapon_empty")}
             </div>
           )}
         </TabsContent>

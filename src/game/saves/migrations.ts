@@ -279,6 +279,35 @@ const migrations: Record<number, Migration> = {
       ],
     };
   },
+  13: (raw) => {
+    const state = raw as Partial<GameState>;
+    const equippedWeaponTypes = (state.ship?.modules ?? []).flatMap(
+      (module) => module.weapons?.flatMap((w) => (w ? [w.type] : [])) ?? [],
+    );
+    // Оружие, уже разблокированное исследованными технологиями (та же карта,
+    // что и в processResearch.ts — на старых сохранениях это не могло сработать вживую).
+    const WEAPON_TECH_MAP: Record<string, string> = {
+      plasma_weapons: "plasma",
+      combat_drones: "drones",
+      antimatter_weapons: "antimatter",
+      quantum_torpedo: "quantum_torpedo",
+      ion_cannon: "ion_cannon",
+    };
+    const researchedWeaponTypes = (
+      state.research?.researchedTechs ?? []
+    ).flatMap((techId) => (WEAPON_TECH_MAP[techId] ? [WEAPON_TECH_MAP[techId]] : []));
+    return {
+      ...state,
+      stateVersion: 14,
+      discoveredWeaponTypes: [
+        ...new Set([
+          ...(state.discoveredWeaponTypes ?? []),
+          ...equippedWeaponTypes,
+          ...researchedWeaponTypes,
+        ]),
+      ],
+    };
+  },
 };
 
 /**

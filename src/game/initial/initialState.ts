@@ -244,6 +244,7 @@ const baseState: GameState = {
   discoveredEnemyCodexIds: [],
   discoveredStationTypes: [],
   discoveredAugmentationIds: [],
+  discoveredWeaponTypes: [],
   nextCrisisTurn: rollInitialCrisisTurn(),
   nextCrisisId:
     GLOBAL_CRISES[Math.floor(Math.random() * GLOBAL_CRISES.length)]?.id ?? null,
