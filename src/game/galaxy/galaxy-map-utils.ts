@@ -210,12 +210,13 @@ export function drawGalaxyObjectiveMarkers(
     }
 }
 
-// Draw static legend (fuel, engine, captain info) - drawn BEFORE transform
+// Draw static legend (fuel, engine, captain and scanner info) - drawn BEFORE transform
 export function drawStaticLegend(
     ctx: CanvasRenderingContext2D,
     modules: Module[],
     captainLevel: number,
     fuel: number,
+    scanRange: number,
     t: (key: string) => string,
     canvasWidth: number,
     canvasHeight: number,
@@ -258,6 +259,20 @@ export function drawStaticLegend(
         legendY + lineH * 2,
     );
     ctx.fillText(t("galaxy.legend.sector_info_1"), legendX, legendY + lineH * 3.3);
+
+    const scannerStatus =
+        scanRange === 0
+            ? `${t("galaxy.legend.scanner")}: ${t("galaxy.labels.scanner_absent")} · ${t("galaxy.legend.boss_detection_required")}`
+            : scanRange < 8
+                ? `${t("galaxy.legend.scanner")}: ${scanRange} · ${t("galaxy.legend.boss_detection_remaining")} +${8 - scanRange}`
+                : `${t("galaxy.legend.scanner")}: ${scanRange} · ${t("galaxy.legend.boss_detection_ready")}`;
+
+    ctx.fillStyle = scanRange >= 8 ? "#00ff41" : "#ffb000";
+    ctx.fillText(
+        scannerStatus,
+        legendX,
+        legendY + lineH * 6.6,
+    );
     ctx.fillText(t("galaxy.legend.sector_info_2"), legendX, legendY + lineH * 4.3);
     ctx.fillText(t("galaxy.legend.sector_info_3"), legendX, legendY + lineH * 5.3);
     ctx.restore();

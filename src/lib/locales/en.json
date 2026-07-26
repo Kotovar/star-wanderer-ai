@@ -2085,6 +2085,10 @@
             "fuel": "⛽ Fuel",
             "engine": "Engine",
             "captain": "Captain",
+            "scanner": "Scanner",
+            "boss_detection_required": "boss detection requires range 8",
+            "boss_detection_remaining": "until boss detection:",
+            "boss_detection_ready": "bosses can be detected",
             "sector_info_1": "Sector 1: Eng.Lvl1 + Capt.Lvl1",
             "sector_info_2": "Sector 2: Eng.Lvl2 + Capt.Lvl2",
             "sector_info_3": "Sector 3: Eng.Lvl3 + Capt.Lvl3",
@@ -2109,15 +2113,10 @@
             "sector": "Sector",
             "threat_level": "Threat level",
             "scanner": "📡 Scanner",
+            "scanner_range": "📡 Scan range",
             "scanner_absent": "none",
             "click_sector": "Click on a sector",
             "click_object": "Click on an object"
-        },
-        "scanner_levels": {
-            "level_4": "4 LVL",
-            "level_3": "3 LVL",
-            "level_2": "2 LVL",
-            "level_1": "1 LVL"
         },
         "black_hole": {
             "title": "🕳️ BLACK HOLE",
@@ -3620,7 +3619,11 @@
         "galactic_coalition": "Allies {{allies}}/{{allyTarget}}, contracts {{contracts}}/{{contractTarget}}, credits {{credits}}/{{creditTarget}}."
     },
     "campaign_progress": {
-        "summary": "Campaign overview: which routes are open, which systems are charted, and where to explore next."
+        "summary": "Campaign overview: which routes are open, which systems are charted, and where to explore next.",
+        "tier2_engine": "Engine level 2 (current level {{level}})",
+        "tier2_engine_hint": "Buy an engine tune-up at a shipyard.",
+        "tier2_captain": "Captain level 2 (current level {{level}})",
+        "tier2_captain_hint": "Pilots gain experience while travelling; a human academy or hiring can help."
     },
     "save_load": {
         "menu_title": "MENU",
@@ -3729,7 +3732,7 @@
         },
         "dev_all_tech_explorer": {
             "name": "Explorer: All Technologies (DEV)",
-            "description": "The exact Explorer starting configuration, with every technology already researched. Available only in development."
+            "description": "The full Weapon Range module layout with every technology already researched. Available only in development."
         }
     },
     "launch_modifiers": {

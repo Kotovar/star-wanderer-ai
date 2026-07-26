@@ -542,7 +542,7 @@ export function GalaxyMap() {
             });
         }
 
-        // Draw static legend (fuel, engine, captain info) BEFORE transform
+        // Draw static legend (fuel, engine, captain and scanner info) BEFORE transform
         const legendTopOffset = hintDismissed
             ? 0
             : hintBannerHeightRef.current + 16;
@@ -551,6 +551,7 @@ export function GalaxyMap() {
             modules,
             captainLevel,
             fuel,
+            scanRange,
             t,
             width,
             height,

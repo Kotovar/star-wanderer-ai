@@ -96,10 +96,15 @@ assert.equal(
   process.env.NODE_ENV === "development",
 );
 if (devAllTechExplorer) {
-  const explorer = SHIP_TEMPLATES.find((template) => template.id === "explorer");
-  assert.ok(explorer);
+  assert.ok(devArsenalTemplate);
   assert.equal(devAllTechExplorer.startWithAllTechs, true);
-  assert.deepEqual(devAllTechExplorer.modules, explorer.modules);
+  assert.equal(devAllTechExplorer.gridSize, devArsenalTemplate.gridSize);
+  assert.deepEqual(devAllTechExplorer.modules, devArsenalTemplate.modules);
+  assert.deepEqual(
+    devAllTechExplorer.crew.map((member) => member.moduleId),
+    [712, 708, 707, 722],
+    "dev all-tech explorer crew must be assigned to its modules",
+  );
   assert.ok(
     devAllTechExplorer.crew.every((member) => member.level === 3),
     "dev all-tech explorer crew must start at level 3",

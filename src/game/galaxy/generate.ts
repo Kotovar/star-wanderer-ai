@@ -19,7 +19,6 @@ import { SHIP_TYPES, STATION_TYPES } from "./consts";
 import { PLANET_TYPES } from "@/game/constants/planets";
 import { getRandomRace, getDominantRaceForPlanet } from "@/game/races/utils";
 import { getRandomBossForTier } from "@/game/bosses/utils";
-import { ANCIENT_BOSSES } from "@/game/constants/bosses";
 import { bossDistribution } from "./bossDistribution";
 import { rollEnemyThreat } from "@/game/progression/enemyProgression";
 import {
@@ -512,26 +511,6 @@ export const generateDerelictShip = (
     name: "location_types.derelict_ship",
     derelictExplored: false,
 });
-
-/**
- * Добавляет уникального босса The Eternal в один сектор с чёрной дырой.
- * Вызывается ровно один раз за генерацию галактики.
- */
-export const addEternalBoss = (sector: Sector): void => {
-    const eternalBoss = ANCIENT_BOSSES.find((b) => b.id === "the_eternal");
-    if (!eternalBoss) return;
-
-    bossDistribution.markBossAsUsed(eternalBoss.id);
-
-    sector.locations.push({
-        id: `${sector.id}-boss-eternal`,
-        type: "boss",
-        name: eternalBoss.name,
-        bossId: eternalBoss.id,
-        bossType: eternalBoss.bossType,
-        bossDefeated: false,
-    });
-};
 
 /**
  * Добавляет случайного босса любого тира в сектор с чёрной дырой.

@@ -201,35 +201,41 @@ const STANDARD_SHIP_TEMPLATES: ShipTemplate[] = [
   },
 ];
 
-const DEV_ALL_TECH_EXPLORER: ShipTemplate = {
+const createDevAllTechExplorer = (arsenal: ShipTemplate): ShipTemplate => ({
   ...STANDARD_SHIP_TEMPLATES[0],
   id: "dev_all_tech_explorer",
   nameKey: "ship_templates.dev_all_tech_explorer.name",
   descriptionKey: "ship_templates.dev_all_tech_explorer.description",
   icon: "🧪",
+  moduleIcons: arsenal.moduleIcons,
+  modules: arsenal.modules,
+  gridSize: arsenal.gridSize,
   crew: [
-    ...STANDARD_SHIP_TEMPLATES[0].crew.map((member) => ({
+    ...STANDARD_SHIP_TEMPLATES[0].crew.map((member, index) => ({
       ...member,
+      moduleId: [712, 708, 707][index] ?? member.moduleId,
       level: 3,
     })),
     {
       id: 4,
       name: "Ксено-испытатель",
       profession: "medic",
-      moduleId: T_EXPLORER + 4,
+      moduleId: 722,
       level: 3,
       race: "xenosymbiont",
     },
   ],
+  credits: arsenal.credits,
+  fuel: arsenal.fuel,
+  maxFuel: arsenal.maxFuel,
+  probes: arsenal.probes,
   startWithAllTechs: true,
-};
+});
 
 export const SHIP_TEMPLATES: ShipTemplate[] =
   process.env.NODE_ENV === "development"
-    ? [
-        ...STANDARD_SHIP_TEMPLATES,
-        DEV_ALL_TECH_EXPLORER,
-        {
+    ? (() => {
+        const devArsenalFixture: ShipTemplate = {
           id: "dev_arsenal_fixture",
           nameKey: "ship_templates.weapon_showcase.name",
           descriptionKey: "ship_templates.weapon_showcase.description",
@@ -269,8 +275,14 @@ export const SHIP_TEMPLATES: ShipTemplate[] =
           maxFuel: 160,
           probes: 10,
           compatibleClasses: null,
-        },
-      ]
+        };
+
+        return [
+          ...STANDARD_SHIP_TEMPLATES,
+          createDevAllTechExplorer(devArsenalFixture),
+          devArsenalFixture,
+        ];
+      })()
     : STANDARD_SHIP_TEMPLATES;
 
 /** Шаблон по умолчанию (Исследователь) */

@@ -13,7 +13,6 @@ import {
     ensureStationTypes,
 } from "./ensure";
 import {
-    addEternalBoss,
     addRandomBossToBlackHole,
     generateSpaceMonster,
     generateStar,
@@ -25,30 +24,30 @@ import {
     getLocationCount,
 } from "./utils";
 import { bossDistribution } from "./bossDistribution";
+import { ANCIENT_BOSSES } from "@/game/constants/bosses";
+import { placeReservedBoss } from "./reservedBosses";
 
 // ============================================================================
 // Основная функция генерации
 // ============================================================================
 
 /**
- * Генерирует галактику с секторами, распределёнными по трём уровням.
+ * Генерирует галактику с секторами, распределёнными по четырём уровням.
  *
- * Создаёт 26 секторов (8 + 8 + 10), расположенных концентрическими кольцами:
- * - Уровень 1: 8 секторов в центре (безопасные)
- * - Уровень 2: 8 секторов в середине (средняя опасность)
- * - Уровень 3: 10 секторов на окраине (опасные)
+ * Создаёт 42 сектора (12 + 12 + 15 + 3), расположенных концентрическими кольцами.
  *
  * Каждый сектор содержит:
  * - Звезду (одиночная, двойная, тройная или чёрная дыра)
  * - Набор локаций (планеты, станции, корабли, астероиды, штормы, аномалии)
  * - Гарантированные: минимум 1 аномалия, 1 колонизированная планета, 1 станция
- * - Гарантированные боссы: по одному уникальному боссу для каждого тира (1, 2, 3)
+ * - Гарантированные боссы: по одному для тиров 1 и 2, Оракул в тире 4 и Вечный у чёрной дыры
  *
  * @returns Массив секторов галактики с назначенными локациями и координатами
  */
 export const generateGalaxy = (): Sector[] => {
     // Reset boss distribution for new game
     bossDistribution.reset();
+    bossDistribution.reserveBosses("void_oracle", "the_eternal");
 
     const sectors: Sector[] = [];
     let sectorIdx = 0;
@@ -110,21 +109,40 @@ export const generateGalaxy = (): Sector[] => {
         }
     });
 
-    // Постобработка ЧД-секторов: 1 The Eternal на всю галактику, остальные — случайный босс
+    // Минимум две чёрные дыры нужен до размещения Вечного.
+    ensureBlackHoles(sectors);
+
+    // Оракул — единственный финальный босс на Дальнем рубеже.
+    const voidOracle = ANCIENT_BOSSES.find((boss) => boss.id === "void_oracle");
+    if (
+        voidOracle &&
+        placeReservedBoss(sectors, voidOracle, {
+            tier: 4,
+            idSuffix: "void-oracle",
+        })
+    ) {
+        bossDistribution.markBossAsUsed(voidOracle.id);
+    }
+
+    // Постобработка ЧД-секторов: один Вечный на всю галактику, остальные — случайный босс.
     const bhSectors = sectors.filter(
         (s) => s.id !== 0 && s.star?.type === "blackhole",
     );
-    if (bhSectors.length > 0) {
-        const eternalIdx = Math.floor(Math.random() * bhSectors.length);
-        bhSectors.forEach((sector, i) => {
-            const hasBoss = sector.locations.some((l) => l.type === "boss");
-            if (i === eternalIdx) {
-                addEternalBoss(sector);
-            } else if (!hasBoss) {
-                addRandomBossToBlackHole(sector);
-            }
-        });
+    const eternal = ANCIENT_BOSSES.find((boss) => boss.id === "the_eternal");
+    if (
+        eternal &&
+        placeReservedBoss(sectors, eternal, {
+            blackHole: true,
+            idSuffix: "eternal",
+        })
+    ) {
+        bossDistribution.markBossAsUsed(eternal.id);
     }
+    bhSectors.forEach((sector) => {
+        if (!sector.locations.some((location) => location.type === "boss")) {
+            addRandomBossToBlackHole(sector);
+        }
+    });
 
     // Гарантируем верфь и медицинскую станцию в каждом тире
     ensureStationTypes(sectors, 1);
@@ -137,7 +155,5 @@ export const generateGalaxy = (): Sector[] => {
     // Постобработка
     populateContracts(sectors);
     populateShipQuests(sectors);
-    ensureBlackHoles(sectors);
-
     return sectors;
 };

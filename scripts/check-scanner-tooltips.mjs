@@ -21,6 +21,30 @@ const { getModuleHealthTechDelta } = jiti("../src/game/modules/techBonuses.ts");
 const { loadWithMigrations } = jiti("../src/game/saves/migrations.ts");
 const t = (key) => key;
 
+const scannerLabelSource = readFileSync(
+  path.join(root, "src/game/components/DistressSignalPanel.tsx"),
+  "utf8",
+);
+const sectorMapSource = readFileSync(
+  path.join(root, "src/game/components/SectorMap.tsx"),
+  "utf8",
+);
+assert.match(
+  scannerLabelSource,
+  /if \(scanRange > 0\) return String\(scanRange\);/,
+  "эффективная дальность не должна превращаться в тир сканера",
+);
+assert.doesNotMatch(
+  scannerLabelSource,
+  /scanner_levels/,
+  "карта и диагностика не должны выводить тир по технологической дальности",
+);
+assert.match(
+  sectorMapSource,
+  /galaxy\.labels\.scanner_range/,
+  "карта сектора должна явно подписывать эффективную дальность",
+);
+
 const infoFor = (loc, scanRange, isRevealed = false) =>
   getScannerInfo(loc, scanRange, isRevealed, t);
 const isUnknown = (info) =>

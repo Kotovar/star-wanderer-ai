@@ -10,7 +10,6 @@ import {
   STAR_HAZARD_LEVEL,
   STAR_SHIELD_REGEN_PENALTY_THRESHOLD,
 } from "@/game/constants/starHazards";
-import { getScannerRangeLabel } from "./DistressSignalPanel";
 import { STAR_SPRITE_SHEET } from "@/game/assets/starSprites";
 import type { Location, LocationType, StarType } from "@/game/types";
 import {
@@ -1265,8 +1264,10 @@ export function SectorMap() {
           {/* Scanner range indicator */}
           {scanRange >= 0 && (
             <div className="pointer-events-auto bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-2 py-1 text-xs text-[#00ff41]">
-              {t("galaxy.labels.scanner")}:{" "}
-              {getScannerRangeLabel(scanRange, t)}
+              {scanRange > 0
+                ? t("galaxy.labels.scanner_range")
+                : t("galaxy.labels.scanner")}
+              : {scanRange > 0 ? scanRange : t("galaxy.labels.scanner_absent")}
             </div>
           )}
         </div>

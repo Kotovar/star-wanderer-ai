@@ -15,6 +15,7 @@ import {
   getVictoryObjectives,
 } from "@/game/constants/victoryObjectives";
 import { WEAPON_TYPES } from "@/game/constants/weapons";
+import { getBestByProfession } from "@/game/crew";
 import { canSeeTier4 } from "@/game/galaxy/galaxy-map-utils";
 import { useTranslation } from "@/lib/useTranslation";
 
@@ -179,6 +180,9 @@ export function CampaignProgressPanel() {
   const currentSector = useGameStore((s) => s.currentSector);
   const traveling = useGameStore((s) => s.traveling);
   const shipModules = useGameStore((s) => s.ship.modules);
+  const captainLevel = useGameStore(
+    (s) => getBestByProfession(s.crew, "pilot")?.level ?? 1,
+  );
   const research = useGameStore((s) => s.research);
   const artifacts = useGameStore((s) => s.artifacts);
   const activeContracts = useGameStore((s) => s.activeContracts);
@@ -195,6 +199,18 @@ export function CampaignProgressPanel() {
 
   const scanRange = getEffectiveScanRange();
   const currentTier = currentSector?.tier ?? 1;
+  const engineLevel = Math.max(
+    1,
+    ...shipModules
+      .filter(
+        (module) =>
+          module.type === "engine" &&
+          module.health > 0 &&
+          !module.disabled &&
+          !module.manualDisabled,
+      )
+      .map((module) => module.level ?? 1),
+  );
   const victoryDone = completedVictoryObjectiveIds.length > 0;
   const canSeeHiddenRim =
     victoryDone ||
@@ -457,6 +473,20 @@ export function CampaignProgressPanel() {
               (tier) => tier.tier >= 2 && tier.visited > 0,
             )}
           />
+          {currentTier < 2 && (
+            <>
+              <Milestone
+                label={t("campaign_progress.tier2_engine", { level: engineLevel })}
+                done={engineLevel >= 2}
+                detail={t("campaign_progress.tier2_engine_hint")}
+              />
+              <Milestone
+                label={t("campaign_progress.tier2_captain", { level: captainLevel })}
+                done={captainLevel >= 2}
+                detail={t("campaign_progress.tier2_captain_hint")}
+              />
+            </>
+          )}
           {currentTier >= 2 && (
             <Milestone
               label="Достичь внешних рубежей"

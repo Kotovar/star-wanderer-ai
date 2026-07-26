@@ -18,15 +18,12 @@ import {
 } from "@/game/slices/locations/constants";
 import type { DistressApproach, SignalType } from "@/game/types";
 
-// Get scanner range label
+// Эффективная дальность, а не аппаратный тир модуля.
 export function getScannerRangeLabel(
     scanRange: number,
     t: (key: string) => string,
 ): string {
-    if (scanRange >= 15) return t("galaxy.scanner_levels.level_4");
-    if (scanRange >= 8) return t("galaxy.scanner_levels.level_3");
-    if (scanRange >= 5) return t("galaxy.scanner_levels.level_2");
-    if (scanRange >= 3) return t("galaxy.scanner_levels.level_1");
+    if (scanRange > 0) return String(scanRange);
     return t("galaxy.labels.scanner_absent");
 }
 
@@ -726,11 +723,7 @@ export function DistressSignalPanel() {
                 <div className="mt-3 grid grid-cols-2 gap-2">
                     <SignalTelemetry
                         label={t("distress_signal.scanner_range")}
-                        value={
-                            scanRange > 0
-                                ? `${scanRange} · ${scannerLabel}`
-                                : scannerLabel
-                        }
+                        value={scannerLabel}
                         color={scanRange > 0 ? "#00d4ff" : "#657080"}
                     />
                     <SignalTelemetry

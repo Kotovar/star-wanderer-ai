@@ -7,6 +7,7 @@ import type { AncientBoss, GalaxyTierAll, GalaxyTierBase } from "@/game/types";
  */
 class BossDistributionManager {
     private usedBossIds = new Set<string>();
+    private reservedBossIds = new Set<string>();
     private guaranteedBossesPlaced: Record<number, boolean> = {
         1: false,
         2: false,
@@ -18,7 +19,10 @@ class BossDistributionManager {
      */
     getRandomBossForTier(tier: GalaxyTierAll): AncientBoss | null {
         const eligibleBosses = ANCIENT_BOSSES.filter(
-            (b) => b.tier <= tier && !this.usedBossIds.has(b.id),
+            (b) =>
+                b.tier <= tier &&
+                !this.usedBossIds.has(b.id) &&
+                !this.reservedBossIds.has(b.id),
         );
 
         if (eligibleBosses.length === 0) return null;
@@ -46,6 +50,11 @@ class BossDistributionManager {
      */
     markBossAsUsed(bossId: string): void {
         this.usedBossIds.add(bossId);
+    }
+
+    /** Исключает уникальных боссов из случайной раздачи до их гарантированного размещения. */
+    reserveBosses(...bossIds: string[]): void {
+        bossIds.forEach((bossId) => this.reservedBossIds.add(bossId));
     }
 
     /**
@@ -95,6 +104,7 @@ class BossDistributionManager {
      */
     reset(): void {
         this.usedBossIds.clear();
+        this.reservedBossIds.clear();
         this.guaranteedBossesPlaced = {
             1: false,
             2: false,

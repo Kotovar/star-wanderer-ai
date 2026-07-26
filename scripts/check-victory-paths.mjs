@@ -78,4 +78,11 @@ assert.equal(
   false,
 );
 
+state.startModifierIds = [];
+assert.equal(
+  getCampaignDirective(state)?.objective.id,
+  "defeat_void_oracle",
+  "после достижения тира 4 базовый маршрут должен вести к финальному боссу",
+);
+
 console.log("Victory path checks passed");
