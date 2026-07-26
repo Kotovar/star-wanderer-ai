@@ -24,6 +24,7 @@ export interface CombatSlice {
     attackFriendlyShip: () => void;
     confirmHostileApproach: () => void;
     cancelHostileApproach: () => void;
+    recoverModuleWithNanites: (moduleId: number) => void;
 }
 
 /**
@@ -157,6 +158,10 @@ export const createCombatSlice = (
             s.gameMode = "sector_map";
         });
         get().addLog( i18nStore.t("game_logs.combatSlice_5"), "info");
+    },
+
+    recoverModuleWithNanites: (moduleId) => {
+        helpers.recoverModuleWithNanites(moduleId, set, get);
     },
 
     retreat: () => {

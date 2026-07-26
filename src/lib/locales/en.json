@@ -1439,6 +1439,7 @@
         "service_healing": "Crew healing",
         "service_augmentation": "Augmentations — after Cybernetic Augmentation",
         "service_mutation_cure": "Mutation treatment — after Xenobiology",
+        "service_genetic_therapy": "Genetic therapy — after Genetic Engineering",
         "service_research": "Research resources and boost",
         "service_mineral_buyback": "Mineral buyback",
         "service_diplomacy": "Reputation and translators",
@@ -1667,6 +1668,10 @@
         "mutation_cure_no_mutations": "✓ No mutations in crew members",
         "mutation_cure_cost": "Cost: {{cost}}₢ per mutation",
         "mutation_cure_button": "CURE",
+        "genetic_therapy_title": "🧬 Genetic Therapy",
+        "genetic_therapy_no_traits": "✓ No negative traits available",
+        "genetic_therapy_cost": "Cost: {{cost}}₢ per therapy",
+        "genetic_therapy_button": "THERAPY",
         "aug_title": "🦾 Cybernetic Augmentations",
         "aug_subtitle": "Max 1 augmentation per crew member. Replacing destroys the old one.",
         "aug_none": "no augmentation",
@@ -2615,7 +2620,11 @@
         "module_damage_title": "🔧 Module damage:",
         "modules_undamaged": "Modules undamaged",
         "crew_losses_title": "👥 Crew losses:",
-        "battle_clean": "✨ Battle completed without damage!"
+        "battle_clean": "✨ Battle completed without damage!",
+        "nanite_recovery_title": "♻️ Nanite Hull",
+        "nanite_recovery_desc": "Restore one destroyed module with 20% health after victory.",
+        "nanite_recovery_button": "RESTORE",
+        "nanite_recovered": "♻️ Nanites restored: {{module}}"
     },
     "game_end": {
         "victory_title": "🎉 VICTORY!",
@@ -3043,7 +3052,15 @@
     "planet_specializations": {
         "human_academy": {
             "name": "Space Academy",
-            "description": "Human military academy offers crew training. Intensive program enhances combat effectiveness."
+            "description": "Human military academy offers crew training. Intensive program enhances combat effectiveness.",
+            "training_mode": "Level training",
+            "retraining_mode": "Retraining",
+            "retraining_locked": "Cognitive Technology is required",
+            "training_select_crew": "Select a crew member for training:",
+            "retraining_select_crew": "Select a crew member for retraining:",
+            "retraining_select_profession": "Select a new profession:",
+            "retraining_used": "Retraining has already been used on this planet.",
+            "retraining_button": "RETRAIN"
         },
         "synthetic_archives": {
             "name": "Data Archives",
@@ -3154,7 +3171,7 @@
         },
         "crew_training": {
             "name": "Cognitive Technology",
-            "description": "Neural programs and simulators accelerate crew learning, providing +25% experience gain.",
+            "description": "Neural programs and simulators accelerate crew learning, providing +25% experience gain and one retraining at a human Academy.",
             "tier_label": "Tier",
             "category_label": "Biology"
         },
@@ -3190,7 +3207,7 @@
         },
         "nanite_hull": {
             "name": "Molecular Assembly",
-            "description": "Molecular machines in the hull continuously regenerate 5% of all module health per turn.",
+            "description": "Molecular machines in the hull continuously regenerate 5% of all module health per turn and can restore one destroyed module to 20% health after victory.",
             "tier_label": "Tier",
             "category_label": "Engineering"
         },
@@ -3202,7 +3219,7 @@
         },
         "genetic_enhancement": {
             "name": "Genetic Engineering",
-            "description": "Targeted DNA modification strengthens crew biology: +30% health and +15% experience.",
+            "description": "Targeted DNA modification strengthens crew biology: +30% health and +15% experience, and lets a medical bay remove one negative trait once per crew member.",
             "tier_label": "Tier",
             "category_label": "Biology"
         },
@@ -3664,6 +3681,10 @@
         "weapon_showcase": {
             "name": "Weapon Range (DEV)",
             "description": "A 7×7 visual test grid with every rendered module and weapon bays holding 1, 3, 4, and 5 weapons. Available only in development."
+        },
+        "dev_all_tech_explorer": {
+            "name": "Explorer: All Technologies (DEV)",
+            "description": "The exact Explorer starting configuration, with every technology already researched. Available only in development."
         }
     },
     "launch_modifiers": {
@@ -4689,6 +4710,7 @@
         "checkGameOver_1": "GAME OVER: Hull destroyed",
         "checkGameOver_2": "GAME OVER: Ship without a crew",
         "restartGame_1": "🔬 Starting technology: {{startingTechId}}",
+        "restartGame_all_tech": "🔬 DEV: all technologies unlocked ({{count}})",
         "restartGame_2": "🚨 GALACTIC CRISIS: {{icon}} {{value}} · duration {{duration}} turns",
         "restartGame_3": "New game",
         "restartGame_4": "Victory paths: {{value}}",
@@ -4815,6 +4837,24 @@
         "trainCrew_2": "Maximum academy training level reached (lv.3)!",
         "trainCrew_3": "Not enough credits for training! {{cost}}₢ required",
         "trainCrew_4": "🎓 {{crewMember_name}} promoted to level {{value}}!",
+        "retrainCrew_1": "Technology required: Cognitive Technology",
+        "retrainCrew_2": "Retraining is only available at a human Academy",
+        "retrainCrew_3": "Retraining has already been used on this planet",
+        "retrainCrew_4": "Crew member not found!",
+        "retrainCrew_5": "Retraining is only available for levels 1–3",
+        "retrainCrew_6": "The crew member already has that profession",
+        "retrainCrew_7": "Not enough credits for retraining! {{cost}}₢ required",
+        "retrainCrew_8": "🎓 {{crewMember_name}} changed profession to {{profession}}",
+        "geneticTherapy_1": "Technology required: Genetic Engineering",
+        "geneticTherapy_2": "Not enough credits for genetic therapy! {{cost}}₢ required",
+        "geneticTherapy_3": "Crew member not found!",
+        "geneticTherapy_4": "{{crewMember_name}} has already received genetic therapy",
+        "geneticTherapy_5": "Negative trait not found",
+        "geneticTherapy_6": "🧬 {{crewMember_name}} removed trait “{{trait_name}}”",
+        "naniteRecovery_1": "Technology required: Molecular Assembly",
+        "naniteRecovery_2": "Nanite recovery is already used or unavailable",
+        "naniteRecovery_3": "Destroyed module not found",
+        "naniteRecovery_4": "♻️ Nanite hull restored “{{module_name}}” to {{health}} HP",
         "createReputationSlice_1": "Reputation with {{raceName}}: {{sign}}{{amount}} ({{oldLevelName}} → {{newLevelName}})",
         "createReputationSlice_2": "Reputation with {{raceName}}: {{sign}}{{amount}}",
         "createReputationSlice_3": "Maximum diplomatic level already reached",

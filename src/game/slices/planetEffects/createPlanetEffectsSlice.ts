@@ -1,7 +1,8 @@
-import type { GameStore, SetState, RaceId } from "@/game/types";
+import type { GameStore, Profession, SetState, RaceId } from "@/game/types";
 import { applyPlanetEffect } from "./helpers/applyEffect";
 import { removeExpiredEffects as removeExpiredEffectsHelper } from "./helpers/removeEffect";
 import { trainCrewMember } from "./helpers/trainCrew";
+import { retrainCrewMember } from "./helpers/retrainCrew";
 import { scanSector as scanSectorHelper } from "./helpers/scanSector";
 import { playSound } from "@/sounds";
 
@@ -27,6 +28,9 @@ export interface PlanetEffectsSlice {
      * @param crewMemberId - ID члена экипажа для обучения
      */
     trainCrew: (crewMemberId: number) => void;
+
+    /** Меняет профессию члена экипажа в человеческой академии */
+    retrainCrew: (crewMemberId: number, profession: Profession) => void;
 
     /**
      * Сканирует сектор (эффект архивов синтетиков)
@@ -58,6 +62,10 @@ export const createPlanetEffectsSlice = (
 
     trainCrew: (crewMemberId) => {
         trainCrewMember(crewMemberId, set, get);
+    },
+
+    retrainCrew: (crewMemberId, profession) => {
+        retrainCrewMember(crewMemberId, profession, set, get);
     },
 
     scanSector: () => {

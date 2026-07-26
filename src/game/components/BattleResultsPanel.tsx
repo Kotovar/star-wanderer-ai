@@ -9,11 +9,23 @@ import { SectionPanel } from "./SectionPanel";
 export function BattleResultsPanel() {
   const battleResult = useGameStore((s) => s.battleResult);
   const showSectorMap = useGameStore((s) => s.showSectorMap);
+  const shipModules = useGameStore((s) => s.ship.modules);
+  const researchedTechs = useGameStore((s) => s.research.researchedTechs);
+  const recoverModuleWithNanites = useGameStore(
+    (s) => s.recoverModuleWithNanites,
+  );
   const { t } = useTranslation();
 
   if (!battleResult) {
     return null;
   }
+
+  const destroyedModules = shipModules.filter((module) => module.health <= 0);
+  const canRecoverWithNanites =
+    battleResult.victory &&
+    researchedTechs.includes("nanite_hull") &&
+    !battleResult.naniteRecoveryUsed &&
+    destroyedModules.length > 0;
 
   const handleContinue = () => {
     // Clear battle result and go back to sector map
@@ -111,6 +123,38 @@ export function BattleResultsPanel() {
                 )}
             </div>
           )}
+
+        {(canRecoverWithNanites || battleResult.naniteRecoveredModule) && (
+          <SectionPanel>
+            <div className="text-[#00d4ff] font-bold mb-1">
+              {t("battle_results.nanite_recovery_title")}
+            </div>
+            {battleResult.naniteRecoveredModule ? (
+              <div className="text-sm text-[#00ff41]">
+                {t("battle_results.nanite_recovered", {
+                  module: battleResult.naniteRecoveredModule,
+                })}
+              </div>
+            ) : (
+              <>
+                <div className="text-sm text-[#888] mb-3">
+                  {t("battle_results.nanite_recovery_desc")}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {destroyedModules.map((module) => (
+                    <Button
+                      key={module.id}
+                      onClick={() => recoverModuleWithNanites(module.id)}
+                      className="bg-transparent border border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] text-xs cursor-pointer"
+                    >
+                      {t("battle_results.nanite_recovery_button")}: {module.name}
+                    </Button>
+                  ))}
+                </div>
+              </>
+            )}
+          </SectionPanel>
+        )}
 
         {/* Crew damage */}
         {(battleResult.crewWounded.length > 0 ||

@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RACES } from "../constants/races";
 import {
     FUEL_PRICE_PER_UNIT,
+    GENETIC_THERAPY_PRICE,
     MUTATION_CURE_PRICE,
 } from "../slices/services/constants";
 import type {
@@ -246,6 +247,7 @@ export function StationPanel() {
     const repairShip = useGameStore((s) => s.repairShip);
     const healCrew = useGameStore((s) => s.healCrew);
     const cureMutation = useGameStore((s) => s.cureMutation);
+    const treatNegativeTrait = useGameStore((s) => s.treatNegativeTrait);
 
     // Ensure credits are always displayed as integers
     const displayCredits = Math.floor(credits);
@@ -321,6 +323,8 @@ export function StationPanel() {
     const allowsCrewHeal = stationConfig?.allowsCrewHeal ?? true;
     const allowsMutationCure =
         allowsCrewHeal && researchedTechs.includes("xenobiology");
+    const allowsGeneticTherapy =
+        allowsCrewHeal && researchedTechs.includes("genetic_enhancement");
     const allowsAugmentation =
         allowsCrewHeal && researchedTechs.includes("cybernetic_augmentation");
 
@@ -354,6 +358,27 @@ export function StationPanel() {
                         })),
                 }))
                 .filter((c) => c.mutations.length > 0),
+        [crew],
+    );
+
+    const crewWithNegativeTraits = useMemo(
+        () =>
+            crew
+                .map((c) => ({
+                    id: c.id,
+                    name: c.name,
+                    geneticTherapyUsed: c.geneticTherapyUsed ?? false,
+                    negativeTraits: (c.traits ?? [])
+                        .filter(
+                            (trait: CrewTrait) =>
+                                trait.type === "negative" && trait.id !== null,
+                        )
+                        .map((trait: CrewTrait) => ({
+                            id: trait.id ?? "",
+                            name: trait.name,
+                        })),
+                }))
+                .filter((c) => c.negativeTraits.length > 0),
         [crew],
     );
 
@@ -701,6 +726,7 @@ export function StationPanel() {
                         installModuleFromCargo={installModuleFromCargo}
                         installCraftedWeapon={installCraftedWeapon}
                         cureMutation={cureMutation}
+                        treatNegativeTrait={treatNegativeTrait}
                         credits={displayCredits}
                         ship={{
                             ...ship,
@@ -711,13 +737,16 @@ export function StationPanel() {
                         repairCost={getRepairCost().cost}
                         healCost={getHealCost().cost}
                         mutationCureCost={MUTATION_CURE_PRICE}
+                        geneticTherapyCost={GENETIC_THERAPY_PRICE}
                         canRepair={canRepairShip()}
                         canHeal={canHealCrew()}
                         allowsCrewHeal={allowsCrewHeal}
                         allowsModuleInstall={allowsModuleInstall}
                         allowsMutationCure={allowsMutationCure}
+                        allowsGeneticTherapy={allowsGeneticTherapy}
                         allowsAugmentation={allowsAugmentation}
                         crewWithMutations={crewWithMutations}
+                        crewWithNegativeTraits={crewWithNegativeTraits}
                         onInstallAugmentation={installAugmentation}
                         onRemoveAugmentation={removeAugmentation}
                         probes={probes}

@@ -62,6 +62,13 @@ interface MutationCrewMember {
     mutations: Array<{ id: string; name: string }>;
 }
 
+interface NegativeTraitCrewMember {
+    id: number;
+    name: string;
+    negativeTraits: Array<{ id: string; name: string }>;
+    geneticTherapyUsed: boolean;
+}
+
 interface ServicesTabProps {
     fuel: number;
     maxFuel: number;
@@ -77,6 +84,7 @@ interface ServicesTabProps {
     installModuleFromCargo: (cargoIndex: number, x: number, y: number) => void;
     installCraftedWeapon: (cargoIndex: number, weaponBayId: number) => void;
     cureMutation: (crewId: number, traitId: string) => void;
+    treatNegativeTrait: (crewId: number, traitId: string) => void;
     credits: number;
     ship: {
         modules: Module[];
@@ -108,14 +116,17 @@ interface ServicesTabProps {
     repairCost: number;
     healCost: number;
     mutationCureCost: number;
+    geneticTherapyCost: number;
     canRepair: boolean;
     canHeal: boolean;
     // Station type flags
     allowsCrewHeal: boolean;
     allowsModuleInstall: boolean;
     allowsMutationCure: boolean;
+    allowsGeneticTherapy: boolean;
     allowsAugmentation: boolean;
     crewWithMutations: MutationCrewMember[];
+    crewWithNegativeTraits: NegativeTraitCrewMember[];
     onInstallAugmentation: (crewId: number, augId: AugmentationId) => void;
     onRemoveAugmentation: (crewId: number) => void;
     probes: number;
@@ -143,19 +154,23 @@ export function ServicesTab({
     installModuleFromCargo,
     installCraftedWeapon,
     cureMutation,
+    treatNegativeTrait,
     credits,
     ship,
     crew,
     repairCost,
     healCost,
     mutationCureCost,
+    geneticTherapyCost,
     canRepair,
     canHeal,
     allowsCrewHeal,
     allowsModuleInstall,
     allowsMutationCure,
+    allowsGeneticTherapy,
     allowsAugmentation,
     crewWithMutations,
+    crewWithNegativeTraits,
     onInstallAugmentation,
     onRemoveAugmentation,
     probes,
@@ -209,6 +224,14 @@ export function ServicesTab({
                     mutationCureCost={mutationCureCost}
                     crewWithMutations={crewWithMutations}
                     onCure={cureMutation}
+                />
+            )}
+            {allowsGeneticTherapy && (
+                <GeneticTherapySection
+                    credits={credits}
+                    geneticTherapyCost={geneticTherapyCost}
+                    crewWithNegativeTraits={crewWithNegativeTraits}
+                    onTreat={treatNegativeTrait}
                 />
             )}
             {allowsAugmentation && (
@@ -537,6 +560,68 @@ function MutationCureSection({
                     </div>
                 ))}
             </div>
+        </div>
+    );
+}
+
+function GeneticTherapySection({
+    credits,
+    geneticTherapyCost,
+    crewWithNegativeTraits,
+    onTreat,
+}: {
+    credits: number;
+    geneticTherapyCost: number;
+    crewWithNegativeTraits: NegativeTraitCrewMember[];
+    onTreat: (crewId: number, traitId: string) => void;
+}) {
+    const { t } = useTranslation();
+    const availableMembers = crewWithNegativeTraits.filter(
+        (member) => !member.geneticTherapyUsed,
+    );
+
+    return (
+        <div className="bg-[rgba(0,212,255,0.05)] border border-[#00d4ff] p-4">
+            <div className="text-[#00d4ff] font-bold mb-1">
+                {t("services.genetic_therapy_title")}
+            </div>
+            <div className="text-xs text-[#888] mb-3">
+                {t("services.genetic_therapy_cost", { cost: geneticTherapyCost })}
+            </div>
+            {availableMembers.length === 0 ? (
+                <div className="text-sm text-[#888]">
+                    {t("services.genetic_therapy_no_traits")}
+                </div>
+            ) : (
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {availableMembers.map((member) => (
+                        <div key={member.id}>
+                            <div className="text-xs text-[#00d4ff] font-bold mb-1">
+                                {member.name}
+                            </div>
+                            <div className="space-y-1">
+                                {member.negativeTraits.map((trait) => (
+                                    <div
+                                        key={trait.id}
+                                        className="flex justify-between items-center bg-[rgba(0,0,0,0.3)] border border-[#00d4ff] p-2"
+                                    >
+                                        <span className="text-xs text-[#ffb000]">
+                                            🧬 {trait.name}
+                                        </span>
+                                        <Button
+                                            disabled={credits < geneticTherapyCost}
+                                            onClick={() => onTreat(member.id, trait.id)}
+                                            className="bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase text-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {t("services.genetic_therapy_button")}
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

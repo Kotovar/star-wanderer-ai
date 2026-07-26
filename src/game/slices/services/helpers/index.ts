@@ -6,4 +6,5 @@ export * from "./installModuleFromCargo";
 export * from "./scrapModule";
 export * from "./removeWeapon";
 export * from "./cureMutation";
+export * from "./geneticTherapy";
 export type { ServiceCostResult } from "./types";

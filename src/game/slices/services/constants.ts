@@ -21,6 +21,12 @@ export const FUEL_PRICE_PER_UNIT = 3;
 export const MUTATION_CURE_PRICE = 5000;
 
 /**
+ * Стоимость снятия одной негативной врождённой черты на медицинской станции.
+ * Требуется технология "Генетическое улучшение".
+ */
+export const GENETIC_THERAPY_PRICE = 2000;
+
+/**
  * Параметры лечения экипажа
  */
 export const HEAL_CONFIG = {

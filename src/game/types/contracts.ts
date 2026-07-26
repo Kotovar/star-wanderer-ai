@@ -106,6 +106,8 @@ export interface BattleResult {
     crewKilled: string[];
     artifactFound?: string;
     researchResources?: { type: string; quantity: number }[];
+    naniteRecoveryUsed?: boolean;
+    naniteRecoveredModule?: string;
 }
 
 // Storm results for showing after entering a storm

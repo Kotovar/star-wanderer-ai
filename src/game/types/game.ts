@@ -240,6 +240,7 @@ export interface GameCombat {
   attackFriendlyShip: () => void; // Player-initiated attack on a friendly ship (-20 rep)
   confirmHostileApproach: () => void; // Confirm approaching a hostile location (start combat)
   cancelHostileApproach: () => void; // Cancel approaching a hostile location (return to sector map)
+  recoverModuleWithNanites: (moduleId: number) => void;
 }
 
 export interface GameStationAndPlanets {
@@ -247,6 +248,7 @@ export interface GameStationAndPlanets {
   repairShip: () => void;
   healCrew: () => void;
   cureMutation: (crewId: number, traitId: string) => void;
+  treatNegativeTrait: (crewId: number, traitId: string) => void;
   buyTradeGood: (goodId: Goods, quantity?: number) => void;
   sellTradeGood: (goodId: Goods, quantity?: number) => void;
   installModuleFromCargo: (cargoIndex: number, x: number, y: number) => void;
@@ -368,6 +370,7 @@ export interface GameReputation {
 
 export interface GamePlanetSpecializations {
   trainCrew: (crewMemberId: number) => void;
+  retrainCrew: (crewMemberId: number, profession: CrewMember["profession"]) => void;
   scanSector: () => void;
   boostArtifact: (artifactId: string) => void;
   activatePlanetEffect: (raceId: RaceId, planetId?: string) => void;

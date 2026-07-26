@@ -24,8 +24,8 @@ export interface StartingStatePatch {
   knownRaces?: RaceId[];
   /** Нужно активировать подходящий текущему состоянию кризис сразу после старта */
   startsWithCrisis: boolean;
-  /** Случайная технология, которую надо сразу засчитать изученной */
-  startingTechId?: TechnologyId;
+  /** Технологии, которые надо сразу засчитать изученными */
+  startingTechIds?: TechnologyId[];
 }
 
 /**
@@ -226,6 +226,12 @@ export function buildStartingState(
   const startingTech = wantsStartingTech
     ? startingTechPool[Math.floor(Math.random() * startingTechPool.length)]
     : undefined;
+  const startingTechIds = [
+    ...(template.startWithAllTechs
+      ? Object.values(RESEARCH_TREE).map((tech) => tech.id)
+      : []),
+    ...(startingTech ? [startingTech.id] : []),
+  ];
 
   // ── Корабль ───────────────────────────────────────────────────────────────
   const crewCapacity =
@@ -257,6 +263,7 @@ export function buildStartingState(
     raceReputation: Object.keys(raceReputation).length > 0 ? raceReputation : undefined,
     knownRaces: knownRaces.size > 0 ? [...knownRaces] : undefined,
     startsWithCrisis: wantsStartingCrisis,
-    startingTechId: startingTech?.id,
+    startingTechIds:
+      startingTechIds.length > 0 ? [...new Set(startingTechIds)] : undefined,
   };
 }

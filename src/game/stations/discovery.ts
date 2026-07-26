@@ -71,6 +71,7 @@ type StationServiceKey =
   | "healing"
   | "augmentation"
   | "mutation_cure"
+  | "genetic_therapy"
   | "research"
   | "mineral_buyback"
   | "diplomacy";
@@ -93,7 +94,12 @@ export function getStationServiceKeys(
   if (config?.allowsCraft) services.push("crafting");
   if (config?.allowsModuleInstall) services.push("install");
   if (config?.allowsCrewHeal) {
-    services.push("healing", "augmentation", "mutation_cure");
+    services.push(
+      "healing",
+      "augmentation",
+      "mutation_cure",
+      "genetic_therapy",
+    );
   }
   if (stationType === "research") services.push("research");
   if (stationType === "mining") services.push("mineral_buyback");

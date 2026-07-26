@@ -59,6 +59,7 @@ assert.ok(getStationServiceKeys("trade", tradeConfig).includes("trade"));
 const medicalServices = getStationServiceKeys("medical", STATION_CONFIG.medical);
 assert.ok(medicalServices.includes("augmentation"));
 assert.ok(medicalServices.includes("mutation_cure"));
+assert.ok(medicalServices.includes("genetic_therapy"));
 const universalServices = getStationServiceKeys("trade", tradeConfig);
 assert.ok(universalServices.includes("probes"));
 assert.ok(universalServices.includes("scrap"));

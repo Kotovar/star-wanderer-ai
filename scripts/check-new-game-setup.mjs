@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import {
   LAUNCH_MODIFIERS,
   assertValidLaunchSelection,
@@ -14,6 +15,10 @@ import {
 
 const modifiersById = Object.fromEntries(
   LAUNCH_MODIFIERS.map((modifier) => [modifier.id, modifier]),
+);
+const buildStartingStateSource = await readFile(
+  new URL("../src/game/slices/gameManagement/helpers/buildStartingState.ts", import.meta.url),
+  "utf8",
 );
 
 for (const template of SHIP_TEMPLATES) {
@@ -82,6 +87,22 @@ assert.equal(
   Boolean(devArsenalTemplate),
   process.env.NODE_ENV === "development",
 );
+
+const devAllTechExplorer = SHIP_TEMPLATES.find(
+  (template) => template.id === "dev_all_tech_explorer",
+);
+assert.equal(
+  Boolean(devAllTechExplorer),
+  process.env.NODE_ENV === "development",
+);
+if (devAllTechExplorer) {
+  const explorer = SHIP_TEMPLATES.find((template) => template.id === "explorer");
+  assert.ok(explorer);
+  assert.equal(devAllTechExplorer.startWithAllTechs, true);
+  assert.deepEqual(devAllTechExplorer.modules, explorer.modules);
+  assert.match(buildStartingStateSource, /template\.startWithAllTechs/);
+  assert.match(buildStartingStateSource, /Object\.values\(RESEARCH_TREE\)/);
+}
 
 for (const modifier of LAUNCH_MODIFIERS) {
   for (const conflictId of modifier.conflictsWith ?? []) {

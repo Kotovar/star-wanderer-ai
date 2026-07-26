@@ -34,6 +34,8 @@ export interface ShipTemplate {
   probes: number;
   /** Стартовые ресурсы исследований */
   researchResources?: Partial<Record<ResearchResourceType, number>>;
+  /** Только dev-шаблон: начать со всеми изученными технологиями */
+  startWithAllTechs?: boolean;
   /** Совместимые классы (null = все) — для будущей фильтрации */
   compatibleClasses: ShipClassId[] | null;
 }
@@ -199,10 +201,20 @@ const STANDARD_SHIP_TEMPLATES: ShipTemplate[] = [
   },
 ];
 
+const DEV_ALL_TECH_EXPLORER: ShipTemplate = {
+  ...STANDARD_SHIP_TEMPLATES[0],
+  id: "dev_all_tech_explorer",
+  nameKey: "ship_templates.dev_all_tech_explorer.name",
+  descriptionKey: "ship_templates.dev_all_tech_explorer.description",
+  icon: "🧪",
+  startWithAllTechs: true,
+};
+
 export const SHIP_TEMPLATES: ShipTemplate[] =
   process.env.NODE_ENV === "development"
     ? [
         ...STANDARD_SHIP_TEMPLATES,
+        DEV_ALL_TECH_EXPLORER,
         {
           id: "dev_arsenal_fixture",
           nameKey: "ship_templates.weapon_showcase.name",

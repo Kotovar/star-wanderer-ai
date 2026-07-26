@@ -14,3 +14,4 @@ export * from "./bossAbilities";
 export * from "./alienPresence";
 export * from "./combatConstants";
 export * from "./completeBattleContracts";
+export * from "./naniteRecovery";

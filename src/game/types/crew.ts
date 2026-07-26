@@ -116,6 +116,8 @@ export interface CrewMember {
     firstaidActive: boolean;
     // Cybernetic augmentation (max 1 per crew member)
     augmentation: AugmentationId | null;
+    // Генетическая терапия может снять одну негативную врождённую черту
+    geneticTherapyUsed?: boolean;
     // Expedition fatigue — turns remaining before crew can join another expedition
     expeditionFatigue?: number;
     // Fatigue accumulated from continuous civilian assignments

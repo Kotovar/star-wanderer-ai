@@ -8,6 +8,7 @@ import {
     scrapModule as scrapModuleAction,
     removeWeapon as removeWeaponAction,
     cureMutation as cureMutationAction,
+    treatNegativeTrait as treatNegativeTraitAction,
     type ServiceCostResult,
 } from "./helpers";
 
@@ -72,6 +73,7 @@ export interface ServicesSlice {
      * @param traitId - ID мутации для лечения
      */
     cureMutation: (crewId: number, traitId: string) => void;
+    treatNegativeTrait: (crewId: number, traitId: string) => void;
 }
 
 /**
@@ -121,4 +123,7 @@ export const createServicesSlice = (
 
     cureMutation: (crewId, traitId) =>
         cureMutationAction(crewId, traitId, set, get),
+
+    treatNegativeTrait: (crewId, traitId) =>
+        treatNegativeTraitAction(crewId, traitId, set, get),
 });

@@ -79,11 +79,24 @@ export const restartGame = (
     runId: crypto.randomUUID(),
   });
 
-  if (patch.startingTechId) {
-    set(applyResearchedTechs(get(), [patch.startingTechId]));
-    get().addLog( i18nStore.t("game_logs.restartGame_1", { startingTechId: RESEARCH_TREE[patch.startingTechId]?.name ?? patch.startingTechId }),
-      "info",
-    );
+  if (patch.startingTechIds?.length) {
+    set(applyResearchedTechs(get(), patch.startingTechIds));
+    if (patch.startingTechIds.length === 1) {
+      const [startingTechId] = patch.startingTechIds;
+      get().addLog(
+        i18nStore.t("game_logs.restartGame_1", {
+          startingTechId: RESEARCH_TREE[startingTechId]?.name ?? startingTechId,
+        }),
+        "info",
+      );
+    } else {
+      get().addLog(
+        i18nStore.t("game_logs.restartGame_all_tech", {
+          count: patch.startingTechIds.length,
+        }),
+        "info",
+      );
+    }
   }
 
   get().updateShipStats();
