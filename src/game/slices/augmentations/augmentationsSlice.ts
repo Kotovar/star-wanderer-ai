@@ -1,6 +1,7 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import { getMedicalAugmentationCatalog } from "@/game/stations/medicalAugmentations";
 import type { AugmentationId } from "@/game/types/augmentations";
 
 export interface AugmentationsSlice {
@@ -20,11 +21,18 @@ export const createAugmentationsSlice = (
             return;
         }
 
+        const station = state.currentLocation;
+        if (station?.type !== "station" || station.stationType !== "medical") {
+            get().addLog(i18nStore.t("game_logs.augmentationsSlice_12"), "error");
+            return;
+        }
+
         const augmentation = AUGMENTATIONS[augmentationId];
         if (!augmentation) {
             get().addLog( i18nStore.t("game_logs.augmentationsSlice_2", { augmentationId }), "error");
             return;
         }
+        const augmentationName = i18nStore.t(`augmentations.${augmentationId}.name`);
 
         const crewMember = state.crew.find((c) => c.id === crewId);
         if (!crewMember) {
@@ -32,9 +40,23 @@ export const createAugmentationsSlice = (
             return;
         }
 
+        const catalog = getMedicalAugmentationCatalog(
+            station.stationId ?? station.id,
+            station.dominantRace,
+        );
+        if (!catalog.includes(augmentationId)) {
+            get().addLog(i18nStore.t("game_logs.augmentationsSlice_13"), "error");
+            return;
+        }
+
+        if ((crewMember.level ?? 1) < 3) {
+            get().addLog(i18nStore.t("game_logs.augmentationsSlice_14"), "error");
+            return;
+        }
+
         // Check profession restriction
         if (augmentation.forProfession && crewMember.profession !== augmentation.forProfession) {
-            get().addLog( i18nStore.t("game_logs.augmentationsSlice_4", { augmentation_name: augmentation.name, forProfession: augmentation.forProfession }),
+            get().addLog( i18nStore.t("game_logs.augmentationsSlice_4", { augmentation_name: augmentationName, forProfession: augmentation.forProfession }),
                 "error",
             );
             return;
@@ -42,7 +64,7 @@ export const createAugmentationsSlice = (
 
         // Check race restriction
         if (augmentation.forRace && crewMember.race !== augmentation.forRace) {
-            get().addLog( i18nStore.t("game_logs.augmentationsSlice_5", { augmentation_name: augmentation.name, forRace: i18nStore.t(`races.${augmentation.forRace}.name`) }),
+            get().addLog( i18nStore.t("game_logs.augmentationsSlice_5", { augmentation_name: augmentationName, forRace: i18nStore.t(`races.${augmentation.forRace}.name`) }),
                 "error",
             );
             return;
@@ -67,11 +89,11 @@ export const createAugmentationsSlice = (
         if (hasExisting) {
             const existingId = crewMember.augmentation ?? augmentationId;
             const old = AUGMENTATIONS[existingId];
-            get().addLog( i18nStore.t("game_logs.augmentationsSlice_7", { crewMember_name: crewMember.name, augmentation: old?.name ?? crewMember.augmentation, augmentation_name: augmentation.name }),
+            get().addLog( i18nStore.t("game_logs.augmentationsSlice_7", { crewMember_name: crewMember.name, augmentation: old ? i18nStore.t(`augmentations.${old.id}.name`) : existingId, augmentation_name: augmentationName }),
                 "info",
             );
         } else {
-            get().addLog( i18nStore.t("game_logs.augmentationsSlice_8", { crewMember_name: crewMember.name, augmentation_name: augmentation.name }),
+            get().addLog( i18nStore.t("game_logs.augmentationsSlice_8", { crewMember_name: crewMember.name, augmentation_name: augmentationName }),
                 "info",
             );
         }
@@ -91,7 +113,9 @@ export const createAugmentationsSlice = (
             return;
         }
 
-        const augName = AUGMENTATIONS[crewMember.augmentation]?.name ?? crewMember.augmentation;
+        const augName = AUGMENTATIONS[crewMember.augmentation]
+            ? i18nStore.t(`augmentations.${crewMember.augmentation}.name`)
+            : crewMember.augmentation;
 
         set((s) => ({
             crew: s.crew.map((c) =>

@@ -226,3 +226,15 @@ export const getTechBonusSum = (
 
     return totalBonus;
 };
+
+/** Технологии не могут снизить расход топлива более чем наполовину. */
+export const MAX_FUEL_EFFICIENCY_BONUS = 0.5;
+
+/** Суммарный технобонус топлива без отдельного эффекта варп-двигателя. */
+export const getFuelEfficiencyTechBonus = (
+    research: Pick<ResearchData, "researchedTechs">,
+): number =>
+    Math.min(
+        getTechBonusSum(research, "fuel_efficiency", ["warp_drive"]),
+        MAX_FUEL_EFFICIENCY_BONUS,
+    );

@@ -83,31 +83,6 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                 {t("planet_panel.expedition_crew_select")}
             </div>
 
-            {/* Selected crew preview */}
-            {selectedIds.length > 0 && (
-                <div className="flex items-center gap-2 flex-wrap">
-                    {selectedIds.map((id) => {
-                        const member = crew.find((c) => c.id === id);
-                        if (!member) return null;
-                        return (
-                            <div
-                                key={id}
-                                className="flex items-center gap-1 px-1.5 py-0.5 border border-[#00d4ff44] bg-[rgba(0,212,255,0.08)] rounded-sm"
-                            >
-                                <ProfessionSprite
-                                    race={member.race}
-                                    profession={member.profession}
-                                    size={16}
-                                />
-                                <span className="text-[10px] text-[#00d4ff]">
-                                    {member.name}
-                                </span>
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
-
             <div className="flex flex-col gap-2 max-h-56 overflow-y-auto scrollbar-gutter-stable pr-1">
                 {crew.map((member) => {
                     const selected = selectedIds.includes(member.id);
@@ -171,9 +146,12 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                                     </span>
                                 </div>
                             </div>
-                            {selected && !fatigued && (
-                                <span className="text-[#00d4ff] text-lg shrink-0">✓</span>
-                            )}
+                            <span
+                                aria-hidden="true"
+                                className="w-5 shrink-0 text-center text-[#00d4ff] text-lg"
+                            >
+                                {selected && !fatigued ? "✓" : ""}
+                            </span>
                         </button>
                     );
                 })}
@@ -218,11 +196,11 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                 )}
             </div>
 
-            {selectedIds.length === 0 && (
-                <div className="text-xs text-[#ff0040]">
-                    {t("planet_panel.expedition_no_crew")}
-                </div>
-            )}
+            <div
+                className={`text-xs text-[#ff0040] ${selectedIds.length > 0 ? "invisible" : ""}`}
+            >
+                {t("planet_panel.expedition_no_crew")}
+            </div>
 
             <div className="flex gap-2 mt-2">
                 <Button

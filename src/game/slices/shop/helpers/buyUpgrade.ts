@@ -8,10 +8,10 @@ import type {
 } from "@/game/types";
 import { playSound } from "@/sounds";
 import { MODULES_BY_LEVEL } from "@/game/components/station";
+import { applyTechBonusesToNewModule } from "@/game/slices/research/helpers/researchHelpers";
 import {
     MAX_UPGRADE_LEVEL,
     MODULE_HEALTH_BY_LEVEL,
-    UPGRADE_HEALTH_BONUS,
 } from "../constants";
 
 /**
@@ -89,6 +89,14 @@ const upgradeEngine = (
     nextLevel: number,
 ): void => {
     const fuelEfficiencyImprovement = item.effect?.fuelEfficiency || 0;
+    const upgradedHealth = applyTechBonusesToNewModule(
+        {
+            ...module,
+            maxHealth: MODULE_HEALTH_BY_LEVEL[nextLevel] ?? 100,
+            health: MODULE_HEALTH_BY_LEVEL[nextLevel] ?? 100,
+        },
+        get(),
+    );
 
     set((s) => ({
         ship: {
@@ -105,9 +113,8 @@ const upgradeEngine = (
                           consumption: nextLevel, // lv2=2, lv3=3
                           level: nextLevel,
                           defense: nextLevel,
-                          maxHealth:
-                              (m.maxHealth || 100) + UPGRADE_HEALTH_BONUS,
-                          health: (m.health || 100) + UPGRADE_HEALTH_BONUS,
+                          maxHealth: upgradedHealth.maxHealth,
+                          health: upgradedHealth.health,
                       }
                     : m,
             ),
@@ -228,6 +235,14 @@ const upgradeModule = (
     }
 
     const moved = newPos.x !== module.x || newPos.y !== module.y;
+    const upgradedHealth = applyTechBonusesToNewModule(
+        {
+            ...module,
+            maxHealth: MODULE_HEALTH_BY_LEVEL[nextLevel] ?? 100,
+            health: MODULE_HEALTH_BY_LEVEL[nextLevel] ?? 100,
+        },
+        state,
+    );
 
     set((s) => ({
         ship: {
@@ -284,8 +299,8 @@ const upgradeModule = (
                               }),
                           level: nextLevel,
                           defense: targetModuleTemplate.defense ?? nextLevel,
-                          maxHealth: MODULE_HEALTH_BY_LEVEL[nextLevel] || 100,
-                          health: MODULE_HEALTH_BY_LEVEL[nextLevel] || 100,
+                          maxHealth: upgradedHealth.maxHealth,
+                          health: upgradedHealth.health,
                       }
                     : m,
             ),

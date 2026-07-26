@@ -2,6 +2,7 @@ import { ARTIFACT_TYPES } from "@/game/constants";
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import { getMaxCrewTraitBonus } from "@/game/traits";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import { getRegularScannerRange } from "./getRegularScannerRange";
 import type { GameState } from "@/game/types";
 
 /**
@@ -39,12 +40,11 @@ export const getEffectiveScanRange = (state: GameState) => {
     }
 
     // Око Сингулярности заменяет сканер диапазона 8, не становясь отдельным бонусом.
-    const baseRange = Math.max(
-        eyeRange,
-        regularScanners.length > 0
-            ? Math.max(...regularScanners.map((s) => s.scanRange ?? 0))
-            : 0,
+    const scannerRange = getRegularScannerRange(
+        regularScanners,
+        state.research,
     );
+    const baseRange = Math.max(eyeRange, scannerRange);
     let maxRange = baseRange + surveyBonus;
     const quantumScanner = findActiveArtifact(
         state.artifacts,
@@ -54,10 +54,6 @@ export const getEffectiveScanRange = (state: GameState) => {
     if (quantumScanner) {
         maxRange += getArtifactEffectValue(quantumScanner, state);
     }
-
-    // ponytail: бонусы scan_range применяются перманентно к модулю сканера при
-    // завершении исследования (applyModuleBonus), поэтому здесь не пересчитываем —
-    // иначе задвоение.
 
     // Применяем бонус кристаллического артефакта (+15% к эффектам артефактов)
     // Применяется только к бонусу артефакта quantum_scanner, не к бонусам технологий

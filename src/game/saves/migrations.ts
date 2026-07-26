@@ -1,8 +1,10 @@
 import { CURRENT_STATE_VERSION } from "@/game/constants/version";
+import { RESEARCH_TREE } from "@/game/constants/research";
 import { getArchiveHintLocations } from "@/game/artifacts/utils";
 import { isContractTargetAvailable } from "@/game/contracts/targetAvailability";
 import { generateSpaceMonster } from "@/game/galaxy/generate";
 import { assignGridPositions } from "@/game/sectorGrid";
+import { MODULE_HEALTH_BY_LEVEL } from "@/game/slices/shop/constants";
 import type { GameState, Location, Sector } from "@/game/types";
 
 interface PersistedState {
@@ -207,6 +209,55 @@ const migrations: Record<number, Migration> = {
       ...state,
       stateVersion: 10,
       discoveredStationTypes: [...visitedStationTypes],
+    };
+  },
+  10: (raw) => {
+    const state = raw as GameState;
+    const scannerRanges = { 1: 3, 2: 5, 3: 8 } as const;
+    return {
+      ...state,
+      stateVersion: 11,
+      ship: {
+        ...state.ship,
+        modules: state.ship.modules.map((module) => {
+          const scanRange =
+            module.type === "scanner"
+              ? scannerRanges[module.level as 1 | 2 | 3]
+              : undefined;
+          return scanRange ? { ...module, scanRange } : module;
+        }),
+      },
+    };
+  },
+  11: (raw) => {
+    const state = raw as Partial<GameState>;
+    const researchedTechs = state.research?.researchedTechs ?? [];
+    const modules = state.ship?.modules;
+    if (!modules || researchedTechs.length === 0) {
+      return { ...state, stateVersion: 12 };
+    }
+
+    return {
+      ...state,
+      stateVersion: 12,
+      ship: {
+        ...state.ship,
+        modules: modules.map((module) => {
+          const baseHealth = MODULE_HEALTH_BY_LEVEL[module.level ?? 1];
+          if (!baseHealth || module.maxHealth !== baseHealth) return module;
+
+          let maxHealth = baseHealth;
+          for (const techId of researchedTechs) {
+            for (const bonus of RESEARCH_TREE[techId]?.bonuses ?? []) {
+              if (bonus.type === "module_health" && bonus.value > 0) {
+                maxHealth = Math.floor(maxHealth * (1 + bonus.value));
+              }
+            }
+          }
+
+          return { ...module, maxHealth, health: maxHealth };
+        }),
+      },
     };
   },
 };

@@ -24,6 +24,15 @@ import {
 import { StatIcon, type StatIconType } from "./StatIcon";
 import { getModuleImageUrl } from "./moduleArt";
 import { GameImage } from "./GameImage";
+import {
+    getFuelEfficiencyTechBonus,
+    MAX_FUEL_EFFICIENCY_BONUS,
+} from "@/game/research";
+import {
+    getModuleHealthTechDelta,
+    getModuleTechBonuses,
+    type ModuleTechBonus,
+} from "@/game/modules/techBonuses";
 
 // Helper to get translated module name
 function getTranslatedModuleName(
@@ -85,7 +94,7 @@ function getModuleDescription(module: Module): string {
 }
 
 /** Индекс уровня сканера по дальности: 0 (базовый) .. 4 (квантовый). Общий порог для всех мест, где показывается тир сканера. */
-function getScannerTierIndex(scanRange: number): number {
+export function getScannerTierIndex(scanRange: number): number {
     if (scanRange >= 15) return 4;
     if (scanRange >= 8) return 3;
     if (scanRange >= 5) return 2;
@@ -349,6 +358,7 @@ export function ModuleDetailDialog({
 }: ModuleDetailDialogProps) {
     const { t } = useTranslation();
     const crew = useGameStore((s) => s.crew);
+    const research = useGameStore((s) => s.research);
     const toggleModule = useGameStore((s) => s.toggleModule);
 
     if (!module) return null;
@@ -366,6 +376,16 @@ export function ModuleDetailDialog({
 
     // Check if level is valid (not NaN)
     const isValidLevel = module.level && !isNaN(module.level);
+    const techBonuses = isStationItem
+        ? []
+        : getModuleTechBonuses(module, research).map((bonus) =>
+              bonus.type === "fuel_efficiency"
+                  ? { ...bonus, value: getFuelEfficiencyTechBonus(research) }
+                  : bonus,
+          );
+    const healthTechDelta = isStationItem
+        ? null
+        : getModuleHealthTechDelta(module, research);
 
     return (
         <Dialog open={!!module} onOpenChange={onClose}>
@@ -418,7 +438,12 @@ export function ModuleDetailDialog({
                             </div>
                         );
                     })()}
-                    <ModuleDetailedStats module={module} mergeEffects={mergeEffects} />
+                    <ModuleDetailedStats
+                        module={module}
+                        mergeEffects={mergeEffects}
+                        techBonuses={techBonuses}
+                        healthTechDelta={healthTechDelta}
+                    />
 
                     {mergedCrewMember && (
                         <div className="border border-[#aa55ff66] bg-[rgba(170,85,255,0.08)] p-2 space-y-1.5">
@@ -465,7 +490,12 @@ export function ModuleDetailDialog({
                         )}
 
                     {module.type === "weaponbay" && module.weapons && (
-                        <WeaponsDetail weapons={module.weapons} />
+                        <WeaponsDetail
+                            weapons={module.weapons}
+                            level={module.level}
+                            techDamageBonus={techBonuses.find((bonus) => bonus.type === "weapon_damage")?.value ?? 0}
+                            techSlots={techBonuses.find((bonus) => bonus.type === "weapon_slots")?.value ?? 0}
+                        />
                     )}
 
                     {/* Only show status and controls for owned modules */}
@@ -534,6 +564,8 @@ interface ModuleDetailedStatsProps {
     module: Module;
     /** Эффекты сращённого с этим модулем ксеноморфа (если есть) */
     mergeEffects?: Partial<Record<MergeEffectKey, number>>;
+    techBonuses: ModuleTechBonus[];
+    healthTechDelta: number | null;
 }
 
 function DetailedStatLabel({
@@ -551,13 +583,35 @@ function DetailedStatLabel({
     );
 }
 
+/** Прибавка от технологии рядом с базовым значением стата, бирюзовым. */
+function TechDelta({
+    delta,
+    negative = false,
+}: {
+    delta: number | null;
+    negative?: boolean;
+}) {
+    if (!delta) return null;
+    return (
+        <span className="text-[#00d4ff] font-bold">
+            {" "}({negative ? "-" : "+"}{delta})
+        </span>
+    );
+}
+
 /** Прибавка от сращивания ксеноморфа рядом с базовым значением стата, фиолетовым */
-function MergeDelta({ delta }: { delta: number | null }) {
+function MergeDelta({
+    delta,
+    negative = false,
+}: {
+    delta: number | null;
+    negative?: boolean;
+}) {
     if (!delta) return null;
     return (
         <span className="text-[#aa55ff] font-bold">
             {" "}
-            ({delta > 0 ? "+" : ""}
+            ({negative ? "-" : delta > 0 ? "+" : ""}
             {delta})
         </span>
     );
@@ -580,7 +634,12 @@ function DetailedStatRow({
     );
 }
 
-type PercentDeltaFn = (key: MergeEffectKey, base: number) => number | null;
+type PercentDeltaFn = (
+    key: MergeEffectKey,
+    base: number,
+    negative?: boolean,
+    minimum?: number,
+) => number | null;
 type FlatDeltaFn = (key: MergeEffectKey) => number | null;
 
 /** Статы, специфичные для конкретного типа модуля (энергия, груз, сканер и т.д.). */
@@ -589,13 +648,23 @@ function renderModuleTypeDetailStats(
     percentDelta: PercentDeltaFn,
     flatDelta: FlatDeltaFn,
     t: (key: string, params?: Record<string, string | number>) => string,
+    techBonuses: ModuleTechBonus[],
 ): ReactNode {
+    const techValue = (type: ModuleTechBonus["type"]) =>
+        techBonuses.find((bonus) => bonus.type === type)?.value ?? 0;
+    const techPercentDelta = (type: ModuleTechBonus["type"], base: number) =>
+        computeMergePercentDelta(base, techValue(type) * 100);
+    const valueWithTech = (type: ModuleTechBonus["type"], base: number) =>
+        base + (techPercentDelta(type, base) ?? 0);
+    const fuelValueWithTech = (base: number) =>
+        base - (techPercentDelta("fuel_efficiency", base) ?? 0);
     return (
         <>
             {module.type === "reactor" && module.power && module.power > 0 && (
                 <DetailedStatRow icon="power_generation" label={`${t("module_list.generation")}:`}>
                     +{module.power}
-                    <MergeDelta delta={percentDelta("powerOutput", module.power)} />
+                    <TechDelta delta={techPercentDelta("module_power", module.power)} />
+                    <MergeDelta delta={percentDelta("powerOutput", valueWithTech("module_power", module.power))} />
                 </DetailedStatRow>
             )}
             {module.type !== "reactor" &&
@@ -617,12 +686,15 @@ function renderModuleTypeDetailStats(
                 module.capacity > 0 && (
                     <DetailedStatRow icon="cargo" label={`${t("module_list.capacity")}:`}>
                         {module.capacity}т
-                        <MergeDelta delta={percentDelta("cargoCapacity", module.capacity)} />
+                        <TechDelta delta={techPercentDelta("cargo_capacity", module.capacity)} />
+                        <MergeDelta delta={percentDelta("cargoCapacity", valueWithTech("cargo_capacity", module.capacity))} />
                     </DetailedStatRow>
                 )}
             {module.type === "engine" && module.fuelEfficiency && (
                 <DetailedStatRow icon="fuel_efficiency" label={`${t("module_list.efficiency")}:`}>
                     {module.fuelEfficiency} {t("module_list.efficiency_note")}
+                    <TechDelta delta={techPercentDelta("fuel_efficiency", module.fuelEfficiency)} negative />
+                    <MergeDelta delta={percentDelta("fuelEfficiency", fuelValueWithTech(module.fuelEfficiency), true, module.fuelEfficiency * (1 - MAX_FUEL_EFFICIENCY_BONUS))} negative />
                 </DetailedStatRow>
             )}
             {module.type === "drill" && (
@@ -655,6 +727,7 @@ function renderModuleTypeDetailStats(
                         </div>
                         <DetailedStatRow icon="scan_range" label={`${t("module_list.scan_range")}:`}>
                             {module.scanRange}
+                            <TechDelta delta={techValue("scan_range")} />
                             <MergeDelta delta={flatDelta("scanRange")} />
                         </DetailedStatRow>
                     </>
@@ -662,7 +735,8 @@ function renderModuleTypeDetailStats(
             {module.type === "lab" && (
                 <DetailedStatRow icon="research" label={`${t("module_list.research")}:`}>
                     {module.researchOutput || 5}
-                    <MergeDelta delta={percentDelta("researchSpeed", module.researchOutput || 5)} />{" "}
+                    <TechDelta delta={techPercentDelta("research_speed", module.researchOutput || 5)} />
+                    <MergeDelta delta={percentDelta("researchSpeed", valueWithTech("research_speed", module.researchOutput || 5))} />{" "}
                     {t("module_list.search_per_turn")}
                 </DetailedStatRow>
             )}
@@ -671,9 +745,17 @@ function renderModuleTypeDetailStats(
                 module.shields > 0 && (
                     <DetailedStatRow icon="shields" label={`${t("module_list.shields")}:`}>
                         {module.shields}
-                        <MergeDelta delta={percentDelta("shieldCapacity", module.shields)} />
+                        <TechDelta delta={techPercentDelta("shield_strength", module.shields)} />
+                        <MergeDelta delta={percentDelta("shieldCapacity", valueWithTech("shield_strength", module.shields))} />
                     </DetailedStatRow>
                 )}
+            {module.type === "shield" && module.shieldRegen && (
+                <DetailedStatRow icon="shield_regen" label={`${t("module_list.tech_shield_regen")}:`}>
+                    {module.shieldRegen}
+                    <TechDelta delta={techPercentDelta("shield_regen", module.shieldRegen)} />
+                    <MergeDelta delta={percentDelta("shieldRegenBonus", valueWithTech("shield_regen", module.shieldRegen))} />
+                </DetailedStatRow>
+            )}
             {module.type === "lifesupport" &&
                 module.oxygen &&
                 module.oxygen > 0 && (
@@ -718,7 +800,8 @@ function renderModuleTypeDetailStats(
             {(module.type === "bio_research_lab" || module.type === "deep_survey_array") && module.researchOutput && module.researchOutput > 0 && (
                 <DetailedStatRow icon="research" label={`${t("module_list.research")}:`}>
                     {module.researchOutput}
-                    <MergeDelta delta={percentDelta("researchSpeed", module.researchOutput)} />{" "}
+                    <TechDelta delta={techPercentDelta("research_speed", module.researchOutput)} />
+                    <MergeDelta delta={percentDelta("researchSpeed", valueWithTech("research_speed", module.researchOutput))} />{" "}
                     {t("module_list.search_per_turn")}
                 </DetailedStatRow>
             )}
@@ -731,22 +814,39 @@ function renderModuleTypeDetailStats(
             {module.type === "pulse_drive" && module.power && module.power > 0 && (
                 <DetailedStatRow icon="power_generation" label={`${t("module_list.generation")}:`}>
                     +{module.power}
+                    <TechDelta delta={techPercentDelta("module_power", module.power)} />
                 </DetailedStatRow>
             )}
             {module.type === "pulse_drive" && module.fuelEfficiency && (
                 <DetailedStatRow icon="fuel_efficiency" label={`${t("module_list.efficiency")}:`}>
                     {module.fuelEfficiency} {t("module_list.efficiency_note")}
+                    <TechDelta delta={techPercentDelta("fuel_efficiency", module.fuelEfficiency)} negative />
+                    <MergeDelta delta={percentDelta("fuelEfficiency", fuelValueWithTech(module.fuelEfficiency), true, module.fuelEfficiency * (1 - MAX_FUEL_EFFICIENCY_BONUS))} negative />
                 </DetailedStatRow>
             )}
         </>
     );
 }
 
-function ModuleDetailedStats({ module, mergeEffects }: ModuleDetailedStatsProps) {
+function ModuleDetailedStats({
+    module,
+    mergeEffects,
+    techBonuses,
+    healthTechDelta,
+}: ModuleDetailedStatsProps) {
     const { t } = useTranslation();
     const descriptionKey = getModuleDescription(module);
-    const percentDelta: PercentDeltaFn = (key, base) =>
-        computeMergePercentDelta(base, mergeEffects?.[key]);
+    const percentDelta: PercentDeltaFn = (key, base, negative, minimum) => {
+        const percent = mergeEffects?.[key];
+        if (!negative) return computeMergePercentDelta(base, percent);
+        if (!percent) return null;
+        const value = Math.max(
+            minimum ?? 0,
+            Math.floor(base * (1 - percent / 100)),
+        );
+        const delta = base - value;
+        return delta > 0 ? delta : null;
+    };
     const flatDelta: FlatDeltaFn = (key) => mergeEffects?.[key] || null;
     const artifactArmor = useGameStore((s) => {
         const artifact = s.artifacts.find(
@@ -763,7 +863,20 @@ function ModuleDetailedStats({ module, mergeEffects }: ModuleDetailedStatsProps)
                 <div className="text-[#888] text-xs">{t(descriptionKey)}</div>
             )}
 
-            {renderModuleTypeDetailStats(module, percentDelta, flatDelta, t)}
+            {renderModuleTypeDetailStats(
+                module,
+                percentDelta,
+                flatDelta,
+                t,
+                techBonuses,
+            )}
+
+            {healthTechDelta && (
+                <DetailedStatRow icon="health" label={`${t("module_list.tech_module_health")}:`}>
+                    {module.maxHealth - healthTechDelta}
+                    <TechDelta delta={healthTechDelta} />
+                </DetailedStatRow>
+            )}
 
             {/* Defense/Armor for all modules - for shields use level */}
             {module.defense !== undefined && module.defense > 0 && (
@@ -830,13 +943,24 @@ function ScannerDescription({ scanRange }: { scanRange?: number }) {
     );
 }
 
-function WeaponsDetail({ weapons }: { weapons: (Weapon | null)[] }) {
+function WeaponsDetail({
+    weapons,
+    level,
+    techDamageBonus,
+    techSlots,
+}: {
+    weapons: (Weapon | null)[];
+    level?: number;
+    techDamageBonus: number;
+    techSlots: number;
+}) {
     const { t } = useTranslation();
 
     return (
         <div className="pt-4 border-t border-[#00ff41]">
             <div className="text-accent mb-2">
-                {t("module_list.weapon_slots")}:
+                {t("module_list.weapon_slots")}: {weapons.length - techSlots}
+                <TechDelta delta={techSlots || null} />
             </div>
             {weapons.map((weapon, i) =>
                 weapon ? (
@@ -856,7 +980,14 @@ function WeaponsDetail({ weapons }: { weapons: (Weapon | null)[] }) {
                                 {t(`weapon_types.${weapon.type}`)}
                             </span>
                             <span className="text-destructive">
-                                ({WEAPON_TYPES[weapon.type].damage})
+                                ({Math.floor(WEAPON_TYPES[weapon.type].damage * (1 + ((level ?? 1) - 1) * 0.1))}
+                                <TechDelta
+                                    delta={computeMergePercentDelta(
+                                        Math.floor(WEAPON_TYPES[weapon.type].damage * (1 + ((level ?? 1) - 1) * 0.1)),
+                                        techDamageBonus * 100,
+                                    )}
+                                />
+                                )
                             </span>
                         </div>
                         <div className="text-[10px] text-[#888] mt-1">

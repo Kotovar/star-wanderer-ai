@@ -6,6 +6,12 @@ import {
   getStationRates,
   getStationServiceKeys,
 } from "../src/game/stations/discovery.ts";
+import {
+  getResearchMaterialPurchaseKey,
+  getResearchMaterialStock,
+  RESEARCH_STATION_BUY_PRICES,
+  RESEARCH_STATION_MATERIAL_STOCK,
+} from "../src/game/stations/researchMaterials.ts";
 
 const constsSource = await readFile(
   new URL("../src/game/galaxy/consts.ts", import.meta.url),
@@ -70,5 +76,21 @@ assert.match(migrationsSource, /visitedStationTypes/);
 assert.match(stationPanelSource, /discoverStationType\(stationType\)/);
 assert.doesNotMatch(stationPanelSource, /claimHintOnce/);
 assert.match(catalogSource, /knownStationTypes\.map/);
+
+assert.deepEqual(RESEARCH_STATION_BUY_PRICES, { tech_salvage: 100 });
+assert.equal(
+  getResearchMaterialStock("research-alpha", "tech_salvage", {}),
+  RESEARCH_STATION_MATERIAL_STOCK,
+);
+assert.equal(
+  getResearchMaterialStock("research-alpha", "tech_salvage", {
+    "research-alpha": {
+      [getResearchMaterialPurchaseKey("tech_salvage")]:
+        RESEARCH_STATION_MATERIAL_STOCK,
+    },
+  }),
+  0,
+);
+assert.match(stationPanelSource, /getResearchMaterialStock/);
 
 console.log("Station discovery checks passed");

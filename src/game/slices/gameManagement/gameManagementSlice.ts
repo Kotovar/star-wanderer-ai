@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import { checkGameOver, checkVictory, triggerVictory, restartGame } from "./helpers";
 import {
+    clearAllSaves,
     loadFromLocalStorage,
     saveToLocalStorage,
     saveSlot,
@@ -10,12 +11,14 @@ import {
 import type { ManualSlotId, SaveSlotId } from "@/game/saves/utils";
 import { CREW_TRAITS } from "@/game/constants/traits";
 import { setSoundPlaybackEnabled } from "@/sounds";
+import { resetMetaProgress } from "@/game/metaProgress/store";
 
 export interface GameManagementSlice {
     checkGameOver: () => void;
     checkVictory: () => void;
     triggerVictory: () => void;
     restartGame: (templateId?: string, modifierIds?: string[]) => void;
+    resetProgress: () => void;
     saveGame: () => void;
     loadGame: () => boolean;
     saveToSlot: (slotId: ManualSlotId, name?: string) => void;
@@ -31,6 +34,10 @@ export const createGameManagementSlice = (
     triggerVictory: () => triggerVictory(set, get),
     restartGame: (templateId?: string, modifierIds?: string[]) =>
         restartGame(set, get, templateId, modifierIds),
+    resetProgress: () => {
+        clearAllSaves();
+        resetMetaProgress();
+    },
 
     /** Авто-сохранение каждый ход (сохраняет в auto-слот + legacy ключ) */
     saveGame: () => {

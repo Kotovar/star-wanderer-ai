@@ -100,6 +100,14 @@ if (devAllTechExplorer) {
   assert.ok(explorer);
   assert.equal(devAllTechExplorer.startWithAllTechs, true);
   assert.deepEqual(devAllTechExplorer.modules, explorer.modules);
+  assert.ok(
+    devAllTechExplorer.crew.every((member) => member.level === 3),
+    "dev all-tech explorer crew must start at level 3",
+  );
+  assert.ok(
+    devAllTechExplorer.crew.some((member) => member.race === "xenosymbiont"),
+    "dev all-tech explorer must include a xenosymbiont",
+  );
   assert.match(buildStartingStateSource, /template\.startWithAllTechs/);
   assert.match(buildStartingStateSource, /Object\.values\(RESEARCH_TREE\)/);
 }

@@ -81,6 +81,16 @@ export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
 
     // ─── Racial augmentations ──────────────────────────────────────────────
 
+    adaptive_neural_link: {
+        id: "adaptive_neural_link",
+        name: "Адаптивный нейроузел",
+        description: "Нейросеть синхронизирует действия экипажа. +15% к эффектам задач.",
+        icon: "🧠",
+        forRace: "human",
+        effect: { actionSpeedBonus: 0.15 },
+        installCost: 700,
+    },
+
     overclock_core: {
         id: "overclock_core",
         name: "Разгон ядра",
@@ -98,6 +108,16 @@ export const AUGMENTATIONS: Record<AugmentationId, Augmentation> = {
         icon: "🦠",
         forRace: "xenosymbiont",
         effect: { damageToHp: 0.05 },
+        installCost: 750,
+    },
+
+    combat_targeting_matrix: {
+        id: "combat_targeting_matrix",
+        name: "Боевая матрица наведения",
+        description: "Рептильные рефлексы усиливают боевую телеметрию. +5% к точности, +10% к шансу крита.",
+        icon: "🦎",
+        forRace: "krylorian",
+        effect: { accuracyBonus: 0.05, critBonus: 0.1 },
         installCost: 750,
     },
 

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -12,6 +13,12 @@ const jiti = require("jiti")(scriptPath, {
 const { getScannerInfo } = jiti("../src/game/components/sectorMap/helpers.ts");
 const { ANCIENT_BOSSES } = jiti("../src/game/constants/bosses.ts");
 const { canDetectObject } = jiti("../src/game/slices/scanner/helpers/canDetectObject.ts");
+const { getRegularScannerRange } = jiti(
+  "../src/game/slices/scanner/helpers/getRegularScannerRange.ts",
+);
+const { getModuleTechBonuses } = jiti("../src/game/modules/techBonuses.ts");
+const { getModuleHealthTechDelta } = jiti("../src/game/modules/techBonuses.ts");
+const { loadWithMigrations } = jiti("../src/game/saves/migrations.ts");
 const t = (key) => key;
 
 const infoFor = (loc, scanRange, isRevealed = false) =>
@@ -121,6 +128,106 @@ assert.equal(
   false,
   "диапазон 8 Ока Сингулярности не должен обходить порог аномалии 4 тира",
 );
+
+const scannerResearch = {
+  researchedTechs: ["scanner_mk2", "quantum_scanner", "deep_scan", "ancient_power"],
+};
+const mk1 = { id: 1, type: "scanner", level: 1, scanRange: 3, health: 100 };
+assert.equal(mk1.scanRange, 3, "MK-1 tier uses hardware range");
+assert.equal(
+  getRegularScannerRange([mk1], scannerResearch),
+  12,
+  "MK-1 gets +9 technology range without becoming a higher hardware tier",
+);
+
+const migrated = loadWithMigrations(
+  JSON.stringify({
+    version: 10,
+    state: { ship: { modules: [{ ...mk1, scanRange: 12 }] } },
+  }),
+);
+assert.equal(migrated.ship.modules[0].scanRange, 3, "migration restores MK-1 hardware range");
+assert.equal(
+  getRegularScannerRange(migrated.ship.modules, scannerResearch),
+  12,
+  "migration must not double the scan technology bonus",
+);
+
+assert.equal(
+    getModuleHealthTechDelta(
+        { id: 1, type: "cargo", maxHealth: 110 },
+    { researchedTechs: ["reinforced_hull"] },
+  ),
+  10,
+    "module durability display must show the applied technology delta",
+);
+
+assert.equal(
+  getModuleHealthTechDelta(
+    { id: 1, type: "reactor", maxHealth: 217 },
+    { researchedTechs: ["reinforced_hull", "storm_shields", "ancient_power"] },
+  ),
+  97,
+  "upgraded durability must be displayed from its real base value",
+);
+const durabilityMigrated = loadWithMigrations(
+  JSON.stringify({
+    version: 11,
+    state: {
+      research: {
+        researchedTechs: ["reinforced_hull", "storm_shields", "ancient_power"],
+      },
+      ship: {
+        modules: [
+          { id: 1, type: "reactor", level: 2, maxHealth: 120, health: 120 },
+        ],
+      },
+    },
+  }),
+);
+assert.deepEqual(
+  durabilityMigrated.ship.modules[0],
+  { id: 1, type: "reactor", level: 2, maxHealth: 217, health: 217 },
+  "migration must restore durability bonuses lost by past upgrades",
+);
+assert.equal(
+  (readFileSync(
+    path.join(root, "src/game/slices/shop/helpers/buyUpgrade.ts"),
+    "utf8",
+  ).match(/applyTechBonusesToNewModule\(/g) ?? []).length,
+  2,
+  "both regular and engine upgrades must retain durability bonuses",
+);
+
+const techResearch = {
+  researchedTechs: [
+    "reinforced_hull",
+    "efficient_reactor",
+    "shield_booster",
+    "storm_shields",
+    "targeting_matrix",
+    "modular_arsenal",
+    "scanner_mk2",
+    "cargo_expansion",
+    "ion_drive",
+    "lab_network",
+  ],
+};
+for (const [type, expected] of [
+  ["reactor", ["module_health", "module_power"]],
+  ["shield", ["module_health", "shield_strength", "shield_regen"]],
+  ["weaponbay", ["module_health", "weapon_damage", "weapon_slots"]],
+  ["cargo", ["module_health", "cargo_capacity"]],
+  ["engine", ["module_health", "fuel_efficiency"]],
+  ["lab", ["module_health", "research_speed"]],
+  ["scanner", ["module_health", "scan_range"]],
+]) {
+  assert.deepEqual(
+    getModuleTechBonuses({ type }, techResearch).map((bonus) => bonus.type),
+    expected,
+    `${type} tech bonuses must be shown`,
+  );
+}
 
 const originalRandom = Math.random;
 Math.random = () => {

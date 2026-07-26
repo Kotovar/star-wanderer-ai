@@ -3,6 +3,7 @@ import { normalizeMetaProgress } from "../src/game/metaProgress/storage.ts";
 import {
   getMetaProgressSnapshot,
   recordRunResult,
+  resetMetaProgress,
 } from "../src/game/metaProgress/store.ts";
 import { mergeUnique } from "../src/game/metaProgress/utils.ts";
 import { ACHIEVEMENTS } from "../src/game/metaProgress/achievements.ts";
@@ -361,5 +362,9 @@ assert.equal(afterSecondRun.lastRecordedRunId, "run-B");
   ).length;
   assert.equal(countInList, 1);
 }
+
+// A full progress reset must also clear the in-memory snapshot used by open UI.
+resetMetaProgress();
+assert.deepEqual(getMetaProgressSnapshot(), normalizeMetaProgress({}));
 
 console.log("Meta-progress checks passed");

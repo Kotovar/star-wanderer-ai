@@ -8,6 +8,7 @@ import {
   type SaveSlotId,
   type SaveSlotMeta,
 } from "@/game/saves/utils";
+import { useGameStore } from "@/game/store";
 import { useTranslation } from "@/lib/useTranslation";
 import { AchievementsPanel } from "@/game/components/AchievementsPanel";
 
@@ -32,6 +33,8 @@ export function StartMenu({
 }: StartMenuProps) {
   const { t, currentLanguage, changeLanguage } = useTranslation();
   const [slots, setSlots] = useState<Array<SaveSlotMeta | null>>([]);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const resetProgress = useGameStore((s) => s.resetProgress);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setSlots(SLOT_IDS.map(getSlotMeta)));
@@ -46,6 +49,12 @@ export function StartMenu({
           { dateStyle: "short", timeStyle: "short" },
         )
       : t("start_menu.legacy_save");
+
+  const handleResetProgress = () => {
+    resetProgress();
+    setSlots(SLOT_IDS.map(() => null));
+    setConfirmReset(false);
+  };
 
   return (
     <section className="fixed inset-x-2 bottom-2 z-20 mx-auto flex h-[58dvh] max-w-4xl flex-col overflow-hidden border border-[#00d4ff] bg-[rgba(3,8,14,0.96)] font-['Share_Tech_Mono'] shadow-[0_0_50px_rgba(0,212,255,0.18)] sm:inset-x-6 sm:bottom-6">
@@ -237,6 +246,40 @@ export function StartMenu({
                     }`}
                   />
                 </button>
+              </div>
+
+              <div className="border border-[#ff444455] bg-[rgba(255,68,68,0.03)] p-4">
+                {confirmReset ? (
+                  <>
+                    <p className="text-xs leading-relaxed text-[#ffb0b0]">
+                      {t("save_load.reset_progress_warning")}
+                    </p>
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleResetProgress}
+                        className="flex-1 cursor-pointer border border-[#ff4444] px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#ff4444] hover:bg-[#ff4444] hover:text-[#050810]"
+                      >
+                        {t("save_load.reset_progress_confirm")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmReset(false)}
+                        className="cursor-pointer border border-[#445] px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#889] hover:bg-[#1a2030]"
+                      >
+                        {t("save_load.btn_cancel")}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmReset(true)}
+                    className="w-full cursor-pointer border border-[#ff4444] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#ff4444] hover:bg-[rgba(255,68,68,0.15)]"
+                  >
+                    ⚠️ {t("save_load.reset_progress")}
+                  </button>
+                )}
               </div>
             </div>
           </TabsContent>

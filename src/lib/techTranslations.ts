@@ -50,12 +50,12 @@ const TECH_TRANSLATIONS: Record<
     xenobiology: {
       name: "Ксенобиология",
       description:
-        "Изучение инопланетной биологии позволяет лечить мутации экипажа на медицинских станциях.",
+        "Изучение инопланетной биологии даёт экипажу +10% здоровья и позволяет лечить мутации на медицинских станциях.",
     },
     ion_drive: {
       name: "Ионная пропульсия",
       description:
-        "Ионные двигатели снижают расход топлива на 30% и повышают КПД энергосистем на 10%.",
+        "Ионные двигатели снижают расход топлива на 20% и сокращают межтировой перелёт на 1 ход.",
     },
     shield_booster: {
       name: "Электромагнитные поля",
@@ -90,7 +90,7 @@ const TECH_TRANSLATIONS: Record<
     crew_training: {
       name: "Когнитивные технологии",
       description:
-        "Нейропрограммы и симуляторы ускоряют обучение экипажа, давая +25% к получаемому опыту.",
+        "Нейропрограммы и симуляторы дают +25% к опыту экипажа и открывают смену профессии в человеческой Академии.",
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -124,7 +124,7 @@ const TECH_TRANSLATIONS: Record<
     nanite_hull: {
       name: "Молекулярная сборка",
       description:
-        "Молекулярные машины в обшивке корабля непрерывно регенерируют 5% прочности всех модулей за ход.",
+        "Молекулярные машины восстанавливают 5% прочности модулей за ход и после победы могут вернуть один уничтоженный модуль с 20% прочности.",
     },
     neural_interface: {
       name: "Нейрокибернетика",
@@ -134,7 +134,7 @@ const TECH_TRANSLATIONS: Record<
     genetic_enhancement: {
       name: "Генная инженерия",
       description:
-        "Целевая модификация ДНК укрепляет биологию экипажа: +30% к здоровью и +15% к опыту.",
+        "Целевая модификация ДНК даёт экипажу +30% здоровья и позволяет разово убрать негативную черту в медотсеке.",
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -267,12 +267,12 @@ const TECH_TRANSLATIONS: Record<
     xenobiology: {
       name: "Xenobiology",
       description:
-        "Study of alien biology enables treating crew mutations at medical stations.",
+        "Study of alien biology grants crew +10% health and enables mutation treatment at medical stations.",
     },
     ion_drive: {
       name: "Ion Propulsion",
       description:
-        "Ion engines reduce fuel consumption by 30% and improve power efficiency by 10%.",
+        "Ion engines reduce fuel consumption by 20% and shorten inter-tier travel by one turn.",
     },
     shield_booster: {
       name: "Electromagnetic Fields",
@@ -307,7 +307,7 @@ const TECH_TRANSLATIONS: Record<
     crew_training: {
       name: "Cognitive Technology",
       description:
-        "Neural programs and simulators accelerate crew learning, providing +25% experience gain.",
+        "Neural programs and simulators grant +25% crew experience and unlock profession changes at a Human Academy.",
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -341,7 +341,7 @@ const TECH_TRANSLATIONS: Record<
     nanite_hull: {
       name: "Molecular Assembly",
       description:
-        "Molecular machines in the hull continuously regenerate 5% of all module health per turn.",
+        "Molecular machines restore 5% of module health per turn and can revive one destroyed module at 20% health after a victory.",
     },
     neural_interface: {
       name: "Neurocybernetics",
@@ -351,7 +351,7 @@ const TECH_TRANSLATIONS: Record<
     genetic_enhancement: {
       name: "Genetic Engineering",
       description:
-        "Targeted DNA modification strengthens crew biology: +30% health and +15% experience.",
+        "Targeted DNA modification grants crew +30% health and allows one negative-trait therapy per crew member in a medical bay.",
     },
 
     // ═══════════════════════════════════════════════════════════════

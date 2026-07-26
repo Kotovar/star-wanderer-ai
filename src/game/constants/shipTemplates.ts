@@ -207,6 +207,20 @@ const DEV_ALL_TECH_EXPLORER: ShipTemplate = {
   nameKey: "ship_templates.dev_all_tech_explorer.name",
   descriptionKey: "ship_templates.dev_all_tech_explorer.description",
   icon: "🧪",
+  crew: [
+    ...STANDARD_SHIP_TEMPLATES[0].crew.map((member) => ({
+      ...member,
+      level: 3,
+    })),
+    {
+      id: 4,
+      name: "Ксено-испытатель",
+      profession: "medic",
+      moduleId: T_EXPLORER + 4,
+      level: 3,
+      race: "xenosymbiont",
+    },
+  ],
   startWithAllTechs: true,
 };
 

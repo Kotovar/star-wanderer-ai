@@ -388,16 +388,6 @@ export const applyModuleBonus = (
                 break;
             }
 
-            case "scan_range": {
-                if (m.type === "scanner") {
-                    newModule = {
-                        ...newModule,
-                        scanRange: (m.scanRange || 0) + bonusValue,
-                    };
-                }
-                break;
-            }
-
             case "cargo_capacity": {
                 if (m.type === "cargo") {
                     newModule = {
@@ -429,8 +419,8 @@ export const applyModuleBonus = (
 
 /**
  * Применяет одноразовые бонусы изученных технологий к НОВОМУ модулю.
- * module_health и scan_range модифицируют модуль при завершении исследования,
- * поэтому купленные позже модули должны получать их при создании
+ * module_health модифицирует модуль при завершении исследования,
+ * поэтому купленные позже модули должны получать его при создании
  * (weapon_slots обрабатывается отдельно через extraWeaponSlots).
  *
  * @param module - Только что созданный модуль
@@ -449,7 +439,7 @@ export const applyTechBonusesToNewModule = (
 
         for (const bonus of tech.bonuses) {
             if (bonus.value <= 0) continue;
-            if (bonus.type === "module_health" || bonus.type === "scan_range") {
+            if (bonus.type === "module_health") {
                 [result] = applyModuleBonus([result], bonus.type, bonus.value);
             }
         }
@@ -573,11 +563,6 @@ export const applyTechnologyBonuses = (
             }
 
             case "scan_range": {
-                newModules = applyModuleBonus(
-                    newModules,
-                    bonus.type,
-                    bonus.value,
-                );
                 appliedBonuses.scanRangeBonus = true;
                 break;
             }

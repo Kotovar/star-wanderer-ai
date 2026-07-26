@@ -461,38 +461,6 @@ export function CrewList() {
                                                 </div>
                                             )}
 
-                                        {selectedCrew.augmentation &&
-                                            (() => {
-                                                const aug =
-                                                    AUGMENTATIONS[
-                                                        selectedCrew.augmentation
-                                                    ];
-                                                return aug ? (
-                                                    <div className="p-2 border border-[#9933ff55] bg-[rgba(153,51,255,0.05)] rounded">
-                                                        <div className="text-[#ffb000] text-xs mb-1">
-                                                            {t(
-                                                                "crew_member.augmentation",
-                                                            )}
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-lg">
-                                                                {aug.icon}
-                                                            </span>
-                                                            <div>
-                                                                <div className="font-bold text-[#9933ff] text-xs">
-                                                                    {aug.name}
-                                                                </div>
-                                                                <div className="text-[#888] text-[10px]">
-                                                                    {
-                                                                        aug.description
-                                                                    }
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ) : null;
-                                            })()}
-
                                         {/* Fire crew button */}
                                         <div className="border-t border-[#ff0040] pt-4 mt-4">
                                             <Button
@@ -566,6 +534,37 @@ export function CrewList() {
                                         </div>
                                     </TabsContent>
                                     <TabsContent value="bonuses" className="mt-2 space-y-4 text-sm leading-relaxed overflow-y-auto pr-1">
+                                        {selectedCrew.augmentation &&
+                                            (() => {
+                                                const aug =
+                                                    AUGMENTATIONS[
+                                                        selectedCrew.augmentation
+                                                    ];
+                                                return aug ? (
+                                                    <div className="p-2 border border-[#9933ff55] bg-[rgba(153,51,255,0.05)] rounded">
+                                                        <div className="text-[#ffb000] text-xs mb-1">
+                                                            {t(
+                                                                "crew_member.augmentation",
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-lg">
+                                                                {aug.icon}
+                                                            </span>
+                                                            <div>
+                                                                <div className="font-bold text-[#9933ff] text-xs">
+                                                                    {aug.name}
+                                                                </div>
+                                                                <div className="text-[#888] text-[10px]">
+                                                                    {
+                                                                        aug.description
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : null;
+                                            })()}
                                         {race && (
                                             <div>
                                                 <span className="text-[#ffb000]">

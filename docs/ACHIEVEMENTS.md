@@ -8,6 +8,8 @@
 
 Мета-прогресс полностью отделён от `GameState`: `restartGame` (`src/game/slices/gameManagement/helpers/restartGame.ts`) пересоздаёт весь игровой стейт при каждом рестарте, поэтому карьерные счётчики хранятся в собственном модуле `src/game/metaProgress/` со своим ключом localStorage — `star-wanderer-meta-progress`, версионированная обёртка `{ version, state }` по образцу `src/game/saves/migrations.ts`.
 
+Кнопка «Сбросить прогресс» в настройках очищает мета-прогресс и все сохранения; язык и настройки интерфейса остаются на месте.
+
 - `types.ts` — `MetaProgressState` (карьерные счётчики и разблокировки) и `RunSummary` (снимок одного забега).
 - `storage.ts` — `loadMetaProgress`/`saveMetaProgress` + `normalizeMetaProgress`, которая на любом мусоре/повреждённых данных подставляет дефолты, убирает дубликаты и отфильтровывает id, которых больше нет в текущих таблицах ачивок/кораблей.
 - `store.ts` — модульный снэпшот + pub/sub (`subscribeMetaProgress`/`getMetaProgressSnapshot`) и единственная точка записи `recordRunResult`.

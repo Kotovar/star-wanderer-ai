@@ -86,7 +86,7 @@
         "power_bus": "Power bus",
         "circuits_online": "circuits online",
         "confirm_restart_title": "Restart?",
-        "confirm_restart_desc": "Are you sure you want to restart? All progress will be lost.",
+        "confirm_restart_desc": "The current expedition will be replaced. Manual saves, achievements, and unlocks will be kept.",
         "cancel": "Cancel",
         "confirm": "Confirm"
     },
@@ -1106,13 +1106,14 @@
         }
     },
     "effects": {
-        "title": "▸ Active Effects",
+        "title": "▸ Effects",
         "no_effects": "No active effects",
         "no_matches": "No effects match this filter",
         "close": "CLOSE",
         "cancel": "Cancel",
-        "description": "Ship conditions from planets, crew, combat, anomalies, and events",
+        "description": "Temporary ship conditions and permanent unique technologies",
         "empty_hint": "Assign crew, win battles, investigate anomalies, and use specialist event choices to gain effects.",
+        "no_permanent": "Permanent unique effects will appear after the relevant research is complete.",
         "turns": "turn(s)",
         "permanent": "permanent",
         "level_short": "Lv",
@@ -1129,13 +1130,19 @@
             "negative": "Penalties",
             "expiring": "Expiring"
         },
+        "tabs": {
+            "label": "Effect sections",
+            "active": "Active",
+            "permanent": "Permanent"
+        },
         "sources": {
             "planet": "Planet",
             "crew": "Crew tasks",
             "combat": "Combat",
             "anomaly": "Anomaly",
             "event": "Event decision",
-            "station": "Station"
+            "station": "Station",
+            "research": "Research"
         },
         "items": {
             "research_boost": {
@@ -1630,9 +1637,26 @@
         "high_risk": "high event risk",
         "low_risk": "low event risk"
     },
+    "augmentations": {
+        "neural_reflex": { "name": "Neural Reflex", "description": "A neural implant shortens the pilot's reaction time. +10% ship evasion." },
+        "nano_hands": { "name": "Nano Hands", "description": "Nanobots in the engineer's hands speed up module repairs. +15% repair efficiency." },
+        "accelerated_regen": { "name": "Accelerated Regeneration", "description": "A bioimplant accelerates tissue regeneration. Medic healing is 15% more effective." },
+        "optical_implant": { "name": "Optical Implant", "description": "Enhanced vision lets a scout make 4 sorties per turn instead of 3." },
+        "memory_core": { "name": "Memory Core", "description": "Synthetic memory storage speeds up data processing. +20% research speed." },
+        "targeting_eye": { "name": "Targeting Eye", "description": "An optical sight integrated into the retina. +10% accuracy, +5% critical chance." },
+        "adaptive_neural_link": { "name": "Adaptive Neural Link", "description": "A neural network synchronizes crew actions. +15% task effects." },
+        "overclock_core": { "name": "Overclock Core", "description": "Processor limiters removed. +50% task effects, but 5% AI glitch chance per turn." },
+        "symbiotic_armor": { "name": "Symbiotic Armor", "description": "The organism converts 5% of damage dealt to enemies into its own HP." },
+        "combat_targeting_matrix": { "name": "Combat Targeting Matrix", "description": "Reptilian reflexes enhance combat telemetry. +5% accuracy, +10% critical chance." },
+        "phase_step": { "name": "Phase Step", "description": "Partial body phase shift. 50% chance to avoid module-hit damage entirely." },
+        "prismatic_lens": { "name": "Prismatic Lens", "description": "A crystal lens focuses laser weapons. +5% laser weapon damage." }
+    },
     "services": {
         "emergency_fuel": "Emergency reserve +{{amount}}",
         "emergency_fuel_log": "The station issued an emergency reserve: +{{amount}} fuel",
+        "research_buy_title": "Research material purchase",
+        "research_buy_desc": "Limited stock of common research materials",
+        "research_stock": "Stock: {{stock}}",
         "tab_title": "SERVICES",
         "refuel_title": "⛽ Refuel",
         "refuel_fuel_label": "Fuel: {{fuel}}/{{maxFuel}}",
@@ -1674,6 +1698,9 @@
         "genetic_therapy_button": "THERAPY",
         "aug_title": "🦾 Cybernetic Augmentations",
         "aug_subtitle": "Max 1 augmentation per crew member. Replacing destroys the old one.",
+        "aug_catalog_race": "Station racial implant: {{race}}",
+        "aug_catalog_no_race": "Racial implant unavailable: this legacy station has no dominant race.",
+        "aug_level_required": "Level 3 required.",
         "aug_none": "no augmentation",
         "aug_current": "Current:",
         "aug_remove": "Remove",
@@ -2116,14 +2143,14 @@
     "planet": {
         "scout_surface": "Scout Surface",
         "scout_requires_scout": "Scouting requires a crew member with the Scout profession.",
-        "drill_title": "⛏️ Planetary Drill",
+        "drill_title": "Planetary Drill",
         "drill_desc": "Resource yield depends on planet type. One-time only.",
         "drill_button": "Start Drilling",
         "drill_done": "Planet already drilled.",
         "drill_result": "Drilling result:",
         "drill_requires_drill": "Requires an active drill module.",
         "drill_requires_scientist": "Requires a scientist in the crew.",
-        "analysis_title": "🌫️ Atmospheric Analysis",
+        "analysis_title": "Atmospheric Analysis",
         "analysis_desc": "A scientist will collect research samples. One-time only.",
         "analysis_button": "Conduct Analysis",
         "analysis_done": "Atmosphere already analyzed.",
@@ -2342,10 +2369,12 @@
         "info_title": "Ship module information",
         "damage_bonus": "Damage bonus",
         "crew_slots": "Crew slots",
-        "repair_per_turn": "🔧 Repair per turn",
+        "repair_per_turn": "Repair per turn",
         "modules": "modules",
         "xenosymbiont_merged": "Merged with xenosymbiont",
-        "xenosymbiont_no_effect": "This module type does not support merging"
+        "xenosymbiont_no_effect": "This module type does not support merging",
+        "tech_module_health": "Durability",
+        "tech_shield_regen": "Shield regeneration"
     },
     "game_log": {
         "turn_label": "TURN"
@@ -3598,7 +3627,10 @@
         "btn_load": "📂 Load",
         "btn_overwrite": "Overwrite",
         "btn_cancel": "Cancel",
-        "btn_confirm_load": "Confirm load"
+        "btn_confirm_load": "Confirm load",
+        "reset_progress": "Reset progress",
+        "reset_progress_warning": "This will delete the current expedition, all manual saves, achievements, and unlocks. This cannot be undone.",
+        "reset_progress_confirm": "Reset everything"
     },
     "new_game_setup": {
         "title": "New Game",
@@ -4460,6 +4492,9 @@
         "augmentationsSlice_9": "Crew member not found",
         "augmentationsSlice_10": "This crew member has no augmentation",
         "augmentationsSlice_11": "🔧 {{crewMember_name}}: augmentation \"{{augName}}\" removed",
+        "augmentationsSlice_12": "Augmentations can only be installed at a medical station",
+        "augmentationsSlice_13": "This augmentation is not in the station catalog",
+        "augmentationsSlice_14": "A level 3 crew member is required to install an augmentation",
         "combatSlice_1": "☠️ You attacked a peaceful ship! Race reputation: -20",
         "combatSlice_2": "⚔️ Station security attacks the intruders!",
         "combatSlice_3": "⚔️ Planetary security attacks the intruders!",

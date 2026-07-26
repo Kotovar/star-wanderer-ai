@@ -187,6 +187,7 @@ function SlotCard({
 export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, onRestart }: Props) {
   const saveToSlot = useGameStore((s) => s.saveToSlot);
   const loadFromSlot = useGameStore((s) => s.loadFromSlot);
+  const resetProgress = useGameStore((s) => s.resetProgress);
   const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
   const soundEnabled = useGameStore((s) => s.settings.soundEnabled);
   const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
@@ -206,6 +207,7 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
   }));
   const [confirmOverwrite, setConfirmOverwrite] = useState<SaveSlotId | null>(null);
   const [loadConfirm, setLoadConfirm] = useState<SaveSlotId | null>(null);
+  const [confirmReset, setConfirmReset] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -233,6 +235,12 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
     loadFromSlot(slotId);
     setLoadConfirm(null);
     onClose();
+  };
+
+  const handleResetProgress = () => {
+    resetProgress();
+    onClose();
+    window.dispatchEvent(new CustomEvent("sw:showTitleSetup"));
   };
 
   const MANUAL_SLOTS: { id: ManualSlotId; label: string }[] = [
@@ -382,6 +390,37 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
                 >
                   🔄 {t("game.restart")}
                 </button>
+                {confirmReset ? (
+                  <div className="col-span-2 border border-[#ff4444] bg-[rgba(255,68,68,0.08)] p-3">
+                    <p className="text-xs leading-relaxed text-[#ffb0b0]">
+                      {t("save_load.reset_progress_warning")}
+                    </p>
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleResetProgress}
+                        className="flex-1 cursor-pointer border border-[#ff4444] px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#ff4444] hover:bg-[#ff4444] hover:text-[#050810]"
+                      >
+                        {t("save_load.reset_progress_confirm")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmReset(false)}
+                        className="cursor-pointer border border-[#445] px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#889] hover:bg-[#1a2030]"
+                      >
+                        {t("save_load.btn_cancel")}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmReset(true)}
+                    className="col-span-2 cursor-pointer border border-[#ff4444] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#ff4444] hover:bg-[rgba(255,68,68,0.15)]"
+                  >
+                    ⚠️ {t("save_load.reset_progress")}
+                  </button>
+                )}
               </div>
             </>
           )}

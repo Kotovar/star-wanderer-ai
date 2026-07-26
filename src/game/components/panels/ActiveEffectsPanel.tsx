@@ -3,12 +3,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getEffectDescription } from "@/game/artifacts";
+import { RESEARCH_TREE } from "@/game/constants/research";
 import { RACES } from "@/game/constants/races";
 import { useGameStore } from "@/game/store";
 import type { ActiveEffect, EffectSource } from "@/game/types";
+import { getTechTranslation } from "@/lib/techTranslations";
 import { useTranslation } from "@/lib/useTranslation";
 
 type EffectFilter = "all" | "positive" | "negative" | "expiring";
+type EffectTab = "active" | "permanent";
 
 const FILTERS: EffectFilter[] = ["all", "positive", "negative", "expiring"];
 
@@ -37,10 +40,15 @@ const getSource = (effect: ActiveEffect): EffectSource =>
   effect.source ?? "planet";
 
 export function ActiveEffectsPanel() {
+  const [tab, setTab] = useState<EffectTab>("active");
   const [filter, setFilter] = useState<EffectFilter>("all");
   const activeEffects = useGameStore((state) => state.activeEffects);
+  const researchedTechs = useGameStore((state) => state.research.researchedTechs);
   const showSectorMap = useGameStore((state) => state.showSectorMap);
-  const { t } = useTranslation();
+  const { t, currentLanguage } = useTranslation();
+  const permanentTechs = researchedTechs
+    .map((techId) => RESEARCH_TREE[techId])
+    .filter((tech) => tech.bonuses.some((bonus) => bonus.type === "special_ability"));
   const positiveCount = activeEffects.filter(
     (effect) => (effect.polarity ?? "positive") !== "negative",
   ).length;
@@ -78,6 +86,25 @@ export function ActiveEffectsPanel() {
         </Button>
       </div>
 
+      <div className="flex gap-1" aria-label={t("effects.tabs.label")}>
+        {(["active", "permanent"] as const).map((tabId) => (
+          <button
+            key={tabId}
+            type="button"
+            onClick={() => setTab(tabId)}
+            className={`cursor-pointer border px-2 py-1 text-[10px] uppercase tracking-wider transition-colors ${
+              tab === tabId
+                ? "border-[#b46cff] bg-[rgba(153,51,255,0.16)] text-[#d9b6ff]"
+                : "border-[#49305f] text-[#78678a] hover:text-[#b46cff]"
+            }`}
+          >
+            {t(`effects.tabs.${tabId}`)}
+          </button>
+        ))}
+      </div>
+
+      {tab === "active" && (
+        <>
       <div className="grid grid-cols-3 gap-2">
         <div className="border border-[#00ff4144] bg-[rgba(0,255,65,0.04)] p-2">
           <div className="text-[9px] uppercase tracking-[0.16em] text-[#65806b]">
@@ -239,6 +266,52 @@ export function ActiveEffectsPanel() {
             );
           })}
         </div>
+      )}
+        </>
+      )}
+
+      {tab === "permanent" && (
+        permanentTechs.length === 0 ? (
+          <div className="grid min-h-52 place-items-center border border-dashed border-[#9933ff55] bg-[rgba(153,51,255,0.025)] p-6 text-center text-xs text-[#788278]">
+            {t("effects.no_permanent")}
+          </div>
+        ) : (
+          <div className="grid gap-3 lg:grid-cols-2">
+            {permanentTechs.map((tech) => {
+              const translation = getTechTranslation(tech.id, currentLanguage);
+              return (
+                <article
+                  key={tech.id}
+                  className="relative overflow-hidden border border-[#00d4ff66] bg-[linear-gradient(145deg,rgba(0,212,255,0.08),rgba(3,9,14,0.82))] p-3"
+                >
+                  <div
+                    className="absolute inset-y-0 left-0 w-px"
+                    style={{ backgroundColor: tech.color }}
+                  />
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">{tech.icon}</span>
+                      <div>
+                        <div className="text-sm font-bold" style={{ color: tech.color }}>
+                          {translation.name}
+                        </div>
+                        <div className="text-[10px] uppercase tracking-wider text-[#788278]">
+                          ⚙ {t("effects.sources.research")}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="shrink-0 border border-[#00ff4166] bg-[rgba(0,255,65,0.08)] px-2 py-1 text-xs font-bold text-[#00ff41]">
+                      ∞ {t("effects.permanent")}
+                    </div>
+                  </div>
+                  <div className="mt-3 text-xs leading-relaxed text-[#8d998d]">
+                    {translation.description}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )
       )}
     </div>
   );

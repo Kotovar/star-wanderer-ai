@@ -219,7 +219,7 @@ export const TIER3_TECHS: Partial<Record<TechnologyId, Technology>> = {
         id: "genetic_enhancement",
         name: "Генетическое улучшение",
         description:
-            "Биологические улучшения увеличивают здоровье экипажа на 30%.",
+            "Биологические улучшения увеличивают здоровье экипажа на 30% и позволяют разово убрать негативную черту в медотсеке.",
         tier: 3,
         category: "biology",
         prerequisites: ["xenobiology"],
@@ -231,6 +231,12 @@ export const TIER3_TECHS: Partial<Record<TechnologyId, Technology>> = {
                 type: "crew_health",
                 value: 0.3,
                 description: "+30% к здоровью экипажа",
+            },
+            {
+                type: "special_ability",
+                value: 1,
+                description:
+                    "Разовая терапия негативной черты для каждого члена экипажа в медотсеке",
             },
         ],
         icon: "🧬",
@@ -270,7 +276,7 @@ export const TIER3_TECHS: Partial<Record<TechnologyId, Technology>> = {
         id: "nanite_hull",
         name: "Нанитовая обшивка",
         description:
-            "Наниты в корпусе восстанавливают 5% здоровья всех модулей каждый ход.",
+            "Наниты в корпусе восстанавливают 5% здоровья всех модулей каждый ход и после победы могут вернуть один уничтоженный модуль с 20% прочности.",
         tier: 3,
         category: "engineering",
         prerequisites: ["shield_booster", "cargo_expansion"],
@@ -287,6 +293,12 @@ export const TIER3_TECHS: Partial<Record<TechnologyId, Technology>> = {
                 type: "nanite_repair",
                 value: 5,
                 description: "+5% ремонт модулей за ход",
+            },
+            {
+                type: "special_ability",
+                value: 0.2,
+                description:
+                    "После победы восстанавливает один уничтоженный модуль до 20% прочности",
             },
         ],
         icon: "🤖",

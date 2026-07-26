@@ -16,8 +16,10 @@ export type ProfessionAugmentationId =
  * Racial augmentation IDs
  */
 export type RacialAugmentationId =
+    | "adaptive_neural_link" // Human
     | "overclock_core"      // Synthetic
     | "symbiotic_armor"     // Xenosymbiont
+    | "combat_targeting_matrix" // Krylorian
     | "phase_step"          // Voidborn
     | "prismatic_lens";     // Crystalline
 

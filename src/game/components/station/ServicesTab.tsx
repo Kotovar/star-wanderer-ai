@@ -12,6 +12,7 @@ import { WEAPON_TYPES } from "@/game/constants/weapons";
 import { WEAPON_SCRAP_VALUES } from "@/game/slices/services/helpers/removeWeapon";
 import { SectionPanel } from "../SectionPanel";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import { getMedicalAugmentationCatalog } from "@/game/stations/medicalAugmentations";
 import type { AugmentationId } from "@/game/types/augmentations";
 import type { Profession } from "@/game/types/crew";
 import type { RaceId } from "@/game/types/races";
@@ -20,6 +21,7 @@ import {
     RESEARCH_BOOST_COST,
     RESEARCH_BOOST_DURATION,
 } from "@/game/slices/research/methods/activateResearchBoost";
+import { RESEARCH_STATION_BUY_PRICES } from "@/game/stations/researchMaterials";
 
 /**
  * Calculates scrap value for a module (70% of base price)
@@ -110,6 +112,7 @@ interface ServicesTabProps {
         moduleId: number;
         profession?: Profession;
         race?: RaceId;
+        level?: number;
         augmentation?: AugmentationId | null;
     }>;
     // Dynamic service costs
@@ -125,6 +128,8 @@ interface ServicesTabProps {
     allowsMutationCure: boolean;
     allowsGeneticTherapy: boolean;
     allowsAugmentation: boolean;
+    stationId: string;
+    dominantRace?: RaceId;
     crewWithMutations: MutationCrewMember[];
     crewWithNegativeTraits: NegativeTraitCrewMember[];
     onInstallAugmentation: (crewId: number, augId: AugmentationId) => void;
@@ -133,6 +138,7 @@ interface ServicesTabProps {
     onBuyProbe: (count: number) => void;
     isResearchStation?: boolean;
     researchResources?: Partial<Record<ResearchResourceType, number>>;
+    researchMaterialStock?: Partial<Record<ResearchResourceType, number>>;
     onSellResearchResource?: (type: ResearchResourceType, qty: number) => void;
     onBuyResearchResource?: (type: ResearchResourceType, qty: number) => void;
     researchBoostTurnsRemaining?: number;
@@ -169,6 +175,8 @@ export function ServicesTab({
     allowsMutationCure,
     allowsGeneticTherapy,
     allowsAugmentation,
+    stationId,
+    dominantRace,
     crewWithMutations,
     crewWithNegativeTraits,
     onInstallAugmentation,
@@ -177,6 +185,7 @@ export function ServicesTab({
     onBuyProbe,
     isResearchStation,
     researchResources,
+    researchMaterialStock,
     onSellResearchResource,
     onBuyResearchResource,
     researchBoostTurnsRemaining,
@@ -238,6 +247,8 @@ export function ServicesTab({
                 <AugmentationSection
                     crew={crew}
                     credits={credits}
+                    stationId={stationId}
+                    dominantRace={dominantRace}
                     onInstall={onInstallAugmentation}
                     onRemove={onRemoveAugmentation}
                 />
@@ -259,6 +270,7 @@ export function ServicesTab({
             {isResearchStation && onBuyResearchResource && (
                 <BuyResearchSection
                     credits={credits}
+                    stock={researchMaterialStock ?? {}}
                     onBuy={onBuyResearchResource}
                 />
             )}
@@ -1000,17 +1012,21 @@ function InstallWeaponSection({
 function AugmentationSection({
     crew,
     credits,
+    stationId,
+    dominantRace,
     onInstall,
     onRemove,
 }: {
     crew: ServicesTabProps["crew"];
     credits: number;
+    stationId: string;
+    dominantRace?: RaceId;
     onInstall: (crewId: number, augId: AugmentationId) => void;
     onRemove: (crewId: number) => void;
 }) {
     const { t } = useTranslation();
     const [selectedCrew, setSelectedCrew] = useState<number | null>(null);
-    const allAugmentations = Object.values(AUGMENTATIONS);
+    const catalog = getMedicalAugmentationCatalog(stationId, dominantRace);
 
     return (
         <SectionPanel tone="cyan">
@@ -1020,13 +1036,20 @@ function AugmentationSection({
             <div className="text-xs text-[#888] mb-3">
                 {t("services.aug_subtitle")}
             </div>
+            <div className="text-[10px] text-[#00d4ff] mb-3">
+                {dominantRace
+                    ? t("services.aug_catalog_race", {
+                          race: t(`races.${dominantRace}.name`),
+                      })
+                    : t("services.aug_catalog_no_race")}
+            </div>
             <div className="space-y-2 max-h-72 overflow-y-auto">
                 {crew.map((member) => {
                     const currentAug = member.augmentation
                         ? AUGMENTATIONS[member.augmentation]
                         : null;
                     const isExpanded = selectedCrew === member.id;
-                    const available = allAugmentations.filter((aug) => {
+                    const available = catalog.map((id) => AUGMENTATIONS[id]).filter((aug) => {
                         if (
                             aug.forProfession &&
                             aug.forProfession !== member.profession
@@ -1036,6 +1059,7 @@ function AugmentationSection({
                             return false;
                         return true;
                     });
+                    const meetsLevel = (member.level ?? 1) >= 3;
                     return (
                         <div
                             key={member.id}
@@ -1055,7 +1079,8 @@ function AugmentationSection({
                                     </span>
                                     {currentAug ? (
                                         <span className="text-[#ffb000]">
-                                            {currentAug.icon} {currentAug.name}
+                                            {currentAug.icon}{" "}
+                                            {t(`augmentations.${currentAug.id}.name`)}
                                         </span>
                                     ) : (
                                         <span className="text-[#555]">
@@ -1074,7 +1099,7 @@ function AugmentationSection({
                                             <span className="text-[#ffb000]">
                                                 {currentAug.icon}{" "}
                                                 {t("services.aug_current")}{" "}
-                                                {currentAug.name}
+                                                {t(`augmentations.${currentAug.id}.name`)}
                                             </span>
                                             <Button
                                                 onClick={() =>
@@ -1084,6 +1109,11 @@ function AugmentationSection({
                                             >
                                                 {t("services.aug_remove")}
                                             </Button>
+                                        </div>
+                                    )}
+                                    {!meetsLevel && (
+                                        <div className="text-[#ffb000] text-[10px]">
+                                            {t("services.aug_level_required")}
                                         </div>
                                     )}
                                     {available.length === 0 && (
@@ -1106,10 +1136,10 @@ function AugmentationSection({
                                                 </span>
                                                 <div className="flex-1">
                                                     <div className="font-bold text-[#00d4ff]">
-                                                        {aug.name}
+                                                        {t(`augmentations.${aug.id}.name`)}
                                                     </div>
                                                     <div className="text-[#888] text-[10px]">
-                                                        {aug.description}
+                                                        {t(`augmentations.${aug.id}.description`)}
                                                     </div>
                                                     <div
                                                         className={`mt-0.5 ${canAfford ? "text-[#ffb000]" : "text-red-400"}`}
@@ -1119,7 +1149,7 @@ function AugmentationSection({
                                                 </div>
                                                 {!isCurrent && (
                                                     <Button
-                                                        disabled={!canAfford}
+                                                        disabled={!canAfford || !meetsLevel}
                                                         onClick={() => {
                                                             onInstall(
                                                                 member.id,
@@ -1157,37 +1187,33 @@ const RESEARCH_SELL_PRICES: Record<ResearchResourceType, number> = {
     quantum_crystals: 500,
 };
 
-/** Common-ресурсы, которые research-станции продают (цена = ×2 от скупки) */
-export const RESEARCH_BUY_PRICES: Partial<
-    Record<ResearchResourceType, number>
-> = {
-    tech_salvage: RESEARCH_SELL_PRICES.tech_salvage * 2,
-    rare_minerals: RESEARCH_SELL_PRICES.rare_minerals * 2,
-};
-
 function BuyResearchSection({
     credits,
+    stock,
     onBuy,
 }: {
     credits: number;
+    stock: Partial<Record<ResearchResourceType, number>>;
     onBuy: (type: ResearchResourceType, qty: number) => void;
 }) {
+    const { t } = useTranslation();
     const buyTypes = Object.keys(
-        RESEARCH_BUY_PRICES,
+        RESEARCH_STATION_BUY_PRICES,
     ) as ResearchResourceType[];
 
     return (
         <SectionPanel>
             <div className="text-[#00ff41] font-bold mb-1">
-                🔬 Закупка исследовательских материалов
+                🔬 {t("services.research_buy_title")}
             </div>
             <div className="text-xs text-[#888] mb-3">
-                Станция продаёт распространённые научные материалы
+                {t("services.research_buy_desc")}
             </div>
             <div className="flex flex-col gap-2">
                 {buyTypes.map((type) => {
                     const res = RESEARCH_RESOURCES[type];
-                    const price = RESEARCH_BUY_PRICES[type] ?? 0;
+                    const price = RESEARCH_STATION_BUY_PRICES[type] ?? 0;
+                    const available = stock[type] ?? 0;
                     return (
                         <div
                             key={type}
@@ -1200,20 +1226,25 @@ function BuyResearchSection({
                                 <span className="text-sm text-[#ccc]">
                                     {res.name}
                                 </span>
+                                <span className="ml-2 text-xs text-[#888]">
+                                    {t("services.research_stock", {
+                                        stock: available,
+                                    })}
+                                </span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="text-xs text-[#ffb000]">
                                     {price}₢/ед.
                                 </span>
                                 <Button
-                                    disabled={credits < price}
+                                    disabled={credits < price || available < 1}
                                     onClick={() => onBuy(type, 1)}
                                     className="cursor-pointer bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] px-2 py-1 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     +1
                                 </Button>
                                 <Button
-                                    disabled={credits < price * 5}
+                                    disabled={credits < price * 5 || available < 5}
                                     onClick={() => onBuy(type, 5)}
                                     className="cursor-pointer bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase text-[9px] px-2 py-1 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
                                 >

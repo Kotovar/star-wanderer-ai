@@ -55,6 +55,11 @@ export const TIER2_TECHS: Partial<Record<TechnologyId, Technology>> = {
         value: 0.2,
         description: "-20% расход топлива",
       },
+      {
+        type: "special_ability",
+        value: 1,
+        description: "Сокращает межтировой перелёт на 1 ход",
+      },
     ],
     icon: "🚀",
     color: "#ffb000",
@@ -230,7 +235,7 @@ export const TIER2_TECHS: Partial<Record<TechnologyId, Technology>> = {
     id: "crew_training",
     name: "Программа подготовки",
     description:
-      "Улучшенное обучение даёт экипажу +25% к получаемому опыту.",
+      "Улучшенное обучение даёт экипажу +25% к получаемому опыту и открывает смену профессии в человеческой Академии.",
     tier: 2,
     category: "biology",
     prerequisites: ["medbay_upgrade"],
@@ -242,6 +247,11 @@ export const TIER2_TECHS: Partial<Record<TechnologyId, Technology>> = {
         type: "crew_exp",
         value: 0.25,
         description: "+25% к опыту экипажа",
+      },
+      {
+        type: "special_ability",
+        value: 1,
+        description: "Разблокирует смену профессии в человеческой Академии",
       },
     ],
     icon: "🎓",
@@ -323,6 +333,11 @@ export const TIER2_TECHS: Partial<Record<TechnologyId, Technology>> = {
     credits: 700,
     scienceCost: 300,
     bonuses: [
+      {
+        type: "special_ability",
+        value: 1,
+        description: "Разблокирует экспедиции на полностью разведанных пустых планетах",
+      },
       {
         type: "expedition_ap",
         value: 2,

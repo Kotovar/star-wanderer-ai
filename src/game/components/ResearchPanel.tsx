@@ -71,6 +71,7 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
   planetary_drill: [2, 10.5], // cargo_expansion → here
   neural_interface: [2, 11.5],
   genetic_enhancement: [2, 12.5],
+  cybernetic_augmentation: [2, 13.5],
 
   // T4 — col 3
 
@@ -78,7 +79,6 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
   modular_arsenal: [3, 4], // antimatter_weapons + quantum_torpedo → here
   artifact_mastery: [3, 8],
   stellar_genetics: [3, 11.5],
-  cybernetic_augmentation: [3, 12.5],
   // T5 — col 4 / 5
   ancient_power: [4, 2.2],
   warp_drive: [4, 3.4],

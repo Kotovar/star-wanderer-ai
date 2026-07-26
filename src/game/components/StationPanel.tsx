@@ -29,7 +29,7 @@ import type {
 import { ShopTab } from "./station/ShopTab";
 import { TradeTab } from "./station/TradeTab";
 import { CrewTab } from "./station/CrewTab";
-import { ServicesTab, RESEARCH_BUY_PRICES } from "./station/ServicesTab";
+import { ServicesTab } from "./station/ServicesTab";
 import { CraftingTab } from "./station/CraftingTab";
 import { ModuleUpgradeModal } from "./station/ModuleUpgradeModal";
 import { Button } from "@/components/ui/button";
@@ -69,6 +69,12 @@ import {
     getStationServiceKeys,
     STATION_DISCOVERY_ICONS,
 } from "@/game/stations/discovery";
+import {
+    getResearchMaterialPurchaseKey,
+    getResearchMaterialStock,
+    getResearchMaterialStocks,
+    RESEARCH_STATION_BUY_PRICES,
+} from "@/game/stations/researchMaterials";
 
 const STATION_BACKGROUNDS = {
     trade: "/assets/station-backgrounds/trade-hub.webp",
@@ -309,7 +315,7 @@ export function StationPanel() {
         useState<StationName | null>(null);
     const pendingStationTypeRef = useRef<StationName | null>(null);
 
-    const stationId = currentLocation?.stationId || "";
+    const stationId = currentLocation?.stationId || currentLocation?.id || "";
     const sectorTier = currentSector?.tier || 1;
     const stationType = currentLocation?.stationType ?? null;
     const stationConfig = currentLocation?.stationConfig;
@@ -326,7 +332,9 @@ export function StationPanel() {
     const allowsGeneticTherapy =
         allowsCrewHeal && researchedTechs.includes("genetic_enhancement");
     const allowsAugmentation =
-        allowsCrewHeal && researchedTechs.includes("cybernetic_augmentation");
+        stationType === "medical" &&
+        allowsCrewHeal &&
+        researchedTechs.includes("cybernetic_augmentation");
 
     const isDiplomaticStation = stationType === "diplomatic";
     const hasDiplomacy = isDiplomaticStation;
@@ -339,6 +347,10 @@ export function StationPanel() {
                 currentLocation?.stationConfig,
             ),
         [stationId, sectorTier, currentLocation?.stationConfig],
+    );
+    const researchMaterialStock = useMemo(
+        () => getResearchMaterialStocks(stationId, stationInventory),
+        [stationId, stationInventory],
     );
 
     const crewWithMutations = useMemo(
@@ -745,6 +757,8 @@ export function StationPanel() {
                         allowsMutationCure={allowsMutationCure}
                         allowsGeneticTherapy={allowsGeneticTherapy}
                         allowsAugmentation={allowsAugmentation}
+                        stationId={stationId}
+                        dominantRace={dominantRace}
                         crewWithMutations={crewWithMutations}
                         crewWithNegativeTraits={crewWithNegativeTraits}
                         onInstallAugmentation={installAugmentation}
@@ -753,6 +767,7 @@ export function StationPanel() {
                         onBuyProbe={buyProbe}
                         isResearchStation={isResearchStation}
                         researchResources={research.resources}
+                        researchMaterialStock={researchMaterialStock}
                         researchBoostTurnsRemaining={
                             researchBoostEffect?.turnsRemaining ?? 0
                         }
@@ -789,10 +804,22 @@ export function StationPanel() {
                             );
                         }}
                         onBuyResearchResource={(type, qty) => {
-                            const price = RESEARCH_BUY_PRICES[type] ?? 0;
+                            const price = RESEARCH_STATION_BUY_PRICES[type] ?? 0;
                             const cost = price * qty;
                             if (price <= 0) return;
-                            if (useGameStore.getState().credits < cost) {
+                            const currentState = useGameStore.getState();
+                            if (
+                                qty >
+                                getResearchMaterialStock(
+                                    stationId,
+                                    type,
+                                    currentState.stationInventory,
+                                )
+                            ) {
+                                addLog(t("game_logs.err_station_no_stock"), "error");
+                                return;
+                            }
+                            if (currentState.credits < cost) {
                                 addLog(
                                     "Недостаточно кредитов для закупки материалов!",
                                     "error",
@@ -808,6 +835,16 @@ export function StationPanel() {
                                         [type]:
                                             (s.research.resources[type] ?? 0) +
                                             qty,
+                                    },
+                                },
+                                stationInventory: {
+                                    ...s.stationInventory,
+                                    [stationId]: {
+                                        ...s.stationInventory[stationId],
+                                        [getResearchMaterialPurchaseKey(type)]:
+                                            (s.stationInventory[stationId]?.[
+                                                getResearchMaterialPurchaseKey(type)
+                                            ] ?? 0) + qty,
                                     },
                                 },
                             }));

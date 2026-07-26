@@ -1,5 +1,5 @@
 import type { MetaProgressState, RunSummary } from "./types";
-import { loadMetaProgress, saveMetaProgress } from "./storage.ts";
+import { emptyMetaProgress, loadMetaProgress, saveMetaProgress } from "./storage.ts";
 import { mergeUnique } from "./utils.ts";
 import { ACHIEVEMENTS } from "./achievements.ts";
 import { SHIP_UNLOCK_RULES } from "./shipUnlocks.ts";
@@ -27,6 +27,10 @@ function commit(next: MetaProgressState): void {
   snapshot = next;
   saveMetaProgress(next);
   listeners.forEach((listener) => listener());
+}
+
+export function resetMetaProgress(): void {
+  commit(emptyMetaProgress());
 }
 
 /**

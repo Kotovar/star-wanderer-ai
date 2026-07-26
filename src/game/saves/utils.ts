@@ -140,6 +140,17 @@ export const deleteSlot = (id: ManualSlotId): void => {
   }
 };
 
+/** Удаляет авто- и ручные сохранения вместе с их метаданными. */
+export const clearAllSaves = (): void => {
+  if (typeof window === "undefined") return;
+  try {
+    for (const key of Object.values(SLOT_KEYS)) localStorage.removeItem(key);
+    for (const key of Object.values(META_KEYS)) localStorage.removeItem(key);
+  } catch (e) {
+    console.error("Failed to clear saves:", e);
+  }
+};
+
 export const getAllSlotMeta = (): Record<SaveSlotId, SaveSlotMeta | null> => ({
   auto: getSlotMeta("auto"),
   manual1: getSlotMeta("manual1"),

@@ -84,12 +84,14 @@ const INLINED_MERGE_KEYS: Partial<Record<ModuleType, MergeEffectKey[]>> = {
     cargo: ["cargoCapacity"],
     scanner: ["scanRange"],
     lab: ["researchSpeed"],
-    shield: ["shieldCapacity"],
+    shield: ["shieldCapacity", "shieldRegenBonus"],
+    engine: ["fuelEfficiency"],
     lifesupport: ["oxygenEfficiency"],
     repair_bay: ["repairBonus"],
     medical: ["healing"],
     habitat_module: ["healing"],
     bio_research_lab: ["researchSpeed"],
+    pulse_drive: ["fuelEfficiency"],
     deep_survey_array: ["scanRange"],
 };
 

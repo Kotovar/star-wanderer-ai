@@ -1,4 +1,7 @@
-import { getTechBonusSum } from "@/game/research";
+import {
+    getFuelEfficiencyTechBonus,
+    MAX_FUEL_EFFICIENCY_BONUS,
+} from "@/game/research";
 import {
     getFuelEfficiency,
     getRaceFuelEfficiencyModifier,
@@ -20,9 +23,6 @@ import { getPilotInCockpit } from "@/game/crew";
  * Множитель расхода топлива без пилота в кабине
  */
 const FUEL_PENALTY_NO_PILOT = 1.5;
-
-// Максимальный бонус эффективности топлива от технологий (90%)
-const MAX_FUEL_EFFICIENCY_BONUS = 0.9;
 
 // ============================================================================
 // Вспомогательные функции
@@ -99,15 +99,8 @@ const collectFuelModifiers = (state: GameState): number => {
  * Вычисляет суммарный бонус эффективности топлива от технологий
  * @returns Суммарный бонус от 0 до MAX_FUEL_EFFICIENCY_BONUS
  */
-const getTechFuelBonus = (state: GameState): number => {
-    // warp_drive обрабатывается отдельно (бесплатные прыжки)
-    const techFuelBonus = getTechBonusSum(state.research, "fuel_efficiency", [
-        "warp_drive",
-    ]);
-
-    // Ограничиваем максимальный бонус технологий
-    return Math.min(techFuelBonus, MAX_FUEL_EFFICIENCY_BONUS);
-};
+const getTechFuelBonus = (state: GameState): number =>
+    getFuelEfficiencyTechBonus(state.research);
 
 /**
  * Применяет модификаторы артефактов и штрафы
@@ -211,11 +204,14 @@ export const calculateFuelCost = (
     // Собираем модификаторы (расы, пилот, планета, сращивание)
     const otherModifiers = collectFuelModifiers(state);
 
-    // Получаем технологический бонус (0-90%)
+    // Получаем технологический бонус (0-50%)
     const techBonus = getTechFuelBonus(state);
 
     // Применяем модификаторы: сначала другие, затем технологический бонус
-    let fuelCost = Math.ceil(baseCost * otherModifiers * (1 - techBonus));
+    let fuelCost = Math.max(
+        Math.ceil(baseCost * (1 - MAX_FUEL_EFFICIENCY_BONUS)),
+        Math.ceil(baseCost * otherModifiers * (1 - techBonus)),
+    );
 
     if (Number.isNaN(fuelCost)) {
         fuelCost = DEFAULT_FUEL_COST;
