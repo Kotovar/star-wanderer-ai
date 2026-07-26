@@ -1189,6 +1189,14 @@
             "crystal_hydra_pact": {
                 "name": "Crystal Resonance",
                 "description": "Synchronizing with the hydra refracts enemy fire and helps the ship evade it."
+            },
+            "ember_wisp_pact": {
+                "name": "Ember Wisp's Spark",
+                "description": "The creature's heat trail feeds the reactor and saves fuel."
+            },
+            "binary_wyrm_pact": {
+                "name": "Binary Wyrm's Grip",
+                "description": "Gravitational resonance sharpens weapon strikes and reduces fuel burn."
             }
         },
         "modifiers": {
