@@ -113,9 +113,12 @@ export function computeAccuracyModifier(state: GameState): number {
 
     let modifier = 0;
 
+    // Scoped to crewInWeaponBays, not all crew — combatAssignment survives
+    // moveCrewMember (only civilian `assignment` is cleared there), so a
+    // gunner who left the bay must not keep granting the "has gunner" bonus.
     const hasGunner =
         crewInWeaponBays.some((c) => c.profession === "gunner") ||
-        state.crew.some((c) => c.combatAssignment === "targeting");
+        crewInWeaponBays.some((c) => c.combatAssignment === "targeting");
 
     if (!hasGunner) {
         modifier += COMBAT_ACCURACY_MODIFIERS.NO_GUNNER_PENALTY;

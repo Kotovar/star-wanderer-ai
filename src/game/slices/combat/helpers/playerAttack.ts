@@ -10,7 +10,6 @@ import { playSound } from "@/sounds";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES, WEAPON_TYPES } from "@/game/constants";
 import { isModuleActive } from "@/game/modules/utils";
-import { getActiveAssignment } from "@/game/crew";
 import {
   getWeaponAccuracy,
   calculateFinalDamagePerWeapon,
@@ -287,13 +286,13 @@ function getWeaponBayCrew(state: GameState) {
     (m) => m.type === "weaponbay" && isModuleActive(m),
   );
 
+  // Only gunner and engineer ever crew a weapon bay — pilots have no
+  // "targeting" option in COMBAT_ACTIONS.pilot (constants/crew.ts), so a
+  // pilot branch here was unreachable dead code.
   const crewInWeaponBays = state.crew.filter(
     (c) =>
       weaponBays.some((wb) => wb.id === c.moduleId) &&
-      (c.profession === "gunner" ||
-        c.profession === "engineer" ||
-        (c.profession === "pilot" &&
-          getActiveAssignment(c, true) === "targeting")),
+      (c.profession === "gunner" || c.profession === "engineer"),
   );
 
   return { weaponBays, crewInWeaponBays };
