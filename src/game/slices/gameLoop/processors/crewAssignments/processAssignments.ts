@@ -273,6 +273,9 @@ const processNonCombatAssignment = (
         case "fuel_synthesis":
             processFuelSynthesisAssignment(crewMember, currentModule, set, get);
             break;
+        case "clean_weapons":
+            processCleanWeaponsAssignment(crewMember, currentModule, set, get);
+            break;
     }
 };
 
@@ -670,6 +673,27 @@ const processTrainingAssignment = (
     }
     get().addLog( i18nStore.t("game_logs.processAssignments_24", { crewMember_name: crewMember.name }), "info");
     get().gainExp(crewMember, BASE_EXP_REWARDS.TRAINING);
+};
+
+/**
+ * Чистка орудий — держит на корабле бонус к урону (weapons_primed), пока
+ * стрелок назначен на задачу; требует оружейную палубу.
+ */
+const processCleanWeaponsAssignment = (
+    crewMember: CrewMember,
+    currentModule: Module,
+    set: SetState,
+    get: () => GameStore,
+): void => {
+    if (currentModule.type !== "weaponbay") {
+        get().addLog( i18nStore.t("game_logs.processAssignments_26", { crewMember_name: crewMember.name }),
+            "warning",
+        );
+        return;
+    }
+    grantTimedEffect("weapons_primed", set, get);
+    get().addLog( i18nStore.t("game_logs.processAssignments_27", { crewMember_name: crewMember.name }), "info");
+    get().gainExp(crewMember, BASE_EXP_REWARDS.CLEAN_WEAPONS);
 };
 
 const processFuelSynthesisAssignment = (

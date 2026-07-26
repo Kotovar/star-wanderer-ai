@@ -1157,6 +1157,10 @@
                 "name": "Combat Momentum",
                 "description": "A recent victory sharpened the crew's reactions and confidence in the next engagement."
             },
+            "weapons_primed": {
+                "name": "Weapons Primed",
+                "description": "A gunner serviced the weapons deck — guns are calibrated and ready for the next fight."
+            },
             "anomaly_resonance": {
                 "name": "Anomaly Resonance",
                 "description": "Residual exotic energy stabilizes the reactor and reduces fuel losses."
@@ -4704,6 +4708,8 @@
         "processAssignments_23": "{{crewMember_name}}: Training is only possible on the weapons deck",
         "processAssignments_24": "🎯 {{crewMember_name}}: Training — experience gained",
         "processAssignments_25": "⛽ {{crewMember_name}}: +1 fuel, -2 morale",
+        "processAssignments_26": "{{crewMember_name}}: Weapon cleaning is only possible on the weapons deck",
+        "processAssignments_27": "🧹 {{crewMember_name}}: Weapon cleaning — ship ready for battle",
         "processCombatAssignments_1": "{{crewMember_name}}: Aimed fire",
         "processCombatAssignments_2": "{{crewMember_name}}: Weapon overload (+15% damage, module armor = 0)",
         "processCombatAssignments_3": "{{crewMember_name}}: Rapid fire (+25% damage, -10% accuracy)",

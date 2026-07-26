@@ -53,6 +53,8 @@ export const CREW_ASSIGNMENT_EXP = {
     ANALYZING: 10,
     /** Тренировка стрелка */
     TRAINING: 3,
+    /** Чистка орудий стрелком */
+    CLEAN_WEAPONS: 3,
     /** Научные исследования */
     RESEARCH: 3,
 } as const;

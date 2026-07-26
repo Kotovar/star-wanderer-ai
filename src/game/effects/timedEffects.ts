@@ -11,6 +11,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 export type TimedEffectId =
   | "coordinated_shift"
   | "combat_momentum"
+  | "weapons_primed"
   | "anomaly_resonance"
   | "anomaly_interference"
   | "decisive_response"
@@ -55,6 +56,15 @@ const TIMED_EFFECTS: Record<TimedEffectId, TimedEffectDefinition> = {
       { type: "combat_bonus", value: 0.1 },
       { type: "evasion_bonus", value: 0.05 },
     ],
+  },
+  weapons_primed: {
+    id: "weapons_primed",
+    source: "crew",
+    polarity: "positive",
+    icon: "🧹",
+    color: "#ff9f40",
+    duration: 3,
+    effects: [{ type: "combat_bonus", value: 0.08 }],
   },
   anomaly_resonance: {
     id: "anomaly_resonance",

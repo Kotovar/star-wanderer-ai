@@ -47,6 +47,7 @@ export const CREW_ASSIGNMENT_ICONS: Record<ActiveCrewAssignment, string> = {
     training: "🎓",
     fuel_synthesis: "⛽",
     vent_fuel: "♨️",
+    clean_weapons: "🧹",
 };
 
 export const COMBAT_ACTIONS: Record<
@@ -191,6 +192,11 @@ export const CREW_ACTIONS: Record<
             value: "training",
             label: "Тренировка",
             effect: "+1 опыт за ход",
+        },
+        {
+            value: "clean_weapons",
+            label: "Чистка орудий",
+            effect: "+8% урона в следующем бою (3 хода, пока экипаж на задаче)",
         },
     ],
 };

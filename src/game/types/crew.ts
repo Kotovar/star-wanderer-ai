@@ -71,6 +71,7 @@ export type CrewMemberAssignment =
     | "training"
     | "fuel_synthesis"
     | "vent_fuel"
+    | "clean_weapons"
     | ""
     | null;
 

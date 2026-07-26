@@ -1157,6 +1157,10 @@
                 "name": "Боевой подъём",
                 "description": "Недавняя победа повысила реакцию экипажа и уверенность в следующем столкновении."
             },
+            "weapons_primed": {
+                "name": "Орудия готовы",
+                "description": "Стрелок обслужил оружейную палубу — орудия пристреляны и готовы к следующему бою."
+            },
             "anomaly_resonance": {
                 "name": "Резонанс аномалии",
                 "description": "Остаточная экзотическая энергия стабилизирует реактор и снижает потери топлива."
@@ -4704,6 +4708,8 @@
         "processAssignments_23": "{{crewMember_name}}: Тренировка возможна только в оружейной палубе",
         "processAssignments_24": "🎯 {{crewMember_name}}: Тренировка — получен опыт",
         "processAssignments_25": "⛽ {{crewMember_name}}: +1 топливо, -2 морали",
+        "processAssignments_26": "{{crewMember_name}}: Чистка орудий возможна только в оружейной палубе",
+        "processAssignments_27": "🧹 {{crewMember_name}}: Чистка орудий — корабль готов к бою",
         "processCombatAssignments_1": "{{crewMember_name}}: Прицельный огонь",
         "processCombatAssignments_2": "{{crewMember_name}}: Перегрузка оружия (+15% урон, броня модуля = 0)",
         "processCombatAssignments_3": "{{crewMember_name}}: Учащённая стрельба (+25% урон, -10% точность)",

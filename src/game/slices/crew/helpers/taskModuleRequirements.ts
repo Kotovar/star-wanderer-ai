@@ -39,6 +39,7 @@ export const TASK_MODULE_REQUIREMENTS: Record<
     targeting: ["weaponbay"],
     rapidfire: ["weaponbay"],
     training: ["weaponbay"],
+    clean_weapons: ["weaponbay"],
 
     // Ксеноморфы
     merge: [],
