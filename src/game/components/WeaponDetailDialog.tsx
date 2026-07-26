@@ -8,9 +8,11 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { GameDialogContent } from "./GameDialog";
-import { WEAPON_TYPES, WEAPON_ART } from "../constants";
+import { WEAPON_TYPES, WEAPON_ART, BASE_ACCURACY } from "../constants";
 import { useTranslation } from "@/lib/useTranslation";
 import { GameImage } from "./GameImage";
+
+const USAGE_TIP_COUNT = 3;
 
 interface WeaponDetailDialogProps {
     weaponType: string;
@@ -28,6 +30,10 @@ export function WeaponDetailDialog({
     if (!weapon) return null;
 
     const weaponArtUrl = WEAPON_ART[weaponType as keyof typeof WEAPON_ART];
+    const accuracy = BASE_ACCURACY[weaponType as keyof typeof BASE_ACCURACY];
+    const usageTips = Array.from({ length: USAGE_TIP_COUNT }, (_, i) =>
+        t(`weapon_info.${weaponType}_usage_${i + 1}`),
+    ).filter((tip) => tip && !tip.startsWith("weapon_info."));
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
@@ -71,19 +77,10 @@ export function WeaponDetailDialog({
                         <div className="text-accent font-bold mb-2">
                             🎯 {t("weapon_info.accuracy")}
                         </div>
-                        {weaponType === "kinetic" && (
+                        {accuracy !== undefined && (
                             <div className="text-[#00ff41]">
-                                90% {t("weapon_info.accuracy_desc")}
-                            </div>
-                        )}
-                        {weaponType === "laser" && (
-                            <div className="text-[#00ff41]">
-                                95% {t("weapon_info.accuracy_desc")}
-                            </div>
-                        )}
-                        {weaponType === "missile" && (
-                            <div className="text-[#00ff41]">
-                                80% {t("weapon_info.accuracy_desc")}
+                                {Math.round(accuracy * 100)}%{" "}
+                                {t("weapon_info.accuracy_desc")}
                             </div>
                         )}
                         <div className="text-[#888] mt-1">
@@ -102,32 +99,18 @@ export function WeaponDetailDialog({
                     </div>
 
                     {/* Usage tips */}
-                    <div className="border-t border-accent pt-3 text-xs">
-                        <div className="text-accent font-bold mb-2">
-                            💡 {t("weapon_info.when_to_use")}
+                    {usageTips.length > 0 && (
+                        <div className="border-t border-accent pt-3 text-xs">
+                            <div className="text-accent font-bold mb-2">
+                                💡 {t("weapon_info.when_to_use")}
+                            </div>
+                            <div className="text-[#888] space-y-1">
+                                {usageTips.map((tip) => (
+                                    <div key={tip}>{tip}</div>
+                                ))}
+                            </div>
                         </div>
-                        {weaponType === "kinetic" && (
-                            <div className="text-[#888] space-y-1">
-                                <div>{t("weapon_info.kinetic_usage_1")}</div>
-                                <div>{t("weapon_info.kinetic_usage_2")}</div>
-                                <div>{t("weapon_info.kinetic_usage_3")}</div>
-                            </div>
-                        )}
-                        {weaponType === "laser" && (
-                            <div className="text-[#888] space-y-1">
-                                <div>{t("weapon_info.laser_usage_1")}</div>
-                                <div>{t("weapon_info.laser_usage_2")}</div>
-                                <div>{t("weapon_info.laser_usage_3")}</div>
-                            </div>
-                        )}
-                        {weaponType === "missile" && (
-                            <div className="text-[#888] space-y-1">
-                                <div>{t("weapon_info.missile_usage_1")}</div>
-                                <div>{t("weapon_info.missile_usage_2")}</div>
-                                <div>{t("weapon_info.missile_usage_3")}</div>
-                            </div>
-                        )}
-                    </div>
+                    )}
 
                     <div className="flex gap-2 pt-2">
                         <Button

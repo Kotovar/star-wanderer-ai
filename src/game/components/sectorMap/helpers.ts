@@ -29,7 +29,7 @@ export function getStarBackgroundColor(starType: StarType | undefined): string {
       return "#0c0608"; // Тёмный с красно-оранжевым оттенком
     case "neutron_star":
       return "#080814"; // Тёмный с фиолетовым оттенком
-    case "gas_giant":
+    case "brown_dwarf":
       return "#050a08"; // Тёмный с зеленоватым оттенком
     case "double":
       return "#0a0908"; // Тёмный с оранжевым оттенком
@@ -63,7 +63,7 @@ export function getStarGlowColor(starType: StarType | undefined): string {
       return "rgba(255, 60, 30, 0.09)";
     case "neutron_star":
       return "rgba(140, 140, 255, 0.09)";
-    case "gas_giant":
+    case "brown_dwarf":
       return "rgba(0, 255, 100, 0.07)";
     case "double":
       return "rgba(255, 200, 80, 0.08)";

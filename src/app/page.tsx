@@ -291,10 +291,10 @@ export default function Home() {
           <TabsTrigger value="modules" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_modules")}</TabsTrigger>
           <TabsTrigger value="cargo" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_cargo")}</TabsTrigger>
         </TabsList>
-        <TabsContent value="layout" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ShipGrid /></TabsContent>
-        <TabsContent value="stats" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ShipStats /></TabsContent>
-        <TabsContent value="modules" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><ModuleList /></TabsContent>
-        <TabsContent value="cargo" className="mt-2 flex-1 min-h-0 overflow-y-auto tab-transition"><CargoDisplay /></TabsContent>
+        <TabsContent value="layout" className="mt-2 flex-1 min-h-0 overflow-y-auto scrollbar-gutter-stable tab-transition"><ShipGrid /></TabsContent>
+        <TabsContent value="stats" className="mt-2 flex-1 min-h-0 overflow-y-auto scrollbar-gutter-stable tab-transition"><ShipStats /></TabsContent>
+        <TabsContent value="modules" className="mt-2 flex-1 min-h-0 overflow-y-auto scrollbar-gutter-stable tab-transition"><ModuleList /></TabsContent>
+        <TabsContent value="cargo" className="mt-2 flex-1 min-h-0 overflow-y-auto scrollbar-gutter-stable tab-transition"><CargoDisplay /></TabsContent>
       </Tabs>
     ),
     crew: <div className="tab-transition"><CrewList /></div>,
@@ -408,7 +408,7 @@ export default function Home() {
             {/* Сцена событий (карта/бой) — десктоп: справа; мобильный: полный экран когда showEventStage */}
             {(!isMobile || showEventStage) && (
               <div className="panel cockpit-panel cockpit-panel--stage flex flex-col min-w-0 flex-1 rounded-lg p-2 overflow-hidden min-h-0">
-                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-2 lg:overflow-hidden lg:pr-0">
+                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-gutter-stable pr-2 lg:overflow-hidden lg:pr-0">
                   <EventDisplay />
                 </div>
               </div>

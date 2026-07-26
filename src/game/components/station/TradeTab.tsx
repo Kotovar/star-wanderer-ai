@@ -63,7 +63,7 @@ export function TradeTab({
     const [infoGood, setInfoGood] = useState<Goods | null>(null);
 
     return (
-        <div className="flex flex-col gap-2.5 flex-1 min-h-0 overflow-y-auto pr-1 pb-2">
+        <div className="flex flex-col gap-2.5 flex-1 min-h-0 overflow-y-auto scrollbar-gutter-stable pr-1 pb-2">
             {stationId &&
                 tradeGoodsKeys.map((goodId) => {
                     const good = { id: goodId, ...TRADE_GOODS[goodId] };

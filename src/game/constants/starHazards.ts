@@ -8,7 +8,7 @@ import type { StarType } from "@/game/types";
 export const STAR_HAZARD_LEVEL: Record<StarType, number> = {
     red_dwarf: 0,
     yellow_dwarf: 0,
-    gas_giant: 0,
+    brown_dwarf: 0,
     variable_star: 0,
     stellar_remnant: 0,
     white_dwarf: 1,

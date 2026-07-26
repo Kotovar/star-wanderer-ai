@@ -274,8 +274,8 @@ export const STAR_TYPE_LOCATION_MODIFIERS: Partial<
         friendlyShip: 0.4,
         planet: 0.5,
     },
-    // Газовый гигант (звезда): несостоявшаяся звезда, забытый угол галактики
-    gas_giant: {
+    // Коричневый карлик: несостоявшаяся звезда, забытый угол галактики
+    brown_dwarf: {
         derelictShip: 2.0,
         anomaly: 1.4,
         station: 0.5,

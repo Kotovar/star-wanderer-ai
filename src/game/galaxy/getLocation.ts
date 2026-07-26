@@ -62,8 +62,8 @@ const getLocationType = (
         storm: m(chances.storm, "storm"),
         distressSignal: m(distressSignal, "distressSignal"),
         derelictShip: m(derelictShip, "derelictShip"),
-        // Газовый гигант как локация не спавнится в системе газового гиганта-звезды
-        gasGiant: starType === "gas_giant" ? 0 : m(gasGiant, "gasGiant"),
+        // Газовый гигант как локация не спавнится в системе коричневого карлика
+        gasGiant: starType === "brown_dwarf" ? 0 : m(gasGiant, "gasGiant"),
         boss: m(chances.boss, "boss"),
         // Аномалия: явный базовый вес 6%, усиливается модификатором звезды
         anomaly: 0.06 * (mods.anomaly ?? 1),

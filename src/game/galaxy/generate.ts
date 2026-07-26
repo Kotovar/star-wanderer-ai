@@ -104,10 +104,10 @@ export const generateStar = (tier: GalaxyTierAll): Sector["star"] => {
         return { type: "stellar_remnant", name: "star_types.stellar_remnant" };
     }
 
-    // Проверка на газовый гигант (коричневый карлик)
+    // Проверка на коричневый карлик (несостоявшаяся звезда)
     cumulativeChance += gasGiantChance;
     if (starRoll < cumulativeChance) {
-        return { type: "gas_giant", name: "star_types.gas_giant" };
+        return { type: "brown_dwarf", name: "star_types.brown_dwarf" };
     }
 
     // Распределение одиночных звёзд по типам (нормализуем оставшийся диапазон)

@@ -1,6 +1,6 @@
 import type { Weapon, WeaponDetails } from "@/game/types";
 
-const interceptChance = 0.2;
+const missileInterceptChance = 0.1;
 const shieldBonus = 1.2;
 const armorPenetration = 0.5;
 
@@ -26,8 +26,8 @@ export const WEAPON_TYPES: Record<Weapon["type"], WeaponDetails> = {
         damage: 28,
         color: "#ffaa00",
         icon: "▲",
-        description: `Высокий урон, пробивает 35% брони, но ${interceptChance * 100}% могут быть сбиты щитами`,
-        interceptChance: 0.1,
+        description: `Высокий урон, пробивает 35% брони, но ${missileInterceptChance * 100}% могут быть сбиты щитами`,
+        interceptChance: missileInterceptChance,
         armorPenetration: 0.35,
     },
     plasma: {
@@ -35,8 +35,7 @@ export const WEAPON_TYPES: Record<Weapon["type"], WeaponDetails> = {
         damage: 30,
         color: "#ff6600",
         icon: "◉",
-        description: "Пробивает 25% брони и наносит +30% урона по щитам",
-        armorPenetration: 0.25,
+        description: "Наносит +30% урона по щитам и навсегда разрушает броню модуля с каждым попаданием",
         shieldBonus: 1.3,
     },
     drones: {
@@ -44,7 +43,7 @@ export const WEAPON_TYPES: Record<Weapon["type"], WeaponDetails> = {
         damage: 22,
         color: "#00ff41",
         icon: "⬡",
-        description: "Каждое попадание даёт +10% к урону (макс. 10 стаков = ×2)",
+        description: "Базовый урон ниже, но каждое попадание даёт +10% к урону всех дронов (стакается до 10 раз = ×2 урон к концу боя)",
     },
     antimatter: {
         name: "Антиматерия",
@@ -67,7 +66,7 @@ export const WEAPON_TYPES: Record<Weapon["type"], WeaponDetails> = {
         damage: 26,
         color: "#4488ff",
         icon: "⚡",
-        description: "×4 урона по щитам, не наносит урон корпусу — идеально для сноса щитов",
+        description: "×4 урона по щитам, но всего 1 урон корпусу, когда щиты уже сняты — не ставьте им весь отсек, комбинируйте с оружием по корпусу",
         shieldBonus: 4.0,
         shieldOnly: true,
     },

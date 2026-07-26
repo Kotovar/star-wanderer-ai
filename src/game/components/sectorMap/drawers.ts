@@ -76,7 +76,7 @@ export function drawStar(
       blue_giant: 126,
       red_supergiant: 146,
       neutron_star: 86,
-      gas_giant: 116,
+      brown_dwarf: 116,
       double: 126,
       triple: 132,
       blackhole: 124,
@@ -282,8 +282,8 @@ export function drawStar(
     ctx.beginPath();
     ctx.arc(x, y, 18, 0, Math.PI * 2);
     ctx.stroke();
-  } else if (star.type === "gas_giant") {
-    // Gas giant - green color like on galaxy map
+  } else if (star.type === "brown_dwarf") {
+    // Brown dwarf - green color like on galaxy map
     const pulse = Math.sin(currentTime * 0.001) * 2;
 
     // Outer green glow

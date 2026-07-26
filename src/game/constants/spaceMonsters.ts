@@ -158,7 +158,7 @@ export const SPACE_MONSTERS: Record<
 const STAR_MONSTERS: Partial<Record<StarType, SpaceMonsterType>> = {
   blackhole: "void_ray",
   stellar_remnant: "void_ray",
-  gas_giant: "nebula_manta",
+  brown_dwarf: "nebula_manta",
   variable_star: "nebula_manta",
   blue_giant: "plasma_leviathan",
   red_supergiant: "plasma_leviathan",

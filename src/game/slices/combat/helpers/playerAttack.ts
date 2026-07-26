@@ -66,7 +66,6 @@ const getCrewLaserDamageBonus = (
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const OVERCLOCK_ARMOR_REDUCTION = 0.1;
-const KINETIC_ARMOR_REDUCTION_LABEL = 50; // percent, for logs
 
 const getCoreDestroyedLog = (isBiological?: boolean): string =>
   isBiological
@@ -96,7 +95,7 @@ interface DamageResult {
   totalModuleDamage: number;
   remainingShields: number;
   missedShots: WeaponCounts;
-  kineticArmorPenetration: number;
+  armorPenetration: number;
   plasmaHitCount: number;
   droneHitCount: number;
   logs: string[];
@@ -501,7 +500,7 @@ function calculateAllDamage(
   let remainingShields = enemyShields;
   let totalShieldDamage = 0;
   let totalModuleDamage = 0;
-  let kineticArmorPenetration = 0;
+  let armorPenetration = 0;
   let plasmaHitCount = 0;
   let droneHitCount = 0;
   const logs: string[] = [];
@@ -554,7 +553,7 @@ function calculateAllDamage(
     remainingShields = result.remainingShields;
     logs.push(...result.logs);
     missedShots.kinetic = result.missedShots;
-    kineticArmorPenetration = result.kineticArmorPenetration;
+    armorPenetration = Math.max(armorPenetration, result.kineticArmorPenetration);
   }
 
   if (weaponCounts.missile > 0) {
@@ -573,6 +572,7 @@ function calculateAllDamage(
     remainingShields = result.remainingShields;
     logs.push(...result.logs);
     missedShots.missile = result.missedShots;
+    armorPenetration = Math.max(armorPenetration, WEAPON_TYPES.missile.armorPenetration ?? 0);
   }
 
   if (weaponCounts.plasma > 0) {
@@ -688,7 +688,7 @@ function calculateAllDamage(
     totalModuleDamage,
     remainingShields,
     missedShots,
-    kineticArmorPenetration,
+    armorPenetration,
     plasmaHitCount,
     droneHitCount,
     logs,
@@ -772,12 +772,12 @@ function applyDamageToEnemy(
         .currentCombat?.enemy.modules.filter((m) => m.health > 0)
         .reduce((sum, m) => sum + (m.defense ?? 0), 0) ?? 0;
 
-    if (weaponCounts.kinetic > 0 && damage.kineticArmorPenetration > 0) {
+    if (damage.armorPenetration > 0) {
       const reduced = Math.floor(
-        moduleDefense * (1 - damage.kineticArmorPenetration),
+        moduleDefense * (1 - damage.armorPenetration),
       );
       damage.logs.push(
-        `🛡 Броня снижена на ${KINETIC_ARMOR_REDUCTION_LABEL}%: ${moduleDefense} → ${reduced}`,
+        `🛡 Броня снижена на ${Math.round(damage.armorPenetration * 100)}%: ${moduleDefense} → ${reduced}`,
       );
       moduleDefense = reduced;
     }
@@ -810,7 +810,7 @@ function applyDamageToEnemy(
       i18nStore.t("game_logs.pierce_hit", {
         name: tgtMod.name,
         damage: finalDamage,
-        armor: weaponCounts.kinetic > 0 ? i18nStore.t("game_logs.pierce_armor", { moduleDefense }) : "",
+        armor: damage.armorPenetration > 0 ? i18nStore.t("game_logs.pierce_armor", { moduleDefense }) : "",
       }),
       "combat",
     );

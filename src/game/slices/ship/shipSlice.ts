@@ -13,6 +13,7 @@ import {
     updateShipStats,
     getTotalDamage,
     toggleModule as toggleModuleHelper,
+    enableAllModules as enableAllModulesHelper,
     moveModule as moveModuleHelper,
     canPlaceModule as canPlaceModuleHelper,
 } from "./helpers";
@@ -152,6 +153,9 @@ interface ShipSlice {
      */
     toggleModule: (moduleId: number) => void;
 
+    /** Включает все модули, отключенные вручную (например, после шторма) */
+    enableAllModules: () => void;
+
     /**
      * Перемещает модуль на новые координаты
      * @param moduleId - ID модуля
@@ -268,6 +272,10 @@ export const createShipSlice = (
 
     toggleModule: (moduleId) => {
         toggleModuleHelper(moduleId, set, get);
+    },
+
+    enableAllModules: () => {
+        enableAllModulesHelper(set, get);
     },
 
     moveModule: (moduleId, x, y) => {

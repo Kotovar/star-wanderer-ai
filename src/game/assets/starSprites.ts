@@ -14,7 +14,7 @@ export const STAR_SPRITE_ORDER: StarType[] = [
   "blue_giant",
   "red_supergiant",
   "neutron_star",
-  "gas_giant",
+  "brown_dwarf",
   "double",
   "triple",
   "blackhole",

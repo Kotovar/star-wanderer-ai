@@ -224,8 +224,6 @@ button:focus-visible,
 
 ::-webkit-scrollbar-thumb:hover { background: #00d4ff; }
 
-.scrollbar-gutter-stable { scrollbar-gutter: stable; }
-
 /* ═══════════════════════════════════════════════════════════════
    PLANET BACKGROUNDS - Unique visual styles for each planet type
    ═══════════════════════════════════════════════════════════════ */

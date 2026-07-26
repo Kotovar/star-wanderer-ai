@@ -12,7 +12,7 @@ import type { Location } from "./locations";
  * - Красные сверхгиганты - эволюционировавшие массивные звёзды
  * - Нейтронные звёзды - сверхплотные остатки сверхновых
  * - Чёрные дыры - гравитационные сингулярности
- * - Газовые гиганты (коричневые карлики) - "неудавшиеся звёзды", субзвёздные объекты
+ * - Коричневые карлики - "неудавшиеся звёзды", субзвёздные объекты
  */
 export type StarType =
     | "red_dwarf" // Красный карлик (M класс)
@@ -24,7 +24,7 @@ export type StarType =
     | "double" // Двойная звёздная система
     | "triple" // Тройная звёздная система
     | "blackhole" // Чёрная дыра
-    | "gas_giant" // Газовый гигант
+    | "brown_dwarf" // Коричневый карлик (несостоявшаяся звезда)
     | "variable_star" // Переменная звезда (медленно меняет яркость)
     | "stellar_remnant"; // Звёздный остаток (тусклое свечение)
 
@@ -38,7 +38,7 @@ export type StarName =
     | "star_types.double"
     | "star_types.triple"
     | "star_types.blackhole"
-    | "star_types.gas_giant"
+    | "star_types.brown_dwarf"
     | "star_types.variable_star"
     | "star_types.stellar_remnant";
 

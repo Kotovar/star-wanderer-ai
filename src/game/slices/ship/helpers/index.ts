@@ -13,6 +13,7 @@ export * from "./areModulesFunctional";
 export * from "./fuel";
 export * from "./updateShipStats";
 export * from "./toggleModule";
+export * from "./enableAllModules";
 export * from "./moveModule";
 export * from "./canPlaceModule";
 export * from "./addTradeGood";

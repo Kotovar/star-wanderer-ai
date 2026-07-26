@@ -142,7 +142,7 @@ export function ShopTab({
 
     return (
         <>
-            <div className="flex flex-col gap-2.5 flex-1 min-h-0 overflow-y-auto pr-1 pb-2">
+            <div className="flex flex-col gap-2.5 flex-1 min-h-0 overflow-y-auto scrollbar-gutter-stable pr-1 pb-2">
                 {filteredItems.map((item) => {
                     const stockLeft =
                         inv[item.id] !== undefined
@@ -390,6 +390,7 @@ function ShopItemCard({
                 disabled={disabled}
                 soldOut={soldOut}
                 noWB={noWB}
+                alreadyOwned={alreadyOwned}
                 isUnique={isUnique}
                 isUpgrade={isUpgrade}
                 onClick={onBuy}
@@ -461,8 +462,20 @@ function ItemDescription({ item }: ItemDescriptionProps) {
     };
     const moduleLevel = getModuleLevel();
 
+    // Module purpose one-liner (what does it actually do)
+    const modulePurpose =
+        item.type === "module" && item.moduleType
+            ? t(`module_descriptions.${item.moduleType}`)
+            : null;
+    const hasModulePurpose =
+        modulePurpose && !modulePurpose.startsWith("module_descriptions.");
+
     return (
         <div className="text-[11px] mt-1 text-[#00ff41]">
+            {/* What the module actually does */}
+            {hasModulePurpose && (
+                <div className="text-[#888] mb-1">{modulePurpose}</div>
+            )}
             {/* Module level - only show for ancient/quantum modules (level 4+) */}
             {moduleLevel && moduleLevel >= 4 && (
                 <div className="text-accent mb-1">
@@ -477,10 +490,15 @@ function ItemDescription({ item }: ItemDescriptionProps) {
             )}
             {/* Weapon info */}
             {item.type === "weapon" && item.weaponType && (
-                <span>
-                    ⚔ {t(`weapon_types.${item.weaponType}`)} (
-                    {WEAPON_TYPES[item.weaponType].damage})
-                </span>
+                <>
+                    <span>
+                        ⚔ {t(`weapon_types.${item.weaponType}`)} (
+                        {WEAPON_TYPES[item.weaponType].damage})
+                    </span>
+                    <div className="text-[#888] mt-1">
+                        {t(`weapon_info.${item.weaponType}_feature`)}
+                    </div>
+                </>
             )}
             {item.type === "upgrade" && item.targetType === "engine" && (
                 <span>
@@ -532,6 +550,7 @@ function BuyButton({
     disabled,
     soldOut,
     noWB,
+    alreadyOwned,
     isUnique,
     isUpgrade,
     onClick,
@@ -539,17 +558,29 @@ function BuyButton({
     disabled: boolean;
     soldOut: boolean;
     noWB: boolean;
+    alreadyOwned: boolean;
     isUnique: boolean;
     isUpgrade: boolean;
     onClick: () => void;
 }) {
     const { t } = useTranslation();
 
+    const disabledReason = noWB
+        ? t("station_upgrades.need_weapon_bay")
+        : soldOut
+          ? isUpgrade
+              ? t("station_upgrades.max_level")
+              : t("station_upgrades.sold_out")
+          : alreadyOwned && !isUpgrade
+            ? t("station_upgrades.already_owned")
+            : undefined;
+
     return (
         <Button
             disabled={disabled}
             onClick={onClick}
-            className={`bg-transparent border-2 text-xs uppercase cursor-pointer ${
+            title={disabledReason}
+            className={`shrink-0 min-h-9 bg-transparent border-2 text-xs uppercase cursor-pointer disabled:cursor-not-allowed ${
                 isUnique
                     ? "border-accent text-accent hover:bg-accent hover:text-[#050810]"
                     : "border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"

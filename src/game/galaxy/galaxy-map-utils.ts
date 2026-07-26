@@ -626,8 +626,8 @@ function drawStar(
         drawRedSupergiant(ctx, x, y, size, isActive);
     } else if (starType === "neutron_star") {
         drawNeutronStar(ctx, x, y, size, isActive);
-    } else if (starType === "gas_giant") {
-        drawGasGiant(ctx, x, y, size, isActive);
+    } else if (starType === "brown_dwarf") {
+        drawBrownDwarf(ctx, x, y, size, isActive);
     } else if (starType === "variable_star") {
         drawVariableStar(ctx, x, y, size, isActive);
     } else if (starType === "stellar_remnant") {
@@ -874,9 +874,9 @@ function drawNeutronStar(
 }
 
 /**
- * Газовый гигант - огромный зелёный шар с атмосферными полосами
+ * Коричневый карлик - огромный зелёный шар с атмосферными полосами
  */
-function drawGasGiant(
+function drawBrownDwarf(
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,

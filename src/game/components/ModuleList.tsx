@@ -112,12 +112,26 @@ function getConditionPercent(module: Module): number {
 }
 
 export function ModuleList() {
+    const { t } = useTranslation();
     const modules = useGameStore((s) => s.ship.modules);
     const crew = useGameStore((s) => s.crew);
+    const enableAllModules = useGameStore((s) => s.enableAllModules);
     const [selectedModule, setSelectedModule] = useState<Module | null>(null);
+
+    const hasManuallyDisabled = modules.some((m) => m.manualDisabled);
 
     return (
         <>
+            {hasManuallyDisabled && (
+                <div className="flex justify-end mb-1.5">
+                    <Button
+                        onClick={enableAllModules}
+                        className="bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] h-auto py-1 px-2 text-[10px]"
+                    >
+                        {t("module_list.enable_all")}
+                    </Button>
+                </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {modules.map((module) => (
                     <ModuleCard

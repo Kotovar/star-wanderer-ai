@@ -588,52 +588,59 @@ export function StationPanel() {
                 >
                     <TabsTrigger
                         value="shop"
-                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2 shrink-0 whitespace-nowrap px-3"
+                        title={t("station.modules_tab_hint")}
+                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
                     >
-                        {t("station.modules_tab")}
+                        🛠 {t("station.modules_tab")}
                     </TabsTrigger>
                     {allowsTrade && (
                         <TabsTrigger
                             value="trade"
-                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2 shrink-0 whitespace-nowrap px-3"
+                            title={t("station.trade_tab_hint")}
+                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
                         >
-                            {t("station.trade_tab")}
+                            💱 {t("station.trade_tab")}
                         </TabsTrigger>
                     )}
                     {isMiningStation && (
                         <TabsTrigger
                             value="minerals"
-                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2 shrink-0 whitespace-nowrap px-3"
+                            title={t("station.minerals_tab_hint")}
+                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
                         >
-                            {t("station.minerals_tab")}
+                            ⛏ {t("station.minerals_tab")}
                         </TabsTrigger>
                     )}
                     <TabsTrigger
                         value="crew"
-                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2 shrink-0 whitespace-nowrap px-3"
+                        title={t("station.crew_tab_hint")}
+                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
                     >
-                        {t("station.crew_tab")}
+                        👥 {t("station.crew_tab")}
                     </TabsTrigger>
                     <TabsTrigger
                         value="services"
-                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2 shrink-0 whitespace-nowrap px-3"
+                        title={t("station.services_tab_hint")}
+                        className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
                     >
-                        {t("station.services_tab")}
+                        🔧 {t("station.services_tab")}
                     </TabsTrigger>
                     {allowsCraft && (
                         <TabsTrigger
                             value="crafting"
-                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2 shrink-0 whitespace-nowrap px-3"
+                            title={t("station.craft_tab_hint")}
+                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
                         >
-                            {t("station.craft")}
+                            📐 {t("station.craft")}
                         </TabsTrigger>
                     )}
                     {hasDiplomacy && (
                         <TabsTrigger
                             value="diplomacy"
-                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2 shrink-0 whitespace-nowrap px-3"
+                            title={t("station.diplomacy_tab_hint")}
+                            className="cursor-pointer data-[state=active]:bg-[#00ff41] data-[state=active]:text-[#050810] text-[#00ff41] text-xs py-2.5 sm:py-2 shrink-0 whitespace-nowrap px-3"
                         >
-                            <span>{t("station.diplomacy_tab")}</span>
+                            <span>🤝 {t("station.diplomacy_tab")}</span>
                         </TabsTrigger>
                     )}
                 </TabsList>
@@ -878,7 +885,7 @@ export function StationPanel() {
                 {hasDiplomacy && (
                     <TabsContent
                         value="diplomacy"
-                        className="mt-4 min-h-0 overflow-y-auto flex flex-col gap-4"
+                        className="mt-4 min-h-0 overflow-y-auto scrollbar-gutter-stable flex flex-col gap-4"
                     >
                         {/* Reputation purchase */}
                         <div>
