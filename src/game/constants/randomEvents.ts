@@ -1,11 +1,18 @@
 import { isModuleActive } from "@/game/modules";
+import { getRaceReputationLevel } from "@/game/reputation/utils";
 import type { GameState, RandomEventType } from "@/game/types";
 
 export type EventCategory = "bad" | "good" | "neutral";
 
 type EventState = Pick<
   GameState,
-  "crew" | "ship" | "credits" | "currentSector" | "artifacts"
+  | "crew"
+  | "ship"
+  | "credits"
+  | "currentSector"
+  | "artifacts"
+  | "knownRaces"
+  | "raceReputation"
 >;
 
 interface EventMeta {
@@ -36,6 +43,18 @@ const fuelRatio = (state: EventState): number =>
 
 const sectorTier = (state: EventState): number =>
   state.currentSector?.tier ?? 1;
+
+const hasAlliedRace = (state: EventState): boolean =>
+  state.knownRaces.some(
+    (raceId) =>
+      getRaceReputationLevel(state.raceReputation, raceId) === "allied",
+  );
+
+const hasHostileRace = (state: EventState): boolean =>
+  state.knownRaces.some(
+    (raceId) =>
+      getRaceReputationLevel(state.raceReputation, raceId) === "hostile",
+  );
 
 const EVENT_REGISTRY: Record<RandomEventType, EventMeta> = {
   // ── BAD events ──────────────────────────────────────────────
@@ -71,7 +90,8 @@ const EVENT_REGISTRY: Record<RandomEventType, EventMeta> = {
   pirate_raid: {
     category: "bad",
     baseWeight: 7,
-    weightFn: (s) => (s.credits > 300 ? 1.3 : 1),
+    weightFn: (s) =>
+      (s.credits > 300 ? 1.3 : 1) * (hasHostileRace(s) ? 1.6 : 1),
   },
 
   // ── GOOD events ─────────────────────────────────────────────
@@ -85,12 +105,13 @@ const EVENT_REGISTRY: Record<RandomEventType, EventMeta> = {
     baseWeight: 7,
     weightFn: (s) =>
       (hasProfession(s, "medic") ? 1.5 : 1) *
-      (hasActiveModule(s, "medical") ? 1.3 : 1),
+      (hasActiveModule(s, "medical") ? 1.3 : 1) *
+      (hasAlliedRace(s) ? 1.4 : 1),
   },
   trader: {
     category: "good",
     baseWeight: 6,
-    weightFn: (s) => (s.credits > 500 ? 1.4 : 1),
+    weightFn: (s) => (s.credits > 500 ? 1.4 : 1) * (hasAlliedRace(s) ? 1.3 : 1),
   },
   derelict: {
     category: "good",
