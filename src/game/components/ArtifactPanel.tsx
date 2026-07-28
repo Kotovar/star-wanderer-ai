@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useMemo, useState } from "react";
 import { useTranslation } from "@/lib/useTranslation";
 import { getTechBonusSum } from "@/game/research";
+import { getArtifactBonusMultiplier } from "@/game/artifacts/utils";
 import { DEFAULT_ARTIFACT_SLOTS } from "@/game/slices/artifacts/constants";
 import type { Artifact, ArtifactType } from "@/game/types";
 import { getLocationName } from "@/lib/translationHelpers";
@@ -293,6 +294,9 @@ export function ArtifactPanel() {
         useState<ArtifactFilter>("all");
 
     const maxScientistLevel = getMaxScientistLevel(crew);
+    const artifactBonusPercent = Math.round(
+        (getArtifactBonusMultiplier({ crew, research }) - 1) * 100,
+    );
     const discoveredCount = artifacts.filter((a) => a.discovered).length;
     const researchedCount = artifacts.filter((a) => a.researched).length;
     const activeCount = artifacts.filter((a) => a.effect.active).length;
@@ -424,6 +428,15 @@ export function ArtifactPanel() {
                         ? `${t("crew.level")} ${maxScientistLevel}`
                         : t("artifacts.no_scientists")}
                 </div>
+
+                {artifactBonusPercent > 0 && (
+                    <div className="text-xs text-[#888]">
+                        {t("artifacts.effect_bonus")}:{" "}
+                        <span className="text-ring">
+                            +{artifactBonusPercent}%
+                        </span>
+                    </div>
+                )}
 
                 <div className="mt-2">
                     <input

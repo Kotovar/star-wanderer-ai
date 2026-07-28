@@ -1078,6 +1078,7 @@
         "cursed_active": "cursed",
         "scientists_onboard": "Scientists on board",
         "no_scientists": "none",
+        "effect_bonus": "Artifact effect bonus",
         "tabs": {
             "regular": "★ Regular",
             "cursed": "⚠️ Cursed"

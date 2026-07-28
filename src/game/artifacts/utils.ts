@@ -193,17 +193,16 @@ export const getCrewTraitArtifactBonus = (crew: GameState["crew"]): number => {
     return traitSum + bestScientistTechPerk;
 };
 
-// Helper function to get artifact effect value with active boost bonus
-export const getArtifactEffectValue = (
-    artifact: Artifact | undefined,
-    state: GameState,
-) => {
-    if (!artifact) return 0;
-
-    const baseValue = artifact.effect.value ?? 0;
-
-    // Бусты накапливаются в один множитель и округляются ОДИН раз —
-    // последовательные Math.floor съедали малые бонусы на целых значениях
+/**
+ * Общий множитель усиления эффектов артефактов от науки, расы crystalline
+ * и трейтов/перков экипажа (legend, "Ксеноархеолог") — всё, что действует
+ * на ЛЮБОЙ артефакт разом. Не включает точечный ритуальный буст воидборнов
+ * (он целится в один конкретный артефакт, а не усиливает все сразу), поэтому
+ * годится и как общая цифра для UI, и как общая часть двух функций ниже.
+ */
+export const getArtifactBonusMultiplier = (
+    state: Pick<GameState, "crew" | "research">,
+): number => {
     let multiplier = 1;
 
     // Apply permanent research-based artifact effect boost
@@ -229,11 +228,27 @@ export const getArtifactEffectValue = (
         multiplier *= 1 + crystallineBonus;
     }
 
-    // Личный трейт-бонус экипажа (legend)
+    // Личный трейт-бонус экипажа (legend) + перк "Ксеноархеолог"
     const traitArtifactBonus = getCrewTraitArtifactBonus(state.crew);
     if (traitArtifactBonus > 0) {
         multiplier *= 1 + traitArtifactBonus;
     }
+
+    return multiplier;
+};
+
+// Helper function to get artifact effect value with active boost bonus
+export const getArtifactEffectValue = (
+    artifact: Artifact | undefined,
+    state: GameState,
+) => {
+    if (!artifact) return 0;
+
+    const baseValue = artifact.effect.value ?? 0;
+
+    // Бусты накапливаются в один множитель и округляются ОДИН раз —
+    // последовательные Math.floor съедали малые бонусы на целых значениях
+    let multiplier = getArtifactBonusMultiplier(state);
 
     // Check if this artifact is boosted by voidborn ritual (stacks on top of research)
     const boostEffect = state.activeEffects.find(
@@ -264,36 +279,9 @@ export const getArtifactShieldRegen = (
 ): number => {
     if (!artifact || !artifact.effect.shieldRegen) return 0;
 
-    let shieldRegen = artifact.effect.shieldRegen;
-
-    // Apply permanent research-based artifact effect boost
-    const researchBoost = getTechBonusSum(
-        state.research,
-        "artifact_effect_boost",
+    let shieldRegen = Math.floor(
+        artifact.effect.shieldRegen * getArtifactBonusMultiplier(state),
     );
-    if (researchBoost > 0) {
-        shieldRegen = Math.floor(shieldRegen * (1 + researchBoost));
-    }
-
-    // Crystalline resonance should boost secondary artifact values too.
-    let crystallineBonus = 0;
-    state.crew.forEach((c) => {
-        const resonanceTrait = RACES[c.race]?.specialTraits?.find(
-            (t) => t.id === "resonance",
-        );
-        if (resonanceTrait?.effects.artifactBonus) {
-            crystallineBonus += Number(resonanceTrait.effects.artifactBonus);
-        }
-    });
-    if (crystallineBonus > 0) {
-        shieldRegen = Math.floor(shieldRegen * (1 + crystallineBonus));
-    }
-
-    // Личный трейт-бонус экипажа (legend)
-    const traitArtifactBonus = getCrewTraitArtifactBonus(state.crew);
-    if (traitArtifactBonus > 0) {
-        shieldRegen = Math.floor(shieldRegen * (1 + traitArtifactBonus));
-    }
 
     // Check if this artifact is boosted by voidborn ritual (stacks on top of research)
     const boostEffect = state.activeEffects.find(
