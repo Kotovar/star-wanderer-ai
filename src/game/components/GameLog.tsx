@@ -321,7 +321,12 @@ function getJournalCategory(
     if (hasAny(message, EXPEDITION_TILE_LOG_MARKERS)) {
         return "exploration";
     }
-    if (entry.type === "combat" || hasAny(message, COMBAT_MARKERS)) {
+    // "сбой" (glitch, e.g. ai_glitch trait) contains "бой" as a substring —
+    // exclude it explicitly so AI-glitch messages don't get mis-tagged as combat.
+    if (
+        entry.type === "combat" ||
+        (hasAny(message, COMBAT_MARKERS) && !message.includes("сбой"))
+    ) {
         return "combat";
     }
     if (hasAny(message, CONTRACT_MARKERS)) {
@@ -388,12 +393,15 @@ const CREW_MARKERS = [
     "член экипажа",
     "здоров",
     "счаст",
+    "мораль",
     "опыт",
     "уров",
     "тренировка",
     "сращ",
     "симбиоз",
     "покинул",
+    "черту",
+    "сбой",
     "crew",
     "health",
     "morale",
