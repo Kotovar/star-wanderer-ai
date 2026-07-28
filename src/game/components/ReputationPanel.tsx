@@ -10,6 +10,7 @@ import {
     REPUTATION_DESCRIPTIONS,
 } from "../types/reputation";
 import { getRaceReputation } from "../reputation/utils";
+import { BUY_MODIFIERS, SELL_MODIFIERS } from "../reputation/priceModifier";
 import { useTranslation } from "@/lib/useTranslation";
 import { RaceSprite } from "./RaceSprite";
 import { Button } from "@/components/ui/button";
@@ -87,6 +88,12 @@ export function ReputationPanel() {
                     const bonuses = formatCrewBonuses(
                         race.crewBonuses ?? {},
                         t,
+                    );
+                    const relationEntries = Object.entries(
+                        race.relations ?? {},
+                    ).filter(
+                        (entry): entry is [string, number] =>
+                            typeof entry[1] === "number" && entry[1] !== 0,
                     );
                     const properties: string[] = [];
                     if (!race.requiresOxygen)
@@ -181,8 +188,10 @@ export function ReputationPanel() {
                                         color,
                                     }}
                                 >
-                                    💰 {t("reputation.trade_label")}:{" "}
-                                    {getPriceModifierText(reputation)}
+                                    💰 {t("trade.buy_label")} ×
+                                    {BUY_MODIFIERS[level].toFixed(1)} ·{" "}
+                                    {t("trade.sell_label")} ×
+                                    {SELL_MODIFIERS[level].toFixed(1)}
                                 </span>
                                 <button
                                     type="button"
@@ -212,6 +221,57 @@ export function ReputationPanel() {
                                             {race.homeworld}
                                         </span>
                                     </div>
+
+                                    {relationEntries.length > 0 && (
+                                        <div>
+                                            <div className="mb-1 text-[#888]">
+                                                {t(
+                                                    "reputation.relations_label",
+                                                )}
+                                            </div>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {relationEntries.map(
+                                                    ([relId, value]) => {
+                                                        const relKnown =
+                                                            knownSet.has(
+                                                                relId as RaceId,
+                                                            );
+                                                        const relRace =
+                                                            RACES[
+                                                                relId as RaceId
+                                                            ];
+                                                        const relColor =
+                                                            REPUTATION_COLORS[
+                                                                getReputationLevel(
+                                                                    value,
+                                                                )
+                                                            ];
+                                                        return (
+                                                            <span
+                                                                key={relId}
+                                                                className="rounded border px-1.5 py-0.5"
+                                                                style={{
+                                                                    borderColor: `${relColor}55`,
+                                                                    backgroundColor: `${relColor}15`,
+                                                                    color: relColor,
+                                                                }}
+                                                            >
+                                                                {relKnown
+                                                                    ? `${relRace.icon} ${relRace.name}`
+                                                                    : t(
+                                                                          "reputation.unknown_name",
+                                                                      )}{" "}
+                                                                {value > 0
+                                                                    ? "+"
+                                                                    : ""}
+                                                                {value}
+                                                            </span>
+                                                        );
+                                                    },
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {bonuses.length > 0 && (
                                         <div className="flex flex-wrap gap-1.5">
@@ -296,18 +356,4 @@ export function ReputationPanel() {
             </div>
         </div>
     );
-}
-
-/**
- * Получить текст модификатора цен
- * Показываем множители для покупки и продажи отдельно
- */
-function getPriceModifierText(reputation: number): string {
-    // Buy modifiers: hostile×2.0, unfriendly×1.4, neutral×1.0, friendly×0.9, allied×0.8
-    // Sell modifiers: hostile×0.7, unfriendly×0.85, neutral×1.0, friendly×1.1, allied×1.2
-    if (reputation <= -51) return "Покупка: ×2.0 | Продажа: ×0.7";
-    if (reputation <= -11) return "Покупка: ×1.4 | Продажа: ×0.85";
-    if (reputation <= 10) return "Покупка: ×1.0 | Продажа: ×1.0";
-    if (reputation <= 50) return "Покупка: ×0.9 | Продажа: ×1.1";
-    return "Покупка: ×0.8 | Продажа: ×1.2";
 }

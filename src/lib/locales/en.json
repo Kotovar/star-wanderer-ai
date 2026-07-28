@@ -2625,6 +2625,7 @@
         "progress": "Races known: {{found}} / {{total}}",
         "unknown_name": "Unknown race",
         "unknown_description": "Meet this race to reveal its details.",
+        "relations_label": "Relations with other races",
         "levels": {
             "hostile": "Hostile",
             "unfriendly": "Unfriendly",

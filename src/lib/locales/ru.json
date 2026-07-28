@@ -2625,6 +2625,7 @@
         "progress": "Открыто рас: {{found}} / {{total}}",
         "unknown_name": "Неизвестная раса",
         "unknown_description": "Познакомьтесь с этой расой, чтобы увидеть подробности.",
+        "relations_label": "Отношения с другими расами",
         "levels": {
             "hostile": "Враждебный",
             "unfriendly": "Недружелюбный",
