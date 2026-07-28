@@ -15,12 +15,21 @@ import {
   scheduleRandomEventConsequence,
 } from "@/game/events/randomEventChains";
 import { pickRandomEvent } from "@/game/constants/randomEvents";
-import { shiftHappiness } from "@/game/crew";
+import { shiftHappiness, giveRandomBondingTrait } from "@/game/crew";
+import { rollCrewRelationEvent } from "@/game/crew/relationEvents";
+import type { CrewRelationEvent } from "@/game/crew/relationEvents";
 
 // ─── Frequency tuning ─────────────────────────────────────────
 const EVENT_TRIGGER_CHANCE = 0.05; // было 0.08
 const EVENT_COOLDOWN = 12; // было 8
 const FIRST_EVENT_TURN = 6;
+
+// ─── Crew relation event tuning ───────────────────────────────
+const CREW_RELATION_CHANCE_PER_POINT = 0.001; // |relation| 20 -> ~2% chance per eligible pair per turn
+const CREW_RELATION_COOLDOWN = 6;
+const RELATION_EVENT_HAPPINESS = 6;
+const RELATION_EVENT_EXP = 3;
+const RELATION_TRAIT_CHANCE = 0.25;
 
 // ─── Payload ranges ───────────────────────────────────────────
 const STORM_DAMAGE_MIN = 5;
@@ -474,6 +483,77 @@ function applyCrewDisputeChoice(
     i18nStore.t("random_events.logs.crew_dispute_standard", { penalty }),
     "warning",
   );
+}
+
+function applyCrewRelationEvent(
+  event: CrewRelationEvent,
+  set: SetState,
+  get: () => GameStore,
+): void {
+  set({ randomEventCooldown: CREW_RELATION_COOLDOWN });
+
+  if (event.type === "conflict") {
+    set((state) => ({
+      crew: state.crew.map((member) =>
+        member.id === event.a.id || member.id === event.b.id
+          ? shiftHappiness(member, -RELATION_EVENT_HAPPINESS)
+          : member,
+      ),
+    }));
+    get().addLog(
+      i18nStore.t("random_events.logs.crew_relation_conflict", {
+        nameA: event.a.name,
+        nameB: event.b.name,
+        penalty: RELATION_EVENT_HAPPINESS,
+      }),
+      "warning",
+    );
+    playSound("ui_notification");
+    return;
+  }
+
+  if (Math.random() < RELATION_TRAIT_CHANCE) {
+    const recipient = Math.random() < 0.5 ? event.a : event.b;
+    const traitName = giveRandomBondingTrait(recipient, set);
+    if (traitName) {
+      get().addLog(
+        i18nStore.t("random_events.logs.crew_relation_trait", {
+          nameA: event.a.name,
+          nameB: event.b.name,
+          recipient: recipient.name,
+          trait: traitName,
+        }),
+        "info",
+      );
+      playSound("ui_notification");
+      return;
+    }
+  }
+
+  set((state) => ({
+    crew: state.crew.map((member) =>
+      member.id === event.a.id || member.id === event.b.id
+        ? shiftHappiness(member, RELATION_EVENT_HAPPINESS)
+        : member,
+    ),
+  }));
+  get().gainExp(
+    get().crew.find((c) => c.id === event.a.id),
+    RELATION_EVENT_EXP,
+  );
+  get().gainExp(
+    get().crew.find((c) => c.id === event.b.id),
+    RELATION_EVENT_EXP,
+  );
+  get().addLog(
+    i18nStore.t("random_events.logs.crew_relation_bonding", {
+      nameA: event.a.name,
+      nameB: event.b.name,
+      exp: RELATION_EVENT_EXP,
+    }),
+    "info",
+  );
+  playSound("ui_notification");
 }
 
 function applyBiohazardChoice(
@@ -981,26 +1061,35 @@ export const processRandomEvents = (
     return;
   }
 
-  // Phase B: maybe spawn a fresh event
-  if (
+  // Phase B: maybe spawn a fresh decision event, or a relation-driven crew tick
+  const busy =
     state.currentCombat ||
     state.pendingTravelEvent ||
     state.pendingRandomEvent ||
     state.scheduledRandomEventConsequence ||
     state.turn < FIRST_EVENT_TURN ||
-    state.randomEventCooldown > 0 ||
-    Math.random() >= EVENT_TRIGGER_CHANCE
-  ) {
+    state.randomEventCooldown > 0;
+
+  if (busy) return;
+
+  if (Math.random() < EVENT_TRIGGER_CHANCE) {
+    const eventType = pickRandomEvent(state);
+    const event = generateEventPayload(eventType, state);
+
+    set({ pendingRandomEvent: event, randomEventCooldown: EVENT_COOLDOWN });
+    get().addLog(
+      i18nStore.t(`random_events.logs.detected_${event.type}`),
+      "warning",
+    );
+    playSound("ui_notification");
     return;
   }
 
-  const eventType = pickRandomEvent(state);
-  const event = generateEventPayload(eventType, state);
-
-  set({ pendingRandomEvent: event, randomEventCooldown: EVENT_COOLDOWN });
-  get().addLog(
-    i18nStore.t(`random_events.logs.detected_${event.type}`),
-    "warning",
+  const relationEvent = rollCrewRelationEvent(
+    state.crew,
+    CREW_RELATION_CHANCE_PER_POINT,
   );
-  playSound("ui_notification");
+  if (relationEvent) {
+    applyCrewRelationEvent(relationEvent, set, get);
+  }
 };
