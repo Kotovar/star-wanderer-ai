@@ -169,6 +169,7 @@ export const selectLocation = (
                     loc.stationId ?? loc.id,
                     loc.dominantRace,
                     state.currentSector?.tier ?? 1,
+                    state.raceReputation,
                 );
                 set((s) => ({
                     discoveredAugmentationIds: [

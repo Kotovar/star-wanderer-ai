@@ -44,6 +44,7 @@ export const createAugmentationsSlice = (
             station.stationId ?? station.id,
             station.dominantRace,
             state.currentSector?.tier ?? 1,
+            state.raceReputation,
         );
         if (!catalog.includes(augmentationId)) {
             get().addLog(i18nStore.t("game_logs.augmentationsSlice_13"), "error");

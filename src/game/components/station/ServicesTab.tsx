@@ -141,6 +141,7 @@ interface ServicesTabProps {
     stationId: string;
     dominantRace?: RaceId;
     sectorTier: number;
+    raceReputation: Record<RaceId, number>;
     crewWithMutations: MutationCrewMember[];
     crewWithNegativeTraits: NegativeTraitCrewMember[];
     onInstallAugmentation: (crewId: number, augId: AugmentationId) => void;
@@ -189,6 +190,7 @@ export function ServicesTab({
     stationId,
     dominantRace,
     sectorTier,
+    raceReputation,
     crewWithMutations,
     crewWithNegativeTraits,
     onInstallAugmentation,
@@ -262,6 +264,7 @@ export function ServicesTab({
                     stationId={stationId}
                     dominantRace={dominantRace}
                     sectorTier={sectorTier}
+                    raceReputation={raceReputation}
                     onInstall={onInstallAugmentation}
                     onRemove={onRemoveAugmentation}
                 />
@@ -1028,6 +1031,7 @@ function AugmentationSection({
     stationId,
     dominantRace,
     sectorTier,
+    raceReputation,
     onInstall,
     onRemove,
 }: {
@@ -1036,6 +1040,7 @@ function AugmentationSection({
     stationId: string;
     dominantRace?: RaceId;
     sectorTier: number;
+    raceReputation: Record<RaceId, number>;
     onInstall: (crewId: number, augId: AugmentationId) => void;
     onRemove: (crewId: number) => void;
 }) {
@@ -1045,6 +1050,7 @@ function AugmentationSection({
         stationId,
         dominantRace,
         sectorTier,
+        raceReputation,
     );
 
     return (

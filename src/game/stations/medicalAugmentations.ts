@@ -4,6 +4,7 @@ import type {
     AugmentationRarity,
 } from "@/game/types/augmentations";
 import type { RaceId } from "@/game/types/races";
+import { getRaceReputationLevel } from "@/game/reputation/utils";
 
 const professionalAugmentations = Object.values(AUGMENTATIONS).filter(
     (augmentation) => augmentation.forProfession,
@@ -85,12 +86,19 @@ export const getMedicalAugmentationCatalog = (
     stationId: string,
     dominantRace?: RaceId,
     sectorTier = 1,
+    raceReputation?: Record<RaceId, number>,
 ): AugmentationId[] => {
     const professional = pickProfessionalAugmentations(
         stationId,
         getTier(sectorTier),
     );
-    const racial = dominantRace
+    // Эксклюзивная раса-аугментация доступна только союзникам (allied) —
+    // это единственная награда за высшую репутацию, которая пока не была задействована.
+    const isAllied =
+        dominantRace &&
+        raceReputation &&
+        getRaceReputationLevel(raceReputation, dominantRace) === "allied";
+    const racial = isAllied
         ? Object.values(AUGMENTATIONS).find(
               (augmentation) => augmentation.forRace === dominantRace,
           )?.id

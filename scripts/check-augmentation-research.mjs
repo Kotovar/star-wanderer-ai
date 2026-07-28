@@ -39,21 +39,38 @@ const augmentationResearch = TIER3_TECHS.cybernetic_augmentation;
 assert.equal(augmentationResearch.tier, 3);
 assert.deepEqual(augmentationResearch.prerequisites, ["xenobiology"]);
 
-const catalog = getMedicalAugmentationCatalog("medical-alpha", "human");
+const alliedHuman = { human: 60 };
+const catalog = getMedicalAugmentationCatalog(
+  "medical-alpha",
+  "human",
+  1,
+  alliedHuman,
+);
 assert.deepEqual(
   catalog,
-  getMedicalAugmentationCatalog("medical-alpha", "human"),
+  getMedicalAugmentationCatalog("medical-alpha", "human", 1, alliedHuman),
   "station catalog must be stable",
 );
-assert.equal(catalog.length, 4, "racial stations must offer four implants");
+assert.equal(
+  catalog.length,
+  4,
+  "racial stations must offer four implants once reputation is allied",
+);
 assert.ok(
   catalog.includes("adaptive_neural_link"),
-  "the dominant race implant must be in the catalog",
+  "the dominant race implant must be in the catalog once reputation is allied",
 );
 assert.equal(
   new Set(catalog).size,
   4,
   "a station catalog must not repeat implants",
+);
+assert.equal(
+  getMedicalAugmentationCatalog("medical-alpha", "human", 1, {
+    human: 10,
+  }).length,
+  3,
+  "the racial implant must be withheld below allied reputation",
 );
 assert.equal(
   getMedicalAugmentationCatalog("legacy-medical").length,
@@ -247,6 +264,7 @@ let state = {
     },
   ],
   credits: 10_000,
+  raceReputation: { human: 60 },
   addLog: () => {},
 };
 const set = (update) => {
