@@ -3138,6 +3138,8 @@
         "tidal": "World with powerful tidal activity. Geothermal energy available but surface is unstable."
     },
     "planet_specializations": {
+        "reputation_required": "Allied relations are required (+51). Current reputation: {{reputation}}.",
+        "reputation_required_button": "ALLIES REQUIRED",
         "human_academy": {
             "name": "Space Academy",
             "description": "Human military academy offers crew training. Intensive program enhances combat effectiveness.",
@@ -4924,6 +4926,7 @@
         "sendScoutingMission_7": "Scouting: {{scoutName}} found {{itemName}} x{{quantity}}!",
         "sendScoutingMission_8": "🔬 Scouting: samples discovered {{icon}} {{resourceData_name}} x{{quantity}}",
         "applyEffect_1": "Effect for race {{raceId}} not found!",
+        "applyEffect_reputation_required": "Allied relations are required to activate a specialization.",
         "applyEffect_2": "Not enough credits for {{spec_name}}! {{cost}}₢ required",
         "applyEffect_3": "🧬 Bio-enhancement: +{{regenValue}} health regeneration per turn for {{duration}} turns",
         "applyEffect_4": "🎓 Space Academy: choose a crew member to train",

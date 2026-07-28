@@ -11,6 +11,7 @@
     "audio:generate": "node --no-warnings scripts/generate-audio.mjs",
     "check:audio": "node --no-warnings --experimental-strip-types scripts/check-audio.mjs",
     "check:planet-specializations": "node --no-warnings --experimental-strip-types scripts/check-planet-specialization-bonuses.mjs",
+    "check:planet-specialization-access": "node --no-warnings --experimental-strip-types scripts/check-planet-specialization-access.mjs",
     "check:data": "node --no-warnings scripts/check-data-consistency.mjs",
     "check:prices": "node --no-warnings scripts/check-price-modifier.mjs",
     "check:victory": "node --no-warnings --experimental-strip-types scripts/check-victory-paths.mjs",

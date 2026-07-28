@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useGameStore } from "@/game/store";
 import { PLANET_SPECIALIZATIONS } from "@/game/constants/planets";
 import { RACES } from "@/game/constants/races";
+import { canUsePlanetSpecialization } from "@/game/reputation/planetSpecializationAccess";
 import { Button } from "@/components/ui/button";
 import { SectionPanel } from "./SectionPanel";
 import { createVoidbornBoostEffect } from "@/game/slices/artifacts/helpers";
@@ -42,6 +43,7 @@ export function PlanetSpecializationPanel({
     const boostArtifact = useGameStore((s) => s.boostArtifact);
     const activatePlanetEffect = useGameStore((s) => s.activatePlanetEffect);
     const planetCooldowns = useGameStore((s) => s.planetCooldowns);
+    const raceReputation = useGameStore((s) => s.raceReputation);
 
     const [selectedCrewId, setSelectedCrewId] = useState<number | null>(null);
     const [selectedArtifactId, setSelectedArtifactId] = useState<string | null>(
@@ -59,6 +61,10 @@ export function PlanetSpecializationPanel({
     const spec = PLANET_SPECIALIZATIONS[currentLocation.dominantRace];
 
     if (!spec) return null;
+
+    const currentReputation =
+        raceReputation[currentLocation.dominantRace] ?? 0;
+    const canUseSpecialization = canUsePlanetSpecialization(currentReputation);
 
     const isRetraining =
         spec.id === "human_academy" && academyAction === "retrain";
@@ -97,6 +103,7 @@ export function PlanetSpecializationPanel({
     const handleConfirm = () => {
         if (
             !canAfford ||
+            !canUseSpecialization ||
             isOnCooldown ||
             isMaxLevelReached ||
             needsCrewSelection ||
@@ -214,6 +221,14 @@ export function PlanetSpecializationPanel({
                     </div>
                 )}
             </div>
+
+            {!canUseSpecialization && (
+                <div className="border border-[#ffb00066] bg-[rgba(255,176,0,0.08)] p-2 text-xs text-[#ffb000]">
+                    {t("planet_specializations.reputation_required", {
+                        reputation: currentReputation,
+                    })}
+                </div>
+            )}
 
             {/* Selection UI for specializations that need it */}
             {spec.id === "human_academy" && (
@@ -404,6 +419,7 @@ export function PlanetSpecializationPanel({
                     onClick={handleConfirm}
                     disabled={
                         !canAfford ||
+                        !canUseSpecialization ||
                         isOnCooldown ||
                         isMaxLevelReached ||
                         needsCrewSelection ||
@@ -413,6 +429,8 @@ export function PlanetSpecializationPanel({
                 >
                     {isOnCooldown
                         ? "ИСПОЛЬЗОВАНО"
+                        : !canUseSpecialization
+                          ? t("planet_specializations.reputation_required_button")
                         : isMaxLevelReached
                           ? "МАКС. УРОВЕНЬ"
                           : !canAfford

@@ -3138,6 +3138,8 @@
         "tidal": "Мир с мощной приливной активностью. Геотермальная энергия доступна, но поверхность нестабильна."
     },
     "planet_specializations": {
+        "reputation_required": "Требуются отношения «Союзники» (+51). Текущая репутация: {{reputation}}.",
+        "reputation_required_button": "ТРЕБУЮТСЯ СОЮЗНИКИ",
         "human_academy": {
             "name": "Космическая Академия",
             "description": "Военная академия людей предлагает обучение для членов экипажа. Интенсивная программа повышает боевую эффективность.",
@@ -4924,6 +4926,7 @@
         "sendScoutingMission_7": "Разведка: {{scoutName}} нашёл {{itemName}} x{{quantity}}!",
         "sendScoutingMission_8": "🔬 Разведка: обнаружены образцы {{icon}} {{resourceData_name}} x{{quantity}}",
         "applyEffect_1": "Эффект для расы {{raceId}} не найден!",
+        "applyEffect_reputation_required": "Для активации специализации нужны отношения «Союзники».",
         "applyEffect_2": "Недостаточно кредитов для {{spec_name}}! Нужно {{cost}}₢",
         "applyEffect_3": "🧬 Биоулучшение: +{{regenValue}} к регенерации здоровья за ход на {{duration}} ходов",
         "applyEffect_4": "🎓 Космическая Академия: выберите члена экипажа для обучения",

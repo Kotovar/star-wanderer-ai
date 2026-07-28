@@ -7,6 +7,7 @@ import type {
     PlanetSpecialization,
 } from "@/game/types";
 import { PLANET_SPECIALIZATIONS } from "@/game/constants/planets";
+import { canUsePlanetSpecialization } from "@/game/reputation/planetSpecializationAccess";
 import { scanSector } from "./scanSector";
 import { getDiminishingPlanetBonus } from "./diminishingBonus";
 
@@ -32,6 +33,14 @@ export const applyPlanetEffect = (
     }
 
     const state = get();
+
+    if (!canUsePlanetSpecialization(state.raceReputation[raceId] ?? 0)) {
+        get().addLog(
+            i18nStore.t("game_logs.applyEffect_reputation_required"),
+            "error",
+        );
+        return false;
+    }
 
     // Проверка достаточности кредитов
     if (state.credits < spec.cost) {
