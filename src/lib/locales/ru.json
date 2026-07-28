@@ -153,7 +153,11 @@
         "traits": "Трейты",
         "tab_profile": "ПРОФИЛЬ",
         "tab_assignment": "НАЗНАЧЕНИЕ",
-        "tab_bonuses": "БОНУСЫ"
+        "tab_bonuses": "БОНУСЫ",
+        "tab_techtree": "ПРОКАЧКА",
+        "tech_tree_tier": "Уровень {{tier}}",
+        "tech_tree_locked": "заблокировано — нужен {{level}} ур.",
+        "tech_tree_pending": "ожидает выбора"
     },
     "cargo": {
         "title": "Грузовой отсек",

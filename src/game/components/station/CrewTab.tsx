@@ -11,7 +11,14 @@ import {
 } from "@/components/ui/dialog";
 import { GameDialogContent } from "../GameDialog";
 import { RACES } from "@/game/constants/races";
-import type { CrewTrait, Profession, RaceId } from "@/game/types";
+import { TECH_TREE, TECH_TREE_TIERS } from "@/game/constants/techTree";
+import type {
+    CrewTrait,
+    Profession,
+    RaceId,
+    TechPerkBranch,
+    TechPerkTier,
+} from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
 import { ProfessionSprite } from "../ProfessionSprite";
 
@@ -23,6 +30,7 @@ interface CrewTabProps {
             profession: Profession;
             level?: number;
             traits: CrewTrait[];
+            techPerks?: Partial<Record<TechPerkTier, TechPerkBranch>>;
         };
         price: number;
         quality: string;
@@ -105,6 +113,7 @@ interface CrewCardProps {
             profession: Profession;
             level?: number;
             traits: CrewTrait[];
+            techPerks?: Partial<Record<TechPerkTier, TechPerkBranch>>;
         };
         price: number;
         quality: string;
@@ -140,6 +149,10 @@ function CrewCard({
                     {crew.member.traits.length > 0 && (
                         <CrewTraits traits={crew.member.traits} />
                     )}
+                    <TechPerkBadges
+                        profession={crew.member.profession}
+                        techPerks={crew.member.techPerks}
+                    />
                 </div>
                 <Button
                     disabled={credits < crew.price}
@@ -344,6 +357,39 @@ function CrewTraits({ traits }: { traits: CrewTrait[] }) {
     );
 }
 
+// Компактный индикатор уже выбранных веток прокачки (для персонала 3+ уровня,
+// который получил их автоматически при генерации — см. buildCrewMember)
+function TechPerkBadges({
+    profession,
+    techPerks,
+}: {
+    profession: Profession;
+    techPerks?: Partial<Record<TechPerkTier, TechPerkBranch>>;
+}) {
+    if (!techPerks) return null;
+    const resolvedTiers = TECH_TREE_TIERS.filter((tier) => techPerks[tier]);
+    if (resolvedTiers.length === 0) return null;
+
+    return (
+        <div className="flex flex-wrap gap-1 mt-1">
+            {resolvedTiers.map((tier) => {
+                const branch = techPerks[tier];
+                if (!branch) return null;
+                const option = TECH_TREE[profession][tier][branch];
+                return (
+                    <span
+                        key={tier}
+                        title={option.desc}
+                        className="text-[10px] bg-[#00d4ff20] text-[#00d4ff] px-1 rounded"
+                    >
+                        {option.icon} {option.name}
+                    </span>
+                );
+            })}
+        </div>
+    );
+}
+
 // Crew detail dialog component for station hiring
 interface CrewDetailDialogProps {
     crew: {
@@ -353,6 +399,7 @@ interface CrewDetailDialogProps {
             profession: Profession;
             level?: number;
             traits: CrewTrait[];
+            techPerks?: Partial<Record<TechPerkTier, TechPerkBranch>>;
         };
         price: number;
         quality: string;
@@ -418,6 +465,10 @@ function CrewDetailDialog({
                 <p className="mt-1 text-xs text-[#aaa]">
                     {t(`profession_descriptions.${crew.member.profession}`)}
                 </p>
+                <TechPerkBadges
+                    profession={crew.member.profession}
+                    techPerks={crew.member.techPerks}
+                />
             </div>
 
             {/* Price */}

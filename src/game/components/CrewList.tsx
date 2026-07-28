@@ -31,6 +31,8 @@ import { ProfessionSprite } from "./ProfessionSprite";
 import { CrewStatusIcon } from "./CrewStatusIcon";
 import { ModuleMoveButtons } from "./CrewMemberCard";
 import { ASSIGNMENT_EXHAUSTED_AT } from "@/game/crew/assignmentFatigue";
+import { TECH_TREE, TECH_TREE_TIERS } from "@/game/constants/techTree";
+import type { TechPerkBranch, TechPerkTier } from "@/game/types";
 import { getHappinessEfficiencyModifier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import { getDesertionTurnsLeft } from "@/game/slices/gameLoop/processors/processDesertion";
 
@@ -280,10 +282,11 @@ export function CrewList() {
 
                             return (
                                 <Tabs defaultValue="profile" className="mt-2 h-[60vh] flex flex-col">
-                                    <TabsList className="grid grid-cols-3 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] rounded-none h-8 w-full shrink-0">
+                                    <TabsList className="grid grid-cols-4 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] rounded-none h-8 w-full shrink-0">
                                         <TabsTrigger value="profile" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-[#ffb000] text-[#667766] uppercase font-bold tracking-wider">{t("crew.tab_profile")}</TabsTrigger>
                                         <TabsTrigger value="assignment" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-[#ffb000] text-[#667766] uppercase font-bold tracking-wider">{t("crew.tab_assignment")}</TabsTrigger>
                                         <TabsTrigger value="bonuses" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-[#ffb000] text-[#667766] uppercase font-bold tracking-wider">{t("crew.tab_bonuses")}</TabsTrigger>
+                                        <TabsTrigger value="techtree" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-[#ffb000] text-[#667766] uppercase font-bold tracking-wider">{t("crew.tab_techtree")}</TabsTrigger>
                                     </TabsList>
                                     <TabsContent value="profile" className="mt-2 space-y-4 text-sm leading-relaxed overflow-y-auto pr-1">
                                         {race && (
@@ -762,6 +765,80 @@ export function CrewList() {
                                                 `profession_descriptions.${selectedCrew.profession}`,
                                             )}
                                         </div>
+                                    </TabsContent>
+                                    <TabsContent value="techtree" className="mt-2 space-y-3 text-sm leading-relaxed overflow-y-auto pr-1">
+                                        {TECH_TREE_TIERS.map((tier: TechPerkTier) => {
+                                            const options = TECH_TREE[selectedCrew.profession][tier];
+                                            const chosenBranch = selectedCrew.techPerks?.[tier];
+                                            const tierStatus =
+                                                selectedCrew.level < tier
+                                                    ? "locked"
+                                                    : chosenBranch
+                                                      ? "resolved"
+                                                      : "pending";
+
+                                            return (
+                                                <div key={tier}>
+                                                    <div className="flex items-center justify-between text-xs uppercase tracking-wider mb-1">
+                                                        <span className="text-[#ffb000]">
+                                                            {t("crew.tech_tree_tier", { tier })}
+                                                        </span>
+                                                        {tierStatus === "locked" && (
+                                                            <span className="text-[#556] normal-case">
+                                                                {t("crew.tech_tree_locked", { level: tier })}
+                                                            </span>
+                                                        )}
+                                                        {tierStatus === "pending" && (
+                                                            <span className="text-[#00d4ff] normal-case">
+                                                                {t("crew.tech_tree_pending")}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        {(["A", "B"] as TechPerkBranch[]).map((branch) => {
+                                                            const option = options[branch];
+                                                            const isChosen = chosenBranch === branch;
+                                                            const cardClass =
+                                                                tierStatus === "locked"
+                                                                    ? "border-[#333] bg-[rgba(255,255,255,0.02)] opacity-40"
+                                                                    : tierStatus === "pending"
+                                                                      ? "border-[#00d4ff66] bg-[rgba(0,212,255,0.05)]"
+                                                                      : isChosen
+                                                                        ? "border-[#00ff41] bg-[rgba(0,255,65,0.08)]"
+                                                                        : "border-[#333] bg-[rgba(255,255,255,0.02)] opacity-50";
+
+                                                            return (
+                                                                <div
+                                                                    key={branch}
+                                                                    className={`flex flex-col gap-1 p-2 border rounded ${cardClass}`}
+                                                                >
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-lg leading-none">
+                                                                            {option.icon}
+                                                                        </span>
+                                                                        <span
+                                                                            className={`text-xs font-bold ${
+                                                                                isChosen ? "text-[#00ff41]" : "text-[#aaa]"
+                                                                            }`}
+                                                                        >
+                                                                            {option.name}
+                                                                        </span>
+                                                                        {isChosen && (
+                                                                            <span className="text-[#00ff41] text-xs ml-auto">
+                                                                                ✓
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="text-[10px] text-[#888]">
+                                                                        {option.desc}
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </TabsContent>
                                 </Tabs>
                             );

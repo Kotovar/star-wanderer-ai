@@ -52,7 +52,10 @@ export function CrewPerkChoiceModal() {
                             key={branch}
                             className="flex min-h-32 flex-col border border-[#00ff4144] bg-[rgba(0,255,65,0.025)] p-3"
                         >
-                            <div className="font-['Orbitron'] text-[11px] font-bold uppercase tracking-wider text-accent">
+                            <div className="flex items-center gap-2 font-['Orbitron'] text-[11px] font-bold uppercase tracking-wider text-accent">
+                                <span className="text-xl leading-none">
+                                    {option.icon}
+                                </span>
                                 {option.name}
                             </div>
                             <div className="mt-1 flex-1 text-xs leading-relaxed text-[#7f8b7f]">

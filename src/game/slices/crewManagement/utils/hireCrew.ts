@@ -190,6 +190,10 @@ export const hireCrew = (
         level: crewData.level,
         traits: crewData.traits,
         exp: crewData.exp,
+        // Сохраняем ветки прокачки, уже показанные игроку в превью кандидата
+        // (см. generateStationCrew) — иначе они бы перевыбирались заново
+        // случайно прямо здесь, расходясь с тем, что было на экране найма.
+        techPerks: crewData.techPerks,
         moduleId: initialModuleId,
     });
 
