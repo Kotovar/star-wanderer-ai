@@ -145,7 +145,7 @@ export const installModuleFromCargo = (
         get().addLog( i18nStore.t("game_logs.installModuleFromCargo_3", { item: cargoItem.module?.name || cargoItem.item, x, y }),
             "info",
         );
-        playSound("success");
+        playSound("world_install");
         get().updateShipStats();
     }
 };

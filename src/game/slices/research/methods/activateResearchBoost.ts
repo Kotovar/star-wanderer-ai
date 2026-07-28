@@ -72,5 +72,5 @@ export const activateResearchBoost = (
         }),
         "info",
     );
-    playSound("success");
+    playSound("world_research");
 };

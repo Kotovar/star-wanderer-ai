@@ -115,6 +115,6 @@ export const scrapModule = (
     get().addLog( i18nStore.t("game_logs.scrapModule_3", { mod_name: mod.name, scrapValue }),
         "warning",
     );
-    playSound("destroy");
+    playSound("world_scrap");
     get().updateShipStats();
 };

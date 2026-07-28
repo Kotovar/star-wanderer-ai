@@ -1,5 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
-import type { GameStore, SetState } from "@/game/types";
+import type { GameState, GameStore, SetState } from "@/game/types";
 import { checkGameOver, checkVictory, triggerVictory, restartGame } from "./helpers";
 import {
     clearAllSaves,
@@ -10,8 +10,33 @@ import {
 } from "@/game/saves/utils";
 import type { ManualSlotId, SaveSlotId } from "@/game/saves/utils";
 import { CREW_TRAITS } from "@/game/constants/traits";
-import { setSoundPlaybackEnabled } from "@/sounds";
+import {
+    DEFAULT_AUDIO_VOLUMES,
+    setAudioVolumes,
+    setSoundPlaybackEnabled,
+} from "@/sounds";
 import { resetMetaProgress } from "@/game/metaProgress/store";
+
+const normalizeAudioSettings = (
+    settings: Partial<GameState["settings"]> | undefined,
+): GameState["settings"] => ({
+    animationsEnabled: settings?.animationsEnabled ?? true,
+    soundEnabled: settings?.soundEnabled ?? true,
+    master: normalizeVolume(settings?.master, DEFAULT_AUDIO_VOLUMES.master),
+    music: normalizeVolume(settings?.music, DEFAULT_AUDIO_VOLUMES.music),
+    sfx: normalizeVolume(settings?.sfx, DEFAULT_AUDIO_VOLUMES.sfx),
+    ui: normalizeVolume(settings?.ui, DEFAULT_AUDIO_VOLUMES.ui),
+});
+
+const normalizeVolume = (value: unknown, fallback: number): number =>
+    typeof value === "number" && Number.isFinite(value)
+        ? Math.max(0, Math.min(1, value))
+        : fallback;
+
+const syncAudioSettings = (settings: GameState["settings"]) => {
+    setSoundPlaybackEnabled(settings.soundEnabled);
+    setAudioVolumes(settings);
+};
 
 export interface GameManagementSlice {
     checkGameOver: () => void;
@@ -56,10 +81,7 @@ export const createGameManagementSlice = (
         }
 
         // Миграция настроек
-        saved.settings = {
-            animationsEnabled: saved.settings?.animationsEnabled ?? false,
-            soundEnabled: saved.settings?.soundEnabled ?? true,
-        };
+        saved.settings = normalizeAudioSettings(saved.settings);
         if (saved.gameLoadedCount === undefined) {
             saved.gameLoadedCount = 0;
         }
@@ -94,7 +116,7 @@ export const createGameManagementSlice = (
             }),
         }));
 
-        setSoundPlaybackEnabled(saved.settings.soundEnabled);
+        syncAudioSettings(saved.settings);
         set({ ...saved });
         return true;
     },
@@ -115,10 +137,7 @@ export const createGameManagementSlice = (
         }
 
         // Миграция
-        saved.settings = {
-            animationsEnabled: saved.settings?.animationsEnabled ?? false,
-            soundEnabled: saved.settings?.soundEnabled ?? true,
-        };
+        saved.settings = normalizeAudioSettings(saved.settings);
         if (saved.gameLoadedCount === undefined) {
             saved.gameLoadedCount = 0;
         }
@@ -153,7 +172,7 @@ export const createGameManagementSlice = (
             }),
         }));
 
-        setSoundPlaybackEnabled(saved.settings.soundEnabled);
+        syncAudioSettings(saved.settings);
         set({ ...saved });
         get().addLog(
             slotId === "auto"

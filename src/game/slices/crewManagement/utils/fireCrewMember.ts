@@ -67,6 +67,6 @@ export const fireCrewMember = (
 
     if (crewMember) {
         get().addLog( i18nStore.t("game_logs.fireCrewMember_1", { crewMember_name: crewMember.name }), "warning");
-        playSound("error");
+        playSound("ui_cancel");
     }
 };

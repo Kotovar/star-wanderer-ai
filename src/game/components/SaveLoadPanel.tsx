@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useGameStore } from "@/game/store";
 import { getAllSlotMeta, deleteSlot } from "@/game/saves/utils";
 import type { SaveSlotMeta, SaveSlotId, ManualSlotId } from "@/game/saves/utils";
 import { useTranslation } from "@/lib/useTranslation";
 import { SHIP_TEMPLATES } from "@/game/constants/shipTemplates";
+import { playUi, unlockAudio, type AudioVolumeCategory } from "@/sounds";
 
 interface Props {
   onClose: () => void;
@@ -190,8 +191,10 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
   const resetProgress = useGameStore((s) => s.resetProgress);
   const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
   const soundEnabled = useGameStore((s) => s.settings.soundEnabled);
+  const audioVolumes = useGameStore((s) => s.settings);
   const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
   const setSoundEnabled = useGameStore((s) => s.setSoundEnabled);
+  const setAudioVolume = useGameStore((s) => s.setAudioVolume);
   const { t, currentLanguage, changeLanguage } = useTranslation();
 
   const [view, setView] = useState<"menu" | "save" | "load">("menu");
@@ -209,13 +212,19 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
   const [loadConfirm, setLoadConfirm] = useState<SaveSlotId | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
 
+  const closePanel = useCallback(() => {
+    playUi("ui_dialog_close");
+    onClose();
+  }, [onClose]);
+
   useEffect(() => {
+    playUi("ui_dialog_open");
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") closePanel();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [closePanel]);
 
   const refreshMeta = () => setSlots(getAllSlotMeta());
 
@@ -232,14 +241,16 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
   };
 
   const handleLoad = (slotId: SaveSlotId) => {
+    void unlockAudio();
+    playUi("ui_confirm");
     loadFromSlot(slotId);
     setLoadConfirm(null);
-    onClose();
+    closePanel();
   };
 
   const handleResetProgress = () => {
     resetProgress();
-    onClose();
+    closePanel();
     window.dispatchEvent(new CustomEvent("sw:showTitleSetup"));
   };
 
@@ -250,11 +261,17 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
     { id: "manual4", label: t("save_load.slot_label", { n: "4" }) },
     { id: "manual5", label: t("save_load.slot_label", { n: "5" }) },
   ];
+  const audioSliders: { id: AudioVolumeCategory; label: string }[] = [
+    { id: "master", label: t("start_menu.audio_master") },
+    { id: "music", label: t("start_menu.audio_music") },
+    { id: "sfx", label: t("start_menu.audio_sfx") },
+    { id: "ui", label: t("start_menu.audio_ui") },
+  ];
 
   return (
     <div
       className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+      onClick={closePanel}
     >
       <div
         className="flex max-h-[calc(100dvh-2rem)] w-full max-w-sm flex-col border-2 border-[#00d4ff] bg-[rgba(5,8,16,0.98)] font-['Share_Tech_Mono']"
@@ -266,7 +283,10 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
           <div className="flex items-center gap-2">
             {view !== "menu" && (
               <button
-                onClick={() => setView("menu")}
+                onClick={() => {
+                  playUi("ui_tab");
+                  setView("menu");
+                }}
                 className="text-[#00d4ff] hover:text-white cursor-pointer text-sm leading-none"
                 title={t("save_load.btn_back")}
               >
@@ -280,7 +300,7 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
             </h2>
           </div>
           <button
-            onClick={onClose}
+            onClick={closePanel}
             className="text-[#ff0040] hover:text-white text-lg font-bold cursor-pointer leading-none"
           >
             ✕
@@ -333,6 +353,27 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
                     <span className={`absolute top-1 h-4 w-4 ${soundEnabled ? "left-7 bg-[#00ff41]" : "left-1 bg-[#556]"}`} />
                   </button>
                 </div>
+
+                <div className="border border-[#1a3040] p-3">
+                  <div className="mb-2 text-xs text-[#00d4ff]">{t("start_menu.audio_levels")}</div>
+                  <div className="grid gap-2">
+                    {audioSliders.map(({ id, label }) => (
+                      <label key={id} className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 text-[10px] text-[#91a0a8]">
+                        <span>{label}</span>
+                        <span className="text-[#00d4ff]">{Math.round(audioVolumes[id] * 100)}%</span>
+                        <input
+                          className="col-span-2 h-1 w-full accent-[#00d4ff]"
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          value={audioVolumes[id]}
+                          onChange={(event) => setAudioVolume(id, Number(event.currentTarget.value))}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="border-t border-[#00d4ff33] pt-3 text-[9px] uppercase tracking-widest text-[#555]">
@@ -342,14 +383,20 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => setView("save")}
+                  onClick={() => {
+                    playUi("ui_tab");
+                    setView("save");
+                  }}
                   className="cursor-pointer border border-[#00d4ff] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#00d4ff] hover:bg-[rgba(0,212,255,0.15)]"
                 >
                   💾 {t("save_load.section_save")}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setView("load")}
+                  onClick={() => {
+                    playUi("ui_tab");
+                    setView("load");
+                  }}
                   className="cursor-pointer border border-[#00ff41] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#00ff41] hover:bg-[rgba(0,255,65,0.15)]"
                 >
                   📂 {t("save_load.section_load")}

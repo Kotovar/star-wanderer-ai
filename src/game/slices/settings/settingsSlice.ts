@@ -1,9 +1,14 @@
 import type { SetState } from "@/game/types";
-import { setSoundPlaybackEnabled } from "@/sounds";
+import {
+    setAudioVolume as setRuntimeAudioVolume,
+    setSoundPlaybackEnabled,
+} from "@/sounds";
+import type { AudioVolumeCategory } from "@/sounds";
 
 export interface SettingsSlice {
     setAnimationsEnabled: (enabled: boolean) => void;
     setSoundEnabled: (enabled: boolean) => void;
+    setAudioVolume: (category: AudioVolumeCategory, value: number) => void;
     setGalaxyZoom: (zoom: number) => void;
     setSectorZoom: (zoom: number) => void;
     setGalaxyOffset: (offset: { x: number; y: number }) => void;
@@ -35,6 +40,19 @@ export const createSettingsSlice = (set: SetState): SettingsSlice => ({
             settings: {
                 ...state.settings,
                 soundEnabled: enabled,
+            },
+        }));
+    },
+
+    setAudioVolume: (category, value) => {
+        const volume = Number.isFinite(value)
+            ? Math.max(0, Math.min(1, value))
+            : 0;
+        setRuntimeAudioVolume(category, volume);
+        set((state) => ({
+            settings: {
+                ...state.settings,
+                [category]: volume,
             },
         }));
     },

@@ -69,6 +69,6 @@ export const retrainCrewMember = (
         }),
         "info",
     );
-    playSound("success");
+    playSound("world_crew_milestone");
     return true;
 };

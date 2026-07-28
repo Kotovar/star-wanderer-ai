@@ -52,7 +52,7 @@ const DEFAULT_CURSED_ARTIFACT_DAMAGE = 5;
 const reportTravelBlocked = (message: string, get: () => GameStore): void => {
     // Попап показывает сам addLog для типа "error"
     get().addLog(message, "error");
-    playSound("error");
+    playSound("ui_error");
 };
 
 /**
@@ -334,6 +334,7 @@ const handleTravelCompletion = (
 
     markSectorVisited(sector, set);
     get().addLog( i18nStore.t("game_logs.selectSector_4", { sector_name: sector.name }), "info");
+    playSound("travel_arrival");
 
     // Радиация нейтронной звезды действует и при мгновенном прибытии
     applyNeutronRadiation(sector, set as SetState, get);
@@ -423,6 +424,7 @@ const handleTravelStart = (
         markSectorVisited(sector, set);
         set(() => ({ gameMode: "sector_map" as GameMode }));
         get().addLog( i18nStore.t("game_logs.selectSector_5", { sector_name: sector.name }), "info");
+        playSound("travel_arrival");
 
         // Радиация нейтронной звезды действует и при варп-прыжке
         applyNeutronRadiation(sector, set as SetState, get);
@@ -598,7 +600,7 @@ export const selectSector = (
     handleNavigationError(state, distance, !!pilotInCockpit, set, get);
 
     // Воспроизведение звука
-    playSound("travel");
+    playSound("travel_departure");
 
     // Обработка перелёта
     if (travelTurns === 0) {

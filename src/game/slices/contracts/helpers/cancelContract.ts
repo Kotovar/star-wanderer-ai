@@ -37,5 +37,5 @@ export const cancelContract = (
         get().changeReputation(contract.requiredRace, -5);
     }
 
-    playSound("error");
+    playSound("ui_cancel");
 };

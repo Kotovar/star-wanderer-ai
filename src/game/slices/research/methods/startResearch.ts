@@ -195,5 +195,5 @@ export const startResearch = (
 
     // Логирование
     get().addLog( i18nStore.t("game_logs.startResearch_1", { tech_name: tech.name }), "info");
-    playSound("success");
+    playSound("world_research");
 };

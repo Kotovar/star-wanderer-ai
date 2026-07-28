@@ -190,5 +190,5 @@ export const buyModule = (
         get().updateShipStats();
     }
 
-    playSound("upgrade");
+    playSound("world_upgrade");
 };

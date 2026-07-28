@@ -129,7 +129,7 @@ export const restartGame = (
       .join(" / ") }),
     "info",
   );
-  playSound("success");
+  playSound("ui_confirm");
 
   saveToLocalStorage(get());
 };

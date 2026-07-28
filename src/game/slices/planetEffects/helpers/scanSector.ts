@@ -146,6 +146,6 @@ export const scanSector = (set: SetState, get: () => GameStore): boolean => {
         );
     }
 
-    playSound("success");
+    playSound("world_discovery");
     return true;
 };

@@ -231,6 +231,10 @@ const baseState: GameState = {
   settings: {
     animationsEnabled: true,
     soundEnabled: true,
+    master: 0.8,
+    music: 0.45,
+    sfx: 0.7,
+    ui: 0.45,
   },
   galaxyZoom: 1,
   sectorZoom: 1,

@@ -6,7 +6,7 @@ import type {
   WeaponCounts,
   WeaponType,
 } from "@/game/types";
-import { playSound } from "@/sounds";
+import { playSound, type SoundId } from "@/sounds";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES, WEAPON_TYPES } from "@/game/constants";
 import { isModuleActive } from "@/game/modules/utils";
@@ -101,6 +101,23 @@ interface DamageResult {
   logs: string[];
 }
 
+const WEAPON_SOUND_IDS: Record<WeaponType, SoundId> = {
+  kinetic: "combat_kinetic",
+  laser: "combat_laser",
+  missile: "combat_missile",
+  plasma: "combat_plasma",
+  drones: "combat_drones",
+  antimatter: "combat_antimatter",
+  quantum_torpedo: "combat_quantum_torpedo",
+  ion_cannon: "combat_ion_cannon",
+};
+
+const playWeaponFires = (weapons: WeaponCounts): void => {
+  (Object.keys(WEAPON_SOUND_IDS) as WeaponType[]).forEach((type) => {
+    if (weapons[type] > 0) playSound(WEAPON_SOUND_IDS[type]);
+  });
+};
+
 const createCombatHitEventId = () => Date.now() + Math.random();
 
 function recordEnemyMiss(
@@ -118,6 +135,7 @@ function recordEnemyMiss(
       missed: true,
     };
   });
+  playSound("combat_miss");
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -254,6 +272,7 @@ function resolveVictoryIfCoreDestroyed(
   if (core && core.health <= 0) {
     get().addLog(getCoreDestroyedLog(core.isBiological), "combat");
   }
+  playSound("combat_enemy_destroyed");
   handleVictory(currentState, set, get, updatedCombat, weaponBays);
   return true;
 }
@@ -721,7 +740,10 @@ function applyDamageToEnemy(
       }
     });
     get().addLog( i18nStore.t("game_logs.playerAttack_9", { totalShieldDamage: damage.totalShieldDamage }), "combat");
-    playSound("shield");
+    playSound("combat_shield_hit");
+    if (enemyShields > 0 && newShields === 0) {
+      playSound("combat_shield_break");
+    }
   }
 
   // Plasma: permanently reduce target module armor
@@ -814,7 +836,7 @@ function applyDamageToEnemy(
       }),
       "combat",
     );
-    playSound("damage");
+    playSound("combat_hull_hit");
   }
 
   if (damage.totalShieldDamage > 0 || finalModuleDamage > 0) {
@@ -909,11 +931,15 @@ export function executePlayerAttack(
     weaponCounts.antimatter +
     weaponCounts.quantum_torpedo +
     weaponCounts.ion_cannon;
-  if (totalWeapons === 0) return;
+  if (totalWeapons === 0) {
+    playSound("combat_no_active_weapons");
+    return;
+  }
 
   // 2. Target resolution
   const tgtMod = resolveTarget(currentState, crewInWeaponBays, get);
   if (!tgtMod) return;
+  playWeaponFires(weaponCounts);
 
   // 2a. Boss evasion_boost: entire attack evaded
   if (checkBossEvasionBoost(currentState, get)) {
@@ -1014,6 +1040,9 @@ export function executePlayerAttack(
     weaponCounts,
     crit.isCrit && damageMultiplier > 1,
   );
+  if (crit.isCrit && damageMultiplier > 1) {
+    playSound("combat_critical");
+  }
 
   // 7a. Boss take-damage passives (damage_absorb, damage_mirror)
   if (currentState.currentCombat.enemy.isBoss && damage.totalModuleDamage > 0) {
@@ -1086,10 +1115,14 @@ export function executePlayerAttackWithBayTargets(
   const activeBays = weaponBays.filter(
     (b) => b.weapons?.some((w) => w),
   );
-  if (activeBays.length === 0) return;
+  if (activeBays.length === 0) {
+    playSound("combat_no_active_weapons");
+    return;
+  }
 
   // 2. Boss evasion check (entire salvo)
   if (checkBossEvasionBoost(currentState, get)) {
+    activeBays.forEach((bay) => playWeaponFires(countWeaponsInBay(bay)));
     const fallbackTarget = currentState.currentCombat.enemy.modules.find(
       (m) => m.health > 0,
     );
@@ -1142,6 +1175,9 @@ export function executePlayerAttackWithBayTargets(
       }
     }
 
+    const bayWeapons = countWeaponsInBay(bay);
+    playWeaponFires(bayWeapons);
+
     // Module dodge per bay (boss or space monster)
     const aliveBossMods = aliveModules;
     if (checkBossModuleDodge(aliveBossMods, get)) {
@@ -1161,8 +1197,6 @@ export function executePlayerAttackWithBayTargets(
     // Per-bay accuracy modifier (gunner/calibration scoped to this bay, global bonuses shared)
     const bayAccuracyModifier = computeBayAccuracyModifier(get(), bay.id);
 
-    // Count weapons in this bay only
-    const bayWeapons = countWeaponsInBay(bay);
     const shieldsBeforeBay = remainingShields;
 
     // Compute per-type damage for this bay: raw base * level bonus * fullMultiplier (all bonuses)
@@ -1207,6 +1241,9 @@ export function executePlayerAttackWithBayTargets(
       bayWeapons,
       bayCrit.isCrit && bayDamageMultiplier > 1,
     );
+    if (bayCrit.isCrit && bayDamageMultiplier > 1) {
+      playSound("combat_critical");
+    }
 
     // Boss take-damage effects
     if (combatNow.enemy.isBoss && damage.totalModuleDamage > 0) {

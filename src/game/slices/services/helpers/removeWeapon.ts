@@ -60,5 +60,5 @@ export const removeWeapon = (
     get().addLog( i18nStore.t("game_logs.removeWeapon_3", { weaponType, scrapValue }),
         "info",
     );
-    playSound("shop");
+    playSound("world_scrap");
 };

@@ -10,6 +10,7 @@ import { buildRunSummary } from "@/game/metaProgress/runSummary";
 import { recordRunResult } from "@/game/metaProgress/store";
 import { findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
+import { playSound } from "@/sounds";
 
 /**
  * Проверяет, есть ли у игрока активный ИИ-артефакт
@@ -77,6 +78,7 @@ export const checkGameOver = (set: SetState, get: () => GameStore): void => {
             gameOverReason:
                 "💥 Корпус корабля разрушен! Все модули уничтожены. Корабль не может продолжать полёт.",
         });
+        if (state.currentCombat) playSound("combat_player_destroyed");
         recordRunResult(buildRunSummary(state, "defeat"));
         get().addLog( i18nStore.t("game_logs.checkGameOver_1"), "error");
         return;
@@ -99,6 +101,7 @@ export const checkGameOver = (set: SetState, get: () => GameStore): void => {
             gameOver: true,
             gameOverReason: reason,
         });
+        if (state.currentCombat) playSound("combat_player_destroyed");
         recordRunResult(buildRunSummary(state, "defeat"));
         get().addLog( i18nStore.t("game_logs.checkGameOver_2"), "error");
         return;

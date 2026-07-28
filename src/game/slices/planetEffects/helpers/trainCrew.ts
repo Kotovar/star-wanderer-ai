@@ -104,7 +104,7 @@ export const trainCrewMember = (
     get().addLog( i18nStore.t("game_logs.trainCrew_4", { crewMember_name: crewMember.name, value: crewMember.level + 1 }),
         "info",
     );
-    playSound("success");
+    playSound("world_crew_milestone");
 
     return true;
 };

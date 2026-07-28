@@ -23,7 +23,7 @@ export const gainExp = (
     const result = calculateGainExpResult(crewMember, amount, state);
 
     if (result.leveledUp && result.logMessage) {
-        playSound("levelUp");
+        playSound("world_crew_milestone");
         store.addLog(result.logMessage, "info");
     }
 

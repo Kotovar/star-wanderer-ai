@@ -173,5 +173,5 @@ export const sellTradeGood = (
         );
     }
 
-    playSound("message");
+    playSound("ui_purchase");
 };

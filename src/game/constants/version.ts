@@ -2,4 +2,4 @@
  * Текущая версия формата состояния игры.
  * Увеличивается при изменении структуры GameState, требующей миграции.
  */
-export const CURRENT_STATE_VERSION = 14;
+export const CURRENT_STATE_VERSION = 15;

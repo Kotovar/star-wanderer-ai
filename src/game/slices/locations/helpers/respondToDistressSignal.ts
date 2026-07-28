@@ -86,7 +86,7 @@ export const respondToDistressSignal = (
     // Update location state
     updateLocationState(loc, outcome, approach, set);
 
-    playSound(outcome === "pirate_ambush" ? "combat" : "success");
+    playSound(outcome === "pirate_ambush" ? "world_danger" : "world_discovery");
 
     // Handle outcome
     handleSignalOutcome(outcome, set, get, approach);
@@ -119,12 +119,12 @@ export const deepScanDistressSignal = (
     const scanRange = state.getEffectiveScanRange();
     if (scanRange < DISTRESS_DEEP_SCAN_MIN_SCAN_RANGE) {
         get().addLog(i18nStore.t("distress_signal.logs.scanner_required"), "error");
-        playSound("error");
+        playSound("ui_error");
         return;
     }
     if (getAvailablePower(state) < DISTRESS_PROTOCOL_MIN_AVAILABLE_POWER) {
         get().addLog(i18nStore.t("distress_signal.logs.deep_scan_power"), "error");
-        playSound("error");
+        playSound("ui_error");
         return;
     }
 
@@ -158,10 +158,10 @@ export const deepScanDistressSignal = (
             }),
             "info",
         );
-        playSound("success");
+        playSound("world_discovery");
     } else {
         get().addLog(i18nStore.t("distress_signal.logs.deep_scan_failed"), "warning");
-        playSound("error");
+        playSound("ui_error");
     }
 
     get().nextTurn();
@@ -186,7 +186,7 @@ export const probeDistressSignal = (
     }
     if (state.probes < 1) {
         get().addLog(i18nStore.t("distress_signal.logs.probe_required"), "error");
-        playSound("error");
+        playSound("ui_error");
         return;
     }
 
@@ -208,7 +208,7 @@ export const probeDistressSignal = (
         }),
         "info",
     );
-    playSound("success");
+    playSound("world_discovery");
 };
 
 /**
@@ -263,22 +263,22 @@ const validateResponseProtocol = (
         }
         if (getActiveProfessionLevel(state, "engineer") < 1) {
             get().addLog(i18nStore.t("distress_signal.logs.guarded_engineer"), "error");
-            playSound("error");
+            playSound("ui_error");
             return false;
         }
         if (state.ship.shields <= 0) {
             get().addLog(i18nStore.t("distress_signal.logs.guarded_shields"), "error");
-            playSound("error");
+            playSound("ui_error");
             return false;
         }
         if (getAvailablePower(state) < DISTRESS_PROTOCOL_MIN_AVAILABLE_POWER) {
             get().addLog(i18nStore.t("distress_signal.logs.guarded_power"), "error");
-            playSound("error");
+            playSound("ui_error");
             return false;
         }
         if (state.ship.fuel < DISTRESS_GUARDED_APPROACH_FUEL_COST) {
             get().addLog(i18nStore.t("distress_signal.logs.guarded_fuel"), "error");
-            playSound("error");
+            playSound("ui_error");
             return false;
         }
     }
@@ -293,12 +293,12 @@ const validateResponseProtocol = (
         }
         if (getActiveProfessionLevel(state, "medic") < 1) {
             get().addLog(i18nStore.t("distress_signal.logs.medical_medic"), "error");
-            playSound("error");
+            playSound("ui_error");
             return false;
         }
         if (getMedicineQuantity(state) < 1) {
             get().addLog(i18nStore.t("distress_signal.logs.medical_medicine"), "error");
-            playSound("error");
+            playSound("ui_error");
             return false;
         }
     }

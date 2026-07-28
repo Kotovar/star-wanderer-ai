@@ -41,7 +41,7 @@ export const toggleArtifact = (
             get().addLog( i18nStore.t("game_logs.toggleArtifact_1", { currentActive, maxSlots }),
                 "error",
             );
-            playSound("error");
+            playSound("ui_error");
             return;
         }
     }
@@ -54,7 +54,7 @@ export const toggleArtifact = (
             get().addLog( i18nStore.t("game_logs.toggleArtifact_2"),
                 "error",
             );
-            playSound("error");
+            playSound("ui_error");
             return;
         }
 
@@ -85,7 +85,7 @@ export const toggleArtifact = (
         `${artifact.name}: ${i18nStore.t(newActive ? "game_logs.toggleArtifact_on" : "game_logs.toggleArtifact_off")}`,
         "info",
     );
-    playSound(newActive ? "artifact" : "error");
+    playSound(newActive ? "world_artifact" : "ui_cancel");
     get().updateShipStats();
 };
 

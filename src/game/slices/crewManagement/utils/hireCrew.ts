@@ -230,7 +230,7 @@ export const hireCrew = (
     }
 
     get().addLog( i18nStore.t("game_logs.hireCrew_2", { newCrew_name: newCrew.name, price: crewData.price }), "info");
-    playSound("success");
+    playSound("world_crew_milestone");
 };
 
 /**

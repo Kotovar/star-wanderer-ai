@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { playUi } from "@/sounds";
 import { store as i18nStore } from "@/lib/useTranslation";
 
 const HINTS_KEY = "sw_hints_seen_v1";
@@ -39,5 +40,6 @@ export function showHintOnce(
 
     const message = i18nStore.t(messageKey);
     toast(message, { duration: 6000 });
+    playUi("ui_notification");
     addLog(`💡 ${message}`, "info");
 }

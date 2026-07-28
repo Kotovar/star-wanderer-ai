@@ -95,7 +95,7 @@ const handleResearchCompletion = (
         }
     });
 
-    playSound("success");
+    playSound("world_research");
 
     // Завершаем квест синтетиков (исследование технологии нужного тира)
     const synthContracts = get().activeContracts.filter(

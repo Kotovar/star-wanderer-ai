@@ -45,7 +45,7 @@ export const researchArtifact = (
         const msg = `Требуется учёный уровня ${artifact.requiresScientistLevel}!`;
         // Попап показывает сам addLog для типа "error"
         get().addLog(msg, "error");
-        playSound("error");
+        playSound("ui_error");
         return;
     }
 
@@ -72,7 +72,7 @@ export const researchArtifact = (
         ),
     }));
 
-    playSound("success");
+    playSound("world_research");
     if (canActivate) {
         get().addLog( i18nStore.t("game_logs.researchArtifact_4", { artifact_name: artifact.name }), "info");
     } else {

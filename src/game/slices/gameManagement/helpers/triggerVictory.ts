@@ -80,5 +80,5 @@ export const triggerVictory = (set: SetState, get: () => GameStore): void => {
         `🎉 ${i18nStore.t("game.victory")}! ${i18nStore.t(objective.titleKey)}`,
         "info",
     );
-    playSound("success");
+    playSound("world_crew_milestone");
 };

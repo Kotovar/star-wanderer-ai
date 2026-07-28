@@ -37,5 +37,5 @@ export const completeDeliveryContract = (
         get().changeReputation(contract.sourceDominantRace, 2);
     }
 
-    playSound("message");
+    playSound("world_contract");
 };

@@ -268,6 +268,6 @@ export const createCrewSlice = (
         get().addLog( i18nStore.t("game_logs.crewSlice_6", { crewMember_name: crewMember.name, targetModule_name: targetModule.name }),
             "info",
         );
-        playSound("click");
+        playSound("ui_confirm");
     },
 });

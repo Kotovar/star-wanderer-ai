@@ -40,16 +40,17 @@ export const createCombatSlice = (
     },
 
     startCombat: (enemy, isAmbush = false) => {
-        playSound(isAmbush ? "alert" : "combat");
+        playSound("world_danger");
         helpers.initializeCombat(enemy, isAmbush, set, get);
     },
 
     startBossCombat: (bossLocation) => {
-        playSound("alert");
+        playSound("world_danger");
         helpers.initializeBossCombat(bossLocation, set, get);
     },
 
     selectEnemyModule: (moduleId) => {
+        let selected = false;
         set((s) => {
             if (!s.currentCombat) return;
             const targetModule = s.currentCombat.enemy.modules.find(
@@ -57,8 +58,10 @@ export const createCombatSlice = (
             );
             if (targetModule && targetModule.health > 0) {
                 s.currentCombat.enemy.selectedModule = moduleId;
+                selected = true;
             }
         });
+        if (selected) playSound("combat_target_select");
     },
 
     attackEnemy: () => {
@@ -119,7 +122,7 @@ export const createCombatSlice = (
             enemyType,
         };
 
-        playSound("alert");
+        playSound("world_danger");
         // Player is attacker — no ambush
         helpers.initializeCombat(fakeLocation, false, set, get);
         // Set defenderRace so victory handler knows which race was attacked
@@ -149,7 +152,7 @@ export const createCombatSlice = (
         } else {
             get().addLog( i18nStore.t("game_logs.combatSlice_4", { loc_name: loc.name }), "error");
         }
-        playSound("alert");
+        playSound("world_danger");
         startDefenderCombat(race, set, get);
     },
 

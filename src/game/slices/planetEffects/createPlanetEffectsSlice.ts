@@ -52,7 +52,7 @@ export const createPlanetEffectsSlice = (
     activatePlanetEffect: (raceId, planetId) => {
         const success = applyPlanetEffect(raceId, planetId, set, get);
         if (success) {
-            playSound("success");
+            playSound("world_discovery");
         }
     },
 

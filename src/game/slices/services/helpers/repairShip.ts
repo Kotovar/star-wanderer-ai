@@ -38,6 +38,6 @@ export const repairShip = (set: SetState, get: () => GameStore): void => {
     }));
 
     get().addLog( i18nStore.t("game_logs.repairShip_2", { cost }), "info");
-    playSound("upgrade");
+    playSound("world_repair");
     get().updateShipStats();
 };

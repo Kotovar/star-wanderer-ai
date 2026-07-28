@@ -127,7 +127,7 @@ const upgradeEngine = (
         "info",
     );
     get().updateShipStats();
-    playSound("upgrade");
+    playSound("world_upgrade");
 };
 
 /**
@@ -321,7 +321,7 @@ const upgradeModule = (
         );
     }
     get().updateShipStats();
-    playSound("upgrade");
+    playSound("world_upgrade");
 };
 
 /**

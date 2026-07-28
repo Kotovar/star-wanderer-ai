@@ -52,7 +52,7 @@ export const tryFindArtifact = (
     // Завершаем контракт на добычу (кристаллический квест)
     completeMiningContracts(set, get, artifact);
 
-    playSound("success");
+    playSound("world_artifact");
     return artifact;
 };
 

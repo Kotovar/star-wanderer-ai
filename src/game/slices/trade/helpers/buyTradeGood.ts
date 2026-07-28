@@ -184,5 +184,5 @@ export const buyTradeGood = (
     get().addLog( i18nStore.t("game_logs.buyTradeGood_2", { name: i18nStore.t(`trade.goods.${goodId}`), quantity, price: validation.price ?? 0 }),
         "info",
     );
-    playSound("shop");
+    playSound("ui_purchase");
 };

@@ -46,5 +46,5 @@ export const healCrew = (set: SetState, get: () => GameStore): void => {
     }));
 
     get().addLog( i18nStore.t("game_logs.healCrew_2", { cost }), "info");
-    playSound("heal");
+    playSound("world_heal");
 };

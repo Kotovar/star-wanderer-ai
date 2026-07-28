@@ -36,7 +36,7 @@ export const boostArtifact = (
     }));
 
     get().addLog( i18nStore.t("game_logs.boostArtifact_2", { artifact_name: artifact.name }), "info");
-    playSound("success");
+    playSound("world_artifact");
 };
 
 /**

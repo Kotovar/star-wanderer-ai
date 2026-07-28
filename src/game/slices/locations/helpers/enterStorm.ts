@@ -404,7 +404,7 @@ export const handleStormEntry = (set: SetState, get: () => GameStore): void => {
         gameMode: "storm_results",
     }));
 
-    playSound("combat");
+    playSound("world_danger");
 
     // Даём опыт всем учёным за изучение шторма
     const scientists = getCrewByProfession(state.crew, "scientist");

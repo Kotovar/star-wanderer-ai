@@ -48,6 +48,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useIsMobile } from "@/game/hooks/useIsMobile";
 import { getContractTurnsRemaining } from "@/game/contracts/contractDeadline";
 import type { LogEntry } from "@/game/types";
+import {
+  playUi,
+  setAudioVolumes,
+  setSoundPlaybackEnabled,
+  startMusic,
+  stopMusic,
+  unlockAudio,
+} from "@/sounds";
 
 type LeftTab =
   | "ship"
@@ -169,6 +177,14 @@ export default function Home() {
   const moduleMovedThisTurn = useGameStore((s) => s.ship.moduleMovedThisTurn);
   const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
   const soundEnabled = useGameStore((s) => s.settings.soundEnabled);
+  const audioVolumes = useGameStore(
+    useShallow((s) => ({
+      master: s.settings.master,
+      music: s.settings.music,
+      sfx: s.settings.sfx,
+      ui: s.settings.ui,
+    })),
+  );
   const loadFromSlot = useGameStore((s) => s.loadFromSlot);
   const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
   const setSoundEnabled = useGameStore((s) => s.setSoundEnabled);
@@ -239,6 +255,20 @@ export default function Home() {
   } = useGameFlowPhase(animationsEnabled);
 
   useEffect(() => {
+    setSoundPlaybackEnabled(soundEnabled);
+    setAudioVolumes(audioVolumes);
+  }, [audioVolumes, soundEnabled]);
+
+  useEffect(() => {
+    if (isTitleSetup || !soundEnabled) {
+      stopMusic();
+      return;
+    }
+    startMusic("exploration");
+    return () => stopMusic();
+  }, [isTitleSetup, soundEnabled]);
+
+  useEffect(() => {
     const handler = () => {
       setActiveTab("progress");
       setMobileShowMap(false);
@@ -270,6 +300,7 @@ export default function Home() {
   ];
 
   const selectTab = (tab: LeftTab) => {
+    if (tab !== activeTab) playUi("ui_tab");
     setActiveTab(tab);
     if (tab === "log") {
       acknowledgeLog();
@@ -284,7 +315,15 @@ export default function Home() {
     ReactNode
   > = {
     ship: (
-      <Tabs value={effectiveShipSubTab} onValueChange={(v) => setShipSubTab(v as ShipSubTab)} className="h-full flex flex-col">
+      <Tabs
+        value={effectiveShipSubTab}
+        onValueChange={(value) => {
+          const tab = value as ShipSubTab;
+          if (tab !== shipSubTab) playUi("ui_tab");
+          setShipSubTab(tab);
+        }}
+        className="h-full flex flex-col"
+      >
         <TabsList className="grid grid-cols-4 bg-[rgba(0,255,65,0.05)] border border-[#00ff41] rounded-none h-8 shrink-0">
           <TabsTrigger value="layout" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_layout")}</TabsTrigger>
           <TabsTrigger value="stats" className="text-[10px] data-[state=active]:bg-[rgba(0,255,65,0.15)] data-[state=active]:text-accent text-muted-foreground uppercase font-bold tracking-wider">{t("ship.subtab_stats")}</TabsTrigger>
@@ -333,12 +372,19 @@ export default function Home() {
                 setSetupReady(true);
                 setAnimationsEnabled(enabled);
               }}
-              onSoundChange={setSoundEnabled}
-              onNewGame={() => setNewGameOpen(true)}
+              onSoundChange={(enabled) => {
+                void unlockAudio();
+                setSoundEnabled(enabled);
+              }}
+              onNewGame={() => {
+                void unlockAudio();
+                setNewGameOpen(true);
+              }}
               onLoad={(slotId) => {
                 // loadFromSlot overwrites settings from the save file itself;
                 // re-apply the toggle values the user currently has selected
                 // in the StartMenu so a load doesn't silently flip them.
+                void unlockAudio();
                 loadFromSlot(slotId);
                 setAnimationsEnabled(animationsEnabled);
                 setSoundEnabled(soundEnabled);
@@ -349,7 +395,10 @@ export default function Home() {
           <NewGameSetupModal
             open={newGameOpen}
             onClose={() => setNewGameOpen(false)}
-            onStarted={() => setPhase("game")}
+            onStarted={() => {
+              void unlockAudio();
+              setPhase("game");
+            }}
           />
         </>
       ) : (
@@ -446,9 +495,9 @@ export default function Home() {
               )}
               <div className="grid grid-cols-5">
                 <MobileNavButton icon="🗺️" label={t("mobile_nav.map")} active={showEventStage} onClick={() => { setMobileShowMap(true); setMoreOpen(false); }} />
-                <MobileNavButton icon="🚀" label={t("mobile_nav.ship")} alert={moduleMovedThisTurn && !showEventStage} active={!showEventStage && activeTab === "ship"} onClick={() => { setActiveTab("ship"); setMobileShowMap(false); setMoreOpen(false); }} />
-                <MobileNavButton icon="👥" label={t("mobile_nav.crew")} active={!showEventStage && activeTab === "crew"} onClick={() => { setActiveTab("crew"); setMobileShowMap(false); setMoreOpen(false); }} />
-                <MobileNavButton icon="📋" label={t("mobile_nav.contracts")} alert={hasUrgentContract && !showEventStage} active={!showEventStage && activeTab === "contracts"} onClick={() => { setActiveTab("contracts"); setMobileShowMap(false); setMoreOpen(false); }} />
+                <MobileNavButton icon="🚀" label={t("mobile_nav.ship")} alert={moduleMovedThisTurn && !showEventStage} active={!showEventStage && activeTab === "ship"} onClick={() => { selectTab("ship"); setMobileShowMap(false); setMoreOpen(false); }} />
+                <MobileNavButton icon="👥" label={t("mobile_nav.crew")} active={!showEventStage && activeTab === "crew"} onClick={() => { selectTab("crew"); setMobileShowMap(false); setMoreOpen(false); }} />
+                <MobileNavButton icon="📋" label={t("mobile_nav.contracts")} alert={hasUrgentContract && !showEventStage} active={!showEventStage && activeTab === "contracts"} onClick={() => { selectTab("contracts"); setMobileShowMap(false); setMoreOpen(false); }} />
                 <MobileNavButton icon="⋯" label={t("mobile_nav.more")} alert={hasLogAlert && !showEventStage} active={!showEventStage && ["progress", "blueprints", "log"].includes(activeTab)} onClick={() => setMoreOpen((o) => !o)} />
               </div>
             </nav>

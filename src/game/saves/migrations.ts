@@ -6,6 +6,7 @@ import { generateSpaceMonster } from "@/game/galaxy/generate";
 import { assignGridPositions } from "@/game/sectorGrid";
 import { MODULE_HEALTH_BY_LEVEL } from "@/game/slices/shop/constants";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
+import { DEFAULT_AUDIO_VOLUMES } from "@/sounds";
 import type { GameState, Location, Sector } from "@/game/types";
 
 interface PersistedState {
@@ -306,6 +307,22 @@ const migrations: Record<number, Migration> = {
           ...researchedWeaponTypes,
         ]),
       ],
+    };
+  },
+  14: (raw) => {
+    const state = raw as Partial<GameState>;
+    const settings = state.settings;
+    return {
+      ...state,
+      stateVersion: 15,
+      settings: {
+        animationsEnabled: settings?.animationsEnabled ?? true,
+        soundEnabled: settings?.soundEnabled ?? true,
+        master: settings?.master ?? DEFAULT_AUDIO_VOLUMES.master,
+        music: settings?.music ?? DEFAULT_AUDIO_VOLUMES.music,
+        sfx: settings?.sfx ?? DEFAULT_AUDIO_VOLUMES.sfx,
+        ui: settings?.ui ?? DEFAULT_AUDIO_VOLUMES.ui,
+      },
     };
   },
 };

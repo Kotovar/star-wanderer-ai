@@ -135,7 +135,7 @@ export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
         get().addLog( i18nStore.t("game_logs.mineAsteroid_5", { asteroidTier, drillLevel }),
             "error",
         );
-        playSound("error");
+        playSound("ui_error");
         return;
     }
 
@@ -143,7 +143,7 @@ export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
     const hasEngineer = state.crew.some((c) => c.profession === "engineer");
     if (!hasEngineer) {
         get().addLog( i18nStore.t("game_logs.mineAsteroid_6"), "error");
-        playSound("error");
+        playSound("ui_error");
         return;
     }
 
@@ -251,7 +251,7 @@ export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
         completedLocations: [...s.completedLocations, loc.id],
     }));
 
-    playSound("success");
+    playSound("world_mining");
 
     // Логирование результатов
     get().addLog( i18nStore.t("game_logs.mineAsteroid_8", { creditsGained }), "info");

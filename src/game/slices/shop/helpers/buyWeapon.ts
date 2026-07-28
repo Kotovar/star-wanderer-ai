@@ -109,5 +109,5 @@ export const buyWeapon = (
     }));
 
     get().addLog( i18nStore.t("game_logs.buyWeapon_4", { name: WEAPON_TYPES[weaponType].name }), "info");
-    playSound("shop");
+    playSound("ui_purchase");
 };

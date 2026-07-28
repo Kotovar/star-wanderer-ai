@@ -47,7 +47,7 @@ export const refuel = (
         ship: { ...s.ship, fuel: (s.ship.fuel || 0) + actualAmount },
     }));
     addLog( i18nStore.t("game_logs.refuel_3", { actualAmount, price }), "info");
-    playSound("energy");
+    playSound("world_refuel");
 
     return { success: true, actualAmount };
 };

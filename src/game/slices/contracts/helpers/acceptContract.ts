@@ -130,6 +130,6 @@ export const acceptContract = (
         );
     }
 
-    playSound("success");
+    playSound("world_contract");
     return true;
 };

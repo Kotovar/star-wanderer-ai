@@ -54,5 +54,5 @@ export const recoverModuleWithNanites = (
         }),
         "info",
     );
-    playSound("success");
+    playSound("world_repair");
 };
