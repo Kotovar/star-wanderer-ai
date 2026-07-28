@@ -49,23 +49,27 @@ export function ActiveEffectsPanel() {
   const permanentTechs = researchedTechs
     .map((techId) => RESEARCH_TREE[techId])
     .filter((tech) => tech.bonuses.some((bonus) => bonus.type === "special_ability"));
-  const positiveCount = activeEffects.filter(
+  const permanentEffects = activeEffects.filter((effect) => effect.permanent);
+  const timedEffects = activeEffects.filter((effect) => !effect.permanent);
+  const positiveCount = timedEffects.filter(
     (effect) => (effect.polarity ?? "positive") !== "negative",
   ).length;
-  const negativeCount = activeEffects.filter(
+  const negativeCount = timedEffects.filter(
     (effect) => effect.polarity === "negative",
   ).length;
-  const expiringCount = activeEffects.filter(
-    (effect) => !effect.permanent && effect.turnsRemaining <= 2,
+  const expiringCount = timedEffects.filter(
+    (effect) => effect.turnsRemaining <= 2,
   ).length;
-  const filteredEffects = activeEffects.filter((effect) => {
+  const filteredEffects = timedEffects.filter((effect) => {
     if (filter === "positive") return effect.polarity !== "negative";
     if (filter === "negative") return effect.polarity === "negative";
     if (filter === "expiring") {
-      return !effect.permanent && effect.turnsRemaining <= 2;
+      return effect.turnsRemaining <= 2;
     }
     return true;
   });
+  const displayedEffects =
+    tab === "active" ? filteredEffects : permanentEffects;
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto p-2 text-[#d7ffe0]">
@@ -149,7 +153,10 @@ export function ActiveEffectsPanel() {
         ))}
       </div>
 
-      {activeEffects.length === 0 ? (
+        </>
+      )}
+
+      {tab === "active" && timedEffects.length === 0 ? (
         <div className="grid min-h-52 place-items-center border border-dashed border-[#9933ff55] bg-[rgba(153,51,255,0.025)] p-6 text-center">
           <div>
             <div className="text-3xl text-[#9933ff]" aria-hidden="true">
@@ -163,13 +170,13 @@ export function ActiveEffectsPanel() {
             </div>
           </div>
         </div>
-      ) : filteredEffects.length === 0 ? (
+      ) : tab === "active" && displayedEffects.length === 0 ? (
         <div className="border border-dashed border-[#49305f] p-5 text-center text-xs text-[#78678a]">
           {t("effects.no_matches")}
         </div>
-      ) : (
+      ) : displayedEffects.length > 0 ? (
         <div className="grid gap-3 lg:grid-cols-2">
-          {filteredEffects.map((effect) => {
+          {displayedEffects.map((effect) => {
             const source = getSource(effect);
             const race = effect.raceId ? RACES[effect.raceId] : undefined;
             const effectKey = effect.raceId
@@ -266,16 +273,14 @@ export function ActiveEffectsPanel() {
             );
           })}
         </div>
-      )}
-        </>
-      )}
+      ) : null}
 
       {tab === "permanent" && (
-        permanentTechs.length === 0 ? (
+        permanentTechs.length === 0 && permanentEffects.length === 0 ? (
           <div className="grid min-h-52 place-items-center border border-dashed border-[#9933ff55] bg-[rgba(153,51,255,0.025)] p-6 text-center text-xs text-[#788278]">
             {t("effects.no_permanent")}
           </div>
-        ) : (
+        ) : permanentTechs.length > 0 ? (
           <div className="grid gap-3 lg:grid-cols-2">
             {permanentTechs.map((tech) => {
               const translation = getTechTranslation(tech.id, currentLanguage);
@@ -311,7 +316,7 @@ export function ActiveEffectsPanel() {
               );
             })}
           </div>
-        )
+        ) : null
       )}
     </div>
   );

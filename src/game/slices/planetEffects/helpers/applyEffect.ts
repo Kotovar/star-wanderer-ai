@@ -8,6 +8,7 @@ import type {
 } from "@/game/types";
 import { PLANET_SPECIALIZATIONS } from "@/game/constants/planets";
 import { scanSector } from "./scanSector";
+import { getDiminishingPlanetBonus } from "./diminishingBonus";
 
 /**
  * Применяет эффект планеты к состоянию игры
@@ -40,6 +41,38 @@ export const applyPlanetEffect = (
         return false;
     }
 
+    const splitEffectTypes =
+        raceId === "xenosymbiont"
+            ? { permanent: "health_boost", timed: "health_regen" }
+            : raceId === "krylorian"
+              ? { permanent: "combat_bonus", timed: "evasion_bonus" }
+              : null;
+    const permanentBaseBonus = splitEffectTypes
+        ? spec.effects.find(
+              (effect) => effect.type === splitEffectTypes.permanent,
+          )?.value
+        : 0;
+    const currentPermanentBonus = splitEffectTypes
+        ? state.activeEffects
+              .filter(
+                  (effect) =>
+                      effect.permanent &&
+                      effect.source === "planet" &&
+                      effect.raceId === raceId,
+              )
+              .flatMap((effect) => effect.effects)
+              .filter((effect) => effect.type === splitEffectTypes.permanent)
+              .reduce((sum, effect) => sum + Number(effect.value), 0)
+        : 0;
+    const permanentBonus =
+        typeof permanentBaseBonus === "number" && splitEffectTypes
+            ? getDiminishingPlanetBonus(
+                  currentPermanentBonus,
+                  permanentBaseBonus,
+                  raceId === "krylorian" ? 100 : 1,
+              )
+            : 0;
+
     // Создаём объект активного эффекта на основе данных из констант
     const activeEffect: ActiveEffect = {
         id: `effect-${raceId}-${Date.now()}`,
@@ -54,10 +87,18 @@ export const applyPlanetEffect = (
         // artifact_boost без targetArtifactId ничего не усиливает — ритуал
         // Voidborn идёт через createVoidbornBoostEffect с выбором артефакта
         effects: spec.effects
-            .filter((e) => e.type !== "artifact_boost")
+            .filter(
+                (effect) =>
+                    effect.type !== "artifact_boost" &&
+                    (effect.type !== splitEffectTypes?.permanent ||
+                        permanentBonus > 0),
+            )
             .map((e) => ({
                 type: e.type as ActiveEffect["effects"][number]["type"],
-                value: e.value,
+                value:
+                    e.type === splitEffectTypes?.permanent
+                        ? permanentBonus
+                        : e.value,
             })),
     };
 
@@ -83,11 +124,11 @@ export const applyPlanetEffect = (
             return true;
 
         case "xenosymbiont":
-            applyXenosymbiontEffect(spec, set, get);
+            applyXenosymbiontEffect(spec, permanentBonus, set, get);
             break;
 
         case "krylorian":
-            applyKrylorianEffect(spec, set);
+            applyKrylorianEffect(spec, permanentBonus, set);
             break;
 
         case "crystalline":
@@ -102,12 +143,6 @@ export const applyPlanetEffect = (
             break;
     }
 
-    const splitEffectTypes =
-        raceId === "xenosymbiont"
-            ? { permanent: "health_boost", timed: "health_regen" }
-            : raceId === "krylorian"
-              ? { permanent: "combat_bonus", timed: "evasion_bonus" }
-              : null;
     const effectsToAdd: ActiveEffect[] = splitEffectTypes
         ? [
               {
@@ -155,25 +190,23 @@ export const applyPlanetEffect = (
  */
 const applyXenosymbiontEffect = (
     spec: PlanetSpecialization,
+    healthBonus: number,
     set: SetState,
     get: () => GameStore,
 ) => {
-    const healthEffect = spec.effects.find((e) => e.type === "health_boost");
     const regenEffect = spec.effects.find((e) => e.type === "health_regen");
-
-    const healthValue =
-        typeof healthEffect?.value === "number" ? healthEffect.value : 5;
     const regenValue =
         typeof regenEffect?.value === "number" ? regenEffect.value : 15;
 
-    // Применяем постоянное увеличение здоровья
-    set((s) => ({
-        crew: s.crew.map((c) => ({
-            ...c,
-            maxHealth: c.maxHealth + healthValue,
-            health: c.health + healthValue,
-        })),
-    }));
+    if (healthBonus > 0) {
+        set((s) => ({
+            crew: s.crew.map((c) => ({
+                ...c,
+                maxHealth: c.maxHealth + healthBonus,
+                health: c.health + healthBonus,
+            })),
+        }));
+    }
 
     // Лог о регенерации (будет применяться через систему активных эффектов)
     get().addLog( i18nStore.t("game_logs.applyEffect_3", { regenValue, duration: spec.duration }),
@@ -185,14 +218,15 @@ const applyXenosymbiontEffect = (
  * Применяет эффект крилориан
  * +10% к урону (bonusDamage), +10% к уклонению
  */
-const applyKrylorianEffect = (spec: PlanetSpecialization, set: SetState) => {
+const applyKrylorianEffect = (
+    spec: PlanetSpecialization,
+    damageBonus: number,
+    set: SetState,
+) => {
     const evasionEffect = spec.effects.find((e) => e.type === "evasion_bonus");
-    const combatEffect = spec.effects.find((e) => e.type === "combat_bonus");
 
     const evasionBonus =
         typeof evasionEffect?.value === "number" ? evasionEffect.value : 0.1;
-    const damageBonus =
-        typeof combatEffect?.value === "number" ? combatEffect.value : 0.1;
 
     set((s) => ({
         ship: {
