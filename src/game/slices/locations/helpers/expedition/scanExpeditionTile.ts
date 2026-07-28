@@ -1,5 +1,6 @@
 import type { SetState, GameStore } from "@/game/types";
 import type { ExpeditionScanMode } from "@/game/types/exploration";
+import { playSound } from "@/sounds";
 import { isTileReachable } from "./adjacency";
 
 /**
@@ -49,4 +50,5 @@ export function scanExpeditionTile(
               }
             : null,
     }));
+    playSound("world_discovery");
 }

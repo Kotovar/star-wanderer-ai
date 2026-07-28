@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { playSound } from "@/sounds";
 import type { GameState, GameStore, SetState } from "@/game/types";
 import {
   FIRST_CRISIS_TURN_MIN,
@@ -79,6 +80,7 @@ export const processGlobalCrises = (
         }).trim(),
         "info",
       );
+      playSound("ui_notification");
     } else {
       const currentStage = getCrisisStage(activeCrisis, crisis?.duration ?? newRemaining);
       const nextStage = getCrisisStage(
@@ -97,6 +99,7 @@ export const processGlobalCrises = (
           }),
           "error",
         );
+        playSound("world_danger");
       }
     }
     return;
@@ -123,5 +126,6 @@ export const processGlobalCrises = (
     get().addLog( i18nStore.t("game_logs.processGlobalCrises_2", { icon: crisis.icon, value: i18nStore.t(crisis.nameKey), duration: crisis.duration }),
       "error",
     );
+    playSound("world_danger");
   }
 };

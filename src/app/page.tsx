@@ -319,7 +319,6 @@ export default function Home() {
         value={effectiveShipSubTab}
         onValueChange={(value) => {
           const tab = value as ShipSubTab;
-          if (tab !== shipSubTab) playUi("ui_tab");
           setShipSubTab(tab);
         }}
         className="h-full flex flex-col"

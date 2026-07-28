@@ -61,6 +61,7 @@ const inspectOpus = (file) => {
   if (peak === undefined || Number(peak) > -1.8) {
     fail(`${file} exceeds the -2 dB peak ceiling (${peak ?? "unknown"} dB)`);
   }
+  return Number(peak);
 };
 
 const getDuration = (file) =>
@@ -90,8 +91,25 @@ const inspectMusicAudibility = (file) => {
   }
 };
 
-const { SOUND_REGISTRY, MUSIC_REGISTRY } = await import(registryUrl);
-if (!SOUND_REGISTRY || !MUSIC_REGISTRY) fail("SOUND_REGISTRY and MUSIC_REGISTRY must be exported");
+const inspectEffectAudibility = (id, sound, file, duration, peak) => {
+  const minimumDuration = sound.category === "ui" ? 0.08 : 0.06;
+  if (!Number.isFinite(duration) || duration < minimumDuration) {
+    fail(`${id} is too short (${duration.toFixed(3)}s, minimum ${minimumDuration}s): ${file}`);
+  }
+
+  const mixGain = DEFAULT_AUDIO_VOLUMES.master
+    * DEFAULT_AUDIO_VOLUMES[sound.category]
+    * sound.gain;
+  const mixedPeak = peak + 20 * Math.log10(mixGain);
+  if (!Number.isFinite(mixedPeak) || mixedPeak < -34) {
+    fail(`${id} is too quiet at default mix (${mixedPeak.toFixed(1)} dBFS): ${file}`);
+  }
+};
+
+const { SOUND_REGISTRY, MUSIC_REGISTRY, DEFAULT_AUDIO_VOLUMES } = await import(registryUrl);
+if (!SOUND_REGISTRY || !MUSIC_REGISTRY || !DEFAULT_AUDIO_VOLUMES) {
+  fail("SOUND_REGISTRY, MUSIC_REGISTRY, and DEFAULT_AUDIO_VOLUMES must be exported");
+}
 
 for (const id of requiredVariantIds) {
   const urls = SOUND_REGISTRY[id]?.urls;
@@ -105,7 +123,8 @@ for (const [id, sound] of Object.entries(SOUND_REGISTRY)) {
     if (!url.endsWith(".ogg")) fail(`${id} must use OGG only`);
     const file = resolve(root, "public", url.replace(/^\//, ""));
     if (!existsSync(file)) fail(`${id} points to a missing file: ${url}`);
-    inspectOpus(file);
+    const peak = inspectOpus(file);
+    inspectEffectAudibility(id, sound, file, getDuration(file), peak);
   }
 }
 

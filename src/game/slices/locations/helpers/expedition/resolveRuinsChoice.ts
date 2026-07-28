@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { playSound } from "@/sounds";
 import type { SetState, GameStore } from "@/game/types";
 import type { RuinsDepth, RuinsOutcome } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES, TRADE_GOODS } from "@/game/constants";
@@ -45,6 +46,7 @@ export function resolveRuinsChoice(
     const parts: string[] = [];
     let riskApplied = false;
     let gained = false;
+    let artifactFound = false;
 
     // Глубокие камеры опасны независимо от выбранного подхода.
     if (riskValue > 0) {
@@ -127,6 +129,7 @@ export function resolveRuinsChoice(
                 rewards = { ...rewards, artifactFound: artifact.id };
                 parts.push(`✨ ${artifact.name}`);
                 gained = true;
+                artifactFound = true;
                 get().addLog( i18nStore.t("game_logs.resolveRuinsChoice_5", { artifact_name: artifact.name }), "info");
             } else {
                 parts.push("🗿 Артефакт не обнаружен");
@@ -159,6 +162,9 @@ export function resolveRuinsChoice(
               }
             : null,
     }));
+    if (!artifactFound && (riskApplied || gained)) {
+        playSound(riskApplied ? "world_danger" : "world_discovery");
+    }
 }
 
 /** Открывает дополнительную камеру руин за AP после получения предыдущей добычи. */

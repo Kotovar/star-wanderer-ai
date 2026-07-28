@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { playSound } from "@/sounds";
 import { isModuleActive } from "@/game/modules";
 import type {
   GameState,
@@ -976,6 +977,7 @@ export const processRandomEvents = (
       i18nStore.t("random_events.logs.detected_consequence"),
       "warning",
     );
+    playSound("ui_notification");
     return;
   }
 
@@ -1000,4 +1002,5 @@ export const processRandomEvents = (
     i18nStore.t(`random_events.logs.detected_${event.type}`),
     "warning",
   );
+  playSound("ui_notification");
 };

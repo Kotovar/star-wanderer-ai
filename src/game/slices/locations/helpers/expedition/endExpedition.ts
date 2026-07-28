@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { playSound } from "@/sounds";
 import type { SetState, GameStore } from "@/game/types";
 import { RACES } from "@/game/constants/races";
 import { collectExpeditionRewards } from "./collectExpeditionRewards";
@@ -67,4 +68,5 @@ export function endExpedition(set: SetState, get: () => GameStore): void {
 
     get().addLog( i18nStore.t("game_logs.endExpedition_2"), "info");
     get().updateShipStats();
+    playSound("world_discovery");
 }

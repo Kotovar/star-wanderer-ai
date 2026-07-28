@@ -4,13 +4,22 @@ import type { ComponentProps } from "react";
 import { Root, List, Trigger, Content } from "@radix-ui/react-tabs";
 
 import { cn } from "@/lib/utils";
+import { playUi } from "@/sounds";
 
-export function Tabs({ className, ...props }: ComponentProps<typeof Root>) {
+export function Tabs({
+    className,
+    onValueChange,
+    ...props
+}: ComponentProps<typeof Root>) {
     return (
         <Root
             data-slot="tabs"
             className={cn("flex flex-col gap-2", className)}
             {...props}
+            onValueChange={(value) => {
+                playUi("ui_tab");
+                onValueChange?.(value);
+            }}
         />
     );
 }
