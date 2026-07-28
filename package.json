@@ -17,6 +17,7 @@
     "check:victory": "node --no-warnings --experimental-strip-types scripts/check-victory-paths.mjs",
     "check:boss-generation": "node --no-warnings --experimental-strip-types scripts/check-galaxy-boss-generation.mjs",
     "check:reputation": "node --no-warnings --experimental-strip-types scripts/check-reputation-ripple.mjs",
+    "check:crew-relation-events": "node --no-warnings --experimental-strip-types scripts/check-crew-relation-events.mjs",
     "check:assignments": "node --no-warnings --experimental-strip-types scripts/check-assignment-fatigue.mjs",
     "check:profession-levels": "node --no-warnings --experimental-strip-types scripts/check-profession-levels.mjs",
     "check:events": "node --no-warnings --experimental-strip-types scripts/check-random-event-chains.mjs",
