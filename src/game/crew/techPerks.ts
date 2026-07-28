@@ -1,4 +1,4 @@
-import { TECH_TREE_TIERS } from "../constants/techTree";
+import { TECH_TREE_TIERS } from "../constants/techTree.ts";
 import type { CrewMember, Profession, TechPerkTier } from "../types/crew";
 
 export interface PendingCrewPerkChoice {
