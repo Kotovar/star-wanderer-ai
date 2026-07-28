@@ -3931,6 +3931,12 @@
             "description": "Выполните суммарно 10 контрактов за карьеру."
         }
     },
+    "crew_perk_choice": {
+        "signal": "Развитие экипажа",
+        "title": "{{name}} повышает квалификацию",
+        "subtitle": "Уровень {{tier}} — {{profession}}",
+        "choose": "Выбрать"
+    },
     "random_events": {
         "signal": "Внеплановый сигнал",
         "captain_decision": "Требуется решение капитана",

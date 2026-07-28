@@ -6,6 +6,8 @@ import type {
   CrewMember,
   CrewMemberAssignment,
   CrewMemberCombatAssignment,
+  TechPerkBranch,
+  TechPerkTier,
 } from "./crew";
 import type { ActiveEffect } from "./effects";
 import type { Goods, TradeGood } from "./goods";
@@ -292,6 +294,11 @@ export interface GameCrew {
   gainExp: (crewMember: CrewMember, amount: number) => void;
   acceptSurvivor: () => void;
   declineSurvivor: () => void;
+  chooseCrewPerk: (
+    crewMemberId: number,
+    tier: TechPerkTier,
+    branch: TechPerkBranch,
+  ) => void;
 }
 
 export interface GameContracts {

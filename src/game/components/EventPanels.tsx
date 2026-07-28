@@ -32,10 +32,12 @@ import { CrisisPanel } from "./CrisisPanel";
 import { EnemyCodexPanel } from "./EnemyCodexPanel";
 import { ActiveEffectsPanel } from "./panels/ActiveEffectsPanel";
 import { RandomEventPanel } from "./RandomEventPanel";
+import { CrewPerkChoiceModal } from "./CrewPerkChoiceModal";
 import { RiskRewardPreview } from "./RiskRewardPreview";
 import type { TravelEventType } from "@/game/types";
 import { getActiveModule } from "@/game/modules";
 import { getPilotInCockpit } from "@/game/crew";
+import { getPendingCrewPerkChoice } from "@/game/crew/techPerks";
 import { RESEARCH_TREE } from "@/game/constants";
 import { getTechTranslation } from "@/lib/techTranslations";
 
@@ -153,6 +155,9 @@ export function EventDisplay() {
   const gameMode = useGameStore((s) => s.gameMode);
   const pendingRandomEvent = useGameStore((s) => s.pendingRandomEvent);
   const traveling = useGameStore((s) => s.traveling);
+  const pendingCrewPerkChoice = useGameStore((s) =>
+    getPendingCrewPerkChoice(s.crew),
+  );
   const pendingTravelEvent = useGameStore((s) => s.pendingTravelEvent);
   const shipFuel = useGameStore((s) => s.ship.fuel);
   const shipShields = useGameStore((s) => s.ship.shields);
@@ -190,6 +195,10 @@ export function EventDisplay() {
 
   if (pendingRandomEvent) {
     return <RandomEventPanel />;
+  }
+
+  if (pendingCrewPerkChoice) {
+    return <CrewPerkChoiceModal />;
   }
 
   // Traveling state
