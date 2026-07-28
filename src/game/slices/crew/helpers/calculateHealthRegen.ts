@@ -1,4 +1,5 @@
 import { getRaceCrewBonus } from "@/game/races";
+import { getTechPerkValue } from "@/game/constants/techTree";
 import type { CrewMember, GameState } from "@/game/types";
 
 /**
@@ -40,6 +41,9 @@ export const calculateHealthRegen = (
             regenAmount += trait.effect.flatRegen;
         }
     });
+
+    // Ветка "Иммунолог" (медик): фиксированная пассивная регенерация
+    regenAmount += getTechPerkValue(crewMember, "B");
 
     // Бонусы от активных эффектов (например, Биолаборатория +5 HP за ход)
     if (state?.activeEffects) {
