@@ -102,16 +102,19 @@ if (devAllTechExplorer) {
   assert.deepEqual(devAllTechExplorer.modules, devArsenalTemplate.modules);
   assert.deepEqual(
     devAllTechExplorer.crew.map((member) => member.moduleId),
-    [712, 708, 707, 722],
+    [712, 708, 722, 707, 702, 709],
     "dev all-tech explorer crew must be assigned to its modules",
   );
-  assert.ok(
-    devAllTechExplorer.crew.every((member) => member.level === 3),
-    "dev all-tech explorer crew must start at level 3",
+  assert.deepEqual(
+    devAllTechExplorer.crew.map((member) => member.profession).sort(),
+    ["engineer", "gunner", "medic", "pilot", "scientist", "scout"].sort(),
+    "dev all-tech explorer must have exactly one crew member per profession",
   );
   assert.ok(
-    devAllTechExplorer.crew.some((member) => member.race === "xenosymbiont"),
-    "dev all-tech explorer must include a xenosymbiont",
+    devAllTechExplorer.crew.every(
+      (member) => member.exp === member.level * 100 - 10,
+    ),
+    "dev all-tech explorer crew must be seeded 10 exp short of their next level, to make it easy to trigger a tech perk choice on purpose",
   );
   assert.match(buildStartingStateSource, /template\.startWithAllTechs/);
   assert.match(buildStartingStateSource, /Object\.values\(RESEARCH_TREE\)/);

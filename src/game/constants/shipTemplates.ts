@@ -210,20 +210,19 @@ const createDevAllTechExplorer = (arsenal: ShipTemplate): ShipTemplate => ({
   moduleIcons: arsenal.moduleIcons,
   modules: arsenal.modules,
   gridSize: arsenal.gridSize,
+  // По одному члену экипажа на профессию, специально недокачаны до порога
+  // левелапа (exp = level * 100 - 10), чтобы удобно тестировать модалку
+  // выбора ветки прокачки: небольшая добавка опыта сразу толкает через
+  // тир 3/6/9, и по двое персонажей на каждый порог — проверить, что
+  // несколько левелапов за один ход (и несколько ожидающих модалок подряд)
+  // не ломаются.
   crew: [
-    ...STANDARD_SHIP_TEMPLATES[0].crew.map((member, index) => ({
-      ...member,
-      moduleId: [712, 708, 707][index] ?? member.moduleId,
-      level: 3,
-    })),
-    {
-      id: 4,
-      name: "Ксено-испытатель",
-      profession: "medic",
-      moduleId: 722,
-      level: 3,
-      race: "xenosymbiont",
-    },
+    { id: 1, name: "Ас-пилот", profession: "pilot", moduleId: 712, level: 2, exp: 190 },
+    { id: 2, name: "Инженер-наладчик", profession: "engineer", moduleId: 708, level: 2, exp: 190 },
+    { id: 3, name: "Медик-практик", profession: "medic", moduleId: 722, level: 5, exp: 490 },
+    { id: 4, name: "Следопыт", profession: "scout", moduleId: 707, level: 5, exp: 490 },
+    { id: 5, name: "Теоретик", profession: "scientist", moduleId: 702, level: 8, exp: 790 },
+    { id: 6, name: "Канонир", profession: "gunner", moduleId: 709, level: 8, exp: 790 },
   ],
   credits: arsenal.credits,
   fuel: arsenal.fuel,
