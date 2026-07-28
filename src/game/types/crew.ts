@@ -11,6 +11,9 @@ export type Profession =
     | "scientist"
     | "gunner";
 
+export type TechPerkBranch = "A" | "B";
+export type TechPerkTier = 3 | 6 | 9;
+
 export type Quality = "poor" | "average" | "good" | "excellent";
 
 export type PositiveTraitId =
@@ -127,6 +130,8 @@ export interface CrewMember {
     assignmentFatigue?: number;
     // Automatic rest before the current assignment resumes
     assignmentRestTurns?: number;
+    // Выбранные ветки прокачки профессии на уровнях 3/6/9 (см. constants/techTree.ts)
+    techPerks?: Partial<Record<TechPerkTier, TechPerkBranch>>;
 }
 
 export type CrewTraitEffect = {
