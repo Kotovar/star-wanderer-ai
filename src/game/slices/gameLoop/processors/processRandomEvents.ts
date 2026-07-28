@@ -25,8 +25,8 @@ const EVENT_COOLDOWN = 12; // было 8
 const FIRST_EVENT_TURN = 6;
 
 // ─── Crew relation event tuning ───────────────────────────────
-const CREW_RELATION_CHANCE_PER_POINT = 0.001; // |relation| 20 -> ~2% chance per eligible pair per turn
-const CREW_RELATION_COOLDOWN = 6;
+const CREW_RELATION_CHANCE_PER_POINT = 0.0003; // |relation| 20 -> ~0.6% chance per eligible pair per turn
+const CREW_RELATION_COOLDOWN = 3;
 const RELATION_EVENT_HAPPINESS = 6;
 const RELATION_EVENT_EXP = 3;
 const RELATION_TRAIT_CHANCE = 0.25;

@@ -53,6 +53,7 @@ graph TD
     RACE -->|crewBonuses: наука, ремонт, бой, лечение| CREW
     RACE -->|environmentPreference → счастье| PLANET
     RACE -->|relations: союзники/соперники| REP
+    RACE -->|relations: конфликт/сближение экипажа| CREW
     RACE -->|расовые аугментации| AUG
     RACE -->|xenosymbiont: merge| MOD
     RACE -->|synthetic: ai_core, без усталости| ASSIGN
@@ -129,6 +130,7 @@ graph TD
 - **Модуль → назначения**: многие задачи требуют нахождения в конкретном модуле (см. `docs/CREW_ASSIGNMENTS.md`).
 - **Ксеноморф → модуль**: сращивание даёт бонус в зависимости от типа модуля (см. `docs/XENOSYMBIONT_MERGE.md`). Новый тип модуля = нужен эффект сращивания.
 - **Репутация → каскад**: изменение репутации с расой пересчитывается на её `relations` (см. `docs/REPUTATION_TRADEOFFS.md`), влияет на цены, контракты, враждебность в секторах.
+- **Отношения рас → экипаж**: `relations` также driveят случайные события конфликта/сближения экипажа между членами враждующих/дружественных рас (`crew/relationEvents.ts`, `random_events.logs.crew_relation_*`) — не только репутацию.
 - **Исследования → всё**: `ResearchBonusType` покрывает модули, оружие, экипаж, груз, щиты, экспедиции, артефакты; технологии открывают рецепты крафта и новые модули.
 - **Счастье → дезертирство**: при `happiness ≤ 0` член экипажа дезертирует (`processDesertion.ts`). Источники счастья: среда планет (`environmentPreference` расы), назначение `morale`, проклятые артефакты (дрейн), черты.
 - **Мутации** приходят из трёх источников (`constants/mutationChances.ts`): аномалии, боссы, проклятые артефакты — и становятся чертами экипажа (`MutationTraitId`).
@@ -204,6 +206,7 @@ graph TD
 
 - `relations` в `constants/races.ts` двусторонние — менять у обеих рас
 - Каскад считается в `slices/reputation`; влияет на цены (`reputation/priceModifier.ts`), контракты, `galactic_coalition`
+- Также драйвит `crew_relation_conflict`/`crew_relation_bonding` события (`crew/relationEvents.ts`, `slices/gameLoop/processors/processRandomEvents.ts`) — проверить баланс `CREW_RELATION_CHANCE_PER_POINT`/`CREW_RELATION_COOLDOWN` при правках `relations`
 
 ---
 
