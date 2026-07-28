@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useGameStore } from "../store";
 import { GalaxyMap } from "./GalaxyMap";
 import { SectorMap } from "./SectorMap";
@@ -155,8 +156,8 @@ export function EventDisplay() {
   const gameMode = useGameStore((s) => s.gameMode);
   const pendingRandomEvent = useGameStore((s) => s.pendingRandomEvent);
   const traveling = useGameStore((s) => s.traveling);
-  const pendingCrewPerkChoice = useGameStore((s) =>
-    getPendingCrewPerkChoice(s.crew),
+  const pendingCrewPerkChoice = useGameStore(
+    useShallow((s) => getPendingCrewPerkChoice(s.crew)),
   );
   const pendingTravelEvent = useGameStore((s) => s.pendingTravelEvent);
   const shipFuel = useGameStore((s) => s.ship.fuel);
