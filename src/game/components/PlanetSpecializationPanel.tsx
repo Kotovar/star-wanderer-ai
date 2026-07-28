@@ -7,6 +7,7 @@ import { RACES } from "@/game/constants/races";
 import { canUsePlanetSpecialization } from "@/game/reputation/planetSpecializationAccess";
 import { Button } from "@/components/ui/button";
 import { SectionPanel } from "./SectionPanel";
+import { getEffectDescription } from "@/game/artifacts/utils";
 import { createVoidbornBoostEffect } from "@/game/slices/artifacts/helpers";
 import {
     ACADEMY_RETRAIN_COST,
@@ -173,27 +174,27 @@ export function PlanetSpecializationPanel({
                         className="font-['Orbitron'] font-bold text-lg"
                         style={{ color: race.color }}
                     >
-                        {spec.name}
+                        {t(`planet_specializations.${spec.id}.name`)}
                     </div>
                     <div className="text-xs text-[#888]">
-                        {race.pluralName} • {currentLocation.name}
+                        {t(`race_names.${currentLocation.dominantRace}`)} • {currentLocation.name}
                     </div>
                 </div>
             </div>
 
             <div className="text-sm text-[#888] leading-relaxed">
-                {spec.description}
+                {t(`planet_specializations.${spec.id}.description`)}
             </div>
 
             {/* Effects */}
             <SectionPanel padding="sm">
                 <div className="text-accent font-bold text-sm mb-2">
-                    Эффекты:
+                    {t("planet_specializations.effects_label")}
                 </div>
                 <ul className="text-xs text-[#888] space-y-1">
                     {spec.effects.map((effect, idx) => (
                         <li key={idx} className="text-[#00ff41]">
-                            ✓ {effect.description}
+                            ✓ {getEffectDescription(effect)}
                         </li>
                     ))}
                 </ul>
@@ -202,7 +203,7 @@ export function PlanetSpecializationPanel({
             {/* Cost and duration */}
             <div className="flex gap-4 text-sm">
                 <div className="text-accent">
-                    💰 Стоимость:{" "}
+                    💰 {t("planet_specializations.cost_label")} {" "}
                     <span
                         className={
                             canAfford ? "text-[#00ff41]" : "text-destructive"
@@ -217,7 +218,9 @@ export function PlanetSpecializationPanel({
                 </div>
                 {spec.duration > 0 && (
                     <div className="text-[#00ff41]">
-                        ⏱️ Длительность: {spec.duration} ходов
+                        ⏱️ {t("planet_specializations.duration_label", {
+                            duration: spec.duration,
+                        })}
                     </div>
                 )}
             </div>
@@ -312,12 +315,12 @@ export function PlanetSpecializationPanel({
                                             {t(
                                                 `professions.${member.profession}`,
                                             )}{" "}
-                                            • ур. {member.level || 1}
+                                            • {t("planet_specializations.level_short")} {member.level || 1}
                                         </div>
                                     </div>
                                     {isMaxLevel && (
                                         <div className="text-[10px] text-destructive">
-                                            МАКС.
+                                            {t("planet_specializations.max_short")}
                                         </div>
                                     )}
                                 </button>
@@ -379,7 +382,9 @@ export function PlanetSpecializationPanel({
                             }`}
                         >
                             <div className="cursor-pointer flex-1 text-xs text-[#888]">
-                                Без артефакта (только топливо)
+                                {t(
+                                    "planet_specializations.voidborn_ritual.without_artifact",
+                                )}
                             </div>
                         </button>
                         {artifacts
@@ -428,21 +433,21 @@ export function PlanetSpecializationPanel({
                     className="cursor-pointer flex-1 bg-[#00ff41] text-black hover:bg-[#00cc33]"
                 >
                     {isOnCooldown
-                        ? "ИСПОЛЬЗОВАНО"
+                        ? t("planet_specializations.used_button")
                         : isMaxLevelReached
-                          ? "МАКС. УРОВЕНЬ"
+                          ? t("planet_specializations.max_level_button")
                           : !canAfford
-                            ? "НЕДОСТАТОЧНО СРЕДСТВ"
+                            ? t("planet_specializations.insufficient_funds_button")
                             : isRetraining
                               ? t("planet_specializations.human_academy.retraining_button")
-                              : "Подтвердить"}
+                              : t("common.confirm")}
                 </Button>
                 <Button
                     onClick={onClose}
                     variant="outline"
                     className="border-[#444] text-[#888] hover:border-[#666] cursor-pointer"
                 >
-                    Отмена
+                    {t("common.cancel")}
                 </Button>
             </div>
         </div>

@@ -2680,14 +2680,14 @@
             "description": "Crystalline beings can tune ship energy systems to resonate with crystals."
         },
         "effects": {
-            "health_boost": "+{{value}} max crew health (permanent)",
+            "health_boost": "+{{value}} max crew health for the whole crew (permanent)",
             "health_regen": "+{{value}} health regen per turn",
             "crew_level": "+{{value}} level to selected crew member",
-            "sector_scan": "Full scan of current sector",
-            "artifact_hints": "{{value}} artifact signals saved",
-            "combat_bonus": "+{{value}}% combat damage",
-            "evasion_bonus": "+{{value}}% evasion",
-            "power_boost": "+{{value}} reactor power",
+            "sector_scan": "Full scan of current sector (all locations)",
+            "artifact_hints": "{{value}} artifact signals saved in the artifacts panel",
+            "combat_bonus": "+{{value}}% combat damage (permanent for crew)",
+            "evasion_bonus": "+{{value}}% evasion against attacks",
+            "power_boost": "+{{value}} max reactor energy",
             "shield_boost": "+{{value}} max shields",
             "fuel_efficiency": "+{{value}}% fuel efficiency",
             "artifact_boost": "Artifact boost (+50%)",
@@ -3139,6 +3139,14 @@
     },
     "planet_specializations": {
         "reputation_required": "Allied relations with this race are required (51+). Current reputation: {{reputation}}.",
+        "effects_label": "Effects:",
+        "cost_label": "Cost:",
+        "duration_label": "Duration: {{duration}} turns",
+        "used_button": "USED",
+        "max_level_button": "MAX LEVEL",
+        "insufficient_funds_button": "INSUFFICIENT FUNDS",
+        "level_short": "LV.",
+        "max_short": "MAX",
         "human_academy": {
             "name": "Space Academy",
             "description": "Human military academy offers crew training. Intensive program enhances combat effectiveness.",
@@ -3153,20 +3161,21 @@
         },
         "synthetic_archives": {
             "name": "Data Archives",
-            "description": "Archives scan the sector and mark signals from three artifacts."
+            "description": "Synthetics store knowledge of ancient civilizations. Archives scan the sector and mark signals from three artifacts."
         },
         "xenosymbiont_lab": {
             "name": "Bio-Laboratory",
-            "description": "Krylorians are masters of biotechnology. Improve crew health and regeneration."
+            "description": "Xenosymbionts are masters of biotechnology. Improve crew health and regeneration."
         },
         "krylorian_dojo": {
             "name": "Warrior Dojo",
-            "description": "Insectoid-krylorians are born warriors. The dojo permanently increases crew damage by 10%."
+            "description": "Insectoid-krylorians are born warriors. Training in the dojo improves combat skills."
         },
         "voidborn_ritual": {
             "name": "Mystic Ritual",
-            "description": "The ritual grants +50% fuel efficiency and optionally enhances one active artifact.",
-            "voidborn_artifact_selection": "Choose an active artifact to enhance (optional; without one, only the fuel bonus applies):"
+            "description": "Voidborn conduct ancient rituals: they grant +50% fuel efficiency and optionally enhance one active artifact.",
+            "voidborn_artifact_selection": "Choose an active artifact to enhance (optional; without one, only the fuel bonus applies):",
+            "without_artifact": "No artifact (fuel only)"
         },
         "crystalline_resonator": {
             "name": "Crystal Resonator",
