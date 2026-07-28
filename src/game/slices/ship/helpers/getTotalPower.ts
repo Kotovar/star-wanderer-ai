@@ -5,6 +5,7 @@ import {
 import { getTechBonusSum } from "@/game/research";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getReactorOverloadPower } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
+import { getTechPerkValue } from "@/game/constants/techTree";
 import type { GameState } from "@/game/types/game";
 
 /**
@@ -28,6 +29,21 @@ export function getTotalPower(state: GameState): number {
     let power = modules
         .filter(isModuleFunctional)
         .reduce((sum, m) => sum + (m.power ?? 0), 0);
+
+    // === Бонус ветки "Реакторный инженер" (лучший инженер экипажа, не суммируется) ===
+    const bestEngineerPowerBonus = Math.max(
+        0,
+        ...crew
+            .filter((c) => c.profession === "engineer")
+            .map((c) => getTechPerkValue(c, "B")),
+        0,
+    );
+    if (bestEngineerPowerBonus > 0) {
+        const reactorCount = modules.filter(
+            (m) => m.type === "reactor" && isModuleFunctional(m),
+        ).length;
+        power += bestEngineerPowerBonus * reactorCount;
+    }
 
     // === Бонус от назначения "разгон реактора" (reactor_overload) ===
     // Считается динамически (не накапливается в state)

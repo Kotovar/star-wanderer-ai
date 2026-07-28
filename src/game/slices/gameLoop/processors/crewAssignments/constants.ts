@@ -4,6 +4,7 @@
 
 import { CREW_ASSIGNMENT_EXP } from "@/game/constants/experience";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
+import { getTechPerkValue } from "@/game/constants/techTree";
 import type { CrewMember } from "@/game/types/crew";
 
 /** Настроение выше этой доли от максимума — нейтрально (не растёт бонус дальше по прямой от 50%) */
@@ -42,6 +43,10 @@ export function getTaskBonusMultiplier(crewMember: CrewMember): number {
     if (hasDoubleEffect) taskBonus = Math.max(taskBonus, 1);
     taskBonus += getAugmentationBonus(crewMember, "actionSpeedBonus");
     taskBonus += getHappinessEfficiencyModifier(crewMember);
+    // Ветки "Механик-виртуоз" (инженер) и "Полевой хирург" (медик)
+    if (crewMember.profession === "engineer" || crewMember.profession === "medic") {
+        taskBonus += getTechPerkValue(crewMember, "A");
+    }
     return Math.max(0, 1 + taskBonus - taskPenalty);
 }
 
