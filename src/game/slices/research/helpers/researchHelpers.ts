@@ -11,6 +11,7 @@ import {
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getTechBonusSum } from "@/game/research";
 import { getDiminishingResearchSpeedBonus } from "@/game/constants/augmentations";
+import { getTechPerkValue } from "@/game/constants/techTree";
 import { typedKeys } from "@/lib/utils";
 import {
     DEFAULT_MODULE_HEALTH,
@@ -121,12 +122,12 @@ export const calculateResearchOutput = (
             scientistContribution * getTaskBonusMultiplier(scientist),
         );
 
-        // Личный бонус к науке (genius +30%, только этому учёному)
+        // Личный бонус к науке (genius +30%, только этому учёному) + ветка "Теоретик"
         const researchTraitBonus =
-            scientist.traits?.reduce(
+            (scientist.traits?.reduce(
                 (sum, tr) => sum + (tr.effect.researchBonus ?? 0),
                 0,
-            ) ?? 0;
+            ) ?? 0) + getTechPerkValue(scientist, "A");
         if (researchTraitBonus > 0) {
             scientistContribution = Math.floor(
                 scientistContribution * (1 + researchTraitBonus),

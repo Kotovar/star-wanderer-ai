@@ -1,6 +1,7 @@
 import { ANCIENT_ARTIFACTS } from "@/game/constants/artifacts";
 import { ARTIFACT_BOOST_BONUS } from "@/game/slices/artifacts/constants";
 import { getTechBonusSum } from "@/game/research";
+import { getTechPerkValue } from "@/game/constants/techTree";
 import { RACES } from "@/game/constants/races";
 import type {
     ActiveEffect,
@@ -168,9 +169,9 @@ export const getEffectDescription = (
     }
 };
 
-/** Личный бонус экипажа к силе эффектов артефактов (трейт legend), суммируется */
-export const getCrewTraitArtifactBonus = (crew: GameState["crew"]): number =>
-    crew.reduce(
+/** Личный бонус экипажа к силе эффектов артефактов (трейт legend, суммируется по всему экипажу) */
+export const getCrewTraitArtifactBonus = (crew: GameState["crew"]): number => {
+    const traitSum = crew.reduce(
         (sum, c) =>
             sum +
             (c.traits?.reduce(
@@ -179,6 +180,18 @@ export const getCrewTraitArtifactBonus = (crew: GameState["crew"]): number =>
             ) ?? 0),
         0,
     );
+    // Ветка "Ксеноархеолог": лучший учёный экипажа, не суммируется между
+    // несколькими учёными (иначе игрок мог бы нанять несколько с этой
+    // веткой и получить неограниченный бонус)
+    const bestScientistTechPerk = Math.max(
+        0,
+        ...crew
+            .filter((c) => c.profession === "scientist")
+            .map((c) => getTechPerkValue(c, "B")),
+        0,
+    );
+    return traitSum + bestScientistTechPerk;
+};
 
 // Helper function to get artifact effect value with active boost bonus
 export const getArtifactEffectValue = (
