@@ -11,7 +11,11 @@ import { ServiceCostResult } from "./types";
  */
 export const repairShip = (set: SetState, get: () => GameStore): void => {
     const state = get();
-    const { cost, canUse }: ServiceCostResult = calculateRepairCost(state);
+    const raceId = state.currentLocation?.dominantRace;
+    const { cost, canUse }: ServiceCostResult = calculateRepairCost(
+        state,
+        raceId,
+    );
 
     // Проверка возможности ремонта
     if (!canUse) {

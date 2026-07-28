@@ -3,6 +3,7 @@ import type { GameState } from "@/game/types";
 import type { RaceId } from "@/game/types/races";
 import type { ServiceCostResult } from "./types";
 import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
+import { getRaceReputationLevel } from "@/game/reputation/utils";
 
 /**
  * Рассчитывает стоимость ремонта корабля
@@ -46,6 +47,10 @@ export const calculateRepairCost = (
             raceId,
             baseCost,
         );
+        // Союзная раса чинит бесплатно
+        if (getRaceReputationLevel(state.raceReputation, raceId) === "allied") {
+            baseCost = 0;
+        }
     }
 
     // Можно ремонтировать, если есть повреждения (> 0 HP)

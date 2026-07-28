@@ -13,7 +13,11 @@ import type { GameStore, SetState } from "@/game/types";
  */
 export const healCrew = (set: SetState, get: () => GameStore): void => {
     const state = get();
-    const { cost, canUse }: ServiceCostResult = calculateHealCost(state);
+    const raceId = state.currentLocation?.dominantRace;
+    const { cost, canUse }: ServiceCostResult = calculateHealCost(
+        state,
+        raceId,
+    );
 
     // Проверка возможности лечения
     if (!canUse) {
