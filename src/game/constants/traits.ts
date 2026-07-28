@@ -1,4 +1,4 @@
-import type { CrewTraitType, MutationTraitId, TraitDetails } from "../types";
+import type { CrewTraitType, MutationTraitId, PositiveTraitId, TraitDetails } from "../types";
 
 export const MUTATION_TRAITS: MutationTraitId[] = [
     "tentacles",
@@ -10,6 +10,8 @@ export const MUTATION_TRAITS: MutationTraitId[] = [
     "paranoid",
     "unstable",
 ];
+
+export const BONDING_TRAITS: PositiveTraitId[] = ["bonded", "mentor"];
 
 export const CREW_TRAITS: Record<
     Exclude<CrewTraitType, "neutral">,
@@ -125,6 +127,26 @@ export const CREW_TRAITS: Record<
             effect: { doubleTaskEffect: 1 },
             rarity: "legendary",
             priceMod: 2.8,
+        },
+        // Bonding traits — only granted by the crew_relation_bonding event
+        // (rarity: "bonding" is a sentinel that never matches the "common"/
+        // "rare"/"legendary" checks in generateCrewTraits, so these can't be
+        // rolled at hire time)
+        {
+            id: "bonded",
+            name: "Крепкая дружба",
+            desc: "+8 настроение команды в модуле (сдружился с представителем другой расы)",
+            effect: { moduleMorale: 8 },
+            rarity: "bonding",
+            priceMod: 1,
+        },
+        {
+            id: "mentor",
+            name: "Межкультурный наставник",
+            desc: "+10% к опыту (перенял знания коллеги другой расы)",
+            effect: { expBonus: 0.1 },
+            rarity: "bonding",
+            priceMod: 1,
         },
     ],
     negative: [

@@ -6,6 +6,7 @@ import {
     MUTATION_CHANCES,
     RACE_LAST_NAMES,
     RACES,
+    BONDING_TRAITS,
 } from "@/game/constants";
 import type {
     CrewMember,
@@ -319,6 +320,32 @@ export const giveRandomMutation = (
             }
             return updated;
         }),
+    }));
+    return newTrait.name;
+};
+
+/**
+ * Даёт члену экипажа случайный ещё не полученный бондинг-трейт (см.
+ * BONDING_TRAITS) — вызывается только из crew_relation_bonding события.
+ * Возвращает название трейта или null, если получать больше нечего.
+ */
+export const giveRandomBondingTrait = (
+    crewMember: CrewMember,
+    set: (
+        fn: (s: { crew: CrewMember[] }) => Partial<{ crew: CrewMember[] }>,
+    ) => void,
+): string | null => {
+    const existingIds = new Set(crewMember.traits.map((t) => t.id));
+    const available = BONDING_TRAITS.filter((id) => !existingIds.has(id));
+    if (available.length === 0) return null;
+    const newTraitId = available[Math.floor(Math.random() * available.length)];
+    const newTrait = getTraitById(newTraitId);
+    set((s) => ({
+        crew: s.crew.map((c) =>
+            c.id === crewMember.id
+                ? { ...c, traits: [...c.traits, newTrait] }
+                : c,
+        ),
     }));
     return newTrait.name;
 };

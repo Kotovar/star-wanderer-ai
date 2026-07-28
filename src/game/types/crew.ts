@@ -26,7 +26,9 @@ export type PositiveTraitId =
     | "invincible"
     | "legend"
     | "master"
-    | "trader";
+    | "trader"
+    | "bonded"
+    | "mentor";
 
 export type NegativeTraitId =
     | "coward"
