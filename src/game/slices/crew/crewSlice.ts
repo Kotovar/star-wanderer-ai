@@ -5,6 +5,7 @@ import type {
     CrewMemberAssignment,
     CrewMemberCombatAssignment,
 } from "@/game/types";
+import type { TechPerkBranch, TechPerkTier } from "@/game/types/crew";
 import { gainExp as gainExpHelper, isValidCrewAssignment } from "./helpers";
 import {
     canMergeWithModule,
@@ -24,6 +25,17 @@ export interface CrewSlice {
      * Начисляет опыт члену экипажа с учётом всех бонусов
      */
     gainExp: (crewMember: CrewMember | undefined, amount: number) => void;
+
+    /**
+     * Фиксирует выбор ветки прокачки профессии для члена экипажа на
+     * заданном уровне (3/6/9). Повторный вызов для того же tier
+     * перезаписывает предыдущий выбор.
+     */
+    chooseCrewPerk: (
+        crewMemberId: number,
+        tier: TechPerkTier,
+        branch: TechPerkBranch,
+    ) => void;
 
     /**
      * Проверка возможности сращивания с модулем
@@ -95,6 +107,14 @@ export const createCrewSlice = (
     gainExp: (crewMember, amount) => {
         const state = get();
         gainExpHelper(crewMember, amount, state, get(), set);
+    },
+
+    chooseCrewPerk: (crewMemberId, tier, branch) => {
+        set((state) => {
+            const crewMember = state.crew.find((c) => c.id === crewMemberId);
+            if (!crewMember) return;
+            crewMember.techPerks = { ...crewMember.techPerks, [tier]: branch };
+        });
     },
 
     canMerge: (crewMember) => canMergeWithModule(crewMember),
