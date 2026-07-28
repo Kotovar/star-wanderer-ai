@@ -7,6 +7,7 @@ import type {
 } from "@/game/types";
 import type { Goods } from "@/game/types/goods";
 import { RESEARCH_RESOURCES, TRADE_GOODS } from "@/game/constants";
+import { getTechPerkValue } from "@/game/constants/techTree";
 import { addTradeGood } from "@/game/slices/ship/helpers";
 import { giveRandomMutation, getBestByProfession } from "@/game/crew";
 import { showHintOnce } from "@/game/hints/showHint";
@@ -137,16 +138,24 @@ export const resolveScoutEvent = (
 
     const logEntry: SurfaceLogEntry = { source: "scout" };
     const { outcome } = choice;
+    const scout = getBestByProfession(get().crew, "scout");
+    const yieldBonus = scout ? getTechPerkValue(scout, "A") : 0;
 
     if (outcome.credits) {
-        const value = roll(...outcome.credits);
+        const value = Math.floor(roll(...outcome.credits) * (1 + yieldBonus));
         set((s) => ({ credits: s.credits + value }));
         logEntry.credits = value;
         get().addLog( i18nStore.t("game_logs.scoutEvents_1", { value }), "info");
     }
 
     if (outcome.tradeGood) {
-        const qty = roll(outcome.tradeGood.min, outcome.tradeGood.max);
+        const qty = Math.max(
+            1,
+            Math.round(
+                roll(outcome.tradeGood.min, outcome.tradeGood.max) *
+                    (1 + yieldBonus),
+            ),
+        );
         const goodId = outcome.tradeGood.id;
         set((s) => ({
             ship: {
@@ -162,7 +171,10 @@ export const resolveScoutEvent = (
     if (outcome.researchResources?.length) {
         const found = outcome.researchResources.map((res) => ({
             type: res.type,
-            quantity: roll(res.min, res.max),
+            quantity: Math.max(
+                1,
+                Math.round(roll(res.min, res.max) * (1 + yieldBonus)),
+            ),
         }));
         set((s) => {
             const updated = { ...s.research.resources };
@@ -180,9 +192,10 @@ export const resolveScoutEvent = (
         logEntry.researchResources = found;
     }
 
-    if (outcome.mutationChance && Math.random() < outcome.mutationChance) {
-        const scout = getBestByProfession(get().crew, "scout");
-        if (scout) {
+    if (outcome.mutationChance) {
+        const riskReduction = scout ? getTechPerkValue(scout, "B") : 0;
+        const effectiveChance = Math.max(0, outcome.mutationChance - riskReduction);
+        if (scout && Math.random() < effectiveChance) {
             const mutationName = giveRandomMutation(scout, set);
             if (mutationName) {
                 logEntry.mutationName = mutationName;

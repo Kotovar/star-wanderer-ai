@@ -20,6 +20,7 @@ import {
     SCOUTING_REQUIRED_VISITS,
 } from "../constants";
 import { getMaxExtraScoutAttempts } from "@/game/constants/augmentations";
+import { getTechPerkValue } from "@/game/constants/techTree";
 import { SCOUT_BASE_EXP } from "@/game/constants/experience";
 import { addTradeGood } from "@/game/slices/ship/helpers";
 import { determineScoutingOutcome } from "./determineScoutingOutcome";
@@ -70,6 +71,7 @@ export const sendScoutingMission = (
         result = determineScoutingOutcome(
             outcome,
             state.currentSector?.tier ?? 1,
+            getTechPerkValue(scout, "A"),
         );
 
         // Pre-compute trade good quantity so it's available for both apply and lastScoutResult

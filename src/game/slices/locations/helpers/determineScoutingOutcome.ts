@@ -13,9 +13,10 @@ import { scaleScoutingReward } from "@/game/progression/incomeBalance";
 export const determineScoutingOutcome = (
     randomValue: number,
     tier = 1,
+    yieldBonus = 0,
 ): ScoutingOutcome => {
     if (randomValue < SCOUTING_PROBABILITIES.CREDITS) {
-        return generateCreditReward(tier);
+        return generateCreditReward(tier, yieldBonus);
     } else if (
         randomValue <
         SCOUTING_PROBABILITIES.CREDITS + SCOUTING_PROBABILITIES.TRADE_GOOD
@@ -31,7 +32,7 @@ export const determineScoutingOutcome = (
  *
  * @returns Объект с результатом разведки (кредиты)
  */
-const generateCreditReward = (tier: number): ScoutingOutcome => {
+const generateCreditReward = (tier: number, yieldBonus = 0): ScoutingOutcome => {
     const reward = scaleScoutingReward(
         Math.floor(
             SCOUTING_CREDIT_REWARD.MIN +
@@ -42,7 +43,7 @@ const generateCreditReward = (tier: number): ScoutingOutcome => {
     );
     return {
         type: "credits",
-        value: reward,
+        value: Math.floor(reward * (1 + yieldBonus)),
     };
 };
 
