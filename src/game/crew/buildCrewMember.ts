@@ -13,6 +13,8 @@ import type {
     Profession,
     Quality,
     RaceId,
+    TechPerkBranch,
+    TechPerkTier,
     TraitId,
 } from "@/game/types";
 
@@ -45,6 +47,8 @@ export interface CrewBuildOptions {
     moduleId?: number;
     /** Начальный опыт. По умолчанию: 0. */
     exp?: number;
+    /** Уже сделанные выборы веток прокачки (тир → ветка). По умолчанию: не выбраны. */
+    techPerks?: Partial<Record<TechPerkTier, TechPerkBranch>>;
 }
 
 const ALL_PROFESSIONS: Profession[] = [
@@ -86,6 +90,7 @@ export function buildCrewMember(options: CrewBuildOptions = {}): CrewMember {
         seed,
         moduleId = 1,
         exp = 0,
+        techPerks,
     } = options;
 
     // Profession
@@ -167,5 +172,6 @@ export function buildCrewMember(options: CrewBuildOptions = {}): CrewMember {
         mergedModuleId: null,
         firstaidActive: false,
         augmentation: null,
+        ...(techPerks ? { techPerks } : {}),
     };
 }
