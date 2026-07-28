@@ -190,7 +190,7 @@ export function CrewList() {
                                     />
                                 </div>
                                 <span className="text-[#555] text-[9px] shrink-0 tabular-nums">
-                                    ♥{member.health}
+                                    ♥{Math.round(member.health)}
                                 </span>
                             </div>
 
@@ -356,8 +356,8 @@ export function CrewList() {
                                             <span className="text-[#ffb000]">
                                                 {t("crew_member.health")}{" "}
                                             </span>
-                                            {selectedCrew.health}/
-                                            {selectedCrew.maxHealth || 100}
+                                            {Math.round(selectedCrew.health)}/
+                                            {Math.round(selectedCrew.maxHealth || 100)}
                                             <Progress
                                                 value={
                                                     (selectedCrew.health /

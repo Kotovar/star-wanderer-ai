@@ -239,7 +239,7 @@ export function PlanetExplorationPanel() {
               <div
                 key={member.id}
                 className="flex items-center gap-1.5 px-2 py-1 border border-[#1a2a3a] bg-[rgba(0,212,255,0.04)] rounded-sm"
-                title={`${member.name} · ${member.health}/${member.maxHealth} HP`}
+                title={`${member.name} · ${Math.round(member.health)}/${Math.round(member.maxHealth)} HP`}
               >
                 <ProfessionSprite
                   race={member.race}

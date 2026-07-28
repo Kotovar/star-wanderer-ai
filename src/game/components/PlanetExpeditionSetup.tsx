@@ -142,7 +142,7 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                                         />
                                     </div>
                                     <span className="text-[10px] opacity-50 whitespace-nowrap font-mono">
-                                        {member.health}/{member.maxHealth}
+                                        {Math.round(member.health)}/{Math.round(member.maxHealth)}
                                     </span>
                                 </div>
                             </div>

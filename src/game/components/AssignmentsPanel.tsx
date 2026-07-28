@@ -529,7 +529,7 @@ function CrewBar({
             <div className="flex justify-between text-[#777]">
                 <span>{label}</span>
                 <span className="tabular-nums">
-                    {value}/{max}
+                    {Math.round(value)}/{Math.round(max)}
                 </span>
             </div>
             <div className="h-1.5 bg-[rgba(0,0,0,0.6)] rounded overflow-hidden">

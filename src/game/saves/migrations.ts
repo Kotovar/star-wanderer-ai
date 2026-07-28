@@ -325,6 +325,23 @@ const migrations: Record<number, Migration> = {
       },
     };
   },
+  15: (raw) => {
+    const state = raw as Partial<GameState>;
+    // Старый (уже исправленный) баг мог оставить у части экипажа дробные
+    // health/maxHealth — каждая текущая мутация здоровья целочисленная
+    // (Math.floor/round), так что дробь сама по себе никогда не появится
+    // заново, но уже сохранённая дробь и дальше складывалась бы/вычиталась
+    // с целыми числами вечно. Округляем один раз при загрузке.
+    return {
+      ...state,
+      stateVersion: 16,
+      crew: (state.crew ?? []).map((c) => ({
+        ...c,
+        health: Math.round(c.health),
+        maxHealth: Math.round(c.maxHealth),
+      })),
+    };
+  },
 };
 
 /**
