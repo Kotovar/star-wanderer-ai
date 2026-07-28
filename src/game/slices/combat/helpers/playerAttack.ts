@@ -37,6 +37,7 @@ import {
 } from "./bossAbilities";
 import { advanceCombatRound } from "./combatTime";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
+import { getTechPerkValue } from "@/game/constants/techTree";
 import type { CrewMember } from "@/game/types";
 
 // Призматическая линза работает только из оружейной палубы с лазером.
@@ -432,6 +433,10 @@ function rollCrit(state: GameState, get: () => GameStore): CritResult {
     });
     // Бонус аугментации targeting_eye (+5% крит для стрелка)
     critChance += getAugmentationBonus(gunnerInBay, "critBonus");
+    // Ветка "Разрушитель" — как и остальные бонусы этого блока,
+    // намеренно только для одного стрелка (см. комментарий выше о
+    // тройном бонусе при нескольких стрелках)
+    critChance += getTechPerkValue(gunnerInBay, "B");
   }
 
   critChance = Math.min(1, critChance);

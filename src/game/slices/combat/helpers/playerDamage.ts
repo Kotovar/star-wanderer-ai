@@ -1,5 +1,6 @@
 import type { GameState, WeaponType } from "@/game/types";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
+import { getTechPerkValue } from "@/game/constants/techTree";
 import {
     BASE_ACCURACY,
     MIN_ACCURACY,
@@ -160,6 +161,7 @@ export function computeAccuracyModifier(state: GameState): number {
                 modifier += Number(trait.effect.accuracyBonus);
         });
         modifier += getAugmentationBonus(c, "accuracyBonus");
+        modifier += getTechPerkValue(c, "A"); // Ветка "Снайпер"
     });
 
     return modifier;
@@ -202,6 +204,7 @@ export function computeBayAccuracyModifier(state: GameState, bayId: number): num
             if (trait.effect?.accuracyPenalty) modifier -= Number(trait.effect.accuracyPenalty);
             if (trait.effect?.accuracyBonus) modifier += Number(trait.effect.accuracyBonus);
         });
+        modifier += getTechPerkValue(gunnerInBay, "A"); // Ветка "Снайпер"
     }
 
     // Engineer with calibration in THIS bay
