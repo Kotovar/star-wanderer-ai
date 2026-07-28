@@ -375,7 +375,7 @@ export function ShipStats() {
         : "#00ff41";
 
   return (
-    <div className="bg-[rgba(0,255,65,0.04)] border border-[#00ff41] p-3 mt-2.5 text-sm">
+    <div className="bg-[rgba(0,255,65,0.04)] border border-[#00ff41] p-3 text-sm">
       <div className="mb-3 flex items-center justify-between gap-3 border-b border-[#00ff4133] pb-2">
         <div>
           <div className="font-['Orbitron'] text-[10px] font-bold uppercase tracking-[0.18em] text-[#b7c8b7]">

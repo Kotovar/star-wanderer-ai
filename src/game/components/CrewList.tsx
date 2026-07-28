@@ -31,7 +31,12 @@ import { ProfessionSprite } from "./ProfessionSprite";
 import { CrewStatusIcon } from "./CrewStatusIcon";
 import { ModuleMoveButtons } from "./CrewMemberCard";
 import { ASSIGNMENT_EXHAUSTED_AT } from "@/game/crew/assignmentFatigue";
-import { TECH_TREE, TECH_TREE_TIERS } from "@/game/constants/techTree";
+import {
+    TECH_TREE,
+    TECH_TREE_TIERS,
+    getTechPerkNameKey,
+    getTechPerkDescKey,
+} from "@/game/constants/techTree";
 import type { TechPerkBranch, TechPerkTier } from "@/game/types";
 import { getHappinessEfficiencyModifier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import { getDesertionTurnsLeft } from "@/game/slices/gameLoop/processors/processDesertion";
@@ -821,7 +826,13 @@ export function CrewList() {
                                                                                 isChosen ? "text-[#00ff41]" : "text-[#aaa]"
                                                                             }`}
                                                                         >
-                                                                            {option.name}
+                                                                            {t(
+                                                                                getTechPerkNameKey(
+                                                                                    selectedCrew.profession,
+                                                                                    tier,
+                                                                                    branch,
+                                                                                ),
+                                                                            )}
                                                                         </span>
                                                                         {isChosen && (
                                                                             <span className="text-[#00ff41] text-xs ml-auto">
@@ -830,7 +841,13 @@ export function CrewList() {
                                                                         )}
                                                                     </div>
                                                                     <div className="text-[10px] text-[#888]">
-                                                                        {option.desc}
+                                                                        {t(
+                                                                            getTechPerkDescKey(
+                                                                                selectedCrew.profession,
+                                                                                tier,
+                                                                                branch,
+                                                                            ),
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             );

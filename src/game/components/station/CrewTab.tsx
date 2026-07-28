@@ -11,7 +11,12 @@ import {
 } from "@/components/ui/dialog";
 import { GameDialogContent } from "../GameDialog";
 import { RACES } from "@/game/constants/races";
-import { TECH_TREE, TECH_TREE_TIERS } from "@/game/constants/techTree";
+import {
+    TECH_TREE,
+    TECH_TREE_TIERS,
+    getTechPerkNameKey,
+    getTechPerkDescKey,
+} from "@/game/constants/techTree";
 import type {
     CrewTrait,
     Profession,
@@ -366,6 +371,7 @@ function TechPerkBadges({
     profession: Profession;
     techPerks?: Partial<Record<TechPerkTier, TechPerkBranch>>;
 }) {
+    const { t } = useTranslation();
     if (!techPerks) return null;
     const resolvedTiers = TECH_TREE_TIERS.filter((tier) => techPerks[tier]);
     if (resolvedTiers.length === 0) return null;
@@ -379,10 +385,11 @@ function TechPerkBadges({
                 return (
                     <span
                         key={tier}
-                        title={option.desc}
+                        title={t(getTechPerkDescKey(profession, tier, branch))}
                         className="text-[10px] bg-[#00d4ff20] text-[#00d4ff] px-1 rounded"
                     >
-                        {option.icon} {option.name}
+                        {option.icon}{" "}
+                        {t(getTechPerkNameKey(profession, tier, branch))}
                     </span>
                 );
             })}

@@ -327,8 +327,8 @@ export function ShipGrid() {
         }`}
     >
       {!isCombatMode && (
-        <div className="relative h-5">
-          <div className="absolute left-1 right-12 top-0 z-10 flex h-5 items-center gap-2 overflow-hidden whitespace-nowrap text-[9px] uppercase tracking-[0.14em] text-[#526452] pointer-events-none">
+        <div className="relative min-h-5">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 py-0.5 pr-12 pl-1 text-[9px] uppercase tracking-[0.14em] text-[#526452] pointer-events-none">
             <span className="text-ring">⌁ {t("ship.power_bus")}</span>
             <span>
               {onlinePowerLinks}/{powerLinks.length} {t("ship.circuits_online")}

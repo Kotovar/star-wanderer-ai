@@ -527,28 +527,28 @@ export function EnemyCodexPanel() {
         onValueChange={handleCatalogSectionChange}
         className="min-h-0"
       >
-        <TabsList className="w-full border border-[#00d4ff44] bg-[rgba(0,212,255,0.04)]">
+        <TabsList className="h-auto min-h-9 w-full border border-[#00d4ff44] bg-[rgba(0,212,255,0.04)]">
           <TabsTrigger
             value="ships"
-            className="flex-1 cursor-pointer text-xs text-[#8fa0aa] data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810]"
+            className="min-w-0 flex-1 cursor-pointer whitespace-normal border-x border-[#00d4ff33] px-1 text-center text-[10px] leading-tight text-[#8fa0aa] first:border-l-0 last:border-r-0 sm:text-xs data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810]"
           >
             {t("enemy_codex.tabs.ships")}
           </TabsTrigger>
           <TabsTrigger
             value="stations"
-            className="flex-1 cursor-pointer text-xs text-[#8fa0aa] data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810]"
+            className="min-w-0 flex-1 cursor-pointer whitespace-normal border-x border-[#00d4ff33] px-1 text-center text-[10px] leading-tight text-[#8fa0aa] first:border-l-0 last:border-r-0 sm:text-xs data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810]"
           >
             {t("enemy_codex.tabs.stations")}
           </TabsTrigger>
           <TabsTrigger
             value="augmentations"
-            className="flex-1 cursor-pointer text-xs text-[#8fa0aa] data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810]"
+            className="min-w-0 flex-1 cursor-pointer whitespace-normal border-x border-[#00d4ff33] px-1 text-center text-[10px] leading-tight text-[#8fa0aa] first:border-l-0 last:border-r-0 sm:text-xs data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810]"
           >
             {t("enemy_codex.tabs.augmentations")}
           </TabsTrigger>
           <TabsTrigger
             value="weapons"
-            className="flex-1 cursor-pointer text-xs text-[#8fa0aa] data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810]"
+            className="min-w-0 flex-1 cursor-pointer whitespace-normal border-x border-[#00d4ff33] px-1 text-center text-[10px] leading-tight text-[#8fa0aa] first:border-l-0 last:border-r-0 sm:text-xs data-[state=active]:bg-[#00d4ff] data-[state=active]:text-[#050810]"
           >
             {t("enemy_codex.tabs.weapons")}
           </TabsTrigger>

@@ -2,7 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import { getPendingCrewPerkChoice } from "@/game/crew/techPerks";
-import { TECH_TREE } from "@/game/constants/techTree";
+import {
+    TECH_TREE,
+    getTechPerkNameKey,
+    getTechPerkDescKey,
+} from "@/game/constants/techTree";
 import { useGameStore } from "@/game/store";
 import type { TechPerkBranch } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
@@ -56,10 +60,22 @@ export function CrewPerkChoiceModal() {
                                 <span className="text-xl leading-none">
                                     {option.icon}
                                 </span>
-                                {option.name}
+                                {t(
+                                    getTechPerkNameKey(
+                                        pending.profession,
+                                        pending.tier,
+                                        branch,
+                                    ),
+                                )}
                             </div>
                             <div className="mt-1 flex-1 text-xs leading-relaxed text-[#7f8b7f]">
-                                {option.desc}
+                                {t(
+                                    getTechPerkDescKey(
+                                        pending.profession,
+                                        pending.tier,
+                                        branch,
+                                    ),
+                                )}
                             </div>
                             <Button
                                 onClick={() =>

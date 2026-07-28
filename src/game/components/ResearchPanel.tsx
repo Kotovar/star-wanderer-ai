@@ -411,7 +411,7 @@ function PanZoomCanvas({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="h-[60dvh] flex-none overflow-hidden min-h-80 bg-[#030608] cursor-grab active:cursor-grabbing lg:h-auto lg:flex-1 lg:min-h-0"
+      className="min-h-0 flex-1 overflow-hidden bg-[#030608] cursor-grab active:cursor-grabbing"
       style={{ userSelect: "none", touchAction: "none" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -576,7 +576,6 @@ interface ResearchPathPanelProps {
   focusedCategory: ResearchCategory | null;
   onFocusCategory: (category: ResearchCategory | null) => void;
   canStartResearch: (tech: Technology) => boolean;
-  lang: "ru" | "en";
 }
 
 function ResearchPathPanel({
@@ -585,10 +584,9 @@ function ResearchPathPanel({
   focusedCategory,
   onFocusCategory,
   canStartResearch,
-  lang,
 }: ResearchPathPanelProps) {
   return (
-    <div className="grid grid-cols-2 gap-1.5 md:grid-cols-4 xl:grid-cols-7">
+    <div className="flex gap-1.5 overflow-x-auto pb-1 md:grid md:grid-cols-4 md:overflow-visible md:pb-0 xl:grid-cols-7">
       {typedKeys(CATEGORY_META).map((category) => {
         const techs = (Object.values(RESEARCH_TREE) as Technology[]).filter(
           (tech) => tech.category === category,
@@ -614,7 +612,7 @@ function ResearchPathPanel({
             key={category}
             type="button"
             onClick={() => onFocusCategory(isFocused ? null : category)}
-            className="min-h-19.5 border p-2 text-left transition-all cursor-pointer"
+            className="w-40 shrink-0 border p-2 text-left transition-all cursor-pointer md:w-auto md:shrink"
             style={{
               borderColor: isFocused || activeInPath ? color : `${color}55`,
               backgroundColor: isFocused
@@ -649,11 +647,6 @@ function ResearchPathPanel({
                   backgroundColor: color,
                 }}
               />
-            </div>
-            <div className="mt-1 text-[9px] leading-snug text-[#555]">
-              {readyTech
-                ? `След.: ${getTechTranslation(readyTech.id, lang).name}`
-                : meta.description}
             </div>
           </button>
         );
@@ -1007,7 +1000,7 @@ export function ResearchPanel() {
     : null;
 
   return (
-    <div className="flex flex-col min-h-full lg:h-full lg:overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden">
       {/* ── Header ── */}
       <div className="shrink-0 p-2 border-b border-[#1a1a1a] space-y-2">
         <div className="flex items-start justify-between gap-3 border-b border-[#9933ff44] pb-2">
@@ -1075,7 +1068,6 @@ export function ResearchPanel() {
           focusedCategory={focusedCategory}
           onFocusCategory={setFocusedCategory}
           canStartResearch={canStartResearch}
-          lang={currentLanguage}
         />
 
         <div className="flex flex-wrap gap-1">

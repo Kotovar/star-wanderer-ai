@@ -1,9 +1,20 @@
 import assert from "node:assert/strict";
-import { TECH_TREE, TECH_TREE_TIERS, getTechPerkValue } from "../src/game/constants/techTree.ts";
+import {
+  TECH_TREE,
+  TECH_TREE_TIERS,
+  getTechPerkValue,
+  getTechPerkNameKey,
+  getTechPerkDescKey,
+} from "../src/game/constants/techTree.ts";
 import { getPendingCrewPerkChoice, fillMissingTechPerkTiers } from "../src/game/crew/techPerks.ts";
+import ruLocale from "../src/lib/locales/ru.json" with { type: "json" };
+import enLocale from "../src/lib/locales/en.json" with { type: "json" };
 
 const PROFESSIONS = ["pilot", "engineer", "medic", "scout", "scientist", "gunner"];
 const BRANCHES = ["A", "B"];
+
+const getByDotPath = (obj, path) =>
+  path.split(".").reduce((node, key) => node?.[key], obj);
 
 // --- Data integrity: every profession has all 3 tiers × 2 branches, values increase per tier ---
 for (const profession of PROFESSIONS) {
@@ -22,9 +33,23 @@ for (const profession of PROFESSIONS) {
     );
     for (const tier of TECH_TREE_TIERS) {
       assert.ok(
-        tree[tier][branch].name.length > 0 && tree[tier][branch].desc.length > 0,
-        `${profession} tier ${tier} branch ${branch} must have name/desc text`,
+        tree[tier][branch].icon.length > 0,
+        `${profession} tier ${tier} branch ${branch} must have an icon`,
       );
+      // Name/desc live in locale files, not in the data module — check both
+      // languages actually have text at the key this branch resolves to.
+      for (const [langName, locale] of [["ru", ruLocale], ["en", enLocale]]) {
+        const name = getByDotPath(locale, getTechPerkNameKey(profession, tier, branch));
+        const desc = getByDotPath(locale, getTechPerkDescKey(profession, tier, branch));
+        assert.ok(
+          typeof name === "string" && name.length > 0,
+          `${langName}.json is missing tech_tree.${profession}.${tier}.${branch}.name`,
+        );
+        assert.ok(
+          typeof desc === "string" && desc.length > 0,
+          `${langName}.json is missing tech_tree.${profession}.${tier}.${branch}.desc`,
+        );
+      }
     }
   }
 }
