@@ -4,6 +4,7 @@ import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getPilotInCockpit } from "@/game/crew";
 import { getArtifactEffectValue } from "@/game/artifacts/utils";
+import { getTechPerkValue } from "@/game/constants/techTree";
 
 /**
  * Вычисляет общий шанс уклонения корабля
@@ -40,6 +41,8 @@ export function getTotalEvasion(state: GameState): number {
                 evasion += trait.effect.pilotEvasionBonus * 100;
             }
         });
+        // Ветка "Ас пилотирования" дерева прокачки
+        evasion += getTechPerkValue(cockpitPilot, "A") * 100;
     }
 
     // Бонусы от артефактов
