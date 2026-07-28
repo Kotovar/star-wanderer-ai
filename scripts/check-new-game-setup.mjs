@@ -6,7 +6,10 @@ import {
   getLaunchCredits,
 } from "../src/game/constants/launchModifiers.ts";
 import { SHIP_TEMPLATES } from "../src/game/constants/shipTemplates.ts";
-import { getPendingCrewPerkChoice } from "../src/game/crew/techPerks.ts";
+import {
+  getPendingCrewPerkChoice,
+  fillMissingTechPerkTiers,
+} from "../src/game/crew/techPerks.ts";
 import { MODULE_TYPES } from "../src/game/constants/modules.ts";
 import { areAllModulesConnected } from "../src/game/modules/areAllModulesConnected.ts";
 import {
@@ -119,10 +122,18 @@ if (devAllTechExplorer) {
   );
   assert.equal(
     getPendingCrewPerkChoice(
-      devAllTechExplorer.crew.map((member) => ({ ...member, health: 100 })),
+      devAllTechExplorer.crew.map((member) => ({
+        ...member,
+        health: 100,
+        // buildCrewMember() runs every crew member through this same
+        // auto-fill before the game ever sees them (see buildCrewMember.ts) —
+        // simulate that here since it can't be imported directly (its `@/`
+        // import chain needs the Next.js bundler, unlike this leaf helper).
+        techPerks: fillMissingTechPerkTiers(member.level, member.techPerks),
+      })),
     ),
     null,
-    "dev all-tech explorer crew above tier 3/6 must have those tiers pre-picked, or the perk choice modal opens immediately on spawn",
+    "dev all-tech explorer crew above tier 3/6 must end up with those tiers auto-filled by buildCrewMember, or the perk choice modal opens immediately on spawn",
   );
   assert.match(buildStartingStateSource, /template\.startWithAllTechs/);
   assert.match(buildStartingStateSource, /Object\.values\(RESEARCH_TREE\)/);

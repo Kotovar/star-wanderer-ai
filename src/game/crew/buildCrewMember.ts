@@ -5,6 +5,7 @@ import {
     getTraitById,
 } from "@/game/crew/utils";
 import { getRandomRace } from "@/game/races";
+import { fillMissingTechPerkTiers } from "@/game/crew/techPerks";
 import { INITIAL_HAPPINESS_PERCENT } from "@/game/constants/crew";
 import { RACES } from "@/game/constants/races";
 import type {
@@ -141,6 +142,17 @@ export function buildCrewMember(options: CrewBuildOptions = {}): CrewMember {
         traits = traitsOpt as CrewTrait[];
     }
 
+    // Tech perks: персонаж 3+ уровня, минующий обычный игровой левелап
+    // (стартовый экипаж, найм, спасённый выживший), не должен упираться в
+    // модалку выбора "задним числом" — вместо неё случайно закрываются все
+    // уже пройденные тиры без явного выбора.
+    let tierCall = 0;
+    const resolvedTechPerks = fillMissingTechPerkTiers(
+        level,
+        techPerks,
+        seed !== undefined ? () => seededRand(seed, 40 + tierCall++) : undefined,
+    );
+
     // Name
     const name = nameOpt ?? getRandomName(profession, race, seed);
 
@@ -172,6 +184,6 @@ export function buildCrewMember(options: CrewBuildOptions = {}): CrewMember {
         mergedModuleId: null,
         firstaidActive: false,
         augmentation: null,
-        ...(techPerks ? { techPerks } : {}),
+        ...(resolvedTechPerks ? { techPerks: resolvedTechPerks } : {}),
     };
 }

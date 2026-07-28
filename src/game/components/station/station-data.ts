@@ -1157,6 +1157,7 @@ export function generateStationCrew(
       profession,
       level,
       traits,
+      seed: seed + i * 6000,
     });
 
     crewList.push({ member, price: finalPrice, quality });

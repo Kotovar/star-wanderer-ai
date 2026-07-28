@@ -216,15 +216,16 @@ const createDevAllTechExplorer = (arsenal: ShipTemplate): ShipTemplate => ({
   // тир 3/6/9, и по двое персонажей на каждый порог — проверить, что
   // несколько левелапов за один ход (и несколько ожидающих модалок подряд)
   // не ломаются. Уже пройденные тиры (3 для ур.5, 3 и 6 для ур.8)
-  // предзаполнены выбором — иначе getPendingCrewPerkChoice считает их
-  // нерешёнными задним числом и модалка всплывает сразу на старте игры.
+  // заполняются случайно самим buildCrewMember (см. Task 2 плана перков) —
+  // иначе getPendingCrewPerkChoice считает их нерешёнными задним числом и
+  // модалка всплывает сразу на старте игры.
   crew: [
     { id: 1, name: "Ас-пилот", profession: "pilot", moduleId: 712, level: 2, exp: 190 },
     { id: 2, name: "Инженер-наладчик", profession: "engineer", moduleId: 708, level: 2, exp: 190 },
-    { id: 3, name: "Медик-практик", profession: "medic", moduleId: 722, level: 5, exp: 490, techPerks: { 3: "A" } },
-    { id: 4, name: "Следопыт", profession: "scout", moduleId: 707, level: 5, exp: 490, techPerks: { 3: "A" } },
-    { id: 5, name: "Теоретик", profession: "scientist", moduleId: 702, level: 8, exp: 790, techPerks: { 3: "A", 6: "A" } },
-    { id: 6, name: "Канонир", profession: "gunner", moduleId: 709, level: 8, exp: 790, techPerks: { 3: "A", 6: "A" } },
+    { id: 3, name: "Медик-практик", profession: "medic", moduleId: 722, level: 5, exp: 490 },
+    { id: 4, name: "Следопыт", profession: "scout", moduleId: 707, level: 5, exp: 490 },
+    { id: 5, name: "Теоретик", profession: "scientist", moduleId: 702, level: 8, exp: 790 },
+    { id: 6, name: "Канонир", profession: "gunner", moduleId: 709, level: 8, exp: 790 },
   ],
   credits: arsenal.credits,
   fuel: arsenal.fuel,

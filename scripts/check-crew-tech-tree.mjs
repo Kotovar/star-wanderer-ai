@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { TECH_TREE, TECH_TREE_TIERS, getTechPerkValue } from "../src/game/constants/techTree.ts";
-import { getPendingCrewPerkChoice } from "../src/game/crew/techPerks.ts";
+import { getPendingCrewPerkChoice, fillMissingTechPerkTiers } from "../src/game/crew/techPerks.ts";
 
 const PROFESSIONS = ["pilot", "engineer", "medic", "scout", "scientist", "gunner"];
 const BRANCHES = ["A", "B"];
@@ -117,5 +117,52 @@ assert.deepEqual(
   null,
   "hiring/rescuing a crew member already above a tier with no recorded pick is still detected (this same function runs regardless of how the crew member reached that level)",
 );
+
+// --- fillMissingTechPerkTiers: auto-picks for characters that skip the normal level-up flow ---
+assert.equal(
+  fillMissingTechPerkTiers(2, undefined, () => 0.9),
+  undefined,
+  "below tier 3, nothing to fill — stays undefined, not an empty object",
+);
+assert.deepEqual(
+  fillMissingTechPerkTiers(3, undefined, () => 0.1),
+  { 3: "A" },
+  "a fresh level-3 character with no picks gets tier 3 rolled",
+);
+assert.deepEqual(
+  fillMissingTechPerkTiers(3, undefined, () => 0.9),
+  { 3: "B" },
+  "roll >= 0.5 picks branch B",
+);
+assert.deepEqual(
+  fillMissingTechPerkTiers(8, undefined, () => 0.1),
+  { 3: "A", 6: "A" },
+  "a fresh level-8 character gets both passed tiers (3 and 6) rolled, but not the unreached tier 9",
+);
+assert.deepEqual(
+  fillMissingTechPerkTiers(8, { 3: "B" }, () => 0.1),
+  { 3: "B", 6: "A" },
+  "an already-recorded pick (e.g. explicitly authored) is never overwritten by the auto-roll",
+);
+{
+  let calls = 0;
+  fillMissingTechPerkTiers(9, undefined, () => {
+    calls += 1;
+    return 0.1;
+  });
+  assert.equal(
+    calls,
+    3,
+    "randomFn is called exactly once per missing tier (3, 6, 9), not once total",
+  );
+}
+{
+  const filled = fillMissingTechPerkTiers(9, undefined);
+  assert.deepEqual(
+    Object.keys(filled).map(Number).sort(),
+    TECH_TREE_TIERS,
+    "randomFn defaults to Math.random when omitted, and still fills every passed tier",
+  );
+}
 
 console.log("Crew tech tree checks passed");
