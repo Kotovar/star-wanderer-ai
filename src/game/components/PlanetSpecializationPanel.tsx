@@ -429,8 +429,6 @@ export function PlanetSpecializationPanel({
                 >
                     {isOnCooldown
                         ? "ИСПОЛЬЗОВАНО"
-                        : !canUseSpecialization
-                          ? t("planet_specializations.reputation_required_button")
                         : isMaxLevelReached
                           ? "МАКС. УРОВЕНЬ"
                           : !canAfford

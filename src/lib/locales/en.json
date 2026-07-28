@@ -3138,8 +3138,7 @@
         "tidal": "World with powerful tidal activity. Geothermal energy available but surface is unstable."
     },
     "planet_specializations": {
-        "reputation_required": "Allied relations are required (+51). Current reputation: {{reputation}}.",
-        "reputation_required_button": "ALLIES REQUIRED",
+        "reputation_required": "Allied relations with this race are required (51+). Current reputation: {{reputation}}.",
         "human_academy": {
             "name": "Space Academy",
             "description": "Human military academy offers crew training. Intensive program enhances combat effectiveness.",
