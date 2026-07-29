@@ -38,12 +38,14 @@ export function processStarTypeEffects(
         const candidates = modules.filter((m) => m.health > MIN_MODULE_HEALTH);
         if (candidates.length > 0) {
             const target = candidates[Math.floor(Math.random() * candidates.length)];
+            const newHealth = Math.max(MIN_MODULE_HEALTH, target.health - MODULE_DECAY_DAMAGE);
+            const actualDamage = target.health - newHealth;
             set((s) => ({
                 ship: {
                     ...s.ship,
                     modules: s.ship.modules.map((m) =>
                         m.id === target.id
-                            ? { ...m, health: Math.max(MIN_MODULE_HEALTH, m.health - MODULE_DECAY_DAMAGE) }
+                            ? { ...m, health: newHealth }
                             : m,
                     ),
                 },
@@ -51,7 +53,7 @@ export function processStarTypeEffects(
             get().addLog(
                 i18nStore.t("game_logs.star_module_decay", {
                     moduleName: target.name,
-                    amount: MODULE_DECAY_DAMAGE,
+                    amount: actualDamage,
                 }),
                 "warning",
             );

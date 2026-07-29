@@ -20,6 +20,17 @@ assert.equal(
   "STAR_TYPE_EFFECTS must have exactly one entry per StarType, no extras",
 );
 
+// --- every non-special star type has at least one non-empty effect ---
+const NON_SPECIAL_STAR_TYPES = ALL_STAR_TYPES.filter(
+  (t) => t !== "neutron_star" && t !== "blackhole",
+);
+for (const starType of NON_SPECIAL_STAR_TYPES) {
+  assert.ok(
+    Object.keys(STAR_TYPE_EFFECTS[starType]).length > 0,
+    `${starType} must have at least one non-empty effect (it is not neutron_star/blackhole)`,
+  );
+}
+
 // --- neutron_star / blackhole are intentionally untouched by this feature ---
 assert.deepEqual(STAR_TYPE_EFFECTS.neutron_star, {}, "neutron_star already has applyNeutronRadiation — must stay empty here");
 assert.deepEqual(STAR_TYPE_EFFECTS.blackhole, {}, "blackhole already has travelThroughBlackHole — must stay empty here");

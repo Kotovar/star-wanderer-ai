@@ -101,7 +101,7 @@ const getTravelEventChance = (
         baseChance * (1 + hazardLevel * STAR_EVENT_CHANCE_PER_LEVEL),
     );
 
-/** Лишних копий события добавляется в взвешенный список за счёт звезды назначения */
+/** Сколько лишних копий события добавляется во взвешенный список за счёт звезды назначения */
 const STAR_EVENT_EXTRA_WEIGHT = 2;
 
 /**
@@ -120,7 +120,7 @@ const pickTravelEvent = (
         );
     }
     if (extraWeight) {
-        weighted.push(...Array(STAR_EVENT_EXTRA_WEIGHT).fill(extraWeight));
+        weighted.push(...Array<TravelEventType>(STAR_EVENT_EXTRA_WEIGHT).fill(extraWeight));
     }
     return randomElement(weighted);
 };

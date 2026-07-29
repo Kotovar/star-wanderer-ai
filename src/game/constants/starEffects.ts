@@ -18,7 +18,7 @@ export interface StarTypeEffect {
     scanRangeJitter?: number;
     /** Фиксированный бонус к энергии корабля */
     powerBonus?: number;
-    /** % (0-1) к добыче void_membrane при погружении в газовый гигант в этом секторе */
+    /** % (0-1) к добыче ресурсов (alien_biology, rare_minerals, void_membrane) при погружении в газовый гигант в этом секторе */
     gasDiveYieldBonus?: number;
     /** % (0-1) к находкам при разграблении обломков / добыче астероидов в этом секторе */
     salvageYieldBonus?: number;

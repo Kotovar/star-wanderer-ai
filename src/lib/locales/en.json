@@ -2778,7 +2778,7 @@
             "temp": "~3,000 K",
             "mass": "0.1–0.6 M☉",
             "hazard": "low",
-            "desc": "The most common type of star. Stable and long-lived but dim and cold. Planets can only be habitable in the very inner zone."
+            "desc": "The most common type of star. Stable and long-lived but dim and cold. Planets can only be habitable in the very inner zone. Its dim light also makes the ship harder to target — a small evasion boost."
         },
         "yellow_dwarf": {
             "icon": "🌟",
@@ -2786,7 +2786,7 @@
             "temp": "~5,800 K",
             "mass": "0.8–1.2 M☉",
             "hazard": "low",
-            "desc": "A star similar to our Sun. Stable, warm, and surrounded by planets suitable for colonisation. The most welcoming type of system."
+            "desc": "A star similar to our Sun. Stable, warm, and surrounded by planets suitable for colonisation. The most welcoming type of system. This calm system slowly restores crew morale."
         },
         "white_dwarf": {
             "icon": "⚪",
@@ -2794,7 +2794,7 @@
             "temp": "10,000–100,000 K",
             "mass": "0.5–1.4 M☉",
             "hazard": "medium",
-            "desc": "The remnant of a dead star, slowly cooling over millennia. Debris from old planets may still orbit it."
+            "desc": "The remnant of a dead star, slowly cooling over millennia. Debris from old planets may still orbit it. Gravitational lensing extends the ship's scan range."
         },
         "blue_giant": {
             "icon": "🔵",
@@ -2802,7 +2802,7 @@
             "temp": "~25,000 K",
             "mass": "10–100 M☉",
             "hazard": "high",
-            "desc": "A rare and massive star that burns its fuel thousands of times faster than the Sun. Its short life ends in a supernova."
+            "desc": "A rare and massive star that burns its fuel thousands of times faster than the Sun. Its short life ends in a supernova. Its intense radiation slowly weighs on crew morale."
         },
         "red_supergiant": {
             "icon": "🟠",
@@ -2810,7 +2810,7 @@
             "temp": "~3,500 K",
             "mass": "10–40 M☉",
             "hazard": "high",
-            "desc": "A dying giant star in its final evolutionary stage. Instability can cause sudden flares and mass ejections."
+            "desc": "A dying giant star in its final evolutionary stage. Instability can cause sudden flares and mass ejections. Unstable stellar winds occasionally chip away at the hull while you're here."
         },
         "neutron_star": {
             "icon": "💜",
@@ -2826,7 +2826,7 @@
             "temp": "variable",
             "mass": "2× M☉",
             "hazard": "medium",
-            "desc": "Two stars orbiting a common centre of mass. Their gravitational interplay creates complex planetary orbits."
+            "desc": "Two stars orbiting a common centre of mass. Their gravitational interplay creates complex planetary orbits. Two light sources give the ship a small power boost."
         },
         "triple": {
             "icon": "✨",
@@ -2834,7 +2834,7 @@
             "temp": "variable",
             "mass": "3× M☉",
             "hazard": "medium",
-            "desc": "Three stars in a complex gravitational dance. Unpredictable but beautiful — and rich in rare resources."
+            "desc": "Three stars in a complex gravitational dance. Unpredictable but beautiful — and rich in rare resources. The three bodies' chaotic gravity kicks up more asteroids on routes leaving here."
         },
         "blackhole": {
             "icon": "⚫",
@@ -2850,7 +2850,7 @@
             "temp": "~1,000 K",
             "mass": "13–80 MJ",
             "hazard": "low",
-            "desc": "A 'failed star' — too massive for a planet but too light to sustain fusion. Rich in deuterium and exotic gases."
+            "desc": "A 'failed star' — too massive for a planet but too light to sustain fusion. Rich in deuterium and exotic gases. A system rich in exotic gases — dives into local gas giants yield more."
         },
         "variable_star": {
             "icon": "⭐",
@@ -2858,7 +2858,7 @@
             "temp": "~5,500 K",
             "mass": "~M☉",
             "hazard": "low",
-            "desc": "A star whose brightness changes periodically. Pulsations create beautiful light waves but can cause navigation interference."
+            "desc": "A star whose brightness changes periodically. Pulsations create beautiful light waves but can cause navigation interference. Its brightness swings alternately help and hinder the ship's scan range."
         },
         "stellar_remnant": {
             "icon": "🌫️",
@@ -2866,7 +2866,7 @@
             "temp": "<500 K",
             "mass": "<0.5 M☉",
             "hazard": "low",
-            "desc": "The cold, dark remnant of a long-dead star. Quiet surroundings — only dust and debris. An ideal hiding spot."
+            "desc": "The cold, dark remnant of a long-dead star. Quiet surroundings — only dust and debris. An ideal hiding spot. Debris from the past litters this system — salvage and mining here pay off more."
         }
     },
     "location_types": {
