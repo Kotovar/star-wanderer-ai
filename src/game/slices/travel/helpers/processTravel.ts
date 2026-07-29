@@ -9,6 +9,7 @@ import {
     STAR_EVENT_CHANCE_PER_LEVEL,
     STAR_HAZARD_LEVEL,
 } from "@/game/constants";
+import { getStarTypeEffect } from "@/game/constants/starEffects";
 import { TRADE_GOODS } from "@/game/constants/goods";
 import { getTierPriceMultiplier } from "@/game/slices/trade/constants";
 import {
@@ -100,17 +101,27 @@ const getTravelEventChance = (
         baseChance * (1 + hazardLevel * STAR_EVENT_CHANCE_PER_LEVEL),
     );
 
+/** Лишних копий события добавляется в взвешенный список за счёт звезды назначения */
+const STAR_EVENT_EXTRA_WEIGHT = 2;
+
 /**
  * Выбирает случайное событие в пути; у опасных звёзд выше шанс EMP/аномалии
  */
-const pickTravelEvent = (hazardLevel: number): TravelEventType => {
-    if (hazardLevel < 2) return randomElement(TRAVEL_EVENTS);
-    const weighted = [
-        ...TRAVEL_EVENTS,
-        ...HAZARDOUS_TRAVEL_EVENTS.flatMap((event) =>
-            Array(hazardLevel).fill(event),
-        ),
-    ];
+const pickTravelEvent = (
+    hazardLevel: number,
+    extraWeight?: TravelEventType,
+): TravelEventType => {
+    const weighted: TravelEventType[] = [...TRAVEL_EVENTS];
+    if (hazardLevel >= 2) {
+        weighted.push(
+            ...HAZARDOUS_TRAVEL_EVENTS.flatMap((event) =>
+                Array(hazardLevel).fill(event),
+            ),
+        );
+    }
+    if (extraWeight) {
+        weighted.push(...Array(STAR_EVENT_EXTRA_WEIGHT).fill(extraWeight));
+    }
     return randomElement(weighted);
 };
 
@@ -689,7 +700,12 @@ export const processTravel = (
             : TRAVEL_EVENT_CHANCE_DIRECT;
     const eventChance = getTravelEventChance(baseEventChance, hazardLevel);
     if (Math.random() < eventChance) {
-        const event = pickTravelEvent(hazardLevel);
+        // Доп. вес события от типа звезды СЕКТОРА НАЗНАЧЕНИЯ (тройная система) —
+        // тот же сектор, что уже даёт hazardLevel выше, для согласованности.
+        const destinationStarEffect = traveling.destination
+            ? getStarTypeEffect(traveling.destination.star.type)
+            : {};
+        const event = pickTravelEvent(hazardLevel, destinationStarEffect.extraTravelEventWeight);
         set({ pendingTravelEvent: { type: event } });
         get().addLog( i18nStore.t("game_logs.processTravel_28"),
             "warning",
