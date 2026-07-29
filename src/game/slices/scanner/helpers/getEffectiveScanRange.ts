@@ -2,6 +2,7 @@ import { ARTIFACT_TYPES } from "@/game/constants";
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import { getMaxCrewTraitBonus } from "@/game/traits";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import { getStarTypeEffect } from "@/game/constants/starEffects";
 import { getRegularScannerRange } from "./getRegularScannerRange";
 import type { GameState } from "@/game/types";
 
@@ -73,6 +74,21 @@ export const getEffectiveScanRange = (state: GameState) => {
     const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);
     if (mergeBonus.scanRange) {
         maxRange += mergeBonus.scanRange;
+    }
+
+    // Бонус/колебание от типа звезды текущего сектора (белый карлик,
+    // переменная звезда). Колебание детерминировано по номеру хода, а не
+    // Math.random() — эта функция читается многократно за один ход из
+    // разных мест (UI, проверки обнаружения), и все вызовы должны видеть
+    // одно и то же значение в пределах хода.
+    if (state.currentSector) {
+        const starEffect = getStarTypeEffect(state.currentSector.star.type);
+        if (starEffect.scanRangeBonus) {
+            maxRange += starEffect.scanRangeBonus;
+        }
+        if (starEffect.scanRangeJitter) {
+            maxRange += Math.round(Math.sin(state.turn) * starEffect.scanRangeJitter);
+        }
     }
 
     return maxRange;
