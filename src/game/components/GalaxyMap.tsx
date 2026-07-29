@@ -14,11 +14,11 @@ import { useTranslation } from "@/lib/useTranslation";
 import { useIsMobile } from "@/game/hooks/useIsMobile";
 import {
     canAccessTier,
-    drawStaticLegend,
     drawSector,
     drawGalaxyObjectiveMarkers,
     drawTierRings,
     canSeeTier4,
+    getGalaxyMapStatus,
     getSectorRadius,
     type GalaxyMapObjective,
 } from "@/game/galaxy/galaxy-map-utils";
@@ -253,25 +253,6 @@ export function GalaxyMap() {
     );
     const dragStartRef = useRef({ x: 0, y: 0 });
     const offsetStartRef = useRef({ x: 0, y: 0 });
-    // Measures the first-visit hint banner (DOM) so the canvas-drawn legend
-    // (fuel/engine/captain info, top-left) can start below it instead of
-    // overlapping — the hint's height varies with text wrapping, so a fixed
-    // canvas offset would drift out of sync on narrow screens.
-    const hintBannerRef = useRef<HTMLDivElement | null>(null);
-    const hintBannerHeightRef = useRef(0);
-
-    useEffect(() => {
-        const el = hintBannerRef.current;
-        if (!el) {
-            hintBannerHeightRef.current = 0;
-            return;
-        }
-        const observer = new ResizeObserver(([entry]) => {
-            hintBannerHeightRef.current = entry.contentRect.height;
-        });
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, [hintDismissed]);
 
     const dismissHint = () => {
         localStorage.setItem("sw_galaxy_hint_done", "1");
@@ -296,6 +277,7 @@ export function GalaxyMap() {
     const completedLocations = useGameStore((s) => s.completedLocations);
     const bossesVisible = useGameStore((s) => s.canScanObject("boss"));
     const canSeeT4 = canSeeTier4(modules, artifacts, scanRange);
+    const galaxyStatus = getGalaxyMapStatus(modules, captainLevel, fuel);
     const mapObjectives = useMemo(
         () =>
             getGalaxyMapObjectives({
@@ -542,21 +524,6 @@ export function GalaxyMap() {
             });
         }
 
-        // Draw static legend (fuel, engine, captain and per-tier jump requirements) BEFORE transform
-        const legendTopOffset = hintDismissed
-            ? 0
-            : hintBannerHeightRef.current + 16;
-        drawStaticLegend(
-            ctx,
-            modules,
-            captainLevel,
-            fuel,
-            t,
-            width,
-            height,
-            legendTopOffset,
-        );
-
         // Apply transform for zoom and pan
         ctx.save();
         ctx.translate(centerX + offset.x, centerY + offset.y);
@@ -621,13 +588,11 @@ export function GalaxyMap() {
         captainLevel,
         currentSector,
         fuel,
-        hintDismissed,
         modules,
         offset.x,
         offset.y,
         scanRange,
         sectors,
-        t,
         updateSectorPosition,
         visibleMapObjectives,
         zoom,
@@ -955,22 +920,6 @@ export function GalaxyMap() {
             className="radar-viewport w-full h-full relative"
             data-animations={animationsEnabled ? "on" : "off"}
         >
-            {/* First-visit galaxy navigation hint */}
-            {!hintDismissed && (
-                <div
-                    ref={hintBannerRef}
-                    className="absolute top-2 left-2 right-2 bg-[rgba(0,212,255,0.08)] border border-ring px-3 py-2 text-xs text-ring z-20 flex items-center justify-between gap-2"
-                >
-                    <span>💡 {t(isMobile ? "galaxy_map_ui.hint_mobile" : "galaxy_map_ui.hint")}</span>
-                    <button
-                        onClick={dismissHint}
-                        className="text-ring hover:text-white cursor-pointer shrink-0 opacity-70 hover:opacity-100 transition-opacity"
-                        title={t("common.close")}
-                    >
-                        ✕
-                    </button>
-                </div>
-            )}
             {dangerousJump && (
                 <div
                     role="alertdialog"
@@ -1092,62 +1041,102 @@ export function GalaxyMap() {
                     </div>
                 </div>
             )}
-            {objectiveTargets.length > 0 && (
-                <details className="absolute top-14 right-2 z-20 max-w-[calc(100vw-1rem)] text-xs text-[#dfe8ef]">
-                    <summary
-                        aria-label={t("galaxy.legend.markers_section")}
-                        className="cursor-pointer border border-ring bg-[rgba(5,8,16,0.88)] px-2 py-1 font-['Orbitron'] text-[10px] text-ring shadow-[0_0_14px_rgba(0,212,255,0.15)]"
-                    >
-                        ⌖ {objectiveTargets.length}
-                    </summary>
-                    <div className="mt-1 max-h-[38dvh] min-w-44 overflow-y-auto border border-ring bg-[rgba(5,8,16,0.94)] p-1 shadow-[0_0_18px_rgba(0,212,255,0.12)]">
-                        {objectiveTargets.map(({ objective, sector }) => {
-                            const marker = OBJECTIVE_MARKERS[objective.kind];
-                            const routeLabel = t("route_dialog.title", {
-                                sector: sector.name,
-                            });
-
-                            return (
-                                <button
-                                    key={sector.id}
-                                    type="button"
-                                    onClick={() =>
-                                        startTravelTo(
-                                            sector.id,
-                                            sector.name,
-                                            sector.tier,
-                                        )
-                                    }
-                                    aria-label={routeLabel}
-                                    title={routeLabel}
-                                    className="flex w-full items-center gap-2 border-b border-[#00d4ff22] px-2 py-1.5 text-left last:border-b-0 hover:bg-[rgba(0,212,255,0.12)]"
-                                >
-                                    <span
-                                        aria-hidden="true"
-                                        className="font-bold"
-                                        style={{ color: marker.color }}
-                                    >
-                                        {marker.icon}
-                                    </span>
-                                    <span className="min-w-0 flex-1">
-                                        <span className="block truncate text-[#dfe8ef]">
-                                            {sector.name}
-                                        </span>
-                                        {objective.label !== sector.name && (
-                                            <span className="block truncate text-[10px] text-[#81909a]">
-                                                {objective.label}
-                                            </span>
-                                        )}
-                                    </span>
-                                    <span aria-hidden="true" className="text-ring">
-                                        →
-                                    </span>
-                                </button>
-                            );
-                        })}
+            <div className="absolute top-2 left-2 right-2 z-20 flex flex-col gap-1.5 pointer-events-none">
+                {!hintDismissed && (
+                    <div className="pointer-events-auto bg-[rgba(0,212,255,0.08)] border border-ring px-3 py-2 text-xs text-ring flex items-center justify-between gap-2">
+                        <span>💡 {t(isMobile ? "galaxy_map_ui.hint_mobile" : "galaxy_map_ui.hint")}</span>
+                        <button
+                            onClick={dismissHint}
+                            className="text-ring hover:text-white cursor-pointer shrink-0 opacity-70 hover:opacity-100 transition-opacity"
+                            title={t("common.close")}
+                        >
+                            ✕
+                        </button>
                     </div>
-                </details>
-            )}
+                )}
+                <div className="flex items-start justify-between gap-2">
+                    <details className="pointer-events-auto relative min-w-0 text-xs text-[#dfe8ef]">
+                        <summary className="flex cursor-pointer items-center gap-2 border border-[#9933ff88] bg-[rgba(5,8,16,0.88)] px-2 py-1 font-['Orbitron'] text-[10px] text-[#d8c6ff] shadow-[0_0_14px_rgba(153,51,255,0.12)]">
+                            <span>⛽ {galaxyStatus.fuel}</span>
+                            <span className="truncate text-[#00ff41]">
+                                {t("galaxy.legend.engine")} {galaxyStatus.engineLevel}
+                            </span>
+                            <span aria-hidden="true" className="opacity-60">⌄</span>
+                        </summary>
+                        <div className="absolute left-0 mt-1 min-w-52 border border-[#9933ff88] bg-[rgba(5,8,16,0.94)] p-2 text-[10px] shadow-[0_0_18px_rgba(153,51,255,0.1)]">
+                            <div className="text-[#81909a]">
+                                {t("galaxy.legend.captain")}: {galaxyStatus.captainLevel}
+                            </div>
+                            <div className="mt-1 space-y-0.5">
+                                {galaxyStatus.tiers.map(({ tier, unlocked }) => (
+                                    <div
+                                        key={tier}
+                                        className={unlocked ? "text-[#00ff41]" : "text-[#ff6a00]"}
+                                    >
+                                        {t(`galaxy.legend.sector_info_${tier}`)}{unlocked ? " ✓" : ""}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </details>
+                    {objectiveTargets.length > 0 && (
+                        <details className="pointer-events-auto relative shrink-0 max-w-[calc(100vw-1rem)] text-xs text-[#dfe8ef]">
+                            <summary
+                                aria-label={t("galaxy.legend.markers_section")}
+                                className="cursor-pointer border border-ring bg-[rgba(5,8,16,0.88)] px-2 py-1 font-['Orbitron'] text-[10px] text-ring shadow-[0_0_14px_rgba(0,212,255,0.15)]"
+                            >
+                                ⌖ {objectiveTargets.length}
+                            </summary>
+                            <div className="absolute right-0 mt-1 max-h-[38dvh] min-w-44 overflow-y-auto border border-ring bg-[rgba(5,8,16,0.94)] p-1 shadow-[0_0_18px_rgba(0,212,255,0.12)]">
+                                {objectiveTargets.map(({ objective, sector }) => {
+                                    const marker = OBJECTIVE_MARKERS[objective.kind];
+                                    const routeLabel = t("route_dialog.title", {
+                                        sector: sector.name,
+                                    });
+
+                                    return (
+                                        <button
+                                            key={sector.id}
+                                            type="button"
+                                            onClick={() =>
+                                                startTravelTo(
+                                                    sector.id,
+                                                    sector.name,
+                                                    sector.tier,
+                                                )
+                                            }
+                                            aria-label={routeLabel}
+                                            title={routeLabel}
+                                            className="flex w-full items-center gap-2 border-b border-[#00d4ff22] px-2 py-1.5 text-left last:border-b-0 hover:bg-[rgba(0,212,255,0.12)]"
+                                        >
+                                            <span
+                                                aria-hidden="true"
+                                                className="font-bold"
+                                                style={{ color: marker.color }}
+                                            >
+                                                {marker.icon}
+                                            </span>
+                                            <span className="min-w-0 flex-1">
+                                                <span className="block truncate text-[#dfe8ef]">
+                                                    {sector.name}
+                                                </span>
+                                                {objective.label !== sector.name && (
+                                                    <span className="block truncate text-[10px] text-[#81909a]">
+                                                        {objective.label}
+                                                    </span>
+                                                )}
+                                            </span>
+                                            <span aria-hidden="true" className="text-ring">
+                                                →
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </details>
+                    )}
+                </div>
+            </div>
             <canvas
                 ref={canvasRef}
                 className="radar-canvas cursor-grab w-full h-full touch-none"
@@ -1199,8 +1188,8 @@ export function GalaxyMap() {
                 </button>
             </div>
 
-            {/* Legend + Zoom level indicator */}
-            <div className="absolute bottom-4 left-4 flex flex-col gap-2 items-start z-20">
+            {/* Legend */}
+            <div className="absolute bottom-4 left-4 z-20">
                 <div className="bg-[rgba(5,8,16,0.75)] border border-[#00ff41] text-[#00ff41] text-xs select-none backdrop-blur-sm flex flex-col max-w-[calc(100vw-2rem)]">
                     {legendOpen && (
                         <div className="border-b border-[#00ff4133] px-2 py-2 space-y-2 text-[10px] text-[#aaa] max-h-[18vh] sm:max-h-[45vh] md:max-h-[60vh] overflow-y-auto">
@@ -1290,14 +1279,14 @@ export function GalaxyMap() {
                     )}
                     <button
                         onClick={() => setLegendOpen(!legendOpen)}
-                        className="w-full px-3 py-1 flex items-center gap-3 cursor-pointer hover:bg-[rgba(0,255,65,0.07)] transition-colors"
+                        className="flex w-full items-center gap-2 px-3 py-1 cursor-pointer hover:bg-[rgba(0,255,65,0.07)] transition-colors"
                     >
                         <span className="font-['Orbitron'] tracking-wider">{t("galaxy.legend.legend_title")}</span>
-                        <span className="ml-auto opacity-60">{legendOpen ? "▼" : "▲"}</span>
+                        <span className="ml-auto font-mono text-[10px] text-[#7fbf8f]">
+                            🔍 {(zoom * 100).toFixed(0)}%
+                        </span>
+                        <span className="opacity-60">{legendOpen ? "▼" : "▲"}</span>
                     </button>
-                </div>
-                <div className="bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-3 py-1 text-xs text-[#00ff41] select-none pointer-events-none">
-                    🔍 {(zoom * 100).toFixed(0)}%
                 </div>
             </div>
         </div>

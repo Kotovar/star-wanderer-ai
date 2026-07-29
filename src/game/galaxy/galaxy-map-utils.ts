@@ -210,69 +210,22 @@ export function drawGalaxyObjectiveMarkers(
     }
 }
 
-// Draw static legend (fuel, engine, captain and scanner info) - drawn BEFORE transform
-export function drawStaticLegend(
-    ctx: CanvasRenderingContext2D,
+// Navigation status for the DOM map HUD.
+export function getGalaxyMapStatus(
     modules: Module[],
     captainLevel: number,
     fuel: number,
-    t: (key: string) => string,
-    canvasWidth: number,
-    canvasHeight: number,
-    topOffset = 0,
 ) {
-    const legendX = 10;
-    const legendY = 8 + topOffset;
     const engineLevel = getEngineLevel(modules);
-
-    const minDim = Math.min(canvasWidth, canvasHeight);
-    const scale = Math.min(1, minDim / 500);
-    const fontSize = Math.max(10, Math.round(13 * scale));
-    const lineH = Math.round(fontSize * 1.5);
-
-    ctx.save();
-    ctx.font = `${fontSize}px Share Tech Mono`;
-    ctx.textAlign = "left";
-    ctx.textBaseline = "top";
-
-    // Safeguard against NaN or undefined fuel
-    const displayFuel = fuel !== undefined && !isNaN(fuel) ? fuel : 0;
-    ctx.fillStyle = "#9933ff";
-    ctx.fillText(
-        `${t("galaxy.legend.fuel")}: ${displayFuel}`,
-        legendX,
-        legendY,
-    );
-
-    ctx.fillStyle = "#00ff41";
-    ctx.fillText(
-        `${t("galaxy.legend.engine")}: Ур.${engineLevel}`,
-        legendX,
-        legendY + lineH,
-    );
-
-    ctx.fillStyle = "#70808a";
-    ctx.fillText(
-        `${t("galaxy.legend.captain")}: Ур.${captainLevel}`,
-        legendX,
-        legendY + lineH * 2,
-    );
-
-    // Per-tier jump requirements, colored by whether the current engine/captain
-    // already clear them — this is how a player learns "why is tier 2 locked"
-    // straight from the map, without needing to attempt the jump first.
-    const tierRequirementKeys = ["sector_info_1", "sector_info_2", "sector_info_3"] as const;
-    tierRequirementKeys.forEach((key, i) => {
-        const tier = i + 1;
-        const unlocked = canAccessTier(tier, modules, captainLevel);
-        ctx.fillStyle = unlocked ? "#00ff41" : "#ff6a00";
-        ctx.fillText(
-            `${t(`galaxy.legend.${key}`)}${unlocked ? " ✓" : ""}`,
-            legendX,
-            legendY + lineH * (3.3 + i),
-        );
-    });
-    ctx.restore();
+    return {
+        fuel: Number.isFinite(fuel) ? fuel : 0,
+        engineLevel,
+        captainLevel,
+        tiers: ([1, 2, 3] as const).map((tier) => ({
+            tier,
+            unlocked: canAccessTier(tier, modules, captainLevel),
+        })),
+    };
 }
 
 // Draw a sector on the galaxy map

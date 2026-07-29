@@ -1329,8 +1329,8 @@ export function SectorMap() {
         </button>
       </div>
 
-      {/* Legend + Zoom level indicator */}
-      <div className="absolute bottom-4 left-4 flex flex-col gap-2 items-start z-20">
+      {/* Legend */}
+      <div className="absolute bottom-4 left-4 z-20">
         <div className="bg-[rgba(5,8,16,0.75)] border border-[#00ff41] text-[#00ff41] text-xs select-none backdrop-blur-sm flex flex-col max-w-[calc(100vw-2rem)]">
           {legendOpen && (
             <div className="border-b border-[#00ff4133] px-2 py-2 max-h-[40vh] md:max-h-[55vh] overflow-y-auto">
@@ -1366,14 +1366,14 @@ export function SectorMap() {
           )}
           <button
             onClick={() => setLegendOpen(!legendOpen)}
-            className="w-full px-3 py-1 flex items-center gap-3 cursor-pointer hover:bg-[rgba(0,255,65,0.07)] transition-colors"
+            className="flex w-full items-center gap-2 px-3 py-1 cursor-pointer hover:bg-[rgba(0,255,65,0.07)] transition-colors"
           >
             <span className="font-['Orbitron'] tracking-wider">{t("sector_map_ui.legend")}</span>
-            <span className="ml-auto opacity-60">{legendOpen ? "▼" : "▲"}</span>
+            <span className="ml-auto font-mono text-[10px] text-[#7fbf8f]">
+              🔍 {(zoom * 100).toFixed(0)}%
+            </span>
+            <span className="opacity-60">{legendOpen ? "▼" : "▲"}</span>
           </button>
-        </div>
-        <div className="bg-[rgba(0,255,65,0.1)] border border-[#00ff41] px-3 py-1 text-xs text-[#00ff41] select-none pointer-events-none">
-          🔍 {(zoom * 100).toFixed(0)}%
         </div>
       </div>
 
