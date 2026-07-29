@@ -6,3 +6,4 @@ export * from "./processCrewAssignments";
 export * from "./processArtifactEffects";
 export * from "./processOthers";
 export * from "./processExpeditionFatigue";
+export * from "./processStarTypeEffects";

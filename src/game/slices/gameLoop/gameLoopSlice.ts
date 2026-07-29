@@ -94,6 +94,9 @@ export const createGameLoopSlice = (
         // Регенерация щитов (штраф от опасной звезды учитывается внутри)
         regenerateShields(state, get, set);
 
+        // Пассивные эффекты типа звезды текущего сектора (счастье, распад модуля)
+        processors.processStarTypeEffects(state, get, set);
+
         // Ремонт нанитами (automated_repair / nanite_hull)
         processNaniteRepair(get, set);
 

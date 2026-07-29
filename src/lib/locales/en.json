@@ -5207,6 +5207,7 @@
         "invalid_assignment": "Invalid assignment!",
         "star_regen_blocked": "☢️ The star radiation completely blocks shield regeneration",
         "star_regen_reduced": "☢️ The star radiation dampens shield regeneration: -{{percent}}%",
+        "star_module_decay": "🌪️ Stellar wind damaged module \"{{moduleName}}\": -{{amount}} HP",
         "crisis_ended": "✅ Crisis over: {{icon}} {{name}}",
         "load_auto": "📂 Autosave loaded",
         "load_slot": "📂 Save {{slot}} loaded",
