@@ -44,3 +44,5 @@ Thumbs.db
 docs/superpowers/specs/
 .superpowers/
 PLAN.md
+.codebase-memory
+docs/superpowers

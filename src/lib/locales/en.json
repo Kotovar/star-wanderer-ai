@@ -2778,7 +2778,7 @@
         "effect_power": "+{{value}} ship power",
         "effect_gas_dive": "+{{value}}% gas giant dive yield in this sector",
         "effect_salvage": "+{{value}}% salvage/asteroid mining yield",
-        "effect_travel_event": "Higher chance of an asteroid event when departing this sector",
+        "effect_travel_event": "Higher chance of an asteroid event when traveling to this sector",
         "effect_module_decay": "{{chance}}%/turn chance: a random module loses HP",
         "close": "Close",
         "red_dwarf": {

@@ -28,6 +28,39 @@ for (const starType of NON_SPECIAL_STAR_TYPES) {
     typeof lookup(enLocale) === "string",
     `${display.key} must exist as a string in en.json (star type: ${starType})`,
   );
+
+  // --- Placeholder/param parity: every {{placeholder}} in the resolved
+  // locale string must exactly match the keys of display.params, in both
+  // locale files ---
+  for (const [name, cat] of [["ru", ruLocale], ["en", enLocale]]) {
+    const str = lookup(cat);
+    const placeholders = [...str.matchAll(/\{\{(\w+)\}\}/g)].map((m) => m[1]);
+    assert.deepEqual(
+      [...placeholders].sort(),
+      Object.keys(display.params).sort(),
+      `${display.key} (${name}.json) placeholders must match getStarEffectDisplay params for ${starType}`,
+    );
+  }
+
+  // --- Sign-safety for always-positive fields: getStarEffectDisplay
+  // hardcodes a leading "+" for these fields, so a negative value would
+  // render a broken "+-3%" string ---
+  for (const field of ["evasionBonus", "scanRangeBonus", "powerBonus"]) {
+    if (STAR_TYPE_EFFECTS[starType][field] !== undefined) {
+      assert.ok(
+        STAR_TYPE_EFFECTS[starType][field] > 0,
+        `${starType}.${field} must be positive — getStarEffectDisplay hardcodes a "+" prefix for this field and does not handle negative values`,
+      );
+    }
+  }
+
+  // --- One-field-per-type invariant: getStarEffectDisplay's if-chain only
+  // renders the first matching field, silently dropping any others ---
+  assert.equal(
+    Object.keys(STAR_TYPE_EFFECTS[starType]).length,
+    1,
+    `${starType} must have exactly one non-empty StarTypeEffect field — getStarEffectDisplay's if-chain only renders the first match, silently dropping any others`,
+  );
 }
 
 // --- neutron_star / blackhole never get a display (out of scope) ---
