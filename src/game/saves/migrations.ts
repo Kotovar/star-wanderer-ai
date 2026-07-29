@@ -214,14 +214,17 @@ const migrations: Record<number, Migration> = {
     };
   },
   10: (raw) => {
-    const state = raw as GameState;
+    const state = raw as Partial<GameState>;
+    const ship = state.ship;
+    if (!ship) return { ...state, stateVersion: 11 };
+
     const scannerRanges = { 1: 3, 2: 5, 3: 8 } as const;
     return {
       ...state,
       stateVersion: 11,
       ship: {
-        ...state.ship,
-        modules: state.ship.modules.map((module) => {
+        ...ship,
+        modules: ship.modules.map((module) => {
           const scanRange =
             module.type === "scanner"
               ? scannerRanges[module.level as 1 | 2 | 3]

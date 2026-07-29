@@ -60,9 +60,9 @@ export const SOUND_REGISTRY = {
   ui_dialog_close: { category: "ui", gain: 0.3, urls: ["/audio/sfx/ui/ui_dialog_close.ogg"], maxVoices: 2 },
   ui_tab: { category: "ui", gain: 0.22, urls: ["/audio/sfx/ui/ui_tab.ogg"], maxVoices: 2 },
   ui_confirm: { category: "ui", gain: 0.3, urls: variantUrls("ui", "ui_confirm"), maxVoices: 3, playbackRate: [0.98, 1.02] },
-  ui_cancel: { category: "ui", gain: 0.26, urls: variantUrls("ui", "ui_cancel"), maxVoices: 3, playbackRate: [0.98, 1.02] },
+  ui_cancel: { category: "ui", gain: 0.3, urls: variantUrls("ui", "ui_cancel"), maxVoices: 3, playbackRate: [0.98, 1.02] },
   ui_purchase: { category: "ui", gain: 0.32, urls: ["/audio/sfx/ui/ui_purchase.ogg"], maxVoices: 2 },
-  ui_error: { category: "ui", gain: 0.32, urls: variantUrls("ui", "ui_error"), maxVoices: 2, playbackRate: [0.98, 1.02] },
+  ui_error: { category: "ui", gain: 0.65, urls: variantUrls("ui", "ui_error"), maxVoices: 2, playbackRate: [0.98, 1.02] },
   ui_notification: { category: "ui", gain: 0.26, urls: ["/audio/sfx/ui/ui_notification.ogg"], maxVoices: 2 },
 } as const satisfies Record<string, SoundDefinition>;
 

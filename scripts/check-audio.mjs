@@ -80,14 +80,21 @@ const getDuration = (file) =>
     ).trim(),
   );
 
-const inspectMusicAudibility = (file) => {
+const getAudibleBandMean = (file) => {
   const audibleBandLog = runAudioTool(
     "ffmpeg",
     ["-hide_banner", "-i", file, "-af", "highpass=f=180,volumedetect", "-f", "null", "-"],
   );
   const mean = /mean_volume:\s*(-?[\d.]+) dB/.exec(audibleBandLog)?.[1];
-  if (mean === undefined || Number(mean) < -40) {
+  if (mean === undefined) {
     fail(`${file} has insufficient audible-range energy (${mean ?? "unknown"} dB)`);
+  }
+  return Number(mean);
+};
+
+const inspectMusicAudibility = (file) => {
+  if (getAudibleBandMean(file) < -40) {
+    fail(`${file} has insufficient audible-range energy`);
   }
 };
 
@@ -103,6 +110,11 @@ const inspectEffectAudibility = (id, sound, file, duration, peak) => {
   const mixedPeak = peak + 20 * Math.log10(mixGain);
   if (!Number.isFinite(mixedPeak) || mixedPeak < -34) {
     fail(`${id} is too quiet at default mix (${mixedPeak.toFixed(1)} dBFS): ${file}`);
+  }
+
+  const mixedAudibleMean = getAudibleBandMean(file) + 20 * Math.log10(mixGain);
+  if (!Number.isFinite(mixedAudibleMean) || mixedAudibleMean < -40) {
+    fail(`${id} has insufficient audible-range energy at default mix (${mixedAudibleMean.toFixed(1)} dBFS): ${file}`);
   }
 };
 
