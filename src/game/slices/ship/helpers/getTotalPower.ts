@@ -6,6 +6,7 @@ import { getTechBonusSum } from "@/game/research";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getReactorOverloadPower } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import { getTechPerkValue } from "@/game/constants/techTree";
+import { getStarTypeEffect } from "@/game/constants/starEffects";
 import type { GameState } from "@/game/types/game";
 
 /**
@@ -60,6 +61,11 @@ export function getTotalPower(state: GameState): number {
     ).forEach((c) => {
         power += getReactorOverloadPower(c);
     });
+
+    // === Бонус от типа звезды текущего сектора (двойная система) ===
+    if (state.currentSector) {
+        power += getStarTypeEffect(state.currentSector.star.type).powerBonus ?? 0;
+    }
 
     // === Бонус от исследований (module_power) — runtime ===
     const techPowerBonus = getTechBonusSum(state.research, "module_power");
