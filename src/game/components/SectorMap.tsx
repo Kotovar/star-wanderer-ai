@@ -10,6 +10,8 @@ import {
   STAR_HAZARD_LEVEL,
   STAR_SHIELD_REGEN_PENALTY_THRESHOLD,
 } from "@/game/constants/starHazards";
+import { getStarTypeEffect } from "@/game/constants/starEffects";
+import { getStarEffectDisplay } from "@/game/constants/starEffectDisplay";
 import { STAR_SPRITE_SHEET } from "@/game/assets/starSprites";
 import type { Location, LocationType, StarType } from "@/game/types";
 import {
@@ -1456,6 +1458,18 @@ export function SectorMap() {
                 ☢️ {t("star_info.shield_drain_warning")}
               </div>
             )}
+
+            {(() => {
+              const display = getStarEffectDisplay(
+                getStarTypeEffect(currentSector.star.type),
+              );
+              if (!display) return null;
+              return (
+                <div className="px-4 py-2 text-[10px] leading-relaxed text-[#00d4ff] bg-[rgba(0,212,255,0.06)]">
+                  ⚡ {t(display.key, display.params)}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
