@@ -4,6 +4,7 @@ import { ANCIENT_DRILL_BONUS, RESEARCH_RESOURCES } from "@/game/constants";
 import { BASE_ENGINEER_EXP } from "@/game/constants/experience";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getMiningResources } from "@/game/research/utils";
+import { getStarTypeEffect } from "@/game/constants/starEffects";
 import { playSound } from "@/sounds";
 import { getCurrentCargo, addTradeGood } from "@/game/slices/ship/helpers";
 import {
@@ -170,6 +171,12 @@ export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
     const mergeBonus = getMergeEffectsBonus(state.crew, state.ship.modules);
     if (mergeBonus.resourceYield) {
         efficiencyBonus *= 1 + mergeBonus.resourceYield / PERCENT_DIVISOR;
+    }
+
+    // Бонус от типа звезды текущего сектора (звёздный остаток)
+    if (state.currentSector) {
+        const starSalvageBonus = getStarTypeEffect(state.currentSector.star.type).salvageYieldBonus ?? 0;
+        efficiencyBonus *= 1 + starSalvageBonus;
     }
 
     const mineralsGained = Math.floor(resources.minerals * efficiencyBonus);

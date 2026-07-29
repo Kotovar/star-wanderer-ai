@@ -11,6 +11,7 @@ import {
 } from "@/game/slices/locations/constants";
 import { isModuleActive } from "@/game/modules/utils";
 import { getEffectiveScanRange } from "@/game/slices/scanner/helpers/getEffectiveScanRange";
+import { getStarTypeEffect } from "@/game/constants/starEffects";
 import {
     addTradeGood,
     getCargoCapacity,
@@ -95,9 +96,12 @@ export function salvageWreckField(
     }
 
     // — Лут: базовые значения —
-    const sparesRaw        = Math.round(rng(config.spares[0], config.spares[1]) * approachConfig.rewardMult);
-    const electronicsRaw   = Math.round(rng(config.electronics[0], config.electronics[1]) * approachConfig.rewardMult);
-    const rareMineralsRaw  = Math.round(rng(config.rare_minerals[0], config.rare_minerals[1]) * approachConfig.rewardMult);
+    const starSalvageMult = 1 + (state.currentSector
+        ? getStarTypeEffect(state.currentSector.star.type).salvageYieldBonus ?? 0
+        : 0);
+    const sparesRaw        = Math.round(rng(config.spares[0], config.spares[1]) * approachConfig.rewardMult * starSalvageMult);
+    const electronicsRaw   = Math.round(rng(config.electronics[0], config.electronics[1]) * approachConfig.rewardMult * starSalvageMult);
+    const rareMineralsRaw  = Math.round(rng(config.rare_minerals[0], config.rare_minerals[1]) * approachConfig.rewardMult * starSalvageMult);
     const techSalvage      = Math.random() < getWreckSpecialLootChance(
         config.tech_salvage,
         approachConfig.rareChanceMult,
