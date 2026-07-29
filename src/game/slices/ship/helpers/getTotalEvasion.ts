@@ -5,6 +5,7 @@ import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getPilotInCockpit } from "@/game/crew";
 import { getArtifactEffectValue } from "@/game/artifacts/utils";
 import { getTechPerkValue } from "@/game/constants/techTree";
+import { getStarTypeEffect } from "@/game/constants/starEffects";
 
 /**
  * Вычисляет общий шанс уклонения корабля
@@ -84,6 +85,11 @@ export function getTotalEvasion(state: GameState): number {
     const mergeBonus = getMergeEffectsBonus(crew, state.ship.modules);
     if (mergeBonus.evasionBonus) {
         evasion += mergeBonus.evasionBonus;
+    }
+
+    // Бонус от типа звезды текущего сектора (например, красный карлик)
+    if (state.currentSector) {
+        evasion += getStarTypeEffect(state.currentSector.star.type).evasionBonus ?? 0;
     }
 
     // Временные бонусы от эффектов планет (Krylorian dojo и др.)
