@@ -35,7 +35,7 @@ export function processStarTypeEffects(
 
     if (effect.moduleDecayChance && Math.random() < effect.moduleDecayChance) {
         const modules = get().ship.modules;
-        const candidates = modules.filter((m) => m.health > 0);
+        const candidates = modules.filter((m) => m.health > MIN_MODULE_HEALTH);
         if (candidates.length > 0) {
             const target = candidates[Math.floor(Math.random() * candidates.length)];
             set((s) => ({
