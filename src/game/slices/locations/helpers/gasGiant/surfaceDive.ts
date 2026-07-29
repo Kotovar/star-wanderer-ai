@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import type { DiveRewards } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES } from "@/game/constants";
+import { getStarTypeEffect } from "@/game/constants/starEffects";
 import { addTradeGood } from "@/game/slices/ship/helpers";
 import { patchLocation } from "@/game/utils/patchLocation";
 
@@ -42,6 +43,16 @@ export function surfaceDive(set: SetState, get: () => GameStore): void {
                 boostedRewards[bonusResource] = Math.ceil(base * 1.5);
             }
         }
+    }
+
+    // Бонус от типа звезды текущего сектора (коричневый карлик/газовый гигант)
+    const starGasDiveBonus = state.currentSector
+        ? getStarTypeEffect(state.currentSector.star.type).gasDiveYieldBonus ?? 0
+        : 0;
+    if (starGasDiveBonus > 0) {
+        boostedRewards.alien_biology = Math.ceil(boostedRewards.alien_biology * (1 + starGasDiveBonus));
+        boostedRewards.rare_minerals = Math.ceil(boostedRewards.rare_minerals * (1 + starGasDiveBonus));
+        boostedRewards.void_membrane = Math.ceil(boostedRewards.void_membrane * (1 + starGasDiveBonus));
     }
 
     // Build resource updates for research inventory
