@@ -20,6 +20,7 @@
     "check:crew-relation-events": "node --no-warnings --experimental-strip-types scripts/check-crew-relation-events.mjs",
     "check:crew-tech-tree": "node --no-warnings --experimental-strip-types scripts/check-crew-tech-tree.mjs",
     "check:star-effects": "node --no-warnings --experimental-strip-types scripts/check-star-effects.mjs",
+    "check:star-effect-display": "node --no-warnings --experimental-strip-types scripts/check-star-effect-display.mjs",
     "check:assignments": "node --no-warnings --experimental-strip-types scripts/check-assignment-fatigue.mjs",
     "check:profession-levels": "node --no-warnings --experimental-strip-types scripts/check-profession-levels.mjs",
     "check:events": "node --no-warnings --experimental-strip-types scripts/check-random-event-chains.mjs",
