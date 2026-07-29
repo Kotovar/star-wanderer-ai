@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button";
 import { useMemo, useState } from "react";
 import { useTranslation } from "@/lib/useTranslation";
 import { getTechBonusSum } from "@/game/research";
-import { getArtifactBonusMultiplier } from "@/game/artifacts/utils";
+import {
+    getArtifactBonusMultiplier,
+    getArtifactEffectValue,
+} from "@/game/artifacts/utils";
+import { getArtifactEffectDisplay } from "@/game/artifacts/display";
 import { DEFAULT_ARTIFACT_SLOTS } from "@/game/slices/artifacts/constants";
 import type { Artifact, ArtifactType } from "@/game/types";
 import { getLocationName } from "@/lib/translationHelpers";
@@ -90,6 +94,14 @@ function ArtifactCard({
     const colors = RARITY_COLORS[artifact.rarity];
     const icon = EFFECT_ICONS[artifact.effect.type] || "?";
     const hintSource = artifact.hintSource ?? "unknown";
+    const currentEffectValue = useGameStore((state) =>
+        getArtifactEffectValue(artifact, state),
+    );
+    const effectDisplay = getArtifactEffectDisplay(
+        artifact.effect.type,
+        artifact.effect.value ?? 0,
+        currentEffectValue,
+    );
 
     return (
         <div
@@ -146,6 +158,14 @@ function ArtifactCard({
                     <div className="text-xs mt-2 leading-relaxed text-[#00ff41]">
                         ★ {artifact.description}
                     </div>
+                    {artifact.effect.active && effectDisplay.isModified && (
+                        <div className="mt-1 text-xs text-ring">
+                            {t("artifacts.current_effect", {
+                                base: effectDisplay.baseLabel,
+                                current: effectDisplay.currentLabel,
+                            })}
+                        </div>
+                    )}
 
                     {/* Negative effect for cursed artifacts */}
                     {artifact.cursed && artifact.negativeEffect && (

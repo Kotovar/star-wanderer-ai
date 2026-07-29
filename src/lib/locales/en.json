@@ -1103,6 +1103,7 @@
         "hint_location": "Search",
         "active_label": "ACTIVE",
         "boosted_label": "✨ BOOSTED",
+        "current_effect": "Effective effect: {{base}} → {{current}}",
         "research_btn": "RESEARCH",
         "research_btn_dangerous": "⚠️ RESEARCH (DANGEROUS)",
         "deactivate_btn": "DEACTIVATE",

@@ -1103,6 +1103,7 @@
         "hint_location": "Искать",
         "active_label": "АКТИВЕН",
         "boosted_label": "✨ УСИЛЕН",
+        "current_effect": "Фактический эффект: {{base}} → {{current}}",
         "research_btn": "ИЗУЧИТЬ",
         "research_btn_dangerous": "⚠️ ИЗУЧИТЬ (ОПАСНО)",
         "deactivate_btn": "ДЕАКТИВИРОВАТЬ",
