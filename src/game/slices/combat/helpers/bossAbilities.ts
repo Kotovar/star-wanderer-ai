@@ -217,6 +217,7 @@ export function applyBossTakeDamageEffects(
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
     damageTaken: number,
+    timeline?: CombatTimelineCollector,
 ): void {
     const combat = state.currentCombat;
     if (!combat?.enemy.isBoss || damageTaken <= 0) return;
@@ -232,6 +233,10 @@ export function applyBossTakeDamageEffects(
         );
         const absorbed = Math.floor((damageTaken * totalPercent) / 100);
         if (absorbed > 0) {
+            const restored = Math.min(
+                absorbed,
+                Math.max(0, combat.enemy.maxShields - combat.enemy.shields),
+            );
             set((s) => {
                 if (!s.currentCombat) return;
                 s.currentCombat.enemy.shields = Math.min(
@@ -239,6 +244,14 @@ export function applyBossTakeDamageEffects(
                     s.currentCombat.enemy.shields + absorbed,
                 );
             });
+            if (restored > 0) {
+                timeline?.push({
+                    kind: "shield_restore",
+                    side: "enemy",
+                    amount: restored,
+                    source: "restore",
+                });
+            }
             get().addLog( i18nStore.t("game_logs.bossAbilities_4", { absorbed }),
                 "warning",
             );
@@ -254,7 +267,7 @@ export function applyBossTakeDamageEffects(
         );
         const reflected = Math.floor((damageTaken * totalPercent) / 100);
         if (reflected > 0) {
-            const playerActiveMods = state.ship.modules.filter(
+            const playerActiveMods = get().ship.modules.filter(
                 (m) => m.health > 0,
             );
             if (playerActiveMods.length > 0) {
@@ -262,7 +275,30 @@ export function applyBossTakeDamageEffects(
                     playerActiveMods[
                         Math.floor(Math.random() * playerActiveMods.length)
                     ];
-                applyModuleDamage(state, set, get, reflected, target);
+                const targetHealthBefore = target.health;
+                const hullDamage = applyModuleDamage(get(), set, get, reflected, target);
+                timeline?.push({
+                    kind: "reflection",
+                    attacker: "player",
+                    defender: "enemy",
+                    targetModuleId: target.id,
+                    shieldDamage: 0,
+                    hullDamage,
+                });
+                const targetHealthAfter = get().ship.modules.find(
+                    (module) => module.id === target.id,
+                )?.health;
+                if (
+                    targetHealthBefore > 0 &&
+                    targetHealthAfter !== undefined &&
+                    targetHealthAfter <= 0
+                ) {
+                    timeline?.push({
+                        kind: "module_destroyed",
+                        side: "player",
+                        moduleId: target.id,
+                    });
+                }
                 get().addLog( i18nStore.t("game_logs.bossAbilities_5", { reflected, target_name: target.name }),
                     "warning",
                 );

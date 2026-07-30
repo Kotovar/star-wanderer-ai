@@ -1801,7 +1801,10 @@
         "complete": "COMPLETE",
         "continue": "Continue",
         "skip": "Skip",
-        "turn_skipped": "TURN SKIPPED"
+        "turn_skipped": "TURN SKIPPED",
+        "absorbed": "ABSORBED",
+        "intercepted": "INTERCEPTED",
+        "reflected": "REFLECTED"
     },
     "distress_signal": {
         "title": "▸ DISTRESS SIGNAL",

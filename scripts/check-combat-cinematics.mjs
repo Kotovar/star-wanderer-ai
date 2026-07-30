@@ -6,7 +6,13 @@ let buildVolleyEvents;
 let createCombatCinematicSnapshot;
 let appendCombatSnapshotDeltaEvents;
 let applyCombatCinematicEvent;
+let getCombatCinematicSnapshotAtProgress;
 let getCombatCinematicEventDuration;
+let getCombatCinematicSceneMetrics;
+let formatCombatCinematicAmount;
+let getMissLabelPoint;
+let getProjectilePathPoint;
+let getShieldImpactPoint;
 
 const modalSource = await readFile(
   new URL("../src/game/components/CombatCinematicModal.tsx", import.meta.url),
@@ -20,6 +26,22 @@ const playerShipGridSource = await readFile(
   new URL("../src/game/components/CombatShipGrid.tsx", import.meta.url),
   "utf8",
 );
+const enemyCounterAttackSource = await readFile(
+  new URL("../src/game/slices/combat/helpers/enemyCounterAttack.ts", import.meta.url),
+  "utf8",
+);
+const bossAbilitiesSource = await readFile(
+  new URL("../src/game/slices/combat/helpers/bossAbilities.ts", import.meta.url),
+  "utf8",
+);
+const playerAttackSource = await readFile(
+  new URL("../src/game/slices/combat/helpers/playerAttack.ts", import.meta.url),
+  "utf8",
+);
+const [ruTranslations, enTranslations] = await Promise.all([
+  readFile(new URL("../src/lib/locales/ru.json", import.meta.url), "utf8").then(JSON.parse),
+  readFile(new URL("../src/lib/locales/en.json", import.meta.url), "utf8").then(JSON.parse),
+]);
 
 assert.match(
   modalSource,
@@ -52,6 +74,55 @@ assert.match(
   "the cinematic dialog overrides the shared small-dialog width on desktop",
 );
 assert.match(
+  modalSource,
+  /const floatProgress = Math\.min\(progress \/ 0\.45, 1\);/,
+  "damage numbers rise first and then remain readable above the ship",
+);
+assert.match(
+  modalSource,
+  /fillText\("MISS",/,
+  "a real miss is labelled clearly instead of using an ambiguous symbol",
+);
+assert.match(
+  modalSource,
+  /combat_cinematics\.absorbed/,
+  "a fully absorbed attack has its own readable outcome",
+);
+assert.match(
+  modalSource,
+  /combat_cinematics\.intercepted/,
+  "an intercepted missile has its own readable outcome",
+);
+assert.match(
+  modalSource,
+  /combat_cinematics\.reflected/,
+  "a reflected attack has its own readable outcome",
+);
+assert.match(
+  enemyCounterAttackSource,
+  /pushEnemyProjectile\(timeline, tgt, 0, 0, false, "absorbed"\)/,
+  "phase shield records absorption instead of a zero-damage shield hit",
+);
+assert.match(
+  bossAbilitiesSource,
+  /timeline\?\.push\(\{\s*kind: "reflection"/,
+  "a boss damage mirror emits a reflection for the cinematic",
+);
+assert.match(
+  playerAttackSource,
+  /applyBossTakeDamageEffects\(get\(\), set, get, damage\.totalModuleDamage, timeline\)/,
+  "the cinematic player attack passes its timeline to boss take-damage effects",
+);
+assert.match(
+  playerAttackSource,
+  /timeline\?\.push\(\{\s*kind: "vessel_destroyed",\s*side: "enemy",?\s*\}\);/,
+  "victory by a destroyed core records the whole enemy vessel as destroyed",
+);
+assert.equal(ruTranslations.combat_cinematics.absorbed, "ПОГЛОЩЕНО");
+assert.equal(ruTranslations.combat_cinematics.intercepted, "ПЕРЕХВАЧЕН");
+assert.equal(ruTranslations.combat_cinematics.reflected, "ОТРАЖЕНО");
+assert.equal(enTranslations.combat_cinematics.absorbed, "ABSORBED");
+assert.match(
   combatPanelSource,
   /if \(!fastCombat \|\| !lastEnemyHit\)/,
   "slow combat does not trigger the legacy enemy hit flash",
@@ -78,11 +149,29 @@ try {
 }
 
 try {
-  ({ applyCombatCinematicEvent, getCombatCinematicEventDuration } = await import(
+  ({
+    applyCombatCinematicEvent,
+    getCombatCinematicSnapshotAtProgress,
+    getCombatCinematicEventDuration,
+  } = await import(
     "../src/game/slices/combat/helpers/combatCinematicPlayback.ts"
   ));
 } catch {
   assert.fail("combatCinematicPlayback.ts must provide deterministic canvas playback");
+}
+
+try {
+  ({
+    getCombatCinematicSceneMetrics,
+    formatCombatCinematicAmount,
+    getMissLabelPoint,
+    getProjectilePathPoint,
+    getShieldImpactPoint,
+  } = await import("../src/game/components/combatCinematicGeometry.ts"));
+} catch {
+  assert.fail(
+    "combatCinematicGeometry.ts must provide responsive scene and shield-impact geometry",
+  );
 }
 
 {
@@ -168,6 +257,112 @@ const snapshot = {
 };
 
 {
+  const compactScene = getCombatCinematicSceneMetrics(304, 228);
+
+  assert.deepEqual(
+    compactScene,
+    { scale: 0.475, width: 640, height: 480 },
+    "a narrow 304 px scene uses the full desktop composition at a fitting scale",
+  );
+}
+
+{
+  assert.equal(
+    formatCombatCinematicAmount(2.5),
+    3,
+    "a fractional cinematic hit is displayed as a whole number",
+  );
+  assert.equal(
+    formatCombatCinematicAmount(0.01),
+    1,
+    "a positive hit never renders as zero damage",
+  );
+}
+
+{
+  const targetCenter = { x: 480, y: 180 };
+
+  assert.deepEqual(
+    getMissLabelPoint(targetCenter, 0.58),
+    { x: 480, y: 180 },
+    "MISS starts from the center of the ship it missed",
+  );
+  assert.deepEqual(
+    getMissLabelPoint(targetCenter, 1),
+    { x: 480, y: 116 },
+    "MISS rises vertically above the missed ship instead of following the projectile",
+  );
+}
+
+{
+  const source = { x: 160, y: 180 };
+  const shieldCenter = { x: 480, y: 180 };
+  const moduleTarget = { x: 442, y: 157 };
+  const shieldImpact = getShieldImpactPoint(
+    source,
+    moduleTarget,
+    shieldCenter,
+    148,
+    86,
+  );
+  const lineCrossProduct = (point) =>
+    (point.x - source.x) * (moduleTarget.y - source.y) -
+    (point.y - source.y) * (moduleTarget.x - source.x);
+
+  assert.ok(
+    Math.abs(lineCrossProduct(shieldImpact)) < 0.000001,
+    "a shield impact for an off-center module remains on the laser line",
+  );
+  assert.ok(
+    Math.abs(
+      ((shieldImpact.x - shieldCenter.x) / 148) ** 2 +
+        ((shieldImpact.y - shieldCenter.y) / 86) ** 2 -
+        1,
+    ) < 0.000001,
+    "the straight laser meets the actual shield boundary",
+  );
+  assert.deepEqual(
+    getProjectilePathPoint(source, shieldImpact, moduleTarget, "shield", 1),
+    shieldImpact,
+    "a shield-only hit stops at the barrier instead of reaching the hull",
+  );
+  assert.deepEqual(
+    getProjectilePathPoint(source, shieldImpact, moduleTarget, "absorbed", 1),
+    shieldImpact,
+    "a phase shield absorption stops the projectile at the barrier",
+  );
+  assert.deepEqual(
+    getProjectilePathPoint(source, shieldImpact, moduleTarget, "hull", 0.62),
+    moduleTarget,
+    "a direct hit reaches the hull before its damage number begins to rise",
+  );
+  assert.deepEqual(
+    getProjectilePathPoint(source, shieldImpact, moduleTarget, "shield_and_hull", 0.68),
+    shieldImpact,
+    "a penetrating hit reaches the shield before entering the hull",
+  );
+  assert.deepEqual(
+    getProjectilePathPoint(source, shieldImpact, moduleTarget, "shield_and_hull", 1),
+    moduleTarget,
+    "a penetrating hit reaches the selected module only after breaching the shield",
+  );
+  assert.ok(
+    Math.abs(
+      lineCrossProduct(
+        getProjectilePathPoint(
+          source,
+          shieldImpact,
+          moduleTarget,
+          "shield_and_hull",
+          0.72,
+        ),
+      ),
+    ) < 0.000001,
+    "a penetrating laser does not bend after crossing the shield",
+  );
+}
+
+{
   const collector = createCombatTimelineCollector(snapshot);
   appendCombatSnapshotDeltaEvents(
     collector,
@@ -209,6 +404,66 @@ const snapshot = {
 }
 
 {
+  assert.equal(
+    typeof getCombatCinematicSnapshotAtProgress,
+    "function",
+    "playback exposes the current visual snapshot for an in-flight event",
+  );
+
+  const impactEvent = {
+    kind: "projectile",
+    from: "player",
+    to: "enemy",
+    weapon: "laser",
+    outcome: "shield_and_hull",
+    shieldDamage: 6,
+    hullDamage: 9,
+    isCrit: false,
+    targetModuleId: 9,
+  };
+  const beforeImpact = getCombatCinematicSnapshotAtProgress(snapshot, impactEvent, 0.67);
+  const shieldImpact = getCombatCinematicSnapshotAtProgress(snapshot, impactEvent, 0.68);
+  const hullImpact = getCombatCinematicSnapshotAtProgress(snapshot, impactEvent, 0.76);
+
+  assert.equal(beforeImpact.enemy.shields, 10, "bars remain unchanged before the projectile hits");
+  assert.equal(shieldImpact.enemy.shields, 4, "the shield bar changes at the shield contact");
+  assert.equal(shieldImpact.enemy.modules[0].health, 40, "hull stays intact until the breach reaches it");
+  assert.equal(hullImpact.enemy.modules[0].health, 31, "the hull bar changes at the module contact");
+
+  const absorbed = getCombatCinematicSnapshotAtProgress(snapshot, {
+    kind: "projectile",
+    from: "enemy",
+    to: "player",
+    weapon: "enemy",
+    outcome: "absorbed",
+    shieldDamage: 0,
+    hullDamage: 0,
+    isCrit: false,
+    targetModuleId: 1,
+  }, 1);
+  assert.deepEqual(
+    absorbed,
+    snapshot,
+    "absorption does not change shields or hull in the visual snapshot",
+  );
+
+  const destroyed = getCombatCinematicSnapshotAtProgress(snapshot, {
+    kind: "vessel_destroyed",
+    side: "enemy",
+  }, 0.15);
+  assert.equal(
+    destroyed.enemy.shields,
+    0,
+    "destroying a vessel empties its visual shield bar",
+  );
+  assert.deepEqual(
+    destroyed.enemy.modules.map((currentModule) => currentModule.health),
+    [0],
+    "destroying a core empties the whole visual hull bar even with surviving modules",
+  );
+}
+
+{
   const damaged = applyCombatCinematicEvent(snapshot, {
     kind: "projectile",
     from: "player",
@@ -244,6 +499,25 @@ const snapshot = {
     900,
     "reflection reserves enough time for the outbound and return flight",
   );
+  assert.equal(
+    getCombatCinematicEventDuration({
+      kind: "projectile",
+      from: "player",
+      to: "enemy",
+      weapon: "laser",
+      outcome: "hull",
+      shieldDamage: 0,
+      hullDamage: 12,
+      isCrit: false,
+    }),
+    1500,
+    "a projectile reserves time for a readable damage number after impact",
+  );
+  assert.equal(
+    getCombatCinematicEventDuration({ kind: "vessel_destroyed", side: "enemy" }),
+    720,
+    "vessel destruction reserves time for the final explosion and empty bars",
+  );
 }
 
 function projectileEvents(input) {
@@ -271,12 +545,17 @@ function projectileEvents(input) {
 
   assert.equal(events.length, 2, "two fired weapons create two projectiles");
   assert.deepEqual(
-    events.map(({ weapon, outcome }) => [weapon, outcome]),
+    events.map(({ weapon, outcome, shieldDamage, hullDamage }) => [
+      weapon,
+      outcome,
+      shieldDamage,
+      hullDamage,
+    ]),
     [
-      ["laser", "shield"],
-      ["kinetic", "hull"],
+      ["laser", "shield_and_hull", 5, 9],
+      ["kinetic", "shield_and_hull", 5, 9],
     ],
-    "the existing weapon order consumes shields before hull",
+    "every visible hit receives its share of shield and hull damage",
   );
   assert.equal(
     events.reduce((sum, event) => sum + event.shieldDamage, 0),
@@ -307,7 +586,10 @@ function projectileEvents(input) {
     weaponOrder,
     "all eight live weapon types receive a visual projectile event",
   );
-  assert(events.every((event) => event.shieldDamage >= 0 && event.hullDamage >= 0));
+  assert(
+    events.every((event) => event.shieldDamage + event.hullDamage > 0),
+    "a visible hit never reaches the target without a damage result",
+  );
 }
 
 {
@@ -352,6 +634,25 @@ function projectileEvents(input) {
     ]),
     [["quantum_torpedo", "hull", 0, 55]],
     "a quantum torpedo renders as a direct hull hit",
+  );
+}
+
+{
+  const weaponCounts = emptyWeaponCounts();
+  weaponCounts.kinetic = 1;
+
+  const events = projectileEvents({
+    weaponCounts,
+    missedShots: emptyMisses(),
+    missileInterceptedCount: 0,
+    shieldDamage: 2.5,
+    hullDamage: 7.5,
+  });
+
+  assert.deepEqual(
+    events.map(({ shieldDamage, hullDamage }) => [shieldDamage, hullDamage]),
+    [[2.5, 7.5]],
+    "a critical ×1.5 result keeps its exact non-negative damage in the cinematic",
   );
 }
 
@@ -424,6 +725,7 @@ function projectileEvents(input) {
     "heal",
     "shield_restore",
     "module_destroyed",
+    "vessel_destroyed",
     "boss_ability",
     "turn_skipped",
   ]);

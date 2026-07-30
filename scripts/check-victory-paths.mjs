@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import {
   VICTORY_OBJECTIVES,
   canRevealLateCampaign,
@@ -6,6 +7,23 @@ import {
   getCompletedVictoryObjective,
   getVictoryObjectives,
 } from "../src/game/constants/victoryObjectives.ts";
+
+const [ruTranslations, enTranslations, triggerVictorySource] = await Promise.all([
+  readFile(new URL("../src/lib/locales/ru.json", import.meta.url), "utf8").then(JSON.parse),
+  readFile(new URL("../src/lib/locales/en.json", import.meta.url), "utf8").then(JSON.parse),
+  readFile(
+    new URL("../src/game/slices/gameManagement/helpers/triggerVictory.ts", import.meta.url),
+    "utf8",
+  ),
+]);
+
+assert.equal(ruTranslations.battle.victory, "Победа");
+assert.equal(enTranslations.battle.victory, "Victory");
+assert.match(
+  triggerVictorySource,
+  /i18nStore\.t\("battle\.victory"\)/,
+  "victory log uses the defined battle.victory translation",
+);
 
 const state = {
   artifacts: Array.from({ length: 3 }, (_, index) => ({

@@ -7,8 +7,18 @@ import { GameDialogContent } from "@/game/components/GameDialog";
 import { WEAPON_TYPES } from "@/game/constants";
 import { setupHiDPICanvas } from "@/game/components/canvas-utils";
 import {
+  COMBAT_CINEMATIC_MISS_LABEL_START_PROGRESS,
+  formatCombatCinematicAmount,
+  getCombatCinematicSceneMetrics,
+  getMissLabelPoint,
+  getProjectilePathPoint,
+  getShieldImpactPoint,
+} from "./combatCinematicGeometry";
+import {
   applyCombatCinematicEvent,
   getCombatCinematicEventDuration,
+  getCombatCinematicProjectileContactProgress,
+  getCombatCinematicSnapshotAtProgress,
 } from "@/game/slices/combat/helpers/combatCinematicPlayback";
 import type {
   CombatCinematicEvent,
@@ -36,6 +46,14 @@ function lerp(from: number, to: number, progress: number): number {
 
 function easeOut(progress: number): number {
   return 1 - (1 - progress) ** 3;
+}
+
+function readableFontSize(
+  baseSize: number,
+  sceneScale: number,
+  minimumSize: number,
+): number {
+  return Math.max(minimumSize, baseSize * sceneScale) / sceneScale;
 }
 
 function shipCenter(side: CombatCinematicSide, width: number, height: number): Point {
@@ -322,6 +340,7 @@ function drawShield(
 ): void {
   const pulse = Math.sin(clamp(progress) * Math.PI);
   const scale = 0.86 + pulse * 0.17;
+  const radii = getShieldRadii(isBoss);
   ctx.save();
   ctx.translate(center.x, center.y);
   ctx.scale(scale, scale);
@@ -331,9 +350,13 @@ function drawShield(
   ctx.shadowColor = SHIELD_COLOR;
   ctx.shadowBlur = 20;
   ctx.beginPath();
-  ctx.ellipse(0, 0, isBoss ? 166 : 148, isBoss ? 100 : 86, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, radii.x, radii.y, 0, 0, Math.PI * 2);
   ctx.stroke();
   ctx.restore();
+}
+
+function getShieldRadii(isBoss: boolean): Point {
+  return isBoss ? { x: 166, y: 100 } : { x: 148, y: 86 };
 }
 
 function drawLaser(
@@ -379,6 +402,7 @@ function drawProjectile(
   height: number,
 ): Point {
   const source = shipCenter(event.from, width, height);
+  const targetCenter = shipCenter(event.to, width, height);
   const target = getModulePoint(
     snapshot[event.to],
     event.to,
@@ -388,11 +412,22 @@ function drawProjectile(
   );
   const missOffset = event.outcome === "miss" ? (event.from === "player" ? 96 : -96) : 0;
   const destination = { x: target.x, y: target.y + missOffset };
+  const shieldRadii = getShieldRadii(snapshot[event.to].kind === "boss");
+  const shieldImpact = getShieldImpactPoint(
+    source,
+    destination,
+    targetCenter,
+    shieldRadii.x,
+    shieldRadii.y,
+  );
   const travel = event.outcome === "intercepted" ? progress * 0.62 : progress;
-  const curvedPoint = {
-    x: lerp(source.x, destination.x, travel),
-    y: lerp(source.y, destination.y, travel),
-  };
+  const curvedPoint = getProjectilePathPoint(
+    source,
+    shieldImpact,
+    destination,
+    event.outcome,
+    travel,
+  );
   const color = getProjectileColor(event, snapshot);
 
   if (event.weapon === "laser") {
@@ -407,14 +442,24 @@ function drawProjectile(
     ctx.moveTo(source.x, source.y);
     for (let step = 1; step <= 5; step += 1) {
       const ratio = (travel * step) / 5;
-      const x = lerp(source.x, destination.x, ratio);
-      const y = lerp(source.y, destination.y, ratio) + (step % 2 === 0 ? -8 : 8);
-      ctx.lineTo(x, y);
+      const point = getProjectilePathPoint(
+        source,
+        shieldImpact,
+        destination,
+        event.outcome,
+        ratio,
+      );
+      ctx.lineTo(point.x, point.y + (step % 2 === 0 ? -8 : 8));
     }
     ctx.stroke();
     ctx.restore();
   } else if (event.weapon === "missile") {
-    curvedPoint.y += Math.sin(travel * Math.PI) * (event.from === "player" ? -34 : 34);
+    const arcEnd = event.outcome === "shield_and_hull"
+      ? 0.68
+      : event.outcome === "shield" || event.outcome === "absorbed" || event.outcome === "hull"
+        ? 0.62
+        : 1;
+    curvedPoint.y += Math.sin(clamp(travel / arcEnd) * Math.PI) * (event.from === "player" ? -34 : 34);
     drawOrb(ctx, curvedPoint, color, 6);
     ctx.save();
     ctx.strokeStyle = "#ffe2aa";
@@ -489,6 +534,53 @@ function drawExplosion(
   ctx.restore();
 }
 
+function drawMiss(
+  ctx: CanvasRenderingContext2D,
+  point: Point,
+  progress: number,
+  sceneScale: number,
+): void {
+  const labelProgress = clamp(
+    (progress - COMBAT_CINEMATIC_MISS_LABEL_START_PROGRESS) /
+      (1 - COMBAT_CINEMATIC_MISS_LABEL_START_PROGRESS),
+  );
+  ctx.save();
+  ctx.translate(point.x, point.y);
+  ctx.globalAlpha = 0.98 - labelProgress * 0.24;
+  ctx.fillStyle = "#dce8f5";
+  ctx.shadowColor = "#8ba0b5";
+  ctx.shadowBlur = 10;
+  ctx.font = `700 ${readableFontSize(16, sceneScale, 12)}px Orbitron, monospace`;
+  ctx.textAlign = "center";
+  ctx.fillText("MISS", 0, 0);
+  ctx.restore();
+}
+
+function drawOutcomeLabel(
+  ctx: CanvasRenderingContext2D,
+  point: Point,
+  label: string,
+  color: string,
+  progress: number,
+  sceneScale: number,
+): void {
+  ctx.save();
+  const pop = 0.82 + easeOut(progress) * 0.3;
+  ctx.translate(
+    point.x,
+    Math.max(40 / sceneScale, point.y - 48 - progress * 28),
+  );
+  ctx.scale(pop, pop);
+  ctx.globalAlpha = 0.98 - progress * 0.28;
+  ctx.fillStyle = color;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 12;
+  ctx.font = `800 ${readableFontSize(14, sceneScale, 10)}px Orbitron, monospace`;
+  ctx.textAlign = "center";
+  ctx.fillText(label, 0, 0);
+  ctx.restore();
+}
+
 function drawDamageNumber(
   ctx: CanvasRenderingContext2D,
   point: Point,
@@ -497,19 +589,28 @@ function drawDamageNumber(
   progress: number,
   isCrit: boolean,
   prefix = "−",
+  sceneScale = 1,
 ): void {
   if (damage <= 0) return;
   ctx.save();
-  const pop = 0.75 + easeOut(progress) * (isCrit ? 0.8 : 0.35);
-  ctx.translate(point.x, point.y - 18 - progress * 34);
+  const floatProgress = Math.min(progress / 0.45, 1);
+  const pop = 0.75 + easeOut(floatProgress) * (isCrit ? 0.8 : 0.35);
+  ctx.translate(
+    point.x,
+    Math.max(48 / sceneScale, point.y - 104 - floatProgress * 64),
+  );
   ctx.scale(pop, pop);
-  ctx.globalAlpha = 1 - progress * 0.5;
+  ctx.globalAlpha = 1 - floatProgress * 0.28;
   ctx.fillStyle = color;
   ctx.shadowColor = color;
   ctx.shadowBlur = isCrit ? 16 : 8;
-  ctx.font = `${isCrit ? 800 : 700} ${isCrit ? 22 : 17}px Orbitron, monospace`;
+  ctx.font = `${isCrit ? 800 : 700} ${readableFontSize(
+    isCrit ? 22 : 17,
+    sceneScale,
+    isCrit ? 14 : 12,
+  )}px Orbitron, monospace`;
   ctx.textAlign = "center";
-  ctx.fillText(`${prefix}${damage}${isCrit ? "!" : ""}`, 0, 0);
+  ctx.fillText(`${prefix}${formatCombatCinematicAmount(damage)}${isCrit ? "!" : ""}`, 0, 0);
   ctx.restore();
 }
 
@@ -520,6 +621,8 @@ function drawReflection(
   snapshot: CombatCinematicSnapshot,
   width: number,
   height: number,
+  sceneScale: number,
+  t: Translate,
 ): void {
   const attacker = shipCenter(event.attacker, width, height);
   const defender = shipCenter(event.defender, width, height);
@@ -535,9 +638,22 @@ function drawReflection(
   const from = firstLeg ? attacker : defender;
   const to = firstLeg ? defender : returnTarget;
   const point = { x: lerp(from.x, to.x, legProgress), y: lerp(from.y, to.y, legProgress) };
-  drawOrb(ctx, point, firstLeg ? ENEMY_COLOR : "#f8f4ff", 6);
+  drawOrb(
+    ctx,
+    point,
+    firstLeg ? (event.attacker === "player" ? PLAYER_COLOR : ENEMY_COLOR) : "#f8f4ff",
+    6,
+  );
   if (!firstLeg) {
     drawShield(ctx, defender, clamp((progress - 0.35) / 0.4), snapshot[event.defender].kind === "boss");
+    drawOutcomeLabel(
+      ctx,
+      defender,
+      t("combat_cinematics.reflected"),
+      "#f8f4ff",
+      legProgress,
+      sceneScale,
+    );
   }
   if (progress > 0.8) {
     const impactProgress = clamp((progress - 0.8) / 0.2);
@@ -546,7 +662,16 @@ function drawReflection(
     }
     if (event.hullDamage > 0) {
       drawExplosion(ctx, returnTarget, impactProgress, "#f8f4ff");
-      drawDamageNumber(ctx, returnTarget, event.hullDamage, "#f8f4ff", impactProgress, false);
+      drawDamageNumber(
+        ctx,
+        returnTarget,
+        event.hullDamage,
+        "#f8f4ff",
+        impactProgress,
+        false,
+        "−",
+        sceneScale,
+      );
     }
   }
 }
@@ -558,6 +683,7 @@ function drawBossAbility(
   snapshot: CombatCinematicSnapshot,
   width: number,
   height: number,
+  sceneScale: number,
 ): void {
   const bossCenter = shipCenter("enemy", width, height);
   const playerCenter = shipCenter("player", width, height);
@@ -584,14 +710,14 @@ function drawBossAbility(
     drawLaser(ctx, bossCenter, playerCenter, "#ffb000");
   } else if (repairEffects.has(event.effect)) {
     drawOrb(ctx, { x: bossCenter.x, y: bossCenter.y - progress * 44 }, "#7dffb2", 7);
-    drawDamageNumber(ctx, bossCenter, 1, "#7dffb2", progress, false, "+");
+    drawDamageNumber(ctx, bossCenter, 1, "#7dffb2", progress, false, "+", sceneScale);
   } else {
     drawExplosion(ctx, bossCenter, progress, "#ff4dff");
   }
 
   ctx.save();
   ctx.fillStyle = "#ffb8ff";
-  ctx.font = "700 13px Orbitron, monospace";
+  ctx.font = `700 ${readableFontSize(13, sceneScale, 10)}px Orbitron, monospace`;
   ctx.textAlign = "center";
   ctx.globalAlpha = 1 - progress * 0.35;
   ctx.fillText(event.name.toUpperCase(), bossCenter.x, bossCenter.y - 116);
@@ -607,32 +733,44 @@ function drawActiveEvent(
   height: number,
   elapsed: number,
   t: Translate,
+  sceneScale: number,
 ): void {
   if (!event) return;
 
   if (event.kind === "projectile") {
     const point = drawProjectile(ctx, event, progress, snapshot, width, height);
     if (event.outcome === "intercepted" && progress > 0.48) {
-      drawExplosion(ctx, point, clamp((progress - 0.48) / 0.52), "#ffb000");
+      const outcomeProgress = clamp((progress - 0.48) / 0.52);
+      drawExplosion(ctx, point, outcomeProgress, "#ffb000");
+      drawOutcomeLabel(
+        ctx,
+        point,
+        t("combat_cinematics.intercepted"),
+        "#ffb000",
+        outcomeProgress,
+        sceneScale,
+      );
       return;
     }
-    if (event.outcome === "miss" && progress > 0.8) {
-      ctx.save();
-      ctx.fillStyle = "#a7b2bf";
-      ctx.font = "700 18px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("×", point.x, point.y);
-      ctx.restore();
+    if (event.outcome === "miss" && progress >= COMBAT_CINEMATIC_MISS_LABEL_START_PROGRESS) {
+      drawMiss(
+        ctx,
+        getMissLabelPoint(shipCenter(event.to, width, height), progress),
+        progress,
+        sceneScale,
+      );
       return;
     }
-    if (progress > 0.76 && event.outcome !== "intercepted") {
-      const impactProgress = clamp((progress - 0.76) / 0.24);
-      const hullImpactProgress = event.outcome === "shield_and_hull"
-        ? clamp((progress - 0.86) / 0.14)
-        : impactProgress;
-      const shieldImpactProgress = event.outcome === "shield_and_hull"
-        ? clamp((progress - 0.76) / 0.1)
-        : impactProgress;
+    const isAbsorbed = event.outcome === "absorbed";
+    const hasShieldImpact =
+      event.outcome === "shield" || event.outcome === "shield_and_hull" || isAbsorbed;
+    const hasHullImpact = event.outcome === "hull" || event.outcome === "shield_and_hull";
+    const { shield: shieldContactProgress, hull: hullContactProgress } =
+      getCombatCinematicProjectileContactProgress(event);
+    if (isAbsorbed && progress >= shieldContactProgress) {
+      const impactProgress = clamp(
+        (progress - shieldContactProgress) / (1 - shieldContactProgress),
+      );
       const targetCenter = shipCenter(event.to, width, height);
       const targetPoint = getModulePoint(
         snapshot[event.to],
@@ -641,25 +779,82 @@ function drawActiveEvent(
         width,
         height,
       );
-      if (event.outcome === "shield" || event.outcome === "shield_and_hull") {
+      const shieldRadii = getShieldRadii(snapshot[event.to].kind === "boss");
+      const shieldImpactPoint = getShieldImpactPoint(
+        shipCenter(event.from, width, height),
+        targetPoint,
+        targetCenter,
+        shieldRadii.x,
+        shieldRadii.y,
+      );
+      drawShield(
+        ctx,
+        targetCenter,
+        impactProgress,
+        snapshot[event.to].kind === "boss",
+      );
+      drawExplosion(ctx, shieldImpactPoint, impactProgress, SHIELD_COLOR);
+      drawOutcomeLabel(
+        ctx,
+        shieldImpactPoint,
+        t("combat_cinematics.absorbed"),
+        SHIELD_COLOR,
+        impactProgress,
+        sceneScale,
+      );
+      return;
+    }
+    if (
+      event.outcome !== "intercepted" &&
+      progress >= Math.min(
+        hasShieldImpact ? shieldContactProgress : 1,
+        hasHullImpact ? hullContactProgress : 1,
+      )
+    ) {
+      const shieldImpactProgress = hasShieldImpact
+        ? clamp((progress - shieldContactProgress) / (1 - shieldContactProgress))
+        : 0;
+      const hullImpactProgress = hasHullImpact
+        ? clamp((progress - hullContactProgress) / (1 - hullContactProgress))
+        : 0;
+      const targetCenter = shipCenter(event.to, width, height);
+      const targetPoint = getModulePoint(
+        snapshot[event.to],
+        event.to,
+        event.targetModuleId,
+        width,
+        height,
+      );
+      const shieldRadii = getShieldRadii(snapshot[event.to].kind === "boss");
+      const shieldImpactPoint = getShieldImpactPoint(
+        shipCenter(event.from, width, height),
+        targetPoint,
+        targetCenter,
+        shieldRadii.x,
+        shieldRadii.y,
+      );
+      if (hasShieldImpact) {
         drawShield(
           ctx,
           targetCenter,
           shieldImpactProgress,
           snapshot[event.to].kind === "boss",
         );
+        drawExplosion(ctx, shieldImpactPoint, shieldImpactProgress, SHIELD_COLOR);
       }
-      if (event.outcome === "hull" || event.outcome === "shield_and_hull") {
+      if (hasHullImpact) {
         drawExplosion(ctx, targetPoint, hullImpactProgress, getProjectileColor(event, snapshot));
       }
       if (event.outcome === "shield_and_hull") {
         drawDamageNumber(
           ctx,
-          targetPoint,
+          shieldImpactPoint,
           event.shieldDamage,
           getProjectileColor(event, snapshot),
           shieldImpactProgress,
           false,
+          "−",
+          sceneScale,
         );
         if (hullImpactProgress > 0) {
           drawDamageNumber(
@@ -669,16 +864,20 @@ function drawActiveEvent(
             getProjectileColor(event, snapshot),
             hullImpactProgress,
             event.isCrit,
+            "−",
+            sceneScale,
           );
         }
       } else {
         drawDamageNumber(
           ctx,
-          targetPoint,
+          hasShieldImpact ? shieldImpactPoint : targetPoint,
           event.shieldDamage + event.hullDamage,
           getProjectileColor(event, snapshot),
-          hullImpactProgress,
+          hasShieldImpact ? shieldImpactProgress : hullImpactProgress,
           event.isCrit,
+          "−",
+          sceneScale,
         );
       }
     }
@@ -686,14 +885,14 @@ function drawActiveEvent(
   }
 
   if (event.kind === "reflection") {
-    drawReflection(ctx, event, progress, snapshot, width, height);
+    drawReflection(ctx, event, progress, snapshot, width, height, sceneScale, t);
     return;
   }
 
   if (event.kind === "heal") {
     for (const moduleId of event.moduleIds) {
       const point = getModulePoint(snapshot[event.side], event.side, moduleId, width, height);
-      drawDamageNumber(ctx, point, event.amount, PLAYER_COLOR, progress, false, "+");
+      drawDamageNumber(ctx, point, event.amount, PLAYER_COLOR, progress, false, "+", sceneScale);
       drawOrb(ctx, { x: point.x, y: point.y - progress * 26 }, PLAYER_COLOR, 3);
     }
     return;
@@ -702,7 +901,7 @@ function drawActiveEvent(
   if (event.kind === "shield_restore") {
     const center = shipCenter(event.side, width, height);
     drawShield(ctx, center, progress, snapshot[event.side].kind === "boss");
-    drawDamageNumber(ctx, center, event.amount, SHIELD_COLOR, progress, false, "+");
+    drawDamageNumber(ctx, center, event.amount, SHIELD_COLOR, progress, false, "+", sceneScale);
     return;
   }
 
@@ -712,14 +911,19 @@ function drawActiveEvent(
     return;
   }
 
+  if (event.kind === "vessel_destroyed") {
+    drawExplosion(ctx, shipCenter(event.side, width, height), progress, "#ffb000");
+    return;
+  }
+
   if (event.kind === "boss_ability") {
-    drawBossAbility(ctx, event, progress, snapshot, width, height);
+    drawBossAbility(ctx, event, progress, snapshot, width, height, sceneScale);
     return;
   }
 
   ctx.save();
   ctx.fillStyle = "#ffb000";
-  ctx.font = "700 15px Orbitron, monospace";
+  ctx.font = `700 ${readableFontSize(15, sceneScale, 11)}px Orbitron, monospace`;
   ctx.textAlign = "center";
   ctx.fillText(t("combat_cinematics.turn_skipped"), width / 2, height * 0.2 + Math.sin(elapsed / 90) * 3);
   ctx.restore();
@@ -734,6 +938,7 @@ function drawScene(
   progress: number,
   elapsed: number,
   t: Translate,
+  sceneScale: number,
 ): void {
   drawBackground(ctx, width, height, elapsed);
   const shake = event?.kind === "projectile" && event.isCrit && progress > 0.76
@@ -745,12 +950,12 @@ function drawScene(
   drawShip(ctx, snapshot.enemy, "enemy", width, height, elapsed);
   drawShipBars(ctx, snapshot.player, "player", width, height);
   drawShipBars(ctx, snapshot.enemy, "enemy", width, height);
-  drawActiveEvent(ctx, event, progress, snapshot, width, height, elapsed, t);
+  drawActiveEvent(ctx, event, progress, snapshot, width, height, elapsed, t, sceneScale);
   ctx.restore();
 
   ctx.save();
   ctx.fillStyle = "rgba(192, 221, 234, 0.78)";
-  ctx.font = "700 11px Orbitron, monospace";
+  ctx.font = `700 ${readableFontSize(11, sceneScale, 9)}px Orbitron, monospace`;
   ctx.textAlign = "center";
   ctx.fillText(t("combat.your_ship").toUpperCase(), width * 0.25, height * 0.13);
   ctx.fillText(snapshot.enemy.name.toUpperCase(), width * 0.75, height * 0.13);
@@ -793,9 +998,10 @@ export function CombatCinematicModal({
 
     const render = (timestamp: number) => {
       const rect = stage.getBoundingClientRect();
-      const width = Math.max(320, Math.floor(rect.width));
-      const height = Math.max(300, Math.floor(rect.height));
+      const width = Math.max(1, Math.floor(rect.width));
+      const height = Math.max(1, Math.floor(rect.height));
       setupHiDPICanvas(canvas, ctx, width, height);
+      const scene = getCombatCinematicSceneMetrics(width, height);
 
       let activeEvent = timeline.events[eventIndex];
       let progress = activeEvent
@@ -810,7 +1016,24 @@ export function CombatCinematicModal({
         progress = 0;
       }
 
-      drawScene(ctx, width, height, visualSnapshot, activeEvent, progress, timestamp, tRef.current);
+      const sceneSnapshot = activeEvent
+        ? getCombatCinematicSnapshotAtProgress(visualSnapshot, activeEvent, progress)
+        : visualSnapshot;
+
+      ctx.save();
+      ctx.scale(scene.scale, scene.scale);
+      drawScene(
+        ctx,
+        scene.width,
+        scene.height,
+        sceneSnapshot,
+        activeEvent,
+        progress,
+        timestamp,
+        tRef.current,
+        scene.scale,
+      );
+      ctx.restore();
 
       if (!activeEvent) {
         if (!finished) {
@@ -831,26 +1054,26 @@ export function CombatCinematicModal({
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onDismiss()}>
       <GameDialogContent
-        className="max-h-[94dvh] !w-[calc(100%-1rem)] !max-w-none gap-3 overflow-y-auto p-3 sm:!w-[min(96vw,72rem)] sm:!max-w-6xl sm:p-5"
+        className="max-h-[94dvh] !w-[calc(100%-1rem)] !max-w-none gap-2 overflow-y-auto p-2.5 sm:!w-[min(96vw,72rem)] sm:!max-w-6xl sm:gap-3 sm:p-5"
         showCloseButton={false}
       >
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-start justify-between gap-2 sm:items-center sm:gap-3">
           <div>
-            <DialogTitle className="font-['Orbitron'] text-sm font-bold uppercase tracking-[0.18em] text-[#67e8f9]">
+            <DialogTitle className="font-['Orbitron'] text-xs font-bold uppercase tracking-[0.12em] text-[#67e8f9] sm:text-sm sm:tracking-[0.18em]">
               {t("combat_cinematics.title")}
             </DialogTitle>
             <DialogDescription className="sr-only">
               {t("combat_cinematics.description")}
             </DialogDescription>
           </div>
-          <div className="font-mono text-[10px] tracking-[0.2em] text-[#6b8791]">
+          <div className="shrink-0 font-mono text-[9px] tracking-[0.14em] text-[#6b8791] sm:text-[10px] sm:tracking-[0.2em]">
             {t(isComplete ? "combat_cinematics.complete" : "combat_cinematics.live")}
           </div>
         </div>
 
         <div
           ref={stageRef}
-          className="relative aspect-[16/9] min-h-[300px] max-h-[560px] overflow-hidden border border-[#1b4965] bg-[#030914] shadow-[0_0_28px_rgba(0,212,255,0.14)] sm:min-h-[420px]"
+          className="relative aspect-[4/3] min-h-[min(13rem,44dvh)] max-h-[min(560px,56dvh)] overflow-hidden border border-[#1b4965] bg-[#030914] shadow-[0_0_28px_rgba(0,212,255,0.14)] sm:aspect-[16/9] sm:min-h-[min(26.25rem,56dvh)]"
         >
           <canvas
             ref={setCanvas}
@@ -863,7 +1086,7 @@ export function CombatCinematicModal({
         <div className="flex justify-end">
           <Button
             onClick={onDismiss}
-            className="border border-[#67e8f9] bg-transparent font-['Orbitron'] text-xs uppercase tracking-wider text-[#67e8f9] hover:bg-[#67e8f9] hover:text-[#03111e]"
+            className="w-full border border-[#67e8f9] bg-transparent font-['Orbitron'] text-xs uppercase tracking-wider text-[#67e8f9] hover:bg-[#67e8f9] hover:text-[#03111e] sm:w-auto"
           >
             {t(isComplete ? "combat_cinematics.continue" : "combat_cinematics.skip")}
           </Button>

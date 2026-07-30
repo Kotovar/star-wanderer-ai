@@ -45,7 +45,7 @@ function recordPlayerHit(
     });
 }
 
-/** Записывает промах по цели (0 урона, флаг missed) — общий случай уклонения/саботажа/фазового щита. */
+/** Записывает промах по цели (0 урона, флаг missed) — общий случай уклонения и саботажа. */
 const recordMiss = (set: (fn: (s: GameState) => void) => void, tgt: Module) => {
     recordPlayerHit(set, tgt, 0, 0, false, true);
     playSound("combat_miss");
@@ -234,7 +234,7 @@ export function performEnemyAttack(
     ) {
         get().addLog( i18nStore.t("game_logs.enemyCounterAttack_4"), "info");
         recordMiss(set, tgt);
-        pushEnemyProjectile(timeline, tgt, 0, 0, false, "shield");
+        pushEnemyProjectile(timeline, tgt, 0, 0, false, "absorbed");
         return;
     }
 

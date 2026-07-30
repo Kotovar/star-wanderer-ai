@@ -6,6 +6,7 @@ export type CombatVesselKind = "player_ship" | "enemy_ship" | "boss" | "creature
 export type CombatProjectileOutcome =
   | "miss"
   | "intercepted"
+  | "absorbed"
   | "shield"
   | "hull"
   | "shield_and_hull";
@@ -65,8 +66,9 @@ export type CombatCinematicEvent =
       side: CombatCinematicSide;
       amount: number;
       source: "regen" | "restore";
-    }
+  }
   | { kind: "module_destroyed"; side: CombatCinematicSide; moduleId: number }
+  | { kind: "vessel_destroyed"; side: CombatCinematicSide }
   | { kind: "boss_ability"; effect: BossAbilityEffectType; name: string };
 
 export interface CombatTurnTimeline {

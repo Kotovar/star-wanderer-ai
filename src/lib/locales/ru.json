@@ -1801,7 +1801,10 @@
         "complete": "ГОТОВО",
         "continue": "Продолжить",
         "skip": "Пропустить",
-        "turn_skipped": "ХОД ПРОПУЩЕН"
+        "turn_skipped": "ХОД ПРОПУЩЕН",
+        "absorbed": "ПОГЛОЩЕНО",
+        "intercepted": "ПЕРЕХВАЧЕН",
+        "reflected": "ОТРАЖЕНО"
     },
     "distress_signal": {
         "title": "▸ СИГНАЛ БЕДСТВИЯ",

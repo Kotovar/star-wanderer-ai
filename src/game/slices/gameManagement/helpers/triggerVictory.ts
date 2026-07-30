@@ -77,7 +77,7 @@ export const triggerVictory = (set: SetState, get: () => GameStore): void => {
     recordRunResult(buildRunSummary(state, "victory"));
 
     get().addLog(
-        `🎉 ${i18nStore.t("game.victory")}! ${i18nStore.t(objective.titleKey)}`,
+        `🎉 ${i18nStore.t("battle.victory")}! ${i18nStore.t(objective.titleKey)}`,
         "info",
     );
     playSound("world_crew_milestone");

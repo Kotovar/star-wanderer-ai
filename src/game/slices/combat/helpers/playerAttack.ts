@@ -301,6 +301,7 @@ function resolveVictoryIfCoreDestroyed(
   if (core && core.health <= 0) {
     get().addLog(getCoreDestroyedLog(core.isBiological), "combat");
   }
+  timeline?.push({ kind: "vessel_destroyed", side: "enemy" });
   playSound("combat_enemy_destroyed");
   handleVictory(currentState, set, get, updatedCombat, weaponBays);
   return true;
@@ -1353,7 +1354,7 @@ export function executePlayerAttackWithBayTargets(
 
     // Boss take-damage effects
     if (combatNow.enemy.isBoss && damage.totalModuleDamage > 0) {
-      applyBossTakeDamageEffects(get(), set, get, damage.totalModuleDamage);
+      applyBossTakeDamageEffects(get(), set, get, damage.totalModuleDamage, timeline);
     }
 
     damage.logs.forEach((log) => get().addLog(log, "combat"));

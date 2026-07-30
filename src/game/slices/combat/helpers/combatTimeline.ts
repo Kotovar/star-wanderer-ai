@@ -136,8 +136,15 @@ function copyEvent(event: CombatCinematicEvent): CombatCinematicEvent {
   return { ...event };
 }
 
+function requireNonNegativeNumber(value: number, label: string): void {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new RangeError(`${label} must be a non-negative number`);
+  }
+}
+
 function requireNonNegativeInteger(value: number, label: string): void {
-  if (!Number.isInteger(value) || value < 0) {
+  requireNonNegativeNumber(value, label);
+  if (!Number.isInteger(value)) {
     throw new RangeError(`${label} must be a non-negative integer`);
   }
 }
@@ -157,17 +164,31 @@ function updateOutcome(event: CombatProjectileEvent): void {
   event.outcome = getProjectileOutcome(event.shieldDamage, event.hullDamage);
 }
 
+function distributeDamage(
+  totalDamage: number,
+  recipients: CombatProjectileEvent[],
+  field: "shieldDamage" | "hullDamage",
+): void {
+  const totalHundredths = Math.round(totalDamage * 100);
+  const baseShare = Math.floor(totalHundredths / recipients.length);
+  const remainder = totalHundredths % recipients.length;
+
+  for (let index = 0; index < recipients.length; index += 1) {
+    recipients[index][field] += (baseShare + (index < remainder ? 1 : 0)) / 100;
+  }
+}
+
 /**
  * Turns the current aggregate combat result into a stable visual sequence.
  * Exact per-shot amounts are not retained by the existing resolver, so the
- * totals are assigned in the same weapon order as combat resolution.
+ * aggregate is distributed across the hits that can visually receive it.
  */
 export function buildVolleyEvents(
   input: BuildVolleyEventsInput,
 ): CombatProjectileEvent[] {
   requireNonNegativeInteger(input.missileInterceptedCount, "missileInterceptedCount");
-  requireNonNegativeInteger(input.shieldDamage, "shieldDamage");
-  requireNonNegativeInteger(input.hullDamage, "hullDamage");
+  requireNonNegativeNumber(input.shieldDamage, "shieldDamage");
+  requireNonNegativeNumber(input.hullDamage, "hullDamage");
 
   const events: CombatProjectileEvent[] = [];
   const hits: CombatProjectileEvent[] = [];
@@ -235,20 +256,19 @@ export function buildVolleyEvents(
     }
   }
 
-  const shieldReceiver = hits.find((event) => event.weapon !== "quantum_torpedo");
+  const shieldRecipients = hits.filter((event) => event.weapon !== "quantum_torpedo");
   if (input.shieldDamage > 0) {
-    if (!shieldReceiver) {
+    if (shieldRecipients.length === 0) {
       throw new RangeError("shield damage requires a non-quantum projectile hit");
     }
-    shieldReceiver.shieldDamage = input.shieldDamage;
+    distributeDamage(input.shieldDamage, shieldRecipients, "shieldDamage");
   }
 
   if (input.hullDamage > 0) {
-    const hullReceiver = hits.find((event) => event !== shieldReceiver) ?? shieldReceiver;
-    if (!hullReceiver) {
+    if (hits.length === 0) {
       throw new RangeError("hull damage requires a projectile hit");
     }
-    hullReceiver.hullDamage = input.hullDamage;
+    distributeDamage(input.hullDamage, hits, "hullDamage");
   }
 
   for (const event of hits) {
