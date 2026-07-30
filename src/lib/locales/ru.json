@@ -1804,7 +1804,28 @@
         "intercepted": "ПЕРЕХВАЧЕН",
         "reflected": "ОТРАЖЕНО",
         "blocked": "БЛОКИРОВАНО",
-        "pierced": "ПРОБИТИЕ"
+        "pierced": "ПРОБИТИЕ",
+        "weapons": {
+            "laser": "ЛАЗЕР",
+            "kinetic": "КИНЕТИКА",
+            "missile": "РАКЕТА",
+            "plasma": "ПЛАЗМА",
+            "drones": "ДРОНЫ",
+            "antimatter": "АНТИМАТЕРИЯ",
+            "quantum_torpedo": "КВАНТ. ТОРПЕДА",
+            "ion_cannon": "ИОННАЯ ПУШКА",
+            "enemy": "ВРАГ"
+        },
+        "statuses": {
+            "shield": "ЩИТ",
+            "hull": "КОРПУС",
+            "mixed": "ЩИТ + КОРПУС",
+            "miss": "ПРОМАХ",
+            "intercepted": "ПЕРЕХВАТ",
+            "absorbed": "ПОГЛОЩЕНО",
+            "blocked": "БЛОКИРОВАНО",
+            "piercing": "ПРОБИТИЕ"
+        }
     },
     "distress_signal": {
         "title": "▸ СИГНАЛ БЕДСТВИЯ",

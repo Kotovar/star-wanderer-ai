@@ -6,6 +6,10 @@ import { showHintOnce } from "@/game/hints/showHint";
 import { Button } from "@/components/ui/button";
 import { CombatCinematicStage } from "./CombatCinematicStage";
 import { CrewMemberCard } from "./CrewMemberCard";
+import {
+  createCombatPresentationSnapshot,
+  getPresentedCombat,
+} from "./combatPresentationState";
 import { useCombatCinematicUiStore } from "./combatCinematicUiStore";
 import type { CrewMember, CrewMemberCombatAssignment, Module, WeaponType } from "../types";
 import type { EnemyModule } from "@/game/types/enemy";
@@ -287,11 +291,17 @@ export function CombatPanel() {
   const [bayTargets, setBayTargets] = useState<Record<number, number | null>>({});
   const [activeBayId, setActiveBayId] = useState<number | null>(null);
   const [selectedCrew, setSelectedCrew] = useState<CrewMember | null>(null);
+  const [playbackCombat, setPlaybackCombat] = useState<Combat | null>(null);
 
   const isPlaybackActive = cinematicTimeline !== null;
+  const presentedCombat = getPresentedCombat(
+    currentCombat,
+    playbackCombat,
+    isPlaybackActive,
+  );
   const idleSnapshot = useMemo(
-    () => createCombatCinematicSnapshot({ ship, currentCombat }),
-    [currentCombat, ship],
+    () => createCombatCinematicSnapshot({ ship, currentCombat: presentedCombat }),
+    [presentedCombat, ship],
   );
   const selectedModuleIds = useMemo(
     () => [
@@ -311,8 +321,8 @@ export function CombatPanel() {
   const dmgBaseSum = (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "quantum_torpedo", "ion_cannon"] as const)
     .reduce((s, k) => s + pDmg[k], 0);
   const dmgMultiplier = dmgBaseSum > 0 ? pDmg.total / dmgBaseSum : 1;
-  const isBoss = currentCombat?.enemy.isBoss || false;
-  const combatRound = currentCombat?.round ?? 1;
+  const isBoss = presentedCombat?.enemy.isBoss || false;
+  const combatRound = presentedCombat?.round ?? 1;
   const campaignTimeCost = calculateCombatTimeCost(combatRound);
 
   const getAdjacentModules = (moduleId: number) => {
@@ -324,17 +334,7 @@ export function CombatPanel() {
     );
   };
 
-  if (!currentCombat) {
-    if (!cinematicTimeline) return null;
-    return (
-      <CombatCinematicStage
-        idleSnapshot={cinematicTimeline.initial}
-        timeline={cinematicTimeline}
-        selectedModuleIds={[]}
-        onPlaybackComplete={finishCombatPlayback}
-      />
-    );
-  }
+  if (!presentedCombat) return null;
 
   const handleEnemyModuleClick = (moduleId: number) => {
     if (isPlaybackActive) return;
@@ -356,13 +356,24 @@ export function CombatPanel() {
   const handleAttack = () => {
     if (isPlaybackActive) return;
     const timeline = attackEnemyWithBayTargets(bayTargets);
-    if (timeline) startCombatPlayback(timeline);
+    if (timeline) {
+      setPlaybackCombat(createCombatPresentationSnapshot(presentedCombat));
+      startCombatPlayback(timeline);
+    }
   };
 
   const handleSkipCombatTurn = () => {
     if (isPlaybackActive) return;
     const timeline = useGameStore.getState().skipTurn();
-    if (timeline) startCombatPlayback(timeline);
+    if (timeline) {
+      setPlaybackCombat(createCombatPresentationSnapshot(presentedCombat));
+      startCombatPlayback(timeline);
+    }
+  };
+
+  const handlePlaybackComplete = () => {
+    setPlaybackCombat(null);
+    finishCombatPlayback();
   };
 
   const armedBayIds = weaponBays
@@ -376,7 +387,7 @@ export function CombatPanel() {
       ? `${Math.min(assignedTargetCount, armedBayIds.length)}/${armedBayIds.length}`
       : "0/0";
   const activeCombatPhase = computeCombatPhase(
-    currentCombat,
+    presentedCombat,
     activeBayId,
     assignedTargetCount,
     armedBayIds.length,
@@ -389,50 +400,14 @@ export function CombatPanel() {
         className={`font-['Orbitron'] font-bold text-lg ${isBoss ? "text-[#ff00ff]" : "border-accent"}`}
       >
         {isBoss ? t("combat.boss_title") : t("combat.fight_title")}
-        {currentCombat.enemy.name.toUpperCase()}
+        {presentedCombat.enemy.name.toUpperCase()}
       </div>
-
-      <CombatPhaseStrip activePhase={activeCombatPhase} note={phaseNote} />
-
-      <div className="grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
-        <CombatMetric label="Раунд боя" value={combatRound} color="#00d4ff" />
-        <CombatMetric
-          label="Время после боя"
-          value={`+${campaignTimeCost}`}
-          color="#ffb000"
-        />
-        <CombatMetric label="Цели" value={targetingProgress} color="#00ff41" />
-        <CombatMetric
-          label="Стаков дронов"
-          value={currentCombat.droneStacks}
-          color="#9933ff"
-        />
-      </div>
-
-      {!hasWeaponBay && (
-        <div className="bg-[rgba(255,0,64,0.1)] border border-destructive p-2 text-sm text-destructive">
-          {t("combat.no_weapon_bay")}
-        </div>
-      )}
-
-      {isBoss && currentCombat.enemy.specialAbility && (
-        <BossAbilityCard
-          ability={currentCombat.enemy.specialAbility}
-          regenRate={currentCombat.enemy.regenRate}
-          t={t}
-        />
-      )}
-
-      <BossModulePassivesCard
-        modules={currentCombat.enemy.modules}
-        t={t}
-      />
 
       <CombatCinematicStage
         idleSnapshot={idleSnapshot}
         timeline={cinematicTimeline}
         selectedModuleIds={selectedModuleIds}
-        onPlaybackComplete={finishCombatPlayback}
+        onPlaybackComplete={handlePlaybackComplete}
       />
 
       {/* Attack actions */}
@@ -470,7 +445,7 @@ export function CombatPanel() {
           {weaponBays.map((bay) => {
             const targetId = bayTargets[bay.id] ?? null;
             const targetMod = targetId !== null
-              ? currentCombat.enemy.modules.find((m) => m.id === targetId)
+              ? presentedCombat.enemy.modules.find((m) => m.id === targetId)
               : null;
             const isActive = activeBayId === bay.id;
             const bayAccuracyModifier = computeBayAccuracyModifier(
@@ -493,7 +468,7 @@ export function CombatPanel() {
             );
           })}
           <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
-            {currentCombat.enemy.modules.map((module) => {
+            {presentedCombat.enemy.modules.map((module) => {
               const isTargeted = selectedModuleIds.includes(module.id);
               return (
                 <button
@@ -523,6 +498,42 @@ export function CombatPanel() {
           )}
         </div>
       )}
+
+      <CombatPhaseStrip activePhase={activeCombatPhase} note={phaseNote} />
+
+      <div className="grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
+        <CombatMetric label="Раунд боя" value={combatRound} color="#00d4ff" />
+        <CombatMetric
+          label="Время после боя"
+          value={`+${campaignTimeCost}`}
+          color="#ffb000"
+        />
+        <CombatMetric label="Цели" value={targetingProgress} color="#00ff41" />
+        <CombatMetric
+          label="Стаков дронов"
+          value={presentedCombat.droneStacks}
+          color="#9933ff"
+        />
+      </div>
+
+      {!hasWeaponBay && (
+        <div className="bg-[rgba(255,0,64,0.1)] border border-destructive p-2 text-sm text-destructive">
+          {t("combat.no_weapon_bay")}
+        </div>
+      )}
+
+      {isBoss && presentedCombat.enemy.specialAbility && (
+        <BossAbilityCard
+          ability={presentedCombat.enemy.specialAbility}
+          regenRate={presentedCombat.enemy.regenRate}
+          t={t}
+        />
+      )}
+
+      <BossModulePassivesCard
+        modules={presentedCombat.enemy.modules}
+        t={t}
+      />
 
       <CrewManagement
         crew={crew}

@@ -12,6 +12,10 @@ import {
   getShieldImpactPoint,
 } from "./combatCinematicGeometry";
 import {
+  getCombatCinematicProjectileReadout,
+  getCombatCinematicProjectileVisual,
+} from "./combatCinematicPresentation";
+import {
   applyCombatCinematicEvent,
   getCombatCinematicEventDuration,
   getCombatCinematicProjectileContactProgress,
@@ -412,6 +416,301 @@ function drawOrb(
   ctx.restore();
 }
 
+function drawCombatLaser(
+  ctx: CanvasRenderingContext2D,
+  from: Point,
+  to: Point,
+  color: string,
+  progress: number,
+): void {
+  ctx.save();
+  ctx.globalAlpha = 0.32 + progress * 0.45;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 7;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 18;
+  ctx.beginPath();
+  ctx.moveTo(from.x, from.y);
+  ctx.lineTo(to.x, to.y);
+  ctx.stroke();
+  ctx.globalAlpha = 0.95;
+  ctx.strokeStyle = "#f6ffff";
+  ctx.lineWidth = 1.4;
+  ctx.shadowBlur = 0;
+  ctx.beginPath();
+  ctx.moveTo(from.x, from.y);
+  ctx.lineTo(to.x, to.y);
+  ctx.stroke();
+  ctx.restore();
+  drawOrb(ctx, from, color, 2.5 + Math.sin(progress * Math.PI) * 1.5);
+}
+
+function drawKineticTracer(
+  ctx: CanvasRenderingContext2D,
+  from: Point,
+  point: Point,
+  color: string,
+): void {
+  const angle = Math.atan2(point.y - from.y, point.x - from.x);
+  ctx.save();
+  ctx.translate(point.x, point.y);
+  ctx.rotate(angle);
+  const trail = ctx.createLinearGradient(-24, 0, 5, 0);
+  trail.addColorStop(0, "rgba(255, 211, 128, 0)");
+  trail.addColorStop(0.7, color);
+  trail.addColorStop(1, "#fff7df");
+  ctx.strokeStyle = trail;
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 9;
+  ctx.beginPath();
+  ctx.moveTo(-24, 0);
+  ctx.lineTo(5, 0);
+  ctx.stroke();
+  ctx.fillStyle = "#fff7df";
+  ctx.fillRect(-1, -2, 8, 4);
+  ctx.restore();
+}
+
+function drawRocket(
+  ctx: CanvasRenderingContext2D,
+  from: Point,
+  point: Point,
+  color: string,
+  travel: number,
+): void {
+  const angle = Math.atan2(point.y - from.y, point.x - from.x);
+  ctx.save();
+  ctx.translate(point.x, point.y);
+  ctx.rotate(angle);
+  ctx.strokeStyle = "rgba(255, 222, 170, 0.72)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-26, 0);
+  ctx.lineTo(-6, 0);
+  ctx.stroke();
+  ctx.fillStyle = "#fff1d2";
+  ctx.beginPath();
+  ctx.moveTo(9, 0);
+  ctx.lineTo(-7, -5);
+  ctx.lineTo(-7, 5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.fillRect(-8, -3, 9, 6);
+  ctx.fillStyle = `rgba(255, 170, 66, ${0.45 + Math.sin(travel * 18) * 0.25})`;
+  ctx.beginPath();
+  ctx.moveTo(-8, -3);
+  ctx.lineTo(-17, 0);
+  ctx.lineTo(-8, 3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawPlasmaBolt(
+  ctx: CanvasRenderingContext2D,
+  point: Point,
+  color: string,
+  progress: number,
+): void {
+  const pulse = 6 + Math.sin(progress * 18) * 1.5;
+  drawOrb(ctx, point, color, pulse);
+  ctx.save();
+  ctx.strokeStyle = "#ffe3b0";
+  ctx.globalAlpha = 0.7;
+  ctx.lineWidth = 1.4;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 12;
+  ctx.beginPath();
+  ctx.arc(point.x, point.y, pulse + 5, progress * 7, progress * 7 + Math.PI * 1.55);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawDroneSwarm(
+  ctx: CanvasRenderingContext2D,
+  point: Point,
+  color: string,
+  progress: number,
+): void {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.56;
+  ctx.beginPath();
+  ctx.arc(point.x, point.y, 12, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+  for (let index = 0; index < 3; index += 1) {
+    const angle = progress * 12 + index * ((Math.PI * 2) / 3);
+    const drone = {
+      x: point.x + Math.cos(angle) * 10,
+      y: point.y + Math.sin(angle) * 7,
+    };
+    drawOrb(ctx, drone, color, 3);
+    ctx.save();
+    ctx.strokeStyle = "#d8ffe8";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(drone.x - 4, drone.y);
+    ctx.lineTo(drone.x + 4, drone.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function drawAntimatterOrb(
+  ctx: CanvasRenderingContext2D,
+  point: Point,
+  color: string,
+  progress: number,
+): void {
+  drawOrb(ctx, point, color, 5);
+  ctx.save();
+  ctx.translate(point.x, point.y);
+  ctx.strokeStyle = "#f8d8ff";
+  ctx.lineWidth = 1.4;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 11;
+  for (const rotation of [progress * 8, -progress * 6]) {
+    ctx.save();
+    ctx.rotate(rotation);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 13, 5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawPhaseTorpedo(
+  ctx: CanvasRenderingContext2D,
+  point: Point,
+  color: string,
+  direction: number,
+  progress: number,
+): void {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 14;
+  for (let index = 2; index >= 0; index -= 1) {
+    const size = 11 - index * 2;
+    ctx.save();
+    ctx.translate(point.x - direction * index * 14, point.y + (index % 2 === 0 ? -3 : 3));
+    ctx.rotate(progress * 7 + index * 0.28);
+    ctx.globalAlpha = 1 - index * 0.28;
+    ctx.fillStyle = index === 0 ? "#e5feff" : color;
+    ctx.fillRect(-size / 2, -size / 2, size, size);
+    ctx.strokeRect(-size / 2, -size / 2, size, size);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawIonArc(
+  ctx: CanvasRenderingContext2D,
+  source: Point,
+  shieldImpact: Point,
+  destination: Point,
+  outcome: CombatProjectileEvent["outcome"],
+  travel: number,
+  color: string,
+): void {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 14;
+  ctx.beginPath();
+  ctx.moveTo(source.x, source.y);
+  for (let step = 1; step <= 6; step += 1) {
+    const ratio = (travel * step) / 6;
+    const point = getProjectilePathPoint(
+      source,
+      shieldImpact,
+      destination,
+      outcome,
+      ratio,
+    );
+    const jitter = step === 6
+      ? 0
+      : Math.sin((ratio + step) * 17) * (7 - step * 0.55);
+    ctx.lineTo(point.x, point.y + jitter);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawEnemyBolt(
+  ctx: CanvasRenderingContext2D,
+  point: Point,
+  color: string,
+  progress: number,
+): void {
+  drawOrb(ctx, point, color, 4.5);
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = 0.7;
+  ctx.beginPath();
+  ctx.arc(point.x, point.y, 9 + Math.sin(progress * 15) * 2, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawShieldRipple(
+  ctx: CanvasRenderingContext2D,
+  point: Point,
+  progress: number,
+  isBoss: boolean,
+): void {
+  const radius = (isBoss ? 17 : 13) + easeOut(progress) * (isBoss ? 28 : 22);
+  ctx.save();
+  ctx.globalAlpha = 0.86 - progress * 0.48;
+  ctx.strokeStyle = SHIELD_COLOR;
+  ctx.lineWidth = isBoss ? 2.5 : 2;
+  ctx.shadowColor = SHIELD_COLOR;
+  ctx.shadowBlur = 15;
+  for (let index = 0; index < 3; index += 1) {
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, radius + index * 8, progress * 2.8, progress * 2.8 + Math.PI * 1.45);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawHullImpact(
+  ctx: CanvasRenderingContext2D,
+  point: Point,
+  progress: number,
+  color: string,
+  incomingDirection: number,
+): void {
+  drawExplosion(ctx, point, progress, color);
+  const radius = 11 + easeOut(progress) * 25;
+  ctx.save();
+  ctx.globalAlpha = 0.92 - progress * 0.55;
+  ctx.strokeStyle = "#fff0c7";
+  ctx.lineWidth = 1.6;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 10;
+  for (let index = 0; index < 6; index += 1) {
+    const spread = (index - 2.5) * 0.28;
+    const startX = point.x + incomingDirection * radius * 0.18;
+    const startY = point.y + Math.sin(spread) * 4;
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(
+      point.x + incomingDirection * radius * (0.6 + index * 0.08),
+      point.y + Math.sin(spread) * radius * 0.9,
+    );
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawProjectile(
   ctx: CanvasRenderingContext2D,
   event: CombatProjectileEvent,
@@ -448,83 +747,47 @@ function drawProjectile(
     travel,
   );
   const color = getProjectileColor(event, snapshot);
+  const visual = getCombatCinematicProjectileVisual(event.weapon);
+  let renderPoint = curvedPoint;
 
-  if (event.weapon === "laser") {
-    drawLaser(ctx, source, curvedPoint, color);
-  } else if (event.weapon === "ion_cannon") {
-    ctx.save();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2.5;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 12;
-    ctx.beginPath();
-    ctx.moveTo(source.x, source.y);
-    for (let step = 1; step <= 5; step += 1) {
-      const ratio = (travel * step) / 5;
-      const point = getProjectilePathPoint(
-        source,
-        shieldImpact,
-        destination,
-        event.outcome,
-        ratio,
-      );
-      ctx.lineTo(point.x, point.y + (step % 2 === 0 ? -8 : 8));
-    }
-    ctx.stroke();
-    ctx.restore();
-  } else if (event.weapon === "missile") {
+  if (visual === "beam") {
+    drawCombatLaser(ctx, source, renderPoint, color, progress);
+  } else if (visual === "tracer") {
+    drawKineticTracer(ctx, source, renderPoint, color);
+  } else if (visual === "rocket") {
     const arcEnd = event.outcome === "shield_and_hull"
       ? 0.68
-      : event.outcome === "shield" || event.outcome === "absorbed" || event.outcome === "hull"
-        ? 0.62
-        : 1;
-    curvedPoint.y += Math.sin(clamp(travel / arcEnd) * Math.PI) * (event.from === "player" ? -34 : 34);
-    drawOrb(ctx, curvedPoint, color, 6);
-    ctx.save();
-    ctx.strokeStyle = "#ffe2aa";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(curvedPoint.x - (event.from === "player" ? 15 : -15), curvedPoint.y);
-    ctx.lineTo(curvedPoint.x, curvedPoint.y);
-    ctx.stroke();
-    ctx.restore();
-  } else if (event.weapon === "plasma") {
-    drawOrb(ctx, curvedPoint, color, 8 + Math.sin(progress * 16) * 2);
-  } else if (event.weapon === "drones") {
-    for (let index = 0; index < 3; index += 1) {
-      drawOrb(
-        ctx,
-        {
-          x: curvedPoint.x + Math.cos(progress * 12 + index * 2) * 9,
-          y: curvedPoint.y + Math.sin(progress * 12 + index * 2) * 9,
-        },
-        color,
-        3,
-      );
-    }
-  } else if (event.weapon === "antimatter") {
-    drawOrb(ctx, curvedPoint, color, 6);
-    ctx.save();
-    ctx.strokeStyle = "#f4c6ff";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(curvedPoint.x, curvedPoint.y, 11, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-  } else if (event.weapon === "quantum_torpedo") {
-    ctx.save();
-    ctx.translate(curvedPoint.x, curvedPoint.y);
-    ctx.rotate(progress * 8);
-    ctx.fillStyle = color;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 14;
-    ctx.fillRect(-6, -6, 12, 12);
-    ctx.restore();
+      : event.outcome === "miss" || event.outcome === "intercepted"
+        ? 1
+        : 0.62;
+    renderPoint = {
+      x: curvedPoint.x,
+      y: curvedPoint.y + Math.sin(clamp(travel / arcEnd) * Math.PI) * (event.from === "player" ? -34 : 34),
+    };
+    drawRocket(ctx, source, renderPoint, color, travel);
+  } else if (visual === "plasma") {
+    drawPlasmaBolt(ctx, renderPoint, color, progress);
+  } else if (visual === "swarm") {
+    drawDroneSwarm(ctx, renderPoint, color, progress);
+  } else if (visual === "orbit") {
+    drawAntimatterOrb(ctx, renderPoint, color, progress);
+  } else if (visual === "phase") {
+    drawPhaseTorpedo(ctx, renderPoint, color, shipDirection(event.from), progress);
+  } else if (visual === "arc") {
+    drawIonArc(
+      ctx,
+      source,
+      shieldImpact,
+      destination,
+      event.outcome,
+      travel,
+      color,
+    );
   } else {
-    drawOrb(ctx, curvedPoint, color, event.weapon === "kinetic" ? 4 : 5);
+    drawEnemyBolt(ctx, renderPoint, color, progress);
   }
 
-  return curvedPoint;
+  return renderPoint;
 }
 
 function drawExplosion(
@@ -630,6 +893,95 @@ function drawDamageNumber(
   )}px Orbitron, monospace`;
   ctx.textAlign = "center";
   ctx.fillText(`${prefix}${formatCombatCinematicAmount(damage)}${isCrit ? "!" : ""}`, 0, 0);
+  ctx.restore();
+}
+
+function getProjectileTelemetryColor(
+  status: ReturnType<typeof getCombatCinematicProjectileReadout>["status"],
+  projectileColor: string,
+): string {
+  if (status === "shield" || status === "absorbed") return SHIELD_COLOR;
+  if (status === "mixed" || status === "piercing") return "#ffcb57";
+  if (status === "miss" || status === "blocked") return "#d8e3ed";
+  if (status === "intercepted") return "#ffb000";
+  return projectileColor;
+}
+
+function getProjectileTelemetryAmount(
+  readout: ReturnType<typeof getCombatCinematicProjectileReadout>,
+): string {
+  const values = [readout.shieldDamage, readout.hullDamage]
+    .filter((damage) => damage > 0)
+    .map((damage) => `−${formatCombatCinematicAmount(damage)}`);
+  return values.join(" / ");
+}
+
+function drawProjectileTelemetry(
+  ctx: CanvasRenderingContext2D,
+  event: CombatProjectileEvent,
+  progress: number,
+  snapshot: CombatCinematicSnapshot,
+  width: number,
+  height: number,
+  t: Translate,
+  sceneScale: number,
+): void {
+  const readout = getCombatCinematicProjectileReadout(
+    event.outcome,
+    event.shieldDamage,
+    event.hullDamage,
+  );
+  const weaponKey = event.weapon === "enemy" ? "enemy" : event.weapon;
+  const weaponIcon = event.weapon === "enemy" ? "✦" : WEAPON_TYPES[event.weapon].icon;
+  const weaponLabel = t(`combat_cinematics.weapons.${weaponKey}`);
+  const statusLabel = t(`combat_cinematics.statuses.${readout.status}`);
+  const amount = getProjectileTelemetryAmount(readout);
+  const projectileColor = getProjectileColor(event, snapshot);
+  const statusColor = getProjectileTelemetryColor(readout.status, projectileColor);
+  const alpha = 0.55 + clamp(progress / 0.16) * 0.45;
+  const y = height * 0.25;
+  const fontSize = readableFontSize(11, sceneScale, 9);
+
+  ctx.save();
+  ctx.font = `700 ${fontSize}px Orbitron, monospace`;
+  const prefix = `${weaponIcon} ${weaponLabel}`;
+  const separator = "  ·  ";
+  const suffix = amount ? `  ${amount}` : "";
+  const prefixWidth = ctx.measureText(prefix).width;
+  const separatorWidth = ctx.measureText(separator).width;
+  const statusWidth = ctx.measureText(statusLabel).width;
+  const suffixWidth = ctx.measureText(suffix).width;
+  const panelWidth = Math.min(
+    width * 0.72,
+    prefixWidth + separatorWidth + statusWidth + suffixWidth + 26,
+  );
+  const x = width / 2 - panelWidth / 2;
+
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = "rgba(3, 12, 23, 0.9)";
+  ctx.fillRect(x, y - 17, panelWidth, 26);
+  ctx.strokeStyle = `${statusColor}99`;
+  ctx.lineWidth = 1;
+  ctx.shadowColor = statusColor;
+  ctx.shadowBlur = 10;
+  ctx.strokeRect(x + 0.5, y - 16.5, panelWidth - 1, 25);
+  ctx.shadowBlur = 0;
+
+  let cursor = x + 13;
+  ctx.textAlign = "left";
+  ctx.fillStyle = projectileColor;
+  ctx.fillText(prefix, cursor, y);
+  cursor += prefixWidth;
+  ctx.fillStyle = "rgba(192, 221, 234, 0.72)";
+  ctx.fillText(separator, cursor, y);
+  cursor += separatorWidth;
+  ctx.fillStyle = statusColor;
+  ctx.fillText(statusLabel, cursor, y);
+  cursor += statusWidth;
+  if (suffix) {
+    ctx.fillStyle = "#f6fbff";
+    ctx.fillText(suffix, cursor, y);
+  }
   ctx.restore();
 }
 
@@ -803,6 +1155,7 @@ function drawActiveEvent(
   if (!event) return;
 
   if (event.kind === "projectile") {
+    drawProjectileTelemetry(ctx, event, progress, snapshot, width, height, t, sceneScale);
     const point = drawProjectile(ctx, event, progress, snapshot, width, height);
     if (event.outcome === "intercepted" && progress > 0.48) {
       const outcomeProgress = clamp((progress - 0.48) / 0.52);
@@ -877,7 +1230,12 @@ function drawActiveEvent(
         impactProgress,
         snapshot[event.to].kind === "boss",
       );
-      drawExplosion(ctx, shieldImpactPoint, impactProgress, SHIELD_COLOR);
+      drawShieldRipple(
+        ctx,
+        shieldImpactPoint,
+        impactProgress,
+        snapshot[event.to].kind === "boss",
+      );
       drawOutcomeLabel(
         ctx,
         shieldImpactPoint,
@@ -924,10 +1282,21 @@ function drawActiveEvent(
           shieldImpactProgress,
           snapshot[event.to].kind === "boss",
         );
-        drawExplosion(ctx, shieldImpactPoint, shieldImpactProgress, SHIELD_COLOR);
+        drawShieldRipple(
+          ctx,
+          shieldImpactPoint,
+          shieldImpactProgress,
+          snapshot[event.to].kind === "boss",
+        );
       }
       if (hasHullImpact) {
-        drawExplosion(ctx, targetPoint, hullImpactProgress, getProjectileColor(event, snapshot));
+        drawHullImpact(
+          ctx,
+          targetPoint,
+          hullImpactProgress,
+          getProjectileColor(event, snapshot),
+          shipDirection(event.from),
+        );
       }
       if (event.outcome === "shield_and_hull" || event.outcome === "piercing") {
         drawDamageNumber(

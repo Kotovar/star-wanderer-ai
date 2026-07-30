@@ -1804,7 +1804,28 @@
         "intercepted": "INTERCEPTED",
         "reflected": "REFLECTED",
         "blocked": "BLOCKED",
-        "pierced": "PIERCING"
+        "pierced": "PIERCING",
+        "weapons": {
+            "laser": "LASER",
+            "kinetic": "KINETIC",
+            "missile": "MISSILE",
+            "plasma": "PLASMA",
+            "drones": "DRONES",
+            "antimatter": "ANTIMATTER",
+            "quantum_torpedo": "QUANTUM TORPEDO",
+            "ion_cannon": "ION CANNON",
+            "enemy": "ENEMY"
+        },
+        "statuses": {
+            "shield": "SHIELD",
+            "hull": "HULL",
+            "mixed": "SHIELD + HULL",
+            "miss": "MISS",
+            "intercepted": "INTERCEPTED",
+            "absorbed": "ABSORBED",
+            "blocked": "BLOCKED",
+            "piercing": "PIERCING"
+        }
     },
     "distress_signal": {
         "title": "▸ DISTRESS SIGNAL",

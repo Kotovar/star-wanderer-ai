@@ -15,6 +15,10 @@ let formatCombatCinematicAmount;
 let getMissLabelPoint;
 let getProjectilePathPoint;
 let getShieldImpactPoint;
+let getCombatCinematicProjectileVisual;
+let getCombatCinematicProjectileReadout;
+let createCombatPresentationSnapshot;
+let getPresentedCombat;
 
 let stageSource;
 
@@ -273,6 +277,31 @@ assert.match(
   /flex gap-2\.5 flex-col sm:flex-row/,
   "combat actions stack on mobile and align on desktop",
 );
+const combatSceneMarkup = combatPanelSource.slice(
+  combatPanelSource.indexOf(
+    'return (\n    <div className="flex flex-col gap-4 h-full overflow-y-auto pr-2">',
+  ),
+);
+assert.ok(
+  combatSceneMarkup.indexOf("<CombatCinematicStage") <
+    combatSceneMarkup.indexOf("<CombatPhaseStrip"),
+  "the permanent canvas is the first substantial combat element instead of being pushed below tactical controls",
+);
+assert.ok(
+  combatSceneMarkup.indexOf("{/* Attack actions */}") <
+    combatSceneMarkup.indexOf("<BossAbilityCard"),
+  "boss ability cards do not push primary combat actions below the fold",
+);
+assert.ok(
+  combatSceneMarkup.indexOf("{/* Per-bay target selector */}") <
+    combatSceneMarkup.indexOf("<BossAbilityCard"),
+  "targeting stays next to combat actions instead of behind boss descriptions",
+);
+assert.doesNotMatch(
+  combatPanelSource,
+  /if \(!currentCombat\) \{\s*if \(!cinematicTimeline\) return null;\s*return \(\s*<CombatCinematicStage/,
+  "terminal playback keeps the combat panel instead of replacing it with an isolated canvas",
+);
 assert.match(
   pageSource,
   /const showEventStage = mobileShowMap \|\| \(isMobile && \(inCombat \|\| cinematicTimeline !== null\)\);/,
@@ -289,6 +318,45 @@ assert.equal(ruTranslations.combat_cinematics.reflected, "ОТРАЖЕНО");
 assert.equal(enTranslations.combat_cinematics.absorbed, "ABSORBED");
 assert.equal(ruTranslations.combat_cinematics.blocked, "БЛОКИРОВАНО");
 assert.equal(enTranslations.combat_cinematics.blocked, "BLOCKED");
+
+for (const translations of [ruTranslations, enTranslations]) {
+  const weaponLabels = translations.combat_cinematics.weapons ?? {};
+  const statusLabels = translations.combat_cinematics.statuses ?? {};
+  for (const key of [
+    "laser",
+    "kinetic",
+    "missile",
+    "plasma",
+    "drones",
+    "antimatter",
+    "quantum_torpedo",
+    "ion_cannon",
+    "enemy",
+  ]) {
+    assert.equal(
+      typeof weaponLabels[key],
+      "string",
+      `the combat telemetry has a localized ${key} weapon label`,
+    );
+  }
+  for (const key of [
+    "shield",
+    "hull",
+    "mixed",
+    "miss",
+    "intercepted",
+    "absorbed",
+    "blocked",
+    "piercing",
+  ]) {
+    assert.equal(
+      typeof statusLabels[key],
+      "string",
+      `the combat telemetry has a localized ${key} outcome label`,
+    );
+  }
+}
+
 assert.doesNotMatch(
   combatPanelSource,
   /lastEnemyHit|lastPlayerHit|enemyFlash/,
@@ -309,6 +377,28 @@ try {
 } catch {
   assert.fail(
     "combatTimeline.ts must provide the deterministic combat cinematic builder",
+  );
+}
+
+try {
+  ({
+    getCombatCinematicProjectileVisual,
+    getCombatCinematicProjectileReadout,
+  } = await import("../src/game/components/combatCinematicPresentation.ts"));
+} catch {
+  assert.fail(
+    "combatCinematicPresentation.ts must provide readable visual profiles for combat projectiles",
+  );
+}
+
+try {
+  ({
+    createCombatPresentationSnapshot,
+    getPresentedCombat,
+  } = await import("../src/game/components/combatPresentationState.ts"));
+} catch {
+  assert.fail(
+    "combatPresentationState.ts must preserve the pre-resolution combat UI during playback",
   );
 }
 
@@ -380,6 +470,56 @@ try {
   );
 }
 
+{
+  const liveCombat = {
+    enemy: {
+      name: "Древний страж",
+      modules: [{ id: 9, name: "Ядро", health: 40, maxHealth: 40 }],
+      selectedModule: 9,
+      shields: 20,
+      maxShields: 20,
+      isBoss: true,
+      specialAbility: {
+        name: "Поглощение материи",
+        description: "Восстанавливает корпус",
+      },
+    },
+    loot: { credits: 100 },
+    round: 4,
+    droneStacks: 3,
+  };
+  const presentationCombat = createCombatPresentationSnapshot(liveCombat);
+
+  liveCombat.enemy.name = "Уничтожен";
+  liveCombat.enemy.modules[0].health = 0;
+
+  assert.equal(
+    presentationCombat.enemy.name,
+    "Древний страж",
+    "playback retains the enemy header captured before terminal resolution",
+  );
+  assert.equal(
+    presentationCombat.enemy.modules[0].health,
+    40,
+    "playback retains target data even after the live combat state is resolved",
+  );
+  assert.equal(
+    presentationCombat.enemy.specialAbility?.name,
+    "Поглощение материи",
+    "playback retains boss cards until the animation completes",
+  );
+  assert.strictEqual(
+    getPresentedCombat(null, presentationCombat, true),
+    presentationCombat,
+    "a terminal live state keeps its combat UI snapshot during playback",
+  );
+  assert.equal(
+    getPresentedCombat(null, presentationCombat, false),
+    null,
+    "the terminal result can replace combat UI only after playback ends",
+  );
+}
+
 const weaponOrder = [
   "laser",
   "kinetic",
@@ -390,6 +530,38 @@ const weaponOrder = [
   "quantum_torpedo",
   "ion_cannon",
 ];
+
+{
+  const profiles = weaponOrder.map((weapon) =>
+    getCombatCinematicProjectileVisual(weapon),
+  );
+
+  assert.deepEqual(
+    profiles,
+    ["beam", "tracer", "rocket", "plasma", "swarm", "orbit", "phase", "arc"],
+    "every weapon type has its own readable projectile profile",
+  );
+  assert.equal(
+    new Set(profiles).size,
+    weaponOrder.length,
+    "weapon animations do not collapse into the same generic projectile",
+  );
+  assert.deepEqual(
+    getCombatCinematicProjectileReadout("shield_and_hull", 20, 5),
+    { status: "mixed", shieldDamage: 20, hullDamage: 5 },
+    "a mixed hit retains separate shield and hull values for the telemetry strip",
+  );
+  assert.deepEqual(
+    getCombatCinematicProjectileReadout("piercing", 8, 12),
+    { status: "piercing", shieldDamage: 8, hullDamage: 12 },
+    "a shield bypass remains visibly distinct from an ordinary mixed hit",
+  );
+  assert.deepEqual(
+    getCombatCinematicProjectileReadout("miss", 0, 0),
+    { status: "miss", shieldDamage: 0, hullDamage: 0 },
+    "a non-damaging result has a dedicated readable status",
+  );
+}
 
 const snapshot = {
   player: {
