@@ -1,7 +1,7 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore, Module } from "@/game/types";
 import type { CombatProjectileEvent } from "@/game/types/combatCinematics";
-import { playSound } from "@/sounds";
+import { playCombatSound } from "./combatSound";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
 import { getPilotInCockpit } from "@/game/crew";
 import { ARTIFACT_TYPES } from "@/game/constants";
@@ -53,7 +53,7 @@ function recordPlayerHit(
 /** Записывает промах по цели (0 урона, флаг missed) — общий случай уклонения и саботажа. */
 const recordMiss = (set: (fn: (s: GameState) => void) => void, tgt: Module) => {
     recordPlayerHit(set, tgt, 0, 0, false, true);
-    playSound("combat_miss");
+    playCombatSound("combat_miss");
 };
 
 function pushEnemyProjectile(
@@ -166,7 +166,7 @@ export function performEnemyAttack(
     const activeMods = state.ship.modules.filter((m) => m.health > 0);
     const tgt = selectTargetModule(activeMods, get);
     if (!tgt) return;
-    playSound("combat_enemy_fire");
+    playCombatSound("combat_enemy_fire");
 
     // Evasion check
     const evasionChance = getTotalEvasion(state) / 100;
@@ -216,7 +216,7 @@ export function performEnemyAttack(
         mirrorShield &&
         Math.random() < getArtifactEffectValue(mirrorShield, state)
     ) {
-        playSound("combat_miss");
+        playCombatSound("combat_miss");
         const reflection = reflectAttack(state, set, get, eDmg, combat);
         if (reflection) {
             timeline?.push({
@@ -343,7 +343,7 @@ function applyBossAttackSideEffects(
             s.ship.shields = Math.max(0, s.ship.shields - bossModifiers.shieldBreakAmount);
         });
         if (shieldsBefore <= bossModifiers.shieldBreakAmount) {
-            playSound("combat_shield_break");
+            playCombatSound("combat_shield_break");
         }
         get().addLog( i18nStore.t("game_logs.enemyCounterAttack_5", { shieldBreakAmount: bossModifiers.shieldBreakAmount }), "warning");
     }
@@ -565,11 +565,11 @@ function applyDamageWithShields(
     }
 
     recordPlayerHit(set, tgt, shieldDamageDealt, hullDamageDealt, isCrit);
-    if (shieldDamageDealt > 0) playSound("combat_shield_hit");
-    if (shieldsBroken) playSound("combat_shield_break");
-    if (hullDamageDealt > 0) playSound("combat_hull_hit");
+    if (shieldDamageDealt > 0) playCombatSound("combat_shield_hit");
+    if (shieldsBroken) playCombatSound("combat_shield_break");
+    if (hullDamageDealt > 0) playCombatSound("combat_hull_hit");
     if (isCrit && (shieldDamageDealt > 0 || hullDamageDealt > 0)) {
-        playSound("combat_critical");
+        playCombatSound("combat_critical");
     }
 }
 
@@ -632,6 +632,6 @@ function applyDamageNoShields(
         ignoreDefense,
     );
     recordPlayerHit(set, tgt, 0, actualDamage, isCrit);
-    if (actualDamage > 0) playSound("combat_hull_hit");
-    if (isCrit && actualDamage > 0) playSound("combat_critical");
+    if (actualDamage > 0) playCombatSound("combat_hull_hit");
+    if (isCrit && actualDamage > 0) playCombatSound("combat_critical");
 }

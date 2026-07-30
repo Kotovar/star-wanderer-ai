@@ -1,5 +1,15 @@
 import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+
+const scriptPath = fileURLToPath(import.meta.url);
+const repoRoot = path.resolve(path.dirname(scriptPath), "..");
+// jiti — для модулей с расширениями-less импортами, которые node сам не резолвит
+const jiti = createRequire(import.meta.url)("jiti")(scriptPath, {
+  alias: { "@": path.join(repoRoot, "src") },
+});
 
 let createCombatTimelineCollector;
 let buildVolleyEvents;
@@ -45,6 +55,10 @@ const crewMemberCardSource = await readFile(
 );
 const enemyCounterAttackSource = await readFile(
   new URL("../src/game/slices/combat/helpers/enemyCounterAttack.ts", import.meta.url),
+  "utf8",
+);
+const combatSliceSource = await readFile(
+  new URL("../src/game/slices/combat/combatSlice.ts", import.meta.url),
   "utf8",
 );
 const enemyAttackSource = await readFile(
@@ -208,6 +222,41 @@ assert.match(
   stageSource,
   /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)\.matches\) \{\s*renderIdle\(\);/,
   "reduced motion renders the idle scene once instead of animating it",
+);
+assert.doesNotMatch(
+  playerAttackSource,
+  /\bplaySound\((?!"combat_no_active_weapons")/,
+  "резолв залпа не играет звук сам — иначе он звучит до анимации",
+);
+assert.match(
+  playerAttackSource,
+  /playSound\("combat_no_active_weapons"\)/,
+  "отказ действия звучит сразу: кинематики для него не будет",
+);
+assert.doesNotMatch(
+  enemyCounterAttackSource,
+  /\bplaySound\(/,
+  "ответ врага не играет звук на этапе расчёта",
+);
+assert.match(
+  combatSliceSource,
+  /deferCombatSound\(\(\) =>\s*helpers\.executePlayerAttackWithBayTargets/,
+  "ход с кинематикой глушит звук резолва — его отыграет сцена",
+);
+assert.match(
+  stageSource,
+  /if \(activeEvent\) playEventSounds\(activeEvent, eventIndex, progress\);/,
+  "сцена дёргает звук по кадрам таймлайна",
+);
+assert.match(
+  stageSource,
+  /if \(index === impactedIndex \|\| progress < getImpactProgress\(event\)\) return;/,
+  "звук попадания играет один раз и ровно в момент контакта",
+);
+assert.match(
+  stageSource,
+  /drawBossIntent\(ctx, bossIntent, width, height, t, sceneScale\);/,
+  "сцена телеграфирует способность босса до хода игрока",
 );
 assert.doesNotMatch(
   enemyCounterAttackSource,
@@ -520,6 +569,89 @@ try {
 } catch {
   assert.fail(
     "combatCinematicGeometry.ts must provide responsive scene and shield-impact geometry",
+  );
+}
+
+{
+  const { getCombatCinematicEventSounds } = jiti(
+    "../src/game/components/combatCinematicSound.ts",
+  );
+  const shot = {
+    kind: "projectile",
+    from: "player",
+    to: "enemy",
+    weapon: "laser",
+    outcome: "hull",
+    shieldDamage: 0,
+    hullDamage: 7,
+    isCrit: false,
+  };
+  assert.deepEqual(
+    getCombatCinematicEventSounds(shot),
+    { launch: "combat_laser", impact: "combat_hull_hit", accent: null },
+    "выстрел и попадание — разные звуки, чтобы сцена могла развести их во времени",
+  );
+  assert.equal(
+    getCombatCinematicEventSounds({ ...shot, outcome: "miss" }).impact,
+    "combat_miss",
+    "промах звучит промахом",
+  );
+  assert.equal(
+    getCombatCinematicEventSounds({ ...shot, isCrit: true }).accent,
+    "combat_critical",
+    "крит добавляет акцент поверх попадания",
+  );
+  assert.equal(
+    getCombatCinematicEventSounds({ ...shot, weapon: "enemy", from: "enemy", to: "player" }).launch,
+    "combat_enemy_fire",
+    "залп врага звучит своим выстрелом",
+  );
+}
+
+{
+  const { getBossAbilityIntent } = jiti(
+    "../src/game/slices/combat/helpers/bossIntent.ts",
+  );
+  const combat = (ability, modules, oneShotFired = false) => ({
+    enemy: { isBoss: true, specialAbility: ability, modules },
+    bossOneShotAbilityFired: oneShotFired,
+  });
+  const healthy = [{ health: 100, maxHealth: 100 }];
+  const wounded = [{ health: 20, maxHealth: 100 }];
+  const everyTurn = { name: "Залп", description: "", trigger: "every_turn", effect: "aoe_damage" };
+  const lowHealth = { name: "Ремонт", description: "", trigger: "low_health", effect: "emergency_repair" };
+  const reactive = { name: "Уклонение", description: "", trigger: "every_turn", effect: "evasion_boost" };
+
+  assert.equal(getBossAbilityIntent(null), null, "без боя намерения нет");
+  assert.equal(
+    getBossAbilityIntent({ enemy: { isBoss: false, modules: [] } }),
+    null,
+    "обычный враг не телеграфирует способность",
+  );
+  assert.equal(
+    getBossAbilityIntent(combat(everyTurn, healthy)).status,
+    "imminent",
+    "способность каждого хода всегда предупреждает о следующем ходе",
+  );
+  assert.equal(
+    getBossAbilityIntent(combat(lowHealth, healthy)).status,
+    "armed",
+    "низкоуровневая способность ждёт своего порога и честно это показывает",
+  );
+  assert.equal(
+    getBossAbilityIntent(combat(lowHealth, wounded)).status,
+    "imminent",
+    "за порогом прочности та же способность становится угрозой на следующий ход",
+  );
+  assert.equal(
+    getBossAbilityIntent(combat(lowHealth, wounded, true)).status,
+    "spent",
+    "одноразовая способность после срабатывания больше не пугает игрока",
+  );
+  assert.equal(
+    getBossAbilityIntent(combat(reactive, healthy)).status,
+    "reactive",
+    "способность-ответ помечена как реакция, а не как ход врага",
   );
 }
 

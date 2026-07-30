@@ -18,6 +18,7 @@ import { processMarketTick } from "@/game/stations";
 import { checkContractExpiry } from "@/game/slices/contracts/helpers/checkContractExpiry";
 import { advanceCombatRound } from "@/game/slices/combat/helpers/combatTime";
 import { executeEnemyAttack } from "@/game/slices/combat/helpers/executeEnemyAttack";
+import { deferCombatSound } from "@/game/slices/combat/helpers/combatSound";
 import {
     appendCombatSnapshotDeltaEvents,
     createCombatCinematicSnapshot,
@@ -165,10 +166,12 @@ export const createGameLoopSlice = (
             const timeline = createCombatTimelineCollector(initialSnapshot);
             timeline.push({ kind: "turn_skipped", side: "player" });
             get().addLog( i18nStore.t("game_logs.gameLoopSlice_1"), "combat");
-            executeEnemyAttack(
-                set as unknown as (fn: (state: GameState) => void) => void,
-                get,
-                timeline,
+            deferCombatSound(() =>
+                executeEnemyAttack(
+                    set as unknown as (fn: (state: GameState) => void) => void,
+                    get,
+                    timeline,
+                ),
             );
             const beforeRound = createCombatCinematicSnapshot(get());
             advanceCombatRound(

@@ -1805,6 +1805,12 @@
         "reflected": "REFLECTED",
         "blocked": "BLOCKED",
         "pierced": "PIERCING",
+        "boss_intent": {
+            "imminent": "⚠ NEXT TURN",
+            "reactive": "⟳ ON YOUR HIT",
+            "armed": "◇ AT 30% HULL",
+            "spent": "✓ SPENT"
+        },
         "weapons": {
             "laser": "LASER",
             "kinetic": "KINETIC",

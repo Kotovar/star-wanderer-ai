@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { WEAPON_TYPES } from "@/game/constants";
+import { playSound } from "@/sounds";
 import { setupHiDPICanvas } from "@/game/components/canvas-utils";
 import {
   COMBAT_CINEMATIC_MISS_LABEL_START_PROGRESS,
@@ -16,12 +17,14 @@ import {
   getCombatCinematicProjectileReadout,
   getCombatCinematicProjectileVisual,
 } from "./combatCinematicPresentation";
+import { getCombatCinematicEventSounds } from "./combatCinematicSound";
 import {
   applyCombatCinematicEvent,
   getCombatCinematicEventDuration,
   getCombatCinematicProjectileContactProgress,
   getCombatCinematicSnapshotAtProgress,
 } from "@/game/slices/combat/helpers/combatCinematicPlayback";
+import type { BossIntent, BossIntentStatus } from "@/game/slices/combat/helpers/bossIntent";
 import type {
   CombatCinematicEvent,
   CombatCinematicSide,
@@ -1916,6 +1919,70 @@ function drawActiveEvent(
   ctx.restore();
 }
 
+/** Момент события, на котором звучит попадание — ровно там, где его видно. */
+const BOSS_INTENT_COLORS: Record<BossIntentStatus, string> = {
+  imminent: "#ff4d6d",
+  reactive: "#ffb000",
+  armed: "#5bd6ff",
+  spent: "#7a8798",
+};
+
+/**
+ * Телеграф способности босса: игрок видит, что его ждёт, ДО того как жмёт
+ * «Атака», а не читает лог постфактум.
+ */
+function drawBossIntent(
+  ctx: CanvasRenderingContext2D,
+  intent: BossIntent,
+  width: number,
+  height: number,
+  t: Translate,
+  sceneScale: number,
+): void {
+  const color = BOSS_INTENT_COLORS[intent.status];
+  const label = t(`combat_cinematics.boss_intent.${intent.status}`);
+  const title = `${intent.name.toUpperCase()}`;
+  const x = width * 0.75;
+  const y = height * 0.2;
+  const pulse = intent.status === "imminent"
+    ? 0.62 + Math.abs(Math.sin(sceneElapsed / 420)) * 0.38
+    : 0.85;
+
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.font = `800 ${readableFontSize(10, sceneScale, 8)}px Orbitron, monospace`;
+  const labelWidth = ctx.measureText(label).width;
+  ctx.font = `700 ${readableFontSize(12, sceneScale, 9)}px Orbitron, monospace`;
+  const titleWidth = ctx.measureText(title).width;
+  const panelWidth = Math.min(width * 0.46, Math.max(labelWidth, titleWidth) + 30);
+
+  ctx.globalAlpha = pulse;
+  ctx.fillStyle = "rgba(5, 12, 22, 0.86)";
+  ctx.fillRect(x - panelWidth / 2, y - 20, panelWidth, 34);
+  ctx.strokeStyle = withAlpha(color, 0.8);
+  ctx.lineWidth = 1;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = intent.status === "imminent" ? 14 : 7;
+  ctx.strokeRect(x - panelWidth / 2 + 0.5, y - 19.5, panelWidth - 1, 33);
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle = color;
+  ctx.font = `800 ${readableFontSize(10, sceneScale, 8)}px Orbitron, monospace`;
+  ctx.fillText(label, x, y - 8);
+  ctx.fillStyle = "rgba(232, 244, 253, 0.94)";
+  ctx.font = `700 ${readableFontSize(12, sceneScale, 9)}px Orbitron, monospace`;
+  ctx.fillText(title, x, y + 8);
+  ctx.restore();
+}
+
+function getImpactProgress(event: CombatCinematicEvent): number {
+  if (event.kind !== "projectile") return 0.5;
+  if (event.outcome === "intercepted") return INTERCEPT_PROGRESS;
+  if (event.outcome === "miss") return COMBAT_CINEMATIC_MISS_LABEL_START_PROGRESS;
+  const contact = getCombatCinematicProjectileContactProgress(event);
+  return Math.min(contact.shield, contact.hull);
+}
+
 function getCameraShake(
   event: CombatCinematicEvent | undefined,
   progress: number,
@@ -1953,6 +2020,7 @@ function drawScene(
   t: Translate,
   sceneScale: number,
   selectedModuleIds: readonly number[],
+  bossIntent: BossIntent | null,
 ): void {
   sceneElapsed = elapsed;
   drawBackground(ctx, width, height, elapsed);
@@ -1968,6 +2036,10 @@ function drawScene(
   ctx.restore();
 
   drawVignette(ctx, width, height);
+
+  if (bossIntent && !event) {
+    drawBossIntent(ctx, bossIntent, width, height, t, sceneScale);
+  }
 
   for (const side of ["player", "enemy"] as const) {
     const color = side === "player" ? PLAYER_COLOR : ENEMY_COLOR;
@@ -2002,6 +2074,7 @@ function drawCanvasFrame(
   elapsed: number,
   t: Translate,
   selectedModuleIds: readonly number[],
+  bossIntent: BossIntent | null,
 ): void {
   const rect = stage.getBoundingClientRect();
   const width = Math.max(1, Math.floor(rect.width));
@@ -2022,6 +2095,7 @@ function drawCanvasFrame(
     t,
     scene.scale,
     selectedModuleIds,
+    bossIntent,
   );
   ctx.restore();
 }
@@ -2030,6 +2104,7 @@ export interface CombatCinematicStageProps {
   idleSnapshot: CombatCinematicSnapshot | null;
   timeline: CombatTurnTimeline | null;
   selectedModuleIds: readonly number[];
+  bossIntent: BossIntent | null;
   onPlaybackComplete: () => void;
 }
 
@@ -2037,6 +2112,7 @@ export function CombatCinematicStage({
   idleSnapshot,
   timeline,
   selectedModuleIds,
+  bossIntent,
   onPlaybackComplete,
 }: CombatCinematicStageProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -2044,6 +2120,7 @@ export function CombatCinematicStage({
   const tRef = useRef<Translate>(t);
   const onPlaybackCompleteRef = useRef(onPlaybackComplete);
   const selectedModuleIdsRef = useRef(selectedModuleIds);
+  const bossIntentRef = useRef(bossIntent);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -2057,6 +2134,10 @@ export function CombatCinematicStage({
   useEffect(() => {
     selectedModuleIdsRef.current = selectedModuleIds;
   }, [selectedModuleIds]);
+
+  useEffect(() => {
+    bossIntentRef.current = bossIntent;
+  }, [bossIntent]);
 
   useLayoutEffect(() => {
     if (timeline || !idleSnapshot || !canvas) return;
@@ -2075,6 +2156,7 @@ export function CombatCinematicStage({
         timestamp,
         tRef.current,
         selectedModuleIds,
+        bossIntentRef.current,
       );
     };
 
@@ -2094,7 +2176,7 @@ export function CombatCinematicStage({
     };
     loop(performance.now());
     return () => cancelAnimationFrame(frameId);
-  }, [canvas, idleSnapshot, selectedModuleIds, timeline]);
+  }, [bossIntent, canvas, idleSnapshot, selectedModuleIds, timeline]);
 
   useLayoutEffect(() => {
     if (!timeline || !canvas) return;
@@ -2108,6 +2190,27 @@ export function CombatCinematicStage({
     let visualSnapshot = timeline.initial;
     let finished = false;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // Звук идёт по кадрам, а не по резолву: выстрел на старте события, попадание
+    // в момент контакта. Каждый — ровно один раз за событие.
+    let launchedIndex = -1;
+    let impactedIndex = -1;
+    const playEventSounds = (
+      event: CombatCinematicEvent,
+      index: number,
+      progress: number,
+    ): void => {
+      if (index !== launchedIndex) {
+        launchedIndex = index;
+        const { launch } = getCombatCinematicEventSounds(event);
+        if (launch) playSound(launch);
+      }
+      if (index === impactedIndex || progress < getImpactProgress(event)) return;
+      impactedIndex = index;
+      const { impact, accent } = getCombatCinematicEventSounds(event);
+      if (impact) playSound(impact);
+      if (accent) playSound(accent);
+    };
 
     const render = (timestamp: number) => {
       let activeEvent = timeline.events[eventIndex];
@@ -2123,6 +2226,8 @@ export function CombatCinematicStage({
         progress = 0;
       }
 
+      if (activeEvent) playEventSounds(activeEvent, eventIndex, progress);
+
       const sceneSnapshot = activeEvent
         ? getCombatCinematicSnapshotAtProgress(visualSnapshot, activeEvent, progress)
         : visualSnapshot;
@@ -2137,6 +2242,7 @@ export function CombatCinematicStage({
         timestamp,
         tRef.current,
         selectedModuleIdsRef.current,
+        null,
       );
 
       if (!activeEvent) {

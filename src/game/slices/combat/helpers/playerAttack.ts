@@ -7,6 +7,7 @@ import type {
   WeaponType,
 } from "@/game/types";
 import { playSound, type SoundId } from "@/sounds";
+import { playCombatSound } from "./combatSound";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES, WEAPON_TYPES } from "@/game/constants";
 import { isModuleActive } from "@/game/modules/utils";
@@ -131,7 +132,7 @@ const WEAPON_SOUND_IDS: Record<WeaponType, SoundId> = {
 
 const playWeaponFires = (weapons: WeaponCounts): void => {
   (Object.keys(WEAPON_SOUND_IDS) as WeaponType[]).forEach((type) => {
-    if (weapons[type] > 0) playSound(WEAPON_SOUND_IDS[type]);
+    if (weapons[type] > 0) playCombatSound(WEAPON_SOUND_IDS[type]);
   });
 };
 
@@ -152,7 +153,7 @@ function recordEnemyMiss(
       missed: true,
     };
   });
-  playSound("combat_miss");
+  playCombatSound("combat_miss");
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -309,7 +310,7 @@ function resolveVictoryIfCoreDestroyed(
     get().addLog(getCoreDestroyedLog(core.isBiological), "combat");
   }
   timeline?.push({ kind: "vessel_destroyed", side: "enemy" });
-  playSound("combat_enemy_destroyed");
+  playCombatSound("combat_enemy_destroyed");
   handleVictory(currentState, set, get, updatedCombat, weaponBays);
   return true;
 }
@@ -799,9 +800,9 @@ function applyDamageToEnemy(
       }
     });
     get().addLog( i18nStore.t("game_logs.playerAttack_9", { totalShieldDamage: damage.totalShieldDamage }), "combat");
-    playSound("combat_shield_hit");
+    playCombatSound("combat_shield_hit");
     if (enemyShields > 0 && newShields === 0) {
-      playSound("combat_shield_break");
+      playCombatSound("combat_shield_break");
     }
   }
 
@@ -895,7 +896,7 @@ function applyDamageToEnemy(
       }),
       "combat",
     );
-    playSound("combat_hull_hit");
+    playCombatSound("combat_hull_hit");
   }
 
   if (damage.totalShieldDamage > 0 || finalModuleDamage > 0) {
@@ -1068,6 +1069,7 @@ export function executePlayerAttack(
     weaponCounts.quantum_torpedo +
     weaponCounts.ion_cannon;
   if (totalWeapons === 0) {
+    // Отказ действия — кинематики не будет, звук нужен сразу.
     playSound("combat_no_active_weapons");
     return;
   }
@@ -1177,7 +1179,7 @@ export function executePlayerAttack(
     crit.isCrit && damageMultiplier > 1,
   );
   if (crit.isCrit && damageMultiplier > 1) {
-    playSound("combat_critical");
+    playCombatSound("combat_critical");
   }
 
   // 7a. Boss take-damage passives (damage_absorb, damage_mirror)
@@ -1259,6 +1261,7 @@ export function executePlayerAttackWithBayTargets(
     (b) => b.weapons?.some((w) => w),
   );
   if (activeBays.length === 0) {
+    // Отказ действия — кинематики не будет, звук нужен сразу.
     playSound("combat_no_active_weapons");
     return null;
   }
@@ -1459,7 +1462,7 @@ export function executePlayerAttackWithBayTargets(
       );
     }
     if (bayCrit.isCrit && bayDamageMultiplier > 1) {
-      playSound("combat_critical");
+      playCombatSound("combat_critical");
     }
 
     // Boss take-damage effects

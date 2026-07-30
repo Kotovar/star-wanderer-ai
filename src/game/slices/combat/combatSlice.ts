@@ -3,6 +3,7 @@ import type { GameState, GameStore, Location } from "@/game/types";
 import type { CombatTurnTimeline } from "@/game/types/combatCinematics";
 import { playSound } from "@/sounds";
 import * as helpers from "./helpers";
+import { deferCombatSound } from "./helpers/combatSound";
 import { DEFENDER_CONFIGS } from "./helpers/combatSetup";
 import { startDefenderCombat } from "./helpers/startDefenderCombat";
 import { advanceCombatRound, applyCombatTimeCost } from "./helpers/combatTime";
@@ -70,7 +71,11 @@ export const createCombatSlice = (
     },
 
     attackEnemyWithBayTargets: (bayTargets) => {
-        return helpers.executePlayerAttackWithBayTargets(bayTargets, set, get);
+        // Звук отыграет кинематика по таймлайну — иначе весь залп звучит разом
+        // ещё до анимации.
+        return deferCombatSound(() =>
+            helpers.executePlayerAttackWithBayTargets(bayTargets, set, get),
+        );
     },
 
     executeAmbushAttack: () => {

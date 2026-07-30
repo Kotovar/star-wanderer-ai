@@ -73,7 +73,10 @@ function healAllBossModules(
     });
 }
 
-function getBossHealthPercent(modules: EnemyModule[]): number {
+/** Порог включения low_health-способностей. */
+export const BOSS_LOW_HEALTH_PERCENT = 30;
+
+export function getBossHealthPercent(modules: EnemyModule[]): number {
     const total = modules.reduce((s, m) => s + m.health, 0);
     const max = modules.reduce((s, m) => s + (m.maxHealth ?? 100), 0);
     return max > 0 ? (total / max) * 100 : 0;
@@ -522,8 +525,8 @@ function applySpecialAbility(
         }
     }
 
-    // ── low_health abilities (< 30%) ──────────────────────────────────────────
-    if (ability.trigger === "low_health" && healthPercent < 30) {
+    // ── low_health abilities ──────────────────────────────────────────
+    if (ability.trigger === "low_health" && healthPercent < BOSS_LOW_HEALTH_PERCENT) {
         switch (ability.effect) {
             case "emergency_repair": {
                 // One-shot: fires only once per combat to avoid infinite healing loop

@@ -11,6 +11,7 @@ import {
   getPresentedCombat,
 } from "./combatPresentationState";
 import { useCombatCinematicUiStore } from "./combatCinematicUiStore";
+import { getBossAbilityIntent } from "@/game/slices/combat/helpers/bossIntent";
 import type { CrewMember, CrewMemberCombatAssignment, Module, WeaponType } from "../types";
 import type { EnemyModule } from "@/game/types/enemy";
 import { useTranslation } from "@/lib/useTranslation";
@@ -303,6 +304,10 @@ export function CombatPanel() {
     () => createCombatCinematicSnapshot({ ship, currentCombat: presentedCombat }),
     [presentedCombat, ship],
   );
+  const bossIntent = useMemo(
+    () => getBossAbilityIntent(presentedCombat),
+    [presentedCombat],
+  );
   const selectedModuleIds = useMemo(
     () => [
       ...new Set(
@@ -407,6 +412,7 @@ export function CombatPanel() {
         idleSnapshot={idleSnapshot}
         timeline={cinematicTimeline}
         selectedModuleIds={selectedModuleIds}
+        bossIntent={bossIntent}
         onPlaybackComplete={handlePlaybackComplete}
       />
 
