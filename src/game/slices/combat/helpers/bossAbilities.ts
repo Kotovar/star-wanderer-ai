@@ -5,6 +5,7 @@ import { applyModuleDamage } from "./moduleDamage";
 import {
     appendCombatSnapshotDamageEvents,
     appendCombatSnapshotDeltaEvents,
+    appendCombatSnapshotSecondaryDamageEvents,
     createCombatCinematicSnapshot,
     type CombatTimelineCollector,
 } from "./combatTimeline";
@@ -277,15 +278,17 @@ export function applyBossTakeDamageEffects(
                         Math.floor(Math.random() * playerActiveMods.length)
                     ];
                 const targetHealthBefore = target.health;
+                const beforeReflection = timeline ? createCombatCinematicSnapshot(get()) : null;
                 const hullDamage = applyModuleDamage(get(), set, get, reflected, target);
-                timeline?.push({
+                const reflectionEvent = {
                     kind: "reflection",
                     attacker: "player",
                     defender: "enemy",
                     targetModuleId: target.id,
                     shieldDamage: 0,
                     hullDamage,
-                });
+                } as const;
+                timeline?.push(reflectionEvent);
                 const targetHealthAfter = get().ship.modules.find(
                     (module) => module.id === target.id,
                 )?.health;
@@ -299,6 +302,15 @@ export function applyBossTakeDamageEffects(
                         side: "player",
                         moduleId: target.id,
                     });
+                }
+                const afterReflection = timeline ? createCombatCinematicSnapshot(get()) : null;
+                if (timeline && beforeReflection && afterReflection) {
+                    appendCombatSnapshotSecondaryDamageEvents(
+                        timeline,
+                        beforeReflection,
+                        afterReflection,
+                        reflectionEvent,
+                    );
                 }
                 get().addLog( i18nStore.t("game_logs.bossAbilities_5", { reflected, target_name: target.name }),
                     "warning",

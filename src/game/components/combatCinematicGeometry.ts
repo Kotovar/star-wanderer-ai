@@ -16,6 +16,11 @@ export const COMBAT_CINEMATIC_MISS_LABEL_START_PROGRESS = 0.58;
 const BASE_SCENE_WIDTH = 640;
 const BASE_SCENE_HEIGHT = 360;
 const MIN_SCENE_SCALE = 0.36;
+const MAX_MODULE_ANCHOR_COLUMNS = 5;
+const MODULE_ANCHOR_HALF_WIDTH = 52;
+const MODULE_ANCHOR_HALF_HEIGHT = 36;
+const MODULE_ANCHOR_MAX_COLUMN_GAP = 38;
+const MODULE_ANCHOR_MAX_ROW_GAP = 46;
 const DIRECT_HIT_PROGRESS = 0.62;
 const SHIELD_BREACH_PROGRESS = 0.68;
 const HULL_AFTER_BREACH_PROGRESS = 0.76;
@@ -44,15 +49,41 @@ export function getCombatCinematicSceneMetrics(
   width: number,
   height: number,
 ): CombatCinematicSceneMetrics {
-  const scale = Math.min(
-    1,
-    Math.max(
-      MIN_SCENE_SCALE,
-      Math.min(width / BASE_SCENE_WIDTH, height / BASE_SCENE_HEIGHT),
-    ),
+  const scale = Math.max(
+    MIN_SCENE_SCALE,
+    Math.min(width / BASE_SCENE_WIDTH, height / BASE_SCENE_HEIGHT),
   );
 
   return { scale, width: width / scale, height: height / scale };
+}
+
+export function getCombatCinematicModuleAnchor(
+  moduleCount: number,
+  moduleIndex: number,
+  center: CombatCinematicPoint,
+  direction: -1 | 1,
+): CombatCinematicPoint {
+  const count = Math.max(1, Math.floor(moduleCount));
+  const index = Math.min(count - 1, Math.max(0, Math.floor(moduleIndex)));
+  const columns = count <= 3
+    ? count
+    : Math.min(MAX_MODULE_ANCHOR_COLUMNS, Math.ceil(Math.sqrt(count)));
+  const rows = Math.ceil(count / columns);
+  const row = Math.floor(index / columns);
+  const rowStart = row * columns;
+  const modulesInRow = Math.min(columns, count - rowStart);
+  const column = index - rowStart;
+  const columnGap = columns > 1
+    ? Math.min(MODULE_ANCHOR_MAX_COLUMN_GAP, (MODULE_ANCHOR_HALF_WIDTH * 2) / (columns - 1))
+    : 0;
+  const rowGap = rows > 1
+    ? Math.min(MODULE_ANCHOR_MAX_ROW_GAP, (MODULE_ANCHOR_HALF_HEIGHT * 2) / (rows - 1))
+    : 0;
+
+  return {
+    x: center.x + direction * (column - (modulesInRow - 1) / 2) * columnGap,
+    y: center.y + (row - (rows - 1) / 2) * rowGap,
+  };
 }
 
 export function getMissLabelPoint(

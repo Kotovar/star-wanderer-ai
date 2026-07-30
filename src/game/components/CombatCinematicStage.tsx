@@ -6,6 +6,7 @@ import { setupHiDPICanvas } from "@/game/components/canvas-utils";
 import {
   COMBAT_CINEMATIC_MISS_LABEL_START_PROGRESS,
   formatCombatCinematicAmount,
+  getCombatCinematicModuleAnchor,
   getCombatCinematicSceneMetrics,
   getMissLabelPoint,
   getProjectilePathPoint,
@@ -64,7 +65,7 @@ function shipCenter(side: CombatCinematicSide, width: number, height: number): P
   };
 }
 
-function shipDirection(side: CombatCinematicSide): number {
+function shipDirection(side: CombatCinematicSide): -1 | 1 {
   return side === "player" ? 1 : -1;
 }
 
@@ -77,14 +78,12 @@ function getModulePoint(
 ): Point {
   const center = shipCenter(side, width, height);
   const index = Math.max(0, vessel.modules.findIndex((currentModule) => currentModule.id === moduleId));
-  const column = index % 3;
-  const row = Math.floor(index / 3) % 2;
-  const direction = shipDirection(side);
-
-  return {
-    x: center.x + direction * (column - 1) * 38,
-    y: center.y + (row - 0.5) * 46,
-  };
+  return getCombatCinematicModuleAnchor(
+    vessel.modules.length,
+    index,
+    center,
+    shipDirection(side),
+  );
 }
 
 function getWeaponColor(weapon: CombatProjectileEvent["weapon"]): string {

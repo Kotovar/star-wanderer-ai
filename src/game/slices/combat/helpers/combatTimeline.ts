@@ -9,6 +9,7 @@ import type {
 } from "../../../types/combatCinematics";
 import type { GameState } from "../../../types/game";
 import type { WeaponCounts, WeaponType } from "../../../types/modules";
+import { applyCombatCinematicEvent } from "./combatCinematicPlayback.ts";
 
 const WEAPON_ORDER: WeaponType[] = [
   "laser",
@@ -27,6 +28,7 @@ export interface BuildVolleyEventsInput {
   projectiles: readonly CombatProjectileResolution[];
   isCrit: boolean;
   targetModuleId?: number;
+  targetHullBeforeVolley?: number;
 }
 
 export interface CombatTimelineCollector {
@@ -119,6 +121,18 @@ export function appendCombatSnapshotDamageEvents(
   }
 }
 
+/** Adds only state changes not already represented by a primary hit event. */
+export function appendCombatSnapshotSecondaryDamageEvents(
+  collector: CombatTimelineCollector,
+  before: CombatCinematicSnapshot,
+  after: CombatCinematicSnapshot,
+  primaryEvent: CombatCinematicEvent,
+): void {
+  const expectedAfterPrimary = applyCombatCinematicEvent(before, primaryEvent);
+  appendCombatSnapshotDamageEvents(collector, expectedAfterPrimary, after);
+  appendCombatSnapshotDeltaEvents(collector, expectedAfterPrimary, after, "repair");
+}
+
 export function createCombatCinematicSnapshot(
   state: Pick<GameState, "ship" | "currentCombat">,
 ): CombatCinematicSnapshot | null {
@@ -205,6 +219,22 @@ function updateOutcome(event: CombatProjectileEvent): void {
   event.outcome = getProjectileOutcome(event.shieldDamage, event.hullDamage);
 }
 
+function takeProjectilesThroughHullDestruction(
+  projectiles: readonly CombatProjectileResolution[],
+  targetHullBeforeVolley: number,
+): readonly CombatProjectileResolution[] {
+  requireNonNegativeNumber(targetHullBeforeVolley, "targetHullBeforeVolley");
+  if (targetHullBeforeVolley === 0) return [];
+
+  let remainingHull = targetHullBeforeVolley;
+  for (let index = 0; index < projectiles.length; index += 1) {
+    remainingHull -= projectiles[index].hullDamage;
+    if (remainingHull <= 0) return projectiles.slice(0, index + 1);
+  }
+
+  return projectiles;
+}
+
 export function createMissProjectileResolutions(
   weaponCounts: WeaponCounts,
 ): CombatProjectileResolution[] {
@@ -263,7 +293,14 @@ export function finalizeProjectileHullDamage(
 export function buildVolleyEvents(
   input: BuildVolleyEventsInput,
 ): CombatProjectileEvent[] {
-  return input.projectiles.map((projectile) => {
+  const projectiles = input.targetHullBeforeVolley === undefined
+    ? input.projectiles
+    : takeProjectilesThroughHullDestruction(
+      input.projectiles,
+      input.targetHullBeforeVolley,
+    );
+
+  return projectiles.map((projectile) => {
     requireNonNegativeNumber(projectile.shieldDamage, "projectile shieldDamage");
     requireNonNegativeNumber(projectile.hullDamage, "projectile hullDamage");
     const isNonDamageOutcome =

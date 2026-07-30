@@ -7,10 +7,12 @@ let finalizeProjectileHullDamage;
 let createCombatCinematicSnapshot;
 let appendCombatSnapshotDeltaEvents;
 let appendCombatSnapshotDamageEvents;
+let appendCombatSnapshotSecondaryDamageEvents;
 let applyCombatCinematicEvent;
 let getCombatCinematicSnapshotAtProgress;
 let getCombatCinematicEventDuration;
 let getCombatCinematicSceneMetrics;
+let getCombatCinematicModuleAnchor;
 let formatCombatCinematicAmount;
 let getMissLabelPoint;
 let getProjectilePathPoint;
@@ -173,9 +175,19 @@ assert.match(
   "phase shield records absorption instead of a zero-damage shield hit",
 );
 assert.match(
+  enemyCounterAttackSource,
+  /appendCombatSnapshotSecondaryDamageEvents\(/,
+  "secondary module damage from a normal enemy hit stays in the cinematic timeline",
+);
+assert.match(
   bossAbilitiesSource,
-  /timeline\?\.push\(\{\s*kind: "reflection"/,
+  /kind: "reflection"[\s\S]*timeline\?\.push\(reflectionEvent\)/,
   "a boss damage mirror emits a reflection for the cinematic",
+);
+assert.match(
+  bossAbilitiesSource,
+  /appendCombatSnapshotSecondaryDamageEvents\(/,
+  "secondary module damage from a boss reflection stays in the cinematic timeline",
 );
 assert.match(
   playerAttackSource,
@@ -186,6 +198,11 @@ assert.match(
   playerAttackSource,
   /timeline\?\.push\(\{\s*kind: "vessel_destroyed",\s*side: "enemy",?\s*\}\);/,
   "victory by a destroyed core records the whole enemy vessel as destroyed",
+);
+assert.match(
+  playerAttackSource,
+  /targetHullBeforeVolley:\s*destroysEnemyVessel\s*\?\s*targetHealthBefore\s*:\s*undefined/,
+  "the real lethal target health limits the terminal volley's visible projectiles",
 );
 assert.match(
   cinematicUiStoreSource,
@@ -371,6 +388,7 @@ try {
     createCombatCinematicSnapshot,
     appendCombatSnapshotDeltaEvents,
     appendCombatSnapshotDamageEvents,
+    appendCombatSnapshotSecondaryDamageEvents,
   } = await import(
     "../src/game/slices/combat/helpers/combatTimeline.ts"
   ));
@@ -417,6 +435,7 @@ try {
 try {
   ({
     getCombatCinematicSceneMetrics,
+    getCombatCinematicModuleAnchor,
     formatCombatCinematicAmount,
     getMissLabelPoint,
     getProjectilePathPoint,
@@ -588,6 +607,41 @@ const snapshot = {
     { scale: 0.475, width: 640, height: 480 },
     "a narrow 304 px scene uses the full desktop composition at a fitting scale",
   );
+}
+
+{
+  assert.deepEqual(
+    getCombatCinematicSceneMetrics(1280, 720),
+    { scale: 2, width: 640, height: 360 },
+    "a 16:9 desktop scene scales the combat composition instead of leaving the vessels undersized",
+  );
+}
+
+{
+  assert.equal(
+    typeof getCombatCinematicModuleAnchor,
+    "function",
+    "combat geometry exposes one shared anchor layout for every module effect",
+  );
+  const center = { x: 160, y: 180 };
+
+  for (const moduleCount of [7, 22]) {
+    const anchors = Array.from({ length: moduleCount }, (_, moduleIndex) =>
+      getCombatCinematicModuleAnchor(moduleCount, moduleIndex, center, 1),
+    );
+
+    assert.equal(
+      new Set(anchors.map(({ x, y }) => `${x}:${y}`)).size,
+      moduleCount,
+      `all ${moduleCount} module anchors remain distinct`,
+    );
+    assert.ok(
+      anchors.every(
+        ({ x, y }) => Math.abs(x - center.x) <= 52 && Math.abs(y - center.y) <= 36,
+      ),
+      `all ${moduleCount} module anchors stay inside the shared ship silhouette`,
+    );
+  }
 }
 
 {
@@ -763,6 +817,67 @@ const snapshot = {
 
 {
   assert.equal(
+    typeof appendCombatSnapshotSecondaryDamageEvents,
+    "function",
+    "secondary damage can be reconciled after the projectile already shown on canvas",
+  );
+  const secondarySnapshot = {
+    player: {
+      ...snapshot.player,
+      modules: [
+        { id: 1, health: 60, maxHealth: 60 },
+        { id: 2, health: 40, maxHealth: 40 },
+      ],
+    },
+    enemy: snapshot.enemy,
+  };
+  const primary = {
+    kind: "projectile",
+    from: "enemy",
+    to: "player",
+    weapon: "enemy",
+    outcome: "hull",
+    shieldDamage: 0,
+    hullDamage: 10,
+    isCrit: false,
+    targetModuleId: 1,
+  };
+  const collector = createCombatTimelineCollector(secondarySnapshot);
+
+  appendCombatSnapshotSecondaryDamageEvents(
+    collector,
+    secondarySnapshot,
+    {
+      ...secondarySnapshot,
+      player: {
+        ...secondarySnapshot.player,
+        modules: [
+          { id: 1, health: 50, maxHealth: 60 },
+          { id: 2, health: 0, maxHealth: 40 },
+        ],
+      },
+    },
+    primary,
+  );
+
+  assert.deepEqual(
+    collector.finish().events,
+    [
+      {
+        kind: "damage",
+        side: "player",
+        shieldDamage: 0,
+        hullDamage: 40,
+        moduleId: 2,
+      },
+      { kind: "module_destroyed", side: "player", moduleId: 2 },
+    ],
+    "a secondary explosion animates only the adjacent module loss and never repeats the primary projectile damage",
+  );
+}
+
+{
+  assert.equal(
     typeof getCombatCinematicSnapshotAtProgress,
     "function",
     "playback exposes the current visual snapshot for an in-flight event",
@@ -917,6 +1032,27 @@ function projectileEvents(projectiles, isCrit = false) {
       ["quantum_torpedo", "hull", 0, 55],
     ],
     "a shield-only shot never inherits hull damage from a quantum torpedo",
+  );
+}
+
+{
+  const events = buildVolleyEvents({
+    from: "player",
+    to: "enemy",
+    targetModuleId: 9,
+    targetHullBeforeVolley: 5,
+    isCrit: false,
+    projectiles: [
+      { weapon: "laser", outcome: "shield", shieldDamage: 12, hullDamage: 0 },
+      { weapon: "quantum_torpedo", outcome: "hull", shieldDamage: 0, hullDamage: 8 },
+      { weapon: "missile", outcome: "hull", shieldDamage: 0, hullDamage: 8 },
+    ],
+  });
+
+  assert.deepEqual(
+    events.map((event) => event.weapon),
+    ["laser", "quantum_torpedo"],
+    "a terminal volley keeps the shield break and killing shot, but not weapons fired after the vessel is visibly destroyed",
   );
 }
 

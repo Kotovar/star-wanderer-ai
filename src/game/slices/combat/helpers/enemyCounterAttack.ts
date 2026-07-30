@@ -1,5 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore, Module } from "@/game/types";
+import type { CombatProjectileEvent } from "@/game/types/combatCinematics";
 import { playSound } from "@/sounds";
 import { getArtifactEffectValue, findActiveArtifact } from "@/game/artifacts";
 import { getPilotInCockpit } from "@/game/crew";
@@ -13,6 +14,7 @@ import { getBossAttackModifiers, processBossRegeneration } from "./bossAbilities
 import {
     appendCombatSnapshotDamageEvents,
     appendCombatSnapshotDeltaEvents,
+    appendCombatSnapshotSecondaryDamageEvents,
     createCombatCinematicSnapshot,
     getProjectileOutcome,
     type CombatTimelineCollector,
@@ -60,11 +62,12 @@ function pushEnemyProjectile(
     shieldDamage: number,
     hullDamage: number,
     isCrit = false,
-    outcome = shieldDamage === 0 && hullDamage === 0
+    outcome: CombatProjectileEvent["outcome"] = shieldDamage === 0 && hullDamage === 0
         ? "blocked"
         : getProjectileOutcome(shieldDamage, hullDamage),
-): void {
-    timeline?.push({
+): CombatProjectileEvent | null {
+    if (!timeline) return null;
+    const event: CombatProjectileEvent = {
         kind: "projectile",
         from: "enemy",
         to: "player",
@@ -74,7 +77,9 @@ function pushEnemyProjectile(
         shieldDamage,
         hullDamage,
         isCrit,
-    });
+    };
+    timeline.push(event);
+    return event;
 }
 
 /**
@@ -248,6 +253,7 @@ export function performEnemyAttack(
     const ignoreDefense = bossModifiers?.ignoreDefense ?? false;
     const targetHealthBefore = get().ship.modules.find((module) => module.id === tgt.id)
         ?.health ?? tgt.health;
+    const beforeDirectHit = timeline ? createCombatCinematicSnapshot(get()) : null;
     if (state.ship.shields > 0) {
         applyDamageWithShields(
             state,
@@ -264,12 +270,13 @@ export function performEnemyAttack(
     }
 
     const hit = get().currentCombat?.lastPlayerHit;
+    let projectileEvent: CombatProjectileEvent | null = null;
     if (hit?.moduleId === tgt.id) {
         const outcome =
             shieldPierce > 0 && hit.shieldDamage > 0 && hit.hullDamage > 0
                 ? "piercing"
                 : undefined;
-        pushEnemyProjectile(
+        projectileEvent = pushEnemyProjectile(
             timeline,
             tgt,
             hit.shieldDamage,
@@ -282,6 +289,15 @@ export function performEnemyAttack(
         ?.health;
     if (targetHealthBefore > 0 && targetHealthAfter !== undefined && targetHealthAfter <= 0) {
         timeline?.push({ kind: "module_destroyed", side: "player", moduleId: tgt.id });
+    }
+    const afterDirectHit = timeline ? createCombatCinematicSnapshot(get()) : null;
+    if (timeline && beforeDirectHit && afterDirectHit && projectileEvent) {
+        appendCombatSnapshotSecondaryDamageEvents(
+            timeline,
+            beforeDirectHit,
+            afterDirectHit,
+            projectileEvent,
+        );
     }
 
     const beforeBossEffects = timeline ? createCombatCinematicSnapshot(get()) : null;

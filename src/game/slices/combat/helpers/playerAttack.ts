@@ -88,7 +88,7 @@ const getCoreDestroyedLog = (isBiological?: boolean): string =>
 
 /** Finds the enemy's core/reactor module — its destruction = instant victory */
 const findEnemyCore = (
-  modules: { type: string; health: number; isBiological?: boolean }[],
+  modules: { id: number; type: string; health: number; isBiological?: boolean }[],
 ) =>
   modules.find((m) => m.type === "reactor" || m.type.includes("core"));
 
@@ -1343,24 +1343,29 @@ export function executePlayerAttackWithBayTargets(
       bayWeapons,
       bayCrit.isCrit && bayDamageMultiplier > 1,
     );
+    const targetHealthAfter = get().currentCombat?.enemy.modules.find(
+      (module) => module.id === tgtMod.id,
+    )?.health;
+    const targetDestroyed =
+      targetHealthBefore > 0 &&
+      targetHealthAfter !== undefined &&
+      targetHealthAfter <= 0;
+    const destroysEnemyVessel = targetDestroyed && (
+      findEnemyCore(combatNow.enemy.modules)?.id === tgtMod.id ||
+      get().currentCombat?.enemy.modules.every((module) => module.health <= 0) === true
+    );
     timeline.push(...buildVolleyEvents({
       from: "player",
       to: "enemy",
       targetModuleId: tgtMod.id,
+      targetHullBeforeVolley: destroysEnemyVessel ? targetHealthBefore : undefined,
       projectiles: finalizeProjectileHullDamage(
         damage.projectiles,
         finalModuleDamage,
       ),
       isCrit: bayCrit.isCrit && bayDamageMultiplier > 1,
     }));
-    const targetHealthAfter = get().currentCombat?.enemy.modules.find(
-      (module) => module.id === tgtMod.id,
-    )?.health;
-    if (
-      targetHealthBefore > 0 &&
-      targetHealthAfter !== undefined &&
-      targetHealthAfter <= 0
-    ) {
+    if (targetDestroyed) {
       timeline.push({ kind: "module_destroyed", side: "enemy", moduleId: tgtMod.id });
     }
     if (bayCrit.isCrit && bayDamageMultiplier > 1) {
