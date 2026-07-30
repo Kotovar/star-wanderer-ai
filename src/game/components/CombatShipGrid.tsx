@@ -51,15 +51,19 @@ export function CombatShipGrid({
   const crew = useGameStore((s) => s.crew);
   const currentCombat = useGameStore((s) => s.currentCombat);
   const lastPlayerHit = useGameStore((s) => s.currentCombat?.lastPlayerHit);
+  const fastCombat = useGameStore((s) => s.settings.fastCombat);
   const { currentLanguage } = useTranslation();
 
   const [flashType, setFlashType] = useState<"shield" | "hull" | null>(null);
   const [hitMarker, setHitMarker] = useState<HitMarker | null>(null);
   const [shieldHitMarker, setShieldHitMarker] =
     useState<ShieldHitMarker | null>(null);
+  const visibleFlashType = fastCombat ? flashType : null;
+  const visibleHitMarker = fastCombat ? hitMarker : null;
+  const visibleShieldHitMarker = fastCombat ? shieldHitMarker : null;
 
   useEffect(() => {
-    if (!lastPlayerHit) return;
+    if (!fastCombat || !lastPlayerHit) return;
     if (lastPlayerHit.missed) {
       return;
     }
@@ -70,14 +74,14 @@ export function CombatShipGrid({
       cancelAnimationFrame(raf);
       clearTimeout(endTimer);
     };
-  }, [lastPlayerHit]);
+  }, [fastCombat, lastPlayerHit]);
 
   useEffect(() => {
     if (
+      !fastCombat ||
       !lastPlayerHit ||
       (lastPlayerHit.hullDamage <= 0 && !lastPlayerHit.missed)
-    )
-      return;
+    ) return;
     const raf = requestAnimationFrame(() =>
       setHitMarker({
         eventId: lastPlayerHit.eventId,
@@ -92,10 +96,10 @@ export function CombatShipGrid({
       cancelAnimationFrame(raf);
       clearTimeout(endTimer);
     };
-  }, [lastPlayerHit]);
+  }, [fastCombat, lastPlayerHit]);
 
   useEffect(() => {
-    if (!lastPlayerHit || lastPlayerHit.shieldDamage <= 0) return;
+    if (!fastCombat || !lastPlayerHit || lastPlayerHit.shieldDamage <= 0) return;
     const raf = requestAnimationFrame(() =>
       setShieldHitMarker({
         eventId: lastPlayerHit.eventId,
@@ -108,7 +112,7 @@ export function CombatShipGrid({
       cancelAnimationFrame(raf);
       clearTimeout(endTimer);
     };
-  }, [lastPlayerHit]);
+  }, [fastCombat, lastPlayerHit]);
 
   const isCombatMode = !!currentCombat;
   const hasShields = ship.shields > 0;
@@ -152,29 +156,29 @@ export function CombatShipGrid({
       className="relative w-full max-w-92"
       style={{ boxShadow: shieldGlow, transition: "box-shadow 0.4s ease" }}
     >
-      {flashType && (
+      {visibleFlashType && (
         <div
           className="absolute inset-0 pointer-events-none z-10"
           style={{
             backgroundColor:
-              flashType === "shield"
+              visibleFlashType === "shield"
                 ? "rgba(30,120,255,0.45)"
                 : "rgba(255,0,64,0.45)",
             animation: "combatHitFlash 0.5s ease-out forwards",
           }}
         />
       )}
-      {shieldHitMarker !== null && (
+      {visibleShieldHitMarker !== null && (
         <div
-          key={shieldHitMarker.eventId}
+          key={visibleShieldHitMarker.eventId}
           className={`combat-damage-number pointer-events-none absolute left-1/2 top-2 z-20 -translate-x-1/2 font-['Orbitron'] text-[#66aaff] ${
-            shieldHitMarker.isCrit ? "text-xl font-black" : "text-sm font-bold"
+            visibleShieldHitMarker.isCrit ? "text-xl font-black" : "text-sm font-bold"
           }`}
           style={{
             textShadow: "0 0 8px #0080ff, 0 0 14px #0080ff",
           }}
         >
-          -{shieldHitMarker.amount}
+          -{visibleShieldHitMarker.amount}
         </div>
       )}
       <div
@@ -212,7 +216,7 @@ export function CombatShipGrid({
                 currentLanguage={currentLanguage}
                 offsetX={cropEmptySpace ? startX : 0}
                 offsetY={cropEmptySpace ? startY : 0}
-                hitMarker={hitMarker?.moduleId === mod.id ? hitMarker : null}
+                hitMarker={visibleHitMarker?.moduleId === mod.id ? visibleHitMarker : null}
               />
             </g>
           ))}

@@ -230,6 +230,7 @@ const baseState: GameState = {
   activeDive: null,
   settings: {
     animationsEnabled: true,
+    fastCombat: false,
     soundEnabled: true,
     master: 0.8,
     music: 0.45,

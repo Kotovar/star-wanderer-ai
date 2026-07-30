@@ -2,6 +2,11 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore } from "@/game/types";
 import type { EnemyModule } from "@/game/types/enemy";
 import { applyModuleDamage } from "./moduleDamage";
+import {
+    appendCombatSnapshotDeltaEvents,
+    createCombatCinematicSnapshot,
+    type CombatTimelineCollector,
+} from "./combatTimeline";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -564,6 +569,7 @@ export function processBossRegeneration(
     state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
+    timeline?: CombatTimelineCollector,
 ): void {
     const combat = state.currentCombat;
     if (!combat) return;
@@ -574,7 +580,12 @@ export function processBossRegeneration(
     if (boss.regenRate && boss.regenRate > 0) {
         const aliveCount = boss.modules.filter((m) => m.health > 0).length;
         if (aliveCount > 0) {
+            const beforeRegen = timeline ? createCombatCinematicSnapshot(get()) : null;
             healAllBossModules(set, boss.regenRate);
+            const afterRegen = timeline ? createCombatCinematicSnapshot(get()) : null;
+            if (timeline && beforeRegen && afterRegen) {
+                appendCombatSnapshotDeltaEvents(timeline, beforeRegen, afterRegen, "regen");
+            }
             get().addLog( i18nStore.t("game_logs.bossAbilities_19", { regenRate: boss.regenRate }),
                 "warning",
             );
@@ -582,8 +593,35 @@ export function processBossRegeneration(
     }
 
     // Per-module passives (regen specialEffect, damage_aura)
+    const beforePassives = timeline ? createCombatCinematicSnapshot(get()) : null;
     applyModulePassives(state, set, get);
+    const afterPassives = timeline ? createCombatCinematicSnapshot(get()) : null;
+    if (timeline && beforePassives && afterPassives) {
+        appendCombatSnapshotDeltaEvents(timeline, beforePassives, afterPassives, "regen");
+    }
 
     // Active special ability
+    const ability = get().currentCombat?.enemy.specialAbility;
+    const beforeAbility = timeline ? createCombatCinematicSnapshot(get()) : null;
     applySpecialAbility(state, set, get);
+    const afterAbility = timeline ? createCombatCinematicSnapshot(get()) : null;
+    if (
+        timeline &&
+        ability &&
+        beforeAbility &&
+        afterAbility &&
+        JSON.stringify(beforeAbility) !== JSON.stringify(afterAbility)
+    ) {
+        timeline.push({
+            kind: "boss_ability",
+            effect: ability.effect,
+            name: ability.name,
+        });
+        appendCombatSnapshotDeltaEvents(
+            timeline,
+            beforeAbility,
+            afterAbility,
+            ability.effect === "lifesteal" ? "lifesteal" : "regen",
+        );
+    }
 }

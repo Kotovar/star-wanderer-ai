@@ -1,5 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore, Location } from "@/game/types";
+import type { CombatTurnTimeline } from "@/game/types/combatCinematics";
 import { playSound } from "@/sounds";
 import * as helpers from "./helpers";
 import { DEFENDER_CONFIGS } from "./helpers/combatSetup";
@@ -18,7 +19,7 @@ export interface CombatSlice {
     startBossCombat: (bossLocation: Location) => void;
     selectEnemyModule: (moduleId: number) => void;
     attackEnemy: () => void;
-    attackEnemyWithBayTargets: (bayTargets: Record<number, number | null>) => void;
+    attackEnemyWithBayTargets: (bayTargets: Record<number, number | null>) => CombatTurnTimeline | null;
     executeAmbushAttack: () => void;
     retreat: () => void;
     attackFriendlyShip: () => void;
@@ -69,7 +70,7 @@ export const createCombatSlice = (
     },
 
     attackEnemyWithBayTargets: (bayTargets) => {
-        helpers.executePlayerAttackWithBayTargets(bayTargets, set, get);
+        return helpers.executePlayerAttackWithBayTargets(bayTargets, set, get);
     },
 
     executeAmbushAttack: () => {

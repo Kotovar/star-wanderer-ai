@@ -345,6 +345,17 @@ const migrations: Record<number, Migration> = {
       })),
     };
   },
+  16: (raw) => {
+    const state = raw as Partial<GameState>;
+    return {
+      ...state,
+      stateVersion: 17,
+      settings: {
+        ...(state.settings ?? {}),
+        fastCombat: state.settings?.fastCombat ?? false,
+      },
+    };
+  },
 };
 
 /**

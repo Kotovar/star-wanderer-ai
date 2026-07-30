@@ -16,8 +16,10 @@ const SLOT_IDS: SaveSlotId[] = ["auto", "manual1", "manual2", "manual3", "manual
 
 interface StartMenuProps {
   animationsEnabled: boolean;
+  fastCombat: boolean;
   soundEnabled: boolean;
   onAnimationsChange: (enabled: boolean) => void;
+  onFastCombatChange: (enabled: boolean) => void;
   onSoundChange: (enabled: boolean) => void;
   onNewGame: () => void;
   onLoad: (slotId: SaveSlotId) => void;
@@ -25,8 +27,10 @@ interface StartMenuProps {
 
 export function StartMenu({
   animationsEnabled,
+  fastCombat,
   soundEnabled,
   onAnimationsChange,
+  onFastCombatChange,
   onSoundChange,
   onNewGame,
   onLoad,
@@ -211,6 +215,36 @@ export function StartMenu({
                   <span
                     className={`absolute top-1 h-4 w-4 transition-all ${
                       animationsEnabled
+                        ? "left-7 bg-[#00ff41]"
+                        : "left-1 bg-[#556]"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between gap-4 border border-[#1c3944] bg-[rgba(0,212,255,0.025)] p-4">
+                <div>
+                  <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-wide text-[#00d4ff]">
+                    {t("start_menu.fast_combat")}
+                  </div>
+                  <p className="mt-1 text-xs leading-relaxed text-[#71818a]">
+                    {t("start_menu.fast_combat_desc")}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={fastCombat}
+                  onClick={() => onFastCombatChange(!fastCombat)}
+                  className={`relative h-7 w-13 shrink-0 cursor-pointer border transition-colors ${
+                    fastCombat
+                      ? "border-[#00ff41] bg-[rgba(0,255,65,0.18)]"
+                      : "border-[#445] bg-[#111820]"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 h-4 w-4 transition-all ${
+                      fastCombat
                         ? "left-7 bg-[#00ff41]"
                         : "left-1 bg-[#556]"
                     }`}

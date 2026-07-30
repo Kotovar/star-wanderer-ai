@@ -10,6 +10,10 @@ import { getTotalEvasion } from "@/game/slices/ship/helpers/getTotalEvasion";
 import { shouldPhaseShieldAbsorb } from "@/game/research/specialAbilities";
 import { applyModuleDamage } from "./moduleDamage";
 import { getBossAttackModifiers, processBossRegeneration } from "./bossAbilities";
+import {
+    getProjectileOutcome,
+    type CombatTimelineCollector,
+} from "./combatTimeline";
 import * as enemyAttack from "./enemyAttack";
 import {
     DEFAULT_MODULE_PRIORITY,
@@ -47,6 +51,27 @@ const recordMiss = (set: (fn: (s: GameState) => void) => void, tgt: Module) => {
     playSound("combat_miss");
 };
 
+function pushEnemyProjectile(
+    timeline: CombatTimelineCollector | undefined,
+    target: Module,
+    shieldDamage: number,
+    hullDamage: number,
+    isCrit = false,
+    outcome = getProjectileOutcome(shieldDamage, hullDamage),
+): void {
+    timeline?.push({
+        kind: "projectile",
+        from: "enemy",
+        to: "player",
+        weapon: "enemy",
+        targetModuleId: target.id,
+        outcome,
+        shieldDamage,
+        hullDamage,
+        isCrit,
+    });
+}
+
 /**
  * Handles enemy counter-attack after player attack (used mid-round, following
  * the player's own attack — regenerates enemy shields first, per round rules).
@@ -55,8 +80,9 @@ export function handleEnemyCounterAttack(
     state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
+    timeline?: CombatTimelineCollector,
 ) {
-    performEnemyAttack(state, set, get, { regenShieldsFirst: true });
+    performEnemyAttack(state, set, get, { regenShieldsFirst: true }, timeline);
 }
 
 /**
@@ -76,13 +102,22 @@ export function performEnemyAttack(
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
     options: { regenShieldsFirst: boolean },
+    timeline?: CombatTimelineCollector,
 ) {
     const combat = state.currentCombat;
     if (!combat) return;
 
     if (options.regenShieldsFirst) {
         // Skipped if player broke shields to 0 this round (see enemyShieldsJustBroken flag).
-        processEnemyShieldRegen(set, get);
+        const restored = processEnemyShieldRegen(set, get);
+        if (restored > 0) {
+            timeline?.push({
+                kind: "shield_restore",
+                side: "enemy",
+                amount: restored,
+                source: "regen",
+            });
+        }
     }
 
     const eDmg = enemyAttack.calculateEnemyDamage(combat.enemy.modules);
@@ -136,6 +171,7 @@ export function performEnemyAttack(
             "info",
         );
         recordMiss(set, tgt);
+        pushEnemyProjectile(timeline, tgt, 0, 0, false, "miss");
         if (pilot) get().gainExp(pilot, PILOT_EVASION_COMBAT_EXP);
         return;
     }
@@ -152,6 +188,7 @@ export function performEnemyAttack(
         if (Math.random() < sabotageChance) {
             get().addLog( i18nStore.t("game_logs.enemyCounterAttack_3"), "info");
             recordMiss(set, tgt);
+            pushEnemyProjectile(timeline, tgt, 0, 0, false, "miss");
             return;
         }
     }
@@ -166,7 +203,24 @@ export function performEnemyAttack(
         Math.random() < getArtifactEffectValue(mirrorShield, state)
     ) {
         playSound("combat_miss");
-        reflectAttack(state, set, get, eDmg, combat);
+        const reflection = reflectAttack(state, set, get, eDmg, combat);
+        if (reflection) {
+            timeline?.push({
+                kind: "reflection",
+                attacker: "enemy",
+                defender: "player",
+                targetModuleId: reflection.targetModuleId,
+                shieldDamage: reflection.shieldDamage,
+                hullDamage: reflection.hullDamage,
+            });
+            if (reflection.destroyed) {
+                timeline?.push({
+                    kind: "module_destroyed",
+                    side: "enemy",
+                    moduleId: reflection.targetModuleId,
+                });
+            }
+        }
         return;
     }
 
@@ -180,12 +234,15 @@ export function performEnemyAttack(
     ) {
         get().addLog( i18nStore.t("game_logs.enemyCounterAttack_4"), "info");
         recordMiss(set, tgt);
+        pushEnemyProjectile(timeline, tgt, 0, 0, false, "shield");
         return;
     }
 
     // Apply damage
     const shieldPierce = bossModifiers?.shieldPiercePercent ?? 0;
     const ignoreDefense = bossModifiers?.ignoreDefense ?? false;
+    const targetHealthBefore = get().ship.modules.find((module) => module.id === tgt.id)
+        ?.health ?? tgt.health;
     if (state.ship.shields > 0) {
         applyDamageWithShields(
             state,
@@ -201,8 +258,24 @@ export function performEnemyAttack(
         applyDamageNoShields(state, set, get, finalDamage, tgt, ignoreDefense, isCrit);
     }
 
+    const hit = get().currentCombat?.lastPlayerHit;
+    if (hit?.moduleId === tgt.id) {
+        pushEnemyProjectile(
+            timeline,
+            tgt,
+            hit.shieldDamage,
+            hit.hullDamage,
+            hit.isCrit ?? false,
+        );
+    }
+    const targetHealthAfter = get().ship.modules.find((module) => module.id === tgt.id)
+        ?.health;
+    if (targetHealthBefore > 0 && targetHealthAfter !== undefined && targetHealthAfter <= 0) {
+        timeline?.push({ kind: "module_destroyed", side: "player", moduleId: tgt.id });
+    }
+
     applyBossAttackSideEffects(bossModifiers, finalDamage, combat, set, get);
-    cleanupAfterEnemyAttack(state, set, get);
+    cleanupAfterEnemyAttack(state, set, get, timeline);
 }
 
 /** Побочные эффекты атаки босса: счётчик атак, пробитие щита, лечение от урона, пропуск хода игрока. */
@@ -268,6 +341,7 @@ function cleanupAfterEnemyAttack(
     state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
+    timeline?: CombatTimelineCollector,
 ) {
     // Remove dead crew
     const deadCrew = get().crew.filter((c) => c.health <= 0);
@@ -279,7 +353,7 @@ function cleanupAfterEnemyAttack(
     }
 
     // Boss regeneration
-    processBossRegeneration(state, set, get);
+    processBossRegeneration(state, set, get, timeline);
 
     get().checkGameOver();
 
@@ -334,13 +408,20 @@ function reflectAttack(
     get: () => GameStore,
     eDmg: number,
     combat: NonNullable<GameState["currentCombat"]>,
-) {
+): {
+    targetModuleId: number;
+    shieldDamage: number;
+    hullDamage: number;
+    destroyed: boolean;
+} | null {
     const aliveModules = combat.enemy.modules.filter((m) => m.health > 0);
-    if (aliveModules.length === 0) return;
+    if (aliveModules.length === 0) return null;
 
     const reflectedTarget =
         aliveModules[Math.floor(Math.random() * aliveModules.length)];
+    const targetWasAlive = reflectedTarget.health > 0;
     let remainingDamage = eDmg;
+    let shieldDamage = 0;
 
     if (combat.enemy.shields > 0) {
         const shieldAbsorb = Math.min(combat.enemy.shields, remainingDamage);
@@ -348,6 +429,7 @@ function reflectAttack(
             if (!s.currentCombat) return;
             s.currentCombat.enemy.shields -= shieldAbsorb;
         });
+        shieldDamage = shieldAbsorb;
         remainingDamage -= shieldAbsorb;
         get().addLog( i18nStore.t("game_logs.enemyCounterAttack_9", { shieldAbsorb }), "info");
     }
@@ -364,6 +446,16 @@ function reflectAttack(
             "info",
         );
     }
+
+    const targetAfterReflection = get().currentCombat?.enemy.modules.find(
+        (module) => module.id === reflectedTarget.id,
+    );
+    return {
+        targetModuleId: reflectedTarget.id,
+        shieldDamage,
+        hullDamage: remainingDamage,
+        destroyed: targetWasAlive && targetAfterReflection?.health === 0,
+    };
 }
 
 /**
@@ -448,9 +540,9 @@ function applyDamageWithShields(
 function processEnemyShieldRegen(
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
-) {
+): number {
     const combat = get().currentCombat;
-    if (!combat) return;
+    if (!combat) return 0;
 
     // If player just broke shields this turn — skip regen, clear flag
     if (combat.enemyShieldsJustBroken) {
@@ -458,14 +550,14 @@ function processEnemyShieldRegen(
             if (!s.currentCombat) return;
             s.currentCombat.enemyShieldsJustBroken = false;
         });
-        return;
+        return 0;
     }
 
     const regenRate = combat.enemy.shieldRegenRate;
-    if (!regenRate || regenRate <= 0) return;
+    if (!regenRate || regenRate <= 0) return 0;
     const current = combat.enemy.shields;
     const max = combat.enemy.maxShields;
-    if (current >= max) return;
+    if (current >= max) return 0;
 
     const restored = Math.min(regenRate, max - current);
     set((s) => {
@@ -475,6 +567,7 @@ function processEnemyShieldRegen(
     get().addLog( i18nStore.t("game_logs.enemyCounterAttack_13", { restored, restored2: current + restored, max }),
         "info",
     );
+    return restored;
 }
 
 /**

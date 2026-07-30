@@ -17,6 +17,13 @@ import { processTravel } from "@/game/slices/travel/helpers";
 import { processMarketTick } from "@/game/stations";
 import { checkContractExpiry } from "@/game/slices/contracts/helpers/checkContractExpiry";
 import { advanceCombatRound } from "@/game/slices/combat/helpers/combatTime";
+import { executeEnemyAttack } from "@/game/slices/combat/helpers/executeEnemyAttack";
+import {
+    appendCombatSnapshotDeltaEvents,
+    createCombatCinematicSnapshot,
+    createCombatTimelineCollector,
+} from "@/game/slices/combat/helpers/combatTimeline";
+import type { CombatTurnTimeline } from "@/game/types/combatCinematics";
 import {
     GLOBAL_CRISES,
 } from "@/game/constants/globalCrises";
@@ -28,7 +35,7 @@ import { getCrisisResponseDefinition } from "@/game/constants/crisisResponses";
  */
 export interface GameLoopSlice {
     nextTurn: () => void;
-    skipTurn: () => void;
+    skipTurn: () => CombatTurnTimeline | null;
     resolveCrisis: (response: CrisisResponse) => void;
     resolveRandomEvent: (choice: RandomEventChoiceId) => void;
 }
@@ -149,21 +156,36 @@ export const createGameLoopSlice = (
     skipTurn: () => {
         if (get().pendingRandomEvent) {
             get().addLog(i18nStore.t("random_events.logs.decision_required"), "warning");
-            return;
+            return null;
         }
 
-        if (get().currentCombat) {
+        const state = get();
+        const initialSnapshot = createCombatCinematicSnapshot(state);
+        if (initialSnapshot) {
+            const timeline = createCombatTimelineCollector(initialSnapshot);
+            timeline.push({ kind: "turn_skipped", side: "player" });
             get().addLog( i18nStore.t("game_logs.gameLoopSlice_1"), "combat");
-            get().processEnemyAttack();
+            executeEnemyAttack(
+                state,
+                set as unknown as (fn: (state: GameState) => void) => void,
+                get,
+                timeline,
+            );
+            const beforeRound = createCombatCinematicSnapshot(get());
             advanceCombatRound(
                 set as unknown as (fn: (state: GameState) => void) => void,
                 get,
             );
-            return;
+            const afterRound = createCombatCinematicSnapshot(get());
+            if (beforeRound && afterRound) {
+                appendCombatSnapshotDeltaEvents(timeline, beforeRound, afterRound, "repair");
+            }
+            return timeline.finish();
         }
 
         get().addLog( i18nStore.t("game_logs.gameLoopSlice_2"), "info");
         get().nextTurn();
+        return null;
     },
 
     resolveRandomEvent: (choice) =>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CombatShipVisual } from "./CombatShipVisual";
 import { CombatShipGrid } from "./CombatShipGrid";
 import { CrewMemberCard } from "./CrewMemberCard";
+import { useCombatCinematicUiStore } from "./combatCinematicUiStore";
 import type { CrewMember, CrewMemberCombatAssignment, Module, WeaponType } from "../types";
 import type { EnemyModule } from "@/game/types/enemy";
 import { getTotalEvasion } from "@/game/slices";
@@ -352,6 +353,7 @@ export function CombatPanel() {
   const getTotalDamage = useGameStore((s) => s.getTotalDamage);
   const selectEnemyModule = useGameStore((s) => s.selectEnemyModule);
   const attackEnemyWithBayTargets = useGameStore((s) => s.attackEnemyWithBayTargets);
+  const fastCombat = useGameStore((s) => s.settings.fastCombat);
   const retreat = useGameStore((s) => s.retreat);
   const moveCrewMember = useGameStore((s) => s.moveCrewMember);
   const assignCombatTask = useGameStore((s) => s.assignCombatTask);
@@ -371,7 +373,7 @@ export function CombatPanel() {
   const [zoomLevel, setZoomLevel] = useState<number>(1);
 
   useEffect(() => {
-    if (!lastEnemyHit) return;
+    if (!fastCombat || !lastEnemyHit) return;
     const type = lastEnemyHit.shieldDamage > 0 ? "shield" : "hull";
     const raf = requestAnimationFrame(() => setEnemyFlash(type));
     const endTimer = setTimeout(() => setEnemyFlash(null), 600);
@@ -379,7 +381,7 @@ export function CombatPanel() {
       cancelAnimationFrame(raf);
       clearTimeout(endTimer);
     };
-  }, [lastEnemyHit]);
+  }, [fastCombat, lastEnemyHit]);
 
   // Suppress unused warning — lastPlayerHit is consumed by CombatShipGrid directly from store
   void lastPlayerHit;
@@ -438,7 +440,13 @@ export function CombatPanel() {
   };
 
   const handleAttack = () => {
-    attackEnemyWithBayTargets(bayTargets);
+    const timeline = attackEnemyWithBayTargets(bayTargets);
+    if (timeline && !fastCombat) useCombatCinematicUiStore.getState().showCombatCinematic(timeline);
+  };
+
+  const handleSkipCombatTurn = () => {
+    const timeline = useGameStore.getState().skipTurn();
+    if (timeline && !fastCombat) useCombatCinematicUiStore.getState().showCombatCinematic(timeline);
   };
 
   // The targeted module for the active bay (for canvas highlight)
@@ -616,9 +624,9 @@ export function CombatPanel() {
             onModuleClick={handleEnemyModuleClick}
             title=""
             shields={currentCombat.enemy.shields}
-            hitFlash={enemyFlash}
+            hitFlash={fastCombat ? enemyFlash : null}
             selectedModuleId={activeBayTargetId ?? undefined}
-            damageHit={lastEnemyHit ?? null}
+            damageHit={fastCombat ? lastEnemyHit ?? null : null}
           />
           {activeBayId !== null && (
             <div className="text-[10px] text-ring mt-2 text-center animate-pulse">
@@ -638,7 +646,7 @@ export function CombatPanel() {
           {t("combat.attack")}
         </Button>
         <Button
-          onClick={() => useGameStore.getState().skipTurn()}
+          onClick={handleSkipCombatTurn}
           className="cursor-pointer bg-transparent border-2 border-accent text-accent hover:bg-accent hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
         >
           {t("combat.skip_turn")}

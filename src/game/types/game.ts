@@ -1,6 +1,7 @@
 import type { Artifact } from "./artifacts";
 import type { CargoItem } from "./cargo";
 import type { CombatState } from "./combat";
+import type { CombatTurnTimeline } from "./combatCinematics";
 import type { BattleResult, Contract, StormResult } from "./contracts";
 import type {
   CrewMember,
@@ -147,6 +148,7 @@ export interface GameState {
   activeDive: DiveState | null; // Active gas giant dive
   settings: {
     animationsEnabled: boolean; // Sector map animations toggle
+    fastCombat: boolean; // Skip the combat cinematic overlay
     soundEnabled: boolean;
     master: number;
     music: number;
@@ -203,6 +205,7 @@ export interface GameActions {
   refuel: (amount: number, price: number) => void;
   gainExp: (crewMember: CrewMember | undefined, amount: number) => void;
   setAnimationsEnabled: (enabled: boolean) => void;
+  setFastCombat: (enabled: boolean) => void;
   setSoundEnabled: (enabled: boolean) => void;
   setAudioVolume: (category: "master" | "music" | "sfx" | "ui", value: number) => void;
   setGalaxyZoom: (zoom: number) => void;
@@ -213,7 +216,7 @@ export interface GameActions {
 
 export interface GameActionsClick {
   nextTurn: () => void;
-  skipTurn: () => void;
+  skipTurn: () => CombatTurnTimeline | null;
   resolveCrisis: (response: CrisisResponse) => void;
   resolveRandomEvent: (choice: RandomEventChoiceId) => void;
   selectSector: (sectorId: number, route?: "direct" | "detour") => void;
@@ -242,7 +245,7 @@ export interface GameCombat {
   startBossCombat: (bossLocation: Location) => void;
   selectEnemyModule: (moduleId: number) => void;
   attackEnemy: () => void;
-  attackEnemyWithBayTargets: (bayTargets: Record<number, number | null>) => void;
+  attackEnemyWithBayTargets: (bayTargets: Record<number, number | null>) => CombatTurnTimeline | null;
   executeAmbushAttack: () => void; // Execute enemy attack for ambush (first strike)
   processEnemyAttack: () => void; // Process enemy counter-attack during combat
   retreat: () => void;

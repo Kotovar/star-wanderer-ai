@@ -48,6 +48,8 @@
         "language_desc": "The language changes immediately and is saved for future launches.",
         "animations": "Interface animations",
         "animations_desc": "Star twinkle, radar sweep and atmospheric effects. Disable them on slower devices or to save battery.",
+        "fast_combat": "Fast combat",
+        "fast_combat_desc": "Do not show the combat animation after attacking or skipping a turn.",
         "sound": "Sound",
         "sound_desc": "Interface, event, travel and combat sounds.",
         "audio_levels": "Audio levels",
@@ -1790,6 +1792,16 @@
         "armor": "Armor:",
         "armor_units": "pts",
         "auto_attack_active": "🎯 Auto-attack on selected target"
+    },
+    "combat_cinematics": {
+        "title": "COMBAT CINEMATIC",
+        "description": "An animated summary of the current combat turn.",
+        "canvas_label": "Combat animation between vessels",
+        "live": "LIVE",
+        "complete": "COMPLETE",
+        "continue": "Continue",
+        "skip": "Skip",
+        "turn_skipped": "TURN SKIPPED"
     },
     "distress_signal": {
         "title": "▸ DISTRESS SIGNAL",

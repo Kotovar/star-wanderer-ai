@@ -1,5 +1,6 @@
 import type { GameState, GameStore } from "@/game/types";
 import { performEnemyAttack } from "./enemyCounterAttack";
+import type { CombatTimelineCollector } from "./combatTimeline";
 
 /**
  * Обрабатывает атаку врага по кораблю игрока — используется вне обычного
@@ -11,6 +12,7 @@ export function executeEnemyAttack(
     state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
+    timeline?: CombatTimelineCollector,
 ) {
-    performEnemyAttack(state, set, get, { regenShieldsFirst: false });
+    performEnemyAttack(state, set, get, { regenShieldsFirst: false }, timeline);
 }

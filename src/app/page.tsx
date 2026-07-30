@@ -16,6 +16,7 @@ import { ContractsList } from "@/game/components/ContractsList";
 import { BlueprintsTab } from "@/game/components/BlueprintsTab";
 import { CampaignProgressPanel } from "@/game/components/CampaignProgressPanel";
 import { EventDisplay } from "@/game/components/EventPanels";
+import { useCombatCinematicUiStore } from "@/game/components/combatCinematicUiStore";
 import { GameEndPanel } from "@/game/components/panels";
 import { useGameStore } from "@/game/store";
 import { useShallow } from "zustand/react/shallow";
@@ -39,6 +40,10 @@ const WelcomeTutorial = dynamic(
 );
 const NewGameSetupModal = dynamic(
   () => import("@/game/components/NewGameSetupModal").then((m) => m.NewGameSetupModal),
+  { ssr: false },
+);
+const CombatCinematicModal = dynamic(
+  () => import("@/game/components/CombatCinematicModal").then((m) => m.CombatCinematicModal),
   { ssr: false },
 );
 import { TitleScreen } from "@/game/components/TitleScreen";
@@ -176,6 +181,7 @@ export default function Home() {
   );
   const moduleMovedThisTurn = useGameStore((s) => s.ship.moduleMovedThisTurn);
   const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
+  const fastCombat = useGameStore((s) => s.settings.fastCombat);
   const soundEnabled = useGameStore((s) => s.settings.soundEnabled);
   const audioVolumes = useGameStore(
     useShallow((s) => ({
@@ -187,8 +193,13 @@ export default function Home() {
   );
   const loadFromSlot = useGameStore((s) => s.loadFromSlot);
   const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
+  const setFastCombat = useGameStore((s) => s.setFastCombat);
   const setSoundEnabled = useGameStore((s) => s.setSoundEnabled);
   const gameMode = useGameStore((s) => s.gameMode);
+  const cinematicTimeline = useCombatCinematicUiStore((s) => s.timeline);
+  const dismissCombatCinematic = useCombatCinematicUiStore(
+    (s) => s.dismissCombatCinematic,
+  );
   const log = useGameStore((s) => s.log);
   const hasUrgentContract = useGameStore((s) =>
     s.activeContracts.some((contract) => {
@@ -366,11 +377,13 @@ export default function Home() {
           {showSetupModal && (
             <StartMenu
               animationsEnabled={animationsEnabled}
+              fastCombat={fastCombat}
               soundEnabled={soundEnabled}
               onAnimationsChange={(enabled) => {
                 setSetupReady(true);
                 setAnimationsEnabled(enabled);
               }}
+              onFastCombatChange={setFastCombat}
               onSoundChange={(enabled) => {
                 void unlockAudio();
                 setSoundEnabled(enabled);
@@ -386,6 +399,7 @@ export default function Home() {
                 void unlockAudio();
                 loadFromSlot(slotId);
                 setAnimationsEnabled(animationsEnabled);
+                setFastCombat(fastCombat);
                 setSoundEnabled(soundEnabled);
                 setPhase("game");
               }}
@@ -517,6 +531,13 @@ export default function Home() {
           <RaceDiscoveryModal />
           <TechnologyDiscoveryModal />
           <SurvivorModal />
+          {cinematicTimeline && (
+            <CombatCinematicModal
+              timeline={cinematicTimeline}
+              open
+              onDismiss={dismissCombatCinematic}
+            />
+          )}
           <WelcomeTutorial
             forceShow={showTutorial}
             onDismissed={() => setShowTutorial(false)}

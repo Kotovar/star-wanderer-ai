@@ -36,6 +36,14 @@ import {
   checkBossResurrect,
 } from "./bossAbilities";
 import { advanceCombatRound } from "./combatTime";
+import {
+  appendCombatSnapshotDeltaEvents,
+  buildVolleyEvents,
+  createCombatCinematicSnapshot,
+  createCombatTimelineCollector,
+  type CombatTimelineCollector,
+} from "./combatTimeline";
+import type { CombatTurnTimeline } from "../../../types/combatCinematics";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { getTechPerkValue } from "@/game/constants/techTree";
 import type { CrewMember } from "@/game/types";
@@ -96,6 +104,7 @@ interface DamageResult {
   totalModuleDamage: number;
   remainingShields: number;
   missedShots: WeaponCounts;
+  missileInterceptedCount: number;
   armorPenetration: number;
   plasmaHitCount: number;
   droneHitCount: number;
@@ -258,6 +267,7 @@ function resolveVictoryIfCoreDestroyed(
   set: (fn: (s: GameState) => void) => void,
   get: () => GameStore,
   weaponBays: GameState["ship"]["modules"],
+  timeline?: CombatTimelineCollector,
 ): boolean {
   const updatedCombat = get().currentCombat;
   if (!updatedCombat) return false;
@@ -268,7 +278,25 @@ function resolveVictoryIfCoreDestroyed(
   if (!isVictory) return false;
 
   // Boss resurrect_chance: one-time chance to come back from defeat
-  if (updatedCombat.enemy.isBoss && checkBossResurrect(set, get)) return false;
+  const resurrectionSnapshot = timeline ? createCombatCinematicSnapshot(get()) : null;
+  if (updatedCombat.enemy.isBoss && checkBossResurrect(set, get)) {
+    const revivedSnapshot = timeline ? createCombatCinematicSnapshot(get()) : null;
+    const ability = updatedCombat.enemy.specialAbility;
+    if (timeline && resurrectionSnapshot && revivedSnapshot && ability) {
+      timeline.push({
+        kind: "boss_ability",
+        effect: ability.effect,
+        name: ability.name,
+      });
+      appendCombatSnapshotDeltaEvents(
+        timeline,
+        resurrectionSnapshot,
+        revivedSnapshot,
+        "regen",
+      );
+    }
+    return false;
+  }
 
   if (core && core.health <= 0) {
     get().addLog(getCoreDestroyedLog(core.isBiological), "combat");
@@ -286,14 +314,20 @@ function finishPlayerTurn(
   currentState: GameStore,
   set: (fn: (s: GameState) => void) => void,
   get: () => GameStore,
+  timeline?: CombatTimelineCollector,
 ): void {
-  handleEnemyCounterAttack(currentState, set, get);
+  handleEnemyCounterAttack(currentState, set, get, timeline);
   set((s) => {
     if (!s.currentCombat) return;
     s.currentCombat.enemy.selectedModule = null;
   });
   get().updateShipStats();
+  const beforeRound = timeline ? createCombatCinematicSnapshot(get()) : null;
   advanceCombatRound(set, get);
+  const afterRound = timeline ? createCombatCinematicSnapshot(get()) : null;
+  if (timeline && beforeRound && afterRound) {
+    appendCombatSnapshotDeltaEvents(timeline, beforeRound, afterRound, "repair");
+  }
   applyAlienPresencePenalty(set, get);
 }
 
@@ -527,6 +561,7 @@ function calculateAllDamage(
   let armorPenetration = 0;
   let plasmaHitCount = 0;
   let droneHitCount = 0;
+  let missileInterceptedCount = 0;
   const logs: string[] = [];
   const missedShots: WeaponCounts = {
     kinetic: 0,
@@ -596,6 +631,7 @@ function calculateAllDamage(
     remainingShields = result.remainingShields;
     logs.push(...result.logs);
     missedShots.missile = result.missedShots;
+    missileInterceptedCount = result.missileInterceptedCount;
     armorPenetration = Math.max(armorPenetration, WEAPON_TYPES.missile.armorPenetration ?? 0);
   }
 
@@ -712,6 +748,7 @@ function calculateAllDamage(
     totalModuleDamage,
     remainingShields,
     missedShots,
+    missileInterceptedCount,
     armorPenetration,
     plasmaHitCount,
     droneHitCount,
@@ -1107,12 +1144,19 @@ export function executePlayerAttackWithBayTargets(
   bayTargets: Record<number, number | null>,
   set: (fn: (s: GameState) => void) => void,
   get: () => GameStore,
-): void {
+): CombatTurnTimeline | null {
   const currentState = get();
-  if (!currentState.currentCombat) return;
+  const combatAtStart = currentState.currentCombat;
+  if (!combatAtStart) return null;
+  const initialSnapshot = createCombatCinematicSnapshot(currentState);
+  if (!initialSnapshot) return null;
+  const timeline = createCombatTimelineCollector(initialSnapshot);
 
   // 0. Skip turn check
-  if (consumeSkippedTurn(set, get)) return;
+  if (consumeSkippedTurn(set, get)) {
+    timeline.push({ kind: "turn_skipped", side: "player" });
+    return timeline.finish();
+  }
 
   // 1. Crew & weapon setup
   const { weaponBays, crewInWeaponBays } = getWeaponBayCrew(currentState);
@@ -1122,18 +1166,42 @@ export function executePlayerAttackWithBayTargets(
   );
   if (activeBays.length === 0) {
     playSound("combat_no_active_weapons");
-    return;
+    return null;
   }
 
   // 2. Boss evasion check (entire salvo)
   if (checkBossEvasionBoost(currentState, get)) {
+    const ability = combatAtStart.enemy.specialAbility;
+    if (ability?.effect === "evasion_boost") {
+      timeline.push({
+        kind: "boss_ability",
+        effect: ability.effect,
+        name: ability.name,
+      });
+    }
     activeBays.forEach((bay) => playWeaponFires(countWeaponsInBay(bay)));
-    const fallbackTarget = currentState.currentCombat.enemy.modules.find(
+    const fallbackTarget = combatAtStart.enemy.modules.find(
       (m) => m.health > 0,
     );
-    if (fallbackTarget) recordEnemyMiss(set, fallbackTarget);
-    handleEnemyCounterAttack(currentState, set, get);
-    return;
+    if (fallbackTarget) {
+      for (const bay of activeBays) {
+        const bayWeapons = countWeaponsInBay(bay);
+        timeline.push(...buildVolleyEvents({
+          from: "player",
+          to: "enemy",
+          targetModuleId: fallbackTarget.id,
+          weaponCounts: bayWeapons,
+          missedShots: bayWeapons,
+          missileInterceptedCount: 0,
+          shieldDamage: 0,
+          hullDamage: 0,
+          isCrit: false,
+        }));
+      }
+      recordEnemyMiss(set, fallbackTarget);
+    }
+    handleEnemyCounterAttack(currentState, set, get, timeline);
+    return timeline.finish();
   }
 
   // 3 & 4. Crit and accuracy are resolved per bay (see bay loop below)
@@ -1158,8 +1226,8 @@ export function executePlayerAttackWithBayTargets(
   const rawBaseTotal = (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "quantum_torpedo", "ion_cannon"] as const)
     .reduce((s, t) => s + totalDamageData[t], 0);
   const fullMultiplier = rawBaseTotal > 0 ? finalDamagePerWeapon / rawBaseTotal : 1;
-  let remainingShields = currentState.currentCombat.enemy.shields;
-  const droneStacks = currentState.currentCombat.droneStacks ?? 0;
+  let remainingShields = combatAtStart.enemy.shields;
+  const droneStacks = combatAtStart.droneStacks ?? 0;
   let anyHit = false;
 
   for (const bay of activeBays) {
@@ -1187,6 +1255,17 @@ export function executePlayerAttackWithBayTargets(
     const aliveBossMods = aliveModules;
     if (checkBossModuleDodge(aliveBossMods, get)) {
       get().addLog( i18nStore.t("game_logs.playerAttack_16", { tgtMod_name: tgtMod.name }), "warning");
+      timeline.push(...buildVolleyEvents({
+        from: "player",
+        to: "enemy",
+        targetModuleId: tgtMod.id,
+        weaponCounts: bayWeapons,
+        missedShots: bayWeapons,
+        missileInterceptedCount: 0,
+        shieldDamage: 0,
+        hullDamage: 0,
+        isCrit: false,
+      }));
       recordEnemyMiss(set, tgtMod);
       continue;
     }
@@ -1227,6 +1306,17 @@ export function executePlayerAttackWithBayTargets(
     );
 
     remainingShields = damage.remainingShields;
+    timeline.push(...buildVolleyEvents({
+      from: "player",
+      to: "enemy",
+      targetModuleId: tgtMod.id,
+      weaponCounts: bayWeapons,
+      missedShots: damage.missedShots,
+      missileInterceptedCount: damage.missileInterceptedCount,
+      shieldDamage: damage.totalShieldDamage,
+      hullDamage: damage.totalModuleDamage,
+      isCrit: bayCrit.isCrit && bayDamageMultiplier > 1,
+    }));
 
     if (damage.totalShieldDamage === 0 && damage.totalModuleDamage === 0) {
       damage.logs.forEach((log) => get().addLog(log, "combat"));
@@ -1236,6 +1326,7 @@ export function executePlayerAttackWithBayTargets(
 
     anyHit = true;
 
+    const targetHealthBefore = tgtMod.health;
     applyDamageToEnemy(
       set,
       get,
@@ -1246,6 +1337,16 @@ export function executePlayerAttackWithBayTargets(
       bayWeapons,
       bayCrit.isCrit && bayDamageMultiplier > 1,
     );
+    const targetHealthAfter = get().currentCombat?.enemy.modules.find(
+      (module) => module.id === tgtMod.id,
+    )?.health;
+    if (
+      targetHealthBefore > 0 &&
+      targetHealthAfter !== undefined &&
+      targetHealthAfter <= 0
+    ) {
+      timeline.push({ kind: "module_destroyed", side: "enemy", moduleId: tgtMod.id });
+    }
     if (bayCrit.isCrit && bayDamageMultiplier > 1) {
       playSound("combat_critical");
     }
@@ -1274,8 +1375,8 @@ export function executePlayerAttackWithBayTargets(
     }
 
     // Victory check after each bay
-    if (resolveVictoryIfCoreDestroyed(currentState, set, get, weaponBays)) {
-      return;
+    if (resolveVictoryIfCoreDestroyed(currentState, set, get, weaponBays, timeline)) {
+      return timeline.finish();
     }
   }
 
@@ -1283,5 +1384,6 @@ export function executePlayerAttackWithBayTargets(
     get().addLog( i18nStore.t("game_logs.playerAttack_18"), "warning");
   }
 
-  finishPlayerTurn(currentState, set, get);
+  finishPlayerTurn(currentState, set, get, timeline);
+  return timeline.finish();
 }

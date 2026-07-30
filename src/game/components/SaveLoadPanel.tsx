@@ -190,9 +190,11 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
   const loadFromSlot = useGameStore((s) => s.loadFromSlot);
   const resetProgress = useGameStore((s) => s.resetProgress);
   const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
+  const fastCombat = useGameStore((s) => s.settings.fastCombat);
   const soundEnabled = useGameStore((s) => s.settings.soundEnabled);
   const audioVolumes = useGameStore((s) => s.settings);
   const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
+  const setFastCombat = useGameStore((s) => s.setFastCombat);
   const setSoundEnabled = useGameStore((s) => s.setSoundEnabled);
   const setAudioVolume = useGameStore((s) => s.setAudioVolume);
   const { t, currentLanguage, changeLanguage } = useTranslation();
@@ -338,6 +340,22 @@ export function SettingsPanel({ onClose, onGuide, onAchievements, onTutorial, on
                     className={`relative h-7 w-13 shrink-0 border ${animationsEnabled ? "border-[#00ff41] bg-[rgba(0,255,65,0.18)]" : "border-[#445] bg-[#111820]"}`}
                   >
                     <span className={`absolute top-1 h-4 w-4 ${animationsEnabled ? "left-7 bg-[#00ff41]" : "left-1 bg-[#556]"}`} />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 border border-[#1a3040] p-3">
+                  <div>
+                    <span className="text-xs text-[#00d4ff]">{t("start_menu.fast_combat")}</span>
+                    <p className="mt-1 text-[10px] text-[#71818a]">{t("start_menu.fast_combat_desc")}</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={fastCombat}
+                    onClick={() => setFastCombat(!fastCombat)}
+                    className={`relative h-7 w-13 shrink-0 border ${fastCombat ? "border-[#00ff41] bg-[rgba(0,255,65,0.18)]" : "border-[#445] bg-[#111820]"}`}
+                  >
+                    <span className={`absolute top-1 h-4 w-4 ${fastCombat ? "left-7 bg-[#00ff41]" : "left-1 bg-[#556]"}`} />
                   </button>
                 </div>
 
