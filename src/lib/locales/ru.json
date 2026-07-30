@@ -4792,6 +4792,7 @@
         "playerAttack_12": "Все выстрелы промахнулись!",
         "playerAttack_13": "🧬 {{c_name}} симбиоз: +{{healAmount}} HP",
         "playerAttack_15": "[Отсек {{bay_id}}] Цель не выбрана — случайный выстрел: {{tgtMod_name}}",
+        "playerAttack_retarget": "🎯 Цель уничтожена — залп перенаправлен на \"{{module_name}}\": -{{damage}}",
         "playerAttack_16": "⚡ Модуль \"{{tgtMod_name}}\" уклонился!",
         "playerAttack_18": "Все выстрелы промахнулись!",
         "playerDamage_1": "🔬 Анализ уязвимостей: +{{scientistLevel}}% урон по цели",

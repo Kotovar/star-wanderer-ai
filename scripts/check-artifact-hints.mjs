@@ -9,7 +9,10 @@ const root = path.resolve(path.dirname(scriptPath), "..");
 const jiti = require("jiti")(scriptPath, {
   alias: { "@": path.join(root, "src") },
 });
-const { getArchiveHintLocations } = jiti("../src/game/artifacts/utils.ts");
+const { getArchiveHintLocations, getArtifactEffectValue } = jiti(
+  "../src/game/artifacts/utils.ts",
+);
+const { ANCIENT_ARTIFACTS } = jiti("../src/game/constants/artifacts.ts");
 const { loadWithMigrations } = jiti("../src/game/saves/migrations.ts");
 
 const sectors = [
@@ -68,6 +71,36 @@ assert.deepEqual(
   migrated?.artifacts.map((artifact) => artifact.hintedAt?.sectorName),
   ["Бета-1", "Гамма-2", "Дельта-3"],
   "миграция должна разнести уже сохранённые архивные сигналы",
+);
+
+const stateWithBoosts = (artifactId) => ({
+  crew: [],
+  research: { researchedTechs: [] },
+  activeEffects: [
+    {
+      targetArtifactId: artifactId,
+      effects: [{ type: "artifact_boost", value: 1 }],
+    },
+  ],
+});
+
+const flagArtifact = ANCIENT_ARTIFACTS.find((a) => a.id === "ai_neural_link");
+assert.equal(
+  flagArtifact.canBoost,
+  false,
+  "ИИ Нейросеть остаётся флаговым артефактом без усиления",
+);
+assert.equal(
+  getArtifactEffectValue(flagArtifact, stateWithBoosts(flagArtifact.id)),
+  flagArtifact.effect.value,
+  "флаговый артефакт не раздувает своё value и не рисует фальшивое «1 → 2»",
+);
+
+const boostableArtifact = ANCIENT_ARTIFACTS.find((a) => a.id === "artifact_compass");
+assert.equal(
+  getArtifactEffectValue(boostableArtifact, stateWithBoosts(boostableArtifact.id)),
+  boostableArtifact.effect.value * 2,
+  "обычный числовой артефакт по-прежнему усиливается ритуалом",
 );
 
 console.log("Artifact hint distribution checks passed");

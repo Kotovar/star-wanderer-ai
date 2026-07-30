@@ -246,6 +246,11 @@ export const getArtifactEffectValue = (
 
     const baseValue = artifact.effect.value ?? 0;
 
+    // canBoost: false — это флаговые артефакты (вкл/выкл), их value никто не
+    // читает как силу эффекта. Ритуал их и так не берёт, а общий множитель
+    // раздувал 1 до 2 и рисовал в панели фальшивое «Фактический эффект: 1 → 2».
+    if (artifact.canBoost === false) return baseValue;
+
     // Бусты накапливаются в один множитель и округляются ОДИН раз —
     // последовательные Math.floor съедали малые бонусы на целых значениях
     let multiplier = getArtifactBonusMultiplier(state);

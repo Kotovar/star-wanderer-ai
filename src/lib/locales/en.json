@@ -4792,6 +4792,7 @@
         "playerAttack_12": "All shots missed!",
         "playerAttack_13": "🧬 {{c_name}} symbiosis: +{{healAmount}} HP",
         "playerAttack_15": "[Bay {{bay_id}}] No target selected — random shot: {{tgtMod_name}}",
+        "playerAttack_retarget": "🎯 Target destroyed — volley redirected to \"{{module_name}}\": -{{damage}}",
         "playerAttack_16": "⚡ Module \"{{tgtMod_name}}\" dodged!",
         "playerAttack_18": "All shots missed!",
         "playerDamage_1": "🔬 Vulnerability analysis: +{{scientistLevel}}% damage to target",

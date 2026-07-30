@@ -219,20 +219,43 @@ function updateOutcome(event: CombatProjectileEvent): void {
   event.outcome = getProjectileOutcome(event.shieldDamage, event.hullDamage);
 }
 
-function takeProjectilesThroughHullDestruction(
+export interface VolleyHullSplit {
+  /** Shots up to and including the one that empties the target's hull. */
+  onTarget: readonly CombatProjectileResolution[];
+  /** Shots left over once the target is already a wreck. */
+  overkill: readonly CombatProjectileResolution[];
+}
+
+/**
+ * Splits a volley where its target dies. Everything after that point was aimed
+ * at a module that no longer exists, so the caller re-aims it.
+ */
+export function splitVolleyAtHullDestruction(
   projectiles: readonly CombatProjectileResolution[],
   targetHullBeforeVolley: number,
-): readonly CombatProjectileResolution[] {
+): VolleyHullSplit {
   requireNonNegativeNumber(targetHullBeforeVolley, "targetHullBeforeVolley");
-  if (targetHullBeforeVolley === 0) return [];
+  if (targetHullBeforeVolley === 0) return { onTarget: [], overkill: projectiles };
 
   let remainingHull = targetHullBeforeVolley;
   for (let index = 0; index < projectiles.length; index += 1) {
     remainingHull -= projectiles[index].hullDamage;
-    if (remainingHull <= 0) return projectiles.slice(0, index + 1);
+    if (remainingHull <= 0) {
+      return {
+        onTarget: projectiles.slice(0, index + 1),
+        overkill: projectiles.slice(index + 1),
+      };
+    }
   }
 
-  return projectiles;
+  return { onTarget: projectiles, overkill: [] };
+}
+
+function takeProjectilesThroughHullDestruction(
+  projectiles: readonly CombatProjectileResolution[],
+  targetHullBeforeVolley: number,
+): readonly CombatProjectileResolution[] {
+  return splitVolleyAtHullDestruction(projectiles, targetHullBeforeVolley).onTarget;
 }
 
 export function createMissProjectileResolutions(

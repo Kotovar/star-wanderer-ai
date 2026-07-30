@@ -4,6 +4,7 @@ import { readFile, readdir } from "node:fs/promises";
 let createCombatTimelineCollector;
 let buildVolleyEvents;
 let finalizeProjectileHullDamage;
+let splitVolleyAtHullDestruction;
 let createCombatCinematicSnapshot;
 let appendCombatSnapshotDeltaEvents;
 let appendCombatSnapshotDamageEvents;
@@ -156,6 +157,16 @@ assert.match(
 );
 assert.match(
   stageSource,
+  /drawInterceptor\(ctx, targetCenter, meetPoint, interceptFlight\);/,
+  "an interception is a visible counter-missile launched by the defender",
+);
+assert.match(
+  stageSource,
+  /if \(interceptFlight >= 1\) return meetPoint;/,
+  "the incoming shot stops where the counter-missile kills it instead of flying on",
+);
+assert.match(
+  stageSource,
   /combat_cinematics\.reflected/,
   "a reflected attack has its own readable outcome",
 );
@@ -168,6 +179,31 @@ assert.match(
   stageSource,
   /combat_cinematics\.blocked/,
   "a zero-damage armor block has a readable outcome",
+);
+assert.match(
+  stageSource,
+  /const shake = getCameraShake\(event, progress, elapsed\);/,
+  "camera shake reacts to every impactful event, not only to a critical hit",
+);
+assert.match(
+  stageSource,
+  /if \(event\.kind === "vessel_destroyed"\) return Math\.sin\([\s\S]*?\) \* 10 \* \(1 - progress\)/,
+  "a destroyed vessel shakes the camera harder than a normal hit",
+);
+assert.match(
+  stageSource,
+  /if \(event\.outcome === "miss" \|\| event\.outcome === "intercepted"\) return 0;/,
+  "an attack that never lands leaves the camera still",
+);
+assert.match(
+  stageSource,
+  /frameId = requestAnimationFrame\(loop\);/,
+  "the idle scene keeps animating while the player picks an action",
+);
+assert.match(
+  stageSource,
+  /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)\.matches\) \{\s*renderIdle\(\);/,
+  "reduced motion renders the idle scene once instead of animating it",
 );
 assert.match(
   enemyCounterAttackSource,
@@ -201,8 +237,23 @@ assert.match(
 );
 assert.match(
   playerAttackSource,
-  /targetHullBeforeVolley:\s*destroysEnemyVessel\s*\?\s*targetHealthBefore\s*:\s*undefined/,
+  /if \(destroysEnemyVessel\) \{[\s\S]*?targetHullBeforeVolley: targetHealthBefore,/,
   "the real lethal target health limits the terminal volley's visible projectiles",
+);
+assert.match(
+  playerAttackSource,
+  /destroyedModuleIds = pushVolleyWithRetargets\(/,
+  "shots left over after their target dies are re-aimed instead of hitting a wreck",
+);
+assert.match(
+  playerAttackSource,
+  /const spilledDamage = overkill\.reduce\(/,
+  "the re-aimed shots deal their hull damage to the new module",
+);
+assert.match(
+  playerAttackSource,
+  /for \(const destroyedId of destroyedModuleIds\) \{/,
+  "a shield module killed by re-aimed shots still recalculates the enemy shield pool",
 );
 assert.match(
   cinematicUiStoreSource,
@@ -385,6 +436,7 @@ try {
     createCombatTimelineCollector,
     buildVolleyEvents,
     finalizeProjectileHullDamage,
+    splitVolleyAtHullDestruction,
     createCombatCinematicSnapshot,
     appendCombatSnapshotDeltaEvents,
     appendCombatSnapshotDamageEvents,
@@ -444,6 +496,29 @@ try {
 } catch {
   assert.fail(
     "combatCinematicGeometry.ts must provide responsive scene and shield-impact geometry",
+  );
+}
+
+{
+  const volley = [
+    { weapon: "kinetic", outcome: "hull", shieldDamage: 0, hullDamage: 4 },
+    { weapon: "kinetic", outcome: "hull", shieldDamage: 0, hullDamage: 4 },
+    { weapon: "kinetic", outcome: "hull", shieldDamage: 0, hullDamage: 4 },
+  ];
+  assert.deepEqual(
+    splitVolleyAtHullDestruction(volley, 6),
+    { onTarget: volley.slice(0, 2), overkill: volley.slice(2) },
+    "the volley splits right after the shot that empties the target's hull",
+  );
+  assert.deepEqual(
+    splitVolleyAtHullDestruction(volley, 40),
+    { onTarget: volley, overkill: [] },
+    "a target that survives the volley keeps every shot",
+  );
+  assert.deepEqual(
+    splitVolleyAtHullDestruction(volley, 12),
+    { onTarget: volley, overkill: [] },
+    "the shot that lands the exact killing blow still belongs to the original target",
   );
 }
 

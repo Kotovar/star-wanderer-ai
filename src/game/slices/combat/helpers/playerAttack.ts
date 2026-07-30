@@ -43,6 +43,7 @@ import {
   createCombatCinematicSnapshot,
   createCombatTimelineCollector,
   finalizeProjectileHullDamage,
+  splitVolleyAtHullDestruction,
   type CombatTimelineCollector,
 } from "./combatTimeline";
 import type {
@@ -914,6 +915,81 @@ function applyDamageToEnemy(
   return finalModuleDamage;
 }
 
+/**
+ * Pushes a bay volley, re-aiming every shot that would otherwise keep pounding a
+ * module the earlier shots of the same volley already destroyed. The redirected
+ * hull damage lands on the new module instead of being thrown away.
+ */
+function pushVolleyWithRetargets(
+  set: (fn: (s: GameState) => void) => void,
+  get: () => GameStore,
+  timeline: CombatTimelineCollector,
+  firstTargetId: number,
+  firstTargetHealth: number,
+  projectiles: readonly CombatProjectileResolution[],
+  isCrit: boolean,
+): number[] {
+  const destroyedModuleIds: number[] = [];
+  let targetId = firstTargetId;
+  let targetHealth = firstTargetHealth;
+  let remaining = projectiles;
+
+  while (remaining.length > 0) {
+    const { onTarget, overkill } = splitVolleyAtHullDestruction(remaining, targetHealth);
+    // A wreck cannot absorb a shot, so nothing would advance the loop.
+    if (onTarget.length === 0) return destroyedModuleIds;
+
+    timeline.push(...buildVolleyEvents({
+      from: "player",
+      to: "enemy",
+      targetModuleId: targetId,
+      projectiles: onTarget,
+      isCrit,
+    }));
+
+    const landedHullDamage = onTarget.reduce(
+      (total, projectile) => total + projectile.hullDamage,
+      0,
+    );
+    const destroyed = targetHealth > 0 && landedHullDamage >= targetHealth;
+    if (destroyed) {
+      destroyedModuleIds.push(targetId);
+      timeline.push({ kind: "module_destroyed", side: "enemy", moduleId: targetId });
+    }
+    if (overkill.length === 0) return destroyedModuleIds;
+
+    const alive = get().currentCombat?.enemy.modules.filter(
+      (module) => module.health > 0 && module.id !== targetId,
+    ) ?? [];
+    if (alive.length === 0) return destroyedModuleIds;
+
+    const next = alive[Math.floor(Math.random() * alive.length)];
+    const spilledDamage = overkill.reduce(
+      (total, projectile) => total + projectile.hullDamage,
+      0,
+    );
+    set((s) => {
+      const spillTarget = s.currentCombat?.enemy.modules.find((m) => m.id === next.id);
+      if (spillTarget) {
+        spillTarget.health = Math.max(0, spillTarget.health - spilledDamage);
+      }
+    });
+    get().addLog(
+      i18nStore.t("game_logs.playerAttack_retarget", {
+        module_name: next.name,
+        damage: Math.round(spilledDamage),
+      }),
+      "combat",
+    );
+
+    targetId = next.id;
+    targetHealth = next.health;
+    remaining = overkill;
+  }
+
+  return destroyedModuleIds;
+}
+
 // ─── Combat flags helper ──────────────────────────────────────────────────────
 
 interface CombatFlags {
@@ -1354,19 +1430,33 @@ export function executePlayerAttackWithBayTargets(
       findEnemyCore(combatNow.enemy.modules)?.id === tgtMod.id ||
       get().currentCombat?.enemy.modules.every((module) => module.health <= 0) === true
     );
-    timeline.push(...buildVolleyEvents({
-      from: "player",
-      to: "enemy",
-      targetModuleId: tgtMod.id,
-      targetHullBeforeVolley: destroysEnemyVessel ? targetHealthBefore : undefined,
-      projectiles: finalizeProjectileHullDamage(
-        damage.projectiles,
-        finalModuleDamage,
-      ),
-      isCrit: bayCrit.isCrit && bayDamageMultiplier > 1,
-    }));
-    if (targetDestroyed) {
+    const volley = finalizeProjectileHullDamage(
+      damage.projectiles,
+      finalModuleDamage,
+    );
+    const bayIsCrit = bayCrit.isCrit && bayDamageMultiplier > 1;
+    let destroyedModuleIds: number[] = [];
+    if (destroysEnemyVessel) {
+      timeline.push(...buildVolleyEvents({
+        from: "player",
+        to: "enemy",
+        targetModuleId: tgtMod.id,
+        targetHullBeforeVolley: targetHealthBefore,
+        projectiles: volley,
+        isCrit: bayIsCrit,
+      }));
       timeline.push({ kind: "module_destroyed", side: "enemy", moduleId: tgtMod.id });
+      destroyedModuleIds = [tgtMod.id];
+    } else {
+      destroyedModuleIds = pushVolleyWithRetargets(
+        set,
+        get,
+        timeline,
+        tgtMod.id,
+        targetHealthBefore,
+        volley,
+        bayIsCrit,
+      );
     }
     if (bayCrit.isCrit && bayDamageMultiplier > 1) {
       playSound("combat_critical");
@@ -1387,9 +1477,13 @@ export function executePlayerAttackWithBayTargets(
       get,
     );
 
-    // Shield module destroyed: recalc enemy shield pool
-    if (damage.totalModuleDamage > 0 && tgtMod.type === "shield") {
-      const newShields = recalcEnemyShieldPoolIfDestroyed(set, get, tgtMod.id);
+    // Shield module destroyed: recalc enemy shield pool (retargeted shots count too)
+    for (const destroyedId of destroyedModuleIds) {
+      const destroyedModule = get().currentCombat?.enemy.modules.find(
+        (module) => module.id === destroyedId,
+      );
+      if (destroyedModule?.type !== "shield") continue;
+      const newShields = recalcEnemyShieldPoolIfDestroyed(set, get, destroyedId);
       if (newShields !== null) {
         remainingShields = Math.min(remainingShields, newShields);
       }
