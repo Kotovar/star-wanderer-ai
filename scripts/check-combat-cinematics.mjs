@@ -259,6 +259,16 @@ assert.match(
 );
 assert.match(
   stageSource,
+  /if \(stage === "breached"\) drawHullBreach\(ctx, point, seed\);/,
+  "уничтоженный модуль оставляет на корпусе пробоину до конца боя",
+);
+assert.match(
+  stageSource,
+  /drawHullDamage\(ctx, vessel, side, width, height\);/,
+  "отметины рисуются поверх силуэта корабля, а не рядом с ним",
+);
+assert.match(
+  stageSource,
   /drawBossIntent\(ctx, bossIntent, width, height, t, sceneScale\);/,
   "сцена телеграфирует способность босса до хода игрока",
 );
@@ -662,6 +672,152 @@ try {
     splitDamageByWeight([0, 0], 10),
     [0, 0],
     "без живых орудий делить нечего",
+  );
+}
+
+{
+  const { getBossAbilityTurnsUntilReady } = jiti(
+    "../src/game/slices/combat/helpers/bossAbilities.ts",
+  );
+  const { getBossAbilityIntent } = jiti(
+    "../src/game/slices/combat/helpers/bossIntent.ts",
+  );
+  const { ANCIENT_BOSSES: allBosses } = jiti("../src/game/constants/bosses.ts");
+
+  // Счётчик атак инкрементится ДО применения способности, поэтому «сработает
+  // сейчас» — это (count + 1) % period === 0.
+  assert.equal(getBossAbilityTurnsUntilReady({}, 0), 0, "способность без периода бьёт каждый ход");
+  assert.deepEqual(
+    [0, 1, 2, 3, 4, 5].map((count) => getBossAbilityTurnsUntilReady({ everyTurns: 3 }, count)),
+    [2, 1, 0, 2, 1, 0],
+    "период 3 отсчитывается ровно до того хода, в который способность реально бьёт",
+  );
+
+  // Описание способности — контракт с игроком: если оно обещает «каждый N-й
+  // ход», в данных обязан стоять everyTurns, иначе она бьёт каждый ход.
+  for (const boss of allBosses) {
+    const ability = boss.specialAbility;
+    const promised = /Кажд\w+ (\d+)-й ход/.exec(ability?.description ?? "");
+    if (!promised) continue;
+    assert.equal(
+      ability.everyTurns,
+      Number(promised[1]),
+      `${boss.name}: «${ability.name}» обещает каждый ${promised[1]}-й ход — период должен стоять в данных`,
+    );
+  }
+
+  // Описание способности — контракт, который игрок читает в кодексе. Числа из
+  // него закреплены здесь: значения `value` у разных эффектов означают разное
+  // (шанс, урон, процент), и разъехаться они могут молча.
+  const abilityContract = {
+    "⚙️ Страж Врат": { effect: "shield_restore", value: 50, note: "50% щитов один раз за бой" },
+    "🔥 Нова Сталкер": { effect: "aoe_damage", value: 20, everyTurns: 3, note: "20 урона каждый 3-й ход" },
+    "🩸 Пустотный Паразит": { effect: "lifesteal", value: 20, note: "лечится на 20% нанесённого урона" },
+    "🌀 Жнец Прайм": { effect: "emergency_repair", value: 25, note: "25% ПРОЦЕНТОВ прочности модулей" },
+    "⚡ Фазовый Охотник": { effect: "evasion_boost", value: 30, note: "30% шанс избежать атаки" },
+    "❄️ Ледяной Разоритель": { effect: "shield_regen", value: 30, note: "30 щитов каждый ход" },
+    "👁️ Оракул Пустоты": { effect: "evasion_boost", value: 25, note: "25% шанс избежать урона" },
+    "💀 Разрушитель Связи": { effect: "heal_all", value: 15, note: "15 ПРОЦЕНТОВ прочности каждый ход" },
+    "⏳ Хранитель Времени": { effect: "self_heal", value: 40, note: "value для self_heal — ШАНС, 40%" },
+    "♾️ Вечный": { effect: "resurrect_chance", value: 20, note: "20% шанс воскреснуть" },
+  };
+
+  for (const [name, want] of Object.entries(abilityContract)) {
+    const boss = allBosses.find((item) => item.name === name);
+    assert.ok(boss, `босс ${name} на месте`);
+    assert.equal(boss.specialAbility.effect, want.effect, `${name}: эффект способности`);
+    assert.equal(
+      boss.specialAbility.value,
+      want.value,
+      `${name}: ${want.note} — число разъехалось с описанием`,
+    );
+    assert.equal(
+      boss.specialAbility.everyTurns ?? null,
+      want.everyTurns ?? null,
+      `${name}: периодичность способности`,
+    );
+  }
+
+  // emergency_repair лечит процентами, а не плоскими очками: на модуле в 220 HP
+  // разница между «25» и «25%» — больше чем вдвое.
+  // Плоское лечение осталось только там, где описание тоже говорит про очки:
+  // вампиризм (% от урона уже посчитан), self_heal на 50 и базовый regenRate.
+  assert.equal(
+    (bossAbilitiesSource.match(/healAllBossModules\(set, /g) ?? []).length,
+    3,
+    "плоским лечением остаются только те способности, что обещают очки, а не проценты",
+  );
+  assert.equal(
+    (bossAbilitiesSource.match(/healAllBossModulesByPercent\(set, healPercent\);/g) ?? []).length,
+    3,
+    "все три процентных лечения (экстренный ремонт и оба heal_all) считают процент",
+  );
+
+  const nova = allBosses.find((boss) => boss.name.includes("Нова Сталкер"));
+  const intentAt = (count) =>
+    getBossAbilityIntent({
+      enemy: {
+        isBoss: true,
+        specialAbility: nova.specialAbility,
+        modules: [{ health: 100, maxHealth: 100 }],
+        bossAttackCount: count,
+      },
+      bossOneShotAbilityFired: false,
+    });
+  assert.deepEqual(
+    [0, 1, 2].map((count) => intentAt(count).status),
+    ["pending", "pending", "imminent"],
+    "телеграф обещает удар в тот ход, в который он прилетает, а не каждый ход",
+  );
+  assert.equal(intentAt(0).turnsUntil, 2, "телеграф называет, сколько ходов осталось");
+}
+
+{
+  const { WEAPON_TYPES } = jiti("../src/game/constants/weapons.ts");
+  const playerDamageOrder = [
+    ...playerAttackSource.matchAll(/if \(weaponCounts\.(\w+) > 0\) \{/g),
+  ].map((match) => match[1]);
+
+  assert.equal(
+    playerDamageOrder[0],
+    "ion_cannon",
+    "ионная пушка (×4 по щитам) стреляет первой, а не по уже сбитым щитам",
+  );
+  const shieldBonusOf = (weapon) => WEAPON_TYPES[weapon].shieldBonus ?? 0;
+  const bonuses = playerDamageOrder.map(shieldBonusOf);
+  assert.deepEqual(
+    [...bonuses].sort((a, b) => b - a),
+    bonuses,
+    "оружие резолвится по убыванию множителя по щитам: сначала снять барьер, потом бить корпус",
+  );
+}
+
+{
+  const { getHullDamageStage } = jiti(
+    "../src/game/components/combatCinematicGeometry.ts",
+  );
+
+  assert.equal(getHullDamageStage(100, 100), "intact", "целый модуль не пачкает корпус");
+  assert.equal(getHullDamageStage(50, 100), "intact", "половина прочности — ещё не повреждение");
+  assert.equal(
+    getHullDamageStage(30, 100),
+    "scorched",
+    "изувеченный, но живой модуль оставляет подпалину — предупреждение до пробоины",
+  );
+  assert.equal(
+    getHullDamageStage(0, 100),
+    "breached",
+    "уничтоженный модуль оставляет пробоину",
+  );
+  assert.equal(
+    getHullDamageStage(-5, 100),
+    "breached",
+    "отрицательная прочность — тоже пробоина, а не целый корпус",
+  );
+  assert.equal(
+    getHullDamageStage(10, 0),
+    "intact",
+    "модуль без максимума прочности не делит на ноль",
   );
 }
 

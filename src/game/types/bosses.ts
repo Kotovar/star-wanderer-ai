@@ -101,4 +101,9 @@ export interface BossAbility {
     trigger: BossAbilityTrigger;
     effect: BossAbilityEffectType;
     value?: number;
+    /**
+     * Периодичность для `every_turn`: способность срабатывает раз в N атак
+     * босса. Без поля — каждый ход.
+     */
+    everyTurns?: number;
 }

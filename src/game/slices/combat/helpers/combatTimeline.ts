@@ -11,15 +11,20 @@ import type { GameState } from "../../../types/game";
 import type { WeaponCounts, WeaponType } from "../../../types/modules";
 import { applyCombatCinematicEvent } from "./combatCinematicPlayback.ts";
 
+/**
+ * Порядок ведения огня: сначала оружие, снимающее щиты (по убыванию множителя
+ * по щитам), затем корпусное. Тот же порядок, что и в резолве урона, — иначе
+ * анимация показывает не ту очерёдность, что реально отработала.
+ */
 const WEAPON_ORDER: WeaponType[] = [
+  "ion_cannon",
+  "antimatter",
+  "plasma",
   "laser",
   "kinetic",
-  "missile",
-  "plasma",
   "drones",
-  "antimatter",
+  "missile",
   "quantum_torpedo",
-  "ion_cannon",
 ];
 
 export interface BuildVolleyEventsInput {
@@ -30,6 +35,8 @@ export interface BuildVolleyEventsInput {
   targetModuleId?: number;
   /** Палуба-источник: снаряды одного залпа бьют очередью, между залпами пауза. */
   volleyId?: number;
+  /** Стаки дронов на момент залпа — рой рисуется гуще. */
+  droneStacks?: number;
   targetHullBeforeVolley?: number;
 }
 
@@ -388,6 +395,9 @@ export function buildVolleyEvents(
         ? {}
         : { targetModuleId: input.targetModuleId }),
       ...(input.volleyId === undefined ? {} : { volleyId: input.volleyId }),
+      ...(projectile.weapon === "drones" && input.droneStacks !== undefined
+        ? { droneStacks: input.droneStacks }
+        : {}),
     };
     if (!isNonDamageOutcome && projectile.outcome !== "piercing") {
       updateOutcome(event);

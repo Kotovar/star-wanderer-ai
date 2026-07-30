@@ -587,6 +587,63 @@ function calculateAllDamage(
   const getAccuracy = (type: WeaponType) =>
     getWeaponAccuracy(type, accuracyModifier);
 
+  // Порядок резолва = порядок приоритета. Щиты снимают те, кто умеет:
+  // ионная пушка (×4 по щитам) стреляла последней и тратила свой множитель
+  // по уже сбитым щитам, пока остальной залп бился о полный барьер.
+  if (weaponCounts.ion_cannon > 0) {
+    const result = processIonCannonDamage(
+      weaponCounts.ion_cannon,
+      perTypeDamage?.ion_cannon ?? finalDamagePerWeapon,
+      damageMultiplier,
+      remainingShields,
+      getAccuracy("ion_cannon"),
+      WEAPON_TYPES.ion_cannon.shieldBonus ?? 4.0,
+      projectiles,
+    );
+    totalShieldDamage += result.totalShieldDamage;
+    totalModuleDamage += result.totalModuleDamage;
+    remainingShields = result.remainingShields;
+    logs.push(...result.logs);
+    missedShots.ion_cannon = result.missedShots;
+  }
+
+  if (weaponCounts.antimatter > 0) {
+    const result = processAntimatterDamage(
+      weaponCounts.antimatter,
+      perTypeDamage?.antimatter ?? finalDamagePerWeapon,
+      damageMultiplier,
+      remainingShields,
+      enemyShields,
+      getAccuracy("antimatter"),
+      WEAPON_TYPES.antimatter.shieldBonus ?? 2.5,
+      projectiles,
+    );
+    totalShieldDamage += result.totalShieldDamage;
+    totalModuleDamage += result.totalModuleDamage;
+    remainingShields = result.remainingShields;
+    logs.push(...result.logs);
+    missedShots.antimatter = result.missedShots;
+  }
+
+  if (weaponCounts.plasma > 0) {
+    const result = processPlasmaDamage(
+      weaponCounts.plasma,
+      perTypeDamage?.plasma ?? finalDamagePerWeapon,
+      damageMultiplier,
+      remainingShields,
+      enemyShields,
+      getAccuracy("plasma"),
+      WEAPON_TYPES.plasma.shieldBonus ?? 1.3,
+      projectiles,
+    );
+    totalShieldDamage += result.totalShieldDamage;
+    totalModuleDamage += result.totalModuleDamage;
+    remainingShields = result.remainingShields;
+    logs.push(...result.logs);
+    missedShots.plasma = result.missedShots;
+    plasmaHitCount += result.plasmaHitCount;
+  }
+
   if (weaponCounts.laser > 0) {
     const laserBase = perTypeDamage?.laser ?? finalDamagePerWeapon;
     const laserDmgPerWeapon = laserDamageBonus > 0
@@ -627,6 +684,25 @@ function calculateAllDamage(
     armorPenetration = Math.max(armorPenetration, result.kineticArmorPenetration);
   }
 
+  if (weaponCounts.drones > 0) {
+    const result = processDronesDamage(
+      weaponCounts.drones,
+      perTypeDamage?.drones ?? finalDamagePerWeapon,
+      damageMultiplier,
+      remainingShields,
+      enemyShields,
+      getAccuracy("drones"),
+      droneStacks,
+      projectiles,
+    );
+    totalShieldDamage += result.totalShieldDamage;
+    totalModuleDamage += result.totalModuleDamage;
+    remainingShields = result.remainingShields;
+    logs.push(...result.logs);
+    missedShots.drones = result.missedShots;
+    droneHitCount += result.droneHitCount;
+  }
+
   if (weaponCounts.missile > 0) {
     const result = processMissileDamage(
       weaponCounts.missile,
@@ -648,62 +724,6 @@ function calculateAllDamage(
     armorPenetration = Math.max(armorPenetration, WEAPON_TYPES.missile.armorPenetration ?? 0);
   }
 
-  if (weaponCounts.plasma > 0) {
-    const result = processPlasmaDamage(
-      weaponCounts.plasma,
-      perTypeDamage?.plasma ?? finalDamagePerWeapon,
-      damageMultiplier,
-      remainingShields,
-      enemyShields,
-      getAccuracy("plasma"),
-      WEAPON_TYPES.plasma.shieldBonus ?? 1.3,
-      projectiles,
-    );
-    totalShieldDamage += result.totalShieldDamage;
-    totalModuleDamage += result.totalModuleDamage;
-    remainingShields = result.remainingShields;
-    logs.push(...result.logs);
-    missedShots.plasma = result.missedShots;
-    plasmaHitCount += result.plasmaHitCount;
-  }
-
-  if (weaponCounts.drones > 0) {
-    const result = processDronesDamage(
-      weaponCounts.drones,
-      perTypeDamage?.drones ?? finalDamagePerWeapon,
-      damageMultiplier,
-      remainingShields,
-      enemyShields,
-      getAccuracy("drones"),
-      droneStacks,
-      projectiles,
-    );
-    totalShieldDamage += result.totalShieldDamage;
-    totalModuleDamage += result.totalModuleDamage;
-    remainingShields = result.remainingShields;
-    logs.push(...result.logs);
-    missedShots.drones = result.missedShots;
-    droneHitCount += result.droneHitCount;
-  }
-
-  if (weaponCounts.antimatter > 0) {
-    const result = processAntimatterDamage(
-      weaponCounts.antimatter,
-      perTypeDamage?.antimatter ?? finalDamagePerWeapon,
-      damageMultiplier,
-      remainingShields,
-      enemyShields,
-      getAccuracy("antimatter"),
-      WEAPON_TYPES.antimatter.shieldBonus ?? 2.5,
-      projectiles,
-    );
-    totalShieldDamage += result.totalShieldDamage;
-    totalModuleDamage += result.totalModuleDamage;
-    remainingShields = result.remainingShields;
-    logs.push(...result.logs);
-    missedShots.antimatter = result.missedShots;
-  }
-
   if (weaponCounts.quantum_torpedo > 0) {
     const result = processQuantumTorpedoDamage(
       weaponCounts.quantum_torpedo,
@@ -715,23 +735,6 @@ function calculateAllDamage(
     totalModuleDamage += result.totalModuleDamage;
     logs.push(...result.logs);
     missedShots.quantum_torpedo = result.missedShots;
-  }
-
-  if (weaponCounts.ion_cannon > 0) {
-    const result = processIonCannonDamage(
-      weaponCounts.ion_cannon,
-      perTypeDamage?.ion_cannon ?? finalDamagePerWeapon,
-      damageMultiplier,
-      remainingShields,
-      getAccuracy("ion_cannon"),
-      WEAPON_TYPES.ion_cannon.shieldBonus ?? 4.0,
-      projectiles,
-    );
-    totalShieldDamage += result.totalShieldDamage;
-    totalModuleDamage += result.totalModuleDamage;
-    remainingShields = result.remainingShields;
-    logs.push(...result.logs);
-    missedShots.ion_cannon = result.missedShots;
   }
 
   // Missed shot logs
@@ -930,6 +933,7 @@ function pushVolleyWithRetargets(
   projectiles: readonly CombatProjectileResolution[],
   isCrit: boolean,
   volleyId: number,
+  droneStacks: number,
 ): number[] {
   const destroyedModuleIds: number[] = [];
   let targetId = firstTargetId;
@@ -946,6 +950,7 @@ function pushVolleyWithRetargets(
       to: "enemy",
       targetModuleId: targetId,
       volleyId,
+      droneStacks,
       projectiles: onTarget,
       isCrit,
     }));
@@ -1443,6 +1448,10 @@ export function executePlayerAttackWithBayTargets(
       finalModuleDamage,
     );
     const bayIsCrit = bayCrit.isCrit && bayDamageMultiplier > 1;
+    const bayDroneStacks = Math.min(
+      DRONE_MAX_STACKS,
+      (get().currentCombat?.droneStacks ?? 0) + damage.droneHitCount,
+    );
     let destroyedModuleIds: number[] = [];
     if (destroysEnemyVessel) {
       timeline.push(...buildVolleyEvents({
@@ -1450,6 +1459,7 @@ export function executePlayerAttackWithBayTargets(
         to: "enemy",
         targetModuleId: tgtMod.id,
         volleyId: bay.id,
+        droneStacks: bayDroneStacks,
         targetHullBeforeVolley: targetHealthBefore,
         projectiles: volley,
         isCrit: bayIsCrit,
@@ -1466,6 +1476,7 @@ export function executePlayerAttackWithBayTargets(
         volley,
         bayIsCrit,
         bay.id,
+        bayDroneStacks,
       );
     }
     if (bayCrit.isCrit && bayDamageMultiplier > 1) {

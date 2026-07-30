@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { WEAPON_TYPES } from "@/game/constants";
+import { DRONE_MAX_STACKS, WEAPON_TYPES } from "@/game/constants";
 import { playSound } from "@/sounds";
 import { setupHiDPICanvas } from "@/game/components/canvas-utils";
 import {
   COMBAT_CINEMATIC_MISS_LABEL_START_PROGRESS,
   formatCombatCinematicAmount,
   getCombatCinematicModuleAnchor,
+  getHullDamageStage,
   getCombatCinematicSceneMetrics,
   getMissLabelPoint,
   getProjectilePathPoint,
@@ -295,25 +296,9 @@ function drawModuleLights(
       : 0;
     const color = side === "player" ? PLAYER_COLOR : ENEMY_COLOR;
 
-    if (!intact) {
-      ctx.save();
-      ctx.globalAlpha = 0.28;
-      ctx.fillStyle = "#4a5058";
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, 3, 0, TAU);
-      ctx.fill();
-      const arc = Math.sin(sceneElapsed / 70 + currentModule.id * 2.3);
-      if (arc > 0.86) {
-        ctx.globalCompositeOperation = "lighter";
-        ctx.globalAlpha = (arc - 0.86) * 6;
-        fillRadialGlow(ctx, point, 9, [
-          [0, "rgba(255, 226, 170, 0.9)"],
-          [1, "rgba(255, 176, 0, 0)"],
-        ]);
-      }
-      ctx.restore();
-      continue;
-    }
+    // Уничтоженный модуль теперь показывает drawHullDamage: пробоина с огнём
+    // заменяет тусклую точку, и она остаётся до конца боя.
+    if (!intact) continue;
 
     const pulse = healthRatio > 0.45
       ? 1
@@ -334,6 +319,107 @@ function drawModuleLights(
   }
 }
 
+/**
+ * Пробоина на месте уничтоженного модуля: обугленное пятно, рваная дыра, огонь
+ * по кромке и столб дыма. Держится до конца боя — по корпусу видно накопленный
+ * урон, а не только текущий кадр.
+ */
+function drawHullBreach(ctx: CanvasRenderingContext2D, point: Point, seed: number): void {
+  ctx.save();
+  fillRadialGlow(ctx, point, 24, [
+    [0, "rgba(5, 7, 11, 0.95)"],
+    [0.5, "rgba(9, 12, 17, 0.62)"],
+    [1, "rgba(9, 12, 17, 0)"],
+  ]);
+  ctx.fillStyle = "#04060a";
+  ctx.strokeStyle = "rgba(126, 100, 74, 0.55)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let corner = 0; corner < 9; corner += 1) {
+    const angle = (TAU * corner) / 9;
+    const radius = 5.5 + pseudoRandom(seed * 3.7 + corner) * 4.5;
+    const x = point.x + Math.cos(angle) * radius;
+    const y = point.y + Math.sin(angle) * radius * 0.82;
+    if (corner === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  const flicker = clamp(
+    0.5 +
+      Math.sin(sceneElapsed / 92 + seed * 3) * 0.26 +
+      Math.sin(sceneElapsed / 39 + seed) * 0.2,
+  );
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = flicker;
+  fillRadialGlow(ctx, point, 15, [
+    [0, "rgba(255, 228, 156, 0.95)"],
+    [0.4, "rgba(255, 132, 32, 0.55)"],
+    [1, "rgba(255, 88, 0, 0)"],
+  ]);
+  ctx.restore();
+
+  ctx.save();
+  for (let puff = 0; puff < 4; puff += 1) {
+    const life = ((sceneElapsed / 1900) + pseudoRandom(seed * 5.3 + puff)) % 1;
+    ctx.globalAlpha = (1 - life) * life * 2.4 * 0.55;
+    fillRadialGlow(
+      ctx,
+      {
+        x: point.x + (pseudoRandom(seed + puff * 2.7) - 0.5) * 16 + life * 7,
+        y: point.y - 4 - life * 56,
+      },
+      5 + life * 19,
+      [
+        [0, "rgba(88, 94, 106, 0.6)"],
+        [1, "rgba(38, 42, 50, 0)"],
+      ],
+    );
+  }
+  ctx.restore();
+}
+
+/** Подпалина у изувеченного, но живого модуля — предупреждение до пробоины. */
+function drawHullScorch(ctx: CanvasRenderingContext2D, point: Point, seed: number): void {
+  ctx.save();
+  fillRadialGlow(ctx, point, 15, [
+    [0, "rgba(12, 10, 9, 0.62)"],
+    [1, "rgba(12, 10, 9, 0)"],
+  ]);
+  const ember = Math.sin(sceneElapsed / 130 + seed * 2.1);
+  if (ember > 0.72) {
+    ctx.globalCompositeOperation = "lighter";
+    ctx.globalAlpha = (ember - 0.72) * 3;
+    fillRadialGlow(ctx, point, 10, [
+      [0, "rgba(255, 190, 96, 0.9)"],
+      [1, "rgba(255, 120, 0, 0)"],
+    ]);
+  }
+  ctx.restore();
+}
+
+/** Отметины на корпусе по всем модулям — рисуются поверх силуэта. */
+function drawHullDamage(
+  ctx: CanvasRenderingContext2D,
+  vessel: CombatCinematicSnapshot["player"],
+  side: CombatCinematicSide,
+  width: number,
+  height: number,
+): void {
+  for (const currentModule of vessel.modules) {
+    const stage = getHullDamageStage(currentModule.health, currentModule.maxHealth);
+    if (stage === "intact") continue;
+    const point = getModulePoint(vessel, side, currentModule.id, width, height);
+    const seed = currentModule.id + (side === "player" ? 0 : 41);
+    if (stage === "breached") drawHullBreach(ctx, point, seed);
+    else drawHullScorch(ctx, point, seed);
+  }
+}
+
 function drawHullSmoke(
   ctx: CanvasRenderingContext2D,
   center: Point,
@@ -342,7 +428,7 @@ function drawHullSmoke(
 ): void {
   if (hullRatio >= 0.6) return;
   const intensity = 1 - hullRatio / 0.6;
-  const count = Math.round(3 + intensity * 6);
+  const count = Math.round(2 + intensity * 3);
   ctx.save();
   for (let index = 0; index < count; index += 1) {
     const life = ((sceneElapsed / 1600) + pseudoRandom(index * 4.3 + seed)) % 1;
@@ -642,6 +728,7 @@ function drawShip(
   else if (side === "player") drawPlayerShip(ctx, center);
   else drawEnemyShip(ctx, center);
   ctx.restore();
+  drawHullDamage(ctx, vessel, side, width, height);
   drawModuleLights(ctx, vessel, side, width, height);
   drawHullSmoke(ctx, center, getHullRatio(vessel), side === "player" ? 0 : 17);
 }
@@ -1024,27 +1111,38 @@ function drawPlasmaBolt(
   ctx.restore();
 }
 
+/**
+ * Рой дронов растёт вместе со стаком: каждый стак — это реальный бонус к урону,
+ * который раньше копился молча, и игрок видел один и тот же рой из трёх машин.
+ */
 function drawDroneSwarm(
   ctx: CanvasRenderingContext2D,
   point: Point,
   color: string,
   progress: number,
+  stacks: number,
 ): void {
+  const growth = clamp(stacks / DRONE_MAX_STACKS);
+  const count = 3 + Math.round(growth * 5);
+  const radiusX = 10 + growth * 9;
+  const radiusY = 7 + growth * 6;
+
   ctx.save();
   ctx.strokeStyle = color;
   ctx.lineWidth = 1;
-  ctx.globalAlpha = 0.56;
+  ctx.globalAlpha = 0.4 + growth * 0.3;
   ctx.beginPath();
-  ctx.arc(point.x, point.y, 12, 0, Math.PI * 2);
+  ctx.ellipse(point.x, point.y, radiusX + 2, radiusY + 2, 0, 0, TAU);
   ctx.stroke();
   ctx.restore();
-  for (let index = 0; index < 3; index += 1) {
-    const angle = progress * 12 + index * ((Math.PI * 2) / 3);
+
+  for (let index = 0; index < count; index += 1) {
+    const angle = progress * 12 + index * (TAU / count);
     const drone = {
-      x: point.x + Math.cos(angle) * 10,
-      y: point.y + Math.sin(angle) * 7,
+      x: point.x + Math.cos(angle) * radiusX,
+      y: point.y + Math.sin(angle) * radiusY,
     };
-    drawOrb(ctx, drone, color, 3);
+    drawOrb(ctx, drone, color, 2.6 + growth * 1.4);
     ctx.save();
     ctx.strokeStyle = "#d8ffe8";
     ctx.lineWidth = 1;
@@ -1052,6 +1150,17 @@ function drawDroneSwarm(
     ctx.moveTo(drone.x - 4, drone.y);
     ctx.lineTo(drone.x + 4, drone.y);
     ctx.stroke();
+    ctx.restore();
+  }
+
+  if (stacks > 0) {
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.globalAlpha = 0.35 + growth * 0.45;
+    fillRadialGlow(ctx, point, radiusX * 2.2, [
+      [0, withAlpha(color, 0.5)],
+      [1, withAlpha(color, 0)],
+    ]);
     ctx.restore();
   }
 }
@@ -1300,7 +1409,7 @@ function drawProjectile(
   } else if (visual === "plasma") {
     drawPlasmaBolt(ctx, renderPoint, color, progress);
   } else if (visual === "swarm") {
-    drawDroneSwarm(ctx, renderPoint, color, progress);
+    drawDroneSwarm(ctx, renderPoint, color, progress, event.droneStacks ?? 0);
   } else if (visual === "orbit") {
     drawAntimatterOrb(ctx, renderPoint, color, progress);
   } else if (visual === "phase") {
@@ -2007,6 +2116,7 @@ function drawActiveEvent(
 /** Момент события, на котором звучит попадание — ровно там, где его видно. */
 const BOSS_INTENT_COLORS: Record<BossIntentStatus, string> = {
   imminent: "#ff4d6d",
+  pending: "#8be9fd",
   reactive: "#ffb000",
   armed: "#5bd6ff",
   spent: "#7a8798",
@@ -2025,7 +2135,9 @@ function drawBossIntent(
   sceneScale: number,
 ): void {
   const color = BOSS_INTENT_COLORS[intent.status];
-  const label = t(`combat_cinematics.boss_intent.${intent.status}`);
+  const label = intent.status === "pending"
+    ? t("combat_cinematics.boss_intent.pending", { turns: intent.turnsUntil ?? 1 })
+    : t(`combat_cinematics.boss_intent.${intent.status}`);
   const title = `${intent.name.toUpperCase()}`;
   const x = width * 0.75;
   const y = height * 0.2;

@@ -56,6 +56,11 @@ export interface CombatProjectileEvent extends CombatProjectileResolution {
    * залпа бьют очередью, между залпами сцена держит паузу.
    */
   volleyId?: number;
+  /**
+   * Накопленные стаки дронов на момент выстрела. Рой должен расти на глазах —
+   * это единственный бонус боя, который копится молча.
+   */
+  droneStacks?: number;
 }
 
 export type CombatCinematicEvent =

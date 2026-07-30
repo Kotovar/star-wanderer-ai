@@ -60,6 +60,21 @@ function rollBossModuleAbility(
 }
 
 /** Heals every alive boss module by `amount`, capped at its maxHealth */
+/** Лечит каждый живой модуль на % от его максимума — как пассивный regen. */
+function healAllBossModulesByPercent(
+    set: (fn: (s: GameState) => void) => void,
+    percent: number,
+): void {
+    set((s) => {
+        if (!s.currentCombat) return;
+        s.currentCombat.enemy.modules.forEach((m) => {
+            if (m.health <= 0) return;
+            const max = m.maxHealth ?? 100;
+            m.health = Math.min(max, m.health + Math.floor((max * percent) / 100));
+        });
+    });
+}
+
 function healAllBossModules(
     set: (fn: (s: GameState) => void) => void,
     amount: number,
@@ -75,6 +90,24 @@ function healAllBossModules(
 
 /** Порог включения low_health-способностей. */
 export const BOSS_LOW_HEALTH_PERCENT = 30;
+
+/**
+ * Сколько атак босса осталось до срабатывания периодической способности.
+ * 0 — сработает уже на следующей. Счётчик атак инкрементится ДО применения
+ * способности, поэтому «следующая атака» — это `bossAttackCount + 1`.
+ *
+ * Один источник правды для расчёта боя и для телеграфа над кораблём: иначе
+ * панель обещает удар не в тот ход, в который он прилетает.
+ */
+export function getBossAbilityTurnsUntilReady(
+    ability: { everyTurns?: number },
+    bossAttackCount: number,
+): number {
+    const period = ability.everyTurns ?? 1;
+    if (period <= 1) return 0;
+    const remainder = (bossAttackCount + 1) % period;
+    return remainder === 0 ? 0 : period - remainder;
+}
 
 export function getBossHealthPercent(modules: EnemyModule[]): number {
     const total = modules.reduce((s, m) => s + m.health, 0);
@@ -456,7 +489,12 @@ function applySpecialAbility(
     const healthPercent = getBossHealthPercent(combat.enemy.modules);
 
     // ── every_turn abilities ──────────────────────────────────────────────────
-    if (ability.trigger === "every_turn") {
+    // everyTurns задаёт периодичность: без неё способность била каждый ход,
+    // хотя описание обещало раз в N ходов.
+    const readyThisTurn =
+        getBossAbilityTurnsUntilReady(ability, (combat.enemy.bossAttackCount ?? 1) - 1) === 0;
+
+    if (ability.trigger === "every_turn" && readyThisTurn) {
         switch (ability.effect) {
             case "aoe_damage": {
                 // Deal value damage to all alive player modules (shields absorb first)
@@ -490,9 +528,10 @@ function applySpecialAbility(
             }
 
             case "heal_all": {
-                const healAmount = ability.value ?? 10;
-                healAllBossModules(set, healAmount);
-                get().addLog( i18nStore.t("game_logs.bossAbilities_12", { ability_name: ability.name, healAmount }),
+                // Описание обещает процент прочности, а не плоские очки.
+                const healPercent = ability.value ?? 10;
+                healAllBossModulesByPercent(set, healPercent);
+                get().addLog( i18nStore.t("game_logs.bossAbilities_12", { ability_name: ability.name, healAmount: healPercent }),
                     "warning",
                 );
                 break;
@@ -531,22 +570,23 @@ function applySpecialAbility(
             case "emergency_repair": {
                 // One-shot: fires only once per combat to avoid infinite healing loop
                 if (combat.bossOneShotAbilityFired) break;
-                const healAmount = ability.value ?? 25;
+                // Описание обещает процент от модуля, а не плоские очки.
+                const healPercent = ability.value ?? 25;
                 set((s) => {
                     if (!s.currentCombat) return;
                     s.currentCombat.bossOneShotAbilityFired = true;
                 });
-                healAllBossModules(set, healAmount);
-                get().addLog( i18nStore.t("game_logs.bossAbilities_14", { ability_name: ability.name, healAmount }),
+                healAllBossModulesByPercent(set, healPercent);
+                get().addLog( i18nStore.t("game_logs.bossAbilities_14", { ability_name: ability.name, healAmount: healPercent }),
                     "warning",
                 );
                 break;
             }
 
             case "heal_all": {
-                const healAmount = ability.value ?? 25;
-                healAllBossModules(set, healAmount);
-                get().addLog( i18nStore.t("game_logs.bossAbilities_15", { ability_name: ability.name, healAmount }),
+                const healPercent = ability.value ?? 25;
+                healAllBossModulesByPercent(set, healPercent);
+                get().addLog( i18nStore.t("game_logs.bossAbilities_15", { ability_name: ability.name, healAmount: healPercent }),
                     "warning",
                 );
                 break;

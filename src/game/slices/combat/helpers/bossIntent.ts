@@ -2,6 +2,7 @@ import type { GameState } from "@/game/types";
 import type { BossAbilityEffectType } from "@/game/types/bosses";
 import {
     BOSS_LOW_HEALTH_PERCENT,
+    getBossAbilityTurnsUntilReady,
     getBossHealthPercent,
 } from "./bossAbilities";
 
@@ -19,13 +20,17 @@ export type BossIntentStatus =
     /** Условие ещё не выполнено — способность ждёт низкого здоровья. */
     | "armed"
     /** Уже израсходована за этот бой. */
-    | "spent";
+    | "spent"
+    /** Периодическая способность: ждёт своего хода. */
+    | "pending";
 
 export interface BossIntent {
     name: string;
     description: string;
     effect: BossAbilityEffectType;
     status: BossIntentStatus;
+    /** Ходов до срабатывания, если статус `pending`. */
+    turnsUntil?: number;
 }
 
 /** Способности, которые срабатывают в ответ на действие игрока, а не в свой ход. */
@@ -59,7 +64,15 @@ export function getBossAbilityIntent(
         return { ...base, status: "reactive" };
     }
     if (ability.trigger === "every_turn") {
-        return { ...base, status: "imminent" };
+        // Периодическая способность бьёт не каждый ход — обещать «следующий»
+        // значит врать игроку.
+        const turnsUntil = getBossAbilityTurnsUntilReady(
+            ability,
+            combat.enemy.bossAttackCount ?? 0,
+        );
+        return turnsUntil === 0
+            ? { ...base, status: "imminent" }
+            : { ...base, status: "pending", turnsUntil };
     }
 
     // Тот же расчёт, что и в applySpecialAbility — телеграф не должен врать.

@@ -86,6 +86,24 @@ export function getCombatCinematicModuleAnchor(
   };
 }
 
+export type CombatHullDamageStage = "intact" | "scorched" | "breached";
+
+/** Ниже этой доли прочности модуль оставляет на корпусе подпалину. */
+const HULL_SCORCH_THRESHOLD = 0.35;
+
+/**
+ * Что показать на корпусе на месте модуля. Пробоина держится до конца боя,
+ * поэтому по силуэту видно накопленный урон, а не только текущий кадр.
+ */
+export function getHullDamageStage(
+  health: number,
+  maxHealth: number,
+): CombatHullDamageStage {
+  if (health <= 0) return "breached";
+  if (maxHealth <= 0) return "intact";
+  return health / maxHealth < HULL_SCORCH_THRESHOLD ? "scorched" : "intact";
+}
+
 export function getMissLabelPoint(
   targetCenter: CombatCinematicPoint,
   progress: number,

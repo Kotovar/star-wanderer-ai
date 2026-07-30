@@ -1806,6 +1806,7 @@
         "blocked": "BLOCKED",
         "pierced": "PIERCING",
         "boss_intent": {
+            "pending": "◷ TURNS LEFT: {{turns}}",
             "imminent": "⚠ NEXT TURN",
             "reactive": "⟳ ON YOUR HIT",
             "armed": "◇ AT 30% HULL",

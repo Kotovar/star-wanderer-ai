@@ -133,6 +133,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
       trigger: "every_turn",
       effect: "aoe_damage",
       value: 20,
+      everyTurns: 3,
     },
     guaranteedArtifactRarity: "rare",
   },
@@ -664,7 +665,8 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
         "При низком здоровье 40% шанс восстановить 50 здоровья",
       trigger: "low_health",
       effect: "self_heal",
-      value: 50,
+      // value для self_heal — это ШАНС в процентах (лечение фиксировано 50).
+      value: 40,
     },
     guaranteedArtifactRarity: "mythic",
   },
