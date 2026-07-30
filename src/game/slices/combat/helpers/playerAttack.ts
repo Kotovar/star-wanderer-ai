@@ -324,7 +324,7 @@ function finishPlayerTurn(
   get: () => GameStore,
   timeline?: CombatTimelineCollector,
 ): void {
-  handleEnemyCounterAttack(currentState, set, get, timeline);
+  handleEnemyCounterAttack(set, get, timeline);
   set((s) => {
     if (!s.currentCombat) return;
     s.currentCombat.enemy.selectedModule = null;
@@ -1080,7 +1080,7 @@ export function executePlayerAttack(
   // 2a. Boss evasion_boost: entire attack evaded
   if (checkBossEvasionBoost(currentState, get)) {
     recordEnemyMiss(set, tgtMod);
-    handleEnemyCounterAttack(currentState, set, get);
+    handleEnemyCounterAttack(set, get);
     return;
   }
 
@@ -1091,7 +1091,7 @@ export function executePlayerAttack(
   if (checkBossModuleDodge(aliveBossMods, get)) {
     get().addLog( i18nStore.t("game_logs.playerAttack_11", { tgtMod_name: tgtMod.name }), "warning");
     recordEnemyMiss(set, tgtMod);
-    handleEnemyCounterAttack(currentState, set, get);
+    handleEnemyCounterAttack(set, get);
     return;
   }
 
@@ -1161,7 +1161,7 @@ export function executePlayerAttack(
     damage.logs.forEach((log) => get().addLog(log, "combat"));
     get().addLog( i18nStore.t("game_logs.playerAttack_12"), "warning");
     recordEnemyMiss(set, tgtMod);
-    handleEnemyCounterAttack(currentState, set, get);
+    handleEnemyCounterAttack(set, get);
     return;
   }
 
@@ -1290,7 +1290,7 @@ export function executePlayerAttackWithBayTargets(
       }
       recordEnemyMiss(set, fallbackTarget);
     }
-    handleEnemyCounterAttack(currentState, set, get, timeline);
+    handleEnemyCounterAttack(set, get, timeline);
     return timeline.finish();
   }
 

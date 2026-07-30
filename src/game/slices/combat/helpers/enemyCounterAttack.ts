@@ -87,12 +87,11 @@ function pushEnemyProjectile(
  * the player's own attack — regenerates enemy shields first, per round rules).
  */
 export function handleEnemyCounterAttack(
-    state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
     timeline?: CombatTimelineCollector,
 ) {
-    performEnemyAttack(state, set, get, { regenShieldsFirst: true }, timeline);
+    performEnemyAttack(set, get, { regenShieldsFirst: true }, timeline);
 }
 
 /**
@@ -108,14 +107,12 @@ export function handleEnemyCounterAttack(
  *   first, since it isn't part of the normal round structure.
  */
 export function performEnemyAttack(
-    state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
     options: { regenShieldsFirst: boolean },
     timeline?: CombatTimelineCollector,
 ) {
-    const combat = state.currentCombat;
-    if (!combat) return;
+    if (!get().currentCombat) return;
 
     if (options.regenShieldsFirst) {
         // Skipped if player broke shields to 0 this round (see enemyShieldsJustBroken flag).
@@ -129,6 +126,13 @@ export function performEnemyAttack(
             });
         }
     }
+
+    // Состояние читается здесь, а не приходит от вызывающего: его снимок сделан
+    // ДО залпа игрока, и по нему враг стрелял из орудийных модулей, которые
+    // игрок только что уничтожил.
+    const state: GameState = get();
+    const combat = state.currentCombat;
+    if (!combat) return;
 
     const eDmg = enemyAttack.calculateEnemyDamage(combat.enemy.modules);
 

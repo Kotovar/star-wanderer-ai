@@ -37,7 +37,7 @@ export const createCombatSlice = (
 ): CombatSlice => ({
     processEnemyAttack: () => {
         // Атака врага по игроку (использует полную логику с выбором цели по приоритету)
-        helpers.executeEnemyAttack(get(), set, get);
+        helpers.executeEnemyAttack(set, get);
     },
 
     startCombat: (enemy, isAmbush = false) => {
@@ -75,7 +75,7 @@ export const createCombatSlice = (
 
     executeAmbushAttack: () => {
         // Атака врага при засаде
-        helpers.executeEnemyAttack(get(), set, get);
+        helpers.executeEnemyAttack(set, get);
 
         set((s) => {
             if (!s.currentCombat) return;

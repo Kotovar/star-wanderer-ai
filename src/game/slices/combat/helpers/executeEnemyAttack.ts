@@ -9,10 +9,9 @@ import type { CombatTimelineCollector } from "./combatTimeline";
  * `handleEnemyCounterAttack`, который выполняется после хода игрока).
  */
 export function executeEnemyAttack(
-    state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
     timeline?: CombatTimelineCollector,
 ) {
-    performEnemyAttack(state, set, get, { regenShieldsFirst: false }, timeline);
+    performEnemyAttack(set, get, { regenShieldsFirst: false }, timeline);
 }

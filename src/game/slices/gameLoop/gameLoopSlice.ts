@@ -166,7 +166,6 @@ export const createGameLoopSlice = (
             timeline.push({ kind: "turn_skipped", side: "player" });
             get().addLog( i18nStore.t("game_logs.gameLoopSlice_1"), "combat");
             executeEnemyAttack(
-                state,
                 set as unknown as (fn: (state: GameState) => void) => void,
                 get,
                 timeline,

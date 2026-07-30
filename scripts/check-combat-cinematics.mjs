@@ -47,6 +47,10 @@ const enemyCounterAttackSource = await readFile(
   new URL("../src/game/slices/combat/helpers/enemyCounterAttack.ts", import.meta.url),
   "utf8",
 );
+const enemyAttackSource = await readFile(
+  new URL("../src/game/slices/combat/helpers/enemyAttack.ts", import.meta.url),
+  "utf8",
+);
 const bossAbilitiesSource = await readFile(
   new URL("../src/game/slices/combat/helpers/bossAbilities.ts", import.meta.url),
   "utf8",
@@ -204,6 +208,26 @@ assert.match(
   stageSource,
   /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)\.matches\) \{\s*renderIdle\(\);/,
   "reduced motion renders the idle scene once instead of animating it",
+);
+assert.doesNotMatch(
+  enemyCounterAttackSource,
+  /export function performEnemyAttack\(\s*state: GameState,/,
+  "the enemy turn does not run on the caller's pre-volley snapshot",
+);
+assert.match(
+  enemyCounterAttackSource,
+  /const state: GameState = get\(\);\s*\n\s*const combat = state\.currentCombat;/,
+  "the enemy turn reads fresh state, so a weapon module destroyed this turn cannot fire back",
+);
+assert.doesNotMatch(
+  playerAttackSource,
+  /handleEnemyCounterAttack\(currentState/,
+  "the player attack hands the enemy turn no stale state to fire from",
+);
+assert.match(
+  enemyAttackSource,
+  /module\.health > 0 \? \(module\.damage \?\? 0\) : 0/,
+  "a destroyed enemy module contributes no damage",
 );
 assert.match(
   enemyCounterAttackSource,
