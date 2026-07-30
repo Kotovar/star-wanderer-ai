@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 
 let createCombatTimelineCollector;
 let buildVolleyEvents;
@@ -14,16 +14,24 @@ let getMissLabelPoint;
 let getProjectilePathPoint;
 let getShieldImpactPoint;
 
-const modalSource = await readFile(
-  new URL("../src/game/components/CombatCinematicModal.tsx", import.meta.url),
-  "utf8",
-);
+let stageSource;
+
+try {
+  stageSource = await readFile(
+    new URL("../src/game/components/CombatCinematicStage.tsx", import.meta.url),
+    "utf8",
+  );
+} catch {
+  assert.fail(
+    "CombatCinematicStage.tsx must provide the persistent, non-modal combat canvas",
+  );
+}
 const combatPanelSource = await readFile(
   new URL("../src/game/components/CombatPanel.tsx", import.meta.url),
   "utf8",
 );
-const playerShipGridSource = await readFile(
-  new URL("../src/game/components/CombatShipGrid.tsx", import.meta.url),
+const crewMemberCardSource = await readFile(
+  new URL("../src/game/components/CrewMemberCard.tsx", import.meta.url),
   "utf8",
 );
 const enemyCounterAttackSource = await readFile(
@@ -38,63 +46,108 @@ const playerAttackSource = await readFile(
   new URL("../src/game/slices/combat/helpers/playerAttack.ts", import.meta.url),
   "utf8",
 );
+const [eventPanelsSource, cinematicUiStoreSource, pageSource] = await Promise.all([
+  readFile(new URL("../src/game/components/EventPanels.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/game/components/combatCinematicUiStore.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8"),
+]);
 const [ruTranslations, enTranslations] = await Promise.all([
   readFile(new URL("../src/lib/locales/ru.json", import.meta.url), "utf8").then(JSON.parse),
   readFile(new URL("../src/lib/locales/en.json", import.meta.url), "utf8").then(JSON.parse),
 ]);
+const weaponsDoc = await readFile(new URL("../docs/WEAPONS.md", import.meta.url), "utf8");
+const globalsSource = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
+
+async function findRuntimeFastCombatReferences(
+  directory,
+  relativeDirectory = "",
+){
+  const references = [];
+  const entries = await readdir(directory, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const relativePath = `${relativeDirectory}${entry.name}`;
+    if (entry.isDirectory()) {
+      references.push(
+        ...(await findRuntimeFastCombatReferences(
+          new URL(`${entry.name}/`, directory),
+          `${relativePath}/`,
+        )),
+      );
+      continue;
+    }
+    if (relativePath === "game/saves/migrations.ts" || !/\.(?:ts|tsx|json)$/.test(entry.name)) {
+      continue;
+    }
+    const source = await readFile(new URL(entry.name, directory), "utf8");
+    if (/fastCombat|fast_combat|fast combat/i.test(source)) references.push(relativePath);
+  }
+
+  return references;
+}
 
 assert.match(
-  modalSource,
+  stageSource,
   /const stageRef = useRef<HTMLDivElement>\(null\);/,
   "the canvas measures a stable stage instead of its own first animation frame",
 );
 assert.match(
-  modalSource,
+  stageSource,
   /ref=\{stageRef\}/,
   "the cinematic canvas has a measured stage",
 );
 assert.match(
-  modalSource,
+  stageSource,
   /stageRef\.current \?\? canvas\.parentElement \?\? canvas/,
   "portal timing falls back to the mounted canvas container instead of leaving it blank",
 );
 assert.match(
-  modalSource,
+  stageSource,
   /const \[canvas, setCanvas\] = useState<HTMLCanvasElement \| null>\(null\);/,
   "the portal canvas becoming available retriggers cinematic playback",
 );
 assert.match(
-  modalSource,
+  stageSource,
   /ref=\{setCanvas\}/,
   "the canvas ref is tied to the playback state",
 );
 assert.match(
-  modalSource,
-  /sm:!max-w-6xl/,
-  "the cinematic dialog overrides the shared small-dialog width on desktop",
+  stageSource,
+  /idleSnapshot: CombatCinematicSnapshot \| null;/,
+  "the permanent scene accepts an idle snapshot before the first action",
 );
 assert.match(
-  modalSource,
+  stageSource,
+  /onPlaybackComplete: \(\) => void;/,
+  "playback completion is automatic and owned by the persistent scene",
+);
+assert.doesNotMatch(
+  stageSource,
+  /\bDialog\b|\bonDismiss\b|combat_cinematics\.skip/,
+  "the persistent scene has neither dialog chrome nor a manual skip path",
+);
+assert.match(
+  stageSource,
   /const floatProgress = Math\.min\(progress \/ 0\.45, 1\);/,
   "damage numbers rise first and then remain readable above the ship",
 );
 assert.match(
-  modalSource,
+  stageSource,
   /fillText\("MISS",/,
   "a real miss is labelled clearly instead of using an ambiguous symbol",
 );
 assert.match(
-  modalSource,
+  stageSource,
   /combat_cinematics\.absorbed/,
   "a fully absorbed attack has its own readable outcome",
 );
 assert.match(
-  modalSource,
+  stageSource,
   /combat_cinematics\.intercepted/,
   "an intercepted missile has its own readable outcome",
 );
 assert.match(
-  modalSource,
+  stageSource,
   /combat_cinematics\.reflected/,
   "a reflected attack has its own readable outcome",
 );
@@ -118,19 +171,114 @@ assert.match(
   /timeline\?\.push\(\{\s*kind: "vessel_destroyed",\s*side: "enemy",?\s*\}\);/,
   "victory by a destroyed core records the whole enemy vessel as destroyed",
 );
+assert.match(
+  cinematicUiStoreSource,
+  /startCombatPlayback: \(timeline: CombatTurnTimeline\) => void;/,
+  "the presentation store exposes an explicit playback start action",
+);
+assert.match(
+  cinematicUiStoreSource,
+  /finishCombatPlayback: \(\) => void;/,
+  "the presentation store exposes automatic playback completion",
+);
+assert.doesNotMatch(
+  cinematicUiStoreSource,
+  /showCombatCinematic|dismissCombatCinematic/,
+  "the old user-dismiss presentation API is removed",
+);
+assert.match(
+  eventPanelsSource,
+  /const cinematicTimeline = useCombatCinematicUiStore\(\(s\) => s\.timeline\);/,
+  "the event host observes a timeline that survives the combat state transition",
+);
+assert.match(
+  eventPanelsSource,
+  /if \(cinematicTimeline\) return <CombatPanel \/>;/,
+  "the combat scene remains mounted until terminal playback finishes",
+);
+assert.doesNotMatch(
+  pageSource,
+  /CombatCinematicModal/,
+  "the page no longer mounts a global combat modal",
+);
+assert.match(
+  combatPanelSource,
+  /import \{ CombatCinematicStage \} from "\.\/CombatCinematicStage";/,
+  "the combat panel mounts the persistent canvas stage itself",
+);
+assert.match(
+  combatPanelSource,
+  /createCombatCinematicSnapshot/,
+  "the permanent scene receives an idle snapshot from live combat state",
+);
+assert.match(
+  combatPanelSource,
+  /const isPlaybackActive = cinematicTimeline !== null;/,
+  "one timeline boolean controls the combat input lock",
+);
+assert.doesNotMatch(
+  combatPanelSource,
+  /CombatShipGrid|CombatShipVisual/,
+  "the legacy side-by-side vessel visuals are not rendered beside the canvas",
+);
+assert.match(
+  combatPanelSource,
+  /if \(isPlaybackActive\) return;/,
+  "action handlers refuse a duplicate resolver call during playback",
+);
+assert.match(
+  combatPanelSource,
+  /disabled=\{isPlaybackActive \|\| !hasWeaponBay\}/,
+  "attack is a real disabled button while playback runs",
+);
+assert.match(
+  combatPanelSource,
+  /disabled=\{isPlaybackActive\}/,
+  "combat controls use the same playback lock",
+);
+assert.match(
+  crewMemberCardSource,
+  /disabled\?: boolean;/,
+  "crew actions accept the combat playback lock",
+);
+assert.deepEqual(
+  await findRuntimeFastCombatReferences(new URL("../src/", import.meta.url)),
+  [],
+  "Fast combat has no runtime state, UI, localization, or animation branch",
+);
+assert.doesNotMatch(
+  weaponsDoc,
+  /Быстрый бой|Fast combat/i,
+  "weapon documentation no longer promises a fast combat mode",
+);
+assert.match(
+  stageSource,
+  /w-full aspect-\[4\/3\].*sm:aspect-\[16\/9\]/,
+  "the persistent stage has a full-width mobile frame and a wider desktop frame",
+);
+assert.match(
+  combatPanelSource,
+  /flex gap-2\.5 flex-col sm:flex-row/,
+  "combat actions stack on mobile and align on desktop",
+);
+assert.match(
+  pageSource,
+  /const showEventStage = mobileShowMap \|\| \(isMobile && \(inCombat \|\| cinematicTimeline !== null\)\);/,
+  "a terminal combat timeline keeps the mobile event stage mounted",
+);
+assert.doesNotMatch(
+  globalsSource,
+  /\.combat-visual-stage/,
+  "unused styling for the replaced side-by-side combat visuals is removed",
+);
 assert.equal(ruTranslations.combat_cinematics.absorbed, "ПОГЛОЩЕНО");
 assert.equal(ruTranslations.combat_cinematics.intercepted, "ПЕРЕХВАЧЕН");
 assert.equal(ruTranslations.combat_cinematics.reflected, "ОТРАЖЕНО");
 assert.equal(enTranslations.combat_cinematics.absorbed, "ABSORBED");
-assert.match(
+assert.doesNotMatch(
   combatPanelSource,
-  /if \(!fastCombat \|\| !lastEnemyHit\)/,
-  "slow combat does not trigger the legacy enemy hit flash",
-);
-assert.match(
-  playerShipGridSource,
-  /if \(!fastCombat \|\| !lastPlayerHit\)/,
-  "slow combat does not trigger the legacy player hit markers",
+  /lastEnemyHit|lastPlayerHit|enemyFlash/,
+  "the permanent scene does not duplicate attack feedback through legacy hit markers",
 );
 
 try {

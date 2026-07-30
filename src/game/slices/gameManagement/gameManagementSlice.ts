@@ -21,7 +21,6 @@ const normalizeAudioSettings = (
     settings: Partial<GameState["settings"]> | undefined,
 ): GameState["settings"] => ({
     animationsEnabled: settings?.animationsEnabled ?? true,
-    fastCombat: settings?.fastCombat ?? false,
     soundEnabled: settings?.soundEnabled ?? true,
     master: normalizeVolume(settings?.master, DEFAULT_AUDIO_VOLUMES.master),
     music: normalizeVolume(settings?.music, DEFAULT_AUDIO_VOLUMES.music),

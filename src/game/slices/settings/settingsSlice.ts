@@ -7,7 +7,6 @@ import type { AudioVolumeCategory } from "@/sounds";
 
 export interface SettingsSlice {
     setAnimationsEnabled: (enabled: boolean) => void;
-    setFastCombat: (enabled: boolean) => void;
     setSoundEnabled: (enabled: boolean) => void;
     setAudioVolume: (category: AudioVolumeCategory, value: number) => void;
     setGalaxyZoom: (zoom: number) => void;
@@ -31,15 +30,6 @@ export const createSettingsSlice = (set: SetState): SettingsSlice => ({
             settings: {
                 ...state.settings,
                 animationsEnabled: enabled,
-            },
-        }));
-    },
-
-    setFastCombat: (enabled: boolean) => {
-        set((state) => ({
-            settings: {
-                ...state.settings,
-                fastCombat: enabled,
             },
         }));
     },

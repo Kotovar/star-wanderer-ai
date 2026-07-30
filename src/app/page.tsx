@@ -42,10 +42,6 @@ const NewGameSetupModal = dynamic(
   () => import("@/game/components/NewGameSetupModal").then((m) => m.NewGameSetupModal),
   { ssr: false },
 );
-const CombatCinematicModal = dynamic(
-  () => import("@/game/components/CombatCinematicModal").then((m) => m.CombatCinematicModal),
-  { ssr: false },
-);
 import { TitleScreen } from "@/game/components/TitleScreen";
 import { StartMenu } from "@/game/components/StartMenu";
 import { useTranslation } from "@/lib/useTranslation";
@@ -181,7 +177,6 @@ export default function Home() {
   );
   const moduleMovedThisTurn = useGameStore((s) => s.ship.moduleMovedThisTurn);
   const animationsEnabled = useGameStore((s) => s.settings.animationsEnabled);
-  const fastCombat = useGameStore((s) => s.settings.fastCombat);
   const soundEnabled = useGameStore((s) => s.settings.soundEnabled);
   const audioVolumes = useGameStore(
     useShallow((s) => ({
@@ -193,13 +188,9 @@ export default function Home() {
   );
   const loadFromSlot = useGameStore((s) => s.loadFromSlot);
   const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
-  const setFastCombat = useGameStore((s) => s.setFastCombat);
   const setSoundEnabled = useGameStore((s) => s.setSoundEnabled);
   const gameMode = useGameStore((s) => s.gameMode);
   const cinematicTimeline = useCombatCinematicUiStore((s) => s.timeline);
-  const dismissCombatCinematic = useCombatCinematicUiStore(
-    (s) => s.dismissCombatCinematic,
-  );
   const log = useGameStore((s) => s.log);
   const hasUrgentContract = useGameStore((s) =>
     s.activeContracts.some((contract) => {
@@ -238,7 +229,7 @@ export default function Home() {
   }
   // Во время боя на мобильном принудительно показываем сцену.
   const inCombat = useGameStore((s) => !!s.currentCombat);
-  const showEventStage = mobileShowMap || (isMobile && inCombat);
+  const showEventStage = mobileShowMap || (isMobile && (inCombat || cinematicTimeline !== null));
 
   // Legacy tab compatibility: if a saved state somehow points to merged tabs,
   // render them as the ship tab with the correct sub-tab.
@@ -363,10 +354,10 @@ export default function Home() {
       <div className="cockpit-scanlines fixed inset-0 pointer-events-none z-9999" />
 
       {/* Game Over / Victory panels (always rendered, self-hide) */}
-      {gameOver && gameOverReason && (
+      {!cinematicTimeline && gameOver && gameOverReason && (
         <GameEndPanel reason={gameOverReason} type="gameover" />
       )}
-      {gameVictory && gameVictoryReason && (
+      {!cinematicTimeline && gameVictory && gameVictoryReason && (
         <GameEndPanel reason={gameVictoryReason} type="victory" />
       )}
 
@@ -377,13 +368,11 @@ export default function Home() {
           {showSetupModal && (
             <StartMenu
               animationsEnabled={animationsEnabled}
-              fastCombat={fastCombat}
               soundEnabled={soundEnabled}
               onAnimationsChange={(enabled) => {
                 setSetupReady(true);
                 setAnimationsEnabled(enabled);
               }}
-              onFastCombatChange={setFastCombat}
               onSoundChange={(enabled) => {
                 void unlockAudio();
                 setSoundEnabled(enabled);
@@ -394,12 +383,11 @@ export default function Home() {
               }}
               onLoad={(slotId) => {
                 // loadFromSlot overwrites settings from the save file itself;
-                // re-apply the toggle values the user currently has selected
-                // in the StartMenu so a load doesn't silently flip them.
+                // re-apply the settings the user currently has selected in the
+                // StartMenu so a load doesn't silently flip them.
                 void unlockAudio();
                 loadFromSlot(slotId);
                 setAnimationsEnabled(animationsEnabled);
-                setFastCombat(fastCombat);
                 setSoundEnabled(soundEnabled);
                 setPhase("game");
               }}
@@ -531,13 +519,6 @@ export default function Home() {
           <RaceDiscoveryModal />
           <TechnologyDiscoveryModal />
           <SurvivorModal />
-          {cinematicTimeline && (
-            <CombatCinematicModal
-              timeline={cinematicTimeline}
-              open
-              onDismiss={dismissCombatCinematic}
-            />
-          )}
           <WelcomeTutorial
             forceShow={showTutorial}
             onDismissed={() => setShowTutorial(false)}

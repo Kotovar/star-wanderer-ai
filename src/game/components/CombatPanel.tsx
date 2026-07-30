@@ -1,20 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGameStore } from "../store";
 import { showHintOnce } from "@/game/hints/showHint";
 import { Button } from "@/components/ui/button";
-import { CombatShipVisual } from "./CombatShipVisual";
-import { CombatShipGrid } from "./CombatShipGrid";
+import { CombatCinematicStage } from "./CombatCinematicStage";
 import { CrewMemberCard } from "./CrewMemberCard";
 import { useCombatCinematicUiStore } from "./combatCinematicUiStore";
 import type { CrewMember, CrewMemberCombatAssignment, Module, WeaponType } from "../types";
 import type { EnemyModule } from "@/game/types/enemy";
-import { getTotalEvasion } from "@/game/slices";
 import { useTranslation } from "@/lib/useTranslation";
 import { WEAPON_TYPES, DRONE_MAX_STACKS, DRONE_STACK_BONUS } from "@/game/constants";
 import { calculateCombatTimeCost } from "@/game/slices/combat/helpers/combatTime";
 import { getBossModulePassives } from "@/game/slices/combat/helpers/bossEffectLabels";
+import { createCombatCinematicSnapshot } from "@/game/slices/combat/helpers/combatTimeline";
 import {
   computeBayAccuracyModifier,
   getWeaponAccuracy,
@@ -63,58 +62,15 @@ type TFn = (key: string, params?: Record<string, string | number>) => string;
 type Ship = ReturnType<typeof useGameStore.getState>["ship"];
 type Combat = NonNullable<ReturnType<typeof useGameStore.getState>["currentCombat"]>;
 
-/** Оружейные отсеки корабля и наличие наводчика — используется в статах и в проверке "нечем стрелять". */
-function getWeaponBayStats(ship: Ship, crew: CrewMember[]) {
+/** Оружейные отсеки корабля — используются для назначения целей и проверки «нечем стрелять». */
+function getWeaponBayStats(ship: Ship) {
   const weaponBays = ship.modules.filter(
     (m) => m.type === "weaponbay" && !m.disabled && m.health > 0,
   );
   const hasWeaponBay =
     weaponBays.length > 0 &&
     weaponBays.some((wb) => wb.weapons && wb.weapons.some((w) => w));
-  const gunnerInWeaponBay = crew.find(
-    (c) =>
-      weaponBays.some((wb) => wb.id === c.moduleId) &&
-      (c.profession === "gunner" ||
-        (c.profession === "pilot" &&
-          (c.combatAssignment === "targeting" ||
-            c.assignment === "targeting"))),
-  );
-  return { weaponBays, hasWeaponBay, gunnerInWeaponBay, hasGunner: !!gunnerInWeaponBay };
-}
-
-/** Суммарные хиты/урон/защита игрока и врага для строки статов боя. */
-function getCombatTotals(currentCombat: Combat, ship: Ship) {
-  const eDmg = currentCombat.enemy.modules.reduce(
-    (s, m) => s + (m.health > 0 ? m.damage || 0 : 0),
-    0,
-  );
-  const eDef = currentCombat.enemy.modules.reduce(
-    (s, m) => s + (m.health > 0 ? m.defense || 0 : 0),
-    0,
-  );
-  const eHP = currentCombat.enemy.modules.reduce((s, m) => s + m.health, 0);
-  const eMaxHP = currentCombat.enemy.modules.reduce(
-    (s, m) => s + (m.maxHealth || 100),
-    0,
-  );
-  const isBiologicalEnemy = currentCombat.enemy.modules.some(
-    (module) => module.isBiological,
-  );
-  const playerMaxHP = ship.modules.reduce(
-    (s, m) => s + (m.maxHealth || m.health),
-    0,
-  );
-  const playerHP = ship.modules.reduce((s, m) => s + m.health, 0);
-  return {
-    eDmg,
-    eDef,
-    eHP,
-    eMaxHP,
-    isBiologicalEnemy,
-    playerMaxHP,
-    playerHP,
-    playerDefense: ship.armor,
-  };
+  return { weaponBays, hasWeaponBay };
 }
 
 /** Текущая фаза боя (засада/наведение/залп/контратака) по состоянию боя и назначенных целей. */
@@ -155,6 +111,7 @@ function WeaponBayTargetRow({
   isActive,
   dmgMultiplier,
   bayAccuracyModifier,
+  disabled,
   onSelect,
   t,
 }: {
@@ -163,6 +120,7 @@ function WeaponBayTargetRow({
   isActive: boolean;
   dmgMultiplier: number;
   bayAccuracyModifier: number;
+  disabled: boolean;
   onSelect: () => void;
   t: TFn;
 }) {
@@ -192,9 +150,10 @@ function WeaponBayTargetRow({
   return (
     <button
       onClick={onSelect}
-      className={`cursor-pointer w-full text-left border px-3 py-2 text-xs transition-colors ${isActive
+      disabled={disabled}
+      className={`w-full text-left border px-3 py-2 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${isActive
         ? "border-ring bg-[rgba(0,212,255,0.12)]"
-        : "border-[#333] bg-[rgba(0,0,0,0.3)] hover:border-[#555]"
+        : "cursor-pointer border-[#333] bg-[rgba(0,0,0,0.3)] hover:border-[#555]"
         }`}
     >
       {/* Top row: weapons + target */}
@@ -242,47 +201,6 @@ function WeaponBayTargetRow({
         </div>
       )}
     </button>
-  );
-}
-
-/** Компактный чип статистики корабля — число + опциональная полоса заполнения под ним. */
-function StatChip({
-  label,
-  value,
-  color,
-  bar,
-}: {
-  label: string;
-  value: string | number;
-  color: string;
-  bar?: { value: number; max: number; colorClass: string };
-}) {
-  const pct = bar
-    ? Math.min(100, Math.max(0, (bar.value / Math.max(1, bar.max)) * 100))
-    : undefined;
-  return (
-    <div
-      className="min-w-0 border bg-[rgba(0,0,0,0.26)] px-2 py-1"
-      style={{ borderColor: `${color}66` }}
-    >
-      <div className="truncate text-[9px] uppercase tracking-wide text-[#667]">
-        {label}
-      </div>
-      <div
-        className="font-['Orbitron'] text-xs font-bold truncate"
-        style={{ color }}
-      >
-        {value}
-      </div>
-      {bar && (
-        <div className="h-1 mt-1 rounded-full bg-[rgba(0,0,0,0.5)] relative">
-          <div
-            className={`absolute rounded-full top-0 left-0 h-full ${bar.colorClass}`}
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -353,14 +271,14 @@ export function CombatPanel() {
   const getTotalDamage = useGameStore((s) => s.getTotalDamage);
   const selectEnemyModule = useGameStore((s) => s.selectEnemyModule);
   const attackEnemyWithBayTargets = useGameStore((s) => s.attackEnemyWithBayTargets);
-  const fastCombat = useGameStore((s) => s.settings.fastCombat);
   const retreat = useGameStore((s) => s.retreat);
   const moveCrewMember = useGameStore((s) => s.moveCrewMember);
   const assignCombatTask = useGameStore((s) => s.assignCombatTask);
   const isModuleAdjacent = useGameStore((s) => s.isModuleAdjacent);
-  const lastEnemyHit = useGameStore((s) => s.currentCombat?.lastEnemyHit);
-  const lastPlayerHit = useGameStore((s) => s.currentCombat?.lastPlayerHit);
   const addLog = useGameStore((s) => s.addLog);
+  const cinematicTimeline = useCombatCinematicUiStore((s) => s.timeline);
+  const startCombatPlayback = useCombatCinematicUiStore((s) => s.startCombatPlayback);
+  const finishCombatPlayback = useCombatCinematicUiStore((s) => s.finishCombatPlayback);
 
   useEffect(() => {
     showHintOnce(addLog, "combat", "hints.combat");
@@ -368,35 +286,32 @@ export function CombatPanel() {
 
   const [bayTargets, setBayTargets] = useState<Record<number, number | null>>({});
   const [activeBayId, setActiveBayId] = useState<number | null>(null);
-  const [enemyFlash, setEnemyFlash] = useState<"shield" | "hull" | null>(null);
   const [selectedCrew, setSelectedCrew] = useState<CrewMember | null>(null);
-  const [zoomLevel, setZoomLevel] = useState<number>(1);
 
-  useEffect(() => {
-    if (!fastCombat || !lastEnemyHit) return;
-    const type = lastEnemyHit.shieldDamage > 0 ? "shield" : "hull";
-    const raf = requestAnimationFrame(() => setEnemyFlash(type));
-    const endTimer = setTimeout(() => setEnemyFlash(null), 600);
-    return () => {
-      cancelAnimationFrame(raf);
-      clearTimeout(endTimer);
-    };
-  }, [fastCombat, lastEnemyHit]);
+  const isPlaybackActive = cinematicTimeline !== null;
+  const idleSnapshot = useMemo(
+    () => createCombatCinematicSnapshot({ ship, currentCombat }),
+    [currentCombat, ship],
+  );
+  const selectedModuleIds = useMemo(
+    () => [
+      ...new Set(
+        Object.values(bayTargets).filter(
+          (targetId): targetId is number => typeof targetId === "number",
+        ),
+      ),
+    ],
+    [bayTargets],
+  );
 
-  // Suppress unused warning — lastPlayerHit is consumed by CombatShipGrid directly from store
-  void lastPlayerHit;
-
-  const { weaponBays, hasWeaponBay, gunnerInWeaponBay } =
-    getWeaponBayStats(ship, crew);
+  const { weaponBays, hasWeaponBay } = getWeaponBayStats(ship);
 
   const pDmg = getTotalDamage();
-  const actualDamage = pDmg.total;
   // Global damage multiplier (bonuses from crew/artifacts/tech applied only to total)
   const dmgBaseSum = (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "quantum_torpedo", "ion_cannon"] as const)
     .reduce((s, k) => s + pDmg[k], 0);
   const dmgMultiplier = dmgBaseSum > 0 ? pDmg.total / dmgBaseSum : 1;
   const isBoss = currentCombat?.enemy.isBoss || false;
-  const evasionChance = getTotalEvasion(useGameStore.getState());
   const combatRound = currentCombat?.round ?? 1;
   const campaignTimeCost = calculateCombatTimeCost(combatRound);
 
@@ -409,21 +324,20 @@ export function CombatPanel() {
     );
   };
 
-  if (!currentCombat) return null;
-
-  const {
-    eDmg,
-    eDef,
-    eHP,
-    eMaxHP,
-    isBiologicalEnemy,
-    playerMaxHP,
-    playerHP,
-    playerDefense,
-  } = getCombatTotals(currentCombat, ship);
+  if (!currentCombat) {
+    if (!cinematicTimeline) return null;
+    return (
+      <CombatCinematicStage
+        idleSnapshot={cinematicTimeline.initial}
+        timeline={cinematicTimeline}
+        selectedModuleIds={[]}
+        onPlaybackComplete={finishCombatPlayback}
+      />
+    );
+  }
 
   const handleEnemyModuleClick = (moduleId: number) => {
-    // Always update enemy selected module (for legacy compatibility)
+    if (isPlaybackActive) return;
     selectEnemyModule(moduleId);
 
     if (activeBayId !== null) {
@@ -440,18 +354,17 @@ export function CombatPanel() {
   };
 
   const handleAttack = () => {
+    if (isPlaybackActive) return;
     const timeline = attackEnemyWithBayTargets(bayTargets);
-    if (timeline && !fastCombat) useCombatCinematicUiStore.getState().showCombatCinematic(timeline);
+    if (timeline) startCombatPlayback(timeline);
   };
 
   const handleSkipCombatTurn = () => {
+    if (isPlaybackActive) return;
     const timeline = useGameStore.getState().skipTurn();
-    if (timeline && !fastCombat) useCombatCinematicUiStore.getState().showCombatCinematic(timeline);
+    if (timeline) startCombatPlayback(timeline);
   };
 
-  // The targeted module for the active bay (for canvas highlight)
-  const activeBayTargetId =
-    activeBayId !== null ? (bayTargets[activeBayId] ?? null) : null;
   const armedBayIds = weaponBays
     .filter((bay) => bay.weapons?.some((weapon) => weapon))
     .map((bay) => bay.id);
@@ -515,146 +428,34 @@ export function CombatPanel() {
         t={t}
       />
 
-      {/* Ship visuals - side by side, with compact stats folded into each panel header */}
-      <div className="combat-visual-stage grid grid-cols-2 gap-4 my-2 items-start">
-        <div className="combat-vessel-panel combat-vessel-panel--player flex min-w-0 flex-col items-center">
-          <div className="combat-vessel-label text-base font-bold mb-2 px-4 py-2 text-ring min-h-11 flex items-center justify-center">
-            {t("combat.your_ship")}
-          </div>
-          <div className="mb-3 grid w-full grid-cols-3 gap-1 sm:grid-cols-5">
-            <StatChip label={t("ship_stats.damage")} value={actualDamage} color="#00ff41" />
-            <StatChip
-              label={t("ship_stats.shields")}
-              value={`${ship.shields}/${ship.maxShields}`}
-              color="#4488ff"
-              bar={{ value: ship.shields, max: ship.maxShields, colorClass: "bg-[#0080ff]" }}
-            />
-            <StatChip
-              label={t("combat.hull")}
-              value={`${playerHP}/${playerMaxHP}`}
-              color="#00ff41"
-              bar={{ value: playerHP, max: playerMaxHP, colorClass: "bg-[#00ff41]" }}
-            />
-            <StatChip label={t("combat.defense")} value={playerDefense} color="#ffb000" />
-            <StatChip label={t("combat.evasion")} value={`${evasionChance}%`} color="#00ff41" />
-          </div>
-          {gunnerInWeaponBay && (
-            <div className="mb-2 text-xs text-[#00ff41]">
-              {t("combat.gunner")} {gunnerInWeaponBay.name}
-            </div>
-          )}
-          <div className="flex items-center gap-2 mb-3">
-            <Button
-              onClick={() =>
-                setZoomLevel((z) => Math.max(0.5, z - 0.1))
-              }
-              disabled={zoomLevel <= 0.5}
-              className="radar-control cursor-pointer border w-10 h-10 p-0 text-lg disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Уменьшить"
-            >
-              −
-            </Button>
-            <span className="text-[#00ff41] text-xs w-12 text-center">
-              {Math.round(zoomLevel * 100)}%
-            </span>
-            <Button
-              onClick={() =>
-                setZoomLevel((z) => Math.min(1, z + 0.1))
-              }
-              disabled={zoomLevel >= 1}
-              className="radar-control cursor-pointer border w-10 h-10 p-0 text-lg disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Увеличить"
-            >
-              +
-            </Button>
-          </div>
-          <CombatShipGrid scale={zoomLevel} />
-        </div>
-        <div className="combat-vessel-panel combat-vessel-panel--enemy flex min-w-0 flex-col items-center">
-          <div
-            className={`combat-vessel-label text-base font-bold mb-2 px-4 py-2 min-h-11 flex items-center justify-center text-center ${isBoss
-              ? "text-[#ff00ff]"
-              : "text-destructive"
-              }`}
-          >
-            {currentCombat.enemy.name}
-          </div>
-          <div className="mb-3 grid w-full grid-cols-2 gap-1 sm:grid-cols-4">
-            <StatChip
-              label={t("ship_stats.damage")}
-              value={eDmg}
-              color={isBoss ? "#ff00ff" : "#ff4d6d"}
-            />
-            <StatChip
-              label={
-                isBiologicalEnemy
-                  ? t("space_monsters.protective_membrane")
-                  : t("combat.shields")
-              }
-              value={`${currentCombat.enemy.shields || 0}/${currentCombat.enemy.maxShields || 0}`}
-              color={isBoss ? "#ff00ff" : "#4488ff"}
-              bar={{
-                value: currentCombat.enemy.shields || 0,
-                max: currentCombat.enemy.maxShields || 0,
-                colorClass: isBoss ? "bg-[#ff00ff]" : "bg-[#0080ff]",
-              }}
-            />
-            <StatChip
-              label={t("combat.hull")}
-              value={`${eHP}/${eMaxHP}`}
-              color={isBoss ? "#ff00ff" : "#ff4d6d"}
-              bar={{
-                value: eHP,
-                max: eMaxHP,
-                colorClass: isBoss ? "bg-[#ff00ff]" : "bg-destructive",
-              }}
-            />
-            <StatChip
-              label={t("combat.defense")}
-              value={eDef}
-              color={isBoss ? "#ff00ff" : "#ff4d6d"}
-            />
-          </div>
-          <div className="flex items-center gap-2 h-11 mb-3" />
-          <CombatShipVisual
-            modules={currentCombat.enemy.modules}
-            crew={[]}
-            isEnemy={true}
-            isBoss={isBoss}
-            onModuleClick={handleEnemyModuleClick}
-            title=""
-            shields={currentCombat.enemy.shields}
-            hitFlash={fastCombat ? enemyFlash : null}
-            selectedModuleId={activeBayTargetId ?? undefined}
-            damageHit={fastCombat ? lastEnemyHit ?? null : null}
-          />
-          {activeBayId !== null && (
-            <div className="text-[10px] text-ring mt-2 text-center animate-pulse">
-              Выбор цели...
-            </div>
-          )}
-        </div>
-      </div>
+      <CombatCinematicStage
+        idleSnapshot={idleSnapshot}
+        timeline={cinematicTimeline}
+        selectedModuleIds={selectedModuleIds}
+        onPlaybackComplete={finishCombatPlayback}
+      />
 
       {/* Attack actions */}
       <div className="flex gap-2.5 flex-col sm:flex-row">
         <Button
-          disabled={!hasWeaponBay}
+          disabled={isPlaybackActive || !hasWeaponBay}
           onClick={handleAttack}
           className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
         >
           {t("combat.attack")}
         </Button>
         <Button
+          disabled={isPlaybackActive}
           onClick={handleSkipCombatTurn}
-          className="cursor-pointer bg-transparent border-2 border-accent text-accent hover:bg-accent hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
+          className="cursor-pointer bg-transparent border-2 border-accent text-accent hover:bg-accent hover:text-[#050810] uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-auto"
         >
           {t("combat.skip_turn")}
         </Button>
         <Button
           variant="destructive"
+          disabled={isPlaybackActive}
           onClick={retreat}
-          className="cursor-pointer bg-transparent border-2 border-destructive text-destructive hover:bg-destructive hover:text-[#050810] uppercase tracking-wider w-full sm:w-auto"
+          className="cursor-pointer bg-transparent border-2 border-destructive text-destructive hover:bg-destructive hover:text-[#050810] uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-auto"
         >
           {t("combat.retreat")}
         </Button>
@@ -685,12 +486,37 @@ export function CombatPanel() {
                 isActive={isActive}
                 dmgMultiplier={dmgMultiplier}
                 bayAccuracyModifier={bayAccuracyModifier}
+                disabled={isPlaybackActive}
                 onSelect={() => setActiveBayId(isActive ? null : bay.id)}
                 t={t}
               />
             );
           })}
-          {activeBayId !== null && (
+          <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
+            {currentCombat.enemy.modules.map((module) => {
+              const isTargeted = selectedModuleIds.includes(module.id);
+              return (
+                <button
+                  key={module.id}
+                  type="button"
+                  disabled={isPlaybackActive || module.health <= 0}
+                  onClick={() => handleEnemyModuleClick(module.id)}
+                  className={`min-w-0 border px-2 py-1.5 text-left text-[10px] transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${isTargeted
+                    ? "border-[#ffcb57] bg-[rgba(255,203,87,0.12)] text-[#ffcb57]"
+                    : "cursor-pointer border-[#365062] bg-[rgba(0,0,0,0.28)] text-[#b8d9e8] hover:border-[#67e8f9]"
+                    }`}
+                >
+                  <span className="block truncate">{module.name}</span>
+                  {!isPlaybackActive && (
+                    <span className="mt-0.5 block text-[9px] text-[#7893a2]">
+                      {module.health}/{module.maxHealth ?? module.health}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {!isPlaybackActive && activeBayId !== null && (
             <div className="text-[10px] text-ring text-center pt-0.5">
               Нажмите на модуль врага чтобы назначить цель
             </div>
@@ -706,6 +532,7 @@ export function CombatPanel() {
         onMoveCrew={moveCrewMember}
         assignCombatTask={assignCombatTask}
         getAdjacentModules={getAdjacentModules}
+        disabled={isPlaybackActive}
       />
 
       {isBoss && (
@@ -800,6 +627,7 @@ function BossModulePassivesCard({
 interface CrewManagementProps {
   crew: CrewMember[];
   ship: ReturnType<typeof useGameStore.getState>["ship"];
+  disabled: boolean;
   selectedCrew: CrewMember | null;
   onSelectCrew: (crew: CrewMember | null) => void;
   onMoveCrew: (_crewId: number, _moduleId: number) => void;
@@ -816,6 +644,7 @@ interface CrewManagementProps {
 function CrewManagement({
   crew,
   ship,
+  disabled,
   selectedCrew,
   onSelectCrew,
   onMoveCrew,
@@ -849,6 +678,7 @@ function CrewManagement({
                 assignCombatTask(id, task, "")
               }
               isCombat={true}
+              disabled={disabled}
             />
           );
         })}

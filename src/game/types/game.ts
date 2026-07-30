@@ -148,7 +148,6 @@ export interface GameState {
   activeDive: DiveState | null; // Active gas giant dive
   settings: {
     animationsEnabled: boolean; // Sector map animations toggle
-    fastCombat: boolean; // Skip the combat cinematic overlay
     soundEnabled: boolean;
     master: number;
     music: number;
@@ -205,7 +204,6 @@ export interface GameActions {
   refuel: (amount: number, price: number) => void;
   gainExp: (crewMember: CrewMember | undefined, amount: number) => void;
   setAnimationsEnabled: (enabled: boolean) => void;
-  setFastCombat: (enabled: boolean) => void;
   setSoundEnabled: (enabled: boolean) => void;
   setAudioVolume: (category: "master" | "music" | "sfx" | "ui", value: number) => void;
   setGalaxyZoom: (zoom: number) => void;

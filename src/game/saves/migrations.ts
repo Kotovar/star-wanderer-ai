@@ -347,12 +347,16 @@ const migrations: Record<number, Migration> = {
   },
   16: (raw) => {
     const state = raw as Partial<GameState>;
+    const legacySettings = state.settings as
+      | (Partial<GameState["settings"]> & { fastCombat?: boolean })
+      | undefined;
     return {
       ...state,
       stateVersion: 17,
       settings: {
-        ...(state.settings ?? {}),
-        fastCombat: state.settings?.fastCombat ?? false,
+        ...(legacySettings ?? {}),
+        // Historical migration output; the current settings normalizer drops this retired field.
+        fastCombat: legacySettings?.fastCombat ?? false,
       },
     };
   },

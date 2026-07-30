@@ -34,6 +34,7 @@ interface CrewMemberCardProps {
     _effect: string | null,
   ) => void;
   isCombat?: boolean;
+  disabled?: boolean;
 }
 
 export function CrewMemberCard({
@@ -45,6 +46,7 @@ export function CrewMemberCard({
   onMove,
   onAssignTask,
   isCombat = false,
+  disabled = false,
 }: CrewMemberCardProps) {
   const { t } = useTranslation();
   // Use combat actions during battle, civilian actions otherwise
@@ -59,11 +61,18 @@ export function CrewMemberCard({
 
   return (
     <div
-      className={`bg-[rgba(0,255,65,0.05)] border p-2 text-[10px] ${isSelected
+      className={`border p-2 text-[10px] ${disabled
+          ? "cursor-not-allowed border-[#00ff4155] bg-[rgba(0,255,65,0.025)] opacity-55"
+          : "cursor-pointer bg-[rgba(0,255,65,0.05)]"
+        } ${isSelected
           ? "border-[#ffb000] bg-[rgba(255,176,0,0.08)]"
           : "border-[#00ff41]"
         }`}
-      onClick={() => onSelect(isSelected ? null : crewMember)}
+      aria-disabled={disabled}
+      onClick={() => {
+        if (disabled) return;
+        onSelect(isSelected ? null : crewMember);
+      }}
     >
       <div className="flex items-center gap-2 cursor-pointer">
         <span className="text-[#00d4ff] font-bold min-w-20">
@@ -98,6 +107,7 @@ export function CrewMemberCard({
             adjacentModules={adjacentModules}
             onMove={onMove}
             onSelect={onSelect}
+            disabled={disabled}
           />
           <TaskRow
             crewMember={crewMember}
@@ -107,6 +117,7 @@ export function CrewMemberCard({
             currentAssignment={currentAssignment}
             isCombat={isCombat}
             t={t}
+            disabled={disabled}
           />
         </div>
       )}
@@ -119,6 +130,7 @@ export interface MovementRowProps {
   adjacentModules: Module[];
   onMove: (_crewMemberId: number, _moduleId: number) => void;
   onSelect: (crewMember: CrewMember | null) => void;
+  disabled?: boolean;
 }
 
 export function ModuleMoveButtons({
@@ -126,6 +138,7 @@ export function ModuleMoveButtons({
   adjacentModules,
   onMove,
   onSelect,
+  disabled = false,
 }: MovementRowProps) {
   const { t } = useTranslation();
 
@@ -147,12 +160,13 @@ export function ModuleMoveButtons({
         modulesWithTypeIndex.map(({ module, typeIndex }) => (
           <Button
             key={module.id}
+            disabled={disabled}
             onClick={(e) => {
               e.stopPropagation();
               onMove(crewMember.id, module.id);
               onSelect(null);
             }}
-            className="cursor-pointer bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-[9px] px-2 h-6 rounded-none"
+            className="cursor-pointer bg-transparent border border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] text-[9px] px-2 h-6 rounded-none disabled:cursor-not-allowed disabled:opacity-50"
           >
             {getModuleName(adjacentModules, t, module.id)} #{typeIndex} (
             {module.x},{module.y})
@@ -174,6 +188,7 @@ function MovementRow({
   adjacentModules,
   onMove,
   onSelect,
+  disabled,
 }: MovementRowProps) {
   const { t } = useTranslation();
 
@@ -188,6 +203,7 @@ function MovementRow({
         adjacentModules={adjacentModules}
         onMove={onMove}
         onSelect={onSelect}
+        disabled={disabled}
       />
     </div>
   );
@@ -210,6 +226,7 @@ interface TaskRowProps {
   currentAssignment: string | null;
   isCombat?: boolean;
   t: (key: string) => string;
+  disabled?: boolean;
 }
 
 function TaskRow({
@@ -220,6 +237,7 @@ function TaskRow({
   currentAssignment,
   isCombat = false,
   t,
+  disabled = false,
 }: TaskRowProps) {
   // Фильтруем задачи по модулю используя общую функцию
   const filteredActions = getAvailableTasksForModule(module, actions);
@@ -242,6 +260,7 @@ function TaskRow({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    disabled={disabled}
                     onClick={(e) => {
                       e.stopPropagation();
                       const actualValue =
@@ -254,7 +273,7 @@ function TaskRow({
                         null,
                       );
                     }}
-                    className={`cursor-pointer bg-transparent border text-[9px] px-2 h-6 rounded-none ${isActive
+                    className={`cursor-pointer bg-transparent border text-[9px] px-2 h-6 rounded-none disabled:cursor-not-allowed disabled:opacity-50 ${isActive
                         ? "bg-[#ffb000] text-[#050810] border-[#ffb000]"
                         : "border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
                       }`}

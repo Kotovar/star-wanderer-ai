@@ -1,9 +1,6 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { GameDialogContent } from "@/game/components/GameDialog";
 import { WEAPON_TYPES } from "@/game/constants";
 import { setupHiDPICanvas } from "@/game/components/canvas-utils";
 import {
@@ -154,6 +151,28 @@ function drawModuleLights(
     ctx.beginPath();
     ctx.arc(point.x, point.y, intact ? 4 : 3, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawSelectedModuleTargets(
+  ctx: CanvasRenderingContext2D,
+  vessel: CombatCinematicSnapshot["enemy"],
+  moduleIds: readonly number[],
+  width: number,
+  height: number,
+): void {
+  for (const moduleId of moduleIds) {
+    if (!vessel.modules.some((currentModule) => currentModule.id === moduleId)) continue;
+    const point = getModulePoint(vessel, "enemy", moduleId, width, height);
+    ctx.save();
+    ctx.strokeStyle = "#ffcb57";
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = "#ffcb57";
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, 11, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.restore();
   }
 }
@@ -939,6 +958,7 @@ function drawScene(
   elapsed: number,
   t: Translate,
   sceneScale: number,
+  selectedModuleIds: readonly number[],
 ): void {
   drawBackground(ctx, width, height, elapsed);
   const shake = event?.kind === "projectile" && event.isCrit && progress > 0.76
@@ -948,6 +968,7 @@ function drawScene(
   ctx.translate(shake, -shake * 0.45);
   drawShip(ctx, snapshot.player, "player", width, height, elapsed);
   drawShip(ctx, snapshot.enemy, "enemy", width, height, elapsed);
+  drawSelectedModuleTargets(ctx, snapshot.enemy, selectedModuleIds, width, height);
   drawShipBars(ctx, snapshot.player, "player", width, height);
   drawShipBars(ctx, snapshot.enemy, "enemy", width, height);
   drawActiveEvent(ctx, event, progress, snapshot, width, height, elapsed, t, sceneScale);
@@ -962,29 +983,100 @@ function drawScene(
   ctx.restore();
 }
 
-export interface CombatCinematicModalProps {
-  timeline: CombatTurnTimeline | null;
-  open: boolean;
-  onDismiss: () => void;
+function drawCanvasFrame(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  stage: HTMLElement,
+  snapshot: CombatCinematicSnapshot,
+  event: CombatCinematicEvent | undefined,
+  progress: number,
+  elapsed: number,
+  t: Translate,
+  selectedModuleIds: readonly number[],
+): void {
+  const rect = stage.getBoundingClientRect();
+  const width = Math.max(1, Math.floor(rect.width));
+  const height = Math.max(1, Math.floor(rect.height));
+  setupHiDPICanvas(canvas, ctx, width, height);
+  const scene = getCombatCinematicSceneMetrics(width, height);
+
+  ctx.save();
+  ctx.scale(scene.scale, scene.scale);
+  drawScene(
+    ctx,
+    scene.width,
+    scene.height,
+    snapshot,
+    event,
+    progress,
+    elapsed,
+    t,
+    scene.scale,
+    selectedModuleIds,
+  );
+  ctx.restore();
 }
 
-export function CombatCinematicModal({
+export interface CombatCinematicStageProps {
+  idleSnapshot: CombatCinematicSnapshot | null;
+  timeline: CombatTurnTimeline | null;
+  selectedModuleIds: readonly number[];
+  onPlaybackComplete: () => void;
+}
+
+export function CombatCinematicStage({
+  idleSnapshot,
   timeline,
-  open,
-  onDismiss,
-}: CombatCinematicModalProps) {
+  selectedModuleIds,
+  onPlaybackComplete,
+}: CombatCinematicStageProps) {
   const stageRef = useRef<HTMLDivElement>(null);
-  const tRef = useRef<Translate>(() => "");
   const { t } = useTranslation();
+  const tRef = useRef<Translate>(t);
+  const onPlaybackCompleteRef = useRef(onPlaybackComplete);
+  const selectedModuleIdsRef = useRef(selectedModuleIds);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
-  const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
     tRef.current = t;
   }, [t]);
 
+  useEffect(() => {
+    onPlaybackCompleteRef.current = onPlaybackComplete;
+  }, [onPlaybackComplete]);
+
+  useEffect(() => {
+    selectedModuleIdsRef.current = selectedModuleIds;
+  }, [selectedModuleIds]);
+
   useLayoutEffect(() => {
-    if (!open || !timeline || !canvas) return;
+    if (timeline || !idleSnapshot || !canvas) return;
+    const stage = stageRef.current ?? canvas.parentElement ?? canvas;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const renderIdle = () => {
+      drawCanvasFrame(
+        canvas,
+        ctx,
+        stage,
+        idleSnapshot,
+        undefined,
+        1,
+        performance.now(),
+        tRef.current,
+        selectedModuleIds,
+      );
+    };
+
+    renderIdle();
+    const resizeObserver = new ResizeObserver(renderIdle);
+    resizeObserver.observe(stage);
+    return () => resizeObserver.disconnect();
+  }, [canvas, idleSnapshot, selectedModuleIds, timeline]);
+
+  useLayoutEffect(() => {
+    if (!timeline || !canvas) return;
     const stage = stageRef.current ?? canvas.parentElement ?? canvas;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -997,12 +1089,6 @@ export function CombatCinematicModal({
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const render = (timestamp: number) => {
-      const rect = stage.getBoundingClientRect();
-      const width = Math.max(1, Math.floor(rect.width));
-      const height = Math.max(1, Math.floor(rect.height));
-      setupHiDPICanvas(canvas, ctx, width, height);
-      const scene = getCombatCinematicSceneMetrics(width, height);
-
       let activeEvent = timeline.events[eventIndex];
       let progress = activeEvent
         ? clamp((timestamp - eventStartedAt) / (reducedMotion ? Math.min(180, getCombatCinematicEventDuration(activeEvent)) : getCombatCinematicEventDuration(activeEvent)))
@@ -1020,25 +1106,22 @@ export function CombatCinematicModal({
         ? getCombatCinematicSnapshotAtProgress(visualSnapshot, activeEvent, progress)
         : visualSnapshot;
 
-      ctx.save();
-      ctx.scale(scene.scale, scene.scale);
-      drawScene(
+      drawCanvasFrame(
+        canvas,
         ctx,
-        scene.width,
-        scene.height,
+        stage,
         sceneSnapshot,
         activeEvent,
         progress,
         timestamp,
         tRef.current,
-        scene.scale,
+        selectedModuleIdsRef.current,
       );
-      ctx.restore();
 
       if (!activeEvent) {
         if (!finished) {
           finished = true;
-          setIsComplete(true);
+          onPlaybackCompleteRef.current();
         }
         return;
       }
@@ -1047,51 +1130,21 @@ export function CombatCinematicModal({
 
     render(performance.now());
     return () => cancelAnimationFrame(frameId);
-  }, [canvas, open, timeline]);
+  }, [canvas, timeline]);
 
-  if (!timeline) return null;
+  if (!timeline && !idleSnapshot) return null;
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onDismiss()}>
-      <GameDialogContent
-        className="max-h-[94dvh] !w-[calc(100%-1rem)] !max-w-none gap-2 overflow-y-auto p-2.5 sm:!w-[min(96vw,72rem)] sm:!max-w-6xl sm:gap-3 sm:p-5"
-        showCloseButton={false}
-      >
-        <div className="flex items-start justify-between gap-2 sm:items-center sm:gap-3">
-          <div>
-            <DialogTitle className="font-['Orbitron'] text-xs font-bold uppercase tracking-[0.12em] text-[#67e8f9] sm:text-sm sm:tracking-[0.18em]">
-              {t("combat_cinematics.title")}
-            </DialogTitle>
-            <DialogDescription className="sr-only">
-              {t("combat_cinematics.description")}
-            </DialogDescription>
-          </div>
-          <div className="shrink-0 font-mono text-[9px] tracking-[0.14em] text-[#6b8791] sm:text-[10px] sm:tracking-[0.2em]">
-            {t(isComplete ? "combat_cinematics.complete" : "combat_cinematics.live")}
-          </div>
-        </div>
-
-        <div
-          ref={stageRef}
-          className="relative aspect-[4/3] min-h-[min(13rem,44dvh)] max-h-[min(560px,56dvh)] overflow-hidden border border-[#1b4965] bg-[#030914] shadow-[0_0_28px_rgba(0,212,255,0.14)] sm:aspect-[16/9] sm:min-h-[min(26.25rem,56dvh)]"
-        >
-          <canvas
-            ref={setCanvas}
-            className="absolute inset-0 block size-full"
-            role="img"
-            aria-label={t("combat_cinematics.canvas_label")}
-          />
-        </div>
-
-        <div className="flex justify-end">
-          <Button
-            onClick={onDismiss}
-            className="w-full border border-[#67e8f9] bg-transparent font-['Orbitron'] text-xs uppercase tracking-wider text-[#67e8f9] hover:bg-[#67e8f9] hover:text-[#03111e] sm:w-auto"
-          >
-            {t(isComplete ? "combat_cinematics.continue" : "combat_cinematics.skip")}
-          </Button>
-        </div>
-      </GameDialogContent>
-    </Dialog>
+    <div
+      ref={stageRef}
+      className="relative w-full aspect-[4/3] min-h-[min(13rem,44dvh)] overflow-hidden border border-[#1b4965] bg-[#030914] shadow-[0_0_28px_rgba(0,212,255,0.14)] sm:aspect-[16/9] sm:min-h-[min(26.25rem,56dvh)]"
+    >
+      <canvas
+        ref={setCanvas}
+        className="absolute inset-0 block size-full"
+        role="img"
+        aria-label={t("combat_cinematics.canvas_label")}
+      />
+    </div>
   );
 }

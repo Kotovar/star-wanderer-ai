@@ -910,28 +910,6 @@ button:focus-visible,
     to { opacity: 0; transform: translate(-50%, -50%) scale(1.15); }
 }
 
-.combat-visual-stage {
-    position: relative;
-    flex-shrink: 0;
-    overflow: hidden;
-    padding: clamp(0.6rem, 1.4vw, 1rem);
-    border: 1px solid rgba(0, 212, 255, 0.28);
-    background:
-        radial-gradient(circle at 22% 48%, rgba(0, 212, 255, 0.09), transparent 34%),
-        radial-gradient(circle at 78% 48%, rgba(255, 0, 64, 0.085), transparent 34%),
-        linear-gradient(180deg, rgba(4, 16, 22, 0.94), rgba(2, 8, 12, 0.98));
-    box-shadow: inset 0 0 42px rgba(0, 0, 0, 0.5);
-}
-
-.combat-visual-stage::before {
-    content: "";
-    position: absolute;
-    inset-block: 8%;
-    left: 50%;
-    border-left: 1px dashed rgba(255, 176, 0, 0.24);
-    pointer-events: none;
-}
-
 .combat-vessel-panel {
     position: relative;
     z-index: 1;
@@ -1050,18 +1028,6 @@ button:focus-visible,
 @keyframes ship-power-flow {
     to {
         stroke-dashoffset: -24;
-    }
-}
-
-@media (max-width: 640px) {
-    .combat-visual-stage {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    .combat-visual-stage::before {
-        inset: auto 8% 50%;
-        border-top: 1px dashed rgba(255, 176, 0, 0.24);
-        border-left: 0;
     }
 }
 

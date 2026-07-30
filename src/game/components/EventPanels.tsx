@@ -10,6 +10,7 @@ import { useTranslation } from "@/lib/useTranslation";
 import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
 
 import { CombatPanel } from "./CombatPanel";
+import { useCombatCinematicUiStore } from "./combatCinematicUiStore";
 import { AssignmentsPanel } from "./AssignmentsPanel";
 import { StationPanel } from "./StationPanel";
 import { PlanetPanel } from "./PlanetPanel";
@@ -154,6 +155,7 @@ function buildTravelEventItems(
 
 export function EventDisplay() {
   const gameMode = useGameStore((s) => s.gameMode);
+  const cinematicTimeline = useCombatCinematicUiStore((s) => s.timeline);
   const pendingRandomEvent = useGameStore((s) => s.pendingRandomEvent);
   const traveling = useGameStore((s) => s.traveling);
   const pendingCrewPerkChoice = useGameStore(
@@ -193,6 +195,8 @@ export function EventDisplay() {
     skipTurn();
     setTimeout(() => setIsSkipping(false), 600);
   };
+
+  if (cinematicTimeline) return <CombatPanel />;
 
   if (pendingRandomEvent) {
     return <RandomEventPanel />;
