@@ -633,6 +633,52 @@ function drawDamageNumber(
   ctx.restore();
 }
 
+function drawAbilityDamage(
+  ctx: CanvasRenderingContext2D,
+  event: Extract<CombatCinematicEvent, { kind: "damage" }>,
+  progress: number,
+  snapshot: CombatCinematicSnapshot,
+  width: number,
+  height: number,
+  sceneScale: number,
+): void {
+  const impactProgress = clamp((progress - 0.56) / 0.44);
+  if (impactProgress <= 0) return;
+
+  const center = shipCenter(event.side, width, height);
+  const target = event.moduleId === undefined
+    ? center
+    : getModulePoint(snapshot[event.side], event.side, event.moduleId, width, height);
+  const color = event.side === "player" ? ENEMY_COLOR : PLAYER_COLOR;
+
+  if (event.shieldDamage > 0) {
+    drawShield(ctx, center, impactProgress, snapshot[event.side].kind === "boss");
+    drawDamageNumber(
+      ctx,
+      center,
+      event.shieldDamage,
+      color,
+      impactProgress,
+      false,
+      "−",
+      sceneScale,
+    );
+  }
+  if (event.hullDamage > 0) {
+    drawExplosion(ctx, target, impactProgress, color);
+    drawDamageNumber(
+      ctx,
+      target,
+      event.hullDamage,
+      color,
+      impactProgress,
+      false,
+      "−",
+      sceneScale,
+    );
+  }
+}
+
 function drawReflection(
   ctx: CanvasRenderingContext2D,
   event: Extract<CombatCinematicEvent, { kind: "reflection" }>,
@@ -780,10 +826,29 @@ function drawActiveEvent(
       );
       return;
     }
+    if (event.outcome === "blocked" && progress >= 0.62) {
+      const impactProgress = clamp((progress - 0.62) / 0.38);
+      drawExplosion(ctx, point, impactProgress, "#94a3b8");
+      drawOutcomeLabel(
+        ctx,
+        point,
+        t("combat_cinematics.blocked"),
+        "#d8e3ed",
+        impactProgress,
+        sceneScale,
+      );
+      return;
+    }
     const isAbsorbed = event.outcome === "absorbed";
     const hasShieldImpact =
-      event.outcome === "shield" || event.outcome === "shield_and_hull" || isAbsorbed;
-    const hasHullImpact = event.outcome === "hull" || event.outcome === "shield_and_hull";
+      event.outcome === "shield" ||
+      event.outcome === "shield_and_hull" ||
+      event.outcome === "piercing" ||
+      isAbsorbed;
+    const hasHullImpact =
+      event.outcome === "hull" ||
+      event.outcome === "shield_and_hull" ||
+      event.outcome === "piercing";
     const { shield: shieldContactProgress, hull: hullContactProgress } =
       getCombatCinematicProjectileContactProgress(event);
     if (isAbsorbed && progress >= shieldContactProgress) {
@@ -864,7 +929,7 @@ function drawActiveEvent(
       if (hasHullImpact) {
         drawExplosion(ctx, targetPoint, hullImpactProgress, getProjectileColor(event, snapshot));
       }
-      if (event.outcome === "shield_and_hull") {
+      if (event.outcome === "shield_and_hull" || event.outcome === "piercing") {
         drawDamageNumber(
           ctx,
           shieldImpactPoint,
@@ -887,6 +952,16 @@ function drawActiveEvent(
             sceneScale,
           );
         }
+        if (event.outcome === "piercing") {
+          drawOutcomeLabel(
+            ctx,
+            shieldImpactPoint,
+            t("combat_cinematics.pierced"),
+            "#ffb000",
+            shieldImpactProgress,
+            sceneScale,
+          );
+        }
       } else {
         drawDamageNumber(
           ctx,
@@ -905,6 +980,11 @@ function drawActiveEvent(
 
   if (event.kind === "reflection") {
     drawReflection(ctx, event, progress, snapshot, width, height, sceneScale, t);
+    return;
+  }
+
+  if (event.kind === "damage") {
+    drawAbilityDamage(ctx, event, progress, snapshot, width, height, sceneScale);
     return;
   }
 

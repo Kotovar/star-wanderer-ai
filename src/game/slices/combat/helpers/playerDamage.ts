@@ -1,4 +1,5 @@
 import type { GameState, WeaponType } from "@/game/types";
+import type { CombatProjectileResolution } from "@/game/types/combatCinematics";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { getTechPerkValue } from "@/game/constants/techTree";
 import {
@@ -17,6 +18,42 @@ import {
     getArtifactEffectValue,
 } from "@/game/artifacts/utils";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import { getProjectileOutcome } from "./combatTimeline";
+
+function recordProjectileHit(
+    projectiles: CombatProjectileResolution[],
+    weapon: WeaponType,
+    shieldDamage: number,
+    hullDamage: number,
+): void {
+    if (shieldDamage <= 0 && hullDamage <= 0) {
+        throw new RangeError(`${weapon} hit must deal shield or hull damage`);
+    }
+    projectiles.push({
+        weapon,
+        outcome: getProjectileOutcome(shieldDamage, hullDamage),
+        shieldDamage,
+        hullDamage,
+    });
+}
+
+function recordProjectileMiss(
+    projectiles: CombatProjectileResolution[],
+    weapon: WeaponType,
+): void {
+    projectiles.push({ weapon, outcome: "miss", shieldDamage: 0, hullDamage: 0 });
+}
+
+function recordProjectileInterception(
+    projectiles: CombatProjectileResolution[],
+): void {
+    projectiles.push({
+        weapon: "missile",
+        outcome: "intercepted",
+        shieldDamage: 0,
+        hullDamage: 0,
+    });
+}
 
 /**
  * Calculates weapon accuracy with all modifiers
@@ -231,6 +268,7 @@ export function processLaserDamage(
     remainingShields: number,
     enemyShields: number,
     accuracy: number,
+    projectiles: CombatProjectileResolution[],
 ): {
     totalShieldDamage: number;
     totalModuleDamage: number;
@@ -246,6 +284,7 @@ export function processLaserDamage(
     for (let i = 0; i < weaponCount; i++) {
         if (Math.random() > accuracy) {
             missedShots++;
+            recordProjectileMiss(projectiles, "laser");
             continue;
         }
 
@@ -269,6 +308,7 @@ export function processLaserDamage(
             logs.push(`Лазер: -${actualShieldDmg} щитам`);
             if (overflow > 0) logs.push(`(перелёт: ${overflow})`);
         }
+        recordProjectileHit(projectiles, "laser", actualShieldDmg, overflow);
     }
 
     return {
@@ -291,6 +331,7 @@ export function processKineticDamage(
     enemyShields: number,
     accuracy: number,
     armorPenetration: number,
+    projectiles: CombatProjectileResolution[],
 ): {
     totalShieldDamage: number;
     totalModuleDamage: number;
@@ -307,6 +348,7 @@ export function processKineticDamage(
     for (let i = 0; i < weaponCount; i++) {
         if (Math.random() > accuracy) {
             missedShots++;
+            recordProjectileMiss(projectiles, "kinetic");
             continue;
         }
 
@@ -321,6 +363,7 @@ export function processKineticDamage(
         if (enemyShields > 0 && shieldDmg > 0) {
             logs.push(`Кинетика: -${shieldDmg} щитам`);
         }
+        recordProjectileHit(projectiles, "kinetic", shieldDmg, overflow);
     }
 
     return {
@@ -345,6 +388,7 @@ export function processMissileDamage(
     accuracy: number,
     interceptChance: number,
     accuracyModifier: number,
+    projectiles: CombatProjectileResolution[],
 ): {
     totalShieldDamage: number;
     totalModuleDamage: number;
@@ -368,11 +412,13 @@ export function processMissileDamage(
     for (let i = 0; i < weaponCount; i++) {
         if (Math.random() > accuracy) {
             missedShots++;
+            recordProjectileMiss(projectiles, "missile");
             continue;
         }
 
         if (Math.random() < actualInterceptChance) {
             missileInterceptedCount++;
+            recordProjectileInterception(projectiles);
             continue;
         }
 
@@ -387,6 +433,7 @@ export function processMissileDamage(
         if (enemyShields > 0 && shieldDmg > 0) {
             logs.push(`Ракета: -${shieldDmg} щитам`);
         }
+        recordProjectileHit(projectiles, "missile", shieldDmg, overflow);
     }
 
     if (missileInterceptedCount > 0) {
@@ -414,6 +461,7 @@ export function processPlasmaDamage(
     enemyShields: number,
     accuracy: number,
     shieldBonus: number,
+    projectiles: CombatProjectileResolution[],
 ): {
     totalShieldDamage: number;
     totalModuleDamage: number;
@@ -431,6 +479,7 @@ export function processPlasmaDamage(
     for (let i = 0; i < weaponCount; i++) {
         if (Math.random() > accuracy) {
             missedShots++;
+            recordProjectileMiss(projectiles, "plasma");
             continue;
         }
 
@@ -450,6 +499,7 @@ export function processPlasmaDamage(
             logs.push(`Плазма: -${actualShieldDmg} щитам`);
             if (overflow > 0) logs.push(`(перелёт: ${Math.floor(overflow)})`);
         }
+        recordProjectileHit(projectiles, "plasma", actualShieldDmg, overflow);
     }
 
     return {
@@ -475,6 +525,7 @@ export function processDronesDamage(
     enemyShields: number,
     accuracy: number,
     droneStacks: number,
+    projectiles: CombatProjectileResolution[],
 ): {
     totalShieldDamage: number;
     totalModuleDamage: number;
@@ -500,6 +551,7 @@ export function processDronesDamage(
     for (let i = 0; i < weaponCount; i++) {
         if (Math.random() > accuracy) {
             missedShots++;
+            recordProjectileMiss(projectiles, "drones");
             continue;
         }
 
@@ -517,6 +569,7 @@ export function processDronesDamage(
         if (enemyShields > 0 && shieldDmg > 0) {
             logs.push(`Дрон: -${Math.floor(shieldDmg)} щитам`);
         }
+        recordProjectileHit(projectiles, "drones", shieldDmg, overflow);
     }
 
     return {
@@ -540,6 +593,7 @@ export function processAntimatterDamage(
     enemyShields: number,
     accuracy: number,
     shieldBonus: number,
+    projectiles: CombatProjectileResolution[],
 ): {
     totalShieldDamage: number;
     totalModuleDamage: number;
@@ -555,6 +609,7 @@ export function processAntimatterDamage(
     for (let i = 0; i < weaponCount; i++) {
         if (Math.random() > accuracy) {
             missedShots++;
+            recordProjectileMiss(projectiles, "antimatter");
             continue;
         }
 
@@ -572,6 +627,7 @@ export function processAntimatterDamage(
             logs.push(`Антиматерия: -${actualShieldDmg} щитам`);
             if (overflow > 0) logs.push(`(перелёт: ${overflow})`);
         }
+        recordProjectileHit(projectiles, "antimatter", actualShieldDmg, overflow);
     }
 
     return {
@@ -591,6 +647,7 @@ export function processQuantumTorpedoDamage(
     finalDamagePerWeapon: number,
     damageMultiplier: number,
     accuracy: number,
+    projectiles: CombatProjectileResolution[],
 ): {
     totalModuleDamage: number;
     logs: string[];
@@ -603,12 +660,14 @@ export function processQuantumTorpedoDamage(
     for (let i = 0; i < weaponCount; i++) {
         if (Math.random() > accuracy) {
             missedShots++;
+            recordProjectileMiss(projectiles, "quantum_torpedo");
             continue;
         }
 
         const torpedoDmg = finalDamagePerWeapon * damageMultiplier;
         totalModuleDamage += torpedoDmg;
         logs.push(`Квант. торпеда: ${torpedoDmg} прямо по модулям!`);
+        recordProjectileHit(projectiles, "quantum_torpedo", 0, torpedoDmg);
     }
 
     return {
@@ -626,9 +685,9 @@ export function processIonCannonDamage(
     finalDamagePerWeapon: number,
     damageMultiplier: number,
     remainingShields: number,
-    enemyShields: number,
     accuracy: number,
     shieldBonus: number,
+    projectiles: CombatProjectileResolution[],
 ): {
     totalShieldDamage: number;
     totalModuleDamage: number;
@@ -644,23 +703,28 @@ export function processIonCannonDamage(
     for (let i = 0; i < weaponCount; i++) {
         if (Math.random() > accuracy) {
             missedShots++;
+            recordProjectileMiss(projectiles, "ion_cannon");
             continue;
         }
 
         const ionDmg = finalDamagePerWeapon * damageMultiplier;
         const shieldDmg = Math.floor(ionDmg * shieldBonus);
+        const shieldsBeforeShot = remainingShields;
         const actualShieldDmg = Math.min(remainingShields, shieldDmg);
 
         remainingShields -= actualShieldDmg;
         totalShieldDamage += actualShieldDmg;
 
-        if (enemyShields > 0) {
+        let hullDamage = 0;
+        if (shieldsBeforeShot > 0) {
             logs.push(`⚡ Ионная пушка: -${actualShieldDmg} щитам`);
         } else {
             // Ионизация наносит минимальный урон корпусу даже без щитов
-            totalModuleDamage += 1;
+            hullDamage = 1;
+            totalModuleDamage += hullDamage;
             logs.push(`⚡ Ионная пушка: щиты сняты, ионизация -1 корпусу`);
         }
+        recordProjectileHit(projectiles, "ion_cannon", actualShieldDmg, hullDamage);
     }
 
     return {

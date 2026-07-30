@@ -7,6 +7,7 @@ import type {
 const DIRECT_PROJECTILE_IMPACT_PROGRESS = 0.62;
 const SHIELD_BREACH_PROGRESS = 0.68;
 const HULL_AFTER_SHIELD_BREACH_PROGRESS = 0.76;
+const ABILITY_DAMAGE_IMPACT_PROGRESS = 0.56;
 
 export function getCombatCinematicEventDuration(
   event: CombatCinematicEvent,
@@ -23,6 +24,8 @@ export function getCombatCinematicEventDuration(
     case "heal":
     case "shield_restore":
       return 460;
+    case "damage":
+      return 560;
     case "turn_skipped":
       return 420;
     case "projectile":
@@ -64,7 +67,8 @@ export function getCombatCinematicSnapshotAtProgress(
     if (
       event.outcome === "miss" ||
       event.outcome === "intercepted" ||
-      event.outcome === "absorbed"
+      event.outcome === "absorbed" ||
+      event.outcome === "blocked"
     ) return snapshot;
 
     const { shield: shieldContact, hull: hullContact } =
@@ -77,6 +81,10 @@ export function getCombatCinematicSnapshotAtProgress(
   }
 
   if (event.kind === "reflection" && progress >= 0.8) {
+    return applyCombatCinematicEvent(snapshot, event);
+  }
+
+  if (event.kind === "damage" && progress >= ABILITY_DAMAGE_IMPACT_PROGRESS) {
     return applyCombatCinematicEvent(snapshot, event);
   }
 
@@ -97,7 +105,8 @@ export function applyCombatCinematicEvent(
     if (
       event.outcome === "miss" ||
       event.outcome === "intercepted" ||
-      event.outcome === "absorbed"
+      event.outcome === "absorbed" ||
+      event.outcome === "blocked"
     ) return next;
     const target = next[event.to];
     target.shields = Math.max(0, target.shields - event.shieldDamage);
@@ -143,6 +152,20 @@ export function applyCombatCinematicEvent(
   if (event.kind === "shield_restore") {
     const target = next[event.side];
     target.shields = Math.min(target.maxShields, target.shields + event.amount);
+    return next;
+  }
+
+  if (event.kind === "damage") {
+    const target = next[event.side];
+    target.shields = Math.max(0, target.shields - event.shieldDamage);
+    if (event.moduleId !== undefined) {
+      const targetModule = target.modules.find(
+        (currentModule) => currentModule.id === event.moduleId,
+      );
+      if (targetModule) {
+        targetModule.health = Math.max(0, targetModule.health - event.hullDamage);
+      }
+    }
     return next;
   }
 

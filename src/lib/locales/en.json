@@ -1802,7 +1802,9 @@
         "turn_skipped": "TURN SKIPPED",
         "absorbed": "ABSORBED",
         "intercepted": "INTERCEPTED",
-        "reflected": "REFLECTED"
+        "reflected": "REFLECTED",
+        "blocked": "BLOCKED",
+        "pierced": "PIERCING"
     },
     "distress_signal": {
         "title": "▸ DISTRESS SIGNAL",

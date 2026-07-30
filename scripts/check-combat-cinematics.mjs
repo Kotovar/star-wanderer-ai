@@ -3,8 +3,10 @@ import { readFile, readdir } from "node:fs/promises";
 
 let createCombatTimelineCollector;
 let buildVolleyEvents;
+let finalizeProjectileHullDamage;
 let createCombatCinematicSnapshot;
 let appendCombatSnapshotDeltaEvents;
+let appendCombatSnapshotDamageEvents;
 let applyCombatCinematicEvent;
 let getCombatCinematicSnapshotAtProgress;
 let getCombatCinematicEventDuration;
@@ -152,6 +154,16 @@ assert.match(
   "a reflected attack has its own readable outcome",
 );
 assert.match(
+  stageSource,
+  /event\.outcome === "piercing"/,
+  "shield-piercing attacks render as a bypass instead of a false shield breach",
+);
+assert.match(
+  stageSource,
+  /combat_cinematics\.blocked/,
+  "a zero-damage armor block has a readable outcome",
+);
+assert.match(
   enemyCounterAttackSource,
   /pushEnemyProjectile\(timeline, tgt, 0, 0, false, "absorbed"\)/,
   "phase shield records absorption instead of a zero-damage shield hit",
@@ -275,6 +287,8 @@ assert.equal(ruTranslations.combat_cinematics.absorbed, "ПОГЛОЩЕНО");
 assert.equal(ruTranslations.combat_cinematics.intercepted, "ПЕРЕХВАЧЕН");
 assert.equal(ruTranslations.combat_cinematics.reflected, "ОТРАЖЕНО");
 assert.equal(enTranslations.combat_cinematics.absorbed, "ABSORBED");
+assert.equal(ruTranslations.combat_cinematics.blocked, "БЛОКИРОВАНО");
+assert.equal(enTranslations.combat_cinematics.blocked, "BLOCKED");
 assert.doesNotMatch(
   combatPanelSource,
   /lastEnemyHit|lastPlayerHit|enemyFlash/,
@@ -285,8 +299,10 @@ try {
   ({
     createCombatTimelineCollector,
     buildVolleyEvents,
+    finalizeProjectileHullDamage,
     createCombatCinematicSnapshot,
     appendCombatSnapshotDeltaEvents,
+    appendCombatSnapshotDamageEvents,
   } = await import(
     "../src/game/slices/combat/helpers/combatTimeline.ts"
   ));
@@ -364,18 +380,6 @@ try {
   );
 }
 
-const emptyWeaponCounts = () => ({
-  kinetic: 0,
-  laser: 0,
-  missile: 0,
-  plasma: 0,
-  drones: 0,
-  antimatter: 0,
-  quantum_torpedo: 0,
-  ion_cannon: 0,
-});
-
-const emptyMisses = () => emptyWeaponCounts();
 const weaponOrder = [
   "laser",
   "kinetic",
@@ -553,6 +557,40 @@ const snapshot = {
 
 {
   assert.equal(
+    typeof appendCombatSnapshotDamageEvents,
+    "function",
+    "boss damage effects can be derived from their real state delta",
+  );
+  const collector = createCombatTimelineCollector(snapshot);
+  appendCombatSnapshotDamageEvents(
+    collector,
+    snapshot,
+    {
+      ...snapshot,
+      player: {
+        ...snapshot.player,
+        shields: 14,
+        modules: [{ id: 1, health: 51, maxHealth: 60 }],
+      },
+    },
+  );
+  assert.deepEqual(
+    collector.finish().events,
+    [
+      {
+        kind: "damage",
+        side: "player",
+        shieldDamage: 6,
+        hullDamage: 9,
+        moduleId: 1,
+      },
+    ],
+    "an ability-driven shield and hull loss becomes a synchronized canvas event",
+  );
+}
+
+{
+  assert.equal(
     typeof getCombatCinematicSnapshotAtProgress,
     "function",
     "playback exposes the current visual snapshot for an in-flight event",
@@ -609,6 +647,16 @@ const snapshot = {
     [0],
     "destroying a core empties the whole visual hull bar even with surviving modules",
   );
+
+  const abilityDamage = getCombatCinematicSnapshotAtProgress(snapshot, {
+    kind: "damage",
+    side: "player",
+    shieldDamage: 6,
+    hullDamage: 9,
+    moduleId: 1,
+  }, 0.62);
+  assert.equal(abilityDamage.player.shields, 14, "ability damage updates shields at its visible impact");
+  assert.equal(abilityDamage.player.modules[0].health, 51, "ability damage updates hull at its visible impact");
 }
 
 {
@@ -668,30 +716,23 @@ const snapshot = {
   );
 }
 
-function projectileEvents(input) {
+function projectileEvents(projectiles, isCrit = false) {
   return buildVolleyEvents({
     from: "player",
     to: "enemy",
     targetModuleId: 9,
-    isCrit: false,
-    ...input,
+    isCrit,
+    projectiles,
   });
 }
 
 {
-  const weaponCounts = emptyWeaponCounts();
-  weaponCounts.laser = 1;
-  weaponCounts.kinetic = 1;
+  const events = projectileEvents([
+    { weapon: "laser", outcome: "shield", shieldDamage: 20, hullDamage: 0 },
+    { weapon: "quantum_torpedo", outcome: "hull", shieldDamage: 0, hullDamage: 55 },
+  ]);
 
-  const events = projectileEvents({
-    weaponCounts,
-    missedShots: emptyMisses(),
-    missileInterceptedCount: 0,
-    shieldDamage: 10,
-    hullDamage: 18,
-  });
-
-  assert.equal(events.length, 2, "two fired weapons create two projectiles");
+  assert.equal(events.length, 2, "two resolved shots create two projectiles");
   assert.deepEqual(
     events.map(({ weapon, outcome, shieldDamage, hullDamage }) => [
       weapon,
@@ -700,59 +741,52 @@ function projectileEvents(input) {
       hullDamage,
     ]),
     [
-      ["laser", "shield_and_hull", 5, 9],
-      ["kinetic", "shield_and_hull", 5, 9],
+      ["laser", "shield", 20, 0],
+      ["quantum_torpedo", "hull", 0, 55],
     ],
-    "every visible hit receives its share of shield and hull damage",
-  );
-  assert.equal(
-    events.reduce((sum, event) => sum + event.shieldDamage, 0),
-    10,
-    "visual shield damage equals the resolved total",
-  );
-  assert.equal(
-    events.reduce((sum, event) => sum + event.hullDamage, 0),
-    18,
-    "visual hull damage equals the resolved total",
+    "a shield-only shot never inherits hull damage from a quantum torpedo",
   );
 }
 
 {
-  const weaponCounts = emptyWeaponCounts();
-  for (const weapon of weaponOrder) weaponCounts[weapon] = 1;
+  const events = projectileEvents([
+    { weapon: "enemy", outcome: "piercing", shieldDamage: 8, hullDamage: 12 },
+    { weapon: "enemy", outcome: "blocked", shieldDamage: 0, hullDamage: 0 },
+  ]);
+  assert.deepEqual(
+    events.map(({ outcome, shieldDamage, hullDamage }) => [outcome, shieldDamage, hullDamage]),
+    [
+      ["piercing", 8, 12],
+      ["blocked", 0, 0],
+    ],
+    "piercing and blocked outcomes preserve their combat meaning instead of becoming a fake hull hit",
+  );
+}
 
-  const events = projectileEvents({
-    weaponCounts,
-    missedShots: emptyMisses(),
-    missileInterceptedCount: 0,
-    shieldDamage: 12,
-    hullDamage: 44,
-  });
+{
+  const events = projectileEvents(
+    weaponOrder.map((weapon) => ({
+      weapon,
+      outcome: weapon === "quantum_torpedo" ? "hull" : "shield",
+      shieldDamage: weapon === "quantum_torpedo" ? 0 : 12,
+      hullDamage: weapon === "quantum_torpedo" ? 44 : 0,
+    })),
+  );
 
   assert.deepEqual(
     events.map((event) => event.weapon),
     weaponOrder,
     "all eight live weapon types receive a visual projectile event",
   );
-  assert(
-    events.every((event) => event.shieldDamage + event.hullDamage > 0),
-    "a visible hit never reaches the target without a damage result",
-  );
+  assert(events.every((event) => event.shieldDamage + event.hullDamage > 0));
 }
 
 {
-  const weaponCounts = emptyWeaponCounts();
-  weaponCounts.missile = 3;
-  const missedShots = emptyMisses();
-  missedShots.missile = 1;
-
-  const events = projectileEvents({
-    weaponCounts,
-    missedShots,
-    missileInterceptedCount: 1,
-    shieldDamage: 12,
-    hullDamage: 0,
-  });
+  const events = projectileEvents([
+    { weapon: "missile", outcome: "shield", shieldDamage: 12, hullDamage: 0 },
+    { weapon: "missile", outcome: "intercepted", shieldDamage: 0, hullDamage: 0 },
+    { weapon: "missile", outcome: "miss", shieldDamage: 0, hullDamage: 0 },
+  ]);
 
   assert.deepEqual(
     events.map((event) => event.outcome),
@@ -762,16 +796,9 @@ function projectileEvents(input) {
 }
 
 {
-  const weaponCounts = emptyWeaponCounts();
-  weaponCounts.quantum_torpedo = 1;
-
-  const events = projectileEvents({
-    weaponCounts,
-    missedShots: emptyMisses(),
-    missileInterceptedCount: 0,
-    shieldDamage: 0,
-    hullDamage: 55,
-  });
+  const events = projectileEvents([
+    { weapon: "quantum_torpedo", outcome: "hull", shieldDamage: 0, hullDamage: 55 },
+  ]);
 
   assert.deepEqual(
     events.map(({ weapon, outcome, shieldDamage, hullDamage }) => [
@@ -786,16 +813,9 @@ function projectileEvents(input) {
 }
 
 {
-  const weaponCounts = emptyWeaponCounts();
-  weaponCounts.kinetic = 1;
-
-  const events = projectileEvents({
-    weaponCounts,
-    missedShots: emptyMisses(),
-    missileInterceptedCount: 0,
-    shieldDamage: 2.5,
-    hullDamage: 7.5,
-  });
+  const events = projectileEvents([
+    { weapon: "kinetic", outcome: "shield_and_hull", shieldDamage: 2.5, hullDamage: 7.5 },
+  ], true);
 
   assert.deepEqual(
     events.map(({ shieldDamage, hullDamage }) => [shieldDamage, hullDamage]),
@@ -805,23 +825,39 @@ function projectileEvents(input) {
 }
 
 {
-  const weaponCounts = emptyWeaponCounts();
-  weaponCounts.plasma = 2;
-  const missedShots = emptyMisses();
-  missedShots.plasma = 2;
-
-  const events = projectileEvents({
-    weaponCounts,
-    missedShots,
-    missileInterceptedCount: 0,
-    shieldDamage: 0,
-    hullDamage: 0,
-  });
+  const events = projectileEvents([
+    { weapon: "plasma", outcome: "miss", shieldDamage: 0, hullDamage: 0 },
+    { weapon: "plasma", outcome: "miss", shieldDamage: 0, hullDamage: 0 },
+  ]);
 
   assert.deepEqual(
     events.map((event) => event.outcome),
     ["miss", "miss"],
     "an all-miss volley has no fabricated damage",
+  );
+}
+
+{
+  assert.equal(
+    typeof finalizeProjectileHullDamage,
+    "function",
+    "armor-adjusted hull damage can be reconciled without changing which shot crossed the shield",
+  );
+  assert.deepEqual(
+    finalizeProjectileHullDamage(
+      [
+        { weapon: "laser", outcome: "shield", shieldDamage: 20, hullDamage: 0 },
+        { weapon: "kinetic", outcome: "shield_and_hull", shieldDamage: 5, hullDamage: 10 },
+        { weapon: "quantum_torpedo", outcome: "hull", shieldDamage: 0, hullDamage: 50 },
+      ],
+      30,
+    ),
+    [
+      { weapon: "laser", outcome: "shield", shieldDamage: 20, hullDamage: 0 },
+      { weapon: "kinetic", outcome: "shield_and_hull", shieldDamage: 5, hullDamage: 5 },
+      { weapon: "quantum_torpedo", outcome: "hull", shieldDamage: 0, hullDamage: 25 },
+    ],
+    "armor changes only the shots that actually reached the hull and keeps their total equal to live damage",
   );
 }
 
@@ -872,6 +908,7 @@ function projectileEvents(input) {
     "reflection",
     "heal",
     "shield_restore",
+    "damage",
     "module_destroyed",
     "vessel_destroyed",
     "boss_ability",

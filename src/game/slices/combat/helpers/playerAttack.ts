@@ -39,11 +39,16 @@ import { advanceCombatRound } from "./combatTime";
 import {
   appendCombatSnapshotDeltaEvents,
   buildVolleyEvents,
+  createMissProjectileResolutions,
   createCombatCinematicSnapshot,
   createCombatTimelineCollector,
+  finalizeProjectileHullDamage,
   type CombatTimelineCollector,
 } from "./combatTimeline";
-import type { CombatTurnTimeline } from "../../../types/combatCinematics";
+import type {
+  CombatProjectileResolution,
+  CombatTurnTimeline,
+} from "../../../types/combatCinematics";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { getTechPerkValue } from "@/game/constants/techTree";
 import type { CrewMember } from "@/game/types";
@@ -109,6 +114,7 @@ interface DamageResult {
   plasmaHitCount: number;
   droneHitCount: number;
   logs: string[];
+  projectiles: CombatProjectileResolution[];
 }
 
 const WEAPON_SOUND_IDS: Record<WeaponType, SoundId> = {
@@ -564,6 +570,7 @@ function calculateAllDamage(
   let droneHitCount = 0;
   let missileInterceptedCount = 0;
   const logs: string[] = [];
+  const projectiles: CombatProjectileResolution[] = [];
   const missedShots: WeaponCounts = {
     kinetic: 0,
     laser: 0,
@@ -590,6 +597,7 @@ function calculateAllDamage(
       remainingShields,
       enemyShields,
       getAccuracy("laser"),
+      projectiles,
     );
     totalShieldDamage += result.totalShieldDamage;
     totalModuleDamage += result.totalModuleDamage;
@@ -607,6 +615,7 @@ function calculateAllDamage(
       enemyShields,
       getAccuracy("kinetic"),
       WEAPON_TYPES.kinetic.armorPenetration ?? 0.5,
+      projectiles,
     );
     totalShieldDamage += result.totalShieldDamage;
     totalModuleDamage += result.totalModuleDamage;
@@ -626,6 +635,7 @@ function calculateAllDamage(
       getAccuracy("missile"),
       WEAPON_TYPES.missile.interceptChance ?? 0.2,
       accuracyModifier,
+      projectiles,
     );
     totalShieldDamage += result.totalShieldDamage;
     totalModuleDamage += result.totalModuleDamage;
@@ -645,6 +655,7 @@ function calculateAllDamage(
       enemyShields,
       getAccuracy("plasma"),
       WEAPON_TYPES.plasma.shieldBonus ?? 1.3,
+      projectiles,
     );
     totalShieldDamage += result.totalShieldDamage;
     totalModuleDamage += result.totalModuleDamage;
@@ -663,6 +674,7 @@ function calculateAllDamage(
       enemyShields,
       getAccuracy("drones"),
       droneStacks,
+      projectiles,
     );
     totalShieldDamage += result.totalShieldDamage;
     totalModuleDamage += result.totalModuleDamage;
@@ -681,6 +693,7 @@ function calculateAllDamage(
       enemyShields,
       getAccuracy("antimatter"),
       WEAPON_TYPES.antimatter.shieldBonus ?? 2.5,
+      projectiles,
     );
     totalShieldDamage += result.totalShieldDamage;
     totalModuleDamage += result.totalModuleDamage;
@@ -695,6 +708,7 @@ function calculateAllDamage(
       perTypeDamage?.quantum_torpedo ?? finalDamagePerWeapon,
       damageMultiplier,
       getAccuracy("quantum_torpedo"),
+      projectiles,
     );
     totalModuleDamage += result.totalModuleDamage;
     logs.push(...result.logs);
@@ -707,9 +721,9 @@ function calculateAllDamage(
       perTypeDamage?.ion_cannon ?? finalDamagePerWeapon,
       damageMultiplier,
       remainingShields,
-      enemyShields,
       getAccuracy("ion_cannon"),
       WEAPON_TYPES.ion_cannon.shieldBonus ?? 4.0,
+      projectiles,
     );
     totalShieldDamage += result.totalShieldDamage;
     totalModuleDamage += result.totalModuleDamage;
@@ -754,6 +768,7 @@ function calculateAllDamage(
     plasmaHitCount,
     droneHitCount,
     logs,
+    projectiles,
   };
 }
 
@@ -769,7 +784,7 @@ function applyDamageToEnemy(
   combatFlags: CombatFlags,
   weaponCounts: WeaponCounts,
   isCrit = false,
-) {
+): number {
   let finalModuleDamage = 0;
 
   // Apply shield damage
@@ -895,6 +910,8 @@ function applyDamageToEnemy(
       };
     });
   }
+
+  return finalModuleDamage;
 }
 
 // ─── Combat flags helper ──────────────────────────────────────────────────────
@@ -1191,11 +1208,7 @@ export function executePlayerAttackWithBayTargets(
           from: "player",
           to: "enemy",
           targetModuleId: fallbackTarget.id,
-          weaponCounts: bayWeapons,
-          missedShots: bayWeapons,
-          missileInterceptedCount: 0,
-          shieldDamage: 0,
-          hullDamage: 0,
+          projectiles: createMissProjectileResolutions(bayWeapons),
           isCrit: false,
         }));
       }
@@ -1260,11 +1273,7 @@ export function executePlayerAttackWithBayTargets(
         from: "player",
         to: "enemy",
         targetModuleId: tgtMod.id,
-        weaponCounts: bayWeapons,
-        missedShots: bayWeapons,
-        missileInterceptedCount: 0,
-        shieldDamage: 0,
-        hullDamage: 0,
+        projectiles: createMissProjectileResolutions(bayWeapons),
         isCrit: false,
       }));
       recordEnemyMiss(set, tgtMod);
@@ -1307,19 +1316,15 @@ export function executePlayerAttackWithBayTargets(
     );
 
     remainingShields = damage.remainingShields;
-    timeline.push(...buildVolleyEvents({
-      from: "player",
-      to: "enemy",
-      targetModuleId: tgtMod.id,
-      weaponCounts: bayWeapons,
-      missedShots: damage.missedShots,
-      missileInterceptedCount: damage.missileInterceptedCount,
-      shieldDamage: damage.totalShieldDamage,
-      hullDamage: damage.totalModuleDamage,
-      isCrit: bayCrit.isCrit && bayDamageMultiplier > 1,
-    }));
 
     if (damage.totalShieldDamage === 0 && damage.totalModuleDamage === 0) {
+      timeline.push(...buildVolleyEvents({
+        from: "player",
+        to: "enemy",
+        targetModuleId: tgtMod.id,
+        projectiles: damage.projectiles,
+        isCrit: false,
+      }));
       damage.logs.forEach((log) => get().addLog(log, "combat"));
       recordEnemyMiss(set, tgtMod);
       continue;
@@ -1328,7 +1333,7 @@ export function executePlayerAttackWithBayTargets(
     anyHit = true;
 
     const targetHealthBefore = tgtMod.health;
-    applyDamageToEnemy(
+    const finalModuleDamage = applyDamageToEnemy(
       set,
       get,
       tgtMod,
@@ -1338,6 +1343,16 @@ export function executePlayerAttackWithBayTargets(
       bayWeapons,
       bayCrit.isCrit && bayDamageMultiplier > 1,
     );
+    timeline.push(...buildVolleyEvents({
+      from: "player",
+      to: "enemy",
+      targetModuleId: tgtMod.id,
+      projectiles: finalizeProjectileHullDamage(
+        damage.projectiles,
+        finalModuleDamage,
+      ),
+      isCrit: bayCrit.isCrit && bayDamageMultiplier > 1,
+    }));
     const targetHealthAfter = get().currentCombat?.enemy.modules.find(
       (module) => module.id === tgtMod.id,
     )?.health;

@@ -4,6 +4,7 @@ import type {
   CombatCinematicSide,
   CombatCinematicSnapshot,
   CombatProjectileEvent,
+  CombatProjectileResolution,
   CombatTurnTimeline,
 } from "../../../types/combatCinematics";
 import type { GameState } from "../../../types/game";
@@ -23,11 +24,7 @@ const WEAPON_ORDER: WeaponType[] = [
 export interface BuildVolleyEventsInput {
   from: CombatCinematicSide;
   to: CombatCinematicSide;
-  weaponCounts: WeaponCounts;
-  missedShots: WeaponCounts;
-  missileInterceptedCount: number;
-  shieldDamage: number;
-  hullDamage: number;
+  projectiles: readonly CombatProjectileResolution[];
   isCrit: boolean;
   targetModuleId?: number;
 }
@@ -73,6 +70,50 @@ export function appendCombatSnapshotDeltaEvents(
         side,
         amount: restoredShields,
         source: source === "regen" ? "regen" : "restore",
+      });
+    }
+  }
+}
+
+/**
+ * Emits the damage portion of a state transition for effects that mutate the
+ * combat state outside the ordinary projectile resolver (boss auras/skills).
+ */
+export function appendCombatSnapshotDamageEvents(
+  collector: CombatTimelineCollector,
+  before: CombatCinematicSnapshot,
+  after: CombatCinematicSnapshot,
+): void {
+  for (const side of ["player", "enemy"] as const) {
+    let remainingShieldDamage = Math.max(
+      0,
+      before[side].shields - after[side].shields,
+    );
+    const previousModules = new Map(
+      before[side].modules.map((module) => [module.id, module]),
+    );
+
+    for (const currentModule of after[side].modules) {
+      const previous = previousModules.get(currentModule.id);
+      if (!previous) continue;
+      const hullDamage = Math.max(0, previous.health - currentModule.health);
+      if (hullDamage <= 0) continue;
+      collector.push({
+        kind: "damage",
+        side,
+        shieldDamage: remainingShieldDamage,
+        hullDamage,
+        moduleId: currentModule.id,
+      });
+      remainingShieldDamage = 0;
+    }
+
+    if (remainingShieldDamage > 0) {
+      collector.push({
+        kind: "damage",
+        side,
+        shieldDamage: remainingShieldDamage,
+        hullDamage: 0,
       });
     }
   }
@@ -164,118 +205,91 @@ function updateOutcome(event: CombatProjectileEvent): void {
   event.outcome = getProjectileOutcome(event.shieldDamage, event.hullDamage);
 }
 
-function distributeDamage(
-  totalDamage: number,
-  recipients: CombatProjectileEvent[],
-  field: "shieldDamage" | "hullDamage",
-): void {
-  const totalHundredths = Math.round(totalDamage * 100);
-  const baseShare = Math.floor(totalHundredths / recipients.length);
-  const remainder = totalHundredths % recipients.length;
-
-  for (let index = 0; index < recipients.length; index += 1) {
-    recipients[index][field] += (baseShare + (index < remainder ? 1 : 0)) / 100;
-  }
-}
-
-/**
- * Turns the current aggregate combat result into a stable visual sequence.
- * Exact per-shot amounts are not retained by the existing resolver, so the
- * aggregate is distributed across the hits that can visually receive it.
- */
-export function buildVolleyEvents(
-  input: BuildVolleyEventsInput,
-): CombatProjectileEvent[] {
-  requireNonNegativeInteger(input.missileInterceptedCount, "missileInterceptedCount");
-  requireNonNegativeNumber(input.shieldDamage, "shieldDamage");
-  requireNonNegativeNumber(input.hullDamage, "hullDamage");
-
-  const events: CombatProjectileEvent[] = [];
-  const hits: CombatProjectileEvent[] = [];
+export function createMissProjectileResolutions(
+  weaponCounts: WeaponCounts,
+): CombatProjectileResolution[] {
+  const projectiles: CombatProjectileResolution[] = [];
 
   for (const weapon of WEAPON_ORDER) {
-    const count = input.weaponCounts[weapon];
-    const missed = input.missedShots[weapon];
-    const intercepted = weapon === "missile" ? input.missileInterceptedCount : 0;
-
+    const count = weaponCounts[weapon];
     requireNonNegativeInteger(count, `${weapon} count`);
-    requireNonNegativeInteger(missed, `${weapon} missedShots`);
-    if (missed + intercepted > count) {
-      throw new RangeError(`${weapon} misses and interceptions exceed fired shots`);
-    }
-
-    const hitCount = count - missed - intercepted;
-    for (let index = 0; index < hitCount; index += 1) {
-      const event: CombatProjectileEvent = {
-        kind: "projectile",
-        from: input.from,
-        to: input.to,
-        weapon,
-        outcome: "hull",
-        shieldDamage: 0,
-        hullDamage: 0,
-        isCrit: input.isCrit,
-        ...(input.targetModuleId === undefined
-          ? {}
-          : { targetModuleId: input.targetModuleId }),
-      };
-      events.push(event);
-      hits.push(event);
-    }
-
-    for (let index = 0; index < intercepted; index += 1) {
-      events.push({
-        kind: "projectile",
-        from: input.from,
-        to: input.to,
-        weapon,
-        outcome: "intercepted",
-        shieldDamage: 0,
-        hullDamage: 0,
-        isCrit: false,
-        ...(input.targetModuleId === undefined
-          ? {}
-          : { targetModuleId: input.targetModuleId }),
-      });
-    }
-
-    for (let index = 0; index < missed; index += 1) {
-      events.push({
-        kind: "projectile",
-        from: input.from,
-        to: input.to,
+    for (let index = 0; index < count; index += 1) {
+      projectiles.push({
         weapon,
         outcome: "miss",
         shieldDamage: 0,
         hullDamage: 0,
-        isCrit: false,
-        ...(input.targetModuleId === undefined
-          ? {}
-          : { targetModuleId: input.targetModuleId }),
       });
     }
   }
 
-  const shieldRecipients = hits.filter((event) => event.weapon !== "quantum_torpedo");
-  if (input.shieldDamage > 0) {
-    if (shieldRecipients.length === 0) {
-      throw new RangeError("shield damage requires a non-quantum projectile hit");
+  return projectiles;
+}
+
+/**
+ * Armor is resolved once for the whole bay. Keep that total exact while only
+ * assigning the remaining hull damage to projectiles that actually reached it.
+ */
+export function finalizeProjectileHullDamage(
+  projectiles: readonly CombatProjectileResolution[],
+  finalHullDamage: number,
+): CombatProjectileResolution[] {
+  requireNonNegativeNumber(finalHullDamage, "finalHullDamage");
+  const rawHullDamage = projectiles.reduce(
+    (total, projectile) => total + projectile.hullDamage,
+    0,
+  );
+  requireNonNegativeNumber(rawHullDamage, "rawHullDamage");
+
+  if (rawHullDamage === 0) {
+    if (finalHullDamage > 0) {
+      throw new RangeError("final hull damage requires a projectile that reached the hull");
     }
-    distributeDamage(input.shieldDamage, shieldRecipients, "shieldDamage");
+    return projectiles.map((projectile) => ({ ...projectile }));
   }
 
-  if (input.hullDamage > 0) {
-    if (hits.length === 0) {
-      throw new RangeError("hull damage requires a projectile hit");
+  const ratio = finalHullDamage / rawHullDamage;
+  return projectiles.map((projectile) => {
+    if (projectile.hullDamage === 0) return { ...projectile };
+    const hullDamage = projectile.hullDamage * ratio;
+    const outcome = projectile.outcome === "piercing"
+      ? "piercing"
+      : getProjectileOutcome(projectile.shieldDamage, hullDamage);
+    return { ...projectile, hullDamage, outcome };
+  });
+}
+
+/** Turns already-resolved shots into their visual events without re-simulating damage. */
+export function buildVolleyEvents(
+  input: BuildVolleyEventsInput,
+): CombatProjectileEvent[] {
+  return input.projectiles.map((projectile) => {
+    requireNonNegativeNumber(projectile.shieldDamage, "projectile shieldDamage");
+    requireNonNegativeNumber(projectile.hullDamage, "projectile hullDamage");
+    const isNonDamageOutcome =
+      projectile.outcome === "miss" ||
+      projectile.outcome === "intercepted" ||
+      projectile.outcome === "absorbed" ||
+      projectile.outcome === "blocked";
+    if (!isNonDamageOutcome && projectile.shieldDamage + projectile.hullDamage <= 0) {
+      throw new RangeError("a projectile hit must have shield or hull damage");
     }
-    distributeDamage(input.hullDamage, hits, "hullDamage");
-  }
 
-  for (const event of hits) {
-    updateOutcome(event);
-  }
-
-  return events;
+    const event: CombatProjectileEvent = {
+      kind: "projectile",
+      from: input.from,
+      to: input.to,
+      ...projectile,
+      isCrit: input.isCrit && !isNonDamageOutcome,
+      ...(input.targetModuleId === undefined
+        ? {}
+        : { targetModuleId: input.targetModuleId }),
+    };
+    if (!isNonDamageOutcome && projectile.outcome !== "piercing") {
+      updateOutcome(event);
+    }
+    return event;
+  });
 }
 
 export function createCombatTimelineCollector(

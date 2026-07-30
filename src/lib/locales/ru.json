@@ -1802,7 +1802,9 @@
         "turn_skipped": "ХОД ПРОПУЩЕН",
         "absorbed": "ПОГЛОЩЕНО",
         "intercepted": "ПЕРЕХВАЧЕН",
-        "reflected": "ОТРАЖЕНО"
+        "reflected": "ОТРАЖЕНО",
+        "blocked": "БЛОКИРОВАНО",
+        "pierced": "ПРОБИТИЕ"
     },
     "distress_signal": {
         "title": "▸ СИГНАЛ БЕДСТВИЯ",

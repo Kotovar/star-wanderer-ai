@@ -9,7 +9,9 @@ export type CombatProjectileOutcome =
   | "absorbed"
   | "shield"
   | "hull"
-  | "shield_and_hull";
+  | "shield_and_hull"
+  | "piercing"
+  | "blocked";
 export type CombatCinematicHealSource = "regen" | "repair" | "lifesteal";
 
 export interface CombatCinematicModuleSnapshot {
@@ -31,14 +33,17 @@ export interface CombatCinematicSnapshot {
   enemy: CombatCinematicVesselSnapshot;
 }
 
-export interface CombatProjectileEvent {
-  kind: "projectile";
-  from: CombatCinematicSide;
-  to: CombatCinematicSide;
+export interface CombatProjectileResolution {
   weapon: WeaponType | "enemy";
   outcome: CombatProjectileOutcome;
   shieldDamage: number;
   hullDamage: number;
+}
+
+export interface CombatProjectileEvent extends CombatProjectileResolution {
+  kind: "projectile";
+  from: CombatCinematicSide;
+  to: CombatCinematicSide;
   isCrit: boolean;
   targetModuleId?: number;
 }
@@ -67,6 +72,13 @@ export type CombatCinematicEvent =
       amount: number;
       source: "regen" | "restore";
   }
+  | {
+      kind: "damage";
+      side: CombatCinematicSide;
+      shieldDamage: number;
+      hullDamage: number;
+      moduleId?: number;
+    }
   | { kind: "module_destroyed"; side: CombatCinematicSide; moduleId: number }
   | { kind: "vessel_destroyed"; side: CombatCinematicSide }
   | { kind: "boss_ability"; effect: BossAbilityEffectType; name: string };

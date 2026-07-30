@@ -3,6 +3,7 @@ import type { GameState, GameStore } from "@/game/types";
 import type { EnemyModule } from "@/game/types/enemy";
 import { applyModuleDamage } from "./moduleDamage";
 import {
+    appendCombatSnapshotDamageEvents,
     appendCombatSnapshotDeltaEvents,
     createCombatCinematicSnapshot,
     type CombatTimelineCollector,
@@ -633,6 +634,7 @@ export function processBossRegeneration(
     applyModulePassives(state, set, get);
     const afterPassives = timeline ? createCombatCinematicSnapshot(get()) : null;
     if (timeline && beforePassives && afterPassives) {
+        appendCombatSnapshotDamageEvents(timeline, beforePassives, afterPassives);
         appendCombatSnapshotDeltaEvents(timeline, beforePassives, afterPassives, "regen");
     }
 
@@ -653,6 +655,7 @@ export function processBossRegeneration(
             effect: ability.effect,
             name: ability.name,
         });
+        appendCombatSnapshotDamageEvents(timeline, beforeAbility, afterAbility);
         appendCombatSnapshotDeltaEvents(
             timeline,
             beforeAbility,

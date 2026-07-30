@@ -11,6 +11,9 @@ import { shouldPhaseShieldAbsorb } from "@/game/research/specialAbilities";
 import { applyModuleDamage } from "./moduleDamage";
 import { getBossAttackModifiers, processBossRegeneration } from "./bossAbilities";
 import {
+    appendCombatSnapshotDamageEvents,
+    appendCombatSnapshotDeltaEvents,
+    createCombatCinematicSnapshot,
     getProjectileOutcome,
     type CombatTimelineCollector,
 } from "./combatTimeline";
@@ -57,7 +60,9 @@ function pushEnemyProjectile(
     shieldDamage: number,
     hullDamage: number,
     isCrit = false,
-    outcome = getProjectileOutcome(shieldDamage, hullDamage),
+    outcome = shieldDamage === 0 && hullDamage === 0
+        ? "blocked"
+        : getProjectileOutcome(shieldDamage, hullDamage),
 ): void {
     timeline?.push({
         kind: "projectile",
@@ -260,12 +265,17 @@ export function performEnemyAttack(
 
     const hit = get().currentCombat?.lastPlayerHit;
     if (hit?.moduleId === tgt.id) {
+        const outcome =
+            shieldPierce > 0 && hit.shieldDamage > 0 && hit.hullDamage > 0
+                ? "piercing"
+                : undefined;
         pushEnemyProjectile(
             timeline,
             tgt,
             hit.shieldDamage,
             hit.hullDamage,
             hit.isCrit ?? false,
+            outcome,
         );
     }
     const targetHealthAfter = get().ship.modules.find((module) => module.id === tgt.id)
@@ -274,7 +284,18 @@ export function performEnemyAttack(
         timeline?.push({ kind: "module_destroyed", side: "player", moduleId: tgt.id });
     }
 
+    const beforeBossEffects = timeline ? createCombatCinematicSnapshot(get()) : null;
     applyBossAttackSideEffects(bossModifiers, finalDamage, combat, set, get);
+    const afterBossEffects = timeline ? createCombatCinematicSnapshot(get()) : null;
+    if (timeline && beforeBossEffects && afterBossEffects) {
+        appendCombatSnapshotDamageEvents(timeline, beforeBossEffects, afterBossEffects);
+        appendCombatSnapshotDeltaEvents(
+            timeline,
+            beforeBossEffects,
+            afterBossEffects,
+            "lifesteal",
+        );
+    }
     cleanupAfterEnemyAttack(state, set, get, timeline);
 }
 
