@@ -14,12 +14,16 @@ import {
   getShieldImpactPoint,
 } from "./combatCinematicGeometry";
 import {
+  getCombatCinematicEnemyWeaponIcon,
+  getCombatCinematicEnemyWeaponKey,
   getCombatCinematicProjectileReadout,
   getCombatCinematicProjectileVisual,
 } from "./combatCinematicPresentation";
 import { getCombatCinematicEventSounds } from "./combatCinematicSound";
 import {
   applyCombatCinematicEvent,
+  getCombatCinematicStaggerMs,
+  COMBAT_CINEMATIC_VOLLEY_STAGGER_MS,
   getCombatCinematicEventDuration,
   getCombatCinematicProjectileContactProgress,
   getCombatCinematicSnapshotAtProgress,
@@ -35,6 +39,11 @@ import type {
 import { useTranslation } from "@/lib/useTranslation";
 
 type Point = { x: number; y: number };
+/** Событие, идущее прямо сейчас: их может быть несколько, залп летит внахлёст. */
+interface ActiveCinematicEvent {
+  event: CombatCinematicEvent;
+  progress: number;
+}
 type Translate = (key: string, params?: Record<string, string | number>) => string;
 
 const PLAYER_COLOR = "#00ff9d";
@@ -132,11 +141,44 @@ function getWeaponColor(weapon: CombatProjectileEvent["weapon"]): string {
   return weapon === "enemy" ? ENEMY_COLOR : WEAPON_TYPES[weapon].color;
 }
 
+/** Незнакомое орудие падает в цвет корабля — данные можно расширять без правок здесь. */
+const ENEMY_GUN_COLORS: Record<string, string> = {
+  plasma_cannon: "#ff8a3d",
+  radiation_core: "#c6ff4d",
+  flare_launcher: "#ffb000",
+  nano_swarm: "#7dffb2",
+  energy_drain: "#ff4dff",
+  shield_drain: "#5bd6ff",
+  ice_beam: "#8be9fd",
+  absolute_zero: "#c9f6ff",
+  disintegrate_beam: "#ff5470",
+  annihilation_beam: "#ff2d55",
+  link_breaker: "#ffd166",
+  entropy_cannon: "#b980ff",
+  void_cannon: "#9d7bff",
+  void_anchor: "#7a5cff",
+  void_embrace: "#8f6bff",
+  reality_tear: "#ff4dff",
+  temporal_cannon: "#4dd8ff",
+  paradox_engine: "#6affe0",
+  grapple_arm: "#d8b26a",
+  prophecy_lance: "#ffe066",
+  severance_array: "#ff7ad9",
+  chronofracture_battery: "#57e8ff",
+  oblivion_spire: "#a86bff",
+};
+
 function getProjectileColor(
   event: CombatProjectileEvent,
   snapshot: CombatCinematicSnapshot,
 ): string {
   if (event.weapon !== "enemy") return getWeaponColor(event.weapon);
+  // Враг стреляет залпом из нескольких орудий — если все выстрелы одного цвета,
+  // читается один поток вместо трёх стволов.
+  const gunColor = event.enemyWeapon
+    ? ENEMY_GUN_COLORS[event.enemyWeapon]
+    : undefined;
+  if (gunColor) return gunColor;
   if (snapshot[event.from].kind === "boss") return "#ff4dff";
   if (snapshot[event.from].kind === "creature") return "#c084fc";
   return ENEMY_COLOR;
@@ -654,10 +696,11 @@ function drawShield(
   center: Point,
   progress: number,
   isBoss: boolean,
+  sceneWidth: number,
 ): void {
   const pulse = Math.sin(clamp(progress) * Math.PI);
   const scale = 0.86 + pulse * 0.17;
-  const radii = getShieldRadii(isBoss);
+  const radii = getShieldRadii(isBoss, sceneWidth);
   ctx.save();
   ctx.translate(center.x, center.y);
   ctx.scale(scale, scale);
@@ -696,8 +739,18 @@ function drawShield(
   ctx.restore();
 }
 
-function getShieldRadii(isBoss: boolean): Point {
-  return isBoss ? { x: 166, y: 100 } : { x: 148, y: 86 };
+/** Пульсация щита в пике раздувает эллипс — запас берётся по ней. */
+const SHIELD_PULSE_PEAK_SCALE = 1.03;
+
+/**
+ * Радиусы щита. Ширина сцены всегда около 640, а корабли стоят на 0.25/0.75 —
+ * то есть от центра до края всего ~160. Щит босса (166) вылезал за кадр и в
+ * пике пульсации срезался прямым краем канваса, на любом экране.
+ */
+function getShieldRadii(isBoss: boolean, sceneWidth: number): Point {
+  const base = isBoss ? { x: 166, y: 100 } : { x: 148, y: 86 };
+  const roomToEdge = sceneWidth * 0.25 - 6;
+  return { x: Math.min(base.x, roomToEdge / SHIELD_PULSE_PEAK_SCALE), y: base.y };
 }
 
 function drawLaser(
@@ -1198,7 +1251,7 @@ function drawProjectile(
   );
   const missOffset = event.outcome === "miss" ? (event.from === "player" ? 96 : -96) : 0;
   const destination = { x: target.x, y: target.y + missOffset };
-  const shieldRadii = getShieldRadii(snapshot[event.to].kind === "boss");
+  const shieldRadii = getShieldRadii(snapshot[event.to].kind === "boss", width);
   const shieldImpact = getShieldImpactPoint(
     source,
     destination,
@@ -1207,7 +1260,7 @@ function drawProjectile(
     shieldRadii.y,
   );
   const color = getProjectileColor(event, snapshot);
-  const visual = getCombatCinematicProjectileVisual(event.weapon);
+  const visual = getCombatCinematicProjectileVisual(event.weapon, event.enemyWeapon);
   const isIntercepted = event.outcome === "intercepted";
   const interceptFlight = isIntercepted ? clamp(progress / INTERCEPT_PROGRESS) : 0;
   const travel = isIntercepted ? interceptFlight * INTERCEPT_TRAVEL : progress;
@@ -1450,9 +1503,15 @@ function drawProjectileTelemetry(
     event.shieldDamage,
     event.hullDamage,
   );
-  const weaponKey = event.weapon === "enemy" ? "enemy" : event.weapon;
-  const weaponIcon = event.weapon === "enemy" ? "✦" : WEAPON_TYPES[event.weapon].icon;
-  const weaponLabel = t(`combat_cinematics.weapons.${weaponKey}`);
+  const enemyWeaponKey = getCombatCinematicEnemyWeaponKey(event.enemyWeapon);
+  const weaponIcon = event.weapon === "enemy"
+    ? getCombatCinematicEnemyWeaponIcon(event.enemyWeapon)
+    : WEAPON_TYPES[event.weapon].icon;
+  const weaponLabel = event.weapon !== "enemy"
+    ? t(`combat_cinematics.weapons.${event.weapon}`)
+    : enemyWeaponKey === "enemy"
+      ? t("combat_cinematics.weapons.enemy")
+      : t(`combat_cinematics.enemy_weapons.${enemyWeaponKey}`);
   const statusLabel = t(`combat_cinematics.statuses.${readout.status}`);
   const amount = getProjectileTelemetryAmount(readout);
   const projectileColor = getProjectileColor(event, snapshot);
@@ -1523,7 +1582,7 @@ function drawAbilityDamage(
   const color = event.side === "player" ? ENEMY_COLOR : PLAYER_COLOR;
 
   if (event.shieldDamage > 0) {
-    drawShield(ctx, center, impactProgress, snapshot[event.side].kind === "boss");
+    drawShield(ctx, center, impactProgress, snapshot[event.side].kind === "boss", width);
     drawDamageNumber(
       ctx,
       center,
@@ -1550,6 +1609,14 @@ function drawAbilityDamage(
   }
 }
 
+/**
+ * Отражение — три такта, а не два: удар долетел, щит его развернул, он вернулся
+ * и попал. Раньше на попадание оставалось 20% события, и весь такт пролетал
+ * незаметно.
+ */
+const REFLECTION_OUTBOUND_END = 0.34;
+const REFLECTION_RETURN_END = 0.68;
+
 function drawReflection(
   ctx: CanvasRenderingContext2D,
   event: Extract<CombatCinematicEvent, { kind: "reflection" }>,
@@ -1569,8 +1636,13 @@ function drawReflection(
     width,
     height,
   );
-  const firstLeg = progress < 0.48;
-  const legProgress = firstLeg ? progress / 0.48 : (progress - 0.48) / 0.52;
+  const firstLeg = progress < REFLECTION_OUTBOUND_END;
+  const legProgress = firstLeg
+    ? progress / REFLECTION_OUTBOUND_END
+    : clamp(
+      (progress - REFLECTION_OUTBOUND_END) /
+        (REFLECTION_RETURN_END - REFLECTION_OUTBOUND_END),
+    );
   const from = firstLeg ? attacker : defender;
   const to = firstLeg ? defender : returnTarget;
   const point = { x: lerp(from.x, to.x, legProgress), y: lerp(from.y, to.y, legProgress) };
@@ -1581,7 +1653,13 @@ function drawReflection(
     6,
   );
   if (!firstLeg) {
-    drawShield(ctx, defender, clamp((progress - 0.35) / 0.4), snapshot[event.defender].kind === "boss");
+    drawShield(
+      ctx,
+      defender,
+      clamp((progress - REFLECTION_OUTBOUND_END * 0.7) / 0.34),
+      snapshot[event.defender].kind === "boss",
+      width,
+    );
     drawOutcomeLabel(
       ctx,
       defender,
@@ -1591,10 +1669,12 @@ function drawReflection(
       sceneScale,
     );
   }
-  if (progress > 0.8) {
-    const impactProgress = clamp((progress - 0.8) / 0.2);
+  if (progress > REFLECTION_RETURN_END) {
+    const impactProgress = clamp(
+      (progress - REFLECTION_RETURN_END) / (1 - REFLECTION_RETURN_END),
+    );
     if (event.shieldDamage > 0) {
-      drawShield(ctx, shipCenter(event.attacker, width, height), impactProgress, snapshot[event.attacker].kind === "boss");
+      drawShield(ctx, shipCenter(event.attacker, width, height), impactProgress, snapshot[event.attacker].kind === "boss", width);
     }
     if (event.hullDamage > 0) {
       drawExplosion(ctx, returnTarget, impactProgress, "#f8f4ff");
@@ -1628,7 +1708,7 @@ function drawBossAbility(
   if (event.effect === "aoe_damage") {
     drawExplosion(ctx, playerCenter, progress, "#ff5a5f");
   } else if (event.effect === "shield_regen" || event.effect === "shield_restore") {
-    drawShield(ctx, bossCenter, progress, snapshot.enemy.kind === "boss");
+    drawShield(ctx, bossCenter, progress, snapshot.enemy.kind === "boss", width);
   } else if (event.effect === "evasion_boost") {
     ctx.save();
     ctx.strokeStyle = "#8be9fd";
@@ -1670,11 +1750,14 @@ function drawActiveEvent(
   elapsed: number,
   t: Translate,
   sceneScale: number,
+  showTelemetry: boolean,
 ): void {
   if (!event) return;
 
   if (event.kind === "projectile") {
-    drawProjectileTelemetry(ctx, event, progress, snapshot, width, height, t, sceneScale);
+    if (showTelemetry) {
+      drawProjectileTelemetry(ctx, event, progress, snapshot, width, height, t, sceneScale);
+    }
     const point = drawProjectile(ctx, event, progress, snapshot, width, height);
     if (event.outcome === "intercepted" && progress > INTERCEPT_PROGRESS) {
       const outcomeProgress = clamp(
@@ -1738,7 +1821,7 @@ function drawActiveEvent(
         width,
         height,
       );
-      const shieldRadii = getShieldRadii(snapshot[event.to].kind === "boss");
+      const shieldRadii = getShieldRadii(snapshot[event.to].kind === "boss", width);
       const shieldImpactPoint = getShieldImpactPoint(
         shipCenter(event.from, width, height),
         targetPoint,
@@ -1751,6 +1834,7 @@ function drawActiveEvent(
         targetCenter,
         impactProgress,
         snapshot[event.to].kind === "boss",
+          width,
       );
       drawShieldRipple(
         ctx,
@@ -1789,7 +1873,7 @@ function drawActiveEvent(
         width,
         height,
       );
-      const shieldRadii = getShieldRadii(snapshot[event.to].kind === "boss");
+      const shieldRadii = getShieldRadii(snapshot[event.to].kind === "boss", width);
       const shieldImpactPoint = getShieldImpactPoint(
         shipCenter(event.from, width, height),
         targetPoint,
@@ -1803,6 +1887,7 @@ function drawActiveEvent(
           targetCenter,
           shieldImpactProgress,
           snapshot[event.to].kind === "boss",
+          width,
         );
         drawShieldRipple(
           ctx,
@@ -1890,7 +1975,7 @@ function drawActiveEvent(
 
   if (event.kind === "shield_restore") {
     const center = shipCenter(event.side, width, height);
-    drawShield(ctx, center, progress, snapshot[event.side].kind === "boss");
+    drawShield(ctx, center, progress, snapshot[event.side].kind === "boss", width);
     drawDamageNumber(ctx, center, event.amount, SHIELD_COLOR, progress, false, "+", sceneScale);
     return;
   }
@@ -2014,8 +2099,7 @@ function drawScene(
   width: number,
   height: number,
   snapshot: CombatCinematicSnapshot,
-  event: CombatCinematicEvent | undefined,
-  progress: number,
+  active: readonly ActiveCinematicEvent[],
   elapsed: number,
   t: Translate,
   sceneScale: number,
@@ -2024,7 +2108,12 @@ function drawScene(
 ): void {
   sceneElapsed = elapsed;
   drawBackground(ctx, width, height, elapsed);
-  const shake = getCameraShake(event, progress, elapsed);
+  // Тряска от самого сильного из идущих событий, а не сумма — иначе залп
+  // внахлёст трясёт экран непрерывно.
+  const shake = active.reduce((strongest, item) => {
+    const value = getCameraShake(item.event, item.progress, elapsed);
+    return Math.abs(value) > Math.abs(strongest) ? value : strongest;
+  }, 0);
   ctx.save();
   ctx.translate(shake, -shake * 0.45);
   drawShip(ctx, snapshot.player, "player", width, height, elapsed);
@@ -2032,12 +2121,31 @@ function drawScene(
   drawSelectedModuleTargets(ctx, snapshot.enemy, selectedModuleIds, width, height);
   drawShipBars(ctx, snapshot.player, "player", width, height);
   drawShipBars(ctx, snapshot.enemy, "enemy", width, height);
-  drawActiveEvent(ctx, event, progress, snapshot, width, height, elapsed, t, sceneScale);
+  // Телеметрия — одна на кадр, по последнему выстрелу: панели наложенных
+  // снарядов рисуются в одном месте и превратились бы в кашу.
+  const telemetryIndex = active.reduce(
+    (latest, item, index) => (item.event.kind === "projectile" ? index : latest),
+    -1,
+  );
+  active.forEach((item, index) => {
+    drawActiveEvent(
+      ctx,
+      item.event,
+      item.progress,
+      snapshot,
+      width,
+      height,
+      elapsed,
+      t,
+      sceneScale,
+      index === telemetryIndex,
+    );
+  });
   ctx.restore();
 
   drawVignette(ctx, width, height);
 
-  if (bossIntent && !event) {
+  if (bossIntent && active.length === 0) {
     drawBossIntent(ctx, bossIntent, width, height, t, sceneScale);
   }
 
@@ -2069,8 +2177,7 @@ function drawCanvasFrame(
   ctx: CanvasRenderingContext2D,
   stage: HTMLElement,
   snapshot: CombatCinematicSnapshot,
-  event: CombatCinematicEvent | undefined,
-  progress: number,
+  active: readonly ActiveCinematicEvent[],
   elapsed: number,
   t: Translate,
   selectedModuleIds: readonly number[],
@@ -2089,8 +2196,7 @@ function drawCanvasFrame(
     scene.width,
     scene.height,
     snapshot,
-    event,
-    progress,
+    active,
     elapsed,
     t,
     scene.scale,
@@ -2151,8 +2257,7 @@ export function CombatCinematicStage({
         ctx,
         stage,
         idleSnapshot,
-        undefined,
-        1,
+        [],
         timestamp,
         tRef.current,
         selectedModuleIds,
@@ -2185,67 +2290,93 @@ export function CombatCinematicStage({
     if (!ctx) return;
 
     let frameId = 0;
-    let eventIndex = 0;
-    let eventStartedAt = performance.now();
+    /** Индекс следующего события, которое ещё не запущено. */
+    let nextIndex = 0;
+    const running: { event: CombatCinematicEvent; index: number; startedAt: number }[] = [];
     let visualSnapshot = timeline.initial;
     let finished = false;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const durationOf = (event: CombatCinematicEvent) => {
+      const full = getCombatCinematicEventDuration(event);
+      return reducedMotion ? Math.min(180, full) : full;
+    };
 
     // Звук идёт по кадрам, а не по резолву: выстрел на старте события, попадание
     // в момент контакта. Каждый — ровно один раз за событие.
-    let launchedIndex = -1;
-    let impactedIndex = -1;
+    const launched = new Set<number>();
+    const impacted = new Set<number>();
     const playEventSounds = (
       event: CombatCinematicEvent,
       index: number,
       progress: number,
     ): void => {
-      if (index !== launchedIndex) {
-        launchedIndex = index;
+      if (!launched.has(index)) {
+        launched.add(index);
         const { launch } = getCombatCinematicEventSounds(event);
         if (launch) playSound(launch);
       }
-      if (index === impactedIndex || progress < getImpactProgress(event)) return;
-      impactedIndex = index;
+      if (impacted.has(index) || progress < getImpactProgress(event)) return;
+      impacted.add(index);
       const { impact, accent } = getCombatCinematicEventSounds(event);
       if (impact) playSound(impact);
       if (accent) playSound(accent);
     };
 
     const render = (timestamp: number) => {
-      let activeEvent = timeline.events[eventIndex];
-      let progress = activeEvent
-        ? clamp((timestamp - eventStartedAt) / (reducedMotion ? Math.min(180, getCombatCinematicEventDuration(activeEvent)) : getCombatCinematicEventDuration(activeEvent)))
-        : 1;
-
-      if (activeEvent && progress >= 1) {
-        visualSnapshot = applyCombatCinematicEvent(visualSnapshot, activeEvent);
-        eventIndex += 1;
-        eventStartedAt = timestamp;
-        activeEvent = timeline.events[eventIndex];
-        progress = 0;
+      // Событие фиксируется в снапшоте строго по очереди: следующее может
+      // догореть раньше, но применять его раньше предыдущего нельзя.
+      while (running.length > 0) {
+        const head = running[0];
+        if (timestamp - head.startedAt < durationOf(head.event)) break;
+        visualSnapshot = applyCombatCinematicEvent(visualSnapshot, head.event);
+        running.shift();
       }
 
-      if (activeEvent) playEventSounds(activeEvent, eventIndex, progress);
+      // Снаряды одной палубы уходят очередью; перед залпом следующей палубы
+      // сцена держит паузу. Всё, что не снаряд, играет соло.
+      while (nextIndex < timeline.events.length) {
+        const next = timeline.events[nextIndex];
+        const last = running[running.length - 1];
+        if (last) {
+          const stagger = getCombatCinematicStaggerMs(last.event, next);
+          if (stagger === null) break;
+          const wait = reducedMotion
+            ? Math.min(60, COMBAT_CINEMATIC_VOLLEY_STAGGER_MS)
+            : stagger;
+          if (timestamp - last.startedAt < wait) break;
+        }
+        running.push({ event: next, index: nextIndex, startedAt: timestamp });
+        nextIndex += 1;
+      }
 
-      const sceneSnapshot = activeEvent
-        ? getCombatCinematicSnapshotAtProgress(visualSnapshot, activeEvent, progress)
-        : visualSnapshot;
+      const active: ActiveCinematicEvent[] = running.map((item) => ({
+        event: item.event,
+        progress: clamp((timestamp - item.startedAt) / durationOf(item.event)),
+      }));
+
+      running.forEach((item, index) => {
+        playEventSounds(item.event, item.index, active[index].progress);
+      });
+
+      const sceneSnapshot = active.reduce(
+        (snapshot, item) =>
+          getCombatCinematicSnapshotAtProgress(snapshot, item.event, item.progress),
+        visualSnapshot,
+      );
 
       drawCanvasFrame(
         canvas,
         ctx,
         stage,
         sceneSnapshot,
-        activeEvent,
-        progress,
+        active,
         timestamp,
         tRef.current,
         selectedModuleIdsRef.current,
         null,
       );
 
-      if (!activeEvent) {
+      if (running.length === 0 && nextIndex >= timeline.events.length) {
         if (!finished) {
           finished = true;
           onPlaybackCompleteRef.current();

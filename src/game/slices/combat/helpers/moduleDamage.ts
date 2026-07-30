@@ -32,7 +32,7 @@ export function applyModuleDamage(
             ? 0
             : (targetModule.defense ?? 0);
     if (ignoreDefense && (targetModule.defense ?? 0) > 0) {
-        get().addLog( i18nStore.t("game_logs.moduleDamage_1", { targetModule_name: targetModule.name }),
+        get().addLog( i18nStore.t("game_logs.combat_ignore_armor", { targetModule_name: targetModule.name }),
             "error",
         );
     } else if (hasOverclockInModule && (targetModule.defense ?? 0) > 0) {

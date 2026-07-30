@@ -17,6 +17,7 @@ import {
     appendCombatSnapshotSecondaryDamageEvents,
     createCombatCinematicSnapshot,
     getProjectileOutcome,
+    splitDamageByWeight,
     type CombatTimelineCollector,
 } from "./combatTimeline";
 import * as enemyAttack from "./enemyAttack";
@@ -65,6 +66,7 @@ function pushEnemyProjectile(
     outcome: CombatProjectileEvent["outcome"] = shieldDamage === 0 && hullDamage === 0
         ? "blocked"
         : getProjectileOutcome(shieldDamage, hullDamage),
+    enemyWeapon?: string,
 ): CombatProjectileEvent | null {
     if (!timeline) return null;
     const event: CombatProjectileEvent = {
@@ -77,9 +79,77 @@ function pushEnemyProjectile(
         shieldDamage,
         hullDamage,
         isCrit,
+        ...(enemyWeapon === undefined ? {} : { enemyWeapon }),
     };
     timeline.push(event);
     return event;
+}
+
+/** Живые орудия врага — по одному выстрелу на каждое. */
+function getEnemyGuns(combat: NonNullable<GameState["currentCombat"]>) {
+    return combat.enemy.modules.filter(
+        (module) => module.health > 0 && (module.damage ?? 0) > 0,
+    );
+}
+
+/**
+ * Разносит уже посчитанный урон залпа по орудиям врага — один снаряд на живое
+ * орудие вместо одного общего болта. Сумма долей равна исходному урону, поэтому
+ * баланс не меняется: игрок просто видит, из чего именно по нему стреляют и что
+ * даёт уничтожение конкретной пушки.
+ */
+function pushEnemyVolley(
+    timeline: CombatTimelineCollector | undefined,
+    combat: NonNullable<GameState["currentCombat"]>,
+    target: Module,
+    shieldDamage: number,
+    hullDamage: number,
+    isCrit: boolean,
+    outcome: CombatProjectileEvent["outcome"] | undefined,
+): CombatProjectileEvent[] {
+    if (!timeline) return [];
+    const guns = getEnemyGuns(combat);
+    const single = (enemyWeapon?: string) => {
+        const event = pushEnemyProjectile(
+            timeline,
+            target,
+            shieldDamage,
+            hullDamage,
+            isCrit,
+            outcome,
+            enemyWeapon,
+        );
+        return event ? [event] : [];
+    };
+    if (guns.length <= 1) return single(guns[0]?.type);
+
+    const weights = guns.map((gun) => gun.damage ?? 0);
+    const shieldShares = splitDamageByWeight(weights, shieldDamage);
+    const hullShares = splitDamageByWeight(weights, hullDamage);
+
+    const events: CombatProjectileEvent[] = [];
+    for (let index = 0; index < guns.length; index += 1) {
+        const shotShield = shieldShares[index];
+        const shotHull = hullShares[index];
+        // Доля округлилась в ноль — этот ствол просто не показываем, иначе
+        // выстрел без урона прочитается как «блокировано».
+        if (shotShield === 0 && shotHull === 0) continue;
+        const shotOutcome = outcome === "piercing" && shotShield > 0 && shotHull > 0
+            ? "piercing"
+            : undefined;
+        const event = pushEnemyProjectile(
+            timeline,
+            target,
+            shotShield,
+            shotHull,
+            isCrit,
+            shotOutcome,
+            guns[index].type,
+        );
+        if (event) events.push(event);
+    }
+
+    return events.length > 0 ? events : single(guns[0]?.type);
 }
 
 /**
@@ -274,14 +344,15 @@ export function performEnemyAttack(
     }
 
     const hit = get().currentCombat?.lastPlayerHit;
-    let projectileEvent: CombatProjectileEvent | null = null;
+    let volleyEvents: CombatProjectileEvent[] = [];
     if (hit?.moduleId === tgt.id) {
         const outcome =
             shieldPierce > 0 && hit.shieldDamage > 0 && hit.hullDamage > 0
                 ? "piercing"
                 : undefined;
-        projectileEvent = pushEnemyProjectile(
+        volleyEvents = pushEnemyVolley(
             timeline,
+            combat,
             tgt,
             hit.shieldDamage,
             hit.hullDamage,
@@ -295,12 +366,12 @@ export function performEnemyAttack(
         timeline?.push({ kind: "module_destroyed", side: "player", moduleId: tgt.id });
     }
     const afterDirectHit = timeline ? createCombatCinematicSnapshot(get()) : null;
-    if (timeline && beforeDirectHit && afterDirectHit && projectileEvent) {
+    if (timeline && beforeDirectHit && afterDirectHit && volleyEvents.length > 0) {
         appendCombatSnapshotSecondaryDamageEvents(
             timeline,
             beforeDirectHit,
             afterDirectHit,
-            projectileEvent,
+            volleyEvents,
         );
     }
 

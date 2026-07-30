@@ -28,6 +28,8 @@ export interface BuildVolleyEventsInput {
   projectiles: readonly CombatProjectileResolution[];
   isCrit: boolean;
   targetModuleId?: number;
+  /** Палуба-источник: снаряды одного залпа бьют очередью, между залпами пауза. */
+  volleyId?: number;
   targetHullBeforeVolley?: number;
 }
 
@@ -122,13 +124,24 @@ export function appendCombatSnapshotDamageEvents(
 }
 
 /** Adds only state changes not already represented by a primary hit event. */
+/**
+ * Дописывает урон, который атака нанесла ПОМИМО своих снарядов.
+ *
+ * Принимает весь залп, а не один снаряд: если учесть только первый, доли
+ * остальных орудий выглядят необъяснённым уроном и превращаются в лишнее
+ * событие `damage` — игрок видит удар без анимации выстрела.
+ */
 export function appendCombatSnapshotSecondaryDamageEvents(
   collector: CombatTimelineCollector,
   before: CombatCinematicSnapshot,
   after: CombatCinematicSnapshot,
-  primaryEvent: CombatCinematicEvent,
+  primaryEvents: CombatCinematicEvent | readonly CombatCinematicEvent[],
 ): void {
-  const expectedAfterPrimary = applyCombatCinematicEvent(before, primaryEvent);
+  const events = Array.isArray(primaryEvents) ? primaryEvents : [primaryEvents];
+  const expectedAfterPrimary = events.reduce(
+    (snapshot, event) => applyCombatCinematicEvent(snapshot, event),
+    before,
+  );
   appendCombatSnapshotDamageEvents(collector, expectedAfterPrimary, after);
   appendCombatSnapshotDeltaEvents(collector, expectedAfterPrimary, after, "repair");
 }
@@ -258,6 +271,36 @@ function takeProjectilesThroughHullDestruction(
   return splitVolleyAtHullDestruction(projectiles, targetHullBeforeVolley).onTarget;
 }
 
+/**
+ * Делит уже посчитанный урон между орудиями врага пропорционально их силе.
+ * Урон НЕ пересчитывается: броня и уклонение резолвятся один раз на залп, как и
+ * раньше, — иначе дробление само по себе ослабило бы врага на `броня × (N−1)`.
+ * Метод наибольших остатков, поэтому сумма долей точно равна исходному числу.
+ */
+export function splitDamageByWeight(
+  weights: readonly number[],
+  total: number,
+): number[] {
+  requireNonNegativeNumber(total, "total");
+  const positiveWeights = weights.map((weight) => Math.max(0, weight));
+  const weightSum = positiveWeights.reduce((sum, weight) => sum + weight, 0);
+  if (weightSum <= 0 || total <= 0) return weights.map(() => 0);
+
+  const exact = positiveWeights.map((weight) => (weight / weightSum) * total);
+  const shares = exact.map((value) => Math.floor(value));
+  let remainder = Math.round(total) - shares.reduce((sum, value) => sum + value, 0);
+
+  const byRemainder = exact
+    .map((value, index) => ({ index, fraction: value - Math.floor(value) }))
+    .sort((a, b) => b.fraction - a.fraction);
+  for (let step = 0; remainder > 0 && step < byRemainder.length; step += 1) {
+    shares[byRemainder[step].index] += 1;
+    remainder -= 1;
+  }
+
+  return shares;
+}
+
 export function createMissProjectileResolutions(
   weaponCounts: WeaponCounts,
 ): CombatProjectileResolution[] {
@@ -344,6 +387,7 @@ export function buildVolleyEvents(
       ...(input.targetModuleId === undefined
         ? {}
         : { targetModuleId: input.targetModuleId }),
+      ...(input.volleyId === undefined ? {} : { volleyId: input.volleyId }),
     };
     if (!isNonDamageOutcome && projectile.outcome !== "piercing") {
       updateOutcome(event);

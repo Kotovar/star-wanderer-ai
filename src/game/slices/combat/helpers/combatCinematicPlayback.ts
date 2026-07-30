@@ -14,7 +14,9 @@ export function getCombatCinematicEventDuration(
 ): number {
   switch (event.kind) {
     case "reflection":
-      return 900;
+      // Три такта (удар → разворот щитом → возврат и попадание): на 900 мс
+      // финальное попадание получало меньше 200 мс и не читалось.
+      return 1700;
     case "module_destroyed":
       return 620;
     case "vessel_destroyed":
@@ -29,8 +31,57 @@ export function getCombatCinematicEventDuration(
     case "turn_skipped":
       return 420;
     case "projectile":
-      return 1500;
+      return getProjectileDuration(event);
   }
+}
+
+/**
+ * Снаряд длится по своей значимости, а не всегда 1500 мс. Плоский тайминг
+ * превращал крупный залп в многосекундную очередь: промах занимал ровно
+ * столько же, сколько добивающий крит.
+ */
+function getProjectileDuration(event: CombatProjectileEvent): number {
+  if (event.isCrit) return 1500;
+  switch (event.outcome) {
+    case "miss":
+    case "blocked":
+      return 700;
+    case "intercepted":
+    case "absorbed":
+      return 800;
+    case "shield":
+      return 950;
+    case "shield_and_hull":
+    case "piercing":
+      return 1200;
+    default:
+      return 1050;
+  }
+}
+
+/** Задержка между снарядами ОДНОЙ палубы — короткая очередь. */
+export const COMBAT_CINEMATIC_VOLLEY_STAGGER_MS = 150;
+
+/**
+ * Пауза перед залпом следующей палубы. Отсчитывается от старта её последнего
+ * выстрела, поэтому предыдущая очередь успевает долететь и попасть: ход
+ * читается как «палуба — пауза — палуба», а не как один сплошной шквал.
+ */
+export const COMBAT_CINEMATIC_BAY_GAP_MS = 620;
+
+/**
+ * Через сколько мс после старта идущего события можно пускать следующее.
+ * `null` — только после того, как всё текущее доиграет (событие идёт соло).
+ */
+export function getCombatCinematicStaggerMs(
+  running: CombatCinematicEvent,
+  next: CombatCinematicEvent,
+): number | null {
+  if (running.kind !== "projectile" || next.kind !== "projectile") return null;
+  if (running.from !== next.from) return null;
+  return running.volleyId === next.volleyId
+    ? COMBAT_CINEMATIC_VOLLEY_STAGGER_MS
+    : COMBAT_CINEMATIC_BAY_GAP_MS;
 }
 
 function copySnapshot(snapshot: CombatCinematicSnapshot): CombatCinematicSnapshot {

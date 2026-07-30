@@ -160,7 +160,7 @@ export const processOvercrowding = (
     }));
 
     if (affectedOrganic.length > 0) {
-        get().addLog( i18nStore.t("game_logs.processOthers_3", { crewCount, crewCapacity, OVERCROWDING_HAPPINESS_PENALTY }),
+        get().addLog( i18nStore.t("game_logs.processOthers_overcrowding", { crewCount, crewCapacity, OVERCROWDING_HAPPINESS_PENALTY }),
             "warning",
         );
     }

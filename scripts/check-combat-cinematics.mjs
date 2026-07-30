@@ -15,6 +15,7 @@ let createCombatTimelineCollector;
 let buildVolleyEvents;
 let finalizeProjectileHullDamage;
 let splitVolleyAtHullDestruction;
+let splitDamageByWeight;
 let createCombatCinematicSnapshot;
 let appendCombatSnapshotDeltaEvents;
 let appendCombatSnapshotDamageEvents;
@@ -22,6 +23,9 @@ let appendCombatSnapshotSecondaryDamageEvents;
 let applyCombatCinematicEvent;
 let getCombatCinematicSnapshotAtProgress;
 let getCombatCinematicEventDuration;
+let getCombatCinematicStaggerMs;
+let COMBAT_CINEMATIC_VOLLEY_STAGGER_MS;
+let COMBAT_CINEMATIC_BAY_GAP_MS;
 let getCombatCinematicSceneMetrics;
 let getCombatCinematicModuleAnchor;
 let formatCombatCinematicAmount;
@@ -200,8 +204,8 @@ assert.match(
 );
 assert.match(
   stageSource,
-  /const shake = getCameraShake\(event, progress, elapsed\);/,
-  "camera shake reacts to every impactful event, not only to a critical hit",
+  /const shake = active\.reduce\(\(strongest, item\) => \{[\s\S]*?getCameraShake\(item\.event, item\.progress, elapsed\)/,
+  "camera shake reacts to every impactful event, and overlapping shots shake by the strongest, not the sum",
 );
 assert.match(
   stageSource,
@@ -245,12 +249,12 @@ assert.match(
 );
 assert.match(
   stageSource,
-  /if \(activeEvent\) playEventSounds\(activeEvent, eventIndex, progress\);/,
-  "сцена дёргает звук по кадрам таймлайна",
+  /playEventSounds\(item\.event, item\.index, active\[index\]\.progress\);/,
+  "сцена дёргает звук по кадрам таймлайна, по каждому идущему событию",
 );
 assert.match(
   stageSource,
-  /if \(index === impactedIndex \|\| progress < getImpactProgress\(event\)\) return;/,
+  /if \(impacted\.has\(index\) \|\| progress < getImpactProgress\(event\)\) return;/,
   "звук попадания играет один раз и ровно в момент контакта",
 );
 assert.match(
@@ -285,8 +289,8 @@ assert.match(
 );
 assert.match(
   enemyCounterAttackSource,
-  /appendCombatSnapshotSecondaryDamageEvents\(/,
-  "secondary module damage from a normal enemy hit stays in the cinematic timeline",
+  /appendCombatSnapshotSecondaryDamageEvents\(\s*timeline,\s*beforeDirectHit,\s*afterDirectHit,\s*volleyEvents,\s*\)/,
+  "весь залп врага учитывается как объяснённый урон — иначе доли лишних стволов дают удар без выстрела",
 );
 assert.match(
   bossAbilitiesSource,
@@ -510,6 +514,7 @@ try {
     buildVolleyEvents,
     finalizeProjectileHullDamage,
     splitVolleyAtHullDestruction,
+    splitDamageByWeight,
     createCombatCinematicSnapshot,
     appendCombatSnapshotDeltaEvents,
     appendCombatSnapshotDamageEvents,
@@ -550,6 +555,9 @@ try {
     applyCombatCinematicEvent,
     getCombatCinematicSnapshotAtProgress,
     getCombatCinematicEventDuration,
+    getCombatCinematicStaggerMs,
+    COMBAT_CINEMATIC_VOLLEY_STAGGER_MS,
+    COMBAT_CINEMATIC_BAY_GAP_MS,
   } = await import(
     "../src/game/slices/combat/helpers/combatCinematicPlayback.ts"
   ));
@@ -570,6 +578,247 @@ try {
   assert.fail(
     "combatCinematicGeometry.ts must provide responsive scene and shield-impact geometry",
   );
+}
+
+{
+  // Залп врага из нескольких орудий не должен порождать «удар без анимации»:
+  // если учесть только первый снаряд, доли остальных стволов читаются как
+  // необъяснённый урон и превращаются в лишнее событие damage.
+  const snapshot = (shields, hull) => ({
+    player: {
+      kind: "player_ship",
+      name: "player",
+      shields,
+      maxShields: 40,
+      modules: [{ id: 1, health: hull, maxHealth: 100 }],
+    },
+    enemy: {
+      kind: "enemy_ship",
+      name: "enemy",
+      shields: 0,
+      maxShields: 0,
+      modules: [{ id: 1, health: 50, maxHealth: 50 }],
+    },
+  });
+  const shot = (shieldDamage, hullDamage) => ({
+    kind: "projectile",
+    from: "enemy",
+    to: "player",
+    weapon: "enemy",
+    targetModuleId: 1,
+    outcome: shieldDamage > 0 && hullDamage > 0
+      ? "shield_and_hull"
+      : shieldDamage > 0 ? "shield" : "hull",
+    shieldDamage,
+    hullDamage,
+    isCrit: false,
+  });
+
+  const volley = [shot(6, 4), shot(4, 3), shot(2, 2)];
+  const before = snapshot(12, 100);
+  const after = snapshot(0, 91);
+
+  const collector = createCombatTimelineCollector(before);
+  appendCombatSnapshotSecondaryDamageEvents(collector, before, after, volley);
+  assert.deepEqual(
+    collector.finish().events,
+    [],
+    "залп из трёх орудий объясняет весь свой урон сам — лишнего удара без выстрела нет",
+  );
+
+  const oneShotCollector = createCombatTimelineCollector(before);
+  appendCombatSnapshotSecondaryDamageEvents(oneShotCollector, before, after, volley[0]);
+  assert.ok(
+    oneShotCollector.finish().events.length > 0,
+    "учёт одного снаряда из залпа обязан оставлять необъяснённый урон — иначе тест выше ничего не проверяет",
+  );
+}
+
+{
+  // Залп врага дробится только на показ: сумма долей обязана совпасть с уже
+  // посчитанным уроном, иначе дробление само по себе меняет баланс.
+  const shares = splitDamageByWeight([60, 25, 20], 87);
+  assert.equal(
+    shares.reduce((sum, value) => sum + value, 0),
+    87,
+    "доли орудий в сумме дают ровно тот урон, который уже посчитан",
+  );
+  assert.deepEqual(
+    shares,
+    [50, 21, 16],
+    "урон делится пропорционально силе орудий, остаток уходит крупнейшей доле",
+  );
+  assert.deepEqual(
+    splitDamageByWeight([1, 1, 1], 2),
+    [1, 1, 0],
+    "когда урона меньше, чем стволов, лишние стволы получают ноль, а не единицу из воздуха",
+  );
+  assert.deepEqual(
+    splitDamageByWeight([50, 50], 0),
+    [0, 0],
+    "нулевой урон не порождает выстрелов с уроном",
+  );
+  assert.deepEqual(
+    splitDamageByWeight([0, 0], 10),
+    [0, 0],
+    "без живых орудий делить нечего",
+  );
+}
+
+{
+  // Сцена рисуется в своих координатах и масштабируется под канвас. Проверяем,
+  // что на реальных экранах корабли, полоски и подписи остаются в кадре.
+  const stageSize = (viewportWidth, viewportHeight, wide) => {
+    const width = viewportWidth - 16;
+    const byAspect = wide ? (width * 9) / 16 : (width * 3) / 4;
+    const minHeight = wide
+      ? Math.min(26.25 * 16, viewportHeight * 0.56)
+      : Math.min(13 * 16, viewportHeight * 0.44);
+    return { width: Math.floor(width), height: Math.floor(Math.max(byAspect, minHeight)) };
+  };
+
+  const devices = [
+    ["iPhone SE", 375, 667, false],
+    ["iPhone 14", 390, 844, false],
+    ["Galaxy S8", 360, 740, false],
+    ["узкий экран 320", 320, 568, false],
+    ["iPad портрет", 768, 1024, true],
+    ["десктоп", 1280, 800, true],
+  ];
+
+  // Те же числа, что и в CombatCinematicStage: корпус босса, щит, полоски.
+  const BOSS_HULL_HALF_WIDTH = 148;
+  const BOSS_SHIELD_RADIUS_X = 166;
+  const SHIELD_PULSE_PEAK = 1.03;
+  const BARS_BELOW_CENTER = 95 + 16;
+
+  for (const [name, viewportWidth, viewportHeight, wide] of devices) {
+    const stage = stageSize(viewportWidth, viewportHeight, wide);
+    const scene = getCombatCinematicSceneMetrics(stage.width, stage.height);
+    const enemyCenterX = scene.width * 0.75;
+    const shipCenterY = scene.height * 0.52;
+    const shieldRadiusX = Math.min(
+      BOSS_SHIELD_RADIUS_X,
+      (scene.width * 0.25 - 6) / SHIELD_PULSE_PEAK,
+    );
+
+    assert.ok(
+      enemyCenterX + BOSS_HULL_HALF_WIDTH < scene.width,
+      `${name}: корпус босса помещается по ширине`,
+    );
+    assert.ok(
+      enemyCenterX + shieldRadiusX * SHIELD_PULSE_PEAK <= scene.width,
+      `${name}: щит босса не срезается краем кадра даже в пике пульсации`,
+    );
+    assert.ok(
+      scene.width * 0.25 - shieldRadiusX * SHIELD_PULSE_PEAK >= 0,
+      `${name}: щит игрока не срезается левым краем`,
+    );
+    assert.ok(
+      shipCenterY + BARS_BELOW_CENTER < scene.height,
+      `${name}: полоски щита и корпуса не уезжают за нижний край`,
+    );
+    assert.ok(
+      scene.height * 0.13 * scene.scale >= 12,
+      `${name}: подпись корабля не прижата к верхнему краю`,
+    );
+    assert.ok(
+      scene.scale >= 0.36,
+      `${name}: масштаб не проваливается ниже читаемого минимума`,
+    );
+  }
+}
+
+{
+  const {
+    COMBAT_CINEMATIC_ENEMY_WEAPON_KEYS,
+    getCombatCinematicEnemyWeaponKey,
+    getCombatCinematicEnemyWeaponIcon,
+  } = jiti("../src/game/components/combatCinematicPresentation.ts");
+  const { ANCIENT_BOSSES: bosses } = jiti("../src/game/constants/bosses.ts");
+
+  for (const key of COMBAT_CINEMATIC_ENEMY_WEAPON_KEYS) {
+    assert.equal(
+      typeof ruTranslations.combat_cinematics.enemy_weapons?.[key],
+      "string",
+      `у орудия «${key}» есть русское имя в телеметрии`,
+    );
+    assert.equal(
+      typeof enTranslations.combat_cinematics.enemy_weapons?.[key],
+      "string",
+      `у орудия «${key}» есть английское имя в телеметрии`,
+    );
+  }
+
+  // Новый ствол в данных обязан получить имя, иначе телеметрия молча
+  // подпишет его общим «орудие врага».
+  const bossGunTypes = new Set(
+    bosses.flatMap((boss) =>
+      boss.modules.filter((m) => (m.damage ?? 0) > 0).map((m) => m.type),
+    ),
+  );
+  const unnamed = [...bossGunTypes].filter(
+    (type) => !COMBAT_CINEMATIC_ENEMY_WEAPON_KEYS.includes(type),
+  );
+  assert.deepEqual(unnamed, [], "каждое орудие босса подписано в телеметрии");
+
+  assert.equal(
+    getCombatCinematicEnemyWeaponKey("reality_tear"),
+    "reality_tear",
+    "известное орудие подписывается своим именем",
+  );
+  assert.equal(
+    getCombatCinematicEnemyWeaponKey("совершенно_новая_пушка"),
+    "enemy",
+    "незнакомое орудие откатывается на общую подпись, а не на сырой ключ",
+  );
+  assert.equal(
+    getCombatCinematicEnemyWeaponKey(undefined),
+    "enemy",
+    "выстрел без указанного орудия подписывается общо",
+  );
+  assert.notEqual(
+    getCombatCinematicEnemyWeaponIcon("ice_beam"),
+    getCombatCinematicEnemyWeaponIcon("nano_swarm"),
+    "иконка различает семейства орудий, а не одна на всех",
+  );
+}
+
+{
+  const { ANCIENT_BOSSES } = jiti("../src/game/constants/bosses.ts");
+  const stats = (boss) => ({
+    hull: boss.modules.reduce((sum, m) => sum + m.health, 0),
+    damage: boss.modules.reduce((sum, m) => sum + (m.damage ?? 0), 0),
+    guns: boss.modules.filter((m) => (m.damage ?? 0) > 0).length,
+  });
+
+  // Зафиксированный баланс: третий ствол T3 нарезан из существующих двух,
+  // суммарный урон и прочность боссов не изменились.
+  const expected = {
+    "👁️ Оракул Пустоты": { hull: 1040, damage: 90, guns: 3 },
+    "💀 Разрушитель Связи": { hull: 840, damage: 125, guns: 3 },
+    "⏳ Хранитель Времени": { hull: 960, damage: 115, guns: 3 },
+    "♾️ Вечный": { hull: 1050, damage: 125, guns: 3 },
+  };
+  for (const [name, want] of Object.entries(expected)) {
+    const boss = ANCIENT_BOSSES.find((b) => b.name === name);
+    assert.ok(boss, `босс ${name} на месте`);
+    assert.deepEqual(
+      stats(boss),
+      want,
+      `${name}: три ствола при неизменных суммарных уроне и прочности`,
+    );
+  }
+
+  for (const boss of ANCIENT_BOSSES) {
+    const guns = boss.modules.filter((m) => (m.damage ?? 0) > 0);
+    assert.ok(guns.length >= 1, `${boss.name} умеет стрелять`);
+    assert.deepEqual(
+      guns.filter((gun) => (gun.defense ?? 0) > 0),
+      [],
+      `${boss.name}: орудия без брони — иначе новый ствол поднимает общий щит от брони врага`,
+    );
+  }
 }
 
 {
@@ -1210,8 +1459,8 @@ const snapshot = {
       shieldDamage: 0,
       hullDamage: 12,
     }),
-    900,
-    "reflection reserves enough time for the outbound and return flight",
+    1700,
+    "отражение — три такта: удар, разворот щитом, возврат с попаданием",
   );
   assert.equal(
     getCombatCinematicEventDuration({
@@ -1224,8 +1473,80 @@ const snapshot = {
       hullDamage: 12,
       isCrit: false,
     }),
+    1050,
+    "a plain hull hit stays readable without holding the whole volley for 1.5s",
+  );
+  assert.equal(
+    getCombatCinematicEventDuration({
+      kind: "projectile",
+      from: "player",
+      to: "enemy",
+      weapon: "laser",
+      outcome: "hull",
+      shieldDamage: 0,
+      hullDamage: 12,
+      isCrit: true,
+    }),
     1500,
-    "a projectile reserves time for a readable damage number after impact",
+    "a critical hit keeps the full beat — it is the moment worth watching",
+  );
+  assert.ok(
+    getCombatCinematicEventDuration({
+      kind: "projectile",
+      from: "player",
+      to: "enemy",
+      weapon: "laser",
+      outcome: "miss",
+      shieldDamage: 0,
+      hullDamage: 0,
+      isCrit: false,
+    }) < getCombatCinematicEventDuration({
+      kind: "projectile",
+      from: "player",
+      to: "enemy",
+      weapon: "laser",
+      outcome: "hull",
+      shieldDamage: 0,
+      hullDamage: 12,
+      isCrit: false,
+    }),
+    "промах не занимает столько же времени, сколько попадание",
+  );
+  assert.ok(
+    COMBAT_CINEMATIC_VOLLEY_STAGGER_MS < COMBAT_CINEMATIC_BAY_GAP_MS,
+    "внутри палубы очередь плотнее, чем пауза между палубами",
+  );
+  assert.equal(
+    getCombatCinematicStaggerMs(
+      { kind: "projectile", from: "player", to: "enemy", weapon: "laser", outcome: "hull", shieldDamage: 0, hullDamage: 5, isCrit: false, volleyId: 7 },
+      { kind: "projectile", from: "player", to: "enemy", weapon: "laser", outcome: "hull", shieldDamage: 0, hullDamage: 5, isCrit: false, volleyId: 7 },
+    ),
+    COMBAT_CINEMATIC_VOLLEY_STAGGER_MS,
+    "снаряды одной палубы бьют короткой очередью",
+  );
+  assert.equal(
+    getCombatCinematicStaggerMs(
+      { kind: "projectile", from: "player", to: "enemy", weapon: "laser", outcome: "hull", shieldDamage: 0, hullDamage: 5, isCrit: false, volleyId: 7 },
+      { kind: "projectile", from: "player", to: "enemy", weapon: "laser", outcome: "hull", shieldDamage: 0, hullDamage: 5, isCrit: false, volleyId: 8 },
+    ),
+    COMBAT_CINEMATIC_BAY_GAP_MS,
+    "перед залпом следующей палубы сцена держит паузу",
+  );
+  assert.equal(
+    getCombatCinematicStaggerMs(
+      { kind: "projectile", from: "player", to: "enemy", weapon: "laser", outcome: "hull", shieldDamage: 0, hullDamage: 5, isCrit: false, volleyId: 7 },
+      { kind: "projectile", from: "enemy", to: "player", weapon: "enemy", outcome: "hull", shieldDamage: 0, hullDamage: 5, isCrit: false },
+    ),
+    null,
+    "ответ врага не накладывается на залп игрока — это разные ходы",
+  );
+  assert.equal(
+    getCombatCinematicStaggerMs(
+      { kind: "projectile", from: "player", to: "enemy", weapon: "laser", outcome: "hull", shieldDamage: 0, hullDamage: 5, isCrit: false, volleyId: 7 },
+      { kind: "module_destroyed", side: "enemy", moduleId: 1 },
+    ),
+    null,
+    "уничтожение модуля играет соло, иначе его не прочитать",
   );
   assert.equal(
     getCombatCinematicEventDuration({ kind: "vessel_destroyed", side: "enemy" }),

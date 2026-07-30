@@ -46,6 +46,16 @@ export interface CombatProjectileEvent extends CombatProjectileResolution {
   to: CombatCinematicSide;
   isCrit: boolean;
   targetModuleId?: number;
+  /**
+   * Тип модуля-орудия врага (`plasma_cannon`, `ice_beam`, …). Задаёт визуал
+   * выстрела: у врага нет `WeaponType`, но орудия у него разные.
+   */
+  enemyWeapon?: string;
+  /**
+   * Из какой оружейной палубы (или залпа врага) ушёл снаряд. Снаряды одного
+   * залпа бьют очередью, между залпами сцена держит паузу.
+   */
+  volleyId?: number;
 }
 
 export type CombatCinematicEvent =

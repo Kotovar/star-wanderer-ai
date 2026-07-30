@@ -929,6 +929,7 @@ function pushVolleyWithRetargets(
   firstTargetHealth: number,
   projectiles: readonly CombatProjectileResolution[],
   isCrit: boolean,
+  volleyId: number,
 ): number[] {
   const destroyedModuleIds: number[] = [];
   let targetId = firstTargetId;
@@ -944,6 +945,7 @@ function pushVolleyWithRetargets(
       from: "player",
       to: "enemy",
       targetModuleId: targetId,
+      volleyId,
       projectiles: onTarget,
       isCrit,
     }));
@@ -1287,6 +1289,7 @@ export function executePlayerAttackWithBayTargets(
           from: "player",
           to: "enemy",
           targetModuleId: fallbackTarget.id,
+          volleyId: bay.id,
           projectiles: createMissProjectileResolutions(bayWeapons),
           isCrit: false,
         }));
@@ -1352,6 +1355,7 @@ export function executePlayerAttackWithBayTargets(
         from: "player",
         to: "enemy",
         targetModuleId: tgtMod.id,
+        volleyId: bay.id,
         projectiles: createMissProjectileResolutions(bayWeapons),
         isCrit: false,
       }));
@@ -1401,6 +1405,7 @@ export function executePlayerAttackWithBayTargets(
         from: "player",
         to: "enemy",
         targetModuleId: tgtMod.id,
+        volleyId: bay.id,
         projectiles: damage.projectiles,
         isCrit: false,
       }));
@@ -1444,6 +1449,7 @@ export function executePlayerAttackWithBayTargets(
         from: "player",
         to: "enemy",
         targetModuleId: tgtMod.id,
+        volleyId: bay.id,
         targetHullBeforeVolley: targetHealthBefore,
         projectiles: volley,
         isCrit: bayIsCrit,
@@ -1459,6 +1465,7 @@ export function executePlayerAttackWithBayTargets(
         targetHealthBefore,
         volley,
         bayIsCrit,
+        bay.id,
       );
     }
     if (bayCrit.isCrit && bayDamageMultiplier > 1) {
