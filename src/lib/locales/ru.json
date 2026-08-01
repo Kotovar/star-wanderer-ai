@@ -1857,6 +1857,22 @@
             "absorbed": "ПОГЛОЩЕНО",
             "blocked": "БЛОКИРОВАНО",
             "piercing": "ПРОБИТИЕ"
+        },
+        "command": {
+            "ambush": "ЗАСАДА",
+            "targeting": "НАВЕДЕНИЕ",
+            "salvo": "ЗАЛП",
+            "counter": "ХОД ВРАГА"
+        },
+        "summary": {
+            "title": "ОТЧЁТ О ЗАЛПЕ",
+            "dealt": "Нанесено",
+            "received": "Получено",
+            "shield": "Щиты",
+            "hull": "Корпус",
+            "critical": "Критов",
+            "modules_destroyed": "Модулей уничтожено",
+            "drone_stacks": "Стаков дронов"
         }
     },
     "distress_signal": {

@@ -219,8 +219,43 @@ assert.match(
 );
 assert.match(
   stageSource,
-  /drawSelectedModuleTargets\(ctx, snapshot\.enemy, selectedModuleIds, active, width, height\);/,
-  "the target reticle receives active timeline events",
+  /drawSelectedModuleTargets\([\s\S]*?selectedModuleIds,[\s\S]*?selectableModuleIds,[\s\S]*?active,[\s\S]*?width,[\s\S]*?height,[\s\S]*?\);/,
+  "the target reticle receives selected, selectable, and active timeline modules",
+);
+assert.match(
+  stageSource,
+  /selectableModuleIds: readonly number\[\];/,
+  "the stage knows which live enemy modules can be selected directly",
+);
+assert.match(
+  stageSource,
+  /onTargetSelect: \(moduleId: number\) => void;/,
+  "canvas target selection routes through a parent-owned handler",
+);
+assert.match(
+  stageSource,
+  /getCombatCinematicModuleHitIndex\(/,
+  "canvas hit testing reuses the shared module-anchor geometry",
+);
+assert.match(
+  stageSource,
+  /onPointerDown=\{handleCanvasPointerDown\}/,
+  "the canvas accepts direct pointer selection on module reticles",
+);
+assert.match(
+  stageSource,
+  /function drawCombatCommandHud\(/,
+  "the idle scene has a compact command HUD",
+);
+assert.match(
+  stageSource,
+  /snapshot\[event\.to\]\.modules\.find\(\(module\) => module\.id === event\.targetModuleId\)\?\.name/,
+  "projectile telemetry names its active target from the frozen snapshot",
+);
+assert.match(
+  stageSource,
+  /if \(reducedMotion\) return null;/,
+  "reduced-motion disables camera focus instead of hiding tactical information",
 );
 assert.match(
   stageSource,
@@ -284,7 +319,7 @@ assert.match(
 );
 assert.match(
   stageSource,
-  /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)\.matches\) \{\s*renderIdle\(\);/,
+  /const reducedMotion = window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)\.matches;[\s\S]*?if \(reducedMotion\) \{\s*renderIdle\(\);/,
   "reduced motion renders the idle scene once instead of animating it",
 );
 assert.doesNotMatch(
@@ -493,6 +528,36 @@ assert.match(
   combatPanelSource,
   /const isPlaybackActive = cinematicTimeline !== null;/,
   "one timeline boolean controls the combat input lock",
+);
+assert.match(
+  combatPanelSource,
+  /const \[lastVolleySummary, setLastVolleySummary\] = useState<CombatCinematicVolleySummary \| null>\(null\);/,
+  "the panel keeps the resolved turn summary until the next action",
+);
+assert.match(
+  combatPanelSource,
+  /setLastVolleySummary\(getCombatCinematicVolleySummary\(timeline\)\);/,
+  "every resolved timeline freezes a post-volley summary before playback",
+);
+assert.match(
+  combatPanelSource,
+  /onTargetSelect=\{handleEnemyModuleClick\}/,
+  "canvas clicks reuse the same target-selection path as the DOM fallback",
+);
+assert.match(
+  combatPanelSource,
+  /selectableModuleIds=\{selectableModuleIds\}/,
+  "the stage receives only currently selectable enemy modules",
+);
+assert.equal(
+  ruTranslations.combat_cinematics.command?.targeting,
+  "НАВЕДЕНИЕ",
+  "the command HUD has a Russian targeting label",
+);
+assert.equal(
+  enTranslations.combat_cinematics.summary?.critical,
+  "Critical hits",
+  "the volley report has an English critical-hit label",
 );
 assert.doesNotMatch(
   combatPanelSource,

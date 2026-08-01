@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from "react";
 import { DRONE_MAX_STACKS, WEAPON_TYPES } from "@/game/constants";
 import { playSound } from "@/sounds";
 import { setupHiDPICanvas } from "@/game/components/canvas-utils";
@@ -8,6 +8,7 @@ import {
   COMBAT_CINEMATIC_MISS_LABEL_START_PROGRESS,
   formatCombatCinematicAmount,
   getCombatCinematicModuleAnchor,
+  getCombatCinematicModuleHitIndex,
   getHullDamageStage,
   getCombatCinematicSceneMetrics,
   getMissLabelPoint,
@@ -40,6 +41,7 @@ import type {
 import { useTranslation } from "@/lib/useTranslation";
 
 type Point = { x: number; y: number };
+export type CombatCinematicCommandPhase = "ambush" | "targeting" | "salvo" | "counter";
 /** Событие, идущее прямо сейчас: их может быть несколько, залп летит внахлёст. */
 interface ActiveCinematicEvent {
   event: CombatCinematicEvent;
@@ -122,6 +124,19 @@ function shipDirection(side: CombatCinematicSide): -1 | 1 {
   return side === "player" ? 1 : -1;
 }
 
+function getModuleAnchorBounds(
+  vessel: CombatCinematicSnapshot["player"],
+  side: CombatCinematicSide,
+) {
+  return side === "enemy" && vessel.kind === "creature" && (
+    vessel.spaceMonsterType === "ember_wisp" ||
+    vessel.spaceMonsterType === "binary_wyrm" ||
+    vessel.spaceMonsterType === "plasma_leviathan"
+  )
+    ? CREATURE_MODULE_CORE_BOUNDS
+    : undefined;
+}
+
 function getModulePoint(
   vessel: CombatCinematicSnapshot["player"],
   side: CombatCinematicSide,
@@ -131,19 +146,12 @@ function getModulePoint(
 ): Point {
   const center = shipCenter(side, width, height);
   const index = Math.max(0, vessel.modules.findIndex((currentModule) => currentModule.id === moduleId));
-  const coreBounds = side === "enemy" && vessel.kind === "creature" && (
-    vessel.spaceMonsterType === "ember_wisp" ||
-    vessel.spaceMonsterType === "binary_wyrm" ||
-    vessel.spaceMonsterType === "plasma_leviathan"
-  )
-    ? CREATURE_MODULE_CORE_BOUNDS
-    : undefined;
   return getCombatCinematicModuleAnchor(
     vessel.modules.length,
     index,
     center,
     shipDirection(side),
-    coreBounds,
+    getModuleAnchorBounds(vessel, side),
   );
 }
 
@@ -502,11 +510,14 @@ function drawSelectedModuleTargets(
   ctx: CanvasRenderingContext2D,
   vessel: CombatCinematicSnapshot["enemy"],
   moduleIds: readonly number[],
+  selectableModuleIds: readonly number[],
   active: readonly ActiveCinematicEvent[],
   width: number,
   height: number,
 ): void {
   const lockedModuleIds = new Set<number>();
+  const selectedModuleIds = new Set(moduleIds);
+  const selectableIds = new Set(selectableModuleIds);
   for (const { event } of active) {
     if (
       event.kind === "projectile"
@@ -515,11 +526,17 @@ function drawSelectedModuleTargets(
     ) lockedModuleIds.add(event.targetModuleId);
   }
 
-  for (const moduleId of new Set([...moduleIds, ...lockedModuleIds])) {
+  for (const moduleId of new Set([
+    ...moduleIds,
+    ...selectableModuleIds,
+    ...lockedModuleIds,
+  ])) {
     if (!vessel.modules.some((currentModule) => currentModule.id === moduleId)) continue;
     const point = getModulePoint(vessel, "enemy", moduleId, width, height);
     const isLocked = lockedModuleIds.has(moduleId);
-    const color = isLocked ? "#dffcff" : "#ffcb57";
+    const isSelected = selectedModuleIds.has(moduleId);
+    const isSelectable = selectableIds.has(moduleId);
+    const color = isLocked ? "#dffcff" : isSelected ? "#ffcb57" : "#67e8f9";
     const pulse = 0.5 + Math.sin(sceneElapsed / (isLocked ? 160 : 320)) * 0.5;
     ctx.save();
     ctx.translate(point.x, point.y);
@@ -527,9 +544,10 @@ function drawSelectedModuleTargets(
     ctx.lineWidth = isLocked ? 1.6 : 1.2;
     ctx.shadowColor = color;
     ctx.shadowBlur = (isLocked ? 10 : 8) + pulse * (isLocked ? 8 : 6);
-    ctx.globalAlpha = (isLocked ? 0.8 : 0.65) + pulse * (isLocked ? 0.2 : 0.35);
+    ctx.globalAlpha = (isLocked ? 0.8 : isSelected ? 0.65 : 0.42) +
+      pulse * (isLocked ? 0.2 : isSelected ? 0.35 : 0.24);
     ctx.save();
-    if (!isLocked) {
+    if (!isLocked && isSelectable) {
       ctx.rotate(sceneElapsed / 1400);
       ctx.setLineDash([5, 6]);
     }
@@ -2308,6 +2326,10 @@ function drawProjectileTelemetry(
     : enemyWeaponKey === "enemy"
       ? t("combat_cinematics.weapons.enemy")
       : t(`combat_cinematics.enemy_weapons.${enemyWeaponKey}`);
+  const targetLabel = event.targetModuleId === undefined
+    ? snapshot[event.to].name
+    : snapshot[event.to].modules.find((module) => module.id === event.targetModuleId)?.name ??
+      snapshot[event.to].name;
   const statusLabel = t(`combat_cinematics.statuses.${readout.status}`);
   const amount = getProjectileTelemetryAmount(readout);
   const projectileColor = getProjectileColor(event, snapshot);
@@ -2318,7 +2340,7 @@ function drawProjectileTelemetry(
 
   ctx.save();
   ctx.font = `700 ${fontSize}px Orbitron, monospace`;
-  const prefix = `${weaponIcon} ${weaponLabel}`;
+  const prefix = `${weaponIcon} ${weaponLabel} → ${targetLabel}`;
   const separator = "  ·  ";
   const suffix = amount ? `  ${amount}` : "";
   const prefixWidth = ctx.measureText(prefix).width;
@@ -2356,6 +2378,34 @@ function drawProjectileTelemetry(
     ctx.fillStyle = "#f6fbff";
     ctx.fillText(suffix, cursor, y);
   }
+  ctx.restore();
+}
+
+function drawCombatCommandHud(
+  ctx: CanvasRenderingContext2D,
+  phase: CombatCinematicCommandPhase,
+  width: number,
+  height: number,
+  t: Translate,
+  sceneScale: number,
+): void {
+  const label = t(`combat_cinematics.command.${phase}`);
+  const x = width / 2;
+  const y = height * 0.25;
+
+  ctx.save();
+  ctx.font = `800 ${readableFontSize(11, sceneScale, 9)}px Orbitron, monospace`;
+  ctx.textAlign = "center";
+  const panelWidth = Math.min(width * 0.46, ctx.measureText(label).width + 30);
+  ctx.fillStyle = "rgba(3, 12, 23, 0.82)";
+  ctx.fillRect(x - panelWidth / 2, y - 17, panelWidth, 26);
+  ctx.strokeStyle = "rgba(103, 232, 249, 0.6)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x - panelWidth / 2 + 0.5, y - 16.5, panelWidth - 1, 25);
+  ctx.fillStyle = "#b8f5ff";
+  ctx.shadowColor = "#5bd6ff";
+  ctx.shadowBlur = 8;
+  ctx.fillText(label, x, y);
   ctx.restore();
 }
 
@@ -2893,6 +2943,44 @@ function getCameraShake(
   return 0;
 }
 
+function getCombatFocus(
+  active: readonly ActiveCinematicEvent[],
+  snapshot: CombatCinematicSnapshot,
+  width: number,
+  height: number,
+  reducedMotion: boolean,
+): { point: Point; scale: number } | null {
+  if (reducedMotion) return null;
+  const current = active.find(({ event, progress }) =>
+    (event.kind === "projectile" && event.isCrit && progress >= 0.2) ||
+    event.kind === "module_destroyed" ||
+    event.kind === "boss_ability",
+  );
+  if (!current) return null;
+
+  const { event } = current;
+  if (event.kind === "projectile") {
+    const beforeImpact = current.progress < getImpactProgress(event);
+    return {
+      point: beforeImpact
+        ? event.sourceModuleId === undefined
+          ? shipCenter(event.from, width, height)
+          : getModulePoint(snapshot[event.from], event.from, event.sourceModuleId, width, height)
+        : event.targetModuleId === undefined
+          ? shipCenter(event.to, width, height)
+          : getModulePoint(snapshot[event.to], event.to, event.targetModuleId, width, height),
+      scale: beforeImpact ? 1.035 : 1.045,
+    };
+  }
+  if (event.kind === "module_destroyed") {
+    return {
+      point: getModulePoint(snapshot[event.side], event.side, event.moduleId, width, height),
+      scale: 1.06,
+    };
+  }
+  return { point: shipCenter("player", width, height), scale: 1.04 };
+}
+
 function drawScene(
   ctx: CanvasRenderingContext2D,
   width: number,
@@ -2903,7 +2991,10 @@ function drawScene(
   t: Translate,
   sceneScale: number,
   selectedModuleIds: readonly number[],
+  selectableModuleIds: readonly number[],
+  commandPhase: CombatCinematicCommandPhase,
   bossIntent: BossIntent | null,
+  reducedMotion: boolean,
 ): void {
   sceneElapsed = elapsed;
   drawBackground(ctx, width, height, elapsed);
@@ -2913,11 +3004,25 @@ function drawScene(
     const value = getCameraShake(item.event, item.progress, elapsed);
     return Math.abs(value) > Math.abs(strongest) ? value : strongest;
   }, 0);
+  const focus = getCombatFocus(active, snapshot, width, height, reducedMotion);
   ctx.save();
+  if (focus) {
+    ctx.translate(width / 2, height * 0.52);
+    ctx.scale(focus.scale, focus.scale);
+    ctx.translate(-focus.point.x, -focus.point.y);
+  }
   ctx.translate(shake, -shake * 0.45);
   drawShip(ctx, snapshot.player, "player", width, height, elapsed);
   drawShip(ctx, snapshot.enemy, "enemy", width, height, elapsed);
-  drawSelectedModuleTargets(ctx, snapshot.enemy, selectedModuleIds, active, width, height);
+  drawSelectedModuleTargets(
+    ctx,
+    snapshot.enemy,
+    selectedModuleIds,
+    selectableModuleIds,
+    active,
+    width,
+    height,
+  );
   drawShipBars(ctx, snapshot.player, "player", width, height);
   drawShipBars(ctx, snapshot.enemy, "enemy", width, height);
   // Телеметрия — одна на кадр, по последнему выстрелу: панели наложенных
@@ -2969,6 +3074,10 @@ function drawScene(
     ctx.fillText(label, x, y);
     ctx.restore();
   }
+
+  if (active.length === 0) {
+    drawCombatCommandHud(ctx, commandPhase, width, height, t, sceneScale);
+  }
 }
 
 function drawCanvasFrame(
@@ -2980,7 +3089,10 @@ function drawCanvasFrame(
   elapsed: number,
   t: Translate,
   selectedModuleIds: readonly number[],
+  selectableModuleIds: readonly number[],
+  commandPhase: CombatCinematicCommandPhase,
   bossIntent: BossIntent | null,
+  reducedMotion: boolean,
 ): void {
   const rect = stage.getBoundingClientRect();
   const width = Math.max(1, Math.floor(rect.width));
@@ -3000,7 +3112,10 @@ function drawCanvasFrame(
     t,
     scene.scale,
     selectedModuleIds,
+    selectableModuleIds,
+    commandPhase,
     bossIntent,
+    reducedMotion,
   );
   ctx.restore();
 }
@@ -3009,7 +3124,10 @@ export interface CombatCinematicStageProps {
   idleSnapshot: CombatCinematicSnapshot | null;
   timeline: CombatTurnTimeline | null;
   selectedModuleIds: readonly number[];
+  selectableModuleIds: readonly number[];
+  commandPhase: CombatCinematicCommandPhase;
   bossIntent: BossIntent | null;
+  onTargetSelect: (moduleId: number) => void;
   onPlaybackComplete: () => void;
 }
 
@@ -3017,7 +3135,10 @@ export function CombatCinematicStage({
   idleSnapshot,
   timeline,
   selectedModuleIds,
+  selectableModuleIds,
+  commandPhase,
   bossIntent,
+  onTargetSelect,
   onPlaybackComplete,
 }: CombatCinematicStageProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -3044,11 +3165,34 @@ export function CombatCinematicStage({
     bossIntentRef.current = bossIntent;
   }, [bossIntent]);
 
+  const handleCanvasPointerDown = (event: PointerEvent<HTMLCanvasElement>) => {
+    if (timeline || !idleSnapshot || selectableModuleIds.length === 0) return;
+    const stage = stageRef.current;
+    if (!stage) return;
+    const rect = stage.getBoundingClientRect();
+    const scene = getCombatCinematicSceneMetrics(rect.width, rect.height);
+    const moduleIndex = getCombatCinematicModuleHitIndex(
+      idleSnapshot.enemy.modules.length,
+      {
+        x: (event.clientX - rect.left) / scene.scale,
+        y: (event.clientY - rect.top) / scene.scale,
+      },
+      shipCenter("enemy", scene.width, scene.height),
+      shipDirection("enemy"),
+      getModuleAnchorBounds(idleSnapshot.enemy, "enemy"),
+    );
+    const moduleId = moduleIndex === null ? undefined : idleSnapshot.enemy.modules[moduleIndex]?.id;
+    if (moduleId !== undefined && selectableModuleIds.includes(moduleId)) {
+      onTargetSelect(moduleId);
+    }
+  };
+
   useLayoutEffect(() => {
     if (timeline || !idleSnapshot || !canvas) return;
     const stage = stageRef.current ?? canvas.parentElement ?? canvas;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const renderIdle = (timestamp = performance.now()) => {
       drawCanvasFrame(
@@ -3060,13 +3204,16 @@ export function CombatCinematicStage({
         timestamp,
         tRef.current,
         selectedModuleIds,
+        selectableModuleIds,
+        commandPhase,
         bossIntentRef.current,
+        reducedMotion,
       );
     };
 
     // ponytail: the idle scene animates too — drift, engines, smoke and the
     // target reticle are what make waiting for the player's order feel alive.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (reducedMotion) {
       renderIdle();
       const resizeObserver = new ResizeObserver(() => renderIdle());
       resizeObserver.observe(stage);
@@ -3080,7 +3227,7 @@ export function CombatCinematicStage({
     };
     loop(performance.now());
     return () => cancelAnimationFrame(frameId);
-  }, [bossIntent, canvas, idleSnapshot, selectedModuleIds, timeline]);
+  }, [bossIntent, canvas, commandPhase, idleSnapshot, selectableModuleIds, selectedModuleIds, timeline]);
 
   useLayoutEffect(() => {
     if (!timeline || !canvas) return;
@@ -3172,7 +3319,10 @@ export function CombatCinematicStage({
         timestamp,
         tRef.current,
         selectedModuleIdsRef.current,
+        [],
+        commandPhase,
         null,
+        reducedMotion,
       );
 
       if (running.length === 0 && nextIndex >= timeline.events.length) {
@@ -3187,7 +3337,7 @@ export function CombatCinematicStage({
 
     render(performance.now());
     return () => cancelAnimationFrame(frameId);
-  }, [canvas, timeline]);
+  }, [canvas, commandPhase, timeline]);
 
   if (!timeline && !idleSnapshot) return null;
 
@@ -3198,9 +3348,10 @@ export function CombatCinematicStage({
     >
       <canvas
         ref={setCanvas}
-        className="absolute inset-0 block size-full"
+        className={`absolute inset-0 block size-full ${timeline === null && selectableModuleIds.length > 0 ? "cursor-crosshair" : ""}`}
         role="img"
         aria-label={t("combat_cinematics.canvas_label")}
+        onPointerDown={handleCanvasPointerDown}
       />
     </div>
   );

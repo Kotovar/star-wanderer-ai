@@ -5,6 +5,10 @@ import { useGameStore } from "../store";
 import { showHintOnce } from "@/game/hints/showHint";
 import { Button } from "@/components/ui/button";
 import { CombatCinematicStage } from "./CombatCinematicStage";
+import {
+  getCombatCinematicVolleySummary,
+  type CombatCinematicVolleySummary,
+} from "./combatCinematicPresentation";
 import { CrewMemberCard } from "./CrewMemberCard";
 import {
   createCombatPresentationSnapshot,
@@ -29,7 +33,7 @@ interface WeaponHint {
   color: string;
 }
 
-type CombatPhaseId = "ambush" | "targeting" | "salvo" | "counter" | "stabilize";
+type CombatPhaseId = "ambush" | "targeting" | "salvo" | "counter";
 
 const COMBAT_PHASES: { id: CombatPhaseId; label: string; caption: string }[] = [
   { id: "targeting", label: "Наведение", caption: "выбор целей" },
@@ -293,6 +297,7 @@ export function CombatPanel() {
   const [activeBayId, setActiveBayId] = useState<number | null>(null);
   const [selectedCrew, setSelectedCrew] = useState<CrewMember | null>(null);
   const [playbackCombat, setPlaybackCombat] = useState<Combat | null>(null);
+  const [lastVolleySummary, setLastVolleySummary] = useState<CombatCinematicVolleySummary | null>(null);
 
   const isPlaybackActive = cinematicTimeline !== null;
   const presentedCombat = getPresentedCombat(
@@ -363,6 +368,7 @@ export function CombatPanel() {
     const timeline = attackEnemyWithBayTargets(bayTargets);
     if (timeline) {
       setPlaybackCombat(createCombatPresentationSnapshot(presentedCombat));
+      setLastVolleySummary(getCombatCinematicVolleySummary(timeline));
       startCombatPlayback(timeline);
     }
   };
@@ -372,6 +378,7 @@ export function CombatPanel() {
     const timeline = useGameStore.getState().skipTurn();
     if (timeline) {
       setPlaybackCombat(createCombatPresentationSnapshot(presentedCombat));
+      setLastVolleySummary(getCombatCinematicVolleySummary(timeline));
       startCombatPlayback(timeline);
     }
   };
@@ -381,6 +388,7 @@ export function CombatPanel() {
     const timeline = retreat();
     if (timeline) {
       setPlaybackCombat(createCombatPresentationSnapshot(presentedCombat));
+      setLastVolleySummary(getCombatCinematicVolleySummary(timeline));
       startCombatPlayback(timeline);
     }
   };
@@ -407,6 +415,12 @@ export function CombatPanel() {
     armedBayIds.length,
   );
   const phaseNote = getPhaseNote(activeCombatPhase, activeBayId, targetingProgress);
+  const selectableModuleIds = !isPlaybackActive &&
+    (activeBayId !== null || weaponBays.length === 1)
+    ? presentedCombat.enemy.modules
+      .filter((module) => module.health > 0)
+      .map((module) => module.id)
+    : [];
 
   return (
     <div className="flex flex-col gap-4 h-full overflow-y-auto pr-2">
@@ -421,9 +435,16 @@ export function CombatPanel() {
         idleSnapshot={idleSnapshot}
         timeline={cinematicTimeline}
         selectedModuleIds={selectedModuleIds}
+        selectableModuleIds={selectableModuleIds}
+        commandPhase={activeCombatPhase}
         bossIntent={bossIntent}
+        onTargetSelect={handleEnemyModuleClick}
         onPlaybackComplete={handlePlaybackComplete}
       />
+
+      {!isPlaybackActive && lastVolleySummary && (
+        <CombatVolleySummaryCard summary={lastVolleySummary} t={t} />
+      )}
 
       {/* Attack actions */}
       <div className="flex gap-2.5 flex-col sm:flex-row">
@@ -590,6 +611,56 @@ function CombatMetric({
       <div className="truncate text-[10px] uppercase tracking-wide text-[#667]">
         {label}
       </div>
+    </div>
+  );
+}
+
+function CombatVolleySummaryCard({
+  summary,
+  t,
+}: {
+  summary: CombatCinematicVolleySummary;
+  t: TFn;
+}) {
+  const destroyedModules =
+    summary.destroyedEnemyModuleIds.length + summary.destroyedPlayerModuleIds.length;
+  const damageColumns = [
+    {
+      label: t("combat_cinematics.summary.dealt"),
+      shield: summary.enemyShieldDamage,
+      hull: summary.enemyHullDamage,
+      color: "#00ff9d",
+    },
+    {
+      label: t("combat_cinematics.summary.received"),
+      shield: summary.playerShieldDamage,
+      hull: summary.playerHullDamage,
+      color: "#ff4d6d",
+    },
+  ];
+
+  return (
+    <div className="border border-[#34566c] bg-[rgba(3,12,23,0.78)] px-3 py-2">
+      <div className="font-['Orbitron'] text-[10px] font-bold tracking-wider text-[#b8f5ff]">
+        {t("combat_cinematics.summary.title")}
+      </div>
+      <div className="mt-1 grid grid-cols-2 gap-3 text-[10px]">
+        {damageColumns.map(({ label, shield, hull, color }) => (
+          <div key={label} className="min-w-0 border-l-2 pl-2" style={{ borderColor: color }}>
+            <div className="font-bold uppercase" style={{ color }}>{label}</div>
+            {shield > 0 && <div className="text-[#78c8ff]">{t("combat_cinematics.summary.shield")}: −{shield}</div>}
+            {hull > 0 && <div className="text-[#f5d0d9]">{t("combat_cinematics.summary.hull")}: −{hull}</div>}
+            {shield === 0 && hull === 0 && <div className="text-[#667788]">—</div>}
+          </div>
+        ))}
+      </div>
+      {(summary.criticalHits > 0 || destroyedModules > 0 || summary.droneStacks > 0) && (
+        <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-[#aebdca]">
+          {summary.criticalHits > 0 && <span className="text-[#ffcb57]">✦ {t("combat_cinematics.summary.critical")}: {summary.criticalHits}</span>}
+          {destroyedModules > 0 && <span className="text-[#ff9d8c]">✕ {t("combat_cinematics.summary.modules_destroyed")}: {destroyedModules}</span>}
+          {summary.droneStacks > 0 && <span className="text-[#c084fc]">⁘ {t("combat_cinematics.summary.drone_stacks")}: {summary.droneStacks}</span>}
+        </div>
+      )}
     </div>
   );
 }

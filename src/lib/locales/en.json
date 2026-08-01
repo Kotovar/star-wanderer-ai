@@ -1857,6 +1857,22 @@
             "absorbed": "ABSORBED",
             "blocked": "BLOCKED",
             "piercing": "PIERCING"
+        },
+        "command": {
+            "ambush": "AMBUSH",
+            "targeting": "TARGETING",
+            "salvo": "SALVO",
+            "counter": "ENEMY TURN"
+        },
+        "summary": {
+            "title": "VOLLEY REPORT",
+            "dealt": "Dealt",
+            "received": "Received",
+            "shield": "Shield",
+            "hull": "Hull",
+            "critical": "Critical hits",
+            "modules_destroyed": "Modules destroyed",
+            "drone_stacks": "Drone stacks"
         }
     },
     "distress_signal": {
