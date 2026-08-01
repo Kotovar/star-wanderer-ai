@@ -1,7 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { getPendingCrewPerkChoice } from "@/game/crew/techPerks";
+import {
+    getCrewPerkNoEffectSource,
+    getPendingCrewPerkChoice,
+} from "@/game/crew/techPerks";
 import {
     RACE_TECH_TREE,
     TECH_TREE,
@@ -11,13 +14,15 @@ import {
     getTechPerkNameKey,
 } from "@/game/constants/techTree";
 import { useGameStore } from "@/game/store";
+import { isModuleActive } from "@/game/modules/utils";
 import { useTranslation } from "@/lib/useTranslation";
 import { useShallow } from "zustand/react/shallow";
 
 export function CrewPerkChoiceModal() {
-    const { crew, chooseCrewPerk } = useGameStore(
+    const { crew, ship, chooseCrewPerk } = useGameStore(
         useShallow((state) => ({
             crew: state.crew,
+            ship: state.ship,
             chooseCrewPerk: state.chooseCrewPerk,
         })),
     );
@@ -30,6 +35,17 @@ export function CrewPerkChoiceModal() {
     if (!crewMember) return null;
 
     const professionalOptions = TECH_TREE[pending.profession][pending.tier];
+    const activeWeaponBayIds = new Set(
+        ship.modules
+            .filter((module) => module.type === "weaponbay" && isModuleActive(module))
+            .map((module) => module.id),
+    );
+    const activeGunnerIds = crew
+        .filter(
+            (member) =>
+                member.profession === "gunner" && activeWeaponBayIds.has(member.moduleId),
+        )
+        .map((member) => member.id);
     const options = [
         {
             branch: "A" as const,
@@ -70,6 +86,13 @@ export function CrewPerkChoiceModal() {
 
             <div className="grid gap-2 lg:grid-cols-3">
                 {options.map(({ branch, option, nameKey, descKey }) => {
+                    const noEffectSource = getCrewPerkNoEffectSource(
+                        crew,
+                        crewMember,
+                        pending.tier,
+                        branch,
+                        activeGunnerIds,
+                    );
                     return (
                         <div
                             key={branch}
@@ -84,6 +107,13 @@ export function CrewPerkChoiceModal() {
                             <div className="mt-1 flex-1 text-xs leading-relaxed text-[#7f8b7f]">
                                 {t(descKey)}
                             </div>
+                            {noEffectSource && (
+                                <div className="mt-2 border-l-2 border-[#ffb000] pl-2 text-[10px] leading-relaxed text-[#ffb000]">
+                                    ⚠ {t("crew_perk_choice.no_additional_effect", {
+                                        name: noEffectSource.name,
+                                    })}
+                                </div>
+                            )}
                             <Button
                                 onClick={() =>
                                     chooseCrewPerk(

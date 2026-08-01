@@ -1,4 +1,9 @@
-import { TECH_TREE_TIERS } from "../constants/techTree.ts";
+import {
+    getRaceTechPerkValue,
+    getTechPerkValue,
+    TECH_TREE_TIERS,
+} from "../constants/techTree.ts";
+import { getGunnerAccuracyBonus, getGunnerCritBonus } from "./combatBonuses.ts";
 import type {
     CrewMember,
     Profession,
@@ -10,6 +15,80 @@ export interface PendingCrewPerkChoice {
     crewMemberId: number;
     profession: Profession;
     tier: TechPerkTier;
+}
+
+function getAtLeastAsStrongCrewMember(
+    crew: CrewMember[],
+    crewMember: CrewMember,
+    candidateValue: number,
+    isEligible: (candidate: CrewMember) => boolean,
+    getValue: (candidate: CrewMember) => number,
+): CrewMember | null {
+    let source: CrewMember | null = null;
+    for (const candidate of crew) {
+        if (candidate.id === crewMember.id || !isEligible(candidate)) continue;
+        const value = getValue(candidate);
+        if (value < candidateValue) continue;
+        if (!source || value > getValue(source)) source = candidate;
+    }
+    return source;
+}
+
+/**
+ * Возвращает носителя уже действующего максимального бонуса, если новый выбор
+ * не увеличит эффект прямо сейчас. Выбор не блокируется: источник может
+ * погибнуть, быть переназначен или уступить после следующей прокачки.
+ */
+export function getCrewPerkNoEffectSource(
+    crew: CrewMember[],
+    crewMember: CrewMember,
+    tier: TechPerkTier,
+    branch: TechPerkBranch,
+    activeGunnerIds: readonly number[] = [],
+): CrewMember | null {
+    const projectedCrewMember: CrewMember = {
+        ...crewMember,
+        techPerks: { ...crewMember.techPerks, [tier]: branch },
+    };
+
+    if (branch === "C") {
+        return getAtLeastAsStrongCrewMember(
+            crew,
+            crewMember,
+            getRaceTechPerkValue(projectedCrewMember),
+            (candidate) => candidate.race === crewMember.race,
+            getRaceTechPerkValue,
+        );
+    }
+
+    if (branch === "B" && (
+        crewMember.profession === "engineer" || crewMember.profession === "scientist"
+    )) {
+        return getAtLeastAsStrongCrewMember(
+            crew,
+            crewMember,
+            getTechPerkValue(projectedCrewMember, "B"),
+            (candidate) => candidate.profession === crewMember.profession,
+            (candidate) => getTechPerkValue(candidate, "B"),
+        );
+    }
+
+    if (
+        crewMember.profession !== "gunner" ||
+        !activeGunnerIds.includes(crewMember.id)
+    ) return null;
+
+    const getGunnerValue = branch === "A"
+        ? getGunnerAccuracyBonus
+        : getGunnerCritBonus;
+    return getAtLeastAsStrongCrewMember(
+        crew,
+        crewMember,
+        getGunnerValue(projectedCrewMember),
+        (candidate) =>
+            candidate.profession === "gunner" && activeGunnerIds.includes(candidate.id),
+        getGunnerValue,
+    );
 }
 
 /**

@@ -4034,7 +4034,8 @@
         "signal": "Crew development",
         "title": "{{name}} is specializing",
         "subtitle": "Level {{tier}} — {{profession}}",
-        "choose": "Choose"
+        "choose": "Choose",
+        "no_additional_effect": "An equal or stronger bonus from {{name}} is already active — this choice will not increase the effect yet."
     },
     "tech_tree": {
         "pilot": {

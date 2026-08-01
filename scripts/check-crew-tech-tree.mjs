@@ -8,7 +8,11 @@ import {
   getTechPerkDescKey,
 } from "../src/game/constants/techTree.ts";
 import * as techTree from "../src/game/constants/techTree.ts";
-import { getPendingCrewPerkChoice, fillMissingTechPerkTiers } from "../src/game/crew/techPerks.ts";
+import {
+  getCrewPerkNoEffectSource,
+  getPendingCrewPerkChoice,
+  fillMissingTechPerkTiers,
+} from "../src/game/crew/techPerks.ts";
 import ruLocale from "../src/lib/locales/ru.json" with { type: "json" };
 import enLocale from "../src/lib/locales/en.json" with { type: "json" };
 
@@ -465,6 +469,65 @@ const crewMember = (overrides) => ({
   techPerks: undefined,
   ...overrides,
 });
+
+const coordinationLead = crewMember({
+  id: 2,
+  name: "Капитан Ли",
+  techPerks: { 3: "C" },
+});
+const humanMedic = crewMember({
+  id: 3,
+  name: "Доктор Рей",
+  profession: "medic",
+  level: 3,
+});
+assert.equal(
+  getCrewPerkNoEffectSource(
+    [coordinationLead, humanMedic],
+    humanMedic,
+    3,
+    "C",
+  )?.id,
+  coordinationLead.id,
+  "a second human Coordination pick warns when it cannot exceed the current team bonus",
+);
+assert.equal(
+  getCrewPerkNoEffectSource(
+    [
+      crewMember({ id: 4, name: "Старший инженер", profession: "engineer", techPerks: { 3: "B" } }),
+      crewMember({ id: 5, name: "Младший инженер", profession: "engineer", level: 3 }),
+    ],
+    crewMember({ id: 5, name: "Младший инженер", profession: "engineer", level: 3 }),
+    3,
+    "B",
+  )?.name,
+  "Старший инженер",
+  "a weaker Reactor Engineer pick warns instead of claiming a stacked power bonus",
+);
+assert.equal(
+  getCrewPerkNoEffectSource(
+    [
+      crewMember({ id: 6, name: "Старший канонир", profession: "gunner", techPerks: { 3: "B" } }),
+      crewMember({ id: 7, name: "Канонир", profession: "gunner", level: 3 }),
+    ],
+    crewMember({ id: 7, name: "Канонир", profession: "gunner", level: 3 }),
+    3,
+    "B",
+    [6, 7],
+  )?.id,
+  6,
+  "an active Gunner's duplicate Destroyer pick compares the real strongest crit source",
+);
+assert.equal(
+  getCrewPerkNoEffectSource(
+    [coordinationLead, humanMedic],
+    { ...humanMedic, techPerks: { 3: "C" } },
+    6,
+    "C",
+  ),
+  null,
+  "a Coordination pick that overtakes the current carrier remains available without a warning",
+);
 
 assert.equal(
   getPendingCrewPerkChoice([crewMember({ level: 2 })]),

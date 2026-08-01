@@ -2,6 +2,7 @@ import type { GameState, WeaponType } from "@/game/types";
 import type { CombatProjectileResolution } from "@/game/types/combatCinematics";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { getTechPerkValue } from "@/game/constants/techTree";
+import { getGunnerAccuracyBonus, getGunnerCritBonus } from "@/game/crew/combatBonuses";
 import {
     BASE_ACCURACY,
     MIN_ACCURACY,
@@ -99,13 +100,7 @@ export function getPlayerCritChance(state: GameState): number {
 
     const bestGunnerCritBonus = Math.max(
         0,
-        ...getActiveGunners(state).map((gunner) => {
-            let bonus = getAugmentationBonus(gunner, "critBonus");
-            gunner.traits?.forEach((trait) => {
-                bonus += trait.effect?.critBonus ?? 0;
-            });
-            return bonus + getTechPerkValue(gunner, "B");
-        }),
+        ...getActiveGunners(state).map(getGunnerCritBonus),
     );
 
     return Math.min(0.5, critChance + bestGunnerCritBonus);
@@ -220,23 +215,7 @@ export function computeAccuracyModifier(state: GameState): number {
     // отсеки не складывали глобальные бонусы. Локальный per-bay расчёт ниже остаётся.
     const bestGunnerAccuracyBonus = Math.max(
         0,
-        ...activeGunners.map((gunner) => {
-            let bonus = Math.min(
-                COMBAT_ACCURACY_MODIFIERS.GUNNER_LEVEL_MAX_BONUS,
-                (gunner.level || 1) * COMBAT_ACCURACY_MODIFIERS.GUNNER_LEVEL_BONUS,
-            );
-            gunner.traits?.forEach((trait) => {
-                if (trait.effect?.accuracyPenalty)
-                    bonus -= Number(trait.effect.accuracyPenalty);
-                if (trait.effect?.accuracyBonus)
-                    bonus += Number(trait.effect.accuracyBonus);
-            });
-            return (
-                bonus +
-                getAugmentationBonus(gunner, "accuracyBonus") +
-                getTechPerkValue(gunner, "A")
-            );
-        }),
+        ...activeGunners.map(getGunnerAccuracyBonus),
     );
     modifier += bestGunnerAccuracyBonus;
 
