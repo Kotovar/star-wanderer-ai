@@ -64,7 +64,7 @@ const scaleProjectileDuration = (duration: number): number =>
   Math.round(duration * PROJECTILE_DURATION_SCALE);
 
 /** Задержка между снарядами ОДНОЙ палубы — короткая очередь. */
-export const COMBAT_CINEMATIC_VOLLEY_STAGGER_MS = 150;
+export const COMBAT_CINEMATIC_VOLLEY_STAGGER_MS = 190;
 
 /**
  * Пауза перед залпом следующей палубы. Отсчитывается от старта её последнего

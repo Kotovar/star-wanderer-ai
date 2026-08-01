@@ -1826,6 +1826,11 @@ const snapshot = {
     "внутри палубы очередь плотнее, чем пауза между палубами",
   );
   assert.equal(
+    COMBAT_CINEMATIC_VOLLEY_STAGGER_MS,
+    190,
+    "weapons in one volley wait 190 ms between launches",
+  );
+  assert.equal(
     getCombatCinematicStaggerMs(
       { kind: "projectile", from: "player", to: "enemy", weapon: "laser", outcome: "hull", shieldDamage: 0, hullDamage: 5, isCrit: false, volleyId: 7 },
       { kind: "projectile", from: "player", to: "enemy", weapon: "laser", outcome: "hull", shieldDamage: 0, hullDamage: 5, isCrit: false, volleyId: 7 },
