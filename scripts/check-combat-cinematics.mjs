@@ -13,6 +13,7 @@ const jiti = createRequire(import.meta.url)("jiti")(scriptPath, {
 
 let createCombatTimelineCollector;
 let buildVolleyEvents;
+let buildEnemyVolleyProjectileEvents;
 let finalizeProjectileHullDamage;
 let splitVolleyAtHullDestruction;
 let splitDamageByWeight;
@@ -34,6 +35,7 @@ let getMissLabelPoint;
 let getProjectilePathPoint;
 let getShieldImpactPoint;
 let getCombatCinematicProjectileVisual;
+let getCombatCinematicImpactSignature;
 let getCombatCinematicProjectileReadout;
 let getCombatCinematicVolleySummary;
 let createCombatPresentationSnapshot;
@@ -704,6 +706,7 @@ try {
   ({
     createCombatTimelineCollector,
     buildVolleyEvents,
+    buildEnemyVolleyProjectileEvents,
     finalizeProjectileHullDamage,
     splitVolleyAtHullDestruction,
     splitDamageByWeight,
@@ -723,6 +726,7 @@ try {
 try {
   ({
     getCombatCinematicProjectileVisual,
+    getCombatCinematicImpactSignature,
     getCombatCinematicProjectileReadout,
     getCombatCinematicVolleySummary,
   } = await import("../src/game/components/combatCinematicPresentation.ts"));
@@ -731,6 +735,40 @@ try {
     "combatCinematicPresentation.ts must provide readable visual profiles for combat projectiles",
   );
 }
+
+{
+  const volley = buildEnemyVolleyProjectileEvents(
+    [
+      { id: 41, type: "ice_beam", damage: 3 },
+      { id: 42, type: "flare_launcher", damage: 1 },
+    ],
+    7,
+    12,
+    6,
+    false,
+  );
+
+  assert.deepEqual(
+    volley.map(({ sourceModuleId, enemyWeapon, shieldDamage, hullDamage }) => ({
+      sourceModuleId,
+      enemyWeapon,
+      shieldDamage,
+      hullDamage,
+    })),
+    [
+      { sourceModuleId: 41, enemyWeapon: "ice_beam", shieldDamage: 9, hullDamage: 5 },
+      { sourceModuleId: 42, enemyWeapon: "flare_launcher", shieldDamage: 3, hullDamage: 1 },
+    ],
+    "every resolved enemy-gun share keeps the module it visibly fires from",
+  );
+}
+
+assert.deepEqual(
+  ["beam", "tracer", "rocket", "plasma", "swarm", "orbit", "phase", "arc", "enemy"]
+    .map((visual) => getCombatCinematicImpactSignature(visual)),
+  ["scorch", "shrapnel", "blast", "blast", "swarm", "distort", "distort", "arc", "blast"],
+  "each projectile family selects a readable local impact reaction",
+);
 
 try {
   ({

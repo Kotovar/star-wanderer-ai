@@ -320,6 +320,66 @@ export function splitDamageByWeight(
   return shares;
 }
 
+interface EnemyVolleyGun {
+  id: number;
+  type: string;
+  damage?: number;
+}
+
+/**
+ * Превращает уже рассчитанный урон врага в видимые выстрелы его живых орудий.
+ * Математика боя не меняется: доли суммируются в исходный урон.
+ */
+export function buildEnemyVolleyProjectileEvents(
+  guns: readonly EnemyVolleyGun[],
+  targetModuleId: number,
+  shieldDamage: number,
+  hullDamage: number,
+  isCrit: boolean,
+  outcome?: CombatProjectileEvent["outcome"],
+): CombatProjectileEvent[] {
+  const makeEvent = (
+    gun: EnemyVolleyGun | undefined,
+    currentShieldDamage: number,
+    currentHullDamage: number,
+    currentOutcome = outcome,
+  ): CombatProjectileEvent => ({
+    kind: "projectile",
+    from: "enemy",
+    to: "player",
+    weapon: "enemy",
+    targetModuleId,
+    outcome: currentOutcome ?? (currentShieldDamage === 0 && currentHullDamage === 0
+      ? "blocked"
+      : getProjectileOutcome(currentShieldDamage, currentHullDamage)),
+    shieldDamage: currentShieldDamage,
+    hullDamage: currentHullDamage,
+    isCrit,
+    ...(gun === undefined ? {} : { enemyWeapon: gun.type, sourceModuleId: gun.id }),
+  });
+
+  if (guns.length <= 1) return [makeEvent(guns[0], shieldDamage, hullDamage)];
+
+  const weights = guns.map((gun) => gun.damage ?? 0);
+  const shieldShares = splitDamageByWeight(weights, shieldDamage);
+  const hullShares = splitDamageByWeight(weights, hullDamage);
+  const events: CombatProjectileEvent[] = [];
+
+  for (let index = 0; index < guns.length; index += 1) {
+    const shotShield = shieldShares[index];
+    const shotHull = hullShares[index];
+    if (shotShield === 0 && shotHull === 0) continue;
+    events.push(makeEvent(
+      guns[index],
+      shotShield,
+      shotHull,
+      outcome === "piercing" && shotShield > 0 && shotHull > 0 ? "piercing" : undefined,
+    ));
+  }
+
+  return events.length > 0 ? events : [makeEvent(guns[0], shieldDamage, hullDamage)];
+}
+
 export function createMissProjectileResolutions(
   weaponCounts: WeaponCounts,
 ): CombatProjectileResolution[] {

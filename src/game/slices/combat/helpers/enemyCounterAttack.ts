@@ -15,9 +15,9 @@ import {
     appendCombatSnapshotDamageEvents,
     appendCombatSnapshotDeltaEvents,
     appendCombatSnapshotSecondaryDamageEvents,
+    buildEnemyVolleyProjectileEvents,
     createCombatCinematicSnapshot,
     getProjectileOutcome,
-    splitDamageByWeight,
     type CombatTimelineCollector,
 } from "./combatTimeline";
 import * as enemyAttack from "./enemyAttack";
@@ -108,48 +108,16 @@ function pushEnemyVolley(
     outcome: CombatProjectileEvent["outcome"] | undefined,
 ): CombatProjectileEvent[] {
     if (!timeline) return [];
-    const guns = getEnemyGuns(combat);
-    const single = (enemyWeapon?: string) => {
-        const event = pushEnemyProjectile(
-            timeline,
-            target,
-            shieldDamage,
-            hullDamage,
-            isCrit,
-            outcome,
-            enemyWeapon,
-        );
-        return event ? [event] : [];
-    };
-    if (guns.length <= 1) return single(guns[0]?.type);
-
-    const weights = guns.map((gun) => gun.damage ?? 0);
-    const shieldShares = splitDamageByWeight(weights, shieldDamage);
-    const hullShares = splitDamageByWeight(weights, hullDamage);
-
-    const events: CombatProjectileEvent[] = [];
-    for (let index = 0; index < guns.length; index += 1) {
-        const shotShield = shieldShares[index];
-        const shotHull = hullShares[index];
-        // Доля округлилась в ноль — этот ствол просто не показываем, иначе
-        // выстрел без урона прочитается как «блокировано».
-        if (shotShield === 0 && shotHull === 0) continue;
-        const shotOutcome = outcome === "piercing" && shotShield > 0 && shotHull > 0
-            ? "piercing"
-            : undefined;
-        const event = pushEnemyProjectile(
-            timeline,
-            target,
-            shotShield,
-            shotHull,
-            isCrit,
-            shotOutcome,
-            guns[index].type,
-        );
-        if (event) events.push(event);
-    }
-
-    return events.length > 0 ? events : single(guns[0]?.type);
+    const events = buildEnemyVolleyProjectileEvents(
+        getEnemyGuns(combat),
+        target.id,
+        shieldDamage,
+        hullDamage,
+        isCrit,
+        outcome,
+    );
+    timeline.push(...events);
+    return events;
 }
 
 /**

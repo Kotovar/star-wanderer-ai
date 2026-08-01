@@ -15,6 +15,14 @@ export type CombatCinematicProjectileVisual =
   | "arc"
   | "enemy";
 
+export type CombatCinematicImpactSignature =
+  | "scorch"
+  | "shrapnel"
+  | "blast"
+  | "swarm"
+  | "distort"
+  | "arc";
+
 export type CombatCinematicProjectileReadoutStatus =
   | "shield"
   | "hull"
@@ -52,6 +60,21 @@ const PROJECTILE_VISUALS = {
   quantum_torpedo: "phase",
   ion_cannon: "arc",
 } as const satisfies Record<WeaponType, CombatCinematicProjectileVisual>;
+
+const IMPACT_SIGNATURES: Record<
+  CombatCinematicProjectileVisual,
+  CombatCinematicImpactSignature
+> = {
+  beam: "scorch",
+  tracer: "shrapnel",
+  rocket: "blast",
+  plasma: "blast",
+  swarm: "swarm",
+  orbit: "distort",
+  phase: "distort",
+  arc: "arc",
+  enemy: "blast",
+};
 
 /**
  * Орудия врага — это модули, а не `WeaponType`. Тип модуля задаёт визуал
@@ -150,6 +173,12 @@ export function getCombatCinematicProjectileVisual(
   if (weapon !== "enemy") return PROJECTILE_VISUALS[weapon];
   if (enemyWeapon === undefined) return "enemy";
   return ENEMY_WEAPON_VISUALS[enemyWeapon] ?? "enemy";
+}
+
+export function getCombatCinematicImpactSignature(
+  visual: CombatCinematicProjectileVisual,
+): CombatCinematicImpactSignature {
+  return IMPACT_SIGNATURES[visual];
 }
 
 export function getCombatCinematicProjectileReadout(

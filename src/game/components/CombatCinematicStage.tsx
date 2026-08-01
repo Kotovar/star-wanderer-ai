@@ -18,6 +18,7 @@ import {
 import {
   getCombatCinematicEnemyWeaponIcon,
   getCombatCinematicEnemyWeaponKey,
+  getCombatCinematicImpactSignature,
   getCombatCinematicProjectileReadout,
   getCombatCinematicProjectileVisual,
 } from "./combatCinematicPresentation";
@@ -53,6 +54,7 @@ const PLAYER_COLOR = "#00ff9d";
 const ENEMY_COLOR = "#ff4d6d";
 const SHIELD_COLOR = "#5bd6ff";
 const CREATURE_MODULE_CORE_BOUNDS = { halfWidth: 28, halfHeight: 22 };
+const ENEMY_FIRE_TELEGRAPH_PROGRESS = 0.12;
 
 function clamp(value: number, min = 0, max = 1): number {
   return Math.min(max, Math.max(min, value));
@@ -2058,6 +2060,111 @@ function drawHullImpact(
   ctx.restore();
 }
 
+function drawEnemyFireTelegraph(
+  ctx: CanvasRenderingContext2D,
+  source: Point,
+  target: Point,
+  progress: number,
+  color: string,
+): void {
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = 0.16 + progress * 0.3;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 6]);
+  ctx.lineDashOffset = -progress * 16;
+  ctx.beginPath();
+  ctx.moveTo(source.x, source.y);
+  ctx.lineTo(target.x, target.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 0.5 + progress * 0.35;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 14;
+  ctx.beginPath();
+  ctx.arc(source.x, source.y, 6 + progress * 12, 0, TAU);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawWeaponImpactSignature(
+  ctx: CanvasRenderingContext2D,
+  signature: ReturnType<typeof getCombatCinematicImpactSignature>,
+  point: Point,
+  progress: number,
+  color: string,
+  incomingDirection: number,
+): void {
+  const fade = (1 - progress) ** 1.35;
+  const radius = 10 + easeOut(progress) * 22;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = fade * 0.78;
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 9;
+
+  if (signature === "scorch") {
+    ctx.strokeStyle = "#fff2cf";
+    ctx.lineWidth = 1.35;
+    for (let index = 0; index < 3; index += 1) {
+      const spread = (index - 1) * 0.38;
+      ctx.beginPath();
+      ctx.moveTo(point.x - incomingDirection * 2, point.y + spread * 7);
+      ctx.lineTo(point.x + incomingDirection * radius, point.y + spread * radius);
+      ctx.stroke();
+    }
+  } else if (signature === "shrapnel") {
+    for (let index = 0; index < 5; index += 1) {
+      const spread = (index - 2) * 5;
+      ctx.fillRect(
+        point.x + incomingDirection * (8 + index * 3),
+        point.y + spread,
+        2.5,
+        2.5,
+      );
+    }
+  } else if (signature === "blast") {
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, radius, 0, TAU);
+    ctx.stroke();
+  } else if (signature === "swarm") {
+    for (let index = 0; index < 4; index += 1) {
+      const angle = (TAU * index) / 4 + progress * 2;
+      ctx.beginPath();
+      ctx.arc(
+        point.x + Math.cos(angle) * radius * 0.55,
+        point.y + Math.sin(angle) * radius * 0.55,
+        2.5 + progress * 2,
+        0,
+        TAU,
+      );
+      ctx.fill();
+    }
+  } else if (signature === "distort") {
+    ctx.lineWidth = 1.35;
+    ctx.setLineDash([4, 4]);
+    ctx.lineDashOffset = -progress * 18;
+    ctx.beginPath();
+    ctx.ellipse(point.x, point.y, radius * 1.25, radius * 0.55, 0, 0, TAU);
+    ctx.stroke();
+  } else {
+    ctx.strokeStyle = "#e8fbff";
+    ctx.lineWidth = 1.45;
+    for (let index = -1; index <= 1; index += 1) {
+      ctx.beginPath();
+      ctx.moveTo(point.x, point.y);
+      ctx.lineTo(point.x + incomingDirection * radius * 0.45, point.y + index * 7);
+      ctx.lineTo(point.x + incomingDirection * radius, point.y + index * 12);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
 function drawProjectile(
   ctx: CanvasRenderingContext2D,
   event: CombatProjectileEvent,
@@ -2095,6 +2202,15 @@ function drawProjectile(
   );
   const color = getProjectileColor(event, snapshot);
   const visual = getCombatCinematicProjectileVisual(event.weapon, event.enemyWeapon);
+  const telegraphProgress = event.from === "enemy" && event.sourceModuleId !== undefined
+    ? clamp(progress / ENEMY_FIRE_TELEGRAPH_PROGRESS)
+    : null;
+  if (telegraphProgress !== null) {
+    drawEnemyFireTelegraph(ctx, source, target, telegraphProgress, color);
+    if (progress < ENEMY_FIRE_TELEGRAPH_PROGRESS && event.outcome !== "intercepted") {
+      return source;
+    }
+  }
   const isIntercepted = event.outcome === "intercepted";
   const interceptFlight = isIntercepted ? clamp(progress / INTERCEPT_PROGRESS) : 0;
   const travel = isIntercepted ? interceptFlight * INTERCEPT_TRAVEL : progress;
@@ -2123,7 +2239,13 @@ function drawProjectile(
   if (visual !== "beam" && visual !== "arc" && visual !== "rocket") {
     drawProjectileTrail(ctx, event, source, shieldImpact, destination, travel, color);
   }
-  drawMuzzleFlash(ctx, source, shipDirection(event.from), color, progress);
+  drawMuzzleFlash(
+    ctx,
+    source,
+    shipDirection(event.from),
+    color,
+    telegraphProgress === null ? progress : progress - ENEMY_FIRE_TELEGRAPH_PROGRESS,
+  );
 
   if (visual === "beam") {
     drawCombatLaser(ctx, source, renderPoint, color, progress);
@@ -2765,6 +2887,16 @@ function drawActiveEvent(
       if (hasHullImpact) {
         drawHullImpact(
           ctx,
+          targetPoint,
+          hullImpactProgress,
+          getProjectileColor(event, snapshot),
+          shipDirection(event.from),
+        );
+        drawWeaponImpactSignature(
+          ctx,
+          getCombatCinematicImpactSignature(
+            getCombatCinematicProjectileVisual(event.weapon, event.enemyWeapon),
+          ),
           targetPoint,
           hullImpactProgress,
           getProjectileColor(event, snapshot),
