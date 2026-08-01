@@ -1187,7 +1187,6 @@ function drawEmberWisp(ctx: CanvasRenderingContext2D, center: Point, elapsed: nu
 }
 
 function drawBinaryWyrm(ctx: CanvasRenderingContext2D, center: Point, elapsed: number): void {
-  const wave = Math.sin(elapsed / 460) * 12;
   ctx.save();
   ctx.translate(center.x, center.y);
   ctx.globalCompositeOperation = "lighter";
@@ -1195,28 +1194,86 @@ function drawBinaryWyrm(ctx: CanvasRenderingContext2D, center: Point, elapsed: n
     [0, "rgba(108, 92, 231, 0.3)"],
     [1, "rgba(108, 92, 231, 0)"],
   ]);
-  ctx.strokeStyle = "#a78bfa";
-  ctx.lineWidth = 11;
   ctx.lineCap = "round";
-  ctx.shadowColor = "#a78bfa";
-  ctx.shadowBlur = 16;
-  for (const offset of [-22, 22]) {
+  const serpents = [
+    { phase: 0, direction: 1, color: "#a78bfa", accent: "#ede9fe" },
+    { phase: Math.PI, direction: -1, color: "#67e8f9", accent: "#cffafe" },
+  ] as const;
+  const segmentCount = 8;
+
+  for (const serpent of serpents) {
+    const points = Array.from({ length: segmentCount }, (_, index) => {
+      const progress = index / (segmentCount - 1);
+      return {
+        x: serpent.direction * (-108 + progress * 216),
+        y: Math.sin(progress * TAU + elapsed / 480 + serpent.phase) * 34,
+      };
+    });
+    const head = points[segmentCount - 1];
+    const neck = points[segmentCount - 2];
+    const headAngle = Math.atan2(head.y - neck.y, head.x - neck.x);
+
+    ctx.strokeStyle = serpent.color;
+    ctx.lineWidth = 8;
+    ctx.shadowColor = serpent.color;
+    ctx.shadowBlur = 16;
     ctx.beginPath();
-    ctx.moveTo(-112, offset);
-    ctx.bezierCurveTo(-44, offset - 52, 12, offset + 52 + wave, 108, offset + wave);
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let index = 1; index < segmentCount - 1; index += 1) {
+      const point = points[index];
+      const nextPoint = points[index + 1];
+      ctx.quadraticCurveTo(
+        point.x,
+        point.y,
+        (point.x + nextPoint.x) / 2,
+        (point.y + nextPoint.y) / 2,
+      );
+    }
+    ctx.lineTo(head.x, head.y);
     ctx.stroke();
-    ctx.fillStyle = "#ede9fe";
+
+    ctx.shadowBlur = 8;
+    for (let index = 0; index < segmentCount - 1; index += 1) {
+      const point = points[index];
+      ctx.fillStyle = serpent.color;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 7 - index * 0.35, 0, TAU);
+      ctx.fill();
+      ctx.strokeStyle = serpent.accent;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    ctx.save();
+    ctx.translate(head.x, head.y);
+    ctx.rotate(headAngle);
+    ctx.fillStyle = serpent.color;
     ctx.beginPath();
-    ctx.arc(108, offset + wave, 10, 0, TAU);
+    ctx.ellipse(3, 0, 14, 9, 0, 0, TAU);
     ctx.fill();
+    ctx.fillStyle = serpent.accent;
+    ctx.beginPath();
+    ctx.arc(6, -3, 2.5, 0, TAU);
+    ctx.fill();
+    ctx.fillRect(-3, -12, 6, 6);
+    ctx.restore();
   }
   ctx.globalCompositeOperation = "source-over";
-  ctx.fillStyle = "#312e81";
+  ctx.fillStyle = "rgba(49, 46, 129, 0.84)";
   ctx.strokeStyle = "#ddd6fe";
   ctx.lineWidth = 2.5;
   ctx.beginPath();
   ctx.arc(0, 0, 46, 0, TAU);
   ctx.fill();
+  ctx.stroke();
+  ctx.globalAlpha = 0.65;
+  ctx.strokeStyle = "#8b5cf6";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(0, 0, 33, -1.05, 1.05);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, 0, 33, Math.PI - 1.05, Math.PI + 1.05);
   ctx.stroke();
   ctx.restore();
 }

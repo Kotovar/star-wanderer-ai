@@ -332,6 +332,17 @@ for (const spaceMonsterType of [
     `${spaceMonsterType} uses the compact central module layout`,
   );
 }
+for (const marker of [
+  "const serpents = [",
+  "const segmentCount = 8;",
+  "ctx.quadraticCurveTo",
+  "ctx.fillRect(-3, -12, 6, 6);",
+]) {
+  assert.ok(
+    stageSource.includes(marker),
+    `the Binary Wyrm keeps its paired-serpent detail: ${marker}`,
+  );
+}
 assert.match(
   stageSource,
   /playEventSounds\(item\.event, item\.index, active\[index\]\.progress\);/,
