@@ -1,5 +1,8 @@
 import type { WeaponType } from "@/game/types";
-import type { CombatProjectileOutcome } from "@/game/types/combatCinematics";
+import type {
+  CombatProjectileOutcome,
+  CombatTurnTimeline,
+} from "@/game/types/combatCinematics";
 
 export type CombatCinematicProjectileVisual =
   | "beam"
@@ -26,6 +29,17 @@ export interface CombatCinematicProjectileReadout {
   status: CombatCinematicProjectileReadoutStatus;
   shieldDamage: number;
   hullDamage: number;
+}
+
+export interface CombatCinematicVolleySummary {
+  playerShieldDamage: number;
+  playerHullDamage: number;
+  enemyShieldDamage: number;
+  enemyHullDamage: number;
+  criticalHits: number;
+  destroyedEnemyModuleIds: number[];
+  destroyedPlayerModuleIds: number[];
+  droneStacks: number;
 }
 
 const PROJECTILE_VISUALS = {
@@ -163,4 +177,67 @@ export function getCombatCinematicProjectileReadout(
     case "blocked":
       return { status: "blocked", ...result };
   }
+}
+
+/** Сводка берёт только уже рассчитанный таймлайн и ничего не меняет в бою. */
+export function getCombatCinematicVolleySummary(
+  timeline: CombatTurnTimeline,
+): CombatCinematicVolleySummary {
+  const destroyedEnemyModuleIds = new Set<number>();
+  const destroyedPlayerModuleIds = new Set<number>();
+  const summary: CombatCinematicVolleySummary = {
+    playerShieldDamage: 0,
+    playerHullDamage: 0,
+    enemyShieldDamage: 0,
+    enemyHullDamage: 0,
+    criticalHits: 0,
+    destroyedEnemyModuleIds: [],
+    destroyedPlayerModuleIds: [],
+    droneStacks: 0,
+  };
+
+  const addDamage = (
+    side: "player" | "enemy",
+    shieldDamage: number,
+    hullDamage: number,
+  ) => {
+    if (side === "player") {
+      summary.playerShieldDamage += shieldDamage;
+      summary.playerHullDamage += hullDamage;
+      return;
+    }
+    summary.enemyShieldDamage += shieldDamage;
+    summary.enemyHullDamage += hullDamage;
+  };
+
+  for (const event of timeline.events) {
+    if (event.kind === "projectile") {
+      addDamage(event.to, event.shieldDamage, event.hullDamage);
+      if (event.isCrit) summary.criticalHits += 1;
+      if (event.weapon === "drones" && event.droneStacks !== undefined) {
+        summary.droneStacks = Math.max(summary.droneStacks, event.droneStacks);
+      }
+      continue;
+    }
+    if (event.kind === "damage") {
+      addDamage(event.side, event.shieldDamage, event.hullDamage);
+      continue;
+    }
+    if (event.kind === "reflection") {
+      addDamage(event.attacker, event.shieldDamage, event.hullDamage);
+      continue;
+    }
+    if (event.kind === "module_destroyed") {
+      const destroyed = event.side === "enemy"
+        ? destroyedEnemyModuleIds
+        : destroyedPlayerModuleIds;
+      destroyed.add(event.moduleId);
+    }
+  }
+
+  return {
+    ...summary,
+    destroyedEnemyModuleIds: [...destroyedEnemyModuleIds],
+    destroyedPlayerModuleIds: [...destroyedPlayerModuleIds],
+  };
 }

@@ -176,6 +176,7 @@ export function createCombatCinematicSnapshot(
       maxShields: state.ship.maxShields,
       modules: state.ship.modules.map((module) => ({
         id: module.id,
+        ...(module.name ? { name: module.name } : {}),
         health: module.health,
         maxHealth: module.maxHealth,
       })),
@@ -187,6 +188,7 @@ export function createCombatCinematicSnapshot(
       maxShields: combat.enemy.maxShields,
       modules: combat.enemy.modules.map((module) => ({
         id: module.id,
+        ...(module.name ? { name: module.name } : {}),
         health: module.health,
         maxHealth: module.maxHealth ?? module.health,
       })),

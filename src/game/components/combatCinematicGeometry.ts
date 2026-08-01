@@ -94,6 +94,36 @@ export function getCombatCinematicModuleAnchor(
   };
 }
 
+/** Индекс ближайшего маркера, если указатель попал в его 16px тактическую зону. */
+export function getCombatCinematicModuleHitIndex(
+  moduleCount: number,
+  pointer: CombatCinematicPoint,
+  center: CombatCinematicPoint,
+  direction: -1 | 1,
+  bounds: CombatCinematicModuleAnchorBounds = DEFAULT_MODULE_ANCHOR_BOUNDS,
+): number | null {
+  let hitIndex: number | null = null;
+  let hitDistance = 16 ** 2;
+  const count = Math.max(0, Math.floor(moduleCount));
+
+  for (let index = 0; index < count; index += 1) {
+    const anchor = getCombatCinematicModuleAnchor(
+      count,
+      index,
+      center,
+      direction,
+      bounds,
+    );
+    const distance = (pointer.x - anchor.x) ** 2 + (pointer.y - anchor.y) ** 2;
+    if (distance <= hitDistance) {
+      hitIndex = index;
+      hitDistance = distance;
+    }
+  }
+
+  return hitIndex;
+}
+
 export type CombatHullDamageStage = "intact" | "scorched" | "breached";
 
 /** Ниже этой доли прочности модуль оставляет на корпусе подпалину. */

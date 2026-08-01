@@ -18,6 +18,7 @@ export type CombatCinematicHealSource = "regen" | "repair" | "lifesteal";
 
 export interface CombatCinematicModuleSnapshot {
   id: number;
+  name?: string;
   health: number;
   maxHealth: number;
 }

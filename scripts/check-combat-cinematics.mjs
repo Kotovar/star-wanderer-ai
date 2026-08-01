@@ -28,12 +28,14 @@ let COMBAT_CINEMATIC_VOLLEY_STAGGER_MS;
 let COMBAT_CINEMATIC_BAY_GAP_MS;
 let getCombatCinematicSceneMetrics;
 let getCombatCinematicModuleAnchor;
+let getCombatCinematicModuleHitIndex;
 let formatCombatCinematicAmount;
 let getMissLabelPoint;
 let getProjectilePathPoint;
 let getShieldImpactPoint;
 let getCombatCinematicProjectileVisual;
 let getCombatCinematicProjectileReadout;
+let getCombatCinematicVolleySummary;
 let createCombatPresentationSnapshot;
 let getPresentedCombat;
 
@@ -647,6 +649,7 @@ try {
   ({
     getCombatCinematicProjectileVisual,
     getCombatCinematicProjectileReadout,
+    getCombatCinematicVolleySummary,
   } = await import("../src/game/components/combatCinematicPresentation.ts"));
 } catch {
   assert.fail(
@@ -684,6 +687,7 @@ try {
   ({
     getCombatCinematicSceneMetrics,
     getCombatCinematicModuleAnchor,
+    getCombatCinematicModuleHitIndex,
     formatCombatCinematicAmount,
     getMissLabelPoint,
     getProjectilePathPoint,
@@ -1440,6 +1444,56 @@ const snapshot = {
     ),
     "compact creature module anchors fit inside the visible core",
   );
+
+  const selectableAnchors = Array.from({ length: 4 }, (_, moduleIndex) =>
+    getCombatCinematicModuleAnchor(4, moduleIndex, center, 1),
+  );
+  assert.equal(
+    getCombatCinematicModuleHitIndex(4, selectableAnchors[0], center, 1),
+    0,
+    "a pointer on the first module anchor selects that module",
+  );
+  assert.equal(
+    getCombatCinematicModuleHitIndex(4, selectableAnchors[3], center, 1),
+    3,
+    "a pointer on the last module anchor selects that module",
+  );
+  assert.equal(
+    getCombatCinematicModuleHitIndex(4, { x: 0, y: 0 }, center, 1),
+    null,
+    "a pointer outside every module reticle selects nothing",
+  );
+}
+
+{
+  const timeline = {
+    initial: snapshot,
+    events: [
+      {
+        kind: "projectile", from: "player", to: "enemy", weapon: "drones",
+        outcome: "shield_and_hull", shieldDamage: 11, hullDamage: 13,
+        targetModuleId: 9, isCrit: true, droneStacks: 4,
+      },
+      { kind: "module_destroyed", side: "enemy", moduleId: 9 },
+      { kind: "module_destroyed", side: "enemy", moduleId: 9 },
+      {
+        kind: "projectile", from: "enemy", to: "player", weapon: "enemy",
+        outcome: "shield_and_hull", shieldDamage: 3, hullDamage: 7,
+        targetModuleId: 1, isCrit: false,
+      },
+    ],
+  };
+
+  assert.deepEqual(getCombatCinematicVolleySummary(timeline), {
+    playerShieldDamage: 3,
+    playerHullDamage: 7,
+    enemyShieldDamage: 11,
+    enemyHullDamage: 13,
+    criticalHits: 1,
+    destroyedEnemyModuleIds: [9],
+    destroyedPlayerModuleIds: [],
+    droneStacks: 4,
+  }, "the command summary keeps the complete resolved volley readable");
 }
 
 {
