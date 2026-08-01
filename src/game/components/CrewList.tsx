@@ -823,9 +823,13 @@ export function CrewList() {
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                                    <div className="space-y-1.5">
                                                         {options.map(({ branch, option, nameKey, descKey }) => {
                                                             const isChosen = chosenBranch === branch;
+                                                            const branchClass =
+                                                                branch === "C"
+                                                                    ? "text-[#00d4ff]"
+                                                                    : "text-[#ffb000]";
                                                             const cardClass =
                                                                 tierStatus === "locked"
                                                                     ? "border-[#333] bg-[rgba(255,255,255,0.02)] opacity-40"
@@ -838,28 +842,35 @@ export function CrewList() {
                                                             return (
                                                                 <div
                                                                     key={branch}
-                                                                    className={`flex flex-col gap-1 p-2 border rounded ${cardClass}`}
+                                                                    className={`grid grid-cols-[1.25rem_1.5rem_minmax(0,1fr)_auto] items-start gap-x-2 rounded border px-2 py-1.5 ${cardClass}`}
                                                                 >
-                                                                    <div className="flex items-start gap-2">
-                                                                        <span className="text-lg leading-none shrink-0">
-                                                                            {option.icon}
-                                                                        </span>
-                                                                        <span
-                                                                            className={`min-w-0 flex-1 break-words leading-tight text-xs font-bold ${
-                                                                                isChosen ? "text-[#00ff41]" : "text-[#aaa]"
+                                                                    <span
+                                                                        className={`pt-0.5 text-[10px] leading-none font-bold ${branchClass}`}
+                                                                    >
+                                                                        {branch}
+                                                                    </span>
+                                                                    <span className="text-lg leading-none">
+                                                                        {option.icon}
+                                                                    </span>
+                                                                    <div className="min-w-0">
+                                                                        <div
+                                                                            className={`text-xs font-bold leading-tight ${
+                                                                                isChosen
+                                                                                    ? "text-[#00ff41]"
+                                                                                    : "text-[#aaa]"
                                                                             }`}
                                                                         >
                                                                             {t(nameKey)}
+                                                                        </div>
+                                                                        <div className="mt-0.5 text-[10px] leading-tight text-[#888]">
+                                                                            {t(descKey)}
+                                                                        </div>
+                                                                    </div>
+                                                                    {isChosen && (
+                                                                        <span className="pt-0.5 text-xs leading-none text-[#00ff41]">
+                                                                            ✓
                                                                         </span>
-                                                                        {isChosen && (
-                                                                            <span className="text-[#00ff41] text-xs ml-auto shrink-0">
-                                                                                ✓
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                    <div className="text-[10px] text-[#888] break-words">
-                                                                        {t(descKey)}
-                                                                    </div>
+                                                                    )}
                                                                 </div>
                                                             );
                                                         })}
