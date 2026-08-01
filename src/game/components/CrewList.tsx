@@ -826,10 +826,6 @@ export function CrewList() {
                                                     <div className="space-y-1.5">
                                                         {options.map(({ branch, option, nameKey, descKey }) => {
                                                             const isChosen = chosenBranch === branch;
-                                                            const branchClass =
-                                                                branch === "C"
-                                                                    ? "text-[#00d4ff]"
-                                                                    : "text-[#ffb000]";
                                                             const cardClass =
                                                                 tierStatus === "locked"
                                                                     ? "border-[#333] bg-[rgba(255,255,255,0.02)] opacity-40"
@@ -842,13 +838,8 @@ export function CrewList() {
                                                             return (
                                                                 <div
                                                                     key={branch}
-                                                                    className={`grid grid-cols-[1.25rem_1.5rem_minmax(0,1fr)_auto] items-start gap-x-2 rounded border px-2 py-1.5 ${cardClass}`}
+                                                                    className={`grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-x-2 rounded border px-2 py-1.5 ${cardClass}`}
                                                                 >
-                                                                    <span
-                                                                        className={`pt-0.5 text-[10px] leading-none font-bold ${branchClass}`}
-                                                                    >
-                                                                        {branch}
-                                                                    </span>
                                                                     <span className="text-lg leading-none">
                                                                         {option.icon}
                                                                     </span>
@@ -867,7 +858,7 @@ export function CrewList() {
                                                                         </div>
                                                                     </div>
                                                                     {isChosen && (
-                                                                        <span className="pt-0.5 text-xs leading-none text-[#00ff41]">
+                                                                        <span className="text-xs leading-none text-[#00ff41]">
                                                                             ✓
                                                                         </span>
                                                                     )}

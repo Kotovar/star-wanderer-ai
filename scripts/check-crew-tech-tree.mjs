@@ -290,13 +290,13 @@ assert.match(
 );
 assert.match(
   crewListSource,
-  /grid-cols-\[1\.25rem_1\.5rem_minmax\(0,1fr\)_auto\]/,
-  "each terminal row reserves columns for branch, icon, text, and choice mark",
+  /grid-cols-\[1\.5rem_minmax\(0,1fr\)_auto\] items-center/,
+  "each terminal row centres its icon beside the full text block",
 );
-assert.match(
+assert.doesNotMatch(
   crewListSource,
-  /\{branch\}/,
-  "each terminal row labels its A/B/C branch",
+  /branchClass/,
+  "terminal rows do not keep the A/B/C label styling",
 );
 assert.doesNotMatch(
   crewListSource,
