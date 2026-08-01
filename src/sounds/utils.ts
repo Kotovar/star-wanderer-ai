@@ -99,6 +99,7 @@ let volumes: AudioVolumes = { ...DEFAULT_AUDIO_VOLUMES };
 let requestedMusic: MusicId | null = null;
 let musicRequestId = 0;
 let activeMusic: ActiveMusic | null = null;
+let fadingMusic: ActiveMusic | null = null;
 let activeEffectVoices = 0;
 const voicesBySound = new Map<SoundId, number>();
 const bufferCache = new Map<string, Promise<AudioBuffer | null>>();
@@ -110,6 +111,20 @@ const setGain = (gain: GainNode, value: number) => {
   const { currentTime } = gain.context;
   gain.gain.cancelScheduledValues(currentTime);
   gain.gain.setTargetAtTime(value, currentTime, 0.015);
+};
+
+const fadeOutMusic = (music: ActiveMusic, duration: number): void => {
+  const { currentTime } = music.gain.context;
+  music.gain.gain.cancelScheduledValues(currentTime);
+  music.gain.gain.setValueAtTime(music.gain.gain.value, currentTime);
+  music.gain.gain.linearRampToValueAtTime(0, currentTime + duration);
+  music.source.stop(currentTime + duration + 0.03);
+};
+
+const stopFadingMusic = (): void => {
+  const music = fadingMusic;
+  fadingMusic = null;
+  if (music) music.source.stop(music.gain.context.currentTime);
 };
 
 const syncBusVolumes = () => {
@@ -235,13 +250,16 @@ export const playUi = (id: UiSoundId): void => {
 };
 
 export const startMusic = (id: MusicId = "exploration"): void => {
-  if (!enabled || activeMusic?.id === id || requestedMusic === id) return;
+  if (!enabled) return;
+  if (activeMusic?.id === id) {
+    requestedMusic = id;
+    musicRequestId += 1;
+    return;
+  }
+  if (requestedMusic === id) return;
   requestedMusic = id;
   const requestId = ++musicRequestId;
   void (async () => {
-    const current = activeMusic;
-    activeMusic = null;
-    if (current) current.source.stop();
     const audio = getNodes();
     if (!audio) return;
     const buffer = await getBuffer(MUSIC_REGISTRY[id].url, audio.context);
@@ -252,6 +270,7 @@ export const startMusic = (id: MusicId = "exploration"): void => {
       musicRequestId !== requestId
     ) return;
 
+    stopFadingMusic();
     const source = audio.context.createBufferSource();
     const gain = audio.context.createGain();
     source.buffer = buffer;
@@ -259,26 +278,29 @@ export const startMusic = (id: MusicId = "exploration"): void => {
     gain.gain.setValueAtTime(0, audio.context.currentTime);
     source.connect(gain);
     gain.connect(audio.music);
+    const outgoing = activeMusic;
     activeMusic = { id, source, gain };
     source.onended = () => {
       if (activeMusic?.source === source) activeMusic = null;
+      if (fadingMusic?.source === source) fadingMusic = null;
     };
     source.start();
     gain.gain.linearRampToValueAtTime(1, audio.context.currentTime + MUSIC_FADE_SECONDS);
+    if (outgoing) {
+      fadingMusic = outgoing;
+      fadeOutMusic(outgoing, MUSIC_FADE_SECONDS);
+    }
   })();
 };
 
 export const stopMusic = ({ fadeOut = true }: { fadeOut?: boolean } = {}): void => {
   requestedMusic = null;
   musicRequestId += 1;
+  const fading = fadingMusic;
+  fadingMusic = null;
   const current = activeMusic;
   activeMusic = null;
-  if (!current) return;
-
   const duration = fadeOut ? MUSIC_FADE_SECONDS : 0;
-  const { currentTime } = current.gain.context;
-  current.gain.gain.cancelScheduledValues(currentTime);
-  current.gain.gain.setValueAtTime(current.gain.gain.value, currentTime);
-  current.gain.gain.linearRampToValueAtTime(0, currentTime + duration);
-  current.source.stop(currentTime + duration + 0.03);
+  if (fading) fadeOutMusic(fading, duration);
+  if (current) fadeOutMusic(current, duration);
 };

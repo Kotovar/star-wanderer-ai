@@ -266,9 +266,10 @@ export default function Home() {
       stopMusic();
       return;
     }
-    startMusic("exploration");
-    return () => stopMusic();
-  }, [isTitleSetup, soundEnabled]);
+    startMusic(inCombat ? "combat" : "exploration");
+  }, [inCombat, isTitleSetup, soundEnabled]);
+
+  useEffect(() => () => stopMusic(), []);
 
   useEffect(() => {
     const handler = () => {
