@@ -2,6 +2,7 @@ import { getRaceCrewBonus } from "@/game/races";
 import { store as i18nStore } from "@/lib/useTranslation";
 import { RACES, XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
+import { getStrongestRaceTechPerkValue } from "@/game/constants/techTree";
 import { LAB_MODULE_TYPES } from "@/game/constants/modules";
 import {
     getMergeEffectsBonus,
@@ -467,6 +468,14 @@ const processHealAssignment = (
     const augHealingBonus = getAugmentationBonus(crewMember, "healingBonus");
     if (augHealingBonus) {
         healAmount = Math.floor(healAmount * (1 + augHealingBonus));
+    }
+
+    const xenosymbiontBonus = getStrongestRaceTechPerkValue(
+        get().crew,
+        "xenosymbiont",
+    );
+    if (xenosymbiontBonus > 0) {
+        healAmount = Math.floor(healAmount * (1 + xenosymbiontBonus));
     }
 
     // Био-регенерация: lifesupport лечит весь экипаж на 50% + бонус к настроению

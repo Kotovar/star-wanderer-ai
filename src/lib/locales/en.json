@@ -4106,6 +4106,38 @@
             }
         }
     },
+    "race_tech_tree": {
+        "human": {
+            "3": { "name": "Coordination", "desc": "+3% experience gained by all crew" },
+            "6": { "name": "Coordination", "desc": "+4% experience gained by all crew" },
+            "9": { "name": "Coordination", "desc": "+5% experience gained by all crew" }
+        },
+        "synthetic": {
+            "3": { "name": "System Optimization", "desc": "-3% energy consumption of active modules" },
+            "6": { "name": "System Optimization", "desc": "-4% energy consumption of active modules" },
+            "9": { "name": "System Optimization", "desc": "-5% energy consumption of active modules" }
+        },
+        "xenosymbiont": {
+            "3": { "name": "Symbiotic Support", "desc": "+3% healing and regeneration for all crew" },
+            "6": { "name": "Symbiotic Support", "desc": "+4% healing and regeneration for all crew" },
+            "9": { "name": "Symbiotic Support", "desc": "+5% healing and regeneration for all crew" }
+        },
+        "krylorian": {
+            "3": { "name": "Tactical Presence", "desc": "+1% ship evasion" },
+            "6": { "name": "Tactical Presence", "desc": "+2% ship evasion" },
+            "9": { "name": "Tactical Presence", "desc": "+3% ship evasion" }
+        },
+        "voidborn": {
+            "3": { "name": "Void Resonance", "desc": "+3% shield regeneration" },
+            "6": { "name": "Void Resonance", "desc": "+4% shield regeneration" },
+            "9": { "name": "Void Resonance", "desc": "+5% shield regeneration" }
+        },
+        "crystalline": {
+            "3": { "name": "Crystal Lattice", "desc": "+0.1 module defence" },
+            "6": { "name": "Crystal Lattice", "desc": "+0.2 module defence" },
+            "9": { "name": "Crystal Lattice", "desc": "+0.3 module defence" }
+        }
+    },
     "random_events": {
         "signal": "Unscheduled signal",
         "captain_decision": "Captain's decision required",

@@ -12,10 +12,13 @@ import {
 import { GameDialogContent } from "../GameDialog";
 import { RACES } from "@/game/constants/races";
 import {
+    RACE_TECH_TREE,
     TECH_TREE,
     TECH_TREE_TIERS,
-    getTechPerkNameKey,
     getTechPerkDescKey,
+    getRaceTechPerkDescKey,
+    getRaceTechPerkNameKey,
+    getTechPerkNameKey,
 } from "@/game/constants/techTree";
 import type {
     CrewTrait,
@@ -155,6 +158,7 @@ function CrewCard({
                         <CrewTraits traits={crew.member.traits} />
                     )}
                     <TechPerkBadges
+                        race={crew.member.race}
                         profession={crew.member.profession}
                         techPerks={crew.member.techPerks}
                     />
@@ -365,9 +369,11 @@ function CrewTraits({ traits }: { traits: CrewTrait[] }) {
 // Компактный индикатор уже выбранных веток прокачки (для персонала 3+ уровня,
 // который получил их автоматически при генерации — см. buildCrewMember)
 function TechPerkBadges({
+    race,
     profession,
     techPerks,
 }: {
+    race: RaceId;
     profession: Profession;
     techPerks?: Partial<Record<TechPerkTier, TechPerkBranch>>;
 }) {
@@ -381,15 +387,26 @@ function TechPerkBadges({
             {resolvedTiers.map((tier) => {
                 const branch = techPerks[tier];
                 if (!branch) return null;
-                const option = TECH_TREE[profession][tier][branch];
+                const option =
+                    branch === "C"
+                        ? RACE_TECH_TREE[race][tier]
+                        : TECH_TREE[profession][tier][branch];
+                const nameKey =
+                    branch === "C"
+                        ? getRaceTechPerkNameKey(race, tier)
+                        : getTechPerkNameKey(profession, tier, branch);
+                const descKey =
+                    branch === "C"
+                        ? getRaceTechPerkDescKey(race, tier)
+                        : getTechPerkDescKey(profession, tier, branch);
                 return (
                     <span
                         key={tier}
-                        title={t(getTechPerkDescKey(profession, tier, branch))}
+                        title={t(descKey)}
                         className="text-[10px] bg-[#00d4ff20] text-[#00d4ff] px-1 rounded"
                     >
                         {option.icon}{" "}
-                        {t(getTechPerkNameKey(profession, tier, branch))}
+                        {t(nameKey)}
                     </span>
                 );
             })}
@@ -473,6 +490,7 @@ function CrewDetailDialog({
                     {t(`profession_descriptions.${crew.member.profession}`)}
                 </p>
                 <TechPerkBadges
+                    race={crew.member.race}
                     profession={crew.member.profession}
                     techPerks={crew.member.techPerks}
                 />

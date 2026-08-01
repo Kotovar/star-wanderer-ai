@@ -4,7 +4,10 @@ import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getPilotInCockpit } from "@/game/crew";
 import { getArtifactEffectValue } from "@/game/artifacts/utils";
-import { getTechPerkValue } from "@/game/constants/techTree";
+import {
+    getStrongestRaceTechPerkValue,
+    getTechPerkValue,
+} from "@/game/constants/techTree";
 import { getStarTypeEffect } from "@/game/constants/starEffects";
 
 /**
@@ -96,6 +99,8 @@ export function getTotalEvasion(state: GameState): number {
     if (ship.bonusEvasion) {
         evasion += ship.bonusEvasion;
     }
+
+    evasion += getStrongestRaceTechPerkValue(crew, "krylorian") * 100;
 
     return Math.max(0, Math.min(30, Math.round(evasion)));
 }

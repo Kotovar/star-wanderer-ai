@@ -56,7 +56,10 @@ export function fillMissingTechPerkTiers(
     for (const tier of TECH_TREE_TIERS) {
         if (tier > level) break;
         if (result?.[tier]) continue;
-        result = { ...result, [tier]: randomFn() < 0.5 ? "A" : "B" };
+        const roll = randomFn();
+        const branch: TechPerkBranch =
+            roll < 1 / 3 ? "A" : roll < 2 / 3 ? "B" : "C";
+        result = { ...result, [tier]: branch };
     }
     return result;
 }

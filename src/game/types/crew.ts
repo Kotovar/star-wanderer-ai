@@ -11,7 +11,8 @@ export type Profession =
     | "scientist"
     | "gunner";
 
-export type TechPerkBranch = "A" | "B";
+export type TechPerkBranch = "A" | "B" | "C";
+export type ProfessionalTechPerkBranch = Exclude<TechPerkBranch, "C">;
 export type TechPerkTier = 3 | 6 | 9;
 
 export type Quality = "poor" | "average" | "good" | "excellent";

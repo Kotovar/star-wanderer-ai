@@ -6,6 +6,7 @@ import {
 import { findActiveArtifact, getArtifactEffectValue } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { getTechBonusSum } from "@/game/research";
+import { getStrongestRaceTechPerkValue } from "@/game/constants/techTree";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getActiveModules } from "@/game/modules/utils";
 import type { GameState } from "@/game/types";
@@ -33,6 +34,10 @@ export const updateShipStats = (state: GameState): void => {
         const armorBonus = getArtifactEffectValue(crystallineArmor, state);
         finalDefense += armorBonus;
     }
+    finalDefense += getStrongestRaceTechPerkValue(
+        state.crew,
+        "crystalline",
+    );
 
     // === Расчёт щитов ===
     let totalShields = calculateTotalShields(modules);

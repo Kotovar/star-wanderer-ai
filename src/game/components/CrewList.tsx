@@ -32,12 +32,15 @@ import { CrewStatusIcon } from "./CrewStatusIcon";
 import { ModuleMoveButtons } from "./CrewMemberCard";
 import { ASSIGNMENT_EXHAUSTED_AT } from "@/game/crew/assignmentFatigue";
 import {
+    RACE_TECH_TREE,
     TECH_TREE,
     TECH_TREE_TIERS,
-    getTechPerkNameKey,
     getTechPerkDescKey,
+    getRaceTechPerkDescKey,
+    getRaceTechPerkNameKey,
+    getTechPerkNameKey,
 } from "@/game/constants/techTree";
-import type { TechPerkBranch, TechPerkTier } from "@/game/types";
+import type { TechPerkTier } from "@/game/types";
 import { getHappinessEfficiencyModifier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import { getDesertionTurnsLeft } from "@/game/slices/gameLoop/processors/processDesertion";
 
@@ -396,6 +399,7 @@ export function CrewList() {
                                         <CrewExpBonusRow
                                             member={selectedCrew}
                                             researchedTechs={researchedTechs}
+                                            crew={crew}
                                             t={t}
                                         />
                                         <CrewMoraleEfficiencyRow
@@ -773,7 +777,27 @@ export function CrewList() {
                                     </TabsContent>
                                     <TabsContent value="techtree" className="mt-2 space-y-3 text-sm leading-relaxed overflow-y-auto pr-1">
                                         {TECH_TREE_TIERS.map((tier: TechPerkTier) => {
-                                            const options = TECH_TREE[selectedCrew.profession][tier];
+                                            const professionalOptions = TECH_TREE[selectedCrew.profession][tier];
+                                            const options = [
+                                                {
+                                                    branch: "A" as const,
+                                                    option: professionalOptions.A,
+                                                    nameKey: getTechPerkNameKey(selectedCrew.profession, tier, "A"),
+                                                    descKey: getTechPerkDescKey(selectedCrew.profession, tier, "A"),
+                                                },
+                                                {
+                                                    branch: "B" as const,
+                                                    option: professionalOptions.B,
+                                                    nameKey: getTechPerkNameKey(selectedCrew.profession, tier, "B"),
+                                                    descKey: getTechPerkDescKey(selectedCrew.profession, tier, "B"),
+                                                },
+                                                {
+                                                    branch: "C" as const,
+                                                    option: RACE_TECH_TREE[selectedCrew.race][tier],
+                                                    nameKey: getRaceTechPerkNameKey(selectedCrew.race, tier),
+                                                    descKey: getRaceTechPerkDescKey(selectedCrew.race, tier),
+                                                },
+                                            ];
                                             const chosenBranch = selectedCrew.techPerks?.[tier];
                                             const tierStatus =
                                                 selectedCrew.level < tier
@@ -799,9 +823,8 @@ export function CrewList() {
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        {(["A", "B"] as TechPerkBranch[]).map((branch) => {
-                                                            const option = options[branch];
+                                                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                                        {options.map(({ branch, option, nameKey, descKey }) => {
                                                             const isChosen = chosenBranch === branch;
                                                             const cardClass =
                                                                 tierStatus === "locked"
@@ -826,13 +849,7 @@ export function CrewList() {
                                                                                 isChosen ? "text-[#00ff41]" : "text-[#aaa]"
                                                                             }`}
                                                                         >
-                                                                            {t(
-                                                                                getTechPerkNameKey(
-                                                                                    selectedCrew.profession,
-                                                                                    tier,
-                                                                                    branch,
-                                                                                ),
-                                                                            )}
+                                                                            {t(nameKey)}
                                                                         </span>
                                                                         {isChosen && (
                                                                             <span className="text-[#00ff41] text-xs ml-auto">
@@ -841,13 +858,7 @@ export function CrewList() {
                                                                         )}
                                                                     </div>
                                                                     <div className="text-[10px] text-[#888]">
-                                                                        {t(
-                                                                            getTechPerkDescKey(
-                                                                                selectedCrew.profession,
-                                                                                tier,
-                                                                                branch,
-                                                                            ),
-                                                                        )}
+                                                                        {t(descKey)}
                                                                     </div>
                                                                 </div>
                                                             );

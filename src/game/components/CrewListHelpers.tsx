@@ -72,7 +72,7 @@ export const getRegen = (
     crew?: CrewMember[],
     modules?: Module[],
 ) => {
-    const base = calculateHealthRegen(member, { activeEffects });
+    const base = calculateHealthRegen(member, { activeEffects, crew });
     if (crew && modules) {
         const bonus = getMergeEffectsBonus(crew, modules);
         return base + (bonus.crewHealthRegen ?? 0);
@@ -110,7 +110,8 @@ const getCrewDamageReduction = (
 const getCrewExpMultiplier = (
     member: CrewMember,
     researchedTechs: TechnologyId[],
-): number => calculateExpMultiplier(member, { researchedTechs });
+    crew: CrewMember[],
+): number => calculateExpMultiplier(member, { researchedTechs }, crew);
 
 export const CrewDamageReductionRow = ({
     member,
@@ -143,13 +144,15 @@ export const CrewDamageReductionRow = ({
 export const CrewExpBonusRow = ({
     member,
     researchedTechs,
+    crew,
     t,
 }: {
     member: CrewMember;
     researchedTechs: TechnologyId[];
+    crew: CrewMember[];
     t: TFn;
 }) => {
-    const expMult = getCrewExpMultiplier(member, researchedTechs);
+    const expMult = getCrewExpMultiplier(member, researchedTechs, crew);
     if (expMult <= 1) return null;
     return (
         <div className="text-[10px] text-[#00d4ff] flex flex-wrap items-center gap-1">

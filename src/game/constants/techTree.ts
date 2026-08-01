@@ -1,9 +1,10 @@
 import type {
     CrewMember,
     Profession,
-    TechPerkBranch,
+    ProfessionalTechPerkBranch,
     TechPerkTier,
 } from "../types/crew";
+import type { RaceId } from "../types/races";
 
 export const TECH_TREE_TIERS: TechPerkTier[] = [3, 6, 9];
 
@@ -15,7 +16,7 @@ export interface TechPerkOption {
 
 type TechTreeForProfession = Record<
     TechPerkTier,
-    Record<TechPerkBranch, TechPerkOption>
+    Record<ProfessionalTechPerkBranch, TechPerkOption>
 >;
 
 /**
@@ -28,13 +29,13 @@ type TechTreeForProfession = Record<
 export const getTechPerkNameKey = (
     profession: Profession,
     tier: TechPerkTier,
-    branch: TechPerkBranch,
+    branch: ProfessionalTechPerkBranch,
 ): string => `tech_tree.${profession}.${tier}.${branch}.name`;
 
 export const getTechPerkDescKey = (
     profession: Profession,
     tier: TechPerkTier,
-    branch: TechPerkBranch,
+    branch: ProfessionalTechPerkBranch,
 ): string => `tech_tree.${profession}.${tier}.${branch}.desc`;
 
 export const TECH_TREE: Record<Profession, TechTreeForProfession> = {
@@ -124,13 +125,59 @@ export const TECH_TREE: Record<Profession, TechTreeForProfession> = {
     },
 };
 
+export const RACE_TECH_TREE: Record<
+    RaceId,
+    Record<TechPerkTier, TechPerkOption>
+> = {
+    human: {
+        3: { value: 0.03, icon: "🤝" },
+        6: { value: 0.04, icon: "🤝" },
+        9: { value: 0.05, icon: "🤝" },
+    },
+    synthetic: {
+        3: { value: 0.03, icon: "⚙️" },
+        6: { value: 0.04, icon: "⚙️" },
+        9: { value: 0.05, icon: "⚙️" },
+    },
+    xenosymbiont: {
+        3: { value: 0.03, icon: "🧬" },
+        6: { value: 0.04, icon: "🧬" },
+        9: { value: 0.05, icon: "🧬" },
+    },
+    krylorian: {
+        3: { value: 0.01, icon: "🦎" },
+        6: { value: 0.02, icon: "🦎" },
+        9: { value: 0.03, icon: "🦎" },
+    },
+    voidborn: {
+        3: { value: 0.03, icon: "🌌" },
+        6: { value: 0.04, icon: "🌌" },
+        9: { value: 0.05, icon: "🌌" },
+    },
+    crystalline: {
+        3: { value: 0.1, icon: "💎" },
+        6: { value: 0.2, icon: "💎" },
+        9: { value: 0.3, icon: "💎" },
+    },
+};
+
+export const getRaceTechPerkNameKey = (
+    race: RaceId,
+    tier: TechPerkTier,
+): string => `race_tech_tree.${race}.${tier}.name`;
+
+export const getRaceTechPerkDescKey = (
+    race: RaceId,
+    tier: TechPerkTier,
+): string => `race_tech_tree.${race}.${tier}.desc`;
+
 /**
  * Эффективный бонус ветки для члена экипажа: сумма уже выбранных тиров этой
  * ветки. Каждый выбор — отдельное улучшение, а не замена предыдущего.
  */
 export function getTechPerkValue(
     crewMember: Pick<CrewMember, "profession" | "techPerks">,
-    branch: TechPerkBranch,
+    branch: ProfessionalTechPerkBranch,
 ): number {
     const tree = TECH_TREE[crewMember.profession];
     if (!tree || !crewMember.techPerks) return 0;
@@ -142,4 +189,32 @@ export function getTechPerkValue(
         }
     }
     return total;
+}
+
+export function getRaceTechPerkValue(
+    crewMember: Pick<CrewMember, "race" | "techPerks">,
+): number {
+    if (!crewMember.techPerks) return 0;
+
+    const tree = RACE_TECH_TREE[crewMember.race];
+    let total = 0;
+    for (const tier of TECH_TREE_TIERS) {
+        if (crewMember.techPerks[tier] === "C") {
+            total += tree[tier].value;
+        }
+    }
+    return total;
+}
+
+export function getStrongestRaceTechPerkValue(
+    crew: Array<Pick<CrewMember, "race" | "techPerks">>,
+    race: RaceId,
+): number {
+    return crew.reduce(
+        (strongest, crewMember) =>
+            crewMember.race === race
+                ? Math.max(strongest, getRaceTechPerkValue(crewMember))
+                : strongest,
+        0,
+    );
 }

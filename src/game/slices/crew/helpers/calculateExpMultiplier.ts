@@ -1,4 +1,5 @@
 import { RACES } from "@/game/constants/races";
+import { getStrongestRaceTechPerkValue } from "@/game/constants/techTree";
 import { getTechBonusSum } from "@/game/research";
 import type { CrewMember, ResearchData } from "@/game/types";
 
@@ -14,6 +15,7 @@ import type { CrewMember, ResearchData } from "@/game/types";
 export const calculateExpMultiplier = (
     crewMember: CrewMember | undefined,
     research: Pick<ResearchData, "researchedTechs">,
+    crew: CrewMember[],
 ): number => {
     if (!crewMember) return 1;
 
@@ -33,6 +35,8 @@ export const calculateExpMultiplier = (
 
     // Apply crew_exp technology bonuses
     expMultiplier += getTechBonusSum(research, "crew_exp");
+
+    expMultiplier += getStrongestRaceTechPerkValue(crew, "human");
 
     return expMultiplier;
 };

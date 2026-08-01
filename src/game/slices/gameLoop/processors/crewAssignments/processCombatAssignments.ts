@@ -1,5 +1,6 @@
 import { getRaceCrewBonus } from "@/game/races";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
+import { getStrongestRaceTechPerkValue } from "@/game/constants/techTree";
 import { isValidCrewAssignment } from "@/game/slices/crew/helpers/validateAssignment";
 import { store as i18nStore } from "@/lib/useTranslation";
 import {
@@ -217,6 +218,14 @@ const processCombatHeal = (
         healAmount = Math.floor(
             healAmount * (1 + augmentationHealingBonus),
         );
+    }
+
+    const xenosymbiontBonus = getStrongestRaceTechPerkValue(
+        get().crew,
+        "xenosymbiont",
+    );
+    if (xenosymbiontBonus > 0) {
+        healAmount = Math.floor(healAmount * (1 + xenosymbiontBonus));
     }
 
     const crewNeedingHealing = get().crew.filter(

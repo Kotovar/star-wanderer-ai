@@ -1,5 +1,8 @@
 import { getRaceCrewBonus } from "@/game/races";
-import { getTechPerkValue } from "@/game/constants/techTree";
+import {
+    getStrongestRaceTechPerkValue,
+    getTechPerkValue,
+} from "@/game/constants/techTree";
 import type { CrewMember, GameState } from "@/game/types";
 
 /**
@@ -22,7 +25,7 @@ import type { CrewMember, GameState } from "@/game/types";
  */
 export const calculateHealthRegen = (
     crewMember: CrewMember,
-    state?: Pick<GameState, "activeEffects">,
+    state?: Pick<GameState, "activeEffects"> & { crew?: CrewMember[] },
 ): number => {
 
     // Базовая регенерация: 0 HP
@@ -59,6 +62,16 @@ export const calculateHealthRegen = (
                 }
             });
         });
+    }
+
+    if (state?.crew) {
+        const xenosymbiontBonus = getStrongestRaceTechPerkValue(
+            state.crew,
+            "xenosymbiont",
+        );
+        if (xenosymbiontBonus > 0) {
+            regenAmount = Math.floor(regenAmount * (1 + xenosymbiontBonus));
+        }
     }
 
     return regenAmount;

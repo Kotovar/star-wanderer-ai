@@ -3,16 +3,16 @@
 import { Button } from "@/components/ui/button";
 import { getPendingCrewPerkChoice } from "@/game/crew/techPerks";
 import {
+    RACE_TECH_TREE,
     TECH_TREE,
-    getTechPerkNameKey,
+    getRaceTechPerkDescKey,
+    getRaceTechPerkNameKey,
     getTechPerkDescKey,
+    getTechPerkNameKey,
 } from "@/game/constants/techTree";
 import { useGameStore } from "@/game/store";
-import type { TechPerkBranch } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
 import { useShallow } from "zustand/react/shallow";
-
-const BRANCHES: TechPerkBranch[] = ["A", "B"];
 
 export function CrewPerkChoiceModal() {
     const { crew, chooseCrewPerk } = useGameStore(
@@ -29,7 +29,27 @@ export function CrewPerkChoiceModal() {
     const crewMember = crew.find((c) => c.id === pending.crewMemberId);
     if (!crewMember) return null;
 
-    const options = TECH_TREE[pending.profession][pending.tier];
+    const professionalOptions = TECH_TREE[pending.profession][pending.tier];
+    const options = [
+        {
+            branch: "A" as const,
+            option: professionalOptions.A,
+            nameKey: getTechPerkNameKey(pending.profession, pending.tier, "A"),
+            descKey: getTechPerkDescKey(pending.profession, pending.tier, "A"),
+        },
+        {
+            branch: "B" as const,
+            option: professionalOptions.B,
+            nameKey: getTechPerkNameKey(pending.profession, pending.tier, "B"),
+            descKey: getTechPerkDescKey(pending.profession, pending.tier, "B"),
+        },
+        {
+            branch: "C" as const,
+            option: RACE_TECH_TREE[crewMember.race][pending.tier],
+            nameKey: getRaceTechPerkNameKey(crewMember.race, pending.tier),
+            descKey: getRaceTechPerkDescKey(crewMember.race, pending.tier),
+        },
+    ];
 
     return (
         <div className="flex min-h-0 flex-col gap-3 p-1 pb-3 lg:h-full lg:overflow-y-auto">
@@ -48,9 +68,8 @@ export function CrewPerkChoiceModal() {
                 </div>
             </div>
 
-            <div className="grid gap-2 lg:grid-cols-2">
-                {BRANCHES.map((branch) => {
-                    const option = options[branch];
+            <div className="grid gap-2 lg:grid-cols-3">
+                {options.map(({ branch, option, nameKey, descKey }) => {
                     return (
                         <div
                             key={branch}
@@ -60,22 +79,10 @@ export function CrewPerkChoiceModal() {
                                 <span className="text-xl leading-none">
                                     {option.icon}
                                 </span>
-                                {t(
-                                    getTechPerkNameKey(
-                                        pending.profession,
-                                        pending.tier,
-                                        branch,
-                                    ),
-                                )}
+                                {t(nameKey)}
                             </div>
                             <div className="mt-1 flex-1 text-xs leading-relaxed text-[#7f8b7f]">
-                                {t(
-                                    getTechPerkDescKey(
-                                        pending.profession,
-                                        pending.tier,
-                                        branch,
-                                    ),
-                                )}
+                                {t(descKey)}
                             </div>
                             <Button
                                 onClick={() =>

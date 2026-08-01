@@ -1,5 +1,6 @@
 import { getRaceCrewBonus } from "@/game/races";
 import { CREW_ASSIGNMENT_BONUSES } from "@/game/constants";
+import { getStrongestRaceTechPerkValue } from "@/game/constants/techTree";
 import { getTaskBonusMultiplier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import { isModuleFunctional } from "../utils";
 import type { GameState } from "@/game/types";
@@ -18,6 +19,7 @@ import type { GameState } from "@/game/types";
 export function getTotalConsumption(state: GameState): number {
     const { ship, crew } = state;
     const { modules } = ship;
+    const syntheticBonus = getStrongestRaceTechPerkValue(crew, "synthetic");
 
     // === Бонус от назначения "навигация" ===
     // Считается динамически (не накапливается в state), учитывает трейты
@@ -75,5 +77,5 @@ export function getTotalConsumption(state: GameState): number {
     }
 
     // Итоговое потребление не может быть отрицательным
-    return Math.max(0, baseConsumption - pilotRed);
+    return Math.max(0, baseConsumption * (1 - syntheticBonus) - pilotRed);
 }

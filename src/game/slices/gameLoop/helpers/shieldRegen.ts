@@ -13,6 +13,7 @@ import {
     STAR_SHIELD_REGEN_PENALTY_THRESHOLD,
 } from "@/game/constants";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import { getStrongestRaceTechPerkValue } from "@/game/constants/techTree";
 import type { GameState, GameStore, SetState } from "@/game/types";
 
 /**
@@ -143,6 +144,10 @@ export const calculateShieldRegen = (
 
     // Бонус от технологий (shield_regen)
     const techRegenMultiplier = getTechBonusSum(state.research, "shield_regen");
+    const voidbornBonus = getStrongestRaceTechPerkValue(
+        state.crew,
+        "voidborn",
+    );
 
     // Итоговая ёмкость щита с бонусом от сращивания
     const maxShieldsWithBonus = mergeBonus.shieldCapacity
@@ -159,7 +164,7 @@ export const calculateShieldRegen = (
 
     // Применяем процентные бонусы к базовой регенерации
     const totalMultiplier =
-        (1 + raceMultiplier + artifactMultiplier + mergeMultiplier + techRegenMultiplier) *
+        (1 + raceMultiplier + artifactMultiplier + mergeMultiplier + techRegenMultiplier + voidbornBonus) *
         combatPenalty *
         hazardMultiplier;
 

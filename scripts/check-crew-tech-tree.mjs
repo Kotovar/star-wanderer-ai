@@ -7,6 +7,7 @@ import {
   getTechPerkNameKey,
   getTechPerkDescKey,
 } from "../src/game/constants/techTree.ts";
+import * as techTree from "../src/game/constants/techTree.ts";
 import { getPendingCrewPerkChoice, fillMissingTechPerkTiers } from "../src/game/crew/techPerks.ts";
 import ruLocale from "../src/lib/locales/ru.json" with { type: "json" };
 import enLocale from "../src/lib/locales/en.json" with { type: "json" };
@@ -33,6 +34,32 @@ const EXPECTED_FULL_PATH_TOTALS = {
   scientist: { A: 0.2, B: 0.12 },
   gunner: { A: 0.14, B: 0.14 },
 };
+const RACE_TECH_VALUES = {
+  human: [0.03, 0.04, 0.05],
+  synthetic: [0.03, 0.04, 0.05],
+  xenosymbiont: [0.03, 0.04, 0.05],
+  krylorian: [0.01, 0.02, 0.03],
+  voidborn: [0.03, 0.04, 0.05],
+  crystalline: [0.1, 0.2, 0.3],
+};
+const RACE_TECH_NAMES = {
+  ru: {
+    human: "Координация",
+    synthetic: "Оптимизация систем",
+    xenosymbiont: "Симбиотическая поддержка",
+    krylorian: "Тактическое присутствие",
+    voidborn: "Пустотный резонанс",
+    crystalline: "Кристаллическая решётка",
+  },
+  en: {
+    human: "Coordination",
+    synthetic: "System Optimization",
+    xenosymbiont: "Symbiotic Support",
+    krylorian: "Tactical Presence",
+    voidborn: "Void Resonance",
+    crystalline: "Crystal Lattice",
+  },
+};
 
 const getByDotPath = (obj, path) =>
   path.split(".").reduce((node, key) => node?.[key], obj);
@@ -54,6 +81,50 @@ const healthRegenSource = await readFile(
 );
 const retreatSource = await readFile(
   new URL("../src/game/slices/combat/helpers/retreat.ts", import.meta.url),
+  "utf8",
+);
+const expMultiplierSource = await readFile(
+  new URL("../src/game/slices/crew/helpers/calculateExpMultiplier.ts", import.meta.url),
+  "utf8",
+);
+const consumptionSource = await readFile(
+  new URL("../src/game/slices/ship/helpers/getTotalConsumption.ts", import.meta.url),
+  "utf8",
+);
+const civilianAssignmentsSource = await readFile(
+  new URL("../src/game/slices/gameLoop/processors/crewAssignments/processAssignments.ts", import.meta.url),
+  "utf8",
+);
+const combatAssignmentsSource = await readFile(
+  new URL("../src/game/slices/gameLoop/processors/crewAssignments/processCombatAssignments.ts", import.meta.url),
+  "utf8",
+);
+const evasionSource = await readFile(
+  new URL("../src/game/slices/ship/helpers/getTotalEvasion.ts", import.meta.url),
+  "utf8",
+);
+const shieldRegenSource = await readFile(
+  new URL("../src/game/slices/gameLoop/helpers/shieldRegen.ts", import.meta.url),
+  "utf8",
+);
+const shipStatsUpdateSource = await readFile(
+  new URL("../src/game/slices/ship/helpers/updateShipStats.ts", import.meta.url),
+  "utf8",
+);
+const perkChoiceModalSource = await readFile(
+  new URL("../src/game/components/CrewPerkChoiceModal.tsx", import.meta.url),
+  "utf8",
+);
+const crewListSource = await readFile(
+  new URL("../src/game/components/CrewList.tsx", import.meta.url),
+  "utf8",
+);
+const stationCrewTabSource = await readFile(
+  new URL("../src/game/components/station/CrewTab.tsx", import.meta.url),
+  "utf8",
+);
+const crewSliceSource = await readFile(
+  new URL("../src/game/slices/crew/crewSlice.ts", import.meta.url),
   "utf8",
 );
 
@@ -109,6 +180,134 @@ for (const profession of PROFESSIONS) {
     }
   }
 }
+
+// --- Race branch C: exact data, per-member sum, strongest same-race carrier ---
+assert.ok(
+  "RACE_TECH_TREE" in techTree &&
+    "getRaceTechPerkValue" in techTree &&
+    "getStrongestRaceTechPerkValue" in techTree,
+  "the race-specific C data and aggregation helpers must exist",
+);
+for (const [race, expectedValues] of Object.entries(RACE_TECH_VALUES)) {
+  assert.deepEqual(
+    TECH_TREE_TIERS.map((tier) => techTree.RACE_TECH_TREE[race][tier].value),
+    expectedValues,
+    `${race} C branch must keep its agreed tier values`,
+  );
+  for (const tier of TECH_TREE_TIERS) {
+    for (const [langName, locale] of [["ru", ruLocale], ["en", enLocale]]) {
+      const name = getByDotPath(locale, techTree.getRaceTechPerkNameKey(race, tier));
+      const desc = getByDotPath(locale, techTree.getRaceTechPerkDescKey(race, tier));
+      const value = techTree.RACE_TECH_TREE[race][tier].value;
+      assert.equal(
+        name,
+        RACE_TECH_NAMES[langName][race],
+        `${langName} locale must name ${race} C`,
+      );
+      assert.ok(
+        typeof desc === "string" && desc.length > 0,
+        `${langName} locale must describe ${race} tier ${tier} C`,
+      );
+      const displayedValue = race === "crystalline"
+        ? value.toFixed(1)
+        : `${Math.round(value * 100)}%`;
+      assert.ok(
+        desc.includes(displayedValue),
+        `${langName} locale must display the ${race} tier ${tier} C increment`,
+      );
+    }
+  }
+}
+assert.equal(
+  techTree.getRaceTechPerkValue({ race: "human", techPerks: { 3: "C", 6: "C" } }),
+  0.07,
+  "one carrier adds its selected C tiers",
+);
+assert.equal(
+  techTree.getStrongestRaceTechPerkValue([
+    { race: "human", techPerks: { 3: "C" } },
+    { race: "human", techPerks: { 3: "C", 6: "C" } },
+  ], "human"),
+  0.07,
+  "same-race C carriers use only the strongest accumulated bonus",
+);
+assert.equal(
+  techTree.getStrongestRaceTechPerkValue([
+    { race: "human", techPerks: { 3: "A", 6: "B" } },
+  ], "human"),
+  0,
+  "professional A/B selections do not create a race C bonus",
+);
+assert.match(
+  expMultiplierSource,
+  /getStrongestRaceTechPerkValue\(crew, "human"\)/,
+  "human C applies to experience for the full crew",
+);
+assert.match(
+  consumptionSource,
+  /getStrongestRaceTechPerkValue\(crew, "synthetic"\)/,
+  "synthetic C applies once to active module consumption",
+);
+assert.match(
+  healthRegenSource,
+  /getStrongestRaceTechPerkValue\(\s*state\.crew,\s*"xenosymbiont",?\s*\)/,
+  "xenosymbiont C applies to passive crew regeneration",
+);
+assert.match(
+  civilianAssignmentsSource,
+  /getStrongestRaceTechPerkValue\(\s*get\(\)\.crew,\s*"xenosymbiont",?\s*\)/,
+  "xenosymbiont C applies to civilian healing",
+);
+assert.match(
+  combatAssignmentsSource,
+  /getStrongestRaceTechPerkValue\(\s*get\(\)\.crew,\s*"xenosymbiont",?\s*\)/,
+  "xenosymbiont C applies to combat healing",
+);
+assert.match(
+  evasionSource,
+  /getStrongestRaceTechPerkValue\(crew, "krylorian"\)/,
+  "krylorian C applies before the existing evasion cap",
+);
+assert.match(
+  shieldRegenSource,
+  /getStrongestRaceTechPerkValue\(\s*state\.crew,\s*"voidborn",?\s*\)/,
+  "voidborn C applies to shield regeneration",
+);
+assert.match(
+  shipStatsUpdateSource,
+  /getStrongestRaceTechPerkValue\(\s*state\.crew,\s*"crystalline",?\s*\)/,
+  "crystalline C applies to module defence",
+);
+assert.match(
+  perkChoiceModalSource,
+  /lg:grid-cols-3/,
+  "the level-up modal renders three choices on desktop",
+);
+assert.match(
+  crewListSource,
+  /sm:grid-cols-3/,
+  "the crew tech tree renders three choices on desktop",
+);
+assert.match(
+  stationCrewTabSource,
+  /branch === "C"/,
+  "station badges resolve stored race C choices without indexing the professional tree",
+);
+assert.match(
+  crewSliceSource,
+  /crewMember\.race === "crystalline"[\s\S]*?get\(\)\.updateShipStats\(\)/,
+  "changing a crystalline perk immediately refreshes stored ship armour",
+);
+assert.match(
+  consumptionSource,
+  /baseConsumption \* \(1 - syntheticBonus\) - pilotRed/,
+  "synthetic C reduces the aggregate active-module consumption by its exact percentage",
+);
+assert.doesNotMatch(
+  consumptionSource,
+  /moduleConsumption \* \(1 - syntheticBonus\)/,
+  "synthetic C is never rounded separately for every module",
+);
 
 // --- getTechPerkValue: no pick, single pick, stack selected tiers, independent branches ---
 assert.equal(
@@ -281,8 +480,8 @@ assert.deepEqual(
 );
 assert.deepEqual(
   fillMissingTechPerkTiers(3, undefined, () => 0.9),
-  { 3: "B" },
-  "roll >= 0.5 picks branch B",
+  { 3: "C" },
+  "roll in the final third picks the racial branch C",
 );
 assert.deepEqual(
   fillMissingTechPerkTiers(8, undefined, () => 0.1),

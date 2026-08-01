@@ -110,11 +110,21 @@ export const createCrewSlice = (
     },
 
     chooseCrewPerk: (crewMemberId, tier, branch) => {
+        const crewMember = get().crew.find((c) => c.id === crewMemberId);
+        if (!crewMember) return;
+
         set((state) => {
-            const crewMember = state.crew.find((c) => c.id === crewMemberId);
-            if (!crewMember) return;
-            crewMember.techPerks = { ...crewMember.techPerks, [tier]: branch };
+            const draftCrewMember = state.crew.find((c) => c.id === crewMemberId);
+            if (!draftCrewMember) return;
+            draftCrewMember.techPerks = {
+                ...draftCrewMember.techPerks,
+                [tier]: branch,
+            };
         });
+
+        if (crewMember.race === "crystalline") {
+            get().updateShipStats();
+        }
     },
 
     canMerge: (crewMember) => canMergeWithModule(crewMember),

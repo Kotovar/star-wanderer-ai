@@ -35,7 +35,11 @@ export const calculateGainExpResult = (
     amount: number,
     state: GameState,
 ): GainExpResult => {
-    const expMultiplier = calculateExpMultiplier(crewMember, state.research);
+    const expMultiplier = calculateExpMultiplier(
+        crewMember,
+        state.research,
+        state.crew,
+    );
     const finalAmount = Math.floor(amount * expMultiplier);
 
     const currentExp = crewMember.exp ?? 0;
