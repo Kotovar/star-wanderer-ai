@@ -1,4 +1,6 @@
 import type { BossAbilityEffectType } from "./bosses";
+import type { EnemyShip } from "./enemy";
+import type { SpaceMonsterType } from "./locations/locations";
 import type { WeaponType } from "./modules";
 
 export type CombatCinematicSide = "player" | "enemy";
@@ -26,6 +28,9 @@ export interface CombatCinematicVesselSnapshot {
   shields: number;
   maxShields: number;
   modules: CombatCinematicModuleSnapshot[];
+  enemyType?: EnemyShip;
+  spaceMonsterType?: SpaceMonsterType;
+  bossId?: string;
 }
 
 export interface CombatCinematicSnapshot {

@@ -189,6 +189,13 @@ export function createCombatCinematicSnapshot(
         health: module.health,
         maxHealth: module.maxHealth ?? module.health,
       })),
+      ...(combat.enemy.enemyType
+        ? { enemyType: combat.enemy.enemyType }
+        : {}),
+      ...(combat.enemy.spaceMonsterType
+        ? { spaceMonsterType: combat.enemy.spaceMonsterType }
+        : {}),
+      ...(combat.enemy.bossId ? { bossId: combat.enemy.bossId } : {}),
     },
   };
 }

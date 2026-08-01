@@ -1110,6 +1110,7 @@ try {
       enemy: {
         name: "Живой улей",
         isBoss: false,
+        spaceMonsterType: "void_ray",
         shields: 0,
         maxShields: 0,
         modules: [
@@ -1132,12 +1133,52 @@ try {
       enemy: {
         kind: "creature",
         name: "Живой улей",
+        spaceMonsterType: "void_ray",
         shields: 0,
         maxShields: 0,
         modules: [{ id: 9, health: 40, maxHealth: 40 }],
       },
     },
     "a combat snapshot preserves the visual side and creature model",
+  );
+}
+
+{
+  const guardSnapshot = createCombatCinematicSnapshot({
+    ship: { shields: 0, maxShields: 0, modules: [] },
+    currentCombat: {
+      enemy: {
+        name: "Страж людей",
+        enemyType: "human_guard",
+        shields: 0,
+        maxShields: 0,
+        modules: [],
+      },
+    },
+  });
+  const bossSnapshot = createCombatCinematicSnapshot({
+    ship: { shields: 0, maxShields: 0, modules: [] },
+    currentCombat: {
+      enemy: {
+        name: "Страж Врат",
+        isBoss: true,
+        bossId: "guardian_sentinel",
+        shields: 0,
+        maxShields: 0,
+        modules: [],
+      },
+    },
+  });
+
+  assert.equal(
+    guardSnapshot?.enemy.enemyType,
+    "human_guard",
+    "a race guard keeps its hull identity in the cinematic snapshot",
+  );
+  assert.equal(
+    bossSnapshot?.enemy.bossId,
+    "guardian_sentinel",
+    "a boss keeps its hull identity in the cinematic snapshot",
   );
 }
 

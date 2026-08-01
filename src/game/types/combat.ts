@@ -1,6 +1,7 @@
 import type { BossAbility } from "./bosses";
 import type { ShopItem } from "./shops";
-import type { EnemyModule } from "./enemy";
+import type { EnemyModule, EnemyShip } from "./enemy";
+import type { SpaceMonsterType } from "./locations/locations";
 import type { RaceId } from "./races";
 
 export interface CombatState {
@@ -11,6 +12,8 @@ export interface CombatState {
         shields: number;
         maxShields: number;
         shieldRegenRate?: number; // Shields regenerated per turn (driven by alive shield modules)
+        enemyType?: EnemyShip;
+        spaceMonsterType?: SpaceMonsterType;
         // Boss-specific fields
         isBoss?: boolean;
         bossId?: string;

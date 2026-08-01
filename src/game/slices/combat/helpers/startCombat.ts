@@ -46,6 +46,8 @@ export function initializeCombat(
                 shields: maxShields,
                 maxShields,
                 shieldRegenRate: shieldRegenRate > 0 ? shieldRegenRate : undefined,
+                enemyType: enemy.enemyType,
+                spaceMonsterType: enemy.spaceMonsterType,
                 threat,
             },
             loot: { credits: lootCredits },
