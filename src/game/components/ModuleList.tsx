@@ -406,7 +406,7 @@ export function ModuleDetailDialog({
         <Dialog open={!!module} onOpenChange={onClose}>
             <GameDialogContent
                 variant={mergedCrewMember ? "merge" : "default"}
-                className="max-w-md"
+                className="max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto"
             >
                 <DialogHeader>
                     <DialogTitle className="text-accent font-['Orbitron']">

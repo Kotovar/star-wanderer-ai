@@ -10,6 +10,7 @@ import {
     COMBAT_ACCURACY_MODIFIERS,
     COMBAT_DAMAGE_MODIFIERS,
     ARTIFACT_TYPES,
+    BASE_CRIT_CHANCE,
     DRONE_STACK_BONUS,
 } from "@/game/constants";
 import { isModuleActive } from "@/game/modules/utils";
@@ -67,6 +68,47 @@ export function getWeaponAccuracy(
         MIN_ACCURACY,
         Math.min(MAX_ACCURACY, base + accuracyModifier),
     );
+}
+
+function getActiveGunners(state: GameState) {
+    const activeWeaponBayIds = new Set(
+        state.ship.modules
+            .filter(
+                (module) =>
+                    module.type === "weaponbay" && isModuleActive(module),
+            )
+            .map((module) => module.id),
+    );
+    return state.crew.filter(
+        (crewMember) =>
+            crewMember.profession === "gunner" &&
+            activeWeaponBayIds.has(crewMember.moduleId),
+    );
+}
+
+/** Шанс критического удара с теми же усилителями, что использует боевой резолвер. */
+export function getPlayerCritChance(state: GameState): number {
+    let critChance = BASE_CRIT_CHANCE;
+    const criticalMatrix = findActiveArtifact(
+        state.artifacts,
+        ARTIFACT_TYPES.CRITICAL_MATRIX,
+    );
+    if (criticalMatrix) {
+        critChance += getArtifactEffectValue(criticalMatrix, state);
+    }
+
+    const bestGunnerCritBonus = Math.max(
+        0,
+        ...getActiveGunners(state).map((gunner) => {
+            let bonus = getAugmentationBonus(gunner, "critBonus");
+            gunner.traits?.forEach((trait) => {
+                bonus += trait.effect?.critBonus ?? 0;
+            });
+            return bonus + getTechPerkValue(gunner, "B");
+        }),
+    );
+
+    return Math.min(0.5, critChance + bestGunnerCritBonus);
 }
 
 /**
@@ -148,6 +190,7 @@ export function computeAccuracyModifier(state: GameState): number {
     const crewInWeaponBays = state.crew.filter((c) =>
         weaponBayIds.has(c.moduleId),
     );
+    const activeGunners = getActiveGunners(state);
 
     let modifier = 0;
 
@@ -155,22 +198,11 @@ export function computeAccuracyModifier(state: GameState): number {
     // moveCrewMember (only civilian `assignment` is cleared there), so a
     // gunner who left the bay must not keep granting the "has gunner" bonus.
     const hasGunner =
-        crewInWeaponBays.some((c) => c.profession === "gunner") ||
+        activeGunners.length > 0 ||
         crewInWeaponBays.some((c) => c.combatAssignment === "targeting");
 
     if (!hasGunner) {
         modifier += COMBAT_ACCURACY_MODIFIERS.NO_GUNNER_PENALTY;
-    } else {
-        const gunnerInBay = crewInWeaponBays.find(
-            (c) => c.profession === "gunner",
-        );
-        if (gunnerInBay) {
-            const gunnerLevel = gunnerInBay.level || 1;
-            modifier += Math.min(
-                COMBAT_ACCURACY_MODIFIERS.GUNNER_LEVEL_MAX_BONUS,
-                gunnerLevel * COMBAT_ACCURACY_MODIFIERS.GUNNER_LEVEL_BONUS,
-            );
-        }
     }
 
     const engineerWithCalibration = crewInWeaponBays.find(
@@ -184,22 +216,29 @@ export function computeAccuracyModifier(state: GameState): number {
 
     modifier += computeGlobalAccuracyBonuses(state);
 
-    // Трейт-бонусы/штрафы и аугментация применяются к КАЖДОМУ стрелку в любом
-    // отсеке (суммируются, если отсеков/стрелков несколько) — в отличие от
-    // per-bay версии, где считается только стрелок этого конкретного отсека
-    state.crew.forEach((c) => {
-        const isGunnerInWeaponBay =
-            c.profession === "gunner" && weaponBayIds.has(c.moduleId);
-        if (!isGunnerInWeaponBay) return;
-        c.traits?.forEach((trait) => {
-            if (trait.effect?.accuracyPenalty)
-                modifier -= Number(trait.effect.accuracyPenalty);
-            if (trait.effect?.accuracyBonus)
-                modifier += Number(trait.effect.accuracyBonus);
-        });
-        modifier += getAugmentationBonus(c, "accuracyBonus");
-        modifier += getTechPerkValue(c, "A"); // Ветка "Снайпер"
-    });
+    // Общий расчёт берёт одного лучшего стрелка, чтобы дополнительные орудийные
+    // отсеки не складывали глобальные бонусы. Локальный per-bay расчёт ниже остаётся.
+    const bestGunnerAccuracyBonus = Math.max(
+        0,
+        ...activeGunners.map((gunner) => {
+            let bonus = Math.min(
+                COMBAT_ACCURACY_MODIFIERS.GUNNER_LEVEL_MAX_BONUS,
+                (gunner.level || 1) * COMBAT_ACCURACY_MODIFIERS.GUNNER_LEVEL_BONUS,
+            );
+            gunner.traits?.forEach((trait) => {
+                if (trait.effect?.accuracyPenalty)
+                    bonus -= Number(trait.effect.accuracyPenalty);
+                if (trait.effect?.accuracyBonus)
+                    bonus += Number(trait.effect.accuracyBonus);
+            });
+            return (
+                bonus +
+                getAugmentationBonus(gunner, "accuracyBonus") +
+                getTechPerkValue(gunner, "A")
+            );
+        }),
+    );
+    modifier += bestGunnerAccuracyBonus;
 
     return modifier;
 }

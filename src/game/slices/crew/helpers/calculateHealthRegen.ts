@@ -43,7 +43,9 @@ export const calculateHealthRegen = (
     });
 
     // Ветка "Иммунолог" (медик): фиксированная пассивная регенерация
-    regenAmount += getTechPerkValue(crewMember, "B");
+    if (crewMember.profession === "medic") {
+        regenAmount += getTechPerkValue(crewMember, "B");
+    }
 
     // Бонусы от активных эффектов (например, Биолаборатория +5 HP за ход)
     if (state?.activeEffects) {

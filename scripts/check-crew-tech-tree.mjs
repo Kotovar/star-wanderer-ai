@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import {
   TECH_TREE,
   TECH_TREE_TIERS,
@@ -12,11 +13,51 @@ import enLocale from "../src/lib/locales/en.json" with { type: "json" };
 
 const PROFESSIONS = ["pilot", "engineer", "medic", "scout", "scientist", "gunner"];
 const BRANCHES = ["A", "B"];
+const EXPECTED_TECH_VALUES = {
+  pilot: { A: [0.03, 0.04, 0.05], B: [0.03, 0.04, 0.05] },
+  engineer: { A: [0.04, 0.06, 0.08], B: [1, 1, 1] },
+  medic: { A: [0.04, 0.06, 0.08], B: [1, 1, 1] },
+  scout: { A: [0.07, 0.09, 0.12], B: [0.07, 0.09, 0.12] },
+  scientist: { A: [0.05, 0.06, 0.09], B: [0.03, 0.04, 0.05] },
+  gunner: { A: [0.03, 0.05, 0.06], B: [0.03, 0.05, 0.06] },
+};
+const PERCENT_BRANCHES = new Set([
+  "pilot:A", "pilot:B", "engineer:A", "medic:A", "scout:A", "scout:B",
+  "scientist:A", "scientist:B", "gunner:A", "gunner:B",
+]);
+const EXPECTED_FULL_PATH_TOTALS = {
+  pilot: { A: 0.12, B: 0.12 },
+  engineer: { A: 0.18, B: 3 },
+  medic: { A: 0.18, B: 3 },
+  scout: { A: 0.28, B: 0.28 },
+  scientist: { A: 0.2, B: 0.12 },
+  gunner: { A: 0.14, B: 0.14 },
+};
 
 const getByDotPath = (obj, path) =>
   path.split(".").reduce((node, key) => node?.[key], obj);
+const shipStatsSource = await readFile(
+  new URL("../src/game/components/ShipStats.tsx", import.meta.url),
+  "utf8",
+);
+const playerAttackSource = await readFile(
+  new URL("../src/game/slices/combat/helpers/playerAttack.ts", import.meta.url),
+  "utf8",
+);
+const playerDamageSource = await readFile(
+  new URL("../src/game/slices/combat/helpers/playerDamage.ts", import.meta.url),
+  "utf8",
+);
+const healthRegenSource = await readFile(
+  new URL("../src/game/slices/crew/helpers/calculateHealthRegen.ts", import.meta.url),
+  "utf8",
+);
+const retreatSource = await readFile(
+  new URL("../src/game/slices/combat/helpers/retreat.ts", import.meta.url),
+  "utf8",
+);
 
-// --- Data integrity: every profession has all 3 tiers × 2 branches, values increase per tier ---
+// --- Data integrity: every profession has all 3 tiers × 2 incremental branches ---
 for (const profession of PROFESSIONS) {
   const tree = TECH_TREE[profession];
   assert.ok(tree, `${profession} must have a tech tree entry`);
@@ -27,10 +68,17 @@ for (const profession of PROFESSIONS) {
   );
   for (const branch of BRANCHES) {
     const values = TECH_TREE_TIERS.map((tier) => tree[tier][branch].value);
-    assert.ok(
-      values[0] < values[1] && values[1] <= values[2],
-      `${profession} branch ${branch} values must strictly increase from tier 3 to 6 (got ${values})`,
+    assert.deepEqual(
+      values,
+      EXPECTED_TECH_VALUES[profession][branch],
+      `${profession} branch ${branch} keeps its bounded incremental values`,
     );
+    if (PERCENT_BRANCHES.has(`${profession}:${branch}`)) {
+      assert.ok(
+        values[0] < values[1] && values[1] < values[2],
+        `${profession} branch ${branch} percent increments must increase with each tier`,
+      );
+    }
     for (const tier of TECH_TREE_TIERS) {
       assert.ok(
         tree[tier][branch].icon.length > 0,
@@ -49,12 +97,20 @@ for (const profession of PROFESSIONS) {
           typeof desc === "string" && desc.length > 0,
           `${langName}.json is missing tech_tree.${profession}.${tier}.${branch}.desc`,
         );
+        if (PERCENT_BRANCHES.has(`${profession}:${branch}`)) {
+          const percent = Math.round(tree[tier][branch].value * 100);
+          assert.match(
+            desc,
+            new RegExp(`[+-]${percent}%`),
+            `${langName}.json must display the ${profession} ${tier} ${branch} increment`,
+          );
+        }
       }
     }
   }
 }
 
-// --- getTechPerkValue: no pick, single pick, replace-not-stack, independent branches ---
+// --- getTechPerkValue: no pick, single pick, stack selected tiers, independent branches ---
 assert.equal(
   getTechPerkValue({ profession: "pilot", techPerks: undefined }, "A"),
   0,
@@ -67,8 +123,8 @@ assert.equal(
 );
 assert.equal(
   getTechPerkValue({ profession: "pilot", techPerks: { 3: "A", 6: "A" } }, "A"),
-  TECH_TREE.pilot[6].A.value,
-  "picking the same branch again at a higher tier replaces (does not add to) the lower tier's value",
+  TECH_TREE.pilot[3].A.value + TECH_TREE.pilot[6].A.value,
+  "picking the same branch again adds its earlier tier bonus",
 );
 assert.equal(
   getTechPerkValue({ profession: "pilot", techPerks: { 3: "A", 9: "B" } }, "B"),
@@ -79,6 +135,75 @@ assert.equal(
   getTechPerkValue({ profession: "pilot", techPerks: { 3: "A", 9: "B" } }, "A"),
   TECH_TREE.pilot[3].A.value,
   "an earlier pick of the other branch is unaffected by a later different-branch pick",
+);
+for (const profession of PROFESSIONS) {
+  for (const branch of BRANCHES) {
+    const techPerks = Object.fromEntries(
+      TECH_TREE_TIERS.map((tier) => [tier, branch]),
+    );
+    assert.ok(
+      Math.abs(
+        getTechPerkValue({ profession, techPerks }, branch) -
+          EXPECTED_FULL_PATH_TOTALS[profession][branch],
+      ) < Number.EPSILON,
+      `${profession} ${branch} stacks every selected tech-tree tier`,
+    );
+  }
+}
+
+assert.match(
+  shipStatsSource,
+  /getPlayerCritChance\(gs\)/,
+  "ship stats display the same total crit chance as combat",
+);
+assert.match(
+  playerAttackSource,
+  /getPlayerCritChance\(state\)/,
+  "combat resolves crits from the shared total crit chance",
+);
+assert.match(
+  playerDamageSource,
+  /function getActiveGunners\(state: GameState\)/,
+  "global gunner effects use the same active-bay scope",
+);
+assert.match(
+  playerDamageSource,
+  /const bestGunnerCritBonus = Math\.max\(/,
+  "crit uses only the strongest active gunner",
+);
+assert.match(
+  playerDamageSource,
+  /Math\.min\(0\.5, critChance \+ bestGunnerCritBonus\)/,
+  "player crit chance is capped at 50%",
+);
+assert.match(
+  healthRegenSource,
+  /crewMember\.profession === "medic"[\s\S]*getTechPerkValue\(crewMember, "B"\)/,
+  "only medics receive the medic regeneration branch",
+);
+assert.match(
+  retreatSource,
+  /const PILOT_LEVEL_RETREAT_BONUS = 2/,
+  "pilot level retreat growth is bounded at 2% per level",
+);
+assert.match(
+  playerDamageSource,
+  /const bestGunnerAccuracyBonus = Math\.max\(/,
+  "legacy global accuracy uses only the strongest active gunner",
+);
+assert.doesNotMatch(
+  playerDamageSource,
+  /state\.crew\.forEach\(\(c\) => \{[\s\S]*?getTechPerkValue\(c, "A"\)/,
+  "legacy global accuracy must not stack every gunner's personal bonuses",
+);
+assert.match(
+  playerDamageSource,
+  /export function computeBayAccuracyModifier[\s\S]*?getTechPerkValue\(gunnerInBay, "A"\)/,
+  "per-bay accuracy remains local to that bay's gunner",
+);
+assert.ok(
+  Math.abs(0.5 + 9 * 0.02 + EXPECTED_FULL_PATH_TOTALS.pilot.B - 0.8) < Number.EPSILON,
+  "a level-9 pilot with the complete retreat path reaches 80%, not guaranteed retreat",
 );
 
 // --- getPendingCrewPerkChoice: derivation from level + existing picks ---

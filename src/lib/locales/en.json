@@ -4023,86 +4023,86 @@
     "tech_tree": {
         "pilot": {
             "3": {
-                "A": { "name": "Evasion Master", "desc": "+4% ship evasion while you're in the cockpit" },
-                "B": { "name": "Retreat Master", "desc": "+15% chance of a successful combat retreat" }
+                "A": { "name": "Evasion Master", "desc": "+3% ship evasion while you're in the cockpit" },
+                "B": { "name": "Retreat Master", "desc": "+3% chance of a successful combat retreat" }
             },
             "6": {
-                "A": { "name": "Evasion Master", "desc": "+8% ship evasion while you're in the cockpit" },
-                "B": { "name": "Retreat Master", "desc": "+30% chance of a successful combat retreat" }
+                "A": { "name": "Evasion Master", "desc": "+4% ship evasion while you're in the cockpit" },
+                "B": { "name": "Retreat Master", "desc": "+4% chance of a successful combat retreat" }
             },
             "9": {
-                "A": { "name": "Evasion Master", "desc": "+12% ship evasion while you're in the cockpit" },
-                "B": { "name": "Retreat Master", "desc": "Guaranteed combat retreat" }
+                "A": { "name": "Evasion Master", "desc": "+5% ship evasion while you're in the cockpit" },
+                "B": { "name": "Retreat Master", "desc": "+5% chance of a successful combat retreat" }
             }
         },
         "engineer": {
             "3": {
-                "A": { "name": "Virtuoso Mechanic", "desc": "+8% repair and reactor overclock efficiency" },
+                "A": { "name": "Virtuoso Mechanic", "desc": "+4% repair and reactor overclock efficiency" },
                 "B": { "name": "Reactor Specialist", "desc": "+1 power to every reactor on the ship" }
             },
             "6": {
-                "A": { "name": "Virtuoso Mechanic", "desc": "+12% repair and reactor overclock efficiency" },
-                "B": { "name": "Reactor Specialist", "desc": "+2 power to every reactor on the ship" }
+                "A": { "name": "Virtuoso Mechanic", "desc": "+6% repair and reactor overclock efficiency" },
+                "B": { "name": "Reactor Specialist", "desc": "+1 power to every reactor on the ship" }
             },
             "9": {
-                "A": { "name": "Virtuoso Mechanic", "desc": "+18% repair and reactor overclock efficiency" },
-                "B": { "name": "Reactor Specialist", "desc": "+3 power to every reactor on the ship" }
+                "A": { "name": "Virtuoso Mechanic", "desc": "+8% repair and reactor overclock efficiency" },
+                "B": { "name": "Reactor Specialist", "desc": "+1 power to every reactor on the ship" }
             }
         },
         "medic": {
             "3": {
-                "A": { "name": "Field Surgeon", "desc": "+8% healing effectiveness" },
+                "A": { "name": "Field Surgeon", "desc": "+4% healing effectiveness" },
                 "B": { "name": "Biochemist", "desc": "+1 HP passive regeneration per turn" }
             },
             "6": {
-                "A": { "name": "Field Surgeon", "desc": "+12% healing effectiveness" },
-                "B": { "name": "Biochemist", "desc": "+2 HP passive regeneration per turn" }
+                "A": { "name": "Field Surgeon", "desc": "+6% healing effectiveness" },
+                "B": { "name": "Biochemist", "desc": "+1 HP passive regeneration per turn" }
             },
             "9": {
-                "A": { "name": "Field Surgeon", "desc": "+18% healing effectiveness" },
-                "B": { "name": "Biochemist", "desc": "+3 HP passive regeneration per turn" }
+                "A": { "name": "Field Surgeon", "desc": "+8% healing effectiveness" },
+                "B": { "name": "Biochemist", "desc": "+1 HP passive regeneration per turn" }
             }
         },
         "scout": {
             "3": {
-                "A": { "name": "Seasoned Pathfinder", "desc": "+10% scouting find yield" },
-                "B": { "name": "Cold-Blooded", "desc": "-10% chance of a bad scouting outcome" }
+                "A": { "name": "Seasoned Pathfinder", "desc": "+7% scouting find yield" },
+                "B": { "name": "Cold-Blooded", "desc": "-7% chance of a bad scouting outcome" }
             },
             "6": {
-                "A": { "name": "Seasoned Pathfinder", "desc": "+18% scouting find yield" },
-                "B": { "name": "Cold-Blooded", "desc": "-18% chance of a bad scouting outcome" }
+                "A": { "name": "Seasoned Pathfinder", "desc": "+9% scouting find yield" },
+                "B": { "name": "Cold-Blooded", "desc": "-9% chance of a bad scouting outcome" }
             },
             "9": {
-                "A": { "name": "Seasoned Pathfinder", "desc": "+28% scouting find yield" },
-                "B": { "name": "Cold-Blooded", "desc": "-28% chance of a bad scouting outcome" }
+                "A": { "name": "Seasoned Pathfinder", "desc": "+12% scouting find yield" },
+                "B": { "name": "Cold-Blooded", "desc": "-12% chance of a bad scouting outcome" }
             }
         },
         "scientist": {
             "3": {
-                "A": { "name": "Theorist", "desc": "+10% personal research contribution" },
-                "B": { "name": "Xenoarchaeologist", "desc": "+5% artifact effect strength" }
+                "A": { "name": "Theorist", "desc": "+5% personal research contribution" },
+                "B": { "name": "Xenoarchaeologist", "desc": "+3% artifact effect strength" }
             },
             "6": {
-                "A": { "name": "Theorist", "desc": "+15% personal research contribution" },
-                "B": { "name": "Xenoarchaeologist", "desc": "+8% artifact effect strength" }
+                "A": { "name": "Theorist", "desc": "+6% personal research contribution" },
+                "B": { "name": "Xenoarchaeologist", "desc": "+4% artifact effect strength" }
             },
             "9": {
-                "A": { "name": "Theorist", "desc": "+20% personal research contribution" },
-                "B": { "name": "Xenoarchaeologist", "desc": "+12% artifact effect strength" }
+                "A": { "name": "Theorist", "desc": "+9% personal research contribution" },
+                "B": { "name": "Xenoarchaeologist", "desc": "+5% artifact effect strength" }
             }
         },
         "gunner": {
             "3": {
+                "A": { "name": "Sniper", "desc": "+3% accuracy (in the weapon bay)" },
+                "B": { "name": "Destroyer", "desc": "+3% critical hit chance" }
+            },
+            "6": {
                 "A": { "name": "Sniper", "desc": "+5% accuracy (in the weapon bay)" },
                 "B": { "name": "Destroyer", "desc": "+5% critical hit chance" }
             },
-            "6": {
-                "A": { "name": "Sniper", "desc": "+9% accuracy (in the weapon bay)" },
-                "B": { "name": "Destroyer", "desc": "+9% critical hit chance" }
-            },
             "9": {
-                "A": { "name": "Sniper", "desc": "+14% accuracy (in the weapon bay)" },
-                "B": { "name": "Destroyer", "desc": "+14% critical hit chance" }
+                "A": { "name": "Sniper", "desc": "+6% accuracy (in the weapon bay)" },
+                "B": { "name": "Destroyer", "desc": "+6% critical hit chance" }
             }
         }
     },

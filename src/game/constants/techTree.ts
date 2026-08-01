@@ -40,94 +40,93 @@ export const getTechPerkDescKey = (
 export const TECH_TREE: Record<Profession, TechTreeForProfession> = {
     pilot: {
         3: {
-            A: { value: 0.04, icon: "🌀" },
-            B: { value: 0.15, icon: "💨" },
+            A: { value: 0.03, icon: "🌀" },
+            B: { value: 0.03, icon: "💨" },
         },
         6: {
-            A: { value: 0.08, icon: "🌀" },
-            B: { value: 0.3, icon: "💨" },
+            A: { value: 0.04, icon: "🌀" },
+            B: { value: 0.04, icon: "💨" },
         },
         9: {
-            A: { value: 0.12, icon: "🌀" },
-            B: { value: 1, icon: "💨" },
+            A: { value: 0.05, icon: "🌀" },
+            B: { value: 0.05, icon: "💨" },
         },
     },
     engineer: {
         3: {
-            A: { value: 0.08, icon: "🔧" },
+            A: { value: 0.04, icon: "🔧" },
             B: { value: 1, icon: "⚡" },
         },
         6: {
-            A: { value: 0.12, icon: "🔧" },
-            B: { value: 2, icon: "⚡" },
+            A: { value: 0.06, icon: "🔧" },
+            B: { value: 1, icon: "⚡" },
         },
         9: {
-            A: { value: 0.18, icon: "🔧" },
-            B: { value: 3, icon: "⚡" },
+            A: { value: 0.08, icon: "🔧" },
+            B: { value: 1, icon: "⚡" },
         },
     },
     medic: {
         3: {
-            A: { value: 0.08, icon: "💉" },
+            A: { value: 0.04, icon: "💉" },
             B: { value: 1, icon: "🧬" },
         },
         6: {
-            A: { value: 0.12, icon: "💉" },
-            B: { value: 2, icon: "🧬" },
+            A: { value: 0.06, icon: "💉" },
+            B: { value: 1, icon: "🧬" },
         },
         9: {
-            A: { value: 0.18, icon: "💉" },
-            B: { value: 3, icon: "🧬" },
+            A: { value: 0.08, icon: "💉" },
+            B: { value: 1, icon: "🧬" },
         },
     },
     scout: {
         3: {
-            A: { value: 0.1, icon: "🧭" },
-            B: { value: 0.1, icon: "🛡️" },
+            A: { value: 0.07, icon: "🧭" },
+            B: { value: 0.07, icon: "🛡️" },
         },
         6: {
-            A: { value: 0.18, icon: "🧭" },
-            B: { value: 0.18, icon: "🛡️" },
+            A: { value: 0.09, icon: "🧭" },
+            B: { value: 0.09, icon: "🛡️" },
         },
         9: {
-            A: { value: 0.28, icon: "🧭" },
-            B: { value: 0.28, icon: "🛡️" },
+            A: { value: 0.12, icon: "🧭" },
+            B: { value: 0.12, icon: "🛡️" },
         },
     },
     scientist: {
         3: {
-            A: { value: 0.1, icon: "🧠" },
-            B: { value: 0.05, icon: "🏺" },
+            A: { value: 0.05, icon: "🧠" },
+            B: { value: 0.03, icon: "🏺" },
         },
         6: {
-            A: { value: 0.15, icon: "🧠" },
-            B: { value: 0.08, icon: "🏺" },
+            A: { value: 0.06, icon: "🧠" },
+            B: { value: 0.04, icon: "🏺" },
         },
         9: {
-            A: { value: 0.2, icon: "🧠" },
-            B: { value: 0.12, icon: "🏺" },
+            A: { value: 0.09, icon: "🧠" },
+            B: { value: 0.05, icon: "🏺" },
         },
     },
     gunner: {
         3: {
+            A: { value: 0.03, icon: "🎯" },
+            B: { value: 0.03, icon: "💥" },
+        },
+        6: {
             A: { value: 0.05, icon: "🎯" },
             B: { value: 0.05, icon: "💥" },
         },
-        6: {
-            A: { value: 0.09, icon: "🎯" },
-            B: { value: 0.09, icon: "💥" },
-        },
         9: {
-            A: { value: 0.14, icon: "🎯" },
-            B: { value: 0.14, icon: "💥" },
+            A: { value: 0.06, icon: "🎯" },
+            B: { value: 0.06, icon: "💥" },
         },
     },
 };
 
 /**
- * Эффективный бонус ветки для члена экипажа: максимум среди уже выбранных
- * тиров этой ветки (повторный выбор той же ветки на более высоком уровне
- * заменяет старое значение, а не складывается с ним).
+ * Эффективный бонус ветки для члена экипажа: сумма уже выбранных тиров этой
+ * ветки. Каждый выбор — отдельное улучшение, а не замена предыдущего.
  */
 export function getTechPerkValue(
     crewMember: Pick<CrewMember, "profession" | "techPerks">,
@@ -136,11 +135,11 @@ export function getTechPerkValue(
     const tree = TECH_TREE[crewMember.profession];
     if (!tree || !crewMember.techPerks) return 0;
 
-    let max = 0;
+    let total = 0;
     for (const tier of TECH_TREE_TIERS) {
         if (crewMember.techPerks[tier] === branch) {
-            max = Math.max(max, tree[tier][branch].value);
+            total += tree[tier][branch].value;
         }
     }
-    return max;
+    return total;
 }

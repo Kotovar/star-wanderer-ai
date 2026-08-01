@@ -18,7 +18,10 @@ import {
   COMBAT_DAMAGE_MODIFIERS,
   WEAPON_TYPES,
 } from "@/game/constants";
-import { computeAccuracyModifier } from "@/game/slices/combat/helpers/playerDamage";
+import {
+  computeAccuracyModifier,
+  getPlayerCritChance,
+} from "@/game/slices/combat/helpers/playerDamage";
 import type { GameState, WeaponType } from "@/game/types";
 import { getTechBonusSum } from "@/game/research";
 import { getActiveModules } from "../modules";
@@ -267,27 +270,6 @@ export function ShipStats() {
 
   const { totalCritChance, totalCritDamage } = useMemo(() => {
     const gs = useGameStore.getState();
-    let critChance = BASE_CRIT_CHANCE;
-    const criticalMatrix = findActiveArtifact(
-      artifacts,
-      ARTIFACT_TYPES.CRITICAL_MATRIX,
-    );
-    if (criticalMatrix) {
-      critChance += getArtifactEffectValue(criticalMatrix, gs);
-    }
-    const weaponBayIds = new Set(
-      ship.modules
-        .filter((m) => m.type === "weaponbay")
-        .map((m) => m.id),
-    );
-    crew.forEach((c) => {
-      if (c.profession === "gunner" && weaponBayIds.has(c.moduleId)) {
-        c.traits?.forEach((trait) => {
-          critChance += trait.effect?.critBonus ?? 0;
-        });
-        critChance += getAugmentationBonus(c, "critBonus");
-      }
-    });
     let critDmg = BASE_CRIT_MULTIPLIER;
     const overloadMatrix = findActiveArtifact(
       artifacts,
@@ -296,7 +278,10 @@ export function ShipStats() {
     if (overloadMatrix) {
       critDmg += getArtifactEffectValue(overloadMatrix, gs);
     }
-    return { totalCritChance: critChance, totalCritDamage: critDmg };
+    return {
+      totalCritChance: getPlayerCritChance(gs),
+      totalCritDamage: critDmg,
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ship, crew, artifacts, research]);
 

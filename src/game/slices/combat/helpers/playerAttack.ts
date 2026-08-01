@@ -13,6 +13,7 @@ import { ARTIFACT_TYPES, WEAPON_TYPES } from "@/game/constants";
 import { isModuleActive } from "@/game/modules/utils";
 import {
   getWeaponAccuracy,
+  getPlayerCritChance,
   calculateFinalDamagePerWeapon,
   computeAccuracyModifier,
   computeBayAccuracyModifier,
@@ -28,7 +29,7 @@ import {
 import { handleVictory } from "./playerVictory";
 import { handleEnemyCounterAttack } from "./enemyCounterAttack";
 import { applyAlienPresencePenalty } from "./alienPresence";
-import { BASE_CRIT_CHANCE, BASE_CRIT_MULTIPLIER, DRONE_MAX_STACKS, DRONE_STACK_BONUS } from "@/game/constants";
+import { BASE_CRIT_MULTIPLIER, DRONE_MAX_STACKS, DRONE_STACK_BONUS } from "@/game/constants";
 import {
   checkBossEvasionBoost,
   checkBossModuleDodge,
@@ -52,7 +53,6 @@ import type {
   CombatTurnTimeline,
 } from "../../../types/combatCinematics";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
-import { getTechPerkValue } from "@/game/constants/techTree";
 import type { CrewMember } from "@/game/types";
 
 // Призматическая линза работает только из оружейной палубы с лазером.
@@ -438,17 +438,13 @@ function resolveTarget(
  * Logs bonuses only when a crit actually occurs.
  */
 function rollCrit(state: GameState, get: () => GameStore): CritResult {
-  let critChance = BASE_CRIT_CHANCE;
+  const critChance = getPlayerCritChance(state);
   let critMultiplier = BASE_CRIT_MULTIPLIER;
 
   const criticalMatrix = findActiveArtifact(
     state.artifacts,
     ARTIFACT_TYPES.CRITICAL_MATRIX,
   );
-  if (criticalMatrix) {
-    critChance += getArtifactEffectValue(criticalMatrix, state);
-  }
-
   const overloadMatrix = findActiveArtifact(
     state.artifacts,
     ARTIFACT_TYPES.OVERLOAD_MATRIX,
@@ -457,32 +453,6 @@ function rollCrit(state: GameState, get: () => GameStore): CritResult {
     critMultiplier += getArtifactEffectValue(overloadMatrix, state);
   }
 
-  // critBonus от трейта/аугментации: только один стрелок в оружейном отсеке
-  // (как и бонус за уровень стрелка к точности) — иначе бонус утраивался
-  // с каждым дополнительным стрелком и обесценивал артефакт Critical Matrix
-  const weaponBayIds = new Set(
-    state.ship.modules
-      .filter((m) => m.type === "weaponbay")
-      .map((m) => m.id),
-  );
-  const gunnerInBay = state.crew.find(
-    (c) => c.profession === "gunner" && weaponBayIds.has(c.moduleId),
-  );
-  if (gunnerInBay) {
-    gunnerInBay.traits?.forEach((trait) => {
-      if (trait.effect?.critBonus) {
-        critChance += trait.effect.critBonus;
-      }
-    });
-    // Бонус аугментации targeting_eye (+5% крит для стрелка)
-    critChance += getAugmentationBonus(gunnerInBay, "critBonus");
-    // Ветка "Разрушитель" — как и остальные бонусы этого блока,
-    // намеренно только для одного стрелка (см. комментарий выше о
-    // тройном бонусе при нескольких стрелках)
-    critChance += getTechPerkValue(gunnerInBay, "B");
-  }
-
-  critChance = Math.min(1, critChance);
   const isCrit = Math.random() < critChance;
 
   if (isCrit) {
@@ -940,22 +910,29 @@ function pushVolleyWithRetargets(
   let targetId = firstTargetId;
   let targetHealth = firstTargetHealth;
   let remaining = projectiles;
+  let currentDroneStacks = droneStacks;
 
   while (remaining.length > 0) {
     const { onTarget, overkill } = splitVolleyAtHullDestruction(remaining, targetHealth);
     // A wreck cannot absorb a shot, so nothing would advance the loop.
     if (onTarget.length === 0) return destroyedModuleIds;
 
-    timeline.push(...buildVolleyEvents({
+    const events = buildVolleyEvents({
       from: "player",
       to: "enemy",
       targetModuleId: targetId,
       sourceModuleId,
       volleyId,
-      droneStacks,
+      droneStacks: currentDroneStacks,
       projectiles: onTarget,
       isCrit,
-    }));
+    });
+    timeline.push(...events);
+    for (const event of events) {
+      if (event.weapon === "drones" && event.droneStacks !== undefined) {
+        currentDroneStacks = event.droneStacks;
+      }
+    }
 
     const landedHullDamage = onTarget.reduce(
       (total, projectile) => total + projectile.hullDamage,
@@ -1298,6 +1275,7 @@ export function executePlayerAttackWithBayTargets(
           targetModuleId: fallbackTarget.id,
           sourceModuleId: bay.id,
           volleyId: bay.id,
+          droneStacks: combatAtStart.droneStacks,
           projectiles: createMissProjectileResolutions(bayWeapons),
           isCrit: false,
         }));
@@ -1331,12 +1309,12 @@ export function executePlayerAttackWithBayTargets(
     .reduce((s, t) => s + totalDamageData[t], 0);
   const fullMultiplier = rawBaseTotal > 0 ? finalDamagePerWeapon / rawBaseTotal : 1;
   let remainingShields = combatAtStart.enemy.shields;
-  const droneStacks = combatAtStart.droneStacks ?? 0;
   let anyHit = false;
 
   for (const bay of activeBays) {
     const combatNow = get().currentCombat;
     if (!combatNow) break;
+    const droneStacksBeforeBay = combatNow.droneStacks ?? 0;
     const aliveModules = combatNow.enemy.modules.filter((m) => m.health > 0);
     if (aliveModules.length === 0) break;
 
@@ -1365,6 +1343,7 @@ export function executePlayerAttackWithBayTargets(
         targetModuleId: tgtMod.id,
         sourceModuleId: bay.id,
         volleyId: bay.id,
+        droneStacks: droneStacksBeforeBay,
         projectiles: createMissProjectileResolutions(bayWeapons),
         isCrit: false,
       }));
@@ -1402,7 +1381,7 @@ export function executePlayerAttackWithBayTargets(
       bayDamageMultiplier,
       remainingShields,
       bayAccuracyModifier,
-      droneStacks,
+      droneStacksBeforeBay,
       laserDamageBonus,
       bayPerTypeDamage,
     );
@@ -1416,6 +1395,7 @@ export function executePlayerAttackWithBayTargets(
         targetModuleId: tgtMod.id,
         sourceModuleId: bay.id,
         volleyId: bay.id,
+        droneStacks: droneStacksBeforeBay,
         projectiles: damage.projectiles,
         isCrit: false,
       }));
@@ -1453,10 +1433,6 @@ export function executePlayerAttackWithBayTargets(
       finalModuleDamage,
     );
     const bayIsCrit = bayCrit.isCrit && bayDamageMultiplier > 1;
-    const bayDroneStacks = Math.min(
-      DRONE_MAX_STACKS,
-      (get().currentCombat?.droneStacks ?? 0) + damage.droneHitCount,
-    );
     let destroyedModuleIds: number[] = [];
     if (destroysEnemyVessel) {
       timeline.push(...buildVolleyEvents({
@@ -1465,7 +1441,7 @@ export function executePlayerAttackWithBayTargets(
         targetModuleId: tgtMod.id,
         sourceModuleId: bay.id,
         volleyId: bay.id,
-        droneStacks: bayDroneStacks,
+        droneStacks: droneStacksBeforeBay,
         targetHullBeforeVolley: targetHealthBefore,
         projectiles: volley,
         isCrit: bayIsCrit,
@@ -1483,7 +1459,7 @@ export function executePlayerAttackWithBayTargets(
         bayIsCrit,
         bay.id,
         bay.id,
-        bayDroneStacks,
+        droneStacksBeforeBay,
       );
     }
     if (bayCrit.isCrit && bayDamageMultiplier > 1) {

@@ -9,6 +9,7 @@ import type {
 } from "../../../types/combatCinematics";
 import type { GameState } from "../../../types/game";
 import type { WeaponCounts, WeaponType } from "../../../types/modules";
+import { DRONE_MAX_STACKS } from "../../../constants/combat.ts";
 import { applyCombatCinematicEvent } from "./combatCinematicPlayback.ts";
 
 /**
@@ -37,7 +38,7 @@ export interface BuildVolleyEventsInput {
   sourceModuleId?: number;
   /** Палуба-источник: снаряды одного залпа бьют очередью, между залпами пауза. */
   volleyId?: number;
-  /** Стаки дронов на момент залпа — рой рисуется гуще. */
+  /** Стаки дронов перед залпом — рой рисуется гуще после каждого попадания. */
   droneStacks?: number;
   targetHullBeforeVolley?: number;
 }
@@ -381,6 +382,7 @@ export function buildVolleyEvents(
       input.projectiles,
       input.targetHullBeforeVolley,
     );
+  let droneStacks = input.droneStacks;
 
   return projectiles.map((projectile) => {
     requireNonNegativeNumber(projectile.shieldDamage, "projectile shieldDamage");
@@ -392,6 +394,9 @@ export function buildVolleyEvents(
       projectile.outcome === "blocked";
     if (!isNonDamageOutcome && projectile.shieldDamage + projectile.hullDamage <= 0) {
       throw new RangeError("a projectile hit must have shield or hull damage");
+    }
+    if (projectile.weapon === "drones" && droneStacks !== undefined && !isNonDamageOutcome) {
+      droneStacks = Math.min(DRONE_MAX_STACKS, droneStacks + 1);
     }
 
     const event: CombatProjectileEvent = {
@@ -407,8 +412,8 @@ export function buildVolleyEvents(
         ? {}
         : { sourceModuleId: input.sourceModuleId }),
       ...(input.volleyId === undefined ? {} : { volleyId: input.volleyId }),
-      ...(projectile.weapon === "drones" && input.droneStacks !== undefined
-        ? { droneStacks: input.droneStacks }
+      ...(projectile.weapon === "drones" && droneStacks !== undefined
+        ? { droneStacks }
         : {}),
     };
     if (!isNonDamageOutcome && projectile.outcome !== "piercing") {

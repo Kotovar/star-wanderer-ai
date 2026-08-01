@@ -121,6 +121,10 @@ const playerAttackSource = await readFile(
   new URL("../src/game/slices/combat/helpers/playerAttack.ts", import.meta.url),
   "utf8",
 );
+const moduleListSource = await readFile(
+  new URL("../src/game/components/ModuleList.tsx", import.meta.url),
+  "utf8",
+);
 const [eventPanelsSource, cinematicUiStoreSource, pageSource] = await Promise.all([
   readFile(new URL("../src/game/components/EventPanels.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/game/components/combatCinematicUiStore.ts", import.meta.url), "utf8"),
@@ -343,6 +347,11 @@ for (const marker of [
     `the Binary Wyrm keeps its paired-serpent detail: ${marker}`,
   );
 }
+assert.match(
+  moduleListSource,
+  /className="max-w-md max-h-\[calc\(100dvh-2rem\)\] overflow-y-auto"/,
+  "a tall weapon bay detail dialog scrolls inside the desktop viewport",
+);
 assert.match(
   stageSource,
   /playEventSounds\(item\.event, item\.index, active\[index\]\.progress\);/,
@@ -1915,6 +1924,44 @@ function projectileEvents(projectiles, isCrit = false) {
       ["quantum_torpedo", "hull", 0, 55],
     ],
     "a shield-only shot never inherits hull damage from a quantum torpedo",
+  );
+}
+
+{
+  const events = buildVolleyEvents({
+    from: "player",
+    to: "enemy",
+    targetModuleId: 9,
+    droneStacks: 3,
+    isCrit: false,
+    projectiles: [
+      { weapon: "drones", outcome: "hull", shieldDamage: 0, hullDamage: 5 },
+      { weapon: "drones", outcome: "miss", shieldDamage: 0, hullDamage: 0 },
+      { weapon: "drones", outcome: "shield", shieldDamage: 5, hullDamage: 0 },
+    ],
+  });
+
+  assert.deepEqual(
+    events.map((event) => event.droneStacks),
+    [4, 4, 5],
+    "each drone event keeps the swarm at its current or newly grown stack",
+  );
+
+  const saturatedEvents = buildVolleyEvents({
+    from: "player",
+    to: "enemy",
+    targetModuleId: 9,
+    droneStacks: 9,
+    isCrit: false,
+    projectiles: [
+      { weapon: "drones", outcome: "hull", shieldDamage: 0, hullDamage: 5 },
+      { weapon: "drones", outcome: "hull", shieldDamage: 0, hullDamage: 5 },
+    ],
+  });
+  assert.deepEqual(
+    saturatedEvents.map((event) => event.droneStacks),
+    [10, 10],
+    "the drone swarm stops growing at its maximum stack",
   );
 }
 
