@@ -224,6 +224,11 @@ assert.match(
 );
 assert.match(
   stageSource,
+  /if \(isSelectable \|\| isSelected\) \{[\s\S]*?targetModule\.name[\s\S]*?const moduleLabel = [\s\S]*?targetModule\.health[\s\S]*?targetModule\.maxHealth[\s\S]*?fillText\(moduleLabel,/,
+  "selectable combat reticles identify their module and current integrity",
+);
+assert.match(
+  stageSource,
   /selectableModuleIds: readonly number\[\];/,
   "the stage knows which live enemy modules can be selected directly",
 );

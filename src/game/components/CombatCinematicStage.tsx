@@ -531,7 +531,8 @@ function drawSelectedModuleTargets(
     ...selectableModuleIds,
     ...lockedModuleIds,
   ])) {
-    if (!vessel.modules.some((currentModule) => currentModule.id === moduleId)) continue;
+    const targetModule = vessel.modules.find((currentModule) => currentModule.id === moduleId);
+    if (!targetModule) continue;
     const point = getModulePoint(vessel, "enemy", moduleId, width, height);
     const isLocked = lockedModuleIds.has(moduleId);
     const isSelected = selectedModuleIds.has(moduleId);
@@ -564,6 +565,25 @@ function drawSelectedModuleTargets(
       ctx.stroke();
     }
     ctx.restore();
+
+    if (isSelectable || isSelected) {
+      const moduleName = targetModule.name && targetModule.name.length > 10
+        ? `${targetModule.name.slice(0, 9)}…`
+        : targetModule.name ?? `#${moduleId}`;
+      const moduleLabel = `${moduleName} ${targetModule.health}/${targetModule.maxHealth}`;
+      const labelY = moduleId % 2 === 0 ? -21 : 27;
+      ctx.save();
+      ctx.font = "700 7px Orbitron, monospace";
+      ctx.textAlign = "center";
+      const labelWidth = Math.min(74, ctx.measureText(moduleLabel).width + 8);
+      ctx.fillStyle = "rgba(3, 12, 23, 0.84)";
+      ctx.fillRect(-labelWidth / 2, labelY - 8, labelWidth, 11);
+      ctx.fillStyle = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 5;
+      ctx.fillText(moduleLabel, 0, labelY);
+      ctx.restore();
+    }
   }
 }
 
