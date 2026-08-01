@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
+import { SFX_PRESETS } from "../audio/source/sfx/presets.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const registryUrl = pathToFileURL(resolve(root, "src/sounds/utils.ts")).href;
@@ -126,6 +127,14 @@ if (!SOUND_REGISTRY || !MUSIC_REGISTRY || !DEFAULT_AUDIO_VOLUMES) {
 for (const id of requiredVariantIds) {
   const urls = SOUND_REGISTRY[id]?.urls;
   if (!urls || urls.length !== 3) fail(`${id} must expose exactly three variants`);
+}
+
+const laserPresets = SFX_PRESETS.combat_laser?.presets;
+if (!laserPresets || laserPresets.length !== 3) {
+  fail("combat_laser must keep three generated variants");
+}
+if (laserPresets.some(({ p_base_freq, p_freq_ramp }) => p_base_freq >= 0.4 || p_freq_ramp > 0)) {
+  fail("combat_laser must be a lower non-rising discharge, not a chirp");
 }
 
 for (const [id, sound] of Object.entries(SOUND_REGISTRY)) {

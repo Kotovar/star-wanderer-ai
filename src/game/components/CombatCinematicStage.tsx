@@ -1014,6 +1014,7 @@ function drawCombatLaser(
   progress: number,
 ): void {
   const flicker = 1 + Math.sin(sceneElapsed / 24) * 0.12;
+  const muzzleCharge = 2 + Math.sin(progress * Math.PI) * 3;
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
   ctx.lineCap = "round";
@@ -1039,7 +1040,18 @@ function drawCombatLaser(
   ctx.stroke();
   ctx.restore();
   drawOrb(ctx, to, color, 3 + Math.sin(progress * Math.PI) * 2);
-  drawOrb(ctx, from, color, 2.5 + Math.sin(progress * Math.PI) * 1.5);
+  drawOrb(ctx, from, color, muzzleCharge);
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = 0.68;
+  ctx.strokeStyle = "#f6ffff";
+  ctx.lineWidth = 1;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.arc(from.x, from.y, muzzleCharge + 2, 0, TAU);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawKineticTracer(
@@ -1049,6 +1061,7 @@ function drawKineticTracer(
   color: string,
 ): void {
   const angle = Math.atan2(point.y - from.y, point.x - from.x);
+  const mechanicalBurst = 2 + Math.sin(sceneElapsed / 12) * 0.7;
   ctx.save();
   ctx.translate(point.x, point.y);
   ctx.rotate(angle);
@@ -1066,6 +1079,12 @@ function drawKineticTracer(
   ctx.stroke();
   ctx.fillStyle = "#fff7df";
   ctx.fillRect(-1, -2, 8, 4);
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = 0.7;
+  ctx.fillStyle = "#fff7df";
+  ctx.fillRect(-7, -mechanicalBurst / 2, 3, mechanicalBurst);
+  ctx.restore();
   ctx.restore();
 }
 
@@ -1077,6 +1096,7 @@ function drawRocket(
   travel: number,
 ): void {
   const angle = Math.atan2(point.y - from.y, point.x - from.x);
+  const smokeAlpha = Math.max(0, 0.34 - travel * 0.14);
   ctx.save();
   ctx.translate(point.x, point.y);
   ctx.rotate(angle);
@@ -1102,6 +1122,15 @@ function drawRocket(
   ctx.lineTo(-8, 3);
   ctx.closePath();
   ctx.fill();
+  ctx.save();
+  ctx.globalAlpha = smokeAlpha;
+  ctx.fillStyle = "#9e9a91";
+  for (const offset of [20, 28, 36]) {
+    ctx.beginPath();
+    ctx.arc(-offset, Math.sin(travel * 18 + offset) * 2, 2.5, 0, TAU);
+    ctx.fill();
+  }
+  ctx.restore();
   ctx.restore();
 }
 
@@ -1112,6 +1141,7 @@ function drawPlasmaBolt(
   progress: number,
 ): void {
   const pulse = 6 + Math.sin(progress * 18) * 1.5;
+  const coronaRotation = progress * 9;
   drawOrb(ctx, point, color, pulse);
   ctx.save();
   ctx.strokeStyle = "#ffe3b0";
@@ -1119,9 +1149,15 @@ function drawPlasmaBolt(
   ctx.lineWidth = 1.4;
   ctx.shadowColor = color;
   ctx.shadowBlur = 12;
-  ctx.beginPath();
-  ctx.arc(point.x, point.y, pulse + 5, progress * 7, progress * 7 + Math.PI * 1.55);
-  ctx.stroke();
+  for (const rotation of [coronaRotation, -coronaRotation]) {
+    ctx.save();
+    ctx.translate(point.x, point.y);
+    ctx.rotate(rotation);
+    ctx.beginPath();
+    ctx.arc(0, 0, pulse + 5, 0, Math.PI * 1.55);
+    ctx.stroke();
+    ctx.restore();
+  }
   ctx.restore();
 }
 
@@ -1137,7 +1173,7 @@ function drawDroneSwarm(
   stacks: number,
 ): void {
   const growth = clamp(stacks / DRONE_MAX_STACKS);
-  const count = 3 + Math.round(growth * 5);
+  const droneCount = Math.max(2, Math.min(7, stacks + 2));
   const radiusX = 10 + growth * 9;
   const radiusY = 7 + growth * 6;
 
@@ -1150,8 +1186,8 @@ function drawDroneSwarm(
   ctx.stroke();
   ctx.restore();
 
-  for (let index = 0; index < count; index += 1) {
-    const angle = progress * 12 + index * (TAU / count);
+  for (let index = 0; index < droneCount; index += 1) {
+    const angle = progress * 12 + index * (TAU / droneCount);
     const drone = {
       x: point.x + Math.cos(angle) * radiusX,
       y: point.y + Math.sin(angle) * radiusY,
@@ -1185,7 +1221,18 @@ function drawAntimatterOrb(
   color: string,
   progress: number,
 ): void {
+  const distortionRadius = 16 + Math.sin(progress * Math.PI) * 5;
   drawOrb(ctx, point, color, 5);
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = 0.38;
+  ctx.strokeStyle = "#f8d8ff";
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 4]);
+  ctx.beginPath();
+  ctx.arc(point.x, point.y, distortionRadius, 0, TAU);
+  ctx.stroke();
+  ctx.restore();
   ctx.save();
   ctx.translate(point.x, point.y);
   ctx.strokeStyle = "#f8d8ff";
@@ -1210,6 +1257,7 @@ function drawPhaseTorpedo(
   direction: number,
   progress: number,
 ): void {
+  const phaseOffset = Math.floor(progress * 9) % 2 === 0 ? -4 : 4;
   ctx.save();
   ctx.strokeStyle = color;
   ctx.shadowColor = color;
@@ -1217,7 +1265,10 @@ function drawPhaseTorpedo(
   for (let index = 2; index >= 0; index -= 1) {
     const size = 11 - index * 2;
     ctx.save();
-    ctx.translate(point.x - direction * index * 14, point.y + (index % 2 === 0 ? -3 : 3));
+    ctx.translate(
+      point.x - direction * index * 14,
+      point.y + (index === 0 ? 0 : phaseOffset * (index % 2 === 0 ? 1 : -1)),
+    );
     ctx.rotate(progress * 7 + index * 0.28);
     ctx.globalAlpha = 1 - index * 0.28;
     ctx.fillStyle = index === 0 ? "#e5feff" : color;
@@ -1237,6 +1288,7 @@ function drawIonArc(
   travel: number,
   color: string,
 ): void {
+  const forkOffset = Math.sin((travel + 0.31) * 23) * 11;
   ctx.save();
   ctx.strokeStyle = color;
   ctx.lineWidth = 2.5;
@@ -1260,6 +1312,34 @@ function drawIonArc(
   }
   ctx.stroke();
   ctx.restore();
+
+  if (travel > 0.6) {
+    const forkStart = getProjectilePathPoint(
+      source,
+      shieldImpact,
+      destination,
+      outcome,
+      travel * 0.78,
+    );
+    const forkEnd = getProjectilePathPoint(
+      source,
+      shieldImpact,
+      destination,
+      outcome,
+      travel,
+    );
+    ctx.save();
+    ctx.globalAlpha = 0.38;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.1;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(forkStart.x, forkStart.y);
+    ctx.lineTo(forkEnd.x, forkEnd.y + forkOffset);
+    ctx.stroke();
+    ctx.restore();
+  }
 }
 
 function drawEnemyBolt(

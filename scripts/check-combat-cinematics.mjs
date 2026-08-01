@@ -49,6 +49,12 @@ try {
     "CombatCinematicStage.tsx must provide the persistent, non-modal combat canvas",
   );
 }
+for (const marker of [
+  "mechanicalBurst", "muzzleCharge", "smokeAlpha", "coronaRotation",
+  "droneCount", "distortionRadius", "phaseOffset", "forkOffset",
+]) {
+  assert.match(stageSource, new RegExp(marker), "missing projectile identity: " + marker);
+}
 const combatPanelSource = await readFile(
   new URL("../src/game/components/CombatPanel.tsx", import.meta.url),
   "utf8",
