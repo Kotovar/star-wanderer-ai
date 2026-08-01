@@ -4,9 +4,9 @@ export const Toaster = ({ ...props }: ToasterProps) => (
     <Sonner
         theme="dark"
         richColors
-        position="bottom-center"
+        position="top-center"
         offset={24}
-        mobileOffset={{ bottom: 88 }}
+        mobileOffset={{ top: 24 }}
         toastOptions={{
             style: {
                 boxShadow:
