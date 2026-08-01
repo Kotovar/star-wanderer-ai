@@ -164,6 +164,16 @@ assert.match(
 );
 assert.match(
   stageSource,
+  /event\.sourceModuleId === undefined\s*\?\s*shipCenter\(event\.from, width, height\)\s*:\s*getModulePoint\(/,
+  "an event without a source module keeps the ship-centre fallback",
+);
+assert.match(
+  stageSource,
+  /drawSelectedModuleTargets\(ctx, snapshot\.enemy, selectedModuleIds, active, width, height\);/,
+  "the target reticle receives active timeline events",
+);
+assert.match(
+  stageSource,
   /fillText\("MISS",/,
   "a real miss is labelled clearly instead of using an ambiguous symbol",
 );

@@ -493,23 +493,37 @@ function drawSelectedModuleTargets(
   ctx: CanvasRenderingContext2D,
   vessel: CombatCinematicSnapshot["enemy"],
   moduleIds: readonly number[],
+  active: readonly ActiveCinematicEvent[],
   width: number,
   height: number,
 ): void {
-  for (const moduleId of moduleIds) {
+  const lockedModuleIds = new Set<number>();
+  for (const { event } of active) {
+    if (
+      event.kind === "projectile"
+      && event.to === "enemy"
+      && event.targetModuleId !== undefined
+    ) lockedModuleIds.add(event.targetModuleId);
+  }
+
+  for (const moduleId of new Set([...moduleIds, ...lockedModuleIds])) {
     if (!vessel.modules.some((currentModule) => currentModule.id === moduleId)) continue;
     const point = getModulePoint(vessel, "enemy", moduleId, width, height);
-    const pulse = 0.5 + Math.sin(sceneElapsed / 320) * 0.5;
+    const isLocked = lockedModuleIds.has(moduleId);
+    const color = isLocked ? "#dffcff" : "#ffcb57";
+    const pulse = 0.5 + Math.sin(sceneElapsed / (isLocked ? 160 : 320)) * 0.5;
     ctx.save();
     ctx.translate(point.x, point.y);
-    ctx.strokeStyle = "#ffcb57";
-    ctx.lineWidth = 1.2;
-    ctx.shadowColor = "#ffcb57";
-    ctx.shadowBlur = 8 + pulse * 6;
-    ctx.globalAlpha = 0.65 + pulse * 0.35;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = isLocked ? 1.6 : 1.2;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = (isLocked ? 10 : 8) + pulse * (isLocked ? 8 : 6);
+    ctx.globalAlpha = (isLocked ? 0.8 : 0.65) + pulse * (isLocked ? 0.2 : 0.35);
     ctx.save();
-    ctx.rotate(sceneElapsed / 1400);
-    ctx.setLineDash([5, 6]);
+    if (!isLocked) {
+      ctx.rotate(sceneElapsed / 1400);
+      ctx.setLineDash([5, 6]);
+    }
     ctx.beginPath();
     ctx.arc(0, 0, 12, 0, TAU);
     ctx.stroke();
@@ -1349,7 +1363,15 @@ function drawProjectile(
   width: number,
   height: number,
 ): Point {
-  const source = shipCenter(event.from, width, height);
+  const source = event.sourceModuleId === undefined
+    ? shipCenter(event.from, width, height)
+    : getModulePoint(
+      snapshot[event.from],
+      event.from,
+      event.sourceModuleId,
+      width,
+      height,
+    );
   const targetCenter = shipCenter(event.to, width, height);
   const target = getModulePoint(
     snapshot[event.to],
@@ -2230,7 +2252,7 @@ function drawScene(
   ctx.translate(shake, -shake * 0.45);
   drawShip(ctx, snapshot.player, "player", width, height, elapsed);
   drawShip(ctx, snapshot.enemy, "enemy", width, height, elapsed);
-  drawSelectedModuleTargets(ctx, snapshot.enemy, selectedModuleIds, width, height);
+  drawSelectedModuleTargets(ctx, snapshot.enemy, selectedModuleIds, active, width, height);
   drawShipBars(ctx, snapshot.player, "player", width, height);
   drawShipBars(ctx, snapshot.enemy, "enemy", width, height);
   // Телеметрия — одна на кадр, по последнему выстрелу: панели наложенных
