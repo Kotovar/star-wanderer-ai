@@ -8,6 +8,7 @@ const DIRECT_PROJECTILE_IMPACT_PROGRESS = 0.62;
 const SHIELD_BREACH_PROGRESS = 0.68;
 const HULL_AFTER_SHIELD_BREACH_PROGRESS = 0.76;
 const ABILITY_DAMAGE_IMPACT_PROGRESS = 0.56;
+const PROJECTILE_DURATION_SCALE = 1.15;
 
 export function getCombatCinematicEventDuration(
   event: CombatCinematicEvent,
@@ -41,23 +42,26 @@ export function getCombatCinematicEventDuration(
  * столько же, сколько добивающий крит.
  */
 function getProjectileDuration(event: CombatProjectileEvent): number {
-  if (event.isCrit) return 1500;
+  if (event.isCrit) return scaleProjectileDuration(1500);
   switch (event.outcome) {
     case "miss":
     case "blocked":
-      return 700;
+      return scaleProjectileDuration(700);
     case "intercepted":
     case "absorbed":
-      return 800;
+      return scaleProjectileDuration(800);
     case "shield":
-      return 950;
+      return scaleProjectileDuration(950);
     case "shield_and_hull":
     case "piercing":
-      return 1200;
+      return scaleProjectileDuration(1200);
     default:
-      return 1050;
+      return scaleProjectileDuration(1050);
   }
 }
+
+const scaleProjectileDuration = (duration: number): number =>
+  Math.round(duration * PROJECTILE_DURATION_SCALE);
 
 /** Задержка между снарядами ОДНОЙ палубы — короткая очередь. */
 export const COMBAT_CINEMATIC_VOLLEY_STAGGER_MS = 150;

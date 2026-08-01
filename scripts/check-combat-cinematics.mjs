@@ -1645,8 +1645,8 @@ const snapshot = {
       hullDamage: 12,
       isCrit: false,
     }),
-    1050,
-    "a plain hull hit stays readable without holding the whole volley for 1.5s",
+    1208,
+    "a plain hull hit is slowed by fifteen percent without changing its place in the volley",
   );
   assert.equal(
     getCombatCinematicEventDuration({
@@ -1659,8 +1659,8 @@ const snapshot = {
       hullDamage: 12,
       isCrit: true,
     }),
-    1500,
-    "a critical hit keeps the full beat — it is the moment worth watching",
+    1725,
+    "a critical hit keeps the longer fifteen-percent beat — it is the moment worth watching",
   );
   assert.ok(
     getCombatCinematicEventDuration({

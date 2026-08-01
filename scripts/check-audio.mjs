@@ -6,6 +6,10 @@ import { SFX_PRESETS } from "../audio/source/sfx/presets.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const registryUrl = pathToFileURL(resolve(root, "src/sounds/utils.ts")).href;
+const combatLoopSource = readFileSync(
+  resolve(root, "audio/source/music/space-combat.mjs"),
+  "utf8",
+);
 const requiredVariantIds = [
   "combat_kinetic",
   "combat_laser",
@@ -126,6 +130,10 @@ if (!SOUND_REGISTRY || !MUSIC_REGISTRY || !DEFAULT_AUDIO_VOLUMES) {
 
 for (const id of ["exploration", "combat"]) {
   if (!MUSIC_REGISTRY[id]) fail(id + " must be registered as music");
+}
+
+if (/\bgatedNoise\b/.test(combatLoopSource)) {
+  fail("combat music must not mix gated random noise");
 }
 
 for (const id of requiredVariantIds) {
