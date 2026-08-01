@@ -549,6 +549,11 @@ assert.match(
   /onTargetSelect=\{handleEnemyModuleClick\}/,
   "canvas clicks reuse the same target-selection path as the DOM fallback",
 );
+assert.doesNotMatch(
+  combatPanelSource,
+  /const handleEnemyModuleClick[\s\S]*?setActiveBayId\(next\?\.id \?\? null\);/,
+  "choosing a target never auto-advances away from the active weapon bay",
+);
 assert.match(
   combatPanelSource,
   /selectableModuleIds=\{selectableModuleIds\}/,
