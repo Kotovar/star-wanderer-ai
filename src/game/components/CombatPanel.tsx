@@ -376,6 +376,15 @@ export function CombatPanel() {
     }
   };
 
+  const handleRetreat = () => {
+    if (isPlaybackActive) return;
+    const timeline = retreat();
+    if (timeline) {
+      setPlaybackCombat(createCombatPresentationSnapshot(presentedCombat));
+      startCombatPlayback(timeline);
+    }
+  };
+
   const handlePlaybackComplete = () => {
     setPlaybackCombat(null);
     finishCombatPlayback();
@@ -435,7 +444,7 @@ export function CombatPanel() {
         <Button
           variant="destructive"
           disabled={isPlaybackActive}
-          onClick={retreat}
+          onClick={handleRetreat}
           className="cursor-pointer bg-transparent border-2 border-destructive text-destructive hover:bg-destructive hover:text-[#050810] uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-auto"
         >
           {t("combat.retreat")}

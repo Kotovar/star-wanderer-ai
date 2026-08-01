@@ -4,6 +4,11 @@ import type { CombatTurnTimeline } from "@/game/types/combatCinematics";
 import { playSound } from "@/sounds";
 import * as helpers from "./helpers";
 import { deferCombatSound } from "./helpers/combatSound";
+import {
+    appendCombatSnapshotDeltaEvents,
+    createCombatCinematicSnapshot,
+    createCombatTimelineCollector,
+} from "./helpers/combatTimeline";
 import { DEFENDER_CONFIGS } from "./helpers/combatSetup";
 import { startDefenderCombat } from "./helpers/startDefenderCombat";
 import { advanceCombatRound, applyCombatTimeCost } from "./helpers/combatTime";
@@ -22,7 +27,7 @@ export interface CombatSlice {
     attackEnemy: () => void;
     attackEnemyWithBayTargets: (bayTargets: Record<number, number | null>) => CombatTurnTimeline | null;
     executeAmbushAttack: () => void;
-    retreat: () => void;
+    retreat: () => CombatTurnTimeline | null;
     attackFriendlyShip: () => void;
     confirmHostileApproach: () => void;
     cancelHostileApproach: () => void;
@@ -175,14 +180,14 @@ export const createCombatSlice = (
 
     retreat: () => {
         const state = get();
-        if (!state.currentCombat) return;
+        if (!state.currentCombat) return null;
 
         if (
             state.currentCombat.isAmbush &&
             !state.currentCombat.ambushAttackDone
         ) {
             get().addLog( i18nStore.t("game_logs.combatSlice_6"), "error");
-            return;
+            return null;
         }
 
         // Отступлением управляет пилот за штурвалом
@@ -202,10 +207,20 @@ export const createCombatSlice = (
             });
             applyCombatTimeCost(combatRound, set, get);
             get().addLog( i18nStore.t("game_logs.combatSlice_7"), "info");
+            return null;
         } else {
+            const initialSnapshot = createCombatCinematicSnapshot(state);
+            if (!initialSnapshot) return null;
+            const timeline = createCombatTimelineCollector(initialSnapshot);
             get().addLog( i18nStore.t("game_logs.combatSlice_8"), "warning");
-            get().processEnemyAttack();
+            deferCombatSound(() => helpers.executeEnemyAttack(set, get, timeline));
+            const beforeRound = createCombatCinematicSnapshot(get());
             advanceCombatRound(set, get);
+            const afterRound = createCombatCinematicSnapshot(get());
+            if (beforeRound && afterRound) {
+                appendCombatSnapshotDeltaEvents(timeline, beforeRound, afterRound, "repair");
+            }
+            return timeline.finish();
         }
     },
 });

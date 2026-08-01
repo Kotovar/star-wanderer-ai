@@ -11,14 +11,21 @@ export interface CombatCinematicSceneMetrics {
   height: number;
 }
 
+export interface CombatCinematicModuleAnchorBounds {
+  halfWidth: number;
+  halfHeight: number;
+}
+
 export const COMBAT_CINEMATIC_MISS_LABEL_START_PROGRESS = 0.58;
 
 const BASE_SCENE_WIDTH = 640;
 const BASE_SCENE_HEIGHT = 360;
 const MIN_SCENE_SCALE = 0.36;
 const MAX_MODULE_ANCHOR_COLUMNS = 5;
-const MODULE_ANCHOR_HALF_WIDTH = 52;
-const MODULE_ANCHOR_HALF_HEIGHT = 36;
+const DEFAULT_MODULE_ANCHOR_BOUNDS: CombatCinematicModuleAnchorBounds = {
+  halfWidth: 52,
+  halfHeight: 36,
+};
 const MODULE_ANCHOR_MAX_COLUMN_GAP = 38;
 const MODULE_ANCHOR_MAX_ROW_GAP = 46;
 const DIRECT_HIT_PROGRESS = 0.62;
@@ -62,6 +69,7 @@ export function getCombatCinematicModuleAnchor(
   moduleIndex: number,
   center: CombatCinematicPoint,
   direction: -1 | 1,
+  bounds: CombatCinematicModuleAnchorBounds = DEFAULT_MODULE_ANCHOR_BOUNDS,
 ): CombatCinematicPoint {
   const count = Math.max(1, Math.floor(moduleCount));
   const index = Math.min(count - 1, Math.max(0, Math.floor(moduleIndex)));
@@ -74,10 +82,10 @@ export function getCombatCinematicModuleAnchor(
   const modulesInRow = Math.min(columns, count - rowStart);
   const column = index - rowStart;
   const columnGap = columns > 1
-    ? Math.min(MODULE_ANCHOR_MAX_COLUMN_GAP, (MODULE_ANCHOR_HALF_WIDTH * 2) / (columns - 1))
+    ? Math.min(MODULE_ANCHOR_MAX_COLUMN_GAP, (bounds.halfWidth * 2) / (columns - 1))
     : 0;
   const rowGap = rows > 1
-    ? Math.min(MODULE_ANCHOR_MAX_ROW_GAP, (MODULE_ANCHOR_HALF_HEIGHT * 2) / (rows - 1))
+    ? Math.min(MODULE_ANCHOR_MAX_ROW_GAP, (bounds.halfHeight * 2) / (rows - 1))
     : 0;
 
   return {

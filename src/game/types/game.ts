@@ -246,7 +246,7 @@ export interface GameCombat {
   attackEnemyWithBayTargets: (bayTargets: Record<number, number | null>) => CombatTurnTimeline | null;
   executeAmbushAttack: () => void; // Execute enemy attack for ambush (first strike)
   processEnemyAttack: () => void; // Process enemy counter-attack during combat
-  retreat: () => void;
+  retreat: () => CombatTurnTimeline | null;
   attackFriendlyShip: () => void; // Player-initiated attack on a friendly ship (-20 rep)
   confirmHostileApproach: () => void; // Confirm approaching a hostile location (start combat)
   cancelHostileApproach: () => void; // Cancel approaching a hostile location (return to sector map)

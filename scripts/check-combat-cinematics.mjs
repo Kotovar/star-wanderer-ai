@@ -302,6 +302,37 @@ assert.match(
   "ход с кинематикой глушит звук резолва — его отыграет сцена",
 );
 assert.match(
+  combatSliceSource,
+  /retreat: \(\) => CombatTurnTimeline \| null;/,
+  "retreat returns a cinematic timeline when an enemy counterattack occurs",
+);
+assert.match(
+  combatSliceSource,
+  /retreat: \(\) => \{[\s\S]*?const initialSnapshot = createCombatCinematicSnapshot\(state\);[\s\S]*?helpers\.executeEnemyAttack\(set, get, timeline\)[\s\S]*?return timeline\.finish\(\);/,
+  "a failed retreat records the enemy strike before advancing the combat round",
+);
+assert.match(
+  combatPanelSource,
+  /const handleRetreat = \(\) => \{[\s\S]*?const timeline = retreat\(\);[\s\S]*?setPlaybackCombat\(createCombatPresentationSnapshot\(presentedCombat\)\);[\s\S]*?startCombatPlayback\(timeline\);[\s\S]*?\};/,
+  "the retreat button starts its returned counterattack timeline",
+);
+assert.match(
+  combatPanelSource,
+  /onClick=\{handleRetreat\}/,
+  "the retreat button uses the cinematic action handler",
+);
+for (const spaceMonsterType of [
+  "ember_wisp",
+  "binary_wyrm",
+  "plasma_leviathan",
+]) {
+  assert.match(
+    stageSource,
+    new RegExp(`spaceMonsterType === "${spaceMonsterType}"`),
+    `${spaceMonsterType} uses the compact central module layout`,
+  );
+}
+assert.match(
   stageSource,
   /playEventSounds\(item\.event, item\.index, active\[index\]\.progress\);/,
   "сцена дёргает звук по кадрам таймлайна, по каждому идущему событию",
@@ -1373,6 +1404,22 @@ const snapshot = {
       `all ${moduleCount} module anchors stay inside the shared ship silhouette`,
     );
   }
+
+  const creatureCoreAnchors = Array.from({ length: 6 }, (_, moduleIndex) =>
+    getCombatCinematicModuleAnchor(
+      6,
+      moduleIndex,
+      center,
+      1,
+      { halfWidth: 28, halfHeight: 22 },
+    ),
+  );
+  assert.ok(
+    creatureCoreAnchors.every(({ x, y }) =>
+      Math.hypot(x - center.x, y - center.y) <= 38
+    ),
+    "compact creature module anchors fit inside the visible core",
+  );
 }
 
 {

@@ -50,6 +50,7 @@ type Translate = (key: string, params?: Record<string, string | number>) => stri
 const PLAYER_COLOR = "#00ff9d";
 const ENEMY_COLOR = "#ff4d6d";
 const SHIELD_COLOR = "#5bd6ff";
+const CREATURE_MODULE_CORE_BOUNDS = { halfWidth: 28, halfHeight: 22 };
 
 function clamp(value: number, min = 0, max = 1): number {
   return Math.min(max, Math.max(min, value));
@@ -130,11 +131,19 @@ function getModulePoint(
 ): Point {
   const center = shipCenter(side, width, height);
   const index = Math.max(0, vessel.modules.findIndex((currentModule) => currentModule.id === moduleId));
+  const coreBounds = side === "enemy" && vessel.kind === "creature" && (
+    vessel.spaceMonsterType === "ember_wisp" ||
+    vessel.spaceMonsterType === "binary_wyrm" ||
+    vessel.spaceMonsterType === "plasma_leviathan"
+  )
+    ? CREATURE_MODULE_CORE_BOUNDS
+    : undefined;
   return getCombatCinematicModuleAnchor(
     vessel.modules.length,
     index,
     center,
     shipDirection(side),
+    coreBounds,
   );
 }
 
@@ -1088,6 +1097,13 @@ function drawPlasmaLeviathan(ctx: CanvasRenderingContext2D, center: Point, elaps
     ctx.fill();
     ctx.stroke();
   }
+  ctx.fillStyle = "#7c2d12";
+  ctx.strokeStyle = "#fed7aa";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(0, 0, 46, 0, TAU);
+  ctx.fill();
+  ctx.stroke();
   ctx.shadowBlur = 0;
   ctx.fillStyle = "#fef3c7";
   for (const y of [-10, 10]) {
@@ -1144,6 +1160,15 @@ function drawEmberWisp(ctx: CanvasRenderingContext2D, center: Point, elapsed: nu
     [0.42, "rgba(251, 146, 60, 0.25)"],
     [1, "rgba(251, 146, 60, 0)"],
   ]);
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#9a3412";
+  ctx.strokeStyle = "#fff1a8";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(0, 0, 46, 0, TAU);
+  ctx.fill();
+  ctx.stroke();
+  ctx.globalCompositeOperation = "lighter";
   ctx.fillStyle = "#fb923c";
   ctx.shadowColor = "#fef3c7";
   ctx.shadowBlur = 20;
@@ -1185,6 +1210,14 @@ function drawBinaryWyrm(ctx: CanvasRenderingContext2D, center: Point, elapsed: n
     ctx.arc(108, offset + wave, 10, 0, TAU);
     ctx.fill();
   }
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#312e81";
+  ctx.strokeStyle = "#ddd6fe";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(0, 0, 46, 0, TAU);
+  ctx.fill();
+  ctx.stroke();
   ctx.restore();
 }
 
