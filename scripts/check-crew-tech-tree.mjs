@@ -67,6 +67,10 @@ const shipStatsSource = await readFile(
   new URL("../src/game/components/ShipStats.tsx", import.meta.url),
   "utf8",
 );
+const combatPanelSource = await readFile(
+  new URL("../src/game/components/CombatPanel.tsx", import.meta.url),
+  "utf8",
+);
 const playerAttackSource = await readFile(
   new URL("../src/game/slices/combat/helpers/playerAttack.ts", import.meta.url),
   "utf8",
@@ -377,8 +381,28 @@ assert.match(
 );
 assert.match(
   shipStatsSource,
-  /accuracy:\s*getWeaponAccuracy\(type, modifier\)/,
+  /values\.push\(getWeaponAccuracy\(weapon\.type, modifier\)\)/,
   "ship stats use the combat accuracy cap",
+);
+assert.match(
+  shipStatsSource,
+  /computeBayAccuracyModifier\(accuracyState, bay\.id\)/,
+  "ship stats calculate accuracy per active weapon bay",
+);
+assert.match(
+  shipStatsSource,
+  /calculateFinalDamagePerWeapon\(dmg\.total, hasGunnerInBay\)/,
+  "ship stats include the same gunner damage bonus as combat",
+);
+assert.match(
+  combatPanelSource,
+  /m\.type === "weaponbay" && isModuleActive\(m\)/,
+  "combat UI ignores manually disabled weapon bays",
+);
+assert.match(
+  combatPanelSource,
+  /calculateFinalDamagePerWeapon\(pDmg\.total, hasGunner\)/,
+  "combat UI damage readout includes the resolver's gunner bonus",
 );
 assert.match(
   playerAttackSource,

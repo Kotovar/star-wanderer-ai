@@ -16,6 +16,7 @@ import {
 } from "./combatPresentationState";
 import { useCombatCinematicUiStore } from "./combatCinematicUiStore";
 import { getBossAbilityIntent } from "@/game/slices/combat/helpers/bossIntent";
+import { isModuleActive } from "@/game/modules/utils";
 import type { CrewMember, CrewMemberCombatAssignment, Module, WeaponType } from "../types";
 import type { EnemyModule } from "@/game/types/enemy";
 import { useTranslation } from "@/lib/useTranslation";
@@ -24,6 +25,7 @@ import { calculateCombatTimeCost } from "@/game/slices/combat/helpers/combatTime
 import { getBossModulePassives } from "@/game/slices/combat/helpers/bossEffectLabels";
 import { createCombatCinematicSnapshot } from "@/game/slices/combat/helpers/combatTimeline";
 import {
+  calculateFinalDamagePerWeapon,
   computeBayAccuracyModifier,
   getWeaponAccuracy,
 } from "@/game/slices/combat/helpers/playerDamage";
@@ -74,7 +76,7 @@ type Combat = NonNullable<ReturnType<typeof useGameStore.getState>["currentComba
 /** Оружейные отсеки корабля — используются для назначения целей и проверки «нечем стрелять». */
 function getWeaponBayStats(ship: Ship) {
   const weaponBays = ship.modules.filter(
-    (m) => m.type === "weaponbay" && !m.disabled && m.health > 0,
+    (m) => m.type === "weaponbay" && isModuleActive(m),
   );
   const hasWeaponBay =
     weaponBays.length > 0 &&
@@ -327,10 +329,16 @@ export function CombatPanel() {
   const { weaponBays, hasWeaponBay } = getWeaponBayStats(ship);
 
   const pDmg = getTotalDamage();
-  // Global damage multiplier (bonuses from crew/artifacts/tech applied only to total)
+  const hasGunner = crew.some(
+    (crewMember) =>
+      crewMember.profession === "gunner" &&
+      weaponBays.some((bay) => bay.id === crewMember.moduleId),
+  );
+  // The same multiplier as the attack resolver, including the active gunner bonus.
   const dmgBaseSum = (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "quantum_torpedo", "ion_cannon"] as const)
     .reduce((s, k) => s + pDmg[k], 0);
-  const dmgMultiplier = dmgBaseSum > 0 ? pDmg.total / dmgBaseSum : 1;
+  const combatDamageTotal = calculateFinalDamagePerWeapon(pDmg.total, hasGunner);
+  const dmgMultiplier = dmgBaseSum > 0 ? combatDamageTotal / dmgBaseSum : 1;
   const isBoss = presentedCombat?.enemy.isBoss || false;
   const combatRound = presentedCombat?.round ?? 1;
   const campaignTimeCost = calculateCombatTimeCost(combatRound);

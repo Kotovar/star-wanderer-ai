@@ -13,13 +13,12 @@ import { useTranslation } from "@/lib/useTranslation";
 import {
   BASE_CRIT_CHANCE,
   BASE_CRIT_MULTIPLIER,
-  BASE_ACCURACY,
   ARTIFACT_TYPES,
-  COMBAT_DAMAGE_MODIFIERS,
   WEAPON_TYPES,
 } from "@/game/constants";
 import {
-  computeAccuracyModifier,
+  calculateFinalDamagePerWeapon,
+  computeBayAccuracyModifier,
   getWeaponAccuracy,
   getPlayerCritChance,
 } from "@/game/slices/combat/helpers/playerDamage";
@@ -204,31 +203,40 @@ export function ShipStats() {
     const dmg = getTotalDamage();
     const weaponTypeKeys = ["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "quantum_torpedo", "ion_cannon"] as const;
     const rawBaseSum = weaponTypeKeys.reduce((s, type) => s + dmg[type], 0);
-    // multiplier = total (with all bonuses) / raw base sum — same ratio applied to per-type display
-    const multiplier = rawBaseSum > 0 ? dmg.total / rawBaseSum : 1;
+    const activeWeaponBayIds = new Set(
+      getActiveModules(ship.modules, "weaponbay").map((bay) => bay.id),
+    );
+    const hasGunnerInBay = crew.some(
+      (crewMember) =>
+        crewMember.profession === "gunner" && activeWeaponBayIds.has(crewMember.moduleId),
+    );
+    const combatDamageTotal = calculateFinalDamagePerWeapon(dmg.total, hasGunnerInBay);
+    // The same multiplier as the attack resolver: global damage bonuses plus the gunner bonus.
+    const multiplier = rawBaseSum > 0 ? combatDamageTotal / rawBaseSum : 1;
+    const laserWeaponBayIds = new Set(
+      ship.modules
+        .filter(
+          (module) =>
+            module.type === "weaponbay" &&
+            module.weapons?.some((weapon) => weapon?.type === "laser"),
+        )
+        .map((module) => module.id),
+    );
     const laserDamageBonus = crew.reduce(
-      (bonus, c) => bonus + getAugmentationBonus(c, "laserDamageBonus"),
+      (bonus, crewMember) =>
+        laserWeaponBayIds.has(crewMember.moduleId)
+          ? bonus + getAugmentationBonus(crewMember, "laserDamageBonus")
+          : bonus,
       0,
     );
     const laserDisplay =
       laserDamageBonus > 0
         ? Math.floor(dmg.laser * multiplier * (1 + laserDamageBonus))
         : Math.floor(dmg.laser * multiplier);
-    const hasGunnerInBay =
-      crew.some(
-        (c) =>
-          c.profession === "gunner" &&
-          ship.modules.some(
-            (m) => m.type === "weaponbay" && m.id === c.moduleId,
-          ),
-      ) || crew.some((c) => c.combatAssignment === "targeting");
-    const damageTotal = hasGunnerInBay
-      ? Math.floor(dmg.total * COMBAT_DAMAGE_MODIFIERS.GUNNER_BONUS)
-      : dmg.total;
     return {
       damage: dmg,
       displayLaserDamage: laserDisplay,
-      displayDamageTotal: damageTotal,
+      displayDamageTotal: combatDamageTotal,
       dmgMultiplier: multiplier,
     };
   }, [crew, ship, getTotalDamage]);
@@ -286,34 +294,30 @@ export function ShipStats() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ship, crew, artifacts, research]);
 
-  const { accuracyByType, accuracyModifier } = useMemo(() => {
-    const equippedWeaponTypes = new Set(
-      ship.modules
-        .filter(
-          (m) =>
-            m.type === "weaponbay" &&
-            !m.disabled &&
-            !m.manualDisabled &&
-            m.health > 0,
-        )
-        .flatMap((m) => m.weapons ?? [])
-        .filter(Boolean)
-        .map((w) => w.type),
-    );
-    const modifier = computeAccuracyModifier({
+  const { accuracyByType } = useMemo(() => {
+    const accuracyState = {
       ship,
       crew,
       artifacts,
-    } as GameState);
-    const byType = (Object.entries(BASE_ACCURACY) as [WeaponType, number][])
-      .filter(([type]) => equippedWeaponTypes.has(type))
-      .map(([type]) => ({
-        type,
-        accuracy: getWeaponAccuracy(type, modifier),
-      }));
+    } as GameState;
+    const valuesByType = new Map<WeaponType, number[]>();
+
+    for (const bay of getActiveModules(ship.modules, "weaponbay")) {
+      const modifier = computeBayAccuracyModifier(accuracyState, bay.id);
+      for (const weapon of bay.weapons ?? []) {
+        if (!weapon) continue;
+        const values = valuesByType.get(weapon.type) ?? [];
+        values.push(getWeaponAccuracy(weapon.type, modifier));
+        valuesByType.set(weapon.type, values);
+      }
+    }
+
     return {
-      accuracyByType: byType,
-      accuracyModifier: modifier,
+      accuracyByType: Array.from(valuesByType, ([type, values]) => ({
+        type,
+        minAccuracy: Math.min(...values),
+        maxAccuracy: Math.max(...values),
+      })),
     };
   }, [ship, crew, artifacts]);
 
@@ -678,28 +682,25 @@ export function ShipStats() {
           <span className="text-accent">
             <StatLabel icon="accuracy">{t("ship_stats.accuracy")}</StatLabel>
           </span>
-          {accuracyModifier !== 0 && (
-            <span className={accuracyModifier > 0 ? "text-[#00ff41] text-xs" : "text-destructive text-xs"}>
-              {accuracyModifier > 0 ? "+" : ""}{Math.round(accuracyModifier * 100)}% {t("ship_stats.accuracy_base")}
-            </span>
-          )}
         </div>
         {accuracyByType.length === 0 ? (
           <span className="text-[#666] text-xs">—</span>
         ) : (
           <div className="flex flex-col gap-0.5">
-            {accuracyByType.map(({ type, accuracy }) => {
-              const color = accuracy >= 0.9 ? "#00ff41" : accuracy >= 0.7 ? "#ffb000" : "#ff0040";
+            {accuracyByType.map(({ type, minAccuracy, maxAccuracy }) => {
+              const minPct = Math.round(minAccuracy * 100);
+              const maxPct = Math.round(maxAccuracy * 100);
+              const color = minAccuracy >= 0.9 ? "#00ff41" : minAccuracy >= 0.7 ? "#ffb000" : "#ff0040";
               const icon = WEAPON_TYPES[type as WeaponType]?.icon ?? "•";
               const name = t(`weapon_types.${type}`) || WEAPON_TYPES[type as WeaponType]?.name || type;
-              const pct = Math.round(accuracy * 100);
+              const accuracyLabel = minPct === maxPct ? `${maxPct}%` : `${minPct}–${maxPct}%`;
               return (
                 <div key={type} className="flex items-center gap-1.5 mb-0.5">
                   <span className="text-[#888] text-xs w-24 shrink-0">{icon} {name}</span>
                   <div className="flex-1 h-1 bg-[rgba(255,255,255,0.08)] rounded-sm">
-                    <div className="h-1 rounded-sm transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+                    <div className="h-1 rounded-sm transition-all" style={{ width: `${minPct}%`, backgroundColor: color }} />
                   </div>
-                  <span className="text-xs shrink-0" style={{ color }}>{pct}%</span>
+                  <span className="text-xs shrink-0" style={{ color }}>{accuracyLabel}</span>
                 </div>
               );
             })}
