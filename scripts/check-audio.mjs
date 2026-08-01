@@ -124,6 +124,10 @@ if (!SOUND_REGISTRY || !MUSIC_REGISTRY || !DEFAULT_AUDIO_VOLUMES) {
   fail("SOUND_REGISTRY, MUSIC_REGISTRY, and DEFAULT_AUDIO_VOLUMES must be exported");
 }
 
+for (const id of ["exploration", "combat"]) {
+  if (!MUSIC_REGISTRY[id]) fail(id + " must be registered as music");
+}
+
 for (const id of requiredVariantIds) {
   const urls = SOUND_REGISTRY[id]?.urls;
   if (!urls || urls.length !== 3) fail(`${id} must expose exactly three variants`);

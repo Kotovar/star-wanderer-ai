@@ -71,6 +71,7 @@ type UiSoundId = Extract<SoundId, `ui_${string}`>;
 
 export const MUSIC_REGISTRY = {
   exploration: { url: "/audio/music/space-exploration.ogg" },
+  combat: { url: "/audio/music/space-combat.ogg" },
 } as const;
 
 type MusicId = keyof typeof MUSIC_REGISTRY;

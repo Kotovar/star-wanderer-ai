@@ -4,12 +4,14 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { sfxr } from "jsfxr";
+import { renderCombatLoop } from "../audio/source/music/space-combat.mjs";
 import { renderExplorationLoop } from "../audio/source/music/space-exploration.mjs";
 import { SFX_PRESETS } from "../audio/source/sfx/presets.mjs";
 
 const run = promisify(execFile);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const outputRoot = resolve(root, "public/audio");
+const MUSIC_FILTER = "loudnorm=I=-26:TP=-2:LRA=7,alimiter=limit=0.79:level=false";
 
 const writeStereoWav = async (file, left, right, sampleRate) => {
   const frames = left.length;
@@ -84,15 +86,15 @@ const generateSfx = async (tempDir) => {
 };
 
 const generateMusic = async (tempDir) => {
-  const { left, right, sampleRate } = renderExplorationLoop();
-  const wav = resolve(tempDir, "space-exploration.wav");
-  await writeStereoWav(wav, left, right, sampleRate);
-  await encode(
-    wav,
-    resolve(outputRoot, "music/space-exploration.ogg"),
-    "loudnorm=I=-26:TP=-2:LRA=7,alimiter=limit=0.79:level=false",
-    "80k",
-  );
+  for (const [name, render] of [
+    ["space-exploration", renderExplorationLoop],
+    ["space-combat", renderCombatLoop],
+  ]) {
+    const { left, right, sampleRate } = render();
+    const wav = resolve(tempDir, `${name}.wav`);
+    await writeStereoWav(wav, left, right, sampleRate);
+    await encode(wav, resolve(outputRoot, `music/${name}.ogg`), MUSIC_FILTER, "80k");
+  }
 };
 
 const tempDir = await mkdtemp(resolve(root, ".tmp-audio-"));
