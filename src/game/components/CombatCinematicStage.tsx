@@ -597,7 +597,145 @@ function drawPlayerShip(ctx: CanvasRenderingContext2D, center: Point): void {
   ctx.restore();
 }
 
-function drawEnemyShip(ctx: CanvasRenderingContext2D, center: Point): void {
+type HullProfile = {
+  points: readonly Point[];
+  body: string;
+  edge: string;
+  detail: string;
+  engine: Point;
+  core: Point;
+  engineSize: number;
+  enginePower: number;
+};
+
+type BossHullProfile = HullProfile & {
+  ornament:
+    | "rings"
+    | "petals"
+    | "claws"
+    | "scythes"
+    | "phase"
+    | "ice"
+    | "eye"
+    | "fracture"
+    | "clock"
+    | "infinity";
+};
+
+const ENEMY_HULL_PROFILES: Partial<
+  Record<NonNullable<CombatCinematicSnapshot["enemy"]["enemyType"]>, HullProfile>
+> = {
+  pirate: {
+    points: [{ x: -108, y: -32 }, { x: -20, y: -54 }, { x: 116, y: -14 }, { x: 42, y: 4 }, { x: 122, y: 34 }, { x: -16, y: 52 }, { x: -82, y: 22 }],
+    body: "#3b2112", edge: "#ff9f43", detail: "#ffd28a", engine: { x: -98, y: 16 }, core: { x: 54, y: 8 }, engineSize: 12, enginePower: 1.4,
+  },
+  raider: {
+    points: [{ x: -104, y: -24 }, { x: 38, y: -40 }, { x: 138, y: 0 }, { x: 38, y: 40 }, { x: -104, y: 24 }, { x: -44, y: 0 }],
+    body: "#3a0d22", edge: "#ff4566", detail: "#ffb1c0", engine: { x: -94, y: 0 }, core: { x: 86, y: 0 }, engineSize: 12, enginePower: 1.9,
+  },
+  mercenary: {
+    points: [{ x: -94, y: -48 }, { x: 54, y: -48 }, { x: 116, y: -18 }, { x: 116, y: 18 }, { x: 54, y: 48 }, { x: -94, y: 48 }, { x: -54, y: 0 }],
+    body: "#102b41", edge: "#5bd6ff", detail: "#d8f5ff", engine: { x: -90, y: 0 }, core: { x: 62, y: 0 }, engineSize: 13, enginePower: 1.45,
+  },
+  marauder: {
+    points: [{ x: -116, y: -42 }, { x: -18, y: -58 }, { x: 82, y: -42 }, { x: 132, y: -12 }, { x: 72, y: 0 }, { x: 132, y: 18 }, { x: 82, y: 46 }, { x: -18, y: 58 }, { x: -116, y: 42 }, { x: -64, y: 0 }],
+    body: "#382314", edge: "#ff8c42", detail: "#ffd166", engine: { x: -106, y: 0 }, core: { x: 78, y: 0 }, engineSize: 14, enginePower: 1.5,
+  },
+  human_guard: {
+    points: [{ x: -102, y: -38 }, { x: 36, y: -52 }, { x: 126, y: 0 }, { x: 36, y: 52 }, { x: -102, y: 38 }, { x: -66, y: 0 }],
+    body: "#18334a", edge: "#45e6a6", detail: "#d6fff1", engine: { x: -94, y: 0 }, core: { x: 64, y: 0 }, engineSize: 12, enginePower: 1.3,
+  },
+  synthetic_guard: {
+    points: [{ x: -110, y: -54 }, { x: 82, y: -54 }, { x: 122, y: -20 }, { x: 122, y: 20 }, { x: 82, y: 54 }, { x: -110, y: 54 }, { x: -80, y: 0 }],
+    body: "#1a2842", edge: "#67e8f9", detail: "#e0fbff", engine: { x: -102, y: 0 }, core: { x: 72, y: 0 }, engineSize: 14, enginePower: 1.15,
+  },
+  xenosymbiont_guard: {
+    points: [{ x: -96, y: -26 }, { x: -18, y: -58 }, { x: 86, y: -44 }, { x: 130, y: 0 }, { x: 86, y: 44 }, { x: -18, y: 58 }, { x: -96, y: 26 }, { x: -48, y: 0 }],
+    body: "#342047", edge: "#d8b4fe", detail: "#f5d0fe", engine: { x: -88, y: 0 }, core: { x: 44, y: 0 }, engineSize: 12, enginePower: 1.25,
+  },
+  krylorian_guard: {
+    points: [{ x: -112, y: -24 }, { x: -8, y: -62 }, { x: 112, y: -28 }, { x: 144, y: 0 }, { x: 112, y: 28 }, { x: -8, y: 62 }, { x: -112, y: 24 }, { x: -54, y: 0 }],
+    body: "#402513", edge: "#facc15", detail: "#fff7b3", engine: { x: -104, y: 0 }, core: { x: 86, y: 0 }, engineSize: 13, enginePower: 1.8,
+  },
+  voidborn_guard: {
+    points: [{ x: -114, y: -38 }, { x: 12, y: -60 }, { x: 104, y: -34 }, { x: 62, y: 0 }, { x: 104, y: 34 }, { x: 12, y: 60 }, { x: -114, y: 38 }, { x: -76, y: 0 }],
+    body: "#171535", edge: "#8b5cf6", detail: "#c4b5fd", engine: { x: -106, y: 0 }, core: { x: 54, y: 0 }, engineSize: 13, enginePower: 1.45,
+  },
+  crystalline_guard: {
+    points: [{ x: -100, y: -52 }, { x: 18, y: -64 }, { x: 116, y: -24 }, { x: 136, y: 0 }, { x: 116, y: 24 }, { x: 18, y: 64 }, { x: -100, y: 52 }, { x: -60, y: 0 }],
+    body: "#173044", edge: "#a5f3fc", detail: "#ecfeff", engine: { x: -92, y: 0 }, core: { x: 58, y: 0 }, engineSize: 14, enginePower: 1.05,
+  },
+};
+
+const BOSS_HULL_PROFILES: Record<string, BossHullProfile> = {
+  guardian_sentinel: {
+    points: [{ x: -136, y: -54 }, { x: -36, y: -78 }, { x: 72, y: -48 }, { x: 150, y: 0 }, { x: 72, y: 48 }, { x: -36, y: 78 }, { x: -136, y: 54 }, { x: -88, y: 0 }],
+    body: "#342818", edge: "#ffcc55", detail: "#fff0b0", engine: { x: -126, y: 0 }, core: { x: 88, y: 0 }, engineSize: 19, enginePower: 2.8, ornament: "rings",
+  },
+  nova_stalker: {
+    points: [{ x: -144, y: 0 }, { x: -24, y: -72 }, { x: 124, y: -26 }, { x: 154, y: 0 }, { x: 124, y: 26 }, { x: -24, y: 72 }],
+    body: "#461713", edge: "#ff7a45", detail: "#ffe1a3", engine: { x: -126, y: 0 }, core: { x: 68, y: 0 }, engineSize: 18, enginePower: 3.1, ornament: "petals",
+  },
+  void_leech: {
+    points: [{ x: -122, y: -62 }, { x: 12, y: -74 }, { x: 134, y: -24 }, { x: 82, y: 0 }, { x: 134, y: 24 }, { x: 12, y: 74 }, { x: -122, y: 62 }, { x: -72, y: 0 }],
+    body: "#311242", edge: "#d946ef", detail: "#f5d0fe", engine: { x: -114, y: 0 }, core: { x: 48, y: 0 }, engineSize: 18, enginePower: 2.5, ornament: "claws",
+  },
+  harvester_prime: {
+    points: [{ x: -150, y: -46 }, { x: -38, y: -74 }, { x: 30, y: -30 }, { x: 150, y: -62 }, { x: 116, y: 0 }, { x: 150, y: 62 }, { x: 30, y: 30 }, { x: -38, y: 74 }, { x: -150, y: 46 }, { x: -92, y: 0 }],
+    body: "#1f3b2b", edge: "#a3e635", detail: "#ecfccb", engine: { x: -140, y: 0 }, core: { x: 46, y: 0 }, engineSize: 20, enginePower: 2.4, ornament: "scythes",
+  },
+  phase_hunter: {
+    points: [{ x: -136, y: 0 }, { x: -20, y: -76 }, { x: 132, y: 0 }, { x: -20, y: 76 }],
+    body: "#172c4b", edge: "#67e8f9", detail: "#cffafe", engine: { x: -124, y: 0 }, core: { x: 66, y: 0 }, engineSize: 19, enginePower: 3.2, ornament: "phase",
+  },
+  cryo_reaver: {
+    points: [{ x: -128, y: -64 }, { x: 28, y: -80 }, { x: 150, y: 0 }, { x: 28, y: 80 }, { x: -128, y: 64 }, { x: -78, y: 0 }],
+    body: "#183d58", edge: "#a5f3fc", detail: "#ecfeff", engine: { x: -118, y: 0 }, core: { x: 78, y: 0 }, engineSize: 20, enginePower: 1.9, ornament: "ice",
+  },
+  void_oracle: {
+    points: [{ x: -108, y: -66 }, { x: 34, y: -82 }, { x: 136, y: -34 }, { x: 158, y: 0 }, { x: 136, y: 34 }, { x: 34, y: 82 }, { x: -108, y: 66 }, { x: -70, y: 0 }],
+    body: "#281342", edge: "#c084fc", detail: "#f5d0fe", engine: { x: -98, y: 0 }, core: { x: 52, y: 0 }, engineSize: 20, enginePower: 2.7, ornament: "eye",
+  },
+  nexus_destroyer: {
+    points: [{ x: -142, y: -48 }, { x: 32, y: -48 }, { x: 32, y: -78 }, { x: 130, y: -78 }, { x: 158, y: 0 }, { x: 130, y: 78 }, { x: 32, y: 78 }, { x: 32, y: 48 }, { x: -142, y: 48 }, { x: -92, y: 0 }],
+    body: "#48152e", edge: "#fb7185", detail: "#fecdd3", engine: { x: -132, y: 0 }, core: { x: 86, y: 0 }, engineSize: 20, enginePower: 2.9, ornament: "fracture",
+  },
+  chronos_warden: {
+    points: [{ x: -122, y: -70 }, { x: 8, y: -84 }, { x: 126, y: -46 }, { x: 158, y: 0 }, { x: 126, y: 46 }, { x: 8, y: 84 }, { x: -122, y: 70 }, { x: -84, y: 0 }],
+    body: "#173c48", edge: "#67e8f9", detail: "#fef3c7", engine: { x: -112, y: 0 }, core: { x: 50, y: 0 }, engineSize: 21, enginePower: 2.2, ornament: "clock",
+  },
+  the_eternal: {
+    points: [{ x: -150, y: -58 }, { x: -54, y: -82 }, { x: 14, y: -44 }, { x: 92, y: -74 }, { x: 164, y: 0 }, { x: 92, y: 74 }, { x: 14, y: 44 }, { x: -54, y: 82 }, { x: -150, y: 58 }, { x: -100, y: 0 }],
+    body: "#250d3a", edge: "#f472b6", detail: "#f5d0fe", engine: { x: -140, y: 0 }, core: { x: 76, y: 0 }, engineSize: 22, enginePower: 3.5, ornament: "infinity",
+  },
+};
+
+function drawHullPolygon(
+  ctx: CanvasRenderingContext2D,
+  points: readonly Point[],
+): void {
+  const [firstPoint, ...rest] = points;
+  if (!firstPoint) return;
+  ctx.beginPath();
+  ctx.moveTo(firstPoint.x, firstPoint.y);
+  for (const point of rest) ctx.lineTo(point.x, point.y);
+  ctx.closePath();
+}
+
+function drawProfileCore(
+  ctx: CanvasRenderingContext2D,
+  profile: HullProfile,
+  pulse: number,
+): void {
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = pulse;
+  fillRadialGlow(ctx, profile.core, 15 + pulse * 9, [
+    [0, withAlpha(profile.detail, 0.9)],
+    [1, withAlpha(profile.edge, 0)],
+  ]);
+}
+
+function drawDefaultEnemyShip(ctx: CanvasRenderingContext2D, center: Point): void {
   ctx.save();
   ctx.translate(center.x, center.y);
   ctx.scale(-1, 1);
@@ -636,7 +774,41 @@ function drawEnemyShip(ctx: CanvasRenderingContext2D, center: Point): void {
   ctx.restore();
 }
 
-function drawBossShip(ctx: CanvasRenderingContext2D, center: Point): void {
+function drawEnemyShip(
+  ctx: CanvasRenderingContext2D,
+  center: Point,
+  enemyType?: CombatCinematicSnapshot["enemy"]["enemyType"],
+): void {
+  const profile = enemyType ? ENEMY_HULL_PROFILES[enemyType] : undefined;
+  if (!profile) {
+    drawDefaultEnemyShip(ctx, center);
+    return;
+  }
+
+  ctx.save();
+  ctx.translate(center.x, center.y);
+  ctx.scale(-1, 1);
+  drawEngineFlare(ctx, profile.engine.x, profile.engine.y, profile.engineSize, profile.edge, profile.enginePower);
+  ctx.fillStyle = profile.body;
+  ctx.strokeStyle = profile.edge;
+  ctx.lineWidth = 2;
+  ctx.shadowColor = profile.edge;
+  ctx.shadowBlur = 13;
+  drawHullPolygon(ctx, profile.points);
+  ctx.fill();
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = profile.detail;
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(-36, 0);
+  ctx.lineTo(profile.core.x + 12, profile.core.y);
+  ctx.stroke();
+  drawProfileCore(ctx, profile, 0.42 + Math.abs(Math.sin(sceneElapsed / 560 + 1.2)) * 0.58);
+  ctx.restore();
+}
+
+function drawDefaultBossShip(ctx: CanvasRenderingContext2D, center: Point): void {
   ctx.save();
   ctx.translate(center.x, center.y);
   ctx.scale(-1, 1);
@@ -679,7 +851,107 @@ function drawBossShip(ctx: CanvasRenderingContext2D, center: Point): void {
   ctx.restore();
 }
 
-function drawCreature(ctx: CanvasRenderingContext2D, center: Point, elapsed: number): void {
+function drawBossOrnament(
+  ctx: CanvasRenderingContext2D,
+  ornament: BossHullProfile["ornament"],
+  color: string,
+): void {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.6;
+  switch (ornament) {
+    case "rings":
+      for (const offset of [-30, 0, 30]) ctx.ellipse(6, offset, 48, 10, 0, 0, TAU);
+      break;
+    case "petals":
+      for (const angle of [-0.7, 0, 0.7]) {
+        ctx.moveTo(-8, 0);
+        ctx.lineTo(82 * Math.cos(angle), 62 * Math.sin(angle));
+      }
+      break;
+    case "claws":
+      for (const y of [-38, 0, 38]) {
+        ctx.moveTo(8, y);
+        ctx.bezierCurveTo(62, y - 26, 86, y + 26, 122, y);
+      }
+      break;
+    case "scythes":
+      ctx.arc(24, -34, 42, -0.8, 1.2);
+      ctx.moveTo(24, 34);
+      ctx.arc(24, 34, 42, -1.2, 0.8);
+      break;
+    case "phase":
+      ctx.rect(-18, -28, 70, 56);
+      ctx.moveTo(0, -48);
+      ctx.lineTo(78, 0);
+      ctx.lineTo(0, 48);
+      break;
+    case "ice":
+      for (const y of [-34, 0, 34]) {
+        ctx.moveTo(-28, y);
+        ctx.lineTo(64, y - 18);
+        ctx.lineTo(100, y);
+      }
+      break;
+    case "eye":
+      ctx.ellipse(36, 0, 48, 24, 0, 0, TAU);
+      ctx.moveTo(36, -24);
+      ctx.lineTo(36, 24);
+      break;
+    case "fracture":
+      ctx.moveTo(-54, -36);
+      ctx.lineTo(18, 0);
+      ctx.lineTo(-16, 42);
+      ctx.moveTo(18, 0);
+      ctx.lineTo(104, -38);
+      break;
+    case "clock":
+      ctx.arc(26, 0, 38, 0, TAU);
+      for (let index = 0; index < 6; index += 1) {
+        const angle = (index / 6) * TAU;
+        ctx.moveTo(26, 0);
+        ctx.lineTo(26 + Math.cos(angle) * 48, Math.sin(angle) * 48);
+      }
+      break;
+    case "infinity":
+      ctx.ellipse(8, 0, 34, 20, 0, 0, TAU);
+      ctx.moveTo(8, 0);
+      ctx.ellipse(64, 0, 34, 20, 0, 0, TAU);
+      break;
+  }
+  ctx.stroke();
+}
+
+function drawBossShip(
+  ctx: CanvasRenderingContext2D,
+  center: Point,
+  bossId?: CombatCinematicSnapshot["enemy"]["bossId"],
+): void {
+  const profile = bossId ? BOSS_HULL_PROFILES[bossId] : undefined;
+  if (!profile) {
+    drawDefaultBossShip(ctx, center);
+    return;
+  }
+
+  ctx.save();
+  ctx.translate(center.x, center.y);
+  ctx.scale(-1, 1);
+  drawEngineFlare(ctx, profile.engine.x, profile.engine.y, profile.engineSize, profile.edge, profile.enginePower);
+  ctx.fillStyle = profile.body;
+  ctx.strokeStyle = profile.edge;
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = profile.edge;
+  ctx.shadowBlur = 18;
+  drawHullPolygon(ctx, profile.points);
+  ctx.fill();
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.beginPath();
+  drawBossOrnament(ctx, profile.ornament, profile.detail);
+  drawProfileCore(ctx, profile, 0.4 + Math.abs(Math.sin(sceneElapsed / 700)) * 0.6);
+  ctx.restore();
+}
+
+function drawDefaultCreature(ctx: CanvasRenderingContext2D, center: Point, elapsed: number): void {
   const breath = 1 + Math.sin(elapsed / 620) * 0.045;
   ctx.save();
   ctx.translate(center.x, center.y);
@@ -723,6 +995,229 @@ function drawCreature(ctx: CanvasRenderingContext2D, center: Point, elapsed: num
   ctx.restore();
 }
 
+function drawVoidRay(ctx: CanvasRenderingContext2D, center: Point, elapsed: number): void {
+  const drift = Math.sin(elapsed / 520) * 8;
+  ctx.save();
+  ctx.translate(center.x, center.y);
+  ctx.globalCompositeOperation = "lighter";
+  fillRadialGlow(ctx, { x: -8, y: 0 }, 138, [
+    [0, "rgba(91, 33, 182, 0.36)"],
+    [1, "rgba(91, 33, 182, 0)"],
+  ]);
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#1e1748";
+  ctx.strokeStyle = "#a78bfa";
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = "#a78bfa";
+  ctx.shadowBlur = 15;
+  ctx.beginPath();
+  ctx.moveTo(-96, 0);
+  ctx.quadraticCurveTo(-22, -72, 80, -46);
+  ctx.quadraticCurveTo(126, 0, 80, 46);
+  ctx.quadraticCurveTo(-22, 72, -96, 0);
+  ctx.fill();
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = "#67e8f9";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-28, 0);
+  ctx.bezierCurveTo(58, -20, 74, 34, 148, drift);
+  ctx.stroke();
+  for (const point of [{ x: 20, y: -16 }, { x: 20, y: 16 }]) {
+    fillRadialGlow(ctx, point, 9, [[0, "rgba(240, 249, 255, 0.95)"], [1, "rgba(103, 232, 249, 0)"]]);
+  }
+  ctx.restore();
+}
+
+function drawNebulaManta(ctx: CanvasRenderingContext2D, center: Point, elapsed: number): void {
+  const breath = 1 + Math.sin(elapsed / 680) * 0.06;
+  ctx.save();
+  ctx.translate(center.x, center.y);
+  ctx.scale(breath, 2 - breath);
+  ctx.globalCompositeOperation = "lighter";
+  fillRadialGlow(ctx, { x: 0, y: 0 }, 150, [
+    [0, "rgba(45, 212, 191, 0.25)"],
+    [0.55, "rgba(167, 139, 250, 0.16)"],
+    [1, "rgba(45, 212, 191, 0)"],
+  ]);
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#173447";
+  ctx.strokeStyle = "#5eead4";
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = "#5eead4";
+  ctx.shadowBlur = 16;
+  ctx.beginPath();
+  ctx.moveTo(-114, 0);
+  ctx.quadraticCurveTo(-52, -78, 8, -38);
+  ctx.quadraticCurveTo(66, -80, 128, -12);
+  ctx.quadraticCurveTo(66, 80, 8, 38);
+  ctx.quadraticCurveTo(-52, 78, -114, 0);
+  ctx.fill();
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#d8b4fe";
+  for (const point of [{ x: -30, y: -26 }, { x: 18, y: 0 }, { x: -30, y: 26 }]) {
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, 7, 0, TAU);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawPlasmaLeviathan(ctx: CanvasRenderingContext2D, center: Point, elapsed: number): void {
+  ctx.save();
+  ctx.translate(center.x, center.y);
+  ctx.globalCompositeOperation = "lighter";
+  fillRadialGlow(ctx, { x: 0, y: 0 }, 150, [
+    [0, "rgba(251, 146, 60, 0.3)"],
+    [1, "rgba(251, 146, 60, 0)"],
+  ]);
+  ctx.globalCompositeOperation = "source-over";
+  for (let index = 0; index < 6; index += 1) {
+    const x = -92 + index * 38;
+    const y = Math.sin(elapsed / 360 + index * 0.78) * 20;
+    const radius = 30 - index * 2;
+    ctx.fillStyle = index === 0 ? "#7c2d12" : "#9a3412";
+    ctx.strokeStyle = "#fb923c";
+    ctx.lineWidth = 2;
+    ctx.shadowColor = "#fb923c";
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.ellipse(x, y, radius, radius * 0.64, 0, 0, TAU);
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#fef3c7";
+  for (const y of [-10, 10]) {
+    ctx.beginPath();
+    ctx.arc(-78, y, 4, 0, TAU);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawCrystalHydra(ctx: CanvasRenderingContext2D, center: Point, elapsed: number): void {
+  const sway = Math.sin(elapsed / 430) * 12;
+  ctx.save();
+  ctx.translate(center.x, center.y);
+  ctx.globalCompositeOperation = "lighter";
+  fillRadialGlow(ctx, { x: 0, y: 0 }, 145, [
+    [0, "rgba(103, 232, 249, 0.32)"],
+    [1, "rgba(103, 232, 249, 0)"],
+  ]);
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#164e63";
+  ctx.strokeStyle = "#67e8f9";
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = "#67e8f9";
+  ctx.shadowBlur = 15;
+  drawHullPolygon(ctx, [
+    { x: -94, y: 0 }, { x: -28, y: -58 }, { x: 58, y: -46 }, { x: 108, y: 0 },
+    { x: 58, y: 46 }, { x: -28, y: 58 },
+  ]);
+  ctx.fill();
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = "#cffafe";
+  for (const y of [-34, 0, 34]) {
+    ctx.beginPath();
+    ctx.moveTo(26, 0);
+    ctx.bezierCurveTo(70, y, 84, y + sway, 132, y);
+    ctx.stroke();
+    ctx.fillStyle = "#ecfeff";
+    ctx.beginPath();
+    ctx.arc(132, y, 8, 0, TAU);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawEmberWisp(ctx: CanvasRenderingContext2D, center: Point, elapsed: number): void {
+  const pulse = 0.55 + Math.abs(Math.sin(elapsed / 310)) * 0.45;
+  ctx.save();
+  ctx.translate(center.x, center.y);
+  ctx.globalCompositeOperation = "lighter";
+  fillRadialGlow(ctx, { x: 0, y: 0 }, 132 * pulse, [
+    [0, "rgba(255, 204, 85, 0.52)"],
+    [0.42, "rgba(251, 146, 60, 0.25)"],
+    [1, "rgba(251, 146, 60, 0)"],
+  ]);
+  ctx.fillStyle = "#fb923c";
+  ctx.shadowColor = "#fef3c7";
+  ctx.shadowBlur = 20;
+  for (let index = 0; index < 5; index += 1) {
+    const angle = elapsed / 720 + (index / 5) * TAU;
+    const point = { x: Math.cos(angle) * 42, y: Math.sin(angle) * 30 };
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, 8 + (index % 2) * 3, 0, TAU);
+    ctx.fill();
+  }
+  ctx.fillStyle = "#fff7b3";
+  ctx.beginPath();
+  ctx.arc(0, 0, 12, 0, TAU);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawBinaryWyrm(ctx: CanvasRenderingContext2D, center: Point, elapsed: number): void {
+  const wave = Math.sin(elapsed / 460) * 12;
+  ctx.save();
+  ctx.translate(center.x, center.y);
+  ctx.globalCompositeOperation = "lighter";
+  fillRadialGlow(ctx, { x: 0, y: 0 }, 145, [
+    [0, "rgba(108, 92, 231, 0.3)"],
+    [1, "rgba(108, 92, 231, 0)"],
+  ]);
+  ctx.strokeStyle = "#a78bfa";
+  ctx.lineWidth = 11;
+  ctx.lineCap = "round";
+  ctx.shadowColor = "#a78bfa";
+  ctx.shadowBlur = 16;
+  for (const offset of [-22, 22]) {
+    ctx.beginPath();
+    ctx.moveTo(-112, offset);
+    ctx.bezierCurveTo(-44, offset - 52, 12, offset + 52 + wave, 108, offset + wave);
+    ctx.stroke();
+    ctx.fillStyle = "#ede9fe";
+    ctx.beginPath();
+    ctx.arc(108, offset + wave, 10, 0, TAU);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawCreature(
+  ctx: CanvasRenderingContext2D,
+  center: Point,
+  elapsed: number,
+  spaceMonsterType?: CombatCinematicSnapshot["enemy"]["spaceMonsterType"],
+): void {
+  switch (spaceMonsterType) {
+    case "void_ray":
+      drawVoidRay(ctx, center, elapsed);
+      return;
+    case "nebula_manta":
+      drawNebulaManta(ctx, center, elapsed);
+      return;
+    case "plasma_leviathan":
+      drawPlasmaLeviathan(ctx, center, elapsed);
+      return;
+    case "crystal_hydra":
+      drawCrystalHydra(ctx, center, elapsed);
+      return;
+    case "ember_wisp":
+      drawEmberWisp(ctx, center, elapsed);
+      return;
+    case "binary_wyrm":
+      drawBinaryWyrm(ctx, center, elapsed);
+      return;
+    default:
+      drawDefaultCreature(ctx, center, elapsed);
+  }
+}
+
 function drawShip(
   ctx: CanvasRenderingContext2D,
   vessel: CombatCinematicSnapshot["player"],
@@ -737,10 +1232,10 @@ function drawShip(
   ctx.translate(center.x, center.y);
   ctx.rotate(roll);
   ctx.translate(-center.x, -center.y);
-  if (vessel.kind === "boss") drawBossShip(ctx, center);
-  else if (vessel.kind === "creature") drawCreature(ctx, center, elapsed);
+  if (vessel.kind === "boss") drawBossShip(ctx, center, vessel.bossId);
+  else if (vessel.kind === "creature") drawCreature(ctx, center, elapsed, vessel.spaceMonsterType);
   else if (side === "player") drawPlayerShip(ctx, center);
-  else drawEnemyShip(ctx, center);
+  else drawEnemyShip(ctx, center, vessel.enemyType);
   ctx.restore();
   drawHullDamage(ctx, vessel, side, width, height);
   drawModuleLights(ctx, vessel, side, width, height);

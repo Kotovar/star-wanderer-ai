@@ -55,6 +55,44 @@ for (const marker of [
 ]) {
   assert.match(stageSource, new RegExp(marker), "missing projectile identity: " + marker);
 }
+const { ANCIENT_BOSSES: cinematicBosses } = jiti(
+  "../src/game/constants/bosses.ts",
+);
+const { SPACE_MONSTERS: cinematicSpaceMonsters } = jiti(
+  "../src/game/constants/spaceMonsters.ts",
+);
+for (const enemyType of [
+  "pirate",
+  "raider",
+  "mercenary",
+  "marauder",
+  "human_guard",
+  "synthetic_guard",
+  "xenosymbiont_guard",
+  "krylorian_guard",
+  "voidborn_guard",
+  "crystalline_guard",
+]) {
+  assert.match(
+    stageSource,
+    new RegExp(`(?:"${enemyType}"|\\b${enemyType}:)`),
+    `the cinematic stage gives ${enemyType} its own hull profile`,
+  );
+}
+for (const spaceMonsterType of Object.keys(cinematicSpaceMonsters)) {
+  assert.match(
+    stageSource,
+    new RegExp(`(?:"${spaceMonsterType}"|\\b${spaceMonsterType}:)`),
+    `the cinematic stage gives ${spaceMonsterType} its own creature profile`,
+  );
+}
+for (const { id: bossId } of cinematicBosses) {
+  assert.match(
+    stageSource,
+    new RegExp(`(?:"${bossId}"|\\b${bossId}:)`),
+    `the cinematic stage gives ${bossId} its own boss profile`,
+  );
+}
 const combatPanelSource = await readFile(
   new URL("../src/game/components/CombatPanel.tsx", import.meta.url),
   "utf8",
