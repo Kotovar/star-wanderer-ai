@@ -376,6 +376,11 @@ assert.match(
   "ship stats display the same total crit chance as combat",
 );
 assert.match(
+  shipStatsSource,
+  /accuracy:\s*getWeaponAccuracy\(type, modifier\)/,
+  "ship stats use the combat accuracy cap",
+);
+assert.match(
   playerAttackSource,
   /getPlayerCritChance\(state\)/,
   "combat resolves crits from the shared total crit chance",

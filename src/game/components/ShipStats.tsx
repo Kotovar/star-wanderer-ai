@@ -20,6 +20,7 @@ import {
 } from "@/game/constants";
 import {
   computeAccuracyModifier,
+  getWeaponAccuracy,
   getPlayerCritChance,
 } from "@/game/slices/combat/helpers/playerDamage";
 import type { GameState, WeaponType } from "@/game/types";
@@ -306,9 +307,9 @@ export function ShipStats() {
     } as GameState);
     const byType = (Object.entries(BASE_ACCURACY) as [WeaponType, number][])
       .filter(([type]) => equippedWeaponTypes.has(type))
-      .map(([type, base]) => ({
+      .map(([type]) => ({
         type,
-        accuracy: Math.max(0.5, Math.min(1.0, base + modifier)),
+        accuracy: getWeaponAccuracy(type, modifier),
       }));
     return {
       accuracyByType: byType,
