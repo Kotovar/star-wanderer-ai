@@ -840,24 +840,24 @@ export function CrewList() {
                                                                     key={branch}
                                                                     className={`flex flex-col gap-1 p-2 border rounded ${cardClass}`}
                                                                 >
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="text-lg leading-none">
+                                                                    <div className="flex items-start gap-2">
+                                                                        <span className="text-lg leading-none shrink-0">
                                                                             {option.icon}
                                                                         </span>
                                                                         <span
-                                                                            className={`text-xs font-bold ${
+                                                                            className={`min-w-0 flex-1 break-words leading-tight text-xs font-bold ${
                                                                                 isChosen ? "text-[#00ff41]" : "text-[#aaa]"
                                                                             }`}
                                                                         >
                                                                             {t(nameKey)}
                                                                         </span>
                                                                         {isChosen && (
-                                                                            <span className="text-[#00ff41] text-xs ml-auto">
+                                                                            <span className="text-[#00ff41] text-xs ml-auto shrink-0">
                                                                                 ✓
                                                                             </span>
                                                                         )}
                                                                     </div>
-                                                                    <div className="text-[10px] text-[#888]">
+                                                                    <div className="text-[10px] text-[#888] break-words">
                                                                         {t(descKey)}
                                                                     </div>
                                                                 </div>

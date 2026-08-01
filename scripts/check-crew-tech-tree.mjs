@@ -289,6 +289,26 @@ assert.match(
   "the crew tech tree renders three choices on desktop",
 );
 assert.match(
+  crewListSource,
+  /text-lg leading-none shrink-0/,
+  "tech-tree card icons stay visible while titles wrap",
+);
+assert.match(
+  crewListSource,
+  /min-w-0 flex-1 break-words leading-tight/,
+  "long tech-tree titles can shrink and wrap inside their cards",
+);
+assert.match(
+  crewListSource,
+  /text-\[#00ff41\] text-xs ml-auto shrink-0/,
+  "the selected mark stays visible beside a wrapped title",
+);
+assert.match(
+  crewListSource,
+  /text-\[10px\] text-\[#888\] break-words/,
+  "long tech-tree descriptions stay inside their cards",
+);
+assert.match(
   stationCrewTabSource,
   /branch === "C"/,
   "station badges resolve stored race C choices without indexing the professional tree",
