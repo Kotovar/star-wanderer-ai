@@ -46,6 +46,8 @@ export interface CombatProjectileEvent extends CombatProjectileResolution {
   to: CombatCinematicSide;
   isCrit: boolean;
   targetModuleId?: number;
+  /** Модуль-источник: откуда визуально ушёл снаряд. */
+  sourceModuleId?: number;
   /**
    * Тип модуля-орудия врага (`plasma_cannon`, `ice_beam`, …). Задаёт визуал
    * выстрела: у врага нет `WeaponType`, но орудия у него разные.

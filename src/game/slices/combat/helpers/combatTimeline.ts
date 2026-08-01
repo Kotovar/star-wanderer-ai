@@ -33,6 +33,8 @@ export interface BuildVolleyEventsInput {
   projectiles: readonly CombatProjectileResolution[];
   isCrit: boolean;
   targetModuleId?: number;
+  /** Модуль-источник: откуда визуально ушёл снаряд. */
+  sourceModuleId?: number;
   /** Палуба-источник: снаряды одного залпа бьют очередью, между залпами пауза. */
   volleyId?: number;
   /** Стаки дронов на момент залпа — рой рисуется гуще. */
@@ -394,6 +396,9 @@ export function buildVolleyEvents(
       ...(input.targetModuleId === undefined
         ? {}
         : { targetModuleId: input.targetModuleId }),
+      ...(input.sourceModuleId === undefined
+        ? {}
+        : { sourceModuleId: input.sourceModuleId }),
       ...(input.volleyId === undefined ? {} : { volleyId: input.volleyId }),
       ...(projectile.weapon === "drones" && input.droneStacks !== undefined
         ? { droneStacks: input.droneStacks }

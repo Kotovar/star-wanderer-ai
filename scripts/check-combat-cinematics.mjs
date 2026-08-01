@@ -1722,6 +1722,23 @@ function projectileEvents(projectiles, isCrit = false) {
 }
 
 {
+  const [event] = buildVolleyEvents({
+    from: "player",
+    to: "enemy",
+    sourceModuleId: 4,
+    targetModuleId: 9,
+    isCrit: false,
+    projectiles: [{ weapon: "laser", outcome: "hull", shieldDamage: 0, hullDamage: 5 }],
+  });
+
+  assert.equal(
+    event.sourceModuleId,
+    4,
+    "a player projectile retains the firing weapon-bay module",
+  );
+}
+
+{
   const events = projectileEvents([
     { weapon: "laser", outcome: "shield", shieldDamage: 20, hullDamage: 0 },
     { weapon: "quantum_torpedo", outcome: "hull", shieldDamage: 0, hullDamage: 55 },
