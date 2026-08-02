@@ -3,26 +3,49 @@
 import { useGameStore } from "../store";
 import { Button } from "@/components/ui/button";
 import { MODULE_RECIPES } from "@/game/constants/crafting";
+import type { DerelictApproach } from "@/game/types";
+import { getDerelictApproachBlockReason } from "@/game/slices/locations/helpers/exploreDerelictShip";
 import { useTranslation } from "@/lib/useTranslation";
-import { ArrowLeft, Cpu, DraftingCompass, Gem, Search, Wrench } from "lucide-react";
+import {
+    ArrowLeft,
+    Cpu,
+    Database,
+    DraftingCompass,
+    Gem,
+    Search,
+    Wrench,
+} from "lucide-react";
 import { EventIllustration } from "./EventIllustration";
 
 export function DerelictShipPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
     const crew = useGameStore((s) => s.crew);
+    const modules = useGameStore((s) => s.ship.modules);
     const exploreDerelictShip = useGameStore((s) => s.exploreDerelictShip);
     const showSectorMap = useGameStore((s) => s.showSectorMap);
     const { t } = useTranslation();
 
     if (!currentLocation || currentLocation.type !== "derelict_ship") return null;
 
-    const hasScout = crew.some((c) => c.profession === "scout");
     const isExplored = currentLocation.derelictExplored ?? false;
     const loot = currentLocation.derelictLoot;
+    const approaches: DerelictApproach[] = [
+        "boarding",
+        "engineering",
+        "archive",
+    ];
 
-    const hasAnyLoot =
+    const hasAnyLoot = Boolean(
         loot &&
-        (loot.spares || loot.electronics || loot.rare_minerals || loot.moduleRecipeId);
+            (loot.spares ||
+                loot.electronics ||
+                loot.rare_minerals ||
+                loot.ancient_data ||
+                loot.tech_salvage ||
+                loot.moduleRecipeId ||
+                loot.crewDamage ||
+                loot.moduleDamage),
+    );
 
     return (
         <div className="flex flex-col gap-4 p-4">
@@ -53,6 +76,11 @@ export function DerelictShipPanel() {
                                     ✓ {t("derelict_ship.explored_results")}
                                 </div>
                                 <div className="space-y-1 text-sm">
+                                    {loot?.approach && (
+                                        <div className="text-[#00d4ff] text-xs uppercase tracking-wider">
+                                            {t(`derelict_ship.approach.${loot.approach}.name`)}
+                                        </div>
+                                    )}
                                     {loot?.spares && loot.spares > 0 && (
                                         <div className="flex items-center gap-2 text-[#aaa]">
                                             <Wrench size={14} /> {t("derelict_ship.loot_spares")}: ×{loot.spares}
@@ -76,6 +104,31 @@ export function DerelictShipPanel() {
                                                 : loot.moduleRecipeId}
                                         </div>
                                     )}
+                                    {loot?.ancient_data && loot.ancient_data > 0 && (
+                                        <div className="flex items-center gap-2 text-[#cc44ff]">
+                                            <Database size={14} /> {t("derelict_ship.loot_ancient_data")}: ×{loot.ancient_data}
+                                        </div>
+                                    )}
+                                    {loot?.tech_salvage && loot.tech_salvage > 0 && (
+                                        <div className="flex items-center gap-2 text-[#00d4ff]">
+                                            <Wrench size={14} /> {t("derelict_ship.loot_tech_salvage")}: ×{loot.tech_salvage}
+                                        </div>
+                                    )}
+                                    {loot?.crewDamage && loot.crewDamage > 0 && (
+                                        <div className="text-[#ff6644]">
+                                            {t("derelict_ship.result_crew_damage", {
+                                                damage: loot.crewDamage,
+                                            })}
+                                        </div>
+                                    )}
+                                    {loot?.moduleDamage && loot.damagedModuleName && (
+                                        <div className="text-[#ff6644]">
+                                            {t("derelict_ship.result_module_damage", {
+                                                damage: loot.moduleDamage,
+                                                module_name: loot.damagedModuleName,
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                             </>
                         ) : (
@@ -86,25 +139,48 @@ export function DerelictShipPanel() {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        <div className="text-xs text-[#888] space-y-1">
-                            <div>• {t("derelict_ship.hint_scout")}</div>
-                            <div>• {t("derelict_ship.hint_loot")}</div>
-                            <div>• {t("derelict_ship.hint_blueprint")}</div>
+                        <div className="text-xs text-[#888] uppercase tracking-wider">
+                            {t("derelict_ship.choose_approach")}
                         </div>
+                        {approaches.map((approach) => {
+                            const blockReason = getDerelictApproachBlockReason(
+                                approach,
+                                crew,
+                                modules,
+                            );
 
-                        {!hasScout && (
-                            <div className="text-[#ff0040] text-xs p-2 border border-[#ff004033]">
-                                ⚠ {t("derelict_ship.requires_scout")}
-                            </div>
-                        )}
-
-                        <Button
-                            disabled={!hasScout}
-                            onClick={() => exploreDerelictShip(currentLocation.id)}
-                            className="w-full bg-transparent border-2 border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] uppercase tracking-wider text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <Search size={14} /> {t("derelict_ship.explore_button")}
-                        </Button>
+                            return (
+                                <div key={approach} className="space-y-1">
+                                    <Button
+                                        disabled={Boolean(blockReason)}
+                                        onClick={() =>
+                                            exploreDerelictShip(
+                                                currentLocation.id,
+                                                approach,
+                                            )
+                                        }
+                                        className="h-auto w-full justify-start bg-transparent border border-[#00d4ff88] px-3 py-2 text-left hover:bg-[#00d4ff11] cursor-pointer disabled:cursor-not-allowed"
+                                    >
+                                        <span className="flex flex-col gap-0.5">
+                                            <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#00d4ff]">
+                                                <Search size={14} /> {t(`derelict_ship.approach.${approach}.name`)}
+                                            </span>
+                                            <span className="text-[10px] font-normal normal-case leading-tight text-[#aaa]">
+                                                {t(`derelict_ship.approach.${approach}.description`)}
+                                            </span>
+                                            <span className="text-[10px] font-normal normal-case leading-tight text-[#ffb000]">
+                                                {t(`derelict_ship.approach.${approach}.risk`)}
+                                            </span>
+                                        </span>
+                                    </Button>
+                                    {blockReason && (
+                                        <div className="text-[10px] text-[#ff6644] px-1">
+                                            {t(`derelict_ship.requires_${blockReason}`)}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
             </div>

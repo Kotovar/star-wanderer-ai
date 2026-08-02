@@ -2284,13 +2284,38 @@
         "hint_loot": "Possible loot: Spare Parts, Electronics, Rare Minerals",
         "hint_blueprint": "10% chance: find a hybrid module blueprint",
         "requires_scout": "Requires a scout in the crew",
+        "requires_engineer": "Requires an engineer in the crew",
+        "requires_scientist": "Requires a scientist in the crew",
+        "requires_scanner": "Requires an active scanner or deep survey array",
         "explore_button": "Search the Wreck",
+        "choose_approach": "CHOOSE APPROACH",
+        "approach": {
+            "boarding": {
+                "name": "BOARDING PARTY",
+                "description": "Search the interior for cargo and possible blueprints.",
+                "risk": "Risk: 25% chance the scout takes 5 HP damage."
+            },
+            "engineering": {
+                "name": "ENGINEERING SALVAGE",
+                "description": "An engineer strips usable systems for 50% more spares and electronics.",
+                "risk": "Risk: 25% chance an active module takes 5 HP damage."
+            },
+            "archive": {
+                "name": "ARCHIVE EXTRACTION",
+                "description": "A scientist and active scanner recover ancient records and tech salvage.",
+                "risk": "Risk: 25% chance the scanner takes 10 HP damage."
+            }
+        },
         "explored_results": "Wreck searched — found:",
         "explored_empty": "Wreck already searched — nothing remains",
         "loot_spares": "Spare Parts",
         "loot_electronics": "Electronics",
         "loot_rare_minerals": "Rare Minerals",
-        "loot_blueprint": "Module Blueprint"
+        "loot_blueprint": "Module Blueprint",
+        "loot_ancient_data": "Ancient Data",
+        "loot_tech_salvage": "Tech Salvage",
+        "result_crew_damage": "Scout injured: -{{damage}} HP",
+        "result_module_damage": "{{module_name}} damaged: -{{damage}} HP"
     },
     "anomaly": {
         "title": "▸ ANOMALY LV{{level}}",
@@ -5104,6 +5129,12 @@
         "exploreDerelictShip_4": "🔍 {{scout_name}} searched the wreck: {{value}}",
         "exploreDerelictShip_5": "🔍 {{scout_name}} searched the wreck — nothing of value",
         "exploreDerelictShip_6": "📐 Blueprint found: {{icon}} {{recipe_name}}!",
+        "exploreDerelictShip_requires_scout": "No scout to explore the wreck!",
+        "exploreDerelictShip_requires_engineer": "Engineering salvage requires an engineer!",
+        "exploreDerelictShip_requires_scientist": "Archive extraction requires a scientist!",
+        "exploreDerelictShip_requires_scanner": "Archive extraction requires an active scanner!",
+        "exploreDerelictShip_scout_damage": "⚠ {{scout_name}} was injured in the wreck: -{{damage}} HP",
+        "exploreDerelictShip_module_damage": "⚠ Module \"{{module_name}}\" was damaged: -{{damage}} HP",
         "abandonDive_1": "🪸 Dive aborted. Probe lost.",
         "diveDeeper_1": "Cannot dive deeper — the storm core has been reached.",
         "diveDeeper_2": "🔽 Diving to layer {{nextDepth}}: {{value}}",

@@ -2284,13 +2284,38 @@
         "hint_loot": "Возможная добыча: Запчасти, Электроника, Редкие минералы",
         "hint_blueprint": "Шанс 10%: найти чертёж гибридного модуля",
         "requires_scout": "Требуется разведчик в экипаже",
+        "requires_engineer": "Требуется инженер в экипаже",
+        "requires_scientist": "Требуется учёный в экипаже",
+        "requires_scanner": "Требуется активный сканер или массив глубокого обзора",
         "explore_button": "Исследовать обломки",
+        "choose_approach": "ВЫБЕРИТЕ ПОДХОД",
+        "approach": {
+            "boarding": {
+                "name": "АБОРДАЖ",
+                "description": "Обыскать внутренние отсеки ради груза и возможных чертежей.",
+                "risk": "Риск: 25% — разведчик получит 5 HP урона."
+            },
+            "engineering": {
+                "name": "ИНЖЕНЕРНЫЙ РАЗБОР",
+                "description": "Инженер снимет пригодные системы: на 50% больше запчастей и электроники.",
+                "risk": "Риск: 25% — активный модуль получит 5 HP урона."
+            },
+            "archive": {
+                "name": "ИЗВЛЕЧЕНИЕ АРХИВА",
+                "description": "Учёный и активный сканер извлекут древние записи и тех. металлолом.",
+                "risk": "Риск: 25% — сканер получит 10 HP урона."
+            }
+        },
         "explored_results": "Обломки исследованы — найдено:",
         "explored_empty": "Обломки уже исследованы — ничего не осталось",
         "loot_spares": "Запчасти",
         "loot_electronics": "Электроника",
         "loot_rare_minerals": "Редкие минералы",
-        "loot_blueprint": "Чертёж модуля"
+        "loot_blueprint": "Чертёж модуля",
+        "loot_ancient_data": "Древние данные",
+        "loot_tech_salvage": "Тех. металлолом",
+        "result_crew_damage": "Разведчик ранен: -{{damage}} HP",
+        "result_module_damage": "Модуль «{{module_name}}» повреждён: -{{damage}} HP"
     },
     "anomaly": {
         "title": "▸ АНОМАЛИЯ LV{{level}}",
@@ -5104,6 +5129,12 @@
         "exploreDerelictShip_4": "🔍 {{scout_name}} обыскал обломки: {{value}}",
         "exploreDerelictShip_5": "🔍 {{scout_name}} обыскал обломки — ничего ценного",
         "exploreDerelictShip_6": "📐 Найден чертёж: {{icon}} {{recipe_name}}!",
+        "exploreDerelictShip_requires_scout": "Нет разведчика для исследования обломков!",
+        "exploreDerelictShip_requires_engineer": "Для инженерного разбора нужен инженер!",
+        "exploreDerelictShip_requires_scientist": "Для извлечения архива нужен учёный!",
+        "exploreDerelictShip_requires_scanner": "Для извлечения архива нужен активный сканер!",
+        "exploreDerelictShip_scout_damage": "⚠ {{scout_name}} ранен на борту: -{{damage}} HP",
+        "exploreDerelictShip_module_damage": "⚠ Модуль «{{module_name}}» повреждён: -{{damage}} HP",
         "abandonDive_1": "🪸 Погружение прервано. Зонд утерян.",
         "diveDeeper_1": "Глубже нырнуть невозможно — достигнуто ядро шторма.",
         "diveDeeper_2": "🔽 Погружение на слой {{nextDepth}}: {{value}}",
