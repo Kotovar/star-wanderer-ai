@@ -3,6 +3,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { SFX_PRESETS } from "../audio/source/sfx/presets.mjs";
+import { SYNTH_SAMPLE_RATE, SYNTH_SOUNDS } from "../audio/source/sfx/combat-synth.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const registryUrl = pathToFileURL(resolve(root, "src/sounds/utils.ts")).href;
@@ -141,12 +142,33 @@ for (const id of requiredVariantIds) {
   if (!urls || urls.length !== 3) fail(`${id} must expose exactly three variants`);
 }
 
-const laserPresets = SFX_PRESETS.combat_laser?.presets;
-if (!laserPresets || laserPresets.length !== 3) {
-  fail("combat_laser must keep three generated variants");
+// Выстрелы больше не пресеты jsfxr: у каждого свой слоёный рендер.
+for (const id of Object.keys(SYNTH_SOUNDS)) {
+  if (SFX_PRESETS[id]) fail(`${id} must be synthesised in combat-synth.mjs, not duplicated as a jsfxr preset`);
 }
-if (laserPresets.some(({ p_base_freq, p_freq_ramp }) => p_base_freq >= 0.4 || p_freq_ramp > 0)) {
-  fail("combat_laser must be a lower non-rising discharge, not a chirp");
+for (const id of ["combat_laser", "combat_kinetic", "combat_enemy_fire"]) {
+  if (SYNTH_SOUNDS[id]?.variants.length !== 3) {
+    fail(`${id} must keep three generated variants`);
+  }
+}
+const laserSource = readFileSync(
+  resolve(root, "audio/source/sfx/combat-synth.mjs"),
+  "utf8",
+);
+const laserSweep = /freq: \[2050 \* pitch, (\d+) \* pitch\]/.exec(laserSource);
+if (!laserSweep || Number(laserSweep[1]) >= 2050) {
+  fail("combat_laser must be a falling discharge, not a rising chirp");
+}
+for (const [id, definition] of Object.entries(SYNTH_SOUNDS)) {
+  for (const [index, renderVariant] of definition.variants.entries()) {
+    const samples = renderVariant();
+    let peak = 0;
+    for (const sample of samples) peak = Math.max(peak, Math.abs(sample));
+    // Кодек добавляет свой овершут: без запаса в исходнике ogg вылезает за
+    // потолок -2 dB, который проверяется ниже уже по файлу.
+    if (peak > 0.55) fail(`${id}-${index + 1} leaves no headroom for the opus encoder (${peak.toFixed(2)})`);
+    if (samples.length < 0.06 * SYNTH_SAMPLE_RATE) fail(`${id}-${index + 1} is shorter than an audible shot`);
+  }
 }
 
 for (const [id, sound] of Object.entries(SOUND_REGISTRY)) {

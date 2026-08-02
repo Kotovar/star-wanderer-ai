@@ -30,31 +30,9 @@ const base = {
 const preset = (overrides) => ({ ...base, ...overrides });
 const variants = (overrides, frequencies) => frequencies.map((p_base_freq) => preset({ ...overrides, p_base_freq }));
 
-/** Explicit, non-random jsfxr definitions. wave_type: square=0, saw=1, sine=2, noise=3. */
+/** Выстрелы синтезируются в weapons.mjs. Explicit, non-random jsfxr definitions. wave_type: square=0, saw=1, sine=2, noise=3. */
 export const SFX_PRESETS = {
-  combat_kinetic: { directory: "combat", presets: variants({ wave_type: 3, p_env_sustain: 0.05, p_env_decay: 0.16, p_freq_ramp: -0.32, p_hpf_freq: 0.28, sound_vol: 0.24 }, [0.23, 0.27, 0.31]) },
-  combat_laser: {
-    directory: "combat",
-    presets: variants(
-      { wave_type: 0, p_env_attack: 0.01, p_env_sustain: 0.09, p_env_decay: 0.22, p_freq_ramp: -0.14, p_lpf_freq: 0.36, p_pha_offset: -0.08, sound_vol: 0.24 },
-      [0.22, 0.26, 0.3],
-    ),
-  },
-  combat_missile: { directory: "combat", presets: [preset({ wave_type: 3, p_env_attack: 0.02, p_env_sustain: 0.2, p_env_decay: 0.34, p_base_freq: 0.14, p_freq_ramp: -0.08, p_lpf_freq: 0.24, sound_vol: 0.28 })] },
-  combat_plasma: { directory: "combat", presets: [preset({ wave_type: 1, p_env_attack: 0.02, p_env_sustain: 0.14, p_env_decay: 0.24, p_base_freq: 0.32, p_freq_ramp: -0.05, p_vib_strength: 0.16, p_vib_speed: 0.58, p_lpf_freq: 0.42, p_pha_offset: 0.16, sound_vol: 0.2 })] },
-  combat_drones: { directory: "combat", presets: [preset({ wave_type: 0, p_env_sustain: 0.06, p_env_decay: 0.17, p_base_freq: 0.34, p_repeat_speed: 0.42, p_duty: 0.22, p_freq_ramp: -0.08, sound_vol: 0.16 })] },
-  combat_antimatter: { directory: "combat", presets: [preset({ wave_type: 2, p_env_attack: 0.03, p_env_sustain: 0.2, p_env_decay: 0.3, p_base_freq: 0.18, p_freq_ramp: 0.22, p_vib_strength: 0.32, p_vib_speed: 0.76, p_pha_offset: 0.36, sound_vol: 0.22 })] },
-  combat_quantum_torpedo: { directory: "combat", presets: [preset({ wave_type: 2, p_env_attack: 0.04, p_env_sustain: 0.2, p_env_decay: 0.34, p_base_freq: 0.14, p_freq_ramp: 0.08, p_vib_strength: 0.12, p_vib_speed: 0.3, p_lpf_freq: 0.22, p_lpf_ramp: 0.15, p_pha_offset: -0.42, sound_vol: 0.26 })] },
-  combat_ion_cannon: { directory: "combat", presets: [preset({ wave_type: 0, p_env_attack: 0.005, p_env_sustain: 0.06, p_env_decay: 0.18, p_base_freq: 0.16, p_freq_ramp: -0.16, p_duty: 0.2, p_lpf_freq: 0.18, p_pha_offset: -0.1, sound_vol: 0.25 })] },
-  combat_enemy_fire: { directory: "combat", presets: variants({ wave_type: 3, p_env_sustain: 0.05, p_env_decay: 0.16, p_freq_ramp: -0.2, p_lpf_freq: 0.32, sound_vol: 0.22 }, [0.18, 0.22, 0.26]) },
-  combat_shield_hit: { directory: "combat", presets: [preset({ wave_type: 2, p_env_attack: 0.01, p_env_sustain: 0.12, p_env_decay: 0.2, p_base_freq: 0.42, p_freq_ramp: 0.18, p_vib_strength: 0.06, p_vib_speed: 0.5, sound_vol: 0.19 })] },
-  combat_hull_hit: { directory: "combat", presets: [preset({ wave_type: 3, p_env_sustain: 0.04, p_env_decay: 0.19, p_base_freq: 0.16, p_freq_ramp: -0.22, p_hpf_freq: 0.12, sound_vol: 0.24 })] },
-  combat_shield_break: { directory: "combat", presets: [preset({ wave_type: 3, p_env_sustain: 0.12, p_env_decay: 0.33, p_base_freq: 0.28, p_freq_ramp: -0.25, p_lpf_freq: 0.28, sound_vol: 0.25 })] },
-  combat_miss: { directory: "combat", presets: [preset({ wave_type: 2, p_env_sustain: 0.07, p_env_decay: 0.2, p_base_freq: 0.38, p_freq_ramp: -0.34, p_hpf_freq: 0.2, sound_vol: 0.14 })] },
-  combat_critical: { directory: "combat", presets: [preset({ wave_type: 1, p_env_sustain: 0.08, p_env_decay: 0.2, p_base_freq: 0.62, p_freq_ramp: 0.28, p_arp_mod: -0.22, p_arp_speed: 0.58, sound_vol: 0.2 })] },
   combat_target_select: { directory: "combat", presets: [preset({ wave_type: 2, p_env_sustain: 0.075, p_env_decay: 0.21, p_base_freq: 0.55, p_freq_ramp: 0.08, sound_vol: 0.13 })] },
-  combat_enemy_destroyed: { directory: "combat", presets: [preset({ wave_type: 3, p_env_sustain: 0.2, p_env_decay: 0.42, p_base_freq: 0.18, p_freq_ramp: -0.2, p_lpf_freq: 0.22, sound_vol: 0.3 })] },
-  combat_player_destroyed: { directory: "combat", presets: [preset({ wave_type: 3, p_env_attack: 0.04, p_env_sustain: 0.36, p_env_decay: 0.58, p_base_freq: 0.1, p_freq_ramp: -0.14, p_lpf_freq: 0.15, sound_vol: 0.32 })] },
   combat_no_active_weapons: { directory: "combat", presets: [preset({ wave_type: 0, p_env_sustain: 0.08, p_env_decay: 0.2, p_base_freq: 0.19, p_freq_ramp: -0.12, p_duty: 0.36, sound_vol: 0.14 })] },
 
   travel_departure: { directory: "world", presets: [preset({ wave_type: 2, p_env_attack: 0.02, p_env_sustain: 0.16, p_env_decay: 0.28, p_base_freq: 0.23, p_freq_ramp: 0.2, p_vib_strength: 0.04, p_vib_speed: 0.5, sound_vol: 0.18 })] },

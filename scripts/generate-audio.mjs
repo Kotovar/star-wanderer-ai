@@ -7,6 +7,7 @@ import { sfxr } from "jsfxr";
 import { renderCombatLoop } from "../audio/source/music/space-combat.mjs";
 import { renderExplorationLoop } from "../audio/source/music/space-exploration.mjs";
 import { SFX_PRESETS } from "../audio/source/sfx/presets.mjs";
+import { SYNTH_SAMPLE_RATE, SYNTH_SOUNDS } from "../audio/source/sfx/combat-synth.mjs";
 
 const run = promisify(execFile);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -71,14 +72,34 @@ const generateSfx = async (tempDir) => {
       }
 
       const duration = wave.buffer.length / wave.header.sampleRate;
-      const fadeOutStart = Math.max(0.01, duration - 0.025).toFixed(3);
       const wav = resolve(tempDir, `${id}-${index + 1}.wav`);
       const name = definition.presets.length === 1 ? id : `${id}-${index + 1}`;
       await writeFile(wav, wavData(wave.dataURI));
       await encode(
         wav,
         resolve(outputRoot, "sfx", definition.directory, `${name}.ogg`),
-        `afade=t=in:st=0:d=0.006,afade=t=out:st=${fadeOutStart}:d=0.025,alimiter=limit=0.79:level=false`,
+        SFX_FILTER(duration),
+        "48k",
+      );
+    }
+  }
+};
+
+const SFX_FILTER = (duration) =>
+  `afade=t=in:st=0:d=0.006,afade=t=out:st=${Math.max(0.01, duration - 0.025).toFixed(3)}:d=0.025,alimiter=limit=0.79:level=false`;
+
+/** Бой приходит готовым PCM: у слоёного звука нет jsfxr-пресета. */
+const generateSynthSfx = async (tempDir) => {
+  for (const [id, definition] of Object.entries(SYNTH_SOUNDS)) {
+    for (const [index, renderVariant] of definition.variants.entries()) {
+      const samples = renderVariant();
+      const name = definition.variants.length === 1 ? id : `${id}-${index + 1}`;
+      const wav = resolve(tempDir, `${name}.wav`);
+      await writeStereoWav(wav, samples, samples, SYNTH_SAMPLE_RATE);
+      await encode(
+        wav,
+        resolve(outputRoot, "sfx", definition.directory, `${name}.ogg`),
+        SFX_FILTER(samples.length / SYNTH_SAMPLE_RATE),
         "48k",
       );
     }
@@ -101,7 +122,9 @@ const tempDir = await mkdtemp(resolve(root, ".tmp-audio-"));
 try {
   await generateMusic(tempDir);
   await generateSfx(tempDir);
-  console.log(`Generated ${Object.keys(SFX_PRESETS).length} sound definitions in public/audio.`);
+  await generateSynthSfx(tempDir);
+  const total = Object.keys(SFX_PRESETS).length + Object.keys(SYNTH_SOUNDS).length;
+  console.log(`Generated ${total} sound definitions in public/audio.`);
 } finally {
   await rm(tempDir, { recursive: true, force: true });
 }
