@@ -15,6 +15,7 @@ let isInterceptableWeapon;
 let getActivePointDefense;
 let getModulePointDefenseChance;
 let getPointDefenseOperatorBonus;
+let formatPointDefenseChances;
 
 function load(target) {
   try {
@@ -66,6 +67,7 @@ try {
     getActivePointDefense,
     getModulePointDefenseChance,
     getPointDefenseOperatorBonus,
+    formatPointDefenseChances,
   } = jiti(
     "../src/game/slices/combat/helpers/pointDefense.ts",
   ));
@@ -350,6 +352,64 @@ assert.match(
   crewAssignmentsDoc,
   /interception[\s\S]*?point_defense/,
   "crew documentation must describe the dedicated point-defense assignment",
+);
+
+// ─── Регрессии по найденным багам ─────────────────────────────────────────────
+
+assert.equal(
+  getActivePointDefense([
+    { id: 1, type: "point_defense", health: 100, level: 1 },
+    { id: 2, type: "point_defense", health: 100, level: 3 },
+  ])?.id,
+  2,
+  "the interceptor animation must launch from the strongest live point defense",
+);
+assert.equal(
+  formatPointDefenseChances({ level: 9 }),
+  "50/70/20",
+  "displayed interception chances must respect the per-weapon caps",
+);
+assert.equal(
+  formatPointDefenseChances(),
+  "20/45/8",
+  "a level-one module must advertise all three profiles, not just the missile one",
+);
+assert.doesNotMatch(
+  moduleList,
+  /20 \+ Math\.max\(0, \(module\.level \?\? 1\) - 1\) \* 5/,
+  "the module panel must not recompute interception chances by hand",
+);
+assert.doesNotMatch(
+  combatPanel,
+  /point_defense_chance", \{ chance: 20 \}/,
+  "enemy point defense must not advertise a hardcoded missile-only chance",
+);
+for (const weapon of ["kinetic", "missile", "siege_torpedo"]) {
+  const guard = weapon === "kinetic"
+    ? new RegExp(`result\\.missedShots < weaponCounts\\.${weapon}`)
+    : new RegExp(
+      `result\\.missedShots \\+ result\\.interceptedCount < weaponCounts\\.${weapon}`,
+    );
+  assert.match(
+    playerAttackSource,
+    guard,
+    `${weapon} must only strip armor when a shot actually reached the hull`,
+  );
+}
+assert.match(
+  enemyAttackSource,
+  /finalDamage \* launcherShare/,
+  "intercepting the missile battery must remove its share of the multiplied damage",
+);
+assert.match(
+  enemyAttackSource,
+  /finalDamage <= 0\) \{\s*\n\s*recordMiss/,
+  "a fully intercepted enemy volley must still be recorded as a miss",
+);
+assert.match(
+  sourceOf("src/game/components/combatCinematicSound.ts"),
+  /case "intercepted":\s*\n\s*return "combat_shield_break"/,
+  "an intercepted shot must not play the hull-hit sound",
 );
 
 console.log("Point-defense checks passed.");

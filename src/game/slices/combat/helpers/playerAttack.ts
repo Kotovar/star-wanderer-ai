@@ -116,7 +116,6 @@ interface DamageResult {
   totalModuleDamage: number;
   remainingShields: number;
   missedShots: WeaponCounts;
-  missileInterceptedCount: number;
   armorPenetration: number;
   plasmaHitCount: number;
   droneHitCount: number;
@@ -553,7 +552,6 @@ function calculateAllDamage(
   let armorPenetration = 0;
   let plasmaHitCount = 0;
   let droneHitCount = 0;
-  let missileInterceptedCount = 0;
   const logs: string[] = [];
   const projectiles: CombatProjectileResolution[] = [];
   const missedShots: WeaponCounts = {
@@ -668,7 +666,11 @@ function calculateAllDamage(
     remainingShields = result.remainingShields;
     logs.push(...result.logs);
     missedShots.kinetic = result.missedShots;
-    armorPenetration = Math.max(armorPenetration, result.kineticArmorPenetration);
+    // Броню режет только долетевший снаряд: иначе один промазавший ствол
+    // снимал защиту для всего залпа.
+    if (result.missedShots < weaponCounts.kinetic) {
+      armorPenetration = Math.max(armorPenetration, result.kineticArmorPenetration);
+    }
   }
 
   if (weaponCounts.drones > 0) {
@@ -707,8 +709,9 @@ function calculateAllDamage(
     remainingShields = result.remainingShields;
     logs.push(...result.logs);
     missedShots.missile = result.missedShots;
-    missileInterceptedCount = result.missileInterceptedCount;
-    armorPenetration = Math.max(armorPenetration, WEAPON_TYPES.missile.armorPenetration ?? 0);
+    if (result.missedShots + result.interceptedCount < weaponCounts.missile) {
+      armorPenetration = Math.max(armorPenetration, WEAPON_TYPES.missile.armorPenetration ?? 0);
+    }
   }
 
   if (weaponCounts.siege_torpedo > 0) {
@@ -728,10 +731,12 @@ function calculateAllDamage(
     remainingShields = result.remainingShields;
     logs.push(...result.logs);
     missedShots.siege_torpedo = result.missedShots;
-    armorPenetration = Math.max(
-      armorPenetration,
-      WEAPON_TYPES.siege_torpedo.armorPenetration ?? 0,
-    );
+    if (result.missedShots + result.interceptedCount < weaponCounts.siege_torpedo) {
+      armorPenetration = Math.max(
+        armorPenetration,
+        WEAPON_TYPES.siege_torpedo.armorPenetration ?? 0,
+      );
+    }
   }
 
   if (weaponCounts.quantum_torpedo > 0) {
@@ -784,7 +789,6 @@ function calculateAllDamage(
     totalModuleDamage,
     remainingShields,
     missedShots,
-    missileInterceptedCount,
     armorPenetration,
     plasmaHitCount,
     droneHitCount,

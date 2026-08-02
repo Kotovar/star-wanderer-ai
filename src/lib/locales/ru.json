@@ -2520,7 +2520,7 @@
         "info_title": "Информация о модуле корабля",
         "damage_bonus": "Бонус к урону",
         "point_defense_chance": "ПРО {{chance}}%",
-        "point_defense_intercept_chance": "Перехват ракет",
+        "point_defense_intercept_chance": "Перехват (ракета/торпеда/квант)",
         "crew_slots": "Места экипажа",
         "repair_per_turn": "Ремонт за ход",
         "modules": "модулей",

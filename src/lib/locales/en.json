@@ -2520,7 +2520,7 @@
         "info_title": "Ship module information",
         "damage_bonus": "Damage bonus",
         "point_defense_chance": "PD {{chance}}%",
-        "point_defense_intercept_chance": "Missile interception",
+        "point_defense_intercept_chance": "Interception (missile/torpedo/quantum)",
         "crew_slots": "Crew slots",
         "repair_per_turn": "Repair per turn",
         "modules": "modules",

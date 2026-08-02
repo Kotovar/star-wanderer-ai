@@ -23,6 +23,7 @@ import {
     type MergeEffectKey,
 } from "@/game/races/mergeEffectLabels";
 import { StatIcon, type StatIconType } from "./StatIcon";
+import { formatPointDefenseChances } from "@/game/slices/combat/helpers/pointDefense";
 import { getModuleImageUrl } from "./moduleArt";
 import { GameImage } from "./GameImage";
 import {
@@ -775,7 +776,7 @@ function renderModuleTypeDetailStats(
             )}
             {module.type === "point_defense" && (
                 <DetailedStatRow icon="shields" label={`${t("module_list.point_defense_intercept_chance")}:`}>
-                    {20 + Math.max(0, (module.level ?? 1) - 1) * 5}%
+                    {formatPointDefenseChances({ level: module.level })}%
                     <MergeDelta delta={flatDelta("pointDefense")} />
                 </DetailedStatRow>
             )}

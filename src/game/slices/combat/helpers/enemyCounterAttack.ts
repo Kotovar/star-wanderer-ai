@@ -313,8 +313,15 @@ export function performEnemyAttack(
             interceptedMissileLauncher.id,
             interceptedMissileLauncher.id,
         );
-        finalDamage -= interceptedMissileLauncher.damage ?? 0;
-        if (finalDamage <= 0) return;
+        // Доля батареи берётся от УЖЕ умноженного урона: крит и multi_hit
+        // разгоняют и её выстрел тоже, поэтому сырое `damage` тут занижало вычет.
+        const launcherShare = (interceptedMissileLauncher.damage ?? 0) / eDmg;
+        finalDamage -= Math.round(finalDamage * launcherShare);
+        if (finalDamage <= 0) {
+            recordMiss(set, tgt);
+            cleanupAfterEnemyAttack(state, set, get, timeline);
+            return;
+        }
     }
 
     // Mirror Shield check

@@ -39,6 +39,9 @@ function getProjectileImpactSound(
     case "miss":
     case "blocked":
       return "combat_miss";
+    // Снаряд разлетелся на полпути — это не удар по корпусу.
+    case "intercepted":
+      return "combat_shield_break";
     case "shield":
     case "absorbed":
       return "combat_shield_hit";

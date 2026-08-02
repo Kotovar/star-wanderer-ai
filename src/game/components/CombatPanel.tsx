@@ -24,6 +24,7 @@ import { WEAPON_TYPES, DRONE_MAX_STACKS, DRONE_STACK_BONUS } from "@/game/consta
 import { calculateCombatTimeCost } from "@/game/slices/combat/helpers/combatTime";
 import { getBossModulePassives } from "@/game/slices/combat/helpers/bossEffectLabels";
 import { createCombatCinematicSnapshot } from "@/game/slices/combat/helpers/combatTimeline";
+import { formatPointDefenseChances } from "@/game/slices/combat/helpers/pointDefense";
 import {
   calculateFinalDamagePerWeapon,
   computeBayAccuracyModifier,
@@ -531,7 +532,9 @@ export function CombatPanel() {
                       {module.type === "point_defense" && (
                         <>
                           {" · "}
-                          {t("module_list.point_defense_chance", { chance: 20 })}
+                          {t("module_list.point_defense_chance", {
+                            chance: formatPointDefenseChances(),
+                          })}
                         </>
                       )}
                     </span>

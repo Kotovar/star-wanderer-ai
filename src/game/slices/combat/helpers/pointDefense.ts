@@ -44,12 +44,16 @@ export function getActivePointDefense<T extends PointDefenseModule>(
   return getActivePointDefenses(modules)[0];
 }
 
+/**
+ * Живые ПРО от сильного к слабому: и затухание в общем шансе, и модуль-стрелок
+ * в кинематике должны брать один и тот же «первый» модуль.
+ */
 export function getActivePointDefenses<T extends PointDefenseModule>(
   modules: readonly T[],
 ): T[] {
-  return modules.filter(
-    (module) => module.type === "point_defense" && module.health > 0,
-  );
+  return modules
+    .filter((module) => module.type === "point_defense" && module.health > 0)
+    .toSorted((a, b) => (b.level ?? 1) - (a.level ?? 1));
 }
 
 export function getModulePointDefenseChance<T extends PointDefenseModule>(
@@ -65,7 +69,6 @@ export function getModulePointDefenseChance<T extends PointDefenseModule>(
     .map((pointDefense) =>
       getPointDefenseChance(weapon, { level: pointDefense.level }),
     )
-    .toSorted((a, b) => b - a)
     .reduce((total, chance, index) => total + chance * 0.5 ** index, 0);
   const profile = POINT_DEFENSE_CHANCES[weapon];
   return Math.min(
@@ -91,6 +94,18 @@ export function getPointDefenseOperatorBonus<T extends PointDefenseModule>(
   );
 
   return operator ? 0.05 + Math.max(0, (operator.level ?? 1) - 1) * 0.01 : 0;
+}
+
+/**
+ * Шансы перехвата по всем перехватываемым типам — «20/45/8». UI обязан брать
+ * их отсюда: у торпед свои профили и свои капы, один хардкод по ракете врёт.
+ */
+export function formatPointDefenseChances(
+  interceptor: PointDefenseInterceptor = {},
+): string {
+  return (Object.keys(POINT_DEFENSE_CHANCES) as PointDefenseWeapon[])
+    .map((weapon) => Math.round(getPointDefenseChance(weapon, interceptor) * 100))
+    .join("/");
 }
 
 export function getPointDefenseChance(

@@ -481,8 +481,8 @@ export function processMissileDamage(
     interceptChance: number,
     interceptorModuleId: number | undefined,
     projectiles: CombatProjectileResolution[],
-): InterceptableDamageResult & { missileInterceptedCount: number } {
-    const result = processInterceptableProjectileDamage(
+): InterceptableDamageResult {
+    return processInterceptableProjectileDamage(
         "missile",
         "Ракета",
         weaponCount,
@@ -495,8 +495,6 @@ export function processMissileDamage(
         interceptorModuleId,
         projectiles,
     );
-
-    return { ...result, missileInterceptedCount: result.interceptedCount };
 }
 
 export function processSiegeTorpedoDamage(
@@ -753,7 +751,10 @@ export function processQuantumTorpedoDamage(
             continue;
         }
 
-        const torpedoDmg = finalDamagePerWeapon * damageMultiplier;
+        const torpedoDmg = Math.max(
+            1,
+            Math.floor(finalDamagePerWeapon * damageMultiplier),
+        );
         totalModuleDamage += torpedoDmg;
         logs.push(`Квант. торпеда: ${torpedoDmg} прямо по модулям!`);
         recordProjectileHit(projectiles, "quantum_torpedo", 0, torpedoDmg);
