@@ -1,5 +1,7 @@
 import type { WeaponType } from "@/game/types";
 import type {
+  CombatCinematicEvent,
+  CombatCinematicSide,
   CombatProjectileOutcome,
   CombatTurnTimeline,
 } from "@/game/types/combatCinematics";
@@ -206,6 +208,143 @@ export function getCombatCinematicProjectileReadout(
     case "blocked":
       return { status: "blocked", ...result };
   }
+}
+
+/**
+ * Активное событие сцены глазами presentation-слоя: `impact` — прогресс, на
+ * котором удар уже виден. Canvas считает его сам (у него живут константы
+ * перехвата и промаха), а свет и импульс берут готовое число.
+ */
+export interface CombatCinematicActiveEvent {
+  event: CombatCinematicEvent;
+  progress: number;
+  impact: number;
+}
+
+export interface CombatCinematicSceneFlash {
+  /** Индекс события в переданном списке: цвет вспышки canvas берёт у него же. */
+  index: number;
+  alpha: number;
+}
+
+export interface CombatCinematicImpulse {
+  x: number;
+  y: number;
+}
+
+function clampUnit(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
+/** Доля события, прошедшая после удара. */
+function afterImpact(progress: number, impact: number): number {
+  if (progress < impact) return -1;
+  return impact >= 1 ? 1 : clampUnit((progress - impact) / (1 - impact));
+}
+
+/** Яркость вспышки в пике: чем больше событие, тем сильнее оно освещает сцену. */
+function getFlashPeak(event: CombatCinematicEvent): number {
+  switch (event.kind) {
+    case "vessel_destroyed":
+      return 0.5;
+    case "module_destroyed":
+      return 0.24;
+    case "boss_ability":
+      return event.effect === "aoe_damage" ? 0.2 : 0.12;
+    case "damage":
+      return event.hullDamage > 0 ? 0.12 : 0.05;
+    case "reflection":
+      return event.hullDamage > 0 ? 0.1 : 0.05;
+    case "projectile":
+      // Промах, перехват и блок не долетают до корпуса — сцену им освещать нечем.
+      if (
+        event.outcome === "miss" ||
+        event.outcome === "intercepted" ||
+        event.outcome === "blocked"
+      ) return 0;
+      if (event.hullDamage > 0) return event.isCrit ? 0.26 : 0.13;
+      return 0.05;
+    default:
+      return 0;
+  }
+}
+
+/**
+ * Свет от самого сильного из идущих событий. Как и тряска, берётся максимум,
+ * а не сумма: залп внахлёст иначе держал бы экран засвеченным.
+ */
+export function getCombatCinematicSceneFlash(
+  active: readonly CombatCinematicActiveEvent[],
+): CombatCinematicSceneFlash | null {
+  let strongest: CombatCinematicSceneFlash | null = null;
+
+  for (let index = 0; index < active.length; index += 1) {
+    const item = active[index];
+    const after = afterImpact(item.progress, item.impact);
+    if (after < 0) continue;
+    const alpha = getFlashPeak(item.event) * (1 - after) ** 1.6;
+    if (alpha <= 0.004) continue;
+    if (strongest === null || alpha > strongest.alpha) strongest = { index, alpha };
+  }
+
+  return strongest;
+}
+
+/** Насколько далеко корпус уезжает назад при выстреле. */
+const RECOIL_WINDOW = 0.16;
+const RECOIL_DISTANCE = 7;
+const MAX_IMPULSE = 14;
+
+/**
+ * Смещение корпуса за кадр: отдача на выстреле, толчок от попадания и дрожь
+ * при потере модуля. Одно число на сторону — canvas двигает корабль целиком,
+ * вместе с модулями, щитом и полосами.
+ */
+export function getCombatCinematicShipImpulse(
+  active: readonly CombatCinematicActiveEvent[],
+  side: CombatCinematicSide,
+): CombatCinematicImpulse {
+  const facing = side === "player" ? 1 : -1;
+  let x = 0;
+  let y = 0;
+
+  for (const { event, progress, impact } of active) {
+    if (event.kind === "projectile") {
+      if (event.from === side && progress < RECOIL_WINDOW) {
+        x -= facing * RECOIL_DISTANCE * Math.sin((progress / RECOIL_WINDOW) * Math.PI);
+      }
+      if (event.to !== side) continue;
+      const after = afterImpact(progress, impact);
+      if (after < 0) continue;
+      if (event.outcome === "miss" || event.outcome === "intercepted") continue;
+      const power = event.hullDamage > 0 ? (event.isCrit ? 12 : 7) : 3.5;
+      const decay = (1 - after) ** 2;
+      // Толчок идёт по направлению полёта снаряда, а не «от себя».
+      x += (event.from === "player" ? 1 : -1) * power * decay;
+      y += Math.sin(after * Math.PI * 3) * power * 0.3 * decay;
+      continue;
+    }
+
+    if (event.kind === "damage" && event.side === side) {
+      const after = afterImpact(progress, impact);
+      if (after >= 0) y += Math.sin(after * Math.PI * 4) * 4 * (1 - after) ** 2;
+      continue;
+    }
+
+    if (
+      (event.kind === "module_destroyed" || event.kind === "vessel_destroyed") &&
+      event.side === side
+    ) {
+      const power = event.kind === "vessel_destroyed" ? 9 : 5;
+      y += Math.sin(progress * Math.PI * 7) * power * (1 - progress) ** 2;
+      x -= facing * power * 0.4 * (1 - progress) ** 2;
+    }
+  }
+
+  return {
+    x: Math.max(-MAX_IMPULSE, Math.min(MAX_IMPULSE, x)),
+    y: Math.max(-MAX_IMPULSE, Math.min(MAX_IMPULSE, y)),
+  };
 }
 
 /** Сводка берёт только уже рассчитанный таймлайн и ничего не меняет в бою. */

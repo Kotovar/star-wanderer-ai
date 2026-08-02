@@ -444,9 +444,12 @@ export function CombatPanel() {
         onPlaybackComplete={handlePlaybackComplete}
       />
 
-      {!isPlaybackActive && lastVolleySummary && (
-        <CombatVolleySummaryCard summary={lastVolleySummary} t={t} />
-      )}
+      {/* Итог предыдущего залпа: пока идёт анимация — прочерк, чтобы результат
+          не опережал кадр. Высота строки не зависит от содержимого. */}
+      <CombatVolleySummaryLine
+        summary={isPlaybackActive ? null : lastVolleySummary}
+        t={t}
+      />
 
       {/* Attack actions */}
       <div className="flex gap-2.5 flex-col sm:flex-row">
@@ -617,51 +620,74 @@ function CombatMetric({
   );
 }
 
-function CombatVolleySummaryCard({
+/**
+ * Итог залпа — одна строка постоянной высоты, стоящая с начала боя. Карточка
+ * на несколько строк появлялась после первого залпа и пряталась на время
+ * анимации, каждый раз сдвигая «Атаковать»; зарезервированное под неё место
+ * выглядело пустой дырой. Строка не двигается и меняет только содержимое.
+ */
+function CombatVolleySummaryLine({
   summary,
   t,
 }: {
-  summary: CombatCinematicVolleySummary;
+  summary: CombatCinematicVolleySummary | null;
   t: TFn;
 }) {
-  const destroyedModules =
-    summary.destroyedEnemyModuleIds.length + summary.destroyedPlayerModuleIds.length;
-  const damageColumns = [
-    {
-      label: t("combat_cinematics.summary.dealt"),
-      shield: summary.enemyShieldDamage,
-      hull: summary.enemyHullDamage,
-      color: "#00ff9d",
-    },
-    {
-      label: t("combat_cinematics.summary.received"),
-      shield: summary.playerShieldDamage,
-      hull: summary.playerHullDamage,
-      color: "#ff4d6d",
-    },
-  ];
+  const formatDamage = (shield: number, hull: number) => {
+    const parts = [];
+    if (shield > 0) parts.push(`${t("combat_cinematics.summary.shield")} −${shield}`);
+    if (hull > 0) parts.push(`${t("combat_cinematics.summary.hull")} −${hull}`);
+    return parts.length > 0 ? parts.join(" / ") : "—";
+  };
+  const destroyedModules = summary
+    ? summary.destroyedEnemyModuleIds.length + summary.destroyedPlayerModuleIds.length
+    : 0;
+  // Стрелка вместо слова: на телефоне «нанесено/получено» съедали строку и
+  // хвост с критами обрезался. Направление и цвет читаются сразу, слово
+  // остаётся в подсказке.
+  const damageColumns = summary
+    ? [
+      {
+        label: t("combat_cinematics.summary.dealt"),
+        arrow: "→",
+        text: formatDamage(summary.enemyShieldDamage, summary.enemyHullDamage),
+        color: "#00ff9d",
+      },
+      {
+        label: t("combat_cinematics.summary.received"),
+        arrow: "←",
+        text: formatDamage(summary.playerShieldDamage, summary.playerHullDamage),
+        color: "#ff4d6d",
+      },
+    ]
+    : [];
 
   return (
-    <div className="border border-[#34566c] bg-[rgba(3,12,23,0.78)] px-3 py-2">
-      <div className="font-['Orbitron'] text-[10px] font-bold tracking-wider text-[#b8f5ff]">
+    <div className="flex h-7 items-center gap-x-3 overflow-hidden whitespace-nowrap border border-[#34566c] bg-[rgba(3,12,23,0.78)] px-3 text-[10px]">
+      <span className="font-['Orbitron'] font-bold tracking-wider text-[#b8f5ff]">
         {t("combat_cinematics.summary.title")}
-      </div>
-      <div className="mt-1 grid grid-cols-2 gap-3 text-[10px]">
-        {damageColumns.map(({ label, shield, hull, color }) => (
-          <div key={label} className="min-w-0 border-l-2 pl-2" style={{ borderColor: color }}>
-            <div className="font-bold uppercase" style={{ color }}>{label}</div>
-            {shield > 0 && <div className="text-[#78c8ff]">{t("combat_cinematics.summary.shield")}: −{shield}</div>}
-            {hull > 0 && <div className="text-[#f5d0d9]">{t("combat_cinematics.summary.hull")}: −{hull}</div>}
-            {shield === 0 && hull === 0 && <div className="text-[#667788]">—</div>}
-          </div>
-        ))}
-      </div>
-      {(summary.criticalHits > 0 || destroyedModules > 0 || summary.droneStacks > 0) && (
-        <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-[#aebdca]">
-          {summary.criticalHits > 0 && <span className="text-[#ffcb57]">✦ {t("combat_cinematics.summary.critical")}: {summary.criticalHits}</span>}
-          {destroyedModules > 0 && <span className="text-[#ff9d8c]">✕ {t("combat_cinematics.summary.modules_destroyed")}: {destroyedModules}</span>}
-          {summary.droneStacks > 0 && <span className="text-[#c084fc]">⁘ {t("combat_cinematics.summary.drone_stacks")}: {summary.droneStacks}</span>}
-        </div>
+      </span>
+      {summary === null && <span className="text-[#667788]">—</span>}
+      {damageColumns.map(({ label, arrow, text, color }) => (
+        <span key={label} title={label}>
+          <span className="font-bold" style={{ color }}>{arrow}</span>{" "}
+          <span className="text-[#cfe3ef]">{text}</span>
+        </span>
+      ))}
+      {summary !== null && summary.criticalHits > 0 && (
+        <span className="text-[#ffcb57]" title={t("combat_cinematics.summary.critical")}>
+          ✦ {summary.criticalHits}
+        </span>
+      )}
+      {destroyedModules > 0 && (
+        <span className="text-[#ff9d8c]" title={t("combat_cinematics.summary.modules_destroyed")}>
+          ✕ {destroyedModules}
+        </span>
+      )}
+      {summary !== null && summary.droneStacks > 0 && (
+        <span className="text-[#c084fc]" title={t("combat_cinematics.summary.drone_stacks")}>
+          ⁘ {summary.droneStacks}
+        </span>
       )}
     </div>
   );

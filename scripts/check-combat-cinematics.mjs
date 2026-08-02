@@ -38,6 +38,8 @@ let getCombatCinematicProjectileVisual;
 let getCombatCinematicImpactSignature;
 let getCombatCinematicProjectileReadout;
 let getCombatCinematicVolleySummary;
+let getCombatCinematicSceneFlash;
+let getCombatCinematicShipImpulse;
 let createCombatPresentationSnapshot;
 let getPresentedCombat;
 
@@ -226,8 +228,13 @@ assert.match(
 );
 assert.match(
   stageSource,
-  /if \(isSelectable \|\| isSelected\) \{[\s\S]*?targetModule\.name[\s\S]*?const moduleLabel = [\s\S]*?targetModule\.health[\s\S]*?targetModule\.maxHealth[\s\S]*?fillText\(moduleLabel,/,
-  "selectable combat reticles identify their module and current integrity",
+  /if \(\(isSelected \|\| isLocked\) && sceneScale >= MODULE_LABEL_MIN_SCENE_SCALE\) \{[\s\S]*?targetModule\.name[\s\S]*?const moduleLabel = [\s\S]*?targetModule\.health[\s\S]*?targetModule\.maxHealth[\s\S]*?fillText\(moduleLabel,/,
+  "only a chosen or already targeted module is named on the hull, and only where the scene is wide enough",
+);
+assert.match(
+  stageSource,
+  /ctx\.translate\(point\.x, point\.y\);\s*ctx\.font = "700 7px Orbitron, monospace";/,
+  "the module label is drawn at its reticle instead of the canvas origin",
 );
 assert.match(
   stageSource,
@@ -626,6 +633,16 @@ assert.ok(
     combatSceneMarkup.indexOf("<CombatPhaseStrip"),
   "the permanent canvas is the first substantial combat element instead of being pushed below tactical controls",
 );
+assert.match(
+  combatPanelSource,
+  /<CombatVolleySummaryLine\s+summary=\{isPlaybackActive \? null : lastVolleySummary\}/,
+  "the volley summary keeps a fixed row from the first turn instead of appearing and moving the combat controls",
+);
+assert.match(
+  combatPanelSource,
+  /className="flex h-7 items-center[^"]*overflow-hidden whitespace-nowrap/,
+  "the summary row height never depends on how much the volley did",
+);
 assert.ok(
   combatSceneMarkup.indexOf("{/* Attack actions */}") <
     combatSceneMarkup.indexOf("<BossAbilityCard"),
@@ -729,6 +746,8 @@ try {
     getCombatCinematicImpactSignature,
     getCombatCinematicProjectileReadout,
     getCombatCinematicVolleySummary,
+    getCombatCinematicSceneFlash,
+    getCombatCinematicShipImpulse,
   } = await import("../src/game/components/combatCinematicPresentation.ts"));
 } catch {
   assert.fail(
@@ -769,6 +788,99 @@ assert.deepEqual(
   ["scorch", "shrapnel", "blast", "blast", "swarm", "distort", "distort", "arc", "blast"],
   "each projectile family selects a readable local impact reaction",
 );
+
+{
+  const hullHit = (extra = {}) => ({
+    kind: "projectile",
+    from: "player",
+    to: "enemy",
+    weapon: "laser",
+    outcome: "hull",
+    shieldDamage: 0,
+    hullDamage: 12,
+    isCrit: false,
+    ...extra,
+  });
+
+  assert.equal(
+    getCombatCinematicSceneFlash([]),
+    null,
+    "the idle scene is never lit by a flash",
+  );
+  assert.equal(
+    getCombatCinematicSceneFlash([
+      { event: hullHit(), progress: 0.4, impact: 0.62 },
+    ]),
+    null,
+    "a shot in flight does not light the scene before it lands",
+  );
+  assert.equal(
+    getCombatCinematicSceneFlash([
+      {
+        event: hullHit({ outcome: "miss", hullDamage: 0 }),
+        progress: 0.9,
+        impact: 0.58,
+      },
+    ]),
+    null,
+    "a miss never lights the scene",
+  );
+
+  const landed = getCombatCinematicSceneFlash([
+    { event: hullHit(), progress: 0.62, impact: 0.62 },
+  ]);
+  assert.equal(landed.index, 0);
+  assert(landed.alpha > 0, "a landed hull hit lights the scene");
+  const faded = getCombatCinematicSceneFlash([
+    { event: hullHit(), progress: 0.9, impact: 0.62 },
+  ]);
+  assert(faded.alpha < landed.alpha, "the flash decays after the impact");
+
+  const strongest = getCombatCinematicSceneFlash([
+    { event: hullHit(), progress: 0.62, impact: 0.62 },
+    { event: hullHit({ isCrit: true }), progress: 0.62, impact: 0.62 },
+  ]);
+  assert.equal(
+    strongest.index,
+    1,
+    "overlapping events light the scene once, by the strongest of them",
+  );
+
+  assert.deepEqual(
+    getCombatCinematicShipImpulse([], "player"),
+    { x: 0, y: 0 },
+    "the idle hull does not drift from an impulse",
+  );
+
+  const recoil = getCombatCinematicShipImpulse(
+    [{ event: hullHit(), progress: 0.08, impact: 0.62 }],
+    "player",
+  );
+  assert(recoil.x < 0, "the firing hull kicks back against its facing");
+
+  const knockback = getCombatCinematicShipImpulse(
+    [{ event: hullHit(), progress: 0.66, impact: 0.62 }],
+    "enemy",
+  );
+  assert(
+    knockback.x > 0,
+    "the struck hull is pushed along the direction the shot travelled",
+  );
+  assert(
+    Math.abs(knockback.x) <= 14 && Math.abs(knockback.y) <= 14,
+    "no salvo can throw a hull off the scene",
+  );
+}
+
+for (const marker of [
+  "drawBloom", "drawHullShading", "drawShieldDome", "drawDebris", "getCachedLayer",
+]) {
+  assert.match(
+    stageSource,
+    new RegExp(marker),
+    "missing scene lighting/volume pass: " + marker,
+  );
+}
 
 try {
   ({

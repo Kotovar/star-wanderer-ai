@@ -21,6 +21,10 @@ import {
   getCombatCinematicImpactSignature,
   getCombatCinematicProjectileReadout,
   getCombatCinematicProjectileVisual,
+  getCombatCinematicSceneFlash,
+  getCombatCinematicShipImpulse,
+  type CombatCinematicActiveEvent,
+  type CombatCinematicImpulse,
 } from "./combatCinematicPresentation";
 import { getCombatCinematicEventSounds } from "./combatCinematicSound";
 import {
@@ -54,6 +58,8 @@ const PLAYER_COLOR = "#00ff9d";
 const ENEMY_COLOR = "#ff4d6d";
 const SHIELD_COLOR = "#5bd6ff";
 const CREATURE_MODULE_CORE_BOUNDS = { halfWidth: 28, halfHeight: 22 };
+/** Ниже этого масштаба сцена узкая: подписи целей не помещаются в силуэт. */
+const MODULE_LABEL_MIN_SCENE_SCALE = 1;
 const ENEMY_FIRE_TELEGRAPH_PROGRESS = 0.12;
 
 function clamp(value: number, min = 0, max = 1): number {
@@ -74,6 +80,14 @@ const TAU = Math.PI * 2;
 // moves hulls, module lights, shields and impact points as one body without
 // threading `elapsed` through every draw call. One canvas, one rAF, no reentry.
 let sceneElapsed = 0;
+
+// ponytail: смещение корпуса на этот кадр — отдача и толчок от попаданий.
+// Живёт рядом со sceneElapsed по той же причине: shipCenter — единственная
+// точка, из которой позицию читают модули, щит, полосы и прицелы.
+let sceneImpulse: Record<CombatCinematicSide, CombatCinematicImpulse> = {
+  player: { x: 0, y: 0 },
+  enemy: { x: 0, y: 0 },
+};
 
 function pseudoRandom(seed: number): number {
   const value = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
@@ -116,9 +130,12 @@ function readableFontSize(
 
 function shipCenter(side: CombatCinematicSide, width: number, height: number): Point {
   const phase = side === "player" ? 0 : 2.1;
+  const impulse = sceneImpulse[side];
   return {
-    x: width * (side === "player" ? 0.25 : 0.75) + Math.sin(sceneElapsed / 2600 + phase) * 4,
-    y: height * 0.52 + Math.sin(sceneElapsed / 1500 + phase) * 6,
+    x: width * (side === "player" ? 0.25 : 0.75)
+      + Math.sin(sceneElapsed / 2600 + phase) * 4
+      + impulse.x,
+    y: height * 0.52 + Math.sin(sceneElapsed / 1500 + phase) * 6 + impulse.y,
   };
 }
 
@@ -204,11 +221,45 @@ function getProjectileColor(
   return ENEMY_COLOR;
 }
 
-function drawBackground(
+/**
+ * Слои, которые не меняются от кадра к кадру, рисуются один раз в offscreen и
+ * дальше только блитятся. Небо и виньетка — это четыре полноэкранных
+ * радиальных градиента, и раньше они пересоздавались 60 раз в секунду.
+ */
+const layerCache = new Map<string, { canvas: HTMLCanvasElement; key: string }>();
+
+function getCachedLayer(
+  name: string,
+  width: number,
+  height: number,
+  scale: number,
+  render: (layerCtx: CanvasRenderingContext2D) => void,
+): HTMLCanvasElement | null {
+  const key = `${Math.round(width)}x${Math.round(height)}@${scale.toFixed(2)}`;
+  const cached = layerCache.get(name);
+  if (cached && cached.key === key) return cached.canvas;
+
+  const canvas = cached?.canvas ?? document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(width * scale));
+  canvas.height = Math.max(1, Math.round(height * scale));
+  const layerCtx = canvas.getContext("2d");
+  if (!layerCtx) return null;
+  layerCtx.setTransform(scale, 0, 0, scale, 0, 0);
+  render(layerCtx);
+  layerCache.set(name, { canvas, key });
+  return canvas;
+}
+
+const NEBULAS = [
+  { x: 0.24, y: 0.36, radius: 0.62, rgb: "0, 255, 157", alpha: 0.1 },
+  { x: 0.76, y: 0.64, radius: 0.58, rgb: "255, 77, 109", alpha: 0.1 },
+  { x: 0.52, y: 0.2, radius: 0.74, rgb: "91, 214, 255", alpha: 0.06 },
+] as const;
+
+function renderSky(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  elapsed: number,
 ): void {
   const gradient = ctx.createLinearGradient(0, 0, width, height);
   gradient.addColorStop(0, "#02060f");
@@ -219,16 +270,10 @@ function drawBackground(
 
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
-  const nebulas = [
-    { x: 0.24, y: 0.36, radius: 0.62, rgb: "0, 255, 157", alpha: 0.1, drift: 9200 },
-    { x: 0.76, y: 0.64, radius: 0.58, rgb: "255, 77, 109", alpha: 0.1, drift: 11700 },
-    { x: 0.52, y: 0.2, radius: 0.74, rgb: "91, 214, 255", alpha: 0.06, drift: 15400 },
-  ];
-  for (const nebula of nebulas) {
-    const sway = Math.sin(elapsed / nebula.drift) * width * 0.035;
+  for (const nebula of NEBULAS) {
     fillRadialGlow(
       ctx,
-      { x: width * nebula.x + sway, y: height * nebula.y - sway * 0.4 },
+      { x: width * nebula.x, y: height * nebula.y },
       Math.max(width, height) * nebula.radius,
       [
         [0, `rgba(${nebula.rgb}, ${nebula.alpha})`],
@@ -238,6 +283,25 @@ function drawBackground(
     );
   }
   ctx.restore();
+}
+
+function drawBackground(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  elapsed: number,
+  sceneScale: number,
+): void {
+  const sky = getCachedLayer("sky", width, height, sceneScale, (skyCtx) =>
+    renderSky(skyCtx, width, height));
+  if (sky) {
+    // Небо блитится с запасом и медленным дрейфом: небулы по-прежнему дышат,
+    // но это одно смещение, а не три полноэкранных градиента за кадр.
+    const sway = Math.sin(elapsed / 11700) * 5;
+    ctx.drawImage(sky, -8 + sway, -6 - sway * 0.4, width + 16, height + 12);
+  } else {
+    renderSky(ctx, width, height);
+  }
 
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
@@ -283,7 +347,11 @@ function drawBackground(
   ctx.restore();
 }
 
-function drawVignette(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+function renderVignette(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+): void {
   const vignette = ctx.createRadialGradient(
     width / 2,
     height * 0.52,
@@ -294,9 +362,21 @@ function drawVignette(ctx: CanvasRenderingContext2D, width: number, height: numb
   );
   vignette.addColorStop(0, "rgba(0, 0, 0, 0)");
   vignette.addColorStop(1, "rgba(0, 0, 0, 0.62)");
-  ctx.save();
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, width, height);
+}
+
+function drawVignette(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  sceneScale: number,
+): void {
+  const vignette = getCachedLayer("vignette", width, height, sceneScale, (layerCtx) =>
+    renderVignette(layerCtx, width, height));
+  ctx.save();
+  if (vignette) ctx.drawImage(vignette, 0, 0, width, height);
+  else renderVignette(ctx, width, height);
   ctx.restore();
 }
 
@@ -516,6 +596,7 @@ function drawSelectedModuleTargets(
   active: readonly ActiveCinematicEvent[],
   width: number,
   height: number,
+  sceneScale: number,
 ): void {
   const lockedModuleIds = new Set<number>();
   const selectedModuleIds = new Set(moduleIds);
@@ -568,13 +649,20 @@ function drawSelectedModuleTargets(
     }
     ctx.restore();
 
-    if (isSelectable || isSelected) {
+    // Подпись только у того, что игрок реально выбрал или во что уже летит
+    // снаряд: имена всех целей не помещаются в силуэт и наезжают друг на
+    // друга. На узкой сцене их нет совсем — те же имена стоят в списке целей
+    // под канвасом.
+    if ((isSelected || isLocked) && sceneScale >= MODULE_LABEL_MIN_SCENE_SCALE) {
       const moduleName = targetModule.name && targetModule.name.length > 10
         ? `${targetModule.name.slice(0, 9)}…`
         : targetModule.name ?? `#${moduleId}`;
       const moduleLabel = `${moduleName} ${targetModule.health}/${targetModule.maxHealth}`;
       const labelY = moduleId % 2 === 0 ? -21 : 27;
       ctx.save();
+      // Подпись живёт в системе координат модуля: без своего translate она
+      // рисовалась в левом верхнем углу канваса, а не у прицела.
+      ctx.translate(point.x, point.y);
       ctx.font = "700 7px Orbitron, monospace";
       ctx.textAlign = "center";
       const labelWidth = Math.min(74, ctx.measureText(moduleLabel).width + 8);
@@ -589,6 +677,11 @@ function drawSelectedModuleTargets(
   }
 }
 
+const PLAYER_HULL_POINTS: readonly Point[] = [
+  { x: -110, y: -42 }, { x: 30, y: -58 }, { x: 142, y: 0 },
+  { x: 30, y: 58 }, { x: -110, y: 42 }, { x: -65, y: 0 },
+];
+
 function drawPlayerShip(ctx: CanvasRenderingContext2D, center: Point): void {
   ctx.save();
   ctx.translate(center.x, center.y);
@@ -598,19 +691,14 @@ function drawPlayerShip(ctx: CanvasRenderingContext2D, center: Point): void {
   hull.addColorStop(0.55, "#0f7c73");
   hull.addColorStop(1, "#b5ffd8");
   ctx.fillStyle = hull;
+  drawHullPolygon(ctx, PLAYER_HULL_POINTS);
+  ctx.fill();
+  drawHullShading(ctx, PLAYER_HULL_POINTS);
   ctx.strokeStyle = PLAYER_COLOR;
   ctx.lineWidth = 2;
   ctx.shadowColor = PLAYER_COLOR;
   ctx.shadowBlur = 12;
-  ctx.beginPath();
-  ctx.moveTo(-110, -42);
-  ctx.lineTo(30, -58);
-  ctx.lineTo(142, 0);
-  ctx.lineTo(30, 58);
-  ctx.lineTo(-110, 42);
-  ctx.lineTo(-65, 0);
-  ctx.closePath();
-  ctx.fill();
+  drawHullPolygon(ctx, PLAYER_HULL_POINTS);
   ctx.stroke();
   ctx.shadowBlur = 0;
 
@@ -716,6 +804,11 @@ const ENEMY_HULL_PROFILES: Partial<
   },
 };
 
+const DEFAULT_BOSS_HULL_POINTS: readonly Point[] = [
+  { x: -130, y: -58 }, { x: -18, y: -73 }, { x: 70, y: -48 }, { x: 148, y: 0 },
+  { x: 70, y: 48 }, { x: -18, y: 73 }, { x: -130, y: 58 }, { x: -88, y: 0 },
+];
+
 const BOSS_HULL_PROFILES: Record<string, BossHullProfile> = {
   guardian_sentinel: {
     points: [{ x: -136, y: -54 }, { x: -36, y: -78 }, { x: 72, y: -48 }, { x: 150, y: 0 }, { x: 72, y: 48 }, { x: -36, y: 78 }, { x: -136, y: 54 }, { x: -88, y: 0 }],
@@ -771,6 +864,58 @@ function drawHullPolygon(
   ctx.closePath();
 }
 
+/**
+ * Объём корпуса: свет сверху, тень снизу и пара панельных швов внутри
+ * силуэта. Работает по тем же точкам, что и заливка, поэтому один вызов
+ * одинаково поднимает все профили врагов, боссов и корабль игрока.
+ */
+function drawHullShading(
+  ctx: CanvasRenderingContext2D,
+  points: readonly Point[],
+): void {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const point of points) {
+    minX = Math.min(minX, point.x);
+    maxX = Math.max(maxX, point.x);
+    minY = Math.min(minY, point.y);
+    maxY = Math.max(maxY, point.y);
+  }
+  if (!Number.isFinite(minX) || maxX <= minX || maxY <= minY) return;
+  const spanX = maxX - minX;
+  const spanY = maxY - minY;
+
+  ctx.save();
+  drawHullPolygon(ctx, points);
+  ctx.clip();
+
+  const light = ctx.createLinearGradient(minX, minY, maxX, maxY);
+  light.addColorStop(0, "rgba(255, 255, 255, 0.2)");
+  light.addColorStop(0.4, "rgba(255, 255, 255, 0.03)");
+  light.addColorStop(0.62, "rgba(0, 0, 0, 0.18)");
+  light.addColorStop(1, "rgba(0, 0, 0, 0.52)");
+  ctx.fillStyle = light;
+  ctx.fillRect(minX, minY, spanX, spanY);
+
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.3)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (const ratio of [0.32, 0.55, 0.76]) {
+    const x = minX + spanX * ratio;
+    ctx.moveTo(x, minY);
+    ctx.lineTo(x, maxY);
+  }
+  for (const ratio of [0.34, 0.68]) {
+    const y = minY + spanY * ratio;
+    ctx.moveTo(minX, y);
+    ctx.lineTo(maxX, y);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawProfileCore(
   ctx: CanvasRenderingContext2D,
   profile: HullProfile,
@@ -784,6 +929,11 @@ function drawProfileCore(
   ]);
 }
 
+const DEFAULT_ENEMY_HULL_POINTS: readonly Point[] = [
+  { x: -100, y: -37 }, { x: 44, y: -53 }, { x: 132, y: 0 },
+  { x: 44, y: 53 }, { x: -100, y: 37 }, { x: -50, y: 0 },
+];
+
 function drawDefaultEnemyShip(ctx: CanvasRenderingContext2D, center: Point): void {
   ctx.save();
   ctx.translate(center.x, center.y);
@@ -794,19 +944,14 @@ function drawDefaultEnemyShip(ctx: CanvasRenderingContext2D, center: Point): voi
   hull.addColorStop(0.55, "#95284a");
   hull.addColorStop(1, "#ffc1ce");
   ctx.fillStyle = hull;
+  drawHullPolygon(ctx, DEFAULT_ENEMY_HULL_POINTS);
+  ctx.fill();
+  drawHullShading(ctx, DEFAULT_ENEMY_HULL_POINTS);
   ctx.strokeStyle = ENEMY_COLOR;
   ctx.lineWidth = 2;
   ctx.shadowColor = ENEMY_COLOR;
   ctx.shadowBlur = 12;
-  ctx.beginPath();
-  ctx.moveTo(-100, -37);
-  ctx.lineTo(44, -53);
-  ctx.lineTo(132, 0);
-  ctx.lineTo(44, 53);
-  ctx.lineTo(-100, 37);
-  ctx.lineTo(-50, 0);
-  ctx.closePath();
-  ctx.fill();
+  drawHullPolygon(ctx, DEFAULT_ENEMY_HULL_POINTS);
   ctx.stroke();
   ctx.shadowBlur = 0;
   ctx.strokeStyle = "#ffb4c1";
@@ -839,12 +984,14 @@ function drawEnemyShip(
   ctx.scale(-1, 1);
   drawEngineFlare(ctx, profile.engine.x, profile.engine.y, profile.engineSize, profile.edge, profile.enginePower);
   ctx.fillStyle = profile.body;
+  drawHullPolygon(ctx, profile.points);
+  ctx.fill();
+  drawHullShading(ctx, profile.points);
   ctx.strokeStyle = profile.edge;
   ctx.lineWidth = 2;
   ctx.shadowColor = profile.edge;
   ctx.shadowBlur = 13;
   drawHullPolygon(ctx, profile.points);
-  ctx.fill();
   ctx.stroke();
   ctx.shadowBlur = 0;
   ctx.strokeStyle = profile.detail;
@@ -862,22 +1009,15 @@ function drawDefaultBossShip(ctx: CanvasRenderingContext2D, center: Point): void
   ctx.translate(center.x, center.y);
   ctx.scale(-1, 1);
   drawEngineFlare(ctx, -126, 110, 20, "#ff4dff", 3.4);
-  ctx.strokeStyle = "#ff4dff";
   ctx.fillStyle = "#2b0a42";
+  drawHullPolygon(ctx, DEFAULT_BOSS_HULL_POINTS);
+  ctx.fill();
+  drawHullShading(ctx, DEFAULT_BOSS_HULL_POINTS);
+  ctx.strokeStyle = "#ff4dff";
   ctx.lineWidth = 2.5;
   ctx.shadowColor = "#ff4dff";
   ctx.shadowBlur = 18;
-  ctx.beginPath();
-  ctx.moveTo(-130, -58);
-  ctx.lineTo(-18, -73);
-  ctx.lineTo(70, -48);
-  ctx.lineTo(148, 0);
-  ctx.lineTo(70, 48);
-  ctx.lineTo(-18, 73);
-  ctx.lineTo(-130, 58);
-  ctx.lineTo(-88, 0);
-  ctx.closePath();
-  ctx.fill();
+  drawHullPolygon(ctx, DEFAULT_BOSS_HULL_POINTS);
   ctx.stroke();
   ctx.shadowBlur = 0;
   ctx.strokeStyle = "#ffb6ff";
@@ -986,12 +1126,14 @@ function drawBossShip(
   ctx.scale(-1, 1);
   drawEngineFlare(ctx, profile.engine.x, profile.engine.y, profile.engineSize, profile.edge, profile.enginePower);
   ctx.fillStyle = profile.body;
+  drawHullPolygon(ctx, profile.points);
+  ctx.fill();
+  drawHullShading(ctx, profile.points);
   ctx.strokeStyle = profile.edge;
   ctx.lineWidth = 2.5;
   ctx.shadowColor = profile.edge;
   ctx.shadowBlur = 18;
   drawHullPolygon(ctx, profile.points);
-  ctx.fill();
   ctx.stroke();
   ctx.shadowBlur = 0;
   ctx.beginPath();
@@ -1477,6 +1619,51 @@ function getShieldRadii(isBoss: boolean, sceneWidth: number): Point {
   const base = isBoss ? { x: 166, y: 100 } : { x: 148, y: 86 };
   const roomToEdge = sceneWidth * 0.25 - 6;
   return { x: Math.min(base.x, roomToEdge / SHIELD_PULSE_PEAK_SCALE), y: base.y };
+}
+
+/**
+ * Тихий купол: пока щит цел, его видно и без попадания. Импульсный `drawShield`
+ * остаётся реакцией на удар — этот слой только показывает, что защита жива.
+ */
+function drawShieldDome(
+  ctx: CanvasRenderingContext2D,
+  center: Point,
+  ratio: number,
+  isBoss: boolean,
+  sceneWidth: number,
+): void {
+  if (ratio <= 0) return;
+  const radii = getShieldRadii(isBoss, sceneWidth);
+  const breath = 1 + Math.sin(sceneElapsed / 1500) * 0.012;
+  ctx.save();
+  ctx.translate(center.x, center.y);
+  ctx.scale(breath, breath);
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = 0.1 + clamp(ratio) * 0.16;
+
+  const wash = ctx.createRadialGradient(0, 0, radii.y * 0.62, 0, 0, radii.x);
+  wash.addColorStop(0, "rgba(91, 214, 255, 0)");
+  wash.addColorStop(0.88, "rgba(91, 214, 255, 0.07)");
+  wash.addColorStop(1, "rgba(91, 214, 255, 0)");
+  ctx.fillStyle = wash;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, radii.x, radii.y, 0, 0, TAU);
+  ctx.fill();
+
+  ctx.strokeStyle = SHIELD_COLOR;
+  ctx.lineWidth = 1.2;
+  ctx.shadowColor = SHIELD_COLOR;
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, radii.x, radii.y, 0, 0, TAU);
+  ctx.stroke();
+
+  const sweep = sceneElapsed / 1800;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, radii.x, radii.y, 0, sweep, sweep + 0.5);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawLaser(
@@ -2344,6 +2531,56 @@ function drawExplosion(
   ctx.restore();
 }
 
+/**
+ * Обломки разрушения: куски корпуса разлетаются и кувыркаются, пока идёт
+ * событие. Детерминированы от seed — своей истории у них нет, поэтому и
+ * системы частиц сцене не нужно.
+ */
+function drawDebris(
+  ctx: CanvasRenderingContext2D,
+  point: Point,
+  progress: number,
+  seed: number,
+  count: number,
+  spread: number,
+): void {
+  const fade = (1 - progress) ** 1.4;
+  if (fade <= 0.01) return;
+  const eased = easeOut(progress);
+  ctx.save();
+  for (let index = 0; index < count; index += 1) {
+    const angle = pseudoRandom(seed + index * 1.7) * TAU;
+    const speed = 0.45 + pseudoRandom(seed + index * 3.1) * 1.05;
+    const distance = eased * spread * speed;
+    const size = 2.5 + pseudoRandom(seed + index * 5.7) * 4.5;
+    const chunk = {
+      x: point.x + Math.cos(angle) * distance,
+      y: point.y + Math.sin(angle) * distance * 0.86,
+    };
+    ctx.save();
+    ctx.translate(chunk.x, chunk.y);
+    ctx.rotate(angle + progress * (4 + speed * 7));
+    ctx.globalAlpha = fade;
+    ctx.fillStyle = index % 3 === 0 ? "#4a5464" : "#232b38";
+    ctx.fillRect(-size / 2, -size / 3, size, size * 0.66);
+    ctx.strokeStyle = "rgba(255, 176, 96, 0.55)";
+    ctx.lineWidth = 0.8;
+    ctx.strokeRect(-size / 2, -size / 3, size, size * 0.66);
+    ctx.restore();
+    if (index % 2 === 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = fade * 0.4;
+      fillRadialGlow(ctx, chunk, size * 1.8, [
+        [0, "rgba(255, 190, 110, 0.7)"],
+        [1, "rgba(255, 120, 0, 0)"],
+      ]);
+      ctx.restore();
+    }
+  }
+  ctx.restore();
+}
+
 function drawMiss(
   ctx: CanvasRenderingContext2D,
   point: Point,
@@ -2981,11 +3218,14 @@ function drawActiveEvent(
   if (event.kind === "module_destroyed") {
     const point = getModulePoint(snapshot[event.side], event.side, event.moduleId, width, height);
     drawExplosion(ctx, point, progress, "#ffb000");
+    drawDebris(ctx, point, progress, event.moduleId * 7.3 + 5, 8, 52);
     return;
   }
 
   if (event.kind === "vessel_destroyed") {
-    drawExplosion(ctx, shipCenter(event.side, width, height), progress, "#ffb000");
+    const center = shipCenter(event.side, width, height);
+    drawExplosion(ctx, center, progress, "#ffb000");
+    drawDebris(ctx, center, progress, event.side === "player" ? 3 : 29, 18, 160);
     return;
   }
 
@@ -3095,6 +3335,17 @@ function getCameraShake(
   return 0;
 }
 
+/** Цвет вспышки берётся у самого события — оружие светит своим цветом. */
+function getFlashColor(
+  event: CombatCinematicEvent,
+  snapshot: CombatCinematicSnapshot,
+): string {
+  if (event.kind === "projectile") return getProjectileColor(event, snapshot);
+  if (event.kind === "boss_ability") return "#ff4dff";
+  if (event.kind === "damage" || event.kind === "reflection") return "#ffd9a0";
+  return "#ffb000";
+}
+
 function getCombatFocus(
   active: readonly ActiveCinematicEvent[],
   snapshot: CombatCinematicSnapshot,
@@ -3149,7 +3400,18 @@ function drawScene(
   reducedMotion: boolean,
 ): void {
   sceneElapsed = elapsed;
-  drawBackground(ctx, width, height, elapsed);
+  const timedEvents: CombatCinematicActiveEvent[] = active.map((item) => ({
+    event: item.event,
+    progress: item.progress,
+    impact: getImpactProgress(item.event),
+  }));
+  // Импульс ставится до первой отрисовки корпуса: shipCenter читают все —
+  // модули, щит, полосы и прицелы, поэтому корабль двигается целиком.
+  sceneImpulse = {
+    player: getCombatCinematicShipImpulse(timedEvents, "player"),
+    enemy: getCombatCinematicShipImpulse(timedEvents, "enemy"),
+  };
+  drawBackground(ctx, width, height, elapsed, sceneScale);
   // Тряска от самого сильного из идущих событий, а не сумма — иначе залп
   // внахлёст трясёт экран непрерывно.
   const shake = active.reduce((strongest, item) => {
@@ -3166,6 +3428,16 @@ function drawScene(
   ctx.translate(shake, -shake * 0.45);
   drawShip(ctx, snapshot.player, "player", width, height, elapsed);
   drawShip(ctx, snapshot.enemy, "enemy", width, height, elapsed);
+  for (const side of ["player", "enemy"] as const) {
+    const vessel = snapshot[side];
+    drawShieldDome(
+      ctx,
+      shipCenter(side, width, height),
+      vessel.maxShields > 0 ? vessel.shields / vessel.maxShields : 0,
+      vessel.kind === "boss",
+      width,
+    );
+  }
   drawSelectedModuleTargets(
     ctx,
     snapshot.enemy,
@@ -3174,6 +3446,7 @@ function drawScene(
     active,
     width,
     height,
+    sceneScale,
   );
   drawShipBars(ctx, snapshot.player, "player", width, height);
   drawShipBars(ctx, snapshot.enemy, "enemy", width, height);
@@ -3199,7 +3472,17 @@ function drawScene(
   });
   ctx.restore();
 
-  drawVignette(ctx, width, height);
+  const flash = getCombatCinematicSceneFlash(timedEvents);
+  if (flash) {
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.globalAlpha = flash.alpha;
+    ctx.fillStyle = getFlashColor(timedEvents[flash.index].event, snapshot);
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+  }
+
+  drawVignette(ctx, width, height, sceneScale);
 
   if (bossIntent && active.length === 0) {
     drawBossIntent(ctx, bossIntent, width, height, t, sceneScale);
@@ -3230,6 +3513,44 @@ function drawScene(
   if (active.length === 0) {
     drawCombatCommandHud(ctx, commandPhase, width, height, t, sceneScale);
   }
+}
+
+let bloomCanvas: HTMLCanvasElement | null = null;
+
+/**
+ * Bloom одним пассом: кадр уменьшается вдвое, умножается сам на себя (дешёвый
+ * порог яркости — тёмный фон гаснет, свет остаётся), размывается и
+ * складывается обратно. Работает в пикселях буфера, поэтому не зависит от
+ * scene scale и HiDPI-трансформа.
+ */
+function drawBloom(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): void {
+  if (typeof ctx.filter !== "string") return;
+  const width = Math.max(1, Math.round(canvas.width / 2));
+  const height = Math.max(1, Math.round(canvas.height / 2));
+  bloomCanvas ??= document.createElement("canvas");
+  if (bloomCanvas.width !== width || bloomCanvas.height !== height) {
+    bloomCanvas.width = width;
+    bloomCanvas.height = height;
+  }
+  const bloomCtx = bloomCanvas.getContext("2d");
+  if (!bloomCtx) return;
+
+  bloomCtx.globalCompositeOperation = "source-over";
+  bloomCtx.clearRect(0, 0, width, height);
+  bloomCtx.drawImage(canvas, 0, 0, width, height);
+  // Два умножения на себя = яркость в кубе: фон и корпуса гаснут почти в ноль,
+  // ореол остаётся только у настоящего света. Один порог оставлял дымку.
+  bloomCtx.globalCompositeOperation = "multiply";
+  bloomCtx.drawImage(canvas, 0, 0, width, height);
+  bloomCtx.drawImage(canvas, 0, 0, width, height);
+
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = 0.5;
+  ctx.filter = "blur(7px)";
+  ctx.drawImage(bloomCanvas, 0, 0, canvas.width, canvas.height);
+  ctx.restore();
 }
 
 function drawCanvasFrame(
@@ -3270,6 +3591,7 @@ function drawCanvasFrame(
     reducedMotion,
   );
   ctx.restore();
+  drawBloom(canvas, ctx);
 }
 
 export interface CombatCinematicStageProps {
