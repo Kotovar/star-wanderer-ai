@@ -180,6 +180,7 @@ function getWeaponColor(weapon: CombatProjectileEvent["weapon"]): string {
 
 /** Незнакомое орудие падает в цвет корабля — данные можно расширять без правок здесь. */
 const ENEMY_GUN_COLORS: Record<string, string> = {
+  missile_launcher: "#ffb000",
   plasma_cannon: "#ff8a3d",
   radiation_core: "#c6ff4d",
   flare_launcher: "#ffb000",
@@ -1906,40 +1907,101 @@ function drawRocket(
   point: Point,
   color: string,
   travel: number,
+  scale = 1,
 ): void {
   const angle = Math.atan2(point.y - from.y, point.x - from.x);
-  const smokeAlpha = Math.max(0, 0.34 - travel * 0.14);
+  const isSiegeTorpedo = scale > 1;
+  const bodyLength = isSiegeTorpedo ? 28 : 21;
+  const bodyRadius = isSiegeTorpedo ? 5.4 : 4.1;
+  const noseLength = isSiegeTorpedo ? 10 : 8;
+  const finSpread = isSiegeTorpedo ? 9 : 7;
+  const engineFlameLength = (isSiegeTorpedo ? 19 : 14) * (
+    0.78 + Math.sin(travel * 26) * 0.14
+  );
+  const smokeAlpha = Math.max(0, 0.28 - travel * 0.1);
   ctx.save();
   ctx.translate(point.x, point.y);
   ctx.rotate(angle);
-  ctx.strokeStyle = "rgba(255, 222, 170, 0.72)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(-26, 0);
-  ctx.lineTo(-6, 0);
-  ctx.stroke();
-  ctx.fillStyle = "#fff1d2";
-  ctx.beginPath();
-  ctx.moveTo(9, 0);
-  ctx.lineTo(-7, -5);
-  ctx.lineTo(-7, 5);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = color;
-  ctx.fillRect(-8, -3, 9, 6);
-  ctx.fillStyle = `rgba(255, 170, 66, ${0.45 + Math.sin(travel * 18) * 0.25})`;
-  ctx.beginPath();
-  ctx.moveTo(-8, -3);
-  ctx.lineTo(-17, 0);
-  ctx.lineTo(-8, 3);
-  ctx.closePath();
-  ctx.fill();
+  ctx.scale(scale, scale);
+
+  // Факел рисуется до корпуса: его широкая часть всегда остаётся позади сопла.
   ctx.save();
-  ctx.globalAlpha = smokeAlpha;
-  ctx.fillStyle = "#9e9a91";
-  for (const offset of [20, 28, 36]) {
+  ctx.globalCompositeOperation = "lighter";
+  ctx.shadowColor = "#ff9e45";
+  ctx.shadowBlur = 12;
+  const flame = ctx.createLinearGradient(-bodyLength / 2 - engineFlameLength, 0, -bodyLength / 2 + 1, 0);
+  flame.addColorStop(0, "rgba(255, 82, 24, 0)");
+  flame.addColorStop(0.5, "rgba(255, 143, 43, 0.68)");
+  flame.addColorStop(1, "rgba(255, 249, 214, 0.98)");
+  ctx.fillStyle = flame;
+  ctx.beginPath();
+  ctx.moveTo(-bodyLength / 2 + 1, -bodyRadius * 0.56);
+  ctx.quadraticCurveTo(
+    -bodyLength / 2 - engineFlameLength * 0.62,
+    -bodyRadius * 0.32,
+    -bodyLength / 2 - engineFlameLength,
+    0,
+  );
+  ctx.quadraticCurveTo(
+    -bodyLength / 2 - engineFlameLength * 0.62,
+    bodyRadius * 0.32,
+    -bodyLength / 2 + 1,
+    bodyRadius * 0.56,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  ctx.fillStyle = withAlpha(color, 0.9);
+  for (const finDirection of [-1, 1] as const) {
     ctx.beginPath();
-    ctx.arc(-offset, Math.sin(travel * 18 + offset) * 2, 2.5, 0, TAU);
+    ctx.moveTo(-bodyLength * 0.2, finDirection * bodyRadius * 0.82);
+    ctx.lineTo(-bodyLength / 2 + 3, finDirection * finSpread);
+    ctx.lineTo(-bodyLength / 2 + 6, finDirection * bodyRadius * 0.5);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  const hull = ctx.createLinearGradient(-bodyLength / 2, -bodyRadius, bodyLength / 2 + noseLength, bodyRadius);
+  hull.addColorStop(0, "#5b6878");
+  hull.addColorStop(0.34, "#edf5fb");
+  hull.addColorStop(0.62, color);
+  hull.addColorStop(1, "#fff8de");
+  ctx.fillStyle = hull;
+  ctx.strokeStyle = "rgba(237, 248, 255, 0.8)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(bodyLength / 2 + noseLength, 0);
+  ctx.quadraticCurveTo(bodyLength / 2 + 3, -bodyRadius, bodyLength / 2 - 3, -bodyRadius);
+  ctx.lineTo(-bodyLength / 2 + 2, -bodyRadius);
+  ctx.quadraticCurveTo(-bodyLength / 2 - 2, 0, -bodyLength / 2 + 2, bodyRadius);
+  ctx.lineTo(bodyLength / 2 - 3, bodyRadius);
+  ctx.quadraticCurveTo(bodyLength / 2 + 3, bodyRadius, bodyLength / 2 + noseLength, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "rgba(10, 24, 38, 0.78)";
+  ctx.fillRect(bodyLength * 0.08, -bodyRadius + 1, 2.2, bodyRadius * 2 - 2);
+  ctx.fillStyle = "#202d3b";
+  ctx.fillRect(-bodyLength / 2 - 1, -bodyRadius * 0.62, 3, bodyRadius * 1.24);
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.fillStyle = "rgba(255, 248, 214, 0.92)";
+  ctx.beginPath();
+  ctx.arc(-bodyLength / 2 - 1, 0, 2.2, 0, TAU);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = smokeAlpha;
+  for (const offset of [engineFlameLength + 8, engineFlameLength + 17, engineFlameLength + 28]) {
+    const smokeSize = 2.2 + offset / 24;
+    ctx.fillStyle = "rgba(123, 137, 154, 0.82)";
+    ctx.beginPath();
+    ctx.arc(-bodyLength / 2 - offset, Math.sin(travel * 18 + offset) * 2.4, smokeSize, 0, TAU);
     ctx.fill();
   }
   ctx.restore();
@@ -2070,16 +2132,31 @@ function drawPhaseTorpedo(
   progress: number,
 ): void {
   const phaseOffset = Math.floor(progress * 9) % 2 === 0 ? -4 : 4;
+  const phaseExhaust = 15 + Math.sin(progress * 22) * 3;
   ctx.save();
-  ctx.strokeStyle = color;
+  ctx.translate(point.x, point.y);
+  ctx.scale(direction, 1);
+  ctx.globalCompositeOperation = "lighter";
   ctx.shadowColor = color;
   ctx.shadowBlur = 14;
+
+  const exhaust = ctx.createLinearGradient(-phaseExhaust - 4, 0, -5, 0);
+  exhaust.addColorStop(0, "rgba(90, 226, 255, 0)");
+  exhaust.addColorStop(0.6, withAlpha(color, 0.6));
+  exhaust.addColorStop(1, "rgba(240, 255, 255, 0.95)");
+  ctx.fillStyle = exhaust;
+  ctx.beginPath();
+  ctx.moveTo(-5, -3.5);
+  ctx.quadraticCurveTo(-phaseExhaust * 0.58, -5, -phaseExhaust - 4, 0);
+  ctx.quadraticCurveTo(-phaseExhaust * 0.58, 5, -5, 3.5);
+  ctx.closePath();
+  ctx.fill();
   for (let index = 2; index >= 0; index -= 1) {
     const size = 11 - index * 2;
     ctx.save();
     ctx.translate(
-      point.x - direction * index * 14,
-      point.y + (index === 0 ? 0 : phaseOffset * (index % 2 === 0 ? 1 : -1)),
+      -index * 14,
+      index === 0 ? 0 : phaseOffset * (index % 2 === 0 ? 1 : -1),
     );
     ctx.rotate(progress * 7 + index * 0.28);
     ctx.globalAlpha = 1 - index * 0.28;
@@ -2411,14 +2488,25 @@ function drawProjectile(
     if (visual !== "rocket") return base;
     return {
       x: base.x,
-      y: base.y + Math.sin(clamp(at / arcEnd) * Math.PI) * (event.from === "player" ? -34 : 34),
+      y: base.y + Math.sin(clamp(at / arcEnd) * Math.PI) * (event.from === "player"
+        ? event.weapon === "siege_torpedo" ? -48 : -34
+        : event.weapon === "siege_torpedo" ? 48 : 34),
     };
   };
   const renderPoint = pathPoint(travel);
 
   if (isIntercepted) {
     const meetPoint = pathPoint(INTERCEPT_TRAVEL);
-    drawInterceptor(ctx, targetCenter, meetPoint, interceptFlight);
+    const interceptorSource = event.interceptorModuleId === undefined
+      ? targetCenter
+      : getModulePoint(
+        snapshot[event.to],
+        event.to,
+        event.interceptorModuleId,
+        width,
+        height,
+      );
+    drawInterceptor(ctx, interceptorSource, meetPoint, interceptFlight);
     // Both missiles are gone the moment they meet — the blast takes over.
     if (interceptFlight >= 1) return meetPoint;
   }
@@ -2439,7 +2527,14 @@ function drawProjectile(
   } else if (visual === "tracer") {
     drawKineticTracer(ctx, source, renderPoint, color);
   } else if (visual === "rocket") {
-    drawRocket(ctx, source, renderPoint, color, travel);
+    drawRocket(
+      ctx,
+      source,
+      renderPoint,
+      color,
+      travel,
+      event.weapon === "siege_torpedo" ? 1.7 : 1,
+    );
   } else if (visual === "plasma") {
     drawPlasmaBolt(ctx, renderPoint, color, progress);
   } else if (visual === "swarm") {
@@ -2965,6 +3060,138 @@ function drawBossAbility(
   ctx.restore();
 }
 
+function drawPhaseShift(
+  ctx: CanvasRenderingContext2D,
+  point: Point,
+  progress: number,
+): void {
+  const alpha = Math.sin(clamp(progress, 0, 1) * Math.PI);
+  if (alpha <= 0) return;
+
+  ctx.save();
+  ctx.strokeStyle = "#8be9fd";
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = alpha * 0.8;
+  for (let index = 0; index < 3; index += 1) {
+    ctx.setLineDash([4, 6]);
+    ctx.lineDashOffset = progress * 38 * (index % 2 === 0 ? 1 : -1);
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, 20 + index * 9 + progress * 16, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.fillStyle = "#dffcff";
+  ctx.globalAlpha = alpha * 0.24;
+  ctx.beginPath();
+  ctx.arc(point.x, point.y, 14 + progress * 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawBossAura(
+  ctx: CanvasRenderingContext2D,
+  event: Extract<CombatCinematicEvent, { kind: "boss_aura" }>,
+  progress: number,
+  snapshot: CombatCinematicSnapshot,
+  width: number,
+  height: number,
+): void {
+  const target = shipCenter("player", width, height);
+  const alpha = Math.sin(clamp(progress, 0, 1) * Math.PI);
+  if (alpha <= 0) return;
+
+  event.sourceModuleIds.forEach((moduleId, index) => {
+    const source = getModulePoint(snapshot.enemy, "enemy", moduleId, width, height);
+    const travel = clamp(progress * 1.35 - index * 0.08, 0, 1);
+    const tip = {
+      x: source.x + (target.x - source.x) * travel,
+      y: source.y + (target.y - source.y) * travel,
+    };
+    ctx.save();
+    ctx.strokeStyle = "#ff4dff";
+    ctx.lineWidth = 1.5 + alpha * 1.5;
+    ctx.globalAlpha = alpha * 0.82;
+    ctx.shadowColor = "#ff4dff";
+    ctx.shadowBlur = 13;
+    ctx.beginPath();
+    ctx.moveTo(source.x, source.y);
+    ctx.quadraticCurveTo(
+      (source.x + tip.x) / 2,
+      (source.y + tip.y) / 2 + Math.sin(progress * Math.PI * 3 + index) * 15,
+      tip.x,
+      tip.y,
+    );
+    ctx.stroke();
+    ctx.fillStyle = "#ffd1ff";
+    ctx.beginPath();
+    ctx.arc(source.x, source.y, 5 + alpha * 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+function drawTurnSkipJamming(
+  ctx: CanvasRenderingContext2D,
+  progress: number,
+  width: number,
+  height: number,
+): void {
+  const source = shipCenter("enemy", width, height);
+  const target = shipCenter("player", width, height);
+  const alpha = Math.sin(clamp(progress, 0, 1) * Math.PI);
+  const travel = clamp(progress * 1.4, 0, 1);
+  const tip = {
+    x: source.x + (target.x - source.x) * travel,
+    y: source.y + (target.y - source.y) * travel,
+  };
+  ctx.save();
+  ctx.strokeStyle = "#c55cff";
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = alpha * 0.85;
+  ctx.shadowColor = "#c55cff";
+  ctx.shadowBlur = 12;
+  ctx.beginPath();
+  ctx.moveTo(source.x, source.y);
+  ctx.lineTo((source.x + tip.x) / 2, (source.y + tip.y) / 2 - 14);
+  ctx.lineTo(tip.x, tip.y);
+  ctx.stroke();
+  if (travel > 0.7) {
+    const ring = 20 + (travel - 0.7) * 80;
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, ring, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawCrewImmortality(
+  ctx: CanvasRenderingContext2D,
+  point: Point,
+  progress: number,
+): void {
+  const alpha = Math.sin(clamp(progress, 0, 1) * Math.PI);
+  if (alpha <= 0) return;
+
+  ctx.save();
+  ctx.strokeStyle = "#7dffb2";
+  ctx.fillStyle = "#e4fff0";
+  ctx.lineWidth = 1.7;
+  ctx.globalAlpha = alpha;
+  ctx.shadowColor = "#7dffb2";
+  ctx.shadowBlur = 14;
+  for (let index = 0; index < 6; index += 1) {
+    const angle = (Math.PI * 2 * index) / 6 + progress * 0.7;
+    ctx.beginPath();
+    ctx.moveTo(point.x + Math.cos(angle) * 5, point.y + Math.sin(angle) * 5);
+    ctx.lineTo(point.x + Math.cos(angle) * (22 + progress * 17), point.y + Math.sin(angle) * (22 + progress * 17));
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.arc(point.x, point.y, 8 + progress * 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawActiveEvent(
   ctx: CanvasRenderingContext2D,
   event: CombatCinematicEvent | undefined,
@@ -2984,6 +3211,30 @@ function drawActiveEvent(
       drawProjectileTelemetry(ctx, event, progress, snapshot, width, height, t, sceneScale);
     }
     const point = drawProjectile(ctx, event, progress, snapshot, width, height);
+    if (event.isPhaseShift) {
+      const targetPoint = getModulePoint(
+        snapshot[event.to],
+        event.to,
+        event.targetModuleId,
+        width,
+        height,
+      );
+      drawPhaseShift(
+        ctx,
+        targetPoint,
+        clamp((progress - 0.16) / 0.72, 0, 1),
+      );
+      if (progress >= 0.36) {
+        drawOutcomeLabel(
+          ctx,
+          targetPoint,
+          t("combat_cinematics.phase_shift"),
+          "#8be9fd",
+          clamp((progress - 0.36) / 0.5, 0, 1),
+          sceneScale,
+        );
+      }
+    }
     if (event.outcome === "intercepted" && progress > INTERCEPT_PROGRESS) {
       const outcomeProgress = clamp(
         (progress - INTERCEPT_PROGRESS) / (1 - INTERCEPT_PROGRESS),
@@ -3194,6 +3445,25 @@ function drawActiveEvent(
     return;
   }
 
+  if (event.kind === "boss_aura") {
+    drawBossAura(ctx, event, progress, snapshot, width, height);
+    return;
+  }
+
+  if (event.kind === "turn_skip_applied") {
+    drawTurnSkipJamming(ctx, progress, width, height);
+    return;
+  }
+
+  if (event.kind === "crew_immortality") {
+    drawCrewImmortality(
+      ctx,
+      getModulePoint(snapshot[event.side], event.side, event.moduleId, width, height),
+      progress,
+    );
+    return;
+  }
+
   if (event.kind === "damage") {
     drawAbilityDamage(ctx, event, progress, snapshot, width, height, sceneScale);
     return;
@@ -3234,12 +3504,15 @@ function drawActiveEvent(
     return;
   }
 
-  ctx.save();
-  ctx.fillStyle = "#ffb000";
-  ctx.font = `700 ${readableFontSize(15, sceneScale, 11)}px Orbitron, monospace`;
-  ctx.textAlign = "center";
-  ctx.fillText(t("combat_cinematics.turn_skipped"), width / 2, height * 0.2 + Math.sin(elapsed / 90) * 3);
-  ctx.restore();
+  if (event.kind === "turn_skipped") {
+    drawTurnSkipJamming(ctx, progress, width, height);
+    ctx.save();
+    ctx.fillStyle = "#ffb000";
+    ctx.font = `700 ${readableFontSize(15, sceneScale, 11)}px Orbitron, monospace`;
+    ctx.textAlign = "center";
+    ctx.fillText(t("combat_cinematics.turn_skipped"), width / 2, height * 0.2 + Math.sin(elapsed / 90) * 3);
+    ctx.restore();
+  }
 }
 
 /** Момент события, на котором звучит попадание — ровно там, где его видно. */
@@ -3324,6 +3597,8 @@ function getCameraShake(
   if (event.kind === "vessel_destroyed") return Math.sin(elapsed / 9) * 10 * (1 - progress);
   if (event.kind === "module_destroyed") return jolt(0, 4.5);
   if (event.kind === "damage") return jolt(0.56, 2.6);
+  if (event.kind === "boss_aura") return jolt(0.42, 2);
+  if (event.kind === "turn_skip_applied") return jolt(0.7, 1.4);
   if (event.kind === "boss_ability") {
     return event.effect === "aoe_damage" ? jolt(0, 5) : 0;
   }

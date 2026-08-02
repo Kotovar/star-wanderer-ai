@@ -59,6 +59,7 @@ const PROJECTILE_VISUALS = {
   plasma: "plasma",
   drones: "swarm",
   antimatter: "orbit",
+  siege_torpedo: "rocket",
   quantum_torpedo: "phase",
   ion_cannon: "arc",
 } as const satisfies Record<WeaponType, CombatCinematicProjectileVisual>;
@@ -84,6 +85,7 @@ const IMPACT_SIGNATURES: Record<
  * орудия можно добавлять в данные, ничего здесь не трогая.
  */
 const ENEMY_WEAPON_VISUALS: Record<string, CombatCinematicProjectileVisual> = {
+  missile_launcher: "rocket",
   plasma_cannon: "plasma",
   radiation_core: "plasma",
   flare_launcher: "rocket",
@@ -118,6 +120,7 @@ const ENEMY_WEAPON_VISUALS: Record<string, CombatCinematicProjectileVisual> = {
  */
 export const COMBAT_CINEMATIC_ENEMY_WEAPON_KEYS: readonly string[] = [
   "weapon",
+  "missile_launcher",
   "plasma_cannon",
   "flare_launcher",
   "radiation_core",
@@ -293,6 +296,7 @@ export function getCombatCinematicSceneFlash(
 /** Насколько далеко корпус уезжает назад при выстреле. */
 const RECOIL_WINDOW = 0.16;
 const RECOIL_DISTANCE = 7;
+const EVADE_DISTANCE = 10;
 const MAX_IMPULSE = 14;
 
 /**
@@ -312,6 +316,10 @@ export function getCombatCinematicShipImpulse(
     if (event.kind === "projectile") {
       if (event.from === side && progress < RECOIL_WINDOW) {
         x -= facing * RECOIL_DISTANCE * Math.sin((progress / RECOIL_WINDOW) * Math.PI);
+      }
+      if (event.to === side && event.isEvasion) {
+        y += (side === "player" ? 1 : -1) * EVADE_DISTANCE * Math.sin(progress * Math.PI);
+        continue;
       }
       if (event.to !== side) continue;
       const after = afterImpact(progress, impact);

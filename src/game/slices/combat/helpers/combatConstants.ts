@@ -14,6 +14,7 @@ export const MODULE_TARGET_PRIORITY: Record<ModuleType, number> = {
     reactor: 85, // Disable power
     engine: 70, // Disable travel
     shield: 60, // Disable defense
+    point_defense: 55, // Disable missile interception
     lifesupport: 50, // Crew suffocation
     fueltank: 45, // Fuel
     medical: 40, // Healing

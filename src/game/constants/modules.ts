@@ -12,6 +12,7 @@ export const MODULE_TYPES: Record<
     lifesupport: { color: "#00ff4133", borderColor: "#00ff41" },
     cargo: { color: "#ff004033", borderColor: "#ff0040" },
     weaponbay: { color: "#ff00ff33", borderColor: "#ff00ff" },
+    point_defense: { color: "#00d4ff33", borderColor: "#00d4ff" },
     shield: { color: "#0080ff33", borderColor: "#0080ff" },
     medical: { color: "#00ffaa33", borderColor: "#00ffaa" },
     scanner: { color: "#ffff0033", borderColor: "#ffff00" },
@@ -40,6 +41,7 @@ export const MODULES_BY_PRIOTITY = [
     { type: "ai_core", name: "ИИ ядро" },
     // Средний приоритет
     { type: "weaponbay", name: "Оружейная палуба" },
+    { type: "point_defense", name: "Модуль ПРО" },
     { type: "shield", name: "Генератор щита" },
     { type: "engine", name: "Двигатель" },
     { type: "quarters", name: "Жилой модуль" },

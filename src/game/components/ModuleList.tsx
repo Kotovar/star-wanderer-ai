@@ -46,6 +46,7 @@ function getTranslatedModuleName(
         lifesupport: t("module_names.lifesupport"),
         cargo: t("module_names.cargo"),
         weaponbay: t("module_names.weaponbay"),
+        point_defense: t("module_names.point_defense"),
         shield: t("module_names.shield"),
         medical: t("module_names.medical"),
         scanner: t("module_names.scanner"),
@@ -75,6 +76,7 @@ function getModuleDescription(module: Module): string {
         lifesupport: "module_descriptions.lifesupport",
         cargo: "module_descriptions.cargo",
         weaponbay: "module_descriptions.weaponbay",
+        point_defense: "module_descriptions.point_defense",
         shield: "module_descriptions.shield",
         medical: "module_descriptions.medical",
         scanner: "module_descriptions.scanner",
@@ -769,6 +771,12 @@ function renderModuleTypeDetailStats(
                     {module.shieldRegen}
                     <TechDelta delta={techPercentDelta("shield_regen", module.shieldRegen)} />
                     <MergeDelta delta={percentDelta("shieldRegenBonus", valueWithTech("shield_regen", module.shieldRegen))} />
+                </DetailedStatRow>
+            )}
+            {module.type === "point_defense" && (
+                <DetailedStatRow icon="shields" label={`${t("module_list.point_defense_intercept_chance")}:`}>
+                    {20 + Math.max(0, (module.level ?? 1) - 1) * 5}%
+                    <MergeDelta delta={flatDelta("pointDefense")} />
                 </DetailedStatRow>
             )}
             {module.type === "lifesupport" &&

@@ -20,6 +20,7 @@ export function applyModuleDamage(
     damage: number,
     targetModule: Module,
     ignoreDefense = false,
+    onCrewImmortality?: (moduleId: number) => void,
 ): number {
     // Overclock removes armor of the weaponbay the engineer is in
     const hasOverclockInModule = state.crew.some(
@@ -114,6 +115,7 @@ export function applyModuleDamage(
         set,
         get,
         state,
+        onCrewImmortality,
     );
     maybeExplodeFuelTank(targetModule.id, set, get);
 
@@ -160,7 +162,8 @@ function damageCrewInModule(
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
     state: GameState,
-) {
+    onCrewImmortality?: (moduleId: number) => void,
+): void {
     const crewInModule = get().crew.filter((c) => c.moduleId === moduleId);
     if (crewInModule.length === 0) return;
 
@@ -201,6 +204,18 @@ function damageCrewInModule(
         if (dodgeChance > 0 && Math.random() < dodgeChance) {
             phaseStepDodgers.add(c.id);
         }
+    });
+
+    const crewSavedByImmortality = hasImmortality && state.crew.some((c) => {
+        if (c.moduleId !== moduleId || phaseStepDodgers.has(c.id)) return false;
+        const veteranReduction = c.traits?.reduce((max, trait) => {
+            return Math.max(max, trait.effect?.combatDamageReduction ?? 0);
+        }, 0) ?? 0;
+        const totalReduction = Math.min(
+            0.9,
+            firstAidReduction + veteranReduction + geneticsReduction,
+        );
+        return c.health - Math.floor(actualDamage * (1 - totalReduction)) < 1;
     });
 
     set((s) => {
@@ -245,8 +260,9 @@ function damageCrewInModule(
     if (geneticsReduction > 0) {
         get().addLog( i18nStore.t("game_logs.moduleDamage_13", { value: Math.round(geneticsReduction * 100) }), "info");
     }
-    if (hasImmortality) {
+    if (crewSavedByImmortality) {
         get().addLog( i18nStore.t("game_logs.moduleDamage_14"), "info");
+        onCrewImmortality?.(moduleId);
     }
 
     const remainingCrew = get().crew.filter((c) => c.health > 0);

@@ -20,6 +20,7 @@ import {
   processLaserDamage,
   processKineticDamage,
   processMissileDamage,
+  processSiegeTorpedoDamage,
   processPlasmaDamage,
   processDronesDamage,
   processAntimatterDamage,
@@ -29,6 +30,10 @@ import {
 import { handleVictory } from "./playerVictory";
 import { handleEnemyCounterAttack } from "./enemyCounterAttack";
 import { applyAlienPresencePenalty } from "./alienPresence";
+import {
+  getActivePointDefense,
+  getModulePointDefenseChance,
+} from "./pointDefense";
 import { BASE_CRIT_MULTIPLIER, DRONE_MAX_STACKS, DRONE_STACK_BONUS } from "@/game/constants";
 import {
   checkBossEvasionBoost,
@@ -126,6 +131,7 @@ const WEAPON_SOUND_IDS: Record<WeaponType, SoundId> = {
   plasma: "combat_plasma",
   drones: "combat_drones",
   antimatter: "combat_antimatter",
+  siege_torpedo: "combat_missile",
   quantum_torpedo: "combat_quantum_torpedo",
   ion_cannon: "combat_ion_cannon",
 };
@@ -371,6 +377,7 @@ function countWeapons(state: GameState): WeaponCounts {
     plasma: 0,
     drones: 0,
     antimatter: 0,
+    siege_torpedo: 0,
     quantum_torpedo: 0,
     ion_cannon: 0,
   };
@@ -533,6 +540,12 @@ function calculateAllDamage(
   droneStacks: number,
   laserDamageBonus = 0,
   perTypeDamage?: Partial<Record<string, number>>,
+  pointDefenseModules: ReadonlyArray<{
+    id: number;
+    type: string;
+    health: number;
+    level?: number;
+  }> = [],
 ): DamageResult {
   let remainingShields = enemyShields;
   let totalShieldDamage = 0;
@@ -550,12 +563,16 @@ function calculateAllDamage(
     plasma: 0,
     drones: 0,
     antimatter: 0,
+    siege_torpedo: 0,
     quantum_torpedo: 0,
     ion_cannon: 0,
   };
 
   const getAccuracy = (type: WeaponType) =>
     getWeaponAccuracy(type, accuracyModifier);
+  const pointDefense = getActivePointDefense(pointDefenseModules);
+  const getInterceptChance = (type: WeaponType) =>
+    getModulePointDefenseChance(type, pointDefenseModules);
 
   // Порядок резолва = порядок приоритета. Щиты снимают те, кто умеет:
   // ионная пушка (×4 по щитам) стреляла последней и тратила свой множитель
@@ -681,8 +698,8 @@ function calculateAllDamage(
       remainingShields,
       enemyShields,
       getAccuracy("missile"),
-      WEAPON_TYPES.missile.interceptChance ?? 0.2,
-      accuracyModifier,
+      getInterceptChance("missile"),
+      pointDefense?.id,
       projectiles,
     );
     totalShieldDamage += result.totalShieldDamage;
@@ -694,12 +711,37 @@ function calculateAllDamage(
     armorPenetration = Math.max(armorPenetration, WEAPON_TYPES.missile.armorPenetration ?? 0);
   }
 
+  if (weaponCounts.siege_torpedo > 0) {
+    const result = processSiegeTorpedoDamage(
+      weaponCounts.siege_torpedo,
+      perTypeDamage?.siege_torpedo ?? finalDamagePerWeapon,
+      damageMultiplier,
+      remainingShields,
+      enemyShields,
+      getAccuracy("siege_torpedo"),
+      getInterceptChance("siege_torpedo"),
+      pointDefense?.id,
+      projectiles,
+    );
+    totalShieldDamage += result.totalShieldDamage;
+    totalModuleDamage += result.totalModuleDamage;
+    remainingShields = result.remainingShields;
+    logs.push(...result.logs);
+    missedShots.siege_torpedo = result.missedShots;
+    armorPenetration = Math.max(
+      armorPenetration,
+      WEAPON_TYPES.siege_torpedo.armorPenetration ?? 0,
+    );
+  }
+
   if (weaponCounts.quantum_torpedo > 0) {
     const result = processQuantumTorpedoDamage(
       weaponCounts.quantum_torpedo,
       perTypeDamage?.quantum_torpedo ?? finalDamagePerWeapon,
       damageMultiplier,
       getAccuracy("quantum_torpedo"),
+      getInterceptChance("quantum_torpedo"),
+      pointDefense?.id,
       projectiles,
     );
     totalModuleDamage += result.totalModuleDamage;
@@ -725,6 +767,10 @@ function calculateAllDamage(
   if (missedShots.antimatter > 0)
     logs.push(
       `❌ ${missedShots.antimatter} антиматер. выстр. промахнул(ись)!`,
+    );
+  if (missedShots.siege_torpedo > 0)
+    logs.push(
+      `❌ ${missedShots.siege_torpedo} осадная торпеда(ы) промахнул(ась)!`,
     );
   if (missedShots.quantum_torpedo > 0)
     logs.push(
@@ -905,6 +951,7 @@ function pushVolleyWithRetargets(
   volleyId: number,
   sourceModuleId: number,
   droneStacks: number,
+  isPhaseShift = false,
 ): number[] {
   const destroyedModuleIds: number[] = [];
   let targetId = firstTargetId;
@@ -926,6 +973,7 @@ function pushVolleyWithRetargets(
       droneStacks: currentDroneStacks,
       projectiles: onTarget,
       isCrit,
+      isPhaseShift,
     });
     timeline.push(...events);
     for (const event of events) {
@@ -1052,6 +1100,7 @@ export function executePlayerAttack(
     weaponCounts.plasma +
     weaponCounts.drones +
     weaponCounts.antimatter +
+    weaponCounts.siege_torpedo +
     weaponCounts.quantum_torpedo +
     weaponCounts.ion_cannon;
   if (totalWeapons === 0) {
@@ -1121,11 +1170,11 @@ export function executePlayerAttack(
   // where rawBaseTotal is the unmodified sum of per-type bases (no racial/artifact/tech bonuses).
   // This correctly scales each weapon type by ALL bonuses combined.
   const totalDamageByType = get().getTotalDamage();
-  const rawBaseTotal = (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "quantum_torpedo", "ion_cannon"] as const)
+  const rawBaseTotal = (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "siege_torpedo", "quantum_torpedo", "ion_cannon"] as const)
     .reduce((s, t) => s + totalDamageByType[t], 0);
   const fullMultiplier = rawBaseTotal > 0 ? finalDamagePerWeapon / rawBaseTotal : 1;
   const perTypeDamage: Partial<Record<string, number>> = {};
-  (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "quantum_torpedo", "ion_cannon"] as const).forEach(
+  (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "siege_torpedo", "quantum_torpedo", "ion_cannon"] as const).forEach(
     (type) => {
       if (totalDamageByType[type] > 0) {
         perTypeDamage[type] = Math.floor(totalDamageByType[type] * fullMultiplier);
@@ -1142,6 +1191,7 @@ export function executePlayerAttack(
     droneStacks,
     laserDamageBonus,
     perTypeDamage,
+    currentState.currentCombat.enemy.modules,
   );
 
   // Early return if everything missed
@@ -1204,7 +1254,7 @@ export function executePlayerAttack(
 function countWeaponsInBay(bay: GameState["ship"]["modules"][number]): WeaponCounts {
   const counts: WeaponCounts = {
     kinetic: 0, laser: 0, missile: 0, plasma: 0,
-    drones: 0, antimatter: 0, quantum_torpedo: 0, ion_cannon: 0,
+    drones: 0, antimatter: 0, siege_torpedo: 0, quantum_torpedo: 0, ion_cannon: 0,
   };
   if (bay.weapons) {
     bay.weapons.forEach((w) => {
@@ -1278,6 +1328,7 @@ export function executePlayerAttackWithBayTargets(
           droneStacks: combatAtStart.droneStacks,
           projectiles: createMissProjectileResolutions(bayWeapons),
           isCrit: false,
+          isEvasion: true,
         }));
       }
       recordEnemyMiss(set, fallbackTarget);
@@ -1305,7 +1356,7 @@ export function executePlayerAttackWithBayTargets(
   // fullMultiplier = finalDamagePerWeapon / rawBaseTotal where rawBaseTotal = sum of per-type raw bases.
   // This correctly captures ALL bonuses (racial/artifact/tech + gunner/overclock) relative to raw weapon base.
   const totalDamageData = get().getTotalDamage();
-  const rawBaseTotal = (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "quantum_torpedo", "ion_cannon"] as const)
+  const rawBaseTotal = (["kinetic", "laser", "missile", "plasma", "drones", "antimatter", "siege_torpedo", "quantum_torpedo", "ion_cannon"] as const)
     .reduce((s, t) => s + totalDamageData[t], 0);
   const fullMultiplier = rawBaseTotal > 0 ? finalDamagePerWeapon / rawBaseTotal : 1;
   let remainingShields = combatAtStart.enemy.shields;
@@ -1346,6 +1397,7 @@ export function executePlayerAttackWithBayTargets(
         droneStacks: droneStacksBeforeBay,
         projectiles: createMissProjectileResolutions(bayWeapons),
         isCrit: false,
+        isEvasion: true,
       }));
       recordEnemyMiss(set, tgtMod);
       continue;
@@ -1354,9 +1406,13 @@ export function executePlayerAttackWithBayTargets(
     // Per-bay crit roll
     const bayCrit = rollCrit(currentState, get);
     let bayDamageMultiplier = bayCrit.isCrit ? bayCrit.multiplier : 1;
+    let bayPhaseShifted = false;
     if (bayCrit.isCrit) {
       const aliveBossModsForCrit = combatNow.enemy.modules.filter((m) => m.health > 0);
-      if (checkBossPhaseShift(aliveBossModsForCrit, get)) bayDamageMultiplier = 1;
+      if (checkBossPhaseShift(aliveBossModsForCrit, get)) {
+        bayDamageMultiplier = 1;
+        bayPhaseShifted = true;
+      }
     }
 
     // Per-bay accuracy modifier (gunner/calibration scoped to this bay, global bonuses shared)
@@ -1384,6 +1440,7 @@ export function executePlayerAttackWithBayTargets(
       droneStacksBeforeBay,
       laserDamageBonus,
       bayPerTypeDamage,
+      combatNow.enemy.modules,
     );
 
     remainingShields = damage.remainingShields;
@@ -1398,6 +1455,7 @@ export function executePlayerAttackWithBayTargets(
         droneStacks: droneStacksBeforeBay,
         projectiles: damage.projectiles,
         isCrit: false,
+        isPhaseShift: bayPhaseShifted,
       }));
       damage.logs.forEach((log) => get().addLog(log, "combat"));
       recordEnemyMiss(set, tgtMod);
@@ -1445,6 +1503,7 @@ export function executePlayerAttackWithBayTargets(
         targetHullBeforeVolley: targetHealthBefore,
         projectiles: volley,
         isCrit: bayIsCrit,
+        isPhaseShift: bayPhaseShifted,
       }));
       timeline.push({ kind: "module_destroyed", side: "enemy", moduleId: tgtMod.id });
       destroyedModuleIds = [tgtMod.id];
@@ -1460,6 +1519,7 @@ export function executePlayerAttackWithBayTargets(
         bay.id,
         bay.id,
         droneStacksBeforeBay,
+        bayPhaseShifted,
       );
     }
     if (bayCrit.isCrit && bayDamageMultiplier > 1) {

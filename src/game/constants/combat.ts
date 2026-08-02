@@ -20,6 +20,7 @@ export const BASE_ACCURACY: Record<WeaponType, number> = {
     plasma: 0.85,
     drones: 0.85,
     antimatter: 0.78,
+    siege_torpedo: 0.5,
     quantum_torpedo: 0.62,
     ion_cannon: 0.88,
 };

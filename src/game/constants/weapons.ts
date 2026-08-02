@@ -1,6 +1,5 @@
 import type { Weapon, WeaponDetails } from "@/game/types";
 
-const missileInterceptChance = 0.1;
 const shieldBonus = 1.2;
 const armorPenetration = 0.5;
 
@@ -26,8 +25,7 @@ export const WEAPON_TYPES: Record<Weapon["type"], WeaponDetails> = {
         damage: 28,
         color: "#ffaa00",
         icon: "▲",
-        description: `Высокий урон, пробивает 35% брони, но ${missileInterceptChance * 100}% могут быть сбиты щитами`,
-        interceptChance: missileInterceptChance,
+        description: "Высокий урон, пробивает 35% брони; перехватывается только активным ПВО",
         armorPenetration: 0.35,
     },
     plasma: {
@@ -52,6 +50,14 @@ export const WEAPON_TYPES: Record<Weapon["type"], WeaponDetails> = {
         icon: "◈",
         description: "×2.5 урона по щитам",
         shieldBonus: 2.5,
+    },
+    siege_torpedo: {
+        name: "Осадная торпеда",
+        damage: 96,
+        color: "#ff8844",
+        icon: "◈",
+        description: "Медленная тяжёлая торпеда: огромный урон, 50% базовая точность; ПВО перехватывает её особенно легко",
+        armorPenetration: 0.5,
     },
     quantum_torpedo: {
         name: "Квантовая торпеда",
@@ -79,6 +85,7 @@ export const WEAPON_ART: Record<Weapon["type"], string> = {
     plasma: "/assets/weapons/plasma.webp",
     drones: "/assets/weapons/drones.webp",
     antimatter: "/assets/weapons/antimatter.webp",
+    siege_torpedo: "/assets/weapons/siege_torpedo.webp",
     quantum_torpedo: "/assets/weapons/quantum_torpedo.webp",
     ion_cannon: "/assets/weapons/ion_cannon.webp",
 };

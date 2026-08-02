@@ -5,6 +5,7 @@ export type ModuleType =
     | "cargo"
     | "weaponbay"
     | "weaponShed"
+    | "point_defense"
     | "shield"
     | "medical"
     | "scanner"
@@ -28,6 +29,7 @@ export type WeaponType =
     | "plasma"
     | "drones"
     | "antimatter"
+    | "siege_torpedo"
     | "quantum_torpedo"
     | "ion_cannon";
 

@@ -1,11 +1,14 @@
 import type { BossModuleEffect } from "./bosses";
 
+export type EnemyWeaponKind = "missile_launcher";
+
 export type EnemyModule = {
     id: number;
     type: string;
     name: string;
     health: number;
     damage?: number;
+    weaponKind?: EnemyWeaponKind;
     defense?: number;
     baseDefense?: number; // Original defense, set on first plasma hit (for armor reduction calculation)
     // Shield module: contribution to enemy shield pool
@@ -19,7 +22,7 @@ export type EnemyModule = {
     specialEffect?: BossModuleEffect; // e.g., { type: 'damage_aura', value: 10 }
 };
 
-export type EnemyModuleType = "weapon" | "shield" | "reactor";
+export type EnemyModuleType = "weapon" | "shield" | "reactor" | "point_defense";
 export type EnemyShip =
     | "pirate"
     | "raider"

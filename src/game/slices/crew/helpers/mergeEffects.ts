@@ -21,6 +21,7 @@ export interface MergeEffectsBonus {
   researchSpeed?: number;
   weaponDamage?: number;
   weaponAccuracy?: number;
+  pointDefense?: number;
   healing?: number;
   miningSpeed?: number;
   resourceYield?: number;
@@ -70,4 +71,3 @@ export const getMergeEffectsBonus = (
 
   return bonus;
 };
-

@@ -44,6 +44,8 @@ export interface CombatProjectileResolution {
   outcome: CombatProjectileOutcome;
   shieldDamage: number;
   hullDamage: number;
+  /** Модуль ПВО на стороне цели, который выпустил перехватчик. */
+  interceptorModuleId?: number;
 }
 
 export interface CombatProjectileEvent extends CombatProjectileResolution {
@@ -51,6 +53,10 @@ export interface CombatProjectileEvent extends CombatProjectileResolution {
   from: CombatCinematicSide;
   to: CombatCinematicSide;
   isCrit: boolean;
+  /** Цель уклонилась своим манёвром, а не просто избежала урона другим эффектом. */
+  isEvasion?: boolean;
+  /** Фазовый сдвиг босса отменил критический множитель этого попадания. */
+  isPhaseShift?: boolean;
   targetModuleId?: number;
   /** Модуль-источник: откуда визуально ушёл снаряд. */
   sourceModuleId?: number;
@@ -63,7 +69,7 @@ export interface CombatProjectileEvent extends CombatProjectileResolution {
    * Из какой оружейной палубы (или залпа врага) ушёл снаряд. Снаряды одного
    * залпа бьют очередью, между залпами сцена держит паузу.
    */
-  volleyId?: number;
+  volleyId?: number | string;
   /**
    * Накопленные стаки дронов на момент выстрела. Рой должен расти на глазах —
    * это единственный бонус боя, который копится молча.
@@ -74,6 +80,9 @@ export interface CombatProjectileEvent extends CombatProjectileResolution {
 export type CombatCinematicEvent =
   | CombatProjectileEvent
   | { kind: "turn_skipped"; side: CombatCinematicSide }
+  | { kind: "turn_skip_applied"; side: CombatCinematicSide }
+  | { kind: "boss_aura"; sourceModuleIds: number[] }
+  | { kind: "crew_immortality"; side: CombatCinematicSide; moduleId: number }
   | {
       kind: "reflection";
       attacker: CombatCinematicSide;

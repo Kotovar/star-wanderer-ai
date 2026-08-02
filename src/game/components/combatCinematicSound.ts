@@ -12,6 +12,7 @@ const WEAPON_SOUND_IDS: Record<WeaponType, SoundId> = {
   plasma: "combat_plasma",
   drones: "combat_drones",
   antimatter: "combat_antimatter",
+  siege_torpedo: "combat_missile",
   quantum_torpedo: "combat_quantum_torpedo",
   ion_cannon: "combat_ion_cannon",
 };

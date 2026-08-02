@@ -9,6 +9,8 @@ import { COMBAT_ACCURACY_MODIFIERS } from "@/game/constants/combat";
 import { PILOT_EVASION_COMBAT_EXP } from "@/game/constants/experience";
 import { getTotalEvasion } from "@/game/slices/ship/helpers/getTotalEvasion";
 import { shouldPhaseShieldAbsorb } from "@/game/research/specialAbilities";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers/mergeEffects";
+import { isModuleActive } from "@/game/modules/utils";
 import { applyModuleDamage } from "./moduleDamage";
 import { getBossAttackModifiers, processBossRegeneration } from "./bossAbilities";
 import {
@@ -21,6 +23,11 @@ import {
     type CombatTimelineCollector,
 } from "./combatTimeline";
 import * as enemyAttack from "./enemyAttack";
+import {
+    getActivePointDefense,
+    getModulePointDefenseChance,
+    getPointDefenseOperatorBonus,
+} from "./pointDefense";
 import {
     DEFAULT_MODULE_PRIORITY,
     MODULE_HEALTH_PRIORITY,
@@ -67,6 +74,9 @@ function pushEnemyProjectile(
         ? "blocked"
         : getProjectileOutcome(shieldDamage, hullDamage),
     enemyWeapon?: string,
+    interceptorModuleId?: number,
+    sourceModuleId?: number,
+    volleyId?: number,
 ): CombatProjectileEvent | null {
     if (!timeline) return null;
     const event: CombatProjectileEvent = {
@@ -80,16 +90,28 @@ function pushEnemyProjectile(
         hullDamage,
         isCrit,
         ...(enemyWeapon === undefined ? {} : { enemyWeapon }),
+        ...(interceptorModuleId === undefined ? {} : { interceptorModuleId }),
+        ...(sourceModuleId === undefined ? {} : { sourceModuleId }),
+        ...(volleyId === undefined ? {} : { volleyId }),
     };
     timeline.push(event);
     return event;
 }
 
 /** Живые орудия врага — по одному выстрелу на каждое. */
-function getEnemyGuns(combat: NonNullable<GameState["currentCombat"]>) {
+function getEnemyGuns(
+    combat: NonNullable<GameState["currentCombat"]>,
+    excludedGunId?: number,
+) {
     return combat.enemy.modules.filter(
-        (module) => module.health > 0 && (module.damage ?? 0) > 0,
-    );
+        (module) =>
+            module.id !== excludedGunId &&
+            module.health > 0 &&
+            (module.damage ?? 0) > 0,
+    ).map((module) => ({
+        ...module,
+        type: module.weaponKind ?? module.type,
+    }));
 }
 
 /**
@@ -106,18 +128,25 @@ function pushEnemyVolley(
     hullDamage: number,
     isCrit: boolean,
     outcome: CombatProjectileEvent["outcome"] | undefined,
+    excludedGunId?: number,
+    isEvasion = false,
+    repetitions = 1,
 ): CombatProjectileEvent[] {
     if (!timeline) return [];
     const events = buildEnemyVolleyProjectileEvents(
-        getEnemyGuns(combat),
+        getEnemyGuns(combat, excludedGunId),
         target.id,
         shieldDamage,
         hullDamage,
         isCrit,
         outcome,
+        repetitions,
     );
-    timeline.push(...events);
-    return events;
+    const visualEvents = isEvasion
+        ? events.map((event) => ({ ...event, isEvasion: true }))
+        : events;
+    timeline.push(...visualEvents);
+    return visualEvents;
 }
 
 /**
@@ -223,7 +252,7 @@ export function performEnemyAttack(
             "info",
         );
         recordMiss(set, tgt);
-        pushEnemyProjectile(timeline, tgt, 0, 0, false, "miss");
+        pushEnemyVolley(timeline, combat, tgt, 0, 0, false, "miss", undefined, true);
         if (pilot) get().gainExp(pilot, PILOT_EVASION_COMBAT_EXP);
         return;
     }
@@ -243,6 +272,49 @@ export function performEnemyAttack(
             pushEnemyProjectile(timeline, tgt, 0, 0, false, "miss");
             return;
         }
+    }
+
+    const activePlayerModules = state.ship.modules.filter(isModuleActive);
+    const playerPointDefense = getActivePointDefense(activePlayerModules);
+    const missileLauncher = combat.enemy.modules.find(
+        (module) =>
+            module.health > 0 && module.weaponKind === "missile_launcher",
+    );
+    const canInterceptEnemyVolley =
+        !combat.enemy.bossId &&
+        !combat.enemy.spaceMonsterType &&
+        missileLauncher !== undefined;
+    const pointDefenseChance = canInterceptEnemyVolley
+        ? getModulePointDefenseChance("missile", activePlayerModules, {
+              operatorBonus: getPointDefenseOperatorBonus(
+                  state.crew,
+                  activePlayerModules,
+              ),
+              mergeBonus:
+                  (getMergeEffectsBonus(state.crew, state.ship.modules)
+                      .pointDefense ?? 0) / 100,
+          })
+        : 0;
+    const interceptedMissileLauncher =
+        pointDefenseChance > 0 && Math.random() < pointDefenseChance
+            ? missileLauncher
+            : undefined;
+    if (interceptedMissileLauncher) {
+        get().addLog(i18nStore.t("game_logs.point_defense_intercept"), "info");
+        pushEnemyProjectile(
+            timeline,
+            tgt,
+            0,
+            0,
+            false,
+            "intercepted",
+            "missile_launcher",
+            playerPointDefense?.id,
+            interceptedMissileLauncher.id,
+            interceptedMissileLauncher.id,
+        );
+        finalDamage -= interceptedMissileLauncher.damage ?? 0;
+        if (finalDamage <= 0) return;
     }
 
     // Mirror Shield check
@@ -296,6 +368,10 @@ export function performEnemyAttack(
     const targetHealthBefore = get().ship.modules.find((module) => module.id === tgt.id)
         ?.health ?? tgt.health;
     const beforeDirectHit = timeline ? createCombatCinematicSnapshot(get()) : null;
+    let crewImmortalityModuleId: number | undefined;
+    const onCrewImmortality = timeline
+        ? (moduleId: number) => { crewImmortalityModuleId = moduleId; }
+        : undefined;
     if (state.ship.shields > 0) {
         applyDamageWithShields(
             state,
@@ -306,9 +382,19 @@ export function performEnemyAttack(
             shieldPierce,
             ignoreDefense,
             isCrit,
+            onCrewImmortality,
         );
     } else {
-        applyDamageNoShields(state, set, get, finalDamage, tgt, ignoreDefense, isCrit);
+        applyDamageNoShields(
+            state,
+            set,
+            get,
+            finalDamage,
+            tgt,
+            ignoreDefense,
+            isCrit,
+            onCrewImmortality,
+        );
     }
 
     const hit = get().currentCombat?.lastPlayerHit;
@@ -326,6 +412,9 @@ export function performEnemyAttack(
             hit.hullDamage,
             hit.isCrit ?? false,
             outcome,
+            interceptedMissileLauncher?.id,
+            false,
+            bossModifiers?.multiHitCount,
         );
     }
     const targetHealthAfter = get().ship.modules.find((module) => module.id === tgt.id)
@@ -342,9 +431,16 @@ export function performEnemyAttack(
             volleyEvents,
         );
     }
+    if (crewImmortalityModuleId !== undefined) {
+        timeline?.push({
+            kind: "crew_immortality",
+            side: "player",
+            moduleId: crewImmortalityModuleId,
+        });
+    }
 
     const beforeBossEffects = timeline ? createCombatCinematicSnapshot(get()) : null;
-    applyBossAttackSideEffects(bossModifiers, finalDamage, combat, set, get);
+    applyBossAttackSideEffects(bossModifiers, finalDamage, combat, set, get, timeline);
     const afterBossEffects = timeline ? createCombatCinematicSnapshot(get()) : null;
     if (timeline && beforeBossEffects && afterBossEffects) {
         appendCombatSnapshotDamageEvents(timeline, beforeBossEffects, afterBossEffects);
@@ -365,6 +461,7 @@ function applyBossAttackSideEffects(
     combat: NonNullable<GameState["currentCombat"]>,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
+    timeline?: CombatTimelineCollector,
 ) {
     // Increment boss attack count
     if (combat.enemy.isBoss) {
@@ -413,6 +510,7 @@ function applyBossAttackSideEffects(
             s.currentCombat.skipPlayerTurn = true;
         });
         get().addLog( i18nStore.t("game_logs.enemyCounterAttack_7"), "error");
+        timeline?.push({ kind: "turn_skip_applied", side: "player" });
     }
 }
 
@@ -552,6 +650,7 @@ function applyDamageWithShields(
     shieldPiercePercent = 0,
     ignoreDefense = false,
     isCrit = false,
+    onCrewImmortality?: (moduleId: number) => void,
 ) {
     // Split damage: piercing portion bypasses shields
     const piercingDamage = shieldPiercePercent > 0
@@ -569,6 +668,8 @@ function applyDamageWithShields(
             get,
             piercingDamage,
             tgt,
+            false,
+            onCrewImmortality,
         );
     }
 
@@ -599,6 +700,7 @@ function applyDamageWithShields(
                 overflow,
                 tgt,
                 ignoreDefense,
+                onCrewImmortality,
             );
         }
     }
@@ -661,6 +763,7 @@ function applyDamageNoShields(
     tgt: Module,
     ignoreDefense = false,
     isCrit = false,
+    onCrewImmortality?: (moduleId: number) => void,
 ) {
     const actualDamage = applyModuleDamage(
         state,
@@ -669,6 +772,7 @@ function applyDamageNoShields(
         eDmg,
         tgt,
         ignoreDefense,
+        onCrewImmortality,
     );
     recordPlayerHit(set, tgt, 0, actualDamage, isCrit);
     if (actualDamage > 0) playCombatSound("combat_hull_hit");

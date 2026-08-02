@@ -315,7 +315,16 @@ export function applyBossTakeDamageEffects(
                     ];
                 const targetHealthBefore = target.health;
                 const beforeReflection = timeline ? createCombatCinematicSnapshot(get()) : null;
-                const hullDamage = applyModuleDamage(get(), set, get, reflected, target);
+                let crewImmortalityModuleId: number | undefined;
+                const hullDamage = applyModuleDamage(
+                    get(),
+                    set,
+                    get,
+                    reflected,
+                    target,
+                    false,
+                    (moduleId) => { crewImmortalityModuleId = moduleId; },
+                );
                 const reflectionEvent = {
                     kind: "reflection",
                     attacker: "player",
@@ -347,6 +356,13 @@ export function applyBossTakeDamageEffects(
                         afterReflection,
                         reflectionEvent,
                     );
+                }
+                if (crewImmortalityModuleId !== undefined) {
+                    timeline?.push({
+                        kind: "crew_immortality",
+                        side: "player",
+                        moduleId: crewImmortalityModuleId,
+                    });
                 }
                 get().addLog( i18nStore.t("game_logs.bossAbilities_5", { reflected, target_name: target.name }),
                     "warning",
@@ -396,9 +412,9 @@ function applyModulePassives(
     state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
-): void {
+): { auraSourceModuleIds: number[]; crewImmortalityModuleIds: number[] } {
     const combat = get().currentCombat;
-    if (!combat) return;
+    if (!combat) return { auraSourceModuleIds: [], crewImmortalityModuleIds: [] };
 
     const aliveMods = getAliveMods(combat.enemy.modules);
 
@@ -435,9 +451,12 @@ function applyModulePassives(
     }
 
     // damage_aura: sum of all alive aura modules → apply to player each turn
-    const auraDamage = aliveMods
-        .filter((m) => m.specialEffect?.type === "damage_aura")
+    const auraMods = aliveMods.filter(
+        (m) => m.specialEffect?.type === "damage_aura",
+    );
+    const auraDamage = auraMods
         .reduce((s, m) => s + (m.specialEffect?.value ?? 0), 0);
+    const crewImmortalityModuleIds = new Set<number>();
 
     if (auraDamage > 0) {
         const freshState = get();
@@ -464,13 +483,26 @@ function applyModulePassives(
                     playerActiveMods[
                         Math.floor(Math.random() * playerActiveMods.length)
                     ];
-                applyModuleDamage(freshState2, set, get, remaining, target);
+                applyModuleDamage(
+                    freshState2,
+                    set,
+                    get,
+                    remaining,
+                    target,
+                    false,
+                    (moduleId) => crewImmortalityModuleIds.add(moduleId),
+                );
                 get().addLog( i18nStore.t("game_logs.bossAbilities_9", { target_name: target.name, remaining }),
                     "error",
                 );
             }
         }
     }
+
+    return {
+        auraSourceModuleIds: auraDamage > 0 ? auraMods.map((module) => module.id) : [],
+        crewImmortalityModuleIds: [...crewImmortalityModuleIds],
+    };
 }
 
 // ─── 8. Active special ability ────────────────────────────────────────────────
@@ -479,12 +511,13 @@ function applySpecialAbility(
     state: GameState,
     set: (fn: (s: GameState) => void) => void,
     get: () => GameStore,
-): void {
+): number[] {
     const combat = get().currentCombat;
-    if (!combat?.enemy.isBoss) return;
+    if (!combat?.enemy.isBoss) return [];
 
     const ability = combat.enemy.specialAbility;
-    if (!ability) return;
+    if (!ability) return [];
+    const crewImmortalityModuleIds = new Set<number>();
 
     const healthPercent = getBossHealthPercent(combat.enemy.modules);
 
@@ -518,7 +551,15 @@ function applySpecialAbility(
                         (m) => m.health > 0,
                     );
                     for (const mod of activeMods) {
-                        applyModuleDamage(get(), set, get, remaining, mod);
+                        applyModuleDamage(
+                            get(),
+                            set,
+                            get,
+                            remaining,
+                            mod,
+                            false,
+                            (moduleId) => crewImmortalityModuleIds.add(moduleId),
+                        );
                     }
                     get().addLog( i18nStore.t("game_logs.bossAbilities_11", { ability_name: ability.name, remaining }),
                         "error",
@@ -648,6 +689,8 @@ function applySpecialAbility(
                 break;
         }
     }
+
+    return [...crewImmortalityModuleIds];
 }
 
 // ─── 9. Main export ───────────────────────────────────────────────────────────
@@ -686,17 +729,34 @@ export function processBossRegeneration(
 
     // Per-module passives (regen specialEffect, damage_aura)
     const beforePassives = timeline ? createCombatCinematicSnapshot(get()) : null;
-    applyModulePassives(state, set, get);
+    const passiveEffects = applyModulePassives(state, set, get);
     const afterPassives = timeline ? createCombatCinematicSnapshot(get()) : null;
     if (timeline && beforePassives && afterPassives) {
+        const playerTookPassiveDamage =
+            afterPassives.player.shields < beforePassives.player.shields ||
+            afterPassives.player.modules.some((module) => {
+                const beforeModule = beforePassives.player.modules.find(
+                    (currentModule) => currentModule.id === module.id,
+                );
+                return beforeModule !== undefined && module.health < beforeModule.health;
+            });
+        if (playerTookPassiveDamage && passiveEffects.auraSourceModuleIds.length > 0) {
+            timeline.push({
+                kind: "boss_aura",
+                sourceModuleIds: passiveEffects.auraSourceModuleIds,
+            });
+        }
         appendCombatSnapshotDamageEvents(timeline, beforePassives, afterPassives);
         appendCombatSnapshotDeltaEvents(timeline, beforePassives, afterPassives, "regen");
+        passiveEffects.crewImmortalityModuleIds.forEach((moduleId) => {
+            timeline.push({ kind: "crew_immortality", side: "player", moduleId });
+        });
     }
 
     // Active special ability
     const ability = get().currentCombat?.enemy.specialAbility;
     const beforeAbility = timeline ? createCombatCinematicSnapshot(get()) : null;
-    applySpecialAbility(state, set, get);
+    const abilityCrewImmortalityModuleIds = applySpecialAbility(state, set, get);
     const afterAbility = timeline ? createCombatCinematicSnapshot(get()) : null;
     if (
         timeline &&
@@ -717,5 +777,8 @@ export function processBossRegeneration(
             afterAbility,
             ability.effect === "lifesteal" ? "lifesteal" : "regen",
         );
+        abilityCrewImmortalityModuleIds.forEach((moduleId) => {
+            timeline.push({ kind: "crew_immortality", side: "player", moduleId });
+        });
     }
 }

@@ -21,6 +21,7 @@ function getTranslatedModuleName(
         lifesupport: "module_names.lifesupport",
         cargo: "module_names.cargo",
         weaponbay: "module_names.weaponbay",
+        point_defense: "module_names.point_defense",
         shield: "module_names.shield",
         medical: "module_names.medical",
         scanner: "module_names.scanner",

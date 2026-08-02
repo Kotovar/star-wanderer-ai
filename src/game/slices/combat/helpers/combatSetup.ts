@@ -117,6 +117,10 @@ export const generateEnemyModules = (
 
     const healthMultiplier = modifiers.healthMod;
     const damageMultiplier = modifiers.damageMod;
+    const hasMissileLauncher =
+        enemyType === "pirate" ||
+            enemyType === "raider" ||
+            enemyType === "marauder";
 
     // id=0: Reactor — always present, high HP, high armor, destroying it = instant win
     const reactorHealth = Math.floor(MODULE_HEALTH_BASE * healthMultiplier * REACTOR_HP_MULTIPLIER);
@@ -136,10 +140,11 @@ export const generateEnemyModules = (
     modules.push({
         id: 1,
         type: "weapon",
-        name: getModuleName("weapon", isBiological),
+        name: hasMissileLauncher ? "Ракетная батарея" : getModuleName("weapon", isBiological),
         health: baseWeaponHealth,
         maxHealth: baseWeaponHealth,
         damage: Math.floor(threat * MODULE_DAMAGE_PER_THREAT * damageMultiplier),
+        weaponKind: hasMissileLauncher ? "missile_launcher" : undefined,
         defense: 0,
         isBiological,
         specialEffect: moduleEffect,
@@ -185,6 +190,25 @@ export const generateEnemyModules = (
         });
     }
 
+    const hasSimplifiedPointDefense =
+        threat >= 3 &&
+        (enemyType === "pirate" ||
+            enemyType === "raider" ||
+            enemyType === "marauder");
+    if (hasSimplifiedPointDefense) {
+        const moduleHealth = Math.floor(MODULE_HEALTH_BASE * healthMultiplier);
+        modules.push({
+            id: modules.length,
+            type: "point_defense",
+            name: getModuleName("point_defense"),
+            health: moduleHealth,
+            maxHealth: moduleHealth,
+            damage: 0,
+            defense: 0,
+            isBiological: false,
+        });
+    }
+
     return modules;
 };
 
@@ -195,6 +219,7 @@ const BIOLOGICAL_MODULE_NAMES: Record<EnemyModuleType, string> = {
     reactor: "Живое ядро",
     weapon: "Хищный орган",
     shield: "Защитная мембрана",
+    point_defense: "Защитный орган",
 };
 
 const getModuleName = (type: EnemyModuleType, isBiological = false): string => {
@@ -207,6 +232,8 @@ const getModuleName = (type: EnemyModuleType, isBiological = false): string => {
             return "Щит";
         case "reactor":
             return "Реактор";
+        case "point_defense":
+            return "ПРО";
     }
 };
 

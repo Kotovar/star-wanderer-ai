@@ -48,12 +48,15 @@ function recordProjectileMiss(
 
 function recordProjectileInterception(
     projectiles: CombatProjectileResolution[],
+    weapon: WeaponType,
+    interceptorModuleId?: number,
 ): void {
     projectiles.push({
-        weapon: "missile",
+        weapon,
         outcome: "intercepted",
         shieldDamage: 0,
         hullDamage: 0,
+        ...(interceptorModuleId === undefined ? {} : { interceptorModuleId }),
     });
 }
 
@@ -397,7 +400,18 @@ export function processKineticDamage(
 /**
  * Processes missile weapon damage
  */
-export function processMissileDamage(
+type InterceptableDamageResult = {
+    totalShieldDamage: number;
+    totalModuleDamage: number;
+    remainingShields: number;
+    logs: string[];
+    missedShots: number;
+    interceptedCount: number;
+};
+
+function processInterceptableProjectileDamage(
+    weapon: "missile" | "siege_torpedo",
+    label: string,
     weaponCount: number,
     finalDamagePerWeapon: number,
     damageMultiplier: number,
@@ -405,38 +419,27 @@ export function processMissileDamage(
     enemyShields: number,
     accuracy: number,
     interceptChance: number,
-    accuracyModifier: number,
+    interceptorModuleId: number | undefined,
     projectiles: CombatProjectileResolution[],
-): {
-    totalShieldDamage: number;
-    totalModuleDamage: number;
-    remainingShields: number;
-    logs: string[];
-    missedShots: number;
-    missileInterceptedCount: number;
-} {
+): InterceptableDamageResult {
     let totalShieldDamage = 0;
     let totalModuleDamage = 0;
     const logs: string[] = [];
     let missedShots = 0;
-    let missileInterceptedCount = 0;
+    let interceptedCount = 0;
 
-    const baseInterceptChance = interceptChance ?? 0.2;
-    const actualInterceptChance = Math.max(
-        0.05,
-        Math.min(0.5, baseInterceptChance - accuracyModifier),
-    );
+    const actualInterceptChance = Math.max(0, Math.min(1, interceptChance));
 
     for (let i = 0; i < weaponCount; i++) {
         if (Math.random() > accuracy) {
             missedShots++;
-            recordProjectileMiss(projectiles, "missile");
+            recordProjectileMiss(projectiles, weapon);
             continue;
         }
 
         if (Math.random() < actualInterceptChance) {
-            missileInterceptedCount++;
-            recordProjectileInterception(projectiles);
+            interceptedCount++;
+            recordProjectileInterception(projectiles, weapon, interceptorModuleId);
             continue;
         }
 
@@ -449,13 +452,13 @@ export function processMissileDamage(
         totalModuleDamage += overflow;
 
         if (enemyShields > 0 && shieldDmg > 0) {
-            logs.push(`Ракета: -${shieldDmg} щитам`);
+            logs.push(`${label}: -${shieldDmg} щитам`);
         }
-        recordProjectileHit(projectiles, "missile", shieldDmg, overflow);
+        recordProjectileHit(projectiles, weapon, shieldDmg, overflow);
     }
 
-    if (missileInterceptedCount > 0) {
-        logs.push(`🛡️ ${missileInterceptedCount} ракета(ы) сбита(ы)!`);
+    if (interceptedCount > 0) {
+        logs.push(`🛡️ ${interceptedCount} ${label.toLowerCase()} сбита(ы)!`);
     }
 
     return {
@@ -464,8 +467,62 @@ export function processMissileDamage(
         remainingShields,
         logs,
         missedShots,
-        missileInterceptedCount,
+        interceptedCount,
     };
+}
+
+export function processMissileDamage(
+    weaponCount: number,
+    finalDamagePerWeapon: number,
+    damageMultiplier: number,
+    remainingShields: number,
+    enemyShields: number,
+    accuracy: number,
+    interceptChance: number,
+    interceptorModuleId: number | undefined,
+    projectiles: CombatProjectileResolution[],
+): InterceptableDamageResult & { missileInterceptedCount: number } {
+    const result = processInterceptableProjectileDamage(
+        "missile",
+        "Ракета",
+        weaponCount,
+        finalDamagePerWeapon,
+        damageMultiplier,
+        remainingShields,
+        enemyShields,
+        accuracy,
+        interceptChance,
+        interceptorModuleId,
+        projectiles,
+    );
+
+    return { ...result, missileInterceptedCount: result.interceptedCount };
+}
+
+export function processSiegeTorpedoDamage(
+    weaponCount: number,
+    finalDamagePerWeapon: number,
+    damageMultiplier: number,
+    remainingShields: number,
+    enemyShields: number,
+    accuracy: number,
+    interceptChance: number,
+    interceptorModuleId: number | undefined,
+    projectiles: CombatProjectileResolution[],
+): InterceptableDamageResult {
+    return processInterceptableProjectileDamage(
+        "siege_torpedo",
+        "Осадная торпеда",
+        weaponCount,
+        finalDamagePerWeapon,
+        damageMultiplier,
+        remainingShields,
+        enemyShields,
+        accuracy,
+        interceptChance,
+        interceptorModuleId,
+        projectiles,
+    );
 }
 
 /**
@@ -665,20 +722,34 @@ export function processQuantumTorpedoDamage(
     finalDamagePerWeapon: number,
     damageMultiplier: number,
     accuracy: number,
+    interceptChance: number,
+    interceptorModuleId: number | undefined,
     projectiles: CombatProjectileResolution[],
 ): {
     totalModuleDamage: number;
     logs: string[];
     missedShots: number;
+    interceptedCount: number;
 } {
     let totalModuleDamage = 0;
     const logs: string[] = [];
     let missedShots = 0;
+    let interceptedCount = 0;
 
     for (let i = 0; i < weaponCount; i++) {
         if (Math.random() > accuracy) {
             missedShots++;
             recordProjectileMiss(projectiles, "quantum_torpedo");
+            continue;
+        }
+
+        if (Math.random() < Math.max(0, Math.min(1, interceptChance))) {
+            interceptedCount++;
+            recordProjectileInterception(
+                projectiles,
+                "quantum_torpedo",
+                interceptorModuleId,
+            );
             continue;
         }
 
@@ -688,10 +759,15 @@ export function processQuantumTorpedoDamage(
         recordProjectileHit(projectiles, "quantum_torpedo", 0, torpedoDmg);
     }
 
+    if (interceptedCount > 0) {
+        logs.push(`🛡️ ${interceptedCount} квант. торпеда(ы) сбита(ы)!`);
+    }
+
     return {
         totalModuleDamage,
         logs,
         missedShots,
+        interceptedCount,
     };
 }
 

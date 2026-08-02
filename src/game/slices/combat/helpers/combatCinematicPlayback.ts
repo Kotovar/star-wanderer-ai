@@ -31,6 +31,12 @@ export function getCombatCinematicEventDuration(
       return 560;
     case "turn_skipped":
       return 420;
+    case "boss_aura":
+      return 640;
+    case "turn_skip_applied":
+      return 680;
+    case "crew_immortality":
+      return 560;
     case "projectile":
       return getProjectileDuration(event);
   }
@@ -42,6 +48,11 @@ export function getCombatCinematicEventDuration(
  * столько же, сколько добивающий крит.
  */
 function getProjectileDuration(event: CombatProjectileEvent): number {
+  if (event.weapon === "siege_torpedo") {
+    return scaleProjectileDuration(
+      event.outcome === "intercepted" ? 1150 : 1800,
+    );
+  }
   if (event.isCrit) return scaleProjectileDuration(1500);
   switch (event.outcome) {
     case "miss":
@@ -83,7 +94,7 @@ export function getCombatCinematicStaggerMs(
 ): number | null {
   if (running.kind !== "projectile" || next.kind !== "projectile") return null;
   if (running.from !== next.from) return null;
-  return running.volleyId === next.volleyId
+  return running.volleyId !== undefined && running.volleyId === next.volleyId
     ? COMBAT_CINEMATIC_VOLLEY_STAGGER_MS
     : COMBAT_CINEMATIC_BAY_GAP_MS;
 }

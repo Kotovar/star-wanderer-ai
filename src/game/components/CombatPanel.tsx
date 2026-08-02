@@ -525,7 +525,15 @@ export function CombatPanel() {
                   <span className="block truncate">{module.name}</span>
                   {!isPlaybackActive && (
                     <span className="mt-0.5 block text-[9px] text-[#7893a2]">
-                      {module.health}/{module.maxHealth ?? module.health}
+                      HP {module.health}/{module.maxHealth ?? module.health}
+                      {" · "}{t("combat.armor")} {module.defense ?? 0}
+                      {" · "}{t("combat.damage")} {module.damage ?? 0}
+                      {module.type === "point_defense" && (
+                        <>
+                          {" · "}
+                          {t("module_list.point_defense_chance", { chance: 20 })}
+                        </>
+                      )}
                     </span>
                   )}
                 </button>

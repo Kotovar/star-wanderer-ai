@@ -36,6 +36,7 @@ export const CREW_ASSIGNMENT_ICONS: Record<ActiveCrewAssignment, string> = {
     evasion: "🌀",
     overclock: "⚡",
     rapidfire: "🔥",
+    interception: "🛡️",
     calibration: "⚙",
     patrol: "🔭",
     research: "🔬",
@@ -134,6 +135,12 @@ export const COMBAT_ACTIONS: Record<
             label: "Скорострельность",
             effect: "+25% урон, +1% за уровень, -10% точность",
             moduleType: "weaponbay",
+        },
+        {
+            value: "interception",
+            label: "ПРО",
+            effect: "+5% к перехвату, +1% за уровень",
+            moduleType: "point_defense",
         },
     ],
 };

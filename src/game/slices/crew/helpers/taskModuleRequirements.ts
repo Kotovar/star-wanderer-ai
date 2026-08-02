@@ -38,6 +38,7 @@ export const TASK_MODULE_REQUIREMENTS: Record<
     // Стрелок
     targeting: ["weaponbay"],
     rapidfire: ["weaponbay"],
+    interception: ["point_defense"],
     training: ["weaponbay"],
     clean_weapons: ["weaponbay"],
 
@@ -55,6 +56,7 @@ export const MODULE_TYPE_NAMES: Record<ModuleType, string> = {
     cockpit: "кокпите",
     reactor: "реакторе",
     weaponbay: "оружейной палубе",
+    point_defense: "модуле ПРО",
     lab: "лаборатории",
     cargo: "грузовом отсеке",
     fueltank: "топливном баке",

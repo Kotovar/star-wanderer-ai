@@ -22,6 +22,7 @@ export const MODULE_ART: Partial<
         "2x1": "/assets/modules/weaponbay-2x1.webp",
         "2x2": "/assets/modules/weaponbay-2x2.webp",
     },
+    point_defense: { "1x1": "/assets/modules/point_defense-1x1.webp" },
     shield: {
         "1x1": "/assets/modules/shield-1x1.webp",
         "2x1": "/assets/modules/shield-2x1.webp",

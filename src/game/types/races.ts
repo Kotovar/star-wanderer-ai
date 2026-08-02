@@ -131,6 +131,8 @@ export interface XenosymbiontMergeEffect {
     weaponDamage?: number;
     /** Точность оружия (%) */
     weaponAccuracy?: number;
+    /** Шанс перехвата ПВО (п.п.) */
+    pointDefense?: number;
     /** Скорость лечения (%) */
     healing?: number;
     /** Скорость добычи (%) */

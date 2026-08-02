@@ -15,7 +15,7 @@ export interface CraftingRecipe {
 
 export type CraftingWeapon = Exclude<
     WeaponType,
-    "kinetic" | "laser" | "missile"
+    "kinetic" | "laser" | "missile" | "siege_torpedo"
 >;
 
 export type CraftingRecipeId = CraftingWeapon;

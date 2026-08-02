@@ -29,6 +29,11 @@ import { RACES } from "@/game/constants/races";
 import { getAugmentationBonus } from "@/game/constants/augmentations";
 import { StatIcon, type StatIconType } from "./StatIcon";
 import { getBestByProfession } from "@/game/crew";
+import {
+  getModulePointDefenseChance,
+  getPointDefenseOperatorBonus,
+} from "@/game/slices/combat/helpers/pointDefense";
+import { getMergeEffectsBonus } from "@/game/slices/crew/helpers/mergeEffects";
 
 function SectionHeader({ label }: { label: string }) {
   return (
@@ -276,6 +281,11 @@ export function ShipStats() {
     engines.length > 0 ? Math.max(...engines.map((e) => e.level || 1)) : 1;
 
   const evasionChance = getTotalEvasion(useGameStore.getState());
+  const pointDefenseModules = getActiveModules(ship.modules, "point_defense");
+  const pointDefenseChance = getModulePointDefenseChance("missile", pointDefenseModules, {
+    operatorBonus: getPointDefenseOperatorBonus(crew, pointDefenseModules),
+    mergeBonus: (getMergeEffectsBonus(crew, ship.modules).pointDefense ?? 0) / 100,
+  });
 
   const { totalCritChance, totalCritDamage } = useMemo(() => {
     const gs = useGameStore.getState();
@@ -480,6 +490,15 @@ export function ShipStats() {
           {evasionChance}%
         </span>
       </div>
+
+      {pointDefenseChance > 0 && (
+        <div className="flex justify-between items-baseline mb-1.5">
+          <StatLabel icon="shields">{t("ship_stats.point_defense")}</StatLabel>
+          <span className="text-[#00d4ff]">
+            {Math.round(pointDefenseChance * 100)}%
+          </span>
+        </div>
+      )}
 
       {reflectChance > 0 && (
         <div className="flex justify-between items-baseline mb-1.5">

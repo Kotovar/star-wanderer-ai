@@ -659,7 +659,6 @@ function ModuleRenderer({
           h={h}
         />
       )}
-
       <HealthBar
         module={module}
         x={x}

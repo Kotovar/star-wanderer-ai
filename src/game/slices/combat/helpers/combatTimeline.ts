@@ -25,6 +25,7 @@ const WEAPON_ORDER: WeaponType[] = [
   "kinetic",
   "drones",
   "missile",
+  "siege_torpedo",
   "quantum_torpedo",
 ];
 
@@ -37,7 +38,11 @@ export interface BuildVolleyEventsInput {
   /** Модуль-источник: откуда визуально ушёл снаряд. */
   sourceModuleId?: number;
   /** Палуба-источник: снаряды одного залпа бьют очередью, между залпами пауза. */
-  volleyId?: number;
+  volleyId?: number | string;
+  /** Визуальный манёвр цели, который отменил выстрел. */
+  isEvasion?: boolean;
+  /** Фазовый сдвиг отменил критический множитель, но не само попадание. */
+  isPhaseShift?: boolean;
   /** Стаки дронов перед залпом — рой рисуется гуще после каждого попадания. */
   droneStacks?: number;
   targetHullBeforeVolley?: number;
@@ -337,12 +342,15 @@ export function buildEnemyVolleyProjectileEvents(
   hullDamage: number,
   isCrit: boolean,
   outcome?: CombatProjectileEvent["outcome"],
+  repetitions = 1,
 ): CombatProjectileEvent[] {
+  const salvoCount = Math.max(1, Math.floor(repetitions));
   const makeEvent = (
     gun: EnemyVolleyGun | undefined,
     currentShieldDamage: number,
     currentHullDamage: number,
     currentOutcome = outcome,
+    volleyId: CombatProjectileEvent["volleyId"] = guns[0]?.id,
   ): CombatProjectileEvent => ({
     kind: "projectile",
     from: "enemy",
@@ -356,28 +364,55 @@ export function buildEnemyVolleyProjectileEvents(
     hullDamage: currentHullDamage,
     isCrit,
     ...(gun === undefined ? {} : { enemyWeapon: gun.type, sourceModuleId: gun.id }),
+    ...(volleyId === undefined ? {} : { volleyId }),
   });
 
-  if (guns.length <= 1) return [makeEvent(guns[0], shieldDamage, hullDamage)];
+  const buildSalvo = (
+    currentShieldDamage: number,
+    currentHullDamage: number,
+    volleyId: CombatProjectileEvent["volleyId"],
+  ): CombatProjectileEvent[] => {
+    if (guns.length <= 1) {
+      return [makeEvent(guns[0], currentShieldDamage, currentHullDamage, outcome, volleyId)];
+    }
 
-  const weights = guns.map((gun) => gun.damage ?? 0);
-  const shieldShares = splitDamageByWeight(weights, shieldDamage);
-  const hullShares = splitDamageByWeight(weights, hullDamage);
-  const events: CombatProjectileEvent[] = [];
+    const weights = guns.map((gun) => gun.damage ?? 0);
+    const shieldShares = splitDamageByWeight(weights, currentShieldDamage);
+    const hullShares = splitDamageByWeight(weights, currentHullDamage);
+    const events: CombatProjectileEvent[] = [];
 
-  for (let index = 0; index < guns.length; index += 1) {
-    const shotShield = shieldShares[index];
-    const shotHull = hullShares[index];
-    if (shotShield === 0 && shotHull === 0) continue;
-    events.push(makeEvent(
-      guns[index],
-      shotShield,
-      shotHull,
-      outcome === "piercing" && shotShield > 0 && shotHull > 0 ? "piercing" : undefined,
-    ));
-  }
+    for (let index = 0; index < guns.length; index += 1) {
+      const shotShield = shieldShares[index];
+      const shotHull = hullShares[index];
+      if (shotShield === 0 && shotHull === 0 && outcome !== "miss") continue;
+      events.push(makeEvent(
+        guns[index],
+        shotShield,
+        shotHull,
+        outcome === "piercing" && shotShield > 0 && shotHull > 0 ? "piercing" : undefined,
+        volleyId,
+      ));
+    }
 
-  return events.length > 0 ? events : [makeEvent(guns[0], shieldDamage, hullDamage)];
+    return events.length > 0
+      ? events
+      : [makeEvent(guns[0], currentShieldDamage, currentHullDamage, outcome, volleyId)];
+  };
+
+  const shieldSalvos = splitDamageByWeight(
+    Array.from({ length: salvoCount }, () => 1),
+    shieldDamage,
+  );
+  const hullSalvos = splitDamageByWeight(
+    Array.from({ length: salvoCount }, () => 1),
+    hullDamage,
+  );
+
+  return Array.from({ length: salvoCount }, (_, index) => buildSalvo(
+    shieldSalvos[index],
+    hullSalvos[index],
+    salvoCount === 1 ? guns[0]?.id : `${guns[0]?.id ?? "enemy"}:${index + 1}`,
+  )).flat();
 }
 
 export function createMissProjectileResolutions(
@@ -467,6 +502,8 @@ export function buildVolleyEvents(
       to: input.to,
       ...projectile,
       isCrit: input.isCrit && !isNonDamageOutcome,
+      ...(input.isEvasion && isNonDamageOutcome ? { isEvasion: true } : {}),
+      ...(input.isPhaseShift && !isNonDamageOutcome ? { isPhaseShift: true } : {}),
       ...(input.targetModuleId === undefined
         ? {}
         : { targetModuleId: input.targetModuleId }),

@@ -61,6 +61,26 @@ for (const marker of [
 ]) {
   assert.match(stageSource, new RegExp(marker), "missing projectile identity: " + marker);
 }
+assert.match(
+  stageSource,
+  /function drawRocket[\s\S]*?quadraticCurveTo/,
+  "missiles and siege torpedoes have a shaped hull instead of an arrow",
+);
+assert.match(
+  stageSource,
+  /const finSpread =/,
+  "missiles and siege torpedoes have stabilizers",
+);
+assert.match(
+  stageSource,
+  /const engineFlameLength =/,
+  "missiles and siege torpedoes have a visible engine flame",
+);
+assert.match(
+  stageSource,
+  /function drawPhaseTorpedo[\s\S]*?phaseExhaust/,
+  "quantum torpedoes keep their phase silhouette but visibly propel themselves",
+);
 const { ANCIENT_BOSSES: cinematicBosses } = jiti(
   "../src/game/constants/bosses.ts",
 );
@@ -288,8 +308,13 @@ assert.match(
 );
 assert.match(
   stageSource,
-  /drawInterceptor\(ctx, targetCenter, meetPoint, interceptFlight\);/,
-  "an interception is a visible counter-missile launched by the defender",
+  /drawInterceptor\(ctx, interceptorSource, meetPoint, interceptFlight\);/,
+  "an interception is a visible counter-missile launched by point defense when available",
+);
+assert.match(
+  stageSource,
+  /event\.interceptorModuleId/,
+  "the counter-missile must originate from the recorded point-defense module",
 );
 assert.match(
   stageSource,
@@ -780,6 +805,69 @@ try {
     ],
     "every resolved enemy-gun share keeps the module it visibly fires from",
   );
+  assert.ok(
+    volley.every(({ volleyId }) => volleyId === 41),
+    "enemy guns in one volley share an explicit volley id",
+  );
+}
+
+{
+  const evadedVolley = buildEnemyVolleyProjectileEvents(
+    [
+      { id: 51, type: "plasma_cannon", damage: 3 },
+      { id: 52, type: "missile_launcher", damage: 2 },
+    ],
+    7,
+    0,
+    0,
+    false,
+    "miss",
+  );
+
+  assert.deepEqual(
+    evadedVolley.map(({ sourceModuleId, enemyWeapon, outcome }) => ({
+      sourceModuleId,
+      enemyWeapon,
+      outcome,
+    })),
+    [
+      { sourceModuleId: 51, enemyWeapon: "plasma_cannon", outcome: "miss" },
+      { sourceModuleId: 52, enemyWeapon: "missile_launcher", outcome: "miss" },
+    ],
+    "an evaded enemy volley still visibly fires every gun, including its missile launcher",
+  );
+}
+
+{
+  const repeatedVolley = buildEnemyVolleyProjectileEvents(
+    [
+      { id: 61, type: "plasma_cannon", damage: 3 },
+      { id: 62, type: "missile_launcher", damage: 1 },
+    ],
+    7,
+    24,
+    12,
+    false,
+    undefined,
+    3,
+  );
+
+  assert.equal(repeatedVolley.length, 6, "a multi-hit boss visibly fires every gun in each of its three salvos");
+  assert.equal(
+    repeatedVolley.reduce((total, event) => total + event.shieldDamage, 0),
+    24,
+    "splitting a multi-hit attack into salvos keeps its total shield damage",
+  );
+  assert.equal(
+    repeatedVolley.reduce((total, event) => total + event.hullDamage, 0),
+    12,
+    "splitting a multi-hit attack into salvos keeps its total hull damage",
+  );
+  assert.equal(
+    new Set(repeatedVolley.map((event) => event.volleyId)).size,
+    3,
+    "each multi-hit pass gets its own cinematic volley id and pause",
+  );
 }
 
 assert.deepEqual(
@@ -857,6 +945,46 @@ assert.deepEqual(
     "player",
   );
   assert(recoil.x < 0, "the firing hull kicks back against its facing");
+
+  const evasion = getCombatCinematicShipImpulse(
+    [{
+      event: {
+        kind: "projectile",
+        from: "enemy",
+        to: "player",
+        weapon: "enemy",
+        outcome: "miss",
+        shieldDamage: 0,
+        hullDamage: 0,
+        isCrit: false,
+        isEvasion: true,
+      },
+      progress: 0.5,
+      impact: 0.58,
+    }],
+    "player",
+  );
+  assert(evasion.y > 0, "a pilot evasion moves the player hull aside before it returns");
+
+  const bossEvasion = getCombatCinematicShipImpulse(
+    [{
+      event: {
+        kind: "projectile",
+        from: "player",
+        to: "enemy",
+        weapon: "laser",
+        outcome: "miss",
+        shieldDamage: 0,
+        hullDamage: 0,
+        isCrit: false,
+        isEvasion: true,
+      },
+      progress: 0.5,
+      impact: 0.58,
+    }],
+    "enemy",
+  );
+  assert(bossEvasion.y < 0, "a dodging boss hull moves away from the player ship before returning");
 
   const knockback = getCombatCinematicShipImpulse(
     [{ event: hullHit(), progress: 0.66, impact: 0.62 }],
@@ -2074,6 +2202,21 @@ const snapshot = {
     "a plain hull hit is slowed by fifteen percent without changing its place in the volley",
   );
   assert.equal(
+    getCombatCinematicEventDuration({ kind: "boss_aura", sourceModuleIds: [7] }),
+    640,
+    "a boss damage aura has a dedicated readable beat before its damage",
+  );
+  assert.equal(
+    getCombatCinematicEventDuration({ kind: "turn_skip_applied", side: "player" }),
+    680,
+    "a boss turn skip has time to show its jamming action",
+  );
+  assert.equal(
+    getCombatCinematicEventDuration({ kind: "crew_immortality", side: "player", moduleId: 7 }),
+    560,
+    "an actual crew rescue by an artifact is visible before the next event",
+  );
+  assert.equal(
     getCombatCinematicEventDuration({
       kind: "projectile",
       from: "player",
@@ -2133,6 +2276,14 @@ const snapshot = {
     ),
     COMBAT_CINEMATIC_BAY_GAP_MS,
     "перед залпом следующей палубы сцена держит паузу",
+  );
+  assert.equal(
+    getCombatCinematicStaggerMs(
+      { kind: "projectile", from: "enemy", to: "player", weapon: "enemy", outcome: "intercepted", shieldDamage: 0, hullDamage: 0, isCrit: false },
+      { kind: "projectile", from: "enemy", to: "player", weapon: "enemy", outcome: "hull", shieldDamage: 0, hullDamage: 5, isCrit: false },
+    ),
+    COMBAT_CINEMATIC_BAY_GAP_MS,
+    "an intercepted enemy missile and the rest of the volley must not overlap",
   );
   assert.equal(
     getCombatCinematicStaggerMs(
@@ -2430,6 +2581,9 @@ function projectileEvents(projectiles, isCrit = false) {
     "vessel_destroyed",
     "boss_ability",
     "turn_skipped",
+    "boss_aura",
+    "turn_skip_applied",
+    "crew_immortality",
   ]);
 
   assert(events.every((event) => knownKinds.has(event.kind)));
