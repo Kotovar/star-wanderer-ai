@@ -12,6 +12,8 @@ export type AnomalyApproach = "cautious" | "standard" | "deep";
 
 export type WreckApproach = "surface" | "standard" | "deep";
 
+export type DerelictApproach = "boarding" | "engineering" | "archive";
+
 export type StormType =
     | "radiation"
     | "ionic"
@@ -188,9 +190,15 @@ export interface Location {
     // Derelict ship fields
     derelictExplored?: boolean; // Whether this derelict ship has been explored
     derelictLoot?: {
+        approach?: DerelictApproach;
         spares?: number;
         electronics?: number;
         rare_minerals?: number;
+        ancient_data?: number;
+        tech_salvage?: number;
         moduleRecipeId?: string; // ID of module recipe found (if any)
+        crewDamage?: number;
+        damagedModuleName?: string;
+        moduleDamage?: number;
     };
 }

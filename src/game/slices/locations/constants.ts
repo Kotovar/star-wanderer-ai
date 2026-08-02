@@ -2,7 +2,11 @@
 // Константы для локаций
 // ============================================================================
 
-import type { AnomalyApproach, WreckApproach } from "@/game/types";
+import type {
+    AnomalyApproach,
+    DerelictApproach,
+    WreckApproach,
+} from "@/game/types";
 
 // ============================================================================
 // Константы для добычи астероидов
@@ -252,6 +256,39 @@ export const WRECK_APPROACH_CONFIG: Record<
         damageMult: 1.5,
         rareChanceMult: 1.5,
         crewProtected: false,
+    },
+};
+
+// ============================================================================
+// Подходы к исследованию покинутого корабля
+// ============================================================================
+
+export const DERELICT_RISK_CHANCE = 0.25;
+
+export const DERELICT_APPROACH_CONFIG: Record<
+    DerelictApproach,
+    {
+        scoutDamage?: number;
+        sparesMultiplier?: number;
+        electronicsMultiplier?: number;
+        moduleDamage?: number;
+        ancientData?: number;
+        techSalvage?: number;
+        scannerDamage?: number;
+    }
+> = {
+    boarding: {
+        scoutDamage: 5,
+    },
+    engineering: {
+        sparesMultiplier: 1.5,
+        electronicsMultiplier: 1.5,
+        moduleDamage: 5,
+    },
+    archive: {
+        ancientData: 1,
+        techSalvage: 1,
+        scannerDamage: 10,
     },
 };
 

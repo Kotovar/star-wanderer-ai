@@ -17,6 +17,7 @@ import type {
   Location,
   LocationType,
   AnomalyApproach,
+  DerelictApproach,
   DistressApproach,
   WreckApproach,
 } from "./locations/locations";
@@ -332,7 +333,7 @@ export interface GameScouting {
   atmosphericAnalysis: (planetId: string) => void;
   orbitalScan: (planetId: string) => void;
   resolveScoutEvent: (choiceIndex: number) => void;
-  exploreDerelictShip: (locationId: string) => void;
+  exploreDerelictShip: (locationId: string, approach: DerelictApproach) => void;
   startExpedition: (planetId: string, crewIds: number[]) => void;
   revealExpeditionTile: (tileIndex: number) => void;
   scanExpeditionTile: (

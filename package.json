@@ -46,6 +46,7 @@
     "check:space-monsters": "node --no-warnings --experimental-strip-types scripts/check-space-monsters.mjs",
     "check:distress-signals": "node --no-warnings --experimental-strip-types scripts/check-distress-signals.mjs",
     "check:wreck-field": "node --no-warnings --experimental-strip-types scripts/check-wreck-field-approaches.mjs",
+    "check:derelict": "node --no-warnings --experimental-strip-types scripts/check-derelict-approaches.mjs",
     "check:scanner-tooltips": "node scripts/check-scanner-tooltips.mjs",
     "check:galaxy-map-hud": "node --no-warnings --experimental-strip-types scripts/check-galaxy-map-hud.mjs",
     "check:fuel-efficiency": "node scripts/check-fuel-efficiency.mjs",

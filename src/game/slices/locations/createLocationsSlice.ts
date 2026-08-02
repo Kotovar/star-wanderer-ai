@@ -6,6 +6,7 @@ import type {
     RaceId,
     StationName,
     AnomalyApproach,
+    DerelictApproach,
     DistressApproach,
     ExpeditionScanMode,
     WreckApproach,
@@ -107,7 +108,7 @@ export interface LocationsSlice {
      * Исследует покинутый корабль разведчиком
      * @param locationId - ID локации с обломками
      */
-    exploreDerelictShip: (locationId: string) => void;
+    exploreDerelictShip: (locationId: string, approach: DerelictApproach) => void;
 
     /**
      * Открывает новую расу
@@ -228,8 +229,8 @@ export const createLocationsSlice = (
         resolveScoutEventHelper(choiceIndex, set, get);
     },
 
-    exploreDerelictShip: (locationId) => {
-        exploreDerelictShipHelper(locationId, set, get);
+    exploreDerelictShip: (locationId, approach) => {
+        exploreDerelictShipHelper(locationId, approach, set, get);
     },
 
     startExpedition: (planetId, crewIds) => {
