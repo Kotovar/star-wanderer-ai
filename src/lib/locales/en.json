@@ -2291,7 +2291,7 @@
         "choose_approach": "CHOOSE APPROACH",
         "approach": {
             "boarding": {
-                "name": "BOARDING PARTY",
+                "name": "HULK SEARCH",
                 "description": "Search the interior for cargo and possible blueprints.",
                 "risk": "Risk: 25% chance the scout takes 5 HP damage."
             },
