@@ -375,6 +375,14 @@ const migrations: Record<number, Migration> = {
     stateVersion: 20,
     runProfileArcTarget: null,
   }),
+  20: (raw) => {
+    const state = raw as GameState;
+    return {
+      ...state,
+      stateVersion: 21,
+      galaxy: { ...state.galaxy, nebulae: state.galaxy?.nebulae ?? [] },
+    };
+  },
 };
 
 /**

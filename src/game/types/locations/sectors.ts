@@ -68,6 +68,10 @@ export interface TravelingState {
     turnsTotal: number;
     /** Маршрут перелёта; отсутствие поля (старые сейвы) = прямой */
     route?: TravelRoute;
+    /** Туманность прямого маршрута; отсутствие поля (старые сейвы) = нет проверки */
+    nebulaId?: string;
+    /** Риск туманности уже был обработан */
+    nebulaChecked?: boolean;
     /** На каком значении turnsLeft встретится странствующий торговец */
     traderTurn?: number;
 }

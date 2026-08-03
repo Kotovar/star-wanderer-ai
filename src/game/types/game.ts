@@ -43,7 +43,7 @@ import type {
   ScheduledRandomEventConsequence,
 } from "./randomEvents";
 import type { RunProfileId } from "@/game/galaxy/runProfiles";
-import type { GalaxyTierAll } from "./locations/galaxy";
+import type { GalaxyTierAll, Nebula } from "./locations/galaxy";
 
 export type GameMode =
   | "galaxy_map"
@@ -116,6 +116,7 @@ export interface GameState {
   crew: CrewMember[];
   galaxy: {
     sectors: Sector[];
+    nebulae: Nebula[];
   };
   activeContracts: Contract[];
   completedContractIds: string[]; // IDs of completed contracts to prevent retaking

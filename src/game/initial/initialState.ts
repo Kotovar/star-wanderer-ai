@@ -3,6 +3,7 @@ import { RESEARCH_TREE } from "@/game/constants";
 import { GLOBAL_CRISES, rollInitialCrisisTurn } from "@/game/constants/globalCrises";
 import { CURRENT_STATE_VERSION } from "@/game/constants/version";
 import { generateGalaxy } from "@/game/galaxy/generateGalaxy";
+import { generateNebulae } from "@/game/galaxy/nebulae";
 import { initialModules, STARTING_FUEL } from "@/game/modules/initial";
 import { initializeStationData } from "@/game/stations/initialize";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
@@ -50,6 +51,7 @@ const INITIAL_DISCOVERED_TECHS: TechnologyId[] = Object.values(RESEARCH_TREE)
 const INITIAL_GAME_LOADED_COUNT = 0;
 
 const sectors = generateGalaxy();
+const nebulae = generateNebulae(sectors);
 const { prices, stock } = initializeStationData(sectors);
 
 // Первый сектор отмечаем посещённым
@@ -169,7 +171,7 @@ const baseState: GameState = {
     mergeTraits: [],
   },
   crew: initialCrew,
-  galaxy: { sectors },
+  galaxy: { sectors, nebulae },
   activeContracts: [],
   completedContractIds: [],
   shipQuestsTaken: [],

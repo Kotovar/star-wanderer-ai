@@ -15,12 +15,13 @@ type VictoryObjectiveState = Pick<
   | "completedVictoryObjectiveIds"
   | "credits"
   | "currentSector"
-  | "galaxy"
   | "knownRaces"
   | "raceReputation"
   | "research"
   | "traveling"
->;
+> & {
+  galaxy: Pick<GameState["galaxy"], "sectors">;
+};
 
 type CampaignDirectiveState = VictoryObjectiveState &
   Pick<GameState, "startModifierIds">;

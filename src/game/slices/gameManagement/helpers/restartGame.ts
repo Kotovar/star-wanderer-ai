@@ -1,5 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { generateGalaxy } from "@/game/galaxy";
+import { generateNebulae } from "@/game/galaxy/nebulae";
 import { initializeStationData } from "@/game/stations";
 import { initialState } from "@/game/initial";
 import { clearLocalStorage, saveToLocalStorage } from "@/game/saves/utils";
@@ -48,6 +49,7 @@ export const restartGame = (
   clearLocalStorage();
 
   const newSectors = generateGalaxy(profile);
+  const nebulae = generateNebulae(newSectors);
   newSectors[STARTING_SECTOR_INDEX].visited = true;
 
   const { prices: restartPrices, stock: restartStock } =
@@ -64,7 +66,7 @@ export const restartGame = (
     ...initialState,
     settings,
     currentSector: newSectors[STARTING_SECTOR_INDEX],
-    galaxy: { sectors: newSectors },
+    galaxy: { sectors: newSectors, nebulae },
     stationPrices: restartPrices,
     stationStock: restartStock,
     log: [],
