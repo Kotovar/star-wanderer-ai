@@ -186,6 +186,10 @@ export const ensureStationTypes = (
         "shipyard",
         "medical",
     ];
+    const stationTypes = tierSectors
+        .flatMap((sector) => sector.locations)
+        .filter((location) => location.type === "station")
+        .map((location) => location.stationType);
 
     for (const requiredType of requiredTypes) {
         const hasType = tierSectors.some((s) =>
@@ -210,11 +214,7 @@ export const ensureStationTypes = (
                     (l) =>
                         l.type === "station" &&
                         l.stationType !== requiredType &&
-                        sector.locations.filter(
-                            (other) =>
-                                other.type === "station" &&
-                                other.stationType === l.stationType,
-                        ).length > 1,
+                        stationTypes.filter((type) => type === l.stationType).length > 1,
                 );
             }
 

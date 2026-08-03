@@ -34,6 +34,7 @@ registerHooks({
 
 const { RUN_PROFILES } = await import("../src/game/galaxy/runProfiles.ts");
 const { generateGalaxy } = await import("../src/game/galaxy/generateGalaxy.ts");
+const { ensureDiplomaticStation, ensureStationTypes } = await import("../src/game/galaxy/ensure.ts");
 
 const count = (sectors, type) => sectors.flatMap((sector) => sector.locations).filter((location) => location.type === type).length;
 const hasStation = (sectors, tier, stationType) =>
@@ -44,6 +45,41 @@ const tierLocations = (sectors, tier, type) =>
   sectors.filter((sector) => sector.tier === tier)
     .flatMap((sector) => sector.locations)
     .filter((location) => location.type === type).length;
+
+const withConstantRandom = (value, callback) => {
+  const originalRandom = Math.random;
+  Math.random = () => value;
+  try {
+    return callback();
+  } finally {
+    Math.random = originalRandom;
+  }
+};
+const makeTier1Anchors = (stationType) => [0, 1, 2].map((id) => ({
+  id,
+  tier: 1,
+  star: { type: "red_dwarf", name: "star_types.red_dwarf" },
+  locations: [{ id: `${id}-station`, type: "station", stationType }],
+}));
+
+const baselineStart = withConstantRandom(0.6, () => generateGalaxy()[0]);
+const warStart = withConstantRandom(0.6, () => generateGalaxy(RUN_PROFILES.war_spiral)[0]);
+assert.equal(
+  warStart.locations.filter((location) => location.type === "enemy").length,
+  baselineStart.locations.filter((location) => location.type === "enemy").length,
+  "war_spiral: start sector must keep baseline hostile locations",
+);
+
+for (const stationType of ["shipyard", "medical"]) {
+  const sectors = makeTier1Anchors(stationType);
+  ensureStationTypes(sectors, 1);
+  ensureDiplomaticStation(sectors);
+  assert.deepEqual(
+    sectors.flatMap((sector) => sector.locations).map((location) => location.stationType).sort(),
+    ["diplomatic", "medical", "shipyard"],
+    `broken_trade_lanes: ${stationType}-only anchors must provide all tier-1 services`,
+  );
+}
 
 for (const profile of Object.values(RUN_PROFILES)) {
   for (let run = 0; run < 12; run += 1) {
