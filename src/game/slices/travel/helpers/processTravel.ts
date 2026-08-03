@@ -23,6 +23,10 @@ import { getActiveModule } from "@/game/modules";
 import { getAnomalyResources } from "@/game/research/utils";
 import { addTradeGood } from "@/game/slices/ship/helpers";
 import { getCargoCapacity } from "@/game/slices/ship/helpers/getCargoCapacity";
+import {
+    getNebulaDisruptionPatch,
+    rollNebulaDisruption,
+} from "./nebulaHazards";
 
 /** Вероятность случайного события в пути (прямой маршрут) */
 const TRAVEL_EVENT_CHANCE_DIRECT = 0.45;
@@ -671,6 +675,51 @@ export const processTravel = (
     const traveling = get().traveling;
     if (!traveling) return;
     if (get().pendingTravelEvent) return;
+
+    if (traveling.nebulaId && !traveling.nebulaChecked) {
+        const disruption = rollNebulaDisruption(Math.random);
+        if (disruption) {
+            const state = get();
+            const patch = getNebulaDisruptionPatch(state, disruption, Math.random);
+            if (patch) {
+                const damagedModule = state.ship.modules.find(
+                    (module, index) =>
+                        patch.ship.modules[index]?.health < module.health,
+                );
+                const fuelLost = state.ship.fuel - patch.ship.fuel;
+
+                set(patch);
+                if (damagedModule) {
+                    const patchedModule = patch.ship.modules.find(
+                        (module) => module.id === damagedModule.id,
+                    );
+                    get().addLog(
+                        i18nStore.t("game_logs.nebula_module_damage", {
+                            module: damagedModule.name,
+                            damage: damagedModule.health - (patchedModule?.health ?? damagedModule.health),
+                        }),
+                        "warning",
+                    );
+                } else if (disruption === "fuel_loss" || fuelLost > 0) {
+                    get().addLog(
+                        i18nStore.t("game_logs.nebula_fuel_loss", { fuel: fuelLost }),
+                        "warning",
+                    );
+                } else {
+                    get().addLog(i18nStore.t("game_logs.nebula_drift"), "warning");
+                }
+                get().saveGame();
+                return;
+            }
+        }
+
+        set((s) => ({
+            traveling: s.traveling
+                ? { ...s.traveling, nebulaChecked: true }
+                : null,
+        }));
+        get().saveGame();
+    }
 
     // Встреча со странствующим торговцем (заготовлена при старте перелёта).
     // traderTurn сразу сбрасывается, иначе событие сработает повторно:

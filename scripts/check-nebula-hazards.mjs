@@ -19,6 +19,8 @@ const {
 } = jiti("../src/game/galaxy/nebulae.ts");
 const { generateGalaxy } = jiti("../src/game/galaxy/generateGalaxy.ts");
 const { loadWithMigrations } = jiti("../src/game/saves/migrations.ts");
+const { rollNebulaDisruption, getNebulaDisruptionPatch } =
+  jiti("../src/game/slices/travel/helpers/nebulaHazards.ts");
 
 const origin = {
   id: 0,
@@ -70,6 +72,103 @@ assert.equal(
   true,
   "a same-tier direct route must still detect a nebula crossing",
 );
+
+assert.equal(
+  rollNebulaDisruption(() => 0.61),
+  null,
+  "a roll outside the 60% nebula chance must have no disruption",
+);
+assert.equal(
+  rollNebulaDisruption(() => 0),
+  "fuel_loss",
+  "a successful low roll must select the first disruption",
+);
+assert.equal(
+  rollNebulaDisruption((() => {
+    const rolls = [0, 0.5];
+    return () => rolls.shift();
+  })()),
+  "module_damage",
+  "the second roll must choose the disruption type",
+);
+
+const traveling = {
+  destination,
+  turnsLeft: 2,
+  turnsTotal: 2,
+  route: "direct",
+  nebulaId: "n",
+  nebulaChecked: false,
+};
+const baseState = {
+  traveling,
+  ship: {
+    fuel: 20,
+    modules: [
+      { id: 1, health: 100, disabled: false },
+      { id: 2, health: 10, disabled: false },
+      { id: 3, health: 100, disabled: true },
+      { id: 4, health: 100, manualDisabled: true },
+    ],
+  },
+};
+assert.equal(
+  getNebulaDisruptionPatch(baseState, "fuel_loss", () => 0)?.ship.fuel,
+  12,
+  "fuel loss must remove exactly eight fuel",
+);
+const moduleDamage = getNebulaDisruptionPatch(
+  baseState,
+  "module_damage",
+  () => 0,
+);
+assert.equal(
+  moduleDamage?.ship.modules[0].health,
+  85,
+  "module damage must damage one eligible module by fifteen",
+);
+assert.equal(
+  moduleDamage?.ship.modules[1].health,
+  10,
+  "modules at minimum health must not be selected",
+);
+assert.equal(
+  moduleDamage?.ship.modules[2].health,
+  100,
+  "disabled modules must not be selected",
+);
+assert.equal(
+  moduleDamage?.ship.modules[3].health,
+  100,
+  "manually disabled modules must not be selected",
+);
+assert.deepEqual(
+  Object.keys(moduleDamage ?? {}).sort(),
+  ["ship", "traveling"],
+  "a nebula disruption must not add rewards or other state",
+);
+assert.equal(
+  getNebulaDisruptionPatch(baseState, "drift", () => 0)?.traveling?.turnsLeft,
+  3,
+  "drift must add exactly one travel turn",
+);
+assert.equal(
+  getNebulaDisruptionPatch(
+    { ...baseState, traveling: { ...traveling, nebulaChecked: true } },
+    "fuel_loss",
+    () => 0,
+  ),
+  null,
+  "an already checked nebula must not disrupt travel again",
+);
+
+const selectSectorSource = readFileSync(
+  path.resolve(process.cwd(), "src/game/slices/travel/helpers/selectSector.ts"),
+  "utf8",
+);
+assert.match(selectSectorSource, /findRouteNebula/);
+assert.match(selectSectorSource, /route === "direct" && !hasWarpDrive/);
+assert.match(selectSectorSource, /travelTurns = Math\.max\(1, travelTurns\)/);
 
 const galaxyMapSource = readFileSync(
   path.resolve(process.cwd(), "src/game/components/GalaxyMap.tsx"),

@@ -1,6 +1,7 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { findActiveArtifact, findArtifactByEffect } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
+import { findRouteNebula } from "@/game/galaxy/nebulae";
 import {
     PILOT_EXP_SAME_SECTOR,
     PILOT_EXP_PER_TIER,
@@ -394,6 +395,7 @@ const handleTravelStart = (
     set: (fn: (state: GameState) => Partial<GameState>) => void,
     get: () => GameStore,
     route: "direct" | "detour" = "direct",
+    nebulaId?: string,
 ): void => {
     if (!sector) return;
 
@@ -415,6 +417,8 @@ const handleTravelStart = (
                   turnsLeft: distance,
                   turnsTotal: distance,
                   route,
+                  nebulaId,
+                  nebulaChecked: false,
                   traderTurn,
               },
         gameMode: "galaxy_map" as GameMode,
@@ -516,6 +520,12 @@ export const selectSector = (
 
     // Варп-двигатель обходит все ограничения доступа к тирам
     const hasWarpDrive = state.research.researchedTechs.includes("warp_drive");
+    const crossedNebula = findRouteNebula(
+        state.currentSector,
+        sector,
+        state.galaxy.nebulae,
+    );
+    const nebula = route === "direct" && !hasWarpDrive ? crossedNebula : null;
 
     if (!hasWarpDrive) {
         const accessError = checkTierAccess(
@@ -588,9 +598,13 @@ export const selectSector = (
     const hasIonDrive = state.research.researchedTechs.includes("ion_drive");
     let travelTurns = hasIonDrive && distance > 0 ? Math.max(0, distance - 1) : distance;
 
-    // Обходной маршрут длиннее
-    if (isDetour && travelTurns > 0) {
-        travelTurns += DETOUR_EXTRA_TURNS;
+    if (nebula) {
+        travelTurns = Math.max(1, travelTurns);
+    }
+
+    // Обходной маршрут длиннее, включая безопасный обход туманности на одном тире.
+    if (isDetour && (travelTurns > 0 || (crossedNebula && !hasWarpDrive))) {
+        travelTurns = Math.max(1, travelTurns) + DETOUR_EXTRA_TURNS;
         get().addLog( i18nStore.t("game_logs.selectSector_10", { DETOUR_EXTRA_TURNS, DETOUR_FUEL_COST }),
             "info",
         );
@@ -623,6 +637,7 @@ export const selectSector = (
             set,
             get,
             isDetour ? "detour" : "direct",
+            nebula?.id,
         );
     }
 };
