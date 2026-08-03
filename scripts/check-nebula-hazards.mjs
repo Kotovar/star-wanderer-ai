@@ -203,6 +203,8 @@ const progressionDoc = readFileSync(
 );
 assert.match(progressionDoc, /## Туманности/);
 assert.match(progressionDoc, /в обход/);
+assert.match(progressionDoc, /Варп-двигатель освобождает от риска туманности/);
+assert.match(progressionDoc, /маршрута внутри одного тира/);
 
 const hazardSource = readFileSync(
   path.resolve(
