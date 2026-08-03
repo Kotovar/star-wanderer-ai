@@ -147,6 +147,29 @@ export const ensureStation = (sector: Sector): void => {
     });
 };
 
+export const ensureStationAnchors = (
+    sectors: Sector[],
+    anchors: Partial<Record<GalaxyTierAll, number>>,
+): void => {
+    for (const [tierText, required] of Object.entries(anchors)) {
+        const tier = Number(tierText) as GalaxyTierAll;
+        const eligible = sectors.filter(
+            (sector) => sector.tier === tier && sector.star.type !== "blackhole",
+        );
+        while (
+            eligible.flatMap((sector) => sector.locations).filter(
+                (location) => location.type === "station",
+            ).length < required
+        ) {
+            const target = eligible.find(
+                (sector) => !sector.locations.some((location) => location.type === "station"),
+            );
+            if (!target) break;
+            ensureStation(target);
+        }
+    }
+};
+
 /**
  * Обеспечивает наличие хотя бы одной верфи и одной медицинской станции
  * в секторах заданного тира
@@ -173,14 +196,44 @@ export const ensureStationTypes = (
 
         if (hasType) continue;
 
-        // Find a sector with a station that isn't already the required type
+        // Find a sector with a station that isn't already a service station.
         for (const sector of tierSectors) {
-            const stationIdx = sector.locations.findIndex(
+            let stationIdx = sector.locations.findIndex(
                 (l) =>
                     l.type === "station" &&
                     l.stationType !== "shipyard" &&
                     l.stationType !== "medical",
             );
+
+            if (stationIdx < 0) {
+                stationIdx = sector.locations.findIndex(
+                    (l) =>
+                        l.type === "station" &&
+                        l.stationType !== requiredType &&
+                        sector.locations.filter(
+                            (other) =>
+                                other.type === "station" &&
+                                other.stationType === l.stationType,
+                        ).length > 1,
+                );
+            }
+
+            if (
+                stationIdx < 0 &&
+                tier !== 1 &&
+                !tierSectors.some((candidate) =>
+                    candidate.locations.some(
+                        (location) =>
+                            location.type === "station" &&
+                            location.stationType !== "shipyard" &&
+                            location.stationType !== "medical",
+                    ),
+                )
+            ) {
+                stationIdx = sector.locations.findIndex(
+                    (l) => l.type === "station" && l.stationType !== requiredType,
+                );
+            }
 
             if (stationIdx >= 0) {
                 const existing = sector.locations[stationIdx];
@@ -231,6 +284,30 @@ export const ensureDiplomaticStation = (sectors: Sector[]): void => {
                 stationType: "diplomatic",
                 stationConfig: STATION_CONFIG["diplomatic"],
                 name: `station_name.${letter}`,
+                dominantRace: getRandomRace([]),
+            };
+            return;
+        }
+    }
+
+    const serviceTypes = tier1Sectors
+        .flatMap((sector) => sector.locations)
+        .filter((location) => location.type === "station")
+        .map((location) => location.stationType);
+    for (const sector of tier1Sectors) {
+        const stationIdx = sector.locations.findIndex(
+            (location) =>
+                location.type === "station" &&
+                (location.stationType === "shipyard" || location.stationType === "medical") &&
+                serviceTypes.filter((type) => type === location.stationType).length > 1,
+        );
+        if (stationIdx >= 0) {
+            const existing = sector.locations[stationIdx];
+            sector.locations[stationIdx] = {
+                ...existing,
+                stationType: "diplomatic",
+                stationConfig: STATION_CONFIG.diplomatic,
+                name: `station_name.${String.fromCharCode(65 + (sector.id % 26))}`,
                 dominantRace: getRandomRace([]),
             };
             return;

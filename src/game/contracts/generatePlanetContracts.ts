@@ -7,6 +7,7 @@ import { typedKeys } from "@/lib/utils";
 import { DELIVERY_GOODS } from "../constants/contracts";
 import { CONTRACT_REWARDS as REWARD } from "./rewards";
 import { getGeneratedContractTimeLimit } from "./contractDeadline";
+import type { RunProfile } from "../galaxy/runProfiles";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Reward scaling constants (index = tier - 1)
@@ -52,6 +53,7 @@ export const generatePlanetContracts = (
     sectorIdx: number,
     allSectors: Sector[],
     dominantRace?: RaceId,
+    profile?: RunProfile | null,
 ): Contract[] => {
     const contracts: Contract[] = [];
     const numContracts = Math.floor(Math.random() * 2) + 1;
@@ -686,11 +688,22 @@ export const generatePlanetContracts = (
         },
     ];
 
-    const shuffled = [...standardQuests].sort(() => Math.random() - 0.5);
+    const remaining = [...standardQuests];
     const numNeeded = Math.max(1, numContracts - contracts.length);
-    for (let i = 0; i < Math.min(numNeeded, shuffled.length); i++) {
-        const q = shuffled[i].gen();
-        if (q) contracts.push(dominantRace ? { ...q, sourceDominantRace: dominantRace } : q);
+    let selections = 0;
+    while (selections < numNeeded && remaining.length > 0) {
+        let roll = Math.random() * remaining.reduce(
+            (total, quest) => total + (profile?.contractWeights[quest.type] ?? 1),
+            0,
+        );
+        const index = remaining.findIndex((quest) => {
+            roll -= profile?.contractWeights[quest.type] ?? 1;
+            return roll <= 0;
+        });
+        const [quest] = remaining.splice(index >= 0 ? index : remaining.length - 1, 1);
+        const contract = quest.gen();
+        if (contract) contracts.push(dominantRace ? { ...contract, sourceDominantRace: dominantRace } : contract);
+        selections += 1;
     }
 
     return contracts;

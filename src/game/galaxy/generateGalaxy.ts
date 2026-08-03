@@ -10,6 +10,7 @@ import {
     ensureDiplomaticStation,
     ensureMinAnomalies,
     ensureStation,
+    ensureStationAnchors,
     ensureStationTypes,
 } from "./ensure";
 import {
@@ -26,6 +27,7 @@ import {
 import { bossDistribution } from "./bossDistribution";
 import { ANCIENT_BOSSES } from "@/game/constants/bosses";
 import { placeReservedBoss } from "./reservedBosses";
+import type { RunProfile } from "./runProfiles";
 
 // ============================================================================
 // Основная функция генерации
@@ -44,7 +46,7 @@ import { placeReservedBoss } from "./reservedBosses";
  *
  * @returns Массив секторов галактики с назначенными локациями и координатами
  */
-export const generateGalaxy = (): Sector[] => {
+export const generateGalaxy = (profile: RunProfile | null = null): Sector[] => {
     // Reset boss distribution for new game
     bossDistribution.reset();
     bossDistribution.reserveBosses("void_oracle", "the_eternal");
@@ -82,6 +84,7 @@ export const generateGalaxy = (): Sector[] => {
                         tier,
                         isBlackHole,
                         star.type,
+                        profile ?? undefined,
                     ),
                 );
             }
@@ -91,7 +94,9 @@ export const generateGalaxy = (): Sector[] => {
 
             if (!isBlackHole) {
                 ensureColonizedPlanet(sector);
-                ensureStation(sector);
+                if (!profile || profile.id !== "broken_trade_lanes") {
+                    ensureStation(sector);
+                }
                 if (sector.id !== 0) {
                     ensureBoss(sector);
                 }
@@ -144,16 +149,51 @@ export const generateGalaxy = (): Sector[] => {
         }
     });
 
+    if (profile) {
+        for (const tier of profile.clusters.tiers) {
+            const clusterSectors = sectors
+                .filter(
+                    (sector) =>
+                        sector.tier === tier && sector.star.type !== "blackhole",
+                )
+                .filter((sector) => profile.id !== "war_spiral" || sector.id !== 0)
+                .slice(0, profile.clusters.sectorsPerTier);
+
+            for (const sector of clusterSectors) {
+                for (const [index, type] of profile.clusters.types.entries()) {
+                    sector.locations.push(
+                        generateLocation(
+                            sector.id,
+                            10_000 + sector.id * 10 + index,
+                            sector.tier,
+                            false,
+                            sector.star.type,
+                            profile,
+                            type,
+                        ),
+                    );
+                }
+            }
+        }
+
+        if (profile.stationAnchorsByTier) {
+            ensureStationAnchors(sectors, profile.stationAnchorsByTier);
+        }
+    }
+
     // Гарантируем верфь и медицинскую станцию в каждом тире
     ensureStationTypes(sectors, 1);
     ensureStationTypes(sectors, 2);
     ensureStationTypes(sectors, 3);
+    ensureStationTypes(sectors, 4);
 
     // Гарантируем одну дипломатическую станцию в тире 1
     ensureDiplomaticStation(sectors);
 
+    sectors.forEach((sector) => assignGridPositions(sector.locations, true));
+
     // Постобработка
-    populateContracts(sectors);
+    populateContracts(sectors, profile);
     populateShipQuests(sectors);
     return sectors;
 };

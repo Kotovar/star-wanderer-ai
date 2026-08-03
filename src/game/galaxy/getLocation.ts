@@ -1,4 +1,5 @@
 import type { GalaxyTierAll, LocationType, Location, StarType } from "@/game/types";
+import type { LocationWeightKey, RunProfile } from "./runProfiles";
 import {
     LOCATION_CHANCES,
     LOCATION_TYPE_CHANCES_BY_TIER,
@@ -15,6 +16,7 @@ import {
     generateFriendlyShip,
     generateGasGiant,
     generatePlanet,
+    generateSpaceMonster,
     generateStation,
     generateStorm,
     generateWreckField,
@@ -30,6 +32,7 @@ const getLocationType = (
     tier: GalaxyTierAll,
     isBlackHole: boolean,
     starType?: StarType,
+    profile?: RunProfile,
 ): LocationType => {
     if (isBlackHole) {
         // ЧД: шторма, аномалии, враги, руины — но не планеты/станции/мирные корабли.
@@ -49,15 +52,15 @@ const getLocationType = (
     const { planet, asteroidBelt, distressSignal, derelictShip, gasGiant, wreckField } =
         LOCATION_TYPE_CHANCES_BY_TIER[tier];
     const mods = starType ? (STAR_TYPE_LOCATION_MODIFIERS[starType] ?? {}) : {};
-    const m = (base: number, key: keyof typeof mods): number =>
-        base * (mods[key] ?? 1);
+    const m = (base: number, key: LocationWeightKey): number =>
+        base * (mods[key === "enemyShip" ? "enemy" : key] ?? 1) * (profile?.locationWeights[key] ?? 1);
 
     // Базовые веса с применением модификаторов звезды
     const w = {
         station: m(chances.station, "station"),
         friendlyShip: m(chances.friendlyShip, "friendlyShip"),
         planet: m(planet, "planet"),
-        enemy: m(chances.enemyShip, "enemy"),
+        enemy: m(chances.enemyShip, "enemyShip"),
         asteroidBelt: m(asteroidBelt, "asteroidBelt"),
         storm: m(chances.storm, "storm"),
         distressSignal: m(distressSignal, "distressSignal"),
@@ -66,7 +69,7 @@ const getLocationType = (
         gasGiant: starType === "brown_dwarf" ? 0 : m(gasGiant, "gasGiant"),
         boss: m(chances.boss, "boss"),
         // Аномалия: явный базовый вес 6%, усиливается модификатором звезды
-        anomaly: 0.06 * (mods.anomaly ?? 1),
+        anomaly: m(0.06, "anomaly"),
         wreckField: m(wreckField, "wreckField"),
     };
 
@@ -98,9 +101,10 @@ export const generateLocation = (
     tier: GalaxyTierAll,
     isBlackHole: boolean,
     starType?: StarType,
+    profile?: RunProfile,
+    forcedType?: LocationType,
 ): Location => {
-    const locType = Math.random();
-    const type = getLocationType(locType, tier, isBlackHole, starType);
+    const type = forcedType ?? getLocationType(Math.random(), tier, isBlackHole, starType, profile);
 
     switch (type) {
         case "station":
@@ -116,6 +120,11 @@ export const generateLocation = (
                 tier,
                 isBlackHole,
             );
+        case "space_monster":
+            return {
+                ...generateSpaceMonster(sectorIdx, tier, starType ?? "red_dwarf"),
+                id: `${sectorIdx}-${locIdx}`,
+            };
         case "asteroid_belt":
             return generateAsteroidBelt(sectorIdx, locIdx, tier);
         case "storm":

@@ -40,6 +40,10 @@ const hasStation = (sectors, tier, stationType) =>
   sectors.some((sector) => sector.tier === tier && sector.locations.some(
     (location) => location.type === "station" && location.stationType === stationType,
   ));
+const tierLocations = (sectors, tier, type) =>
+  sectors.filter((sector) => sector.tier === tier)
+    .flatMap((sector) => sector.locations)
+    .filter((location) => location.type === type).length;
 
 for (const profile of Object.values(RUN_PROFILES)) {
   for (let run = 0; run < 12; run += 1) {
@@ -51,6 +55,31 @@ for (const profile of Object.values(RUN_PROFILES)) {
     for (const tier of [1, 2, 3, 4]) {
       assert.ok(hasStation(sectors, tier, "shipyard"), `${profile.id}: tier ${tier} needs repair`);
       assert.ok(hasStation(sectors, tier, "medical"), `${profile.id}: tier ${tier} needs healing`);
+    }
+    for (const tier of [1, 2, 3]) {
+      if (profile.id === "ancient_echo") {
+        const richSectors = sectors.filter((sector) => sector.tier === tier)
+          .filter((sector) => sector.locations.filter((location) => location.type === "anomaly").length >= 3);
+        assert.ok(richSectors.length >= 2, `ancient_echo: tier ${tier} needs two anomaly clusters`);
+      }
+      if (profile.id === "war_spiral") {
+        const warfronts = sectors.filter((sector) => sector.tier === tier && sector.id !== 0)
+          .filter((sector) => sector.locations.some((location) => location.type === "enemy"))
+          .filter((sector) => sector.locations.filter((location) => location.type === "space_monster").length >= 2);
+        assert.ok(warfronts.length >= 2, `war_spiral: tier ${tier} needs two warfronts`);
+      }
+      if (profile.id === "broken_trade_lanes") {
+        for (const type of ["derelict_ship", "distress_signal", "wreck_field"]) {
+          assert.ok(tierLocations(sectors, tier, type) >= 2, `broken_trade_lanes: tier ${tier} needs ${type}`);
+        }
+      }
+    }
+
+    if (profile.id === "broken_trade_lanes") {
+      const expectedStations = { 1: 3, 2: 2, 3: 2, 4: 2 };
+      for (const [tier, expected] of Object.entries(expectedStations)) {
+        assert.equal(tierLocations(sectors, Number(tier), "station"), expected);
+      }
     }
   }
 }
