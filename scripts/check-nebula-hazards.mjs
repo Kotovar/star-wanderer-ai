@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 
 const require = createRequire(import.meta.url);
@@ -60,6 +61,36 @@ assert.equal(
   }),
   true,
   "a zero-length route must be hazardous when its sector is inside the nebula",
+);
+
+const sameTierA = { ...origin, id: 4, tier: 2, mapAngle: Math.PI };
+const sameTierB = { ...destination, id: 5, tier: 2, mapAngle: 0 };
+assert.equal(
+  routeIntersectsNebula(sameTierA, sameTierB, crossing),
+  true,
+  "a same-tier direct route must still detect a nebula crossing",
+);
+
+const galaxyMapSource = readFileSync(
+  path.resolve(process.cwd(), "src/game/components/GalaxyMap.tsx"),
+  "utf8",
+);
+assert.match(galaxyMapSource, /findRouteNebula/);
+assert.match(galaxyMapSource, /drawNebulae/);
+
+const ru = JSON.parse(
+  readFileSync(path.resolve(process.cwd(), "src/lib/locales/ru.json"), "utf8"),
+);
+const en = JSON.parse(
+  readFileSync(path.resolve(process.cwd(), "src/lib/locales/en.json"), "utf8"),
+);
+assert.equal(
+  ru.galaxy_map_ui.nebula.route_warning,
+  "Маршрут проходит через туманность",
+);
+assert.equal(
+  en.galaxy_map_ui.nebula.route_warning,
+  "Route crosses a nebula",
 );
 
 const withSeededRandom = (callback) => {

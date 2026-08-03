@@ -3769,6 +3769,10 @@
             "description": "Sector “{{sector}}”: readiness score {{rating}}, recommended {{recommended}}. Travel is possible, but enemies in this tier may be too strong.",
             "readiness_hint": "Readiness is a combat estimate based on working modules, weapons, and living crew. The recommended value is not an engine level or a travel lock.",
             "continue": "Travel anyway"
+        },
+        "nebula": {
+            "route_warning": "Route crosses a nebula",
+            "direct_risk": "60%: fuel loss, module damage, or drift"
         }
     },
     "victory_paths": {

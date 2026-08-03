@@ -4,6 +4,7 @@ import type {
     StarType,
     GalaxyTierAll,
     Artifact,
+    Nebula,
 } from "@/game/types";
 import { drawStarSprite } from "@/game/assets/starSprites";
 import { findActiveArtifact } from "../artifacts";
@@ -478,6 +479,54 @@ export function drawTierRings(
         drawTierGlow(ctx, centerX, centerY, radius, colors, isAccessible);
         drawTierRing(ctx, centerX, centerY, radius, colors, isAccessible, tier, isMobile);
     });
+}
+
+export function drawNebulae(
+    ctx: CanvasRenderingContext2D,
+    nebulae: Nebula[],
+    centerX: number,
+    centerY: number,
+    maxRadius: number,
+    time: number,
+): void {
+    if (nebulae.length === 0) return;
+
+    const pulse = time === 0 ? 1 : 0.9 + Math.sin(time * 0.0015) * 0.1;
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+
+    for (const nebula of nebulae) {
+        const x = centerX + nebula.x * maxRadius;
+        const y = centerY + nebula.y * maxRadius;
+        const radius = nebula.radius * maxRadius;
+
+        const cyan = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        cyan.addColorStop(0, `rgba(0, 212, 255, ${0.16 * pulse})`);
+        cyan.addColorStop(0.62, `rgba(0, 212, 255, ${0.07 * pulse})`);
+        cyan.addColorStop(1, "transparent");
+        ctx.fillStyle = cyan;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        const violet = ctx.createRadialGradient(x, y, 0, x, y, radius * 0.82);
+        violet.addColorStop(0, `rgba(153, 51, 255, ${0.14 * pulse})`);
+        violet.addColorStop(0.7, `rgba(153, 51, 255, ${0.05 * pulse})`);
+        violet.addColorStop(1, "transparent");
+        ctx.fillStyle = violet;
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 0.82, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.setLineDash([4, 5]);
+        ctx.strokeStyle = `rgba(160, 116, 255, ${0.16 * pulse})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    ctx.restore();
 }
 
 function drawTierGlow(

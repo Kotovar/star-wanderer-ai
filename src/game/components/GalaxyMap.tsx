@@ -16,12 +16,14 @@ import {
     canAccessTier,
     drawSector,
     drawGalaxyObjectiveMarkers,
+    drawNebulae,
     drawTierRings,
     canSeeTier4,
     getGalaxyMapStatus,
     getSectorRadius,
     type GalaxyMapObjective,
 } from "@/game/galaxy/galaxy-map-utils";
+import { findRouteNebula } from "@/game/galaxy/nebulae";
 import { getBestByProfession } from "@/game/crew";
 import { getActiveModule } from "@/game/modules/utils";
 import {
@@ -244,6 +246,7 @@ export function GalaxyMap() {
         sectorName: string;
         turns: number;
         fuelCost: number;
+        nebulaId?: string;
     } | null>(null);
     const [playerShipImageReady, setPlayerShipImageReady] = useState(false);
     const [starSpriteImageReady, setStarSpriteImageReady] = useState(false);
@@ -261,6 +264,7 @@ export function GalaxyMap() {
     };
 
     const sectors = useGameStore((s) => s.galaxy.sectors);
+    const nebulae = useGameStore((s) => s.galaxy.nebulae);
     const currentSector = useGameStore((s) => s.currentSector);
     const selectSector = useGameStore((s) => s.selectSector);
     const modules = useGameStore((s) => s.ship.modules);
@@ -391,8 +395,20 @@ export function GalaxyMap() {
                 hasIonDrive && distance > 0
                     ? Math.max(0, distance - 1)
                     : distance;
+            const targetSector = state.galaxy.sectors.find(
+                (sector) => sector.id === sectorId,
+            );
+            const nebula = targetSector
+                ? findRouteNebula(
+                      state.currentSector,
+                      targetSector,
+                      state.galaxy.nebulae,
+                  )
+                : null;
+            const needsRouteChoice =
+                !hasWarpDrive && (turns > 0 || !!nebula);
 
-            if (turns <= 0 || hasWarpDrive) {
+            if (!needsRouteChoice) {
                 selectSector(sectorId);
                 return;
             }
@@ -400,8 +416,9 @@ export function GalaxyMap() {
             setRouteChoice({
                 sectorId,
                 sectorName,
-                turns,
+                turns: nebula ? Math.max(1, turns) : turns,
                 fuelCost: calculateFuelCostForUI(state, sectorId).fuelCost,
+                nebulaId: nebula?.id,
             });
         },
         [selectSector],
@@ -553,6 +570,14 @@ export function GalaxyMap() {
             width,
             height,
         );
+        drawNebulae(
+            ctx,
+            nebulae,
+            centerX,
+            centerY,
+            baseMaxRadius,
+            markerTime,
+        );
         drawSectors(
             ctx,
             sectors,
@@ -599,6 +624,7 @@ export function GalaxyMap() {
         currentSector,
         fuel,
         modules,
+        nebulae,
         offset.x,
         offset.y,
         scanRange,
@@ -1005,6 +1031,20 @@ export function GalaxyMap() {
                                 })}
                             </div>
                             <div>{t("route_dialog.high_risk")}</div>
+                            {routeChoice.nebulaId && (
+                                <div className="mt-1 border-l-2 border-[#9933ff99] pl-2 text-[#d8c6ff]">
+                                    <div>
+                                        {t(
+                                            "galaxy_map_ui.nebula.route_warning",
+                                        )}
+                                    </div>
+                                    <div>
+                                        {t(
+                                            "galaxy_map_ui.nebula.direct_risk",
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         <div className="border border-[#00ff4166] p-2 text-[#b8b8b8]">
                             <div className="font-bold text-[#00ff41]">
