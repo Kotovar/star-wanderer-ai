@@ -189,6 +189,14 @@ export function WreckFieldPanel() {
                 <ShieldAlert size={12} /> Щиты -{lastLoot.shieldDamage}
               </span>
             )}
+            {lastLoot.radiationPenetration && (
+              <span className="flex items-center gap-1 text-[#ff6644]">
+                <ShieldAlert size={12} />
+                {t("wreck_field.radiation_penetrated", {
+                  damage: lastLoot.radiationPenetration,
+                })}
+              </span>
+            )}
           </div>
         </div>
       )}

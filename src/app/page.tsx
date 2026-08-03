@@ -187,6 +187,7 @@ export default function Home() {
     })),
   );
   const loadFromSlot = useGameStore((s) => s.loadFromSlot);
+  const hydratePlayerSettings = useGameStore((s) => s.hydratePlayerSettings);
   const setAnimationsEnabled = useGameStore((s) => s.setAnimationsEnabled);
   const setSoundEnabled = useGameStore((s) => s.setSoundEnabled);
   const gameMode = useGameStore((s) => s.gameMode);
@@ -209,6 +210,10 @@ export default function Home() {
     preloadGasGiantBackgrounds();
     preloadGameImages();
   }, []);
+
+  useEffect(() => {
+    hydratePlayerSettings();
+  }, [hydratePlayerSettings]);
 
   // ── Мобильная навигация: одно полноэкранное представление за раз ──
   const isMobile = useIsMobile();

@@ -4,8 +4,10 @@ import {
     setSoundPlaybackEnabled,
 } from "@/sounds";
 import type { AudioVolumeCategory } from "@/sounds";
+import { loadPlayerSettings, savePlayerSettings } from "./playerSettings";
 
 export interface SettingsSlice {
+    hydratePlayerSettings: () => void;
     setAnimationsEnabled: (enabled: boolean) => void;
     setSoundEnabled: (enabled: boolean) => void;
     setAudioVolume: (category: AudioVolumeCategory, value: number) => void;
@@ -21,27 +23,35 @@ export interface SettingsSlice {
  * @returns Методы управления настройками
  */
 export const createSettingsSlice = (set: SetState): SettingsSlice => ({
+    hydratePlayerSettings: () => {
+        set((state) => ({ settings: loadPlayerSettings(state.settings) }));
+    },
+
     /**
      * Включает или выключает анимации в игре
      * @param enabled - true для включения анимаций, false для выключения
-     */
+    */
     setAnimationsEnabled: (enabled: boolean) => {
-        set((state) => ({
-            settings: {
+        set((state) => {
+            const settings = {
                 ...state.settings,
                 animationsEnabled: enabled,
-            },
-        }));
+            };
+            savePlayerSettings(settings);
+            return { settings };
+        });
     },
 
     setSoundEnabled: (enabled: boolean) => {
         setSoundPlaybackEnabled(enabled);
-        set((state) => ({
-            settings: {
+        set((state) => {
+            const settings = {
                 ...state.settings,
                 soundEnabled: enabled,
-            },
-        }));
+            };
+            savePlayerSettings(settings);
+            return { settings };
+        });
     },
 
     setAudioVolume: (category, value) => {
@@ -49,12 +59,14 @@ export const createSettingsSlice = (set: SetState): SettingsSlice => ({
             ? Math.max(0, Math.min(1, value))
             : 0;
         setRuntimeAudioVolume(category, volume);
-        set((state) => ({
-            settings: {
+        set((state) => {
+            const settings = {
                 ...state.settings,
                 [category]: volume,
-            },
-        }));
+            };
+            savePlayerSettings(settings);
+            return { settings };
+        });
     },
 
     setGalaxyZoom: (zoom: number) => {

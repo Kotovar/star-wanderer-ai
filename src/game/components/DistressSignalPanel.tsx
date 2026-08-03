@@ -16,7 +16,7 @@ import {
     SURVIVORS_REWARD,
     SURVIVOR_JOINS_CHANCE,
 } from "@/game/slices/locations/constants";
-import type { DistressApproach, SignalType } from "@/game/types";
+import type { DistressApproach, Location, SignalType } from "@/game/types";
 
 // Эффективная дальность, а не аппаратный тир модуля.
 export function getScannerRangeLabel(
@@ -323,6 +323,67 @@ function SignalTelemetry({
     );
 }
 
+function SignalLootDetails({
+    loot,
+    color,
+    t,
+}: {
+    loot: NonNullable<Location["signalLoot"]>;
+    color: string;
+    t: (key: string, params?: Record<string, string | number>) => string;
+}) {
+    return (
+        <div className="mt-3 space-y-1">
+            <div
+                className="mb-2 text-xs font-bold uppercase tracking-widest"
+                style={{ color }}
+            >
+                {t("distress_signal.found")}
+            </div>
+            {loot.credits && (
+                <div className="flex items-center gap-2 text-sm text-[#00ff41]">
+                    <span>💰</span>
+                    <span>{loot.credits}₢</span>
+                </div>
+            )}
+            {loot.tradeGood && (
+                <div className="flex items-center gap-2 text-sm text-ring">
+                    <span>📦</span>
+                    <span>
+                        {loot.tradeGood.name} ×{loot.tradeGood.quantity}
+                    </span>
+                </div>
+            )}
+            {loot.alienBiology && (
+                <div className="flex items-center gap-2 text-sm text-[#c4a1ff]">
+                    <span>🧬</span>
+                    <span>
+                        {t("distress_signal.alien_biology", {
+                            count: loot.alienBiology,
+                        })}
+                    </span>
+                </div>
+            )}
+            {loot.artifact && (
+                <div className="flex items-center gap-2 text-sm text-[#ff00ff]">
+                    <span>★</span>
+                    <span>{loot.artifact}</span>
+                </div>
+            )}
+            {loot.survivorName && (
+                <div className="flex items-center gap-2 text-sm text-[#00ff9d]">
+                    <span>👤</span>
+                    <span>
+                        {t("distress_signal.survivor_evacuated", {
+                            name: loot.survivorName,
+                        })}
+                    </span>
+                </div>
+            )}
+        </div>
+    );
+}
+
 export function DistressSignalPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
     const crew = useGameStore((s) => s.crew);
@@ -352,6 +413,7 @@ export function DistressSignalPanel() {
     const isResolved = currentLocation.signalResolved;
     const isRevealed = currentLocation.signalRevealed;
     const revealChecked = currentLocation.signalRevealChecked;
+    const deepScanFailed = currentLocation.signalDeepScanFailed;
     const activeCrew = crew.filter((member) => member.health > 0);
     const scientistLevel = activeCrew
         .filter((member) => member.profession === "scientist")
@@ -387,7 +449,11 @@ export function DistressSignalPanel() {
             }),
     );
     const deepScanDisabledReason = currentLocation.signalDeepScanUsed
-        ? t("distress_signal.deep_scan_used")
+        ? t(
+              deepScanFailed
+                  ? "distress_signal.deep_scan_failed"
+                  : "distress_signal.deep_scan_used",
+          )
         : getFirstMissing(
               scanRange < DISTRESS_DEEP_SCAN_MIN_SCAN_RANGE &&
                   t("distress_signal.requires_scanner", {
@@ -410,7 +476,7 @@ export function DistressSignalPanel() {
         const info = OUTCOME_INFO[outcome];
 
         return (
-            <div className="flex min-w-0 max-w-full flex-col gap-4">
+            <div className="flex h-full min-w-0 max-w-full flex-col gap-4 overflow-y-auto pr-1">
                 {/* Header */}
                 <div className="flex items-center gap-3">
                     <SOSBeacon color="#555" size={56} />
@@ -462,9 +528,18 @@ export function DistressSignalPanel() {
                                 </span>
                             )}
                             {outcome === "survivors" && (
-                                <span style={{ color: info.color }}>
-                                    {t("distress_signal.survivors_saved")}
-                                </span>
+                                <div>
+                                    <span style={{ color: info.color }}>
+                                        {t("distress_signal.survivors_saved")}
+                                    </span>
+                                    {currentLocation.signalLoot && (
+                                        <SignalLootDetails
+                                            loot={currentLocation.signalLoot}
+                                            color={info.color}
+                                            t={t}
+                                        />
+                                    )}
+                                </div>
                             )}
                             {outcome === "abandoned_cargo" && (
                                 <div>
@@ -472,61 +547,11 @@ export function DistressSignalPanel() {
                                         {t("distress_signal.abandoned_ship")}
                                     </span>
                                     {currentLocation.signalLoot && (
-                                        <div className="mt-3 space-y-1">
-                                            <div
-                                                className="text-xs font-bold uppercase tracking-widest mb-2"
-                                                style={{ color: info.color }}
-                                            >
-                                                {t("distress_signal.found")}
-                                            </div>
-                                            {currentLocation.signalLoot
-                                                .credits && (
-                                                <div className="flex items-center gap-2 text-[#00ff41] text-sm">
-                                                    <span>💰</span>
-                                                    <span>
-                                                        {
-                                                            currentLocation
-                                                                .signalLoot
-                                                                .credits
-                                                        }
-                                                        ₢
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {currentLocation.signalLoot
-                                                .tradeGood && (
-                                                <div className="flex items-center gap-2 text-ring text-sm">
-                                                    <span>📦</span>
-                                                    <span>
-                                                        {
-                                                            currentLocation
-                                                                .signalLoot
-                                                                .tradeGood.name
-                                                        }{" "}
-                                                        ×
-                                                        {
-                                                            currentLocation
-                                                                .signalLoot
-                                                                .tradeGood
-                                                                .quantity
-                                                        }
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {currentLocation.signalLoot
-                                                .artifact && (
-                                                <div className="flex items-center gap-2 text-[#ff00ff] text-sm">
-                                                    <span>★</span>
-                                                    <span>
-                                                        {
-                                                            currentLocation
-                                                                .signalLoot
-                                                                .artifact
-                                                        }
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
+                                        <SignalLootDetails
+                                            loot={currentLocation.signalLoot}
+                                            color={info.color}
+                                            t={t}
+                                        />
                                     )}
                                 </div>
                             )}
@@ -560,7 +585,7 @@ export function DistressSignalPanel() {
         const revealedPreview = buildDistressPreview(outcome);
 
         return (
-            <div className="flex min-w-0 max-w-full flex-col gap-4">
+            <div className="flex h-full min-w-0 max-w-full flex-col gap-4 overflow-y-auto pr-1">
                 {/* Header */}
                 <div className="flex items-center gap-3">
                     <SOSBeacon color={info.color} size={64} />
@@ -686,7 +711,7 @@ export function DistressSignalPanel() {
     const scannerLabel = getScannerRangeLabel(scanRange, t);
 
     return (
-        <div className="flex min-w-0 max-w-full flex-col gap-4">
+        <div className="flex h-full min-w-0 max-w-full flex-col gap-4 overflow-y-auto pr-1">
             {/* Header with animated beacon */}
             <div className="flex items-center gap-3">
                 <SOSBeacon color="#ffaa00" size={72} />
@@ -746,6 +771,9 @@ export function DistressSignalPanel() {
                         color={ship.shields > 0 ? "#00d4ff" : "#ff7b7b"}
                     />
                 </div>
+                <div className="mt-2 text-[10px] text-[#8d97a8]">
+                    {t("distress_signal.specialists_hint")}
+                </div>
             </div>
 
             {/* Possible outcomes grid */}
@@ -804,6 +832,12 @@ export function DistressSignalPanel() {
                     <span className="text-[#555]">
                         {t("distress_signal.scanner_failed")}
                     </span>
+                </div>
+            )}
+
+            {deepScanFailed && (
+                <div className="border border-[#805f36] bg-[rgba(255,170,0,0.06)] p-3 text-xs font-['Share_Tech_Mono'] text-[#d6aa68]">
+                    {t("distress_signal.deep_scan_failed")}
                 </div>
             )}
 

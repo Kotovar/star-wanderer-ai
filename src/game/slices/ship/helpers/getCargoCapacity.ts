@@ -3,6 +3,7 @@ import { getTechBonusSum } from "@/game/research";
 import type { GameState } from "@/game/types/game";
 import { getActiveModules } from "@/game/modules/utils";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
+import { getCurrentCargo } from "./getCurrentCargo";
 
 const capacityDefault =
     MODULES_BY_LEVEL[1].find((module) => module.moduleType === "cargo")
@@ -36,3 +37,6 @@ export const getCargoCapacity = (state: GameState) => {
 
     return capacity;
 };
+
+export const getFreeCargoSpace = (state: GameState) =>
+    Math.max(0, getCargoCapacity(state) - getCurrentCargo(state));

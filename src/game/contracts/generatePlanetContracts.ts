@@ -252,7 +252,6 @@ export const generatePlanetContracts = (
                 sourceSectorName: sector.name,
                 requiredRace: "crystalline",
                 isRaceQuest: true,
-                timeLimit: 15,
                 reward:
                     REWARD.crystalline.base[tier - 1] +
                     Math.floor(Math.random() * REWARD.crystalline.range[tier - 1]),
@@ -436,11 +435,6 @@ export const generatePlanetContracts = (
                     sectorName: tgt.name,
                     sourcePlanetId: planetId,
                     sourceSectorName: sector.name,
-                    timeLimit: getGeneratedContractTimeLimit(
-                        "combat",
-                        sector.tier ?? 1,
-                        tgt.tier ?? sector.tier ?? 1,
-                    ),
                     reward: REWARD.combat.base + Math.floor(Math.random() * REWARD.combat.range),
                 };
             },

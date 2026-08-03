@@ -3,7 +3,10 @@ import type { SetState, GameStore, PlanetType } from "@/game/types";
 import type { ResearchResourceType } from "@/game/types/research";
 import { RESEARCH_RESOURCES } from "@/game/constants";
 import { SCIENTIST_ATMOSPHERE_EXP } from "@/game/constants/experience";
-import { addTradeGood } from "@/game/slices/ship/helpers";
+import {
+    addTradeGoodWithinCapacity,
+    getFreeCargoSpace,
+} from "@/game/slices/ship/helpers";
 import { getBestByProfession } from "@/game/crew";
 import { appendSurfaceLog } from "./sendScoutingMission";
 import { planetHasFeature } from "@/game/planets";
@@ -108,47 +111,54 @@ export const atmosphericAnalysis = (
     }
 
     // Применяем ресурсы: rare_minerals → трюм (торговый ресурс), остальные → исследования
-    const cargoCapacity = get().getCargoCapacity();
+    const rareMinerals = resources.find((res) => res.type === "rare_minerals");
+    const cargoResult = rareMinerals
+        ? addTradeGoodWithinCapacity(
+              state.ship.tradeGoods,
+              "rare_minerals",
+              rareMinerals.qty,
+              getFreeCargoSpace(state),
+          )
+        : null;
+    const receivedResources = resources.flatMap((res) =>
+        res.type !== "rare_minerals"
+            ? [res]
+            : cargoResult && cargoResult.accepted > 0
+              ? [{ ...res, qty: cargoResult.accepted }]
+              : [],
+    );
 
     set((s) => {
         const updated = { ...s.research.resources };
-        const cargoUsed =
-            s.ship.cargo.reduce((sum, c) => sum + c.quantity, 0) +
-            s.ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0);
-        let availableSpace = Math.max(0, cargoCapacity - cargoUsed);
-        let newTradeGoods = [...s.ship.tradeGoods];
 
         for (const res of resources) {
-            if (res.type === "rare_minerals") {
-                const actual = Math.min(res.qty, availableSpace);
-                if (actual > 0) {
-                    newTradeGoods = addTradeGood(newTradeGoods, "rare_minerals", actual);
-                    availableSpace -= actual;
-                }
-            } else {
+            if (res.type !== "rare_minerals") {
                 updated[res.type] = (updated[res.type] || 0) + res.qty;
             }
         }
         return {
-            ship: { ...s.ship, tradeGoods: newTradeGoods },
+            ship: { ...s.ship, tradeGoods: cargoResult?.tradeGoods ?? s.ship.tradeGoods },
             research: { ...s.research, resources: updated },
         };
     });
 
-    resources.forEach((res) => {
+    receivedResources.forEach((res) => {
         const rd = RESEARCH_RESOURCES[res.type];
         const destination = res.type === "rare_minerals" ? " → трюм" : "";
         get().addLog( i18nStore.t("game_logs.atmosphericAnalysis_4", { value: rd?.icon ?? "", type: rd?.name ?? res.type, qty: res.qty, destination }),
             "info",
         );
     });
+    if (cargoResult?.discarded) {
+        get().addLog( i18nStore.t("game_logs.cargo_overflow", { discarded: cargoResult.discarded }), "warning");
+    }
 
     // Опыт учёному
     get().gainExp(scientist, SCIENTIST_ATMOSPHERE_EXP);
 
     // Формируем результат для отображения в UI
     const atmoResult = {
-        researchResources: resources.map((res) => ({
+        researchResources: receivedResources.map((res) => ({
             type: res.type,
             quantity: res.qty,
         })),

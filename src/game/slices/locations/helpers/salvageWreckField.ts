@@ -5,6 +5,7 @@ import type { SetState, GameStore, WreckApproach } from "@/game/types";
 import { patchLocation } from "@/game/utils/patchLocation";
 import { LAB_MODULE_TYPES } from "@/game/constants/modules";
 import {
+    getRadiationDamageReport,
     getWreckScannerRareChanceMultiplier,
     getWreckSpecialLootChance,
     WRECK_APPROACH_CONFIG,
@@ -79,8 +80,11 @@ export function salvageWreckField(
         rng(config.shieldDmg[0], config.shieldDmg[1]) * approachConfig.damageMult,
     ));
     const curShields   = state.ship.shields;
-    const overflow     = Math.max(0, shieldDmg - curShields);
-    const newShields   = Math.max(0, curShields - shieldDmg);
+    const { shieldDamage, overflowDamage: overflow } = getRadiationDamageReport(
+        shieldDmg,
+        curShields,
+    );
+    const newShields   = curShields - shieldDamage;
 
     // — Урон случайному модулю (если радиация прошла сквозь щиты) —
     let moduleDamageAmt = 0;
@@ -143,7 +147,8 @@ export function salvageWreckField(
         rare_minerals: rareMinerals  > 0 ? rareMinerals  : undefined,
         tech_salvage:  techSalvage   > 0 ? techSalvage   : undefined,
         ancient_data:  ancientData   > 0 ? ancientData   : undefined,
-        shieldDamage:  shieldDmg,
+        shieldDamage:  shieldDamage || undefined,
+        radiationPenetration: overflow || undefined,
     };
 
     set((s) => {
@@ -216,7 +221,12 @@ export function salvageWreckField(
     if (ancientData > 0) parts.push(`📡 Древние данные ×${ancientData}`);
 
     const lootStr = parts.length > 0 ? parts.join(", ") : "ничего ценного";
-    get().addLog( i18nStore.t("game_logs.salvageWreckField_2", { newPassesDone, passesTotal, lootStr, shieldDmg }),
+    const radiationSummary = shieldDamage > 0
+        ? i18nStore.t("game_logs.salvageWreckField_shields", { shieldDamage })
+        : overflow > 0
+          ? i18nStore.t("game_logs.salvageWreckField_penetration")
+          : "";
+    get().addLog( i18nStore.t("game_logs.salvageWreckField_2", { newPassesDone, passesTotal, lootStr, radiationSummary }),
         shieldDmg > 20 ? "warning" : "info",
     );
 

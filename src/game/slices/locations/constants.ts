@@ -259,6 +259,11 @@ export const WRECK_APPROACH_CONFIG: Record<
     },
 };
 
+export const getRadiationDamageReport = (damage: number, shields: number) => ({
+    shieldDamage: Math.min(damage, shields),
+    overflowDamage: Math.max(0, damage - shields),
+});
+
 // ============================================================================
 // Подходы к исследованию покинутого корабля
 // ============================================================================

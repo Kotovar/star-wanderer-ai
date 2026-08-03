@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useGameStore } from "@/game/store";
 import { RACES } from "@/game/constants/races";
+import { COMBAT_ACTIONS, CREW_ACTIONS } from "@/game/constants/crew";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import type { CrewMember } from "@/game/types";
 import type { AugmentationRarity } from "@/game/types/augmentations";
@@ -41,11 +42,20 @@ import {
     getTechPerkNameKey,
 } from "@/game/constants/techTree";
 import type { TechPerkTier } from "@/game/types";
-import { getHappinessEfficiencyModifier } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
+import { getTaskEfficiencyPercent } from "@/game/slices/gameLoop/processors/crewAssignments/constants";
 import { getDesertionTurnsLeft } from "@/game/slices/gameLoop/processors/processDesertion";
 
 const stripLeadingSymbol = (value: string) =>
     value.replace(/^[^\p{L}\p{N}]+/u, "");
+
+const getAssignmentLabel = (member: CrewMember, isCombat: boolean): string => {
+    const assignment = isCombat ? member.combatAssignment : member.assignment;
+    if (!assignment) return "";
+    const actions = isCombat
+        ? COMBAT_ACTIONS[member.profession]
+        : CREW_ACTIONS[member.profession];
+    return actions.find((action) => action.value === assignment)?.label ?? assignment;
+};
 
 const AUGMENTATION_CARD_STYLES: Record<AugmentationRarity, string> = {
     common: "bg-[rgba(148,163,184,0.07)] border-[#94a3b866] hover:border-[#94a3b8] hover:bg-[rgba(148,163,184,0.13)] hover:shadow-[0_0_10px_rgba(148,163,184,0.28)]",
@@ -88,9 +98,8 @@ export function CrewList() {
                     );
                     const healthPct =
                         (member.health / (member.maxHealth || 100)) * 100;
-                    const currentAssignment = isCombat
-                        ? member.combatAssignment
-                        : member.assignment;
+                    const assignmentLabel = getAssignmentLabel(member, isCombat);
+                    const efficiency = getTaskEfficiencyPercent(member);
                     const race = RACES[member.race];
                     const hpColor =
                         member.health < 30
@@ -165,8 +174,8 @@ export function CrewList() {
                                 </span>
                             </div>
                             <div className="text-[#555] text-[10px] truncate leading-tight min-h-3">
-                                {currentAssignment && (
-                                    <span>{currentAssignment}</span>
+                                {assignmentLabel && (
+                                    <span>{assignmentLabel}</span>
                                 )}
                             </div>
 
@@ -222,22 +231,21 @@ export function CrewList() {
                                     <span className="text-[#555] text-[9px] shrink-0 tabular-nums">
                                         ☺{member.happiness}
                                     </span>
-                                    {(() => {
-                                        const eff = getHappinessEfficiencyModifier(member);
-                                        if (Math.abs(eff) < 0.005) return null;
-                                        const pct = Math.round(eff * 100);
-                                        return (
-                                            <span
-                                                className={`text-[9px] shrink-0 tabular-nums font-bold ${eff > 0 ? "text-[#00ff41]" : "text-[#ff0040]"}`}
-                                                title={t("crew_member.morale_efficiency_hint")}
-                                            >
-                                                {pct > 0 ? "+" : ""}
-                                                {pct}%
-                                            </span>
-                                        );
-                                    })()}
                                 </div>
                             )}
+
+                            <div
+                                className={`text-[9px] shrink-0 tabular-nums font-bold ${
+                                    efficiency > 100
+                                        ? "text-[#00ff41]"
+                                        : efficiency < 100
+                                          ? "text-[#ff0040]"
+                                          : "text-[#77808f]"
+                                }`}
+                                title={t("crew_member.morale_efficiency_hint")}
+                            >
+                                ⚙ {efficiency}%
+                            </div>
 
                             {(() => {
                                 const desertionTurns = getDesertionTurnsLeft(member);
@@ -523,13 +531,10 @@ export function CrewList() {
                                             <span className="text-[#ffb000]">
                                                 {t("crew_member.assignment")}{" "}
                                             </span>
-                                            {isCombat
-                                                ? selectedCrew.combatAssignment
-                                                    ? `[${selectedCrew.combatAssignment.toUpperCase()}]`
-                                                    : t("crew_member.waiting_short")
-                                                : selectedCrew.assignment
-                                                  ? `[${selectedCrew.assignment.toUpperCase()}]`
-                                                  : t("crew_member.waiting_short")}
+                                            {getAssignmentLabel(
+                                                selectedCrew,
+                                                isCombat,
+                                            ) || t("crew_member.waiting_short")}
                                         </div>
 
                                         {/* Module movement section */}

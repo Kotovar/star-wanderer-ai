@@ -4,7 +4,8 @@ import { generateNebulae } from "@/game/galaxy/nebulae";
 import { initializeStationData } from "@/game/stations";
 import { initialState } from "@/game/initial";
 import { clearLocalStorage, saveToLocalStorage } from "@/game/saves/utils";
-import { playSound } from "@/sounds";
+import { playSound, setAudioVolumes, setSoundPlaybackEnabled } from "@/sounds";
+import { loadPlayerSettings } from "../../settings/playerSettings";
 import { buildStartingState } from "./buildStartingState";
 import { applyResearchedTechs } from "@/game/research/applyResearchedTechs";
 import { DEFAULT_TEMPLATE_ID } from "@/game/constants/shipTemplates";
@@ -44,7 +45,9 @@ export const restartGame = (
 ): void => {
   const profile = getRunProfile(profileId ?? pickRunProfileId());
   if (!profile) return;
-  const settings = get().settings;
+  const settings = loadPlayerSettings(get().settings);
+  setSoundPlaybackEnabled(settings.soundEnabled);
+  setAudioVolumes(settings);
   const patch = buildStartingState(templateId, modifierIds);
   clearLocalStorage();
 

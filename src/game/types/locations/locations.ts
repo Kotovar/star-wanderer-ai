@@ -149,12 +149,15 @@ export interface Location {
     signalRevealed?: boolean; // Scanner successfully revealed the outcome
     signalRevealChecked?: boolean; // Already checked with scanner (one-time check)
     signalDeepScanUsed?: boolean; // Deep scan was already attempted
+    signalDeepScanFailed?: boolean; // Deep scan completed but did not decode the source
     signalResponseProtocol?: DistressApproach; // Protocol used to approach the signal
     signalLoot?: {
         // Store loot details for display
         credits?: number;
         tradeGood?: { name: string; quantity: number };
         artifact?: string;
+        alienBiology?: number;
+        survivorName?: string;
     };
     // Ancient boss fields
     bossId?: string;
@@ -186,6 +189,7 @@ export interface Location {
         tech_salvage?: number;
         ancient_data?: number;
         shieldDamage?: number;
+        radiationPenetration?: number;
     };
 
     // Derelict ship fields

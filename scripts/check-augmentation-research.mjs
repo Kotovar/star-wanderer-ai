@@ -30,8 +30,11 @@ const { createAugmentationsSlice } = jiti(
 const { processCombatAssignment } = jiti(
   "../src/game/slices/gameLoop/processors/crewAssignments/processCombatAssignments.ts",
 );
-const { getTaskBonusMultiplier } = jiti(
+const { getTaskBonusMultiplier, getTaskEfficiencyPercent } = jiti(
   "../src/game/slices/gameLoop/processors/crewAssignments/constants.ts",
+);
+const { getGunnerAccuracyBonus, getGunnerCritBonus } = jiti(
+  "../src/game/crew/combatBonuses.ts",
 );
 
 const augmentationResearch = TIER3_TECHS.cybernetic_augmentation;
@@ -137,9 +140,38 @@ assert.equal(
 );
 assert.equal(
   getTaskBonusMultiplier({ augmentation: "overclock_core" }), 1.5);
+assert.equal(
+  getTaskEfficiencyPercent({
+    happiness: 50,
+    maxHappiness: 100,
+    traits: [{ effect: { taskBonus: 0.2 } }],
+  }),
+  120,
+  "tentacle-like task bonuses must be included in displayed efficiency",
+);
+assert.equal(
+  getTaskEfficiencyPercent({
+    happiness: 50,
+    maxHappiness: 100,
+    traits: [{ effect: { taskPenalty: 0.2 } }],
+  }),
+  80,
+  "chitin-like task penalties must be included in displayed efficiency",
+);
 assert.equal(AUGMENTATIONS.quantum_memory_core.effect.researchSpeedBonus, 0.4);
 assert.equal(AUGMENTATIONS.combat_cognition.effect.accuracyBonus, 0.25);
 assert.equal(AUGMENTATIONS.combat_cognition.effect.critBonus, 0.15);
+assert.equal(
+  getGunnerAccuracyBonus({ level: 1, augmentation: "combat_cognition" }) -
+    getGunnerAccuracyBonus({ level: 1 }),
+  0.25,
+  "combat foresight must increase gunner accuracy",
+);
+assert.equal(
+  getGunnerCritBonus({ augmentation: "combat_cognition" }),
+  0.15,
+  "combat foresight must increase gunner critical chance",
+);
 
 const source = (file) => readFileSync(path.join(root, file), "utf8");
 assert.match(
@@ -161,16 +193,6 @@ assert.match(
   source("src/game/slices/combat/helpers/playerAttack.ts"),
   /laserWeaponBayIds\.has\(crewMember\.moduleId\)/,
   "prismatic lens must require the wearer to be in a laser weapon bay",
-);
-assert.match(
-  source("src/game/slices/combat/helpers/playerDamage.ts"),
-  /getAugmentationBonus\(c, "accuracyBonus"\)/,
-  "combat accuracy must apply combat foresight",
-);
-assert.match(
-  source("src/game/slices/combat/helpers/playerAttack.ts"),
-  /getAugmentationBonus\(gunnerInBay, "critBonus"\)/,
-  "combat critical chance must apply combat foresight",
 );
 assert.match(
   source("src/game/slices/travel/helpers/selectLocation.ts"),

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   getWreckScannerRareChanceMultiplier,
   getWreckSpecialLootChance,
+  getRadiationDamageReport,
   WRECK_APPROACH_CONFIG,
   WRECK_LAB_ANCIENT_DATA_MULTIPLIER,
   WRECK_SPECIAL_LOOT_CHANCE_CAP,
@@ -24,5 +25,13 @@ assert.equal(getWreckScannerRareChanceMultiplier(5), 1.1);
 assert.equal(getWreckScannerRareChanceMultiplier(8), 1.25);
 assert.equal(getWreckSpecialLootChance(0.6, 1.5, 1.25), WRECK_SPECIAL_LOOT_CHANCE_CAP);
 assert.equal(WRECK_LAB_ANCIENT_DATA_MULTIPLIER, 2);
+assert.deepEqual(getRadiationDamageReport(23, 0), {
+  shieldDamage: 0,
+  overflowDamage: 23,
+});
+assert.deepEqual(getRadiationDamageReport(23, 10), {
+  shieldDamage: 10,
+  overflowDamage: 13,
+});
 
 console.log("Wreck field approach checks passed");

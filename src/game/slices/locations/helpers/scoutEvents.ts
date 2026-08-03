@@ -8,7 +8,10 @@ import type {
 import type { Goods } from "@/game/types/goods";
 import { RESEARCH_RESOURCES, TRADE_GOODS } from "@/game/constants";
 import { getTechPerkValue } from "@/game/constants/techTree";
-import { addTradeGood } from "@/game/slices/ship/helpers";
+import {
+    addTradeGoodWithinCapacity,
+    getFreeCargoSpace,
+} from "@/game/slices/ship/helpers";
 import { giveRandomMutation, getBestByProfession } from "@/game/crew";
 import { showHintOnce } from "@/game/hints/showHint";
 import { appendSurfaceLog } from "./sendScoutingMission";
@@ -125,15 +128,15 @@ export const resolveScoutEvent = (
     choiceIndex: number,
     set: SetState,
     get: () => GameStore,
-): void => {
+): SurfaceLogEntry | null => {
     const state = get();
     const pending = state.pendingScoutEvent;
-    if (!pending) return;
+    if (!pending) return null;
     const event = SCOUT_EVENTS.find((e) => e.id === pending.eventId);
     const choice = event?.choices[choiceIndex];
     if (!choice) {
         set({ pendingScoutEvent: null });
-        return;
+        return null;
     }
 
     const logEntry: SurfaceLogEntry = { source: "scout" };
@@ -157,15 +160,26 @@ export const resolveScoutEvent = (
             ),
         );
         const goodId = outcome.tradeGood.id;
+        const cargoResult = addTradeGoodWithinCapacity(
+            state.ship.tradeGoods,
+            goodId,
+            qty,
+            getFreeCargoSpace(state),
+        );
         set((s) => ({
             ship: {
                 ...s.ship,
-                tradeGoods: addTradeGood(s.ship.tradeGoods, goodId, qty),
+                tradeGoods: cargoResult.tradeGoods,
             },
         }));
         const goodName = TRADE_GOODS[goodId] ? i18nStore.t(`trade.goods.${goodId}`) : goodId;
-        logEntry.tradeGood = { name: goodName, quantity: qty };
-        get().addLog( i18nStore.t("game_logs.scoutEvents_2", { goodName, qty }), "info");
+        if (cargoResult.accepted > 0) {
+            logEntry.tradeGood = { name: goodName, quantity: cargoResult.accepted };
+            get().addLog( i18nStore.t("game_logs.scoutEvents_2", { goodName, qty: cargoResult.accepted }), "info");
+        }
+        if (cargoResult.discarded > 0) {
+            get().addLog( i18nStore.t("game_logs.cargo_overflow", { discarded: cargoResult.discarded }), "warning");
+        }
     }
 
     if (outcome.researchResources?.length) {
@@ -215,4 +229,5 @@ export const resolveScoutEvent = (
         })),
     }));
     get().saveGame();
+    return logEntry;
 };

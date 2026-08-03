@@ -364,6 +364,8 @@ function applyCapsuleChoice(
   );
 }
 
+const VIRUS_ORGANIC_DAMAGE = 5;
+
 function applyVirusChoice(
   event: Extract<PendingRandomEvent, { type: "virus" }>,
   choice: RandomEventChoiceId,
@@ -406,9 +408,20 @@ function applyVirusChoice(
   }
 
   changeCrewHappiness(set, -event.happinessPenalty);
+  set((state) => ({
+    crew: state.crew.map((member) =>
+      member.race !== "synthetic" && member.health > 0
+        ? {
+            ...member,
+            health: Math.max(0, member.health - VIRUS_ORGANIC_DAMAGE),
+          }
+        : member,
+    ),
+  }));
   get().addLog(
     i18nStore.t("random_events.logs.virus_standard", {
       penalty: event.happinessPenalty,
+      damage: VIRUS_ORGANIC_DAMAGE,
     }),
     "error",
   );

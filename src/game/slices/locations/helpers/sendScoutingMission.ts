@@ -22,7 +22,10 @@ import {
 import { getMaxExtraScoutAttempts } from "@/game/constants/augmentations";
 import { getTechPerkValue } from "@/game/constants/techTree";
 import { SCOUT_BASE_EXP } from "@/game/constants/experience";
-import { addTradeGood } from "@/game/slices/ship/helpers";
+import {
+    addTradeGoodWithinCapacity,
+    getFreeCargoSpace,
+} from "@/game/slices/ship/helpers";
 import { determineScoutingOutcome } from "./determineScoutingOutcome";
 import { giveRandomMutation } from "@/game/crew";
 import { showHintOnce } from "@/game/hints/showHint";
@@ -262,13 +265,26 @@ const applyTradeGoodReward = (
 
     if (!goodId) return;
 
+    const state = get();
+    const cargoResult = addTradeGoodWithinCapacity(
+        state.ship.tradeGoods,
+        goodId,
+        quantity,
+        getFreeCargoSpace(state),
+    );
+
     set((s) => ({
         ship: {
             ...s.ship,
-            tradeGoods: addTradeGood(s.ship.tradeGoods, goodId, quantity),
+            tradeGoods: cargoResult.tradeGoods,
         },
     }));
-    get().addLog( i18nStore.t("game_logs.sendScoutingMission_7", { scoutName, itemName: i18nStore.t(`trade.goods.${goodId}`), quantity }), "info");
+    if (cargoResult.accepted > 0) {
+        get().addLog( i18nStore.t("game_logs.sendScoutingMission_7", { scoutName, itemName: i18nStore.t(`trade.goods.${goodId}`), quantity: cargoResult.accepted }), "info");
+    }
+    if (cargoResult.discarded > 0) {
+        get().addLog( i18nStore.t("game_logs.cargo_overflow", { discarded: cargoResult.discarded }), "warning");
+    }
 };
 
 /**

@@ -50,6 +50,9 @@ export function getTaskBonusMultiplier(crewMember: CrewMember): number {
     return Math.max(0, 1 + taskBonus - taskPenalty);
 }
 
+export const getTaskEfficiencyPercent = (crewMember: CrewMember): number =>
+    Math.round(getTaskBonusMultiplier(crewMember) * 100);
+
 /** Базовое количество опыта за выполнение назначений */
 export const BASE_EXP_REWARDS = CREW_ASSIGNMENT_EXP;
 

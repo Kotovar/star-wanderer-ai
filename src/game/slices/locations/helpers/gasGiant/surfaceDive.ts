@@ -4,7 +4,10 @@ import type { SetState, GameStore } from "@/game/types";
 import type { DiveRewards } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES } from "@/game/constants";
 import { getStarTypeEffect } from "@/game/constants/starEffects";
-import { addTradeGood } from "@/game/slices/ship/helpers";
+import {
+    addTradeGoodWithinCapacity,
+    getFreeCargoSpace,
+} from "@/game/slices/ship/helpers";
 import { patchLocation } from "@/game/utils/patchLocation";
 
 type DiveResourceKey = keyof DiveRewards;
@@ -64,6 +67,14 @@ export function surfaceDive(set: SetState, get: () => GameStore): void {
         "void_membrane",
     ] as const;
 
+    const cargoResult = addTradeGoodWithinCapacity(
+        state.ship.tradeGoods,
+        "rare_minerals",
+        boostedRewards.rare_minerals,
+        getFreeCargoSpace(state),
+    );
+    boostedRewards.rare_minerals = cargoResult.accepted;
+
     for (const type of resourceTypes) {
         const qty = boostedRewards[type];
         if (qty > 0) {
@@ -75,26 +86,13 @@ export function surfaceDive(set: SetState, get: () => GameStore): void {
 
     const membranesCollected = boostedRewards.void_membrane;
 
-    const cargoCapacity = get().getCargoCapacity();
-
     set((s) => {
         // Add research resources to player inventory
         // rare_minerals goes to cargo (it's also a trade good); others go to research
         const newResources = { ...s.research.resources };
-        const cargoUsed =
-            s.ship.cargo.reduce((sum, c) => sum + c.quantity, 0) +
-            s.ship.tradeGoods.reduce((sum, g) => sum + g.quantity, 0);
-        let availableSpace = Math.max(0, cargoCapacity - cargoUsed);
-        let newTradeGoods = [...s.ship.tradeGoods];
 
         for (const [type, qty] of Object.entries(resourceUpdates)) {
-            if (type === "rare_minerals") {
-                const actual = Math.min(qty, availableSpace);
-                if (actual > 0) {
-                    newTradeGoods = addTradeGood(newTradeGoods, "rare_minerals", actual);
-                    availableSpace -= actual;
-                }
-            } else {
+            if (type !== "rare_minerals") {
                 newResources[type as keyof typeof newResources] =
                     (newResources[type as keyof typeof newResources] ?? 0) + qty;
             }
@@ -119,7 +117,7 @@ export function surfaceDive(set: SetState, get: () => GameStore): void {
             activeDive: null,
             turn: s.turn + 1,
             activeContracts: updatedContracts,
-            ship: { ...s.ship, tradeGoods: newTradeGoods },
+            ship: { ...s.ship, tradeGoods: cargoResult.tradeGoods },
             research: {
                 ...s.research,
                 resources: newResources,
@@ -129,6 +127,10 @@ export function surfaceDive(set: SetState, get: () => GameStore): void {
         };
     });
     maybeRevealRunProfileArcTarget(set, get);
+
+    if (cargoResult.discarded > 0) {
+        get().addLog( i18nStore.t("game_logs.cargo_overflow", { discarded: cargoResult.discarded }), "warning");
+    }
 
     if (logParts.length > 0) {
         get().addLog( i18nStore.t("game_logs.surfaceDive_1", { value: logParts.join(", ") }),

@@ -704,6 +704,7 @@
         "reputation_impact": "Reputation consequences",
         "active": "Active contracts",
         "turns_left": "{{count}} turns left",
+        "turns_after_accept": "Deadline: {{count}} turns after acceptance",
         "expired_toast": "Race contract expired: {{contract}}",
         "failed": "Failed",
         "reward": "Reward",
@@ -1892,9 +1893,11 @@
         "scanner_detected": "📡 Scanner detected:",
         "scanner_analyzed": "Scanner was able to analyze the signal and determine the situation type.",
         "enemy_found": "Enemies were found here.",
-        "survivors_saved": "✓ Survivors rescued! Reward received immediately.",
+        "survivors_saved": "✓ Survivors rescued!",
         "abandoned_ship": "Empty ship drifts in space.",
         "found": "Found:",
+        "alien_biology": "Alien biology ×{{count}}",
+        "survivor_evacuated": "Evacuated: {{name}}",
         "leave_signal": "LEAVE SIGNAL",
         "approach_combat": "⚔️ APPROACH FOR COMBAT",
         "approach": "APPROACH",
@@ -1931,6 +1934,7 @@
         "deep_scan_desc": "The scanner and specialists try to decode the interference. Takes 1 turn.",
         "deep_scan_chance": "Decode chance: {{chance}}%",
         "deep_scan_used": "Deep analysis has already been performed",
+        "deep_scan_failed": "Deep analysis completed: source could not be decoded.",
         "probe_analysis": "Launch probe",
         "probe_analysis_desc": "A disposable probe identifies the source exactly and costs no turn.",
         "probe_analysis_ready": "Probes aboard: {{count}}",
@@ -1940,7 +1944,8 @@
         "signal_diagnostics": "CHANNEL DIAGNOSTICS",
         "power_reserve": "Power reserve",
         "scanner_range": "Scanner range",
-        "specialists": "Specialists",
+        "specialists": "Specialist levels",
+        "specialists_hint": "🔬 scientists · 🔧 engineers · 💊 medics",
         "shields_status": "Shields",
         "source_unknown": "Source: unknown",
         "requires_scanner": "Requires scanner {{range}}+",
@@ -2014,6 +2019,8 @@
         "empty_description": "Description unavailable",
         "leave_planet": "LEAVE PLANET",
         "scouting": "Scouting",
+        "scout_event_result_title": "Scout result",
+        "scout_event_continue": "CONTINUE",
         "scouting_desc_1": "Send a scout to investigate the planet.",
         "scouting_credits": "• Credits (100-250₢)",
         "scouting_goods": "• Trade goods (1-3 + scout level)",
@@ -2232,7 +2239,8 @@
             "scanner_range": "📡 Scan range",
             "scanner_absent": "none",
             "click_sector": "Click on a sector",
-            "click_object": "Click on an object"
+            "click_object": "Click on an object",
+            "fuel_recovery": "⛽ Fuel is empty: assign an engineer to Fuel Synthesis in a fuel tank, then skip a turn."
         },
         "black_hole": {
             "title": "🕳️ BLACK HOLE",
@@ -2250,6 +2258,7 @@
         "yes": "Yes",
         "no": "No",
         "cancel": "Cancel",
+        "confirm": "Confirm",
         "ok": "OK",
         "close": "Close",
         "back": "Back",
@@ -2350,8 +2359,8 @@
         }
     },
     "crew_member": {
-        "morale_efficiency_hint": "Task efficiency bonus/penalty from morale",
-        "morale_efficiency": "Morale efficiency:",
+        "morale_efficiency_hint": "Total from morale, traits, augmentations, and professional bonuses",
+        "morale_efficiency": "Efficiency:",
         "desertion_warning": "⚠ Deserts in {{turns}} turn(s)!",
         "assignment_fatigue": "Fatigue {{value}}/{{max}}",
         "assignment_rest": "Resting: {{turns}} turns",
@@ -3655,19 +3664,20 @@
     "wreck_field": {
         "choose_approach": "Salvage approach",
         "radiation_notice": "Radiation: a standard pass costs {{damage}} shields; surface salvage costs about half, deep salvage costs one and a half times more.",
-        "scanner_bonus": "📡 Scanner (range {{range}}): +{{bonus}}% chance for valuable finds during deep breach.",
+        "scanner_bonus": "📡 Scanner (range {{range}}): +{{bonus}}% chance for valuable finds during a thorough search.",
         "lab_bonus": "🔬 Laboratory: Ancient Data is doubled when found.",
+        "radiation_penetrated": "Radiation reached the hull: {{damage}}",
         "approach": {
             "surface": {
                 "name": "Surface salvage",
                 "description": "Less loot and radiation; the crew is protected."
             },
             "standard": {
-                "name": "Standard salvage",
+                "name": "Standard search",
                 "description": "The usual balance of rewards and risk."
             },
             "deep": {
-                "name": "Deep breach",
+                "name": "Thorough search",
                 "description": "More loot and better odds for rare finds; more radiation."
             }
         }
@@ -3773,6 +3783,13 @@
         "nebula": {
             "route_warning": "Route crosses a nebula",
             "direct_risk": "60%: fuel loss, module damage, or drift"
+        },
+        "fuel_trap": {
+            "title": "Stranding risk",
+            "description": "After jumping to “{{sector}}”, {{fuel}} fuel will remain. The next available jump needs at least {{needed}}.",
+            "no_route": "After jumping to “{{sector}}”, {{fuel}} fuel will remain and no further route is available.",
+            "no_station": "There is no station in this system and no one can synthesize fuel in the tank. This may end the run.",
+            "continue": "Jump anyway"
         }
     },
     "victory_paths": {
@@ -4288,7 +4305,7 @@
         },
         "virus": {
             "title": "Shipboard Virus",
-            "description": "An unknown pathogen entered the ventilation system. Without intervention, all crew morale drops by {{penalty}}.",
+            "description": "An unknown pathogen entered the ventilation system. Without treatment, living organic crew lose 5 HP and morale drops by {{penalty}}.",
             "medic": {
                 "label": "Field treatment",
                 "description": "A medic contains the symptoms and runs emergency prophylaxis.",
@@ -4304,7 +4321,7 @@
             "standard": {
                 "label": "Full quarantine",
                 "description": "Seal the decks and wait for the outbreak to pass.",
-                "outcome": "All crew morale drops by {{penalty}}."
+                "outcome": "Living organic crew lose 5 HP and all crew morale drops by {{penalty}}."
             }
         },
         "fuel_leak": {
@@ -4632,7 +4649,7 @@
             "capsule_standard": "Capsule coordinates sold: +{{reward}}₢",
             "virus_medic": "The medic contained the virus: crew morale -{{penalty}}",
             "virus_purge": "Virus destroyed by digital purge: receiving system lost 5 HP",
-            "virus_standard": "Quarantine complete: crew morale -{{penalty}}",
+            "virus_standard": "Quarantine complete: living organic crew -{{damage}} HP, morale -{{penalty}}",
             "fuel_leak_engineer": "The engineer contained the leak: {{loss}} fuel lost",
             "fuel_leak_drones": "Repair drones sealed the leak: repair bay -5 HP",
             "fuel_leak_standard": "Fuel line isolated: {{loss}} fuel lost",
@@ -4865,6 +4882,7 @@
         "toggleArtifact_3": "☠️ WARNING! {{artifact_name}} is a CURSED ARTIFACT! Curse effect: {{description}}",
         "toggleArtifact_4": "⚠️ {{scientist_name}} was hurt by the curse! -{{CURSE_REMOVAL_DAMAGE}} health",
         "tryFindArtifact_1": "Contract artifact found! +{{reward}}₢",
+        "cargo_overflow": "⚠️ Cargo hold full: {{discarded}}t left behind.",
         "augmentationsSlice_1": "Technology required: Cybernetic Augmentations",
         "augmentationsSlice_2": "Augmentation \"{{augmentationId}}\" not found",
         "augmentationsSlice_3": "Crew member not found",
@@ -5236,9 +5254,11 @@
         "respondToDistressSignal_5": "Credits: +{{creditsReward}}₢",
         "respondToDistressSignal_6": "★ ARTIFACT FOUND: {{artifact_name}}!",
         "salvageWreckField_1": "The wreck field has already been fully searched.",
-        "salvageWreckField_2": "🔧 Wreck field searched (pass {{newPassesDone}}/{{passesTotal}}): {{lootStr}}. Shields -{{shieldDmg}}.",
+        "salvageWreckField_2": "🔧 Wreck field searched (pass {{newPassesDone}}/{{passesTotal}}): {{lootStr}}. {{radiationSummary}}",
+        "salvageWreckField_shields": "Shields -{{shieldDamage}}.",
+        "salvageWreckField_penetration": "Radiation reached the hull.",
         "salvageWreckField_3": "⚠️ Cargo hold is full — some finds didn't fit.",
-        "salvageWreckField_4": "☢ Radiation pierced the shields! Module \"{{damagedModuleName}}\" damaged by {{moduleDamageAmt}}.",
+        "salvageWreckField_4": "☢ Radiation reached the ship: module \"{{damagedModuleName}}\" damaged by {{moduleDamageAmt}}.",
         "salvageWreckField_5": "☢ Background radiation hurt the crew (−{{crewRadDamage}} health).",
         "salvageWreckField_6": "💀 The wreck field is fully searched. Radiation is rising — time to leave.",
         "scoutEvents_1": "💰 Find: +{{value}}₢",

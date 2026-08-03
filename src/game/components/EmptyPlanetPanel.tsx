@@ -209,6 +209,10 @@ export function EmptyPlanetPanel() {
     const showSectorMap = useGameStore((s) => s.showSectorMap);
 
     const [showExpeditionSetup, setShowExpeditionSetup] = useState(false);
+    const [scoutEventResult, setScoutEventResult] = useState<{
+        event: (typeof SCOUT_EVENTS)[number];
+        result: SurfaceLogEntry;
+    } | null>(null);
 
     if (!currentLocation) return null;
     const planetId = currentLocation.id;
@@ -263,6 +267,11 @@ export function EmptyPlanetPanel() {
         pendingScoutEvent?.planetId === planetId
             ? SCOUT_EVENTS.find((e) => e.id === pendingScoutEvent.eventId)
             : undefined;
+    const scoutEventDialog = scoutEventResult
+        ? scoutEventResult
+        : activeScoutEvent
+          ? { event: activeScoutEvent, result: null }
+          : null;
 
     // Анализ атмосферы
     const hasAtmoTech = researchedTechs.includes("atmospheric_analysis");
@@ -630,26 +639,53 @@ export function EmptyPlanetPanel() {
                 </div>
 
                 {/* Событие разведки */}
-                {activeScoutEvent && (
+                {scoutEventDialog && (
                     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                         <div className="bg-[rgba(10,20,30,0.97)] border-2 border-[#ffb000] p-4 sm:p-6 max-w-md w-full max-h-[85dvh] overflow-y-auto">
                             <div className="font-['Orbitron'] font-bold text-base text-[#ffb000]">
-                                🔦 {t(activeScoutEvent.titleKey)}
+                                🔦 {t(scoutEventDialog.result ? "planet_panel.scout_event_result_title" : scoutEventDialog.event.titleKey)}
                             </div>
-                            <div className="mt-2 text-sm leading-relaxed text-[#aaa]">
-                                {t(activeScoutEvent.descKey)}
-                            </div>
-                            <div className="mt-4 flex flex-col gap-2">
-                                {activeScoutEvent.choices.map((choice, i) => (
+                            {scoutEventDialog.result ? (
+                                <>
+                                    <div className="mt-3 border border-[#00ff4133] bg-[rgba(0,255,65,0.03)] p-3">
+                                        <SurfaceLogRow
+                                            entry={scoutEventDialog.result}
+                                            t={t}
+                                        />
+                                    </div>
                                     <Button
-                                        key={i}
-                                        onClick={() => resolveScoutEvent(i)}
-                                        className="cursor-pointer justify-start bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] tracking-wider text-xs h-auto py-2 whitespace-normal text-left"
+                                        onClick={() => setScoutEventResult(null)}
+                                        className="mt-4 cursor-pointer border-2 border-[#00ff41] bg-transparent text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
                                     >
-                                        {t(choice.labelKey)}
+                                        {t("planet_panel.scout_event_continue")}
                                     </Button>
-                                ))}
-                            </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="mt-2 text-sm leading-relaxed text-[#aaa]">
+                                        {t(scoutEventDialog.event.descKey)}
+                                    </div>
+                                    <div className="mt-4 flex flex-col gap-2">
+                                        {scoutEventDialog.event.choices.map((choice, i) => (
+                                            <Button
+                                                key={i}
+                                                onClick={() => {
+                                                    const result = resolveScoutEvent(i);
+                                                    if (result) {
+                                                        setScoutEventResult({
+                                                            event: scoutEventDialog.event,
+                                                            result,
+                                                        });
+                                                    }
+                                                }}
+                                                className="cursor-pointer justify-start bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] tracking-wider text-xs h-auto py-2 whitespace-normal text-left"
+                                            >
+                                                {t(choice.labelKey)}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}

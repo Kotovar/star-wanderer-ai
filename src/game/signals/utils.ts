@@ -48,3 +48,24 @@ export const getDeepScanChance = (
 
     return Math.min(95, chance);
 };
+
+export const getDeepScanPatch = (outcome?: SignalType) => ({
+    signalDeepScanUsed: true,
+    ...(outcome
+        ? {
+              signalType: outcome,
+              signalRevealed: true,
+              signalRevealChecked: true,
+          }
+        : { signalDeepScanFailed: true }),
+});
+
+export const getSurvivorSignalLoot = (
+    credits: number,
+    alienBiology: number,
+    survivorName?: string,
+) => ({
+    credits,
+    ...(alienBiology > 0 ? { alienBiology } : {}),
+    ...(survivorName ? { survivorName } : {}),
+});

@@ -6,6 +6,8 @@ import { findActiveArtifact } from "@/game/artifacts/utils";
 import {
     determineSignalOutcome as determineSignalOutcomeHelper,
     getDeepScanChance,
+    getDeepScanPatch,
+    getSurvivorSignalLoot,
 } from "@/game/signals";
 import { playSound } from "@/sounds";
 import { patchLocation } from "@/game/utils/patchLocation";
@@ -22,7 +24,10 @@ import type {
 } from "@/game/types";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
 import { rollQuality } from "@/game/crew/utils";
-import { addTradeGood } from "@/game/slices/ship/helpers";
+import {
+    addTradeGoodWithinCapacity,
+    getFreeCargoSpace,
+} from "@/game/slices/ship/helpers";
 import {
     SURVIVORS_REWARD,
     SURVIVOR_JOINS_CHANCE,
@@ -140,16 +145,7 @@ export const deepScanDistressSignal = (
 
     updateSignalLocation(
         loc,
-        {
-            signalDeepScanUsed: true,
-            ...(outcome
-                ? {
-                      signalType: outcome,
-                      signalRevealed: true,
-                      signalRevealChecked: true,
-                  }
-                : {}),
-        },
+        getDeepScanPatch(outcome),
         set,
     );
 
@@ -506,9 +502,16 @@ const handleSurvivors = (
     }
 
     // Иногда выживший присоединяется к экипажу
-    if (hasCapacity && Math.random() < survivorJoinChance) {
-        addSurvivorToCrew(set, get);
-    }
+    const survivorName =
+        hasCapacity && Math.random() < survivorJoinChance
+            ? addSurvivorToCrew(set, get)
+            : undefined;
+
+    updateLocationWithLoot(
+        set,
+        get,
+        getSurvivorSignalLoot(reward, alienBioQty, survivorName),
+    );
 
     markLocationCompleted(set, get);
 };
@@ -518,7 +521,7 @@ const handleSurvivors = (
  * Использует то же качество/трейты/расу, что и генерация экипажа на станции,
  * но уровень всегда 1.
  */
-const addSurvivorToCrew = (set: SetState, get: () => GameStore): void => {
+const addSurvivorToCrew = (set: SetState, get: () => GameStore): string => {
     const lifesupportModule = get().ship.modules.find(
         (m) => m.type === "lifesupport",
     );
@@ -543,6 +546,7 @@ const addSurvivorToCrew = (set: SetState, get: () => GameStore): void => {
     get().addLog( i18nStore.t("game_logs.respondToDistressSignal_3", { newCrew_name: newCrew.name, value: getRaceName(newCrew.race) }),
         "info",
     );
+    return newCrew.name;
 };
 
 /**
@@ -560,6 +564,13 @@ const handleAbandonedCargo = (set: SetState, get: () => GameStore): void => {
     const goodId = keys[Math.floor(Math.random() * keys.length)];
     const quantity = getRandomQuantity(ABANDONED_CARGO_QUANTITY);
     const goodName = i18nStore.t(`trade.goods.${goodId}`);
+    const state = get();
+    const cargoResult = addTradeGoodWithinCapacity(
+        state.ship.tradeGoods,
+        goodId,
+        quantity,
+        getFreeCargoSpace(state),
+    );
 
     // Технологический лом из заброшенного груза (гарантировано 1–3)
     const techSalvageQty = Math.floor(Math.random() * 3) + 1;
@@ -571,7 +582,7 @@ const handleAbandonedCargo = (set: SetState, get: () => GameStore): void => {
             credits: s.credits + creditsReward,
             ship: {
                 ...s.ship,
-                tradeGoods: addTradeGood(s.ship.tradeGoods, goodId, quantity),
+                tradeGoods: cargoResult.tradeGoods,
             },
             research: { ...s.research, resources: updatedResources },
         };
@@ -579,7 +590,12 @@ const handleAbandonedCargo = (set: SetState, get: () => GameStore): void => {
 
     get().addLog( i18nStore.t("game_logs.respondToDistressSignal_4"), "info");
     get().addLog( i18nStore.t("game_logs.respondToDistressSignal_5", { creditsReward }), "info");
-    get().addLog(`${goodName}: +${quantity}`, "info");
+    if (cargoResult.accepted > 0) {
+        get().addLog(`${goodName}: +${cargoResult.accepted}`, "info");
+    }
+    if (cargoResult.discarded > 0) {
+        get().addLog( i18nStore.t("game_logs.cargo_overflow", { discarded: cargoResult.discarded }), "warning");
+    }
     const rdSalvage = RESEARCH_RESOURCES["tech_salvage"];
     get().addLog(`🔬 ${rdSalvage.icon} ${rdSalvage.name} x${techSalvageQty}`, "info");
 
@@ -594,7 +610,10 @@ const handleAbandonedCargo = (set: SetState, get: () => GameStore): void => {
     // Update location with loot details
     updateLocationWithLoot(set, get, {
         credits: creditsReward,
-        tradeGood: { name: goodName, quantity },
+        tradeGood:
+            cargoResult.accepted > 0
+                ? { name: goodName, quantity: cargoResult.accepted }
+                : undefined,
         artifact: foundArtifact,
     });
 
@@ -609,8 +628,10 @@ const updateLocationWithLoot = (
     get: () => GameStore,
     loot: {
         credits: number;
-        tradeGood: { name: string; quantity: number };
+        tradeGood?: { name: string; quantity: number };
         artifact?: string;
+        alienBiology?: number;
+        survivorName?: string;
     },
 ): void => {
     const loc = get().currentLocation;

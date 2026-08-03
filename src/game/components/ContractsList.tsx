@@ -876,6 +876,8 @@ export function ContractsList() {
                         diplomacy: t("contracts.type_diplomacy"),
                         gas_dive: t("contracts.type_gas_dive"),
                         expedition_survey: t("contracts.type_expedition_survey"),
+                        derelict_recovery: t("contracts.type_derelict_recovery"),
+                        cleanse_curse: t("contracts.type_cleanse_curse"),
                     };
                     return (
                         <div

@@ -19,6 +19,7 @@ import type {
   AnomalyApproach,
   DerelictApproach,
   DistressApproach,
+  SurfaceLogEntry,
   WreckApproach,
 } from "./locations/locations";
 import type { LogEntry } from "./logs";
@@ -217,6 +218,7 @@ export interface GameActions {
   areFuelTanksFunctional: () => boolean;
   refuel: (amount: number, price: number) => void;
   gainExp: (crewMember: CrewMember | undefined, amount: number) => void;
+  hydratePlayerSettings: () => void;
   setAnimationsEnabled: (enabled: boolean) => void;
   setSoundEnabled: (enabled: boolean) => void;
   setAudioVolume: (category: "master" | "music" | "sfx" | "ui", value: number) => void;
@@ -345,7 +347,7 @@ export interface GameScouting {
   planetaryDrill: (planetId: string) => void;
   atmosphericAnalysis: (planetId: string) => void;
   orbitalScan: (planetId: string) => void;
-  resolveScoutEvent: (choiceIndex: number) => void;
+  resolveScoutEvent: (choiceIndex: number) => SurfaceLogEntry | null;
   exploreDerelictShip: (locationId: string, approach: DerelictApproach) => void;
   startExpedition: (planetId: string, crewIds: number[]) => void;
   revealExpeditionTile: (tileIndex: number) => void;

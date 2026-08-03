@@ -2,7 +2,10 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import type { SetState, GameStore } from "@/game/types";
 import type { ExpeditionReward } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES, TRADE_GOODS } from "@/game/constants";
-import { addTradeGood } from "@/game/slices/ship/helpers";
+import {
+    addTradeGoodWithinCapacity,
+    getFreeCargoSpace,
+} from "@/game/slices/ship/helpers";
 
 /**
  * Применяет накопленные награды экспедиции к состоянию игры
@@ -20,16 +23,33 @@ export function collectExpeditionRewards(
 
     // Trade goods
     if (rewards.tradeGoods.length > 0) {
-        set((s) => {
-            let tradeGoods = s.ship.tradeGoods;
-            for (const tg of rewards.tradeGoods) {
-                tradeGoods = addTradeGood(tradeGoods, tg.id, tg.quantity);
-            }
-            return { ship: { ...s.ship, tradeGoods } };
+        const state = get();
+        let tradeGoods = state.ship.tradeGoods;
+        let cargoSpace = getFreeCargoSpace(state);
+        const cargoResults = rewards.tradeGoods.map((tg) => {
+            const result = addTradeGoodWithinCapacity(
+                tradeGoods,
+                tg.id,
+                tg.quantity,
+                cargoSpace,
+            );
+            tradeGoods = result.tradeGoods;
+            cargoSpace -= result.accepted;
+            return result;
         });
-        for (const tg of rewards.tradeGoods) {
+        set((s) => ({ ship: { ...s.ship, tradeGoods } }));
+        rewards.tradeGoods.forEach((tg, index) => {
+            const result = cargoResults[index];
+            if (!result || result.accepted === 0) return;
             const name = TRADE_GOODS[tg.id]?.name ?? tg.id;
-            get().addLog( i18nStore.t("game_logs.collectExpeditionRewards_2", { name, quantity: tg.quantity }), "info");
+            get().addLog( i18nStore.t("game_logs.collectExpeditionRewards_2", { name, quantity: result.accepted }), "info");
+        });
+        const discarded = cargoResults.reduce(
+            (sum, result) => sum + result.discarded,
+            0,
+        );
+        if (discarded > 0) {
+            get().addLog( i18nStore.t("game_logs.cargo_overflow", { discarded }), "warning");
         }
     }
 
@@ -41,6 +61,7 @@ export function collectExpeditionRewards(
         const rareMineralsReward = rewards.researchResources.find(
             (res) => res.type === "rare_minerals",
         );
+        let rareMineralsAccepted = rareMineralsReward?.quantity ?? 0;
 
         // Regular research resources → research.resources
         if (regularResources.length > 0) {
@@ -56,21 +77,33 @@ export function collectExpeditionRewards(
         // rare_minerals is a dual resource: lives in ship.tradeGoods so it
         // shows up in both the cargo hold AND the research panel (which sums both).
         if (rareMineralsReward) {
+            const state = get();
+            const cargoResult = addTradeGoodWithinCapacity(
+                state.ship.tradeGoods,
+                "rare_minerals",
+                rareMineralsReward.quantity,
+                getFreeCargoSpace(state),
+            );
             set((s) => ({
                 ship: {
                     ...s.ship,
-                    tradeGoods: addTradeGood(
-                        s.ship.tradeGoods,
-                        "rare_minerals",
-                        rareMineralsReward.quantity,
-                    ),
+                    tradeGoods: cargoResult.tradeGoods,
                 },
             }));
+            rareMineralsAccepted = cargoResult.accepted;
+            if (cargoResult.discarded > 0) {
+                get().addLog( i18nStore.t("game_logs.cargo_overflow", { discarded: cargoResult.discarded }), "warning");
+            }
         }
 
         for (const res of rewards.researchResources) {
+            const quantity =
+                res.type === "rare_minerals"
+                    ? rareMineralsAccepted
+                    : res.quantity;
+            if (quantity === 0) continue;
             const rd = RESEARCH_RESOURCES[res.type];
-            get().addLog( i18nStore.t("game_logs.collectExpeditionRewards_3", { value: rd?.icon ?? "", type: rd?.name ?? res.type, quantity: res.quantity }),
+            get().addLog( i18nStore.t("game_logs.collectExpeditionRewards_3", { value: rd?.icon ?? "", type: rd?.name ?? res.type, quantity }),
                 "info",
             );
         }

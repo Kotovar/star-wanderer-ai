@@ -92,12 +92,17 @@ function ContractDescription({
 }) {
     return (
         <>
-            {c.type === "delivery" && c.cargo &&
-                t("contracts.desc_delivery", {
-                    cargo: DELIVERY_GOODS[c.cargo as DeliveryGoods].name,
-                    amount: String(c.quantity ?? DELIVERY_CONTRACT_CARGO_AMOUNT),
-                    destination: getContractDestinationText(c, t) || "",
-                })}
+            {c.type === "delivery" && c.cargo && (
+                <>
+                    {t("contracts.desc_delivery", {
+                        cargo: DELIVERY_GOODS[c.cargo as DeliveryGoods].name,
+                        amount: String(c.quantity ?? DELIVERY_CONTRACT_CARGO_AMOUNT),
+                    })}
+                    <span className="ml-1">
+                        · {getContractDestinationText(c, t)}
+                    </span>
+                </>
+            )}
             {c.type === "combat" &&
                 t(
                     c.isRaceQuest ? "contracts.desc_combat_race" : "contracts.desc_combat",
@@ -203,6 +208,7 @@ function AvailableContractCard({
     const rawTitle = c.desc.startsWith("contracts.")
         ? t(c.desc, {
               planetType: c.planetType ? getPlanetTypeName(c.planetType, t) : "",
+              sector: c.targetSectorName ?? "",
           })
         : c.desc;
     const title = c.isRaceQuest ? stripLeadingEmoji(rawTitle) : rawTitle;
@@ -253,6 +259,11 @@ function AvailableContractCard({
                 <div className="text-[#00ff41]">
                     <ContractDescription contract={c} get={get} t={t} />
                 </div>
+                {c.timeLimit !== undefined && (
+                    <div className="text-[#ffb000]">
+                        ⏳ {t("contracts.turns_after_accept", { count: c.timeLimit })}
+                    </div>
+                )}
                 <div className="text-[#ffaa00] font-bold">💰 {c.reward}₢</div>
             </div>
         </div>

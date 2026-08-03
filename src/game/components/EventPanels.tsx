@@ -142,6 +142,30 @@ function MapToolbar({
   );
 }
 
+function FuelRecoveryHint({
+  available,
+  onCrewTasks,
+  t,
+}: {
+  available: boolean;
+  onCrewTasks: () => void;
+  t: (key: string) => string;
+}) {
+  if (!available) return null;
+
+  return (
+    <div className="mb-1 flex items-center justify-center gap-2 border border-[#ffb00077] bg-[rgba(255,176,0,0.08)] px-2 py-1 text-center text-[10px] text-[#ffb000]">
+      <span>{t("galaxy.labels.fuel_recovery")}</span>
+      <button
+        onClick={onCrewTasks}
+        className="cursor-pointer border border-[#ffb000] px-1.5 py-0.5 text-[9px] font-bold text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
+      >
+        {t("galaxy.buttons.crew_tasks")}
+      </button>
+    </div>
+  );
+}
+
 function buildTravelEventItems(
   t: (key: string) => string,
   eventType: TravelEventType,
@@ -159,6 +183,12 @@ export function EventDisplay() {
   const gameMode = useGameStore((s) => s.gameMode);
   const cinematicTimeline = useCombatCinematicUiStore((s) => s.timeline);
   const pendingRandomEvent = useGameStore((s) => s.pendingRandomEvent);
+  const keepDistressResultVisible = useGameStore(
+    (s) =>
+      s.gameMode === "distress_signal" &&
+      s.currentLocation?.type === "distress_signal" &&
+      Boolean(s.currentLocation.signalResolved),
+  );
   const traveling = useGameStore((s) => s.traveling);
   const pendingCrewPerkChoice = useGameStore(
     useShallow((s) => getPendingCrewPerkChoice(s.crew)),
@@ -188,6 +218,20 @@ export function EventDisplay() {
     );
     return s.ship.fuel < minCost;
   });
+  const canRecoverFuel = useGameStore(
+    (s) =>
+      s.ship.fuel === 0 &&
+      s.crew.some(
+        (member) => member.profession === "engineer" && member.health > 0,
+      ) &&
+      s.ship.modules.some(
+        (module) =>
+          module.type === "fueltank" &&
+          module.health > 0 &&
+          !module.disabled &&
+          !module.manualDisabled,
+      ),
+  );
   const { t, currentLanguage } = useTranslation();
 
   const [isSkipping, setIsSkipping] = useState(false);
@@ -200,7 +244,7 @@ export function EventDisplay() {
 
   if (cinematicTimeline) return <CombatPanel />;
 
-  if (pendingRandomEvent) {
+  if (pendingRandomEvent && !keepDistressResultVisible) {
     return <RandomEventPanel />;
   }
 
@@ -398,6 +442,11 @@ export function EventDisplay() {
             isSkipping={isSkipping}
             t={t}
           />
+          <FuelRecoveryHint
+            available={canRecoverFuel}
+            onCrewTasks={showAssignments}
+            t={t}
+          />
           <div className="flex-1 relative min-h-0">
             <GalaxyMap />
           </div>
@@ -416,6 +465,11 @@ export function EventDisplay() {
             onCrewTasks={showAssignments}
             onSkipTurn={handleSkipTurn}
             isSkipping={isSkipping}
+            t={t}
+          />
+          <FuelRecoveryHint
+            available={canRecoverFuel}
+            onCrewTasks={showAssignments}
             t={t}
           />
           <div className="flex-1 relative min-h-0">

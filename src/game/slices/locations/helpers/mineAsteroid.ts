@@ -262,8 +262,11 @@ export const mineAsteroid = (set: SetState, get: () => GameStore): void => {
 
     // Логирование результатов
     get().addLog( i18nStore.t("game_logs.mineAsteroid_8", { creditsGained }), "info");
-    if (rareGained > 0) get().addLog( i18nStore.t("game_logs.mineAsteroid_9", { rareGained }), "info");
-    get().addLog( i18nStore.t("game_logs.mineAsteroid_10", { mineralsGained }), "info");
+    if (addedRare > 0) get().addLog( i18nStore.t("game_logs.mineAsteroid_9", { rareGained: addedRare }), "info");
+    if (addedMinerals > 0) get().addLog( i18nStore.t("game_logs.mineAsteroid_10", { mineralsGained: addedMinerals }), "info");
+    if (totalAdded < totalGained) {
+        get().addLog( i18nStore.t("game_logs.cargo_overflow", { discarded: totalGained - totalAdded }), "warning");
+    }
 
     // Опыт инженеру
     const engineer = state.crew.find((c) => c.profession === "engineer");

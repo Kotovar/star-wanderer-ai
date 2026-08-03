@@ -9,6 +9,7 @@ import type {
     DerelictApproach,
     DistressApproach,
     ExpeditionScanMode,
+    SurfaceLogEntry,
     WreckApproach,
     WeaponType,
 } from "@/game/types";
@@ -102,7 +103,7 @@ export interface LocationsSlice {
     orbitalScan: (planetId: string) => void;
 
     /** Обрабатывает выбор игрока в событии разведки пустой планеты */
-    resolveScoutEvent: (choiceIndex: number) => void;
+    resolveScoutEvent: (choiceIndex: number) => SurfaceLogEntry | null;
 
     /**
      * Исследует покинутый корабль разведчиком
@@ -226,7 +227,7 @@ export const createLocationsSlice = (
     },
 
     resolveScoutEvent: (choiceIndex) => {
-        resolveScoutEventHelper(choiceIndex, set, get);
+        return resolveScoutEventHelper(choiceIndex, set, get);
     },
 
     exploreDerelictShip: (locationId, approach) => {

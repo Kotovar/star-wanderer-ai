@@ -3,7 +3,10 @@ import type { SetState, GameStore, PlanetType } from "@/game/types";
 import type { ResearchResourceType } from "@/game/types/research";
 import type { Goods } from "@/game/types/goods";
 import { RESEARCH_RESOURCES, TRADE_GOODS } from "@/game/constants";
-import { addTradeGood } from "@/game/slices/ship/helpers";
+import {
+    addTradeGoodWithinCapacity,
+    getFreeCargoSpace,
+} from "@/game/slices/ship/helpers";
 import { ENGINEER_DRILL_EXP } from "@/game/constants/experience";
 import { appendSurfaceLog } from "./sendScoutingMission";
 import { planetHasFeature } from "@/game/planets";
@@ -179,13 +182,24 @@ export const planetaryDrill = (
     if (yields.tradeGood) {
         const { id, qty } = yields.tradeGood;
         const goodName = TRADE_GOODS[id] ? i18nStore.t(`trade.goods.${id}`) : id;
+        const cargoResult = addTradeGoodWithinCapacity(
+            state.ship.tradeGoods,
+            id,
+            qty,
+            getFreeCargoSpace(state),
+        );
         set((s) => ({
             ship: {
                 ...s.ship,
-                tradeGoods: addTradeGood(s.ship.tradeGoods, id, qty),
+                tradeGoods: cargoResult.tradeGoods,
             },
         }));
-        get().addLog( i18nStore.t("game_logs.planetaryDrill_5", { goodName, qty }), "info");
+        if (cargoResult.accepted > 0) {
+            get().addLog( i18nStore.t("game_logs.planetaryDrill_5", { goodName, qty: cargoResult.accepted }), "info");
+        }
+        if (cargoResult.discarded > 0) {
+            get().addLog( i18nStore.t("game_logs.cargo_overflow", { discarded: cargoResult.discarded }), "warning");
+        }
     }
 
     // Применяем исследовательские ресурсы

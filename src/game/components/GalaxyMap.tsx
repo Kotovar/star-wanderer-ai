@@ -9,7 +9,7 @@ import {
     useSyncExternalStore,
 } from "react";
 import { useGameStore } from "../store";
-import type { Sector } from "@/game/types";
+import type { GameStore, Sector, TravelRoute } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
 import { useIsMobile } from "@/game/hooks/useIsMobile";
 import {
@@ -163,6 +163,66 @@ const OBJECTIVE_MARKERS: Record<
     final: { icon: "◎", color: "#ff00ff" },
 };
 
+type FuelTrapRisk = {
+    remainingFuel: number;
+    minimumFuel: number | null;
+};
+
+function getFuelTrapRisk(
+    state: GameStore,
+    targetSector: Sector,
+    route: TravelRoute,
+): FuelTrapRisk | null {
+    const canSynthesizeFuel =
+        Boolean(getActiveModule(state.ship.modules, "fueltank")) &&
+        state.crew.some(
+            (member) =>
+                member.profession === "engineer" && member.health > 0,
+        );
+    if (
+        canSynthesizeFuel ||
+        targetSector.locations.some((location) => location.type === "station")
+    ) {
+        return null;
+    }
+
+    const fuelCost =
+        calculateFuelCostForUI(state, targetSector.id).fuelCost +
+        (route === "detour" ? DETOUR_FUEL_COST : 0);
+    if (state.ship.fuel < fuelCost) return null;
+
+    const captainLevel =
+        getBestByProfession(state.crew, "pilot")?.level ?? 1;
+    const hasWarpDrive = state.research.researchedTechs.includes("warp_drive");
+    const departureState = {
+        ...state,
+        currentSector: targetSector,
+        traveling: null,
+    };
+    const departureCosts = state.galaxy.sectors
+        .filter(
+            (sector) =>
+                sector.id !== targetSector.id &&
+                (hasWarpDrive ||
+                    canAccessTier(
+                        sector.tier,
+                        state.ship.modules,
+                        captainLevel,
+                    )),
+        )
+        .map(
+            (sector) =>
+                calculateFuelCostForUI(departureState, sector.id).fuelCost,
+        );
+    const minimumFuel =
+        departureCosts.length > 0 ? Math.min(...departureCosts) : null;
+    const remainingFuel = state.ship.fuel - fuelCost;
+
+    return minimumFuel === null || remainingFuel < minimumFuel
+        ? { remainingFuel, minimumFuel }
+        : null;
+}
+
 function GalaxyStarIcon({ type }: { type: (typeof STAR_TYPES)[number] }) {
     return (
         <span
@@ -240,6 +300,13 @@ export function GalaxyMap() {
         sectorTier: number;
         rating: number;
         recommended: number;
+    } | null>(null);
+    const [fuelWarning, setFuelWarning] = useState<{
+        sectorId: number;
+        sectorName: string;
+        route: TravelRoute;
+        remainingFuel: number;
+        minimumFuel: number | null;
     } | null>(null);
     const [routeChoice, setRouteChoice] = useState<{
         sectorId: number;
@@ -380,6 +447,30 @@ export function GalaxyMap() {
         return calculateFuelCostForUI(state, sectorId).fuelCost;
     }, []);
 
+    const requestTravelTo = useCallback(
+        (sectorId: number, route: TravelRoute = "direct") => {
+            const state = useGameStore.getState();
+            const targetSector = state.galaxy.sectors.find(
+                (sector) => sector.id === sectorId,
+            );
+            if (!targetSector) return;
+
+            const risk = getFuelTrapRisk(state, targetSector, route);
+            if (risk) {
+                setFuelWarning({
+                    sectorId,
+                    sectorName: targetSector.name,
+                    route,
+                    ...risk,
+                });
+                return;
+            }
+
+            selectSector(sectorId, route);
+        },
+        [selectSector],
+    );
+
     // Перед многоходовым перелётом предлагаем выбрать маршрут
     const startTravelTo = useCallback(
         (sectorId: number, sectorName: string, sectorTier: number) => {
@@ -409,7 +500,7 @@ export function GalaxyMap() {
                 !hasWarpDrive && (turns > 0 || !!nebula);
 
             if (!needsRouteChoice) {
-                selectSector(sectorId);
+                requestTravelTo(sectorId);
                 return;
             }
 
@@ -421,7 +512,7 @@ export function GalaxyMap() {
                 nebulaId: nebula?.id,
             });
         },
-        [selectSector],
+        [requestTravelTo],
     );
 
     // Get set function from store to update sector positions
@@ -956,6 +1047,55 @@ export function GalaxyMap() {
             className="radar-viewport w-full h-full relative"
             data-animations={animationsEnabled ? "on" : "off"}
         >
+            {fuelWarning && (
+                <div
+                    role="alertdialog"
+                    aria-labelledby="fuel-warning-title"
+                    className="absolute left-2 right-2 top-14 z-30 mx-auto max-w-md border border-[#ff6a00] bg-[rgba(5,8,16,0.96)] p-3 shadow-[0_0_24px_rgba(255,106,0,0.18)]"
+                >
+                    <div
+                        id="fuel-warning-title"
+                        className="font-['Orbitron'] text-xs font-bold uppercase tracking-wider text-[#ff6a00]"
+                    >
+                        {t("galaxy_map_ui.fuel_trap.title")}
+                    </div>
+                    <div className="mt-2 text-xs text-[#b8b8b8]">
+                        {fuelWarning.minimumFuel === null
+                            ? t("galaxy_map_ui.fuel_trap.no_route", {
+                                  sector: fuelWarning.sectorName,
+                                  fuel: fuelWarning.remainingFuel,
+                              })
+                            : t("galaxy_map_ui.fuel_trap.description", {
+                                  sector: fuelWarning.sectorName,
+                                  fuel: fuelWarning.remainingFuel,
+                                  needed: fuelWarning.minimumFuel,
+                              })}
+                    </div>
+                    <div className="mt-2 border-l-2 border-[#ff6a0066] pl-2 text-[11px] leading-relaxed text-[#f0b27a]">
+                        {t("galaxy_map_ui.fuel_trap.no_station")}
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                        <button
+                            onClick={() => setFuelWarning(null)}
+                            className="cursor-pointer border border-[#687868] px-2 py-2 text-[10px] uppercase text-[#9aa59a] hover:border-[#00ff41] hover:text-[#00ff41]"
+                        >
+                            {t("common.cancel")}
+                        </button>
+                        <button
+                            onClick={() => {
+                                selectSector(
+                                    fuelWarning.sectorId,
+                                    fuelWarning.route,
+                                );
+                                setFuelWarning(null);
+                            }}
+                            className="cursor-pointer border border-[#ff6a00] px-2 py-2 text-[10px] uppercase text-[#ff6a00] hover:bg-[#ff6a00] hover:text-[#050810]"
+                        >
+                            {t("galaxy_map_ui.fuel_trap.continue")}
+                        </button>
+                    </div>
+                </div>
+            )}
             {dangerousJump && (
                 <div
                     role="alertdialog"
@@ -1072,7 +1212,7 @@ export function GalaxyMap() {
                         </button>
                         <button
                             onClick={() => {
-                                selectSector(routeChoice.sectorId, "direct");
+                                requestTravelTo(routeChoice.sectorId, "direct");
                                 setRouteChoice(null);
                             }}
                             className="cursor-pointer border border-[#ff4444] px-2 py-2 text-[10px] uppercase text-[#ff4444] hover:bg-[#ff4444] hover:text-white"
@@ -1081,7 +1221,7 @@ export function GalaxyMap() {
                         </button>
                         <button
                             onClick={() => {
-                                selectSector(routeChoice.sectorId, "detour");
+                                requestTravelTo(routeChoice.sectorId, "detour");
                                 setRouteChoice(null);
                             }}
                             className="cursor-pointer border border-[#00ff41] px-2 py-2 text-[10px] uppercase text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"

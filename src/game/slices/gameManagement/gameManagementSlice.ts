@@ -22,6 +22,7 @@ import {
 } from "@/sounds";
 import { resetMetaProgress } from "@/game/metaProgress/store";
 import type { RunProfileId } from "@/game/galaxy/runProfiles";
+import { loadPlayerSettings } from "../settings/playerSettings";
 
 const normalizeAudioSettings = (
     settings: Partial<GameState["settings"]> | undefined,
@@ -87,7 +88,7 @@ export const createGameManagementSlice = (
         }
 
         // Миграция настроек
-        saved.settings = normalizeAudioSettings(saved.settings);
+        saved.settings = loadPlayerSettings(normalizeAudioSettings(saved.settings));
         if (saved.gameLoadedCount === undefined) {
             saved.gameLoadedCount = 0;
         }
@@ -131,6 +132,7 @@ export const createGameManagementSlice = (
     saveToSlot: (slotId: ManualSlotId, name?: string) => {
         const state = get();
         saveSlot(slotId, state, name);
+        saveSlot("auto", state);
         get().addLog( i18nStore.t("game_logs.gameManagementSlice_2", { value: slotId.replace("manual", "") }), "info");
     },
 
@@ -143,7 +145,7 @@ export const createGameManagementSlice = (
         }
 
         // Миграция
-        saved.settings = normalizeAudioSettings(saved.settings);
+        saved.settings = loadPlayerSettings(normalizeAudioSettings(saved.settings));
         if (saved.gameLoadedCount === undefined) {
             saved.gameLoadedCount = 0;
         }

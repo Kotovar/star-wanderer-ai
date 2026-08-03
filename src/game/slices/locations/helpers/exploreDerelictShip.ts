@@ -8,7 +8,10 @@ import type {
     SetState,
 } from "@/game/types";
 import { MODULE_RECIPES } from "@/game/constants/crafting";
-import { addTradeGood } from "@/game/slices/ship/helpers";
+import {
+    addTradeGoodWithinCapacity,
+    getFreeCargoSpace,
+} from "@/game/slices/ship/helpers";
 import { patchLocation } from "@/game/utils/patchLocation";
 import { SCOUT_BASE_EXP } from "@/game/constants/experience";
 import type { ModuleRecipeId } from "@/game/types/crafting";
@@ -149,6 +152,27 @@ export const exploreDerelictShip = (
                           1),
               )
             : 0;
+    let cargoSpace = getFreeCargoSpace(state);
+    const sparesCargo = addTradeGoodWithinCapacity(
+        state.ship.tradeGoods,
+        "spares",
+        sparesQty,
+        cargoSpace,
+    );
+    cargoSpace -= sparesCargo.accepted;
+    const electronicsCargo = addTradeGoodWithinCapacity(
+        sparesCargo.tradeGoods,
+        "electronics",
+        electronicsQty,
+        cargoSpace,
+    );
+    cargoSpace -= electronicsCargo.accepted;
+    const rareMineralsCargo = addTradeGoodWithinCapacity(
+        electronicsCargo.tradeGoods,
+        "rare_minerals",
+        rareMineralsQty,
+        cargoSpace,
+    );
     const foundRecipe =
         approach === "boarding" && Math.random() < DERELICT_RECIPE_CHANCE
             ? pickUncollectedRecipe(state.moduleRecipes)
@@ -187,9 +211,15 @@ export const exploreDerelictShip = (
 
     const lootResult = {
         approach,
-        spares: sparesQty > 0 ? sparesQty : undefined,
-        electronics: electronicsQty > 0 ? electronicsQty : undefined,
-        rare_minerals: rareMineralsQty > 0 ? rareMineralsQty : undefined,
+        spares: sparesCargo.accepted > 0 ? sparesCargo.accepted : undefined,
+        electronics:
+            electronicsCargo.accepted > 0
+                ? electronicsCargo.accepted
+                : undefined,
+        rare_minerals:
+            rareMineralsCargo.accepted > 0
+                ? rareMineralsCargo.accepted
+                : undefined,
         ancient_data: ancientData > 0 ? ancientData : undefined,
         tech_salvage: techSalvage > 0 ? techSalvage : undefined,
         moduleRecipeId: foundRecipe ?? undefined,
@@ -200,21 +230,7 @@ export const exploreDerelictShip = (
     };
 
     set((s) => {
-        let newTradeGoods = s.ship.tradeGoods;
-        if (sparesQty > 0)
-            newTradeGoods = addTradeGood(newTradeGoods, "spares", sparesQty);
-        if (electronicsQty > 0)
-            newTradeGoods = addTradeGood(
-                newTradeGoods,
-                "electronics",
-                electronicsQty,
-            );
-        if (rareMineralsQty > 0)
-            newTradeGoods = addTradeGood(
-                newTradeGoods,
-                "rare_minerals",
-                rareMineralsQty,
-            );
+        const newTradeGoods = rareMineralsCargo.tradeGoods;
 
         const newResources = { ...s.research.resources };
         if (ancientData > 0)
@@ -275,17 +291,17 @@ export const exploreDerelictShip = (
 
     // Лог-сообщения
     const lootParts: string[] = [];
-    if (sparesQty > 0)
+    if (sparesCargo.accepted > 0)
         lootParts.push(
-            `${i18nStore.t("derelict_ship.loot_spares")} ×${sparesQty}`,
+            `${i18nStore.t("derelict_ship.loot_spares")} ×${sparesCargo.accepted}`,
         );
-    if (electronicsQty > 0)
+    if (electronicsCargo.accepted > 0)
         lootParts.push(
-            `${i18nStore.t("derelict_ship.loot_electronics")} ×${electronicsQty}`,
+            `${i18nStore.t("derelict_ship.loot_electronics")} ×${electronicsCargo.accepted}`,
         );
-    if (rareMineralsQty > 0)
+    if (rareMineralsCargo.accepted > 0)
         lootParts.push(
-            `${i18nStore.t("derelict_ship.loot_rare_minerals")} ×${rareMineralsQty}`,
+            `${i18nStore.t("derelict_ship.loot_rare_minerals")} ×${rareMineralsCargo.accepted}`,
         );
     if (ancientData > 0)
         lootParts.push(
@@ -304,6 +320,14 @@ export const exploreDerelictShip = (
         get().addLog( i18nStore.t("game_logs.exploreDerelictShip_5", { scout_name: scout.name }),
             "info",
         );
+    }
+
+    const discardedCargo =
+        sparesCargo.discarded +
+        electronicsCargo.discarded +
+        rareMineralsCargo.discarded;
+    if (discardedCargo > 0) {
+        get().addLog( i18nStore.t("game_logs.cargo_overflow", { discarded: discardedCargo }), "warning");
     }
 
     if (foundRecipe) {

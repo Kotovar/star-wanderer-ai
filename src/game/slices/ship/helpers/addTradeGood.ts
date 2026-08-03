@@ -18,3 +18,20 @@ export const addTradeGood = (
     }
     return [...tradeGoods, { item, quantity, buyPrice }];
 };
+
+export const addTradeGoodWithinCapacity = (
+    tradeGoods: TradeGood[],
+    item: Goods,
+    quantity: number,
+    availableSpace: number,
+    buyPrice = 0,
+) => {
+    const accepted = Math.max(0, Math.min(quantity, availableSpace));
+    return {
+        tradeGoods: accepted
+            ? addTradeGood(tradeGoods, item, accepted, buyPrice)
+            : tradeGoods,
+        accepted,
+        discarded: Math.max(0, quantity - accepted),
+    };
+};
