@@ -179,10 +179,14 @@ export const generateGalaxy = (profile: RunProfile | null = null): Sector[] => {
             }
         }
 
-        if (profile.stationAnchorsByTier) {
-            ensureStationAnchors(sectors, profile.stationAnchorsByTier);
-        }
     }
+
+    ensureStationAnchors(sectors, profile?.stationAnchorsByTier ?? {
+        1: 2,
+        2: 2,
+        3: 2,
+        4: 2,
+    });
 
     // Гарантируем верфь и медицинскую станцию в каждом тире
     ensureStationTypes(sectors, 1);

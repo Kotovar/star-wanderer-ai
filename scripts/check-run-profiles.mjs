@@ -41,7 +41,7 @@ registerHooks({
 
 const { RUN_PROFILES } = await import("../src/game/galaxy/runProfiles.ts");
 const { generateGalaxy } = await import("../src/game/galaxy/generateGalaxy.ts");
-const { ensureDiplomaticStation, ensureStationTypes } = await import("../src/game/galaxy/ensure.ts");
+const { ensureDiplomaticStation, ensureStationAnchors, ensureStationTypes } = await import("../src/game/galaxy/ensure.ts");
 const { loadWithMigrations } = await import("../src/game/saves/migrations.ts");
 
 const count = (sectors, type) => sectors.flatMap((sector) => sector.locations).filter((location) => location.type === type).length;
@@ -69,6 +69,20 @@ const makeTier1Anchors = (stationType) => [0, 1, 2].map((id) => ({
   star: { type: "red_dwarf", name: "star_types.red_dwarf" },
   locations: [{ id: `${id}-station`, type: "station", stationType }],
 }));
+const makeTier4ServiceFixture = () => [
+  {
+    id: 39,
+    tier: 4,
+    star: { type: "red_dwarf", name: "star_types.red_dwarf" },
+    locations: [{ id: "39-station", type: "station", stationType: "trade" }],
+  },
+  ...[40, 41].map((id) => ({
+    id,
+    tier: 4,
+    star: { type: "blackhole", name: "star_types.blackhole" },
+    locations: [],
+  })),
+];
 
 const baselineStart = withConstantRandom(0.6, () => generateGalaxy()[0]);
 const warStart = withConstantRandom(0.6, () => generateGalaxy(RUN_PROFILES.war_spiral)[0]);
@@ -88,6 +102,18 @@ for (const stationType of ["shipyard", "medical"]) {
     `broken_trade_lanes: ${stationType}-only anchors must provide all tier-1 services`,
   );
 }
+
+const tier4Services = makeTier4ServiceFixture();
+ensureStationAnchors(tier4Services, { 4: 2 });
+ensureStationTypes(tier4Services, 4);
+assert.deepEqual(
+  tier4Services[0].locations
+    .filter((location) => location.type === "station")
+    .map((location) => location.stationType)
+    .sort(),
+  ["medical", "shipyard"],
+  "tier 4: one eligible sector must retain both service stations",
+);
 
 for (const profile of Object.values(RUN_PROFILES)) {
   for (let run = 0; run < 12; run += 1) {

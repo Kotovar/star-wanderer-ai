@@ -109,12 +109,15 @@ export const ensureColonizedPlanet = (sector: Sector): void => {
  * Обеспечивает наличие хотя бы одной станции
  * Доминирующая раса на станции выбирается на основе рас планет в секторе
  */
-export const ensureStation = (sector: Sector): void => {
+export const ensureStation = (
+    sector: Sector,
+    minimumCount = MIN_REQUIREMENTS.stations,
+): void => {
     const stationCount = sector.locations.filter(
         (l) => l.type === "station",
     ).length;
 
-    if (stationCount >= MIN_REQUIREMENTS.stations) return;
+    if (stationCount >= minimumCount) return;
 
     const stationType =
         STATION_TYPES[Math.floor(Math.random() * STATION_TYPES.length)];
@@ -136,8 +139,8 @@ export const ensureStation = (sector: Sector): void => {
     }
 
     sector.locations.push({
-        id: `${sector.id}-extra-station`,
-        stationId: `station-${sector.id}-extra`,
+        id: `${sector.id}-extra-station${stationCount ? `-${stationCount}` : ""}`,
+        stationId: `station-${sector.id}-extra${stationCount ? `-${stationCount}` : ""}`,
         type: "station",
         name: `Станция ${String.fromCharCode(65 + (sector.locations.length % 26))}`,
         stationType,
@@ -156,16 +159,22 @@ export const ensureStationAnchors = (
         const eligible = sectors.filter(
             (sector) => sector.tier === tier && sector.star.type !== "blackhole",
         );
+        if (!eligible.length) continue;
         while (
             eligible.flatMap((sector) => sector.locations).filter(
                 (location) => location.type === "station",
             ).length < required
         ) {
-            const target = eligible.find(
-                (sector) => !sector.locations.some((location) => location.type === "station"),
+            const target = eligible.reduce((leastStations, sector) =>
+                sector.locations.filter((location) => location.type === "station").length <
+                leastStations.locations.filter((location) => location.type === "station").length
+                    ? sector
+                    : leastStations,
             );
-            if (!target) break;
-            ensureStation(target);
+            const stationCount = target.locations.filter(
+                (location) => location.type === "station",
+            ).length;
+            ensureStation(target, stationCount + 1);
         }
     }
 };
