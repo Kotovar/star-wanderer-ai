@@ -847,6 +847,7 @@
         "cargo": "Cargo",
         "close": "CLOSE",
         "ready_badge": "✓ READY",
+        "completion_title": "✓ Contract completed",
         "completed_count": "COMPLETED",
         "location_planet": "planet",
         "location_station": "station",
@@ -2221,6 +2222,7 @@
             "stars_section": "STAR TYPES",
             "fuel_enough": "enough fuel",
             "fuel_low": "low fuel",
+            "station_marker": "station in system",
             "visited": "visited",
             "current_sector": "current sector",
             "tier_unknown": "what if there's more out there?.."
@@ -3786,8 +3788,8 @@
         },
         "fuel_trap": {
             "title": "Stranding risk",
-            "description": "After jumping to “{{sector}}”, {{fuel}} fuel will remain. The next available jump needs at least {{needed}}.",
-            "no_route": "After jumping to “{{sector}}”, {{fuel}} fuel will remain and no further route is available.",
+            "description": "After jumping to “{{sector}}”, {{fuel}} fuel will remain. Reaching the nearest accessible station needs at least {{needed}}.",
+            "no_route": "After jumping to “{{sector}}”, {{fuel}} fuel will remain and no accessible refuelling station exists.",
             "no_station": "There is no station in this system and no one can synthesize fuel in the tank. This may end the run.",
             "continue": "Jump anyway"
         }

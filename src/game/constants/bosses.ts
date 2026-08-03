@@ -413,7 +413,7 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
   },
 
   // ═══════════════════════════════════════════════════════════
-  // TIER 3 BOSSES (3 variants)
+  // TIER 3 BOSSES (4 variants; Void Oracle is reserved for Tier 4)
   // ═══════════════════════════════════════════════════════════
 
   // Tier 3 Boss - Void Oracle
@@ -667,6 +667,84 @@ export const ANCIENT_BOSSES: AncientBoss[] = [
       effect: "self_heal",
       // value для self_heal — это ШАНС в процентах (лечение фиксировано 50).
       value: 40,
+    },
+    guaranteedArtifactRarity: "mythic",
+  },
+
+  // Tier 3 Boss - Gravity Archon
+  {
+    id: "gravity_archon",
+    name: "🪐 Архонт Гравитации",
+    bossType: "destroyer",
+    description:
+      "Осадная машина Древних, которая сжимает пространство вокруг цели и ломает её защиту массой собственного поля.",
+    lore: "В старых журналах спасательных кораблей его называют не судном, а движущейся орбитой. Те, кто успел уйти, вспоминают, что двигатели замолчали раньше, чем приборы показали перегрузку.",
+    tier: 3,
+    modules: [
+      {
+        type: "gravity_core",
+        name: "Гравитационное Ядро",
+        health: 230,
+        defense: 10,
+        isAncient: true,
+        specialEffect: { type: "regen", value: 20 },
+        description: "Восстанавливает 20% здоровья каждый ход",
+      },
+      {
+        type: "tidal_lance",
+        name: "Приливное Копьё",
+        health: 105,
+        damage: 52,
+        isAncient: true,
+        specialEffect: { type: "ignore_defense", value: 100 },
+        description: "Игнорирует всю защиту",
+      },
+      {
+        type: "compression_field",
+        name: "Поле Сжатия",
+        health: 170,
+        defense: 12,
+        isAncient: true,
+        specialEffect: { type: "turn_skip", value: 20 },
+        description: "20% шанс пропустить ход противника",
+      },
+      {
+        type: "singularity_well",
+        name: "Колодец Сингулярности",
+        health: 100,
+        damage: 30,
+        isAncient: true,
+        specialEffect: { type: "damage_aura", value: 14 },
+        description: "Наносит 14 урона модулям каждый ход",
+      },
+      {
+        type: "mass_driver",
+        name: "Масс-драйвер",
+        health: 120,
+        damage: 45,
+        isAncient: true,
+        specialEffect: { type: "multi_hit", value: 2 },
+        description: "Атакует 2 раза за ход",
+      },
+      {
+        type: "shield",
+        name: "Орбитальный Щит",
+        health: 150,
+        defense: 10,
+        isAncient: true,
+        shieldContribution: 190,
+        regenContribution: 16,
+        description: "Даёт 190 щитов, +16 рег./ход",
+      },
+    ],
+    shields: 190,
+    regenRate: 23,
+    specialAbility: {
+      name: "Приливный Удар",
+      description: "Каждый ход наносит 18 урона всем модулям противника",
+      trigger: "every_turn",
+      effect: "aoe_damage",
+      value: 18,
     },
     guaranteedArtifactRarity: "mythic",
   },

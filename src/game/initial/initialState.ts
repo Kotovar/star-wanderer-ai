@@ -174,6 +174,7 @@ const baseState: GameState = {
   galaxy: { sectors, nebulae },
   activeContracts: [],
   completedContractIds: [],
+  pendingContractCompletions: [],
   shipQuestsTaken: [],
   completedLocations: [],
   knownTradeStations: [],

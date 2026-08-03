@@ -36,6 +36,7 @@ export function completeBattleContracts(
             completedContractIds: [...s.completedContractIds, c.id],
             activeContracts: s.activeContracts.filter((ac) => ac.id !== c.id),
         }));
+        get().showContractCompletion(c);
     });
 
     // Krylorian race combat contracts (defeat ALL non-boss enemies in target sector)
@@ -74,6 +75,7 @@ export function completeBattleContracts(
                         (ac) => ac.id !== c.id,
                     ),
                 }));
+                get().showContractCompletion(c);
             } else {
                 get().addLog( i18nStore.t("game_logs.completeBattleContracts_3", { remainingEnemies_length: remainingEnemies.length }),
                     "info",
@@ -106,5 +108,6 @@ export function completeBattleContracts(
             completedContractIds: [...s.completedContractIds, c.id],
             activeContracts: s.activeContracts.filter((ac) => ac.id !== c.id),
         }));
+        get().showContractCompletion(c);
     });
 }

@@ -27,6 +27,7 @@ export const completeDeliveryContract = (
         activeContracts: s.activeContracts.filter((c) => c.id !== contractId),
         completedContractIds: [...s.completedContractIds, contractId],
     }));
+    get().showContractCompletion(contract);
     get().addLog( i18nStore.t("game_logs.completeDeliveryContract_1", { reward: contract.reward }), "info");
 
     // Give experience to all crew members

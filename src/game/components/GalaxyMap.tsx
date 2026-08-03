@@ -23,6 +23,10 @@ import {
     getSectorRadius,
     type GalaxyMapObjective,
 } from "@/game/galaxy/galaxy-map-utils";
+import {
+    getFuelTrapRisk as getFuelTrapRiskFromDepartures,
+    type FuelTrapRisk,
+} from "@/game/galaxy/fuelTrapRisk";
 import { findRouteNebula } from "@/game/galaxy/nebulae";
 import { getBestByProfession } from "@/game/crew";
 import { getActiveModule } from "@/game/modules/utils";
@@ -163,11 +167,6 @@ const OBJECTIVE_MARKERS: Record<
     final: { icon: "◎", color: "#ff00ff" },
 };
 
-type FuelTrapRisk = {
-    remainingFuel: number;
-    minimumFuel: number | null;
-};
-
 function getFuelTrapRisk(
     state: GameStore,
     targetSector: Sector,
@@ -199,7 +198,7 @@ function getFuelTrapRisk(
         currentSector: targetSector,
         traveling: null,
     };
-    const departureCosts = state.galaxy.sectors
+    const departureOptions = state.galaxy.sectors
         .filter(
             (sector) =>
                 sector.id !== targetSector.id &&
@@ -210,17 +209,15 @@ function getFuelTrapRisk(
                         captainLevel,
                     )),
         )
-        .map(
-            (sector) =>
-                calculateFuelCostForUI(departureState, sector.id).fuelCost,
-        );
-    const minimumFuel =
-        departureCosts.length > 0 ? Math.min(...departureCosts) : null;
+        .map((sector) => ({
+            hasStation: sector.locations.some(
+                (location) => location.type === "station",
+            ),
+            fuelCost: calculateFuelCostForUI(departureState, sector.id).fuelCost,
+        }));
     const remainingFuel = state.ship.fuel - fuelCost;
 
-    return minimumFuel === null || remainingFuel < minimumFuel
-        ? { remainingFuel, minimumFuel }
-        : null;
+    return getFuelTrapRiskFromDepartures(remainingFuel, departureOptions);
 }
 
 function GalaxyStarIcon({ type }: { type: (typeof STAR_TYPES)[number] }) {
@@ -1432,6 +1429,10 @@ export function GalaxyMap() {
                                         <div className="flex items-center gap-1.5">
                                             <span style={{ color: "#ff0040" }} className="font-mono font-bold">⛽12</span>
                                             <span>{t("galaxy.legend.fuel_low")}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span style={{ color: "#ffb000" }} className="font-mono font-bold">⌂</span>
+                                            <span>{t("galaxy.legend.station_marker")}</span>
                                         </div>
                                     </div>
                                     <div className="space-y-0.5">

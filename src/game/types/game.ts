@@ -121,6 +121,7 @@ export interface GameState {
   };
   activeContracts: Contract[];
   completedContractIds: string[]; // IDs of completed contracts to prevent retaking
+  pendingContractCompletions: Contract[]; // Очередь результатов успешно выполненных контрактов
   shipQuestsTaken: string[]; // IDs of ships where quest was taken
   hiredCrewFromShips: string[]; // IDs of friendly ships where crew was hired
   distressRespondedShips: string[]; // IDs of distress ships that have been helped
@@ -322,6 +323,8 @@ export interface GameContracts {
   acceptContract: (contract: Contract) => boolean;
   completeDeliveryContract: (contractId: string) => void;
   cancelContract: (contractId: string) => void;
+  showContractCompletion: (contract: Contract) => void;
+  dismissContractCompletion: () => void;
 }
 
 export interface GameModule {

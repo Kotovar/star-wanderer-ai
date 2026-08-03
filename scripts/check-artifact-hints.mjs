@@ -15,6 +15,11 @@ const { getArchiveHintLocations, getArtifactEffectValue } = jiti(
 const { ANCIENT_ARTIFACTS } = jiti("../src/game/constants/artifacts.ts");
 const { loadWithMigrations } = jiti("../src/game/saves/migrations.ts");
 
+assert.ok(
+  ANCIENT_ARTIFACTS.every((artifact) => !/^\p{Extended_Pictographic}/u.test(artifact.name)),
+  "названия артефактов не должны дублировать иконку эффекта в карточке",
+);
+
 const sectors = [
     {
       id: 1,

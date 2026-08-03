@@ -65,6 +65,7 @@ export const handleResearchContract = (
 
     if (!updatedContract) {
         // Contract completed - show completion message
+        get().showContractCompletion(contract);
         get().addLog( i18nStore.t("game_logs.handleResearchContract_2", {
             desc: formatContractDescription(contract, i18nStore.t.bind(i18nStore)),
             reward: contract.reward,

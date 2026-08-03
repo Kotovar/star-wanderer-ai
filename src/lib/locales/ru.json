@@ -847,6 +847,7 @@
         "cargo": "Груз",
         "close": "ЗАКРЫТЬ",
         "ready_badge": "✓ ГОТОВО",
+        "completion_title": "✓ Задание выполнено",
         "completed_count": "ВЫПОЛНЕНО",
         "location_planet": "планете",
         "location_station": "станции",
@@ -2221,6 +2222,7 @@
             "stars_section": "ТИПЫ ЗВЁЗД",
             "fuel_enough": "топлива хватит",
             "fuel_low": "мало топлива",
+            "station_marker": "станция в системе",
             "visited": "посещён",
             "current_sector": "текущий сектор",
             "tier_unknown": "а вдруг есть что-то ещё?.."
@@ -3786,8 +3788,8 @@
         },
         "fuel_trap": {
             "title": "Риск застрять",
-            "description": "После прыжка в «{{sector}}» останется {{fuel}} ед. топлива. Для следующего доступного прыжка нужно не меньше {{needed}}.",
-            "no_route": "После прыжка в «{{sector}}» останется {{fuel}} ед. топлива, а доступного маршрута дальше нет.",
+            "description": "После прыжка в «{{sector}}» останется {{fuel}} ед. топлива. Для прыжка до ближайшей доступной станции нужно не меньше {{needed}}.",
+            "no_route": "После прыжка в «{{sector}}» останется {{fuel}} ед. топлива, а доступной станции для дозаправки нет.",
             "no_station": "В системе нет станции и некому синтезировать топливо в баке. Это может завершить забег.",
             "continue": "Прыгнуть всё равно"
         }
@@ -5119,9 +5121,9 @@
         "processArtifactEffects_7": "💥 Бонус к урону: +{{damageBoost}}%",
         "processArtifactEffects_8": "🎯 Бонус к точности: +{{accuracyBoost}}%",
         "processArtifactEffects_9": "⚡ Шанс крита: {{critChance}}%",
-        "processArtifactEffects_10": "📡 Реликт Наблюдателей: +{{scanBonus}} к дальности",
-        "processArtifactEffects_11": "👁️ Око Сингулярности: все враги видны",
-        "processArtifactEffects_12": "🌀 Вакуумный Двигатель: бесплатные перелёты",
+        "processArtifactEffects_10": "Реликт Наблюдателей: +{{scanBonus}} к дальности",
+        "processArtifactEffects_11": "Око Сингулярности: все враги видны",
+        "processArtifactEffects_12": "Вакуумный Двигатель: бесплатные перелёты",
         "processArtifactEffects_13": "⚡ Варп-Катушка: мгновенные перемещения",
         "processArtifactEffects_14": "💖 Кристалл Жизни: экипаж бессмертен",
         "processArtifactEffects_15": "🧬 Биосфера Древних: экипаж не умирает",

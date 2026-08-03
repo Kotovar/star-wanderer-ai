@@ -34,6 +34,13 @@ const SurvivorModal = dynamic(
   () => import("@/game/components/SurvivorModal").then((m) => m.SurvivorModal),
   { ssr: false },
 );
+const ContractCompletionModal = dynamic(
+  () =>
+    import("@/game/components/ContractCompletionModal").then(
+      (m) => m.ContractCompletionModal,
+    ),
+  { ssr: false },
+);
 const WelcomeTutorial = dynamic(
   () => import("@/game/components/WelcomeTutorial").then((m) => m.WelcomeTutorial),
   { ssr: false },
@@ -525,6 +532,7 @@ export default function Home() {
           <RaceDiscoveryModal />
           <TechnologyDiscoveryModal />
           <SurvivorModal />
+          <ContractCompletionModal />
           <WelcomeTutorial
             forceShow={showTutorial}
             onDismissed={() => setShowTutorial(false)}

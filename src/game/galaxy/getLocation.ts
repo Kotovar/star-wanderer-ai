@@ -9,7 +9,6 @@ import {
 import {
     generateAnomaly,
     generateAsteroidBelt,
-    generateBossOrAnomaly,
     generateDerelictShip,
     generateDistressSignal,
     generateEnemyShip,
@@ -138,10 +137,7 @@ export const generateLocation = (
         case "wreck_field":
             return generateWreckField(sectorIdx, locIdx, tier);
         case "boss":
-            if (sectorIdx === 0) {
-                return generateAnomaly(sectorIdx, locIdx, tier, isBlackHole);
-            }
-            return generateBossOrAnomaly(sectorIdx, locIdx, tier, isBlackHole);
+            return generateAnomaly(sectorIdx, locIdx, tier, isBlackHole);
         case "anomaly":
         default:
             return generateAnomaly(sectorIdx, locIdx, tier, isBlackHole);

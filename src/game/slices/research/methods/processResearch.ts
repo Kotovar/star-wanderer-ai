@@ -122,6 +122,7 @@ const handleResearchCompletion = (
         }));
         const expReward = CONTRACT_REWARDS.research.baseExp;
         synthContracts.forEach((contract) => {
+            get().showContractCompletion(contract);
             giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
             get().addLog( i18nStore.t("game_logs.processResearch_3", { reward: contract.reward }),
                 "info",

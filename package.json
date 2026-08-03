@@ -53,6 +53,7 @@
     "check:derelict": "node --no-warnings --experimental-strip-types scripts/check-derelict-approaches.mjs",
     "check:scanner-tooltips": "node scripts/check-scanner-tooltips.mjs",
     "check:galaxy-map-hud": "node --no-warnings --experimental-strip-types scripts/check-galaxy-map-hud.mjs",
+    "check:fuel-trap-warning": "node --no-warnings scripts/check-fuel-trap-warning.mjs",
     "check:fuel-efficiency": "node scripts/check-fuel-efficiency.mjs",
     "check:crises": "node --no-warnings --experimental-strip-types scripts/check-crisis-escalation.mjs",
     "check:meta-progress": "node --no-warnings --experimental-strip-types scripts/check-meta-progress.mjs"

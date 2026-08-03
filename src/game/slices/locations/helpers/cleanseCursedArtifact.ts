@@ -53,6 +53,8 @@ export const cleanseCursedArtifact = (
         activeContracts: s.activeContracts.filter((c) => c.id !== contract.id),
     }));
 
+    get().showContractCompletion(contract);
+
     get().addLog(
         i18nStore.t("game_logs.cleanseCursedArtifact_3", {
             artifact_name: artifact.name,

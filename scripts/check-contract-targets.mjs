@@ -455,10 +455,22 @@ assert.equal(
   "📡 Сканирование: Ледяная",
   "описание контракта не передаёт параметры перевода",
 );
+assert.equal(
+  formatContractDescription(
+    {
+      desc: "contracts.derelict_recovery_pending",
+      targetSectorName: "Кассиопея-2",
+    },
+    (_key, params) => `Дереликт: ${params?.sector}`,
+  ),
+  "Дереликт: Кассиопея-2",
+  "описание дереликта должно показывать целевой сектор",
+);
 
 let derelictState = {
   credits: 10,
   completedContractIds: [],
+  pendingContractCompletions: [],
   activeContracts: [
     {
       id: "derelict-target",
@@ -485,6 +497,15 @@ let derelictState = {
 const derelictReputationChanges = [];
 const derelictGet = () => ({
   ...derelictState,
+  showContractCompletion: (contract) => {
+    derelictState = {
+      ...derelictState,
+      pendingContractCompletions: [
+        ...derelictState.pendingContractCompletions,
+        contract,
+      ],
+    };
+  },
   addLog: () => undefined,
   changeReputation: (raceId, amount) =>
     derelictReputationChanges.push([raceId, amount]),
@@ -512,6 +533,11 @@ assert.deepEqual(
     ["synthetic", 2],
   ],
   "derelict_recovery: репутация заказчика не обновлена",
+);
+assert.deepEqual(
+  derelictState.pendingContractCompletions.map((contract) => contract.id),
+  ["derelict-target", "derelict-same-target"],
+  "derelict_recovery: выполненные контракты должны попасть в очередь результата",
 );
 handleDerelictRecoveryContracts("1-3", derelictSet, derelictGet);
 assert.equal(
@@ -547,7 +573,11 @@ let miningState = {
     },
   ],
 };
-const miningGet = () => ({ ...miningState, addLog: () => undefined });
+const miningGet = () => ({
+  ...miningState,
+  showContractCompletion: () => undefined,
+  addLog: () => undefined,
+});
 const miningSet = (updater) => {
   miningState = { ...miningState, ...updater(miningState) };
 };

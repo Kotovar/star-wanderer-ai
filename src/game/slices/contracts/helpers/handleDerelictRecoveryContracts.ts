@@ -32,6 +32,7 @@ export const handleDerelictRecoveryContracts = (
     }));
 
     ready.forEach((contract) => {
+        get().showContractCompletion(contract);
         get().addLog(
             i18nStore.t("game_logs.completeDerelictRecoveryContracts_1", {
                 reward: contract.reward,

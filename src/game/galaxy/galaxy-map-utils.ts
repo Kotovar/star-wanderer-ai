@@ -380,7 +380,7 @@ function drawSectorText(
     ) {
         ctx.font = `${fuelFontSize}px Share Tech Mono`;
         ctx.fillStyle = "#ffb000";
-        ctx.fillText("⛽", x + (isMobile ? 11 : 20), y - checkOffsetY);
+        ctx.fillText("⌂", x + (isMobile ? 11 : 20), y - checkOffsetY);
     }
 
     ctx.font = `${isCurrent ? "bold " : ""}${nameFontSize}px Share Tech Mono`;

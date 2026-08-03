@@ -607,6 +607,7 @@ export const handlePatrolContracts = (
         if (visitedTargetCount >= targetSectors.length) {
             completedIds.push(c.id);
             totalReward += c.reward;
+            getState().showContractCompletion(c);
 
             getState().addLog( i18nStore.t("game_logs.processTravel_24", { reward: c.reward }),
                 "info",

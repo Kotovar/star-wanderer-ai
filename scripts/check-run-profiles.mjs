@@ -43,6 +43,7 @@ const { RUN_PROFILES } = await import("../src/game/galaxy/runProfiles.ts");
 const { generateGalaxy } = await import("../src/game/galaxy/generateGalaxy.ts");
 const { ensureDiplomaticStation, ensureStationAnchors, ensureStationTypes } = await import("../src/game/galaxy/ensure.ts");
 const { loadWithMigrations } = await import("../src/game/saves/migrations.ts");
+const { ANCIENT_BOSSES } = await import("../src/game/constants/bosses.ts");
 const ru = (await import("../src/lib/locales/ru.json")).default;
 const en = (await import("../src/lib/locales/en.json")).default;
 
@@ -55,6 +56,11 @@ const tierLocations = (sectors, tier, type) =>
   sectors.filter((sector) => sector.tier === tier)
     .flatMap((sector) => sector.locations)
     .filter((location) => location.type === type).length;
+const normalTierBosses = (sectors, tier) =>
+  sectors
+    .filter((sector) => sector.tier === tier && sector.star.type !== "blackhole")
+    .flatMap((sector) => sector.locations)
+    .filter((location) => location.type === "boss");
 
 const withConstantRandom = (value, callback) => {
   const originalRandom = Math.random;
@@ -124,6 +130,15 @@ for (const profile of Object.values(RUN_PROFILES)) {
     assert.ok(sectors.filter((sector) => sector.star.type === "blackhole").length >= 2);
     assert.equal(count(sectors, "boss") && sectors.flatMap((s) => s.locations).filter((l) => l.bossId === "void_oracle").length, 1);
     assert.equal(sectors.flatMap((s) => s.locations).filter((l) => l.bossId === "the_eternal").length, 1);
+    for (const tier of [1, 2, 3]) {
+      const bosses = normalTierBosses(sectors, tier);
+      assert.equal(bosses.length, tier, `${profile.id}: normal boss count must grow from T1 to T3`);
+      assert.ok(
+        bosses.every((boss) => ANCIENT_BOSSES.find((definition) => definition.id === boss.bossId)?.tier === tier),
+        `${profile.id}: every normal boss must match its sector tier`,
+      );
+      assert.equal(new Set(bosses.map((boss) => boss.bossId)).size, bosses.length);
+    }
     for (const tier of [1, 2, 3, 4]) {
       assert.ok(hasStation(sectors, tier, "shipyard"), `${profile.id}: tier ${tier} needs repair`);
       assert.ok(hasStation(sectors, tier, "medical"), `${profile.id}: tier ${tier} needs healing`);
@@ -148,7 +163,7 @@ for (const profile of Object.values(RUN_PROFILES)) {
     }
 
     if (profile.id === "broken_trade_lanes") {
-      const expectedStations = { 1: 3, 2: 2, 3: 2, 4: 2 };
+      const expectedStations = { 1: 4, 2: 3, 3: 3, 4: 2 };
       for (const [tier, expected] of Object.entries(expectedStations)) {
         assert.equal(tierLocations(sectors, Number(tier), "station"), expected);
       }

@@ -156,6 +156,7 @@ export const completeMiningContracts = (
     }));
 
     ready.forEach((contract) => {
+        get().showContractCompletion(contract);
         get().addLog( i18nStore.t("game_logs.tryFindArtifact_1", { reward: contract.reward }), "info");
     });
 };

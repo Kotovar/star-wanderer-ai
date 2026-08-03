@@ -66,6 +66,8 @@ export const completeScanContracts = (
             ),
         }));
 
+        get().showContractCompletion(c);
+
         get().addLog( i18nStore.t("game_logs.completeScanContracts_1", {
             desc: formatContractDescription(c, i18nStore.t.bind(i18nStore)),
             reward: c.reward,

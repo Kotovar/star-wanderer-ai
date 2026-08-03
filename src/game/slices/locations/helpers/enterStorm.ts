@@ -439,6 +439,7 @@ export const handleStormEntry = (set: SetState, get: () => GameStore): void => {
 
         const expReward = CONTRACT_REWARDS.rescue.baseExp;
         rescueContracts.forEach((contract) => {
+            get().showContractCompletion(contract);
             get().addLog( i18nStore.t("game_logs.enterStorm_5", { reward: contract.reward }),
                 "info",
             );

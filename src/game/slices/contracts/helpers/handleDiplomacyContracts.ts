@@ -52,4 +52,5 @@ export const handleDiplomacyContracts = (
             (ac) => ac.id !== diplomacyContract.id,
         ),
     }));
+    get().showContractCompletion(diplomacyContract);
 };

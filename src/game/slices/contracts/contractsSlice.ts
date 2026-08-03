@@ -36,6 +36,9 @@ export interface ContractsSlice {
      */
     cancelContract: (contractId: string) => void;
 
+    showContractCompletion: (contract: Contract) => void;
+    dismissContractCompletion: () => void;
+
     /**
      * Обрабатывает сканирование планеты при посещении локации
      */
@@ -79,6 +82,22 @@ export const createContractsSlice = (
     set: SetState,
     get: () => GameStore,
 ): ContractsSlice => ({
+    showContractCompletion: (contract) => {
+        set((state) => ({
+            pendingContractCompletions: [
+                ...state.pendingContractCompletions,
+                contract,
+            ],
+        }));
+    },
+
+    dismissContractCompletion: () => {
+        set((state) => ({
+            pendingContractCompletions:
+                state.pendingContractCompletions.slice(1),
+        }));
+    },
+
     processScanContracts: () => {
         const state = get();
         const result = processScanContractsFn(state);

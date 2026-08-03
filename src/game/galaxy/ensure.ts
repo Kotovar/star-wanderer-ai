@@ -1,5 +1,5 @@
 import { PLANET_TYPES } from "@/game/constants/planets";
-import type { GalaxyTierAll, Sector } from "@/game/types";
+import type { GalaxyTierAll, GalaxyTierBase, Sector } from "@/game/types";
 import { bossDistribution } from "./bossDistribution";
 import { ANOMALY_COLORS, MIN_REQUIREMENTS, STATION_CONFIG } from "./config";
 import { STATION_TYPES } from "./consts";
@@ -30,38 +30,37 @@ export const ensureMinAnomalies = (
 };
 
 /**
- * Обеспечивает наличие гарантированных боссов по тирам
- * - Тир 1: 1 случайный босс 1 тира
- * - Тир 2: 1 случайный босс 2 тира
+ * Размещает уникальных обычных боссов после формирования чёрных дыр.
  */
-export const ensureBoss = (sector: Sector): void => {
-    // Tier 1 and 2: guarantee exactly one boss per tier
-    if (sector.tier === 1 || sector.tier === 2) {
-        const tierNum = sector.tier;
-        const bossCount = sector.locations.filter(
-            (l) => l.type === "boss",
-        ).length;
+export const ensureBosses = (sectors: Sector[], tier: GalaxyTierBase): void => {
+    const required = { 1: 1, 2: 2, 3: 3 }[tier];
+    const tierSectors = sectors.filter(
+        (sector) =>
+            sector.id !== 0 &&
+            sector.tier === tier &&
+            sector.star.type !== "blackhole",
+    );
+    let count = tierSectors.flatMap((sector) => sector.locations).filter(
+        (location) => location.type === "boss",
+    ).length;
 
-        // If no boss in this sector and guaranteed boss not yet placed for this tier
-        if (
-            bossCount === 0 &&
-            !bossDistribution.isGuaranteedBossPlaced(tierNum)
-        ) {
-            const guaranteedBoss =
-                bossDistribution.getGuaranteedBossForTier(tierNum);
-            if (guaranteedBoss) {
-                bossDistribution.markBossAsUsed(guaranteedBoss.id);
-                bossDistribution.markGuaranteedBossPlaced(tierNum);
-                sector.locations.push({
-                    id: `${sector.id}-guaranteed-boss`,
-                    type: "boss",
-                    name: guaranteedBoss.name,
-                    bossId: guaranteedBoss.id,
-                    bossType: guaranteedBoss.bossType,
-                    bossDefeated: false,
-                });
-            }
-        }
+    for (const sector of tierSectors) {
+        if (count >= required) return;
+        if (sector.locations.some((location) => location.type === "boss")) continue;
+
+        const boss = bossDistribution.getRandomBossForTier(tier);
+        if (!boss) return;
+
+        bossDistribution.markBossAsUsed(boss.id);
+        sector.locations.push({
+            id: `${sector.id}-boss-${boss.id}`,
+            type: "boss",
+            name: boss.name,
+            bossId: boss.id,
+            bossType: boss.bossType,
+            bossDefeated: false,
+        });
+        count += 1;
     }
 };
 

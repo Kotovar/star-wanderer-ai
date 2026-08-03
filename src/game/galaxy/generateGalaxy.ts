@@ -5,7 +5,7 @@ import { TIER_CONFIG } from "./config";
 import { TIER_NAMES } from "./consts";
 import {
     ensureBlackHoles,
-    ensureBoss,
+    ensureBosses,
     ensureColonizedPlanet,
     ensureDiplomaticStation,
     ensureMinAnomalies,
@@ -100,9 +100,6 @@ export const generateGalaxy = (profile: RunProfile | null = null): Sector[] => {
                 if (!profile || profile.id !== "broken_trade_lanes") {
                     ensureStation(sector);
                 }
-                if (sector.id !== 0) {
-                    ensureBoss(sector);
-                }
             }
 
             sector.locations.push(
@@ -119,6 +116,9 @@ export const generateGalaxy = (profile: RunProfile | null = null): Sector[] => {
 
     // Минимум две чёрные дыры нужен до размещения Вечного.
     ensureBlackHoles(sectors);
+    ensureBosses(sectors, 1);
+    ensureBosses(sectors, 2);
+    ensureBosses(sectors, 3);
 
     // Оракул — единственный финальный босс на Дальнем рубеже.
     const voidOracle = ANCIENT_BOSSES.find((boss) => boss.id === "void_oracle");

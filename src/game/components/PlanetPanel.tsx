@@ -172,6 +172,10 @@ function ContractDescription({
                     sector: c.targetSectorName ?? "",
                     count: String(c.requiredDiscoveries ?? 1),
                 })}
+            {c.type === "derelict_recovery" &&
+                t("contracts.derelict_recovery_pending", {
+                    sector: c.targetSectorName || "",
+                })}
             {c.type === "gas_dive" &&
                 t("contracts.desc_gas_dive_offer", {
                     count: String(c.requiredMembranes ?? 1),

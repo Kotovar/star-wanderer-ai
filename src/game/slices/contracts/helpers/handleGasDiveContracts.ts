@@ -46,6 +46,7 @@ export const handleGasDiveContracts = (
                         : ac,
                 ),
         }));
+        get().showContractCompletion(c);
         get().addLog( i18nStore.t("game_logs.handleGasDiveContracts_1", { collectedMembranes: c.collectedMembranes ?? 0, requiredMembranes: c.requiredMembranes ?? 0, reward: c.reward }),
             "info",
         );

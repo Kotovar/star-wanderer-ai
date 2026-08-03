@@ -29,6 +29,7 @@ export const handleExpeditionSurveyContracts = (
             completedContractIds: [...s.completedContractIds, c.id],
             activeContracts: s.activeContracts.filter((ac) => ac.id !== c.id),
         }));
+        get().showContractCompletion(c);
         get().addLog( i18nStore.t("game_logs.handleExpeditionSurveyContracts_1", { reward: c.reward }),
             "info",
         );

@@ -52,6 +52,7 @@ export const handleSupplyRunContracts = (
             completedContractIds: [...s.completedContractIds, c.id],
             activeContracts: s.activeContracts.filter((ac) => ac.id !== c.id),
         }));
+        get().showContractCompletion(c);
         get().addLog( i18nStore.t("game_logs.handleSupplyRunContracts_1", {
             desc: formatContractDescription(c, i18nStore.t.bind(i18nStore)),
             loc_name: c.sourceName || loc.name,

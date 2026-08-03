@@ -118,7 +118,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
   },
   {
     id: "shield_regenerator",
-    name: "⚡ Регенератор Щитов",
+    name: "Регенератор Щитов",
     description:
       "+50% к скорости регенерации щитов. Щиты восстанавливаются быстрее.",
     effect: { type: "shield_regen_boost", value: 0.5, active: false },
@@ -183,7 +183,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
 
   {
     id: "abyss_reactor",
-    name: "⚛️ Реактор Бездны",
+    name: "Реактор Бездны",
     description: "+25⚡ энергии каждый ход. Но тьма пожирает души экипажа.",
     effect: { type: "abyss_power", value: 25, active: false },
     negativeEffect: {
@@ -199,7 +199,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
   },
   {
     id: "singularity_eye",
-    name: "👁️ Око Сингулярности",
+    name: "Око Сингулярности",
     description:
       "Все враги в секторе видны на карте. Но они тоже видят вас.",
     effect: { type: "all_seeing", value: 1, active: false },
@@ -225,7 +225,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
   },
   {
     id: "ancient_biosphere",
-    name: "🧬 Биосфера Древних",
+    name: "Биосфера Древних",
     description: "Экипаж не может умереть. Но ДНК меняется... навсегда.",
     effect: { type: "undying_crew", value: 1, active: false },
     negativeEffect: {
@@ -242,7 +242,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
   },
   {
     id: "black_box",
-    name: "📦 Чёрный Ящик",
+    name: "Чёрный Ящик",
     description:
       "+75% ко всем наградам(после боя) в кредитах. Но что-то ломается.",
     effect: { type: "credit_booster", value: 0.75, active: false },
@@ -259,7 +259,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
   },
   {
     id: "parasitic_nanites",
-    name: "🔧 Паразитические Наниты",
+    name: "Паразитические Наниты",
     description: "Все модули автоматически чинятся на 8% за ход.",
     effect: { type: "auto_repair", value: 8, active: false },
     negativeEffect: {
@@ -275,7 +275,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
   },
   {
     id: "overload_matrix",
-    name: "💥 Матрица Перегрузки",
+    name: "Матрица Перегрузки",
     description: "+60% критический урон в бою. Мощность сжигает системы.",
     effect: { type: "crit_damage_boost", value: 0.6, active: false },
     negativeEffect: {
@@ -292,7 +292,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
   },
   {
     id: "dark_shield_generator",
-    name: "🛡️ Тёмный Щит",
+    name: "Тёмный Щит",
     description:
       "+100 к максимальным щитам, +20 регенерация щитов. Но экипаж чувствует холод.",
     effect: {
@@ -314,7 +314,7 @@ export const ANCIENT_ARTIFACTS: Artifact[] = [
   },
   {
     id: "void_drive",
-    name: "🌀 Варп Бездны",
+    name: "Варп Бездны",
     description: "Бесплатные перелёты в любые секторы. Но экипаж страдает.",
     effect: { type: "void_engine", value: 1, active: false },
     negativeEffect: {

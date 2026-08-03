@@ -1,5 +1,5 @@
 import { ANCIENT_BOSSES } from "@/game/constants/bosses";
-import type { AncientBoss, GalaxyTierAll, GalaxyTierBase } from "@/game/types";
+import type { AncientBoss, GalaxyTierAll } from "@/game/types";
 
 /**
  * Менеджер распределения боссов по галактике
@@ -8,11 +8,6 @@ import type { AncientBoss, GalaxyTierAll, GalaxyTierBase } from "@/game/types";
 class BossDistributionManager {
     private usedBossIds = new Set<string>();
     private reservedBossIds = new Set<string>();
-    private guaranteedBossesPlaced: Record<number, boolean> = {
-        1: false,
-        2: false,
-        3: false,
-    };
 
     /**
      * Получить случайного босса для тира, исключая уже использованных
@@ -20,7 +15,7 @@ class BossDistributionManager {
     getRandomBossForTier(tier: GalaxyTierAll): AncientBoss | null {
         const eligibleBosses = ANCIENT_BOSSES.filter(
             (b) =>
-                b.tier <= tier &&
+                b.tier === tier &&
                 !this.usedBossIds.has(b.id) &&
                 !this.reservedBossIds.has(b.id),
         );
@@ -31,18 +26,18 @@ class BossDistributionManager {
         return eligibleBosses[randomIndex];
     }
 
-    /**
-     * Получить гарантированного босса для тира (уникального)
-     */
-    getGuaranteedBossForTier(tier: GalaxyTierBase): AncientBoss | null {
+    /** Получить неиспользованного босса для чёрной дыры. */
+    getRandomBossForBlackHole(): AncientBoss | null {
         const eligibleBosses = ANCIENT_BOSSES.filter(
-            (b) => b.tier === tier && !this.usedBossIds.has(b.id),
+            (b) =>
+                b.tier <= 3 &&
+                !this.usedBossIds.has(b.id) &&
+                !this.reservedBossIds.has(b.id),
         );
 
         if (eligibleBosses.length === 0) return null;
 
-        const boss = eligibleBosses[0];
-        return boss;
+        return eligibleBosses[Math.floor(Math.random() * eligibleBosses.length)];
     }
 
     /**
@@ -62,20 +57,6 @@ class BossDistributionManager {
      */
     isBossUsed(bossId: string): boolean {
         return this.usedBossIds.has(bossId);
-    }
-
-    /**
-     * Отметить гарантированного босса как размещённого
-     */
-    markGuaranteedBossPlaced(tier: 1 | 2 | 3): void {
-        this.guaranteedBossesPlaced[tier] = true;
-    }
-
-    /**
-     * Проверить, размещён ли гарантированный босс для тира
-     */
-    isGuaranteedBossPlaced(tier: 1 | 2 | 3): boolean {
-        return this.guaranteedBossesPlaced[tier];
     }
 
     /**
@@ -105,11 +86,6 @@ class BossDistributionManager {
     reset(): void {
         this.usedBossIds.clear();
         this.reservedBossIds.clear();
-        this.guaranteedBossesPlaced = {
-            1: false,
-            2: false,
-            3: false,
-        };
     }
 }
 

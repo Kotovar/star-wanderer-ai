@@ -18,7 +18,6 @@ import {
 import { SHIP_TYPES, STATION_TYPES } from "./consts";
 import { PLANET_TYPES } from "@/game/constants/planets";
 import { getRandomRace, getDominantRaceForPlanet } from "@/game/races/utils";
-import { getRandomBossForTier } from "@/game/bosses/utils";
 import { bossDistribution } from "./bossDistribution";
 import { rollEnemyThreat } from "@/game/progression/enemyProgression";
 import {
@@ -377,32 +376,6 @@ export const generateDistressSignal = (
 });
 
 /**
- * Генерирует босса или аномалию
- */
-export const generateBossOrAnomaly = (
-    sectorIdx: number,
-    locIdx: number,
-    tier: GalaxyTierAll,
-    isBlackHole: boolean,
-): Location => {
-    const boss = getRandomBossForTier(tier);
-
-    if (boss) {
-        bossDistribution.markBossAsUsed(boss.id);
-        return {
-            id: `${sectorIdx}-${locIdx}`,
-            type: "boss",
-            name: boss.name,
-            bossId: boss.id,
-            bossType: boss.bossType,
-            bossDefeated: false,
-        };
-    }
-
-    return generateAnomaly(sectorIdx, locIdx, tier, isBlackHole);
-};
-
-/**
  * Генерирует аномалию
  */
 export const generateAnomaly = (
@@ -517,8 +490,7 @@ export const generateDerelictShip = (
  * Используется для ЧД-секторов, которые не получили The Eternal.
  */
 export const addRandomBossToBlackHole = (sector: Sector): void => {
-    // tier 3 означает "любой тир ≤ 3" в getRandomBossForTier
-    const boss = bossDistribution.getRandomBossForTier(3);
+    const boss = bossDistribution.getRandomBossForBlackHole();
     if (!boss) return;
 
     bossDistribution.markBossAsUsed(boss.id);

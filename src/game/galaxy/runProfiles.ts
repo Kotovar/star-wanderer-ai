@@ -95,7 +95,7 @@ export const RUN_PROFILES = {
             enemyType: "marauder",
         },
         clusters: { tiers: [1, 2, 3], sectorsPerTier: 2, types: ["derelict_ship", "distress_signal", "wreck_field"] },
-        stationAnchorsByTier: { 1: 3, 2: 2, 3: 2, 4: 2 },
+        stationAnchorsByTier: { 1: 4, 2: 3, 3: 3, 4: 2 },
     },
 } as const satisfies Record<RunProfileId, RunProfile>;
 
