@@ -433,7 +433,7 @@ export interface GameScanContracts {
 }
 
 export interface GameManagement {
-  restartGame: (templateId?: string, modifierIds?: string[]) => void;
+  restartGame: (templateId?: string, modifierIds?: string[], profileId?: RunProfileId) => void;
   resetProgress: () => void;
   saveGame: () => void;
   loadGame: () => boolean;
