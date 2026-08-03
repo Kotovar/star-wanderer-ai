@@ -27,6 +27,7 @@ import {
     getNebulaDisruptionPatch,
     rollNebulaDisruption,
 } from "./nebulaHazards";
+import { addPilotAsteroidManeuverDelay } from "./asteroidManeuver";
 
 /** Вероятность случайного события в пути (прямой маршрут) */
 const TRAVEL_EVENT_CHANCE_DIRECT = 0.45;
@@ -334,6 +335,11 @@ const applyCautiousEventChoice = (
     switch (event) {
         case "asteroids": {
             if (hasPilotInCockpit(getState())) {
+                setState((s) => ({
+                    traveling: s.traveling
+                        ? addPilotAsteroidManeuverDelay(s.traveling)
+                        : null,
+                }));
                 getState().addLog( i18nStore.t("game_logs.processTravel_9"),
                     "info",
                 );

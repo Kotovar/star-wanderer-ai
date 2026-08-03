@@ -62,6 +62,7 @@ const TRAVEL_EVENT_META: Record<
     hasSpecial?: boolean;
     /** Префикс ключей улучшенного осторожного варианта (пилот/сканер/щиты) */
     cautiousOverride?: string;
+    cautiousOverrideTones?: [Tone, Tone];
   }
 > = {
   asteroids: {
@@ -70,6 +71,7 @@ const TRAVEL_EVENT_META: Record<
     cautiousFuelCost: 5,
     hasSpecial: true,
     cautiousOverride: "pilot",
+    cautiousOverrideTones: ["good", "warning"],
   },
   anomaly: {
     riskTones: ["danger", "good"],
@@ -224,8 +226,7 @@ export function EventDisplay() {
       const overrideActive = cautiousOverride !== undefined;
       const cautiousItems = cautiousOverride
         ? buildTravelEventItems(t, eventType, cautiousOverride, [
-            "good",
-            "good",
+            ...(meta.cautiousOverrideTones ?? ["good", "good"]),
           ])
         : buildTravelEventItems(t, eventType, "cautious", meta.cautiousTones);
       const cautiousButton = cautiousOverride

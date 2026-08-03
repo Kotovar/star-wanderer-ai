@@ -1563,8 +1563,8 @@
             "special_hint": "1 module -15 HP, minerals to cargo (scales with drill level)",
             "pilot1_label": "Pilot maneuver",
             "pilot1_value": "no damage",
-            "pilot2_label": "Fuel",
-            "pilot2_value": "no cost",
+            "pilot2_label": "Time",
+            "pilot2_value": "+1 turn",
             "pilot_button": "Pilot maneuver"
         },
         "anomaly": {
@@ -5364,7 +5364,7 @@
         "processTravel_6": "⚡ The electromagnetic pulse passed without consequences",
         "processTravel_7": "🛸 Nothing to offer the trader — the hold is empty. The ships parted ways.",
         "processTravel_8": "🛸 The wandering trader bought all the cargo: +{{total}}₢",
-        "processTravel_9": "☄️ The pilot in the cockpit guided the ship through the asteroid stream unharmed",
+        "processTravel_9": "☄️ The pilot in the cockpit guided the ship through the asteroid stream unharmed, route +1 turn",
         "processTravel_10": "Not enough fuel for the evasive maneuver",
         "processTravel_11": "☄️ Evasive maneuver: asteroid stream passed without damage, fuel -{{ASTEROID_CAUTIOUS_FUEL_COST}}",
         "processTravel_12": "Not enough fuel to go around the anomaly",
