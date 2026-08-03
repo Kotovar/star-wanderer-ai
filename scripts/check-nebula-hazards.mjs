@@ -197,6 +197,22 @@ assert.equal(
   "Route crosses a nebula",
 );
 
+const progressionDoc = readFileSync(
+  path.resolve(process.cwd(), "docs/CAMPAIGN_PROGRESSION.md"),
+  "utf8",
+);
+assert.match(progressionDoc, /## Туманности/);
+assert.match(progressionDoc, /в обход/);
+
+const hazardSource = readFileSync(
+  path.resolve(
+    process.cwd(),
+    "src/game/slices/travel/helpers/nebulaHazards.ts",
+  ),
+  "utf8",
+);
+assert.doesNotMatch(hazardSource, /credits|research|cargo/i);
+
 const withSeededRandom = (callback) => {
   const originalRandom = Math.random;
   let seed = 123_456_789;
