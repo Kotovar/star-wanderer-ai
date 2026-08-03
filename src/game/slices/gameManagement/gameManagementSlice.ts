@@ -16,6 +16,7 @@ import {
     setSoundPlaybackEnabled,
 } from "@/sounds";
 import { resetMetaProgress } from "@/game/metaProgress/store";
+import type { RunProfileId } from "@/game/galaxy/runProfiles";
 
 const normalizeAudioSettings = (
     settings: Partial<GameState["settings"]> | undefined,
@@ -42,7 +43,7 @@ export interface GameManagementSlice {
     checkGameOver: () => void;
     checkVictory: () => void;
     triggerVictory: () => void;
-    restartGame: (templateId?: string, modifierIds?: string[]) => void;
+    restartGame: (templateId?: string, modifierIds?: string[], profileId?: RunProfileId) => void;
     resetProgress: () => void;
     saveGame: () => void;
     loadGame: () => boolean;
@@ -57,8 +58,8 @@ export const createGameManagementSlice = (
     checkGameOver: () => checkGameOver(set, get),
     checkVictory: () => checkVictory(set, get),
     triggerVictory: () => triggerVictory(set, get),
-    restartGame: (templateId?: string, modifierIds?: string[]) =>
-        restartGame(set, get, templateId, modifierIds),
+    restartGame: (templateId?: string, modifierIds?: string[], profileId?: RunProfileId) =>
+        restartGame(set, get, templateId, modifierIds, profileId),
     resetProgress: () => {
         clearAllSaves();
         resetMetaProgress();

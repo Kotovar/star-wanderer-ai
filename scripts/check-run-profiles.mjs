@@ -21,6 +21,13 @@ registerHooks({
     return file ? { url: pathToFileURL(file).href, shortCircuit: true } : nextResolve(specifier, context);
   },
   load(url, context, nextLoad) {
+    if (url.endsWith(".json")) {
+      return {
+        format: "module",
+        source: `export default ${readFileSync(fileURLToPath(url), "utf8")};`,
+        shortCircuit: true,
+      };
+    }
     if (!url.endsWith(".ts") && !url.endsWith(".tsx")) return nextLoad(url, context);
     return {
       format: "module",
@@ -35,6 +42,7 @@ registerHooks({
 const { RUN_PROFILES } = await import("../src/game/galaxy/runProfiles.ts");
 const { generateGalaxy } = await import("../src/game/galaxy/generateGalaxy.ts");
 const { ensureDiplomaticStation, ensureStationTypes } = await import("../src/game/galaxy/ensure.ts");
+const { loadWithMigrations } = await import("../src/game/saves/migrations.ts");
 
 const count = (sectors, type) => sectors.flatMap((sector) => sector.locations).filter((location) => location.type === type).length;
 const hasStation = (sectors, tier, stationType) =>
@@ -118,6 +126,12 @@ for (const profile of Object.values(RUN_PROFILES)) {
       }
     }
   }
+}
+
+const legacy = loadWithMigrations(JSON.stringify({ version: 17, state: {} }));
+assert.equal(legacy?.runProfileId, null);
+for (const profile of Object.values(RUN_PROFILES)) {
+  assert.ok(generateGalaxy(profile).length, `${profile.id}: must generate a fresh galaxy`);
 }
 
 console.log("Run profile checks passed");

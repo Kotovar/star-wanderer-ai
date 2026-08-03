@@ -13,6 +13,11 @@ import {
   pickWeightedCrisis,
   rollNextCrisisTurn,
 } from "@/game/constants/globalCrises";
+import {
+  getRunProfile,
+  pickRunProfileId,
+  type RunProfileId,
+} from "@/game/galaxy/runProfiles";
 import type { GameStore, SetState } from "@/game/types";
 
 /**
@@ -27,18 +32,22 @@ const STARTING_SECTOR_INDEX = 0;
  * @param get - Функция получения текущего состояния
  * @param templateId - ID шаблона корабля (по умолчанию "explorer")
  * @param modifierIds - Активные модификаторы запуска
+ * @param profileId - ID профиля нового забега
  */
 export const restartGame = (
   set: SetState,
   get: () => GameStore,
   templateId: string = DEFAULT_TEMPLATE_ID,
   modifierIds: string[] = [],
+  profileId?: RunProfileId,
 ): void => {
+  const profile = getRunProfile(profileId ?? pickRunProfileId());
+  if (!profile) return;
   const settings = get().settings;
   const patch = buildStartingState(templateId, modifierIds);
   clearLocalStorage();
 
-  const newSectors = generateGalaxy();
+  const newSectors = generateGalaxy(profile);
   newSectors[STARTING_SECTOR_INDEX].visited = true;
 
   const { prices: restartPrices, stock: restartStock } =
@@ -72,6 +81,7 @@ export const restartGame = (
     knownRaces,
     startTemplateId: templateId,
     startModifierIds: modifierIds,
+    runProfileId: profile.id,
     // initialState — модульный синглтон, вычисляется один раз при импорте,
     // поэтому его runId нельзя переиспользовать между забегами — иначе все
     // рестарты, которые не проходят через loadFromSlot, получили бы один и

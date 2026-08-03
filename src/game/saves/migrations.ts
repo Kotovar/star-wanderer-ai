@@ -360,6 +360,11 @@ const migrations: Record<number, Migration> = {
       },
     };
   },
+  17: (raw) => ({
+    ...(raw as GameState),
+    stateVersion: 18,
+    runProfileId: null,
+  }),
 };
 
 /**

@@ -42,6 +42,7 @@ import type {
   RandomEventChoiceId,
   ScheduledRandomEventConsequence,
 } from "./randomEvents";
+import type { RunProfileId } from "@/game/galaxy/runProfiles";
 
 export type GameMode =
   | "galaxy_map"
@@ -164,6 +165,7 @@ export interface GameState {
   diplomaticTranslatorRaceIds: RaceId[]; // Races with a hired translator (permanent diplomacy cost discount)
   startTemplateId?: string; // Ship template used to start this game (undefined = old save)
   startModifierIds: string[]; // Launch modifiers and selected doctrine
+  runProfileId: RunProfileId | null;
   activeCrisis: ActiveCrisisState | null; // Currently active global crisis
   discoveredCrisisIds: string[]; // Crises already encountered by the player
   discoveredEnemyCodexIds: string[]; // Enemy types already encountered by the player

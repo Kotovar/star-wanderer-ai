@@ -243,6 +243,7 @@ const baseState: GameState = {
   bannedPlanets: [],
   diplomaticTranslatorRaceIds: [],
   startModifierIds: [],
+  runProfileId: null,
   activeCrisis: null,
   discoveredCrisisIds: [],
   discoveredEnemyCodexIds: [],
