@@ -1,6 +1,12 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore, SetState } from "@/game/types";
-import { checkGameOver, checkVictory, triggerVictory, restartGame } from "./helpers";
+import {
+    checkGameOver,
+    checkVictory,
+    triggerVictory,
+    restartGame,
+    claimRunProfileArcReward,
+} from "./helpers";
 import {
     clearAllSaves,
     loadFromLocalStorage,
@@ -44,6 +50,7 @@ export interface GameManagementSlice {
     checkVictory: () => void;
     triggerVictory: () => void;
     restartGame: (templateId?: string, modifierIds?: string[], profileId?: RunProfileId) => void;
+    claimRunProfileArcReward: () => void;
     resetProgress: () => void;
     saveGame: () => void;
     loadGame: () => boolean;
@@ -60,6 +67,7 @@ export const createGameManagementSlice = (
     triggerVictory: () => triggerVictory(set, get),
     restartGame: (templateId?: string, modifierIds?: string[], profileId?: RunProfileId) =>
         restartGame(set, get, templateId, modifierIds, profileId),
+    claimRunProfileArcReward: () => claimRunProfileArcReward(set, get),
     resetProgress: () => {
         clearAllSaves();
         resetMetaProgress();

@@ -244,6 +244,7 @@ const baseState: GameState = {
   diplomaticTranslatorRaceIds: [],
   startModifierIds: [],
   runProfileId: null,
+  runProfileArcRewardClaimed: false,
   activeCrisis: null,
   discoveredCrisisIds: [],
   discoveredEnemyCodexIds: [],

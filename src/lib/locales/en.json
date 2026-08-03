@@ -3830,6 +3830,27 @@
             "risk": "Service stations cluster along scarce support routes."
         }
     },
+    "run_profile_arcs": {
+        "label": "Profile route",
+        "milestone": "stage {{target}}",
+        "claim": "Claim resource cache",
+        "claimed": "Resource cache claimed",
+        "ancient_echo": {
+            "title": "Archive route",
+            "objective": "Explore anomalies and gas giants: {{current}}/{{target}}",
+            "reward": "Reward: 6 ancient data, 1 quantum crystal"
+        },
+        "war_spiral": {
+            "title": "Frontline hunt",
+            "objective": "Defeat enemies and space creatures: {{current}}/{{target}}",
+            "reward": "Reward: 5 alien biology, 3 tech salvage"
+        },
+        "broken_trade_lanes": {
+            "title": "Salvage the survivors",
+            "objective": "Explore signals, derelicts, and wreck fields: {{current}}/{{target}}",
+            "reward": "Reward: 5 rare minerals, 3 tech salvage"
+        }
+    },
     "campaign_progress": {
         "summary": "Campaign overview: which routes are open, which systems are charted, and where to explore next.",
         "tier2_engine": "Engine level 2 (current level {{level}})",
@@ -5428,7 +5449,8 @@
         "err_cargo_off": "Cargo bay disabled or missing!",
         "err_no_space": "Not enough space!",
         "err_no_module_type": "Module type for upgrade not specified",
-        "err_max_upgrade": "Maximum upgrade level! (LV3)"
+        "err_max_upgrade": "Maximum upgrade level! (LV3)",
+        "run_profile_arc_claimed": "{{profile}}: resource cache claimed — {{reward}}"
     },
     "delivery_goods": {
         "spares": "Spare Parts",

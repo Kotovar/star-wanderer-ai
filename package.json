@@ -20,6 +20,7 @@
     "check:combat-cinematics": "node scripts/check-combat-cinematics.mjs",
     "check:boss-generation": "node --no-warnings --experimental-strip-types scripts/check-galaxy-boss-generation.mjs",
     "check:run-profiles": "node --no-warnings scripts/check-run-profiles.mjs",
+    "check:run-profile-arcs": "node --no-warnings scripts/check-run-profile-arcs.mjs",
     "check:reputation": "node --no-warnings --experimental-strip-types scripts/check-reputation-ripple.mjs",
     "check:crew-relation-events": "node --no-warnings --experimental-strip-types scripts/check-crew-relation-events.mjs",
     "check:crew-tech-tree": "node --no-warnings --experimental-strip-types scripts/check-crew-tech-tree.mjs",

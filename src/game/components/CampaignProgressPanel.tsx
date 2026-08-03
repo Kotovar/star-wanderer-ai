@@ -17,7 +17,10 @@ import {
 import { WEAPON_TYPES } from "@/game/constants/weapons";
 import { getBestByProfession } from "@/game/crew";
 import { canSeeTier4 } from "@/game/galaxy/galaxy-map-utils";
+import { getRunProfileArcProgress } from "@/game/galaxy/runProfileArcs";
 import { getRunProfile } from "@/game/galaxy/runProfiles";
+import { isLocationCountedAsVisited } from "@/game/progression/locationProgress";
+import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 
 type Tone = "good" | "warning" | "danger" | "neutral";
@@ -133,41 +136,6 @@ function Milestone({
   );
 }
 
-function isLocationCountedAsVisited(
-  loc: {
-    id: string;
-    visited?: boolean;
-    defeated?: boolean;
-    bossDefeated?: boolean;
-    mined?: boolean;
-    signalResolved?: boolean;
-    derelictExplored?: boolean;
-    scoutedTimes?: number;
-    planetaryDrilled?: boolean;
-    atmosphereAnalyzed?: boolean;
-    expeditionCompleted?: boolean;
-    wreckPassesDone?: number;
-    gasGiantLastDiveAt?: number;
-  },
-  completedLocations: string[],
-) {
-  return (
-    loc.visited ||
-    completedLocations.includes(loc.id) ||
-    loc.defeated ||
-    loc.bossDefeated ||
-    loc.mined ||
-    loc.signalResolved ||
-    loc.derelictExplored ||
-    (loc.scoutedTimes ?? 0) > 0 ||
-    loc.planetaryDrilled ||
-    loc.atmosphereAnalyzed ||
-    loc.expeditionCompleted ||
-    (loc.wreckPassesDone ?? 0) > 0 ||
-    loc.gasGiantLastDiveAt !== undefined
-  );
-}
-
 const REGION_NAMES: Record<number, string> = {
   1: "Внутренние миры",
   2: "Срединный пояс",
@@ -197,10 +165,21 @@ export function CampaignProgressPanel() {
   const raceReputation = useGameStore((s) => s.raceReputation);
   const startModifierIds = useGameStore((s) => s.startModifierIds);
   const runProfileId = useGameStore((s) => s.runProfileId);
+  const runProfileArcRewardClaimed = useGameStore(
+    (s) => s.runProfileArcRewardClaimed,
+  );
+  const claimRunProfileArcReward = useGameStore(
+    (s) => s.claimRunProfileArcReward,
+  );
   const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
 
   const scanRange = getEffectiveScanRange();
   const runProfile = getRunProfile(runProfileId);
+  const profileArcProgress = useMemo(
+    () =>
+      getRunProfileArcProgress(runProfileId, sectors, completedLocations),
+    [completedLocations, runProfileId, sectors],
+  );
   const currentTier = currentSector?.tier ?? 1;
   const engineLevel = Math.max(
     1,
@@ -351,6 +330,66 @@ export function CampaignProgressPanel() {
           <p className="mt-1 text-xs text-[#ffcc66]">
             {t(runProfile.riskKey)}
           </p>
+          {profileArcProgress ? (
+            <div className="mt-3 border-t border-[#00d4ff33] pt-3">
+              <div className="text-[10px] uppercase tracking-[0.16em] text-[#76dff5]">
+                {t("run_profile_arcs.label")}
+              </div>
+              <div className="mt-1 text-xs font-bold text-[#d8f6ff]">
+                {t(profileArcProgress.profile.arc.titleKey)}
+              </div>
+              <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-[#9eb5bd]">
+                <span>
+                  {t(profileArcProgress.profile.arc.objectiveKey, {
+                    current: profileArcProgress.completed,
+                    target: profileArcProgress.target,
+                  })}
+                </span>
+                <span className="shrink-0 text-[#d8f6ff]">
+                  {profileArcProgress.completed}/{profileArcProgress.target}
+                </span>
+              </div>
+              <div className="mt-2">
+                <ProgressBar
+                  value={profileArcProgress.completed}
+                  max={profileArcProgress.target}
+                  color="#00d4ff"
+                />
+              </div>
+              <div className="mt-2 grid grid-cols-3 gap-1 text-[9px] uppercase tracking-wide">
+                {profileArcProgress.milestones.map((milestone) => (
+                  <div
+                    key={milestone}
+                    className={
+                      profileArcProgress.completed >= milestone
+                        ? "text-[#9ef2ff]"
+                        : "text-[#52666b]"
+                    }
+                  >
+                    {profileArcProgress.completed >= milestone ? "✓" : "□"}{" "}
+                    {t("run_profile_arcs.milestone", { target: milestone })}
+                  </div>
+                ))}
+              </div>
+              <p className="mt-2 text-[10px] text-[#ffcc66]">
+                {t(profileArcProgress.profile.arc.rewardKey)}
+              </p>
+              {runProfileArcRewardClaimed ? (
+                <p className="mt-2 text-xs text-[#00ff41]">
+                  ✓ {t("run_profile_arcs.claimed")}
+                </p>
+              ) : profileArcProgress.isComplete ? (
+                <Button
+                  className="mt-2 h-7 border-[#00d4ff88] bg-[#00d4ff12] px-2 text-[10px] text-[#d8f6ff] hover:bg-[#00d4ff22]"
+                  onClick={claimRunProfileArcReward}
+                  size="sm"
+                  variant="outline"
+                >
+                  {t("run_profile_arcs.claim")}
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
         </section>
       )}
 

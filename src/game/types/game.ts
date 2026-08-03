@@ -166,6 +166,7 @@ export interface GameState {
   startTemplateId?: string; // Ship template used to start this game (undefined = old save)
   startModifierIds: string[]; // Launch modifiers and selected doctrine
   runProfileId: RunProfileId | null;
+  runProfileArcRewardClaimed: boolean;
   activeCrisis: ActiveCrisisState | null; // Currently active global crisis
   discoveredCrisisIds: string[]; // Crises already encountered by the player
   discoveredEnemyCodexIds: string[]; // Enemy types already encountered by the player
@@ -434,6 +435,7 @@ export interface GameScanContracts {
 
 export interface GameManagement {
   restartGame: (templateId?: string, modifierIds?: string[], profileId?: RunProfileId) => void;
+  claimRunProfileArcReward: () => void;
   resetProgress: () => void;
   saveGame: () => void;
   loadGame: () => boolean;
