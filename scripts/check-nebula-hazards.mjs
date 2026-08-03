@@ -169,6 +169,11 @@ const selectSectorSource = readFileSync(
 assert.match(selectSectorSource, /findRouteNebula/);
 assert.match(selectSectorSource, /route === "direct" && !hasWarpDrive/);
 assert.match(selectSectorSource, /travelTurns = Math\.max\(1, travelTurns\)/);
+assert.match(
+  selectSectorSource,
+  /const travelInstant = hasWarpDrive \|\| \(fuelResult\.travelInstant && !crossedNebula\);/,
+  "a warp coil must not make a nebula crossing instant; only warp drive is exempt",
+);
 
 const galaxyMapSource = readFileSync(
   path.resolve(process.cwd(), "src/game/components/GalaxyMap.tsx"),

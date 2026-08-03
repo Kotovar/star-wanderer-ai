@@ -568,7 +568,7 @@ export const selectSector = (
         !!pilotInCockpit,
     );
     // Варп-двигатель делает перелёт мгновенным
-    const travelInstant = fuelResult.travelInstant || hasWarpDrive;
+    const travelInstant = hasWarpDrive || (fuelResult.travelInstant && !crossedNebula);
 
     // Обходной маршрут: дороже по топливу, но спокойнее (см. processTravel)
     const isDetour = route === "detour" && !travelInstant;
