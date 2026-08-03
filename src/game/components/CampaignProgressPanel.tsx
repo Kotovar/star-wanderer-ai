@@ -17,6 +17,7 @@ import {
 import { WEAPON_TYPES } from "@/game/constants/weapons";
 import { getBestByProfession } from "@/game/crew";
 import { canSeeTier4 } from "@/game/galaxy/galaxy-map-utils";
+import { getRunProfile } from "@/game/galaxy/runProfiles";
 import { useTranslation } from "@/lib/useTranslation";
 
 type Tone = "good" | "warning" | "danger" | "neutral";
@@ -195,9 +196,11 @@ export function CampaignProgressPanel() {
   const knownRaces = useGameStore((s) => s.knownRaces);
   const raceReputation = useGameStore((s) => s.raceReputation);
   const startModifierIds = useGameStore((s) => s.startModifierIds);
+  const runProfileId = useGameStore((s) => s.runProfileId);
   const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
 
   const scanRange = getEffectiveScanRange();
+  const runProfile = getRunProfile(runProfileId);
   const currentTier = currentSector?.tier ?? 1;
   const engineLevel = Math.max(
     1,
@@ -333,6 +336,23 @@ export function CampaignProgressPanel() {
           {t("campaign_progress.summary")}
         </div>
       </div>
+
+      {runProfile && (
+        <section className="border border-[#00d4ff66] bg-[rgba(0,212,255,0.06)] p-3">
+          <div className="text-[10px] uppercase tracking-[0.16em] text-ring">
+            {t("run_profiles.label")}
+          </div>
+          <div className="mt-1 font-['Orbitron'] text-sm text-[#d8f6ff]">
+            {runProfile.icon} {t(runProfile.nameKey)}
+          </div>
+          <p className="mt-1 text-xs text-[#9eb5bd]">
+            {t(runProfile.opportunityKey)}
+          </p>
+          <p className="mt-1 text-xs text-[#ffcc66]">
+            {t(runProfile.riskKey)}
+          </p>
+        </section>
+      )}
 
       {revealLateCampaign ? (
         <div className="border border-[#ffb00066] bg-[rgba(255,176,0,0.06)] p-3">

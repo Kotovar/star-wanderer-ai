@@ -43,6 +43,8 @@ const { RUN_PROFILES } = await import("../src/game/galaxy/runProfiles.ts");
 const { generateGalaxy } = await import("../src/game/galaxy/generateGalaxy.ts");
 const { ensureDiplomaticStation, ensureStationAnchors, ensureStationTypes } = await import("../src/game/galaxy/ensure.ts");
 const { loadWithMigrations } = await import("../src/game/saves/migrations.ts");
+const ru = (await import("../src/lib/locales/ru.json")).default;
+const en = (await import("../src/lib/locales/en.json")).default;
 
 const count = (sectors, type) => sectors.flatMap((sector) => sector.locations).filter((location) => location.type === type).length;
 const hasStation = (sectors, tier, stationType) =>
@@ -159,5 +161,22 @@ assert.equal(legacy?.runProfileId, null);
 for (const profile of Object.values(RUN_PROFILES)) {
   assert.ok(generateGalaxy(profile).length, `${profile.id}: must generate a fresh galaxy`);
 }
+
+const galaxyMapSource = readFileSync(
+  resolve(process.cwd(), "src/game/components/GalaxyMap.tsx"),
+  "utf8",
+);
+const progressSource = readFileSync(
+  resolve(process.cwd(), "src/game/components/CampaignProgressPanel.tsx"),
+  "utf8",
+);
+
+assert.ok(!galaxyMapSource.includes("getRunProfile"));
+assert.ok(!galaxyMapSource.includes("runProfileId"));
+assert.match(progressSource, /getRunProfile\(runProfileId\)/);
+assert.match(progressSource, /t\(runProfile\.opportunityKey\)/);
+assert.match(progressSource, /t\(runProfile\.riskKey\)/);
+assert.equal(ru.run_profiles.broken_trade_lanes.name, "Угасающая галактика");
+assert.equal(en.run_profiles.broken_trade_lanes.name, "Fading Galaxy");
 
 console.log("Run profile checks passed");
