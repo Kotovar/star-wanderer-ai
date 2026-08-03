@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -262,9 +262,14 @@ export function NewGameSetupModal({
     "ship",
   );
   const wasOpenRef = useRef(open);
+  const hasCompletedOpenRef = useRef(false);
 
-  useEffect(() => {
-    if (open && !wasOpenRef.current) setRunProfileId(pickRunProfileId());
+  useLayoutEffect(() => {
+    if (!open) {
+      if (wasOpenRef.current) hasCompletedOpenRef.current = true;
+    } else if (!wasOpenRef.current) {
+      if (hasCompletedOpenRef.current) setRunProfileId(pickRunProfileId());
+    }
     wasOpenRef.current = open;
   }, [open]);
 

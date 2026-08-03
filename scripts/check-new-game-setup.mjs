@@ -34,6 +34,15 @@ assert.match(
   newGameSetupSource,
   /restartGame\(selectedTemplateId, selectedModifiers, runProfileId\)/,
 );
+assert.match(newGameSetupSource, /const hasCompletedOpenRef = useRef\(false\);/);
+assert.match(
+  newGameSetupSource,
+  /if \(hasCompletedOpenRef\.current\) setRunProfileId\(pickRunProfileId\(\)\);/,
+);
+assert.doesNotMatch(
+  newGameSetupSource,
+  /useEffect\(\(\) => \{\s*if \(open && !wasOpenRef\.current\)/,
+);
 
 for (const template of SHIP_TEMPLATES) {
   assert.equal(assertValidLaunchSelection(template.credits, []), template.credits);
