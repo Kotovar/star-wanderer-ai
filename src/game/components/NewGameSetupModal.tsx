@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +28,7 @@ import {
   SHIP_UNLOCK_RULES,
 } from "@/game/metaProgress/shipUnlocks";
 import type { MetaProgressState } from "@/game/metaProgress/types";
+import { getRunProfile, pickRunProfileId } from "@/game/galaxy/runProfiles";
 
 interface NewGameSetupModalProps {
   open: boolean;
@@ -256,9 +257,16 @@ export function NewGameSetupModal({
   const [selectedTemplateId, setSelectedTemplateId] =
     useState(DEFAULT_TEMPLATE_ID);
   const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
+  const [runProfileId, setRunProfileId] = useState(pickRunProfileId);
   const [mobileSection, setMobileSection] = useState<"ship" | "settings">(
     "ship",
   );
+  const wasOpenRef = useRef(open);
+
+  useEffect(() => {
+    if (open && !wasOpenRef.current) setRunProfileId(pickRunProfileId());
+    wasOpenRef.current = open;
+  }, [open]);
 
   const selectedTemplate = SHIP_TEMPLATES.find(
     (tmpl) => tmpl.id === selectedTemplateId,
@@ -268,6 +276,7 @@ export function NewGameSetupModal({
     () => LAUNCH_MODIFIERS.filter((mod) => selectedModifiers.includes(mod.id)),
     [selectedModifiers],
   );
+  const runProfile = getRunProfile(runProfileId);
 
   if (!selectedTemplate) return null;
 
@@ -451,7 +460,7 @@ export function NewGameSetupModal({
 
   const handleStart = () => {
     if (!hasSufficientCredits) return;
-    restartGame(selectedTemplateId, selectedModifiers);
+    restartGame(selectedTemplateId, selectedModifiers, runProfileId);
     onStarted?.();
     onClose();
   };
@@ -513,6 +522,22 @@ export function NewGameSetupModal({
             <section
               className={`${mobileSection === "ship" ? "flex" : "hidden"} min-w-0 flex-col border border-[#00ff4133] bg-[rgba(0,255,65,0.02)] p-3 min-[980px]:flex min-[980px]:min-h-0`}
             >
+              {runProfile && (
+                <section className="mb-3 border border-[#00d4ff66] bg-[rgba(0,212,255,0.06)] p-3">
+                  <div className="text-[10px] uppercase tracking-[0.16em] text-ring">
+                    {t("run_profiles.label")}
+                  </div>
+                  <div className="mt-1 font-['Orbitron'] text-sm text-[#d8f6ff]">
+                    {runProfile.icon} {t(runProfile.nameKey)}
+                  </div>
+                  <p className="mt-1 text-xs text-[#9eb5bd]">
+                    {t(runProfile.opportunityKey)}
+                  </p>
+                  <p className="mt-1 text-xs text-[#ffcc66]">
+                    {t(runProfile.riskKey)}
+                  </p>
+                </section>
+              )}
               <div className="mb-2 flex items-center justify-between gap-2">
                 <div className="font-['Orbitron'] text-xs font-bold uppercase tracking-[0.18em] text-accent">
                   {t("new_game_setup.template_section")}

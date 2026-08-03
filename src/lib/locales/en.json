@@ -3812,6 +3812,24 @@
         "scientific_ascension": "Technologies {{tech}}/{{techTarget}}, artifacts {{artifacts}}/{{artifactTarget}}.",
         "galactic_coalition": "Allies {{allies}}/{{allyTarget}}, contracts {{contracts}}/{{contractTarget}}, credits {{credits}}/{{creditTarget}}."
     },
+    "run_profiles": {
+        "label": "Galaxy profile",
+        "ancient_echo": {
+            "name": "Ancient Echo",
+            "opportunity": "Clusters of anomalies and expeditions reveal knowledge.",
+            "risk": "Infrastructure appears less often."
+        },
+        "war_spiral": {
+            "name": "War Spiral",
+            "opportunity": "Fronts offer more hunts and combat contracts.",
+            "risk": "Dangerous encounters drain the ship faster."
+        },
+        "broken_trade_lanes": {
+            "name": "Broken Trade Lanes",
+            "opportunity": "Signals, derelicts, and wreckage offer risky opportunities.",
+            "risk": "Service stations cluster along scarce support routes."
+        }
+    },
     "campaign_progress": {
         "summary": "Campaign overview: which routes are open, which systems are charted, and where to explore next.",
         "tier2_engine": "Engine level 2 (current level {{level}})",

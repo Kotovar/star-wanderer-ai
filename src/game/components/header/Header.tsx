@@ -17,6 +17,7 @@ import { GameDialogContent } from "../GameDialog";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { getCampaignDirective } from "@/game/constants/victoryObjectives";
+import { getRunProfile } from "@/game/galaxy/runProfiles";
 
 export function GameHeader() {
   const [showHelp, setShowHelp] = useState(false);
@@ -47,6 +48,7 @@ export function GameHeader() {
   const raceReputation = useGameStore((s) => s.raceReputation);
   const research = useGameStore((s) => s.research);
   const startModifierIds = useGameStore((s) => s.startModifierIds);
+  const runProfileId = useGameStore((s) => s.runProfileId);
   const showArtifacts = useGameStore((s) => s.showArtifacts);
   const showEffects = useGameStore((s) => s.showEffects);
   const showResearch = useGameStore((s) => s.showResearch);
@@ -56,6 +58,7 @@ export function GameHeader() {
   const showSectorMap = useGameStore((s) => s.showSectorMap);
   const gameMode = useGameStore((s) => s.gameMode);
   const { t } = useTranslation();
+  const runProfile = getRunProfile(runProfileId);
 
   const discoveredArtifacts = artifacts.filter((a) => a.discovered).length;
   const activeArtifacts = artifacts.filter((a) => a.effect.active).length;
@@ -214,6 +217,11 @@ export function GameHeader() {
               </span>
               <span className="hidden xl:inline"> — {t(campaignDirective.detail.key, campaignDirective.detail.params)}</span>
             </button>
+          )}
+          {runProfile && (
+            <div className="border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-2 py-1 text-[10px] text-[#bdefff]">
+              {runProfile.icon} {t(runProfile.nameKey)}
+            </div>
           )}
         </div>
         <div className="flex gap-2 md:gap-4 text-xs md:text-sm items-center flex-wrap justify-center md:justify-normal">

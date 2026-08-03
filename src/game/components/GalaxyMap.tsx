@@ -39,6 +39,7 @@ import { getSectorReadiness } from "@/game/progression/sectorReadiness";
 import { setupHiDPICanvas } from "./canvas-utils";
 import { getGalaxyMapObjectives } from "./galaxyMapObjectives";
 import { useMapZoomPan, DRAG_THRESHOLD } from "./useMapZoomPan";
+import { getRunProfile } from "@/game/galaxy/runProfiles";
 
 // Animation constants
 const TWINKLING_STARS_COUNT = 40;
@@ -267,6 +268,7 @@ export function GalaxyMap() {
         (s) => getBestByProfession(s.crew, "pilot")?.level ?? 1,
     );
     const fuel = useGameStore((s) => s.ship.fuel);
+    const runProfileId = useGameStore((s) => s.runProfileId);
     const areEnginesFunctional = useGameStore((s) => s.areEnginesFunctional);
     const areFuelTanksFunctional = useGameStore(
         (s) => s.areFuelTanksFunctional,
@@ -278,6 +280,7 @@ export function GalaxyMap() {
     const bossesVisible = useGameStore((s) => s.canScanObject("boss"));
     const canSeeT4 = canSeeTier4(modules, artifacts, scanRange);
     const galaxyStatus = getGalaxyMapStatus(modules, captainLevel, fuel);
+    const runProfile = getRunProfile(runProfileId);
     const mapObjectives = useMemo(
         () =>
             getGalaxyMapObjectives({
@@ -1079,6 +1082,11 @@ export function GalaxyMap() {
                             </div>
                         </div>
                     </details>
+                    {runProfile && (
+                        <div className="border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-2 py-1 text-[10px] text-[#bdefff]">
+                            {runProfile.icon} {t(runProfile.nameKey)}
+                        </div>
+                    )}
                     {objectiveTargets.length > 0 && (
                         <details className="pointer-events-auto relative shrink-0 max-w-[calc(100vw-1rem)] text-xs text-[#dfe8ef]">
                             <summary

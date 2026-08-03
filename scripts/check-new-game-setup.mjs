@@ -24,6 +24,16 @@ const buildStartingStateSource = await readFile(
   new URL("../src/game/slices/gameManagement/helpers/buildStartingState.ts", import.meta.url),
   "utf8",
 );
+const newGameSetupSource = await readFile(
+  new URL("../src/game/components/NewGameSetupModal.tsx", import.meta.url),
+  "utf8",
+);
+
+assert.match(newGameSetupSource, /pickRunProfileId/);
+assert.match(
+  newGameSetupSource,
+  /restartGame\(selectedTemplateId, selectedModifiers, runProfileId\)/,
+);
 
 for (const template of SHIP_TEMPLATES) {
   assert.equal(assertValidLaunchSelection(template.credits, []), template.credits);
