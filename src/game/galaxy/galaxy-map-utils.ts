@@ -18,6 +18,7 @@ type TierDetails = {
 export type GalaxyMapObjectiveKind =
     | "contract"
     | "artifact"
+    | "signal"
     | "boss"
     | "final";
 
@@ -123,6 +124,7 @@ export function getSectorRadius(maxRadius: number, tier: number): number {
 const OBJECTIVE_COLORS: Record<GalaxyMapObjectiveKind, string> = {
     contract: "#ffb000",
     artifact: "#00d4ff",
+    signal: "#76dff5",
     boss: "#ff0040",
     final: "#ff00ff",
 };
@@ -193,6 +195,12 @@ export function drawGalaxyObjectiveMarkers(
                 ctx.lineTo(0, size);
                 ctx.lineTo(-size, 0);
                 ctx.closePath();
+            } else if (kind === "signal") {
+                ctx.moveTo(0, -size);
+                ctx.lineTo(size, 0);
+                ctx.lineTo(0, size);
+                ctx.lineTo(-size, 0);
+                ctx.closePath();
             } else if (kind === "boss") {
                 ctx.moveTo(-size, 0);
                 ctx.lineTo(size, 0);
@@ -205,6 +213,11 @@ export function drawGalaxyObjectiveMarkers(
             }
             ctx.fill();
             ctx.stroke();
+            if (kind === "signal") {
+                ctx.beginPath();
+                ctx.arc(0, 0, size * 0.25, 0, Math.PI * 2);
+                ctx.fill();
+            }
             ctx.restore();
         });
     }

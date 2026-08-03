@@ -43,6 +43,7 @@ import type {
   ScheduledRandomEventConsequence,
 } from "./randomEvents";
 import type { RunProfileId } from "@/game/galaxy/runProfiles";
+import type { GalaxyTierAll } from "./locations/galaxy";
 
 export type GameMode =
   | "galaxy_map"
@@ -70,6 +71,13 @@ export type GameMode =
   | "wreck_field"
   | "space_monster"
   | "hostile_approach_warning";
+
+export interface RunProfileArcTarget {
+  profileId: RunProfileId;
+  sectorId: number;
+  locationId: string;
+  tier: GalaxyTierAll;
+}
 
 export interface GameState {
   /** Версия состояния для миграций сохранений */
@@ -167,6 +175,7 @@ export interface GameState {
   startModifierIds: string[]; // Launch modifiers and selected doctrine
   runProfileId: RunProfileId | null;
   runProfileArcRewardClaimed: boolean;
+  runProfileArcTarget: RunProfileArcTarget | null;
   activeCrisis: ActiveCrisisState | null; // Currently active global crisis
   discoveredCrisisIds: string[]; // Crises already encountered by the player
   discoveredEnemyCodexIds: string[]; // Enemy types already encountered by the player
@@ -435,7 +444,6 @@ export interface GameScanContracts {
 
 export interface GameManagement {
   restartGame: (templateId?: string, modifierIds?: string[], profileId?: RunProfileId) => void;
-  claimRunProfileArcReward: () => void;
   resetProgress: () => void;
   saveGame: () => void;
   loadGame: () => boolean;

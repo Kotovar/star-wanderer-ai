@@ -245,6 +245,7 @@ const baseState: GameState = {
   startModifierIds: [],
   runProfileId: null,
   runProfileArcRewardClaimed: false,
+  runProfileArcTarget: null,
   activeCrisis: null,
   discoveredCrisisIds: [],
   discoveredEnemyCodexIds: [],

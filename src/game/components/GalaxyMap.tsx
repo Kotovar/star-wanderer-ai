@@ -145,8 +145,9 @@ const STAR_TYPES = STAR_SPRITE_ORDER;
 const OBJECTIVE_PRIORITY: Record<GalaxyMapObjective["kind"], number> = {
     final: 0,
     boss: 1,
-    artifact: 2,
-    contract: 3,
+    signal: 2,
+    artifact: 3,
+    contract: 4,
 };
 
 const OBJECTIVE_MARKERS: Record<
@@ -155,6 +156,7 @@ const OBJECTIVE_MARKERS: Record<
 > = {
     contract: { icon: "▲", color: "#ffb000" },
     artifact: { icon: "◆", color: "#00d4ff" },
+    signal: { icon: "◆", color: "#76dff5" },
     boss: { icon: "✚", color: "#ff0040" },
     final: { icon: "◎", color: "#ff00ff" },
 };
@@ -275,6 +277,10 @@ export function GalaxyMap() {
     const scanRange = useGameStore((s) => getEffectiveScanRange(s));
     const activeContracts = useGameStore((s) => s.activeContracts);
     const completedLocations = useGameStore((s) => s.completedLocations);
+    const runProfileArcTarget = useGameStore((s) => s.runProfileArcTarget);
+    const runProfileArcRewardClaimed = useGameStore(
+        (s) => s.runProfileArcRewardClaimed,
+    );
     const bossesVisible = useGameStore((s) => s.canScanObject("boss"));
     const canSeeT4 = canSeeTier4(modules, artifacts, scanRange);
     const galaxyStatus = getGalaxyMapStatus(modules, captainLevel, fuel);
@@ -285,6 +291,8 @@ export function GalaxyMap() {
                 activeContracts,
                 artifacts,
                 completedLocations,
+                runProfileArcTarget,
+                runProfileArcRewardClaimed,
                 bossesVisible,
             }),
         [
@@ -292,6 +300,8 @@ export function GalaxyMap() {
             artifacts,
             bossesVisible,
             completedLocations,
+            runProfileArcRewardClaimed,
+            runProfileArcTarget,
             sectors,
         ],
     );
@@ -1090,6 +1100,11 @@ export function GalaxyMap() {
                             <div className="absolute right-0 mt-1 max-h-[38dvh] min-w-44 overflow-y-auto border border-ring bg-[rgba(5,8,16,0.94)] p-1 shadow-[0_0_18px_rgba(0,212,255,0.12)]">
                                 {objectiveTargets.map(({ objective, sector }) => {
                                     const marker = OBJECTIVE_MARKERS[objective.kind];
+                                    const objectiveLabel = objective.label.startsWith(
+                                        "location_types.",
+                                    )
+                                        ? t(objective.label)
+                                        : objective.label;
                                     const routeLabel = t("route_dialog.title", {
                                         sector: sector.name,
                                     });
@@ -1120,9 +1135,9 @@ export function GalaxyMap() {
                                                 <span className="block truncate text-[#dfe8ef]">
                                                     {sector.name}
                                                 </span>
-                                                {objective.label !== sector.name && (
+                                                {objectiveLabel !== sector.name && (
                                                     <span className="block truncate text-[10px] text-[#81909a]">
-                                                        {objective.label}
+                                                        {objectiveLabel}
                                                     </span>
                                                 )}
                                             </span>

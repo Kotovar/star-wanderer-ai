@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { maybeRevealRunProfileArcTarget } from "@/game/galaxy/runProfileArcs";
 import type {
     CrewMember,
     DerelictApproach,
@@ -268,6 +269,7 @@ export const exploreDerelictShip = (
             }),
         };
     });
+    maybeRevealRunProfileArcTarget(set, get);
 
     handleDerelictRecoveryContracts(locationId, set, get);
 

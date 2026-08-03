@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import { store as i18nStore } from "@/lib/useTranslation";
+import { maybeRevealRunProfileArcTarget } from "@/game/galaxy/runProfileArcs";
 import type { SetState, GameStore, WreckApproach } from "@/game/types";
 import { patchLocation } from "@/game/utils/patchLocation";
 import { LAB_MODULE_TYPES } from "@/game/constants/modules";
@@ -204,6 +205,7 @@ export function salvageWreckField(
             }),
         };
     });
+    maybeRevealRunProfileArcTarget(set, get);
 
     // — Log —
     const parts: string[] = [];

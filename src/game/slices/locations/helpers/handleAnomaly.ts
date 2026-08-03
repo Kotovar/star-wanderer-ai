@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { maybeRevealRunProfileArcTarget } from "@/game/galaxy/runProfileArcs";
 import type { SetState, GameStore, Location, AnomalyApproach } from "@/game/types";
 import { RESEARCH_RESOURCES } from "@/game/constants";
 import { getAnomalyResources } from "@/game/research/utils";
@@ -41,6 +42,7 @@ export const handleAnomaly = (
     set((s) => ({
         completedLocations: [...s.completedLocations, anomaly.id],
     }));
+    maybeRevealRunProfileArcTarget(set, get);
 
     // Get research resources from anomaly
     addResearchResources(set, get, config.guaranteedResources);

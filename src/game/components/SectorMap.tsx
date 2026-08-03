@@ -434,7 +434,10 @@ export function SectorMap() {
         } else {
           drawUnknown(ctx, x, y, completed);
         }
-      } else if (loc.type === "distress_signal") {
+      } else if (
+        loc.type === "distress_signal" ||
+        loc.type === "profile_signal"
+      ) {
         // Distress signals are always visible (SOS beacon)
         drawDistressSignal(
           ctx,

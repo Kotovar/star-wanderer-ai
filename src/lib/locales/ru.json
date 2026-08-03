@@ -3014,7 +3014,8 @@
         "cosmic_storm": "Космический шторм",
         "wreck_field": "Обломки кораблей",
         "boss": "Древний босс",
-        "space_monster": "Космическое существо"
+        "space_monster": "Космическое существо",
+        "profile_signal": "Зашифрованные координаты"
     },
     "space_monsters": {
         "title": "КОСМИЧЕСКОЕ СУЩЕСТВО",
@@ -3831,24 +3832,26 @@
         }
     },
     "run_profile_arcs": {
-        "label": "Маршрут профиля",
-        "milestone": "этап {{target}}",
-        "claim": "Получить ресурсный тайник",
-        "claimed": "Ресурсный тайник получен",
+        "label": "Зашифрованный след",
+        "confirmed": "Подтверждено: {{current}}/3 секторов",
+        "coordinates": "Зашифрованные координаты",
+        "coordinates_target": "Координаты: {{sector}} · тир {{tier}}",
+        "completed": "След завершён",
+        "received": "Получено:",
         "ancient_echo": {
-            "title": "Архивный маршрут",
-            "objective": "Исследуйте аномалии и газовые гиганты: {{current}}/{{target}}",
-            "reward": "Награда: 6 древних данных, 1 квантовый кристалл"
+            "title": "Эхо древних",
+            "objective": "Подтверждено: {{current}}/{{target}} секторов",
+            "boss": "Древний страж"
         },
         "war_spiral": {
-            "title": "Фронтовая охота",
-            "objective": "Победите врагов и космических существ: {{current}}/{{target}}",
-            "reward": "Награда: 5 биоматериалов, 3 технофрагмента"
+            "title": "Фронтовая сводка",
+            "objective": "Подтверждено: {{current}}/{{target}} секторов",
+            "boss": "Боевой авангард"
         },
         "broken_trade_lanes": {
-            "title": "Сбор выживших",
-            "objective": "Исследуйте сигналы, дереликты и поля обломков: {{current}}/{{target}}",
-            "reward": "Награда: 5 редких минералов, 3 технофрагмента"
+            "title": "Угасающий сигнал",
+            "objective": "Подтверждено: {{current}}/{{target}} секторов",
+            "boss": "Мародёрский конвой"
         }
     },
     "campaign_progress": {
@@ -5450,7 +5453,8 @@
         "err_no_space": "Недостаточно места!",
         "err_no_module_type": "Не указан тип модуля для улучшения",
         "err_max_upgrade": "Максимальный уровень улучшения! (LV3)",
-        "run_profile_arc_claimed": "{{profile}}: получен ресурсный тайник — {{reward}}"
+        "profile_signal_coordinates": "Зашифрованные координаты: {{sector}}, тир {{tier}}",
+        "profile_signal_reward": "{{profile}}: след расшифрован, награда получена"
     },
     "delivery_goods": {
         "spares": "Запчасти",

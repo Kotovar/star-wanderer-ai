@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getRunProfileArcEncounter } from "@/game/galaxy/runProfileArcs";
 import { findActiveArtifact } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { addEnemyCodexEntry, getEnemyCodexId } from "@/game/constants/enemyCodex";
@@ -235,6 +236,20 @@ export const selectLocation = (
                 set({ gameMode: "unknown_ship" });
             } else {
                 get().startCombat(loc);
+            }
+            break;
+        }
+
+        case "profile_signal": {
+            if (loc.defeated) {
+                set({ gameMode: "sector_map" });
+                break;
+            }
+            if (state.runProfileArcTarget?.locationId === loc.id) {
+                get().startCombat({
+                    ...loc,
+                    ...getRunProfileArcEncounter(state.runProfileArcTarget),
+                });
             }
             break;
         }

@@ -1,5 +1,10 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import {
+    getRunProfileArcRewardPatch,
+    maybeRevealRunProfileArcTarget,
+} from "@/game/galaxy/runProfileArcs";
+import { getRunProfile } from "@/game/galaxy/runProfiles";
+import {
     ARTIFACT_TYPES,
     RESEARCH_RESOURCES,
     MUTATION_CHANCES,
@@ -121,6 +126,20 @@ export function handleVictory(
             }),
         );
     }
+
+    const profileRewardPatch = getRunProfileArcRewardPatch(get());
+    if (profileRewardPatch) {
+        const profile = getRunProfile(get().runProfileArcTarget?.profileId ?? null);
+        set(() => profileRewardPatch);
+        get().addLog(
+            i18nStore.t("game_logs.profile_signal_reward", {
+                profile: profile ? i18nStore.t(profile.nameKey) : "—",
+            }),
+            "info",
+        );
+        get().saveGame();
+    }
+    maybeRevealRunProfileArcTarget(set, get);
 
     // Threat/tier of the defeated enemy — drives contract completion, research
     // loot, and mutation risk below. `threat` is never explicitly 0 in practice

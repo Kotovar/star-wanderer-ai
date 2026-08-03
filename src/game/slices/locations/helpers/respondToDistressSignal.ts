@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { maybeRevealRunProfileArcTarget } from "@/game/galaxy/runProfileArcs";
 import { ARTIFACT_TYPES } from "@/game/constants/artifacts";
 import { TRADE_GOODS } from "@/game/constants";
 import { findActiveArtifact } from "@/game/artifacts/utils";
@@ -85,6 +86,7 @@ export const respondToDistressSignal = (
 
     // Update location state
     updateLocationState(loc, outcome, approach, set);
+    maybeRevealRunProfileArcTarget(set, get);
 
     playSound(outcome === "pirate_ambush" ? "world_danger" : "world_discovery");
 

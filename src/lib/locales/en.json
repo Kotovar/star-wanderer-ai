@@ -3014,7 +3014,8 @@
         "cosmic_storm": "Cosmic Storm",
         "wreck_field": "Wreck Field",
         "boss": "Ancient Boss",
-        "space_monster": "Space Creature"
+        "space_monster": "Space Creature",
+        "profile_signal": "Encrypted Coordinates"
     },
     "space_monsters": {
         "title": "SPACE CREATURE",
@@ -3831,24 +3832,26 @@
         }
     },
     "run_profile_arcs": {
-        "label": "Profile route",
-        "milestone": "stage {{target}}",
-        "claim": "Claim resource cache",
-        "claimed": "Resource cache claimed",
+        "label": "Encrypted Trail",
+        "confirmed": "Confirmed: {{current}}/3 sectors",
+        "coordinates": "Encrypted Coordinates",
+        "coordinates_target": "Coordinates: {{sector}} · Tier {{tier}}",
+        "completed": "Trail completed",
+        "received": "Received:",
         "ancient_echo": {
-            "title": "Archive route",
-            "objective": "Explore anomalies and gas giants: {{current}}/{{target}}",
-            "reward": "Reward: 6 ancient data, 1 quantum crystal"
+            "title": "Ancient Echo",
+            "objective": "Confirmed: {{current}}/{{target}} sectors",
+            "boss": "Ancient Guardian"
         },
         "war_spiral": {
-            "title": "Frontline hunt",
-            "objective": "Defeat enemies and space creatures: {{current}}/{{target}}",
-            "reward": "Reward: 5 alien biology, 3 tech salvage"
+            "title": "Frontline Dispatch",
+            "objective": "Confirmed: {{current}}/{{target}} sectors",
+            "boss": "Combat Vanguard"
         },
         "broken_trade_lanes": {
-            "title": "Salvage the survivors",
-            "objective": "Explore signals, derelicts, and wreck fields: {{current}}/{{target}}",
-            "reward": "Reward: 5 rare minerals, 3 tech salvage"
+            "title": "Fading Signal",
+            "objective": "Confirmed: {{current}}/{{target}} sectors",
+            "boss": "Marauder Convoy"
         }
     },
     "campaign_progress": {
@@ -5450,7 +5453,8 @@
         "err_no_space": "Not enough space!",
         "err_no_module_type": "Module type for upgrade not specified",
         "err_max_upgrade": "Maximum upgrade level! (LV3)",
-        "run_profile_arc_claimed": "{{profile}}: resource cache claimed — {{reward}}"
+        "profile_signal_coordinates": "Encrypted coordinates: {{sector}}, Tier {{tier}}",
+        "profile_signal_reward": "{{profile}}: trail decrypted, reward received"
     },
     "delivery_goods": {
         "spares": "Spare Parts",

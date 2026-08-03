@@ -1,4 +1,5 @@
 import type { ContractType, GalaxyTierAll, LocationType } from "@/game/types";
+import type { EnemyShip } from "@/game/types/enemy";
 import type { ResearchResourceType } from "@/game/types/research";
 
 export type RunProfileId =
@@ -29,12 +30,11 @@ export interface RunProfile {
     readonly locationWeights: Readonly<Partial<Record<LocationWeightKey, number>>>;
     readonly contractWeights: Partial<Record<ContractType, number>>;
     readonly arc: {
-        readonly locationTypes: readonly LocationType[];
-        readonly milestones: readonly [1, 3, 5];
         readonly reward: Partial<Record<ResearchResourceType, number>>;
         readonly titleKey: string;
         readonly objectiveKey: string;
-        readonly rewardKey: string;
+        readonly bossNameKey: string;
+        readonly enemyType: EnemyShip;
     };
     readonly clusters: {
         readonly tiers: readonly GalaxyTierAll[];
@@ -54,12 +54,11 @@ export const RUN_PROFILES = {
         locationWeights: { anomaly: 2.25, gasGiant: 1.5, station: 0.6 },
         contractWeights: { research: 3, expedition_survey: 3, gas_dive: 2 },
         arc: {
-            locationTypes: ["anomaly", "gas_giant"],
-            milestones: [1, 3, 5],
             reward: { ancient_data: 6, quantum_crystals: 1 },
             titleKey: "run_profile_arcs.ancient_echo.title",
             objectiveKey: "run_profile_arcs.ancient_echo.objective",
-            rewardKey: "run_profile_arcs.ancient_echo.reward",
+            bossNameKey: "run_profile_arcs.ancient_echo.boss",
+            enemyType: "synthetic_guard",
         },
         clusters: { tiers: [1, 2, 3], sectorsPerTier: 2, types: ["anomaly", "anomaly", "gas_giant"] },
     },
@@ -72,12 +71,11 @@ export const RUN_PROFILES = {
         locationWeights: { enemyShip: 2, boss: 1.4, station: 0.85 },
         contractWeights: { combat: 3, bounty: 3 },
         arc: {
-            locationTypes: ["enemy", "space_monster"],
-            milestones: [1, 3, 5],
             reward: { alien_biology: 5, tech_salvage: 3 },
             titleKey: "run_profile_arcs.war_spiral.title",
             objectiveKey: "run_profile_arcs.war_spiral.objective",
-            rewardKey: "run_profile_arcs.war_spiral.reward",
+            bossNameKey: "run_profile_arcs.war_spiral.boss",
+            enemyType: "raider",
         },
         clusters: { tiers: [1, 2, 3], sectorsPerTier: 2, types: ["enemy", "space_monster"] },
     },
@@ -90,12 +88,11 @@ export const RUN_PROFILES = {
         locationWeights: { station: 0, derelictShip: 2.4, distressSignal: 2, wreckField: 2 },
         contractWeights: { derelict_recovery: 3, delivery: 2, supply_run: 2 },
         arc: {
-            locationTypes: ["derelict_ship", "distress_signal", "wreck_field"],
-            milestones: [1, 3, 5],
             reward: { rare_minerals: 5, tech_salvage: 3 },
             titleKey: "run_profile_arcs.broken_trade_lanes.title",
             objectiveKey: "run_profile_arcs.broken_trade_lanes.objective",
-            rewardKey: "run_profile_arcs.broken_trade_lanes.reward",
+            bossNameKey: "run_profile_arcs.broken_trade_lanes.boss",
+            enemyType: "marauder",
         },
         clusters: { tiers: [1, 2, 3], sectorsPerTier: 2, types: ["derelict_ship", "distress_signal", "wreck_field"] },
         stationAnchorsByTier: { 1: 3, 2: 2, 3: 2, 4: 2 },

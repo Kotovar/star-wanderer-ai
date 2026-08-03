@@ -5,7 +5,6 @@ import {
     checkVictory,
     triggerVictory,
     restartGame,
-    claimRunProfileArcReward,
 } from "./helpers";
 import {
     clearAllSaves,
@@ -50,7 +49,6 @@ export interface GameManagementSlice {
     checkVictory: () => void;
     triggerVictory: () => void;
     restartGame: (templateId?: string, modifierIds?: string[], profileId?: RunProfileId) => void;
-    claimRunProfileArcReward: () => void;
     resetProgress: () => void;
     saveGame: () => void;
     loadGame: () => boolean;
@@ -67,7 +65,6 @@ export const createGameManagementSlice = (
     triggerVictory: () => triggerVictory(set, get),
     restartGame: (templateId?: string, modifierIds?: string[], profileId?: RunProfileId) =>
         restartGame(set, get, templateId, modifierIds, profileId),
-    claimRunProfileArcReward: () => claimRunProfileArcReward(set, get),
     resetProgress: () => {
         clearAllSaves();
         resetMetaProgress();

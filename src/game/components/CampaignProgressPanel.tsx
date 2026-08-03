@@ -20,7 +20,6 @@ import { canSeeTier4 } from "@/game/galaxy/galaxy-map-utils";
 import { getRunProfileArcProgress } from "@/game/galaxy/runProfileArcs";
 import { getRunProfile } from "@/game/galaxy/runProfiles";
 import { isLocationCountedAsVisited } from "@/game/progression/locationProgress";
-import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 
 type Tone = "good" | "warning" | "danger" | "neutral";
@@ -168,9 +167,7 @@ export function CampaignProgressPanel() {
   const runProfileArcRewardClaimed = useGameStore(
     (s) => s.runProfileArcRewardClaimed,
   );
-  const claimRunProfileArcReward = useGameStore(
-    (s) => s.claimRunProfileArcReward,
-  );
+  const runProfileArcTarget = useGameStore((s) => s.runProfileArcTarget);
   const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
 
   const scanRange = getEffectiveScanRange();
@@ -180,6 +177,9 @@ export function CampaignProgressPanel() {
       getRunProfileArcProgress(runProfileId, sectors, completedLocations),
     [completedLocations, runProfileId, sectors],
   );
+  const profileArcTargetSector = runProfileArcTarget
+    ? sectors.find((sector) => sector.id === runProfileArcTarget.sectorId)
+    : null;
   const currentTier = currentSector?.tier ?? 1;
   const engineLevel = Math.max(
     1,
@@ -338,56 +338,70 @@ export function CampaignProgressPanel() {
               <div className="mt-1 text-xs font-bold text-[#d8f6ff]">
                 {t(profileArcProgress.profile.arc.titleKey)}
               </div>
-              <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-[#9eb5bd]">
-                <span>
-                  {t(profileArcProgress.profile.arc.objectiveKey, {
-                    current: profileArcProgress.completed,
-                    target: profileArcProgress.target,
-                  })}
-                </span>
-                <span className="shrink-0 text-[#d8f6ff]">
-                  {profileArcProgress.completed}/{profileArcProgress.target}
-                </span>
-              </div>
-              <div className="mt-2">
-                <ProgressBar
-                  value={profileArcProgress.completed}
-                  max={profileArcProgress.target}
-                  color="#00d4ff"
-                />
-              </div>
-              <div className="mt-2 grid grid-cols-3 gap-1 text-[9px] uppercase tracking-wide">
-                {profileArcProgress.milestones.map((milestone) => (
-                  <div
-                    key={milestone}
-                    className={
-                      profileArcProgress.completed >= milestone
-                        ? "text-[#9ef2ff]"
-                        : "text-[#52666b]"
-                    }
-                  >
-                    {profileArcProgress.completed >= milestone ? "✓" : "□"}{" "}
-                    {t("run_profile_arcs.milestone", { target: milestone })}
-                  </div>
-                ))}
-              </div>
-              <p className="mt-2 text-[10px] text-[#ffcc66]">
-                {t(profileArcProgress.profile.arc.rewardKey)}
-              </p>
               {runProfileArcRewardClaimed ? (
-                <p className="mt-2 text-xs text-[#00ff41]">
-                  ✓ {t("run_profile_arcs.claimed")}
-                </p>
-              ) : profileArcProgress.isComplete ? (
-                <Button
-                  className="mt-2 h-7 border-[#00d4ff88] bg-[#00d4ff12] px-2 text-[10px] text-[#d8f6ff] hover:bg-[#00d4ff22]"
-                  onClick={claimRunProfileArcReward}
-                  size="sm"
-                  variant="outline"
-                >
-                  {t("run_profile_arcs.claim")}
-                </Button>
-              ) : null}
+                <div className="mt-2 text-xs text-[#00ff41]">
+                  <p>✓ {t("run_profile_arcs.completed")}</p>
+                  <div className="mt-1 text-[#d8f6ff]">
+                    <span className="text-[#9eb5bd]">
+                      {t("run_profile_arcs.received")}
+                    </span>{" "}
+                    {Object.entries(profileArcProgress.profile.arc.reward).map(
+                      ([resource, amount], index) => (
+                        <span key={resource}>
+                          {index > 0 ? " · " : ""}+{amount} {t(`research.resources.${resource}.name`)}
+                        </span>
+                      ),
+                    )}
+                  </div>
+                </div>
+              ) : runProfileArcTarget ? (
+                <div className="mt-2 text-xs text-[#d8f6ff]">
+                  <div className="text-[10px] uppercase tracking-[0.16em] text-[#76dff5]">
+                    {t("run_profile_arcs.coordinates")}
+                  </div>
+                  <p className="mt-1">
+                    {t("run_profile_arcs.coordinates_target", {
+                      sector: profileArcTargetSector?.name ?? "—",
+                      tier: runProfileArcTarget.tier,
+                    })}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-[#9eb5bd]">
+                    <span>
+                      {t(profileArcProgress.profile.arc.objectiveKey, {
+                        current: profileArcProgress.confirmed,
+                        target: profileArcProgress.target,
+                      })}
+                    </span>
+                    <span className="shrink-0 text-[#d8f6ff]">
+                      {profileArcProgress.confirmed}/{profileArcProgress.target}
+                    </span>
+                  </div>
+                  <div className="mt-2">
+                    <ProgressBar
+                      value={profileArcProgress.confirmed}
+                      max={profileArcProgress.target}
+                      color="#00d4ff"
+                    />
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-1 text-[9px] uppercase tracking-wide">
+                    {[1, 2, 3].map((mark) => (
+                      <div
+                        key={mark}
+                        className={
+                          profileArcProgress.confirmed >= mark
+                            ? "text-[#9ef2ff]"
+                            : "text-[#52666b]"
+                        }
+                      >
+                        {profileArcProgress.confirmed >= mark ? "✓" : "□"} {mark}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           ) : null}
         </section>

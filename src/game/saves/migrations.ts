@@ -370,6 +370,11 @@ const migrations: Record<number, Migration> = {
     stateVersion: 19,
     runProfileArcRewardClaimed: false,
   }),
+  19: (raw) => ({
+    ...(raw as GameState),
+    stateVersion: 20,
+    runProfileArcTarget: null,
+  }),
 };
 
 /**

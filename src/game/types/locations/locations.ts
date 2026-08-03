@@ -47,7 +47,8 @@ export type LocationType =
     | "derelict_ship"
     | "gas_giant"
     | "wreck_field"
-    | "space_monster";
+    | "space_monster"
+    | "profile_signal";
 
 export const SHIP_LOCATION_TYPES: LocationType[] = [
     "boss",

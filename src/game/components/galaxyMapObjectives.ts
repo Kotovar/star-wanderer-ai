@@ -1,4 +1,4 @@
-import type { Artifact, Contract, Sector } from "@/game/types";
+import type { Artifact, Contract, RunProfileArcTarget, Sector } from "@/game/types";
 import type {
     GalaxyMapObjective,
     GalaxyMapObjectiveKind,
@@ -9,6 +9,8 @@ type GalaxyMapObjectivesInput = {
     activeContracts: Contract[];
     artifacts: Artifact[];
     completedLocations: string[];
+    runProfileArcTarget: RunProfileArcTarget | null;
+    runProfileArcRewardClaimed: boolean;
     bossesVisible: boolean;
 };
 
@@ -46,6 +48,8 @@ export const getGalaxyMapObjectives = ({
     activeContracts,
     artifacts,
     completedLocations,
+    runProfileArcTarget,
+    runProfileArcRewardClaimed,
     bossesVisible,
 }: GalaxyMapObjectivesInput): GalaxyMapObjective[] => {
     const sectorsById = new Map(sectors.map((sector) => [sector.id, sector]));
@@ -81,6 +85,13 @@ export const getGalaxyMapObjectives = ({
         );
         if (sector && location) {
             addObjective("artifact", sector, location.name);
+        }
+    }
+
+    if (runProfileArcTarget && !runProfileArcRewardClaimed) {
+        const sector = sectorsById.get(runProfileArcTarget.sectorId);
+        if (sector) {
+            addObjective("signal", sector, "location_types.profile_signal");
         }
     }
 

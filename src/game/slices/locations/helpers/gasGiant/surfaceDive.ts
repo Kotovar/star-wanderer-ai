@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { maybeRevealRunProfileArcTarget } from "@/game/galaxy/runProfileArcs";
 import type { SetState, GameStore } from "@/game/types";
 import type { DiveRewards } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES } from "@/game/constants";
@@ -127,6 +128,7 @@ export function surfaceDive(set: SetState, get: () => GameStore): void {
             ...patchLocation(s, locationId, { gasGiantLastDiveAt: s.turn }),
         };
     });
+    maybeRevealRunProfileArcTarget(set, get);
 
     if (logParts.length > 0) {
         get().addLog( i18nStore.t("game_logs.surfaceDive_1", { value: logParts.join(", ") }),
