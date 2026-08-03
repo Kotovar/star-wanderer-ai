@@ -847,6 +847,10 @@ const BOSS_HULL_PROFILES: Record<string, BossHullProfile> = {
     points: [{ x: -122, y: -70 }, { x: 8, y: -84 }, { x: 126, y: -46 }, { x: 158, y: 0 }, { x: 126, y: 46 }, { x: 8, y: 84 }, { x: -122, y: 70 }, { x: -84, y: 0 }],
     body: "#173c48", edge: "#67e8f9", detail: "#fef3c7", engine: { x: -112, y: 0 }, core: { x: 50, y: 0 }, engineSize: 21, enginePower: 2.2, ornament: "clock",
   },
+  gravity_archon: {
+    points: [{ x: -154, y: -48 }, { x: -72, y: -76 }, { x: 8, y: -62 }, { x: 82, y: -82 }, { x: 160, y: 0 }, { x: 82, y: 82 }, { x: 8, y: 62 }, { x: -72, y: 76 }, { x: -154, y: 48 }, { x: -102, y: 0 }],
+    body: "#211a43", edge: "#a78bfa", detail: "#ddd6fe", engine: { x: -142, y: 0 }, core: { x: 72, y: 0 }, engineSize: 22, enginePower: 2.1, ornament: "rings",
+  },
   the_eternal: {
     points: [{ x: -150, y: -58 }, { x: -54, y: -82 }, { x: 14, y: -44 }, { x: 92, y: -74 }, { x: 164, y: 0 }, { x: 92, y: 74 }, { x: 14, y: 44 }, { x: -54, y: 82 }, { x: -150, y: 58 }, { x: -100, y: 0 }],
     body: "#250d3a", edge: "#f472b6", detail: "#f5d0fe", engine: { x: -140, y: 0 }, core: { x: 76, y: 0 }, engineSize: 22, enginePower: 3.5, ornament: "infinity",
@@ -3638,16 +3642,10 @@ function getCombatFocus(
 
   const { event } = current;
   if (event.kind === "projectile") {
-    const beforeImpact = current.progress < getImpactProgress(event);
+    if (event.to !== "enemy" || event.targetModuleId === undefined) return null;
     return {
-      point: beforeImpact
-        ? event.sourceModuleId === undefined
-          ? shipCenter(event.from, width, height)
-          : getModulePoint(snapshot[event.from], event.from, event.sourceModuleId, width, height)
-        : event.targetModuleId === undefined
-          ? shipCenter(event.to, width, height)
-          : getModulePoint(snapshot[event.to], event.to, event.targetModuleId, width, height),
-      scale: beforeImpact ? 1.035 : 1.045,
+      point: getModulePoint(snapshot.enemy, "enemy", event.targetModuleId, width, height),
+      scale: 1.045,
     };
   }
   if (event.kind === "module_destroyed") {

@@ -143,6 +143,9 @@ export const COMBAT_CINEMATIC_ENEMY_WEAPON_KEYS: readonly string[] = [
   "reality_tear",
   "oblivion_spire",
   "void_embrace",
+  "tidal_lance",
+  "singularity_well",
+  "mass_driver",
 ];
 
 const NAMED_ENEMY_WEAPONS = new Set(COMBAT_CINEMATIC_ENEMY_WEAPON_KEYS);

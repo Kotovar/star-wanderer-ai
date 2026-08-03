@@ -63,6 +63,11 @@ for (const marker of [
 }
 assert.match(
   stageSource,
+  /if \(event\.to !== "enemy" \|\| event\.targetModuleId === undefined\) return null;/,
+  "a critical-shot camera focus must only target an enemy module",
+);
+assert.match(
+  stageSource,
   /function drawRocket[\s\S]*?quadraticCurveTo/,
   "missiles and siege torpedoes have a shaped hull instead of an arrow",
 );

@@ -1841,7 +1841,10 @@
             "paradox_engine": "ДВИГАТЕЛЬ ПАРАДОКСОВ",
             "reality_tear": "РАЗРЫВ РЕАЛЬНОСТИ",
             "oblivion_spire": "ШПИЛЬ ЗАБВЕНИЯ",
-            "void_embrace": "ОБЪЯТИЕ ПУСТОТЫ"
+            "void_embrace": "ОБЪЯТИЕ ПУСТОТЫ",
+            "tidal_lance": "ПРИЛИВНОЕ КОПЬЁ",
+            "singularity_well": "КОЛОДЕЦ СИНГУЛЯРНОСТИ",
+            "mass_driver": "МАСС-ДРАЙВЕР"
         },
         "weapons": {
             "laser": "ЛАЗЕР",

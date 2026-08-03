@@ -1841,7 +1841,10 @@
             "paradox_engine": "PARADOX ENGINE",
             "reality_tear": "REALITY TEAR",
             "oblivion_spire": "OBLIVION SPIRE",
-            "void_embrace": "VOID EMBRACE"
+            "void_embrace": "VOID EMBRACE",
+            "tidal_lance": "TIDAL LANCE",
+            "singularity_well": "SINGULARITY WELL",
+            "mass_driver": "MASS DRIVER"
         },
         "weapons": {
             "laser": "LASER",
