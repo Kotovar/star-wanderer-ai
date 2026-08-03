@@ -53,8 +53,8 @@ export const getNebulaDisruptionPatch = (
   );
   if (candidates.length === 0) {
     return {
-      ship: { ...state.ship, fuel: Math.max(0, state.ship.fuel - NEBULA_FUEL_LOSS) },
-      traveling: checkedTraveling,
+      ship: state.ship,
+      traveling: { ...checkedTraveling, turnsLeft: traveling.turnsLeft + 1 },
     };
   }
 

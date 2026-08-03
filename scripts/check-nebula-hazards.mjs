@@ -152,6 +152,23 @@ assert.equal(
   3,
   "drift must add exactly one travel turn",
 );
+const noEligibleModuleFallback = getNebulaDisruptionPatch(
+  {
+    ...baseState,
+    ship: {
+      ...baseState.ship,
+      fuel: 0,
+      modules: [{ id: 1, health: 10, disabled: false }],
+    },
+  },
+  "module_damage",
+  () => 0,
+);
+assert.equal(
+  noEligibleModuleFallback?.traveling?.turnsLeft,
+  3,
+  "module damage without an eligible module must drift for one extra travel turn",
+);
 assert.equal(
   getNebulaDisruptionPatch(
     { ...baseState, traveling: { ...traveling, nebulaChecked: true } },
