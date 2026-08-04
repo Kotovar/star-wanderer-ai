@@ -4289,7 +4289,7 @@
             "description": "An energy front threatens the {{module}} system. Expected load: {{damage}} HP.",
             "pilot": {
                 "label": "Evade the front",
-                "description": "The pilot plots a course through a break in the storm.",
+                "description": "The pilot plots a course through a break in the energy front.",
                 "outcome": "The module takes only {{damage}} damage and the pilot gains experience.",
                 "requirement": "a living pilot stationed in an active cockpit"
             },
@@ -4307,7 +4307,7 @@
             },
             "standard": {
                 "label": "Brace compartments",
-                "description": "Prepare the ship to take the storm head-on.",
+                "description": "Prepare the ship to take the energy front head-on.",
                 "outcome": "The selected module takes {{damage}} damage."
             }
         },
