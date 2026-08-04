@@ -60,6 +60,11 @@ assert.equal(
   false,
   "не-ксеноморф не должен получать задачу merge",
 );
+assert.equal(
+  isValidCrewAssignment(xenoGunner, { id: 3, type: "weapon" }, "merge").valid,
+  false,
+  "ксеноморф не должен получать задачу merge в модуле без эффекта",
+);
 
 const source = (file) => readFileSync(path.join(root, file), "utf8");
 assert.doesNotMatch(

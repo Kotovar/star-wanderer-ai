@@ -18,10 +18,9 @@ export const canMergeWithModule = (
     if (!moduleShip) return true;
 
     const mergeEffect = XENOSYMBIONT_MERGE_EFFECTS[moduleShip.type];
-    return (
-        moduleShip.type !== "weaponShed" &&
-        Object.keys(mergeEffect.effects).length > 0
-    );
+    if (!mergeEffect || moduleShip.type === "weaponShed") return false;
+
+    return Object.keys(mergeEffect.effects).length > 0;
 };
 
 /**
