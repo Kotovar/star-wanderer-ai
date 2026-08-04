@@ -61,7 +61,10 @@ const EVENT_ICONS: Record<PendingRandomEvent["type"], string> = {
 
 function buildEventView(
   event: PendingRandomEvent,
-  state: Pick<ReturnType<typeof useGameStore.getState>, "crew" | "ship">,
+  state: Pick<
+    ReturnType<typeof useGameStore.getState>,
+    "crew" | "research" | "ship"
+  >,
   t: Translate,
   currentLanguage: "ru" | "en",
 ): { description: string; choices: ChoiceView[] } {
@@ -103,6 +106,17 @@ function buildEventView(
             }),
             available: isAvailable("systems"),
             requirement: t("random_events.storm.shields.requirement"),
+          },
+          {
+            id: "technology",
+            icon: "ϟ",
+            label: t("random_events.storm.technology.label"),
+            description: t("random_events.storm.technology.description"),
+            outcome: t("random_events.storm.technology.outcome", {
+              damage: event.damage * 0.5,
+            }),
+            available: isAvailable("technology"),
+            requirement: t("random_events.storm.technology.requirement"),
           },
           {
             id: "standard",
@@ -611,11 +625,12 @@ function buildEventView(
 }
 
 export function RandomEventPanel() {
-  const { event, resolveRandomEvent, crew, ship } = useGameStore(
+  const { event, resolveRandomEvent, crew, research, ship } = useGameStore(
     useShallow((state) => ({
       event: state.pendingRandomEvent,
       resolveRandomEvent: state.resolveRandomEvent,
       crew: state.crew,
+      research: state.research,
       ship: state.ship,
     })),
   );
@@ -626,7 +641,7 @@ export function RandomEventPanel() {
   const accent = EVENT_ACCENTS[event.type];
   const { description, choices } = buildEventView(
     event,
-    { crew, ship },
+    { crew, research, ship },
     t,
     currentLanguage,
   );
@@ -671,7 +686,7 @@ export function RandomEventPanel() {
         </p>
       </div>
 
-      <div className="grid gap-2 lg:grid-cols-3">
+      <div className={`grid gap-2 ${choices.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
         {choices.map((choice) => (
           <div
             key={choice.id}

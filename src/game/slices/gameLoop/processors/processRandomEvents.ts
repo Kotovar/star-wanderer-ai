@@ -54,7 +54,7 @@ const DERELICT_REWARD_MAX = 35;
 const TRADER_DISCOUNT_MIN = 20;
 const TRADER_DISCOUNT_MAX = 40;
 
-type RandomEventState = Pick<GameState, "crew" | "ship">;
+type RandomEventState = Pick<GameState, "crew" | "research" | "ship">;
 
 const randomInRange = (min: number, max: number): number =>
   Math.floor(Math.random() * (max - min + 1)) + min;
@@ -83,6 +83,12 @@ export function canUseRandomEventChoice(
   choice: RandomEventChoiceId,
 ): boolean {
   if (choice === "standard") return true;
+  if (choice === "technology") {
+    return (
+      event.type === "storm" &&
+      state.research.researchedTechs.includes("storm_shields")
+    );
+  }
   if (event.type === "consequence") return false;
 
   switch (event.type) {
@@ -294,6 +300,18 @@ function applyStormChoice(
   set: SetState,
   get: () => GameStore,
 ): void {
+  if (choice === "technology") {
+    const reducedDamage = event.damage * 0.5;
+    damageModule(set, event.targetModuleId, reducedDamage);
+    get().addLog(
+      i18nStore.t("random_events.logs.storm_technology", {
+        damage: reducedDamage,
+      }),
+      "info",
+    );
+    return;
+  }
+
   if (choice === "specialist") {
     const reducedDamage = Math.max(1, Math.ceil(event.damage * 0.35));
     damageModule(set, event.targetModuleId, reducedDamage);

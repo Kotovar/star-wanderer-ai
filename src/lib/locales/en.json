@@ -4285,7 +4285,7 @@
         "unavailable": "Unavailable",
         "unknown_module": "unknown module",
         "storm": {
-            "title": "Cosmic Storm",
+            "title": "Energy Front",
             "description": "An energy front threatens the {{module}} system. Expected load: {{damage}} HP.",
             "pilot": {
                 "label": "Evade the front",
@@ -4298,6 +4298,12 @@
                 "description": "Redirect the defensive field toward the impact side.",
                 "outcome": "Shields absorb {{absorbed}}; remaining module damage: {{damage}}.",
                 "requirement": "charged shields"
+            },
+            "technology": {
+                "label": "Activate Storm Shields",
+                "description": "Specialized shielding dissipates half of the strike against the module.",
+                "outcome": "The module takes only {{damage}} damage.",
+                "requirement": "Storm Shields research"
             },
             "standard": {
                 "label": "Brace compartments",
@@ -4584,9 +4590,10 @@
             "description": "A consequence of the decision during “{{event}}” has surfaced.",
             "outcome": "The result will be applied to the ship state after confirmation.",
             "storm": {
-                "specialist": "The successful maneuver strengthened crew confidence: up to +3 morale.",
-                "systems": "The defenses endured the calculated load: up to +3 crew morale.",
-                "standard": "The direct impact still weighs on the crew: morale -2."
+                "specialist": "The successful maneuver through the energy front strengthened crew confidence: up to +3 morale.",
+                "systems": "The defenses endured the energy-front load: up to +3 crew morale.",
+                "technology": "Storm Shields dispersed part of the front's impact: up to +3 crew morale.",
+                "standard": "The direct energy-front impact still weighs on the crew: morale -2."
             },
             "capsule": {
                 "specialist": "Archive decoding revealed another fragment: +1 Ancient Data.",
@@ -4657,16 +4664,17 @@
         "logs": {
             "decision_required": "Resolve the unscheduled event before advancing the turn",
             "choice_unavailable": "The requirements for that choice are no longer met",
-            "detected_storm": "⚠ Cosmic storm detected — captain's decision required",
+            "detected_storm": "⚠ Energy front detected — captain's decision required",
             "detected_capsule": "◈ Drifting capsule detected — captain's decision required",
             "detected_virus": "☣ Shipboard virus detected — captain's decision required",
             "detected_fuel_leak": "◒ Fuel leak detected — captain's decision required",
             "detected_crew_dispute": "◐ Crew dispute reported — captain's decision required",
             "detected_biohazard": "☄ Biohazard detected — captain's decision required",
             "detected_consequence": "◆ A delayed consequence of an earlier decision has surfaced",
-            "storm_pilot": "The pilot crossed the front: module took {{damage}} damage",
-            "storm_shields": "Shields absorbed {{absorbed}}; remaining module damage: {{damage}}",
-            "storm_standard": "The storm damaged a module by {{damage}} HP",
+            "storm_pilot": "The pilot crossed the energy front: module took {{damage}} damage",
+            "storm_shields": "Shields absorbed {{absorbed}} of the front's impact; remaining module damage: {{damage}}",
+            "storm_technology": "Storm Shields dispersed the front's impact: module took {{damage}} damage",
+            "storm_standard": "The energy front damaged a module by {{damage}} HP",
             "capsule_science": "Capsule archive decoded: +1 Ancient Data",
             "capsule_salvage": "Capsule dismantled: +2 Tech Salvage",
             "capsule_standard": "Capsule coordinates sold: +{{reward}}₢",

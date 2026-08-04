@@ -1,4 +1,4 @@
-export type RandomEventChoiceId = "specialist" | "systems" | "standard";
+export type RandomEventChoiceId = "specialist" | "systems" | "technology" | "standard";
 
 export type RandomEventType =
   | "storm"
