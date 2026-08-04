@@ -5,6 +5,7 @@ import { useGameStore } from "@/game/store";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { getTechBonusSum } from "@/game/research";
+import { RACES } from "@/game/constants/races";
 import {
     EXPEDITION_SCANS_PER_SCIENTIST,
     getExpeditionEnvironment,
@@ -87,6 +88,7 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                 {crew.map((member) => {
                     const selected = selectedIds.includes(member.id);
                     const fatigued = (member.expeditionFatigue ?? 0) > 0;
+                    const hasExpeditionFatigue = RACES[member.race].hasFatigue !== false;
                     const hpPct = member.maxHealth > 0 ? (member.health / member.maxHealth) * 100 : 0;
                     const hpColor = hpPct > 60 ? "#00ff41" : hpPct > 30 ? "#ffb000" : "#ff0040";
                     const isSynthetic = member.race === "synthetic";
@@ -127,9 +129,16 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                                     {t(`professions.${member.profession}`)} ·{" "}
                                     {t("effects.level_short")}
                                     {member.level}
-                                    {fatigued &&
-                                        ` · 😴 ${member.expeditionFatigue} ${t("effects.turns")}`}
                                 </div>
+                                {fatigued ? (
+                                    <div className="text-[10px] text-[#ffb000] mt-1">
+                                        {member.expeditionFatigue && t("planet_panel.expedition_fatigue_reason", { turns: member.expeditionFatigue })}
+                                    </div>
+                                ) : !hasExpeditionFatigue ? (
+                                    <div className="text-[10px] text-[#4488ff] mt-1">
+                                        {t("planet_panel.expedition_no_fatigue")}
+                                    </div>
+                                ) : null}
                                 {/* HP bar */}
                                 <div className="flex items-center gap-1.5">
                                     <div className="flex-1 h-2 rounded-full bg-[#1a1a1a] overflow-hidden border border-[#222]">
