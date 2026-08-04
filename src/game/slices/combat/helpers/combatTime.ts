@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { checkModuleDamage } from "@/game/slices/gameLoop/helpers/moduleDamage";
 import { processCrewAssignments } from "@/game/slices/gameLoop/processors";
 import type { GameState, GameStore, SetState } from "@/game/types";
 
@@ -19,7 +20,13 @@ export function advanceCombatRound(
         s.currentCombat.round = (s.currentCombat.round ?? 1) + 1;
     });
 
+    checkModuleDamage(get, set as unknown as SetState);
     processCrewAssignments(set as unknown as SetState, get);
+    set((s) => {
+        s.crew.forEach((crewMember) => {
+            crewMember.movedThisTurn = false;
+        });
+    });
     get().updateShipStats();
     get().checkGameOver();
     get().saveGame();
