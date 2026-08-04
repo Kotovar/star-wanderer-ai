@@ -38,6 +38,29 @@ assert.equal(
   true,
 );
 
+const xenoGunner = {
+  profession: "gunner",
+  race: "xenosymbiont",
+  isMerged: false,
+};
+const weaponBay = { id: 2, type: "weaponbay" };
+
+assert.equal(
+  isValidCrewAssignment(xenoGunner, weaponBay, "merge").valid,
+  true,
+  "незросшийся ксеноморф-стрелок должен получать задачу merge у оружейной палубы",
+);
+assert.equal(
+  isValidCrewAssignment({ ...xenoGunner, isMerged: true }, weaponBay, "merge").valid,
+  false,
+  "сросшийся ксеноморф не должен получать задачу merge повторно",
+);
+assert.equal(
+  isValidCrewAssignment({ ...xenoGunner, race: "human" }, weaponBay, "merge").valid,
+  false,
+  "не-ксеноморф не должен получать задачу merge",
+);
+
 const source = (file) => readFileSync(path.join(root, file), "utf8");
 assert.doesNotMatch(
   source("src/game/slices/combat/helpers/playerDamage.ts"),

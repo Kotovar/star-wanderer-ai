@@ -5,6 +5,7 @@ import type {
     Module,
 } from "@/game/types";
 import { COMBAT_ACTIONS, CREW_ACTIONS } from "@/game/constants/crew";
+import { canMergeWithModule } from "./merge";
 import {
     TASK_MODULE_REQUIREMENTS,
     MODULE_TYPE_NAMES,
@@ -56,6 +57,15 @@ export const isValidCrewAssignment = (
     // Если задача не указана, проверяем только профессию
     if (!task) {
         return { valid: true };
+    }
+
+    if (task === "merge" && mode === "civilian") {
+        return canMergeWithModule(crewMember, currentModule)
+            ? { valid: true }
+            : {
+                  valid: false,
+                  error: 'Задача "merge" доступна только не сросшемуся ксеноморфу в подходящем модуле!',
+              };
     }
 
     const availableTasks =

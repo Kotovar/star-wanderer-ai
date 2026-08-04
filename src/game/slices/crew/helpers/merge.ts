@@ -1,16 +1,27 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { RACES, XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants/races";
-import type { GameState, GameStore, CrewMember } from "@/game/types";
+import type { GameState, GameStore, CrewMember, Module } from "@/game/types";
 import { getCargoCapacity } from "@/game/slices/ship/helpers/getCargoCapacity";
 
 /**
  * Проверяет, может ли член экипажа срастись с модулем
  */
-export const canMergeWithModule = (crewMember: CrewMember): boolean => {
+export const canMergeWithModule = (
+    crewMember: CrewMember,
+    moduleShip?: Module,
+): boolean => {
     if (crewMember.isMerged) return false;
 
     const race = RACES[crewMember.race];
-    return race.id === "xenosymbiont";
+    if (race.id !== "xenosymbiont") return false;
+
+    if (!moduleShip) return true;
+
+    const mergeEffect = XENOSYMBIONT_MERGE_EFFECTS[moduleShip.type];
+    return (
+        moduleShip.type !== "weaponShed" &&
+        Object.keys(mergeEffect.effects).length > 0
+    );
 };
 
 /**
@@ -42,22 +53,12 @@ export const mergeWithModule = (
     const crew = get().crew;
     const crewMember = crew.find((c) => c.id === crewMemberId);
 
-    if (!crewMember || !canMergeWithModule(crewMember)) {
+    const moduleShip = get().ship.modules.find((m) => m.id === moduleId);
+    if (!crewMember || !moduleShip || !canMergeWithModule(crewMember, moduleShip)) {
         return false;
     }
 
-    const moduleShip = get().ship.modules.find((m) => m.id === moduleId);
-    const mergeEffect = moduleShip
-        ? XENOSYMBIONT_MERGE_EFFECTS[moduleShip.type]
-        : undefined;
-    if (
-        !moduleShip ||
-        moduleShip.type === "weaponShed" ||
-        !mergeEffect ||
-        Object.keys(mergeEffect.effects).length === 0
-    ) {
-        return false;
-    }
+    const mergeEffect = XENOSYMBIONT_MERGE_EFFECTS[moduleShip.type];
 
     // Проверяем, нет ли уже другого ксеноморфа в этом модуле
     const existingMerge = crew.find(

@@ -1,13 +1,10 @@
-import { MODULES_BY_LEVEL } from "@/game/components/station";
 import { getTechBonusSum } from "@/game/research";
 import type { GameState } from "@/game/types/game";
 import { getActiveModules } from "@/game/modules/utils";
 import { getMergeEffectsBonus } from "@/game/slices/crew/helpers";
 import { getCurrentCargo } from "./getCurrentCargo";
 
-const capacityDefault =
-    MODULES_BY_LEVEL[1].find((module) => module.moduleType === "cargo")
-        ?.capacity ?? 40;
+const capacityDefault = 40;
 
 /**
  * Вычисляет общую грузоподъёмность корабля
