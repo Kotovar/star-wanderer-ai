@@ -1,6 +1,13 @@
 import { toast } from "sonner";
 import { store as i18nStore } from "@/lib/useTranslation";
-import type { GameState, GameStore, Sector, SetState, TravelEventType } from "@/game/types";
+import type {
+    ContractCompletionResult,
+    GameState,
+    GameStore,
+    Sector,
+    SetState,
+    TravelEventType,
+} from "@/game/types";
 import {
     CONTRACT_REWARDS,
     MUTATION_CHANCES,
@@ -29,6 +36,10 @@ import {
 } from "./nebulaHazards";
 import { addPilotAsteroidManeuverDelay } from "./asteroidManeuver";
 import { getReputationChanges } from "@/game/contracts/completionRewards";
+import {
+    applyPatrolContractCompletions,
+    type PatrolContractResult,
+} from "./patrolCompletions";
 
 /** Вероятность случайного события в пути (прямой маршрут) */
 const TRAVEL_EVENT_CHANCE_DIRECT = 0.45;
@@ -584,15 +595,16 @@ export const handlePatrolContracts = (
     state: GameState,
     setState: SetState,
     getState: () => GameStore,
-) => {
+): PatrolContractResult => {
     let newActiveContracts = state.activeContracts;
     // Несколько patrol-контрактов могут завершиться одним прилётом —
     // копим все ID и суммарную награду, а не последнюю
     const completedIds: string[] = [];
     let totalReward = 0;
+    const completions: ContractCompletionResult[] = [];
 
     if (!destinationSector) {
-        return { newActiveContracts, completedIds, totalReward };
+        return { newActiveContracts, completedIds, totalReward, completions };
     }
 
     contracts.forEach((c) => {
@@ -623,7 +635,7 @@ export const handlePatrolContracts = (
                 getState().changeReputation(c.requiredRace, 10);
             }
 
-            getState().showContractCompletion({
+            completions.push({
                 contract: c,
                 credits: c.reward,
                 reputationChanges: getReputationChanges(reputationBefore, getState().raceReputation),
@@ -643,7 +655,7 @@ export const handlePatrolContracts = (
         }
     });
 
-    return { newActiveContracts, completedIds, totalReward };
+    return { newActiveContracts, completedIds, totalReward, completions };
 };
 
 /**
@@ -817,13 +829,8 @@ export const processTravel = (
                         : sector,
                 ),
             },
-            credits: s.credits + patrolResult.totalReward,
-            completedContractIds: [
-                ...s.completedContractIds,
-                ...patrolResult.completedIds,
-            ],
-            activeContracts: patrolResult.newActiveContracts,
         }));
+        applyPatrolContractCompletions(patrolResult, set, get);
 
         // Радиационная мутация при прибытии в сектор с нейтронной звездой
         applyNeutronRadiation(destinationSector, set, get);

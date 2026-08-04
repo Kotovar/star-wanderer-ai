@@ -11,6 +11,7 @@ import { getBestByProfession, getPilotInCockpit } from "@/game/crew";
 import { playSound } from "@/sounds";
 import { calculateFuelCost } from "./calculateFuelCost";
 import { applyNeutronRadiation, handlePatrolContracts } from "./processTravel";
+import { applyPatrolContractCompletions } from "./patrolCompletions";
 import type { GameState, GameStore, GameMode, Artifact, SetState } from "@/game/types";
 
 // ============================================================================
@@ -357,14 +358,7 @@ const handleTravelCompletion = (
             set as Parameters<typeof handlePatrolContracts>[3],
             get,
         );
-        set((s) => ({
-            credits: s.credits + patrolResult.totalReward,
-            completedContractIds: [
-                ...s.completedContractIds,
-                ...patrolResult.completedIds,
-            ],
-            activeContracts: patrolResult.newActiveContracts,
-        }));
+        applyPatrolContractCompletions(patrolResult, set as SetState, get);
     }
 
     if (!travelInstant) {
@@ -448,14 +442,7 @@ const handleTravelStart = (
                 set as SetState,
                 get,
             );
-            set((s) => ({
-                credits: s.credits + patrolResult.totalReward,
-                completedContractIds: [
-                    ...s.completedContractIds,
-                    ...patrolResult.completedIds,
-                ],
-                activeContracts: patrolResult.newActiveContracts,
-            }));
+            applyPatrolContractCompletions(patrolResult, set as SetState, get);
         }
 
         if (sector.tier === 4) {

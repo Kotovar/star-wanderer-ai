@@ -14,6 +14,14 @@ const jiti = require("jiti")(scriptPath, {
 const { getReputationChanges } = jiti(
   "../src/game/contracts/completionRewards.ts",
 );
+let applyPatrolContractCompletions;
+try {
+  ({ applyPatrolContractCompletions } = jiti(
+    "../src/game/slices/travel/helpers/patrolCompletions.ts",
+  ));
+} catch {
+  // The assertion below documents the required completion boundary.
+}
 
 assert.deepEqual(
   getReputationChanges({ human: 5 }, { human: 5 }),
@@ -55,6 +63,67 @@ assert.match(
   modal,
   /completion\.reputationChanges/,
   "completion modal must render stored reputation changes",
+);
+
+assert.equal(
+  typeof applyPatrolContractCompletions,
+  "function",
+  "patrol completion results must be queued after their state mutation",
+);
+
+const completedPatrol = { id: "patrol-completed", reward: 75 };
+let patrolState = {
+  credits: 25,
+  completedContractIds: [],
+  activeContracts: [completedPatrol, { id: "still-active", reward: 10 }],
+};
+const queuedCompletions = [];
+const getPatrolState = () => ({
+  ...patrolState,
+  showContractCompletion: (completion) => {
+    assert.equal(
+      patrolState.credits,
+      100,
+      "credits must be awarded before the completion becomes observable",
+    );
+    assert.deepEqual(
+      patrolState.completedContractIds,
+      ["patrol-completed"],
+      "completed contract ID must be recorded before the completion becomes observable",
+    );
+    assert.deepEqual(
+      patrolState.activeContracts.map((contract) => contract.id),
+      ["still-active"],
+      "completed patrol must be removed before the completion becomes observable",
+    );
+    queuedCompletions.push(completion);
+  },
+});
+const setPatrolState = (update) => {
+  patrolState = { ...patrolState, ...update(patrolState) };
+};
+
+applyPatrolContractCompletions(
+  {
+    totalReward: 75,
+    completedIds: ["patrol-completed"],
+    newActiveContracts: [{ id: "still-active", reward: 10 }],
+    completions: [
+      {
+        contract: completedPatrol,
+        credits: 75,
+        reputationChanges: [],
+        experience: [],
+      },
+    ],
+  },
+  setPatrolState,
+  getPatrolState,
+);
+assert.equal(
+  queuedCompletions.length,
+  1,
+  "patrol completion must still be enqueued after its rewards are applied",
 );
 
 console.log("contract completion feedback checks passed");
