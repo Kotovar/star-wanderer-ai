@@ -1,9 +1,9 @@
 "use client";
 
 import { useGameStore } from "@/game/store";
+import { getTotalEvasion } from "@/game/slices/ship/helpers";
 import { useTranslation } from "@/lib/useTranslation";
 import { StatIcon } from "./StatIcon";
-import { getBestByProfession } from "@/game/crew";
 
 interface ShipStatsPanelProps {
     title?: string;
@@ -14,9 +14,9 @@ export function ShipStatsPanel({ title, showEvasion = true }: ShipStatsPanelProp
     const { t } = useTranslation();
     const ship = useGameStore((s) => s.ship);
     const crew = useGameStore((s) => s.crew);
-    const captain = useGameStore((s) =>
-        getBestByProfession(s.crew, "pilot"),
-    );
+    const getCrewCapacity = useGameStore((s) => s.getCrewCapacity);
+    const crewCapacity = getCrewCapacity();
+    const evasion = getTotalEvasion(useGameStore.getState());
 
     const currentHull = ship.modules.reduce((s, m) => s + m.health, 0);
     const maxHull = ship.modules.reduce(
@@ -68,8 +68,7 @@ export function ShipStatsPanel({ title, showEvasion = true }: ShipStatsPanelProp
                         {t("unknown_ship.crew")}
                     </span>
                     <span className="text-[#00ff41] ml-1">
-                        {crew.filter((c) => c.health > 50).length}/
-                        {crew.length}
+                        {crew.length}/{crewCapacity}
                     </span>
                 </div>
             </div>
@@ -80,16 +79,7 @@ export function ShipStatsPanel({ title, showEvasion = true }: ShipStatsPanelProp
                         {t("unknown_ship.evasion")}
                     </span>
                     <span className="text-[#00ff41] ml-1">
-                        {(captain?.level || 1) + (ship.bonusEvasion || 0)}%
-                        {ship.bonusEvasion ? (
-                            <span className="text-[#9933ff]">
-                                {" "}
-                                {t("unknown_ship.bonus").replace(
-                                    "{{bonus}}",
-                                    String(ship.bonusEvasion),
-                                )}
-                            </span>
-                        ) : null}
+                        {evasion}%
                     </span>
                 </div>
             )}
