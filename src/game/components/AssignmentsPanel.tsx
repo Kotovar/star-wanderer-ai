@@ -7,7 +7,11 @@ import { showHintOnce } from "@/game/hints/showHint";
 import { Button } from "@/components/ui/button";
 import { RACES, XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants/races";
 import { formatMergeEffectSummary } from "@/game/races/mergeEffectLabels";
-import { CREW_ACTIONS, PROFESSION_NAMES } from "@/game/constants/crew";
+import {
+    CREW_ACTIONS,
+    PROFESSION_NAMES,
+    XENOSYMBIONT_MERGE_ACTION,
+} from "@/game/constants/crew";
 import { getAvailableTasksForModule } from "@/game/slices/crew/helpers";
 import type {
     CrewMember,
@@ -135,8 +139,7 @@ export function AssignmentsPanel() {
                         allActions = [
                             ...allActions,
                             {
-                                value: "merge",
-                                label: "🧬 Сращивание",
+                                ...XENOSYMBIONT_MERGE_ACTION,
                                 effect: mergeSummary || "Нет эффекта в этом модуле",
                             },
                         ];

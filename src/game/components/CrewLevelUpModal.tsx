@@ -40,11 +40,18 @@ function ProfessionGains({
             </div>
             <ul className="mt-1 space-y-0.5 text-xs">
                 {gains.map((gain) => (
-                    <li key={gain.key}>
-                        ▸ {t(`crew_level_up.gains.${gain.key}`, {
-                            from: gain.from,
-                            to: gain.to,
-                        })}
+                    <li
+                        key={gain.key}
+                        className="flex flex-wrap items-center gap-1"
+                    >
+                        <span>
+                            ▸ {t(`crew_level_up.gains.${gain.key}`)}:
+                        </span>
+                        <span className="tabular-nums">{gain.from}</span>
+                        <span className="leading-none">→</span>
+                        <span className="font-bold tabular-nums">
+                            {gain.to}
+                        </span>
                     </li>
                 ))}
             </ul>
@@ -81,7 +88,7 @@ export function CrewLevelUpModal() {
     return (
         <Dialog open onOpenChange={(open) => !open && crossedTalentTiers.length === 0 && dismissCrewLevelUp()}>
             <GameDialogContent
-                className={currentChoice ? "max-w-3xl" : "max-w-md"}
+                className={currentChoice ? "sm:max-w-3xl" : "max-w-md"}
                 showCloseButton={crossedTalentTiers.length === 0}
             >
                 <DialogHeader>

@@ -209,6 +209,15 @@ export const CREW_ACTIONS: Record<
 };
 
 /**
+ * Сращивание — задача только для ксеноморфов, поэтому её нет в CREW_ACTIONS
+ * по профессиям. Подпись общая для меню задач и карточки экипажа.
+ */
+export const XENOSYMBIONT_MERGE_ACTION = {
+    value: "merge",
+    label: "🧬 Сращивание",
+} as const;
+
+/**
  * Бонусы от назначения экипажа
  */
 export const CREW_ASSIGNMENT_BONUSES = {

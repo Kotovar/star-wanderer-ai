@@ -4161,15 +4161,15 @@
         "choose_talent": "Choose a talent",
         "gains_title": "Profession growth: {{profession}}",
         "gains": {
-            "evasion": "Ship evasion (in cockpit): {{from}}% → {{to}}%",
-            "retreat": "Retreat chance: {{from}}% → {{to}}%",
-            "repair": "Module repair per turn: {{from}} → {{to}} HP",
-            "reactor_power": "Reactor overload: +{{from}} → +{{to}} power",
-            "heal": "Healing per turn: {{from}} → {{to}} HP",
-            "morale": "Morale boost per turn: {{from}} → {{to}}",
-            "accuracy": "Weapon accuracy: +{{from}}% → +{{to}}%",
-            "patrol_credits": "Patrol finds: +{{from}} → +{{to}} credits",
-            "anomaly_level": "Anomaly and artifact analysis: lv. {{from}} → {{to}}"
+            "evasion": "Ship evasion in cockpit (%)",
+            "retreat": "Retreat chance (%)",
+            "repair": "Module repair per turn (HP)",
+            "reactor_power": "Reactor overload (power)",
+            "heal": "Healing per turn (HP)",
+            "morale": "Morale boost per turn",
+            "accuracy": "Weapon accuracy (%)",
+            "patrol_credits": "Patrol finds (credits)",
+            "anomaly_level": "Anomaly and artifact analysis (lv.)"
         }
     },
     "tech_tree": {

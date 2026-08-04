@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { useGameStore } from "@/game/store";
 import { RACES } from "@/game/constants/races";
-import { COMBAT_ACTIONS, CREW_ACTIONS } from "@/game/constants/crew";
+import {
+    COMBAT_ACTIONS,
+    CREW_ACTIONS,
+    XENOSYMBIONT_MERGE_ACTION,
+} from "@/game/constants/crew";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import type { CrewMember } from "@/game/types";
 import type { AugmentationRarity } from "@/game/types/augmentations";
@@ -57,6 +61,8 @@ const stripLeadingSymbol = (value: string) =>
 const getAssignmentLabel = (member: CrewMember, isCombat: boolean): string => {
     const assignment = isCombat ? member.combatAssignment : member.assignment;
     if (!assignment) return "";
+    if (assignment === XENOSYMBIONT_MERGE_ACTION.value)
+        return XENOSYMBIONT_MERGE_ACTION.label;
     const actions = isCombat
         ? COMBAT_ACTIONS[member.profession]
         : CREW_ACTIONS[member.profession];
@@ -198,6 +204,8 @@ export function CrewList() {
                                 ⚙ {efficiency}%
                             </div>
 
+                            {/* Строка усталости всегда занимает место, чтобы карточки не прыгали */}
+                            <div className="min-h-3 leading-3">
                             {race?.hasFatigue === false ? (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -244,6 +252,7 @@ export function CrewList() {
                                     </Tooltip>
                                 )
                             )}
+                            </div>
 
                             {/* HP bar */}
                             <div className="flex items-center gap-1">
