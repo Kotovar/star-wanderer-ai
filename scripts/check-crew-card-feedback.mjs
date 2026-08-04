@@ -32,6 +32,11 @@ assert.match(
   /race\?\.hasFatigue === false[\s\S]*crew_member\.fatigue_free[\s\S]*crew_member\.fatigue_free_tooltip/,
   "fatigue-free races must have their own compact label and tooltip",
 );
+assert.equal(
+  (crewList.match(/<TooltipTrigger asChild>\s*<span\s+tabIndex=\{0\}/g) ?? []).length,
+  2,
+  "both compact fatigue tooltip triggers must be keyboard-focusable",
+);
 
 for (const [locale, source] of [["ru", ru], ["en", en]]) {
   for (const key of ["assignment_fatigue_tooltip", "fatigue_free", "fatigue_free_tooltip"]) {

@@ -188,9 +188,12 @@ export function CrewList() {
                             {race?.hasFatigue === false ? (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <div className="text-[9px] text-[#00d4ff] cursor-help">
+                                        <span
+                                            tabIndex={0}
+                                            className="text-[9px] text-[#00d4ff] cursor-help"
+                                        >
                                             {t("crew_member.fatigue_free")}
-                                        </div>
+                                        </span>
                                     </TooltipTrigger>
                                     <TooltipContent className="max-w-60 text-xs">
                                         {t("crew_member.fatigue_free_tooltip")}
@@ -202,7 +205,10 @@ export function CrewList() {
                                     (member.assignmentRestTurns ?? 0) > 0) && (
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <div className="text-[9px] text-[#ffb000] cursor-help">
+                                            <span
+                                                tabIndex={0}
+                                                className="text-[9px] text-[#ffb000] cursor-help"
+                                            >
                                                 {(member.assignmentRestTurns ?? 0) > 0
                                                     ? t("crew_member.assignment_rest", {
                                                           turns:
@@ -215,7 +221,7 @@ export function CrewList() {
                                                               0,
                                                           max: ASSIGNMENT_EXHAUSTED_AT,
                                                       })}
-                                            </div>
+                                            </span>
                                         </TooltipTrigger>
                                         <TooltipContent className="max-w-60 text-xs">
                                             {t(
