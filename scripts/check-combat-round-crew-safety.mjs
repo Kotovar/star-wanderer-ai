@@ -18,3 +18,12 @@ assert.ok(moduleDamageIndex >= 0, "combat round must apply critical-module damag
 assert.ok(assignmentsIndex > moduleDamageIndex, "crew processing must follow module damage");
 assert.ok(movementResetIndex > assignmentsIndex, "crew movement must reset after crew processing");
 assert.doesNotMatch(combatRound, /s\.turn\s*(?:\+=|=)/, "combat round must not change strategic turn");
+
+const playerAttackSource = await readFile(
+  new URL("../src/game/slices/combat/helpers/playerAttack.ts", import.meta.url),
+  "utf8",
+);
+const counterAttacks = playerAttackSource.match(
+  /handleEnemyCounterAttack\(set, get(?:, timeline)?\);/g,
+) ?? [];
+assert.equal(counterAttacks.length, 1, "only finishPlayerTurn may call enemy counterattack directly");
