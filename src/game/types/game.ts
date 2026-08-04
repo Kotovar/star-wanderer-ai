@@ -2,7 +2,8 @@ import type { Artifact } from "./artifacts";
 import type { CargoItem } from "./cargo";
 import type { CombatState } from "./combat";
 import type { CombatTurnTimeline } from "./combatCinematics";
-import type { BattleResult, Contract, StormResult } from "./contracts";
+import type { BattleResult, Contract, ContractCompletionResult, StormResult } from "./contracts";
+import type { GainExpResult } from "@/game/slices/crew/helpers/calculateGainExpResult";
 import type {
   CrewMember,
   CrewMemberAssignment,
@@ -121,7 +122,7 @@ export interface GameState {
   };
   activeContracts: Contract[];
   completedContractIds: string[]; // IDs of completed contracts to prevent retaking
-  pendingContractCompletions: Contract[]; // Очередь результатов успешно выполненных контрактов
+  pendingContractCompletions: ContractCompletionResult[]; // Очередь результатов успешно выполненных контрактов
   shipQuestsTaken: string[]; // IDs of ships where quest was taken
   hiredCrewFromShips: string[]; // IDs of friendly ships where crew was hired
   distressRespondedShips: string[]; // IDs of distress ships that have been helped
@@ -218,7 +219,7 @@ export interface GameActions {
   areEnginesFunctional: () => boolean;
   areFuelTanksFunctional: () => boolean;
   refuel: (amount: number, price: number) => void;
-  gainExp: (crewMember: CrewMember | undefined, amount: number) => void;
+  gainExp: (crewMember: CrewMember | undefined, amount: number) => GainExpResult | undefined;
   hydratePlayerSettings: () => void;
   setAnimationsEnabled: (enabled: boolean) => void;
   setSoundEnabled: (enabled: boolean) => void;
@@ -309,7 +310,7 @@ export interface GameCrew {
   moveCrewMember: (crewId: number, targetModuleId: number) => void;
   isModuleAdjacent: (moduleId1: number, moduleId2: number) => boolean;
   getCrewInModule: (moduleId: number) => CrewMember[];
-  gainExp: (crewMember: CrewMember, amount: number) => void;
+  gainExp: (crewMember: CrewMember, amount: number) => GainExpResult | undefined;
   acceptSurvivor: () => void;
   declineSurvivor: () => void;
   chooseCrewPerk: (
@@ -323,7 +324,7 @@ export interface GameContracts {
   acceptContract: (contract: Contract) => boolean;
   completeDeliveryContract: (contractId: string) => void;
   cancelContract: (contractId: string) => void;
-  showContractCompletion: (contract: Contract) => void;
+  showContractCompletion: (completion: ContractCompletionResult) => void;
   dismissContractCompletion: () => void;
 }
 

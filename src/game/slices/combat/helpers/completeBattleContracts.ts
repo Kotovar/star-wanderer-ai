@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore } from "@/game/types";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
+import { getReputationChanges } from "@/game/contracts/completionRewards";
 
 /**
  * Completes combat and bounty contracts after battle victory
@@ -28,7 +29,8 @@ export function completeBattleContracts(
         const expReward =
             rewardConfig.baseExp +
             enemyThreat * (rewardConfig.threatBonus ?? 0);
-        giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+        const experience = giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+        const reputationBefore = { ...get().raceReputation };
         if (c.sourceDominantRace) {
             get().changeReputation(c.sourceDominantRace, 2);
         }
@@ -36,7 +38,12 @@ export function completeBattleContracts(
             completedContractIds: [...s.completedContractIds, c.id],
             activeContracts: s.activeContracts.filter((ac) => ac.id !== c.id),
         }));
-        get().showContractCompletion(c);
+        get().showContractCompletion({
+            contract: c,
+            credits: c.reward,
+            reputationChanges: getReputationChanges(reputationBefore, get().raceReputation),
+            experience,
+        });
     });
 
     // Krylorian race combat contracts (defeat ALL non-boss enemies in target sector)
@@ -60,11 +67,12 @@ export function completeBattleContracts(
                 const expReward =
                     rewardConfig.baseExp +
                     enemyThreat * (rewardConfig.threatBonus ?? 0);
-                giveCrewExperience(
+                const experience = giveCrewExperience(
                     expReward,
                     `Экипаж получил опыт: +${expReward} ед.`,
                 );
 
+                const reputationBefore = { ...get().raceReputation };
                 if (c.requiredRace) {
                     get().changeReputation(c.requiredRace, 10);
                 }
@@ -75,7 +83,12 @@ export function completeBattleContracts(
                         (ac) => ac.id !== c.id,
                     ),
                 }));
-                get().showContractCompletion(c);
+                get().showContractCompletion({
+                    contract: c,
+                    credits: c.reward,
+                    reputationChanges: getReputationChanges(reputationBefore, get().raceReputation),
+                    experience,
+                });
             } else {
                 get().addLog( i18nStore.t("game_logs.completeBattleContracts_3", { remainingEnemies_length: remainingEnemies.length }),
                     "info",
@@ -100,7 +113,8 @@ export function completeBattleContracts(
         const expReward =
             rewardConfig.baseExp +
             enemyThreat * (rewardConfig.threatBonus ?? 0);
-        giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+        const experience = giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+        const reputationBefore = { ...get().raceReputation };
         if (c.sourceDominantRace) {
             get().changeReputation(c.sourceDominantRace, 2);
         }
@@ -108,6 +122,11 @@ export function completeBattleContracts(
             completedContractIds: [...s.completedContractIds, c.id],
             activeContracts: s.activeContracts.filter((ac) => ac.id !== c.id),
         }));
-        get().showContractCompletion(c);
+        get().showContractCompletion({
+            contract: c,
+            credits: c.reward,
+            reputationChanges: getReputationChanges(reputationBefore, get().raceReputation),
+            experience,
+        });
     });
 }

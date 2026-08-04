@@ -6,6 +6,7 @@ import { CONTRACT_REWARDS } from "@/game/constants";
 import { SCIENTIST_STORM_EXP } from "@/game/constants/experience";
 import { giveCrewExperience } from "@/game/crew/utils";
 import { getCrewByProfession } from "@/game/crew/utils";
+import { getReputationChanges } from "@/game/contracts/completionRewards";
 import {
     STORM_CONFIG,
     STORM_LOOT_CONFIG,
@@ -439,12 +440,18 @@ export const handleStormEntry = (set: SetState, get: () => GameStore): void => {
 
         const expReward = CONTRACT_REWARDS.rescue.baseExp;
         rescueContracts.forEach((contract) => {
-            get().showContractCompletion(contract);
             get().addLog( i18nStore.t("game_logs.enterStorm_5", { reward: contract.reward }),
                 "info",
             );
-            giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+            const experience = giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+            const reputationBefore = { ...get().raceReputation };
             get().changeReputation("voidborn", 10);
+            get().showContractCompletion({
+                contract,
+                credits: contract.reward,
+                reputationChanges: getReputationChanges(reputationBefore, get().raceReputation),
+                experience,
+            });
         });
     }
 

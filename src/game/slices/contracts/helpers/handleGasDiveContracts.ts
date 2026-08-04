@@ -1,6 +1,7 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
+import { getReputationChanges } from "@/game/contracts/completionRewards";
 import type { GameState, GameStore, Location } from "@/game/types";
 
 type SetState = {
@@ -46,14 +47,20 @@ export const handleGasDiveContracts = (
                         : ac,
                 ),
         }));
-        get().showContractCompletion(c);
         get().addLog( i18nStore.t("game_logs.handleGasDiveContracts_1", { collectedMembranes: c.collectedMembranes ?? 0, requiredMembranes: c.requiredMembranes ?? 0, reward: c.reward }),
             "info",
         );
         const expReward = CONTRACT_REWARDS.gas_dive.baseExp;
-        giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+        const experience = giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+        const reputationBefore = { ...get().raceReputation };
         if (c.sourceDominantRace) {
             get().changeReputation(c.sourceDominantRace, 2);
         }
+        get().showContractCompletion({
+            contract: c,
+            credits: c.reward,
+            reputationChanges: getReputationChanges(reputationBefore, get().raceReputation),
+            experience,
+        });
     });
 };

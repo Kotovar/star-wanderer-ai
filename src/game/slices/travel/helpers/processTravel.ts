@@ -28,6 +28,7 @@ import {
     rollNebulaDisruption,
 } from "./nebulaHazards";
 import { addPilotAsteroidManeuverDelay } from "./asteroidManeuver";
+import { getReputationChanges } from "@/game/contracts/completionRewards";
 
 /** Вероятность случайного события в пути (прямой маршрут) */
 const TRAVEL_EVENT_CHANCE_DIRECT = 0.45;
@@ -607,21 +608,27 @@ export const handlePatrolContracts = (
         if (visitedTargetCount >= targetSectors.length) {
             completedIds.push(c.id);
             totalReward += c.reward;
-            getState().showContractCompletion(c);
-
             getState().addLog( i18nStore.t("game_logs.processTravel_24", { reward: c.reward }),
                 "info",
             );
 
             const expReward = CONTRACT_REWARDS.patrol.baseExp;
-            giveCrewExperience(
+            const experience = giveCrewExperience(
                 expReward,
                 `Экипаж получил опыт: +${expReward} ед.`,
             );
 
+            const reputationBefore = { ...getState().raceReputation };
             if (c.isRaceQuest && c.requiredRace) {
                 getState().changeReputation(c.requiredRace, 10);
             }
+
+            getState().showContractCompletion({
+                contract: c,
+                credits: c.reward,
+                reputationChanges: getReputationChanges(reputationBefore, getState().raceReputation),
+                experience,
+            });
 
             newActiveContracts = newActiveContracts.filter(
                 (ac) => ac.id !== c.id,

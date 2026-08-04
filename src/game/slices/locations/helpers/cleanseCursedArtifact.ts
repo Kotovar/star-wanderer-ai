@@ -1,5 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
+import { getReputationChanges } from "@/game/contracts/completionRewards";
 
 /**
  * Снимает проклятие с артефакта через резонанс с Кристальной Гидрой.
@@ -53,8 +54,6 @@ export const cleanseCursedArtifact = (
         activeContracts: s.activeContracts.filter((c) => c.id !== contract.id),
     }));
 
-    get().showContractCompletion(contract);
-
     get().addLog(
         i18nStore.t("game_logs.cleanseCursedArtifact_3", {
             artifact_name: artifact.name,
@@ -62,7 +61,14 @@ export const cleanseCursedArtifact = (
         }),
         "info",
     );
+    const reputationBefore = { ...get().raceReputation };
     if (contract.sourceDominantRace) {
         get().changeReputation(contract.sourceDominantRace, 2);
     }
+    get().showContractCompletion({
+        contract,
+        credits: contract.reward,
+        reputationChanges: getReputationChanges(reputationBefore, get().raceReputation),
+        experience: [],
+    });
 };

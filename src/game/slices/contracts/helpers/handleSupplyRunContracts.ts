@@ -3,6 +3,7 @@ import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
 import type { GameState, GameStore, Location } from "@/game/types";
 import { formatContractDescription } from "@/game/contracts/formatContractDescription";
+import { getReputationChanges } from "@/game/contracts/completionRewards";
 
 // Тип для set с поддержкой immer (позволяет и мутации, и объекты)
 type SetState = {
@@ -52,7 +53,6 @@ export const handleSupplyRunContracts = (
             completedContractIds: [...s.completedContractIds, c.id],
             activeContracts: s.activeContracts.filter((ac) => ac.id !== c.id),
         }));
-        get().showContractCompletion(c);
         get().addLog( i18nStore.t("game_logs.handleSupplyRunContracts_1", {
             desc: formatContractDescription(c, i18nStore.t.bind(i18nStore)),
             loc_name: c.sourceName || loc.name,
@@ -62,9 +62,16 @@ export const handleSupplyRunContracts = (
         );
         // Give experience to all crew members
         const expReward = CONTRACT_REWARDS.supply_run.baseExp;
-        giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+        const experience = giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+        const reputationBefore = { ...get().raceReputation };
         if (c.sourceDominantRace) {
             get().changeReputation(c.sourceDominantRace, 2);
         }
+        get().showContractCompletion({
+            contract: c,
+            credits: c.reward,
+            reputationChanges: getReputationChanges(reputationBefore, get().raceReputation),
+            experience,
+        });
     }
 };

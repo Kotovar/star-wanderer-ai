@@ -11,6 +11,7 @@ import {
 } from "../helpers/researchHelpers";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
+import { getReputationChanges } from "@/game/contracts/completionRewards";
 import type { GameStore, SetState, TechnologyId } from "@/game/types";
 import type { CraftingRecipeId } from "@/game/types/crafting";
 
@@ -122,12 +123,18 @@ const handleResearchCompletion = (
         }));
         const expReward = CONTRACT_REWARDS.research.baseExp;
         synthContracts.forEach((contract) => {
-            get().showContractCompletion(contract);
-            giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+            const experience = giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
             get().addLog( i18nStore.t("game_logs.processResearch_3", { reward: contract.reward }),
                 "info",
             );
+            const reputationBefore = { ...get().raceReputation };
             get().changeReputation("synthetic", 10);
+            get().showContractCompletion({
+                contract,
+                credits: contract.reward,
+                reputationChanges: getReputationChanges(reputationBefore, get().raceReputation),
+                experience,
+            });
         });
     }
 

@@ -71,6 +71,13 @@ export interface Contract {
     expeditionDone?: boolean;     // Set when tilesRevealed >= requiredDiscoveries
 }
 
+export interface ContractCompletionResult {
+    contract: Contract;
+    credits: number;
+    reputationChanges: Array<{ raceId: RaceId; change: number }>;
+    experience: Array<{ crewMemberId: number; name: string; amount: number }>;
+}
+
 export type ContractType =
     | "delivery"
     | "scan_planet"

@@ -7,6 +7,8 @@ import { applyLevelUp } from "./applyLevelUp";
  * Результат начисления опыта члену экипажа
  */
 export interface GainExpResult {
+    /** Фактически начисленный опыт с учётом множителей */
+    finalAmount: number;
     /** Обновлённый опыт */
     newExp: number;
     /** Произошло ли повышение уровня */
@@ -48,6 +50,7 @@ export const calculateGainExpResult = (
     const levelUp = applyLevelUp(crewMember, newExp);
 
     return {
+        finalAmount,
         newExp: levelUp ? levelUp.exp : newExp,
         leveledUp: levelUp !== null,
         newLevel: levelUp?.level,

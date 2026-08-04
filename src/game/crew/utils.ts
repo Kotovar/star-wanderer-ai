@@ -244,13 +244,18 @@ export const getRandomName = (
 export const giveCrewExperience = (expAmount: number, logMessage?: string) => {
     const state = useGameStore.getState();
 
-    state.crew.forEach((crewMember) => {
-        useGameStore.getState().gainExp(crewMember, expAmount);
+    const experience = state.crew.flatMap((crewMember) => {
+        const result = useGameStore.getState().gainExp(crewMember, expAmount);
+        return result
+            ? [{ crewMemberId: crewMember.id, name: crewMember.name, amount: result.finalAmount }]
+            : [];
     });
 
     if (logMessage) {
         useGameStore.getState().addLog(logMessage, "info");
     }
+
+    return experience;
 };
 
 /**

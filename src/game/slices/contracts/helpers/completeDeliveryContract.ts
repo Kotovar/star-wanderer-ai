@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameStore, SetState } from "@/game/types";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
+import { getReputationChanges } from "@/game/contracts/completionRewards";
 import { playSound } from "@/sounds";
 
 /**
@@ -27,16 +28,22 @@ export const completeDeliveryContract = (
         activeContracts: s.activeContracts.filter((c) => c.id !== contractId),
         completedContractIds: [...s.completedContractIds, contractId],
     }));
-    get().showContractCompletion(contract);
     get().addLog( i18nStore.t("game_logs.completeDeliveryContract_1", { reward: contract.reward }), "info");
 
     // Give experience to all crew members
     const expReward = CONTRACT_REWARDS.delivery.baseExp;
-    giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+    const experience = giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
 
+    const reputationBefore = { ...get().raceReputation };
     if (contract.sourceDominantRace) {
         get().changeReputation(contract.sourceDominantRace, 2);
     }
+    get().showContractCompletion({
+        contract,
+        credits: contract.reward,
+        reputationChanges: getReputationChanges(reputationBefore, get().raceReputation),
+        experience,
+    });
 
     playSound("world_contract");
 };

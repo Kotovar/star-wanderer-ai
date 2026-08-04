@@ -1,6 +1,7 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
+import { getReputationChanges } from "@/game/contracts/completionRewards";
 import type { GameState, GameStore, Location } from "@/game/types";
 
 // Тип для set с поддержкой immer (позволяет и мутации, и объекты)
@@ -40,11 +41,11 @@ export const handleDiplomacyContracts = (
     get().addLog( i18nStore.t("game_logs.handleDiplomacyContracts_1", { reward: diplomacyContract.reward }),
         "info",
     );
-    get().changeReputation("human", 10);
-
     // Give experience to all crew members
     const expReward = CONTRACT_REWARDS.diplomacy.baseExp;
-    giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+    const experience = giveCrewExperience(expReward, `Экипаж получил опыт: +${expReward} ед.`);
+    const reputationBefore = { ...get().raceReputation };
+    get().changeReputation("human", 10);
 
     set((s) => ({
         completedContractIds: [...s.completedContractIds, diplomacyContract.id],
@@ -52,5 +53,10 @@ export const handleDiplomacyContracts = (
             (ac) => ac.id !== diplomacyContract.id,
         ),
     }));
-    get().showContractCompletion(diplomacyContract);
+    get().showContractCompletion({
+        contract: diplomacyContract,
+        credits: diplomacyContract.reward,
+        reputationChanges: getReputationChanges(reputationBefore, get().raceReputation),
+        experience,
+    });
 };

@@ -1,5 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import type { GameState, GameStore } from "@/game/types";
+import { getReputationChanges } from "@/game/contracts/completionRewards";
 
 type SetState = {
     (partial: Partial<GameState> | ((state: GameState) => Partial<GameState>)): void;
@@ -32,15 +33,21 @@ export const handleDerelictRecoveryContracts = (
     }));
 
     ready.forEach((contract) => {
-        get().showContractCompletion(contract);
         get().addLog(
             i18nStore.t("game_logs.completeDerelictRecoveryContracts_1", {
                 reward: contract.reward,
             }),
             "info",
         );
+        const reputationBefore = { ...get().raceReputation };
         if (contract.sourceDominantRace) {
             get().changeReputation(contract.sourceDominantRace, 2);
         }
+        get().showContractCompletion({
+            contract,
+            credits: contract.reward,
+            reputationChanges: getReputationChanges(reputationBefore, get().raceReputation),
+            experience: [],
+        });
     });
 };

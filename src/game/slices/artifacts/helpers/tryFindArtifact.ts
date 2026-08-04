@@ -156,7 +156,12 @@ export const completeMiningContracts = (
     }));
 
     ready.forEach((contract) => {
-        get().showContractCompletion(contract);
+        get().showContractCompletion({
+            contract,
+            credits: contract.reward,
+            reputationChanges: [],
+            experience: [],
+        });
         get().addLog( i18nStore.t("game_logs.tryFindArtifact_1", { reward: contract.reward }), "info");
     });
 };

@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { store as i18nStore } from "@/lib/useTranslation";
-import type { GameStore, SetState, Contract } from "@/game/types";
+import type { GameStore, SetState, Contract, ContractCompletionResult } from "@/game/types";
 import {
     processScanContracts as processScanContractsFn,
     completeScanContracts as completeScanContractsFn,
@@ -36,7 +36,7 @@ export interface ContractsSlice {
      */
     cancelContract: (contractId: string) => void;
 
-    showContractCompletion: (contract: Contract) => void;
+    showContractCompletion: (completion: ContractCompletionResult) => void;
     dismissContractCompletion: () => void;
 
     /**
@@ -82,11 +82,11 @@ export const createContractsSlice = (
     set: SetState,
     get: () => GameStore,
 ): ContractsSlice => ({
-    showContractCompletion: (contract) => {
+    showContractCompletion: (completion) => {
         set((state) => ({
             pendingContractCompletions: [
                 ...state.pendingContractCompletions,
-                contract,
+                completion,
             ],
         }));
     },

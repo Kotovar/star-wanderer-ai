@@ -3,6 +3,7 @@ import type { SetState, GameStore, Contract } from "@/game/types";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
 import { formatContractDescription } from "@/game/contracts/formatContractDescription";
+import { getReputationChanges } from "@/game/contracts/completionRewards";
 
 /**
  * Обрабатывает прогресс контракта на исследование аномалий
@@ -64,8 +65,6 @@ export const handleResearchContract = (
     );
 
     if (!updatedContract) {
-        // Contract completed - show completion message
-        get().showContractCompletion(contract);
         get().addLog( i18nStore.t("game_logs.handleResearchContract_2", {
             desc: formatContractDescription(contract, i18nStore.t.bind(i18nStore)),
             reward: contract.reward,
@@ -75,13 +74,20 @@ export const handleResearchContract = (
 
         // Give experience to all crew members
         const expReward = CONTRACT_REWARDS.research.baseExp;
-        giveCrewExperience(
+        const experience = giveCrewExperience(
             expReward,
             `Экипаж получил опыт: +${expReward} ед.`,
         );
+        const reputationBefore = { ...get().raceReputation };
         if (contract.sourceDominantRace) {
             get().changeReputation(contract.sourceDominantRace, 2);
         }
+        get().showContractCompletion({
+            contract,
+            credits: contract.reward,
+            reputationChanges: getReputationChanges(reputationBefore, get().raceReputation),
+            experience,
+        });
         return true;
     }
 

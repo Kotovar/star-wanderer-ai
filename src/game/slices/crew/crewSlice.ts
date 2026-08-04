@@ -15,6 +15,7 @@ import {
     autoUnmergeOnMove as autoUnmergeOnMoveFn,
 } from "./helpers/merge";
 import { playSound } from "@/sounds";
+import type { GainExpResult } from "./helpers/calculateGainExpResult";
 
 /**
  * Интерфейс CrewSlice
@@ -24,7 +25,7 @@ export interface CrewSlice {
     /**
      * Начисляет опыт члену экипажа с учётом всех бонусов
      */
-    gainExp: (crewMember: CrewMember | undefined, amount: number) => void;
+    gainExp: (crewMember: CrewMember | undefined, amount: number) => GainExpResult | undefined;
 
     /**
      * Фиксирует выбор ветки прокачки профессии для члена экипажа на
@@ -106,7 +107,7 @@ export const createCrewSlice = (
 ): CrewSlice => ({
     gainExp: (crewMember, amount) => {
         const state = get();
-        gainExpHelper(crewMember, amount, state, get(), set);
+        return gainExpHelper(crewMember, amount, state, get(), set);
     },
 
     chooseCrewPerk: (crewMemberId, tier, branch) => {

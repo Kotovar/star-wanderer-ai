@@ -3,6 +3,7 @@ import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
 import type { GameState, SetState, GameStore } from "@/game/types";
 import { formatContractDescription } from "@/game/contracts/formatContractDescription";
+import { getReputationChanges } from "@/game/contracts/completionRewards";
 
 /**
  * Завершает выполненные контракты на сканирование
@@ -66,8 +67,6 @@ export const completeScanContracts = (
             ),
         }));
 
-        get().showContractCompletion(c);
-
         get().addLog( i18nStore.t("game_logs.completeScanContracts_1", {
             desc: formatContractDescription(c, i18nStore.t.bind(i18nStore)),
             reward: c.reward,
@@ -75,14 +74,21 @@ export const completeScanContracts = (
             "info",
         );
 
-        giveCrewExperience(
+        const experience = giveCrewExperience(
             expReward,
             `Экипаж получил опыт: +${expReward} ед.`,
         );
 
+        const reputationBefore = { ...get().raceReputation };
         if (c.sourceDominantRace) {
             get().changeReputation(c.sourceDominantRace, 2);
         }
+        get().showContractCompletion({
+            contract: c,
+            credits: c.reward,
+            reputationChanges: getReputationChanges(reputationBefore, get().raceReputation),
+            experience,
+        });
     });
 
     return {

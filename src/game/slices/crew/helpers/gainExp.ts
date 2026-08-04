@@ -17,7 +17,7 @@ export const gainExp = (
     state: GameState,
     store: GameStore,
     set: (fn: (s: GameState) => void) => void,
-): void => {
+): ReturnType<typeof calculateGainExpResult> | undefined => {
     if (!crewMember) return;
 
     const result = calculateGainExpResult(crewMember, amount, state);
@@ -48,4 +48,6 @@ export const gainExp = (
             }
         }
     });
+
+    return result;
 };
