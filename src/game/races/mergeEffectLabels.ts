@@ -92,6 +92,7 @@ const INLINED_MERGE_KEYS: Partial<Record<ModuleType, MergeEffectKey[]>> = {
     habitat_module: ["healing"],
     bio_research_lab: ["researchSpeed"],
     pulse_drive: ["fuelEfficiency"],
+    weaponbay: ["weaponDamage"],
     deep_survey_array: ["scanRange"],
 };
 

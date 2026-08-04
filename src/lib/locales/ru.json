@@ -4158,7 +4158,19 @@
         "max_health": "+{{amount}} к макс. HP ({{oldMaxHealth}} → {{newMaxHealth}})",
         "health_restored": "HP восстановлено: {{previousHealth}} → {{restoredHealth}}",
         "acknowledge": "Продолжить",
-        "choose_talent": "Выбрать талант"
+        "choose_talent": "Выбрать талант",
+        "gains_title": "Рост профессии: {{profession}}",
+        "gains": {
+            "evasion": "Уклонение корабля (в кабине): {{from}}% → {{to}}%",
+            "retreat": "Шанс отступления из боя: {{from}}% → {{to}}%",
+            "repair": "Ремонт модуля за ход: {{from}} → {{to}} HP",
+            "reactor_power": "Перегрузка реактора: +{{from}} → +{{to}} энергии",
+            "heal": "Лечение за ход: {{from}} → {{to}} HP",
+            "morale": "Подъём морали за ход: {{from}} → {{to}}",
+            "accuracy": "Точность орудий: +{{from}}% → +{{to}}%",
+            "patrol_credits": "Находки в патруле: +{{from}} → +{{to}} кредитов",
+            "anomaly_level": "Анализ аномалий и артефактов: ур. {{from}} → {{to}}"
+        }
     },
     "tech_tree": {
         "pilot": {
@@ -4976,7 +4988,7 @@
         "enemyCounterAttack_11": "🔱 Пробитие щитов: {{piercingDamage}} урона игнорирует щиты",
         "enemyCounterAttack_12": "Враг по щитам: -{{sDmg}}",
         "enemyCounterAttack_13": "🛡 Щиты врага восстановились: +{{restored}} ({{restored2}}/{{max}})",
-        "moduleDamage_1": "⚠️ {{crewMember_name}} получил -{{damage}}% урона в {{shipModule_name}} ({{value}}% ❤️)",
+        "moduleDamage_1": "⚠️ {{crewMember_name}} теряет {{damage}} HP: модуль {{shipModule_name}} повреждён (прочность {{value}}%)",
         "combat_ignore_armor": "⚠️ Атака игнорирует броню \"{{targetModule_name}}\"!",
         "moduleDamage_2": "⚠️ Перегрузка: броня \"{{targetModule_name}}\" отключена!",
         "moduleDamage_3": "🛡️ Броня модуля \"{{targetModule_name}}\": -{{damageAfterArmor}} урона",
@@ -5166,7 +5178,7 @@
         "processCursedArtifacts_2": "⚠️ {{artifact_name}}: {{targetModule_name}} повреждён на -{{value}}%",
         "processCursedArtifacts_3": "⚠️ {{artifact_name}}: {{crewMember_name}} покинул корабль",
         "processCursedArtifacts_4": "⚠️ {{artifact_name}}: {{crewMember_name}} мутировал ({{mutationName}})",
-        "processDesertion_1": "{{crewMember_name}} покинул корабль из-за низкого настроения!",
+        "processDesertion_1": "💔 {{crewMember_name}} покинул корабль: мораль держалась на нуле 3 хода",
         "processGlobalCrises_1": "⚠️ Ранний галактический кризис отложен: система кризисов перебалансирована",
         "processGlobalCrises_2": "🚨 ГАЛАКТИЧЕСКИЙ КРИЗИС: {{icon}} {{value}} · длительность {{duration}} хода",
         "processOthers_1": "😨 {{crewMember_name}} (Трус): -{{drain}} морали",
@@ -5174,7 +5186,6 @@
         "processOthers_3": "★ {{crewMember_name}} ({{trait_name}}): +{{adjacentBonus}} настроения соседним модулям",
         "processOthers_overcrowding": "😤 Перенаселённость: {{crewCount}}/{{crewCapacity}}. Мораль экипажа -{{OVERCROWDING_HAPPINESS_PENALTY}}",
         "processOthers_4": "🤖 Перегрев систем от скученности: синтетики -{{OVERCROWDING_HARDWARE_DAMAGE}} HP",
-        "processOthers_5": "{{crewMember_name}} покинул корабль!",
         "processOthers_6": "КРИТИЧНО: Недостаток энергии!",
         "processOthers_7": "\"{{targetModule_name}}\" повреждён перегрузкой!",
         "gameManagementSlice_1": "Нет сохранённой игры",

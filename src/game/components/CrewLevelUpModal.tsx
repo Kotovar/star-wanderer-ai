@@ -14,6 +14,43 @@ import type { CrewLevelUpResult } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
 import { GameDialogContent } from "./GameDialog";
 import { CrewPerkChoiceContent } from "./CrewPerkChoiceModal";
+import { getProfessionLevelGains } from "@/game/crew/professionLevelGains";
+import type { Profession } from "@/game/types";
+
+/** Что стало сильнее в профессии персонажа на новом уровне. */
+function ProfessionGains({
+    profession,
+    oldLevel,
+    newLevel,
+}: {
+    profession: Profession;
+    oldLevel: number;
+    newLevel: number;
+}) {
+    const { t } = useTranslation();
+    const gains = getProfessionLevelGains(profession, oldLevel, newLevel);
+    if (gains.length === 0) return null;
+
+    return (
+        <div className="border border-[#ffb00055] bg-[rgba(255,176,0,0.04)] px-3 py-2 text-sm text-[#ffb000]">
+            <div className="font-bold">
+                {t("crew_level_up.gains_title", {
+                    profession: t(`professions.${profession}`),
+                })}
+            </div>
+            <ul className="mt-1 space-y-0.5 text-xs">
+                {gains.map((gain) => (
+                    <li key={gain.key}>
+                        ▸ {t(`crew_level_up.gains.${gain.key}`, {
+                            from: gain.from,
+                            to: gain.to,
+                        })}
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+}
 
 type TalentChoiceState = {
     result: CrewLevelUpResult;
@@ -44,7 +81,7 @@ export function CrewLevelUpModal() {
     return (
         <Dialog open onOpenChange={(open) => !open && crossedTalentTiers.length === 0 && dismissCrewLevelUp()}>
             <GameDialogContent
-                className="max-w-md"
+                className={currentChoice ? "max-w-3xl" : "max-w-md"}
                 showCloseButton={crossedTalentTiers.length === 0}
             >
                 <DialogHeader>
@@ -95,6 +132,13 @@ export function CrewLevelUpModal() {
                                 restoredHealth: result.restoredHealth,
                             })}
                         </div>
+                        {crewMember && (
+                            <ProfessionGains
+                                profession={crewMember.profession}
+                                oldLevel={result.oldLevel}
+                                newLevel={result.newLevel}
+                            />
+                        )}
                         <Button
                             onClick={() =>
                                 crewMember && crossedTalentTiers.length > 0

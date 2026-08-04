@@ -23,6 +23,13 @@ const { getReactorOverloadPower } = jiti(
 const { processPassiveExperience } = jiti(
   "../src/game/slices/gameLoop/helpers/turnInit.ts",
 );
+const { getProfessionLevelGains } = jiti(
+  "../src/game/crew/professionLevelGains.ts",
+);
+const { calculateRetreatChance } = jiti(
+  "../src/game/slices/combat/helpers/retreat.ts",
+);
+const { getGunnerAccuracyBonus } = jiti("../src/game/crew/combatBonuses.ts");
 
 const reactorEngineer = { profession: "engineer", level: 1 };
 assert.equal(getReactorOverloadPower(reactorEngineer), 5);
@@ -92,5 +99,33 @@ assert.deepEqual(
   [100, 200, 300],
 );
 assert.equal(Math.ceil(getExpNeededForNextLevel(1) / CREW_ASSIGNMENT_EXP.REPAIR), 13);
+
+// Прибавки, показываемые в модалке левелапа, должны совпадать с реальными формулами
+const gain = (profession, key, from, to) =>
+  getProfessionLevelGains(profession, from, to).find((g) => g.key === key);
+
+assert.equal(
+  gain("engineer", "reactor_power", 3, 4).to,
+  getReactorOverloadPower({ profession: "engineer", level: 4 }),
+  "прибавка reactor_power должна совпадать с getReactorOverloadPower",
+);
+assert.equal(
+  gain("pilot", "retreat", 3, 4).to,
+  Math.round(
+    (calculateRetreatChance({ profession: "pilot", level: 4 }) - 0.5) * 100,
+  ),
+  "прибавка retreat должна совпадать с calculateRetreatChance",
+);
+assert.equal(
+  gain("gunner", "accuracy", 3, 4).to / 100,
+  getGunnerAccuracyBonus({ profession: "gunner", level: 4 }),
+  "прибавка accuracy должна совпадать с getGunnerAccuracyBonus",
+);
+// Канонир упирается в кап на 10 уровне — прибавка после него не показывается
+assert.equal(getProfessionLevelGains("gunner", 10, 11).length, 0);
+// Ни одна прибавка не показывается без роста уровня
+for (const profession of ["pilot", "engineer", "medic", "gunner", "scout", "scientist"]) {
+  assert.deepEqual(getProfessionLevelGains(profession, 4, 4), []);
+}
 
 console.log("Profession and experience checks passed");

@@ -185,6 +185,19 @@ export function CrewList() {
                                 )}
                             </div>
 
+                            <div
+                                className={`text-[9px] shrink-0 tabular-nums font-bold ${
+                                    efficiency > 100
+                                        ? "text-[#00ff41]"
+                                        : efficiency < 100
+                                          ? "text-[#ff0040]"
+                                          : "text-[#77808f]"
+                                }`}
+                                title={t("crew_member.morale_efficiency_hint")}
+                            >
+                                ⚙ {efficiency}%
+                            </div>
+
                             {race?.hasFatigue === false ? (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -267,19 +280,6 @@ export function CrewList() {
                                     </span>
                                 </div>
                             )}
-
-                            <div
-                                className={`text-[9px] shrink-0 tabular-nums font-bold ${
-                                    efficiency > 100
-                                        ? "text-[#00ff41]"
-                                        : efficiency < 100
-                                          ? "text-[#ff0040]"
-                                          : "text-[#77808f]"
-                                }`}
-                                title={t("crew_member.morale_efficiency_hint")}
-                            >
-                                ⚙ {efficiency}%
-                            </div>
 
                             {(() => {
                                 const desertionTurns = getDesertionTurnsLeft(member);

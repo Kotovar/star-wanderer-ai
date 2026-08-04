@@ -2,7 +2,7 @@ import type { CrewMember } from "@/game/types";
 import { getTechPerkValue } from "@/game/constants/techTree";
 
 const BASE_RETREAT_CHANCE = 0.5;
-const PILOT_LEVEL_RETREAT_BONUS = 2; // % per level
+export const PILOT_LEVEL_RETREAT_BONUS = 2; // % per level
 
 /**
  * Calculates retreat success chance based on pilot level

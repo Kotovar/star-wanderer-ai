@@ -621,16 +621,19 @@ function TechDelta({
 function MergeDelta({
     delta,
     negative = false,
+    unit = "",
 }: {
     delta: number | null;
     negative?: boolean;
+    unit?: string;
 }) {
     if (!delta) return null;
     return (
         <span className="text-[#aa55ff] font-bold">
             {" "}
             ({negative ? "-" : delta > 0 ? "+" : ""}
-            {delta})
+            {delta}
+            {unit})
         </span>
     );
 }
@@ -808,6 +811,7 @@ function renderModuleTypeDetailStats(
             {module.type === "weaponbay" && (
                 <DetailedStatRow icon="damage_bonus" label={`${t("module_list.damage_bonus")}:`}>
                     +{((module.level ?? 1) - 1) * 10}%
+                    <MergeDelta delta={flatDelta("weaponDamage")} unit="%" />
                 </DetailedStatRow>
             )}
             {module.type === "habitat_module" && module.capacity !== undefined && module.capacity > 0 && (

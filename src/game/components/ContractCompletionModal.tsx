@@ -29,7 +29,7 @@ export function ContractCompletionModal() {
             open
             onOpenChange={(open) => !open && dismissContractCompletion()}
         >
-            <GameDialogContent className="max-w-sm">
+            <GameDialogContent className="max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="font-['Orbitron'] text-[#00ff41]">
                         {t("contracts.completion_title")}

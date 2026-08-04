@@ -4158,7 +4158,19 @@
         "max_health": "+{{amount}} max HP ({{oldMaxHealth}} → {{newMaxHealth}})",
         "health_restored": "HP restored: {{previousHealth}} → {{restoredHealth}}",
         "acknowledge": "Continue",
-        "choose_talent": "Choose a talent"
+        "choose_talent": "Choose a talent",
+        "gains_title": "Profession growth: {{profession}}",
+        "gains": {
+            "evasion": "Ship evasion (in cockpit): {{from}}% → {{to}}%",
+            "retreat": "Retreat chance: {{from}}% → {{to}}%",
+            "repair": "Module repair per turn: {{from}} → {{to}} HP",
+            "reactor_power": "Reactor overload: +{{from}} → +{{to}} power",
+            "heal": "Healing per turn: {{from}} → {{to}} HP",
+            "morale": "Morale boost per turn: {{from}} → {{to}}",
+            "accuracy": "Weapon accuracy: +{{from}}% → +{{to}}%",
+            "patrol_credits": "Patrol finds: +{{from}} → +{{to}} credits",
+            "anomaly_level": "Anomaly and artifact analysis: lv. {{from}} → {{to}}"
+        }
     },
     "tech_tree": {
         "pilot": {
@@ -4976,7 +4988,7 @@
         "enemyCounterAttack_11": "🔱 Shield piercing: {{piercingDamage}} damage ignores shields",
         "enemyCounterAttack_12": "Enemy hits shields: -{{sDmg}}",
         "enemyCounterAttack_13": "🛡 Enemy shields recovered: +{{restored}} ({{restored2}}/{{max}})",
-        "moduleDamage_1": "⚠️ {{crewMember_name}} took -{{damage}}% damage in {{shipModule_name}} ({{value}}% ❤️)",
+        "moduleDamage_1": "⚠️ {{crewMember_name}} loses {{damage}} HP: module {{shipModule_name}} is damaged (integrity {{value}}%)",
         "combat_ignore_armor": "⚠️ The attack ignores the armor of \"{{targetModule_name}}\"!",
         "moduleDamage_2": "⚠️ Overload: armor of \"{{targetModule_name}}\" disabled!",
         "moduleDamage_3": "🛡️ Module armor \"{{targetModule_name}}\": -{{damageAfterArmor}} damage",
@@ -5166,7 +5178,7 @@
         "processCursedArtifacts_2": "⚠️ {{artifact_name}}: {{targetModule_name}} damaged by -{{value}}%",
         "processCursedArtifacts_3": "⚠️ {{artifact_name}}: {{crewMember_name}} left the ship",
         "processCursedArtifacts_4": "⚠️ {{artifact_name}}: {{crewMember_name}} mutated ({{mutationName}})",
-        "processDesertion_1": "{{crewMember_name}} left the ship due to low morale!",
+        "processDesertion_1": "💔 {{crewMember_name}} left the ship: morale stayed at zero for 3 turns",
         "processGlobalCrises_1": "⚠️ Early galactic crisis postponed: the crisis system was rebalanced",
         "processGlobalCrises_2": "🚨 GALACTIC CRISIS: {{icon}} {{value}} · duration {{duration}} turns",
         "processOthers_1": "😨 {{crewMember_name}} (Coward): -{{drain}} morale",
@@ -5174,7 +5186,6 @@
         "processOthers_3": "★ {{crewMember_name}} ({{trait_name}}): +{{adjacentBonus}} morale to adjacent modules",
         "processOthers_overcrowding": "😤 Overcrowding: {{crewCount}}/{{crewCapacity}}. Crew morale -{{OVERCROWDING_HAPPINESS_PENALTY}}",
         "processOthers_4": "🤖 Systems overheating from crowding: synthetics -{{OVERCROWDING_HARDWARE_DAMAGE}} HP",
-        "processOthers_5": "{{crewMember_name}} left the ship!",
         "processOthers_6": "CRITICAL: Power shortage!",
         "processOthers_7": "\"{{targetModule_name}}\" damaged by overload!",
         "gameManagementSlice_1": "No saved game",

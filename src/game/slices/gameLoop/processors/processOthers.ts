@@ -172,29 +172,6 @@ export const processOvercrowding = (
 };
 
 /**
- * Обрабатывает несчастный экипаж
- * Члены экипажа с нулевым настроением покидают корабль
- * @param state - Текущее состояние игры
- * @param set - Функция обновления состояния
- * @param get - Функция получения состояния
- */
-export const processUnhappyCrew = (
-    set: SetState,
-    get: () => GameStore,
-): void => {
-    const unhappyCrew = get().crew.filter(
-        (c) => c.happiness === 0 && RACES[c.race]?.hasHappiness !== false,
-    );
-
-    unhappyCrew.forEach((crewMember) => {
-        get().addLog( i18nStore.t("game_logs.processOthers_5", { crewMember_name: crewMember.name }), "error");
-        set((s) => ({
-            crew: s.crew.filter((c) => c.id !== crewMember.id),
-        }));
-    });
-};
-
-/**
  * Проверяет критическую нехватку энергии
  * При нехватке энергии:
  * - Весь экипаж теряет настроение

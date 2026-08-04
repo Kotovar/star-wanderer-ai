@@ -144,7 +144,6 @@ export const createGameLoopSlice = (
         // Трейты морали и прочее
         processors.processMoraleTraits(set, get);
         processors.processOvercrowding(set, get);
-        processors.processUnhappyCrew(set, get);
         processors.processPowerCheck(set, get);
         processors.processExpeditionFatigue(set);
 

@@ -103,11 +103,13 @@ export function CrewPerkChoiceContent({
                             key={branch}
                             className="flex min-h-32 flex-col border border-[#00ff4144] bg-[rgba(0,255,65,0.025)] p-3"
                         >
-                            <div className="flex items-center gap-2 font-['Orbitron'] text-[11px] font-bold uppercase tracking-wider text-accent">
-                                <span className="text-xl leading-none">
+                            <div className="flex items-start gap-2 font-['Orbitron'] text-[11px] font-bold uppercase tracking-wider text-accent">
+                                <span className="shrink-0 text-xl leading-none">
                                     {option.icon}
                                 </span>
-                                {t(nameKey)}
+                                <span className="min-w-0 hyphens-auto break-words">
+                                    {t(nameKey)}
+                                </span>
                             </div>
                             <div className="mt-1 flex-1 text-xs leading-relaxed text-[#7f8b7f]">
                                 {t(descKey)}
