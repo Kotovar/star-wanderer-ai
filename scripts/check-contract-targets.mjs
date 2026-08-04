@@ -438,6 +438,11 @@ assert.equal(
   "срок дальней доставки не учитывает путь",
 );
 assert.equal(
+  getGeneratedContractTimeLimit("bounty", 1, 10),
+  12,
+  "охота на пирата должна всегда давать 12 ходов после принятия",
+);
+assert.equal(
   getGeneratedContractTimeLimit("derelict_recovery", 1, 1),
   8,
   "срок контракта на дереликт разбалансирован",

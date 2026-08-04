@@ -42,6 +42,8 @@ export const getGeneratedContractTimeLimit = (
   sourceTier: number,
   targetTier: number,
 ): number | undefined => {
+  if (type === "bounty") return 12;
+
   const base = STANDARD_CONTRACT_DEADLINES[type];
   if (base === undefined) return undefined;
 
