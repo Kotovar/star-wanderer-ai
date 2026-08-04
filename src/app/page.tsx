@@ -41,6 +41,10 @@ const ContractCompletionModal = dynamic(
     ),
   { ssr: false },
 );
+const CrewLevelUpModal = dynamic(
+  () => import("@/game/components/CrewLevelUpModal").then((m) => m.CrewLevelUpModal),
+  { ssr: false },
+);
 const WelcomeTutorial = dynamic(
   () => import("@/game/components/WelcomeTutorial").then((m) => m.WelcomeTutorial),
   { ssr: false },
@@ -533,6 +537,7 @@ export default function Home() {
           <TechnologyDiscoveryModal />
           <SurvivorModal />
           <ContractCompletionModal />
+          <CrewLevelUpModal />
           <WelcomeTutorial
             forceShow={showTutorial}
             onDismissed={() => setShowTutorial(false)}

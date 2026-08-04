@@ -193,6 +193,9 @@ export function EventDisplay() {
   const pendingCrewPerkChoice = useGameStore(
     useShallow((s) => getPendingCrewPerkChoice(s.crew)),
   );
+  const hasPendingCrewLevelUp = useGameStore(
+    (s) => s.pendingCrewLevelUps.length > 0,
+  );
   const pendingTravelEvent = useGameStore((s) => s.pendingTravelEvent);
   const shipFuel = useGameStore((s) => s.ship.fuel);
   const shipShields = useGameStore((s) => s.ship.shields);
@@ -248,7 +251,7 @@ export function EventDisplay() {
     return <RandomEventPanel />;
   }
 
-  if (pendingCrewPerkChoice) {
+  if (pendingCrewPerkChoice && !hasPendingCrewLevelUp) {
     return <CrewPerkChoiceModal />;
   }
 

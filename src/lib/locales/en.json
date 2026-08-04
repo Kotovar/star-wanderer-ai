@@ -4149,6 +4149,14 @@
         "choose": "Choose",
         "no_additional_effect": "An equal or stronger bonus from {{name}} is already active — this choice will not increase the effect yet."
     },
+    "crew_level_up": {
+        "title": "{{name}} reached a new level",
+        "level_transition": "Level {{oldLevel}} → {{newLevel}}",
+        "max_health": "+{{amount}} max HP ({{oldMaxHealth}} → {{newMaxHealth}})",
+        "health_restored": "HP restored: {{previousHealth}} → {{restoredHealth}}",
+        "acknowledge": "Continue",
+        "choose_talent": "Choose a talent"
+    },
     "tech_tree": {
         "pilot": {
             "3": {

@@ -81,6 +81,17 @@ export interface RunProfileArcTarget {
   tier: GalaxyTierAll;
 }
 
+export interface CrewLevelUpResult {
+  crewMemberId: number;
+  crewMemberName: string;
+  oldLevel: number;
+  newLevel: number;
+  previousMaxHealth: number;
+  newMaxHealth: number;
+  previousHealth: number;
+  restoredHealth: number;
+}
+
 export interface GameState {
   /** Версия состояния для миграций сохранений */
   stateVersion: number;
@@ -123,6 +134,7 @@ export interface GameState {
   activeContracts: Contract[];
   completedContractIds: string[]; // IDs of completed contracts to prevent retaking
   pendingContractCompletions: ContractCompletionResult[]; // Очередь результатов успешно выполненных контрактов
+  pendingCrewLevelUps: CrewLevelUpResult[];
   shipQuestsTaken: string[]; // IDs of ships where quest was taken
   hiredCrewFromShips: string[]; // IDs of friendly ships where crew was hired
   distressRespondedShips: string[]; // IDs of distress ships that have been helped
@@ -456,6 +468,7 @@ export interface GameManagement {
   loadGame: () => boolean;
   saveToSlot: (slotId: "manual1" | "manual2" | "manual3" | "manual4" | "manual5", name?: string) => void;
   loadFromSlot: (slotId: "auto" | "manual1" | "manual2" | "manual3" | "manual4" | "manual5") => void;
+  dismissCrewLevelUp: () => void;
 }
 
 export type GameStore = GameState &

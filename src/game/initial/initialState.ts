@@ -175,6 +175,7 @@ const baseState: GameState = {
   activeContracts: [],
   completedContractIds: [],
   pendingContractCompletions: [],
+  pendingCrewLevelUps: [],
   shipQuestsTaken: [],
   completedLocations: [],
   knownTradeStations: [],

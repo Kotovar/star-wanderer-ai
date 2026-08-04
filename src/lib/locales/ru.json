@@ -4149,6 +4149,14 @@
         "choose": "Выбрать",
         "no_additional_effect": "Уже действует равный или более сильный бонус от {{name}} — этот выбор не увеличит эффект."
     },
+    "crew_level_up": {
+        "title": "{{name}} получает новый уровень",
+        "level_transition": "Уровень {{oldLevel}} → {{newLevel}}",
+        "max_health": "+{{amount}} к макс. HP ({{oldMaxHealth}} → {{newMaxHealth}})",
+        "health_restored": "HP восстановлено: {{previousHealth}} → {{restoredHealth}}",
+        "acknowledge": "Продолжить",
+        "choose_talent": "Выбрать талант"
+    },
     "tech_tree": {
         "pilot": {
             "3": {

@@ -17,19 +17,24 @@ import { useGameStore } from "@/game/store";
 import { isModuleActive } from "@/game/modules/utils";
 import { useTranslation } from "@/lib/useTranslation";
 import { useShallow } from "zustand/react/shallow";
+import type { PendingCrewPerkChoice } from "@/game/crew/techPerks";
 
-export function CrewPerkChoiceModal() {
-    const { crew, ship, chooseCrewPerk } = useGameStore(
+interface CrewPerkChoiceContentProps {
+    pending: PendingCrewPerkChoice;
+    onChoose: (branch: "A" | "B" | "C") => void;
+}
+
+export function CrewPerkChoiceContent({
+    pending,
+    onChoose,
+}: CrewPerkChoiceContentProps) {
+    const { crew, ship } = useGameStore(
         useShallow((state) => ({
             crew: state.crew,
             ship: state.ship,
-            chooseCrewPerk: state.chooseCrewPerk,
         })),
     );
     const { t } = useTranslation();
-
-    const pending = getPendingCrewPerkChoice(crew);
-    if (!pending) return null;
 
     const crewMember = crew.find((c) => c.id === pending.crewMemberId);
     if (!crewMember) return null;
@@ -115,13 +120,7 @@ export function CrewPerkChoiceModal() {
                                 </div>
                             )}
                             <Button
-                                onClick={() =>
-                                    chooseCrewPerk(
-                                        pending.crewMemberId,
-                                        pending.tier,
-                                        branch,
-                                    )
-                                }
+                                onClick={() => onChoose(branch)}
                                 className="mt-3 cursor-pointer border border-[#00ff41] bg-transparent text-[10px] uppercase tracking-wider text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
                             >
                                 {t("crew_perk_choice.choose")}
@@ -131,5 +130,25 @@ export function CrewPerkChoiceModal() {
                 })}
             </div>
         </div>
+    );
+}
+
+export function CrewPerkChoiceModal() {
+    const { crew, chooseCrewPerk } = useGameStore(
+        useShallow((state) => ({
+            crew: state.crew,
+            chooseCrewPerk: state.chooseCrewPerk,
+        })),
+    );
+    const pending = getPendingCrewPerkChoice(crew);
+    if (!pending) return null;
+
+    return (
+        <CrewPerkChoiceContent
+            pending={pending}
+            onChoose={(branch) =>
+                chooseCrewPerk(pending.crewMemberId, pending.tier, branch)
+            }
+        />
     );
 }
