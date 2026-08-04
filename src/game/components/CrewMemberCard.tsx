@@ -7,7 +7,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { PROFESSION_NAMES } from "@/game/constants/crew";
 import type {
   CrewMember,
   CrewMemberCombatAssignment,
@@ -80,7 +79,7 @@ export function CrewMemberCard({
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="text-[#ffb000] cursor-help underline decoration-dotted underline-offset-2">
-                {PROFESSION_NAMES[crewMember.profession]}
+                {t(`professions.${crewMember.profession}`)}
               </span>
             </TooltipTrigger>
             <TooltipContent className="max-w-48 text-xs">

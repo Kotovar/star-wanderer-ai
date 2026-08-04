@@ -15,15 +15,6 @@ export const CREW_BASE_PRICES: Record<Profession, number> = {
     gunner: 500,
 };
 
-export const PROFESSION_NAMES: Record<Profession, string> = {
-    pilot: "Пилот",
-    engineer: "Инженер",
-    medic: "Медик",
-    scout: "Разведчик",
-    scientist: "Учёный",
-    gunner: "Стрелок",
-};
-
 type ActiveCrewAssignment = Exclude<NonNullable<CrewMemberAssignment>, "">;
 
 export const CREW_ASSIGNMENT_ICONS: Record<ActiveCrewAssignment, string> = {

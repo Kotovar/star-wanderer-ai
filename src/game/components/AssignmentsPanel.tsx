@@ -9,7 +9,6 @@ import { RACES, XENOSYMBIONT_MERGE_EFFECTS } from "@/game/constants/races";
 import { formatMergeEffectSummary } from "@/game/races/mergeEffectLabels";
 import {
     CREW_ACTIONS,
-    PROFESSION_NAMES,
     XENOSYMBIONT_MERGE_ACTION,
     getCrewActionEffectKey,
     getCrewActionLabelKey,
@@ -19,7 +18,6 @@ import type {
     CrewMember,
     CrewMemberAssignment,
     Module,
-    Profession,
     RaceId,
 } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
@@ -93,16 +91,25 @@ export function AssignmentsPanel() {
             <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
                 <div>
                     <div className="font-['Orbitron'] font-bold text-lg text-[#ffb000]">
-                        ▸ ЭКИПАЖ
+                        ▸ {t("assignments_panel.title")}
                     </div>
                     <div className="text-sm text-[#aaa]">
-                        Планирование перемещений и задач на следующий ход.
+                        {t("assignments_panel.subtitle")}
                     </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
-                    <StatusMetric label="Экипаж" value={crew.length} />
-                    <StatusMetric label="Маршруты" value={plannedMoveCount} />
-                    <StatusMetric label="Задачи" value={plannedTaskCount} />
+                    <StatusMetric
+                        label={t("assignments_panel.metric_crew")}
+                        value={crew.length}
+                    />
+                    <StatusMetric
+                        label={t("assignments_panel.metric_routes")}
+                        value={plannedMoveCount}
+                    />
+                    <StatusMetric
+                        label={t("assignments_panel.metric_tasks")}
+                        value={plannedTaskCount}
+                    />
                 </div>
             </div>
 
@@ -231,21 +238,24 @@ export function AssignmentsPanel() {
             <div className="mt-auto flex shrink-0 items-center justify-between gap-3 flex-wrap">
                 <div className="text-xs text-[#888]">
                     {hasPlannedChanges
-                        ? `Будет применено: ${plannedMoveCount} перемещ., ${plannedTaskCount} задач.`
-                        : "Изменений пока нет."}
+                        ? t("assignments_panel.planned_summary", {
+                              moves: plannedMoveCount,
+                              tasks: plannedTaskCount,
+                          })
+                        : t("assignments_panel.no_changes")}
                 </div>
                 <div className="flex gap-2.5 flex-wrap">
                 <Button
                     onClick={handleApply}
                     className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
                 >
-                    ПРИМЕНИТЬ
+                    {t("assignments_panel.apply")}
                 </Button>
                 <Button
                     onClick={showGalaxyMap}
                     className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider"
                 >
-                    ОТМЕНА
+                    {t("assignments_panel.cancel")}
                 </Button>
                 </div>
             </div>
@@ -322,7 +332,7 @@ function CrewAssignmentCard({
                         race={crewMember.race}
                         profession={crewMember.profession}
                         size={46}
-                        title={`${PROFESSION_NAMES[crewMember.profession as Profession] || crewMember.profession}: ${race?.name ?? ""}`}
+                        title={`${t(`professions.${crewMember.profession}`)}: ${t(`races.${crewMember.race}.name`)}`}
                     />
                     <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -330,19 +340,17 @@ function CrewAssignmentCard({
                                 {crewMember.name}
                             </span>
                             <span className="text-[10px] text-[#ffb000] border border-[#ffb00055] px-1.5 py-0.5 rounded">
-                                {PROFESSION_NAMES[
-                                    crewMember.profession as Profession
-                                ] || crewMember.profession}{" "}
+                                {t(`professions.${crewMember.profession}`)}{" "}
                                 LV{crewMember.level || 1}
                             </span>
                             {crewMember.isMerged && (
                                 <span className="text-[10px] text-[#9933ff] border border-[#9933ff55] px-1.5 py-0.5 rounded">
-                                    Сращён
+                                    {t("assignments_panel.merged")}
                                 </span>
                             )}
                             {crewMember.movedThisTurn && (
                                 <span className="text-[10px] text-[#ff0040] border border-[#ff004055] px-1.5 py-0.5 rounded">
-                                    Ход потрачен
+                                    {t("assignments_panel.turn_spent")}
                                 </span>
                             )}
                             {race?.hasFatigue &&
@@ -356,14 +364,23 @@ function CrewAssignmentCard({
                                         }`}
                                     >
                                         {(crewMember.assignmentRestTurns ?? 0) > 0
-                                            ? `Отдых: ${crewMember.assignmentRestTurns} х.`
-                                            : `Усталость ${crewMember.assignmentFatigue}/${ASSIGNMENT_EXHAUSTED_AT}`}
+                                            ? t("assignments_panel.rest", {
+                                                  turns:
+                                                      crewMember.assignmentRestTurns ??
+                                                      0,
+                                              })
+                                            : t("assignments_panel.fatigue", {
+                                                  value:
+                                                      crewMember.assignmentFatigue ??
+                                                      0,
+                                                  max: ASSIGNMENT_EXHAUSTED_AT,
+                                              })}
                                     </span>
                                 )}
                         </div>
                         <div className="mt-1 grid grid-cols-2 gap-2 text-[10px]">
                             <CrewBar
-                                label="Здоровье"
+                                label={t("assignments_panel.health")}
                                 value={crewMember.health}
                                 max={crewMember.maxHealth || 100}
                                 pct={hpPct}
@@ -377,11 +394,11 @@ function CrewAssignmentCard({
                             />
                             {race?.hasHappiness === false ? (
                                 <div className="text-[#777] pt-1">
-                                    Мораль: иммунитет
+                                    {t("assignments_panel.morale_immune")}
                                 </div>
                             ) : (
                                 <CrewBar
-                                    label="Мораль"
+                                    label={t("assignments_panel.morale")}
                                     value={crewMember.happiness}
                                     max={crewMember.maxHappiness || 100}
                                     pct={moralePct}
@@ -399,11 +416,15 @@ function CrewAssignmentCard({
                 </div>
 
                 <div className="text-[10px] text-right min-w-42">
-                    <div className="text-[#888]">Текущая задача</div>
+                    <div className="text-[#888]">
+                        {t("assignments_panel.current_task")}
+                    </div>
                     <div className="text-[#00ff41] font-bold">
                         {currentActionLabel}
                     </div>
-                    <div className="text-[#888] mt-1">Выбрано</div>
+                    <div className="text-[#888] mt-1">
+                        {t("assignments_panel.selected")}
+                    </div>
                     <div className="text-[#ffb000] font-bold">
                         {t(getCrewActionLabelKey(selectedAction?.value ?? ""))}
                     </div>
@@ -412,10 +433,10 @@ function CrewAssignmentCard({
 
             <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3">
                 <div className="space-y-2">
-                    <SectionLabel label="Маршрут" />
+                    <SectionLabel label={t("assignments_panel.route")} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <ModuleRouteButton
-                            label="Остаться"
+                            label={t("assignments_panel.stay")}
                             module={currentModule}
                             moduleName={
                                 currentModule
@@ -429,7 +450,7 @@ function CrewAssignmentCard({
                         {adjacentModules.map((mod) => (
                             <ModuleRouteButton
                                 key={mod.id}
-                                label="Перейти"
+                                label={t("assignments_panel.move")}
                                 module={mod}
                                 moduleName={getModuleName(mod.id)}
                                 active={pendingModuleId === mod.id}
@@ -440,12 +461,12 @@ function CrewAssignmentCard({
                     </div>
                     {adjacentModules.length === 0 && (
                         <div className="text-[10px] text-[#777]">
-                            Нет доступных соседних модулей для перемещения.
+                            {t("assignments_panel.no_adjacent")}
                         </div>
                     )}
                     {effectiveModule && (
                         <div className="text-[10px] text-[#888]">
-                            Задачи ниже рассчитаны для модуля:{" "}
+                            {t("assignments_panel.tasks_for_module")}{" "}
                             <span className="text-[#00d4ff]">
                                 {getModuleName(effectiveModule.id)}
                             </span>
@@ -455,7 +476,7 @@ function CrewAssignmentCard({
                 </div>
 
                 <div className="space-y-2">
-                    <SectionLabel label="Задача" />
+                    <SectionLabel label={t("assignments_panel.task")} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {actions.map((action) => {
                             const itemValue =
@@ -502,7 +523,7 @@ function CrewAssignmentCard({
                     </div>
                     {actions.length === 0 && (
                         <div className="text-[10px] text-[#777]">
-                            На выбранном модуле нет доступных задач.
+                            {t("assignments_panel.no_tasks")}
                         </div>
                     )}
                 </div>
@@ -565,6 +586,7 @@ function ModuleRouteButton({
     disabled: boolean;
     onClick: () => void;
 }) {
+    const { t } = useTranslation();
     const hpPct = module ? getPercent(module.health, module.maxHealth || 100) : 0;
     const status = getModuleStatus(module);
 
@@ -612,7 +634,7 @@ function ModuleRouteButton({
                     />
                 </div>
                 <span className={`text-[10px] ${status.color}`}>
-                    {status.label}
+                    {t(status.key)}
                 </span>
             </div>
         </button>
@@ -625,12 +647,16 @@ function getPercent(value: number, max: number) {
 }
 
 function getModuleStatus(module: Module | undefined) {
-    if (!module) return { label: "нет", color: "text-[#777]" };
+    const status = (key: string, color: string) => ({
+        key: `assignments_panel.module_status.${key}`,
+        color,
+    });
+    if (!module) return status("none", "text-[#777]");
     if (module.disabled || module.manualDisabled) {
-        return { label: "откл.", color: "text-[#ff0040]" };
+        return status("disabled", "text-[#ff0040]");
     }
     const pct = getPercent(module.health, module.maxHealth || 100);
-    if (pct < 35) return { label: "повр.", color: "text-[#ff0040]" };
-    if (pct < 75) return { label: "износ", color: "text-[#ffb000]" };
-    return { label: "норма", color: "text-[#00ff41]" };
+    if (pct < 35) return status("damaged", "text-[#ff0040]");
+    if (pct < 75) return status("worn", "text-[#ffb000]");
+    return status("ok", "text-[#00ff41]");
 }

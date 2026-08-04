@@ -159,4 +159,18 @@ for (const locale of ["ru", "en"]) {
   }
 }
 
+// Панель назначений и карточки экипажа не должны содержать русский текст в
+// разметке — он не переводится на английской локали (комментарии не в счёт)
+for (const file of [
+  "src/game/components/AssignmentsPanel.tsx",
+  "src/game/components/CrewList.tsx",
+  "src/game/components/CrewMemberCard.tsx",
+]) {
+  const code = source(file)
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
+  const cyrillic = code.match(/^.*[А-Яа-яЁё].*$/m);
+  assert.equal(cyrillic, null, `${file}: русский текст вне комментариев -> ${cyrillic}`);
+}
+
 console.log("Profession and experience checks passed");

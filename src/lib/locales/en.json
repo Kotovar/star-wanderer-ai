@@ -375,6 +375,40 @@
         "merge": "🧬 Symbiosis",
         "merge_effect": "No effect in this module"
     },
+    "assignments_panel": {
+        "title": "CREW",
+        "subtitle": "Plan moves and assignments for the next turn.",
+        "metric_crew": "Crew",
+        "metric_routes": "Routes",
+        "metric_tasks": "Tasks",
+        "planned_summary": "Will apply: {{moves}} move(s), {{tasks}} task(s).",
+        "no_changes": "No changes yet.",
+        "apply": "APPLY",
+        "cancel": "CANCEL",
+        "merged": "Merged",
+        "turn_spent": "Turn spent",
+        "rest": "Resting: {{turns}} t.",
+        "fatigue": "Fatigue {{value}}/{{max}}",
+        "health": "Health",
+        "morale": "Morale",
+        "morale_immune": "Morale: immune",
+        "current_task": "Current task",
+        "selected": "Selected",
+        "route": "Route",
+        "stay": "Stay",
+        "move": "Move",
+        "no_adjacent": "No adjacent modules available to move to.",
+        "tasks_for_module": "Tasks below are calculated for module:",
+        "task": "Task",
+        "no_tasks": "No tasks available on the selected module.",
+        "module_status": {
+            "none": "none",
+            "disabled": "off",
+            "damaged": "damaged",
+            "worn": "worn",
+            "ok": "ok"
+        }
+    },
     "races": {
         "human": {
             "name": "Human",
