@@ -11,6 +11,8 @@ import {
     CREW_ACTIONS,
     PROFESSION_NAMES,
     XENOSYMBIONT_MERGE_ACTION,
+    getCrewActionEffectKey,
+    getCrewActionLabelKey,
 } from "@/game/constants/crew";
 import { getAvailableTasksForModule } from "@/game/slices/crew/helpers";
 import type {
@@ -29,8 +31,8 @@ import {
 
 type CivilianAction = {
     value: NonNullable<CrewMemberAssignment>;
-    label: string;
-    effect: string | null;
+    /** Переопределение описания эффекта; иначе берётся из локали по value */
+    effect?: string | null;
 };
 
 type PendingAssignment = {
@@ -122,9 +124,7 @@ export function AssignmentsPanel() {
                     );
 
                     let allActions: CivilianAction[] =
-                        CREW_ACTIONS[c.profession] || [
-                            { value: "", label: "ОЖИДАНИЕ", effect: null },
-                        ];
+                        CREW_ACTIONS[c.profession] || [{ value: "" }];
 
                     // Добавляем "Сращивание" для ксеноморфов — эффект превью
                     // рассчитан для модуля, куда экипаж реально попадёт с учётом
@@ -140,7 +140,9 @@ export function AssignmentsPanel() {
                             ...allActions,
                             {
                                 ...XENOSYMBIONT_MERGE_ACTION,
-                                effect: mergeSummary || "Нет эффекта в этом модуле",
+                                effect:
+                                    mergeSummary ||
+                                    t(getCrewActionEffectKey("merge")),
                             },
                         ];
                     }
@@ -294,15 +296,17 @@ function CrewAssignmentCard({
         action: CivilianAction | undefined,
     ) => void;
 }) {
+    const { t } = useTranslation();
     const race = RACES[crewMember.race as RaceId];
     const hpPct = getPercent(crewMember.health, crewMember.maxHealth || 100);
     const moralePct = getPercent(
         crewMember.happiness,
         crewMember.maxHappiness || 100,
     );
-    const currentActionLabel =
-        actions.find((a) => (a.value === "" ? "none" : a.value) === currentTask)
-            ?.label ?? "ОЖИДАНИЕ";
+    const currentAction = actions.find(
+        (a) => (a.value === "" ? "none" : a.value) === currentTask,
+    );
+    const currentActionLabel = t(getCrewActionLabelKey(currentAction?.value ?? ""));
 
     return (
         <div
@@ -401,7 +405,7 @@ function CrewAssignmentCard({
                     </div>
                     <div className="text-[#888] mt-1">Выбрано</div>
                     <div className="text-[#ffb000] font-bold">
-                        {selectedAction?.label ?? "ОЖИДАНИЕ"}
+                        {t(getCrewActionLabelKey(selectedAction?.value ?? ""))}
                     </div>
                 </div>
             </div>
@@ -486,10 +490,11 @@ function CrewAssignmentCard({
                                                 : "text-[#aaa]"
                                         }`}
                                     >
-                                        {action.label}
+                                        {t(getCrewActionLabelKey(action.value))}
                                     </div>
                                     <div className="text-[10px] text-[#777] mt-0.5">
-                                        {action.effect ?? "Без активного эффекта"}
+                                        {action.effect ??
+                                            t(getCrewActionEffectKey(action.value))}
                                     </div>
                                 </button>
                             );

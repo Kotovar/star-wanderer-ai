@@ -7,6 +7,7 @@ import {
     COMBAT_ACTIONS,
     CREW_ACTIONS,
     XENOSYMBIONT_MERGE_ACTION,
+    getCrewActionLabelKey,
 } from "@/game/constants/crew";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import type { CrewMember } from "@/game/types";
@@ -32,6 +33,7 @@ import {
     CrewExpBonusRow,
     CrewMoraleEfficiencyRow,
 } from "./CrewListHelpers";
+import type { TFn } from "./CrewListHelpers";
 import { ProfessionSprite } from "./ProfessionSprite";
 import { CrewStatusIcon } from "./CrewStatusIcon";
 import { ModuleMoveButtons } from "./CrewMemberCard";
@@ -58,15 +60,21 @@ import { getDesertionTurnsLeft } from "@/game/slices/gameLoop/processors/process
 const stripLeadingSymbol = (value: string) =>
     value.replace(/^[^\p{L}\p{N}]+/u, "");
 
-const getAssignmentLabel = (member: CrewMember, isCombat: boolean): string => {
+const getAssignmentLabel = (
+    member: CrewMember,
+    isCombat: boolean,
+    t: TFn,
+): string => {
     const assignment = isCombat ? member.combatAssignment : member.assignment;
     if (!assignment) return "";
     if (assignment === XENOSYMBIONT_MERGE_ACTION.value)
-        return XENOSYMBIONT_MERGE_ACTION.label;
+        return t(getCrewActionLabelKey(assignment));
     const actions = isCombat
         ? COMBAT_ACTIONS[member.profession]
         : CREW_ACTIONS[member.profession];
-    return actions.find((action) => action.value === assignment)?.label ?? assignment;
+    return actions.some((action) => action.value === assignment)
+        ? t(getCrewActionLabelKey(assignment))
+        : assignment;
 };
 
 const AUGMENTATION_CARD_STYLES: Record<AugmentationRarity, string> = {
@@ -110,7 +118,7 @@ export function CrewList() {
                     );
                     const healthPct =
                         (member.health / (member.maxHealth || 100)) * 100;
-                    const assignmentLabel = getAssignmentLabel(member, isCombat);
+                    const assignmentLabel = getAssignmentLabel(member, isCombat, t);
                     const efficiency = getTaskEfficiencyPercent(member);
                     const race = RACES[member.race];
                     const hpColor =
@@ -583,6 +591,7 @@ export function CrewList() {
                                             {getAssignmentLabel(
                                                 selectedCrew,
                                                 isCombat,
+                                                t,
                                             ) || t("crew_member.waiting_short")}
                                         </div>
 

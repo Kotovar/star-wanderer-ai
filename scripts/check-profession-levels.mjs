@@ -30,6 +30,13 @@ const { calculateRetreatChance } = jiti(
   "../src/game/slices/combat/helpers/retreat.ts",
 );
 const { getGunnerAccuracyBonus } = jiti("../src/game/crew/combatBonuses.ts");
+const {
+  COMBAT_ACTIONS,
+  CREW_ACTIONS,
+  XENOSYMBIONT_MERGE_ACTION,
+  getCrewActionEffectKey,
+  getCrewActionLabelKey,
+} = jiti("../src/game/constants/crew.ts");
 
 const reactorEngineer = { profession: "engineer", level: 1 };
 assert.equal(getReactorOverloadPower(reactorEngineer), 5);
@@ -126,6 +133,30 @@ assert.equal(getProfessionLevelGains("gunner", 10, 11).length, 0);
 // Ни одна прибавка не показывается без роста уровня
 for (const profession of ["pilot", "engineer", "medic", "gunner", "scout", "scientist"]) {
   assert.deepEqual(getProfessionLevelGains(profession, 4, 4), []);
+}
+
+// У каждой задачи должны быть подпись и эффект в обеих локалях —
+// иначе английская сборка снова покажет русский текст или сырой ключ
+const lookup = (catalog, key) =>
+  key.split(".").reduce((node, part) => node?.[part], catalog);
+
+for (const locale of ["ru", "en"]) {
+  const catalog = JSON.parse(source(`src/lib/locales/${locale}.json`));
+  const values = new Set([XENOSYMBIONT_MERGE_ACTION.value]);
+  for (const table of [CREW_ACTIONS, COMBAT_ACTIONS]) {
+    for (const actions of Object.values(table)) {
+      for (const action of actions) values.add(action.value);
+    }
+  }
+  for (const value of values) {
+    for (const key of [getCrewActionLabelKey(value), getCrewActionEffectKey(value)]) {
+      assert.equal(
+        typeof lookup(catalog, key),
+        "string",
+        `в ${locale}.json нет ключа ${key}`,
+      );
+    }
+  }
 }
 
 console.log("Profession and experience checks passed");

@@ -15,7 +15,7 @@ import type {
   ModuleType,
   Profession,
 } from "@/game/types";
-import { COMBAT_ACTIONS } from "@/game/constants/crew";
+import { COMBAT_ACTIONS, getCrewActionLabelKey } from "@/game/constants/crew";
 import { getAvailableTasksForModule } from "@/game/slices/crew/helpers";
 import { useTranslation } from "@/lib/useTranslation";
 import { CrewStatusIcon } from "./CrewStatusIcon";
@@ -50,9 +50,7 @@ export function CrewMemberCard({
 }: CrewMemberCardProps) {
   const { t } = useTranslation();
   // Use combat actions during battle, civilian actions otherwise
-  const actions = COMBAT_ACTIONS[crewMember.profession] || [
-    { value: "", label: t("crew_member.waiting"), effect: null },
-  ];
+  const actions = COMBAT_ACTIONS[crewMember.profession] || [{ value: "" }];
 
   // Get current assignment based on combat state
   const currentAssignment = isCombat
@@ -214,8 +212,6 @@ interface TaskRowProps {
   module: Module | undefined;
   actions: Array<{
     value: NonNullable<CrewMemberCombatAssignment>;
-    label: string;
-    effect: string | null;
     moduleType?: ModuleType;
   }>;
   onAssignTask: (
@@ -278,7 +274,7 @@ function TaskRow({
                         : "border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
                       }`}
                   >
-                    {a.label}
+                    {t(getCrewActionLabelKey(a.value))}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent

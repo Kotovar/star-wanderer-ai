@@ -55,167 +55,64 @@ export const COMBAT_ACTIONS: Record<
     Profession,
     {
         value: NonNullable<CrewMemberCombatAssignment>;
-        label: string;
-        effect: string | null;
         moduleType?: ModuleType; // Требуемый тип модуля
     }[]
 > = {
     pilot: [
-        { value: "", label: "ОЖИДАНИЕ", effect: null },
-        {
-            value: "evasion",
-            label: "Маневры",
-            effect: "+1% за уровень к уклонению",
-            moduleType: "cockpit",
-        },
-        {
-            value: "vent_fuel",
-            label: "Вентиляция топлива",
-            effect: "-10 топлива, +15 щита",
-            moduleType: "fueltank",
-        },
+        { value: "" },
+        { value: "evasion", moduleType: "cockpit" },
+        { value: "vent_fuel", moduleType: "fueltank" },
     ],
     engineer: [
-        { value: "", label: "ОЖИДАНИЕ", effect: null },
-        { value: "repair", label: "Ремонт", effect: "+15 корпуса, +1 за уровень" },
-        {
-            value: "calibration",
-            label: "Калибровка",
-            effect: "+10% точность, +1% за уровень",
-            moduleType: "weaponbay",
-        },
-        {
-            value: "overclock",
-            label: "Перегрузка",
-            effect: "+15% урон, +1% за уровень, -10% броня цели",
-            moduleType: "weaponbay",
-        },
-        {
-            value: "vent_fuel",
-            label: "Вентиляция топлива",
-            effect: "-10 топлива, +15 щита",
-            moduleType: "fueltank",
-        },
+        { value: "" },
+        { value: "repair" },
+        { value: "calibration", moduleType: "weaponbay" },
+        { value: "overclock", moduleType: "weaponbay" },
+        { value: "vent_fuel", moduleType: "fueltank" },
     ],
-    medic: [
-        { value: "", label: "ОЖИДАНИЕ", effect: null },
-        { value: "heal", label: "Лечение", effect: "+20 здоровья, +1 за уровень" },
-        {
-            value: "firstaid",
-            label: "Медпаки",
-            effect: "Защита при уроне",
-        },
-    ],
-    scout: [
-        { value: "", label: "ОЖИДАНИЕ", effect: null },
-        {
-            value: "sabotage",
-            label: "Диверсии",
-            effect: "-5% шанс попадания врага, -1% за уровень",
-        },
-    ],
-    scientist: [
-        { value: "", label: "ОЖИДАНИЕ", effect: null },
-        {
-            value: "analysis",
-            label: "Анализ уязвимостей",
-            effect: "+10% урон по цели, +1% за уровень",
-        },
-    ],
+    medic: [{ value: "" }, { value: "heal" }, { value: "firstaid" }],
+    scout: [{ value: "" }, { value: "sabotage" }],
+    scientist: [{ value: "" }, { value: "analysis" }],
     gunner: [
-        { value: "", label: "ОЖИДАНИЕ", effect: null },
-        {
-            value: "targeting",
-            label: "Прицеливание",
-            effect: "Выбор цели, +5% точность",
-            moduleType: "weaponbay",
-        },
-        {
-            value: "rapidfire",
-            label: "Скорострельность",
-            effect: "+25% урон, +1% за уровень, -10% точность",
-            moduleType: "weaponbay",
-        },
-        {
-            value: "interception",
-            label: "ПРО",
-            effect: "+5% к перехвату, +1% за уровень",
-            moduleType: "point_defense",
-        },
+        { value: "" },
+        { value: "targeting", moduleType: "weaponbay" },
+        { value: "rapidfire", moduleType: "weaponbay" },
+        { value: "interception", moduleType: "point_defense" },
     ],
 };
 
 export const CREW_ACTIONS: Record<
     Profession,
-    {
-        value: NonNullable<CrewMemberAssignment>;
-        label: string;
-        effect: string | null;
-    }[]
+    { value: NonNullable<CrewMemberAssignment> }[]
 > = {
-    pilot: [
-        { value: "", label: "ОЖИДАНИЕ", effect: null },
-        { value: "navigation", label: "Навигация", effect: "-1⚡ потребление" },
-    ],
+    pilot: [{ value: "" }, { value: "navigation" }],
     engineer: [
-        { value: "", label: "ОЖИДАНИЕ", effect: null },
-        { value: "repair", label: "Ремонт", effect: "+15 корпуса, +1 за уровень" },
-        {
-            value: "reactor_overload",
-            label: "Разгон реактора",
-            effect: "+5⚡, +1⚡ за уровень",
-        },
-        {
-            value: "fuel_synthesis",
-            label: "Синтез топлива",
-            effect: "+1 топливо, -2 морали за ход",
-        },
+        { value: "" },
+        { value: "repair" },
+        { value: "reactor_overload" },
+        { value: "fuel_synthesis" },
     ],
-    medic: [
-        { value: "", label: "ОЖИДАНИЕ", effect: null },
-        { value: "heal", label: "Лечение", effect: "+20 здоровья, +1 за уровень" },
-        { value: "morale", label: "Мораль", effect: "+15 настроения, +1 за уровень" },
-    ],
-    scout: [
-        { value: "", label: "ОЖИДАНИЕ", effect: null },
-        { value: "patrol", label: "Патруль", effect: "+5 кредитов за уровень после 1" },
-    ],
-    scientist: [
-        { value: "", label: "ОЖИДАНИЕ", effect: null },
-        {
-            value: "research",
-            label: "Исследование",
-            effect: "+100% к науке",
-        },
-        {
-            value: "analyzing",
-            label: "Анализ аномалий",
-            effect: "+данные с аномалий",
-        },
-    ],
-    gunner: [
-        { value: "", label: "ОЖИДАНИЕ", effect: null },
-        {
-            value: "training",
-            label: "Тренировка",
-            effect: "+1 опыт за ход",
-        },
-        {
-            value: "clean_weapons",
-            label: "Чистка орудий",
-            effect: "+8% урона в следующем бою (3 хода, пока экипаж на задаче)",
-        },
-    ],
+    medic: [{ value: "" }, { value: "heal" }, { value: "morale" }],
+    scout: [{ value: "" }, { value: "patrol" }],
+    scientist: [{ value: "" }, { value: "research" }, { value: "analyzing" }],
+    gunner: [{ value: "" }, { value: "training" }, { value: "clean_weapons" }],
 };
+
+/**
+ * Подпись и эффект задачи живут в локалях, а не в этой таблице — иначе
+ * английская сборка показывала русский текст. Пустое значение — «ожидание».
+ */
+export const getCrewActionLabelKey = (value: string) =>
+    `crew_actions.${value || "waiting"}`;
+
+export const getCrewActionEffectKey = (value: string) =>
+    `crew_actions.${value || "waiting"}_effect`;
 
 /**
  * Сращивание — задача только для ксеноморфов, поэтому её нет в CREW_ACTIONS
  * по профессиям. Подпись общая для меню задач и карточки экипажа.
  */
-export const XENOSYMBIONT_MERGE_ACTION = {
-    value: "merge",
-    label: "🧬 Сращивание",
-} as const;
+export const XENOSYMBIONT_MERGE_ACTION = { value: "merge" } as const;
 
 /**
  * Бонусы от назначения экипажа
