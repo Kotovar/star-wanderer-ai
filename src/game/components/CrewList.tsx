@@ -31,7 +31,13 @@ import {
 import { ProfessionSprite } from "./ProfessionSprite";
 import { CrewStatusIcon } from "./CrewStatusIcon";
 import { ModuleMoveButtons } from "./CrewMemberCard";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ASSIGNMENT_EXHAUSTED_AT } from "@/game/crew/assignmentFatigue";
+import { getExpNeededForNextLevel } from "@/game/slices/crew/helpers/getExpNeededForNextLevel";
 import {
     RACE_TECH_TREE,
     TECH_TREE,
@@ -91,7 +97,7 @@ export function CrewList() {
         <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {crew.map((member) => {
-                    const expNeeded = (member.level || 1) * 100;
+                    const expNeeded = getExpNeededForNextLevel(member.level || 1);
                     const expPercent = Math.min(
                         100,
                         ((member.exp || 0) / expNeeded) * 100,
@@ -179,24 +185,46 @@ export function CrewList() {
                                 )}
                             </div>
 
-                            {race?.hasFatigue &&
+                            {race?.hasFatigue === false ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div className="text-[9px] text-[#00d4ff] cursor-help">
+                                            {t("crew_member.fatigue_free")}
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-60 text-xs">
+                                        {t("crew_member.fatigue_free_tooltip")}
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : (
+                                race?.hasFatigue &&
                                 ((member.assignmentFatigue ?? 0) > 0 ||
                                     (member.assignmentRestTurns ?? 0) > 0) && (
-                                    <div className="text-[9px] text-[#ffb000]">
-                                        {(member.assignmentRestTurns ?? 0) > 0
-                                            ? t("crew_member.assignment_rest", {
-                                                  turns:
-                                                      member.assignmentRestTurns ??
-                                                      0,
-                                              })
-                                            : t("crew_member.assignment_fatigue", {
-                                                  value:
-                                                      member.assignmentFatigue ??
-                                                      0,
-                                                  max: ASSIGNMENT_EXHAUSTED_AT,
-                                              })}
-                                    </div>
-                                )}
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <div className="text-[9px] text-[#ffb000] cursor-help">
+                                                {(member.assignmentRestTurns ?? 0) > 0
+                                                    ? t("crew_member.assignment_rest", {
+                                                          turns:
+                                                              member.assignmentRestTurns ??
+                                                              0,
+                                                      })
+                                                    : t("crew_member.assignment_fatigue", {
+                                                          value:
+                                                              member.assignmentFatigue ??
+                                                              0,
+                                                          max: ASSIGNMENT_EXHAUSTED_AT,
+                                                      })}
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="max-w-60 text-xs">
+                                            {t(
+                                                "crew_member.assignment_fatigue_tooltip",
+                                            )}
+                                        </TooltipContent>
+                                    </Tooltip>
+                                )
+                            )}
 
                             {/* HP bar */}
                             <div className="flex items-center gap-1">
@@ -267,6 +295,10 @@ export function CrewList() {
                                         style={{ width: `${expPercent}%` }}
                                     />
                                 </div>
+                                <span className="text-[#555] text-[9px] shrink-0 tabular-nums">
+                                    {t("crew_member.experience")} {member.exp || 0}/
+                                    {expNeeded}
+                                </span>
                             </div>
                         </div>
                     );
@@ -289,6 +321,9 @@ export function CrewList() {
                     {selectedCrew &&
                         (() => {
                             const race = RACES[selectedCrew.race];
+                            const selectedExpNeeded = getExpNeededForNextLevel(
+                                selectedCrew.level || 1,
+                            );
                             const currentModule = modules.find(
                                 (m) => m.id === selectedCrew.moduleId,
                             );
@@ -356,13 +391,12 @@ export function CrewList() {
                                                 {t("crew_member.experience")}{" "}
                                             </span>
                                             {selectedCrew.exp}/
-                                            {(selectedCrew.level || 1) * 100}
+                                            {selectedExpNeeded}
                                             <Progress
                                                 value={Math.min(
                                                     100,
                                                     ((selectedCrew.exp || 0) /
-                                                        ((selectedCrew.level || 1) *
-                                                            100)) *
+                                                        selectedExpNeeded) *
                                                         100,
                                                 )}
                                                 className="h-2 mt-1 bg-[rgba(0,0,0,0.5)] [&>div]:bg-[#00d4ff]"
