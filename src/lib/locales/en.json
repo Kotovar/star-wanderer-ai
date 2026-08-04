@@ -2075,6 +2075,7 @@
         "expedition_rewards_title": "Collected:",
         "expedition_finished": "Expedition complete!",
         "expedition_artifact_found": "✨ Artifact found",
+        "expedition_artifact_empty": "No artifact was found in tile {{tile}}: the site was empty.",
         "expedition_artifact_dialog_desc": "The artifact was added to your collection. Research it to reveal its effect.",
         "expedition_synthetic_bonus": "+{{count}} synthetic",
         "expedition_scout_bonus": "+{{count}} 🧭 scouts",

@@ -123,6 +123,7 @@ export function startExpedition(
         ruinsOutcome: null,
         ruinsDepth: 0,
         pendingTileIndex: null,
+        emptyArtifactTileIndex: null,
         rewards: {
             credits: 0,
             tradeGoods: [],

@@ -99,6 +99,7 @@ export interface ExpeditionState {
     ruinsOutcome: RuinsOutcome | null; // исход последнего выбора в руинах
     ruinsDepth: RuinsDepth; // дополнительные камеры в текущих руинах
     pendingTileIndex: number | null; // tile waiting for ruins choice resolution
+    emptyArtifactTileIndex?: number | null; // latest artifact tile that yielded no artifact
     rewards: ExpeditionReward;
     finished: boolean;
     crewIds: number[]; // crew members sent on expedition

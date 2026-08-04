@@ -121,6 +121,7 @@ export function PlanetExplorationPanel() {
     !!foundArtifact &&
     foundArtifact.id !== dismissedArtifactId &&
     !activeRuinsEvent;
+  const emptyArtifactTileIndex = expedition.emptyArtifactTileIndex ?? null;
 
   const handleAbort = () => {
     setShowAbortConfirm(false);
@@ -224,6 +225,14 @@ export function PlanetExplorationPanel() {
               : "\u00a0"}
         </div>
       )}
+      <div
+        aria-live="polite"
+        className="min-h-10 -mt-1 flex items-center px-2 text-[10px] text-[#c69cff] border border-[#9933ff33] bg-[rgba(153,51,255,0.04)] rounded-sm"
+      >
+        {emptyArtifactTileIndex !== null
+          ? `🗿 ${t("planet_panel.expedition_artifact_empty", { tile: emptyArtifactTileIndex + 1 })}`
+          : "\u00a0"}
+      </div>
 
       {/* Crew panel */}
       {expeditionCrew.length > 0 && (

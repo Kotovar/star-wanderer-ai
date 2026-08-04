@@ -313,6 +313,7 @@ export function revealExpeditionTile(
                     activeExpedition: s.activeExpedition
                         ? {
                               ...s.activeExpedition,
+                              emptyArtifactTileIndex: null,
                               rewards: {
                                   ...s.activeExpedition.rewards,
                                   artifactFound: artifact.id,
@@ -324,6 +325,14 @@ export function revealExpeditionTile(
                 get().addLog( i18nStore.t("game_logs.revealExpeditionTile_5", { artifact_name: artifact.name }), "info");
             } else {
                 get().addLog( i18nStore.t("game_logs.revealExpeditionTile_6"), "info");
+                set((s) => ({
+                    activeExpedition: s.activeExpedition
+                        ? {
+                              ...s.activeExpedition,
+                              emptyArtifactTileIndex: tileIndex,
+                          }
+                        : null,
+                }));
             }
             break;
         }

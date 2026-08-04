@@ -2075,6 +2075,7 @@
         "expedition_rewards_title": "Собрано:",
         "expedition_finished": "Экспедиция завершена!",
         "expedition_artifact_found": "✨ Артефакт найден",
+        "expedition_artifact_empty": "В клетке {{tile}} артефакт не найден: место оказалось пустым.",
         "expedition_artifact_dialog_desc": "Артефакт добавлен в коллекцию. Изучите его, чтобы раскрыть эффект.",
         "expedition_synthetic_bonus": "+{{count}} синтетики",
         "expedition_scout_bonus": "+{{count}} 🧭 разведчики",
