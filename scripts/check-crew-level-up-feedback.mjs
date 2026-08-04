@@ -62,11 +62,66 @@ assert.deepEqual(
   "tier level must keep using the existing pending perk resolver",
 );
 
+const multiLevelCrewMember = {
+  ...crewMember,
+  id: 8,
+  level: 2,
+  exp: 0,
+  health: 31,
+  maxHealth: 60,
+};
+const multiLevelState = {
+  crew: [multiLevelCrewMember],
+  research: { researchedTechs: [] },
+  pendingCrewLevelUps: [],
+};
+gainExp(
+  multiLevelCrewMember,
+  500,
+  multiLevelState,
+  { addLog: () => {} },
+  (update) => update(multiLevelState),
+);
+assert.deepEqual(
+  multiLevelState.pendingCrewLevelUps[0],
+  {
+    crewMemberId: 8,
+    crewMemberName: "Тест",
+    oldLevel: 2,
+    newLevel: 4,
+    previousMaxHealth: 60,
+    newMaxHealth: 100,
+    previousHealth: 31,
+    restoredHealth: 100,
+  },
+  "a multi-level result must retain every crossed tier in its level range",
+);
+
 const levelUpModal = readFileSync(
   path.join(root, "src/game/components/CrewLevelUpModal.tsx"),
   "utf8",
 );
 assert.match(levelUpModal, /CrewPerkChoiceContent/, "tier choices must render in the level-up dialog");
 assert.match(levelUpModal, /chooseCrewPerk[\s\S]*dismissCrewLevelUp/, "choosing a tier perk must dismiss the queued result");
+assert.match(
+  levelUpModal,
+  /TECH_TREE_TIERS\.filter\(\(tier\) => result\.oldLevel < tier && tier <= result\.newLevel\)/,
+  "the dialog must include every talent tier crossed by a multi-level result",
+);
+assert.match(
+  levelUpModal,
+  /showCloseButton=\{crossedTalentTiers\.length === 0\}/,
+  "tier results must not expose the default close button",
+);
+assert.match(
+  levelUpModal,
+  /!open && crossedTalentTiers\.length === 0 && dismissCrewLevelUp\(\)/,
+  "tier results must ignore Escape and backdrop close requests",
+);
+assert.match(
+  levelUpModal,
+  /nextTierIndex < crossedTalentTiers\.length/,
+  "choosing a crossed tier must continue to the next tier before dismissing",
+);
 
 console.log("Crew level-up feedback checks passed");
