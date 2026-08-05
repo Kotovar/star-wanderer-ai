@@ -329,28 +329,21 @@ export function NavigatorPanel() {
 
         {filters.category === "trade" && (
           <>
-            <div className="flex items-end">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
+            <label className="flex items-center gap-2 self-end pb-1 text-xs text-[#9aa59a]">
+              <input
+                type="checkbox"
+                checked={Boolean(filters.cargoOnly)}
                 disabled={!filters.cargoOnly && cargoGoodCount === 0}
-                onClick={() =>
-                  updateFilters(
-                    filters.cargoOnly
-                      ? { cargoOnly: undefined }
-                      : { cargoOnly: true, goodId: undefined, sort: "sell_desc" },
-                  )
+                onChange={(event) =>
+                  updateFilters({
+                    cargoOnly: event.target.checked || undefined,
+                    goodId: event.target.checked ? undefined : filters.goodId,
+                    sort: event.target.checked ? "sell_desc" : filters.sort,
+                  })
                 }
-                className="w-full border-[#ffb000] bg-transparent text-xs text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
-              >
-                {t(
-                  filters.cargoOnly
-                    ? "navigator.filters.show_all_goods"
-                    : "navigator.filters.sell_from_cargo",
-                )}
-              </Button>
-            </div>
+              />
+              {t("navigator.filters.cargo_goods_only")}
+            </label>
             {!filters.cargoOnly && (
               <label className="text-xs text-[#9aa59a]">
                 {t("navigator.filters.good")}

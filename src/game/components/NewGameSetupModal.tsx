@@ -263,7 +263,7 @@ export function NewGameSetupModal({
   const [selectedTemplateId, setSelectedTemplateId] =
     useState(DEFAULT_TEMPLATE_ID);
   const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
-  const [runProfileId, setRunProfileId] = useState(pickRunProfileId);
+  const [runProfileId, setRunProfileId] = useState<RunProfileId | null>(null);
   const [mobileSection, setMobileSection] = useState<"ship" | "settings">(
     "ship",
   );
@@ -460,7 +460,11 @@ export function NewGameSetupModal({
 
   const handleStart = () => {
     if (!hasSufficientCredits) return;
-    restartGame(selectedTemplateId, selectedModifiers, runProfileId);
+    restartGame(
+      selectedTemplateId,
+      selectedModifiers,
+      runProfileId ?? pickRunProfileId(),
+    );
     onStarted?.();
     onClose();
   };
@@ -529,12 +533,17 @@ export function NewGameSetupModal({
                       {t("run_profiles.label")}
                       <select
                         aria-label={t("run_profiles.label")}
-                        value={runProfileId}
+                        value={runProfileId ?? ""}
                         onChange={(event) =>
-                          setRunProfileId(event.target.value as RunProfileId)
+                          setRunProfileId(
+                            RUN_PROFILE_IDS.find(
+                              (profileId) => profileId === event.target.value,
+                            ) ?? null,
+                          )
                         }
                         className="mt-1 w-full border border-[#00d4ff66] bg-[#071019] px-2 py-1 text-xs normal-case tracking-normal text-[#d8f6ff]"
                       >
+                        <option value="">{t("run_profiles.random")}</option>
                         {RUN_PROFILE_IDS.map((profileId) => (
                           <option key={profileId} value={profileId}>
                             {t(RUN_PROFILES[profileId].nameKey)}
@@ -546,8 +555,13 @@ export function NewGameSetupModal({
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={() => setRunProfileId(pickRunProfileId())}
-                      className="border-[#00d4ff] bg-transparent text-[10px] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810]"
+                      aria-pressed={runProfileId === null}
+                      onClick={() => setRunProfileId(null)}
+                      className={`border-[#00d4ff] text-[10px] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] ${
+                        runProfileId === null
+                          ? "bg-[#00d4ff22]"
+                          : "bg-transparent"
+                      }`}
                     >
                       {t("run_profiles.random")}
                     </Button>

@@ -153,6 +153,15 @@ assert.equal(typeof en.navigator.title, "string");
 const navigatorMarkup = renderToStaticMarkup(createElement(NavigatorPanel));
 assert.ok(navigatorMarkup.includes(ru.navigator.title));
 assert.ok(navigatorMarkup.includes(ru.navigator.empty));
+assert.equal(
+  navigatorMarkup.includes("ПРОДАТЬ ИЗ ТРЮМА"),
+  false,
+  "Cargo sale search must not be presented as an immediate sell action",
+);
+assert.ok(
+  navigatorMarkup.includes(ru.navigator.filters.cargo_goods_only),
+  "Cargo sale search must be presented as a goods filter",
+);
 assert.ok(
   navigatorMarkup.includes("overflow-y-auto lg:overflow-hidden"),
   "Navigator panel must scroll filters on mobile without changing desktop overflow",

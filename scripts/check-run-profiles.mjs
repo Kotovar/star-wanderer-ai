@@ -211,6 +211,16 @@ assert.match(
   /t\("run_profiles\.random"\)/,
   "New game setup must offer an explicit random scenario action",
 );
+assert.match(
+  newGameSetupSource,
+  /useState<RunProfileId \| null>\(null\)/,
+  "Random scenario must stay unknown until the game starts",
+);
+assert.match(
+  newGameSetupSource,
+  /restartGame\(\s*selectedTemplateId,\s*selectedModifiers,\s*runProfileId \?\? pickRunProfileId\(\),\s*\)/,
+  "Random scenario must be resolved only when the game starts",
+);
 assert.equal(
   newGameSetupSource.includes("useLayoutEffect"),
   false,
