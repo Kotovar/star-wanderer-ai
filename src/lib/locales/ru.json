@@ -325,7 +325,8 @@
             "reputation": "Репутация",
             "mineral_buyback_only": "Только скупка руды",
             "population_knowledge": "Данные о населении",
-            "unresolved": "Только незавершённые"
+            "unresolved": "Только незавершённые",
+            "advanced": "Доп. фильтры"
         },
         "sort": {
             "tier": "По тиру сектора",

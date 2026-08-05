@@ -150,9 +150,15 @@ for (const [locale, catalog] of [
 
 assert.equal(typeof ru.navigator.title, "string");
 assert.equal(typeof en.navigator.title, "string");
+assert.equal(typeof ru.navigator.filters.advanced, "string");
+assert.equal(typeof en.navigator.filters.advanced, "string");
 const navigatorMarkup = renderToStaticMarkup(createElement(NavigatorPanel));
 assert.ok(navigatorMarkup.includes(ru.navigator.title));
 assert.ok(navigatorMarkup.includes(ru.navigator.empty));
+assert.ok(
+  navigatorMarkup.includes(ru.navigator.filters.advanced),
+  "Navigator must expose advanced filters behind a mobile-only toggle",
+);
 assert.equal(
   navigatorMarkup.includes("ПРОДАТЬ ИЗ ТРЮМА"),
   false,
@@ -163,8 +169,22 @@ assert.ok(
   "Cargo sale search must be presented as a goods filter",
 );
 assert.ok(
-  navigatorMarkup.includes("overflow-y-auto lg:overflow-hidden"),
-  "Navigator panel must scroll filters on mobile without changing desktop overflow",
+  navigatorMarkup.includes("grid grid-cols-2 gap-2 lg:grid-cols-3"),
+  "Navigator filters must use two columns on mobile so results stay visible",
+);
+assert.ok(
+  navigatorMarkup.includes("flex h-full min-h-0 flex-col gap-3 overflow-hidden"),
+  "Navigator must reserve a fixed-height result area on mobile",
+);
+assert.ok(
+  navigatorMarkup.includes("hidden lg:contents"),
+  "Advanced navigator filters must start collapsed on mobile",
+);
+assert.ok(
+  navigatorMarkup.includes(
+    "min-h-0 flex-1 space-y-2 overflow-y-auto pr-1",
+  ),
+  "Navigator results must have their own scroll area on mobile",
 );
 const enemyResultMarkup = renderToStaticMarkup(
   createElement(NavigatorResultDetails, {

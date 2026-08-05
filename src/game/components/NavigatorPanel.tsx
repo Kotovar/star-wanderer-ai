@@ -151,6 +151,7 @@ export function NavigatorResultDetails({
 export function NavigatorPanel() {
   const { t } = useTranslation();
   const [filters, setFilters] = useState<NavigatorFilters>(EMPTY_FILTERS);
+  const [showMobileAdvancedFilters, setShowMobileAdvancedFilters] = useState(false);
   const navigatorData = useGameStore(
     useShallow((state) => ({
       activeCrisis: state.activeCrisis,
@@ -205,6 +206,12 @@ export function NavigatorPanel() {
 
   const updateFilters = (patch: Partial<NavigatorFilters>) =>
     setFilters((current) => ({ ...current, ...patch }));
+  const hasAdvancedFilters =
+    filters.category === "trade" ||
+    filters.category === "crew" ||
+    filters.category === "planets" ||
+    filters.category === "missions" ||
+    filters.category === "discovery";
   const cargoGoodCount = navigatorData.shipTradeGoods.filter(
     ({ quantity }) => quantity > 0,
   ).length;
@@ -216,7 +223,7 @@ export function NavigatorPanel() {
     );
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto lg:overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="mr-auto font-['Orbitron'] text-base font-bold text-accent">
           ▸ {t("navigator.title")}
@@ -225,7 +232,10 @@ export function NavigatorPanel() {
           type="button"
           size="sm"
           variant="outline"
-          onClick={() => setFilters(EMPTY_FILTERS)}
+          onClick={() => {
+            setFilters(EMPTY_FILTERS);
+            setShowMobileAdvancedFilters(false);
+          }}
           className="border-[#00ff41] bg-transparent text-xs text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
         >
           {t("navigator.reset_filters")}
@@ -251,13 +261,14 @@ export function NavigatorPanel() {
         </Button>
       </div>
 
-      <SectionPanel padding="sm" className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <SectionPanel padding="sm" className="grid grid-cols-2 gap-2 lg:grid-cols-3">
         <label className="text-xs text-[#9aa59a]">
           {t("navigator.filters.category")}
           <select
             value={filters.category}
             onChange={(event) => {
               const category = event.target.value as NavigatorCategory;
+              setShowMobileAdvancedFilters(false);
               updateFilters({
                 category,
                 sort:
@@ -327,7 +338,27 @@ export function NavigatorPanel() {
           </select>
         </label>
 
-        {filters.category === "trade" && (
+        {hasAdvancedFilters && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            aria-expanded={showMobileAdvancedFilters}
+            onClick={() => setShowMobileAdvancedFilters((current) => !current)}
+            className="col-span-2 border-[#00d4ff] bg-transparent text-xs text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] lg:hidden"
+          >
+            {showMobileAdvancedFilters ? "▾" : "▸"} {t("navigator.filters.advanced")}
+          </Button>
+        )}
+
+        <div
+          className={
+            showMobileAdvancedFilters
+              ? "col-span-2 grid max-h-48 grid-cols-2 gap-2 overflow-y-auto pr-1 lg:contents"
+              : "hidden lg:contents"
+          }
+        >
+          {filters.category === "trade" && (
           <>
             <label className="flex items-center gap-2 self-end pb-1 text-xs text-[#9aa59a]">
               <input
@@ -387,9 +418,9 @@ export function NavigatorPanel() {
               {t("navigator.filters.mineral_buyback_only")}
             </label>
           </>
-        )}
+          )}
 
-        {filters.category === "crew" && (
+          {filters.category === "crew" && (
           <>
             <label className="text-xs text-[#9aa59a]">
               {t("navigator.filters.race")}
@@ -485,9 +516,9 @@ export function NavigatorPanel() {
               </select>
             </label>
           </>
-        )}
+          )}
 
-        {filters.category === "planets" && (
+          {filters.category === "planets" && (
           <>
             <label className="text-xs text-[#9aa59a]">
               {t("navigator.filters.planet_type")}
@@ -585,20 +616,21 @@ export function NavigatorPanel() {
               </select>
             </label>
           </>
-        )}
+          )}
 
-        {(filters.category === "missions" || filters.category === "discovery") && (
-          <label className="flex items-center gap-2 self-end pb-1 text-xs text-[#9aa59a]">
-            <input
-              type="checkbox"
-              checked={Boolean(filters.unresolvedOnly)}
-              onChange={(event) =>
-                updateFilters({ unresolvedOnly: event.target.checked })
-              }
-            />
-            {t("navigator.filters.unresolved")}
-          </label>
-        )}
+          {(filters.category === "missions" || filters.category === "discovery") && (
+            <label className="flex items-center gap-2 self-end pb-1 text-xs text-[#9aa59a]">
+              <input
+                type="checkbox"
+                checked={Boolean(filters.unresolvedOnly)}
+                onChange={(event) =>
+                  updateFilters({ unresolvedOnly: event.target.checked })
+                }
+              />
+              {t("navigator.filters.unresolved")}
+            </label>
+          )}
+        </div>
       </SectionPanel>
 
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">

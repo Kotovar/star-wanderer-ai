@@ -325,7 +325,8 @@
             "reputation": "Reputation",
             "mineral_buyback_only": "Ore buyback only",
             "population_knowledge": "Population data",
-            "unresolved": "Unresolved only"
+            "unresolved": "Unresolved only",
+            "advanced": "More filters"
         },
         "sort": {
             "tier": "Sector tier",
