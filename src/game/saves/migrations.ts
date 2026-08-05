@@ -7,6 +7,7 @@ import { assignGridPositions } from "@/game/sectorGrid";
 import { MODULE_HEALTH_BY_LEVEL } from "@/game/slices/shop/constants";
 import { AUGMENTATIONS } from "@/game/constants/augmentations";
 import { DEFAULT_AUDIO_VOLUMES } from "@/sounds";
+import { hydrateNavigatorIntelFromLegacyState } from "@/game/navigator/intel";
 import type { GameState, Location, Sector } from "@/game/types";
 
 interface PersistedState {
@@ -381,6 +382,14 @@ const migrations: Record<number, Migration> = {
       ...state,
       stateVersion: 21,
       galaxy: { ...state.galaxy, nebulae: state.galaxy?.nebulae ?? [] },
+    };
+  },
+  21: (raw) => {
+    const state = raw as GameState;
+    return {
+      ...state,
+      stateVersion: 22,
+      ...hydrateNavigatorIntelFromLegacyState(state),
     };
   },
 };

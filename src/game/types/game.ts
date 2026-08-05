@@ -46,6 +46,7 @@ import type {
 } from "./randomEvents";
 import type { RunProfileId } from "@/game/galaxy/runProfiles";
 import type { GalaxyTierAll, Nebula } from "./locations/galaxy";
+import type { KnownLocationIntel, NavigatorTarget } from "./navigator";
 
 export type GameMode =
   | "galaxy_map"
@@ -139,6 +140,8 @@ export interface GameState {
   hiredCrewFromShips: string[]; // IDs of friendly ships where crew was hired
   distressRespondedShips: string[]; // IDs of distress ships that have been helped
   completedLocations: string[];
+  knownLocationIntel: Record<string, KnownLocationIntel>;
+  navigatorTargets: NavigatorTarget[];
   /** Станции, где игрок реально был в доке — их цены считаются известными */
   knownTradeStations: string[];
   stationInventory: Record<string, Record<string, number>>;

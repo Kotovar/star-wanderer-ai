@@ -56,7 +56,8 @@
     "check:fuel-trap-warning": "node --no-warnings scripts/check-fuel-trap-warning.mjs",
     "check:fuel-efficiency": "node scripts/check-fuel-efficiency.mjs",
     "check:crises": "node --no-warnings --experimental-strip-types scripts/check-crisis-escalation.mjs",
-    "check:meta-progress": "node --no-warnings --experimental-strip-types scripts/check-meta-progress.mjs"
+    "check:meta-progress": "node --no-warnings --experimental-strip-types scripts/check-meta-progress.mjs",
+    "check:navigator": "node --no-warnings --experimental-strip-types scripts/check-known-object-navigator.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.20",

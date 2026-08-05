@@ -178,6 +178,8 @@ const baseState: GameState = {
   pendingCrewLevelUps: [],
   shipQuestsTaken: [],
   completedLocations: [],
+  knownLocationIntel: {},
+  navigatorTargets: [],
   knownTradeStations: [],
   stationInventory: {},
   stationPrices: prices,
