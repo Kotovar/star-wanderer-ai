@@ -16,8 +16,6 @@ import {
 import { GameDialogContent } from "../GameDialog";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
-import { getCampaignDirective } from "@/game/constants/victoryObjectives";
-import { getRunProfile } from "@/game/galaxy/runProfiles";
 
 export function GameHeader() {
   const [showHelp, setShowHelp] = useState(false);
@@ -38,17 +36,6 @@ export function GameHeader() {
   const traveling = useGameStore((s) => s.traveling);
   const artifacts = useGameStore((s) => s.artifacts);
   const activeEffects = useGameStore((s) => s.activeEffects);
-  const completedContractIds = useGameStore((s) => s.completedContractIds);
-  const completedLocations = useGameStore((s) => s.completedLocations);
-  const completedVictoryObjectiveIds = useGameStore(
-    (s) => s.completedVictoryObjectiveIds,
-  );
-  const galaxy = useGameStore((s) => s.galaxy);
-  const knownRaces = useGameStore((s) => s.knownRaces);
-  const raceReputation = useGameStore((s) => s.raceReputation);
-  const research = useGameStore((s) => s.research);
-  const startModifierIds = useGameStore((s) => s.startModifierIds);
-  const runProfileId = useGameStore((s) => s.runProfileId);
   const showArtifacts = useGameStore((s) => s.showArtifacts);
   const showEffects = useGameStore((s) => s.showEffects);
   const showResearch = useGameStore((s) => s.showResearch);
@@ -60,7 +47,6 @@ export function GameHeader() {
   const showSectorMap = useGameStore((s) => s.showSectorMap);
   const gameMode = useGameStore((s) => s.gameMode);
   const { t } = useTranslation();
-  const runProfile = getRunProfile(runProfileId);
 
   const discoveredArtifacts = artifacts.filter((a) => a.discovered).length;
   const activeArtifacts = artifacts.filter((a) => a.effect.active).length;
@@ -72,20 +58,6 @@ export function GameHeader() {
   const isDraggingCrisisRef = useRef(false);
   const crisisWidgetKey = activeCrisis ? `active:${activeCrisis.id}` : "none";
   const crisisWidgetDismissed = dismissedCrisisWidgetKey === crisisWidgetKey;
-  const campaignDirective = getCampaignDirective({
-    artifacts,
-    completedContractIds,
-    completedLocations,
-    completedVictoryObjectiveIds,
-    credits,
-    currentSector,
-    galaxy,
-    knownRaces,
-    raceReputation,
-    research,
-    startModifierIds,
-    traveling,
-  });
 
   const handleRestartClick = () => {
     setShowSettings(false);
@@ -202,38 +174,7 @@ export function GameHeader() {
 
   return (
     <>
-      <header className="cockpit-header select-none px-4 py-3 md:px-5 md:py-4 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0">
-        <div className="flex flex-col items-center gap-1 md:items-start">
-          <h1 className="cockpit-header__title font-['Orbitron'] font-black text-lg md:text-2xl tracking-[2px] md:tracking-[3px] text-[#00ff41] text-center md:text-left">
-            ◆ {t("game.title")} ◆
-          </h1>
-          {campaignDirective && (
-            <button
-              type="button"
-              onClick={() =>
-                window.dispatchEvent(new CustomEvent("sw:showCampaignProgress"))
-              }
-              title={t("campaign_directive.open_progress")}
-              className="max-w-[min(92vw,25rem)] border border-[#ffb00077] bg-[rgba(255,176,0,0.06)] px-2 py-1 text-left text-[10px] leading-snug text-[#ffcc66] transition-colors hover:bg-[rgba(255,176,0,0.14)] cursor-pointer"
-            >
-              <span className="mr-2 font-bold tracking-[0.16em] text-accent">
-                {t("campaign_directive.label")}
-              </span>
-              <span className="font-bold text-[#ffe0a0]">
-                {t(
-                  campaignDirective.displayTitleKey ??
-                    campaignDirective.objective.titleKey,
-                )}
-              </span>
-              <span className="hidden xl:inline"> — {t(campaignDirective.detail.key, campaignDirective.detail.params)}</span>
-            </button>
-          )}
-          {runProfile && (
-            <div className="border border-[#00d4ff55] bg-[rgba(0,212,255,0.06)] px-2 py-1 text-[10px] text-[#bdefff]">
-              {runProfile.icon} {t(runProfile.nameKey)}
-            </div>
-          )}
-        </div>
+      <header className="cockpit-header flex items-center justify-center px-4 py-3 select-none md:px-5 md:py-4">
         <div className="flex gap-2 md:gap-4 text-xs md:text-sm items-center flex-wrap justify-center md:justify-normal">
           {/* ── Статистика ── */}
           <div className="flex items-center gap-2 md:gap-3">
@@ -285,7 +226,7 @@ export function GameHeader() {
           <div className="flex items-center gap-2 flex-wrap justify-center">
             <button
               onClick={handleEffectsClick}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer relative"
+              className="relative flex w-9 items-center justify-center gap-1 md:w-auto md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
               title={t("header.tooltip_effects")}
             >
               <span className="text-[#9933ff]">⚡</span>
@@ -300,7 +241,7 @@ export function GameHeader() {
             </button>
             <button
               onClick={handleArtifactsClick}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#ff00ff] hover:bg-[rgba(255,0,255,0.2)] transition-colors cursor-pointer"
+              className="flex w-9 items-center justify-center gap-1 md:w-auto md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#ff00ff] hover:bg-[rgba(255,0,255,0.2)] transition-colors cursor-pointer"
               title={t("header.tooltip_artifacts")}
             >
               <span className="text-[#ff00ff]">★</span>
@@ -313,7 +254,7 @@ export function GameHeader() {
             </button>
             <button
               onClick={handleResearchClick}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
+              className="flex w-9 items-center justify-center gap-1 md:w-auto md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
               title={t("header.tooltip_research")}
             >
               <span className="text-[#9933ff]">🔬</span>
@@ -323,7 +264,7 @@ export function GameHeader() {
             </button>
             <button
               onClick={handleNavigatorClick}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.16)] transition-colors cursor-pointer"
+              className="flex w-9 items-center justify-center gap-1 md:w-auto md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.16)] transition-colors cursor-pointer"
               title={t("navigator.title")}
             >
               <span className="text-ring">⌕</span>
@@ -333,7 +274,7 @@ export function GameHeader() {
             </button>
             <button
               onClick={handleEnemyCodexClick}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.16)] transition-colors cursor-pointer"
+              className="flex w-9 items-center justify-center gap-1 md:w-auto md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.16)] transition-colors cursor-pointer"
               title={t("enemy_codex.button")}
             >
               <span className="text-ring">👾</span>
@@ -349,7 +290,7 @@ export function GameHeader() {
                   showReputation();
                 }
               }}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
+              className="flex w-9 items-center justify-center gap-1 md:w-auto md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#9933ff] hover:bg-[rgba(153,51,255,0.2)] transition-colors cursor-pointer"
               title={t("reputation.button_tooltip")}
             >
               <span className="text-[#9933ff] xl:hidden">🤝</span>
@@ -365,7 +306,7 @@ export function GameHeader() {
                   showCrises();
                 }
               }}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#ff4444] hover:bg-[rgba(255,68,68,0.2)] transition-colors cursor-pointer"
+              className="flex w-9 items-center justify-center gap-1 md:w-auto md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#ff4444] hover:bg-[rgba(255,68,68,0.2)] transition-colors cursor-pointer"
               title={t("crisis_panel.title")}
             >
               <span className="text-[#ff4444]">🚨</span>
@@ -381,7 +322,7 @@ export function GameHeader() {
           <div className="flex items-center gap-1 md:gap-2">
             <button
               onClick={() => setShowSettings(true)}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-ring hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
+              className="flex w-9 items-center justify-center gap-1 md:w-auto md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-ring hover:bg-[rgba(0,212,255,0.2)] transition-colors cursor-pointer"
               title={t("save_load.menu_title")}
             >
               <span className="text-ring">☰</span>

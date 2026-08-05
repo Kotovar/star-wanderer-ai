@@ -366,8 +366,8 @@ export function EmptyPlanetPanel() {
                         }}
                     />
                     <div className="relative z-10 flex min-h-0 sm:min-h-52 flex-col justify-between gap-2 sm:gap-4 p-3 sm:p-5">
-                        <div className="flex items-start justify-between gap-2">
-                            <div className="max-w-2xl">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="w-full max-w-2xl">
                                 <div className="font-['Orbitron'] font-bold text-base sm:text-xl text-accent">
                                     ▸ {getLocationName(currentLocation.name, t)}
                                     {planetType
@@ -386,7 +386,7 @@ export function EmptyPlanetPanel() {
                             </div>
                             <Button
                                 onClick={showSectorMap}
-                                className="h-auto shrink-0 cursor-pointer border-2 border-accent bg-transparent px-2 py-1 text-[10px] uppercase tracking-wider text-accent hover:bg-accent hover:text-[#050810] sm:px-4 sm:py-2 sm:text-sm"
+                                className="h-auto self-end sm:self-auto sm:shrink-0 cursor-pointer border-2 border-accent bg-transparent px-2 py-1 text-[10px] uppercase tracking-wider text-accent hover:bg-accent hover:text-[#050810] sm:px-4 sm:py-2 sm:text-sm"
                             >
                                 {t("planet_panel.leave_planet")}
                             </Button>
