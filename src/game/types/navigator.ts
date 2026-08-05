@@ -31,6 +31,8 @@ export type NavigatorSort =
   | "sell_desc"
   | "buy_asc";
 
+export type PopulationKnowledge = "known" | "unknown";
+
 export type NavigatorFilters = {
   category: NavigatorCategory;
   query: string;
@@ -38,6 +40,7 @@ export type NavigatorFilters = {
   sort: NavigatorSort;
   goodId?: Goods;
   cargoOnly?: boolean;
+  mineralBuybackOnly?: boolean;
   race?: RaceId;
   profession?: Profession;
   minLevel?: number;
@@ -45,6 +48,7 @@ export type NavigatorFilters = {
   mutation?: MutationTraitId;
   planetType?: PlanetType;
   population?: "inhabited" | "empty";
+  populationKnowledge?: PopulationKnowledge;
   reputation?: ReputationLevel;
   unresolvedOnly?: boolean;
 };

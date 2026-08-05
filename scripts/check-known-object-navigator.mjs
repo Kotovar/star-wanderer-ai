@@ -435,6 +435,15 @@ const navigatorSectors = [
         dominantRace: "human",
       },
       {
+        id: "mining-station",
+        name: "Ore Exchange",
+        type: "station",
+        stationId: "station-mining",
+        stationType: "mining",
+        stationConfig: { ...stationConfig, allowsTrade: false },
+        dominantRace: "human",
+      },
+      {
         id: "friendly-trader",
         name: "Friendly Trader",
         type: "friendly_ship",
@@ -460,6 +469,13 @@ const navigatorSectors = [
         population: 1200,
         dominantRace: "human",
         visited: true,
+      },
+      {
+        id: "unknown-population-planet",
+        name: "Nix",
+        type: "planet",
+        planetType: "Ледяная",
+        isEmpty: true,
       },
       {
         id: "unbeaten-boss",
@@ -518,9 +534,11 @@ const knownLocationIntel = Object.fromEntries(
     [10, "trade-station", 3, false],
     [10, "seen-station", 0, false],
     [10, "zulu-station", 3, false],
+    [10, "mining-station", 8, true],
     [10, "friendly-trader", 8, true],
     [10, "crew-station", 3, false],
     [10, "ocean-planet", 8, true],
+    [10, "unknown-population-planet", 3, false],
     [10, "unbeaten-boss", 8, false],
     [10, "defeated-boss", 8, false],
     [10, "defeated-enemy", 8, true],
@@ -579,10 +597,11 @@ assert.equal(
 const navigatorInput = {
   galaxy: { sectors: navigatorSectors },
   knownLocationIntel,
-  knownTradeStations: ["station-market", "station-zulu"],
+  knownTradeStations: ["station-market", "station-zulu", "station-mining"],
   stationPrices: {
     "station-market": { water: { buy: 100, sell: 60 } },
     "station-zulu": { water: { buy: 200, sell: 150 } },
+    "station-mining": { minerals: { buy: 100, sell: 95 } },
   },
   friendlyShipStock: {
     "friendly-trader": { water: 7, food: 5, medicine: 3 },
@@ -648,6 +667,22 @@ assert.deepEqual(
     { goodId: "water", buy: 10, sell: 6 },
     { goodId: "water", buy: 40, sell: 30 },
   ],
+);
+assert.deepEqual(
+  results({
+    category: "trade",
+    goodId: "minerals",
+    mineralBuybackOnly: true,
+  }).map(({ locationId, trade }) => [locationId, trade?.sell]),
+  [["mining-station", 19]],
+  "Ore buyback filter must expose visited mining stations even when normal trade is disabled",
+);
+assert.deepEqual(
+  results({ category: "trade", mineralBuybackOnly: true }).map(
+    ({ locationId }) => locationId,
+  ),
+  ["mining-station"],
+  "Ore buyback filter must exclude regular stations and trader ships",
 );
 const cargoSaleResults = results({
   category: "trade",
@@ -807,6 +842,20 @@ assert.deepEqual(
     reputation: "neutral",
   }).map(({ locationId }) => locationId),
   ["ocean-planet"],
+);
+assert.deepEqual(
+  results({ category: "planets", populationKnowledge: "known" }).map(
+    ({ locationId }) => locationId,
+  ),
+  ["ocean-planet"],
+  "Known population filter must exclude planets with incomplete settlement data",
+);
+assert.deepEqual(
+  results({ category: "planets", populationKnowledge: "unknown" }).map(
+    ({ locationId }) => locationId,
+  ),
+  ["unknown-population-planet"],
+  "Unknown population filter must find visible planets whose settlement data is not scanned",
 );
 assert.deepEqual(
   results({ category: "missions", unresolvedOnly: true }).map(

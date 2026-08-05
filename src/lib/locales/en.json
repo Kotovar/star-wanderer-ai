@@ -324,6 +324,8 @@
             "planet_type": "Planet type",
             "population": "Population",
             "reputation": "Reputation",
+            "mineral_buyback_only": "Ore buyback only",
+            "population_knowledge": "Population data",
             "unresolved": "Unresolved only"
         },
         "sort": {
@@ -333,6 +335,9 @@
             "buy_asc": "Buy price: low to high"
         },
         "population": {
+            "any": "Any (including unknown)",
+            "known": "Known",
+            "unknown": "Unknown",
             "inhabited": "Inhabited",
             "empty": "Empty"
         },
@@ -3988,21 +3993,22 @@
         "galactic_coalition": "Allies {{allies}}/{{allyTarget}}, contracts {{contracts}}/{{contractTarget}}, credits {{credits}}/{{creditTarget}}."
     },
     "run_profiles": {
-        "label": "Galaxy profile",
+        "label": "Galaxy scenario",
+        "random": "RANDOM",
         "ancient_echo": {
             "name": "Ancient Echo",
-            "opportunity": "Clusters of anomalies and expeditions reveal knowledge.",
+            "opportunity": "Anomalies and expeditions more often yield ancient data and research resources.",
             "risk": "Infrastructure appears less often."
         },
         "war_spiral": {
-            "name": "War Spiral",
-            "opportunity": "Fronts offer more hunts and combat contracts.",
+            "name": "War Loop",
+            "opportunity": "Enemies and combat tasks are more common in these sectors.",
             "risk": "Dangerous encounters drain the ship faster."
         },
         "broken_trade_lanes": {
-            "name": "Fading Galaxy",
-            "opportunity": "Signals, derelicts, and wreckage offer risky opportunities.",
-            "risk": "Service stations cluster along scarce support routes."
+            "name": "Broken Trade Lanes",
+            "opportunity": "Distress signals, derelicts, and wreck fields are more common.",
+            "risk": "Stations are scarce, but each region has several reliable places to repair and resupply."
         }
     },
     "run_profile_arcs": {

@@ -12,6 +12,7 @@ import { useGameStore } from "@/game/store";
 import type {
   NavigatorCategory,
   NavigatorFilters,
+  PopulationKnowledge,
   NavigatorResult,
   NavigatorSort,
 } from "@/game/types/navigator";
@@ -50,6 +51,7 @@ const REPUTATION_LEVELS: ReputationLevel[] = [
   "friendly",
   "allied",
 ];
+const MINERAL_BUYBACK_GOODS: Goods[] = ["minerals", "rare_minerals"];
 export const NAVIGATOR_TRAIT_IDS: TraitId[] = [
   ...CREW_TRAITS.positive,
   ...CREW_TRAITS.negative,
@@ -362,7 +364,10 @@ export function NavigatorPanel() {
                   className="mt-1 w-full border border-[#00ff4166] bg-[#071019] px-2 py-1 text-[#d7f8ff]"
                 >
                   <option value="">{t("navigator.filters.any")}</option>
-                  {Object.keys(TRADE_GOODS).map((goodId) => (
+                  {(filters.mineralBuybackOnly
+                    ? MINERAL_BUYBACK_GOODS
+                    : Object.keys(TRADE_GOODS)
+                  ).map((goodId) => (
                     <option key={goodId} value={goodId}>
                       {t(`trade.goods.${goodId}`)}
                     </option>
@@ -370,6 +375,24 @@ export function NavigatorPanel() {
                 </select>
               </label>
             )}
+            <label className="flex items-center gap-2 self-end pb-1 text-xs text-[#9aa59a]">
+              <input
+                type="checkbox"
+                checked={Boolean(filters.mineralBuybackOnly)}
+                onChange={(event) =>
+                  updateFilters({
+                    mineralBuybackOnly: event.target.checked,
+                    goodId:
+                      event.target.checked &&
+                      filters.goodId &&
+                      !MINERAL_BUYBACK_GOODS.includes(filters.goodId)
+                        ? undefined
+                        : filters.goodId,
+                  })
+                }
+              />
+              {t("navigator.filters.mineral_buyback_only")}
+            </label>
           </>
         )}
 
@@ -505,11 +528,31 @@ export function NavigatorPanel() {
                 }
                 className="mt-1 w-full border border-[#00ff4166] bg-[#071019] px-2 py-1 text-[#d7f8ff]"
               >
-                <option value="">{t("navigator.filters.any")}</option>
+                <option value="">{t("navigator.population.any")}</option>
                 <option value="inhabited">
                   {t("navigator.population.inhabited")}
                 </option>
                 <option value="empty">{t("navigator.population.empty")}</option>
+              </select>
+            </label>
+            <label className="text-xs text-[#9aa59a]">
+              {t("navigator.filters.population_knowledge")}
+              <select
+                value={filters.populationKnowledge ?? ""}
+                onChange={(event) =>
+                  updateFilters({
+                    populationKnowledge: optionalValue<PopulationKnowledge>(
+                      event.target.value,
+                    ),
+                  })
+                }
+                className="mt-1 w-full border border-[#00ff4166] bg-[#071019] px-2 py-1 text-[#d7f8ff]"
+              >
+                <option value="">{t("navigator.filters.any")}</option>
+                <option value="known">{t("navigator.population.known")}</option>
+                <option value="unknown">
+                  {t("navigator.population.unknown")}
+                </option>
               </select>
             </label>
             <label className="text-xs text-[#9aa59a]">

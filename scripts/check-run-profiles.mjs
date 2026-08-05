@@ -185,6 +185,10 @@ const progressSource = readFileSync(
   resolve(process.cwd(), "src/game/components/CampaignProgressPanel.tsx"),
   "utf8",
 );
+const newGameSetupSource = readFileSync(
+  resolve(process.cwd(), "src/game/components/NewGameSetupModal.tsx"),
+  "utf8",
+);
 
 assert.ok(!galaxyMapSource.includes("getRunProfile"));
 assert.ok(!galaxyMapSource.includes("runProfileId"));
@@ -194,8 +198,24 @@ assert.match(progressSource, /t\(runProfile\.riskKey\)/);
 assert.match(progressSource, /runProfileArcTarget/);
 assert.match(progressSource, /run_profile_arcs\.coordinates/);
 assert.match(progressSource, /Object\.entries\(profileArcProgress\.profile\.arc\.reward\)/);
-assert.equal(ru.run_profiles.broken_trade_lanes.name, "Угасающая галактика");
-assert.equal(en.run_profiles.broken_trade_lanes.name, "Fading Galaxy");
+assert.equal(ru.run_profiles.label, "Сценарий галактики");
+assert.equal(ru.run_profiles.broken_trade_lanes.name, "Разорванные торговые пути");
+assert.equal(en.run_profiles.broken_trade_lanes.name, "Broken Trade Lanes");
+assert.match(
+  newGameSetupSource,
+  /aria-label=\{t\("run_profiles\.label"\)\}/,
+  "New game setup must offer an explicit galaxy scenario selection",
+);
+assert.match(
+  newGameSetupSource,
+  /t\("run_profiles\.random"\)/,
+  "New game setup must offer an explicit random scenario action",
+);
+assert.equal(
+  newGameSetupSource.includes("useLayoutEffect"),
+  false,
+  "Reopening the setup must not reroll the galaxy scenario",
+);
 assert.equal(ru.run_profile_arcs.label, "Зашифрованный след");
 assert.equal(en.run_profile_arcs.label, "Encrypted Trail");
 assert.equal(ru.run_profile_arcs.received, "Получено:");

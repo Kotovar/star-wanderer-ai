@@ -53,6 +53,10 @@ type TierInput = Pick<GameState, "artifacts"> & {
 };
 
 const FRIENDLY_TRADE_GOODS: Goods[] = ["water", "food", "medicine"];
+const MINERAL_BUYBACK_GOODS = new Set<Goods>([
+  "minerals",
+  "rare_minerals",
+]);
 const FRIENDLY_CREW_PROFESSIONS: Profession[] = [
   "pilot",
   "engineer",
@@ -218,13 +222,26 @@ const getTradeResult = (
 ): NavigatorResult | null => {
   const result = createResult(sector, location, "trade", []);
 
-  if (
-    location.type === "station" &&
-    (intel.visited ||
-      intel.highestScanRange >= 3 ||
-      input.knownTradeStations.includes(location.stationId ?? location.id)) &&
-    (location.stationConfig?.allowsTrade ?? true)
-  ) {
+  if (location.type === "station") {
+    const isKnownTradeStation =
+      (intel.visited ||
+        intel.highestScanRange >= 3 ||
+        input.knownTradeStations.includes(location.stationId ?? location.id)) &&
+      (location.stationConfig?.allowsTrade ?? true);
+    const isMineralBuybackStation =
+      location.stationType === "mining" && intel.visited;
+
+    if (!isKnownTradeStation && !isMineralBuybackStation) return null;
+    if (input.filters.mineralBuybackOnly && !isMineralBuybackStation) {
+      return null;
+    }
+    if (
+      goodId &&
+      (input.filters.mineralBuybackOnly || !isKnownTradeStation) &&
+      !MINERAL_BUYBACK_GOODS.has(goodId)
+    ) {
+      return null;
+    }
     if (!goodId) return result;
     const stationId = location.stationId ?? location.id;
     const prices = input.knownTradeStations.includes(stationId)
@@ -244,6 +261,8 @@ const getTradeResult = (
         }
       : null;
   }
+
+  if (input.filters.mineralBuybackOnly) return null;
 
   if (
     location.type !== "friendly_ship" ||
@@ -350,6 +369,8 @@ const getPlanetResult = (
       (!knowsType || location.planetType !== filters.planetType)) ||
     (filters.population &&
       (!knowsSettlement || population !== filters.population)) ||
+    (filters.populationKnowledge === "known" && !knowsSettlement) ||
+    (filters.populationKnowledge === "unknown" && knowsSettlement) ||
     (filters.race &&
       (!knowsSettlement || location.dominantRace !== filters.race)) ||
     (filters.reputation &&
@@ -452,6 +473,12 @@ export const getNavigatorResults = (input: NavigatorInput): NavigatorResult[] =>
         case "trade": {
           if (input.filters.cargoOnly) {
             for (const [goodId, cargoQuantity] of cargoGoods) {
+              if (
+                input.filters.mineralBuybackOnly &&
+                !MINERAL_BUYBACK_GOODS.has(goodId)
+              ) {
+                continue;
+              }
               const result = getTradeResult(
                 input,
                 sector,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +28,13 @@ import {
   SHIP_UNLOCK_RULES,
 } from "@/game/metaProgress/shipUnlocks";
 import type { MetaProgressState } from "@/game/metaProgress/types";
-import { getRunProfile, pickRunProfileId } from "@/game/galaxy/runProfiles";
+import {
+  getRunProfile,
+  pickRunProfileId,
+  RUN_PROFILE_IDS,
+  RUN_PROFILES,
+  type RunProfileId,
+} from "@/game/galaxy/runProfiles";
 
 interface NewGameSetupModalProps {
   open: boolean;
@@ -261,17 +267,6 @@ export function NewGameSetupModal({
   const [mobileSection, setMobileSection] = useState<"ship" | "settings">(
     "ship",
   );
-  const wasOpenRef = useRef(open);
-  const hasCompletedOpenRef = useRef(false);
-
-  useLayoutEffect(() => {
-    if (!open) {
-      if (wasOpenRef.current) hasCompletedOpenRef.current = true;
-    } else if (!wasOpenRef.current) {
-      if (hasCompletedOpenRef.current) setRunProfileId(pickRunProfileId());
-    }
-    wasOpenRef.current = open;
-  }, [open]);
 
   const selectedTemplate = SHIP_TEMPLATES.find(
     (tmpl) => tmpl.id === selectedTemplateId,
@@ -529,8 +524,33 @@ export function NewGameSetupModal({
             >
               {runProfile && (
                 <section className="mb-3 border border-[#00d4ff66] bg-[rgba(0,212,255,0.06)] p-3">
-                  <div className="text-[10px] uppercase tracking-[0.16em] text-ring">
-                    {t("run_profiles.label")}
+                  <div className="flex items-end gap-2">
+                    <label className="min-w-0 flex-1 text-[10px] uppercase tracking-[0.16em] text-ring">
+                      {t("run_profiles.label")}
+                      <select
+                        aria-label={t("run_profiles.label")}
+                        value={runProfileId}
+                        onChange={(event) =>
+                          setRunProfileId(event.target.value as RunProfileId)
+                        }
+                        className="mt-1 w-full border border-[#00d4ff66] bg-[#071019] px-2 py-1 text-xs normal-case tracking-normal text-[#d8f6ff]"
+                      >
+                        {RUN_PROFILE_IDS.map((profileId) => (
+                          <option key={profileId} value={profileId}>
+                            {t(RUN_PROFILES[profileId].nameKey)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setRunProfileId(pickRunProfileId())}
+                      className="border-[#00d4ff] bg-transparent text-[10px] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810]"
+                    >
+                      {t("run_profiles.random")}
+                    </Button>
                   </div>
                   <div className="mt-1 font-['Orbitron'] text-sm text-[#d8f6ff]">
                     {runProfile.icon} {t(runProfile.nameKey)}
