@@ -52,6 +52,7 @@ export function GameHeader() {
   const showArtifacts = useGameStore((s) => s.showArtifacts);
   const showEffects = useGameStore((s) => s.showEffects);
   const showResearch = useGameStore((s) => s.showResearch);
+  const showNavigator = useGameStore((s) => s.showNavigator);
   const showReputation = useGameStore((s) => s.showReputation);
   const showCrises = useGameStore((s) => s.showCrises);
   const showEnemyCodex = useGameStore((s) => s.showEnemyCodex);
@@ -139,6 +140,14 @@ export function GameHeader() {
       showSectorMap();
     } else {
       showEnemyCodex();
+    }
+  };
+
+  const handleNavigatorClick = () => {
+    if (gameMode === "navigator") {
+      showSectorMap();
+    } else {
+      showNavigator();
     }
   };
 
@@ -309,6 +318,16 @@ export function GameHeader() {
               <span className="text-[#9933ff]">🔬</span>
               <span className="text-[#9933ff] hidden xl:inline">
                 {t("game.science")}
+              </span>
+            </button>
+            <button
+              onClick={handleNavigatorClick}
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2.5 md:py-1 border border-[#00d4ff] hover:bg-[rgba(0,212,255,0.16)] transition-colors cursor-pointer"
+              title={t("navigator.title")}
+            >
+              <span className="text-ring">⌕</span>
+              <span className="text-ring hidden xl:inline">
+                {t("navigator.short_title")}
               </span>
             </button>
             <button

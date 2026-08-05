@@ -10,7 +10,7 @@ const sourceFile = (base) =>
     (candidate) => existsSync(candidate) && statSync(candidate).isFile(),
   );
 const crewFixture = `export const buildCrewMember = (member) => ({ ...member, race: "human", health: 100, maxHealth: 100, traits: member.traits ?? [] });`;
-const storeFixture = `export const useGameStore = Object.assign(() => ({}), { getState: () => ({}), subscribe: () => () => {} });`;
+const storeFixture = `export const useGameStore = Object.assign((selector) => selector(globalThis.__navigatorTestState), { getState: () => globalThis.__navigatorTestState, subscribe: () => () => {} });`;
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
@@ -81,6 +81,27 @@ const {
 const {
   generateStationCrew,
 } = await import("../src/game/components/station/station-data.ts");
+globalThis.__navigatorTestState = {
+  ...initialState,
+  getEffectiveScanRange: () => 0,
+  pinNavigatorTarget: () => {},
+  unpinNavigatorTarget: () => {},
+  clearNavigatorTargets: () => {},
+  closeNavigator: () => {},
+};
+const { createElement } = await import("react");
+const { renderToStaticMarkup } = await import("react-dom/server");
+const { NavigatorPanel } = await import(
+  "../src/game/components/NavigatorPanel.tsx"
+);
+const { default: ru } = await import("../src/lib/locales/ru.json");
+const { default: en } = await import("../src/lib/locales/en.json");
+
+assert.equal(typeof ru.navigator.title, "string");
+assert.equal(typeof en.navigator.title, "string");
+const navigatorMarkup = renderToStaticMarkup(createElement(NavigatorPanel));
+assert.ok(navigatorMarkup.includes(ru.navigator.title));
+assert.ok(navigatorMarkup.includes(ru.navigator.empty));
 
 const legacy = structuredClone(initialState);
 const [visited, hidden] = legacy.galaxy.sectors[0].locations;

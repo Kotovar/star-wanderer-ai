@@ -32,6 +32,7 @@ import { SpaceMonsterPanel } from "./SpaceMonsterPanel";
 import { HostileApproachWarningPanel } from "./HostileApproachWarningPanel";
 import { CrisisPanel } from "./CrisisPanel";
 import { EnemyCodexPanel } from "./EnemyCodexPanel";
+import { NavigatorPanel } from "./NavigatorPanel";
 import { ActiveEffectsPanel } from "./panels/ActiveEffectsPanel";
 import { RandomEventPanel } from "./RandomEventPanel";
 import { CrewPerkChoiceModal } from "./CrewPerkChoiceModal";
@@ -562,6 +563,9 @@ export function EventDisplay() {
 
     case "research":
       return <ResearchPanel />;
+
+    case "navigator":
+      return <NavigatorPanel />;
 
     case "reputation":
       return <ReputationPanel />;

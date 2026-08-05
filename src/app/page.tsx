@@ -89,6 +89,7 @@ const GLOBAL_OVERLAY_MODES = new Set([
   "artifacts",
   "effects",
   "research",
+  "navigator",
   "reputation",
   "crises",
   "enemy_codex",

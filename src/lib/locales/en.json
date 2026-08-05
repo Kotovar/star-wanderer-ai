@@ -288,6 +288,58 @@
         "tooltip_tutorial": "Tutorial",
         "tooltip_probes": "Research probes"
     },
+    "navigator": {
+        "title": "KNOWN OBJECT NAVIGATOR",
+        "short_title": "NAVIGATOR",
+        "close": "CLOSE",
+        "clear_markers": "CLEAR MARKERS",
+        "mark": "MARK",
+        "unmark": "UNMARK",
+        "empty": "No known objects match this search.",
+        "categories": {
+            "trade": "Trade",
+            "crew": "Crew hiring",
+            "planets": "Planets",
+            "missions": "Missions and threats",
+            "discovery": "Exploration and mining"
+        },
+        "filters": {
+            "category": "Section",
+            "search": "Search",
+            "search_placeholder": "Sector or object",
+            "tier": "Sector tier",
+            "tier_value": "Tier {{tier}}",
+            "all_tiers": "All available tiers",
+            "any": "Any",
+            "good": "Good",
+            "race": "Race",
+            "profession": "Profession",
+            "min_level": "Minimum level",
+            "trait": "Trait",
+            "mutation": "Mutation",
+            "planet_type": "Planet type",
+            "population": "Population",
+            "reputation": "Reputation",
+            "unresolved": "Unresolved only"
+        },
+        "population": {
+            "inhabited": "Inhabited",
+            "empty": "Empty"
+        },
+        "prices": {
+            "known": "Known prices",
+            "unknown": "Choose a good to see known prices.",
+            "buy": "Buy: {{price}}₢",
+            "sell": "Sell: {{price}}₢"
+        },
+        "facts": {
+            "sector": "{{name}} sector · tier {{tier}}",
+            "kind": "Type: {{value}}",
+            "crew": "Candidate: {{race}} · {{profession}} · lvl. {{level}}",
+            "traits": "Traits: {{values}}",
+            "details": "Data: {{values}}"
+        }
+    },
     "professions": {
         "pilot": "Pilot",
         "engineer": "Engineer",

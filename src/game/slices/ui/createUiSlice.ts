@@ -27,10 +27,14 @@ export interface UiSlice {
     showArtifacts: () => void;
     /** Показать панель исследований */
     showResearch: () => void;
+    /** Показать навигатор известных объектов */
+    showNavigator: () => void;
     /** Закрыть панель артефактов */
     closeArtifactsPanel: () => void;
     /** Закрыть панель исследований */
     closeResearchPanel: () => void;
+    /** Закрыть навигатор известных объектов */
+    closeNavigator: () => void;
     /** Сохранить текущий режим игры (для возврата из модальных окон) */
     savePreviousGameMode: () => void;
 }
@@ -141,6 +145,16 @@ export const createUiSlice = (set: SetState): UiSlice => ({
             gameMode: GAME_MODES.MANAGEMENT.RESEARCH,
         })),
 
+    showNavigator: () =>
+        set((state) => ({
+            previousGameMode: PANELS_RETURNING_TO_NAVIGATION.includes(
+                state.gameMode as (typeof PANELS_RETURNING_TO_NAVIGATION)[number],
+            )
+                ? state.previousGameMode
+                : state.gameMode,
+            gameMode: GAME_MODES.MANAGEMENT.NAVIGATOR,
+        })),
+
     closeArtifactsPanel: () =>
         set((state) => ({
             gameMode: state.previousGameMode || DEFAULT_NAVIGATION_MODE,
@@ -148,6 +162,12 @@ export const createUiSlice = (set: SetState): UiSlice => ({
         })),
 
     closeResearchPanel: () =>
+        set((state) => ({
+            gameMode: state.previousGameMode || DEFAULT_NAVIGATION_MODE,
+            previousGameMode: null,
+        })),
+
+    closeNavigator: () =>
         set((state) => ({
             gameMode: state.previousGameMode || DEFAULT_NAVIGATION_MODE,
             previousGameMode: null,

@@ -288,6 +288,58 @@
         "tooltip_tutorial": "Обучение",
         "tooltip_probes": "Исследовательские зонды"
     },
+    "navigator": {
+        "title": "НАВИГАТОР ИЗВЕСТНЫХ ОБЪЕКТОВ",
+        "short_title": "НАВИГАТОР",
+        "close": "ЗАКРЫТЬ",
+        "clear_markers": "СБРОСИТЬ МЕТКИ",
+        "mark": "ОТМЕТИТЬ",
+        "unmark": "СНЯТЬ МЕТКУ",
+        "empty": "Нет известных объектов по этому запросу.",
+        "categories": {
+            "trade": "Торговля",
+            "crew": "Наём экипажа",
+            "planets": "Планеты",
+            "missions": "Задания и угрозы",
+            "discovery": "Исследование и добыча"
+        },
+        "filters": {
+            "category": "Раздел",
+            "search": "Поиск",
+            "search_placeholder": "Сектор или объект",
+            "tier": "Тир сектора",
+            "tier_value": "Тир {{tier}}",
+            "all_tiers": "Все доступные тиры",
+            "any": "Любой",
+            "good": "Товар",
+            "race": "Раса",
+            "profession": "Профессия",
+            "min_level": "Мин. уровень",
+            "trait": "Черта",
+            "mutation": "Мутация",
+            "planet_type": "Тип планеты",
+            "population": "Население",
+            "reputation": "Репутация",
+            "unresolved": "Только незавершённые"
+        },
+        "population": {
+            "inhabited": "Населённая",
+            "empty": "Пустая"
+        },
+        "prices": {
+            "known": "Известные цены",
+            "unknown": "Выберите товар, чтобы увидеть известные цены.",
+            "buy": "Покупка: {{price}}₢",
+            "sell": "Продажа: {{price}}₢"
+        },
+        "facts": {
+            "sector": "Сектор {{name}} · тир {{tier}}",
+            "kind": "Тип: {{value}}",
+            "crew": "Кандидат: {{race}} · {{profession}} · ур. {{level}}",
+            "traits": "Черты: {{values}}",
+            "details": "Данные: {{values}}"
+        }
+    },
     "professions": {
         "pilot": "Пилот",
         "engineer": "Инженер",

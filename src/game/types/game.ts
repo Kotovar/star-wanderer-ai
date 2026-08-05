@@ -67,6 +67,7 @@ export type GameMode =
   | "battle_results"
   | "storm_results"
   | "research"
+  | "navigator"
   | "reputation"
   | "crises"
   | "enemy_codex"
@@ -270,6 +271,8 @@ export interface GameModeChanges {
   showEffects: () => void;
   closeArtifactsPanel: () => void;
   closeResearchPanel: () => void;
+  showNavigator: () => void;
+  closeNavigator: () => void;
   savePreviousGameMode: () => void;
 }
 
