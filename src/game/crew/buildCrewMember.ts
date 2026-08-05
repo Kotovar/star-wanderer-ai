@@ -1,12 +1,16 @@
-import { calculateCrewStats } from "@/game/slices/crewManagement/utils/hireCrew";
 import {
     generateCrewTraits,
     getRandomName,
     getTraitById,
-} from "@/game/crew/utils";
-import { getRandomRace } from "@/game/races";
+} from "@/game/crew/generation";
+import { getRaceCrewBonus, getRandomRace } from "@/game/races";
 import { fillMissingTechPerkTiers } from "@/game/crew/techPerks";
-import { INITIAL_HAPPINESS_PERCENT } from "@/game/constants/crew";
+import {
+    BASE_CREW_HEALTH,
+    BASE_CREW_HEALTH_PER_LEVEL,
+    DEFAULT_MAX_HAPPINESS,
+    INITIAL_HAPPINESS_PERCENT,
+} from "@/game/constants/crew";
 import { RACES } from "@/game/constants/races";
 import type {
     CrewMember,
@@ -63,6 +67,67 @@ const ALL_PROFESSIONS: Profession[] = [
 
 const seededRand = (seed: number, offset: number): number =>
     Math.abs(Math.sin(seed + offset) * 10000) % 1;
+
+interface CrewStatsOptions {
+    race: RaceId;
+    traits: CrewMember["traits"];
+    level: number;
+}
+
+interface CrewStats {
+    maxHealth: number;
+    maxHappiness: number;
+    hasHappiness: boolean;
+}
+
+const calculateCrewStats = (options: CrewStatsOptions): CrewStats => {
+    const { race, traits, level } = options;
+    const raceData = RACES[race];
+    const raceHealthBonus = getRaceCrewBonus(race, "health");
+    let raceHealthPenaltyPercent = 0;
+
+    raceData?.specialTraits?.forEach((trait) => {
+        if (trait.effects.healthPenalty) {
+            raceHealthPenaltyPercent += Math.abs(
+                Number(trait.effects.healthPenalty),
+            );
+        }
+    });
+
+    let maxHealth =
+        BASE_CREW_HEALTH + BASE_CREW_HEALTH_PER_LEVEL * (level - 1);
+    if (raceHealthPenaltyPercent > 0) {
+        maxHealth = Math.floor(maxHealth * (1 - raceHealthPenaltyPercent));
+    }
+    traits.forEach((trait) => {
+        if (trait.effect.healthPenalty) {
+            maxHealth = Math.floor(
+                maxHealth * (1 - trait.effect.healthPenalty),
+            );
+        }
+        if (trait.effect.healthBonus) {
+            maxHealth = Math.floor(maxHealth * (1 + trait.effect.healthBonus));
+        }
+    });
+    maxHealth += raceHealthBonus * level;
+
+    const raceHappinessBonus = getRaceCrewBonus(race, "happiness");
+    let maxHappiness = DEFAULT_MAX_HAPPINESS + raceHappinessBonus;
+    traits.forEach((trait) => {
+        if (trait.effect.maxHappinessBonus) {
+            maxHappiness = Math.floor(
+                maxHappiness * (1 + trait.effect.maxHappinessBonus),
+            );
+        }
+    });
+
+    const hasHappiness = raceData?.hasHappiness ?? true;
+    return {
+        maxHealth,
+        maxHappiness: hasHappiness ? maxHappiness : 0,
+        hasHappiness,
+    };
+};
 
 /**
  * Универсальный конструктор члена экипажа.
