@@ -91,7 +91,7 @@ globalThis.__navigatorTestState = {
 };
 const { createElement } = await import("react");
 const { renderToStaticMarkup } = await import("react-dom/server");
-const { NavigatorPanel } = await import(
+const { NavigatorPanel, NavigatorResultDetails } = await import(
   "../src/game/components/NavigatorPanel.tsx"
 );
 const { default: ru } = await import("../src/lib/locales/ru.json");
@@ -102,6 +102,40 @@ assert.equal(typeof en.navigator.title, "string");
 const navigatorMarkup = renderToStaticMarkup(createElement(NavigatorPanel));
 assert.ok(navigatorMarkup.includes(ru.navigator.title));
 assert.ok(navigatorMarkup.includes(ru.navigator.empty));
+const enemyResultMarkup = renderToStaticMarkup(
+  createElement(NavigatorResultDetails, {
+    result: {
+      key: "enemy",
+      sectorId: 1,
+      sectorName: "Alpha",
+      sectorTier: 1,
+      locationId: "enemy",
+      locationName: "Enemy",
+      category: "missions",
+      kind: "enemy",
+      details: [],
+    },
+  }),
+);
+assert.ok(enemyResultMarkup.includes(ru.location_types.enemy_ship));
+assert.equal(enemyResultMarkup.includes("location_types.enemy"), false);
+const stormResultMarkup = renderToStaticMarkup(
+  createElement(NavigatorResultDetails, {
+    result: {
+      key: "storm",
+      sectorId: 1,
+      sectorName: "Alpha",
+      sectorTier: 1,
+      locationId: "storm",
+      locationName: "Storm",
+      category: "discovery",
+      kind: "storm",
+      details: [],
+    },
+  }),
+);
+assert.ok(stormResultMarkup.includes(ru.location_types.cosmic_storm));
+assert.equal(stormResultMarkup.includes("location_types.storm"), false);
 
 const legacy = structuredClone(initialState);
 const [visited, hidden] = legacy.galaxy.sectors[0].locations;

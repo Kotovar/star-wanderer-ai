@@ -61,18 +61,29 @@ const EMPTY_FILTERS: NavigatorFilters = {
   query: "",
   tier: "all",
 };
+const LOCATION_KIND_TRANSLATION_KEYS: Partial<
+  Record<NavigatorResult["kind"], string>
+> = {
+  enemy: "enemy_ship",
+  storm: "cosmic_storm",
+};
 
 const formatId = (value: string) => value.replaceAll("_", " ");
 const optionalValue = <T extends string>(value: string): T | undefined =>
   value === "" ? undefined : (value as T);
 
-function ResultDetails({ result }: { result: NavigatorResult }) {
+export function NavigatorResultDetails({
+  result,
+}: {
+  result: NavigatorResult;
+}) {
   const { t } = useTranslation();
+  const kind = LOCATION_KIND_TRANSLATION_KEYS[result.kind] ?? result.kind;
 
   return (
     <div className="mt-2 space-y-1 text-xs leading-relaxed text-[#9aa59a]">
       <div>
-        {t("navigator.facts.kind", { value: t(`location_types.${result.kind}`) })}
+        {t("navigator.facts.kind", { value: t(`location_types.${kind}`) })}
       </div>
       {result.crew && (
         <>
@@ -471,7 +482,7 @@ export function NavigatorPanel() {
                         tier: result.sectorTier,
                       })}
                     </div>
-                    <ResultDetails result={result} />
+                    <NavigatorResultDetails result={result} />
                     {result.trade ? (
                       <div className="mt-2 text-xs text-[#b8dfc2]">
                         <div>{t("navigator.prices.known")}</div>
