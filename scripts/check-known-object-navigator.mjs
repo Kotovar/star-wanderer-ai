@@ -85,6 +85,9 @@ const {
 const {
   generateStationCrew,
 } = await import("../src/game/components/station/station-data.ts");
+const { selectLocation } = await import(
+  "../src/game/slices/travel/helpers/selectLocation.ts"
+);
 globalThis.__navigatorTestState = {
   ...initialState,
   getEffectiveScanRange: () => 0,
@@ -153,6 +156,124 @@ assert.equal(
   undefined,
 );
 assert.deepEqual(migrated.navigatorTargets, []);
+
+const lifecycleLegacy = structuredClone(initialState);
+const lifecycleSector = structuredClone(lifecycleLegacy.galaxy.sectors[0]);
+lifecycleSector.id = 101;
+const [legacyTrader, lifecycleHidden] = lifecycleSector.locations;
+Object.assign(legacyTrader, {
+  id: "legacy-trader",
+  name: "Legacy Trader",
+  type: "station",
+  stationId: "legacy-trader-station",
+  dominantRace: "human",
+  visited: false,
+  stationConfig: undefined,
+});
+Object.assign(lifecycleHidden, {
+  id: "lifecycle-hidden",
+  type: "enemy",
+  threat: 1,
+  visited: false,
+});
+lifecycleSector.locations = [legacyTrader, lifecycleHidden];
+lifecycleLegacy.currentSector = lifecycleSector;
+lifecycleLegacy.galaxy.sectors = [lifecycleSector];
+lifecycleLegacy.ship.modules.push({
+  id: 999,
+  type: "scanner",
+  name: "Damaged Scanner Mk.1",
+  x: 0,
+  y: 0,
+  width: 1,
+  height: 1,
+  health: 0,
+  maxHealth: 100,
+  level: 1,
+  defense: 0,
+  scanRange: 3,
+});
+lifecycleLegacy.stationPrices = {
+  "legacy-trader-station": { water: { buy: 100, sell: 60 } },
+};
+
+const migratedLifecycle = loadWithMigrations(
+  JSON.stringify({ version: 21, state: lifecycleLegacy }),
+);
+assert.ok(migratedLifecycle, "legacy lifecycle save should load");
+const lifecycleState = migratedLifecycle;
+const setLifecycleState = (update) => {
+  const next = typeof update === "function" ? update(lifecycleState) : update;
+  if (next) Object.assign(lifecycleState, next);
+};
+Object.assign(
+  lifecycleState,
+  createNavigatorSlice(setLifecycleState, () => lifecycleState),
+  { nextTurn: () => {} },
+);
+const lifecycleResults = (filters) =>
+  getNavigatorResults({
+    artifacts: lifecycleState.artifacts,
+    filters,
+    friendlyShipStock: lifecycleState.friendlyShipStock,
+    galaxy: lifecycleState.galaxy,
+    hiredCrew: lifecycleState.hiredCrew,
+    hiredCrewFromShips: lifecycleState.hiredCrewFromShips,
+    knownLocationIntel: lifecycleState.knownLocationIntel,
+    knownTradeStations: lifecycleState.knownTradeStations,
+    raceReputation: lifecycleState.raceReputation,
+    ship: lifecycleState.ship,
+    stationPrices: lifecycleState.stationPrices,
+  });
+
+lifecycleState.syncNavigatorIntel();
+assert.equal(
+  lifecycleResults({ category: "missions" }).some(
+    ({ locationId }) => locationId === "lifecycle-hidden",
+  ),
+  false,
+);
+lifecycleState.ship.modules = lifecycleState.ship.modules.map((module) =>
+  module.type === "scanner" ? { ...module, health: module.maxHealth } : module,
+);
+assert.equal(
+  lifecycleResults({ category: "missions" }).some(
+    ({ locationId }) => locationId === "lifecycle-hidden",
+  ),
+  false,
+);
+lifecycleState.syncNavigatorIntel();
+assert.ok(
+  lifecycleResults({ category: "missions" }).some(
+    ({ locationId }) => locationId === "lifecycle-hidden",
+  ),
+);
+assert.equal(
+  lifecycleResults({ category: "trade", goodId: "water" }).some(
+    ({ locationId }) => locationId === "legacy-trader",
+  ),
+  false,
+);
+selectLocation(setLifecycleState, () => lifecycleState, 0);
+assert.deepEqual(lifecycleState.knownTradeStations, ["legacy-trader-station"]);
+assert.deepEqual(
+  lifecycleResults({ category: "trade", goodId: "water" })
+    .filter(({ locationId }) => locationId === "legacy-trader")
+    .map(({ trade }) => trade),
+  [{ goodId: "water", buy: 100, sell: 60 }],
+);
+const lifecycleTraderTarget = { sectorId: 101, locationId: "legacy-trader" };
+const lifecycleHiddenTarget = { sectorId: 101, locationId: "lifecycle-hidden" };
+lifecycleState.pinNavigatorTarget(lifecycleTraderTarget);
+lifecycleState.pinNavigatorTarget(lifecycleHiddenTarget);
+assert.deepEqual(lifecycleState.navigatorTargets, [
+  lifecycleTraderTarget,
+  lifecycleHiddenTarget,
+]);
+lifecycleState.unpinNavigatorTarget(lifecycleTraderTarget);
+assert.deepEqual(lifecycleState.navigatorTargets, [lifecycleHiddenTarget]);
+lifecycleState.clearNavigatorTargets();
+assert.deepEqual(lifecycleState.navigatorTargets, []);
 
 const sector = structuredClone(initialState.galaxy.sectors[0]);
 sector.id = 1;

@@ -83,7 +83,7 @@ export const hydrateNavigatorIntelFromLegacyState = (
   const knownStationIds = new Set(state.knownTradeStations);
   const knownTradeStations: string[] = [];
 
-  for (const sector of state.galaxy.sectors) {
+  for (const sector of state.galaxy?.sectors ?? []) {
     for (const location of sector.locations) {
       if (!location.visited) continue;
 

@@ -211,7 +211,10 @@ const getTradeResult = (
   const { goodId } = input.filters;
   const result = createResult(sector, location, "trade", []);
 
-  if (location.type === "station" && location.stationConfig?.allowsTrade) {
+  if (
+    location.type === "station" &&
+    (location.stationConfig?.allowsTrade ?? true)
+  ) {
     if (!goodId) return result;
     const stationId = location.stationId ?? location.id;
     const prices = input.knownTradeStations.includes(stationId)
