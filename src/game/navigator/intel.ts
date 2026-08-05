@@ -40,6 +40,19 @@ export const collectNavigatorIntel = (
   return knownLocationIntel;
 };
 
+export const isKnownNavigatorTarget = (
+  target: NavigatorTarget,
+  knownLocationIntel: Record<string, KnownLocationIntel>,
+): boolean => {
+  const intel = knownLocationIntel[
+    getNavigatorLocationKey(target.sectorId, target.locationId)
+  ];
+  return (
+    intel?.sectorId === target.sectorId &&
+    intel.locationId === target.locationId
+  );
+};
+
 export const getVisibleNavigatorTargetIds = (
   targets: NavigatorTarget[],
   sectorId: number,
@@ -50,9 +63,7 @@ export const getVisibleNavigatorTargetIds = (
   for (const target of targets) {
     if (
       target.sectorId === sectorId &&
-      knownLocationIntel[
-        getNavigatorLocationKey(target.sectorId, target.locationId)
-      ]
+      isKnownNavigatorTarget(target, knownLocationIntel)
     ) {
       targetIds.add(target.locationId);
     }

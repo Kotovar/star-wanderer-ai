@@ -352,6 +352,7 @@ export function GalaxyMap() {
         (s) => s.runProfileArcRewardClaimed,
     );
     const bossesVisible = useGameStore((s) => s.canScanObject("boss"));
+    const knownLocationIntel = useGameStore((s) => s.knownLocationIntel);
     const navigatorTargets = useGameStore((s) => s.navigatorTargets);
     const canSeeT4 = canSeeTier4(modules, artifacts, scanRange);
     const galaxyStatus = getGalaxyMapStatus(modules, captainLevel, fuel);
@@ -365,6 +366,7 @@ export function GalaxyMap() {
                 runProfileArcTarget,
                 runProfileArcRewardClaimed,
                 bossesVisible,
+                knownLocationIntel,
                 navigatorTargets,
             }),
         [
@@ -374,6 +376,7 @@ export function GalaxyMap() {
             completedLocations,
             runProfileArcRewardClaimed,
             runProfileArcTarget,
+            knownLocationIntel,
             navigatorTargets,
             sectors,
         ],

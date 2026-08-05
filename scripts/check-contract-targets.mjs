@@ -782,6 +782,7 @@ const mapObjectives = getGalaxyMapObjectives({
   ],
   completedLocations: [],
   bossesVisible: true,
+  knownLocationIntel: {},
   navigatorTargets: [],
 });
 assert.ok(

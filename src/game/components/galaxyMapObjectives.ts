@@ -1,5 +1,6 @@
 import type { Artifact, Contract, RunProfileArcTarget, Sector } from "@/game/types";
-import type { NavigatorTarget } from "@/game/types/navigator";
+import { isKnownNavigatorTarget } from "@/game/navigator/intel";
+import type { KnownLocationIntel, NavigatorTarget } from "@/game/types/navigator";
 import type {
     GalaxyMapObjective,
     GalaxyMapObjectiveKind,
@@ -13,6 +14,7 @@ type GalaxyMapObjectivesInput = {
     runProfileArcTarget: RunProfileArcTarget | null;
     runProfileArcRewardClaimed: boolean;
     bossesVisible: boolean;
+    knownLocationIntel: Record<string, KnownLocationIntel>;
     navigatorTargets: NavigatorTarget[];
 };
 
@@ -53,6 +55,7 @@ export const getGalaxyMapObjectives = ({
     runProfileArcTarget,
     runProfileArcRewardClaimed,
     bossesVisible,
+    knownLocationIntel,
     navigatorTargets,
 }: GalaxyMapObjectivesInput): GalaxyMapObjective[] => {
     const sectorsById = new Map(sectors.map((sector) => [sector.id, sector]));
@@ -119,6 +122,8 @@ export const getGalaxyMapObjectives = ({
     }
 
     for (const target of navigatorTargets) {
+        if (!isKnownNavigatorTarget(target, knownLocationIntel)) continue;
+
         const sector = sectorsById.get(target.sectorId);
         if (sector) {
             addObjective("navigator", sector, "navigator.short_title");

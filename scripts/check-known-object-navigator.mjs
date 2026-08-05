@@ -346,6 +346,7 @@ const galaxyNavigatorObjectives = getGalaxyMapObjectives({
   runProfileArcTarget: null,
   runProfileArcRewardClaimed: false,
   bossesVisible: false,
+  knownLocationIntel,
   navigatorTargets: [
     { sectorId: 10, locationId: "trade-station" },
     { sectorId: 10, locationId: "friendly-trader" },
@@ -356,6 +357,21 @@ assert.equal(
     ({ kind, sectorId }) => kind === "navigator" && sectorId === 10,
   ).length,
   1,
+);
+const hiddenGalaxyNavigatorObjectives = getGalaxyMapObjectives({
+  sectors: navigatorSectors,
+  activeContracts: [],
+  artifacts: [],
+  completedLocations: [],
+  runProfileArcTarget: null,
+  runProfileArcRewardClaimed: false,
+  bossesVisible: false,
+  knownLocationIntel,
+  navigatorTargets: [{ sectorId: 10, locationId: "hidden" }],
+});
+assert.equal(
+  hiddenGalaxyNavigatorObjectives.some(({ kind }) => kind === "navigator"),
+  false,
 );
 const navigatorInput = {
   galaxy: { sectors: navigatorSectors },
