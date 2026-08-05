@@ -49,12 +49,10 @@ const REPUTATION_LEVELS: ReputationLevel[] = [
   "friendly",
   "allied",
 ];
-const TRAIT_IDS: TraitId[] = [
-  ...Object.values(CREW_TRAITS).flatMap((traits) =>
-    traits.map((trait) => trait.id),
-  ),
-  ...MUTATION_TRAITS,
-];
+export const NAVIGATOR_TRAIT_IDS: TraitId[] = [
+  ...CREW_TRAITS.positive,
+  ...CREW_TRAITS.negative,
+].map((trait) => trait.id);
 
 const EMPTY_FILTERS: NavigatorFilters = {
   category: "trade",
@@ -373,7 +371,7 @@ export function NavigatorPanel() {
                 className="mt-1 w-full border border-[#00ff4166] bg-[#071019] px-2 py-1 text-[#d7f8ff]"
               >
                 <option value="">{t("navigator.filters.any")}</option>
-                {TRAIT_IDS.map((trait) => (
+                {NAVIGATOR_TRAIT_IDS.map((trait) => (
                   <option key={trait} value={trait}>
                     {t(`racial_traits.${trait}.name`)}
                   </option>

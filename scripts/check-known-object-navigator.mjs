@@ -85,7 +85,9 @@ const {
 const {
   generateStationCrew,
 } = await import("../src/game/components/station/station-data.ts");
-const { CREW_TRAITS } = await import("../src/game/constants/traits.ts");
+const { CREW_TRAITS, MUTATION_TRAITS } = await import(
+  "../src/game/constants/traits.ts"
+);
 const { selectLocation } = await import(
   "../src/game/slices/travel/helpers/selectLocation.ts"
 );
@@ -102,12 +104,27 @@ globalThis.__navigatorTestState = {
 };
 const { createElement } = await import("react");
 const { renderToStaticMarkup } = await import("react-dom/server");
-const { NavigatorPanel, NavigatorResultDetails } = await import(
+const { NAVIGATOR_TRAIT_IDS, NavigatorPanel, NavigatorResultDetails } = await import(
   "../src/game/components/NavigatorPanel.tsx"
 );
 const { default: ru } = await import("../src/lib/locales/ru.json");
 const { default: en } = await import("../src/lib/locales/en.json");
 const { store: translationStore } = await import("../src/lib/useTranslation.ts");
+
+assert.ok(
+  Array.isArray(NAVIGATOR_TRAIT_IDS),
+  "Navigator trait filter ids must be exposed for regression checks",
+);
+assert.equal(
+  NAVIGATOR_TRAIT_IDS.some((traitId) => MUTATION_TRAITS.includes(traitId)),
+  false,
+  "Navigator trait filter must not include mutations",
+);
+assert.equal(
+  new Set(NAVIGATOR_TRAIT_IDS).size,
+  NAVIGATOR_TRAIT_IDS.length,
+  "Navigator trait filter must not contain duplicate ids",
+);
 
 const navigatorTraitIds = Object.values(CREW_TRAITS).flatMap((traits) =>
   traits.map((trait) => trait.id),
