@@ -159,6 +159,10 @@ export function CrewList() {
                                 <span className="text-[#00d4ff] font-bold truncate leading-tight">
                                     {member.name}
                                 </span>
+                                <span className="text-[#555] shrink-0">—</span>
+                                <span className="shrink-0 text-[#00d4ff] tabular-nums">
+                                    LV{member.level || 1}
+                                </span>
                                 {member.movedThisTurn && (
                                     <span className="text-[#ff0040] shrink-0 text-[9px]">
                                         ●
@@ -184,18 +188,18 @@ export function CrewList() {
                                 )}
                             </div>
 
-                            {/* Profession + level + assignment */}
-                            <div className="flex items-center justify-between gap-1 text-[10px] leading-tight">
-                                <span className="text-[#ffb000] truncate">
+                            {/* Profession + assignment */}
+                            <div className="flex items-center gap-1 text-[10px] leading-tight min-w-0">
+                                <span className="text-[#ffb000] shrink-0">
                                     {t(`professions.${member.profession}`)}
                                 </span>
-                                <span className="shrink-0 text-[#00d4ff] tabular-nums">
-                                    LV{member.level || 1}
-                                </span>
-                            </div>
-                            <div className="text-[#555] text-[10px] truncate leading-tight min-h-3">
                                 {assignmentLabel && (
-                                    <span>{assignmentLabel}</span>
+                                    <>
+                                        <span className="text-[#555] shrink-0">—</span>
+                                        <span className="text-[#555] truncate">
+                                            {assignmentLabel}
+                                        </span>
+                                    </>
                                 )}
                             </div>
 
@@ -210,56 +214,6 @@ export function CrewList() {
                                 title={t("crew_member.morale_efficiency_hint")}
                             >
                                 ⚙ {efficiency}%
-                            </div>
-
-                            {/* Строка усталости всегда занимает место, чтобы карточки не прыгали */}
-                            <div className="min-h-3 leading-3">
-                            {race?.hasFatigue === false ? (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <span
-                                            tabIndex={0}
-                                            className="text-[9px] text-[#00d4ff] cursor-help"
-                                        >
-                                            {t("crew_member.fatigue_free")}
-                                        </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="max-w-60 text-xs">
-                                        {t("crew_member.fatigue_free_tooltip")}
-                                    </TooltipContent>
-                                </Tooltip>
-                            ) : (
-                                race?.hasFatigue &&
-                                ((member.assignmentFatigue ?? 0) > 0 ||
-                                    (member.assignmentRestTurns ?? 0) > 0) && (
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <span
-                                                tabIndex={0}
-                                                className="text-[9px] text-[#ffb000] cursor-help"
-                                            >
-                                                {(member.assignmentRestTurns ?? 0) > 0
-                                                    ? t("crew_member.assignment_rest", {
-                                                          turns:
-                                                              member.assignmentRestTurns ??
-                                                              0,
-                                                      })
-                                                    : t("crew_member.assignment_fatigue", {
-                                                          value:
-                                                              member.assignmentFatigue ??
-                                                              0,
-                                                          max: ASSIGNMENT_EXHAUSTED_AT,
-                                                      })}
-                                            </span>
-                                        </TooltipTrigger>
-                                        <TooltipContent className="max-w-60 text-xs">
-                                            {t(
-                                                "crew_member.assignment_fatigue_tooltip",
-                                            )}
-                                        </TooltipContent>
-                                    </Tooltip>
-                                )
-                            )}
                             </div>
 
                             {/* HP bar */}
@@ -322,6 +276,59 @@ export function CrewList() {
                                     {t("crew_member.experience")} {member.exp || 0}/
                                     {expNeeded}
                                 </span>
+                            </div>
+
+                            {/* Строка усталости всегда занимает место, чтобы карточки не прыгали */}
+                            <div className="min-h-3 leading-3">
+                                {race?.hasFatigue === false ? (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <span
+                                                tabIndex={0}
+                                                className="text-[9px] text-[#00d4ff] cursor-help"
+                                            >
+                                                {t("crew_member.fatigue_free")}
+                                            </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="max-w-60 text-xs">
+                                            {t("crew_member.fatigue_free_tooltip")}
+                                        </TooltipContent>
+                                    </Tooltip>
+                                ) : (
+                                    race?.hasFatigue &&
+                                    ((member.assignmentFatigue ?? 0) > 0 ||
+                                        (member.assignmentRestTurns ?? 0) > 0) && (
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <span
+                                                    tabIndex={0}
+                                                    className="text-[9px] text-[#ffb000] cursor-help"
+                                                >
+                                                    {(member.assignmentRestTurns ?? 0) > 0
+                                                        ? t("crew_member.assignment_rest", {
+                                                              turns:
+                                                                  member.assignmentRestTurns ??
+                                                                  0,
+                                                          })
+                                                        : t(
+                                                              "crew_member.assignment_fatigue",
+                                                              {
+                                                                  value:
+                                                                      member.assignmentFatigue ??
+                                                                      0,
+                                                                  max: ASSIGNMENT_EXHAUSTED_AT,
+                                                              },
+                                                          )}
+                                                </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent className="max-w-60 text-xs">
+                                                {t(
+                                                    "crew_member.assignment_fatigue_tooltip",
+                                                )}
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    )
+                                )}
                             </div>
                         </div>
                     );
