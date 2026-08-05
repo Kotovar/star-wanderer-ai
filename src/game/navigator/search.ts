@@ -32,6 +32,8 @@ type NavigatorInput = Pick<
   | "artifacts"
   | "friendlyShipStock"
   | "galaxy"
+  | "hiredCrew"
+  | "hiredCrewFromShips"
   | "knownLocationIntel"
   | "knownTradeStations"
   | "raceReputation"
@@ -263,14 +265,22 @@ const getCrewResults = (
 ): NavigatorResult[] => {
   if (!intel.visited) return [];
 
+  const stationId = location.stationId ?? location.id;
   const crew =
     location.type === "station"
       ? generateStationCrew(
-          location.stationId ?? location.id,
+          stationId,
           location.dominantRace,
           location.stationConfig,
-        ).map(({ member }) => toCrewResult(member))
-      : location.type === "friendly_ship" && location.hasCrew
+        )
+          .filter(
+            ({ member }) =>
+              !input.hiredCrew[stationId]?.includes(member.name),
+          )
+          .map(({ member }) => toCrewResult(member))
+      : location.type === "friendly_ship" &&
+          location.hasCrew &&
+          !input.hiredCrewFromShips.includes(location.id)
         ? [getFriendlyCrew(location)]
         : [];
 

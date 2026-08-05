@@ -78,6 +78,9 @@ const {
   getNavigatorResults,
   getNavigatorTierOptions,
 } = await import("../src/game/navigator/search.ts");
+const {
+  generateStationCrew,
+} = await import("../src/game/components/station/station-data.ts");
 
 const legacy = structuredClone(initialState);
 const [visited, hidden] = legacy.galaxy.sectors[0].locations;
@@ -277,6 +280,8 @@ const navigatorInput = {
     "friendly-trader": { water: 7, food: 5, medicine: 3 },
   },
   raceReputation: structuredClone(initialState.raceReputation),
+  hiredCrew: {},
+  hiredCrewFromShips: [],
   ship: { modules: [] },
   artifacts: [],
   scanRange: 8,
@@ -331,16 +336,45 @@ visitedCrewSectors[0].locations.find(
 ).visited = true;
 const visitedCrewIntel = structuredClone(knownLocationIntel);
 visitedCrewIntel[getNavigatorLocationKey(10, "crew-station")].visited = true;
+const visitedCrewInput = {
+  ...navigatorInput,
+  galaxy: { sectors: visitedCrewSectors },
+  knownLocationIntel: visitedCrewIntel,
+};
 const revealedCrew = results(
   { category: "crew", profession: "engineer" },
-  {
-    ...navigatorInput,
-    galaxy: { sectors: visitedCrewSectors },
-    knownLocationIntel: visitedCrewIntel,
-  },
+  visitedCrewInput,
 ).filter(({ locationId }) => locationId === "crew-station");
 assert.ok(revealedCrew.length > 0);
 assert.ok(revealedCrew.every(({ crew }) => Array.isArray(crew.traits)));
+
+const hiredStationCandidate = generateStationCrew(
+  "crew-station",
+  "human",
+  stationConfig,
+)[0];
+const availableStationCrew = results(
+  { category: "crew" },
+  visitedCrewInput,
+).filter(({ locationId }) => locationId === "crew-station");
+const stationCrewAfterHire = results(
+  { category: "crew" },
+  {
+    ...visitedCrewInput,
+    hiredCrew: { "crew-station": [hiredStationCandidate.member.name] },
+  },
+).filter(({ locationId }) => locationId === "crew-station");
+assert.equal(stationCrewAfterHire.length, availableStationCrew.length - 1);
+assert.equal(
+  results(
+    { category: "crew" },
+    {
+      ...navigatorInput,
+      hiredCrewFromShips: ["friendly-trader"],
+    },
+  ).some(({ locationId }) => locationId === "friendly-trader"),
+  false,
+);
 
 assert.deepEqual(
   results({
