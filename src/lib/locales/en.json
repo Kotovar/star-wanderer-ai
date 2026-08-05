@@ -3993,7 +3993,7 @@
     },
     "run_profiles": {
         "label": "Galaxy scenario",
-        "random": "RANDOM",
+        "random": "Random",
         "ancient_echo": {
             "name": "Ancient Echo",
             "opportunity": "Anomalies and expeditions more often yield ancient data and research resources.",
@@ -4005,7 +4005,7 @@
             "risk": "Dangerous encounters drain the ship faster."
         },
         "broken_trade_lanes": {
-            "name": "Broken Trade Lanes",
+            "name": "Lost Routes",
             "opportunity": "Distress signals, derelicts, and wreck fields are more common.",
             "risk": "Stations are scarce, but each region has several reliable places to repair and resupply."
         }

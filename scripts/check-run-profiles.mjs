@@ -199,17 +199,19 @@ assert.match(progressSource, /runProfileArcTarget/);
 assert.match(progressSource, /run_profile_arcs\.coordinates/);
 assert.match(progressSource, /Object\.entries\(profileArcProgress\.profile\.arc\.reward\)/);
 assert.equal(ru.run_profiles.label, "Сценарий галактики");
-assert.equal(ru.run_profiles.broken_trade_lanes.name, "Разорванные торговые пути");
-assert.equal(en.run_profiles.broken_trade_lanes.name, "Broken Trade Lanes");
+assert.equal(ru.run_profiles.random, "Случайный");
+assert.equal(en.run_profiles.random, "Random");
+assert.equal(ru.run_profiles.broken_trade_lanes.name, "Затерянные маршруты");
+assert.equal(en.run_profiles.broken_trade_lanes.name, "Lost Routes");
 assert.match(
   newGameSetupSource,
   /aria-label=\{t\("run_profiles\.label"\)\}/,
   "New game setup must offer an explicit galaxy scenario selection",
 );
-assert.match(
-  newGameSetupSource,
-  /t\("run_profiles\.random"\)/,
-  "New game setup must offer an explicit random scenario action",
+assert.equal(
+  newGameSetupSource.match(/t\("run_profiles\.random"\)/g)?.length,
+  1,
+  "Random scenario must be one option in the selector, not a separate button",
 );
 assert.match(
   newGameSetupSource,

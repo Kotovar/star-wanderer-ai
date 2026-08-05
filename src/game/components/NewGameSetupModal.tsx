@@ -527,44 +527,28 @@ export function NewGameSetupModal({
               className={`${mobileSection === "ship" ? "flex" : "hidden"} min-w-0 flex-col border border-[#00ff4133] bg-[rgba(0,255,65,0.02)] p-3 min-[980px]:flex min-[980px]:min-h-0`}
             >
               <section className="mb-3 border border-[#00d4ff66] bg-[rgba(0,212,255,0.06)] p-3">
-                <div className="flex items-end gap-2">
-                  <label className="min-w-0 flex-1 text-[10px] uppercase tracking-[0.16em] text-ring">
-                    {t("run_profiles.label")}
-                    <select
-                      aria-label={t("run_profiles.label")}
-                      value={runProfileId ?? ""}
-                      onChange={(event) =>
-                        setRunProfileId(
-                          RUN_PROFILE_IDS.find(
-                            (profileId) => profileId === event.target.value,
-                          ) ?? null,
-                        )
-                      }
-                      className="mt-1 w-full border border-[#00d4ff66] bg-[#071019] px-2 py-1 text-xs normal-case tracking-normal text-[#d8f6ff]"
-                    >
-                      <option value="">{t("run_profiles.random")}</option>
-                      {RUN_PROFILE_IDS.map((profileId) => (
-                        <option key={profileId} value={profileId}>
-                          {t(RUN_PROFILES[profileId].nameKey)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    aria-pressed={runProfileId === null}
-                    onClick={() => setRunProfileId(null)}
-                    className={`border-[#00d4ff] text-[10px] text-[#00d4ff] hover:bg-[#00d4ff] hover:text-[#050810] ${
-                      runProfileId === null
-                        ? "bg-[#00d4ff22]"
-                        : "bg-transparent"
-                    }`}
+                <label className="block text-[10px] uppercase tracking-[0.16em] text-ring">
+                  {t("run_profiles.label")}
+                  <select
+                    aria-label={t("run_profiles.label")}
+                    value={runProfileId ?? ""}
+                    onChange={(event) =>
+                      setRunProfileId(
+                        RUN_PROFILE_IDS.find(
+                          (profileId) => profileId === event.target.value,
+                        ) ?? null,
+                      )
+                    }
+                    className="mt-1 w-full border border-[#00d4ff66] bg-[#071019] px-2 py-1 text-xs normal-case tracking-normal text-[#d8f6ff]"
                   >
-                    {t("run_profiles.random")}
-                  </Button>
-                </div>
+                    <option value="">{t("run_profiles.random")}</option>
+                    {RUN_PROFILE_IDS.map((profileId) => (
+                      <option key={profileId} value={profileId}>
+                        {t(RUN_PROFILES[profileId].nameKey)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 {runProfile && (
                   <>
                     <div className="mt-1 font-['Orbitron'] text-sm text-[#d8f6ff]">
