@@ -222,6 +222,11 @@ assert.match(
   "Random scenario must be resolved only when the game starts",
 );
 assert.equal(
+  /\{runProfile\s*&&\s*\(\s*<section/.test(newGameSetupSource),
+  false,
+  "Scenario selector must remain visible when the random scenario is unknown",
+);
+assert.equal(
   newGameSetupSource.includes("useLayoutEffect"),
   false,
   "Reopening the setup must not reroll the galaxy scenario",
