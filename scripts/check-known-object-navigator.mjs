@@ -9,7 +9,7 @@ const sourceFile = (base) =>
   [base, `${base}.ts`, `${base}.tsx`, resolve(base, "index.ts")].find(
     (candidate) => existsSync(candidate) && statSync(candidate).isFile(),
   );
-const crewFixture = `export const buildCrewMember = (member) => ({ ...member, race: "human", health: 100, maxHealth: 100, traits: member.traits ?? [] });`;
+const crewFixture = `export const buildCrewMember = (member) => ({ ...member, race: member.race ?? "human", health: 100, maxHealth: 100, traits: member.traits ?? [] });`;
 const storeFixture = `export const useGameStore = Object.assign((selector) => selector(globalThis.__navigatorTestState), { getState: () => globalThis.__navigatorTestState, subscribe: () => () => {} });`;
 
 registerHooks({
@@ -88,6 +88,9 @@ const {
 const { selectLocation } = await import(
   "../src/game/slices/travel/helpers/selectLocation.ts"
 );
+const { createUiSlice } = await import(
+  "../src/game/slices/ui/createUiSlice.ts"
+);
 globalThis.__navigatorTestState = {
   ...initialState,
   getEffectiveScanRange: () => 0,
@@ -103,6 +106,7 @@ const { NavigatorPanel, NavigatorResultDetails } = await import(
 );
 const { default: ru } = await import("../src/lib/locales/ru.json");
 const { default: en } = await import("../src/lib/locales/en.json");
+const { store: translationStore } = await import("../src/lib/useTranslation.ts");
 
 assert.equal(typeof ru.navigator.title, "string");
 assert.equal(typeof en.navigator.title, "string");
@@ -371,6 +375,14 @@ const navigatorSectors = [
         dominantRace: "human",
       },
       {
+        id: "seen-station",
+        name: "Seen Station",
+        type: "station",
+        stationId: "seen-station",
+        stationConfig,
+        dominantRace: "human",
+      },
+      {
         id: "friendly-trader",
         name: "Friendly Trader",
         type: "friendly_ship",
@@ -402,6 +414,20 @@ const navigatorSectors = [
         name: "Ancient Warden",
         type: "boss",
         bossDefeated: false,
+      },
+      {
+        id: "defeated-boss",
+        name: "Defeated Boss",
+        type: "boss",
+        bossDefeated: true,
+      },
+      {
+        id: "defeated-enemy",
+        name: "Defeated Enemy",
+        type: "enemy",
+        threat: 1,
+        defeated: true,
+        hasQuest: true,
       },
       {
         id: "hidden-enemy",
@@ -438,10 +464,13 @@ const navigatorSectors = [
 const knownLocationIntel = Object.fromEntries(
   [
     [10, "trade-station", 3, false],
+    [10, "seen-station", 0, false],
     [10, "friendly-trader", 8, true],
     [10, "crew-station", 3, false],
     [10, "ocean-planet", 8, true],
     [10, "unbeaten-boss", 8, false],
+    [10, "defeated-boss", 8, false],
+    [10, "defeated-enemy", 8, true],
     [10, "open-wreck", 3, false],
     [40, "tier-four-planet", 3, false],
   ].map(([sectorId, locationId, highestScanRange, intelVisited]) => [
@@ -533,6 +562,22 @@ assert.equal(
   ).some(({ locationId }) => locationId === "tier-four-planet"),
   true,
 );
+assert.equal(
+  results({ category: "trade" }).some(
+    ({ locationId }) => locationId === "seen-station",
+  ),
+  false,
+);
+const identifiedStationIntel = structuredClone(knownLocationIntel);
+identifiedStationIntel[
+  getNavigatorLocationKey(10, "seen-station")
+].highestScanRange = 3;
+assert.ok(
+  results(
+    { category: "trade" },
+    { ...navigatorInput, knownLocationIntel: identifiedStationIntel },
+  ).some(({ locationId }) => locationId === "seen-station"),
+);
 
 const waterMerchants = results({ category: "trade", goodId: "water" });
 assert.deepEqual(
@@ -545,6 +590,17 @@ assert.deepEqual(
     { goodId: "water", buy: 100, sell: 60 },
     { goodId: "water", buy: 53, sell: 31 },
   ],
+);
+assert.deepEqual(
+  results(
+    { category: "trade", goodId: "water" },
+    {
+      ...navigatorInput,
+      activeCrisis: { id: "raider_wave" },
+      raceReputation: { ...navigatorInput.raceReputation, human: 20 },
+    },
+  ).find(({ locationId }) => locationId === "trade-station")?.trade,
+  { goodId: "water", buy: 135, sell: 99 },
 );
 
 const hiddenCrew = results({ category: "crew" });
@@ -601,6 +657,62 @@ assert.equal(
   false,
 );
 
+const hostileStationId = Array.from(
+  { length: 100 },
+  (_, index) => `hostile-station-${index}`,
+).find((stationId) =>
+  generateStationCrew(stationId, "human", stationConfig).some(
+    ({ member }) => member.race !== "human",
+  ),
+);
+assert.ok(hostileStationId, "hostile station fixture needs a minority candidate");
+const hostileCrewInput = {
+  ...navigatorInput,
+  galaxy: {
+    sectors: [
+      {
+        ...navigatorSectors[0],
+        locations: [
+          {
+            id: hostileStationId,
+            name: "Hostile Station",
+            type: "station",
+            stationId: hostileStationId,
+            stationConfig,
+            dominantRace: "human",
+            visited: true,
+          },
+        ],
+      },
+    ],
+  },
+  knownLocationIntel: {
+    [getNavigatorLocationKey(10, hostileStationId)]: {
+      sectorId: 10,
+      locationId: hostileStationId,
+      highestScanRange: 8,
+      visited: true,
+    },
+  },
+  raceReputation: {
+    ...Object.fromEntries(
+      Object.keys(navigatorInput.raceReputation).map((race) => [race, 0]),
+    ),
+    human: -60,
+  },
+};
+assert.ok(
+  generateStationCrew(hostileStationId, "human", stationConfig).some(
+    ({ member }) => member.race !== "human",
+  ),
+);
+assert.equal(
+  results({ category: "crew" }, hostileCrewInput).some(
+    ({ locationId }) => locationId === hostileStationId,
+  ),
+  false,
+);
+
 assert.deepEqual(
   results({
     category: "planets",
@@ -623,6 +735,13 @@ assert.equal(
   ),
   false,
 );
+assert.equal(
+  results({ category: "missions" }).some(
+    ({ locationId }) =>
+      locationId === "defeated-enemy" || locationId === "defeated-boss",
+  ),
+  false,
+);
 assert.deepEqual(
   results({ category: "discovery", unresolvedOnly: true }).map(
     ({ locationId }) => locationId,
@@ -635,5 +754,164 @@ assert.deepEqual(
   ),
   ["open-wreck"],
 );
+
+globalThis.localStorage = { setItem: () => {} };
+translationStore.changeLanguage("en");
+await new Promise((finish) => setTimeout(finish, 0));
+const englishLocalizedMarkup = renderToStaticMarkup(
+  createElement(
+    "div",
+    null,
+    createElement(NavigatorResultDetails, {
+      result: {
+        key: "planet",
+        sectorId: 1,
+        sectorName: "Alpha",
+        sectorTier: 1,
+        locationId: "planet",
+        locationName: "Planet",
+        category: "planets",
+        kind: "planet",
+        details: ["Океаническая"],
+      },
+    }),
+    createElement(NavigatorResultDetails, {
+      result: {
+        key: "crew",
+        sectorId: 1,
+        sectorName: "Alpha",
+        sectorTier: 1,
+        locationId: "crew",
+        locationName: "Crew",
+        category: "crew",
+        kind: "station",
+        details: [],
+        crew: {
+          race: "human",
+          profession: "engineer",
+          level: 1,
+          traits: ["sharpshooter"],
+        },
+      },
+    }),
+    createElement(NavigatorResultDetails, {
+      result: {
+        key: "trade",
+        sectorId: 1,
+        sectorName: "Alpha",
+        sectorTier: 1,
+        locationId: "trade",
+        locationName: "Trade",
+        category: "trade",
+        kind: "station",
+        details: ["water"],
+      },
+    }),
+    createElement(NavigatorResultDetails, {
+      result: {
+        key: "wreck",
+        sectorId: 1,
+        sectorName: "Alpha",
+        sectorTier: 1,
+        locationId: "wreck",
+        locationName: "Wreck",
+        category: "discovery",
+        kind: "wreck_field",
+        details: ["wreck_field"],
+      },
+    }),
+  ),
+);
+assert.ok(englishLocalizedMarkup.includes(en.locations.planet_types.oceanic));
+assert.ok(englishLocalizedMarkup.includes(en.racial_traits.sharpshooter.name));
+assert.ok(englishLocalizedMarkup.includes(en.trade.goods.water));
+assert.ok(englishLocalizedMarkup.includes(en.location_types.wreck_field));
+assert.equal(englishLocalizedMarkup.includes("Океаническая"), false);
+assert.equal(englishLocalizedMarkup.includes("sharpshooter"), false);
+translationStore.changeLanguage("ru");
+const russianLocalizedMarkup = renderToStaticMarkup(
+  createElement(
+    "div",
+    null,
+    createElement(NavigatorResultDetails, {
+      result: {
+        key: "planet",
+        sectorId: 1,
+        sectorName: "Альфа",
+        sectorTier: 1,
+        locationId: "planet",
+        locationName: "Планета",
+        category: "planets",
+        kind: "planet",
+        details: ["Океаническая"],
+      },
+    }),
+    createElement(NavigatorResultDetails, {
+      result: {
+        key: "crew",
+        sectorId: 1,
+        sectorName: "Альфа",
+        sectorTier: 1,
+        locationId: "crew",
+        locationName: "Экипаж",
+        category: "crew",
+        kind: "station",
+        details: [],
+        crew: {
+          race: "human",
+          profession: "engineer",
+          level: 1,
+          traits: ["sharpshooter"],
+        },
+      },
+    }),
+    createElement(NavigatorResultDetails, {
+      result: {
+        key: "trade",
+        sectorId: 1,
+        sectorName: "Альфа",
+        sectorTier: 1,
+        locationId: "trade",
+        locationName: "Торговля",
+        category: "trade",
+        kind: "station",
+        details: ["water"],
+      },
+    }),
+    createElement(NavigatorResultDetails, {
+      result: {
+        key: "wreck",
+        sectorId: 1,
+        sectorName: "Альфа",
+        sectorTier: 1,
+        locationId: "wreck",
+        locationName: "Обломки",
+        category: "discovery",
+        kind: "wreck_field",
+        details: ["wreck_field"],
+      },
+    }),
+  ),
+);
+assert.ok(russianLocalizedMarkup.includes(ru.locations.planet_types.oceanic));
+assert.ok(russianLocalizedMarkup.includes(ru.racial_traits.sharpshooter.name));
+assert.ok(russianLocalizedMarkup.includes(ru.trade.goods.water));
+assert.ok(russianLocalizedMarkup.includes(ru.location_types.wreck_field));
+assert.equal(russianLocalizedMarkup.includes("wreck_field"), false);
+
+const navigatorCloseState = {
+  ...structuredClone(initialState),
+  gameMode: "navigator",
+  previousGameMode: "galaxy_map",
+};
+const setNavigatorCloseState = (update) => {
+  const next =
+    typeof update === "function" ? update(navigatorCloseState) : update;
+  if (next) Object.assign(navigatorCloseState, next);
+};
+Object.assign(navigatorCloseState, createUiSlice(setNavigatorCloseState));
+navigatorCloseState.closeNavigator();
+assert.equal(navigatorCloseState.gameMode, "galaxy_map");
+assert.equal(navigatorCloseState.previousGameMode, null);
 
 console.log("Known object navigator checks passed");

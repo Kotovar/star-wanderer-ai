@@ -53,6 +53,7 @@ export function GameHeader() {
   const showEffects = useGameStore((s) => s.showEffects);
   const showResearch = useGameStore((s) => s.showResearch);
   const showNavigator = useGameStore((s) => s.showNavigator);
+  const closeNavigator = useGameStore((s) => s.closeNavigator);
   const showReputation = useGameStore((s) => s.showReputation);
   const showCrises = useGameStore((s) => s.showCrises);
   const showEnemyCodex = useGameStore((s) => s.showEnemyCodex);
@@ -145,7 +146,7 @@ export function GameHeader() {
 
   const handleNavigatorClick = () => {
     if (gameMode === "navigator") {
-      showSectorMap();
+      closeNavigator();
     } else {
       showNavigator();
     }

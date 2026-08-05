@@ -9,6 +9,7 @@ import {
   getRaceReputationLevel,
 } from "@/game/reputation/utils";
 import { getTierPriceMultiplier } from "@/game/slices/trade/constants";
+import { applyCrisisMarketModifier } from "@/game/stations/crisisMarket";
 import type {
   GameState,
   GalaxyTierAll,
@@ -29,6 +30,7 @@ import {
 
 type NavigatorInput = Pick<
   GameState,
+  | "activeCrisis"
   | "artifacts"
   | "friendlyShipStock"
   | "galaxy"
@@ -213,6 +215,9 @@ const getTradeResult = (
 
   if (
     location.type === "station" &&
+    (intel.visited ||
+      intel.highestScanRange >= 3 ||
+      input.knownTradeStations.includes(location.stationId ?? location.id)) &&
     (location.stationConfig?.allowsTrade ?? true)
   ) {
     if (!goodId) return result;
@@ -220,11 +225,17 @@ const getTradeResult = (
     const prices = input.knownTradeStations.includes(stationId)
       ? input.stationPrices[stationId]?.[goodId]
       : undefined;
-    return prices
+    const adjustedPrices = prices
+      ? applyCrisisMarketModifier(prices, input.activeCrisis?.id, goodId)
+      : undefined;
+    return adjustedPrices
       ? {
           ...result,
           details: [goodId],
-          trade: { goodId, ...withReputation(prices, input, location) },
+          trade: {
+            goodId,
+            ...withReputation(adjustedPrices, input, location),
+          },
         }
       : null;
   }
@@ -267,6 +278,14 @@ const getCrewResults = (
   intel: KnownLocationIntel,
 ): NavigatorResult[] => {
   if (!intel.visited) return [];
+  if (
+    location.type === "station" &&
+    location.dominantRace &&
+    getRaceReputationLevel(input.raceReputation, location.dominantRace) ===
+      "hostile"
+  ) {
+    return [];
+  }
 
   const stationId = location.stationId ?? location.id;
   const crew =
@@ -354,11 +373,14 @@ const getPlanetResult = (
   );
 };
 
-const isMission = (location: Location, intel: KnownLocationIntel): boolean =>
-  location.type === "enemy" ||
-  location.type === "boss" ||
-  (intel.visited &&
-    (Boolean(location.hasQuest) || Boolean(location.contracts?.length)));
+const isMission = (location: Location, intel: KnownLocationIntel): boolean => {
+  if (location.type === "enemy") return !location.defeated;
+  if (location.type === "boss") return !location.bossDefeated;
+  return (
+    intel.visited &&
+    (Boolean(location.hasQuest) || Boolean(location.contracts?.length))
+  );
+};
 
 const isUnresolved = (location: Location): boolean => {
   switch (location.type) {

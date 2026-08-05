@@ -23,7 +23,7 @@ import type {
 } from "@/game/types";
 import type { PlanetType } from "@/game/types/planets";
 import type { ReputationLevel } from "@/game/types/reputation";
-import { getLocationName } from "@/lib/translationHelpers";
+import { getLocationName, getPlanetTypeName } from "@/lib/translationHelpers";
 import { useTranslation } from "@/lib/useTranslation";
 import { SectionPanel } from "./SectionPanel";
 
@@ -68,9 +68,36 @@ const LOCATION_KIND_TRANSLATION_KEYS: Partial<
   storm: "cosmic_storm",
 };
 
-const formatId = (value: string) => value.replaceAll("_", " ");
 const optionalValue = <T extends string>(value: string): T | undefined =>
   value === "" ? undefined : (value as T);
+const getLocationKindLabel = (kind: string, t: (key: string) => string) =>
+  t(
+    `location_types.${
+      LOCATION_KIND_TRANSLATION_KEYS[kind as NavigatorResult["kind"]] ?? kind
+    }`,
+  );
+const getResultDetailLabel = (
+  detail: string,
+  result: NavigatorResult,
+  t: (key: string) => string,
+) => {
+  if (result.category === "planets") {
+    if (PLANET_TYPES.includes(detail as PlanetType)) {
+      return getPlanetTypeName(detail, t);
+    }
+    if (detail === "inhabited" || detail === "empty") {
+      return t(`navigator.population.${detail}`);
+    }
+    if (RACES[detail as RaceId]) return t(`race_names.${detail}`);
+  }
+  if (result.category === "trade" && TRADE_GOODS[detail as Goods]) {
+    return t(`trade.goods.${detail}`);
+  }
+  if (result.category === "missions" || result.category === "discovery") {
+    return getLocationKindLabel(detail, t);
+  }
+  return detail;
+};
 
 export function NavigatorResultDetails({
   result,
@@ -78,12 +105,13 @@ export function NavigatorResultDetails({
   result: NavigatorResult;
 }) {
   const { t } = useTranslation();
-  const kind = LOCATION_KIND_TRANSLATION_KEYS[result.kind] ?? result.kind;
 
   return (
     <div className="mt-2 space-y-1 text-xs leading-relaxed text-[#9aa59a]">
       <div>
-        {t("navigator.facts.kind", { value: t(`location_types.${kind}`) })}
+        {t("navigator.facts.kind", {
+          value: getLocationKindLabel(result.kind, t),
+        })}
       </div>
       {result.crew && (
         <>
@@ -97,7 +125,9 @@ export function NavigatorResultDetails({
           {result.crew.traits.length > 0 && (
             <div>
               {t("navigator.facts.traits", {
-                values: result.crew.traits.map(formatId).join(", "),
+                values: result.crew.traits
+                  .map((trait) => t(`racial_traits.${trait}.name`))
+                  .join(", "),
               })}
             </div>
           )}
@@ -105,7 +135,11 @@ export function NavigatorResultDetails({
       )}
       {result.details.length > 0 && !result.crew && (
         <div>
-          {t("navigator.facts.details", { values: result.details.join(" · ") })}
+          {t("navigator.facts.details", {
+            values: result.details
+              .map((detail) => getResultDetailLabel(detail, result, t))
+              .join(" · "),
+          })}
         </div>
       )}
     </div>
@@ -117,6 +151,7 @@ export function NavigatorPanel() {
   const [filters, setFilters] = useState<NavigatorFilters>(EMPTY_FILTERS);
   const navigatorData = useGameStore(
     useShallow((state) => ({
+      activeCrisis: state.activeCrisis,
       artifacts: state.artifacts,
       friendlyShipStock: state.friendlyShipStock,
       hiredCrew: state.hiredCrew,
@@ -340,7 +375,7 @@ export function NavigatorPanel() {
                 <option value="">{t("navigator.filters.any")}</option>
                 {TRAIT_IDS.map((trait) => (
                   <option key={trait} value={trait}>
-                    {formatId(trait)}
+                    {t(`racial_traits.${trait}.name`)}
                   </option>
                 ))}
               </select>
@@ -359,7 +394,7 @@ export function NavigatorPanel() {
                 <option value="">{t("navigator.filters.any")}</option>
                 {MUTATION_TRAITS.map((mutation) => (
                   <option key={mutation} value={mutation}>
-                    {formatId(mutation)}
+                    {t(`racial_traits.${mutation}.name`)}
                   </option>
                 ))}
               </select>
@@ -383,7 +418,7 @@ export function NavigatorPanel() {
                 <option value="">{t("navigator.filters.any")}</option>
                 {PLANET_TYPES.map((planetType) => (
                   <option key={planetType} value={planetType}>
-                    {planetType}
+                    {getPlanetTypeName(planetType, t)}
                   </option>
                 ))}
               </select>

@@ -571,6 +571,14 @@
             "name": "Sharpshooter",
             "description": "+10% accuracy"
         },
+        "tentacles": { "name": "Mutation: Tentacles" },
+        "third_eye": { "name": "Mutation: Third Eye" },
+        "chitin": { "name": "Mutation: Chitin" },
+        "telepathy": { "name": "Mutation: Telepathy" },
+        "regeneration": { "name": "Mutation: Regeneration" },
+        "nightmares": { "name": "Mutation: Nightmares" },
+        "paranoid": { "name": "Mutation: Paranoia" },
+        "unstable": { "name": "Mutation: Instability" },
         "tough": {
             "name": "Tough",
             "description": "+20% health"
