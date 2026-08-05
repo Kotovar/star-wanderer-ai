@@ -85,6 +85,7 @@ const {
 const {
   generateStationCrew,
 } = await import("../src/game/components/station/station-data.ts");
+const { CREW_TRAITS } = await import("../src/game/constants/traits.ts");
 const { selectLocation } = await import(
   "../src/game/slices/travel/helpers/selectLocation.ts"
 );
@@ -107,6 +108,28 @@ const { NavigatorPanel, NavigatorResultDetails } = await import(
 const { default: ru } = await import("../src/lib/locales/ru.json");
 const { default: en } = await import("../src/lib/locales/en.json");
 const { store: translationStore } = await import("../src/lib/useTranslation.ts");
+
+const navigatorTraitIds = Object.values(CREW_TRAITS).flatMap((traits) =>
+  traits.map((trait) => trait.id),
+);
+for (const [locale, catalog] of [
+  ["ru", ru],
+  ["en", en],
+]) {
+  for (const traitId of navigatorTraitIds) {
+    const traitName = catalog.racial_traits?.[traitId]?.name;
+    assert.equal(
+      typeof traitName,
+      "string",
+      `Navigator trait ${traitId} must have a localized ${locale} name`,
+    );
+    assert.notEqual(
+      traitName,
+      `racial_traits.${traitId}.name`,
+      `Navigator trait ${traitId} must not use a fallback ${locale} name`,
+    );
+  }
+}
 
 assert.equal(typeof ru.navigator.title, "string");
 assert.equal(typeof en.navigator.title, "string");
@@ -790,7 +813,7 @@ const englishLocalizedMarkup = renderToStaticMarkup(
           race: "human",
           profession: "engineer",
           level: 1,
-          traits: ["sharpshooter"],
+          traits: ["sharpshooter", "charismatic"],
         },
       },
     }),
@@ -824,6 +847,7 @@ const englishLocalizedMarkup = renderToStaticMarkup(
 );
 assert.ok(englishLocalizedMarkup.includes(en.locations.planet_types.oceanic));
 assert.ok(englishLocalizedMarkup.includes(en.racial_traits.sharpshooter.name));
+assert.ok(englishLocalizedMarkup.includes(en.racial_traits.charismatic.name));
 assert.ok(englishLocalizedMarkup.includes(en.trade.goods.water));
 assert.ok(englishLocalizedMarkup.includes(en.location_types.wreck_field));
 assert.equal(englishLocalizedMarkup.includes("Океаническая"), false);
@@ -861,7 +885,7 @@ const russianLocalizedMarkup = renderToStaticMarkup(
           race: "human",
           profession: "engineer",
           level: 1,
-          traits: ["sharpshooter"],
+          traits: ["sharpshooter", "charismatic"],
         },
       },
     }),
@@ -895,6 +919,7 @@ const russianLocalizedMarkup = renderToStaticMarkup(
 );
 assert.ok(russianLocalizedMarkup.includes(ru.locations.planet_types.oceanic));
 assert.ok(russianLocalizedMarkup.includes(ru.racial_traits.sharpshooter.name));
+assert.ok(russianLocalizedMarkup.includes(ru.racial_traits.charismatic.name));
 assert.ok(russianLocalizedMarkup.includes(ru.trade.goods.water));
 assert.ok(russianLocalizedMarkup.includes(ru.location_types.wreck_field));
 assert.equal(russianLocalizedMarkup.includes("wreck_field"), false);
