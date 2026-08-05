@@ -154,6 +154,7 @@ const OBJECTIVE_PRIORITY: Record<GalaxyMapObjective["kind"], number> = {
     signal: 2,
     artifact: 3,
     contract: 4,
+    navigator: 5,
 };
 
 const OBJECTIVE_MARKERS: Record<
@@ -165,6 +166,7 @@ const OBJECTIVE_MARKERS: Record<
     signal: { icon: "◆", color: "#76dff5" },
     boss: { icon: "✚", color: "#ff0040" },
     final: { icon: "◎", color: "#ff00ff" },
+    navigator: { icon: "⌖", color: "#ffb000" },
 };
 
 function getFuelTrapRisk(
@@ -350,6 +352,7 @@ export function GalaxyMap() {
         (s) => s.runProfileArcRewardClaimed,
     );
     const bossesVisible = useGameStore((s) => s.canScanObject("boss"));
+    const navigatorTargets = useGameStore((s) => s.navigatorTargets);
     const canSeeT4 = canSeeTier4(modules, artifacts, scanRange);
     const galaxyStatus = getGalaxyMapStatus(modules, captainLevel, fuel);
     const mapObjectives = useMemo(
@@ -362,6 +365,7 @@ export function GalaxyMap() {
                 runProfileArcTarget,
                 runProfileArcRewardClaimed,
                 bossesVisible,
+                navigatorTargets,
             }),
         [
             activeContracts,
@@ -370,6 +374,7 @@ export function GalaxyMap() {
             completedLocations,
             runProfileArcRewardClaimed,
             runProfileArcTarget,
+            navigatorTargets,
             sectors,
         ],
     );
@@ -1277,9 +1282,9 @@ export function GalaxyMap() {
                             <div className="absolute right-0 mt-1 max-h-[38dvh] min-w-44 overflow-y-auto border border-ring bg-[rgba(5,8,16,0.94)] p-1 shadow-[0_0_18px_rgba(0,212,255,0.12)]">
                                 {objectiveTargets.map(({ objective, sector }) => {
                                     const marker = OBJECTIVE_MARKERS[objective.kind];
-                                    const objectiveLabel = objective.label.startsWith(
+                                    const objectiveLabel = (objective.label.startsWith(
                                         "location_types.",
-                                    )
+                                    ) || objective.label.startsWith("navigator."))
                                         ? t(objective.label)
                                         : objective.label;
                                     const routeLabel = t("route_dialog.title", {

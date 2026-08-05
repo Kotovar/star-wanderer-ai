@@ -40,6 +40,27 @@ export const collectNavigatorIntel = (
   return knownLocationIntel;
 };
 
+export const getVisibleNavigatorTargetIds = (
+  targets: NavigatorTarget[],
+  sectorId: number,
+  knownLocationIntel: Record<string, KnownLocationIntel>,
+): string[] => {
+  const targetIds = new Set<string>();
+
+  for (const target of targets) {
+    if (
+      target.sectorId === sectorId &&
+      knownLocationIntel[
+        getNavigatorLocationKey(target.sectorId, target.locationId)
+      ]
+    ) {
+      targetIds.add(target.locationId);
+    }
+  }
+
+  return [...targetIds];
+};
+
 export const hydrateNavigatorIntelFromLegacyState = (
   state: Pick<GameState, "galaxy" | "knownTradeStations">,
 ): {

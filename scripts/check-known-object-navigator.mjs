@@ -70,7 +70,11 @@ const { loadWithMigrations } = await import("../src/game/saves/migrations.ts");
 const {
   collectNavigatorIntel,
   getNavigatorLocationKey,
+  getVisibleNavigatorTargetIds,
 } = await import("../src/game/navigator/intel.ts");
+const {
+  getGalaxyMapObjectives,
+} = await import("../src/game/components/galaxyMapObjectives.ts");
 const {
   createNavigatorSlice,
 } = await import("../src/game/slices/navigator/createNavigatorSlice.ts");
@@ -323,6 +327,35 @@ const knownLocationIntel = Object.fromEntries(
     getNavigatorLocationKey(sectorId, locationId),
     { sectorId, locationId, highestScanRange, visited: intelVisited },
   ]),
+);
+const visibleNavigatorTargets = getVisibleNavigatorTargetIds(
+  [
+    { sectorId: 10, locationId: "trade-station" },
+    { sectorId: 10, locationId: "hidden" },
+    { sectorId: 40, locationId: "tier-four-planet" },
+  ],
+  10,
+  knownLocationIntel,
+);
+assert.deepEqual([...visibleNavigatorTargets], ["trade-station"]);
+const galaxyNavigatorObjectives = getGalaxyMapObjectives({
+  sectors: navigatorSectors,
+  activeContracts: [],
+  artifacts: [],
+  completedLocations: [],
+  runProfileArcTarget: null,
+  runProfileArcRewardClaimed: false,
+  bossesVisible: false,
+  navigatorTargets: [
+    { sectorId: 10, locationId: "trade-station" },
+    { sectorId: 10, locationId: "friendly-trader" },
+  ],
+});
+assert.equal(
+  galaxyNavigatorObjectives.filter(
+    ({ kind, sectorId }) => kind === "navigator" && sectorId === 10,
+  ).length,
+  1,
 );
 const navigatorInput = {
   galaxy: { sectors: navigatorSectors },

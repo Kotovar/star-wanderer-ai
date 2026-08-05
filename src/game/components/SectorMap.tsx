@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { useGameStore } from "@/game/store";
+import { getVisibleNavigatorTargetIds } from "@/game/navigator/intel";
 import { useTranslation } from "@/lib/useTranslation";
 import { getLocationName } from "@/lib/translationHelpers";
 import { RACES } from "@/game/constants/races";
@@ -216,6 +217,8 @@ export function SectorMap() {
   const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
   const canScanObject = useGameStore((s) => s.canScanObject);
   const syncNavigatorIntel = useGameStore((s) => s.syncNavigatorIntel);
+  const navigatorTargets = useGameStore((s) => s.navigatorTargets);
+  const knownLocationIntel = useGameStore((s) => s.knownLocationIntel);
   const hasTelepathy = useGameStore((s) =>
     s.crew.some((c) => c.traits?.some((t) => t.effect?.seeHostility)),
   );
@@ -318,6 +321,20 @@ export function SectorMap() {
   const [, setSpriteImagesReady] = useState(0);
 
   const scanRange = getEffectiveScanRange();
+  const currentSectorId = currentSector?.id;
+  const visibleNavigatorTargetIds = useMemo(
+    () =>
+      currentSectorId !== undefined
+        ? new Set(
+            getVisibleNavigatorTargetIds(
+              navigatorTargets,
+              currentSectorId,
+              knownLocationIntel,
+            ),
+          )
+        : new Set<string>(),
+    [currentSectorId, knownLocationIntel, navigatorTargets],
+  );
 
   useEffect(() => {
     syncNavigatorIntel();
@@ -498,6 +515,26 @@ export function SectorMap() {
       }
     });
 
+    for (const loc of locations) {
+      if (!visibleNavigatorTargetIds.has(loc.id)) continue;
+
+      const { x, y } = computeLocationPosition(loc, centerX, centerY, baseMaxRadius);
+      const pulse = 1 + Math.sin(animationStateRef.current.time * 0.004) * 0.12;
+      ctx.save();
+      ctx.strokeStyle = "#ffb000";
+      ctx.fillStyle = "#ffb000";
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = "#ffb000";
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(x, y, 21 * pulse, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.font = "12px Share Tech Mono";
+      ctx.textAlign = "center";
+      ctx.fillText("⌖", x, y + 4);
+      ctx.restore();
+    }
+
     ctx.restore();
   }, [
     canScanObject,
@@ -507,6 +544,7 @@ export function SectorMap() {
     hasTelepathy,
     offset,
     t,
+    visibleNavigatorTargetIds,
     zoom,
   ]);
 

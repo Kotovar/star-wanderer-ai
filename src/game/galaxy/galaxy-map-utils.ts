@@ -21,7 +21,8 @@ export type GalaxyMapObjectiveKind =
     | "artifact"
     | "signal"
     | "boss"
-    | "final";
+    | "final"
+    | "navigator";
 
 export type GalaxyMapObjective = {
     sectorId: number;
@@ -128,6 +129,7 @@ const OBJECTIVE_COLORS: Record<GalaxyMapObjectiveKind, string> = {
     signal: "#76dff5",
     boss: "#ff0040",
     final: "#ff00ff",
+    navigator: "#ffb000",
 };
 
 /** Рисует компактные маркеры уже известных целей рядом со звёздными системами. */
@@ -207,6 +209,12 @@ export function drawGalaxyObjectiveMarkers(
                 ctx.lineTo(size, 0);
                 ctx.moveTo(0, -size);
                 ctx.lineTo(0, size);
+            } else if (kind === "navigator") {
+                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                ctx.moveTo(-size * 1.4, 0);
+                ctx.lineTo(size * 1.4, 0);
+                ctx.moveTo(0, -size * 1.4);
+                ctx.lineTo(0, size * 1.4);
             } else {
                 ctx.arc(0, 0, size, 0, Math.PI * 2);
                 ctx.moveTo(-size * 0.45, 0);
