@@ -185,22 +185,27 @@ const withReputation = (
   input: NavigatorInput,
   location: Location,
 ): { buy: number; sell: number } => {
-  if (!location.dominantRace) return prices;
+  const batchPrices = !location.dominantRace
+    ? prices
+    : {
+        buy: applyReputationPriceModifier(
+          input.raceReputation,
+          location.dominantRace,
+          prices.buy,
+          "buy",
+          prices.sell,
+        ),
+        sell: applyReputationPriceModifier(
+          input.raceReputation,
+          location.dominantRace,
+          prices.sell,
+          "sell",
+          prices.buy,
+        ),
+      };
   return {
-    buy: applyReputationPriceModifier(
-      input.raceReputation,
-      location.dominantRace,
-      prices.buy,
-      "buy",
-      prices.sell,
-    ),
-    sell: applyReputationPriceModifier(
-      input.raceReputation,
-      location.dominantRace,
-      prices.sell,
-      "sell",
-      prices.buy,
-    ),
+    buy: Math.floor(batchPrices.buy / 5),
+    sell: Math.floor(batchPrices.sell / 5),
   };
 };
 

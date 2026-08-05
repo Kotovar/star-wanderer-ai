@@ -329,8 +329,8 @@
         "prices": {
             "known": "Known prices",
             "unknown": "Choose a good to see known prices.",
-            "buy": "Buy: {{price}}₢",
-            "sell": "Sell: {{price}}₢"
+            "buy": "Buy: {{price}}₢/t",
+            "sell": "Sell: {{price}}₢/t"
         },
         "facts": {
             "sector": "{{name}} sector · tier {{tier}}",

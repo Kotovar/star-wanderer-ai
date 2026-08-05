@@ -205,7 +205,7 @@ export function NavigatorPanel() {
     );
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3">
+    <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto lg:overflow-hidden">
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="mr-auto font-['Orbitron'] text-base font-bold text-accent">
           ▸ {t("navigator.title")}

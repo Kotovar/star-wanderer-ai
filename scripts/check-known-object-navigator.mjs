@@ -153,6 +153,10 @@ assert.equal(typeof en.navigator.title, "string");
 const navigatorMarkup = renderToStaticMarkup(createElement(NavigatorPanel));
 assert.ok(navigatorMarkup.includes(ru.navigator.title));
 assert.ok(navigatorMarkup.includes(ru.navigator.empty));
+assert.ok(
+  navigatorMarkup.includes("overflow-y-auto lg:overflow-hidden"),
+  "Navigator panel must scroll filters on mobile without changing desktop overflow",
+);
 const enemyResultMarkup = renderToStaticMarkup(
   createElement(NavigatorResultDetails, {
     result: {
@@ -304,7 +308,7 @@ assert.deepEqual(
   lifecycleResults({ category: "trade", goodId: "water" })
     .filter(({ locationId }) => locationId === "legacy-trader")
     .map(({ trade }) => trade),
-  [{ goodId: "water", buy: 100, sell: 60 }],
+  [{ goodId: "water", buy: 20, sell: 12 }],
 );
 const lifecycleTraderTarget = { sectorId: 101, locationId: "legacy-trader" };
 const lifecycleHiddenTarget = { sectorId: 101, locationId: "lifecycle-hidden" };
@@ -627,8 +631,8 @@ assert.deepEqual(
 assert.deepEqual(
   waterMerchants.map(({ trade }) => trade),
   [
-    { goodId: "water", buy: 100, sell: 60 },
-    { goodId: "water", buy: 53, sell: 31 },
+    { goodId: "water", buy: 20, sell: 12 },
+    { goodId: "water", buy: 10, sell: 6 },
   ],
 );
 assert.deepEqual(
@@ -640,7 +644,7 @@ assert.deepEqual(
       raceReputation: { ...navigatorInput.raceReputation, human: 20 },
     },
   ).find(({ locationId }) => locationId === "trade-station")?.trade,
-  { goodId: "water", buy: 135, sell: 99 },
+  { goodId: "water", buy: 27, sell: 19 },
 );
 
 const hiddenCrew = results({ category: "crew" });
