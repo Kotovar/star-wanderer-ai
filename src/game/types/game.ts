@@ -47,6 +47,7 @@ import type {
 import type { RunProfileId } from "@/game/galaxy/runProfiles";
 import type { GalaxyTierAll, Nebula } from "./locations/galaxy";
 import type { KnownLocationIntel, NavigatorTarget } from "./navigator";
+import type { NavigatorSlice } from "@/game/slices/navigator/createNavigatorSlice";
 
 export type GameMode =
   | "galaxy_map"
@@ -476,6 +477,7 @@ export interface GameManagement {
 }
 
 export type GameStore = GameState &
+  NavigatorSlice &
   GameActions &
   GameActionsClick &
   GameModeChanges &

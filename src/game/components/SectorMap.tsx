@@ -215,6 +215,7 @@ export function SectorMap() {
   const completedLocations = useGameStore((s) => s.completedLocations);
   const getEffectiveScanRange = useGameStore((s) => s.getEffectiveScanRange);
   const canScanObject = useGameStore((s) => s.canScanObject);
+  const syncNavigatorIntel = useGameStore((s) => s.syncNavigatorIntel);
   const hasTelepathy = useGameStore((s) =>
     s.crew.some((c) => c.traits?.some((t) => t.effect?.seeHostility)),
   );
@@ -317,6 +318,10 @@ export function SectorMap() {
   const [, setSpriteImagesReady] = useState(0);
 
   const scanRange = getEffectiveScanRange();
+
+  useEffect(() => {
+    syncNavigatorIntel();
+  }, [currentSector?.id, scanRange, syncNavigatorIntel]);
 
   // Draw the canvas content
   const drawCanvas = useCallback(() => {

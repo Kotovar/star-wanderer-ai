@@ -67,7 +67,13 @@ registerHooks({
 
 const { initialState } = await import("../src/game/initial/initialState.ts");
 const { loadWithMigrations } = await import("../src/game/saves/migrations.ts");
-const { getNavigatorLocationKey } = await import("../src/game/navigator/intel.ts");
+const {
+  collectNavigatorIntel,
+  getNavigatorLocationKey,
+} = await import("../src/game/navigator/intel.ts");
+const {
+  createNavigatorSlice,
+} = await import("../src/game/slices/navigator/createNavigatorSlice.ts");
 
 const legacy = structuredClone(initialState);
 const [visited, hidden] = legacy.galaxy.sectors[0].locations;
@@ -81,5 +87,74 @@ assert.equal(
   undefined,
 );
 assert.deepEqual(migrated.navigatorTargets, []);
+
+const sector = structuredClone(initialState.galaxy.sectors[0]);
+sector.id = 1;
+const [station, enemy] = sector.locations;
+Object.assign(station, { id: "station-a", type: "station", visited: false });
+Object.assign(enemy, {
+  id: "enemy-a",
+  type: "enemy",
+  threat: 1,
+  visited: false,
+});
+sector.locations = [station, enemy];
+
+const noScanner = structuredClone(initialState);
+noScanner.currentSector = sector;
+noScanner.galaxy.sectors = [sector];
+const noScannerIntel = collectNavigatorIntel(noScanner, sector);
+assert.equal(Object.keys(noScannerIntel).length, 1);
+assert.equal(
+  noScannerIntel[getNavigatorLocationKey(1, "enemy-a")],
+  undefined,
+);
+
+const scannerMk1 = structuredClone(noScanner);
+scannerMk1.ship.modules.push({
+  id: 999,
+  type: "scanner",
+  name: "Scanner Mk.1",
+  x: 0,
+  y: 0,
+  width: 1,
+  height: 1,
+  health: 100,
+  maxHealth: 100,
+  level: 1,
+  defense: 0,
+  scanRange: 3,
+});
+const scannedIntel = collectNavigatorIntel(scannerMk1, sector);
+assert.ok(scannedIntel[getNavigatorLocationKey(1, "enemy-a")]);
+scannerMk1.knownLocationIntel = scannedIntel;
+assert.equal(Object.keys(collectNavigatorIntel(scannerMk1, sector)).length, 2);
+
+const navigatorState = structuredClone(noScanner);
+const setNavigatorState = (update) => {
+  const next = typeof update === "function" ? update(navigatorState) : update;
+  if (next) Object.assign(navigatorState, next);
+};
+Object.assign(
+  navigatorState,
+  createNavigatorSlice(setNavigatorState, () => navigatorState),
+);
+navigatorState.syncNavigatorIntel();
+assert.equal(Object.keys(navigatorState.knownLocationIntel).length, 1);
+navigatorState.ship.modules.push(...scannerMk1.ship.modules);
+navigatorState.syncNavigatorIntel();
+navigatorState.syncNavigatorIntel();
+assert.equal(Object.keys(navigatorState.knownLocationIntel).length, 2);
+
+const enemyTarget = { sectorId: 1, locationId: "enemy-a" };
+const stationTarget = { sectorId: 1, locationId: "station-a" };
+navigatorState.pinNavigatorTarget(enemyTarget);
+navigatorState.pinNavigatorTarget(enemyTarget);
+assert.deepEqual(navigatorState.navigatorTargets, [enemyTarget]);
+navigatorState.pinNavigatorTarget(stationTarget);
+navigatorState.unpinNavigatorTarget(enemyTarget);
+assert.deepEqual(navigatorState.navigatorTargets, [stationTarget]);
+navigatorState.clearNavigatorTargets();
+assert.deepEqual(navigatorState.navigatorTargets, []);
 
 console.log("Known object navigator checks passed");

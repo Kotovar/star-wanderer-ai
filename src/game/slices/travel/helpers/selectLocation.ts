@@ -8,6 +8,7 @@ import { determineSignalOutcome } from "@/game/signals";
 import type { GameStore, Location, SetState } from "@/game/types";
 import { getRaceReputationLevel } from "@/game/reputation/utils";
 import { patchLocation } from "@/game/utils/patchLocation";
+import { getNavigatorLocationKey } from "@/game/types/navigator";
 
 // ============================================================================
 // Константы
@@ -32,7 +33,25 @@ const markLocationVisited = (
     get: () => GameStore,
 ): void => {
     if (!get().currentSector) return;
-    set((s) => patchLocation(s, loc.id, { visited: true }));
+    set((s) => {
+        const sectorId = s.currentSector?.id;
+        if (sectorId === undefined) return s;
+
+        const key = getNavigatorLocationKey(sectorId, loc.id);
+        const current = s.knownLocationIntel[key];
+        return {
+            ...patchLocation(s, loc.id, { visited: true }),
+            knownLocationIntel: {
+                ...s.knownLocationIntel,
+                [key]: {
+                    sectorId,
+                    locationId: loc.id,
+                    highestScanRange: Math.max(current?.highestScanRange ?? 0, 8),
+                    visited: true,
+                },
+            },
+        };
+    });
 };
 
 /**

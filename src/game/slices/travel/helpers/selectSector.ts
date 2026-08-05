@@ -335,6 +335,7 @@ const handleTravelCompletion = (
     if (!sector) return;
 
     markSectorVisited(sector, set);
+    get().syncNavigatorIntel();
     get().addLog( i18nStore.t("game_logs.selectSector_4", { sector_name: sector.name }), "info");
     playSound("travel_arrival");
 
