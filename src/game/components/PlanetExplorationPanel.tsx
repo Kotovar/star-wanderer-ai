@@ -100,6 +100,7 @@ export function PlanetExplorationPanel() {
   const revealedCount = grid.filter((tile) => tile.revealed).length;
   const totalTiles = grid.length;
   const apExhausted = apRemaining < stepApCost && !finished;
+  const canEndExpedition = apExhausted || finished;
 
   const apPct = apTotal > 0 ? (apRemaining / apTotal) * 100 : 0;
   const apColor =
@@ -131,7 +132,7 @@ export function PlanetExplorationPanel() {
   return (
     <div className="flex flex-col gap-3">
       {/* Header */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="sticky top-0 z-20 flex flex-wrap items-center gap-2 bg-[rgba(5,8,16,0.95)] px-2 py-1.5 backdrop-blur-sm">
         <div className="font-['Orbitron'] font-bold text-ring uppercase tracking-wider text-sm shrink-0">
           🗺️ {t("planet_panel.expedition_active_title")}
         </div>
@@ -172,15 +173,25 @@ export function PlanetExplorationPanel() {
             {apRemaining}/{apTotal} AP
           </span>
         </div>
-        {/* Abort link */}
-        {!finished && !apExhausted && (
-          <button
-            onClick={() => setShowAbortConfirm(true)}
-            className="text-[10px] text-[#ff004055] hover:text-destructive transition-colors cursor-pointer uppercase tracking-wider shrink-0"
-          >
-            ✕ {t("planet_panel.expedition_abort_btn")}
-          </button>
-        )}
+        <span
+          aria-live={finished ? "polite" : "off"}
+          className={`flex h-7 items-center gap-1 border border-[#00ff4144] bg-[rgba(0,255,65,0.06)] px-2 text-[10px] font-bold uppercase tracking-wider text-[#00ff41] ${finished ? "" : "invisible"}`}
+        >
+            <span className="animate-pulse">✓</span>
+            {t("planet_panel.expedition_finished")}
+        </span>
+        <button
+          onClick={canEndExpedition ? endExpedition : () => setShowAbortConfirm(true)}
+          className={`h-7 w-48 shrink-0 cursor-pointer border text-[10px] uppercase tracking-wider transition-colors ${
+            canEndExpedition
+              ? "border-[#00ff41] bg-transparent text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
+              : "border-[#ff004066] bg-transparent text-[#ff6b6b] hover:bg-[#ff0040] hover:text-[#050810]"
+          }`}
+        >
+          {canEndExpedition
+            ? t("planet_panel.expedition_end_btn")
+            : `✕ ${t("planet_panel.expedition_abort_btn")}`}
+        </button>
       </div>
 
       {/* Scan controls */}
@@ -236,7 +247,7 @@ export function PlanetExplorationPanel() {
 
       {/* Crew panel */}
       {expeditionCrew.length > 0 && (
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap lg:hidden">
           {expeditionCrew.map((member) => {
             const hpPct =
               member.maxHealth > 0
@@ -448,21 +459,20 @@ export function PlanetExplorationPanel() {
         </DialogContent>
       </Dialog>
 
-      {/* Grid */}
-      <div className="flex justify-center">
-        <ExpeditionMapCanvas
-          grid={grid}
-          apRemaining={apRemaining}
-          apTotal={apTotal}
-          canReveal={canReveal}
-          scanMode={effectiveScanMode}
-          onTileClick={(idx) => revealExpeditionTile(idx)}
-          onScanClick={(idx, mode) => scanExpeditionTile(idx, mode)}
-        />
-      </div>
+      <div className="flex flex-col items-center gap-2 xl:flex-row xl:items-start xl:justify-center">
+        <div className="flex min-w-0 justify-center">
+          <ExpeditionMapCanvas
+            grid={grid}
+            apRemaining={apRemaining}
+            apTotal={apTotal}
+            canReveal={canReveal}
+            scanMode={effectiveScanMode}
+            onTileClick={(idx) => revealExpeditionTile(idx)}
+            onScanClick={(idx, mode) => scanExpeditionTile(idx, mode)}
+          />
+        </div>
 
-      {/* Tile legend */}
-      <div className="flex flex-wrap gap-x-3 gap-y-1 justify-center">
+        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 xl:w-36 xl:flex-col xl:items-start xl:justify-start">
         {(
           Object.entries(TILE_COLORS) as [
             ExploreTileType,
@@ -488,6 +498,7 @@ export function PlanetExplorationPanel() {
             )}
           </span>
         ))}
+        </div>
       </div>
 
       {/* AP exhausted hint */}
@@ -496,12 +507,6 @@ export function PlanetExplorationPanel() {
           <span className="text-xs text-accent">
             {t("planet_panel.expedition_no_ap_hint")}
           </span>
-          <Button
-            onClick={endExpedition}
-            className="ml-auto bg-transparent border border-[#ffb00066] text-accent hover:bg-accent hover:text-[#050810] text-xs py-1 px-3 cursor-pointer uppercase tracking-wider"
-          >
-            {t("planet_panel.expedition_end_btn")}
-          </Button>
         </div>
       )}
 
@@ -550,33 +555,6 @@ export function PlanetExplorationPanel() {
         </div>
       )}
 
-      {/* Finished state */}
-      {finished && (
-        <div className="flex flex-col gap-2">
-          <div
-            className="flex items-center gap-2 px-3 py-2 border rounded-sm"
-            style={{
-              borderColor: "#00ff4144",
-              background: "rgba(0,255,65,0.06)",
-              boxShadow: "0 0 20px rgba(0,255,65,0.1)",
-            }}
-          >
-            <span className="text-[#00ff41] text-base animate-pulse">✓</span>
-            <span className="text-sm text-[#00ff41] font-bold font-['Orbitron'] uppercase tracking-wider">
-              {t("planet_panel.expedition_finished")}
-            </span>
-            <span className="text-xs text-[#00ff4155] font-mono ml-auto">
-              {revealedCount}/{totalTiles}
-            </span>
-          </div>
-          <Button
-            onClick={endExpedition}
-            className="w-full bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider cursor-pointer font-['Orbitron']"
-          >
-            {t("planet_panel.expedition_end_btn")}
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

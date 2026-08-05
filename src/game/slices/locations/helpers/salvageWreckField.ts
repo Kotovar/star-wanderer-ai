@@ -6,6 +6,7 @@ import { patchLocation } from "@/game/utils/patchLocation";
 import { LAB_MODULE_TYPES } from "@/game/constants/modules";
 import {
     getRadiationDamageReport,
+    getRadiationModuleDamage,
     getWreckScannerRareChanceMultiplier,
     getWreckSpecialLootChance,
     WRECK_APPROACH_CONFIG,
@@ -91,7 +92,7 @@ export function salvageWreckField(
     let damagedModuleName: string | null = null;
     const modulesToDamage = state.ship.modules.filter((m) => m.health > 0);
     if (overflow > 0 && modulesToDamage.length > 0) {
-        moduleDamageAmt = Math.max(1, Math.ceil(overflow / 2));
+        moduleDamageAmt = getRadiationModuleDamage(overflow);
     }
 
     // — Урон экипажу от радиации (тир 3 + overflow) —
@@ -149,6 +150,7 @@ export function salvageWreckField(
         ancient_data:  ancientData   > 0 ? ancientData   : undefined,
         shieldDamage:  shieldDamage || undefined,
         radiationPenetration: overflow || undefined,
+        moduleDamage: moduleDamageAmt || undefined,
     };
 
     set((s) => {

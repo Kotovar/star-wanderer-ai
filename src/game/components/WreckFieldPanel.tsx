@@ -5,7 +5,10 @@ import { useGameStore } from "@/game/store";
 import { useCargoStatus } from "@/game/hooks/useCargoStatus";
 import { Button } from "@/components/ui/button";
 import { LAB_MODULE_TYPES } from "@/game/constants/modules";
-import { getWreckScannerRareChanceMultiplier } from "@/game/slices/locations/constants";
+import {
+  getRadiationModuleDamage,
+  getWreckScannerRareChanceMultiplier,
+} from "@/game/slices/locations/constants";
 import { isModuleActive } from "@/game/modules/utils";
 import type { WreckApproach } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
@@ -112,10 +115,13 @@ export function WreckFieldPanel() {
   const done = currentLocation.wreckPassesDone ?? 0;
   const exhausted = currentLocation.wreckExhausted ?? false;
   const lastLoot = currentLocation.wreckLastPassLoot;
+  const moduleDamage = lastLoot?.moduleDamage ?? (
+    lastLoot?.radiationPenetration
+      ? getRadiationModuleDamage(lastLoot.radiationPenetration)
+      : undefined
+  );
 
   const tierColor = TIER_COLORS[tier];
-
-  const shieldWarning = tier === 3 ? "20–35" : tier === 2 ? "10–25" : "5–15";
 
   return (
     <div className="flex flex-col gap-3 h-full overflow-y-auto">
@@ -189,22 +195,15 @@ export function WreckFieldPanel() {
                 <ShieldAlert size={12} /> Щиты -{lastLoot.shieldDamage}
               </span>
             )}
-            {lastLoot.radiationPenetration && (
+            {moduleDamage && (
               <span className="flex items-center gap-1 text-[#ff6644]">
                 <ShieldAlert size={12} />
                 {t("wreck_field.radiation_penetrated", {
-                  damage: lastLoot.radiationPenetration,
+                  damage: moduleDamage,
                 })}
               </span>
             )}
           </div>
-        </div>
-      )}
-
-      {/* Предупреждение о радиации */}
-      {!exhausted && (
-        <div className="text-[10px] text-[#ff6644] border border-[#ff664422] p-2 bg-[rgba(255,68,0,0.04)] shrink-0">
-          {t("wreck_field.radiation_notice", { damage: shieldWarning })}
         </div>
       )}
 

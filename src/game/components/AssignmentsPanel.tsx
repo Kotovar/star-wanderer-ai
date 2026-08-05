@@ -44,7 +44,7 @@ export function AssignmentsPanel() {
     const assignCrewTask = useGameStore((s) => s.assignCrewTask);
     const moveCrewMember = useGameStore((s) => s.moveCrewMember);
     const isModuleAdjacent = useGameStore((s) => s.isModuleAdjacent);
-    const showGalaxyMap = useGameStore((s) => s.showGalaxyMap);
+    const closeAssignments = useGameStore((s) => s.closeAssignments);
     const addLog = useGameStore((s) => s.addLog);
     const { t } = useTranslation();
 
@@ -83,7 +83,7 @@ export function AssignmentsPanel() {
             const actualTask = task === "none" ? "" : task;
             assignCrewTask(Number(crewId), actualTask, effect);
         });
-        showGalaxyMap();
+        closeAssignments();
     };
 
     return (
@@ -252,7 +252,7 @@ export function AssignmentsPanel() {
                     {t("assignments_panel.apply")}
                 </Button>
                 <Button
-                    onClick={showGalaxyMap}
+                    onClick={closeAssignments}
                     className="cursor-pointer bg-transparent border-2 border-[#ffb000] text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] uppercase tracking-wider"
                 >
                     {t("assignments_panel.cancel")}

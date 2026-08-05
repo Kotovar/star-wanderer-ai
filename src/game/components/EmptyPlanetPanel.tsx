@@ -336,9 +336,9 @@ export function EmptyPlanetPanel() {
 
     return (
         <div
-            className={`flex flex-col gap-3 p-2 sm:p-3 rounded-lg border border-[#333] ${planetBgClass}`}
+            className={`flex flex-col gap-3 p-2 sm:p-3 rounded-lg border border-[#333] lg:h-full lg:min-h-0 ${planetBgClass}`}
         >
-            <div className="relative z-10 min-h-0 overflow-hidden rounded border border-[#333] bg-[rgba(5,8,16,0.9)]">
+            <div className="relative z-10 min-h-0 overflow-hidden rounded border border-[#333] bg-[rgba(5,8,16,0.9)] lg:flex-1 lg:overflow-y-auto">
                 {/* Полноширинная сцена планеты */}
                 <section className="relative overflow-hidden border-b border-[#333]">
                     {background && (
@@ -442,20 +442,32 @@ export function EmptyPlanetPanel() {
 
                                 {/* Орбитальное сканирование */}
                                 {canOrbitalScan && (
-                                    <Button
-                                        onClick={() => orbitalScan(planetId)}
-                                        disabled={!hasWorkingScanner}
-                                        title={
-                                            hasWorkingScanner
-                                                ? undefined
-                                                : t(
-                                                      "planet_panel.orbital_scan_requires_scanner",
-                                                  )
-                                        }
-                                        className="h-auto cursor-pointer border border-ring bg-transparent px-2 py-0.5 text-[10px] sm:text-xs uppercase tracking-wider text-ring hover:bg-ring hover:text-[#050810] disabled:opacity-40"
-                                    >
-                                        {t("planet_panel.orbital_scan")}
-                                    </Button>
+                                    <div className="inline-flex flex-wrap items-center gap-1.5">
+                                        <Button
+                                            onClick={() => orbitalScan(planetId)}
+                                            disabled={!hasWorkingScanner}
+                                            title={
+                                                hasWorkingScanner
+                                                    ? undefined
+                                                    : t(
+                                                          "planet_panel.orbital_scan_requires_scanner",
+                                                      )
+                                            }
+                                            className="h-auto cursor-pointer border border-ring bg-transparent px-2 py-0.5 text-[10px] sm:text-xs uppercase tracking-wider text-ring hover:bg-ring hover:text-[#050810] disabled:opacity-40"
+                                        >
+                                            {t("planet_panel.orbital_scan")}
+                                        </Button>
+                                        {!hasWorkingScanner && (
+                                            <span
+                                                aria-live="polite"
+                                                className="text-[10px] text-[#ffb000]"
+                                            >
+                                                {t(
+                                                    "planet_panel.orbital_scan_requires_scanner",
+                                                )}
+                                            </span>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         </div>

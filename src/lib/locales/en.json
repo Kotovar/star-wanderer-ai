@@ -3737,10 +3737,9 @@
     },
     "wreck_field": {
         "choose_approach": "Salvage approach",
-        "radiation_notice": "Radiation: a standard pass costs {{damage}} shields; surface salvage costs about half, deep salvage costs one and a half times more.",
         "scanner_bonus": "📡 Scanner (range {{range}}): +{{bonus}}% chance for valuable finds during a thorough search.",
         "lab_bonus": "🔬 Laboratory: Ancient Data is doubled when found.",
-        "radiation_penetrated": "Radiation reached the hull: {{damage}}",
+        "radiation_penetrated": "Radiation damaged the hull: {{damage}}",
         "approach": {
             "surface": {
                 "name": "Surface salvage",
@@ -4447,7 +4446,7 @@
         },
         "crew_dispute": {
             "title": "Crew Dispute",
-            "description": "Mounting tension has erupted into an open dispute between shifts. Without intervention, morale drops by {{penalty}}.",
+            "description": "Mounting tension has erupted into an open dispute between shifts. Without intervention, the shifts' morale will fall.",
             "captain": {
                 "label": "Intervene personally",
                 "description": "The captain hears both sides and makes a decision.",

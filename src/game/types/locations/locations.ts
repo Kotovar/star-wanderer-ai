@@ -190,6 +190,7 @@ export interface Location {
         ancient_data?: number;
         shieldDamage?: number;
         radiationPenetration?: number;
+        moduleDamage?: number;
     };
 
     // Derelict ship fields

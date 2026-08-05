@@ -264,6 +264,9 @@ export const getRadiationDamageReport = (damage: number, shields: number) => ({
     overflowDamage: Math.max(0, damage - shields),
 });
 
+export const getRadiationModuleDamage = (overflowDamage: number): number =>
+    overflowDamage > 0 ? Math.ceil(overflowDamage / 2) : 0;
+
 // ============================================================================
 // Подходы к исследованию покинутого корабля
 // ============================================================================

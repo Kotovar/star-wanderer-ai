@@ -260,6 +260,7 @@ export interface GameModeChanges {
   showGalaxyMap: () => void;
   showSectorMap: () => void;
   showAssignments: () => void;
+  closeAssignments: () => void;
   showCrises: () => void;
   showEnemyCodex: () => void;
   showEffects: () => void;

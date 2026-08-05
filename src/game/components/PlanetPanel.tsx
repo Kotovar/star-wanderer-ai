@@ -381,11 +381,11 @@ export function PlanetPanel() {
     const planetBgClass = getPlanetBackgroundClass(currentLocationPlanetType);
     return (
         <div
-            className={`flex flex-col gap-3 p-2 sm:p-3 rounded-lg border ${planetBgClass}`}
+            className={`flex flex-col gap-3 p-2 sm:p-3 rounded-lg border lg:h-full lg:min-h-0 ${planetBgClass}`}
             style={{ borderColor: raceAccent + "88" }}
         >
             <div
-                className="relative z-10 min-h-0 overflow-hidden rounded border"
+                className="relative z-10 min-h-0 overflow-hidden rounded border lg:flex lg:flex-col lg:flex-1 lg:overflow-y-auto"
                 style={{
                     borderColor: raceBorder,
                     backgroundColor: "rgba(5,8,16,0.9)",
@@ -421,35 +421,37 @@ export function PlanetPanel() {
                         }}
                     />
                     <div className="relative z-10 flex min-h-0 sm:min-h-52 flex-col justify-between gap-2 sm:gap-5 p-3 sm:p-5">
-                        <div className="flex items-start justify-between gap-2">
-                            <div className="max-w-2xl">
-                                <div
-                                    className="font-['Orbitron'] font-bold text-lg sm:text-xl"
-                                    style={{ color: raceAccent }}
+                        <div>
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                    <div
+                                        className="font-['Orbitron'] font-bold text-lg sm:text-xl"
+                                        style={{ color: raceAccent }}
+                                    >
+                                        ▸ {getLocationName(currentLocation.name, t)} -{" "}
+                                        {currentLocationPlanetType
+                                            ? getPlanetTypeName(
+                                                  currentLocationPlanetType,
+                                                  t,
+                                              )
+                                            : ""}
+                                    </div>
+                                </div>
+                                <Button
+                                    onClick={showSectorMap}
+                                    className="h-auto shrink-0 cursor-pointer border-2 border-accent bg-transparent px-2 py-1 text-[10px] uppercase tracking-wider text-accent hover:bg-accent hover:text-[#050810] sm:px-4 sm:py-2 sm:text-sm"
                                 >
-                                    ▸ {getLocationName(currentLocation.name, t)} -{" "}
-                                    {currentLocationPlanetType
-                                        ? getPlanetTypeName(
-                                              currentLocationPlanetType,
-                                              t,
-                                          )
-                                        : ""}
-                                </div>
-                                <div className="mt-1 text-sm italic leading-relaxed text-[#b5c1c6]">
-                                    {currentLocationPlanetType
-                                        ? getPlanetDescription(
-                                              currentLocationPlanetType,
-                                              t,
-                                          ) || t("planet_panel.empty_description")
-                                        : t("planet_panel.empty_description")}
-                                </div>
+                                    {t("planet_panel.leave_planet")}
+                                </Button>
                             </div>
-                            <Button
-                                onClick={showSectorMap}
-                                className="h-auto shrink-0 cursor-pointer border-2 border-accent bg-transparent px-2 py-1 text-[10px] uppercase tracking-wider text-accent hover:bg-accent hover:text-[#050810] sm:px-4 sm:py-2 sm:text-sm"
-                            >
-                                {t("planet_panel.leave_planet")}
-                            </Button>
+                            <div className="mt-1 max-w-2xl text-sm italic leading-relaxed text-[#b5c1c6]">
+                                {currentLocationPlanetType
+                                    ? getPlanetDescription(
+                                          currentLocationPlanetType,
+                                          t,
+                                      ) || t("planet_panel.empty_description")
+                                    : t("planet_panel.empty_description")}
+                            </div>
                         </div>
 
                         <div className="flex flex-wrap items-end gap-1.5 sm:gap-2 text-xs sm:text-sm">
@@ -576,7 +578,7 @@ export function PlanetPanel() {
                     </div>
                 </div>
 
-                <div className="p-4">
+                <div className="p-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
 
                 {/* Delivery contracts completion */}
                 {deliveryContracts.length > 0 && (
@@ -629,14 +631,14 @@ export function PlanetPanel() {
 
                 {/* Available contracts */}
                 {availableContracts.length > 0 && (
-                    <>
+                    <div className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
                         <div
                             className="font-['Orbitron'] font-bold text-base mt-4"
                             style={{ color: raceAccent }}
                         >
                             {t("planet_panel.available_tasks")}
                         </div>
-                        <div className="flex flex-col gap-2 max-h-75 overflow-y-auto">
+                        <div className="flex flex-col gap-2 max-h-75 overflow-y-auto lg:max-h-none lg:min-h-0 lg:flex-1">
                             {availableContracts.map((c) => {
                                 const isActive = activeContracts.some(
                                     (ac) => ac.id === c.id,
@@ -660,7 +662,7 @@ export function PlanetPanel() {
                                 );
                             })}
                         </div>
-                    </>
+                    </div>
                 )}
 
                 {availableContracts.length === 0 &&

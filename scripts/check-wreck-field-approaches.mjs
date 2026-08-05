@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import * as wreckConstants from "../src/game/slices/locations/constants.ts";
 import {
   getWreckScannerRareChanceMultiplier,
   getWreckSpecialLootChance,
@@ -33,5 +34,9 @@ assert.deepEqual(getRadiationDamageReport(23, 10), {
   shieldDamage: 10,
   overflowDamage: 13,
 });
+assert.equal(typeof wreckConstants.getRadiationModuleDamage, "function");
+assert.equal(wreckConstants.getRadiationModuleDamage(12), 6);
+assert.equal(wreckConstants.getRadiationModuleDamage(1), 1);
+assert.equal(wreckConstants.getRadiationModuleDamage(0), 0);
 
 console.log("Wreck field approach checks passed");
