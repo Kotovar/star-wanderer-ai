@@ -13,6 +13,7 @@ import type {
   NavigatorCategory,
   NavigatorFilters,
   NavigatorResult,
+  NavigatorSort,
 } from "@/game/types/navigator";
 import type {
   Goods,
@@ -58,6 +59,7 @@ const EMPTY_FILTERS: NavigatorFilters = {
   category: "trade",
   query: "",
   tier: "all",
+  sort: "tier",
 };
 const LOCATION_KIND_TRANSLATION_KEYS: Partial<
   Record<NavigatorResult["kind"], string>
@@ -159,6 +161,7 @@ export function NavigatorPanel() {
       raceReputation: state.raceReputation,
       sectors: state.galaxy.sectors,
       shipModules: state.ship.modules,
+      shipTradeGoods: state.ship.tradeGoods,
       stationPrices: state.stationPrices,
     })),
   );
@@ -180,7 +183,10 @@ export function NavigatorPanel() {
         ...navigatorData,
         filters,
         galaxy: { sectors: navigatorData.sectors, nebulae: [] },
-        ship: { modules: navigatorData.shipModules },
+        ship: {
+          modules: navigatorData.shipModules,
+          tradeGoods: navigatorData.shipTradeGoods,
+        },
         scanRange,
       }),
     [filters, navigatorData, scanRange],
@@ -197,6 +203,9 @@ export function NavigatorPanel() {
 
   const updateFilters = (patch: Partial<NavigatorFilters>) =>
     setFilters((current) => ({ ...current, ...patch }));
+  const cargoGoodCount = navigatorData.shipTradeGoods.filter(
+    ({ quantity }) => quantity > 0,
+  ).length;
   const isMarked = (result: NavigatorResult) =>
     navigatorTargets.some(
       (target) =>
@@ -210,6 +219,15 @@ export function NavigatorPanel() {
         <h2 className="mr-auto font-['Orbitron'] text-base font-bold text-accent">
           ▸ {t("navigator.title")}
         </h2>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => setFilters(EMPTY_FILTERS)}
+          className="border-[#00ff41] bg-transparent text-xs text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810]"
+        >
+          {t("navigator.reset_filters")}
+        </Button>
         <Button
           type="button"
           size="sm"
@@ -236,9 +254,17 @@ export function NavigatorPanel() {
           {t("navigator.filters.category")}
           <select
             value={filters.category}
-            onChange={(event) =>
-              updateFilters({ category: event.target.value as NavigatorCategory })
-            }
+            onChange={(event) => {
+              const category = event.target.value as NavigatorCategory;
+              updateFilters({
+                category,
+                sort:
+                  category === "trade" ||
+                  (filters.sort !== "sell_desc" && filters.sort !== "buy_asc")
+                    ? filters.sort
+                    : "tier",
+              });
+            }}
             className="mt-1 w-full border border-[#00ff4166] bg-[#071019] px-2 py-1 text-[#d7f8ff]"
           >
             {CATEGORIES.map((category) => (
@@ -279,27 +305,72 @@ export function NavigatorPanel() {
             ))}
           </select>
         </label>
+        <label className="text-xs text-[#9aa59a]">
+          {t("navigator.filters.sort")}
+          <select
+            value={filters.sort}
+            onChange={(event) =>
+              updateFilters({ sort: event.target.value as NavigatorSort })
+            }
+            className="mt-1 w-full border border-[#00ff4166] bg-[#071019] px-2 py-1 text-[#d7f8ff]"
+          >
+            <option value="tier">{t("navigator.sort.tier")}</option>
+            <option value="name">{t("navigator.sort.name")}</option>
+            {filters.category === "trade" && (
+              <>
+                <option value="sell_desc">{t("navigator.sort.sell_desc")}</option>
+                <option value="buy_asc">{t("navigator.sort.buy_asc")}</option>
+              </>
+            )}
+          </select>
+        </label>
 
         {filters.category === "trade" && (
-          <label className="text-xs text-[#9aa59a]">
-            {t("navigator.filters.good")}
-            <select
-              value={filters.goodId ?? ""}
-              onChange={(event) =>
-                updateFilters({
-                  goodId: optionalValue<Goods>(event.target.value),
-                })
-              }
-              className="mt-1 w-full border border-[#00ff4166] bg-[#071019] px-2 py-1 text-[#d7f8ff]"
-            >
-              <option value="">{t("navigator.filters.any")}</option>
-              {Object.keys(TRADE_GOODS).map((goodId) => (
-                <option key={goodId} value={goodId}>
-                  {t(`trade.goods.${goodId}`)}
-                </option>
-              ))}
-            </select>
-          </label>
+          <>
+            <div className="flex items-end">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={!filters.cargoOnly && cargoGoodCount === 0}
+                onClick={() =>
+                  updateFilters(
+                    filters.cargoOnly
+                      ? { cargoOnly: undefined }
+                      : { cargoOnly: true, goodId: undefined, sort: "sell_desc" },
+                  )
+                }
+                className="w-full border-[#ffb000] bg-transparent text-xs text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
+              >
+                {t(
+                  filters.cargoOnly
+                    ? "navigator.filters.show_all_goods"
+                    : "navigator.filters.sell_from_cargo",
+                )}
+              </Button>
+            </div>
+            {!filters.cargoOnly && (
+              <label className="text-xs text-[#9aa59a]">
+                {t("navigator.filters.good")}
+                <select
+                  value={filters.goodId ?? ""}
+                  onChange={(event) =>
+                    updateFilters({
+                      goodId: optionalValue<Goods>(event.target.value),
+                    })
+                  }
+                  className="mt-1 w-full border border-[#00ff4166] bg-[#071019] px-2 py-1 text-[#d7f8ff]"
+                >
+                  <option value="">{t("navigator.filters.any")}</option>
+                  {Object.keys(TRADE_GOODS).map((goodId) => (
+                    <option key={goodId} value={goodId}>
+                      {t(`trade.goods.${goodId}`)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </>
         )}
 
         {filters.category === "crew" && (
@@ -519,6 +590,13 @@ export function NavigatorPanel() {
                     {result.trade ? (
                       <div className="mt-2 text-xs text-[#b8dfc2]">
                         <div>{t("navigator.prices.known")}</div>
+                        {result.trade.cargoQuantity !== undefined && (
+                          <div>
+                            {t("navigator.prices.cargo", {
+                              quantity: result.trade.cargoQuantity,
+                            })}
+                          </div>
+                        )}
                         <div>
                           {t("navigator.prices.buy", { price: result.trade.buy })} ·{" "}
                           {t("navigator.prices.sell", { price: result.trade.sell })}

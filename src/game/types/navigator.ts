@@ -25,11 +25,19 @@ export type NavigatorCategory =
   | "missions"
   | "discovery";
 
+export type NavigatorSort =
+  | "tier"
+  | "name"
+  | "sell_desc"
+  | "buy_asc";
+
 export type NavigatorFilters = {
   category: NavigatorCategory;
   query: string;
   tier: GalaxyTierAll | "all";
+  sort: NavigatorSort;
   goodId?: Goods;
+  cargoOnly?: boolean;
   race?: RaceId;
   profession?: Profession;
   minLevel?: number;
@@ -51,7 +59,12 @@ export type NavigatorResult = {
   category: NavigatorCategory;
   kind: LocationType;
   details: string[];
-  trade?: { goodId: Goods; buy: number; sell: number };
+  trade?: {
+    goodId: Goods;
+    buy: number;
+    sell: number;
+    cargoQuantity?: number;
+  };
   crew?: {
     race: RaceId;
     profession: Profession;

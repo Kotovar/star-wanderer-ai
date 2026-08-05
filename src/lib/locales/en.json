@@ -292,6 +292,7 @@
         "title": "KNOWN OBJECT NAVIGATOR",
         "short_title": "NAVIGATOR",
         "close": "CLOSE",
+        "reset_filters": "RESET FILTERS",
         "clear_markers": "CLEAR MARKERS",
         "mark": "MARK",
         "unmark": "UNMARK",
@@ -310,8 +311,11 @@
             "tier": "Sector tier",
             "tier_value": "Tier {{tier}}",
             "all_tiers": "All available tiers",
+            "sort": "Sort",
             "any": "Any",
             "good": "Good",
+            "sell_from_cargo": "SELL FROM CARGO",
+            "show_all_goods": "ALL GOODS",
             "race": "Race",
             "profession": "Profession",
             "min_level": "Minimum level",
@@ -322,6 +326,12 @@
             "reputation": "Reputation",
             "unresolved": "Unresolved only"
         },
+        "sort": {
+            "tier": "Sector tier",
+            "name": "Name",
+            "sell_desc": "Sell price: high to low",
+            "buy_asc": "Buy price: low to high"
+        },
         "population": {
             "inhabited": "Inhabited",
             "empty": "Empty"
@@ -329,6 +339,7 @@
         "prices": {
             "known": "Known prices",
             "unknown": "Choose a good to see known prices.",
+            "cargo": "In cargo: {{quantity}} t",
             "buy": "Buy: {{price}}₢/t",
             "sell": "Sell: {{price}}₢/t"
         },

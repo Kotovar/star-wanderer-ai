@@ -427,6 +427,14 @@ const navigatorSectors = [
         dominantRace: "human",
       },
       {
+        id: "zulu-station",
+        name: "Zulu Market",
+        type: "station",
+        stationId: "station-zulu",
+        stationConfig,
+        dominantRace: "human",
+      },
+      {
         id: "friendly-trader",
         name: "Friendly Trader",
         type: "friendly_ship",
@@ -509,6 +517,7 @@ const knownLocationIntel = Object.fromEntries(
   [
     [10, "trade-station", 3, false],
     [10, "seen-station", 0, false],
+    [10, "zulu-station", 3, false],
     [10, "friendly-trader", 8, true],
     [10, "crew-station", 3, false],
     [10, "ocean-planet", 8, true],
@@ -570,9 +579,10 @@ assert.equal(
 const navigatorInput = {
   galaxy: { sectors: navigatorSectors },
   knownLocationIntel,
-  knownTradeStations: ["station-market"],
+  knownTradeStations: ["station-market", "station-zulu"],
   stationPrices: {
     "station-market": { water: { buy: 100, sell: 60 } },
+    "station-zulu": { water: { buy: 200, sell: 150 } },
   },
   friendlyShipStock: {
     "friendly-trader": { water: 7, food: 5, medicine: 3 },
@@ -580,7 +590,10 @@ const navigatorInput = {
   raceReputation: structuredClone(initialState.raceReputation),
   hiredCrew: {},
   hiredCrewFromShips: [],
-  ship: { modules: [] },
+  ship: {
+    modules: [],
+    tradeGoods: [{ item: "water", quantity: 9, buyPrice: 0 }],
+  },
   artifacts: [],
   scanRange: 8,
 };
@@ -626,14 +639,42 @@ assert.ok(
 const waterMerchants = results({ category: "trade", goodId: "water" });
 assert.deepEqual(
   waterMerchants.map(({ locationId }) => locationId),
-  ["trade-station", "friendly-trader"],
+  ["trade-station", "friendly-trader", "zulu-station"],
 );
 assert.deepEqual(
   waterMerchants.map(({ trade }) => trade),
   [
     { goodId: "water", buy: 20, sell: 12 },
     { goodId: "water", buy: 10, sell: 6 },
+    { goodId: "water", buy: 40, sell: 30 },
   ],
+);
+const cargoSaleResults = results({
+  category: "trade",
+  cargoOnly: true,
+  sort: "sell_desc",
+});
+assert.deepEqual(
+  cargoSaleResults.map(({ locationId, trade }) => [
+    locationId,
+    trade?.goodId,
+    trade?.sell,
+    trade?.cargoQuantity,
+  ]),
+  [
+    ["zulu-station", "water", 30, 9],
+    ["trade-station", "water", 12, 9],
+    ["friendly-trader", "water", 6, 9],
+  ],
+  "Cargo sale mode must list only carried goods at known buyers, ordered by selling price",
+);
+assert.deepEqual(
+  results(
+    { category: "trade", cargoOnly: true, sort: "sell_desc" },
+    { ...navigatorInput, ship: { modules: [], tradeGoods: [] } },
+  ),
+  [],
+  "Cargo sale mode must not list markets when the hold is empty",
 );
 assert.deepEqual(
   results(

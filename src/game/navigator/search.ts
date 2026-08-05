@@ -44,7 +44,7 @@ type NavigatorInput = Pick<
   filters: Pick<NavigatorFilters, "category"> &
     Partial<Omit<NavigatorFilters, "category">>;
   scanRange?: number;
-  ship: Pick<GameState["ship"], "modules">;
+  ship: Pick<GameState["ship"], "modules" | "tradeGoods">;
 };
 
 type TierInput = Pick<GameState, "artifacts"> & {
@@ -214,8 +214,8 @@ const getTradeResult = (
   sector: Sector,
   location: Location,
   intel: KnownLocationIntel,
+  goodId = input.filters.goodId,
 ): NavigatorResult | null => {
-  const { goodId } = input.filters;
   const result = createResult(sector, location, "trade", []);
 
   if (
@@ -419,6 +419,11 @@ export const getNavigatorResults = (input: NavigatorInput): NavigatorResult[] =>
   const results: NavigatorResult[] = [];
   const tiers = new Set(getNavigatorTierOptions(input));
   const query = input.filters.query?.trim().toLocaleLowerCase() ?? "";
+  const cargoGoods = new Map(
+    input.ship.tradeGoods
+      .filter(({ quantity }) => quantity > 0)
+      .map(({ item, quantity }) => [item, quantity]),
+  );
 
   for (const sector of input.galaxy.sectors) {
     if (
@@ -445,6 +450,25 @@ export const getNavigatorResults = (input: NavigatorInput): NavigatorResult[] =>
 
       switch (input.filters.category) {
         case "trade": {
+          if (input.filters.cargoOnly) {
+            for (const [goodId, cargoQuantity] of cargoGoods) {
+              const result = getTradeResult(
+                input,
+                sector,
+                location,
+                intel,
+                goodId,
+              );
+              if (result?.trade) {
+                results.push({
+                  ...result,
+                  key: `${result.key}:${goodId}`,
+                  trade: { ...result.trade, cargoQuantity },
+                });
+              }
+            }
+            break;
+          }
           const result = getTradeResult(input, sector, location, intel);
           if (result) results.push(result);
           break;
@@ -481,11 +505,24 @@ export const getNavigatorResults = (input: NavigatorInput): NavigatorResult[] =>
     }
   }
 
-  return results.sort(
-    (left, right) =>
-      left.sectorTier - right.sectorTier ||
-      left.sectorName.localeCompare(right.sectorName) ||
-      left.locationName.localeCompare(right.locationName) ||
-      left.key.localeCompare(right.key),
-  );
+  const sortByTier = (left: NavigatorResult, right: NavigatorResult) =>
+    left.sectorTier - right.sectorTier ||
+    left.sectorName.localeCompare(right.sectorName) ||
+    left.locationName.localeCompare(right.locationName) ||
+    left.key.localeCompare(right.key);
+
+  return results.sort((left, right) => {
+    switch (input.filters.sort) {
+      case "name":
+        return (
+          left.locationName.localeCompare(right.locationName) || sortByTier(left, right)
+        );
+      case "sell_desc":
+        return (right.trade?.sell ?? -1) - (left.trade?.sell ?? -1) || sortByTier(left, right);
+      case "buy_asc":
+        return (left.trade?.buy ?? Infinity) - (right.trade?.buy ?? Infinity) || sortByTier(left, right);
+      default:
+        return sortByTier(left, right);
+    }
+  });
 };
