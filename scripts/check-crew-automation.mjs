@@ -92,6 +92,7 @@ const decide = (crew, modules, overrides = {}) => {
     mode: "civilian",
     memory: {},
     hasActiveResearch: false,
+    hasWeaponsPrimed: false,
     currentLocationType: null,
     ...overrides,
   });
@@ -124,6 +125,24 @@ const decide = (crew, modules, overrides = {}) => {
   );
   assert.equal(decisions.get(1)?.targetModuleId, 2, "first gunner takes nearest bay");
   assert.equal(decisions.get(2)?.targetModuleId, 3, "second gunner takes the other nearest bay");
+}
+
+{
+  const modules = [
+    shipModule(1, "cockpit", 0, 0),
+    shipModule(2, "weaponbay", 1, 0),
+  ];
+  const gunner = [crewMember(1, "gunner", 2)];
+  assert.equal(
+    decide(gunner, modules).get(1)?.task,
+    "clean_weapons",
+    "an unprimed weapon bay is cleaned before training",
+  );
+  assert.equal(
+    decide(gunner, modules, { hasWeaponsPrimed: true }).get(1)?.task,
+    "training",
+    "a primed weapon bay returns its gunner to training",
+  );
 }
 
 {

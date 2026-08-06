@@ -29,6 +29,7 @@ export interface CrewAutomationInput {
   mode: CrewAutomationMode;
   memory: CrewAutomationMemory;
   hasActiveResearch: boolean;
+  hasWeaponsPrimed: boolean;
   passiveRegenByCrew?: Record<number, number>;
   mergeableModuleIds?: number[];
   enabled?: boolean;
@@ -228,6 +229,7 @@ export const planCrewAutomation = ({
   mode,
   memory,
   hasActiveResearch,
+  hasWeaponsPrimed,
   passiveRegenByCrew = {},
   mergeableModuleIds,
   enabled = true,
@@ -353,7 +355,8 @@ export const planCrewAutomation = ({
   ).forEach(assign);
 
   // 4. Exclusive professional roles.
-  const gunnerTask = mode === "combat" ? "targeting" : "training";
+  const gunnerTask =
+    mode === "combat" ? "targeting" : hasWeaponsPrimed ? "training" : "clean_weapons";
   const weaponBays = activeModules.filter((module) => module.type === "weaponbay");
   selectUniqueCandidates(
     candidatesFor(

@@ -23,6 +23,9 @@ export const runCrewAutomation = (
     mode,
     memory: state.crewAutomation.memory,
     hasActiveResearch: state.research.activeResearch !== null,
+    hasWeaponsPrimed: state.activeEffects.some(
+      (effect) => effect.definitionId === "weapons_primed",
+    ),
     passiveRegenByCrew: Object.fromEntries(
       state.crew.map((member) => [member.id, calculateHealthRegen(member, state)]),
     ),
