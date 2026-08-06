@@ -2327,7 +2327,8 @@
         "bonuses": "Bonuses",
         "description_label": "Description",
         "tier_label": "Tier",
-        "category_label": "Category"
+        "category_label": "Category",
+        "choose_research": "Choose Technology"
     },
     "sector_map": {
         "visited": "(visited)",

@@ -16,6 +16,10 @@ const assignmentsPanelSource = await readFile(
   new URL("../src/game/components/AssignmentsPanel.tsx", import.meta.url),
   "utf8",
 );
+const technologyDiscoveryModalSource = await readFile(
+  new URL("../src/game/components/TechnologyDiscoveryModal.tsx", import.meta.url),
+  "utf8",
+);
 const taskModuleRequirementsSource = await readFile(
   new URL("../src/game/slices/crew/helpers/taskModuleRequirements.ts", import.meta.url),
   "utf8",
@@ -30,6 +34,16 @@ assert.match(
   assignmentsPanelSource,
   /readOnly && \(\s+<span[^>]*>\s+\{t\("assignments_panel\.automation_toggle"\)\}/,
   "automated crew card has an explicit status badge",
+);
+assert.match(
+  technologyDiscoveryModalSource,
+  /technology_discovery\.choose_research/,
+  "technology discovery modal offers research-tree navigation",
+);
+assert.match(
+  technologyDiscoveryModalSource,
+  /showResearch\(\)/,
+  "technology discovery modal uses the existing research-tree navigation",
 );
 
 const shipModule = (id, type, x, y, overrides = {}) => ({

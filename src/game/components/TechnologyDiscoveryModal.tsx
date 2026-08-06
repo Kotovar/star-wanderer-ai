@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import {
     Dialog,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { GameDialogContent } from "./GameDialog";
 import { useGameStore } from "../store";
 import { RESEARCH_TREE } from "../constants/research";
@@ -17,6 +19,7 @@ export function TechnologyDiscoveryModal() {
     const { t } = useTranslation();
     // Get the list of researched technologies from the store
     const researchedTechs = useGameStore((s) => s.research.researchedTechs);
+    const showResearch = useGameStore((s) => s.showResearch);
     // Get game load counter to detect when game is loaded
     const gameLoadedCount = useGameStore((s) => s.gameLoadedCount);
 
@@ -95,6 +98,17 @@ export function TechnologyDiscoveryModal() {
                         {getTechnologyBonusesDescription(tech)}
                     </div>
                 </div>
+                <DialogFooter className="px-4 pb-4">
+                    <Button
+                        onClick={() => {
+                            setOpen(false);
+                            showResearch();
+                        }}
+                        className="w-full cursor-pointer border border-[#9933ff] bg-[rgba(153,51,255,0.12)] text-[#d8b4fe] hover:bg-[rgba(153,51,255,0.24)]"
+                    >
+                        {t("technology_discovery.choose_research")}
+                    </Button>
+                </DialogFooter>
             </GameDialogContent>
         </Dialog>
     );

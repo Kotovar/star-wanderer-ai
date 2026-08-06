@@ -2327,7 +2327,8 @@
         "bonuses": "Преимущества",
         "description_label": "Описание",
         "tier_label": "Тир",
-        "category_label": "Категория"
+        "category_label": "Категория",
+        "choose_research": "Выбрать технологию"
     },
     "sector_map": {
         "visited": "(посещено)",
