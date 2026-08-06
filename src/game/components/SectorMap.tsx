@@ -22,6 +22,7 @@ import {
 } from "./sectorMap/helpers";
 import { LegendIcon } from "./sectorMap/LegendIcon";
 import { setupHiDPICanvas } from "./canvas-utils";
+import { shouldRedrawMainMap } from "./mapFrameRate";
 import { useMapZoomPan, DRAG_THRESHOLD } from "./useMapZoomPan";
 import { useIsMobile } from "@/game/hooks/useIsMobile";
 import {
@@ -314,6 +315,7 @@ export function SectorMap() {
 
   // Animation frame ID
   const animationFrameIdRef = useRef<number | null>(null);
+  const lastMainCanvasDrawAtRef = useRef(0);
 
   // Ref for animation canvas
   const animCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -748,7 +750,7 @@ export function SectorMap() {
     }
 
     // Start animation loop
-    const animate = () => {
+    const animate = (timestamp: number) => {
       const animState = animationStateRef.current;
       animState.time += 16; // ~16ms per frame
 
@@ -819,8 +821,10 @@ export function SectorMap() {
         }
       }
 
-      // Draw main canvas
-      drawCanvas();
+      if (shouldRedrawMainMap(lastMainCanvasDrawAtRef.current, timestamp)) {
+        lastMainCanvasDrawAtRef.current = timestamp;
+        drawCanvas();
+      }
 
       animationFrameIdRef.current = requestAnimationFrame(animate);
     };

@@ -44,6 +44,7 @@ import {
 import { getSectorReadiness } from "@/game/progression/sectorReadiness";
 import { setupHiDPICanvas } from "./canvas-utils";
 import { getGalaxyMapObjectives } from "./galaxyMapObjectives";
+import { shouldRedrawMainMap } from "./mapFrameRate";
 import { useMapZoomPan, DRAG_THRESHOLD } from "./useMapZoomPan";
 
 // Animation constants
@@ -260,6 +261,7 @@ export function GalaxyMap() {
         color: string;
     }> | null>(null);
     const animationStateRef = useRef<{ time: number }>({ time: 0 });
+    const lastMainCanvasDrawAtRef = useRef(0);
     const initializedRef = useRef(false);
     const canvasSizeRef = useRef({ width: 0, height: 0 });
     const hasMovedRef = useRef(false);
@@ -765,7 +767,7 @@ export function GalaxyMap() {
 
         // Animation loop
         let animationFrameId: number;
-        const animate = () => {
+        const animate = (timestamp: number) => {
             animationStateRef.current.time += 16;
 
             if (animationsEnabled) {
@@ -828,7 +830,10 @@ export function GalaxyMap() {
                 animCtx.clearRect(0, 0, width, height);
             }
 
-            drawGalaxyCanvas();
+            if (shouldRedrawMainMap(lastMainCanvasDrawAtRef.current, timestamp)) {
+                lastMainCanvasDrawAtRef.current = timestamp;
+                drawGalaxyCanvas();
+            }
             animationFrameId = requestAnimationFrame(animate);
         };
 
