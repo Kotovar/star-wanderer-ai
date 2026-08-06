@@ -11,10 +11,7 @@ import { ModuleList } from "@/game/components/ModuleList";
 import { CrewList } from "@/game/components/CrewList";
 import { ShipStats } from "@/game/components/ShipStats";
 import { CargoDisplay } from "@/game/components/CargoDisplay";
-import { GameLog } from "@/game/components/GameLog";
 import { ContractsList } from "@/game/components/ContractsList";
-import { BlueprintsTab } from "@/game/components/BlueprintsTab";
-import { CampaignProgressPanel } from "@/game/components/CampaignProgressPanel";
 import { EventDisplay } from "@/game/components/EventPanels";
 import { useCombatCinematicUiStore } from "@/game/components/combatCinematicUiStore";
 import { GameEndPanel } from "@/game/components/panels";
@@ -51,6 +48,21 @@ const WelcomeTutorial = dynamic(
 );
 const NewGameSetupModal = dynamic(
   () => import("@/game/components/NewGameSetupModal").then((m) => m.NewGameSetupModal),
+  { ssr: false },
+);
+const CampaignProgressPanel = dynamic(
+  () =>
+    import("@/game/components/CampaignProgressPanel").then(
+      (m) => m.CampaignProgressPanel,
+    ),
+  { ssr: false },
+);
+const BlueprintsTab = dynamic(
+  () => import("@/game/components/BlueprintsTab").then((m) => m.BlueprintsTab),
+  { ssr: false },
+);
+const GameLog = dynamic(
+  () => import("@/game/components/GameLog").then((m) => m.GameLog),
   { ssr: false },
 );
 import { TitleScreen } from "@/game/components/TitleScreen";
