@@ -16,6 +16,10 @@ const assignmentsPanelSource = await readFile(
   new URL("../src/game/components/AssignmentsPanel.tsx", import.meta.url),
   "utf8",
 );
+const taskModuleRequirementsSource = await readFile(
+  new URL("../src/game/slices/crew/helpers/taskModuleRequirements.ts", import.meta.url),
+  "utf8",
+);
 
 assert.match(
   assignmentsPanelSource,
@@ -261,6 +265,33 @@ const decide = (crew, modules, overrides = {}) => {
   assert.equal(decisions.get(1)?.targetModuleId, 3, "planner keeps distant role target");
   assert.equal(decisions.get(1)?.nextModuleId, 2, "planner only takes the first route step");
   assert.equal(plan.memory[1]?.turnsAtTarget, 0, "attachment starts only after reaching the target");
+}
+
+{
+  const modules = [
+    shipModule(1, "lab", 0, 0),
+    shipModule(2, "scanner", 1, 0),
+    shipModule(3, "medical", 2, 0),
+  ];
+  const decisions = decide(
+    [
+      crewMember(1, "scientist", 1, { level: 2 }),
+      crewMember(2, "scientist", 3, { level: 6 }),
+      crewMember(3, "scientist", 3, { level: 1 }),
+    ],
+    modules,
+    { hasActiveResearch: true },
+  );
+  assert.equal(decisions.get(2)?.targetModuleId, 1, "highest-level scientist takes the lab");
+  assert.equal(decisions.get(2)?.task, "research", "lab scientist researches");
+  assert.equal(decisions.get(1)?.targetModuleId, 2, "next scientist takes the scanner");
+  assert.equal(decisions.get(1)?.task, "analyzing", "scanner scientist analyzes anomalies");
+  assert.equal(decisions.get(3)?.task, null, "extra scientist rests without a task");
+  assert.match(
+    taskModuleRequirementsSource,
+    /analyzing:\s*\["scanner"\]/,
+    "analyzing requires a scanner",
+  );
 }
 
 {

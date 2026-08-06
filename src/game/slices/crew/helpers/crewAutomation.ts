@@ -29,7 +29,6 @@ export interface CrewAutomationInput {
   mode: CrewAutomationMode;
   memory: CrewAutomationMemory;
   hasActiveResearch: boolean;
-  currentLocationType: string | null;
   passiveRegenByCrew?: Record<number, number>;
   mergeableModuleIds?: number[];
   enabled?: boolean;
@@ -229,7 +228,6 @@ export const planCrewAutomation = ({
   mode,
   memory,
   hasActiveResearch,
-  currentLocationType,
   passiveRegenByCrew = {},
   mergeableModuleIds,
   enabled = true,
@@ -384,21 +382,28 @@ export const planCrewAutomation = ({
   ).forEach(assign);
 
   const labs = activeModules.filter((module) => LAB_MODULE_TYPES.has(module.type));
-  if (mode === "civilian" && currentLocationType === "anomaly") {
-    const scientistTargets = activeModules.filter(
-      (module) => module.type === "scanner" || module.type === "deep_survey_array",
-    );
-    selectUniqueCandidates(
-      candidatesFor(unassigned("scientist"), scientistTargets, "analyzing", PRIORITY.role),
-    ).forEach(assign);
-  }
   if (mode === "civilian" && hasActiveResearch) {
+    const researchScientists = unassigned("scientist");
     selectUniqueCandidates(
       candidatesFor(
-        unassigned("scientist"),
+        researchScientists,
         labs,
         "research",
         PRIORITY.role,
+        researchScientists.length > labs.length,
+      ),
+    ).forEach(assign);
+  }
+  if (mode === "civilian") {
+    const scannerTargets = activeModules.filter((module) => module.type === "scanner");
+    const analyzingScientists = unassigned("scientist");
+    selectUniqueCandidates(
+      candidatesFor(
+        analyzingScientists,
+        scannerTargets,
+        "analyzing",
+        PRIORITY.role,
+        analyzingScientists.length > scannerTargets.length,
       ),
     ).forEach(assign);
   }

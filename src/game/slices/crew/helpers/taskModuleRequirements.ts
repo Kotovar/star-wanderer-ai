@@ -32,7 +32,7 @@ export const TASK_MODULE_REQUIREMENTS: Record<
 
     // Учёный
     research: LAB_MODULE_TYPES,
-    analyzing: [],
+    analyzing: ["scanner"],
     analysis: [],
 
     // Стрелок

@@ -23,7 +23,6 @@ export const runCrewAutomation = (
     mode,
     memory: state.crewAutomation.memory,
     hasActiveResearch: state.research.activeResearch !== null,
-    currentLocationType: state.currentLocation?.type ?? null,
     passiveRegenByCrew: Object.fromEntries(
       state.crew.map((member) => [member.id, calculateHealthRegen(member, state)]),
     ),
