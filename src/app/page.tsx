@@ -12,7 +12,6 @@ import { CrewList } from "@/game/components/CrewList";
 import { ShipStats } from "@/game/components/ShipStats";
 import { CargoDisplay } from "@/game/components/CargoDisplay";
 import { ContractsList } from "@/game/components/ContractsList";
-import { EventDisplay } from "@/game/components/EventPanels";
 import { useCombatCinematicUiStore } from "@/game/components/combatCinematicUiStore";
 import { GameEndPanel } from "@/game/components/panels";
 import { useGameStore } from "@/game/store";
@@ -63,6 +62,10 @@ const BlueprintsTab = dynamic(
 );
 const GameLog = dynamic(
   () => import("@/game/components/GameLog").then((m) => m.GameLog),
+  { ssr: false },
+);
+const EventDisplay = dynamic(
+  () => import("@/game/components/EventPanels").then((m) => m.EventDisplay),
   { ssr: false },
 );
 import { TitleScreen } from "@/game/components/TitleScreen";
