@@ -88,8 +88,6 @@
         "subtab_modules": "МОДУЛИ",
         "subtab_cargo": "ГРУЗ",
         "cannot_move_combat": "⚠️ Нельзя перемещать модули во время боя!",
-        "power_bus": "Энергосеть",
-        "circuits_online": "цепей в сети",
         "confirm_restart_title": "Начать заново?",
         "confirm_restart_desc": "Текущая экспедиция будет заменена. Ручные сохранения, достижения и разблокировки сохранятся.",
         "cancel": "Отмена",

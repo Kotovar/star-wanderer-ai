@@ -88,8 +88,6 @@
         "subtab_modules": "MODULES",
         "subtab_cargo": "CARGO",
         "cannot_move_combat": "⚠️ Cannot move modules during combat!",
-        "power_bus": "Power bus",
-        "circuits_online": "circuits online",
         "confirm_restart_title": "Restart?",
         "confirm_restart_desc": "The current expedition will be replaced. Manual saves, achievements, and unlocks will be kept.",
         "cancel": "Cancel",

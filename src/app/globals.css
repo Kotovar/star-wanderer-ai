@@ -978,64 +978,10 @@ button:focus-visible,
     border-top: 1px solid rgba(0, 212, 255, 0.14);
 }
 
-.ship-power-grid {
-    pointer-events: none;
-    mix-blend-mode: screen;
-}
-
-.ship-power-link-rail,
-.ship-power-link {
-    fill: none;
-    vector-effect: non-scaling-stroke;
-}
-
-.ship-power-link-rail {
-    stroke: rgba(0, 212, 255, 0.09);
-    stroke-width: 5;
-}
-
-.ship-power-link {
-    stroke: rgba(0, 212, 255, 0.76);
-    stroke-width: 1.5;
-    stroke-dasharray: 3 9;
-    animation: ship-power-flow 2.2s linear infinite;
-    filter: drop-shadow(0 0 3px rgba(0, 212, 255, 0.72));
-}
-
-.ship-power-node {
-    fill: #00d4ff;
-    filter: drop-shadow(0 0 4px rgba(0, 212, 255, 0.86));
-}
-
-.ship-power-grid [data-state="warning"] .ship-power-link {
-    stroke: rgba(255, 176, 0, 0.88);
-}
-
-.ship-power-grid [data-state="warning"] .ship-power-node {
-    fill: #ffb000;
-}
-
-.ship-power-grid [data-state="offline"] .ship-power-link {
-    stroke: rgba(255, 0, 64, 0.62);
-    stroke-dasharray: 2 12;
-    animation: none;
-}
-
-.ship-power-grid [data-state="offline"] .ship-power-node {
-    fill: #ff0040;
-}
-
-@keyframes ship-power-flow {
-    to {
-        stroke-dashoffset: -24;
-    }
-}
-
 [data-animations="off"] .cockpit-scanlines,
 [data-animations="off"] .tab-transition,
 [data-animations="off"] .title-star,
 [data-animations="off"] .title-wordmark,
-[data-animations="off"] .ship-power-link,
 [data-animations="off"] .combat-impact-overlay {
     animation: none !important;
 }
