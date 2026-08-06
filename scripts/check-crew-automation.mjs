@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { performance } from "node:perf_hooks";
 
 const { planCrewAutomation } = await import(
   "../src/game/slices/crew/helpers/crewAutomation.ts"
@@ -275,6 +276,32 @@ const decide = (crew, modules, overrides = {}) => {
   );
   assert.equal(decisions.get(1)?.task, "targeting", "combat gunner fills weapon role");
   assert.equal(decisions.get(2)?.task, "analysis", "scientist analyzes only after targeting is staffed");
+}
+
+{
+  const modules = Array.from({ length: 16 }, (_, index) =>
+    shipModule(index + 1, "weaponbay", index, 0),
+  );
+  const crew = Array.from({ length: 16 }, (_, index) =>
+    crewMember(index + 1, "gunner", 1),
+  );
+  const input = {
+    crew,
+    modules,
+    mode: "civilian",
+    memory: {},
+    hasActiveResearch: false,
+    currentLocationType: null,
+  };
+
+  planCrewAutomation(input);
+  const startedAt = performance.now();
+  const plan = planCrewAutomation(input);
+  const elapsed = performance.now() - startedAt;
+  const targets = plan.decisions.map((decision) => decision.targetModuleId);
+
+  assert.equal(new Set(targets).size, 16, "large specialist group fills distinct slots");
+  assert.ok(elapsed < 250, `large specialist group plans quickly (${elapsed.toFixed(1)} ms)`);
 }
 
 console.log("crew automation checks passed");

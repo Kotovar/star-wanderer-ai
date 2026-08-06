@@ -144,62 +144,83 @@ type Candidate = {
   nextModuleId: number | null;
 };
 
-const compareMatches = (
-  left: { count: number; score: number; matches: Candidate[] },
-  right: { count: number; score: number; matches: Candidate[] },
-) =>
-  left.count !== right.count
-    ? left.count > right.count
-    : left.score > right.score;
-
-/**
- * Exact matching is deliberately limited to role-sized candidate sets. A ship has
- * few crew slots, and this avoids greedy collisions between nearby specialists.
- */
+/** Matches the most specialists possible, then maximizes their total priority score. */
 const selectUniqueCandidates = (candidates: Candidate[]): Candidate[] => {
   const crewIds = [...new Set(candidates.map((candidate) => candidate.crewId))];
   const moduleIds = [...new Set(candidates.map((candidate) => candidate.moduleId))];
   if (crewIds.length === 0 || moduleIds.length === 0) return [];
 
-  const limitedModuleIds = moduleIds.slice(0, 20);
-  const candidateMap = new Map<number, Candidate[]>();
-  crewIds.forEach((crewId) => {
-    candidateMap.set(
-      crewId,
-      candidates
-        .filter(
-          (candidate) =>
-            candidate.crewId === crewId && limitedModuleIds.includes(candidate.moduleId),
-        )
-        .sort((left, right) => right.score - left.score),
-    );
+  const candidateKey = (crewId: number, moduleId: number) => `${crewId}:${moduleId}`;
+  const candidatesByKey = new Map(
+    candidates.map((candidate) => [candidateKey(candidate.crewId, candidate.moduleId), candidate]),
+  );
+  const matchBonus = candidates.reduce((sum, candidate) => sum + Math.abs(candidate.score), 0) + 1;
+  const forbiddenCost = matchBonus * 2 + 1;
+  const columnCount = moduleIds.length + crewIds.length;
+  const costs = crewIds.map((crewId) =>
+    Array.from({ length: columnCount }, (_, index) => {
+      if (index >= moduleIds.length) return 0;
+      const candidate = candidatesByKey.get(candidateKey(crewId, moduleIds[index]));
+      return candidate ? -(matchBonus + candidate.score) : forbiddenCost;
+    }),
+  );
+
+  // Dummy columns allow a specialist to remain unassigned without occupying a real module.
+  const u = Array<number>(crewIds.length + 1).fill(0);
+  const v = Array<number>(columnCount + 1).fill(0);
+  const matchedRowsByColumn = Array<number>(columnCount + 1).fill(0);
+  const previousColumn = Array<number>(columnCount + 1).fill(0);
+
+  for (let row = 1; row <= crewIds.length; row += 1) {
+    matchedRowsByColumn[0] = row;
+    let column = 0;
+    const minimumCosts = Array<number>(columnCount + 1).fill(Infinity);
+    const usedColumns = Array<boolean>(columnCount + 1).fill(false);
+
+    do {
+      usedColumns[column] = true;
+      const currentRow = matchedRowsByColumn[column];
+      let delta = Infinity;
+      let nextColumn = 0;
+
+      for (let candidateColumn = 1; candidateColumn <= columnCount; candidateColumn += 1) {
+        if (usedColumns[candidateColumn]) continue;
+        const cost = costs[currentRow - 1][candidateColumn - 1] - u[currentRow] - v[candidateColumn];
+        if (cost < minimumCosts[candidateColumn]) {
+          minimumCosts[candidateColumn] = cost;
+          previousColumn[candidateColumn] = column;
+        }
+        if (minimumCosts[candidateColumn] < delta) {
+          delta = minimumCosts[candidateColumn];
+          nextColumn = candidateColumn;
+        }
+      }
+
+      for (let candidateColumn = 0; candidateColumn <= columnCount; candidateColumn += 1) {
+        if (usedColumns[candidateColumn]) {
+          u[matchedRowsByColumn[candidateColumn]] += delta;
+          v[candidateColumn] -= delta;
+        } else {
+          minimumCosts[candidateColumn] -= delta;
+        }
+      }
+      column = nextColumn;
+    } while (matchedRowsByColumn[column] !== 0);
+
+    do {
+      const nextColumn = previousColumn[column];
+      matchedRowsByColumn[column] = matchedRowsByColumn[nextColumn];
+      column = nextColumn;
+    } while (column !== 0);
+  }
+
+  return moduleIds.flatMap((moduleId, index) => {
+    const row = matchedRowsByColumn[index + 1] - 1;
+    const candidate = row >= 0
+      ? candidatesByKey.get(candidateKey(crewIds[row], moduleId))
+      : undefined;
+    return candidate ? [candidate] : [];
   });
-
-  const memo = new Map<string, { count: number; score: number; matches: Candidate[] }>();
-  const solve = (index: number, usedModules: number): { count: number; score: number; matches: Candidate[] } => {
-    if (index >= crewIds.length) return { count: 0, score: 0, matches: [] };
-    const key = `${index}:${usedModules}`;
-    const cached = memo.get(key);
-    if (cached) return cached;
-
-    let best = solve(index + 1, usedModules);
-    for (const candidate of candidateMap.get(crewIds[index]) ?? []) {
-      const moduleIndex = limitedModuleIds.indexOf(candidate.moduleId);
-      const moduleBit = 1 << moduleIndex;
-      if ((usedModules & moduleBit) !== 0) continue;
-      const next = solve(index + 1, usedModules | moduleBit);
-      const current = {
-        count: next.count + 1,
-        score: next.score + candidate.score,
-        matches: [candidate, ...next.matches],
-      };
-      if (compareMatches(current, best)) best = current;
-    }
-    memo.set(key, best);
-    return best;
-  };
-
-  return solve(0, 0).matches;
 };
 
 export const planCrewAutomation = ({
