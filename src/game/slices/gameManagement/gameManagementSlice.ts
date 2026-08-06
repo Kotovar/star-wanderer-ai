@@ -9,7 +9,6 @@ import {
 import {
     clearAllSaves,
     loadFromLocalStorage,
-    saveToLocalStorage,
     saveSlot,
     loadSlot,
 } from "@/game/saves/utils";
@@ -78,11 +77,10 @@ export const createGameManagementSlice = (
         }));
     },
 
-    /** Авто-сохранение каждый ход (сохраняет в auto-слот + legacy ключ) */
+    /** Авто-сохранение каждый ход: auto-слот использует legacy ключ. */
     saveGame: () => {
         const state = get();
-        saveToLocalStorage(state);          // legacy key — page refresh picks it up
-        saveSlot("auto", state);            // new auto slot with meta
+        saveSlot("auto", state);
     },
 
     /** Загружает сохранение при запуске страницы (из legacy auto-ключа) */
