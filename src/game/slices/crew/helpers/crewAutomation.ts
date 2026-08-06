@@ -237,6 +237,12 @@ export const planCrewAutomation = ({
     const levelWeight = scarce ? 1_000 : 0;
     members.forEach((member) => {
       targetModules.forEach((target) => {
+        if (
+          isCritical(target) &&
+          (member.profession !== "engineer" || task !== "repair")
+        ) {
+          return;
+        }
         const path = getPath(modules, member.moduleId, target.id);
         if (!path) return;
         const attachment = memory[member.id];

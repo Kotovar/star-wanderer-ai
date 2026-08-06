@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 
 const { planCrewAutomation } = await import(
   "../src/game/slices/crew/helpers/crewAutomation.ts"
@@ -8,6 +9,22 @@ assert.equal(
   typeof planCrewAutomation,
   "function",
   "crew automation planner must be exported",
+);
+
+const assignmentsPanelSource = await readFile(
+  new URL("../src/game/components/AssignmentsPanel.tsx", import.meta.url),
+  "utf8",
+);
+
+assert.match(
+  assignmentsPanelSource,
+  /if \(crewAutomationEnabled\) \{\s+closeAssignments\(\);\s+return;\s+\}/,
+  "automation Apply closes the assignments panel",
+);
+assert.match(
+  assignmentsPanelSource,
+  /readOnly && \(\s+<span[^>]*>\s+\{t\("assignments_panel\.automation_toggle"\)\}/,
+  "automated crew card has an explicit status badge",
 );
 
 const shipModule = (id, type, x, y, overrides = {}) => ({
@@ -145,6 +162,21 @@ const decide = (crew, modules, overrides = {}) => {
   const decisions = decide([crewMember(1, "gunner", 1)], modules);
   assert.equal(decisions.get(1)?.targetModuleId, 2, "non-engineer evacuates a broken module");
   assert.equal(decisions.get(1)?.nextModuleId, 2, "evacuation moves one adjacent step");
+}
+
+{
+  const modules = [
+    shipModule(1, "cockpit", 0, 0),
+    shipModule(2, "weaponbay", 1, 0, { health: 25 }),
+  ];
+  const decisions = decide(
+    [crewMember(1, "gunner", 1), crewMember(2, "engineer", 1)],
+    modules,
+  );
+  assert.equal(decisions.get(1)?.targetModuleId, 1, "gunner does not return to a critical weapon bay");
+  assert.equal(decisions.get(1)?.task, null, "gunner waits outside a critical weapon bay");
+  assert.equal(decisions.get(2)?.targetModuleId, 2, "engineer enters a critical module");
+  assert.equal(decisions.get(2)?.task, "repair", "engineer enters a critical module only to repair it");
 }
 
 {

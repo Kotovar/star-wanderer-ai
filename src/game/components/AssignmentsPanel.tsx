@@ -76,7 +76,10 @@ export function AssignmentsPanel() {
     const hasPlannedChanges = plannedMoveCount + plannedTaskCount > 0;
 
     const handleApply = () => {
-        if (crewAutomationEnabled) return;
+        if (crewAutomationEnabled) {
+            closeAssignments();
+            return;
+        }
         // 1. Move first — moving clears the assignment in store
         Object.entries(moves).forEach(([crewId, targetModuleId]) => {
             moveCrewMember(Number(crewId), targetModuleId);
@@ -273,7 +276,6 @@ export function AssignmentsPanel() {
                 <div className="flex gap-2.5 flex-wrap">
                 <Button
                     onClick={handleApply}
-                    disabled={crewAutomationEnabled}
                     className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
                 >
                     {t("assignments_panel.apply")}
@@ -372,6 +374,11 @@ function CrewAssignmentCard({
                                 {t(`professions.${crewMember.profession}`)}{" "}
                                 LV{crewMember.level || 1}
                             </span>
+                            {readOnly && (
+                                <span className="text-[10px] text-[#ffcb57] border border-[#ffb00088] px-1.5 py-0.5 rounded">
+                                    {t("assignments_panel.automation_toggle")}
+                                </span>
+                            )}
                             {crewMember.isMerged && (
                                 <span className="text-[10px] text-[#9933ff] border border-[#9933ff55] px-1.5 py-0.5 rounded">
                                     {t("assignments_panel.merged")}
