@@ -2,18 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { GameHeader } from "@/game/components/header";
-import { preloadGasGiantBackgrounds } from "@/game/components/GasGiantPanel";
-import { preloadModuleArt, ShipGrid } from "@/game/components/ShipGrid";
-import { preloadRacePlanetBackgrounds } from "@/game/components/PlanetPanel";
 import { preloadGameImages } from "@/game/assets/preload";
-import { ModuleList } from "@/game/components/ModuleList";
-import { CrewList } from "@/game/components/CrewList";
-import { ShipStats } from "@/game/components/ShipStats";
-import { CargoDisplay } from "@/game/components/CargoDisplay";
-import { ContractsList } from "@/game/components/ContractsList";
 import { useCombatCinematicUiStore } from "@/game/components/combatCinematicUiStore";
-import { GameEndPanel } from "@/game/components/panels";
 import { useGameStore } from "@/game/store";
 import { useShallow } from "zustand/react/shallow";
 import dynamic from "next/dynamic";
@@ -66,6 +56,38 @@ const GameLog = dynamic(
 );
 const EventDisplay = dynamic(
   () => import("@/game/components/EventPanels").then((m) => m.EventDisplay),
+  { ssr: false },
+);
+const GameHeader = dynamic(
+  () => import("@/game/components/header/Header").then((m) => m.GameHeader),
+  { ssr: false },
+);
+const GameEndPanel = dynamic(
+  () => import("@/game/components/panels/GameEndPanel").then((m) => m.GameEndPanel),
+  { ssr: false },
+);
+const ShipGrid = dynamic(
+  () => import("@/game/components/ShipGrid").then((m) => m.ShipGrid),
+  { ssr: false },
+);
+const ModuleList = dynamic(
+  () => import("@/game/components/ModuleList").then((m) => m.ModuleList),
+  { ssr: false },
+);
+const CrewList = dynamic(
+  () => import("@/game/components/CrewList").then((m) => m.CrewList),
+  { ssr: false },
+);
+const ShipStats = dynamic(
+  () => import("@/game/components/ShipStats").then((m) => m.ShipStats),
+  { ssr: false },
+);
+const CargoDisplay = dynamic(
+  () => import("@/game/components/CargoDisplay").then((m) => m.CargoDisplay),
+  { ssr: false },
+);
+const ContractsList = dynamic(
+  () => import("@/game/components/ContractsList").then((m) => m.ContractsList),
   { ssr: false },
 );
 import { TitleScreen } from "@/game/components/TitleScreen";
@@ -232,9 +254,13 @@ export default function Home() {
   const { hasLogAlert, acknowledgeLog } = useLogAlerts(log);
 
   useEffect(() => {
-    preloadModuleArt();
-    preloadRacePlanetBackgrounds();
-    preloadGasGiantBackgrounds();
+    void import("@/game/components/ShipGrid").then((m) => m.preloadModuleArt());
+    void import("@/game/components/PlanetPanel").then((m) =>
+      m.preloadRacePlanetBackgrounds(),
+    );
+    void import("@/game/components/GasGiantPanel").then((m) =>
+      m.preloadGasGiantBackgrounds(),
+    );
     preloadGameImages();
   }, []);
 
