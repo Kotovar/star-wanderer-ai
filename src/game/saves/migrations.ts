@@ -392,6 +392,11 @@ const migrations: Record<number, Migration> = {
       ...hydrateNavigatorIntelFromLegacyState(state),
     };
   },
+  22: (raw) => ({
+    ...(raw as GameState),
+    stateVersion: 23,
+    crewAutomation: { enabled: false, memory: {} },
+  }),
 };
 
 /**

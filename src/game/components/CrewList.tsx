@@ -94,6 +94,7 @@ export function CrewList() {
     const isModuleAdjacent = useGameStore((s) => s.isModuleAdjacent);
     const fireCrewMember = useGameStore((s) => s.fireCrewMember);
     const currentCombat = useGameStore((s) => s.currentCombat);
+    const crewAutomationEnabled = useGameStore((s) => s.crewAutomation.enabled);
     const researchedTechs = useGameStore((s) => s.research.researchedTechs);
     const [selectedCrew, setSelectedCrew] = useState<CrewMember | null>(null);
 
@@ -624,6 +625,7 @@ export function CrewList() {
                                                 }
                                                 onMove={moveCrewMember}
                                                 onSelect={setSelectedCrew}
+                                                disabled={crewAutomationEnabled}
                                             />
                                         </div>
                                     </TabsContent>

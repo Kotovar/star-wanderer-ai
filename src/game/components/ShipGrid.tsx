@@ -156,6 +156,7 @@ export function ShipGrid() {
   const canPlaceModule = useGameStore((s) => s.canPlaceModule);
   const isModuleAdjacent = useGameStore((s) => s.isModuleAdjacent);
   const currentCombat = useGameStore((s) => s.currentCombat);
+  const crewAutomationEnabled = useGameStore((s) => s.crewAutomation.enabled);
   const { t, currentLanguage } = useTranslation();
 
   const [draggedModule, setDraggedModule] = useState<Module | null>(null);
@@ -267,7 +268,7 @@ export function ShipGrid() {
 
   const handlePointerUp = () => {
     if (draggedCrew) {
-      if (crewDropModuleRef.current !== null) {
+      if (!crewAutomationEnabled && crewDropModuleRef.current !== null) {
         moveCrewMember(draggedCrew.id, crewDropModuleRef.current);
       }
       setDraggedCrew(null);
@@ -301,7 +302,7 @@ export function ShipGrid() {
     member: CrewMember,
   ) => {
     e.stopPropagation();
-    if (member.movedThisTurn) return;
+    if (crewAutomationEnabled || member.movedThisTurn) return;
     const svg = e.currentTarget.ownerSVGElement;
     if (!svg) return;
     svg.setPointerCapture?.(e.pointerId);

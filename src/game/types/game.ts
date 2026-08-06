@@ -8,6 +8,7 @@ import type {
   CrewMember,
   CrewMemberAssignment,
   CrewMemberCombatAssignment,
+  CrewAutomationState,
   TechPerkBranch,
   TechPerkTier,
 } from "./crew";
@@ -130,6 +131,7 @@ export interface GameState {
     mergeTraits?: ShipMergeTrait[]; // Traits from xenosymbiont merging with ship
   };
   crew: CrewMember[];
+  crewAutomation: CrewAutomationState;
   galaxy: {
     sectors: Sector[];
     nebulae: Nebula[];
@@ -327,6 +329,7 @@ export interface GameCrew {
     task: CrewMemberCombatAssignment,
     effect: string,
   ) => void;
+  setCrewAutomationEnabled: (enabled: boolean) => void;
   moveCrewMember: (crewId: number, targetModuleId: number) => void;
   isModuleAdjacent: (moduleId1: number, moduleId2: number) => boolean;
   getCrewInModule: (moduleId: number) => CrewMember[];

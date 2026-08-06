@@ -280,6 +280,7 @@ export function CombatPanel() {
   const currentCombat = useGameStore((s) => s.currentCombat);
   const ship = useGameStore((s) => s.ship);
   const crew = useGameStore((s) => s.crew);
+  const crewAutomationEnabled = useGameStore((s) => s.crewAutomation.enabled);
   const getTotalDamage = useGameStore((s) => s.getTotalDamage);
   const selectEnemyModule = useGameStore((s) => s.selectEnemyModule);
   const attackEnemyWithBayTargets = useGameStore((s) => s.attackEnemyWithBayTargets);
@@ -595,7 +596,7 @@ export function CombatPanel() {
         onMoveCrew={moveCrewMember}
         assignCombatTask={assignCombatTask}
         getAdjacentModules={getAdjacentModules}
-        disabled={isPlaybackActive}
+        disabled={isPlaybackActive || crewAutomationEnabled}
       />
 
       {isBoss && (

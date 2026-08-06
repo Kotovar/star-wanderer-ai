@@ -98,6 +98,25 @@ export type CrewMemberCombatAssignment =
     | ""
     | null;
 
+export type CrewAutomationMode = "civilian" | "combat";
+export type CrewAutomationTask =
+    | CrewMemberAssignment
+    | CrewMemberCombatAssignment;
+
+export interface CrewAutomationMemoryEntry {
+    targetModuleId: number | null;
+    task: CrewAutomationTask;
+    mode: CrewAutomationMode;
+    turnsAtTarget: number;
+}
+
+export type CrewAutomationMemory = Record<number, CrewAutomationMemoryEntry>;
+
+export interface CrewAutomationState {
+    enabled: boolean;
+    memory: CrewAutomationMemory;
+}
+
 export interface CrewMember {
     id: number;
     name: string;

@@ -43,6 +43,8 @@ export function AssignmentsPanel() {
     const modules = useGameStore((s) => s.ship.modules);
     const assignCrewTask = useGameStore((s) => s.assignCrewTask);
     const moveCrewMember = useGameStore((s) => s.moveCrewMember);
+    const crewAutomationEnabled = useGameStore((s) => s.crewAutomation.enabled);
+    const setCrewAutomationEnabled = useGameStore((s) => s.setCrewAutomationEnabled);
     const isModuleAdjacent = useGameStore((s) => s.isModuleAdjacent);
     const closeAssignments = useGameStore((s) => s.closeAssignments);
     const addLog = useGameStore((s) => s.addLog);
@@ -74,6 +76,7 @@ export function AssignmentsPanel() {
     const hasPlannedChanges = plannedMoveCount + plannedTaskCount > 0;
 
     const handleApply = () => {
+        if (crewAutomationEnabled) return;
         // 1. Move first — moving clears the assignment in store
         Object.entries(moves).forEach(([crewId, targetModuleId]) => {
             moveCrewMember(Number(crewId), targetModuleId);
@@ -112,6 +115,28 @@ export function AssignmentsPanel() {
                     />
                 </div>
             </div>
+
+            <label className="flex shrink-0 cursor-pointer items-center gap-2 border border-[#ffb00066] bg-[rgba(255,176,0,0.06)] px-3 py-2 text-xs text-[#ffcb57]">
+                <input
+                    type="checkbox"
+                    checked={crewAutomationEnabled}
+                    onChange={(event) => {
+                        if (event.target.checked) {
+                            setAssignments({});
+                            setMoves({});
+                        }
+                        setCrewAutomationEnabled(event.target.checked);
+                    }}
+                    className="accent-[#ffb000]"
+                />
+                {t("assignments_panel.automation_toggle")}
+            </label>
+
+            {crewAutomationEnabled && (
+                <div className="shrink-0 border border-[#ffb00088] bg-[rgba(255,176,0,0.08)] px-3 py-2 text-xs text-[#ffcb57]">
+                    {t("assignments_panel.automation_readonly")}
+                </div>
+            )}
 
             <div className="min-h-0 flex-1 overflow-y-auto bg-[rgba(0,212,255,0.04)] border border-[#00d4ff] p-3 space-y-3">
                 {crew.map((c) => {
@@ -201,6 +226,7 @@ export function AssignmentsPanel() {
                             selectedAction={selectedAction}
                             isMoving={isMoving}
                             pendingModuleId={pendingModuleId}
+                            readOnly={crewAutomationEnabled}
                             getModuleName={getModuleName}
                             onSetMove={(targetModuleId) => {
                                 if (targetModuleId === null) {
@@ -247,6 +273,7 @@ export function AssignmentsPanel() {
                 <div className="flex gap-2.5 flex-wrap">
                 <Button
                     onClick={handleApply}
+                    disabled={crewAutomationEnabled}
                     className="cursor-pointer bg-transparent border-2 border-[#00ff41] text-[#00ff41] hover:bg-[#00ff41] hover:text-[#050810] uppercase tracking-wider"
                 >
                     {t("assignments_panel.apply")}
@@ -285,6 +312,7 @@ function CrewAssignmentCard({
     selectedAction,
     isMoving,
     pendingModuleId,
+    readOnly,
     getModuleName,
     onSetMove,
     onSetTask,
@@ -299,6 +327,7 @@ function CrewAssignmentCard({
     selectedAction: CivilianAction | undefined;
     isMoving: boolean;
     pendingModuleId: number | undefined;
+    readOnly: boolean;
     getModuleName: (moduleId: number) => string;
     onSetMove: (targetModuleId: number | null) => void;
     onSetTask: (
@@ -444,7 +473,7 @@ function CrewAssignmentCard({
                                     : "?"
                             }
                             active={!isMoving}
-                            disabled={false}
+                            disabled={readOnly}
                             onClick={() => onSetMove(null)}
                         />
                         {adjacentModules.map((mod) => (
@@ -454,7 +483,7 @@ function CrewAssignmentCard({
                                 module={mod}
                                 moduleName={getModuleName(mod.id)}
                                 active={pendingModuleId === mod.id}
-                                disabled={crewMember.movedThisTurn}
+                                disabled={readOnly || crewMember.movedThisTurn}
                                 onClick={() => onSetMove(mod.id)}
                             />
                         ))}
@@ -488,7 +517,7 @@ function CrewAssignmentCard({
                                     type="button"
                                     disabled={
                                         (crewMember.assignmentRestTurns ?? 0) >
-                                            0 && itemValue !== "none"
+                                            0 && itemValue !== "none" || readOnly
                                     }
                                     onClick={() =>
                                         onSetTask(

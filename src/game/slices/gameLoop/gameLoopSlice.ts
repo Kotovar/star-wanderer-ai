@@ -30,6 +30,7 @@ import {
 } from "@/game/constants/globalCrises";
 import { getCrisisResponseChance } from "@/game/crises/escalation";
 import { getCrisisResponseDefinition } from "@/game/constants/crisisResponses";
+import { runCrewAutomation } from "@/game/slices/crew/helpers/runCrewAutomation";
 
 /**
  * Интерфейс GameLoopSlice
@@ -92,6 +93,8 @@ export const createGameLoopSlice = (
         // Проверка кислорода
         const gameOver = checkOxygen(state, get, set);
         if (gameOver) return;
+
+        runCrewAutomation(set, get);
 
         // Проверка повреждений модулей
         checkModuleDamage(get, set);

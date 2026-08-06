@@ -453,6 +453,8 @@
         "no_changes": "No changes yet.",
         "apply": "APPLY",
         "cancel": "CANCEL",
+        "automation_toggle": "Automatic crew control",
+        "automation_readonly": "Automation is active: AI will assign tasks and movement at the start of the next turn.",
         "merged": "Merged",
         "turn_spent": "Turn spent",
         "rest": "Resting: {{turns}} t.",

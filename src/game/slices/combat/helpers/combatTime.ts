@@ -1,6 +1,7 @@
 import { store as i18nStore } from "@/lib/useTranslation";
 import { checkModuleDamage } from "@/game/slices/gameLoop/helpers/moduleDamage";
 import { processCrewAssignments } from "@/game/slices/gameLoop/processors";
+import { runCrewAutomation } from "@/game/slices/crew/helpers/runCrewAutomation";
 import type { GameState, GameStore, SetState } from "@/game/types";
 
 type ImmerSetState = (fn: (state: GameState) => void) => void;
@@ -20,6 +21,7 @@ export function advanceCombatRound(
         s.currentCombat.round = (s.currentCombat.round ?? 1) + 1;
     });
 
+    runCrewAutomation(set as unknown as SetState, get);
     checkModuleDamage(get, set as unknown as SetState);
     processCrewAssignments(set as unknown as SetState, get);
     set((s) => {

@@ -63,6 +63,9 @@ export interface CrewSlice {
      */
     autoUnmergeOnMove: (crewMemberId: number) => void;
 
+    /** Включает или отключает автоматическое управление экипажем */
+    setCrewAutomationEnabled: (enabled: boolean) => void;
+
     /**
      * Назначает гражданскую задачу члену экипажа
      */
@@ -132,17 +135,31 @@ export const createCrewSlice = (
 
     canUnmerge: (crewMember) => canUnmerge(crewMember),
 
-    mergeWithModule: (crewMemberId, moduleId) =>
-        mergeWithModuleFn(crewMemberId, moduleId, set, get),
+    mergeWithModule: (crewMemberId, moduleId) => {
+        if (get().crewAutomation.enabled) return false;
+        return mergeWithModuleFn(crewMemberId, moduleId, set, get);
+    },
 
-    unmergeFromModule: (crewMemberId) =>
-        unmergeFromModuleFn(crewMemberId, set, get),
+    unmergeFromModule: (crewMemberId) => {
+        if (get().crewAutomation.enabled) return false;
+        return unmergeFromModuleFn(crewMemberId, set, get);
+    },
 
-    autoUnmergeOnMove: (crewMemberId) =>
-        autoUnmergeOnMoveFn(crewMemberId, set, get),
+    autoUnmergeOnMove: (crewMemberId) => {
+        if (get().crewAutomation.enabled) return;
+        autoUnmergeOnMoveFn(crewMemberId, set, get);
+    },
+
+    setCrewAutomationEnabled: (enabled) => {
+        set((state) => {
+            state.crewAutomation.enabled = enabled;
+            state.crewAutomation.memory = {};
+        });
+    },
 
     assignCrewTask: (crewId, task, effect) => {
         const state = get();
+        if (state.crewAutomation.enabled) return;
         const crewMember = state.crew.find((c) => c.id === crewId);
         if (!crewMember) return;
 
@@ -200,6 +217,7 @@ export const createCrewSlice = (
 
     assignCombatTask: (crewId, task, effect) => {
         const state = get();
+        if (state.crewAutomation.enabled) return;
         const crewMember = state.crew.find((c) => c.id === crewId);
         if (!crewMember) return;
 
@@ -244,6 +262,7 @@ export const createCrewSlice = (
 
     moveCrewMember: (crewId, targetModuleId) => {
         const state = get();
+        if (state.crewAutomation.enabled) return;
         const crewMember = state.crew.find((c) => c.id === crewId);
         if (!crewMember) return;
 
