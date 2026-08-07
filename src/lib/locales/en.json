@@ -299,6 +299,7 @@
         "categories": {
             "trade": "Trade",
             "crew": "Crew hiring",
+            "modules": "Station modules",
             "planets": "Planets",
             "missions": "Missions and threats",
             "discovery": "Exploration and mining"
@@ -319,6 +320,8 @@
             "min_level": "Minimum level",
             "trait": "Trait",
             "mutation": "Mutation",
+            "module_type": "Module type",
+            "module_level": "Module level",
             "planet_type": "Planet type",
             "population": "Population",
             "reputation": "Reputation",
@@ -352,6 +355,7 @@
             "kind": "Type: {{value}}",
             "crew": "Candidate: {{race}} · {{profession}} · lvl. {{level}}",
             "traits": "Traits: {{values}}",
+            "module": "For sale: {{module}} · lvl. {{level}}",
             "details": "Data: {{values}}"
         }
     },

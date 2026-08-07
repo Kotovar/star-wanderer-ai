@@ -2,6 +2,7 @@ import type { MutationTraitId, Profession, TraitId } from "./crew";
 import type { Goods } from "./goods";
 import type { GalaxyTierAll } from "./locations/galaxy";
 import type { LocationType } from "./locations/locations";
+import type { ModuleType } from "./modules";
 import type { PlanetType } from "./planets";
 import type { RaceId } from "./races";
 import type { ReputationLevel } from "./reputation";
@@ -21,6 +22,7 @@ export const getNavigatorLocationKey = (sectorId: number, locationId: string) =>
 export type NavigatorCategory =
   | "trade"
   | "crew"
+  | "modules"
   | "planets"
   | "missions"
   | "discovery";
@@ -46,6 +48,8 @@ export type NavigatorFilters = {
   minLevel?: number;
   trait?: TraitId;
   mutation?: MutationTraitId;
+  moduleType?: ModuleType;
+  moduleLevel?: number;
   planetType?: PlanetType;
   population?: "inhabited" | "empty";
   populationKnowledge?: PopulationKnowledge;
@@ -75,5 +79,9 @@ export type NavigatorResult = {
     level: number;
     traits: TraitId[];
     mutation?: MutationTraitId;
+  };
+  module?: {
+    type: ModuleType;
+    level: number;
   };
 };

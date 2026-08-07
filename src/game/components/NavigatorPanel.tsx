@@ -7,6 +7,7 @@ import { TRADE_GOODS } from "@/game/constants/goods";
 import { PLANET_TYPES } from "@/game/constants/planets";
 import { RACES } from "@/game/constants/races";
 import { CREW_TRAITS, MUTATION_TRAITS } from "@/game/constants/traits";
+import { MODULES_BY_LEVEL } from "@/game/components/station/station-data";
 import { getNavigatorResults, getNavigatorTierOptions } from "@/game/navigator/search";
 import { useGameStore } from "@/game/store";
 import type {
@@ -19,6 +20,7 @@ import type {
 import type {
   Goods,
   MutationTraitId,
+  ModuleType,
   Profession,
   RaceId,
   TraitId,
@@ -32,6 +34,7 @@ import { SectionPanel } from "./SectionPanel";
 const CATEGORIES: NavigatorCategory[] = [
   "trade",
   "crew",
+  "modules",
   "planets",
   "missions",
   "discovery",
@@ -52,6 +55,22 @@ const REPUTATION_LEVELS: ReputationLevel[] = [
   "allied",
 ];
 const MINERAL_BUYBACK_GOODS: Goods[] = ["minerals", "rare_minerals"];
+const MODULE_TYPES: ModuleType[] = Array.from(
+  new Set(
+    Object.values(MODULES_BY_LEVEL)
+      .flat()
+      .filter((item) => item.type === "module")
+      .map((item) => item.moduleType),
+  ),
+);
+const MODULE_LEVELS = Array.from(
+  new Set(
+    Object.values(MODULES_BY_LEVEL)
+      .flat()
+      .filter((item) => item.type === "module")
+      .map((item) => item.level ?? 1),
+  ),
+).sort((left, right) => left - right);
 export const NAVIGATOR_TRAIT_IDS: TraitId[] = [
   ...CREW_TRAITS.positive,
   ...CREW_TRAITS.negative,
@@ -78,6 +97,11 @@ const getLocationKindLabel = (kind: string, t: (key: string) => string) =>
       LOCATION_KIND_TRANSLATION_KEYS[kind as NavigatorResult["kind"]] ?? kind
     }`,
   );
+const getModuleName = (moduleType: ModuleType, t: (key: string) => string) => {
+  const key = `module_names.${moduleType}`;
+  const translated = t(key);
+  return translated === key ? moduleType : translated;
+};
 const getResultDetailLabel = (
   detail: string,
   result: NavigatorResult,
@@ -134,6 +158,14 @@ export function NavigatorResultDetails({
             </div>
           )}
         </>
+      )}
+      {result.module && (
+        <div>
+          {t("navigator.facts.module", {
+            module: getModuleName(result.module.type, t),
+            level: result.module.level,
+          })}
+        </div>
       )}
       {result.details.length > 0 && !result.crew && (
         <div>
@@ -209,6 +241,7 @@ export function NavigatorPanel() {
   const hasAdvancedFilters =
     filters.category === "trade" ||
     filters.category === "crew" ||
+    filters.category === "modules" ||
     filters.category === "planets" ||
     filters.category === "missions" ||
     filters.category === "discovery";
@@ -511,6 +544,51 @@ export function NavigatorPanel() {
                 {MUTATION_TRAITS.map((mutation) => (
                   <option key={mutation} value={mutation}>
                     {t(`racial_traits.${mutation}.name`)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+          )}
+
+          {filters.category === "modules" && (
+          <>
+            <label className="text-xs text-[#9aa59a]">
+              {t("navigator.filters.module_type")}
+              <select
+                value={filters.moduleType ?? ""}
+                onChange={(event) =>
+                  updateFilters({
+                    moduleType: optionalValue<ModuleType>(event.target.value),
+                  })
+                }
+                className="mt-1 w-full border border-[#00ff4166] bg-[#071019] px-2 py-1 text-[#d7f8ff]"
+              >
+                <option value="">{t("navigator.filters.any")}</option>
+                {MODULE_TYPES.map((moduleType) => (
+                  <option key={moduleType} value={moduleType}>
+                    {getModuleName(moduleType, t)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-xs text-[#9aa59a]">
+              {t("navigator.filters.module_level")}
+              <select
+                value={filters.moduleLevel ?? ""}
+                onChange={(event) =>
+                  updateFilters({
+                    moduleLevel: event.target.value
+                      ? Number(event.target.value)
+                      : undefined,
+                  })
+                }
+                className="mt-1 w-full border border-[#00ff4166] bg-[#071019] px-2 py-1 text-[#d7f8ff]"
+              >
+                <option value="">{t("navigator.filters.any")}</option>
+                {MODULE_LEVELS.map((level) => (
+                  <option key={level} value={level}>
+                    {level}
                   </option>
                 ))}
               </select>

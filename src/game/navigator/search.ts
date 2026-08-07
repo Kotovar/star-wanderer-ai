@@ -1,6 +1,9 @@
 import { TRADE_GOODS } from "@/game/constants/goods";
 import { RACES } from "@/game/constants/races";
-import { generateStationCrew } from "@/game/components/station/station-data";
+import {
+  generateStationCrew,
+  generateStationItems,
+} from "@/game/components/station/station-data";
 import { generateCrewTraits, rollQuality } from "@/game/crew/utils";
 import { canSeeTier4 } from "@/game/galaxy/galaxy-map-utils";
 import { applyReputationPriceModifier } from "@/game/reputation/priceModifier";
@@ -15,6 +18,7 @@ import type {
   GalaxyTierAll,
   Goods,
   Location,
+  ModuleType,
   MutationTraitId,
   Profession,
   RaceId,
@@ -352,6 +356,34 @@ const getCrewResults = (
   });
 };
 
+const getModuleResults = (
+  input: NavigatorInput,
+  sector: Sector,
+  location: Location,
+  intel: KnownLocationIntel,
+): NavigatorResult[] => {
+  if (location.type !== "station" || !intel.visited) return [];
+
+  const stationId = location.stationId ?? location.id;
+  return generateStationItems(stationId, sector.tier, location.stationConfig)
+    .filter(
+      (item) =>
+        item.type === "module" &&
+        (!input.filters.moduleType ||
+          item.moduleType === input.filters.moduleType) &&
+        (!input.filters.moduleLevel ||
+          (item.level ?? 1) === input.filters.moduleLevel),
+    )
+    .map((item) => ({
+      ...createResult(sector, location, "modules", []),
+      key: `${getNavigatorLocationKey(sector.id, location.id)}:module:${item.id}`,
+      module: {
+        type: item.moduleType as ModuleType,
+        level: item.level ?? 1,
+      },
+    }));
+};
+
 const getPlanetResult = (
   input: NavigatorInput,
   sector: Sector,
@@ -502,6 +534,9 @@ export const getNavigatorResults = (input: NavigatorInput): NavigatorResult[] =>
         }
         case "crew":
           results.push(...getCrewResults(input, sector, location, intel));
+          break;
+        case "modules":
+          results.push(...getModuleResults(input, sector, location, intel));
           break;
         case "planets": {
           const result = getPlanetResult(input, sector, location, intel);

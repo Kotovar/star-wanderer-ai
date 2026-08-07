@@ -299,6 +299,7 @@
         "categories": {
             "trade": "Торговля",
             "crew": "Наём экипажа",
+            "modules": "Модули на станциях",
             "planets": "Планеты",
             "missions": "Задания и угрозы",
             "discovery": "Исследование и добыча"
@@ -319,6 +320,8 @@
             "min_level": "Мин. уровень",
             "trait": "Черта",
             "mutation": "Мутация",
+            "module_type": "Тип модуля",
+            "module_level": "Уровень модуля",
             "planet_type": "Тип планеты",
             "population": "Население",
             "reputation": "Репутация",
@@ -352,6 +355,7 @@
             "kind": "Тип: {{value}}",
             "crew": "Кандидат: {{race}} · {{profession}} · ур. {{level}}",
             "traits": "Черты: {{values}}",
+            "module": "В продаже: {{module}} · ур. {{level}}",
             "details": "Данные: {{values}}"
         }
     },

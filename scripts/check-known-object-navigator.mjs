@@ -456,6 +456,22 @@ const navigatorSectors = [
         dominantRace: "human",
       },
       {
+        id: "known-lab-station",
+        name: "Known Laboratory",
+        type: "station",
+        stationId: "known-lab-station",
+        stationConfig: { ...stationConfig, guaranteedModules: ["lab"] },
+        dominantRace: "human",
+      },
+      {
+        id: "unseen-lab-station",
+        name: "Unseen Laboratory",
+        type: "station",
+        stationId: "unseen-lab-station",
+        stationConfig: { ...stationConfig, guaranteedModules: ["lab"] },
+        dominantRace: "human",
+      },
+      {
         id: "zulu-station",
         name: "Zulu Market",
         type: "station",
@@ -562,6 +578,8 @@ const knownLocationIntel = Object.fromEntries(
   [
     [10, "trade-station", 3, false],
     [10, "seen-station", 0, false],
+    [10, "known-lab-station", 8, true],
+    [10, "unseen-lab-station", 8, false],
     [10, "zulu-station", 3, false],
     [10, "mining-station", 8, true],
     [10, "friendly-trader", 8, true],
@@ -682,6 +700,23 @@ assert.ok(
     { category: "trade" },
     { ...navigatorInput, knownLocationIntel: identifiedStationIntel },
   ).some(({ locationId }) => locationId === "seen-station"),
+);
+
+assert.ok(
+  results({ category: "modules", moduleType: "lab", moduleLevel: 1 }).some(
+    ({ locationId, module }) =>
+      locationId === "known-lab-station" &&
+      module?.type === "lab" &&
+      module.level === 1,
+  ),
+  "Module search must find an exact offer at a visited station",
+);
+assert.equal(
+  results({ category: "modules", moduleType: "lab", moduleLevel: 1 }).some(
+    ({ locationId }) => locationId === "unseen-lab-station",
+  ),
+  false,
+  "Module search must not reveal inventory from an unvisited station",
 );
 
 const waterMerchants = results({ category: "trade", goodId: "water" });
