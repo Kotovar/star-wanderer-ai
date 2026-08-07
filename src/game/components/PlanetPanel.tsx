@@ -64,7 +64,7 @@ function getPlanetTheme(dominantRace: keyof typeof RACES | undefined) {
 /** Текст места назначения контракта (планета/станция/корабль в нужном секторе). */
 function getContractDestinationText(
     contract: { targetLocationType?: string; targetLocationName?: string; targetSectorName?: string },
-    t: (key: string) => string,
+    t: (key: string, params?: Record<string, string | number>) => string,
 ): string {
     if (!contract.targetLocationType) {
         return contract.targetSectorName || t("contracts.unknown");
@@ -75,7 +75,11 @@ function getContractDestinationText(
             : contract.targetLocationType === "station"
               ? t("contracts.location_station")
               : t("contracts.location_ship");
-    return `${contract.targetLocationName} (${typeText}), сектор ${contract.targetSectorName}`;
+    return t("contracts.destination_full", {
+        name: getLocationName(contract.targetLocationName ?? t("contracts.unknown"), t),
+        type: typeText,
+        sector: contract.targetSectorName ?? "",
+    });
 }
 
 type TFn = (key: string, params?: Record<string, string | number>) => string;
@@ -119,7 +123,7 @@ function ContractDescription({
                 })}
             {c.type === "diplomacy" &&
                 t("contracts.desc_diplomacy", {
-                    planet: c.targetPlanetName || "",
+                    planet: getLocationName(c.targetPlanetName || "", t),
                     type: c.targetPlanetType || "",
                     sector: c.targetSectorName || "",
                 })}
@@ -168,7 +172,7 @@ function ContractDescription({
             })()}
             {c.type === "expedition_survey" &&
                 t("contracts.desc_expedition_survey_offer", {
-                    planet: c.targetPlanetName ?? "",
+                    planet: getLocationName(c.targetPlanetName ?? "", t),
                     sector: c.targetSectorName ?? "",
                     count: String(c.requiredDiscoveries ?? 1),
                 })}

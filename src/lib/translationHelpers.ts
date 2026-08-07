@@ -88,7 +88,8 @@ export function getLocationName(
         locationName.startsWith("location_types.") ||
         locationName.startsWith("asteroid_belt_names.") ||
         locationName.startsWith("gas_giant_names.") ||
-        locationName.startsWith("space_monsters.")
+        locationName.startsWith("space_monsters.") ||
+        locationName.startsWith("location_names.")
     ) {
         const translated = i18nT(locationName);
         // If translation failed, return the key without prefix
@@ -98,7 +99,8 @@ export function getLocationName(
                 .replace("location_types.", "")
                 .replace("asteroid_belt_names.", "")
                 .replace("gas_giant_names.", "")
-                .replace("space_monsters.", "");
+                .replace("space_monsters.", "")
+                .replace("location_names.", "");
         }
         return translated;
     }

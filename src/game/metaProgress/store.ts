@@ -1,8 +1,12 @@
+import type { CrewMember } from "../types/crew.ts";
 import type { MetaProgressState, RunSummary } from "./types";
 import { emptyMetaProgress, loadMetaProgress, saveMetaProgress } from "./storage.ts";
 import { mergeUnique } from "./utils.ts";
 import { ACHIEVEMENTS } from "./achievements.ts";
-import { SHIP_UNLOCK_RULES } from "./shipUnlocks.ts";
+import {
+  hasSyntheticCrewForEveryProfession,
+  SHIP_UNLOCK_RULES,
+} from "./shipUnlocks.ts";
 
 // Пороги — когда именно этот забег засчитывается в bespoke-счётчики доктрин
 // (сколько раз условие выполнено — уже в achievements.ts, DOCTRINE_REPEAT_TARGET).
@@ -31,6 +35,23 @@ function commit(next: MetaProgressState): void {
 
 export function resetMetaProgress(): void {
   commit(emptyMetaProgress());
+}
+
+export function unlockSyntheticDroneIfEligible(
+  crew: readonly CrewMember[],
+): boolean {
+  if (
+    snapshot.unlockedShipIds.includes("synthetic_drone") ||
+    !hasSyntheticCrewForEveryProfession(crew)
+  ) {
+    return false;
+  }
+
+  commit({
+    ...snapshot,
+    unlockedShipIds: mergeUnique(snapshot.unlockedShipIds, ["synthetic_drone"]),
+  });
+  return true;
 }
 
 /**

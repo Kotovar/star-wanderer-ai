@@ -8,6 +8,7 @@ import {
     SURVIVOR_ACCEPT_REPUTATION,
     SURVIVOR_DECLINE_REPUTATION,
 } from "@/game/slices/locations/constants";
+import { unlockSyntheticDroneIfEligible } from "@/game/metaProgress/store";
 
 /**
  * Интерфейс CrewManagementSlice
@@ -61,6 +62,9 @@ export const createCrewManagementSlice = (
             ],
             pendingSurvivor: null,
         }));
+        if (unlockSyntheticDroneIfEligible(get().crew)) {
+            get().addLog(i18nStore.t("game_logs.synthetic_drone_unlocked"), "info");
+        }
         get().changeReputation(survivor.race, SURVIVOR_ACCEPT_REPUTATION);
         get().addLog( i18nStore.t("game_logs.createCrewManagementSlice_1", { survivor_name: survivor.name }),
             "info",

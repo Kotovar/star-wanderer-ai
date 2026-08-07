@@ -4,10 +4,12 @@ import {
   getMetaProgressSnapshot,
   recordRunResult,
   resetMetaProgress,
+  unlockSyntheticDroneIfEligible,
 } from "../src/game/metaProgress/store.ts";
 import { mergeUnique } from "../src/game/metaProgress/utils.ts";
 import { ACHIEVEMENTS } from "../src/game/metaProgress/achievements.ts";
 import { SHIP_UNLOCK_RULES } from "../src/game/metaProgress/shipUnlocks.ts";
+import { SHIP_TEMPLATES } from "../src/game/constants/shipTemplates.ts";
 
 // ── mergeUnique: dedup, no mutation of inputs ──
 assert.deepEqual(mergeUnique(["a", "b"], ["b", "c"]), ["a", "b", "c"]);
@@ -53,6 +55,31 @@ assert.equal(weird.lastRecordedRunId, null);
 assert.equal(weird.winsWithSectors15Plus, 0);
 assert.equal(weird.runsWithCredits3000Plus, 0);
 assert.equal(weird.winsWithHostileRep, 0);
+
+assert.ok(
+  normalizeMetaProgress({ unlockedShipIds: ["synthetic_drone"] }).unlockedShipIds.includes(
+    "synthetic_drone",
+  ),
+  "synthetic drone id survives meta-progress normalization",
+);
+
+const syntheticDrone = SHIP_TEMPLATES.find((ship) => ship.id === "synthetic_drone");
+assert.ok(syntheticDrone, "synthetic drone template exists");
+assert.deepEqual(
+  syntheticDrone.crew.map((member) => [member.race, member.profession]),
+  [["synthetic", "pilot"], ["synthetic", "gunner"]],
+  "synthetic drone starts with a pilot and gunner",
+);
+assert.ok(
+  syntheticDrone.modules.some(
+    (module) => module.type === "reactor" && module.level === 2,
+  ),
+  "synthetic drone has a Mk.2 reactor",
+);
+assert.ok(
+  !syntheticDrone.modules.some((module) => module.type === "lifesupport"),
+  "synthetic drone does not need life support",
+);
 
 // ── ACHIEVEMENTS: every one of the 16 must be present exactly once ──
 const EXPECTED_ACHIEVEMENT_IDS = [
@@ -256,6 +283,28 @@ assert.deepEqual(
   SHIP_UNLOCK_RULES.fighter.getProgress(baseLifetime({ wins: 5 })),
   { current: 1, target: 1 },
   "getProgress must clamp current to target, not overshoot",
+);
+assert.ok(SHIP_UNLOCK_RULES.synthetic_drone, "synthetic drone has a lock rule");
+
+resetMetaProgress();
+const syntheticCrew = ["pilot", "engineer", "medic", "scout", "scientist", "gunner"].map(
+  (profession, index) => ({
+    id: index + 1,
+    race: "synthetic",
+    profession,
+    health: 100,
+  }),
+);
+assert.equal(
+  unlockSyntheticDroneIfEligible(syntheticCrew),
+  true,
+  "a living synthetic in every profession unlocks the drone immediately",
+);
+assert.ok(getMetaProgressSnapshot().unlockedShipIds.includes("synthetic_drone"));
+assert.equal(
+  unlockSyntheticDroneIfEligible(syntheticCrew),
+  false,
+  "unlocking the drone is idempotent",
 );
 
 // ── recordRunResult: idempotent on repeated runId ──

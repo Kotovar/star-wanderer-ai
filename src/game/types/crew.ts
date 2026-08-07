@@ -11,6 +11,15 @@ export type Profession =
     | "scientist"
     | "gunner";
 
+export const ALL_PROFESSIONS = [
+    "pilot",
+    "engineer",
+    "medic",
+    "scout",
+    "scientist",
+    "gunner",
+] as const satisfies readonly Profession[];
+
 export type TechPerkBranch = "A" | "B" | "C";
 export type ProfessionalTechPerkBranch = Exclude<TechPerkBranch, "C">;
 export type TechPerkTier = 3 | 6 | 9;

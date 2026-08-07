@@ -4,6 +4,7 @@ import { bossDistribution } from "./bossDistribution";
 import { ANOMALY_COLORS, MIN_REQUIREMENTS, STATION_CONFIG } from "./config";
 import { STATION_TYPES } from "./consts";
 import { getRandomRace, getDominantRaceForPlanet } from "@/game/races/utils";
+import { getLocationNameKey } from "./generate";
 
 /**
  * Обеспечивает минимальное количество аномалий в секторе
@@ -94,7 +95,7 @@ export const ensureColonizedPlanet = (sector: Sector): void => {
         sector.locations.push({
             id: `${sector.id}-extra-colony`,
             type: "planet",
-            name: `${String.fromCharCode(67 + (sector.locations.length % 26))}-${planetType.substring(0, 3)}`,
+            name: getLocationNameKey("planet", sector.id, sector.locations.length),
             planetType,
             isEmpty: false,
             dominantRace: getDominantRaceForPlanet(planetType),
@@ -141,7 +142,7 @@ export const ensureStation = (
         id: `${sector.id}-extra-station${stationCount ? `-${stationCount}` : ""}`,
         stationId: `station-${sector.id}-extra${stationCount ? `-${stationCount}` : ""}`,
         type: "station",
-        name: `Станция ${String.fromCharCode(65 + (sector.locations.length % 26))}`,
+        name: getLocationNameKey("station", sector.id, sector.locations.length),
         stationType,
         stationConfig: STATION_CONFIG[stationType],
         dominantRace: stationRace,
@@ -283,15 +284,10 @@ export const ensureDiplomaticStation = (sectors: Sector[]): void => {
 
         if (stationIdx >= 0) {
             const existing = sector.locations[stationIdx];
-            // Generate a random letter for the station name (like station_name.A)
-            const letter = String.fromCharCode(
-                65 + Math.floor(Math.random() * 26),
-            );
             sector.locations[stationIdx] = {
                 ...existing,
                 stationType: "diplomatic",
                 stationConfig: STATION_CONFIG["diplomatic"],
-                name: `station_name.${letter}`,
                 dominantRace: getRandomRace([]),
             };
             return;
@@ -315,7 +311,6 @@ export const ensureDiplomaticStation = (sectors: Sector[]): void => {
                 ...existing,
                 stationType: "diplomatic",
                 stationConfig: STATION_CONFIG.diplomatic,
-                name: `station_name.${String.fromCharCode(65 + (sector.id % 26))}`,
                 dominantRace: getRandomRace([]),
             };
             return;
@@ -329,7 +324,7 @@ export const ensureDiplomaticStation = (sectors: Sector[]): void => {
             id: `${sector.id}-diplomatic`,
             stationId: `station-${sector.id}-diplomatic`,
             type: "station",
-            name: `station_name.${String.fromCharCode(65 + (sector.id % 26))}`,
+            name: getLocationNameKey("station", sector.id, sector.locations.length),
             stationType: "diplomatic",
             stationConfig: STATION_CONFIG["diplomatic"],
             dominantRace: getRandomRace([]),

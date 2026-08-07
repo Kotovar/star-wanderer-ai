@@ -47,6 +47,7 @@ const T_FIGHTER = 300;
 const T_TRADER = 400;
 const T_SCIENTIST = 500;
 const T_ENGINEER = 600;
+const T_SYNTHETIC_DRONE = 800;
 
 // ─── Общие базовые значения ───────────────────────────────────────────────────
 const BASE_FUEL = 80;
@@ -194,6 +195,32 @@ const STANDARD_SHIP_TEMPLATES: ShipTemplate[] = [
       { id: 2, name: "Варга З'орк", profession: "gunner", moduleId: T_FIGHTER + 5, level: 1, race: "krylorian" },
     ],
     credits: 800,
+    fuel: BASE_FUEL,
+    maxFuel: BASE_FUEL,
+    probes: 0,
+    compatibleClasses: null,
+  },
+
+  // ── 6. Синтетический боевой дрон (hard) ──────────────────────────────────
+  {
+    id: "synthetic_drone",
+    nameKey: "ship_templates.synthetic_drone.name",
+    descriptionKey: "ship_templates.synthetic_drone.description",
+    icon: "🤖",
+    difficulty: "hard",
+    moduleIcons: ["⚛️", "🎮", "🔧", "🔫", "⛽"],
+    modules: [
+      { id: T_SYNTHETIC_DRONE + 1, type: "reactor", name: "Реактор Мк.2", x: 1, y: 1, width: 1, height: 1, power: 15, health: 120, maxHealth: 120, level: 2, defense: 3 },
+      { id: T_SYNTHETIC_DRONE + 2, type: "cockpit", name: "Кабина", x: 2, y: 1, width: 1, height: 1, consumption: 1, health: 100, maxHealth: 100, level: 1, defense: 2 },
+      { id: T_SYNTHETIC_DRONE + 3, type: "engine", name: "Двигатель", x: 3, y: 1, width: 1, height: 1, consumption: 1, health: 100, maxHealth: 100, level: 1, fuelEfficiency: 10, defense: 1 },
+      { id: T_SYNTHETIC_DRONE + 4, type: "weaponbay", name: "Боевая палуба", x: 1, y: 2, width: 1, height: 1, consumption: 2, health: 100, maxHealth: 100, level: 1, defense: 2, weapons: [{ type: "laser" }] },
+      { id: T_SYNTHETIC_DRONE + 5, type: "fueltank", name: "Топливный бак", x: 2, y: 2, width: 1, height: 1, health: 100, maxHealth: 100, level: 1, capacity: BASE_FUEL, defense: 1 },
+    ],
+    crew: [
+      { id: 1, name: "СИГМА-1", profession: "pilot", moduleId: T_SYNTHETIC_DRONE + 2, level: 1, race: "synthetic" },
+      { id: 2, name: "ВЕКТОР-2", profession: "gunner", moduleId: T_SYNTHETIC_DRONE + 4, level: 1, race: "synthetic" },
+    ],
+    credits: 750,
     fuel: BASE_FUEL,
     maxFuel: BASE_FUEL,
     probes: 0,

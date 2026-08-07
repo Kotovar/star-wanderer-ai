@@ -6,6 +6,11 @@ import {
 assert.equal(getExpeditionEnvironment("Вулканическая")?.stepDamage, 5);
 assert.equal(getExpeditionEnvironment("Ледяная")?.apCost, 2);
 assert.equal(
+  getExpeditionEnvironment("Ледяная")?.artifactWeightBonus,
+  2,
+  "ice expeditions make artifact cells as likely as ocean expeditions",
+);
+assert.equal(
   getExpeditionEnvironment("Океаническая")?.artifactWeightBonus,
   2,
 );

@@ -20,6 +20,7 @@ const EXPEDITION_PLANET_ENVIRONMENTS: Partial<
         icon: "❄️",
         labelKey: "ice",
         apCost: 2,
+        artifactWeightBonus: 2,
     },
     "Океаническая": {
         icon: "🌊",

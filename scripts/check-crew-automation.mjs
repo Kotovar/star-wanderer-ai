@@ -194,6 +194,28 @@ const decide = (crew, modules, overrides = {}) => {
 
 {
   const modules = [
+    shipModule(1, "medical", 0, 0),
+    shipModule(2, "weaponbay", 1, 0),
+    shipModule(3, "cockpit", 2, 0),
+  ];
+  const decisions = decide(
+    [
+      crewMember(1, "medic", 1),
+      crewMember(2, "gunner", 2, { happiness: 100 }),
+      crewMember(3, "pilot", 3, { happiness: 40 }),
+    ],
+    modules,
+  );
+  assert.equal(
+    decisions.get(1)?.targetModuleId,
+    3,
+    "medic leaves a fully restored module for the largest morale deficit",
+  );
+  assert.equal(decisions.get(1)?.task, "morale", "medic switches to morale support");
+}
+
+{
+  const modules = [
     shipModule(1, "lifesupport", 0, 0),
     shipModule(2, "weaponbay", 1, 0),
     shipModule(3, "medical", 0, 1, { healing: 8 }),

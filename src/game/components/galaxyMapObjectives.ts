@@ -5,6 +5,7 @@ import type {
     GalaxyMapObjective,
     GalaxyMapObjectiveKind,
 } from "@/game/galaxy/galaxy-map-utils";
+import { getLocationName } from "@/lib/translationHelpers";
 
 type GalaxyMapObjectivesInput = {
     sectors: Sector[];
@@ -16,6 +17,7 @@ type GalaxyMapObjectivesInput = {
     bossesVisible: boolean;
     knownLocationIntel: Record<string, KnownLocationIntel>;
     navigatorTargets: NavigatorTarget[];
+    translate?: (key: string) => string;
 };
 
 const getContractTargetSectorIds = (contract: Contract): number[] => {
@@ -39,12 +41,19 @@ const getContractTargetSectorIds = (contract: Contract): number[] => {
     return [...targetIds];
 };
 
-const getContractTargetLabel = (contract: Contract, sector: Sector): string =>
-    contract.targetLocationName ??
-    contract.targetPlanetName ??
-    contract.targetSectorName ??
-    contract.sectorName ??
-    sector.name;
+const getContractTargetLabel = (
+    contract: Contract,
+    sector: Sector,
+    translate: (key: string) => string,
+): string =>
+    getLocationName(
+        contract.targetLocationName ??
+            contract.targetPlanetName ??
+            contract.targetSectorName ??
+            contract.sectorName ??
+            sector.name,
+        translate,
+    );
 
 /** Собирает уже известные цели для навигационного слоя карты без нового состояния. */
 export const getGalaxyMapObjectives = ({
@@ -57,6 +66,7 @@ export const getGalaxyMapObjectives = ({
     bossesVisible,
     knownLocationIntel,
     navigatorTargets,
+    translate = (key) => key,
 }: GalaxyMapObjectivesInput): GalaxyMapObjective[] => {
     const sectorsById = new Map(sectors.map((sector) => [sector.id, sector]));
     const sectorsByName = new Map(sectors.map((sector) => [sector.name, sector]));
@@ -77,7 +87,11 @@ export const getGalaxyMapObjectives = ({
         for (const sectorId of getContractTargetSectorIds(contract)) {
             const sector = sectorsById.get(sectorId);
             if (sector) {
-                addObjective("contract", sector, getContractTargetLabel(contract, sector));
+                addObjective(
+                    "contract",
+                    sector,
+                    getContractTargetLabel(contract, sector, translate),
+                );
             }
         }
     }

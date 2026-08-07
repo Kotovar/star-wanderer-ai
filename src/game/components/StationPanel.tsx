@@ -35,6 +35,7 @@ import { CraftingTab } from "./station/CraftingTab";
 import { ModuleUpgradeModal } from "./station/ModuleUpgradeModal";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
+import { getLocationName } from "@/lib/translationHelpers";
 import {
     canHireRace,
     getRaceReputation,
@@ -1126,7 +1127,7 @@ function StationHeader({
         if (fullName.startsWith("Station ")) {
             return fullName.replace("Station ", "");
         }
-        return fullName;
+        return getLocationName(fullName, t);
     };
 
     const dominantRace = location.dominantRace;

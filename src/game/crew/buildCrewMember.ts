@@ -12,6 +12,7 @@ import {
     INITIAL_HAPPINESS_PERCENT,
 } from "@/game/constants/crew";
 import { RACES } from "@/game/constants/races";
+import { ALL_PROFESSIONS } from "@/game/types/crew";
 import type {
     CrewMember,
     CrewTrait,
@@ -55,15 +56,6 @@ export interface CrewBuildOptions {
     /** Уже сделанные выборы веток прокачки (тир → ветка). По умолчанию: не выбраны. */
     techPerks?: Partial<Record<TechPerkTier, TechPerkBranch>>;
 }
-
-const ALL_PROFESSIONS: Profession[] = [
-    "pilot",
-    "engineer",
-    "medic",
-    "scout",
-    "scientist",
-    "gunner",
-];
 
 const seededRand = (seed: number, offset: number): number =>
     Math.abs(Math.sin(seed + offset) * 10000) % 1;

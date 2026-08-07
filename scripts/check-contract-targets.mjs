@@ -7,8 +7,6 @@ import {
   getGeneratedContractTimeLimit,
   isContractExpired,
 } from "../src/game/contracts/contractDeadline.ts";
-import { formatContractDescription } from "../src/game/contracts/formatContractDescription.ts";
-import { getGalaxyMapObjectives } from "../src/game/components/galaxyMapObjectives.ts";
 
 const require = createRequire(import.meta.url);
 const scriptPath = fileURLToPath(import.meta.url);
@@ -16,6 +14,13 @@ const root = path.resolve(path.dirname(scriptPath), "..");
 const jiti = require("jiti")(scriptPath, {
   alias: { "@": path.join(root, "src") },
 });
+const { getGalaxyMapObjectives } = jiti(
+  "../src/game/components/galaxyMapObjectives.ts",
+);
+const { getLocationName } = jiti("../src/lib/translationHelpers.ts");
+const { formatContractDescription } = jiti(
+  "../src/game/contracts/formatContractDescription.ts",
+);
 const { isContractTargetAvailable } = jiti(
   "../src/game/contracts/targetAvailability.ts",
 );
@@ -35,10 +40,46 @@ const { completeMiningContracts } = jiti(
 const { generatePlanetContracts } = jiti(
   "../src/game/contracts/generatePlanetContracts.ts",
 );
+const { generatePlanet, generateStation } = jiti("../src/game/galaxy/generate.ts");
+const { refreshVisitedPlanetContracts } = jiti(
+  "../src/game/contracts/refreshPlanetContracts.ts",
+);
 const { processScanContracts } = jiti(
   "../src/game/slices/contracts/helpers/processScanContracts.ts",
 );
 const { loadWithMigrations } = jiti("../src/game/saves/migrations.ts");
+
+const locationTranslations = {
+  "location_names.station_01": "Meridian Foundry",
+  "location_names.planet_01": "Asterion",
+  "sector_map.station_prefix": "Station",
+};
+const translateLocation = (key) => locationTranslations[key] ?? key;
+assert.equal(
+  getLocationName("location_names.station_01", translateLocation),
+  "Meridian Foundry",
+  "new station name keys are translated",
+);
+assert.equal(
+  getLocationName("location_names.planet_01", translateLocation),
+  "Asterion",
+  "new planet name keys are translated",
+);
+assert.equal(
+  getLocationName("station_name.A", translateLocation),
+  "Station A",
+  "legacy station names stay readable",
+);
+assert.equal(
+  generateStation(2, 3).name,
+  "location_names.station_18",
+  "station names use the deterministic localized catalog",
+);
+assert.equal(
+  generatePlanet(2, 3, 1, false).name,
+  "location_names.planet_18",
+  "planet names use the deterministic localized catalog",
+);
 
 const sectors = [
   {
@@ -83,6 +124,74 @@ const sectors = [
 const defaultContext = { artifacts: [], researchedTechs: [] };
 const ok = (c, completed = [], context = defaultContext) =>
   isContractTargetAvailable(c, sectors, completed, context);
+
+const visitedPlanet = {
+  id: "refresh-visited",
+  type: "planet",
+  name: "location_names.planet_01",
+  planetType: "Ледяная",
+  visited: true,
+  contracts: [
+    { id: "refresh-open", type: "delivery" },
+    { id: "refresh-active", type: "delivery" },
+    { id: "refresh-completed", type: "delivery" },
+    { id: "refresh-stale", type: "combat", sectorId: 2 },
+  ],
+};
+const untouchedPlanet = {
+  id: "refresh-unvisited",
+  type: "planet",
+  name: "location_names.planet_02",
+  planetType: "Ледяная",
+  contracts: [{ id: "refresh-untouched", type: "delivery" }],
+};
+const refreshSectors = [
+  {
+    id: 1,
+    name: "Alpha",
+    tier: 1,
+    locations: [visitedPlanet, untouchedPlanet],
+  },
+  {
+    id: 2,
+    name: "Beta",
+    tier: 1,
+    locations: [
+      { id: "refresh-target", type: "planet", name: "location_names.planet_03", planetType: "Лесная" },
+      { id: "refresh-defeated", type: "enemy", defeated: true },
+    ],
+  },
+];
+const savedRandom = Math.random;
+Math.random = () => 0.2;
+const refreshedSectors = refreshVisitedPlanetContracts({
+  activeContracts: [{ id: "refresh-active", type: "delivery" }],
+  artifacts: [],
+  completedContractIds: ["refresh-completed"],
+  completedLocations: [],
+  galaxy: { sectors: refreshSectors },
+  research: { researchedTechs: [] },
+  runProfileId: null,
+});
+Math.random = savedRandom;
+assert.ok(refreshedSectors, "visited planets must be refreshed");
+const refreshedPlanet = refreshedSectors[0].locations[0];
+const refreshedIds = refreshedPlanet.contracts.map((contract) => contract.id);
+assert.ok(refreshedIds.includes("refresh-open"), "open offers are retained");
+assert.ok(!refreshedIds.includes("refresh-active"), "active offers are removed");
+assert.ok(!refreshedIds.includes("refresh-completed"), "completed offers are removed");
+assert.ok(!refreshedIds.includes("refresh-stale"), "stale offers are removed");
+assert.ok(
+  refreshedIds.filter((id) => id.startsWith("c-refresh-visited-")).length >= 1 &&
+    refreshedIds.filter((id) => id.startsWith("c-refresh-visited-")).length <= 2,
+  `refresh adds one or two offers: ${refreshedIds.join(", ")}`,
+);
+assert.ok(refreshedPlanet.contracts.length <= 5, "refresh never exceeds five open offers");
+assert.deepEqual(
+  refreshedSectors[0].locations[1].contracts,
+  untouchedPlanet.contracts,
+  "unvisited planets are untouched",
+);
 
 // combat: живой враг есть в секторе 1, в секторе 2 все убиты
 assert.ok(ok({ type: "combat", sectorId: 1 }), "combat: живой враг не найден");
@@ -397,6 +506,21 @@ let expiryState = {
       { item: "ore", quantity: 1 },
     ],
   },
+  galaxy: {
+    sectors: [
+      {
+        locations: [
+          {
+            contracts: [
+              { id: "expired-standard" },
+              { id: "expired-race" },
+              { id: "still-active" },
+            ],
+          },
+        ],
+      },
+    ],
+  },
 };
 const reputationChanges = [];
 const expiryGet = () => ({
@@ -418,6 +542,11 @@ assert.deepEqual(
   expiryState.ship.cargo,
   [{ item: "ore", quantity: 1 }],
   "груз просроченной доставки должен покинуть трюм",
+);
+assert.deepEqual(
+  expiryState.galaxy.sectors[0].locations[0].contracts.map((contract) => contract.id),
+  ["still-active"],
+  "просроченные предложения должны исчезнуть с планеты",
 );
 assert.deepEqual(
   reputationChanges,
@@ -474,6 +603,7 @@ assert.equal(
 
 let derelictState = {
   credits: 10,
+  raceReputation: { human: 0, synthetic: 0 },
   completedContractIds: [],
   pendingContractCompletions: [],
   activeContracts: [
@@ -512,8 +642,16 @@ const derelictGet = () => ({
     };
   },
   addLog: () => undefined,
-  changeReputation: (raceId, amount) =>
-    derelictReputationChanges.push([raceId, amount]),
+  changeReputation: (raceId, amount) => {
+    derelictReputationChanges.push([raceId, amount]);
+    derelictState = {
+      ...derelictState,
+      raceReputation: {
+        ...derelictState.raceReputation,
+        [raceId]: derelictState.raceReputation[raceId] + amount,
+      },
+    };
+  },
 });
 const derelictSet = (updater) => {
   derelictState = { ...derelictState, ...updater(derelictState) };
@@ -540,7 +678,7 @@ assert.deepEqual(
   "derelict_recovery: репутация заказчика не обновлена",
 );
 assert.deepEqual(
-  derelictState.pendingContractCompletions.map((contract) => contract.id),
+  derelictState.pendingContractCompletions.map((result) => result.contract.id),
   ["derelict-target", "derelict-same-target"],
   "derelict_recovery: выполненные контракты должны попасть в очередь результата",
 );
@@ -772,7 +910,13 @@ const mapObjectives = getGalaxyMapObjectives({
       ],
     },
   ],
-  activeContracts: [{ type: "delivery", targetSector: 1 }],
+  activeContracts: [
+    {
+      type: "delivery",
+      targetSector: 1,
+      targetLocationName: "location_names.station_01",
+    },
+  ],
   artifacts: [
     {
       hinted: true,
@@ -784,12 +928,16 @@ const mapObjectives = getGalaxyMapObjectives({
   bossesVisible: true,
   knownLocationIntel: {},
   navigatorTargets: [],
+  translate: translateLocation,
 });
 assert.ok(
   mapObjectives.some(
-    (objective) => objective.kind === "contract" && objective.sectorId === 1,
+    (objective) =>
+      objective.kind === "contract" &&
+      objective.sectorId === 1 &&
+      objective.label === "Meridian Foundry",
   ),
-  "контрактная цель не отмечена на карте",
+  "контрактная цель на карте не локализована",
 );
 assert.ok(
   mapObjectives.some(

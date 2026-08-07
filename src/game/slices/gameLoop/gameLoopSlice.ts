@@ -31,6 +31,7 @@ import {
 import { getCrisisResponseChance } from "@/game/crises/escalation";
 import { getCrisisResponseDefinition } from "@/game/constants/crisisResponses";
 import { runCrewAutomation } from "@/game/slices/crew/helpers/runCrewAutomation";
+import { refreshVisitedPlanetContracts } from "@/game/contracts/refreshPlanetContracts";
 
 /**
  * Интерфейс GameLoopSlice
@@ -60,6 +61,14 @@ export const createGameLoopSlice = (
         // Инициализация нового хода
         initNewTurn(set);
         const currentTurnState = get();
+        if (currentTurnState.turn % 100 === 0) {
+            const sectors = refreshVisitedPlanetContracts(currentTurnState);
+            if (sectors) {
+                set((s) => ({
+                    galaxy: { ...s.galaxy, sectors },
+                }));
+            }
+        }
 
         // Сбрасываем bonusPower/bonusEvasion до значений из активных планетарных эффектов.
         // Это удаляет устаревшие накопленные значения от назначений экипажа

@@ -484,17 +484,22 @@ export const planCrewAutomation = ({
     ).forEach(assign);
   }
 
-  const moraleTargets = [...new Set(crew.map((member) => member.moduleId))]
+  const moraleTargets = [...new Set(
+    crew
+      .filter((member) => member.happiness < member.maxHappiness)
+      .map((member) => member.moduleId),
+  )]
     .map((moduleId) => modules.find((module) => module.id === moduleId))
     .filter((module): module is Module => Boolean(module && isActive(module)))
     .sort((left, right) => {
-      const leftMorale = crew
-        .filter((member) => member.moduleId === left.id)
-        .reduce((sum, member) => sum + member.happiness / Math.max(member.maxHappiness, 1), 0);
-      const rightMorale = crew
-        .filter((member) => member.moduleId === right.id)
-        .reduce((sum, member) => sum + member.happiness / Math.max(member.maxHappiness, 1), 0);
-      return leftMorale - rightMorale;
+      const moraleDeficit = (moduleId: number) =>
+        crew
+          .filter((member) => member.moduleId === moduleId)
+          .reduce(
+            (sum, member) => sum + Math.max(0, member.maxHappiness - member.happiness),
+            0,
+          );
+      return moraleDeficit(right.id) - moraleDeficit(left.id);
     });
   selectUniqueCandidates(
     candidatesFor(unassigned("medic"), moraleTargets, mode === "combat" ? "firstaid" : "morale", PRIORITY.work),

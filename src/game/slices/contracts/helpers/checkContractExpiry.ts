@@ -25,6 +25,27 @@ export const checkContractExpiry = (
         activeContracts: s.activeContracts.filter(
             (ac) => !expired.some((e) => e.id === ac.id),
         ),
+        galaxy: {
+            ...s.galaxy,
+            sectors: s.galaxy.sectors.map((sector) => ({
+                ...sector,
+                locations: sector.locations.map((location) =>
+                    location.contracts?.some((offer) =>
+                        expired.some((contract) => contract.id === offer.id),
+                    )
+                        ? {
+                              ...location,
+                              contracts: location.contracts.filter(
+                                  (offer) =>
+                                      !expired.some(
+                                          (contract) => contract.id === offer.id,
+                                      ),
+                              ),
+                          }
+                        : location,
+                ),
+            })),
+        },
         ship: {
             ...s.ship,
             cargo: s.ship.cargo.filter(

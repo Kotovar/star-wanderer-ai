@@ -104,6 +104,22 @@ export const acceptContract = (
             ...s.activeContracts,
             { ...contract, acceptedAt: s.turn },
         ],
+        galaxy: {
+            ...s.galaxy,
+            sectors: s.galaxy.sectors.map((sector) => ({
+                ...sector,
+                locations: sector.locations.map((location) =>
+                    location.contracts?.some((offer) => offer.id === contract.id)
+                        ? {
+                              ...location,
+                              contracts: location.contracts.filter(
+                                  (offer) => offer.id !== contract.id,
+                              ),
+                          }
+                        : location,
+                ),
+            })),
+        },
     }));
     get().addLog( i18nStore.t("game_logs.acceptContract_7", {
         value: formatContractDescription(contract, i18nStore.t.bind(i18nStore)),

@@ -27,6 +27,13 @@ import {
 
 const ENEMY_TYPES: EnemyShip[] = ["pirate", "raider", "mercenary", "marauder"];
 
+export const getLocationNameKey = (
+    kind: "station" | "planet",
+    sectorIdx: number,
+    locIdx: number,
+) =>
+    `location_names.${kind}_${String(((sectorIdx * 7 + locIdx) % 24) + 1).padStart(2, "0")}`;
+
 // Enemy type display names
 const ENEMY_TYPE_NAMES: Record<EnemyShip, string> = {
     pirate: "Пираты",
@@ -186,7 +193,7 @@ export const generateStation = (
         id: `${sectorIdx}-${locIdx}`,
         stationId: `station-${sectorIdx}-${locIdx}`,
         type: "station",
-        name: `station_name.${String.fromCharCode(65 + (locIdx % 26))}`,
+        name: getLocationNameKey("station", sectorIdx, locIdx),
         stationType,
         stationConfig,
         dominantRace,
@@ -246,7 +253,7 @@ export const generatePlanet = (
     return {
         id: `${sectorIdx}-${locIdx}`,
         type: "planet",
-        name: `${String.fromCharCode(65 + (locIdx % 26))}-${planetType.substring(0, 3)}`,
+        name: getLocationNameKey("planet", sectorIdx, locIdx),
         planetType,
         isEmpty,
         contracts: [],

@@ -155,7 +155,8 @@
         "tab_techtree": "TECH TREE",
         "tech_tree_tier": "Level {{tier}}",
         "tech_tree_locked": "locked — requires level {{level}}",
-        "tech_tree_pending": "awaiting choice"
+        "tech_tree_pending": "awaiting choice",
+        "hire_oxygen_warning": "After hiring, {{needed}} crew members will need oxygen but life support only has capacity for {{capacity}}. Hire anyway?"
     },
     "cargo": {
         "title": "Cargo Bay",
@@ -3186,6 +3187,56 @@
         "space_monster": "Space Creature",
         "profile_signal": "Encrypted Coordinates"
     },
+    "location_names": {
+        "station_01": "Meridian Foundry",
+        "station_02": "Lazarus Point",
+        "station_03": "Anchor Market",
+        "station_04": "Cascade Yard",
+        "station_05": "Aurora Post",
+        "station_06": "Pulsar Haven",
+        "station_07": "Quiet Seam",
+        "station_08": "Helios Dock",
+        "station_09": "Vector Node",
+        "station_10": "Spark Harbor",
+        "station_11": "Deepwake Port",
+        "station_12": "Comet Relay",
+        "station_13": "Frontier Bastion",
+        "station_14": "Seven Moons Market",
+        "station_15": "Thread Observatory",
+        "station_16": "Ring Pier",
+        "station_17": "Pilgrim Depot",
+        "station_18": "Pole Star Hub",
+        "station_19": "Sigma Ark",
+        "station_20": "Echo Crossing",
+        "station_21": "Aurora",
+        "station_22": "Gamma Concourse",
+        "station_23": "Fairway Port",
+        "station_24": "Quartz Frontier",
+        "planet_01": "Asterion",
+        "planet_02": "Nivea",
+        "planet_03": "Thalassa",
+        "planet_04": "Cassida",
+        "planet_05": "Elion",
+        "planet_06": "Rifton",
+        "planet_07": "Mirra",
+        "planet_08": "Kron",
+        "planet_09": "Saphir",
+        "planet_10": "Liora",
+        "planet_11": "Ortus",
+        "planet_12": "Selene",
+        "planet_13": "Valkyria",
+        "planet_14": "Praxis",
+        "planet_15": "Pharos",
+        "planet_16": "Icaria",
+        "planet_17": "Delta Nova",
+        "planet_18": "Terra-Lumen",
+        "planet_19": "Viridis",
+        "planet_20": "Nox",
+        "planet_21": "Eos",
+        "planet_22": "Caldera",
+        "planet_23": "Arcadia",
+        "planet_24": "Kepler Haven"
+    },
     "space_monsters": {
         "title": "SPACE CREATURE",
         "threat": "Threat level",
@@ -4084,6 +4135,7 @@
         "locked_badge": "Locked",
         "ship_unlock_any_run": "Finish any expedition (win or lose) to unlock",
         "ship_unlock_win": "Win an expedition to unlock",
+        "ship_unlock_synthetic_drone": "Bring living synthetics of every profession together in one run to unlock",
         "crew_hint": "Crew members",
         "probes_hint": "Probes for exploring gas planets",
         "module_legend_label": "Modules",
@@ -4142,6 +4194,10 @@
         "engineer": {
             "name": "Engineer",
             "description": "Repair bay and powerful reactor. Synthetic engineer never tires. Ship repairs itself every turn."
+        },
+        "synthetic_drone": {
+            "name": "Synthetic Combat Drone",
+            "description": "A compact strike platform for synthetic crew: upgraded reactor, laser, and no life support."
         },
         "weapon_showcase": {
             "name": "Weapon Range (DEV)",
@@ -4555,6 +4611,7 @@
         "biohazard": {
             "title": "Biohazard",
             "description": "Scanners detect alien spores in the ventilation system. Without intervention, the crew takes {{damage}} HP damage.",
+            "safe_description": "Scanners detect alien spores, but every living crew member is immune. There is no risk.",
             "medic": {
                 "label": "Emergency decontamination",
                 "description": "The medic develops an antidote and contains the contamination.",
@@ -4571,7 +4628,8 @@
                 "label": "General isolation",
                 "description": "Seal the compartments and wait out the spore spread.",
                 "outcome": "Crew takes {{damage}} HP damage and loses 5 morale."
-            }
+            },
+            "safe_outcome": "The immune crew is unharmed."
         },
         "meteor_shower": {
             "title": "Meteor Shower",
@@ -4850,6 +4908,7 @@
             "biohazard_specialist": "Medic neutralized the spores: crew -{{damage}} HP",
             "biohazard_systems": "Bio-filters cleansed the ventilation: life support -5 HP",
             "biohazard_standard": "Spores spread through the ship: crew -{{damage}} HP, morale -5",
+            "biohazard_safe": "The spores are harmless: every living crew member is immune.",
             "detected_meteor_shower": "✦ Meteor shower pelting the ship — captain's decision required",
             "detected_pirate_raid": "☠ Pirate raid! — captain's decision required",
             "detected_distress_signal": "SOS Distress signal intercepted — captain's decision required",
@@ -5668,7 +5727,8 @@
         "err_no_module_type": "Module type for upgrade not specified",
         "err_max_upgrade": "Maximum upgrade level! (LV3)",
         "profile_signal_coordinates": "Encrypted coordinates: {{sector}}, Tier {{tier}}",
-        "profile_signal_reward": "{{profile}}: trail decrypted, reward received"
+        "profile_signal_reward": "{{profile}}: trail decrypted, reward received",
+        "synthetic_drone_unlocked": "🤖 Synthetic Combat Drone unlocked!"
     },
     "delivery_goods": {
         "spares": "Spare Parts",

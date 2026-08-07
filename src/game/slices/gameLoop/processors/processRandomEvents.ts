@@ -15,6 +15,10 @@ import {
   scheduleRandomEventConsequence,
 } from "@/game/events/randomEventChains";
 import { pickRandomEvent } from "@/game/constants/randomEvents";
+import {
+  canBeAffectedByBiohazard,
+  isCrewImmuneToBiohazard,
+} from "@/game/events/biohazard";
 import { shiftHappiness, giveRandomBondingTrait } from "@/game/crew";
 import { rollCrewRelationEvent } from "@/game/crew/relationEvents";
 import type { CrewRelationEvent } from "@/game/crew/relationEvents";
@@ -212,11 +216,19 @@ function applyRandomEventConsequence(
     case "storm":
     case "virus":
     case "crew_dispute":
-    case "biohazard":
       changeCrewHappiness(
         set,
-        positive ? 3 : event.eventType === "biohazard" ? -3 : -2,
+        positive ? 3 : -2,
       );
+      break;
+    case "biohazard":
+      set((state) => ({
+        crew: state.crew.map((member) =>
+          canBeAffectedByBiohazard(member)
+            ? shiftHappiness(member, positive ? 3 : -3)
+            : member,
+        ),
+      }));
       break;
     case "capsule":
       if (event.choice === "specialist")
@@ -593,6 +605,11 @@ function applyBiohazardChoice(
   set: SetState,
   get: () => GameStore,
 ): void {
+  if (isCrewImmuneToBiohazard(get().crew)) {
+    get().addLog(i18nStore.t("random_events.logs.biohazard_safe"), "info");
+    return;
+  }
+
   if (choice === "systems") {
     const lifesupport = findActiveModule(get(), "lifesupport");
     if (lifesupport) damageModule(set, lifesupport.id, 5);
@@ -603,10 +620,11 @@ function applyBiohazardChoice(
   if (choice === "specialist") {
     const damage = Math.floor(event.crewDamage * 0.3);
     set((state) => ({
-      crew: state.crew.map((member) => ({
-        ...member,
-        health: Math.max(1, member.health - damage),
-      })),
+      crew: state.crew.map((member) =>
+        canBeAffectedByBiohazard(member)
+          ? { ...member, health: Math.max(1, member.health - damage) }
+          : member,
+      ),
     }));
     get().gainExp(findLivingCrew(get(), "medic"), SPECIALIST_EXP);
     get().addLog(
@@ -618,10 +636,12 @@ function applyBiohazardChoice(
 
   set((state) => ({
     crew: state.crew.map((member) =>
-      shiftHappiness(
-        { ...member, health: Math.max(1, member.health - event.crewDamage) },
-        -5,
-      ),
+      canBeAffectedByBiohazard(member)
+        ? shiftHappiness(
+            { ...member, health: Math.max(1, member.health - event.crewDamage) },
+            -5,
+          )
+        : member,
     ),
   }));
   get().addLog(
@@ -978,7 +998,10 @@ export const resolveRandomEvent = (
       break;
   }
 
-  if (event.type !== "consequence") {
+  if (
+    event.type !== "consequence" &&
+    !(event.type === "biohazard" && isCrewImmuneToBiohazard(get().crew))
+  ) {
     set({
       scheduledRandomEventConsequence: scheduleRandomEventConsequence(
         event.type,

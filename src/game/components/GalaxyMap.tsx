@@ -401,6 +401,7 @@ export function GalaxyMap() {
                 bossesVisible,
                 knownLocationIntel,
                 navigatorTargets,
+                translate: t,
             }),
         [
             activeContracts,
@@ -412,6 +413,7 @@ export function GalaxyMap() {
             knownLocationIntel,
             navigatorTargets,
             sectors,
+            t,
         ],
     );
     const visibleMapObjectives = useMemo(() => {

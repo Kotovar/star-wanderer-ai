@@ -6,6 +6,7 @@ import { useGameStore } from "@/game/store";
 import type { PendingRandomEvent, RandomEventChoiceId } from "@/game/types";
 import { getModuleTranslation } from "@/lib/moduleTranslations";
 import { useTranslation } from "@/lib/useTranslation";
+import { isCrewImmuneToBiohazard } from "@/game/events/biohazard";
 import { useShallow } from "zustand/react/shallow";
 
 interface ChoiceView {
@@ -278,10 +279,13 @@ function buildEventView(
         ],
       };
     case "biohazard":
+      const biohazardSafe = isCrewImmuneToBiohazard(state.crew);
       return {
-        description: t("random_events.biohazard.description", {
-          damage: event.crewDamage,
-        }),
+        description: biohazardSafe
+          ? t("random_events.biohazard.safe_description")
+          : t("random_events.biohazard.description", {
+              damage: event.crewDamage,
+            }),
         choices: [
           {
             id: "specialist",
@@ -308,9 +312,11 @@ function buildEventView(
             icon: "▣",
             label: t("random_events.biohazard.standard.label"),
             description: t("random_events.biohazard.standard.description"),
-            outcome: t("random_events.biohazard.standard.outcome", {
-              damage: event.crewDamage,
-            }),
+            outcome: biohazardSafe
+              ? t("random_events.biohazard.safe_outcome")
+              : t("random_events.biohazard.standard.outcome", {
+                  damage: event.crewDamage,
+                }),
             available: true,
           },
         ],

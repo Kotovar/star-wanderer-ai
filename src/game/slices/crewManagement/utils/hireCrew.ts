@@ -4,6 +4,8 @@ import type { GameStore, CrewMember, RaceId, SetState } from "@/game/types";
 import { playSound } from "@/sounds";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
 import { canHireRace } from "@/game/reputation/utils";
+import { RACES } from "@/game/constants/races";
+import { unlockSyntheticDroneIfEligible } from "@/game/metaProgress/store";
 
 /**
  * Результат проверки возможности найма
@@ -66,6 +68,24 @@ export const hireCrew = (
         return;
     }
 
+    const candidateRace = crewData.race ?? "human";
+    const oxygenRequired = state.crew.filter(
+        (member) => RACES[member.race].requiresOxygen,
+    ).length + (RACES[candidateRace].requiresOxygen ? 1 : 0);
+    if (
+        RACES[candidateRace].requiresOxygen &&
+        oxygenRequired > state.getOxygenCapacity() &&
+        typeof window !== "undefined" &&
+        !window.confirm(
+            i18nStore.t("crew.hire_oxygen_warning", {
+                needed: oxygenRequired,
+                capacity: state.getOxygenCapacity(),
+            }),
+        )
+    ) {
+        return;
+    }
+
     // Поиск модуля жизнеобеспечения для начального размещения
     const lifesupportModule = state.ship.modules.find(
         (m) => m.type === "lifesupport",
@@ -113,6 +133,10 @@ export const hireCrew = (
             ],
         },
     }));
+
+    if (unlockSyntheticDroneIfEligible(get().crew)) {
+        get().addLog(i18nStore.t("game_logs.synthetic_drone_unlocked"), "info");
+    }
 
     // Повышение репутации с расой за найм экипажа (+1~3 в зависимости от уровня)
     if (newCrew.race) {

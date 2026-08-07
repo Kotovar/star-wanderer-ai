@@ -1,3 +1,4 @@
+import { ALL_PROFESSIONS, type CrewMember } from "../types/crew.ts";
 import type { MetaProgressState } from "./types";
 
 /**
@@ -14,6 +15,17 @@ export interface ShipUnlockRule {
   /** Локаль текста условия, показывается на заблокированной карточке. */
   hintKey: string;
 }
+
+export const hasSyntheticCrewForEveryProfession = (
+  crew: readonly CrewMember[],
+): boolean => {
+  const professions = new Set(
+    crew
+      .filter((member) => member.health > 0 && member.race === "synthetic")
+      .map((member) => member.profession),
+  );
+  return ALL_PROFESSIONS.every((profession) => professions.has(profession));
+};
 
 /** dev_arsenal_fixture сюда не входит — он вне прогрессии, гейтится NODE_ENV (см. shipTemplates.ts). */
 export const SHIP_UNLOCK_RULES: Record<string, ShipUnlockRule> = {
@@ -40,5 +52,10 @@ export const SHIP_UNLOCK_RULES: Record<string, ShipUnlockRule> = {
       target: 1,
     }),
     hintKey: "new_game_setup.ship_unlock_win",
+  },
+  synthetic_drone: {
+    isUnlocked: () => false,
+    getProgress: () => ({ current: 0, target: 1 }),
+    hintKey: "new_game_setup.ship_unlock_synthetic_drone",
   },
 };

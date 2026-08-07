@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { RACES } from "../constants/races";
 import type { RaceId } from "../types";
 import { useTranslation } from "@/lib/useTranslation";
+import { getLocationName } from "@/lib/translationHelpers";
 
 export function HostileApproachWarningPanel() {
     const currentLocation = useGameStore((s) => s.currentLocation);
@@ -27,14 +28,7 @@ export function HostileApproachWarningPanel() {
     // Stations and planets refuse entry — show access denied
     const isFriendlyShip = locType === "friendly_ship";
 
-    // Get location display name - handle station_name.X keys
-    const getDisplayName = () => {
-        const fullName = currentLocation.name;
-        if (fullName.startsWith("station_name.")) {
-            return `${t("events.station")} ${fullName.replace("station_name.", "")}`;
-        }
-        return fullName;
-    };
+    const getDisplayName = () => getLocationName(currentLocation.name, t);
 
     let warningText: string;
     if (isBanned) {

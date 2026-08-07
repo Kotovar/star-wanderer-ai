@@ -6,6 +6,7 @@ import { TRADE_GOODS } from "../constants/goods";
 import { DELIVERY_GOODS } from "../constants/contracts";
 import { WEAPON_TYPES } from "../constants/weapons";
 import { useTranslation } from "@/lib/useTranslation";
+import { getLocationName } from "@/lib/translationHelpers";
 import { GoodInfoModal } from "./GoodInfoModal";
 import { WeaponDetailDialog } from "./WeaponDetailDialog";
 import { ModuleDetailDialog } from "./ModuleList";
@@ -152,7 +153,11 @@ function ContractCargoDialog({
                   ?.name || cargoItem.item;
 
     const destination = contract
-        ? [contract.targetLocationName, contract.targetSectorName]
+        ? [
+              contract.targetLocationName &&
+                  getLocationName(contract.targetLocationName, t),
+              contract.targetSectorName,
+          ]
               .filter(Boolean)
               .join(", ")
         : "";
