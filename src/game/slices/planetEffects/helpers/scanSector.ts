@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getSectorName } from "@/lib/translationHelpers";
 import { PLANET_SPECIALIZATIONS } from "@/game/constants";
 import {
     getArchiveHintLocations,
@@ -129,13 +130,13 @@ export const scanSector = (set: SetState, get: () => GameStore): boolean => {
     }
 
     if (bossHint) {
-        get().addLog( i18nStore.t("game_logs.scanSector_3", { sectorName: bossHint.sectorName, locationName: bossHint.locationName }),
+        get().addLog( i18nStore.t("game_logs.scanSector_3", { sectorName: getSectorName(bossHint.sectorName, i18nStore.t), locationName: bossHint.locationName }),
             "warning",
         );
     }
 
     if (anomalyHint) {
-        get().addLog( i18nStore.t("game_logs.scanSector_4", { sectorName: anomalyHint.sectorName }),
+        get().addLog( i18nStore.t("game_logs.scanSector_4", { sectorName: getSectorName(anomalyHint.sectorName, i18nStore.t) }),
             "warning",
         );
     }

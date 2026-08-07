@@ -1,5 +1,5 @@
 import type { Contract } from "@/game/types";
-import { getLocationName } from "@/lib/translationHelpers";
+import { getLocationName, getSectorNames } from "@/lib/translationHelpers";
 
 type ContractDescription = Pick<
   Contract,
@@ -45,13 +45,16 @@ export const formatContractDescription = (
     progress: contract.visited ?? contract.visitedAnomalies ?? 0,
     quantity: contract.quantity ?? "",
     amount: contract.quantity ?? "",
-    sector: contract.targetSectorName ?? contract.sectorName ?? "",
+    sector: getLocationName(
+      contract.targetSectorName ?? contract.sectorName ?? "",
+      t,
+    ),
     threat: contract.targetThreat ?? "",
     planet: getLocationName(contract.targetPlanetName ?? "", t),
     type: contract.targetPlanetType ?? "",
-    sectors: contract.targetSectorNames ?? "",
+    sectors: getSectorNames(contract.targetSectorNames ?? "", t),
     visited: contract.visitedSectors?.length ?? 0,
     target: contract.targetSectors?.length ?? 0,
     stormName: contract.stormName ?? "",
-    sectorName: contract.sectorName ?? "",
+    sectorName: getLocationName(contract.sectorName ?? "", t),
   });

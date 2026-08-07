@@ -46,6 +46,7 @@ import { setupHiDPICanvas } from "./canvas-utils";
 import { getGalaxyMapObjectives } from "./galaxyMapObjectives";
 import { shouldRedrawMainMap } from "./mapFrameRate";
 import { useMapZoomPan, DRAG_THRESHOLD } from "./useMapZoomPan";
+import { getSectorName } from "@/lib/translationHelpers";
 
 // Animation constants
 const TWINKLING_STARS_COUNT = 40;
@@ -497,7 +498,7 @@ export function GalaxyMap() {
             if (risk) {
                 setFuelWarning({
                     sectorId,
-                    sectorName: targetSector.name,
+                    sectorName: getSectorName(targetSector.name, t),
                     route,
                     ...risk,
                 });
@@ -506,7 +507,7 @@ export function GalaxyMap() {
 
             selectSector(sectorId, route);
         },
-        [selectSector],
+        [selectSector, t],
     );
 
     // Перед многоходовым перелётом предлагаем выбрать маршрут
@@ -728,6 +729,7 @@ export function GalaxyMap() {
             playerShipImageRef.current,
             starSpriteImageRef.current,
             markerTime,
+            (sector) => getSectorName(sector.name, t),
         );
         drawGalaxyObjectiveMarkers(
             ctx,
@@ -761,6 +763,7 @@ export function GalaxyMap() {
         updateSectorPosition,
         visibleMapObjectives,
         zoom,
+        t,
     ]);
 
     useEffect(() => {
@@ -1063,7 +1066,7 @@ export function GalaxyMap() {
                     if (readiness.needsWarning) {
                         setDangerousJump({
                             sectorId: sector.id,
-                            sectorName: sector.name,
+                            sectorName: getSectorName(sector.name, t),
                             sectorTier: sector.tier,
                             rating: readiness.rating,
                             recommended: readiness.recommended,
@@ -1073,7 +1076,11 @@ export function GalaxyMap() {
                 }
                 setDangerousJump(null);
                 if (sector.id !== useGameStore.getState().currentSector?.id) {
-                    startTravelTo(sector.id, sector.name, sector.tier);
+                    startTravelTo(
+                        sector.id,
+                        getSectorName(sector.name, t),
+                        sector.tier,
+                    );
                 } else {
                     selectSector(sector.id);
                 }
@@ -1327,7 +1334,7 @@ export function GalaxyMap() {
                                         ? t(objective.label)
                                         : objective.label;
                                     const routeLabel = t("route_dialog.title", {
-                                        sector: sector.name,
+                                        sector: getSectorName(sector.name, t),
                                     });
 
                                     return (
@@ -1337,7 +1344,7 @@ export function GalaxyMap() {
                                             onClick={() =>
                                                 startTravelTo(
                                                     sector.id,
-                                                    sector.name,
+                                                    getSectorName(sector.name, t),
                                                     sector.tier,
                                                 )
                                             }
@@ -1354,9 +1361,9 @@ export function GalaxyMap() {
                                             </span>
                                             <span className="min-w-0 flex-1">
                                                 <span className="block truncate text-[#dfe8ef]">
-                                                    {sector.name}
+                                                    {getSectorName(sector.name, t)}
                                                 </span>
-                                                {objectiveLabel !== sector.name && (
+                                                {objectiveLabel !== getSectorName(sector.name, t) && (
                                                     <span className="block truncate text-[10px] text-[#81909a]">
                                                         {objectiveLabel}
                                                     </span>
@@ -1554,6 +1561,7 @@ function drawSectors(
     playerShipImage?: HTMLImageElement | null,
     starSpriteImage?: HTMLImageElement | null,
     time: number = 0,
+    formatSectorName: (sector: Sector) => string = (sector) => sector.name,
 ) {
     const canSeeT4 = canSeeTier4(modules, artifacts, scanRange);
 
@@ -1580,6 +1588,7 @@ function drawSectors(
             playerShipImage,
             starSpriteImage,
             time,
+            formatSectorName(sector),
         );
     });
 }

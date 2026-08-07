@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getLocationName } from "@/lib/translationHelpers";
 import { getArchiveHintLocations } from "@/game/artifacts/utils";
 import {
     FIRST_CONTACT_RESOURCE_BONUS,
@@ -223,7 +224,10 @@ export const resonateWithSpaceMonster = (
                               "space_monsters.logs.first_contact_artifact_hint",
                               {
                                   name: monsterName,
-                                  sector: artifactHint.hintedAt.sectorName,
+                                  sector: getLocationName(
+                                      artifactHint.hintedAt.sectorName,
+                                      i18nStore.t,
+                                  ),
                                   location: artifactHint.hintedAt.locationName,
                               },
                           )

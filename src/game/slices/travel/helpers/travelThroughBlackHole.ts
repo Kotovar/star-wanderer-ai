@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getSectorName } from "@/lib/translationHelpers";
 import type { GameStore, SetState } from "@/game/types";
 import { removeDeadCrew } from "@/game/slices/gameLoop/helpers/crewUtils";
 import { SCIENTIST_BLACK_HOLE_EXP } from "@/game/constants";
@@ -143,7 +144,7 @@ export const travelThroughBlackHole = (
 
     // Логирование
     get().addLog( i18nStore.t("game_logs.travelThroughBlackHole_3"), "warning");
-    get().addLog( i18nStore.t("game_logs.travelThroughBlackHole_4", { destination_name: destination.name }), "info");
+    get().addLog( i18nStore.t("game_logs.travelThroughBlackHole_4", { destination_name: getSectorName(destination.name, i18nStore.t) }), "info");
     get().addLog( i18nStore.t("game_logs.travelThroughBlackHole_5", { baseModuleDamage, numModulesToDamage }),
         "error",
     );

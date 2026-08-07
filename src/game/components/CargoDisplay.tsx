@@ -156,7 +156,8 @@ function ContractCargoDialog({
         ? [
               contract.targetLocationName &&
                   getLocationName(contract.targetLocationName, t),
-              contract.targetSectorName,
+              contract.targetSectorName &&
+                  getLocationName(contract.targetSectorName, t),
           ]
               .filter(Boolean)
               .join(", ")

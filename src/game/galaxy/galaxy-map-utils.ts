@@ -271,6 +271,7 @@ export function drawSector(
     playerShipImage?: HTMLImageElement | null,
     starSpriteSheet?: HTMLImageElement | null,
     time: number = 0,
+    sectorName = sector.name,
 ) {
     const tier = sector.tier;
     const isAccessible =
@@ -300,6 +301,7 @@ export function drawSector(
     drawSectorText(
         ctx,
         sector,
+        sectorName,
         x,
         y,
         isAccessible,
@@ -339,6 +341,7 @@ function drawSectorGlow(ctx: CanvasRenderingContext2D, x: number, y: number) {
 function drawSectorText(
     ctx: CanvasRenderingContext2D,
     sector: Sector,
+    sectorName: string,
     x: number,
     y: number,
     isAccessible: boolean,
@@ -398,7 +401,7 @@ function drawSectorText(
           ? "#00d4ff"
           : "#44515a";
     ctx.textAlign = "center";
-    ctx.fillText(sector.name, x, y - nameOffsetY);
+    ctx.fillText(sectorName, x, y - nameOffsetY);
 
     if (isAccessible && !isCurrent) {
         ctx.font = `${fuelFontSize}px Share Tech Mono`;

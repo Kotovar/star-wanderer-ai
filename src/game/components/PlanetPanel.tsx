@@ -23,6 +23,7 @@ import {
     getLocationName,
     getPlanetDescription,
     getPlanetTypeName,
+    getSectorNames,
 } from "@/lib/translationHelpers";
 import {
     getRaceReputation,
@@ -67,7 +68,10 @@ function getContractDestinationText(
     t: (key: string, params?: Record<string, string | number>) => string,
 ): string {
     if (!contract.targetLocationType) {
-        return contract.targetSectorName || t("contracts.unknown");
+        return getLocationName(
+            contract.targetSectorName || t("contracts.unknown"),
+            t,
+        );
     }
     const typeText =
         contract.targetLocationType === "planet"
@@ -78,7 +82,7 @@ function getContractDestinationText(
     return t("contracts.destination_full", {
         name: getLocationName(contract.targetLocationName ?? t("contracts.unknown"), t),
         type: typeText,
-        sector: contract.targetSectorName ?? "",
+        sector: getLocationName(contract.targetSectorName ?? "", t),
     });
 }
 
@@ -110,7 +114,7 @@ function ContractDescription({
             {c.type === "combat" &&
                 t(
                     c.isRaceQuest ? "contracts.desc_combat_race" : "contracts.desc_combat",
-                    { sector: c.sectorName || "" },
+                    { sector: getLocationName(c.sectorName || "", t) },
                 )}
             {c.type === "research" &&
                 (c.requiresTechResearch
@@ -119,17 +123,17 @@ function ContractDescription({
             {c.type === "bounty" &&
                 t("contracts.desc_bounty", {
                     threat: c.targetThreat || 1,
-                    sector: c.targetSectorName || "",
+                    sector: getLocationName(c.targetSectorName || "", t),
                 })}
             {c.type === "diplomacy" &&
                 t("contracts.desc_diplomacy", {
                     planet: getLocationName(c.targetPlanetName || "", t),
                     type: c.targetPlanetType || "",
-                    sector: c.targetSectorName || "",
+                    sector: getLocationName(c.targetSectorName || "", t),
                 })}
             {c.type === "patrol" &&
                 t("contracts.desc_patrol", {
-                    sectors: c.targetSectorNames || "",
+                    sectors: getSectorNames(c.targetSectorNames || "", t),
                     visited: c.visitedSectors?.length || 0,
                     target: c.targetSectors?.length || 0,
                 })}
@@ -137,7 +141,7 @@ function ContractDescription({
                 <>
                     {t("contracts.desc_rescue", {
                         stormName: c.stormName || t("storm.radiation_cloud"),
-                        sectorName: c.sectorName || "",
+                        sectorName: getLocationName(c.sectorName || "", t),
                     })}
                     {(c.requiredStormIntensity ?? 1) > 1 && (
                         <span className="ml-1 text-yellow-400">
@@ -158,7 +162,7 @@ function ContractDescription({
                       })
                     : t("contracts.desc_scan", {
                           planetType: c.planetType || "",
-                          sector: c.targetSectorName || "",
+                          sector: getLocationName(c.targetSectorName || "", t),
                       }))}
             {c.type === "supply_run" && c.cargo && (() => {
                 const cargoOwned =
@@ -167,18 +171,20 @@ function ContractDescription({
                     cargo: TRADE_GOODS[c.cargo as Goods]?.name || "",
                     quantity: c.quantity || 0,
                     progress: cargoOwned,
-                    destination: c.sourceName || c.sourceSectorName || "",
+                    destination:
+                        c.sourceName ||
+                        getLocationName(c.sourceSectorName || "", t),
                 });
             })()}
             {c.type === "expedition_survey" &&
                 t("contracts.desc_expedition_survey_offer", {
                     planet: getLocationName(c.targetPlanetName ?? "", t),
-                    sector: c.targetSectorName ?? "",
+                    sector: getLocationName(c.targetSectorName ?? "", t),
                     count: String(c.requiredDiscoveries ?? 1),
                 })}
             {c.type === "derelict_recovery" &&
                 t("contracts.derelict_recovery_pending", {
-                    sector: c.targetSectorName || "",
+                    sector: getLocationName(c.targetSectorName || "", t),
                 })}
             {c.type === "gas_dive" &&
                 t("contracts.desc_gas_dive_offer", {
@@ -186,7 +192,7 @@ function ContractDescription({
                 })}
             {c.type === "cleanse_curse" &&
                 t("contracts.desc_cleanse_curse_offer", {
-                    sector: c.targetSectorName || "",
+                    sector: getLocationName(c.targetSectorName || "", t),
                 })}
         </>
     );
@@ -216,7 +222,7 @@ function AvailableContractCard({
     const rawTitle = c.desc.startsWith("contracts.")
         ? t(c.desc, {
               planetType: c.planetType ? getPlanetTypeName(c.planetType, t) : "",
-              sector: c.targetSectorName ?? "",
+              sector: getLocationName(c.targetSectorName ?? "", t),
           })
         : c.desc;
     const title = c.isRaceQuest ? stripLeadingEmoji(rawTitle) : rawTitle;

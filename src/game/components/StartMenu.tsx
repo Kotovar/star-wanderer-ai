@@ -11,6 +11,7 @@ import {
 import { useGameStore } from "@/game/store";
 import { useTranslation } from "@/lib/useTranslation";
 import { AchievementsPanel } from "@/game/components/AchievementsPanel";
+import { getSectorName } from "@/lib/translationHelpers";
 
 const SLOT_IDS: SaveSlotId[] = ["auto", "manual1", "manual2", "manual3", "manual4", "manual5"];
 
@@ -107,7 +108,7 @@ export function StartMenu({
               title={t("start_menu.continue")}
               description={
                 autoSave
-                  ? `${autoSave.sectorName} · ${t("start_menu.turn")} ${autoSave.turn} · ₢${autoSave.credits}`
+                  ? `${getSectorName(autoSave.sectorName, t)} · ${t("start_menu.turn")} ${autoSave.turn} · ₢${autoSave.credits}`
                   : t("start_menu.no_save")
               }
               accent="#ffb000"
@@ -150,7 +151,7 @@ export function StartMenu({
                   )}
                   <div className="mt-2 text-[11px] text-[#91a0a8]">
                     {meta
-                      ? `${meta.sectorName} · ${t("start_menu.turn")} ${meta.turn} · ₢${meta.credits}`
+                      ? `${getSectorName(meta.sectorName, t)} · ${t("start_menu.turn")} ${meta.turn} · ₢${meta.credits}`
                       : t("start_menu.empty_desc")}
                   </div>
                 </button>

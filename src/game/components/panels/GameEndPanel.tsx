@@ -5,6 +5,7 @@ import { useGameStore } from "@/game/store";
 import { Button } from "@/components/ui/button";
 import { NewGameSetupModal } from "@/game/components/NewGameSetupModal";
 import { useTranslation } from "@/lib/useTranslation";
+import { getSectorName } from "@/lib/translationHelpers";
 import { SectionPanel } from "../SectionPanel";
 
 interface GameEndPanelProps {
@@ -67,7 +68,9 @@ export function GameEndPanel({ type, reason }: GameEndPanelProps) {
                     </h2>
                     <div className="text-sm" style={{ color: theme.border }}>
                         {t("game.turn")}: {turn} | {t("game.sector")}:{" "}
-                        {currentSector?.name ?? t("game_end.unknown")}
+                        {currentSector
+                            ? getSectorName(currentSector.name, t)
+                            : t("game_end.unknown")}
                     </div>
                 </div>
 

@@ -7,6 +7,7 @@ import { GalaxyMap } from "./GalaxyMap";
 import { SectorMap } from "./SectorMap";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
+import { getSectorName } from "@/lib/translationHelpers";
 import { calculateFuelCostForUI } from "@/game/slices/travel/helpers";
 
 import { CombatPanel } from "./CombatPanel";
@@ -380,7 +381,7 @@ export function EventDisplay() {
         </div>
         <div className="text-sm leading-relaxed">
           {t("travel.heading")}{" "}
-          <span className="text-accent">{traveling.destination.name}</span>
+          <span className="text-accent">{getSectorName(traveling.destination.name, t)}</span>
           <br />
           <br />
           {t("travel.turns_left")}:{" "}

@@ -650,7 +650,7 @@ export function NavigatorPanel() {
                     </div>
                     <div className="mt-1 text-[11px] text-ring">
                       {t("navigator.facts.sector", {
-                        name: result.sectorName,
+                        name: getLocationName(result.sectorName, t),
                         tier: result.sectorTier,
                       })}
                     </div>

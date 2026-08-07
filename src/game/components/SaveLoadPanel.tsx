@@ -7,6 +7,7 @@ import type { SaveSlotMeta, SaveSlotId, ManualSlotId } from "@/game/saves/utils"
 import { useTranslation } from "@/lib/useTranslation";
 import { SHIP_TEMPLATES } from "@/game/constants/shipTemplates";
 import { playUi, unlockAudio, type AudioVolumeCategory } from "@/sounds";
+import { getSectorName } from "@/lib/translationHelpers";
 
 interface Props {
   onClose: () => void;
@@ -126,7 +127,7 @@ function SlotCard({
         <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs">
           <span className="text-[#ffb000]">{t("save_load.turn_label")} {meta.turn}</span>
           <span className="text-[#00ff41]">{meta.credits}₢</span>
-          <span className="text-[#888]">📍 {meta.sectorName}</span>
+          <span className="text-[#888]">📍 {getSectorName(meta.sectorName, t)}</span>
           {meta.templateId ? (
             (() => {
               const tmpl = SHIP_TEMPLATES.find((template) => template.id === meta.templateId);

@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getLocationName } from "@/lib/translationHelpers";
 import type { SetState, GameStore } from "@/game/types";
 import type { ExpeditionReward } from "@/game/types/exploration";
 import { RESEARCH_RESOURCES } from "@/game/constants";
@@ -128,7 +129,7 @@ export function revealExpeditionTile(
         (c) => notDoneBefore.has(c.id) && c.expeditionDone,
     );
     for (const c of justFulfilled) {
-        get().addLog( i18nStore.t("game_logs.revealExpeditionTile_1", { tilesRevealed: c.tilesRevealed ?? 0, requiredDiscoveries: c.requiredDiscoveries ?? 0, sourceSectorName: c.sourceSectorName ?? "" }),
+        get().addLog( i18nStore.t("game_logs.revealExpeditionTile_1", { tilesRevealed: c.tilesRevealed ?? 0, requiredDiscoveries: c.requiredDiscoveries ?? 0, sourceSectorName: getLocationName(c.sourceSectorName ?? "", i18nStore.t.bind(i18nStore)) }),
             "info",
         );
     }

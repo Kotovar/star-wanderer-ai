@@ -2,7 +2,7 @@ import { populateContracts, populateShipQuests } from "../contracts";
 import { assignGridPositions } from "../sectorGrid";
 import type { Sector } from "../types";
 import { TIER_CONFIG } from "./config";
-import { TIER_NAMES } from "./consts";
+import { getSectorNameKey } from "./consts";
 import {
     ensureBlackHoles,
     ensureBosses,
@@ -65,7 +65,7 @@ export const generateGalaxy = (profile: RunProfile | null = null): Sector[] => {
 
             const sector: Sector = {
                 id: sectorIdx,
-                name: `${TIER_NAMES[sectorIdx % TIER_NAMES.length]}-${tier}`,
+                name: getSectorNameKey(sectorIdx, tier),
                 danger: baseDanger + Math.floor(Math.random() * 2),
                 distance: tier,
                 tier,

@@ -131,7 +131,7 @@ export function GoodInfoModal({ goodId, onClose }: GoodInfoModalProps) {
                             >
                                 <div className="text-[#00d4ff]">
                                     {getLocationName(row.stationName, t)},{" "}
-                                    {row.sectorName}
+                                    {getLocationName(row.sectorName, t)}
                                     {row.isCurrent && (
                                         <span className="ml-2 text-[10px] uppercase text-[#00ff41]">
                                             {t("good_info.current_station")}

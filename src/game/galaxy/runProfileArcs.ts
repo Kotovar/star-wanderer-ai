@@ -6,6 +6,7 @@ import {
 } from "./runProfiles";
 import { assignGridPositions } from "@/game/sectorGrid/assignGridPositions";
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getSectorName } from "@/lib/translationHelpers";
 import type {
   GameState,
   GameStore,
@@ -185,7 +186,7 @@ export function maybeRevealRunProfileArcTarget(
   );
   get().addLog(
     i18nStore.t("game_logs.profile_signal_coordinates", {
-      sector: targetSector?.name ?? "—",
+      sector: targetSector ? getSectorName(targetSector.name, i18nStore.t) : "—",
       tier: patch.runProfileArcTarget.tier,
     }),
     "info",

@@ -9,6 +9,7 @@ import { getCargoCapacity } from "@/game/slices/ship/helpers/getCargoCapacity";
 import { isRaceContractAvailable } from "@/game/reputation/utils";
 import { isContractTargetAvailable } from "@/game/contracts/targetAvailability";
 import { formatContractDescription } from "@/game/contracts/formatContractDescription";
+import { getLocationName } from "@/lib/translationHelpers";
 
 /**
  * Принимает контракт
@@ -141,7 +142,7 @@ export const acceptContract = (
 
     // Special message for supply_run contracts
     if (contract.type === "supply_run") {
-        get().addLog( i18nStore.t("game_logs.acceptContract_8", { value: i18nStore.t(contract.sourceType === "planet" ? "game_logs.deliver_to_planet" : "game_logs.deliver_to_ship"), sourceName: contract.sourceName ?? "", sourceSectorName: contract.sourceSectorName ?? "" }),
+        get().addLog( i18nStore.t("game_logs.acceptContract_8", { value: i18nStore.t(contract.sourceType === "planet" ? "game_logs.deliver_to_planet" : "game_logs.deliver_to_ship"), sourceName: contract.sourceName ?? "", sourceSectorName: getLocationName(contract.sourceSectorName ?? "", i18nStore.t.bind(i18nStore)) }),
             "warning",
         );
     }

@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getSectorName } from "@/lib/translationHelpers";
 import { findActiveArtifact, findArtifactByEffect } from "@/game/artifacts";
 import { ARTIFACT_TYPES } from "@/game/constants";
 import { findRouteNebula } from "@/game/galaxy/nebulae";
@@ -336,7 +337,7 @@ const handleTravelCompletion = (
 
     markSectorVisited(sector, set);
     get().syncNavigatorIntel();
-    get().addLog( i18nStore.t("game_logs.selectSector_4", { sector_name: sector.name }), "info");
+    get().addLog( i18nStore.t("game_logs.selectSector_4", { sector_name: getSectorName(sector.name, i18nStore.t) }), "info");
     playSound("travel_arrival");
 
     // Радиация нейтронной звезды действует и при мгновенном прибытии
@@ -422,7 +423,7 @@ const handleTravelStart = (
     if (travelInstant) {
         markSectorVisited(sector, set);
         set(() => ({ gameMode: "sector_map" as GameMode }));
-        get().addLog( i18nStore.t("game_logs.selectSector_5", { sector_name: sector.name }), "info");
+        get().addLog( i18nStore.t("game_logs.selectSector_5", { sector_name: getSectorName(sector.name, i18nStore.t) }), "info");
         playSound("travel_arrival");
 
         // Радиация нейтронной звезды действует и при варп-прыжке
@@ -450,7 +451,7 @@ const handleTravelStart = (
             get().checkVictory();
         }
     } else {
-        get().addLog( i18nStore.t("game_logs.selectSector_6", { sector_name: sector.name, distance }),
+        get().addLog( i18nStore.t("game_logs.selectSector_6", { sector_name: getSectorName(sector.name, i18nStore.t), distance }),
             "info",
         );
     }

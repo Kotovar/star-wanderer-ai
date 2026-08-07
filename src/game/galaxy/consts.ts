@@ -1,22 +1,7 @@
 import { StationName } from "../types";
 
-export const TIER_NAMES = [
-    "Альфа",
-    "Бета",
-    "Гамма",
-    "Дельта",
-    "Эпсилон",
-    "Дзета",
-    "Эта",
-    "Тета",
-    "Йота",
-    "Каппа",
-    "Лямбда",
-    "Мю",
-    "Ню",
-    "Кси",
-    "Омикрон",
-];
+export const getSectorNameKey = (sectorIdx: number, tier: number): string =>
+    `sector_names.sector_${String(sectorIdx + 1).padStart(2, "0")}_${tier}`;
 
 type ShipType = {
     name: string;

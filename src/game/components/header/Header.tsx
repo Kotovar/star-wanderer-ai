@@ -16,6 +16,7 @@ import {
 import { GameDialogContent } from "../GameDialog";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
+import { getSectorName } from "@/lib/translationHelpers";
 
 export function GameHeader() {
   const [showHelp, setShowHelp] = useState(false);
@@ -193,7 +194,7 @@ export function GameHeader() {
                   </span>
                   <span className="text-ring md:hidden">🚀</span>
                   <span className="font-bold text-ring text-xs md:text-base">
-                    {traveling.destination.name}
+                    {getSectorName(traveling.destination.name, t)}
                   </span>
                   <span className="text-[#445544] text-[10px]">
                     {traveling.turnsLeft}/{traveling.turnsTotal}{" "}
@@ -207,7 +208,9 @@ export function GameHeader() {
                   </span>
                   <span className="text-accent md:hidden">📍</span>
                   <span className="font-bold text-[#00ff41] text-xs md:text-base">
-                    {currentSector?.name || "START"}
+                    {currentSector
+                      ? getSectorName(currentSector.name, t)
+                      : "START"}
                   </span>
                 </>
               )}

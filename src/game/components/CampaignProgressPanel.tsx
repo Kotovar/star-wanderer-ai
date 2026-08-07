@@ -21,6 +21,7 @@ import { getRunProfileArcProgress } from "@/game/galaxy/runProfileArcs";
 import { getRunProfile } from "@/game/galaxy/runProfiles";
 import { isLocationCountedAsVisited } from "@/game/progression/locationProgress";
 import { useTranslation } from "@/lib/useTranslation";
+import { getSectorName } from "@/lib/translationHelpers";
 
 type Tone = "good" | "warning" | "danger" | "neutral";
 
@@ -463,7 +464,7 @@ export function CampaignProgressPanel() {
         <MetricCard
           label="Текущая область"
           value={REGION_NAMES[currentTier] ?? "Неизвестный сектор"}
-          hint={currentSector?.name ?? "—"}
+          hint={currentSector ? getSectorName(currentSector.name, t) : "—"}
           tone={currentTier >= 3 ? "warning" : "good"}
         />
         <MetricCard

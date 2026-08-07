@@ -20,7 +20,7 @@ import { RaceSprite } from "./RaceSprite";
 import { ContractReputationImpact } from "./ContractReputationImpact";
 import { getContractReputationImpact } from "@/game/reputation/utils";
 import { getContractTurnsRemaining } from "@/game/contracts/contractDeadline";
-import { getLocationName } from "@/lib/translationHelpers";
+import { getLocationName, getSectorNames } from "@/lib/translationHelpers";
 
 type TFunction = (
     key: string,
@@ -192,12 +192,15 @@ export function ContractsList() {
                     return t("contracts.deliver_to_named", {
                         type: typeText,
                         name: getLocationName(contract.targetLocationName, t),
-                        sector: contract.targetSectorName ?? "",
+                        sector: getLocationName(contract.targetSectorName ?? "", t),
                     });
                 }
                 return t("contracts.deliver_to").replace(
                     "{{sector}}",
-                    contract.targetSectorName || t("contracts.unknown"),
+                    getLocationName(
+                        contract.targetSectorName || t("contracts.unknown"),
+                        t,
+                    ),
                 );
             case "scan_planet": {
                 const req = contract.requiresVisit ?? 1;
@@ -209,7 +212,10 @@ export function ContractsList() {
             case "combat":
                 return t("contracts.clear_sector").replace(
                     "{{sector}}",
-                    contract.sectorName || t("contracts.unknown"),
+                    getLocationName(
+                        contract.sectorName || t("contracts.unknown"),
+                        t,
+                    ),
                 );
             case "research":
                 if (contract.requiresTechResearch) {
@@ -235,15 +241,21 @@ export function ContractsList() {
                 }
                 return revealed > 0
                     ? `🗺️ ${t("contracts.expedition_tiles_progress", { current: String(revealed), total: String(required) })}`
-                    : `🗺️ ${t("contracts.expedition_pending", { planet: getLocationName(contract.targetPlanetName ?? "?", t), sector: contract.targetSectorName ?? "?" })}`;
+                    : `🗺️ ${t("contracts.expedition_pending", { planet: getLocationName(contract.targetPlanetName ?? "?", t), sector: getLocationName(contract.targetSectorName ?? "?", t) })}`;
             }
             case "derelict_recovery":
                 return `🛸 ${t("contracts.derelict_recovery_pending", {
-                    sector: contract.targetSectorName ?? t("contracts.unknown"),
+                    sector: getLocationName(
+                        contract.targetSectorName ?? t("contracts.unknown"),
+                        t,
+                    ),
                 })}`;
             case "cleanse_curse":
                 return `✨ ${t("contracts.cleanse_curse_pending", {
-                    sector: contract.targetSectorName ?? t("contracts.unknown"),
+                    sector: getLocationName(
+                        contract.targetSectorName ?? t("contracts.unknown"),
+                        t,
+                    ),
                 })}`;
             default:
                 return t("contracts.default");
@@ -322,14 +334,17 @@ export function ContractsList() {
         // Determine destination text
         const getDestText = () => {
             if (!contract.targetLocationType)
-                return contract.targetSectorName || t("contracts.unknown");
+                return getLocationName(
+                    contract.targetSectorName || t("contracts.unknown"),
+                    t,
+                );
             return t("contracts.destination_full", {
                 name: getLocationName(
                     contract.targetLocationName ?? t("contracts.unknown"),
                     t,
                 ),
                 type: locationTypeText(contract.targetLocationType),
-                sector: contract.targetSectorName ?? "",
+                sector: getLocationName(contract.targetSectorName ?? "", t),
             });
         };
 
@@ -410,11 +425,14 @@ export function ContractsList() {
                         {
                             label: t("contracts.task_where"),
                             value: contract.sourcePlanetName
-                                ? `${contract.sourceSectorName}, ${getLocationName(contract.sourcePlanetName, t)}`
+                                ? `${getLocationName(contract.sourceSectorName ?? t("contracts.unknown"), t)}, ${getLocationName(contract.sourcePlanetName, t)}`
                                 : contract.sourceName && contract.sourceSectorName
-                                  ? `${contract.sourceType === "planet" ? t("events.planet") : t("events.friendly_ship")} "${contract.sourceName}" (${contract.sourceSectorName})`
-                                  : contract.sourceSectorName ||
-                                    t("contracts.unknown"),
+                                  ? `${contract.sourceType === "planet" ? t("events.planet") : t("events.friendly_ship")} "${contract.sourceName}" (${getLocationName(contract.sourceSectorName, t)})`
+                                  : getLocationName(
+                                        contract.sourceSectorName ||
+                                            t("contracts.unknown"),
+                                        t,
+                                    ),
                         },
                         {
                             label: t("contracts.task_status"),
@@ -458,7 +476,7 @@ export function ContractsList() {
                             label: t("contracts.task_where"),
                             value:
                                 contract.sourceName && contract.sourceSectorName
-                                    ? `${t("contracts.supply_find_location")}. ${contract.sourceType === "planet" ? t("events.planet") : t("events.friendly_ship")} "${contract.sourceName}" (${contract.sourceSectorName})`
+                                    ? `${t("contracts.supply_find_location")}. ${contract.sourceType === "planet" ? t("events.planet") : t("events.friendly_ship")} "${contract.sourceName}" (${getLocationName(contract.sourceSectorName, t)})`
                                     : t("contracts.supply_find_location"),
                         },
                     ],
@@ -475,8 +493,10 @@ export function ContractsList() {
                         },
                         {
                             label: t("contracts.task_sector"),
-                            value:
+                            value: getLocationName(
                                 contract.sectorName || t("contracts.unknown"),
+                                t,
+                            ),
                         },
                         {
                             label: t("contracts.task_where"),
@@ -545,7 +565,10 @@ export function ContractsList() {
                             )
                             .replace(
                                 "{{sectorName}}",
-                                contract.sectorName || t("contracts.unknown"),
+                                getLocationName(
+                                    contract.sectorName || t("contracts.unknown"),
+                                    t,
+                                ),
                             ),
                     },
                 ];
@@ -621,8 +644,11 @@ export function ContractsList() {
                             label: t("contracts.task_what"),
                             value: t("contracts.patrol_visit").replace(
                                 "{{sectors}}",
-                                contract.targetSectorNames ||
-                                    t("contracts.unknown"),
+                                getSectorNames(
+                                    contract.targetSectorNames ||
+                                        t("contracts.unknown"),
+                                    t,
+                                ),
                             ),
                         },
                         {
@@ -649,8 +675,11 @@ export function ContractsList() {
                                 )
                                 .replace(
                                     "{{sector}}",
-                                    contract.targetSectorName ||
-                                        t("contracts.unknown"),
+                                    getLocationName(
+                                        contract.targetSectorName ||
+                                            t("contracts.unknown"),
+                                        t,
+                                    ),
                                 ),
                         },
                         {
@@ -682,8 +711,12 @@ export function ContractsList() {
                         {
                             label: t("contracts.task_where"),
                             value: contract.sourcePlanetName
-                                ? `${contract.sourceSectorName}, ${getLocationName(contract.sourcePlanetName, t)}`
-                                : contract.sourceSectorName ?? t("contracts.unknown"),
+                                ? `${getLocationName(contract.sourceSectorName ?? t("contracts.unknown"), t)}, ${getLocationName(contract.sourcePlanetName, t)}`
+                                : getLocationName(
+                                      contract.sourceSectorName ??
+                                          t("contracts.unknown"),
+                                      t,
+                                  ),
                         },
                     ],
                 };
@@ -703,8 +736,12 @@ export function ContractsList() {
                         {
                             label: t("contracts.task_target"),
                             value: contract.targetPlanetName
-                                ? `${getLocationName(contract.targetPlanetName, t)} (${contract.targetSectorName})`
-                                : contract.targetSectorName ?? t("contracts.unknown"),
+                                ? `${getLocationName(contract.targetPlanetName, t)} (${getLocationName(contract.targetSectorName ?? t("contracts.unknown"), t)})`
+                                : getLocationName(
+                                      contract.targetSectorName ??
+                                          t("contracts.unknown"),
+                                      t,
+                                  ),
                         },
                         {
                             label: t("contracts.task_progress"),
@@ -715,8 +752,12 @@ export function ContractsList() {
                         {
                             label: t("contracts.task_where"),
                             value: contract.sourcePlanetName
-                                ? `${contract.sourceSectorName}, ${getLocationName(contract.sourcePlanetName, t)}`
-                                : contract.sourceSectorName ?? t("contracts.unknown"),
+                                ? `${getLocationName(contract.sourceSectorName ?? t("contracts.unknown"), t)}, ${getLocationName(contract.sourcePlanetName, t)}`
+                                : getLocationName(
+                                      contract.sourceSectorName ??
+                                          t("contracts.unknown"),
+                                      t,
+                                  ),
                         },
                     ],
                 };
@@ -732,8 +773,11 @@ export function ContractsList() {
                         {
                             label: t("contracts.task_sector"),
                             value:
-                                contract.targetSectorName ??
-                                t("contracts.unknown"),
+                                getLocationName(
+                                    contract.targetSectorName ??
+                                        t("contracts.unknown"),
+                                    t,
+                                ),
                         },
                         {
                             label: t("contracts.task_requirements"),
@@ -756,8 +800,11 @@ export function ContractsList() {
                         {
                             label: t("contracts.task_sector"),
                             value:
-                                contract.targetSectorName ??
-                                t("contracts.unknown"),
+                                getLocationName(
+                                    contract.targetSectorName ??
+                                        t("contracts.unknown"),
+                                    t,
+                                ),
                         },
                         {
                             label: t("contracts.task_requirements"),
@@ -792,8 +839,11 @@ export function ContractsList() {
                         {
                             label: t("contracts.task_target"),
                             value:
-                                contract.targetSectorName ||
-                                t("contracts.unknown"),
+                                getLocationName(
+                                    contract.targetSectorName ||
+                                        t("contracts.unknown"),
+                                    t,
+                                ),
                         },
                         {
                             label: t("contracts.task_where"),

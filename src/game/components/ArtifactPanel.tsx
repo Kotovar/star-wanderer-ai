@@ -276,7 +276,7 @@ function ArtifactCard({
                             <span>🧭</span>
                             <span>
                                 {t("artifacts.hint_location")}: {" "}
-                                {artifact.hintedAt.sectorName} · {" "}
+                                {getLocationName(artifact.hintedAt.sectorName, t)} · {" "}
                                 {getLocationName(
                                     artifact.hintedAt.locationName,
                                     t,

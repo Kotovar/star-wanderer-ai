@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getSectorName } from "@/lib/translationHelpers";
 import type {
     ContractCompletionResult,
     GameState,
@@ -835,7 +836,7 @@ export const processTravel = (
         // Радиационная мутация при прибытии в сектор с нейтронной звездой
         applyNeutronRadiation(destinationSector, set, get);
 
-        get().addLog( i18nStore.t("game_logs.processTravel_29", { destinationSector_name: destinationSector.name }), "info");
+        get().addLog( i18nStore.t("game_logs.processTravel_29", { destinationSector_name: getSectorName(destinationSector.name, i18nStore.t) }), "info");
         get().updateShipStats();
         set(() => ({ gameMode: "sector_map" }));
 

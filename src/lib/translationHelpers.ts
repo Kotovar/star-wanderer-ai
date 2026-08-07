@@ -61,6 +61,10 @@ export function getLocationName(
     locationName: string,
     i18nT: (key: string) => string,
 ): string {
+    if (locationName.startsWith("sector_names.")) {
+        return getSectorName(locationName, i18nT);
+    }
+
     // Handle station names like "station_name.A"
     if (locationName.startsWith("station_name.")) {
         const letter = locationName.replace("station_name.", "");
@@ -107,4 +111,26 @@ export function getLocationName(
 
     // Direct value (already translated or fallback)
     return locationName;
+}
+
+export function getSectorName(
+    sectorName: string,
+    i18nT: (key: string) => string,
+): string {
+    if (!sectorName.startsWith("sector_names.")) return sectorName;
+
+    const translated = i18nT(sectorName);
+    return translated === sectorName
+        ? sectorName.replace("sector_names.", "")
+        : translated;
+}
+
+export function getSectorNames(
+    sectorNames: string,
+    i18nT: (key: string) => string,
+): string {
+    return sectorNames
+        .split(", ")
+        .map((sectorName) => getSectorName(sectorName, i18nT))
+        .join(", ");
 }

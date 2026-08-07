@@ -1309,7 +1309,7 @@ export function SectorMap() {
               {t("game.sector")}:
             </span>
             <span className="text-[#00ff41]">
-              {currentSector?.name ?? "START"}
+              {currentSector ? getLocationName(currentSector.name, t) : "START"}
             </span>
           </div>
 
@@ -1446,7 +1446,7 @@ export function SectorMap() {
                     )}
                   </div>
                   <div className="text-[#445] text-xs">
-                    {currentSector.name}
+                    {getLocationName(currentSector.name, t)}
                   </div>
                 </div>
               </div>

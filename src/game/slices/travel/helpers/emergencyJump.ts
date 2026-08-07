@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getSectorName } from "@/lib/translationHelpers";
 import type { GameStore, SetState } from "@/game/types";
 import { calculateFuelCostForUI } from "./calculateFuelCost";
 
@@ -97,7 +98,7 @@ export const emergencyJump = (set: SetState, get: () => GameStore): void => {
     });
 
     get().addLog( i18nStore.t("game_logs.emergencyJump_4"), "warning");
-    get().addLog( i18nStore.t("game_logs.emergencyJump_5", { destination_name: destination.name }), "info");
+    get().addLog( i18nStore.t("game_logs.emergencyJump_5", { destination_name: getSectorName(destination.name, i18nStore.t) }), "info");
     get().addLog( i18nStore.t("game_logs.emergencyJump_6", { damage }),
         "error",
     );

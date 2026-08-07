@@ -1,5 +1,7 @@
 import type { GameState, LogEntry } from "@/game/types";
 import { isModuleActive } from "@/game/modules/utils";
+import { store as i18nStore } from "@/lib/useTranslation";
+import { getLocationName } from "@/lib/translationHelpers";
 
 /**
  * Обрабатывает сканирование планеты при посещении локации
@@ -80,11 +82,12 @@ export const processScanContracts = (state: GameState) => {
 
         if (newVisited >= required) {
             // Все планеты отсканированы — возвращаемся
+            const t = i18nStore.t.bind(i18nStore);
             const returnLocation = c.sourcePlanetName
-                ? `${c.sourceSectorName}, ${c.sourcePlanetName}`
+                ? `${getLocationName(c.sourceSectorName ?? "", t)}, ${getLocationName(c.sourcePlanetName, t)}`
                 : c.sourceName && c.sourceSectorName
-                  ? `${c.sourceName} (${c.sourceSectorName})`
-                  : c.sourceSectorName || "базу";
+                  ? `${c.sourceName} (${getLocationName(c.sourceSectorName, t)})`
+                  : getLocationName(c.sourceSectorName || "базу", t);
             logs.push({
                 message: `${location.planetType} отсканирована! Возвращайтесь на ${returnLocation}`,
                 type: "info",
