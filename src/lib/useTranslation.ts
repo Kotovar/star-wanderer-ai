@@ -46,10 +46,10 @@ export const store = {
         }
     },
 
-    t(key: string, params?: Record<string, string | number>): string {
+    t: (key: string, params?: Record<string, string | number>): string => {
         const keys = key.split(".");
         // Пока английский каталог не загружен, показываем русский
-        let value: unknown = resources[this.lng] ?? resources.ru;
+        let value: unknown = resources[store.lng] ?? resources.ru;
         for (const k of keys) {
             if (value && typeof value === "object" && k in value) {
                 value = (value as Record<string, unknown>)[k];

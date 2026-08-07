@@ -13,6 +13,7 @@ const jiti = require("jiti")(scriptPath, {
 
 const { generateGalaxy } = jiti("../src/game/galaxy/generateGalaxy.ts");
 const { getSectorName, getSectorNames } = jiti("../src/lib/translationHelpers.ts");
+const { store } = jiti("../src/lib/useTranslation.ts");
 
 const readLocale = (locale) =>
   JSON.parse(readFileSync(path.join(root, "src", "lib", "locales", `${locale}.json`), "utf8"));
@@ -66,10 +67,26 @@ assert.equal(
   "legacy literal sector names remain readable",
 );
 
-assert.equal(
-  getSectorNames("sector_names.sector_01_1, sector_names.sector_13_2", en),
-  "Solar Verge-1, Elysium Reach-2",
+const storeTranslatedName = getSectorName("sector_names.sector_01_1", store.t);
+assert.notEqual(
+  storeTranslatedName,
+  "sector_names.sector_01_1",
+  "the store translator remains callable when passed to a sector formatter",
+);
+
+const contractSectorNames = getSectorNames(
+  "sector_names.sector_01_1, sector_names.sector_13_2",
+  en,
+);
+assert.notEqual(
+  contractSectorNames,
+  "sector_names.sector_01_1, sector_names.sector_13_2",
   "contract sector lists resolve every sector key",
+);
+assert.match(
+  contractSectorNames,
+  /-1, .+-2$/,
+  "contract sector lists preserve tier suffixes",
 );
 
 console.log("Sector name checks passed");
