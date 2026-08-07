@@ -10,6 +10,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { GameDialogContent } from "../GameDialog";
+import type { HireCrewResult } from "@/game/types";
 import { RACES } from "@/game/constants/races";
 import {
     RACE_TECH_TREE,
@@ -30,6 +31,20 @@ import type {
 import { useTranslation } from "@/lib/useTranslation";
 import { ProfessionSprite } from "../ProfessionSprite";
 
+type HireCrewHandler = (
+    member: unknown,
+    price: number,
+    locationId?: string,
+    confirmOxygen?: boolean,
+) => HireCrewResult;
+
+type PendingHire = {
+    member: unknown;
+    price: number;
+    locationId?: string;
+    warning: Extract<HireCrewResult, { status: "oxygen_confirmation_required" }>;
+};
+
 interface CrewTabProps {
     availableCrew: Array<{
         member: {
@@ -46,7 +61,7 @@ interface CrewTabProps {
     hasSpace: boolean;
     credits: number;
     locationId?: string;
-    hireCrew: (member: unknown, price: number, locationId?: string) => void;
+    hireCrew: HireCrewHandler;
 }
 
 export function CrewTab({
@@ -59,7 +74,37 @@ export function CrewTab({
     const [selectedCrew, setSelectedCrew] = useState<
         (typeof availableCrew)[0] | null
     >(null);
+    const [pendingHire, setPendingHire] = useState<PendingHire | null>(null);
     const { t } = useTranslation();
+
+    const handleHire: HireCrewHandler = (
+        member,
+        price,
+        nextLocationId,
+        confirmOxygen,
+    ) => {
+        const result = hireCrew(member, price, nextLocationId, confirmOxygen);
+        if (typeof result === "object") {
+            setPendingHire({
+                member,
+                price,
+                locationId: nextLocationId,
+                warning: result,
+            });
+        }
+        return result;
+    };
+
+    const confirmOxygenHire = () => {
+        if (!pendingHire) return;
+        const result = handleHire(
+            pendingHire.member,
+            pendingHire.price,
+            pendingHire.locationId,
+            true,
+        );
+        if (typeof result !== "object") setPendingHire(null);
+    };
 
     return (
         <>
@@ -77,7 +122,7 @@ export function CrewTab({
                         hasSpace={hasSpace}
                         credits={credits}
                         locationId={locationId}
-                        onHire={hireCrew}
+                        onHire={handleHire}
                         onViewDetails={() => setSelectedCrew(crew)}
                     />
                 ))}
@@ -103,10 +148,45 @@ export function CrewTab({
                             hasSpace={hasSpace}
                             credits={credits}
                             locationId={locationId}
-                            onHire={hireCrew}
+                            onHire={handleHire}
                             onClose={() => setSelectedCrew(null)}
                         />
                     )}
+                </GameDialogContent>
+            </Dialog>
+
+            <Dialog
+                open={pendingHire !== null}
+                onOpenChange={(open) => {
+                    if (!open) setPendingHire(null);
+                }}
+            >
+                <GameDialogContent variant="warning" className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="font-['Orbitron'] text-[#ffb000]">
+                            ⚠ {t("crew.hire_oxygen_title")}
+                        </DialogTitle>
+                        <DialogDescription className="text-sm leading-relaxed text-[#c9d1d9]">
+                            {pendingHire &&
+                                t("crew.hire_oxygen_warning", pendingHire.warning)}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-4 flex gap-2">
+                        <Button
+                            type="button"
+                            onClick={() => setPendingHire(null)}
+                            className="flex-1 border border-[#526b75] bg-transparent text-xs text-[#aab7bd] hover:bg-[#526b75] hover:text-[#050810]"
+                        >
+                            {t("effects.cancel")}
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={confirmOxygenHire}
+                            className="flex-1 border border-[#ffb000] bg-transparent text-xs text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810]"
+                        >
+                            {t("crew.hire_oxygen_confirm")}
+                        </Button>
+                    </div>
                 </GameDialogContent>
             </Dialog>
         </>
@@ -129,7 +209,7 @@ interface CrewCardProps {
     hasSpace: boolean;
     credits: number;
     locationId?: string;
-    onHire: (member: unknown, price: number, locationId?: string) => void;
+    onHire: HireCrewHandler;
     onViewDetails: () => void;
 }
 
@@ -431,7 +511,7 @@ interface CrewDetailDialogProps {
     hasSpace: boolean;
     credits: number;
     locationId?: string;
-    onHire: (member: unknown, price: number, locationId?: string) => void;
+    onHire: HireCrewHandler;
     onClose: () => void;
 }
 

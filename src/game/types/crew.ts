@@ -26,6 +26,15 @@ export type TechPerkTier = 3 | 6 | 9;
 
 export type Quality = "poor" | "average" | "good" | "excellent";
 
+export type HireCrewResult =
+    | "hired"
+    | "blocked"
+    | {
+          status: "oxygen_confirmation_required";
+          needed: number;
+          capacity: number;
+      };
+
 export type PositiveTraitId =
     | "sharpshooter"
     | "experienced"

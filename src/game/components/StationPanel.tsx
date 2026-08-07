@@ -724,7 +724,7 @@ export function StationPanel() {
                         hasSpace={hasSpace}
                         credits={displayCredits}
                         locationId={stationId}
-                        hireCrew={(member, price) =>
+                        hireCrew={(member, price, locationId, confirmOxygen) =>
                             hireCrew(
                                 {
                                     ...(member as Partial<CrewMember>),
@@ -732,7 +732,8 @@ export function StationPanel() {
                                 } as Partial<CrewMember> & {
                                     price: number;
                                 },
-                                stationId,
+                                locationId ?? stationId,
+                                confirmOxygen,
                             )
                         }
                     />

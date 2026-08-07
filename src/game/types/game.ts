@@ -9,6 +9,7 @@ import type {
   CrewMemberAssignment,
   CrewMemberCombatAssignment,
   CrewAutomationState,
+  HireCrewResult,
   TechPerkBranch,
   TechPerkTier,
 } from "./crew";
@@ -317,7 +318,8 @@ export interface GameCrew {
   hireCrew: (
     crewData: Partial<CrewMember> & { price: number },
     locationId?: string,
-  ) => void;
+    confirmOxygen?: boolean,
+  ) => HireCrewResult;
   fireCrewMember: (crewId: number) => void;
   assignCrewTask: (
     crewId: number,

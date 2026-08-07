@@ -1,6 +1,12 @@
 import { getTechBonusSum } from "@/game/research";
 import { store as i18nStore } from "@/lib/useTranslation";
-import type { GameStore, CrewMember, RaceId, SetState } from "@/game/types";
+import type {
+    GameStore,
+    CrewMember,
+    HireCrewResult,
+    RaceId,
+    SetState,
+} from "@/game/types";
 import { playSound } from "@/sounds";
 import { buildCrewMember } from "@/game/crew/buildCrewMember";
 import { canHireRace } from "@/game/reputation/utils";
@@ -16,6 +22,21 @@ interface HireValidation {
     /** Сообщение об ошибке */
     error?: string;
 }
+
+export const getOxygenHireWarning = (
+    state: Pick<GameStore, "crew" | "getOxygenCapacity">,
+    candidateRace: RaceId,
+): Extract<HireCrewResult, { status: "oxygen_confirmation_required" }> | null => {
+    if (!RACES[candidateRace].requiresOxygen) return null;
+
+    const needed =
+        state.crew.filter((member) => RACES[member.race].requiresOxygen)
+            .length + 1;
+    const capacity = state.getOxygenCapacity();
+    return needed > capacity
+        ? { status: "oxygen_confirmation_required", needed, capacity }
+        : null;
+};
 
 /**
  * Проверяет возможность найма экипажа
@@ -50,13 +71,15 @@ const validateHireCrew = (
  * @param get - Функция получения состояния
  * @param crewData - Данные экипажа
  * @param locationId - ID локации (станции или корабля)
+ * @param confirmOxygen - Игрок подтвердил риск нехватки кислорода
  */
 export const hireCrew = (
     set: SetState,
     get: () => GameStore,
     crewData: Partial<CrewMember> & { price: number },
     locationId?: string,
-): void => {
+    confirmOxygen = false,
+): HireCrewResult => {
     const state = get();
 
     // Проверка возможности найма
@@ -65,25 +88,13 @@ export const hireCrew = (
         if (validation.error) {
             get().addLog(validation.error, "error");
         }
-        return;
+        return "blocked";
     }
 
     const candidateRace = crewData.race ?? "human";
-    const oxygenRequired = state.crew.filter(
-        (member) => RACES[member.race].requiresOxygen,
-    ).length + (RACES[candidateRace].requiresOxygen ? 1 : 0);
-    if (
-        RACES[candidateRace].requiresOxygen &&
-        oxygenRequired > state.getOxygenCapacity() &&
-        typeof window !== "undefined" &&
-        !window.confirm(
-            i18nStore.t("crew.hire_oxygen_warning", {
-                needed: oxygenRequired,
-                capacity: state.getOxygenCapacity(),
-            }),
-        )
-    ) {
-        return;
+    const oxygenWarning = getOxygenHireWarning(state, candidateRace);
+    if (oxygenWarning && !confirmOxygen) {
+        return oxygenWarning;
     }
 
     // Поиск модуля жизнеобеспечения для начального размещения
@@ -149,6 +160,7 @@ export const hireCrew = (
 
     get().addLog( i18nStore.t("game_logs.hireCrew_2", { newCrew_name: newCrew.name, price: crewData.price }), "info");
     playSound("world_crew_milestone");
+    return "hired";
 };
 
 /**

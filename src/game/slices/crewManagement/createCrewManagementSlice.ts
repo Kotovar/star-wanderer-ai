@@ -1,5 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
-import type { GameStore, CrewMember, SetState } from "@/game/types";
+import type { GameStore, CrewMember, HireCrewResult, SetState } from "@/game/types";
 import { hireCrew as hireCrewAction } from "./utils";
 import { fireCrewMember as fireCrewMemberAction } from "./utils";
 import {
@@ -22,7 +22,8 @@ export interface CrewManagementSlice {
     hireCrew: (
         crewData: Partial<CrewMember> & { price: number },
         locationId?: string,
-    ) => void;
+        confirmOxygen?: boolean,
+    ) => HireCrewResult;
     /**
      * Увольнение члена экипажа
      * @param crewId - ID члена экипажа
@@ -41,8 +42,8 @@ export const createCrewManagementSlice = (
     set: SetState,
     get: () => GameStore,
 ): CrewManagementSlice => ({
-    hireCrew: (crewData, locationId) =>
-        hireCrewAction(set, get, crewData, locationId),
+    hireCrew: (crewData, locationId, confirmOxygen) =>
+        hireCrewAction(set, get, crewData, locationId, confirmOxygen),
 
     fireCrewMember: (crewId) => fireCrewMemberAction(set, get, crewId),
 

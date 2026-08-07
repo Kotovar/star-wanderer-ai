@@ -156,7 +156,9 @@
         "tech_tree_tier": "Level {{tier}}",
         "tech_tree_locked": "locked — requires level {{level}}",
         "tech_tree_pending": "awaiting choice",
-        "hire_oxygen_warning": "After hiring, {{needed}} crew members will need oxygen but life support only has capacity for {{capacity}}. Hire anyway?"
+        "hire_oxygen_warning": "After hiring, {{needed}} crew members will need oxygen but life support only has capacity for {{capacity}}. Hire anyway?",
+        "hire_oxygen_title": "Insufficient oxygen",
+        "hire_oxygen_confirm": "Hire anyway"
     },
     "cargo": {
         "title": "Cargo Bay",

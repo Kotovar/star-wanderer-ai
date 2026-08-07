@@ -274,12 +274,14 @@ export function FriendlyShipPanel() {
     member: unknown,
     price: number,
     locationId?: string,
+    confirmOxygen?: boolean,
   ) => {
-    hireCrew(
+    return hireCrew(
       { ...(member as Partial<CrewMember>), price } as Partial<CrewMember> & {
         price: number;
       },
       locationId ?? currentLocation.id,
+      confirmOxygen,
     );
   };
 
