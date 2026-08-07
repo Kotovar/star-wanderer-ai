@@ -138,10 +138,18 @@ const checkTierAccess = (
 
     const requiredEngine = TIER_ENGINE_REQUIREMENTS[sector.tier] ?? 1;
     const requiredCaptain = TIER_CAPTAIN_REQUIREMENTS[sector.tier] ?? 1;
+    const accessMessage = (engineRequirement: number, captainRequirement: number) =>
+        i18nStore.t("travel.access_requires", {
+            sectorLevel: sector.tier,
+            requiredEngine: engineRequirement,
+            requiredCaptain: captainRequirement,
+            engineLevel,
+            captainLevel,
+        });
 
     if (sector.tier >= 2) {
         if (engineLevel < requiredEngine || captainLevel < requiredCaptain) {
-            return `Доступ к Тир ${sector.tier} требует: Двигатель Ур.${requiredEngine} + Капитан Ур.${requiredCaptain} (сейчас: Двигатель Ур.${engineLevel}, Капитан Ур.${captainLevel})`;
+            return accessMessage(requiredEngine, requiredCaptain);
         }
     }
 
@@ -152,7 +160,7 @@ const checkTierAccess = (
             (e: { level?: number }) => (e.level ?? 1) >= 4,
         );
         if (!hasTier4Engine) {
-            return `Доступ к Тир 4 требует: Двигатель Ур.4 + Капитан Ур.4 (сейчас: Двигатель Ур.${engineLevel}, Капитан Ур.${captainLevel})`;
+            return accessMessage(4, 4);
         }
     }
 

@@ -4011,7 +4011,8 @@
         "title": "TRAVELING",
         "heading": "Ship heading to",
         "turns_left": "Turns remaining",
-        "skipping": "SKIPPING..."
+        "skipping": "SKIPPING...",
+        "access_requires": "To enter sector level {{sectorLevel}}, you need: Engine Lv. {{requiredEngine}} and Captain Lv. {{requiredCaptain}}. Current: Engine Lv. {{engineLevel}}, Captain Lv. {{captainLevel}}."
     },
     "sector_map_ui": {
         "zoom_in": "Zoom in",

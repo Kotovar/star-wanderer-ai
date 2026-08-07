@@ -4011,7 +4011,8 @@
         "title": "ПУТЕШЕСТВИЕ",
         "heading": "Корабль движется к",
         "turns_left": "Осталось ходов",
-        "skipping": "ПРОПУСКАЕМ..."
+        "skipping": "ПРОПУСКАЕМ...",
+        "access_requires": "Для доступа к сектору уровня {{sectorLevel}} нужны: двигатель ур. {{requiredEngine}} и капитан ур. {{requiredCaptain}}. Сейчас: двигатель ур. {{engineLevel}}, капитан ур. {{captainLevel}}."
     },
     "sector_map_ui": {
         "zoom_in": "Приблизить",
