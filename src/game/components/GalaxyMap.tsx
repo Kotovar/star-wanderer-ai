@@ -51,6 +51,35 @@ import { useMapZoomPan, DRAG_THRESHOLD } from "./useMapZoomPan";
 const TWINKLING_STARS_COUNT = 40;
 const COSMIC_PARTICLES_COUNT = 10;
 
+const playerShipImageCache: {
+    image: HTMLImageElement | null;
+    promise: Promise<HTMLImageElement | null> | null;
+} = { image: null, promise: null };
+
+const loadPlayerShipImage = (): Promise<HTMLImageElement | null> => {
+    if (playerShipImageCache.image) {
+        return Promise.resolve(playerShipImageCache.image);
+    }
+    if (playerShipImageCache.promise) return playerShipImageCache.promise;
+
+    playerShipImageCache.promise = new Promise((resolve) => {
+        const image = new Image();
+        image.decoding = "async";
+        image.onload = () => {
+            void image.decode().catch(() => undefined).then(() => {
+                playerShipImageCache.image = image;
+                resolve(image);
+            });
+        };
+        image.onerror = () => {
+            playerShipImageCache.promise = null;
+            resolve(null);
+        };
+        image.src = "/assets/ship.webp";
+    });
+    return playerShipImageCache.promise;
+};
+
 // Generate stars once and reuse them
 function generateStars(
     width: number,
@@ -265,7 +294,7 @@ export function GalaxyMap() {
     const initializedRef = useRef(false);
     const canvasSizeRef = useRef({ width: 0, height: 0 });
     const hasMovedRef = useRef(false);
-    const playerShipImageRef = useRef<HTMLImageElement | null>(null);
+    const playerShipImageRef = useRef<HTMLImageElement | null>(playerShipImageCache.image);
     const starSpriteImageRef = useRef<HTMLImageElement | null>(null);
 
     // Animation canvas ref
@@ -316,7 +345,9 @@ export function GalaxyMap() {
         fuelCost: number;
         nebulaId?: string;
     } | null>(null);
-    const [playerShipImageReady, setPlayerShipImageReady] = useState(false);
+    const [playerShipImageReady, setPlayerShipImageReady] = useState(
+        () => playerShipImageCache.image !== null,
+    );
     const [starSpriteImageReady, setStarSpriteImageReady] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const hintDismissed = useSyncExternalStore(
@@ -422,15 +453,13 @@ export function GalaxyMap() {
     }, [sectors, visibleMapObjectives]);
 
     useEffect(() => {
-        const image = new Image();
-        image.src = "/assets/ship.webp";
-        image.onload = () => {
+        let cancelled = false;
+        void loadPlayerShipImage().then((image) => {
             playerShipImageRef.current = image;
-            setPlayerShipImageReady(true);
-        };
-        image.onerror = () => {
-            playerShipImageRef.current = null;
-            setPlayerShipImageReady(false);
+            if (!cancelled) setPlayerShipImageReady(image !== null);
+        });
+        return () => {
+            cancelled = true;
         };
     }, []);
 

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -10,6 +11,30 @@ const jiti = require("jiti")(scriptPath, {
   alias: { "@": path.join(root, "src") },
 });
 const galaxyUtils = jiti("../src/game/galaxy/galaxy-map-utils.ts");
+const galaxyMapSource = await readFile(
+  new URL("../src/game/components/GalaxyMap.tsx", import.meta.url),
+  "utf8",
+);
+const galaxyMapUtilsSource = await readFile(
+  new URL("../src/game/galaxy/galaxy-map-utils.ts", import.meta.url),
+  "utf8",
+);
+
+assert.match(
+  galaxyMapSource,
+  /const playerShipImageCache:/,
+  "GalaxyMap keeps the decoded ship sprite across map remounts",
+);
+assert.match(
+  galaxyMapSource,
+  /useRef<HTMLImageElement \| null>\(playerShipImageCache\.image\)/,
+  "GalaxyMap draws a cached ship sprite on its first remount frame",
+);
+assert.doesNotMatch(
+  galaxyMapUtilsSource,
+  /Fallback before the bitmap asset is loaded/,
+  "GalaxyMap never replaces the ship with a temporary vector marker",
+);
 
 assert.equal(
   typeof galaxyUtils.getGalaxyMapStatus,

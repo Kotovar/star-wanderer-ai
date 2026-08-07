@@ -429,28 +429,7 @@ function drawPlayerShipMarker(
 
     if (image?.complete && image.naturalWidth > 0) {
         ctx.drawImage(image, x - size / 2, y - size / 2, size, size);
-        ctx.restore();
-        return;
     }
-
-    // Fallback before the bitmap asset is loaded.
-    ctx.fillStyle = "#dfe8ef";
-    ctx.strokeStyle = "#00d4ff";
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(x, y - size * 0.48);
-    ctx.lineTo(x + size * 0.28, y + size * 0.34);
-    ctx.lineTo(x, y + size * 0.18);
-    ctx.lineTo(x - size * 0.28, y + size * 0.34);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = "#00d4ff";
-    ctx.beginPath();
-    ctx.arc(x, y - size * 0.1, size * 0.12, 0, Math.PI * 2);
-    ctx.fill();
-
     ctx.restore();
 }
 

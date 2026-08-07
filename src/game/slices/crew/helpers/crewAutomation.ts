@@ -45,6 +45,9 @@ const PRIORITY = {
   rest: 100,
 } as const;
 
+const CRITICAL_CREW_HEALTH_RATIO = 0.3;
+const ADEQUATE_LOCAL_HEALING = 15;
+
 const MEDICAL_MODULE_TYPES = new Set<ModuleType>([
   "medical",
   "bio_research_lab",
@@ -354,7 +357,58 @@ export const planCrewAutomation = ({
     candidatesFor(unassigned("medic"), injuredModules, medicTask, PRIORITY.healing),
   ).forEach(assign);
 
-  // 4. Exclusive professional roles.
+  // 4. Treatment takes precedence over any role when it saves time or a critical crew member.
+  const medicalTargets = activeModules.filter((module) => getMedicalHealing(module) > 0);
+  const getPlannedMedicHealing = (moduleId: number) =>
+    [...decisions.values()]
+      .filter((decision) => decision.targetModuleId === moduleId && decision.task === "heal")
+      .reduce((best, decision) => {
+        const medic = crew.find((member) => member.id === decision.crewId);
+        return Math.max(best, 20 + Math.max((medic?.level ?? 1) - 1, 0));
+      }, 0);
+
+  unassigned()
+    .filter((member) => member.health < member.maxHealth)
+    .forEach((member) => {
+      const current = modules.find((module) => module.id === member.moduleId);
+      if (!current) return;
+
+      if (getMedicalHealing(current) > 0) {
+        const candidate = candidatesFor([member], [current], null, PRIORITY.healing)[0];
+        if (candidate) assign(candidate);
+        return;
+      }
+
+      const localHealing =
+        (passiveRegenByCrew[member.id] ?? 0) + getPlannedMedicHealing(current.id);
+      const critical = member.health / Math.max(member.maxHealth, 1) <= CRITICAL_CREW_HEALTH_RATIO;
+      const candidate = candidatesFor([member], medicalTargets, null, PRIORITY.healing)
+        .filter((target) => {
+          const targetModule = modules.find((module) => module.id === target.moduleId);
+          const path = getPath(modules, member.moduleId, target.moduleId);
+          if (!targetModule || !path) return false;
+
+          const targetHealing =
+            (passiveRegenByCrew[member.id] ?? 0) +
+            getMedicalHealing(targetModule) +
+            getPlannedMedicHealing(target.moduleId);
+          if (targetHealing <= localHealing) return false;
+          if (mode === "combat") {
+            return critical && localHealing < ADEQUATE_LOCAL_HEALING;
+          }
+          return member.health + localHealing * (path.length - 1) < member.maxHealth;
+        })
+        .sort((left, right) => {
+          const leftModule = modules.find((module) => module.id === left.moduleId);
+          const rightModule = modules.find((module) => module.id === right.moduleId);
+          const leftHealing = leftModule ? getMedicalHealing(leftModule) : 0;
+          const rightHealing = rightModule ? getMedicalHealing(rightModule) : 0;
+          return rightHealing - leftHealing || right.score - left.score;
+        })[0];
+      if (candidate) assign(candidate);
+    });
+
+  // 5. Exclusive professional roles.
   const gunnerTask =
     mode === "combat" ? "targeting" : hasWeaponsPrimed ? "training" : "clean_weapons";
   const weaponBays = activeModules.filter((module) => module.type === "weaponbay");
@@ -453,7 +507,7 @@ export const planCrewAutomation = ({
     if (candidate) assign(candidate);
   });
 
-  // 5. A free xenosymbiont merges only after its normal profession had no slot.
+  // 6. A free xenosymbiont merges only after its normal profession had no slot.
   unassigned().forEach((member) => {
     if (member.race !== "xenosymbiont") return;
     const occupiedMergeIds = new Set(
@@ -498,7 +552,7 @@ export const planCrewAutomation = ({
     if (candidate) assign(candidate);
   });
 
-  // 6. Idle crew rests in a healing or defensible active module.
+  // 7. Idle crew rests in a healing or defensible active module.
   unassigned().forEach((member) => {
     const fallbackTargets = activeModules
       .filter((module) => REST_MODULE_TYPES.has(module.type) || mode === "combat")

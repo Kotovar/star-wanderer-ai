@@ -194,6 +194,77 @@ const decide = (crew, modules, overrides = {}) => {
 
 {
   const modules = [
+    shipModule(1, "lifesupport", 0, 0),
+    shipModule(2, "weaponbay", 1, 0),
+    shipModule(3, "medical", 0, 1, { healing: 8 }),
+  ];
+  for (const profession of ["pilot", "gunner", "engineer", "scientist", "scout"]) {
+    const decision = decide(
+      [crewMember(1, profession, 1, { health: 70 })],
+      modules,
+    ).get(1);
+    assert.equal(decision?.targetModuleId, 3, `${profession} uses a medical bay while wounded`);
+    assert.equal(decision?.task, null, `${profession} rests while the medical bay heals them`);
+  }
+}
+
+{
+  const modules = [
+    shipModule(1, "weaponbay", 0, 0),
+    shipModule(2, "medical", 1, 0, { healing: 8 }),
+  ];
+  assert.equal(
+    decide([crewMember(1, "gunner", 1, { health: 90 })], modules, { mode: "combat" }).get(1)?.task,
+    "targeting",
+    "a slightly wounded gunner keeps their combat post",
+  );
+  const critical = decide(
+    [crewMember(1, "gunner", 1, { health: 20 })],
+    modules,
+    { mode: "combat" },
+  ).get(1);
+  assert.equal(critical?.targetModuleId, 2, "a critically wounded gunner seeks a medical bay without local healing");
+  assert.equal(critical?.task, null, "a critically wounded gunner drops their combat task while moving to treatment");
+  assert.equal(
+    decide(
+      [crewMember(1, "gunner", 1, { health: 20 })],
+      modules,
+      { mode: "combat", passiveRegenByCrew: { 1: 15 } },
+    ).get(1)?.task,
+    "targeting",
+    "strong local regeneration keeps a critically wounded gunner at their post",
+  );
+  assert.equal(
+    decide(
+      [
+        crewMember(1, "gunner", 1, { health: 20 }),
+        crewMember(2, "medic", 1),
+      ],
+      modules,
+      { mode: "combat" },
+    ).get(1)?.task,
+    "targeting",
+    "a medic healing the same module keeps a critically wounded gunner at their post",
+  );
+}
+
+{
+  const modules = [
+    shipModule(1, "lifesupport", 0, 0),
+    shipModule(2, "cargo", 1, 0),
+    shipModule(3, "medical", 2, 0, { healing: 8 }),
+  ];
+  const decision = decide(
+    [crewMember(1, "scout", 1, { health: 90 })],
+    modules,
+    { passiveRegenByCrew: { 1: 15 } },
+  ).get(1);
+  assert.equal(decision?.targetModuleId, 1, "near-complete crew with strong regeneration does not cross the ship for treatment");
+  assert.equal(decision?.task, "patrol", "the crew member keeps their normal work when local healing finishes first");
+}
+
+{
+  const modules = [
     shipModule(1, "weaponbay", 0, 0, { health: 0 }),
     shipModule(2, "medical", 1, 0, { healing: 10 }),
   ];
