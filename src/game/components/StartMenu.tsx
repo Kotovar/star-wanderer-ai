@@ -136,7 +136,7 @@ export function StartMenu({
                   type="button"
                   disabled={!meta}
                   onClick={() => onLoad(slotId)}
-                  className="min-w-0 border border-[#1c3944] bg-[rgba(0,212,255,0.025)] p-3 text-left transition-colors hover:border-[#00d4ff] hover:bg-[rgba(0,212,255,0.07)] disabled:cursor-not-allowed disabled:opacity-35"
+                  className="min-w-0 cursor-pointer border border-[#1c3944] bg-[rgba(0,212,255,0.025)] p-3 text-left transition duration-150 enabled:hover:-translate-y-0.5 enabled:hover:border-[#00d4ff] enabled:hover:bg-[rgba(0,212,255,0.1)] enabled:hover:shadow-[0_0_18px_rgba(0,212,255,0.2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00d4ff] disabled:cursor-not-allowed disabled:opacity-35"
                 >
                   <div className="flex items-center justify-between gap-2 text-xs font-bold text-[#00d4ff]">
                     <span>{meta?.name || t(`start_menu.slot_${slotId}`)}</span>

@@ -264,7 +264,7 @@ export const CREW_TRAITS: Record<
         },
         {
             id: "regeneration",
-            name: "Мутация: Регенерация",
+            name: "Мутация: Клеточное восстановление",
             desc: "+5 здоровья/ход, -25% макс. здоровья, -5 морали экипажу в модуле",
             effect: { flatRegen: 5, healthPenalty: 0.25, teamMorale: -5 },
             rarity: "mutation",

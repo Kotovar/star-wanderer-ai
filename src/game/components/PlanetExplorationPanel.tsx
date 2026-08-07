@@ -195,45 +195,52 @@ export function PlanetExplorationPanel() {
       </div>
 
       {/* Scan controls */}
-      {scansRemaining > 0 && !finished && (
-        <button
-          onClick={() =>
-            setScanMode((mode) =>
-              mode === "scientist" ? null : "scientist",
-            )
-          }
-          className={`self-start text-[10px] uppercase tracking-wider px-2 py-1 rounded-sm border cursor-pointer transition-colors shrink-0 ${
-            effectiveScanMode === "scientist"
-              ? "bg-[#00d4ff22] border-[#00d4ff] text-[#00d4ff]"
-              : "bg-transparent border-[#00d4ff55] text-[#00d4ff99] hover:text-[#00d4ff] hover:border-[#00d4ff]"
-          }`}
-        >
-          🔭 {t("planet_panel.expedition_scan_btn")} ({scansRemaining})
-        </button>
-      )}
-      {orbitalScanAvailable && !finished && (
-        <button
-          onClick={() =>
-            setScanMode((mode) =>
-              mode === "orbital" ? null : "orbital",
-            )
-          }
-          className={`self-start text-[10px] uppercase tracking-wider px-2 py-1 rounded-sm border cursor-pointer transition-colors shrink-0 ${
-            effectiveScanMode === "orbital"
-              ? "bg-[#00d4ff22] border-[#00d4ff] text-[#00d4ff]"
-              : "bg-transparent border-[#00d4ff55] text-[#00d4ff99] hover:text-[#00d4ff] hover:border-[#00d4ff]"
-          }`}
-        >
-          📡 {t("planet_panel.expedition_orbital_scan_btn")}
-        </button>
-      )}
       {(scansRemaining > 0 || orbitalScanAvailable) && !finished && (
-        <div aria-live="polite" className="min-h-10 -mt-1 text-[10px] text-[#00d4ff99]">
-          {effectiveScanMode === "scientist"
-            ? t("planet_panel.expedition_scan_hint")
-            : effectiveScanMode === "orbital"
-              ? t("planet_panel.expedition_orbital_scan_hint")
-              : "\u00a0"}
+        <div className="grid gap-2 sm:grid-cols-2">
+          {scansRemaining > 0 && (
+            <button
+              onClick={() =>
+                setScanMode((mode) =>
+                  mode === "scientist" ? null : "scientist",
+                )
+              }
+              className={`min-h-14 border px-2 py-1.5 text-left transition-colors ${
+                effectiveScanMode === "scientist"
+                  ? "border-[#00d4ff] bg-[#00d4ff22] text-[#00d4ff]"
+                  : "border-[#00d4ff55] bg-transparent text-[#00d4ff99] hover:border-[#00d4ff] hover:text-[#00d4ff]"
+              }`}
+            >
+              <span className="block text-[10px] font-bold uppercase tracking-wider">
+                🔭 {t("planet_panel.expedition_scan_btn")} · {scansRemaining}
+              </span>
+              <span className="mt-1 block text-[10px] normal-case leading-relaxed">
+                {t("planet_panel.expedition_scientist_scan_rules", {
+                  scans: scansRemaining,
+                })}
+              </span>
+            </button>
+          )}
+          {orbitalScanAvailable && (
+            <button
+              onClick={() =>
+                setScanMode((mode) =>
+                  mode === "orbital" ? null : "orbital",
+                )
+              }
+              className={`min-h-14 border px-2 py-1.5 text-left transition-colors ${
+                effectiveScanMode === "orbital"
+                  ? "border-[#00d4ff] bg-[#00d4ff22] text-[#00d4ff]"
+                  : "border-[#00d4ff55] bg-transparent text-[#00d4ff99] hover:border-[#00d4ff] hover:text-[#00d4ff]"
+              }`}
+            >
+              <span className="block text-[10px] font-bold uppercase tracking-wider">
+                📡 {t("planet_panel.expedition_orbital_scan_btn")}
+              </span>
+              <span className="mt-1 block text-[10px] normal-case leading-relaxed">
+                {t("planet_panel.expedition_orbital_scan_rules")}
+              </span>
+            </button>
+          )}
         </div>
       )}
       <div

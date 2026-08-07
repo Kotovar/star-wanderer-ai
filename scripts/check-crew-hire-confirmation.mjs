@@ -12,6 +12,9 @@ const jiti = require("jiti")(scriptPath, {
 const { getOxygenHireWarning } = jiti(
   "../src/game/slices/crewManagement/utils/hireCrew.ts",
 );
+const { CREW_TRAITS } = jiti("../src/game/constants/traits.ts");
+const ru = require("../src/lib/locales/ru.json");
+const en = require("../src/lib/locales/en.json");
 
 const crew = Array.from({ length: 5 }, () => ({ race: "human" }));
 const state = {
@@ -29,5 +32,16 @@ assert.equal(
   null,
   "An oxygen-immune hire must not require confirmation",
 );
+assert.equal(
+  CREW_TRAITS.mutation.find(({ id }) => id === "regeneration")?.name,
+  "Мутация: Клеточное восстановление",
+  "The saved mutation id must use its new Russian display name",
+);
+assert.equal(
+  ru.racial_traits.regeneration.name,
+  "Мутация: Клеточное восстановление",
+);
+assert.equal(
+  en.racial_traits.regeneration.name, "Mutation: Cellular Recovery");
 
 console.log("Crew hire confirmation checks passed");
