@@ -102,7 +102,6 @@ export const generateFabricationContract = (
             Math.round(recipe.credits * FABRICATION_REWARD_MULT) +
             FABRICATION_TIER_BONUS[tierIndex(sector)],
         requiredWeaponType: recipe.weaponType,
-        requiredWeaponName: recipe.name,
         sourcePlanetId: planet.id,
         sourcePlanetName: planet.name,
         sourceName: planet.name,

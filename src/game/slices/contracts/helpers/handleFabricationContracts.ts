@@ -2,6 +2,7 @@ import { store as i18nStore } from "@/lib/useTranslation";
 import { CONTRACT_REWARDS } from "@/game/constants";
 import { giveCrewExperience } from "@/game/crew";
 import { getReputationChanges } from "@/game/contracts/completionRewards";
+import { getWeaponTypeName } from "@/lib/translationHelpers";
 import type { GameState, GameStore, Location } from "@/game/types";
 
 type SetState = {
@@ -57,7 +58,10 @@ export const handleFabricationContracts = (
 
         get().addLog(
             i18nStore.t("game_logs.handleFabricationContracts_1", {
-                weapon: c.requiredWeaponName ?? c.requiredWeaponType ?? "",
+                weapon: getWeaponTypeName(
+                    c.requiredWeaponType,
+                    i18nStore.t.bind(i18nStore),
+                ),
                 loc_name: c.sourceName || loc.name,
                 reward: c.reward,
             }),

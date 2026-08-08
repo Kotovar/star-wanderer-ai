@@ -134,3 +134,31 @@ export function getSectorNames(
         .map((sectorName) => getSectorName(sectorName, i18nT))
         .join(", ");
 }
+
+/**
+ * Название типа оружия. Имена в CRAFTING_RECIPES и WEAPONS захардкожены
+ * по-русски, поэтому в интерфейсе берём их из каталога, а константу
+ * оставляем запасным вариантом.
+ */
+export function getWeaponTypeName(
+    weaponType: string | undefined,
+    i18nT: (key: string) => string,
+    fallback = "",
+): string {
+    if (!weaponType) return fallback;
+    const key = `weapon_types.${weaponType}`;
+    const translated = i18nT(key);
+    return translated === key ? fallback || weaponType : translated;
+}
+
+/** Название торгового товара — та же история, что и с оружием. */
+export function getTradeGoodName(
+    good: string | undefined,
+    i18nT: (key: string) => string,
+    fallback = "",
+): string {
+    if (!good) return fallback;
+    const key = `trade.goods.${good}`;
+    const translated = i18nT(key);
+    return translated === key ? fallback || good : translated;
+}

@@ -11,6 +11,7 @@ import { TRADE_GOODS } from "@/game/constants/goods";
 import { WEAPON_TYPES } from "@/game/constants/weapons";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
+import { getWeaponTypeName } from "@/lib/translationHelpers";
 
 export function CraftingTab() {
   const { t } = useTranslation();
@@ -134,7 +135,7 @@ export function CraftingTab() {
                               "#fff",
                           }}
                         >
-                          {recipe.name}
+                          {getWeaponTypeName(recipe.weaponType, t, recipe.name)}
                         </span>
                         <span className="text-[#888] text-xs">
                           {weaponDetails &&

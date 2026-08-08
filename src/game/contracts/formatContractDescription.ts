@@ -1,12 +1,16 @@
 import type { Contract } from "@/game/types";
-import { getLocationName, getSectorNames } from "@/lib/translationHelpers";
+import {
+  getLocationName,
+  getSectorNames,
+  getWeaponTypeName,
+} from "@/lib/translationHelpers";
 
 type ContractDescription = Pick<
   Contract,
   | "cargo"
   | "crisisName"
   | "desc"
-  | "requiredWeaponName"
+  | "requiredWeaponType"
   | "planetType"
   | "quantity"
   | "requiredDiscoveries"
@@ -60,5 +64,5 @@ export const formatContractDescription = (
     stormName: contract.stormName ?? "",
     sectorName: getLocationName(contract.sectorName ?? "", t),
     crisis: contract.crisisName ? t(contract.crisisName) : "",
-    weapon: contract.requiredWeaponName ?? "",
+    weapon: getWeaponTypeName(contract.requiredWeaponType, t),
   });

@@ -20,7 +20,12 @@ import { RaceSprite } from "./RaceSprite";
 import { ContractReputationImpact } from "./ContractReputationImpact";
 import { getContractReputationImpact } from "@/game/reputation/utils";
 import { getContractTurnsRemaining } from "@/game/contracts/contractDeadline";
-import { getLocationName, getSectorNames } from "@/lib/translationHelpers";
+import {
+    getLocationName,
+    getSectorNames,
+    getTradeGoodName,
+    getWeaponTypeName,
+} from "@/lib/translationHelpers";
 
 type TFunction = (
     key: string,
@@ -346,14 +351,13 @@ export function ContractsList() {
                 return t("contracts.name_cleanse_curse");
             case "crisis_response":
                 return t("contracts.name_crisis_response", {
-                    cargo: contract.cargo
-                        ? TRADE_GOODS[contract.cargo as Goods]?.name ??
-                          contract.cargo
-                        : t("contracts.cargo"),
+                    cargo:
+                        getTradeGoodName(contract.cargo, t) ||
+                        t("contracts.cargo"),
                 });
             case "fabrication":
                 return t("contracts.name_fabrication", {
-                    weapon: contract.requiredWeaponName ?? "",
+                    weapon: getWeaponTypeName(contract.requiredWeaponType, t),
                 });
             default:
                 return contract.desc;
@@ -847,9 +851,7 @@ export function ContractsList() {
                     ],
                 };
             case "crisis_response": {
-                const reliefCargo = TRADE_GOODS[
-                    contract.cargo as keyof typeof TRADE_GOODS
-                ]?.name;
+                const reliefCargo = getTradeGoodName(contract.cargo, t);
                 const reliefProgress = getProgress(contract);
                 return {
                     type: t("contracts.type_crisis_response"),
@@ -857,7 +859,7 @@ export function ContractsList() {
                         {
                             label: t("contracts.task_what"),
                             value: t("contracts.crisis_response_task")
-                                .replace("{{cargo}}", reliefCargo ?? contract.cargo ?? "")
+                                .replace("{{cargo}}", reliefCargo)
                                 .replace("{{quantity}}", String(contract.quantity ?? 0)),
                         },
                         {
@@ -892,7 +894,7 @@ export function ContractsList() {
                             label: t("contracts.task_what"),
                             value: t("contracts.fabrication_task").replace(
                                 "{{weapon}}",
-                                contract.requiredWeaponName ?? "",
+                                getWeaponTypeName(contract.requiredWeaponType, t),
                             ),
                         },
                         {

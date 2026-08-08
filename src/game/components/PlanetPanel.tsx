@@ -24,6 +24,8 @@ import {
     getPlanetDescription,
     getPlanetTypeName,
     getSectorNames,
+    getTradeGoodName,
+    getWeaponTypeName,
 } from "@/lib/translationHelpers";
 import {
     getRaceReputation,
@@ -202,7 +204,7 @@ function ContractDescription({
                         item.quantity > 0,
                 );
                 return t("contracts.desc_fabrication_offer", {
-                    weapon: c.requiredWeaponName ?? "",
+                    weapon: getWeaponTypeName(c.requiredWeaponType, t),
                     progress: crafted ? 1 : 0,
                 });
             })()}
@@ -211,7 +213,7 @@ function ContractDescription({
                     get().ship.tradeGoods.find((g) => g.item === c.cargo)?.quantity ?? 0;
                 return t("contracts.desc_crisis_response_offer", {
                     crisis: c.crisisName ? t(c.crisisName) : "",
-                    cargo: TRADE_GOODS[c.cargo as Goods]?.name || "",
+                    cargo: getTradeGoodName(c.cargo, t),
                     quantity: c.quantity || 0,
                     progress: cargoOwned,
                 });
@@ -245,9 +247,9 @@ function AvailableContractCard({
         ? t(c.desc, {
               planetType: c.planetType ? getPlanetTypeName(c.planetType, t) : "",
               sector: getLocationName(c.targetSectorName ?? "", t),
-              weapon: c.requiredWeaponName ?? "",
+              weapon: getWeaponTypeName(c.requiredWeaponType, t),
               crisis: c.crisisName ? t(c.crisisName) : "",
-              cargo: c.cargo ? TRADE_GOODS[c.cargo as Goods]?.name ?? c.cargo : "",
+              cargo: getTradeGoodName(c.cargo, t),
               quantity: c.quantity ?? 0,
           })
         : c.desc;

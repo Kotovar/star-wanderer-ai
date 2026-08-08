@@ -86,7 +86,6 @@ const FABRICATION = {
   desc: "contracts.desc_fabrication",
   reward: 900,
   requiredWeaponType: "drones",
-  requiredWeaponName: "Боевые дроны",
   sourcePlanetId: "p1",
   sourcePlanetName: "Церера-3",
   sourceSectorName: "Меридиан-1",
@@ -147,6 +146,33 @@ assert.ok(
   markup.includes("Медикаменты"),
   "отклик на кризис обязан называть нужный груз",
 );
+
+// ── И то же самое на английском: имена не должны застревать по-русски ───────
+globalThis.localStorage ??= { getItem: () => null, setItem: () => {} };
+const { store: i18nStore } = await import("../src/lib/useTranslation.ts");
+i18nStore.changeLanguage("en");
+// Английский каталог грузится отдельным чанком — дождёмся его
+await new Promise((done) => setTimeout(done, 0));
+assert.equal(
+  i18nStore.t("weapon_types.drones"),
+  "Combat Drones",
+  "английский каталог не загрузился — проверка была бы бессмысленной",
+);
+const englishMarkup = renderToStaticMarkup(createElement(ContractsList));
+assert.doesNotMatch(
+  englishMarkup,
+  /[А-Яа-яЁё]/,
+  "русские названия протекли в английский интерфейс",
+);
+assert.ok(
+  englishMarkup.includes("Combat Drones"),
+  "оружие обязано называться по-английски",
+);
+assert.ok(
+  englishMarkup.includes("Medicine"),
+  "груз помощи обязан называться по-английски",
+);
+i18nStore.changeLanguage("ru");
 
 // ── Прогресс виден: в списке он рисуется полосой, ширина = доля выполнения ──
 const bars = (html) => [...html.matchAll(/width:\s*([\d.]+)%/g)].map((m) => m[1]);

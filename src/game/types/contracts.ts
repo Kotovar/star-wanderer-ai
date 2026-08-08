@@ -73,9 +73,10 @@ export interface Contract {
     // For crisis relief quest — only offered while its crisis is active
     crisisId?: string;
     crisisName?: string;
-    // For fabrication quest — hand over a weapon the player crafted themselves
+    // For fabrication quest — hand over a weapon the player crafted themselves.
+    // Только тип: имя берётся из каталога переводов, иначе оно застынет
+    // на языке, который был включён в момент генерации контракта.
     requiredWeaponType?: WeaponType;
-    requiredWeaponName?: string;
 }
 
 export interface ContractCompletionResult {

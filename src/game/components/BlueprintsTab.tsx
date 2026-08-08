@@ -9,6 +9,7 @@ import {
 } from "@/game/constants/crafting";
 import { WEAPON_TYPES } from "@/game/constants/weapons";
 import { useTranslation } from "@/lib/useTranslation";
+import { getWeaponTypeName } from "@/lib/translationHelpers";
 import type { CraftingRecipe, ModuleRecipe } from "@/game/types";
 
 type ExpandedId = string | null;
@@ -64,7 +65,7 @@ function WeaponPreview({
         </span>
         <div className="flex-1 min-w-0">
           <div className="font-bold text-[11px] truncate" style={{ color }}>
-            {recipe.name}
+            {getWeaponTypeName(recipe.weaponType, t, recipe.name)}
           </div>
           <div className="text-[#555] text-[9px] uppercase tracking-wider">
             {weaponDetails?.name}
@@ -298,7 +299,7 @@ export function BlueprintsTab() {
                       className="font-bold"
                       style={{ color: weaponDetails?.color ?? "#fff" }}
                     >
-                      {recipe.name}
+                      {getWeaponTypeName(recipe.weaponType, t, recipe.name)}
                     </div>
                     <div className="text-[#555] text-[10px]">
                       {t("blueprints.craft_hint")} · {recipe.credits}₢
