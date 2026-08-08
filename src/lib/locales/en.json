@@ -2210,7 +2210,7 @@
             "ocean": "Oceanic: more artifact locations"
         },
         "expedition_abort_btn": "Abort",
-        "expedition_abort_desc": "Uncollected rewards will be lost. Crew will gain fatigue.",
+        "expedition_abort_desc": "Rewards and experience will be lost. Crew will gain fatigue and lose morale. The planet can be explored again.",
         "expedition_no_ap_hint": "Not enough AP for another step — finish the expedition",
         "expedition_scan_btn": "Scan",
         "expedition_scan_hint": "Scan mode: tap a reachable tile to reveal its type. Costs 1 scan, not AP.",
@@ -5480,6 +5480,7 @@
         "collectExpeditionRewards_3": "🗺️ Expedition: {{value}} {{type}} x{{quantity}}",
         "endExpedition_1": "😴 The expedition members are exhausted: {{EXPEDITION_FATIGUE_TURNS}} turns of rest, -{{EXPEDITION_HAPPINESS_PENALTY}} morale.",
         "endExpedition_2": "🗺️ Expedition complete.",
+        "abortExpedition_1": "🗺️ Expedition aborted. The planet can be explored again.",
         "resolveRuinsChoice_1": "⚠️ {{target_name}} was hurt: -{{damage}} HP",
         "resolveRuinsChoice_2": "🏚️ Ruins: +{{val}}₢",
         "resolveRuinsChoice_3": "🏚️ Ruins: {{value}} {{rewardResourceType}} x{{quantity}}",

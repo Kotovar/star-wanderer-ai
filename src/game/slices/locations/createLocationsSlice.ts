@@ -36,6 +36,7 @@ import {
     diveDeeperIntoRuins as diveDeeperIntoRuinsHelper,
     confirmRuinsOutcome as confirmRuinsOutcomeHelper,
     endExpedition as endExpeditionHelper,
+    abortExpedition as abortExpeditionHelper,
 } from "./helpers/expedition";
 import {
     startDive as startDiveHelper,
@@ -146,6 +147,9 @@ export interface LocationsSlice {
 
     /** Завершает экспедицию, применяет награды и тратит 1 ход */
     endExpedition: () => void;
+
+    /** Прерывает экспедицию без наград и позволяет запустить её повторно */
+    abortExpedition: () => void;
 
     /** Начинает погружение зонда в газовый гигант */
     startDive: (locationId: string) => void;
@@ -260,6 +264,10 @@ export const createLocationsSlice = (
 
     endExpedition: () => {
         endExpeditionHelper(set, get);
+    },
+
+    abortExpedition: () => {
+        abortExpeditionHelper(set, get);
     },
 
     startDive: (locationId) => {

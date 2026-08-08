@@ -9,64 +9,88 @@ import { EXPEDITION_CREW_SCOUT_EXP, EXPEDITION_CREW_OTHER_EXP } from "./constant
 const EXPEDITION_FATIGUE_TURNS = 5;
 const EXPEDITION_HAPPINESS_PENALTY = 10;
 
+export type ExpeditionEndOutcome = "completed" | "aborted";
+
 /**
- * Завершает экспедицию: применяет награды, опыт, усталость экипажу, тратит 1 ход.
- * Помечает планету как исследованную (1 экспедиция за всю игру).
+ * Завершает или прерывает экспедицию и применяет общие последствия для экипажа.
  */
-export function endExpedition(set: SetState, get: () => GameStore): void {
+export function endExpedition(
+    set: SetState,
+    get: () => GameStore,
+    outcome: ExpeditionEndOutcome = "completed",
+): void {
     const state = get();
     const expedition = state.activeExpedition;
 
     if (!expedition) return;
 
-    // Apply collected rewards
-    collectExpeditionRewards(expedition.rewards, set, get);
-
-    // Give experience + apply fatigue + happiness penalty to expedition crew
-    const expeditionCrew = state.crew.filter((c) =>
-        expedition.crewIds.includes(c.id),
-    );
-    for (const member of expeditionCrew) {
-        const exp =
-            member.profession === "scout"
-                ? EXPEDITION_CREW_SCOUT_EXP
-                : EXPEDITION_CREW_OTHER_EXP;
-        get().gainExp(member, exp);
+    const completed = outcome === "completed";
+    if (completed) {
+        collectExpeditionRewards(expedition.rewards, set, get);
+        const expeditionCrew = state.crew.filter((member) =>
+            expedition.crewIds.includes(member.id),
+        );
+        for (const member of expeditionCrew) {
+            get().gainExp(
+                member,
+                member.profession === "scout"
+                    ? EXPEDITION_CREW_SCOUT_EXP
+                    : EXPEDITION_CREW_OTHER_EXP,
+            );
+        }
     }
 
-    // Apply fatigue and happiness penalty
     set((s) => ({
-        crew: s.crew.map((c) => {
-            if (!expedition.crewIds.includes(c.id)) return c;
-            const race = RACES[c.race];
-            const hasHappiness = race?.hasHappiness !== false;
+        crew: s.crew.map((member) => {
+            if (!expedition.crewIds.includes(member.id)) return member;
+            const race = RACES[member.race];
             // Расы с hasFatigue:false (синтетики, порождённые пустотой) не устают
-            const hasFatigue = race?.hasFatigue !== false;
             return {
-                ...c,
-                expeditionFatigue: hasFatigue
+                ...member,
+                expeditionFatigue: race?.hasFatigue !== false
                     ? EXPEDITION_FATIGUE_TURNS
-                    : c.expeditionFatigue,
-                happiness: hasHappiness
-                    ? Math.max(0, c.happiness - EXPEDITION_HAPPINESS_PENALTY)
-                    : c.happiness,
+                    : member.expeditionFatigue,
+                happiness:
+                    race?.hasHappiness !== false
+                        ? Math.max(
+                              0,
+                              member.happiness - EXPEDITION_HAPPINESS_PENALTY,
+                          )
+                        : member.happiness,
             };
         }),
     }));
 
-    get().addLog( i18nStore.t("game_logs.endExpedition_1", { EXPEDITION_FATIGUE_TURNS, EXPEDITION_HAPPINESS_PENALTY }),
+    get().addLog(
+        i18nStore.t("game_logs.endExpedition_1", {
+            EXPEDITION_FATIGUE_TURNS,
+            EXPEDITION_HAPPINESS_PENALTY,
+        }),
         "warning",
     );
 
-    // Mark planet as expedition completed (once per planet)
-    const planetId = expedition.planetId;
     set((s) => ({
         turn: s.turn + 1,
         activeExpedition: null,
-        ...patchLocation(s, planetId, { expeditionCompleted: true }),
+        ...(completed
+            ? patchLocation(s, expedition.planetId, {
+                  expeditionCompleted: true,
+              })
+            : {}),
     }));
 
-    get().addLog( i18nStore.t("game_logs.endExpedition_2"), "info");
+    get().addLog(
+        i18nStore.t(
+            completed
+                ? "game_logs.endExpedition_2"
+                : "game_logs.abortExpedition_1",
+        ),
+        "info",
+    );
     get().updateShipStats();
-    playSound("world_discovery");
+    playSound(completed ? "world_discovery" : "ui_cancel");
+}
+
+export function abortExpedition(set: SetState, get: () => GameStore): void {
+    endExpedition(set, get, "aborted");
 }

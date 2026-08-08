@@ -388,6 +388,7 @@ export interface GameScouting {
   diveDeeperIntoRuins: () => void;
   confirmRuinsOutcome: () => void;
   endExpedition: () => void;
+  abortExpedition: () => void;
   startDive: (locationId: string) => void;
   resolveDiveEvent: (choiceIndex: number) => void;
   diveDeeper: () => void;

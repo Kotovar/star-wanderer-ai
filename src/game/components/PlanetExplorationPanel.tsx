@@ -53,6 +53,7 @@ export function PlanetExplorationPanel() {
   const diveDeeperIntoRuins = useGameStore((s) => s.diveDeeperIntoRuins);
   const confirmRuinsOutcome = useGameStore((s) => s.confirmRuinsOutcome);
   const endExpedition = useGameStore((s) => s.endExpedition);
+  const abortExpedition = useGameStore((s) => s.abortExpedition);
   const { t } = useTranslation();
   const { cargoFull } = useCargoStatus();
 
@@ -126,7 +127,7 @@ export function PlanetExplorationPanel() {
 
   const handleAbort = () => {
     setShowAbortConfirm(false);
-    endExpedition();
+    abortExpedition();
   };
 
   return (

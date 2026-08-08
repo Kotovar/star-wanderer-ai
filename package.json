@@ -33,6 +33,7 @@
     "check:market": "node --no-warnings --experimental-strip-types scripts/check-market-tick.mjs",
     "check:contract-targets": "node --no-warnings --experimental-strip-types scripts/check-contract-targets.mjs",
     "check:artifact-hints": "node scripts/check-artifact-hints.mjs",
+    "check:expedition-abort": "node --no-warnings scripts/check-expedition-abort.mjs",
     "check:expedition-environments": "node --no-warnings --experimental-strip-types scripts/check-expedition-environments.mjs",
     "check:expedition-orbital-scan": "node scripts/check-expedition-orbital-scan.mjs",
     "check:expedition-ruins": "node --no-warnings --experimental-strip-types scripts/check-expedition-ruins.mjs",

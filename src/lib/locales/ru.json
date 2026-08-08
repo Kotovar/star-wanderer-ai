@@ -2210,7 +2210,7 @@
             "ocean": "Океаническая: больше мест с артефактами"
         },
         "expedition_abort_btn": "Прервать",
-        "expedition_abort_desc": "Несобранные награды будут утеряны. Участники получат усталость.",
+        "expedition_abort_desc": "Награды и опыт будут утеряны. Участники получат усталость и потеряют мораль. Планету можно будет исследовать повторно.",
         "expedition_no_ap_hint": "Недостаточно AP для следующего шага — завершите экспедицию",
         "expedition_scan_btn": "Сканировать",
         "expedition_scan_hint": "Режим сканирования: нажмите доступную клетку, чтобы увидеть её тип. Не тратит AP, тратит 1 сканирование.",
@@ -5480,6 +5480,7 @@
         "collectExpeditionRewards_3": "🗺️ Экспедиция: {{value}} {{type}} x{{quantity}}",
         "endExpedition_1": "😴 Участники экспедиции устали: {{EXPEDITION_FATIGUE_TURNS}} ходов отдыха, -{{EXPEDITION_HAPPINESS_PENALTY}} морали.",
         "endExpedition_2": "🗺️ Экспедиция завершена.",
+        "abortExpedition_1": "🗺️ Экспедиция прервана. Планету можно исследовать повторно.",
         "resolveRuinsChoice_1": "⚠️ {{target_name}} пострадал: -{{damage}} HP",
         "resolveRuinsChoice_2": "🏚️ Руины: +{{val}}₢",
         "resolveRuinsChoice_3": "🏚️ Руины: {{value}} {{rewardResourceType}} x{{quantity}}",

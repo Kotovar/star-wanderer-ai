@@ -6,5 +6,5 @@ export {
     diveDeeperIntoRuins,
     confirmRuinsOutcome,
 } from "./resolveRuinsChoice";
-export { endExpedition } from "./endExpedition";
+export { abortExpedition, endExpedition } from "./endExpedition";
 export { isTileReachable } from "./adjacency";
