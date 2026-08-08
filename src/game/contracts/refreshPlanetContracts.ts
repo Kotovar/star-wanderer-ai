@@ -3,14 +3,13 @@ import {
     generateCrisisResponseContract,
     generateFabricationContract,
 } from "./generateResponseContracts";
+import { FABRICATION_OFFER_CHANCE } from "./seedResponseContracts";
 import { isContractTargetAvailable } from "./targetAvailability";
 import { getRunProfile } from "@/game/galaxy/runProfiles";
 import type { Contract, GameState, Sector } from "@/game/types";
 
 const MAX_OPEN_CONTRACTS = 5;
 
-/** Шанс, что планета выставит заказ на изготовление при обновлении предложений */
-const FABRICATION_OFFER_CHANCE = 0.25;
 
 export const refreshVisitedPlanetContracts = (
     state: Pick<

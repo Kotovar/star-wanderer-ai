@@ -11,6 +11,7 @@ const { isContractTargetAvailable } = await import(
 );
 const {
   seedFabricationOffers,
+  seedStartingFabricationOffers,
   seedCrisisResponseOffers,
   dropStaleCrisisOffers,
 } = await import("../src/game/contracts/seedResponseContracts.ts");
@@ -197,6 +198,43 @@ const crowded = [
   },
 ];
 assert.equal(seedFabricationOffers(crowded, "plasma"), null);
+
+// Старт со всеми рецептами (dev-шаблоны, случайная стартовая технология) не
+// проходит через processResearch — заказы обязаны быть уже на первом ходу
+const startSectors = [
+  {
+    id: 1,
+    name: "S1",
+    tier: 2,
+    locations: Array.from({ length: 200 }, (_, i) => planet(`p${i}`, false)),
+  },
+];
+const started = seedStartingFabricationOffers(startSectors, [
+  "plasma",
+  "drones",
+  "ion_cannon",
+]);
+assert.ok(started, "старт с рецептами обязан подсеять заказы");
+const startedOffers = started[0].locations.flatMap((l) => l.contracts);
+assert.ok(startedOffers.length > 0);
+assert.ok(
+  startedOffers.every((offer) => offer.type === "fabrication"),
+  "подсев не должен добавлять ничего лишнего",
+);
+// Бросок на планету, а не на рецепт: иначе планета целиком забилась бы заказами
+assert.ok(
+  started[0].locations.every(
+    (l) => l.contracts.filter((c) => c.type === "fabrication").length <= 1,
+  ),
+  "на планете не может быть больше одного стартового заказа",
+);
+assert.ok(
+  startedOffers.length < started[0].locations.length,
+  "заказы обязаны выпадать по шансу, а не на каждой планете",
+);
+assert.equal(seedStartingFabricationOffers(startSectors, []), null);
+assert.equal(seedStartingFabricationOffers(startSectors, undefined), null);
+assert.equal(seedStartingFabricationOffers(startSectors, ["nope"]), null);
 
 // Кризис просит помощи сразу и по всей галактике, включая непосещённое
 const crisisState = { id: "epidemic", turnsRemaining: 30 };

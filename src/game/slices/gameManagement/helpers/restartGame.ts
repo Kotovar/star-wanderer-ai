@@ -8,6 +8,10 @@ import { playSound, setAudioVolumes, setSoundPlaybackEnabled } from "@/sounds";
 import { loadPlayerSettings } from "../../settings/playerSettings";
 import { buildStartingState } from "./buildStartingState";
 import { getRunModifierLocationWeights } from "@/game/constants/launchModifiers";
+import {
+  seedCrisisResponseOffers,
+  seedStartingFabricationOffers,
+} from "@/game/contracts/seedResponseContracts";
 import { applyResearchedTechs } from "@/game/research/applyResearchedTechs";
 import { DEFAULT_TEMPLATE_ID } from "@/game/constants/shipTemplates";
 import { getVictoryObjectives } from "@/game/constants/victoryObjectives";
@@ -130,6 +134,17 @@ export const restartGame = (
     }
   }
 
+  // Стартовые технологии не проходят через processResearch, поэтому заказы на
+  // изготовление подсеваются здесь — иначе игрок со всеми рецептами на первом
+  // ходу увидел бы первый заказ только на сотом
+  set((s) => {
+    const sectors = seedStartingFabricationOffers(
+      s.galaxy.sectors,
+      s.research.unlockedRecipes,
+    );
+    return sectors ? { galaxy: { ...s.galaxy, sectors } } : {};
+  });
+
   get().updateShipStats();
 
   if (patch.startsWithCrisis) {
@@ -137,18 +152,28 @@ export const restartGame = (
     const crisisData = crisis.onStartEffect?.(set, get) ?? undefined;
     const stateAfterStart = get();
     const nextCrisis = pickWeightedCrisis(stateAfterStart, crisis.id);
-    set((state) => ({
-      activeCrisis: {
-        id: crisis.id,
-        turnsRemaining: crisis.duration,
-        data: { ...crisisData, startedFromModifier: true },
-      },
-      discoveredCrisisIds: [
-        ...new Set([...state.discoveredCrisisIds, crisis.id]),
-      ],
-      nextCrisisTurn: rollNextCrisisTurn(state.turn, stateAfterStart),
-      nextCrisisId: nextCrisis.id,
-    }));
+    const startedCrisis = {
+      id: crisis.id,
+      turnsRemaining: crisis.duration,
+      data: { ...crisisData, startedFromModifier: true },
+    };
+    set((state) => {
+      // Стартовый кризис не проходит через processGlobalCrises, поэтому его
+      // просьбы о помощи тоже надо подсеять здесь
+      const sectors = seedCrisisResponseOffers(
+        state.galaxy.sectors,
+        startedCrisis,
+      );
+      return {
+        activeCrisis: startedCrisis,
+        discoveredCrisisIds: [
+          ...new Set([...state.discoveredCrisisIds, crisis.id]),
+        ],
+        nextCrisisTurn: rollNextCrisisTurn(state.turn, stateAfterStart),
+        nextCrisisId: nextCrisis.id,
+        ...(sectors ? { galaxy: { ...state.galaxy, sectors } } : {}),
+      };
+    });
     get().addLog( i18nStore.t("game_logs.restartGame_2", { icon: crisis.icon, value: i18nStore.t(crisis.nameKey), duration: crisis.duration }),
       "error",
     );

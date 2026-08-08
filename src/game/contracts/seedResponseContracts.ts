@@ -17,6 +17,9 @@ import type { Contract, Location, Sector } from "@/game/types";
 /** Потолок предложений на планете — тот же, что у обычного обновления */
 const MAX_OPEN_CONTRACTS = 5;
 
+/** Шанс, что планета выставит заказ на изготовление */
+export const FABRICATION_OFFER_CHANCE = 0.25;
+
 const isOfferablePlanet = (location: Location) =>
     location.type === "planet" && !location.isEmpty;
 
@@ -72,6 +75,33 @@ export const seedFabricationOffers = (
             ),
         (location, sector) =>
             generateFabricationContract(location, sector, [recipeId]),
+    );
+};
+
+/**
+ * Заказы на рецепты, которые игрок знает уже на первом ходу: шаблоны со всеми
+ * технологиями и модификатор случайной стартовой технологии (ion_cannon
+ * открывается без предпосылок). Такой старт не проходит через processResearch,
+ * поэтому без отдельного подсева первые заказы появились бы только на сотом
+ * ходу. Бросок делается на планету, а не на рецепт, иначе все предложения
+ * планеты оказались бы заказами на изготовление.
+ */
+export const seedStartingFabricationOffers = (
+    sectors: Sector[],
+    unlockedRecipes: readonly string[] | undefined,
+): Sector[] | null => {
+    const available = (unlockedRecipes ?? []).filter(
+        (recipeId): recipeId is CraftingWeapon => recipeId in CRAFTING_RECIPES,
+    );
+    if (available.length === 0) return null;
+
+    return seedPlanets(
+        sectors,
+        () => Math.random() < FABRICATION_OFFER_CHANCE,
+        (location, sector) =>
+            generateFabricationContract(location, sector, [
+                available[Math.floor(Math.random() * available.length)],
+            ]),
     );
 };
 
