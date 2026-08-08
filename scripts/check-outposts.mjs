@@ -568,10 +568,11 @@ assert.match(
 );
 
 // Кнопка приписки обязана называть профессию: с несколькими инженерами
-// одно имя ничего не говорит
+// одно имя ничего не говорит. Блок общий для базы и сборщика — искать надо
+// в нём, а не в отдельной панели
 assert.match(
-  source("game/components/GasCollectorSection.tsx"),
-  /\{member\.name\} ·\{" "\}\n\s*\{t\(\n?\s*`professions\./,
+  source("game/components/OutpostGarrison.tsx"),
+  /\{member\.name\} ·\{" "\}\n\s*\{t\(`professions\./,
   "в списке кандидатов не видно профессии и уровня",
 );
 

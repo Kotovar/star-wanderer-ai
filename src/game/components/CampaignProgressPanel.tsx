@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { OutpostStatusList } from "./OutpostStatusList";
 import { useGameStore } from "@/game/store";
 import { RESEARCH_TREE } from "@/game/constants";
 import { CRAFTING_RECIPES } from "@/game/constants/crafting";
@@ -149,6 +150,7 @@ const REGION_NAMES: Record<number, string> = {
 export function CampaignProgressPanel() {
   const { t } = useTranslation();
   const sectors = useGameStore((s) => s.galaxy.sectors);
+  const outpostCount = useGameStore((s) => s.outposts.length);
   const currentSector = useGameStore((s) => s.currentSector);
   const traveling = useGameStore((s) => s.traveling);
   const shipModules = useGameStore((s) => s.ship.modules);
@@ -495,6 +497,12 @@ export function CampaignProgressPanel() {
           />
         )}
       </div>
+
+      {outpostCount > 0 && (
+        <Section title={t("outposts.status_title")}>
+          <OutpostStatusList />
+        </Section>
+      )}
 
       <Section title="Маршрут по галактике">
         <div className="space-y-3">

@@ -382,6 +382,50 @@ assert.match(
   "со склада нечем забрать положенное",
 );
 
+// ── Гарнизон базы должен быть достижим ─────────────────────────────────────
+// Панель показывала «Гарнизон: 0/1» без единой кнопки: множитель базы
+// навсегда оставался ×0.7, казарма давала места, которые нечем заполнить, а
+// стрелок, снижающий риск захвата, был недостижим
+const garrison = source("game/components/OutpostGarrison.tsx");
+for (const fn of ["stationCrew(", "recallCrew("]) {
+  assert.ok(garrison.includes(fn), `в гарнизоне нет ${fn}`);
+}
+for (const path of [
+  "game/components/BaseSection.tsx",
+  "game/components/GasCollectorSection.tsx",
+]) {
+  assert.match(
+    source(path),
+    /<OutpostGarrison/,
+    `${path}: гарнизон не подключён — его слоты видно, но заполнить нечем`,
+  );
+}
+assert.match(
+  garrison,
+  /getCrewSlots\(outpost\)/,
+  "гарнизон считает слоты по-своему, а не общим помощником — у базы они зависят от уровня и казармы",
+);
+
+// ── Статус построек виден удалённо ─────────────────────────────────────────
+// Строить только на месте, но знать, полон ли бункер, — откуда угодно:
+// иначе маршрут не спланировать и приходится летать наугад
+const status = source("game/components/OutpostStatusList.tsx");
+for (const what of ["capturedAtTurn", "isBunkerFull", "getCrewSlots"]) {
+  assert.ok(status.includes(what), `сводка не показывает ${what}`);
+}
+assert.match(
+  source("game/components/CampaignProgressPanel.tsx"),
+  /<OutpostStatusList/,
+  "сводку по постройкам негде посмотреть",
+);
+// Сводка обязана оставаться только сводкой: строить и приписывать — на месте
+for (const action of ["buildBase(", "installBaseModule(", "stationCrew("]) {
+  assert.ok(
+    !status.includes(action),
+    `сводка позволяет ${action} издалека — возвращаться к постройке становится незачем`,
+  );
+}
+
 // ── Локали и подключение к экрану ──────────────────────────────────────────
 assert.match(
   source("game/components/EmptyPlanetPanel.tsx"),
@@ -432,7 +476,7 @@ for (const lang of ["ru", "en"]) {
     assert.ok(catalog.base_modules?.[id]?.name, `${lang}: нет имени модуля ${id}`);
     assert.ok(catalog.base_modules?.[id]?.desc, `${lang}: нет описания модуля ${id}`);
   }
-  for (const key of ["base", "build_base", "base_hint", "bunker", "dismantle", "upgrade", "blocked_not_explored", "services", "service_repair", "service_heal", "service_store"]) {
+  for (const key of ["base", "build_base", "base_hint", "bunker", "dismantle", "upgrade", "blocked_not_explored", "status_title", "services", "service_repair", "service_heal", "service_store"]) {
     assert.ok(catalog.outposts?.[key], `${lang}: нет outposts.${key}`);
   }
   for (const key of ["base_withdrawn", "outpost_built_base", "base_upgraded", "base_module_installed", "base_module_removed", "outpost_build_remote", "base_repaired", "base_healed", "base_stored", "base_service_remote"]) {

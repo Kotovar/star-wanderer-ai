@@ -10,7 +10,6 @@ import {
     BASE_MODULES,
     BASE_SLOTS_BY_LEVEL,
     BASE_UPGRADE_COST,
-    getBaseCrewSlots,
 } from "@/game/constants/baseModules";
 import { RESEARCH_RESOURCES } from "@/game/constants";
 import {
@@ -23,10 +22,10 @@ import {
     hasBaseService,
 } from "@/game/slices/outposts/helpers";
 import { describeCargoItem } from "@/game/cargo/describeCargoItem";
-import { getOutpostCrew } from "@/game/crew/stationed";
 import { planetHasFeature, PLANET_FEATURES } from "@/game/planets";
 import type { Location } from "@/game/types";
 import type { BaseModuleId, OutpostResource } from "@/game/types/outposts";
+import { OutpostGarrison } from "./OutpostGarrison";
 
 interface Props {
     location: Location;
@@ -182,7 +181,6 @@ export function BaseSection({ location }: Props) {
     const level = base.level ?? 1;
     const slots = BASE_SLOTS_BY_LEVEL[level] ?? 0;
     const installed = base.modules ?? [];
-    const stationed = getOutpostCrew(crew, base.id);
     const multiplier = getOutpostOutputMultiplier(base, crew);
     const haul = Object.entries(base.bunker).filter(([, amount]) => amount > 0);
     const upgrade = BASE_UPGRADE_COST[level];
@@ -398,12 +396,10 @@ export function BaseSection({ location }: Props) {
                 </div>
             )}
 
-            {/* Гарнизон и расширение */}
+            <OutpostGarrison outpost={base} accent="#ffb000" />
+
+            {/* Расширение базы */}
             <div className="mt-2 border-t border-[#ffb00022] pt-2 text-[10px] sm:text-xs">
-                <div className="text-[#8a9ba3]">
-                    {t("outposts.garrison")}: {stationed.length}/
-                    {getBaseCrewSlots(level)}
-                </div>
                 {level < BASE_MAX_LEVEL && upgrade && (
                     <Button
                         onClick={() => upgradeBase(base.id)}
