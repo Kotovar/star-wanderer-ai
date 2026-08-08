@@ -141,6 +141,25 @@ export function ContractsList() {
                     total: contract.quantity,
                 };
             }
+            case "crisis_response": {
+                if (!contract.quantity) return null;
+                const reliefOwned =
+                    get().ship.tradeGoods.find((g) => g.item === contract.cargo)
+                        ?.quantity ?? 0;
+                return {
+                    current: Math.min(reliefOwned, contract.quantity),
+                    total: contract.quantity,
+                };
+            }
+            case "fabrication": {
+                const crafted = get().ship.cargo.some(
+                    (item) =>
+                        item.isCraftedWeapon &&
+                        item.weaponType === contract.requiredWeaponType &&
+                        item.quantity > 0,
+                );
+                return { current: crafted ? 1 : 0, total: 1 };
+            }
             case "gas_dive":
                 return {
                     current: contract.collectedMembranes ?? 0,
@@ -816,6 +835,65 @@ export function ContractsList() {
                         },
                     ],
                 };
+            case "crisis_response": {
+                const reliefCargo = TRADE_GOODS[
+                    contract.cargo as keyof typeof TRADE_GOODS
+                ]?.name;
+                return {
+                    type: t("contracts.type_crisis_response"),
+                    tasks: [
+                        {
+                            label: t("contracts.task_what"),
+                            value: t("contracts.crisis_response_task")
+                                .replace("{{cargo}}", reliefCargo ?? contract.cargo ?? "")
+                                .replace("{{quantity}}", String(contract.quantity ?? 0)),
+                        },
+                        {
+                            label: t("contracts.task_requirements"),
+                            value: contract.crisisName
+                                ? t(contract.crisisName)
+                                : t("contracts.unknown"),
+                        },
+                        {
+                            label: t("contracts.task_where"),
+                            value: contract.sourcePlanetName
+                                ? `${getLocationName(contract.sourceSectorName ?? t("contracts.unknown"), t)}, ${getLocationName(contract.sourcePlanetName, t)}`
+                                : getLocationName(
+                                      contract.sourceSectorName ??
+                                          t("contracts.unknown"),
+                                      t,
+                                  ),
+                        },
+                    ],
+                };
+            }
+            case "fabrication":
+                return {
+                    type: t("contracts.type_fabrication"),
+                    tasks: [
+                        {
+                            label: t("contracts.task_what"),
+                            value: t("contracts.fabrication_task").replace(
+                                "{{weapon}}",
+                                contract.requiredWeaponName ?? "",
+                            ),
+                        },
+                        {
+                            label: t("contracts.task_requirements"),
+                            value: t("contracts.fabrication_requirement"),
+                        },
+                        {
+                            label: t("contracts.task_where"),
+                            value: contract.sourcePlanetName
+                                ? `${getLocationName(contract.sourceSectorName ?? t("contracts.unknown"), t)}, ${getLocationName(contract.sourcePlanetName, t)}`
+                                : getLocationName(
+                                      contract.sourceSectorName ??
+                                          t("contracts.unknown"),
+                                      t,
+                                  ),
+                        },
+                    ],
+                };
             case "diplomacy":
                 return {
                     type: t("contracts.type_diplomacy"),
@@ -923,6 +1001,8 @@ export function ContractsList() {
                         expedition_survey: t("contracts.type_expedition_survey"),
                         derelict_recovery: t("contracts.type_derelict_recovery"),
                         cleanse_curse: t("contracts.type_cleanse_curse"),
+                        crisis_response: t("contracts.type_crisis_response"),
+                        fabrication: t("contracts.type_fabrication"),
                     };
                     return (
                         <div

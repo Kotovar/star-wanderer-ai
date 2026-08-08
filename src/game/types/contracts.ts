@@ -1,6 +1,7 @@
 import type { RaceId } from "./races";
 import type { EnemyShip } from "./enemy";
 import type { ArtifactRarity } from "./artifacts";
+import type { WeaponType } from "./modules";
 
 export type ContactSourceType = "planet" | "station" | "ship";
 
@@ -69,6 +70,12 @@ export interface Contract {
     requiredDiscoveries?: number; // Total tiles to reveal on target planet
     tilesRevealed?: number;       // Progress: tiles revealed so far
     expeditionDone?: boolean;     // Set when tilesRevealed >= requiredDiscoveries
+    // For crisis relief quest — only offered while its crisis is active
+    crisisId?: string;
+    crisisName?: string;
+    // For fabrication quest — hand over a weapon the player crafted themselves
+    requiredWeaponType?: WeaponType;
+    requiredWeaponName?: string;
 }
 
 export interface ContractCompletionResult {
@@ -92,7 +99,9 @@ export type ContractType =
     | "gas_dive"
     | "expedition_survey"
     | "derelict_recovery"
-    | "cleanse_curse";
+    | "cleanse_curse"
+    | "crisis_response"
+    | "fabrication";
 
 // Special delivery goods (quest items - given to player, not trade goods)
 export type DeliveryGoods =

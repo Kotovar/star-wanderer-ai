@@ -14,4 +14,6 @@ export const CONTRACT_REWARDS = {
   expedition_survey: { base: [700, 1100, 1700], range: [300, 400, 500] },
   derelict_recovery: { base: [500, 800, 1200], range: [200, 300, 400] },
   cleanse_curse: { base: [700, 1100, 1600], range: [300, 400, 500] },
+  // Умножается на effectMultiplier стадии кризиса: чем хуже, тем щедрее
+  crisis_response: { base: [600, 900, 1300], range: [200, 300, 400] },
 } as const;

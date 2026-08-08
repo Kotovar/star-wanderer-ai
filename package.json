@@ -22,6 +22,7 @@
     "check:run-profiles": "node --no-warnings scripts/check-run-profiles.mjs",
     "check:launch-modifiers": "node --no-warnings scripts/check-launch-modifiers.mjs",
     "check:asteroid-belt": "node --no-warnings scripts/check-asteroid-belt.mjs",
+    "check:response-contracts": "node --no-warnings scripts/check-response-contracts.mjs",
     "check:run-profile-arcs": "node --no-warnings scripts/check-run-profile-arcs.mjs",
     "check:reputation": "node --no-warnings --experimental-strip-types scripts/check-reputation-ripple.mjs",
     "check:crew-relation-events": "node --no-warnings --experimental-strip-types scripts/check-crew-relation-events.mjs",

@@ -15,6 +15,8 @@ export const CONTRACT_REWARDS = {
     research: { baseExp: 20 },
     gas_dive: { baseExp: 22 },
     expedition_survey: { baseExp: 25 },
+    crisis_response: { baseExp: 28 },
+    fabrication: { baseExp: 20 },
 } as const;
 
 // ============================================================================

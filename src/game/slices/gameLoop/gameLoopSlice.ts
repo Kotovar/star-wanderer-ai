@@ -34,6 +34,15 @@ import { runCrewAutomation } from "@/game/slices/crew/helpers/runCrewAutomation"
 import { refreshVisitedPlanetContracts } from "@/game/contracts/refreshPlanetContracts";
 
 /**
+ * Как часто планеты обновляют предложения контрактов.
+ *
+ * Должен быть заметно короче кризиса (~30 ходов), иначе crisis_response
+ * не успевает появиться. Наплыв заданий это не вызывает: обновление лишь
+ * добирает предложения до MAX_OPEN_CONTRACTS на планету.
+ */
+const CONTRACT_REFRESH_INTERVAL = 20;
+
+/**
  * Интерфейс GameLoopSlice
  */
 export interface GameLoopSlice {
@@ -61,7 +70,9 @@ export const createGameLoopSlice = (
         // Инициализация нового хода
         initNewTurn(set);
         const currentTurnState = get();
-        if (currentTurnState.turn % 100 === 0) {
+        // Раз в 100 ходов предложения обновлялись бы реже, чем длится кризис
+        // (~30 ходов), поэтому crisis_response не успевал бы появиться ни разу.
+        if (currentTurnState.turn % CONTRACT_REFRESH_INTERVAL === 0) {
             const sectors = refreshVisitedPlanetContracts(currentTurnState);
             if (sectors) {
                 set((s) => ({

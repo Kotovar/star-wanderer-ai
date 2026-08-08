@@ -472,6 +472,8 @@ export interface GameScanContracts {
   handleDiplomacyContracts: (locationIdx: number) => void;
   handleSupplyRunContracts: (locationIdx: number) => void;
   handleGasDiveContracts: (locationIdx: number) => void;
+  handleCrisisResponseContracts: (locationIdx: number) => void;
+  handleFabricationContracts: (locationIdx: number) => void;
   handleExpeditionSurveyContracts: (locationIdx: number) => void;
 }
 

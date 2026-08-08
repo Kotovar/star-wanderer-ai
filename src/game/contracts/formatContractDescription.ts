@@ -4,7 +4,9 @@ import { getLocationName, getSectorNames } from "@/lib/translationHelpers";
 type ContractDescription = Pick<
   Contract,
   | "cargo"
+  | "crisisName"
   | "desc"
+  | "requiredWeaponName"
   | "planetType"
   | "quantity"
   | "requiredDiscoveries"
@@ -57,4 +59,6 @@ export const formatContractDescription = (
     target: contract.targetSectors?.length ?? 0,
     stormName: contract.stormName ?? "",
     sectorName: getLocationName(contract.sectorName ?? "", t),
+    crisis: contract.crisisName ? t(contract.crisisName) : "",
+    weapon: contract.requiredWeaponName ?? "",
   });

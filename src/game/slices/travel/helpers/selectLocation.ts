@@ -232,6 +232,8 @@ export const selectLocation = (
                 get().handleSupplyRunContracts(locationIdx);
                 get().handleGasDiveContracts(locationIdx);
                 get().handleExpeditionSurveyContracts(locationIdx);
+                get().handleCrisisResponseContracts(locationIdx);
+                get().handleFabricationContracts(locationIdx);
             }
             break;
         }

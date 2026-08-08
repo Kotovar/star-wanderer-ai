@@ -1,8 +1,13 @@
 import { RESEARCH_TREE } from "@/game/constants/research";
+import { CRAFTING_RECIPES } from "@/game/constants/crafting";
 import type { Contract, GameState, Sector, TechnologyId } from "@/game/types";
 
 export type ContractTargetContext = Pick<GameState, "artifacts"> & {
     researchedTechs: GameState["research"]["researchedTechs"];
+    /** Нужен для crisis_response — предложение живёт только вместе с кризисом */
+    activeCrisis?: GameState["activeCrisis"];
+    /** Нужен для fabrication — заказывать можно только собираемое оружие */
+    unlockedRecipes?: GameState["research"]["unlockedRecipes"];
 };
 
 /**
@@ -158,6 +163,20 @@ export const isContractTargetAvailable = (
                         location.type === "space_monster" &&
                         location.spaceMonsterResolved !== "hunted",
                 ),
+            );
+        }
+        case "crisis_response":
+            // Кризис прошёл — гасить нечего, предложение снимается с планеты
+            return context.activeCrisis?.id === contract.crisisId;
+        case "fabrication": {
+            // Заказ на оружие, рецепта которого у игрока нет, невыполним
+            if (!contract.requiredWeaponType) return false;
+            const recipes = context.unlockedRecipes;
+            if (!recipes) return true;
+            return recipes.some(
+                (recipeId) =>
+                    CRAFTING_RECIPES[recipeId]?.weaponType ===
+                    contract.requiredWeaponType,
             );
         }
         default:
