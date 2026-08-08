@@ -238,6 +238,18 @@ assert.match(
   /LOW_GRAVITY_EXPEDITION_AP/,
   "экран сбора обязан учитывать низкую гравитацию, иначе покажет не тот AP",
 );
+// Подсказка про подготовку перечисляет скан, анализ и бурение — операций,
+// которых на населённой планете не существует. Показывать её там — советовать
+// невыполнимое, поэтому блок обязан быть под isEmpty.
+const prepBlock = setupSource.slice(
+  setupSource.indexOf("expedition_prep_peeks") - 400,
+  setupSource.indexOf("expedition_prep_none"),
+);
+assert.match(
+  prepBlock,
+  /isEmpty/,
+  "подсказка о подготовке не ограничена необитаемыми планетами",
+);
 
 // ── planetHasFeature согласован с getPlanetFeatures ────────────────────────
 const probe = "planet-7-x";

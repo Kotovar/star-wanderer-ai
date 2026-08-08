@@ -221,18 +221,22 @@ export function PlanetExpeditionSetup({ planetId, onClose }: Props) {
                 )}
             </div>
 
-            {/* Подготовка к высадке: что дали орбитальный скан, анализ и бурение */}
-            <div className="text-[10px] sm:text-xs">
-                {prepPeeks > 0 ? (
-                    <span className="text-[#00d4ffaa]">
-                        {t("planet_panel.expedition_prep_peeks", { count: prepPeeks })}
-                    </span>
-                ) : (
-                    <span className="text-[#888]">
-                        {t("planet_panel.expedition_prep_none")}
-                    </span>
-                )}
-            </div>
+            {/* Подготовка к высадке: что дали орбитальный скан, анализ и бурение.
+                Только для необитаемых — на населённой планете этих операций нет,
+                и совет «стоило подготовиться» там невыполним. */}
+            {planet?.isEmpty && (
+                <div className="text-[10px] sm:text-xs">
+                    {prepPeeks > 0 ? (
+                        <span className="text-[#00d4ffaa]">
+                            {t("planet_panel.expedition_prep_peeks", { count: prepPeeks })}
+                        </span>
+                    ) : (
+                        <span className="text-[#888]">
+                            {t("planet_panel.expedition_prep_none")}
+                        </span>
+                    )}
+                </div>
+            )}
 
             <div
                 className={`text-xs text-[#ff0040] ${selectedIds.length > 0 ? "invisible" : ""}`}
