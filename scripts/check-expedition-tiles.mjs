@@ -122,18 +122,67 @@ for (const path of [
   }
 }
 
-// Спрайт-лист покрывает только пять старых клеток — новые обязаны рисоваться
-// на canvas, иначе drawImage возьмёт кусок за границей картинки
+// ── Спрайт-лист: индексы, счётчик кадров и сам файл сходятся ───────────────
 const canvasSource = source("game/components/ExpeditionMapCanvas.tsx");
 assert.match(
   canvasSource,
   /const TILE_SPRITE_INDEX: Partial</,
-  "карта спрайтов снова обязательна для всех типов, а картинок только пять",
+  "карта спрайтов обязана оставаться частичной: новый тип клетки может появиться раньше своей картинки",
 );
 assert.match(
   canvasSource,
   /spriteIndex === undefined/,
-  "нет защиты от типа без спрайта",
+  "нет защиты от типа без спрайта — drawImage возьмёт кусок за границей листа",
+);
+
+const spriteCount = Number(
+  canvasSource.match(/EXPEDITION_LOCATION_SPRITE_COUNT = (\d+)/)?.[1],
+);
+const spriteIndices = [
+  ...canvasSource
+    .slice(
+      canvasSource.indexOf("const TILE_SPRITE_INDEX"),
+      canvasSource.indexOf("};", canvasSource.indexOf("const TILE_SPRITE_INDEX")),
+    )
+    .matchAll(/(\w+): (\d+)/g),
+].map(([, type, index]) => [type, Number(index)]);
+
+assert.deepEqual(
+  spriteIndices.map(([type]) => type).sort(),
+  [...declaredTypes].sort(),
+  "у какого-то типа клетки нет кадра в спрайт-листе",
+);
+assert.deepEqual(
+  spriteIndices.map(([, index]) => index).sort((a, b) => a - b),
+  [...Array(spriteCount).keys()],
+  "индексы кадров не покрывают лист без дыр и повторов",
+);
+
+// Файл на диске обязан содержать ровно столько кадров, сколько обещает код,
+// и каждая ячейка — что-то видимое. Иначе клетка отрисуется пустой.
+const sheet = readFileSync(
+  new URL("../public/assets/expedition_locations.webp", import.meta.url),
+);
+// RIFF-WEBP с альфой пишется расширенным контейнером VP8X: ширина холста
+// лежит по смещению 24 тремя байтами little-endian и хранится как «минус один»
+assert.equal(
+  sheet.toString("ascii", 12, 16),
+  "VP8X",
+  "спрайт-лист перестал быть расширенным webp — разбор ширины ниже сломается",
+);
+const width = sheet.readUIntLE(24, 3) + 1;
+assert.ok(width > 0, "не удалось прочитать ширину спрайт-листа");
+assert.equal(
+  width % spriteCount,
+  0,
+  `ширина листа ${width} не делится на ${spriteCount} кадров — кадры поедут на доли пикселя`,
+);
+
+// Ручные поправки центрирования сняты вместе с выравниванием листа
+assert.doesNotMatch(
+  canvasSource,
+  /TILE_SPRITE_OFFSET/,
+  "вернулась ручная компенсация центрирования — значит лист снова кривой",
 );
 
 // ── Керн зависит от типа планеты — ради этого он и заменил лабораторию ─────

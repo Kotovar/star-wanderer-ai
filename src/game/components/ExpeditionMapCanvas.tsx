@@ -73,11 +73,12 @@ const TILE_COLORS: Record<
 };
 
 const EXPEDITION_LOCATION_SPRITE = "/assets/expedition_locations.webp";
-const EXPEDITION_LOCATION_SPRITE_COUNT = 5;
+const EXPEDITION_LOCATION_SPRITE_COUNT = 9;
 
 /**
- * В спрайт-листе ровно пять картинок — у клеток необитаемых планет их нет,
- * поэтому такие типы отсутствуют в карте и рисуются на canvas.
+ * Карта намеренно частичная: тип клетки может появиться раньше своей
+ * картинки, и тогда он обязан отрисоваться на canvas, а не взять чужой
+ * кадр или кусок за границей листа.
  */
 const TILE_SPRITE_INDEX: Partial<Record<ExploreTileType, number>> = {
   market: 0,
@@ -85,13 +86,10 @@ const TILE_SPRITE_INDEX: Partial<Record<ExploreTileType, number>> = {
   ruins: 2,
   incident: 3,
   artifact: 4,
-};
-
-const TILE_SPRITE_OFFSET: Partial<
-  Record<ExploreTileType, { x: number; y: number }>
-> = {
-  market: { x: -0.14, y: 0 },
-  artifact: { x: 0.08, y: 0 },
+  cache: 5,
+  core_sample: 6,
+  hazard: 7,
+  signal: 8,
 };
 
 // Drawing functions for each tile type
@@ -656,9 +654,11 @@ function drawTileSprite(
   const spriteIndex = TILE_SPRITE_INDEX[type];
   if (spriteIndex === undefined) return;
   const drawSize = size * 0.95;
-  const offset = TILE_SPRITE_OFFSET[type];
-  const drawCenterX = centerX + (offset?.x ?? 0) * drawSize;
-  const drawCenterY = centerY + (offset?.y ?? 0) * drawSize;
+  // Ручных поправок здесь больше нет: раньше содержимое кадров стояло не по
+  // центру ячейки (отступы гуляли от 5 до 190 px), и код это компенсировал.
+  // Теперь выровнен сам лист.
+  const drawCenterX = centerX;
+  const drawCenterY = centerY;
 
   ctx.drawImage(
     image,
