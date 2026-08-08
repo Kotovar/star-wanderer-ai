@@ -20,7 +20,10 @@ import {
     BASE_SLOTS_BY_LEVEL,
     BASE_SERVICE_VALUES,
     BASE_UPGRADE_COST,
+    getBaseImage,
+    getBaseModuleImage,
 } from "@/game/constants/baseModules";
+import { GameImage } from "./GameImage";
 import { RESEARCH_RESOURCES } from "@/game/constants";
 import {
     describeHaulResource,
@@ -223,6 +226,14 @@ export function BaseSection({ location }: Props) {
 
     return (
         <div className="mt-2 border border-[#ffb00033] bg-[rgba(255,176,0,0.04)] p-2 sm:p-3">
+            {/* Расширение базы — единственное место в системе, где вложение
+                видно глазами, поэтому картинка меняется с уровнем */}
+            <GameImage
+                src={getBaseImage(level)}
+                alt={t("outposts.base")}
+                className="mb-2 w-full object-contain"
+            />
+
             <div className="flex items-center justify-between">
                 <span className="text-[11px] uppercase tracking-wider text-[#ffb000] sm:text-xs">
                     🏗 {t("outposts.base")} · {t("outposts.base_level", { level })}
@@ -246,8 +257,13 @@ export function BaseSection({ location }: Props) {
                             key={moduleId}
                             className="flex items-center justify-between gap-2 border border-[#ffb00033] px-2 py-1"
                         >
-                            <span className="truncate text-[11px] text-white sm:text-xs">
-                                {def.icon} {t(`base_modules.${moduleId}.name`)}
+                            <span className="flex min-w-0 items-center gap-1.5 truncate text-[11px] text-white sm:text-xs">
+                                <GameImage
+                                    src={getBaseModuleImage(moduleId)}
+                                    alt=""
+                                    className="h-6 w-6 shrink-0 object-contain"
+                                />
+                                {t(`base_modules.${moduleId}.name`)}
                                 {boostFeature && (
                                     <span className="ml-1 text-[#00ff41]">
                                         {PLANET_FEATURES[boostFeature].icon} ×2
@@ -275,6 +291,25 @@ export function BaseSection({ location }: Props) {
                                     base,
                                     moduleId,
                                 );
+                                // Чего именно не хватает — надо показать, а не
+                                // прятать в подсказку: заблокированная кнопка
+                                // без причины читается как поломка
+                                const missing =
+                                    blocker === "not_enough_resources"
+                                        ? Object.entries(def.cost.resources)
+                                              .filter(
+                                                  ([resource, amount]) =>
+                                                      (research.resources[
+                                                          resource as keyof typeof research.resources
+                                                      ] ?? 0) < amount,
+                                              )
+                                              .map(
+                                                  ([resource]) =>
+                                                      RESEARCH_RESOURCES[
+                                                          resource as keyof typeof RESEARCH_RESOURCES
+                                                      ]?.name ?? resource,
+                                              )
+                                        : [];
                                 return (
                                     <Button
                                         key={moduleId}
@@ -284,16 +319,29 @@ export function BaseSection({ location }: Props) {
                                         disabled={blocker !== null}
                                         title={
                                             blocker
-                                                ? t(`outposts.module_${blocker}`)
+                                                ? missing.length > 0
+                                                    ? `${t("outposts.module_not_enough_resources")}: ${missing.join(", ")}`
+                                                    : t(`outposts.module_${blocker}`)
                                                 : t(
                                                       `base_modules.${moduleId}.desc`,
                                                   )
                                         }
                                         className="min-h-7 cursor-pointer border border-[#555] bg-transparent px-2 text-[10px] text-[#b9c6cc] hover:border-[#ffb000] hover:text-[#ffb000] disabled:cursor-default disabled:opacity-40"
                                     >
-                                        {def.icon}{" "}
+                                        <GameImage
+                                            src={getBaseModuleImage(moduleId)}
+                                            alt=""
+                                            className="mr-1 h-5 w-5 shrink-0 object-contain"
+                                        />
                                         {t(`base_modules.${moduleId}.name`)} ·{" "}
                                         {def.cost.credits}₢
+                                        {blocker && (
+                                            <span className="ml-1 text-[#ff667f]">
+                                                {missing.length > 0
+                                                    ? `— ${missing.join(", ")}`
+                                                    : `— ${t(`outposts.module_${blocker}`)}`}
+                                            </span>
+                                        )}
                                     </Button>
                                 );
                             })}

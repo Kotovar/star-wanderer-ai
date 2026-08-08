@@ -5,8 +5,9 @@ import { useTranslation } from "@/lib/useTranslation";
 import { getLocationName } from "@/lib/translationHelpers";
 import {
     BASE_BUNKER_CAP,
-    BASE_MODULES,
+    getBaseModuleImage,
 } from "@/game/constants/baseModules";
+import { GameImage } from "./GameImage";
 import { GAS_COLLECTOR_BUNKER_CAP } from "@/game/constants/outposts";
 import { getOutpostCrew } from "@/game/crew/stationed";
 import {
@@ -101,12 +102,19 @@ export function OutpostStatusList() {
                                     {t("outposts.garrison")}:{" "}
                                     {getOutpostCrew(crew, outpost.id).length}/
                                     {getCrewSlots(outpost)}
-                                    {isBase &&
-                                        (outpost.modules ?? []).length > 0 &&
-                                        ` · ${(outpost.modules ?? [])
-                                            .map((id) => BASE_MODULES[id].icon)
-                                            .join(" ")}`}
                                 </div>
+                                {isBase && (outpost.modules ?? []).length > 0 && (
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                        {(outpost.modules ?? []).map((id) => (
+                                            <GameImage
+                                                key={id}
+                                                src={getBaseModuleImage(id)}
+                                                alt={t(`base_modules.${id}.name`)}
+                                                className="h-5 w-5 object-contain"
+                                            />
+                                        ))}
+                                    </div>
+                                )}
                             </>
                         )}
                     </div>

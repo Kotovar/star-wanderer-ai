@@ -19,6 +19,8 @@ import {
 } from "@/game/slices/outposts/helpers";
 import type { Location } from "@/game/types";
 import { OutpostGarrison } from "./OutpostGarrison";
+import { GameImage } from "./GameImage";
+import { GAS_COLLECTOR_IMAGE } from "@/game/constants/baseModules";
 
 interface Props {
     location: Location;
@@ -72,6 +74,11 @@ export function GasCollectorSection({ location }: Props) {
 
         return (
             <div className="mt-2 border border-[#00d4ff33] bg-[rgba(0,212,255,0.04)] p-2 sm:p-3">
+                <GameImage
+                    src={GAS_COLLECTOR_IMAGE}
+                    alt={t("outposts.gas_collector")}
+                    className="mb-2 w-full object-contain"
+                />
                 <div className="text-[11px] uppercase tracking-wider text-[#00d4ff] sm:text-xs">
                     🛰️ {t("outposts.gas_collector")}
                 </div>

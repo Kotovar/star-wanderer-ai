@@ -54,7 +54,7 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
         role: "engineer",
         cost: {
             credits: 1200,
-            resources: { tech_salvage: 8, rare_minerals: 6 },
+            resources: { rare_minerals: 8, energy_samples: 5 },
         },
         // 80₢/ход до удвоения чертой. Числа дробные намеренно: остаток
         // копится в сотых, и редкий минерал выходит примерно раз в 17 ходов
@@ -67,7 +67,7 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
         role: "engineer",
         cost: {
             credits: 1000,
-            resources: { tech_salvage: 6, energy_samples: 5 },
+            resources: { energy_samples: 8, void_membrane: 4 },
         },
         output: { water: 0.8 },
         // Крекеру нужен лёд: на планете без шапок ему нечего перерабатывать
@@ -79,7 +79,7 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
         role: "scientist",
         cost: {
             credits: 1400,
-            resources: { tech_salvage: 6, ancient_data: 6 },
+            resources: { ancient_data: 8, alien_biology: 5 },
         },
         // 0.4 давали за 100 ходов 38% всей потребности дерева в биообразцах:
         // лаборатория была сильнейшим модулем, а проверка её не видела —
@@ -104,7 +104,7 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
         role: "engineer",
         cost: {
             credits: 900,
-            resources: { tech_salvage: 10 },
+            resources: { rare_minerals: 10 },
         },
         output: {},
         service: "storage",
@@ -115,7 +115,7 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
         role: "engineer",
         cost: {
             credits: 1800,
-            resources: { tech_salvage: 14, rare_minerals: 8 },
+            resources: { tech_salvage: 12, rare_minerals: 8 },
         },
         output: {},
         service: "repair",
@@ -126,7 +126,7 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
         role: "medic",
         cost: {
             credits: 1500,
-            resources: { alien_biology: 10, tech_salvage: 6 },
+            resources: { alien_biology: 12, void_membrane: 5 },
         },
         output: {},
         service: "heal",
@@ -137,7 +137,7 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
         role: "medic",
         cost: {
             credits: 1100,
-            resources: { tech_salvage: 8, energy_samples: 4 },
+            resources: { energy_samples: 10, alien_biology: 5 },
         },
         output: {},
         service: "garrison",
@@ -148,7 +148,7 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
         role: "gunner",
         cost: {
             credits: 2000,
-            resources: { tech_salvage: 16, rare_minerals: 10 },
+            resources: { tech_salvage: 14, rare_minerals: 10 },
         },
         output: {},
         service: "defense",
@@ -159,7 +159,7 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
         role: "engineer",
         cost: {
             credits: 1700,
-            resources: { tech_salvage: 12, rare_minerals: 6 },
+            resources: { tech_salvage: 10, quantum_crystals: 4 },
         },
         output: {},
         service: "craft",
@@ -186,6 +186,20 @@ export const BASE_SERVICE_VALUES = {
     turretThreatRelief: 1,
 } as const;
 
+/**
+ * Картинки. Путь строится из id, а не хранится полем у каждого модуля:
+ * поле пришлось бы заполнять руками, и забытое означало бы пустое место
+ * без единой жалобы. Эмодзи остаётся запасным вариантом, как у технологий.
+ */
+export const getBaseModuleImage = (id: BaseModuleId): string =>
+    `/assets/base-modules/${id}.webp`;
+
+/** Иллюстрация базы по уровню и газосборника */
+export const getBaseImage = (level: number): string =>
+    `/assets/base/level-${Math.min(BASE_MAX_LEVEL, Math.max(1, level))}.webp`;
+
+export const GAS_COLLECTOR_IMAGE = "/assets/base/gas_collector.webp";
+
 /** Слоты по уровню базы: 1 → 2, 2 → 4, 3 → 6 */
 export const BASE_SLOTS_BY_LEVEL = [0, 2, 4, 6] as const;
 export const BASE_MAX_LEVEL = 3;
@@ -203,8 +217,8 @@ export const BASE_COST = {
 /** Апгрейд уровня: дорожает с каждым разом */
 export const BASE_UPGRADE_COST = [
     null,
-    { credits: 5000, resources: { tech_salvage: 18, quantum_crystals: 4 } },
-    { credits: 9000, resources: { tech_salvage: 26, quantum_crystals: 8 } },
+    { credits: 5000, resources: { tech_salvage: 10, quantum_crystals: 4 } },
+    { credits: 9000, resources: { tech_salvage: 14, quantum_crystals: 8 } },
 ] as const;
 
 /** Потолок бункера базы — она крупнее сборщика */

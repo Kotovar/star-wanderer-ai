@@ -462,6 +462,103 @@ assert.match(
   "турели не ослабляют захватчиков — при штурме их как будто и не было",
 );
 
+// ── У каждого модуля и уровня есть картинка ───────────────────────────────
+// Путь строится из id, а не хранится полем: забытое поле молча дало бы
+// пустое место, а несуществующий файл проверка ловит здесь
+const { existsSync } = await import("node:fs");
+const {
+  getBaseModuleImage,
+  getBaseImage,
+  GAS_COLLECTOR_IMAGE,
+} = await import("../src/game/constants/baseModules.ts");
+
+const asset = (webPath) =>
+  new URL(`../public${webPath}`, import.meta.url);
+
+for (const id of moduleIds) {
+  for (const path of [getBaseModuleImage(id), getBaseModuleImage(id).replace(".webp", ".avif")]) {
+    assert.ok(existsSync(asset(path)), `${id}: нет файла ${path}`);
+  }
+}
+for (let level = 1; level <= BASE_MAX_LEVEL; level++) {
+  for (const path of [getBaseImage(level), getBaseImage(level).replace(".webp", ".avif")]) {
+    assert.ok(existsSync(asset(path)), `уровень ${level}: нет файла ${path}`);
+  }
+}
+assert.ok(existsSync(asset(GAS_COLLECTOR_IMAGE)));
+// Уровень вне диапазона не должен уводить на несуществующий файл
+assert.equal(getBaseImage(0), getBaseImage(1));
+assert.equal(getBaseImage(99), getBaseImage(BASE_MAX_LEVEL));
+
+// GameImage сначала пробует avif — без него каждая картинка стоила бы 404
+assert.match(
+  source("game/components/GameImage.tsx"),
+  /replace\(".webp", ".avif"\)/,
+  "GameImage перестал пробовать avif, а файлы лежат парами",
+);
+for (const path of [
+  "game/components/BaseSection.tsx",
+  "game/components/GasCollectorSection.tsx",
+  "game/components/OutpostStatusList.tsx",
+]) {
+  assert.match(
+    source(path),
+    /<GameImage/,
+    `${path}: картинки построек не показываются`,
+  );
+}
+
+// ── Ни один материал не должен быть универсальным замком ──────────────────
+// В первой версии обломки техники просили все десять модулей: стоило им
+// кончиться на постройке базы, и вся система вставала разом
+const askedBy = {};
+for (const def of Object.values(BASE_MODULES)) {
+  for (const resource of Object.keys(def.cost.resources)) {
+    askedBy[resource] = (askedBy[resource] ?? 0) + 1;
+  }
+}
+for (const [resource, count] of Object.entries(askedBy)) {
+  assert.ok(
+    count <= moduleIds.length * 0.6,
+    `«${resource}» просят ${count} модулей из ${moduleIds.length} — исчерпав его, игрок теряет доступ ко всей базе сразу`,
+  );
+}
+assert.ok(
+  Object.keys(askedBy).length >= 4,
+  "модули опираются на слишком узкий набор материалов",
+);
+
+// Базы и апгрейдов должно хватать так, чтобы после них оставалось на модули
+const devTemplate = (await import("../src/game/constants/shipTemplates.ts")).SHIP_TEMPLATES.find(
+  (tpl) => tpl.id === "dev_all_tech_explorer",
+);
+if (devTemplate?.researchResources) {
+  const left = { ...devTemplate.researchResources };
+  const spend = (res) => {
+    for (const [k, v] of Object.entries(res ?? {})) left[k] = (left[k] ?? 0) - v;
+  };
+  spend(BASE_COST.resources);
+  for (let level = 1; level < BASE_MAX_LEVEL; level++) {
+    spend(BASE_UPGRADE_COST[level].resources);
+  }
+  const affordable = Object.values(BASE_MODULES).filter((def) =>
+    Object.entries(def.cost.resources).every(
+      ([resource, amount]) => (left[resource] ?? 0) >= amount,
+    ),
+  );
+  assert.ok(
+    affordable.length >= BASE_SLOTS_BY_LEVEL[BASE_MAX_LEVEL],
+    `на dev-шаблоне после базы и всех апгрейдов доступно ${affordable.length} модулей при ${BASE_SLOTS_BY_LEVEL[BASE_MAX_LEVEL]} слотах — механику не посмотреть`,
+  );
+}
+
+// Заблокированная кнопка обязана называть причину, а не молчать
+assert.match(
+  source("game/components/BaseSection.tsx"),
+  /missing\.join\(", "\)/,
+  "кнопка модуля не говорит, какого материала не хватает — блокировка читается как поломка",
+);
+
 // ── Локали и подключение к экрану ──────────────────────────────────────────
 assert.match(
   source("game/components/EmptyPlanetPanel.tsx"),
