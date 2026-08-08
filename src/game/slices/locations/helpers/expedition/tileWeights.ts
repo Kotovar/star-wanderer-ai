@@ -104,8 +104,9 @@ export function getWeightsForRace(
     raceId: RaceId | undefined,
     pointOfInterest?: PlanetPointOfInterest,
     planetType?: PlanetType,
+    featureWeights?: Partial<TileWeightMap>,
 ): TileWeightMap {
-    const weights = pointOfInterest
+    const base = pointOfInterest
         ? POINT_OF_INTEREST_WEIGHTS[pointOfInterest]
         : !raceId || !(raceId in RACE_WEIGHTS)
           ? DEFAULT_WEIGHTS
@@ -113,9 +114,15 @@ export function getWeightsForRace(
     const artifactWeightBonus =
         getExpeditionEnvironment(planetType)?.artifactWeightBonus ?? 0;
 
-    return artifactWeightBonus > 0
-        ? { ...weights, artifact: weights.artifact + artifactWeightBonus }
-        : weights;
+    const weights = { ...base };
+    weights.artifact += artifactWeightBonus;
+    for (const [type, bonus] of Object.entries(featureWeights ?? {}) as [
+        ExploreTileType,
+        number,
+    ][]) {
+        weights[type] += bonus;
+    }
+    return weights;
 }
 
 export function pickWeightedTile(

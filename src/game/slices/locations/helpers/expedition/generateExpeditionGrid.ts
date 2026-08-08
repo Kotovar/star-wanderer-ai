@@ -12,8 +12,14 @@ export function generateExpeditionGrid(
     raceId: RaceId | undefined,
     pointOfInterest?: PlanetPointOfInterest,
     planetType?: PlanetType,
+    featureWeights?: Partial<Record<ExploreTileType, number>>,
 ): ExploreTile[] {
-    const weights = getWeightsForRace(raceId, pointOfInterest, planetType);
+    const weights = getWeightsForRace(
+        raceId,
+        pointOfInterest,
+        planetType,
+        featureWeights,
+    );
     const types: ExploreTileType[] = [];
     let artifactCount = 0;
 

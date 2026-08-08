@@ -9,6 +9,11 @@ import {
     EXPEDITION_SCANS_PER_SCIENTIST,
     getExpeditionEnvironment,
 } from "./constants";
+import {
+    LOW_GRAVITY_EXPEDITION_AP,
+    planetHasFeature,
+    RUINED_SETTLEMENT_RUINS_WEIGHT,
+} from "@/game/planets";
 
 /**
  * Начинает экспедицию на поверхность планеты.
@@ -98,16 +103,26 @@ export function startExpedition(
     const techBonus = getTechBonusSum(state.research, "expedition_ap");
     apTotal += techBonus;
 
+    // Низкая гравитация: отряд покрывает больше поверхности за те же силы
+    if (planetHasFeature(planetId, "low_gravity")) {
+        apTotal += LOW_GRAVITY_EXPEDITION_AP;
+    }
+
     const pointOfInterest =
         planet.isEmpty && planet.planetType
             ? planet.pointOfInterest ??
               PLANET_POINT_OF_INTERESTS[planet.planetType]
             : undefined;
     const environment = getExpeditionEnvironment(planet.planetType);
+    // Заброшенное поселение: от прежних жильцов остались руины, а не рынок
+    const featureWeights = planetHasFeature(planetId, "ruined_settlement")
+        ? { ruins: RUINED_SETTLEMENT_RUINS_WEIGHT }
+        : undefined;
     const grid = generateExpeditionGrid(
         planet.dominantRace,
         pointOfInterest,
         planet.planetType,
+        featureWeights,
     );
 
     const expedition: ExpeditionState = {

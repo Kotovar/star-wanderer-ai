@@ -5193,6 +5193,22 @@
         "ancient_traces": {
             "name": "Ancient traces",
             "desc": "Double chance to find research samples while scouting"
+        },
+        "seismic_activity": {
+            "name": "Seismic activity",
+            "desc": "Drilling yields 60% more, but every pass risks damaging the drill"
+        },
+        "ice_caps": {
+            "name": "Ice caps",
+            "desc": "Lifted ice feeds fuel synthesis: +8 fuel per drilling pass"
+        },
+        "low_gravity": {
+            "name": "Low gravity",
+            "desc": "Expeditions gain +2 action points"
+        },
+        "ruined_settlement": {
+            "name": "Ruined settlement",
+            "desc": "Noticeably more ruins on the surface"
         }
     },
     "scout_events": {
@@ -5601,6 +5617,8 @@
         "planetaryDrill_4": "The drill is cooling down: next pass in {{value}} turn(s).",
         "planetaryDrill_5": "⛏️ Drilling: extracted {{goodName}} x{{qty}}",
         "planetaryDrill_6": "⛏️ Drilling: {{value}} {{type}} x{{qty}}",
+        "drill_ice_caps": "🧊 Lifted ice processed into fuel: +{{qty}}",
+        "drill_seismic_shock": "🌋 Tremor underground: {{drillName}} damaged by {{damage}}",
         "respondToDistressSignal_1": "✓ Survivors rescued!",
         "respondToDistressSignal_2": "Rescue reward: +{{reward}}₢",
         "respondToDistressSignal_3": "Survivor {{newCrew_name}} ({{value}}) asks to come aboard.",

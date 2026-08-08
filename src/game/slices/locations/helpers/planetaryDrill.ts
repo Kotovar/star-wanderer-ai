@@ -9,7 +9,13 @@ import {
 } from "@/game/slices/ship/helpers";
 import { ENGINEER_DRILL_EXP } from "@/game/constants/experience";
 import { appendSurfaceLog } from "./sendScoutingMission";
-import { planetHasFeature } from "@/game/planets";
+import {
+    ICE_CAPS_FUEL,
+    planetHasFeature,
+    SEISMIC_DRILL_DAMAGE,
+    SEISMIC_DRILL_DAMAGE_CHANCE,
+    SEISMIC_DRILL_YIELD_BONUS,
+} from "@/game/planets";
 import { patchLocation } from "@/game/utils/patchLocation";
 
 /** Кол-во проходов бурения (богатые залежи дают +1) */
@@ -134,10 +140,10 @@ export const planetaryDrill = (
     }
 
     // Проверка модуля дрели
-    const hasDrill = state.ship.modules.some(
+    const drill = state.ship.modules.find(
         (m) => m.type === "drill" && m.health > 0 && !m.disabled && !m.manualDisabled,
     );
-    if (!hasDrill) {
+    if (!drill) {
         get().addLog( i18nStore.t("game_logs.planetaryDrill_2"), "error");
         return;
     }
@@ -164,10 +170,13 @@ export const planetaryDrill = (
     const planetType = planet?.planetType;
     const yields = getDrillYield(planetType);
 
-    // Каждый следующий проход беднее; богатые залежи удваивают добычу
+    // Каждый следующий проход беднее; богатые залежи удваивают добычу,
+    // а сейсмика вскрывает породу — но за это платит сам бур (см. ниже)
+    const seismic = planetHasFeature(planetId, "seismic_activity");
     const passMultiplier =
         (PASS_YIELD_MULTIPLIERS[drillsDone] ?? 0.4) *
-        (planetHasFeature(planetId, "rich_deposits") ? 2 : 1);
+        (planetHasFeature(planetId, "rich_deposits") ? 2 : 1) *
+        (seismic ? 1 + SEISMIC_DRILL_YIELD_BONUS : 1);
     if (yields.tradeGood) {
         yields.tradeGood.qty = Math.max(
             1,
@@ -217,6 +226,42 @@ export const planetaryDrill = (
                 "info",
             );
         });
+    }
+
+    // Ледяные шапки: поднятый лёд идёт в топливный синтез
+    if (planetHasFeature(planetId, "ice_caps")) {
+        let refuelled = 0;
+        set((s) => {
+            refuelled = Math.min(ICE_CAPS_FUEL, s.ship.maxFuel - s.ship.fuel);
+            return { ship: { ...s.ship, fuel: s.ship.fuel + refuelled } };
+        });
+        if (refuelled > 0) {
+            get().addLog(
+                i18nStore.t("game_logs.drill_ice_caps", { qty: refuelled }),
+                "info",
+            );
+        }
+    }
+
+    // Сейсмика: та же трещиноватость, что открыла породу, бьёт по буру
+    if (seismic && Math.random() < SEISMIC_DRILL_DAMAGE_CHANCE) {
+        set((s) => ({
+            ship: {
+                ...s.ship,
+                modules: s.ship.modules.map((m) =>
+                    m.id === drill.id
+                        ? { ...m, health: Math.max(0, m.health - SEISMIC_DRILL_DAMAGE) }
+                        : m,
+                ),
+            },
+        }));
+        get().addLog(
+            i18nStore.t("game_logs.drill_seismic_shock", {
+                drillName: drill.name,
+                damage: SEISMIC_DRILL_DAMAGE,
+            }),
+            "warning",
+        );
     }
 
     // Опыт инженеру

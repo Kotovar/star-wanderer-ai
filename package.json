@@ -69,7 +69,8 @@
     "check:meta-progress": "node --no-warnings --experimental-strip-types scripts/check-meta-progress.mjs",
     "check:crew-imports": "node --no-warnings scripts/check-crew-builder-import-cycle.mjs",
     "check:navigator": "node --no-warnings --experimental-strip-types scripts/check-known-object-navigator.mjs",
-    "check:crew-hire": "node --no-warnings scripts/check-crew-hire-confirmation.mjs"
+    "check:crew-hire": "node --no-warnings scripts/check-crew-hire-confirmation.mjs",
+    "check:planet-features": "node --no-warnings scripts/check-planet-features.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.20",
