@@ -154,6 +154,10 @@ export interface CrewMember {
     combatAssignmentEffect: string | null; // Combat assignment effect
     traits: CrewTrait[];
     moduleId: number; // ID of the module where the crew member is located
+    /** Приписан к аванпосту: физически не на корабле, недоступен в бою и назначениях */
+    outpostId?: string;
+    /** Отсек, из которого человек ушёл на аванпост — чтобы вернуть его на место */
+    stationedFromModuleId?: number;
     movedThisTurn: boolean; // Whether the crew member has moved this turn
     // Xenosymbiont merge state
     isMerged: boolean; // Whether the crew member is merged with a module

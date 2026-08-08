@@ -76,6 +76,44 @@ assert.match(
   "снят инвариант длины списков",
 );
 
+
+// ── Ни одно название технологии не должно повторяться ──────────────────────
+// Два узла с одинаковой подписью в дереве неотличимы: `combat_drones` уже
+// назывались «Автономные системы», и новая технология совпала с ними.
+const translations = readFileSync(
+  new URL("../src/lib/techTranslations.ts", import.meta.url),
+  "utf8",
+);
+for (const lang of ["ru", "en"]) {
+  const block = translations.slice(
+    translations.indexOf(`\n  ${lang}: {`),
+    translations.indexOf("\n  },", translations.indexOf(`\n  ${lang}: {`)),
+  );
+  const byName = new Map();
+  for (const [, techId, name] of block.matchAll(
+    /^ {4}([a-z0-9_]+): \{\s*\n\s*name: "([^"]+)"/gm,
+  )) {
+    const seen = byName.get(name);
+    assert.ok(
+      !seen,
+      `${lang}: «${name}» носят и ${seen}, и ${techId} — в дереве их не различить`,
+    );
+    byName.set(name, techId);
+  }
+  assert.ok(byName.size > 30, `${lang}: разбор названий сломался, найдено ${byName.size}`);
+}
+
+// Условие постройки должно быть сказано в самой технологии, а не только
+// всплывать отказом на панели гиганта
+for (const [lang, needle] of [["ru", "ядра шторма"], ["en", "storm core"]]) {
+  const block = translations.slice(translations.indexOf(`\n  ${lang}: {`));
+  const entry = block.slice(block.indexOf("autonomous_systems:"));
+  assert.ok(
+    entry.slice(0, 600).includes(needle),
+    `${lang}: технология не предупреждает, что газосборник требует нырка до ядра шторма`,
+  );
+}
+
 console.log("Research panel checks passed");
 console.log(
   `  ${iconOrder.length} технологий со спрайтом, ${withoutSprite.length} на эмодзи${

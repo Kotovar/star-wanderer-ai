@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getShipCrew } from "@/game/crew/stationed";
 import { maybeRevealRunProfileArcTarget } from "@/game/galaxy/runProfileArcs";
 import { ARTIFACT_TYPES } from "@/game/constants/artifacts";
 import { TRADE_GOODS } from "@/game/constants";
@@ -456,7 +457,9 @@ const handleSurvivors = (
     medicalProtocol: boolean,
 ): void => {
     const reward = getRandomReward(SURVIVORS_REWARD);
-    const hasCapacity = get().crew.length < get().getCrewCapacity();
+    // Приписанные к аванпостам не на борту и койку не занимают
+    const hasCapacity =
+        getShipCrew(get().crew).length < get().getCrewCapacity();
 
     // Медицинский протокол гарантирует образцы и повышает шанс эвакуации.
     const alienBioQty = medicalProtocol

@@ -25,6 +25,12 @@ const {
   OUTPOST_LIMITS,
   OUTPOST_TECH_ID,
 } = await import("../src/game/constants/outposts.ts");
+const { OUTPOST_CREW_MULTIPLIERS } = await import(
+  "../src/game/constants/outposts.ts"
+);
+const { getOutpostOutputMultiplier } = await import(
+  "../src/game/slices/outposts/helpers/outpostCrew.ts"
+);
 const {
   accrueOutposts,
   burnCryogen,
@@ -50,6 +56,7 @@ for (const gas of gases) {
   assert.ok(gas in GAS_BASE_PRICE, `${gas} не имеет цены`);
 }
 const sellable = gases.filter((gas) => GAS_BASE_PRICE[gas] > 0);
+const bestGasPrice = Math.max(...sellable.map((gas) => GAS_BASE_PRICE[gas]));
 assert.equal(
   sellable.length,
   3,
@@ -139,8 +146,11 @@ let outposts = [
   { id: "o1", kind: "gas_collector", locationId: "gg-1", bunker: {} },
 ];
 
+// Профильный инженер первого уровня — та самая норма, от которой считаются
+// GAS_COLLECTOR_RATE и окупаемость
+const engineer = [{ id: 1, profession: "engineer", level: 1, outpostId: "o1" }];
 for (let turn = 0; turn < GAS_COLLECTOR_FILL_TURNS; turn++) {
-  outposts = accrueOutposts(outposts, sectors);
+  outposts = accrueOutposts(outposts, sectors, engineer);
 }
 assert.equal(
   getBunkerTotal(outposts[0]),
@@ -152,7 +162,7 @@ assert.equal(isBunkerFull(outposts[0]), true);
 // Ещё сотня ходов ничего не добавляет: полный бункер простаивает.
 // Это и отделяет постройку от пассивного дохода.
 for (let turn = 0; turn < 100; turn++) {
-  outposts = accrueOutposts(outposts, sectors);
+  outposts = accrueOutposts(outposts, sectors, engineer);
 }
 assert.equal(
   getBunkerTotal(outposts[0]),
@@ -168,6 +178,7 @@ assert.deepEqual(getBunkerEntries(outposts[0]), [
 const nitrogenOutpost = accrueOutposts(
   [{ id: "o2", kind: "gas_collector", locationId: "gg-2", bunker: {} }],
   sectors,
+  [{ id: 2, profession: "engineer", level: 1, outpostId: "o2" }],
 );
 assert.deepEqual(getBunkerEntries(nitrogenOutpost[0]), [
   [GAS_BY_ATMOSPHERE.nitrogen, GAS_COLLECTOR_RATE],
@@ -299,6 +310,22 @@ assert.match(
   "стартовый газ не доезжает до состояния — поле в шаблоне будет молча игнорироваться",
 );
 
+// dev-шаблон существует, чтобы смотреть механики, а не собирать материалы:
+// на постройку сборщика ему обязано хватать сразу
+const devExplorer = SHIP_TEMPLATES.find((tpl) => tpl.id === "dev_all_tech_explorer");
+assert.ok(devExplorer, "dev-шаблон исследователя пропал");
+assert.ok(
+  devExplorer.credits >= GAS_COLLECTOR_COST.credits,
+  "dev-шаблону не хватает кредитов на газосборник",
+);
+for (const [resource, amount] of Object.entries(GAS_COLLECTOR_COST.resources)) {
+  const held = devExplorer.researchResources?.[resource] ?? 0;
+  assert.ok(
+    held >= amount,
+    `dev-шаблону не хватает ${resource}: ${held} против ${amount} — постройку не посмотреть без фарма`,
+  );
+}
+
 // ── Газ занимает трюм ──────────────────────────────────────────────────────
 // Без этого бункер на 40 единиц не создаёт давления, и вывоз ничего не стоит.
 const { getCurrentCargo, getGasVolume } = await import(
@@ -396,6 +423,147 @@ assert.match(
   "из трюма нельзя открыть шлюз, а криоген иначе не выбросить",
 );
 
+// ── Гарнизон: кого отправить — это выбор, а не галочка ─────────────────────
+const collector = { id: "oc", kind: "gas_collector", locationId: "gg-1", bunker: {} };
+const stationedAs = (profession, level) => [
+  { id: 1, profession, level, outpostId: "oc" },
+];
+
+const empty = getOutpostOutputMultiplier(collector, []);
+const wrong = getOutpostOutputMultiplier(collector, stationedAs("gunner", 1));
+const right = getOutpostOutputMultiplier(collector, stationedAs("engineer", 1));
+const veteran = getOutpostOutputMultiplier(collector, stationedAs("engineer", 5));
+
+assert.ok(
+  empty < wrong && wrong < right && right < veteran,
+  `множители не выстраиваются в лестницу: пусто ${empty}, не по профилю ${wrong}, инженер ${right}, ветеран ${veteran}`,
+);
+assert.equal(right, 1, "профильный инженер первого уровня — та самая норма, от которой считалась окупаемость");
+assert.equal(empty, OUTPOST_CREW_MULTIPLIERS.empty);
+
+// Людей с чужого аванпоста считать нельзя
+assert.equal(
+  getOutpostOutputMultiplier(collector, [
+    { id: 2, profession: "engineer", level: 9, outpostId: "другой" },
+  ]),
+  OUTPOST_CREW_MULTIPLIERS.empty,
+  "экипаж чужой постройки учитывается как свой",
+);
+
+// Пустой слот наказан, но не смертельно: иначе человек перестаёт быть выбором
+const emptyPayback =
+  (GAS_COLLECTOR_COST.credits / (bestGasPrice * GAS_COLLECTOR_BUNKER_CAP)) *
+  (GAS_COLLECTOR_FILL_TURNS / empty);
+assert.ok(
+  emptyPayback <= 160,
+  `без экипажа окупаемость ${Math.round(emptyPayback)} ходов — гарнизон становится обязаловкой, а не выбором`,
+);
+
+// Накопление реально слушается экипажа
+const withEngineer = accrueOutposts([collector], sectors, stationedAs("engineer", 1));
+const withoutCrew = accrueOutposts([collector], sectors, []);
+assert.ok(
+  getBunkerTotal(withEngineer[0]) >= getBunkerTotal(withoutCrew[0]),
+  "экипаж не влияет на выработку",
+);
+// Дробная выработка не теряется: остаток копится и доносит единицу
+let slow = [collector];
+for (let turn = 0; turn < 10; turn++) slow = accrueOutposts(slow, sectors, []);
+assert.equal(
+  getBunkerTotal(slow[0]),
+  Math.floor(10 * empty),
+  "дробная выработка теряется вместо накопления остатка",
+);
+
+// ── Приписанный уходит с корабля по-настоящему ─────────────────────────────
+const stationSource = source("game/slices/outposts/helpers/stationCrew.ts");
+for (const field of ["moduleId: 0", "assignment: null", "combatAssignment: null"]) {
+  assert.ok(
+    stationSource.includes(field),
+    `приписка не сбрасывает ${field} — человек работал бы и на аванпосте, и на корабле`,
+  );
+}
+assert.match(
+  stationSource,
+  /stationedFromModuleId: c\.moduleId/,
+  "прежний отсек не запоминается — вернуть человека будет некуда",
+);
+assert.match(
+  source("game/slices/locations/helpers/respondToDistressSignal.ts"),
+  /getShipCrew\(get\(\)\.crew\)\.length < get\(\)\.getCrewCapacity\(\)/,
+  "наём считает приписанных как занимающих койку",
+);
+assert.match(
+  source("game/slices/gameLoop/processors/processOthers.ts"),
+  /getShipCrew\(get\(\)\.crew\)\.length/,
+  "перенаселение считает приписанных как находящихся на борту",
+);
+
+// ── Постройку видно на обеих картах и в обеих легендах ─────────────────────
+// Иначе «прилететь за добычей» превращается в перебор секторов наугад.
+assert.match(
+  source("game/galaxy/galaxy-map-utils.ts"),
+  /drawOutpostSectorMarkers/,
+  "на карте галактики не видно, в какой системе стоит постройка",
+);
+assert.match(
+  source("game/components/GalaxyMap.tsx"),
+  /drawOutpostSectorMarkers\(/,
+  "значки аванпостов не рисуются на карте галактики",
+);
+for (const [path, what] of [
+  ["game/components/sectorMap/LegendIcon.tsx", 'case "outpost"'],
+  ["game/components/SectorMap.tsx", 'key: "outpost"'],
+  ["game/components/GalaxyMap.tsx", "outposts.legend"],
+]) {
+  assert.ok(source(path).includes(what), `${path}: аванпоста нет в легенде`);
+}
+
+// ── Приписанного видно в разделе экипажа, вместе с местом ──────────────────
+// На сетке корабля его нет, поэтому «отсек» показывать нечего
+// Оба экрана экипажа обязаны брать место из одного помощника: карточка и
+// подробная вкладка расходились, и вторая честно писала «Неизвестно»
+const describer = source("game/crew/describeStationedPlace.ts");
+assert.ok(
+  describer.includes("sector?.name") && describer.includes("location?.name"),
+  "не сказано, где именно стоит постройка — по названию непонятно, куда лететь",
+);
+for (const path of [
+  "game/components/CrewMemberCard.tsx",
+  "game/components/CrewList.tsx",
+]) {
+  assert.match(
+    source(path),
+    /describeStationedPlace\(/,
+    `${path}: показывает приписанному отсек корабля, которого у него нет`,
+  );
+}
+assert.match(
+  source("game/components/CrewList.tsx"),
+  /stationedPlace \? \(/,
+  "приписанному всё ещё предлагают ходить по отсекам корабля",
+);
+// Выделять надо в обоих экранах: карточка на сетке корабля и плитка на
+// вкладке «Экипаж» — разные компоненты, и правка одного оставляет другой слепым
+assert.match(
+  source("game/components/CrewMemberCard.tsx"),
+  /STATIONED_CARD_CHROME/,
+  "приписанные не выделены на карточке у сетки корабля",
+);
+assert.match(
+  source("game/components/CrewList.tsx"),
+  /STATIONED_CARD_STYLE/,
+  "приписанные не выделены на вкладке «Экипаж» — в длинной команде их не найти",
+);
+
+// Кнопка приписки обязана называть профессию: с несколькими инженерами
+// одно имя ничего не говорит
+assert.match(
+  source("game/components/GasCollectorSection.tsx"),
+  /\{member\.name\} ·\{" "\}\n\s*\{t\(\n?\s*`professions\./,
+  "в списке кандидатов не видно профессии и уровня",
+);
+
 // ── Локали: ворота, газы и логи переведены на оба языка ────────────────────
 const BLOCKERS = [
   "tech_missing",
@@ -417,7 +585,7 @@ for (const lang of ["ru", "en"]) {
       `${lang}: нет лога outpost_blocked_${blocker}`,
     );
   }
-  for (const key of ["gas_from_outposts", "gas_price", "sell_all", "cryogen_burning"]) {
+  for (const key of ["gas_from_outposts", "gas_price", "sell_all", "cryogen_burning", "garrison", "garrison_empty", "recall", "no_candidates", "legend"]) {
     assert.ok(catalog.outposts?.[key], `${lang}: нет outposts.${key}`);
   }
   for (const gas of gases) {
@@ -425,15 +593,14 @@ for (const lang of ["ru", "en"]) {
     assert.ok(catalog.gases?.[gas]?.use, `${lang}: не сказано, зачем нужен ${gas}`);
     assert.ok(catalog.gases?.[gas]?.desc, `${lang}: нет описания газа ${gas} для модалки`);
   }
-  for (const key of ["outpost_built_gas_collector", "outpost_collected", "outpost_collect_empty", "outpost_collect_remote", "outpost_collect_no_room", "outpost_collect_partial", "gas_sold", "gas_not_sellable"]) {
+  for (const key of ["outpost_built_gas_collector", "outpost_collected", "outpost_collect_empty", "outpost_collect_remote", "outpost_collect_no_room", "outpost_collect_partial", "outpost_crew_stationed", "outpost_crew_recalled", "outpost_crew_remote", "outpost_crew_no_slot", "gas_sold", "gas_not_sellable"]) {
     assert.ok(catalog.game_logs?.[key], `${lang}: нет лога ${key}`);
   }
 }
 
 // ── Окупаемость лежит в целевом окне 80–120 ходов ──────────────────────────
 // Иначе «построил и забыл» побеждает «играл» — см. риски в плане.
-const bestGas = Math.max(...sellable.map((gas) => GAS_BASE_PRICE[gas]));
-const perFullBunker = bestGas * GAS_COLLECTOR_BUNKER_CAP;
+const perFullBunker = bestGasPrice * GAS_COLLECTOR_BUNKER_CAP;
 const paybackTurns =
   (GAS_COLLECTOR_COST.credits / perFullBunker) * GAS_COLLECTOR_FILL_TURNS;
 assert.ok(

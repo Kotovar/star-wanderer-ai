@@ -52,7 +52,7 @@ export const GAS_COLLECTOR_RATE = 1;
  */
 export const GAS_COLLECTOR_BUNKER_CAP = 40;
 
-/** Ходов на полный бункер при пустом старте */
+/** Ходов на полный бункер при профильном инженере первого уровня */
 export const GAS_COLLECTOR_FILL_TURNS =
     GAS_COLLECTOR_BUNKER_CAP / GAS_COLLECTOR_RATE;
 
@@ -68,6 +68,32 @@ export const CRYOGEN_BURN_PER_TURN = 1;
 
 /** На сколько криоген снижает расход каждого модуля, пока горит */
 export const CRYOGEN_CONSUMPTION_REDUCTION = 1;
+
+/**
+ * Множители добычи от приписанного экипажа.
+ *
+ * Профильный инженер — норма, остальные справляются хуже, уровень добавляет
+ * сверху. Пустой слот наказан, но не смертельно: при 0.5 окупаемость улетала
+ * за 160 ходов, и человек на аванпосте переставал быть выбором, становясь
+ * обязательным условием. 0.7 держит непроверенный сборщик в разумных рамках,
+ * а хорошего инженера делает заметным вложением.
+ */
+export const OUTPOST_CREW_MULTIPLIERS = {
+    empty: 0.7,
+    offRole: 0.85,
+    onRole: 1,
+    perLevel: 0.1,
+} as const;
+
+/** Профессия, которую просит каждая постройка */
+export const OUTPOST_ROLE: Record<string, string> = {
+    gas_collector: "engineer",
+};
+
+/** Мест гарнизона у постройки */
+export const OUTPOST_CREW_SLOTS: Record<string, number> = {
+    gas_collector: 1,
+};
 
 /** Наценка станции при скупке газа: продаём дешевле базовой цены */
 export const GAS_SELL_RATE = 0.85;

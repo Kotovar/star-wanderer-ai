@@ -1050,3 +1050,72 @@ function drawStellarRemnant(
         ctx.fill();
     });
 }
+
+/**
+ * Значки аванпостов поверх секторов на карте галактики.
+ *
+ * Отдельным проходом, а не параметром `drawSector`: у той и без того
+ * двадцать аргументов, а значок ничего не знает про сектор кроме координат.
+ * Полный бункер горит янтарным — единственный повод менять маршрут должен
+ * быть виден с общей карты, а не только вблизи.
+ */
+export function drawOutpostSectorMarkers(
+    ctx: CanvasRenderingContext2D,
+    sectors: { id: number; tier: number; mapAngle?: number }[],
+    outposts: { sectorId: number; full: boolean }[],
+    centerX: number,
+    centerY: number,
+    maxRadius: number,
+) {
+    if (outposts.length === 0) return;
+
+    const bySector = new Map<number, boolean>();
+    for (const outpost of outposts) {
+        bySector.set(
+            outpost.sectorId,
+            (bySector.get(outpost.sectorId) ?? false) || outpost.full,
+        );
+    }
+
+    for (const sector of sectors) {
+        if (sector.mapAngle === undefined) continue;
+        const anyFull = bySector.get(sector.id);
+        if (anyFull === undefined) continue;
+
+        const radius = getSectorRadius(maxRadius, sector.tier);
+        const x = centerX + Math.cos(sector.mapAngle) * radius + 15;
+        const y = centerY + Math.sin(sector.mapAngle) * radius - 15;
+        const color = anyFull ? "#ffb000" : "#00d4ff";
+
+        ctx.save();
+
+        if (anyFull) {
+            const glow = ctx.createRadialGradient(x, y, 0, x, y, 10);
+            glow.addColorStop(0, "rgba(255,176,0,0.5)");
+            glow.addColorStop(1, "transparent");
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(x, y, 10, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.fillStyle = "#0b1218";
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.roundRect(x - 5, y - 3, 10, 6, 1.5);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x, y - 3);
+        ctx.lineTo(x, y - 7);
+        ctx.stroke();
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y - 7.5, 1.4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+}

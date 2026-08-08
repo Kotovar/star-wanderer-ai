@@ -2550,6 +2550,8 @@
         }
     },
     "crew_member": {
+        "stationed_note": "Stationed at an outpost: takes no shipboard assignments and does not move between modules. Recall them at the outpost itself.",
+        "stationed_hint": "Stationed at an outpost: not aboard and not available in combat",
         "morale_efficiency_hint": "Total from morale, traits, augmentations, and professional bonuses",
         "morale_efficiency": "Efficiency:",
         "desertion_warning": "⚠ Deserts in {{turns}} turn(s)!",
@@ -3682,7 +3684,7 @@
             "category_label": "Ship Systems"
         },
         "combat_drones": {
-            "name": "Autonomous Systems",
+            "name": "Unattended Complexes",
             "description": "Autonomous combat drones attack targets without crew input, providing +15% damage.",
             "tier_label": "Tier",
             "category_label": "Weapons"
@@ -5192,10 +5194,16 @@
         }
     },
     "outposts": {
+        "legend": "Your outpost",
         "gas_from_outposts": "Gas from outposts",
         "gas_price": "{{price}}₢ per unit",
         "sell_all": "Sell all · {{total}}₢",
         "cryogen_burning": "Burns on its own: −{{value}} draw on every module",
+        "garrison": "Garrison",
+        "garrison_empty": "Slot is empty — best fit: {{role}}",
+        "no_candidates": "Nobody aboard to send",
+        "recall": "Recall",
+        "station_hint": "Station at the outpost: they leave the ship",
         "gas_collector": "Gas collector",
         "build_gas_collector": "Build a gas collector",
         "build": "Build",
@@ -5203,7 +5211,7 @@
         "bunker_full": "Bunker is full — the collector idles until you haul the gas away",
         "limit": "Built: {{built}} of {{limit}}",
         "gas_collector_hint": "Extracts {{gas}}: {{rate}} per turn, bunker holds {{cap}}. A full bunker takes {{turns}} turns and then idles — you have to come back for the gas.",
-        "blocked_tech_missing": "Requires the Autonomous Systems technology",
+        "blocked_tech_missing": "Requires the Unattended Complexes technology",
         "blocked_limit_reached": "No more gas collectors can be built this run",
         "blocked_already_built": "An outpost already stands here",
         "blocked_no_deep_dive": "Dive to the storm core first — a full atmospheric reading comes only from there",
@@ -5680,13 +5688,18 @@
         "planetaryDrill_3": "This planet's deposits are depleted.",
         "planetaryDrill_4": "The drill is cooling down: next pass in {{value}} turn(s).",
         "planetaryDrill_5": "⛏️ Drilling: extracted {{goodName}} x{{qty}}",
+        "outpost_crew_stationed": "👤 {{name}} stays at the outpost",
+        "outpost_crew_recalled": "👤 {{name}} is back aboard",
+        "outpost_crew_remote": "The garrison can only be changed on site",
+        "outpost_crew_no_slot": "No garrison slots left",
+        "outpost_crew_no_module": "No module left aboard to put them in",
         "outpost_built_gas_collector": "🛰️ Gas collector deployed: {{location}}, extracting {{gas}}",
         "outpost_collected": "📦 Hauled from the outpost: {{haul}}",
         "outpost_collect_empty": "The outpost bunker is empty",
         "outpost_collect_no_room": "Cargo hold is full — nowhere to put the gas",
         "outpost_collect_partial": "⚠ {{left}} left in the bunker: not enough cargo room",
         "outpost_collect_remote": "The haul can only be collected on site",
-        "outpost_blocked_tech_missing": "Requires the Autonomous Systems technology",
+        "outpost_blocked_tech_missing": "Requires the Unattended Complexes technology",
         "outpost_blocked_limit_reached": "No more gas collectors can be built this run",
         "outpost_blocked_already_built": "An outpost already stands here",
         "outpost_blocked_no_deep_dive": "Dive to the storm core first",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { describeStationedPlace } from "@/game/crew/describeStationedPlace";
 import { useGameStore } from "@/game/store";
 import { RACES } from "@/game/constants/races";
 import {
@@ -84,11 +85,18 @@ const AUGMENTATION_CARD_STYLES: Record<AugmentationRarity, string> = {
     legendary: "bg-[rgba(255,176,0,0.08)] border-[#ffb00077] hover:border-[#ffb000] hover:bg-[rgba(255,176,0,0.14)] hover:shadow-[0_0_12px_rgba(255,176,0,0.4)]",
 };
 
+// Приписанных к аванпостам выделяем голубым — тем же цветом, что у построек
+// на картах: в длинном списке иначе не найти, кого сейчас нет на корабле
+const STATIONED_CARD_STYLE =
+    "bg-[rgba(0,212,255,0.06)] border-[#00d4ff] hover:bg-[rgba(0,212,255,0.12)] hover:shadow-[0_0_10px_rgba(0,212,255,0.35)]";
+
 export function CrewList() {
     const { t } = useTranslation();
     const translateTrait = useTraitTranslation(t);
     const crew = useGameStore((s) => s.crew);
     const modules = useGameStore((s) => s.ship.modules);
+    const outposts = useGameStore((s) => s.outposts);
+    const sectors = useGameStore((s) => s.galaxy.sectors);
     const activeEffects = useGameStore((s) => s.activeEffects);
     const moveCrewMember = useGameStore((s) => s.moveCrewMember);
     const isModuleAdjacent = useGameStore((s) => s.isModuleAdjacent);
@@ -135,7 +143,18 @@ export function CrewList() {
                     const augmentation = member.augmentation
                         ? AUGMENTATIONS[member.augmentation]
                         : null;
-                    const cardStyle = augmentation
+                    const stationedAt = describeStationedPlace(
+                        member,
+                        outposts,
+                        sectors,
+                        t,
+                    );
+                    // Приписанные выделяются раньше аугментаций и мутаций:
+                    // «где человек физически» важнее для поиска в списке, чем
+                    // редкость импланта, а имплант всё равно виден значком
+                    const cardStyle = stationedAt
+                        ? STATIONED_CARD_STYLE
+                        : augmentation
                         ? AUGMENTATION_CARD_STYLES[augmentation.rarity]
                         : hasMutation
                           ? "bg-[rgba(204,68,255,0.06)] border-[#cc44ff66] hover:border-[#cc44ff] hover:bg-[rgba(204,68,255,0.12)] hover:shadow-[0_0_10px_rgba(204,68,255,0.35)]"
@@ -169,6 +188,14 @@ export function CrewList() {
                                         ●
                                     </span>
                                 )}
+                                {stationedAt && (
+                                    <span
+                                        className="shrink-0 text-[9px] text-[#00d4ff]"
+                                        title={stationedAt}
+                                    >
+                                        🛰
+                                    </span>
+                                )}
                                 {augmentation && (
                                     <span
                                         className="shrink-0 text-[9px]"
@@ -194,13 +221,24 @@ export function CrewList() {
                                 <span className="text-[#ffb000] shrink-0">
                                     {t(`professions.${member.profession}`)}
                                 </span>
-                                {assignmentLabel && (
+                                {/* У приписанного нет корабельного назначения,
+                                    поэтому на его месте называем постройку */}
+                                {stationedAt ? (
                                     <>
                                         <span className="text-[#555] shrink-0">—</span>
-                                        <span className="text-[#555] truncate">
-                                            {assignmentLabel}
+                                        <span className="text-[#00d4ff] truncate">
+                                            {stationedAt}
                                         </span>
                                     </>
+                                ) : (
+                                    assignmentLabel && (
+                                        <>
+                                            <span className="text-[#555] shrink-0">—</span>
+                                            <span className="text-[#555] truncate">
+                                                {assignmentLabel}
+                                            </span>
+                                        </>
+                                    )
                                 )}
                             </div>
 
@@ -360,6 +398,12 @@ export function CrewList() {
                             );
                             const adjacentModules = getAdjacentToModule(
                                 selectedCrew.moduleId,
+                            );
+                            const stationedPlace = describeStationedPlace(
+                                selectedCrew,
+                                outposts,
+                                sectors,
+                                t,
                             );
 
                             return (
@@ -585,11 +629,18 @@ export function CrewList() {
                                                 )}{" "}
                                             </span>
                                             <span className="text-[#00d4ff]">
-                                                {currentModule
-                                                    ? getModuleNameById(
-                                                          currentModule.id,
-                                                      )
-                                                    : t("crew_member.unknown")}
+                                                {/* У приписанного отсека нет —
+                                                    вместо «Неизвестно» называем
+                                                    постройку и где она стоит */}
+                                                {stationedPlace
+                                                    ? stationedPlace
+                                                    : currentModule
+                                                      ? getModuleNameById(
+                                                            currentModule.id,
+                                                        )
+                                                      : t(
+                                                            "crew_member.unknown",
+                                                        )}
                                             </span>
                                         </div>
                                         <div>
@@ -603,7 +654,13 @@ export function CrewList() {
                                             ) || t("crew_member.waiting_short")}
                                         </div>
 
-                                        {/* Module movement section */}
+                                        {/* Приписанный не берёт корабельных
+                                            назначений и не ходит по отсекам */}
+                                        {stationedPlace ? (
+                                            <div className="border-t border-[#00d4ff33] pt-4 text-xs text-[#8a9ba3]">
+                                                {t("crew_member.stationed_note")}
+                                            </div>
+                                        ) : (
                                         <div className="border-t border-[#00ff41] pt-4">
                                             <div className="text-[#ffb000] mb-2 inline-flex items-center gap-1">
                                                 <CrewStatusIcon
@@ -628,6 +685,7 @@ export function CrewList() {
                                                 disabled={crewAutomationEnabled}
                                             />
                                         </div>
+                                        )}
                                     </TabsContent>
                                     <TabsContent value="bonuses" className="mt-2 space-y-4 text-sm leading-relaxed overflow-y-auto pr-1">
                                         {selectedCrew.augmentation &&

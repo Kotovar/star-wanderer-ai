@@ -1,6 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useMemo } from "react";
+import { useGameStore } from "@/game/store";
+import { describeStationedPlace } from "@/game/crew/describeStationedPlace";
 import {
   Tooltip,
   TooltipContent,
@@ -36,6 +39,10 @@ interface CrewMemberCardProps {
   disabled?: boolean;
 }
 
+// Приписанных к аванпостам выделяем голубым: в длинном списке иначе не
+// найти, кто из команды сейчас вообще не на корабле
+const STATIONED_CARD_CHROME = "border-[#00d4ff] bg-[rgba(0,212,255,0.06)]";
+
 export function CrewMemberCard({
   crewMember,
   module,
@@ -48,6 +55,15 @@ export function CrewMemberCard({
   disabled = false,
 }: CrewMemberCardProps) {
   const { t } = useTranslation();
+  const outposts = useGameStore((s) => s.outposts);
+  const sectors = useGameStore((s) => s.galaxy.sectors);
+
+  // Где именно стоит человек, если он приписан к постройке
+  const stationedAt = useMemo(
+    () => describeStationedPlace(crewMember, outposts, sectors, t),
+    [crewMember, outposts, sectors, t],
+  );
+
   // Use combat actions during battle, civilian actions otherwise
   const actions = COMBAT_ACTIONS[crewMember.profession] || [{ value: "" }];
 
@@ -63,7 +79,9 @@ export function CrewMemberCard({
           : "cursor-pointer bg-[rgba(0,255,65,0.05)]"
         } ${isSelected
           ? "border-[#ffb000] bg-[rgba(255,176,0,0.08)]"
-          : "border-[#00ff41]"
+          : stationedAt
+            ? STATIONED_CARD_CHROME
+            : "border-[#00ff41]"
         }`}
       aria-disabled={disabled}
       onClick={() => {
@@ -87,8 +105,13 @@ export function CrewMemberCard({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <span className="text-[#888] flex-1">
-          📍 {module?.name || "???"}
+        <span
+          className={`flex-1 ${stationedAt ? "text-[#00d4ff]" : "text-[#888]"}`}
+          title={stationedAt ? t("crew_member.stationed_hint") : undefined}
+        >
+          {/* Приписанного нет на сетке корабля, поэтому «отсек» ему показывать
+              нечего — вместо этого называем постройку и где она стоит */}
+          {stationedAt ? `🛰 ${stationedAt}` : `📍 ${module?.name || "???"}`}
         </span>
         {crewMember.movedThisTurn && (
           <span className="text-[#ff0040] px-1 border border-[#ff0040] text-[9px]">

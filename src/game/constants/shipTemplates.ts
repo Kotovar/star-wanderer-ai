@@ -263,7 +263,18 @@ const createDevAllTechExplorer = (arsenal: ShipTemplate): ShipTemplate => ({
   probes: arsenal.probes,
   // Все четыре газа сразу: три продаваемых — чтобы увидеть блок продажи на
   // станции, и криоген — чтобы увидеть, как он горит сам и режет расход
-  gases: { deuterium: 24, polymers: 18, biosynth: 12, cryogen: 6 },
+  gases: { deuterium: 10, polymers: 10, biosynth: 10, cryogen: 10 },
+  // Хватает и на постройку газосборника, и на пару исследований: dev-шаблон
+  // существует, чтобы смотреть механики, а не собирать материалы
+  researchResources: {
+    ancient_data: 40,
+    rare_minerals: 40,
+    alien_biology: 40,
+    energy_samples: 40,
+    quantum_crystals: 20,
+    tech_salvage: 40,
+    void_membrane: 20,
+  },
   startWithAllTechs: true,
 });
 

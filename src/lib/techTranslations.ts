@@ -191,9 +191,9 @@ const TECH_TRANSLATIONS: Record<
         "Адаптирует буровой модуль для работы на поверхности планет. Тип планеты определяет добычу: лёд — вода, вулканы — энергия, джунгли — биоматериалы и т.д.",
     },
     autonomous_systems: {
-      name: "Автономные системы",
+      name: "Автономные комплексы",
       description:
-        "Оборудование, способное работать без экипажа месяцами. Открывает строительство аванпостов: газосборников в атмосфере гигантов и наземной базы на исследованной пустой планете.",
+        "Оборудование, способное работать без экипажа месяцами. Открывает строительство аванпостов. Газосборник ставится только на том газовом гиганте, чью атмосферу вы промерили целиком — то есть нырнули до ядра шторма и вернулись. Наземная база — на полностью исследованной пустой планете.",
     },
     atmospheric_analysis: {
       name: "Атмосферный анализ",
@@ -413,9 +413,9 @@ const TECH_TRANSLATIONS: Record<
         "Adapts the drill module for planetary surface operations. Resource yield depends on planet type: ice worlds yield water, volcanic worlds yield energy, jungles yield biomatter, and so on.",
     },
     autonomous_systems: {
-      name: "Autonomous Systems",
+      name: "Unattended Complexes",
       description:
-        "Equipment that runs unattended for months. Unlocks outpost construction: gas collectors in giant atmospheres and a ground base on a fully surveyed empty planet.",
+        "Equipment that runs unattended for months. Unlocks outpost construction. A gas collector can only be placed on a giant whose atmosphere you have fully measured — that means diving to the storm core and coming back. A ground base needs a fully surveyed empty planet.",
     },
     atmospheric_analysis: {
       name: "Atmospheric Analysis",

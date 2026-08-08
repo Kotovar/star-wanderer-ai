@@ -19,6 +19,8 @@ export interface Outpost {
     builtAtTurn: number;
     /** Что накоплено и ждёт вывоза. Полный бункер простаивает */
     bunker: Partial<Record<GasType, number>>;
+    /** Недобранная доля единицы в сотых: на дробях терялась каждая десятая единица */
+    progress?: number;
     /** Ход последнего вывоза — для логов и подсказок */
     lastCollectedAtTurn?: number;
 }

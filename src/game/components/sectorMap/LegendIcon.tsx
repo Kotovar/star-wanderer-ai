@@ -2,6 +2,23 @@
 
 export function LegendIcon({ type }: { type: string }) {
   switch (type) {
+    case "outpost":
+      return (
+        <svg width="22" height="22" viewBox="0 0 24 24">
+          <defs>
+            <radialGradient id="lg-outpost" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="#00d4ff" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="#00d4ff" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <circle cx="12" cy="12" r="11" fill="url(#lg-outpost)" />
+          <rect x="5.5" y="10" width="13" height="7" rx="1.5" fill="#0b1218" stroke="#00d4ff" strokeWidth="1.3" />
+          <line x1="8" y1="17" x2="6.5" y2="20" stroke="#00d4ff" strokeWidth="1.3" />
+          <line x1="16" y1="17" x2="17.5" y2="20" stroke="#00d4ff" strokeWidth="1.3" />
+          <line x1="12" y1="10" x2="12" y2="5.5" stroke="#00d4ff" strokeWidth="1.3" />
+          <circle cx="12" cy="4.6" r="1.6" fill="#00d4ff" />
+        </svg>
+      );
     case "unknown_ship":
       return (
         <svg width="22" height="22" viewBox="0 0 24 24">

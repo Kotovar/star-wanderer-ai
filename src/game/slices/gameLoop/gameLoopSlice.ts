@@ -165,7 +165,7 @@ export const createGameLoopSlice = (
 
         // Аванпосты копят добычу в бункер
         set((s) => ({
-            outposts: accrueOutposts(s.outposts ?? [], s.galaxy.sectors),
+            outposts: accrueOutposts(s.outposts ?? [], s.galaxy.sectors, s.crew),
         }));
 
         // Криоген горит сам, пока есть запас

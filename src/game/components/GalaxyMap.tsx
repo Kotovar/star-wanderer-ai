@@ -12,10 +12,12 @@ import { useGameStore } from "../store";
 import type { GameStore, Sector, TravelRoute } from "@/game/types";
 import { useTranslation } from "@/lib/useTranslation";
 import { useIsMobile } from "@/game/hooks/useIsMobile";
+import { isBunkerFull } from "@/game/slices/outposts/helpers";
 import {
     canAccessTier,
     drawSector,
     drawGalaxyObjectiveMarkers,
+    drawOutpostSectorMarkers,
     drawNebulae,
     drawTierRings,
     canSeeTier4,
@@ -369,6 +371,17 @@ export function GalaxyMap() {
     const selectSector = useGameStore((s) => s.selectSector);
     const modules = useGameStore((s) => s.ship.modules);
     const artifacts = useGameStore((s) => s.artifacts);
+    const outposts = useGameStore((s) => s.outposts);
+
+    // Полный бункер рисуется иначе — пересобираем только когда постройки менялись
+    const outpostMarkers = useMemo(
+        () =>
+            outposts.map((outpost) => ({
+                sectorId: outpost.sectorId,
+                full: isBunkerFull(outpost),
+            })),
+        [outposts],
+    );
     const captainLevel = useGameStore(
         (s) => getBestByProfession(s.crew, "pilot")?.level ?? 1,
     );
@@ -731,6 +744,14 @@ export function GalaxyMap() {
             markerTime,
             (sector) => getSectorName(sector.name, t),
         );
+        drawOutpostSectorMarkers(
+            ctx,
+            sectors,
+            outpostMarkers,
+            centerX,
+            centerY,
+            baseMaxRadius,
+        );
         drawGalaxyObjectiveMarkers(
             ctx,
             sectors,
@@ -750,6 +771,7 @@ export function GalaxyMap() {
         areEnginesFunctional,
         areFuelTanksFunctional,
         artifacts,
+        outpostMarkers,
         calculateFuelCost,
         captainLevel,
         currentSector,
@@ -1473,6 +1495,14 @@ export function GalaxyMap() {
                                 <div className="text-[#00ff41] font-['Orbitron'] text-[9px] tracking-widest mb-1 opacity-70">{t("galaxy.legend.markers_section")}</div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
                                     <div className="space-y-0.5">
+                                        <div className="flex items-center gap-1.5">
+                                            <svg width="14" height="14" viewBox="0 0 24 24">
+                                                <rect x="5.5" y="10" width="13" height="7" rx="1.5" fill="#0b1218" stroke="#00d4ff" strokeWidth="1.6" />
+                                                <line x1="12" y1="10" x2="12" y2="5.5" stroke="#00d4ff" strokeWidth="1.6" />
+                                                <circle cx="12" cy="4.6" r="1.8" fill="#00d4ff" />
+                                            </svg>
+                                            <span>{t("outposts.legend")}</span>
+                                        </div>
                                         <div className="flex items-center gap-1.5">
                                             <span style={{ color: "#9933ff" }} className="font-mono font-bold">⛽12</span>
                                             <span>{t("galaxy.legend.fuel_enough")}</span>

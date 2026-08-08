@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { getShipCrew } from "@/game/crew/stationed";
 import type { CrewTrait, GameStore, SetState } from "@/game/types";
 import { RACES } from "@/game/constants/races";
 import { shiftHappiness } from "@/game/crew";
@@ -125,7 +126,8 @@ export const processOvercrowding = (
     set: SetState,
     get: () => GameStore,
 ): void => {
-    const crewCount = get().crew.length;
+    // Приписанные живут на аванпосте — теснота на корабле их не касается
+    const crewCount = getShipCrew(get().crew).length;
     const crewCapacity = get().getCrewCapacity();
 
     if (crewCount <= crewCapacity) return;
@@ -135,6 +137,7 @@ export const processOvercrowding = (
 
     set((s) => ({
         crew: s.crew.map((c) => {
+            if (c.outpostId) return c;
             const race = RACES[c.race];
             if (race?.hasHappiness === false) {
                 // Синтетики и нечувствительные: перегрев/помехи → урон здоровью

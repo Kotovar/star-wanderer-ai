@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import {
     GAS_BY_ATMOSPHERE,
+    OUTPOST_CREW_SLOTS,
+    OUTPOST_ROLE,
     GAS_COLLECTOR_BUNKER_CAP,
     GAS_COLLECTOR_COST,
     GAS_COLLECTOR_FILL_TURNS,
@@ -15,8 +17,10 @@ import { RESEARCH_RESOURCES } from "@/game/constants";
 import {
     getBunkerEntries,
     getGasCollectorBlocker,
+    getOutpostOutputMultiplier,
     isBunkerFull,
 } from "@/game/slices/outposts/helpers";
+import { getOutpostCrew } from "@/game/crew/stationed";
 import type { Location } from "@/game/types";
 
 interface Props {
@@ -34,6 +38,9 @@ export function GasCollectorSection({ location }: Props) {
     const research = useGameStore((s) => s.research);
     const buildGasCollector = useGameStore((s) => s.buildGasCollector);
     const collectOutpost = useGameStore((s) => s.collectOutpost);
+    const crew = useGameStore((s) => s.crew);
+    const stationCrew = useGameStore((s) => s.stationCrew);
+    const recallCrew = useGameStore((s) => s.recallCrew);
 
     const outpost = outposts.find((o) => o.locationId === location.id);
     const gas = location.gasGiantAtmosphere
@@ -46,6 +53,16 @@ export function GasCollectorSection({ location }: Props) {
         const haul = getBunkerEntries(outpost);
         const full = isBunkerFull(outpost);
         const stored = outpost.bunker[gas] ?? 0;
+        const stationed = getOutpostCrew(crew, outpost.id);
+        const slots = OUTPOST_CREW_SLOTS[outpost.kind] ?? 0;
+        const role = OUTPOST_ROLE[outpost.kind];
+        const multiplier = getOutpostOutputMultiplier(outpost, crew);
+        // Профильные первыми: игрок почти всегда хочет именно инженера
+        const candidates = crew
+            .filter((member) => !member.outpostId)
+            .sort((a, b) =>
+                a.profession === role ? -1 : b.profession === role ? 1 : 0,
+            );
 
         return (
             <div className="mt-2 border border-[#00d4ff33] bg-[rgba(0,212,255,0.04)] p-2 sm:p-3">
@@ -76,6 +93,78 @@ export function GasCollectorSection({ location }: Props) {
                         ⚠ {t("outposts.bunker_full")}
                     </div>
                 )}
+
+                {/* Гарнизон: кто стоит на постройке и что это даёт */}
+                <div className="mt-2 border-t border-[#00d4ff22] pt-2">
+                    <div className="flex items-center justify-between text-[10px] sm:text-xs">
+                        <span className="text-[#8a9ba3]">
+                            {t("outposts.garrison")} · ×
+                            {multiplier.toFixed(2)}
+                        </span>
+                        <span className="text-[#8a9ba3]">
+                            {stationed.length}/{slots}
+                        </span>
+                    </div>
+
+                    {stationed.map((member) => (
+                        <div
+                            key={member.id}
+                            className="mt-1 flex items-center justify-between gap-2"
+                        >
+                            <span className="truncate text-[11px] text-white sm:text-xs">
+                                {member.name} ·{" "}
+                                {t(`professions.${member.profession}`)}{" "}
+                                {t("effects.level_short")}
+                                {member.level}
+                            </span>
+                            <Button
+                                onClick={() => recallCrew(member.id)}
+                                className="min-h-7 cursor-pointer border border-[#555] bg-transparent px-2 text-[10px] uppercase text-[#b9c6cc] hover:border-[#00d4ff] hover:text-[#00d4ff]"
+                            >
+                                {t("outposts.recall")}
+                            </Button>
+                        </div>
+                    ))}
+
+                    {stationed.length < slots && (
+                        <>
+                            <div className="mt-1 text-[10px] text-[#ffb000]">
+                                {t("outposts.garrison_empty", {
+                                    role: t(`professions.${role}`),
+                                })}
+                            </div>
+                            {candidates.length === 0 ? (
+                                <div className="mt-1 text-[10px] text-[#8a9ba3]">
+                                    {t("outposts.no_candidates")}
+                                </div>
+                            ) : (
+                                <div className="mt-1 flex flex-wrap gap-1">
+                                    {candidates.map((member) => (
+                                        <Button
+                                            key={member.id}
+                                            onClick={() =>
+                                                stationCrew(member.id, outpost.id)
+                                            }
+                                            title={t("outposts.station_hint")}
+                                            className={`min-h-7 cursor-pointer border bg-transparent px-2 text-[10px] ${
+                                                member.profession === role
+                                                    ? "border-[#00d4ff] text-[#00d4ff]"
+                                                    : "border-[#555] text-[#b9c6cc]"
+                                            }`}
+                                        >
+                                            {member.name} ·{" "}
+                                            {t(
+                                                `professions.${member.profession}`,
+                                            )}{" "}
+                                            {t("effects.level_short")}
+                                            {member.level}
+                                        </Button>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
 
                 <Button
                     onClick={() => collectOutpost(outpost.id)}

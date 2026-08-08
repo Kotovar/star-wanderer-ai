@@ -5,7 +5,8 @@ import {
     GAS_COLLECTOR_RATE,
 } from "@/game/constants/outposts";
 import type { GasType, Outpost } from "@/game/types/outposts";
-import type { Sector } from "@/game/types";
+import type { CrewMember, Sector } from "@/game/types";
+import { getOutpostOutputMultiplier } from "./outpostCrew";
 
 /**
  * Накопление за один ход. Чистая функция: принимает постройки и сектора,
@@ -18,6 +19,7 @@ import type { Sector } from "@/game/types";
 export function accrueOutposts(
     outposts: readonly Outpost[],
     sectors: readonly Sector[],
+    crew: readonly CrewMember[] = [],
 ): Outpost[] {
     if (outposts.length === 0) return [...outposts];
 
@@ -38,14 +40,22 @@ export function accrueOutposts(
         const stored = outpost.bunker[gas] ?? 0;
         if (stored >= GAS_COLLECTOR_BUNKER_CAP) return outpost;
 
+        // Экипаж делает выработку дробной, поэтому копим остаток отдельно и
+        // переносим в бункер только целые единицы. Остаток считаем в сотых
+        // целыми числами: на дробях 0.7 накапливалось как 0.9999… и каждая
+        // десятая единица терялась молча.
+        const rate = Math.round(
+            GAS_COLLECTOR_RATE * getOutpostOutputMultiplier(outpost, crew) * 100,
+        );
+        const progress = (outpost.progress ?? 0) + rate;
+        const gained = Math.floor(progress / 100);
+
         return {
             ...outpost,
+            progress: progress - gained * 100,
             bunker: {
                 ...outpost.bunker,
-                [gas]: Math.min(
-                    GAS_COLLECTOR_BUNKER_CAP,
-                    stored + GAS_COLLECTOR_RATE,
-                ),
+                [gas]: Math.min(GAS_COLLECTOR_BUNKER_CAP, stored + gained),
             },
         };
     });
