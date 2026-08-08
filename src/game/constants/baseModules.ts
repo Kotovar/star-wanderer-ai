@@ -4,7 +4,6 @@ import type { ResearchResourceType } from "@/game/types/research";
 
 export interface BaseModuleDef {
     id: BaseModuleId;
-    icon: string;
     /** Профессия, которая усиливает этот модуль */
     role: string;
     cost: {
@@ -50,7 +49,6 @@ export type BaseService =
 export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
     drill_shaft: {
         id: "drill_shaft",
-        icon: "⛏️",
         role: "engineer",
         cost: {
             credits: 1200,
@@ -63,7 +61,6 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
     },
     cryo_cracker: {
         id: "cryo_cracker",
-        icon: "🧊",
         role: "engineer",
         cost: {
             credits: 1000,
@@ -75,7 +72,6 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
     },
     field_lab: {
         id: "field_lab",
-        icon: "🔬",
         role: "scientist",
         cost: {
             credits: 1400,
@@ -89,7 +85,6 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
     },
     relay: {
         id: "relay",
-        icon: "📡",
         role: "scout",
         cost: {
             credits: 1600,
@@ -100,7 +95,6 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
     },
     warehouse: {
         id: "warehouse",
-        icon: "📦",
         role: "engineer",
         cost: {
             credits: 900,
@@ -111,7 +105,6 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
     },
     repair_dock: {
         id: "repair_dock",
-        icon: "🔧",
         role: "engineer",
         cost: {
             credits: 1800,
@@ -122,7 +115,6 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
     },
     med_bay: {
         id: "med_bay",
-        icon: "⚕️",
         role: "medic",
         cost: {
             credits: 1500,
@@ -133,7 +125,6 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
     },
     barracks: {
         id: "barracks",
-        icon: "🛏",
         role: "medic",
         cost: {
             credits: 1100,
@@ -144,7 +135,6 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
     },
     turrets: {
         id: "turrets",
-        icon: "🔫",
         role: "gunner",
         cost: {
             credits: 2000,
@@ -155,7 +145,6 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
     },
     workbench: {
         id: "workbench",
-        icon: "🛠",
         role: "engineer",
         cost: {
             credits: 1700,
