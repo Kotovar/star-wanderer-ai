@@ -376,7 +376,7 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
         targetName
           ? `🏴‍☠️ Рейдерский налёт: ${lossLabel}, повреждён ${targetName}`
           : `🏴‍☠️ Рейдерский налёт: ${lossLabel}, экипаж на взводе`,
-        "error",
+        "warning",
       );
     },
   },
@@ -446,7 +446,7 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
         disruptedIds.length > 0
           ? "☀️ Солнечная вспышка: экраны перегружены, чувствительные модули продолжают страдать"
           : "☀️ Солнечная вспышка: щиты сорваны, сенсоры захлёбываются помехами",
-        "error",
+        "warning",
       );
     },
     onEndEffect: (set, get, activeCrisis) => {
@@ -564,7 +564,7 @@ export const GLOBAL_CRISES: GlobalCrisis[] = [
         hasMedicSupport
           ? "🦠 Эпидемия сдерживается медиками, но заражённые всё ещё слабеют"
           : "🦠 Эпидемия распространяется по жилым отсекам и давит на мораль экипажа",
-        "error",
+        "warning",
       );
       return newlyInfected.length > 0
         ? {
