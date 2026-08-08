@@ -55,9 +55,9 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
   relic_chamber: [1, 8],
   expedition_kits: [1, 9.5], // atmospheric_analysis → here
   cargo_expansion: [1, 10.5],
-  crew_training: [1, 11.5],
-  xenobiology: [1, 12.5],
-  bio_membrane_shield: [1, 13.5],
+  crew_training: [1, 12.5],
+  xenobiology: [1, 13.5],
+  bio_membrane_shield: [1, 14.5],
   // T3 — col 2
   phase_shield: [2, 0],
   storm_shields: [2, 1.1], // shield_booster → storm_shields
@@ -69,23 +69,30 @@ const TREE_LAYOUT: Record<TechnologyId, [number, number]> = {
   ancient_resonance: [2, 8],
   nanite_hull: [2, 9.5],
   planetary_drill: [2, 10.5], // cargo_expansion → here
-  neural_interface: [2, 11.5],
-  genetic_enhancement: [2, 12.5],
-  cybernetic_augmentation: [2, 13.5],
+  autonomous_systems: [2, 11.5], // cargo_expansion → here, под планетарным буром
+  neural_interface: [2, 12.5],
+  genetic_enhancement: [2, 13.5],
+  cybernetic_augmentation: [2, 14.5],
 
   // T4 — col 3
 
   void_resonance: [3, 1.1],
   modular_arsenal: [3, 4], // antimatter_weapons + quantum_torpedo → here
   artifact_mastery: [3, 8],
-  stellar_genetics: [3, 11.5],
+  stellar_genetics: [3, 12.5],
   // T5 — col 4 / 5
   ancient_power: [4, 2.2],
   warp_drive: [4, 3.4],
 };
 
-const CANVAS_W = Math.ceil(PAD_X + 5.5 * COL_GAP + NODE_W / 2 + PAD_X);
-const CANVAS_H = Math.ceil(PAD_Y + 13.5 * ROW_GAP + NODE_H / 2 + PAD_Y);
+// Размеры считаются из самой раскладки: захардкоженная высота уже приводила
+// к тому, что новый узел оказывался за пределами холста и просто не рисовался
+const LAYOUT_POSITIONS = Object.values(TREE_LAYOUT);
+const MAX_COL = Math.max(...LAYOUT_POSITIONS.map(([col]) => col));
+const MAX_ROW = Math.max(...LAYOUT_POSITIONS.map(([, row]) => row));
+
+const CANVAS_W = Math.ceil(PAD_X + (MAX_COL + 1.5) * COL_GAP + NODE_W / 2 + PAD_X);
+const CANVAS_H = Math.ceil(PAD_Y + MAX_ROW * ROW_GAP + NODE_H / 2 + PAD_Y);
 
 // ─── Category colors ───────────────────────────────────────────────────────────
 const CATEGORY_COLORS: Record<ResearchCategory, string> = {

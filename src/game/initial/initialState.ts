@@ -179,6 +179,8 @@ const baseState: GameState = {
   pendingCrewLevelUps: [],
   shipQuestsTaken: [],
   completedLocations: [],
+  outposts: [],
+  gases: {},
   knownLocationIntel: {},
   navigatorTargets: [],
   knownTradeStations: [],

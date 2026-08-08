@@ -10,6 +10,7 @@ import { useGameStore } from "@/game/store";
 import { useCargoStatus } from "@/game/hooks/useCargoStatus";
 import type { DiveDepth } from "@/game/types/exploration";
 import { getLocationName } from "@/lib/translationHelpers";
+import { GasCollectorSection } from "./GasCollectorSection";
 import { useTranslation } from "@/lib/useTranslation";
 
 const DEPTH_COLORS: Record<DiveDepth, string> = {
@@ -519,6 +520,8 @@ export function GasGiantPanel() {
               {t("gas_giant.cooldown", { turns: cooldownRemaining })}
             </div>
           )}
+
+          {!activeDive && <GasCollectorSection location={currentLocation} />}
         </div>
 
         <div className="flex flex-col gap-1.5 sm:gap-2">

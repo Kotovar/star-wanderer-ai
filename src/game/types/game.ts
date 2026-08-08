@@ -26,6 +26,8 @@ import type {
   WreckApproach,
 } from "./locations/locations";
 import type { LogEntry } from "./logs";
+import type { GasType, Outpost } from "./outposts";
+import type { OutpostsSlice } from "@/game/slices/outposts/createOutpostsSlice";
 import type { Module, WeaponCounts, WeaponType } from "./modules";
 import type { RaceId } from "./races";
 import type { ReputationLevel } from "./reputation";
@@ -145,6 +147,10 @@ export interface GameState {
   hiredCrewFromShips: string[]; // IDs of friendly ships where crew was hired
   distressRespondedShips: string[]; // IDs of distress ships that have been helped
   completedLocations: string[];
+  /** Постройки игрока: живут в состоянии, а не в локациях — сектор пересобирается из galaxy при перезаходе */
+  outposts: Outpost[];
+  /** Газ с аванпостов. Отдельный пул, а не Goods: расширять торговый union ради четырёх позиций дороже, чем оно того стоит */
+  gases: Partial<Record<GasType, number>>;
   knownLocationIntel: Record<string, KnownLocationIntel>;
   navigatorTargets: NavigatorTarget[];
   /** Станции, где игрок реально был в доке — их цены считаются известными */
@@ -489,6 +495,7 @@ export interface GameManagement {
 
 export type GameStore = GameState &
   NavigatorSlice &
+  OutpostsSlice &
   GameActions &
   GameActionsClick &
   GameModeChanges &

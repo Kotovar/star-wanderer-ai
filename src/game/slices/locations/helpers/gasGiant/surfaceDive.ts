@@ -9,6 +9,7 @@ import {
     getFreeCargoSpace,
 } from "@/game/slices/ship/helpers";
 import { patchLocation } from "@/game/utils/patchLocation";
+import { GAS_COLLECTOR_REQUIRED_DIVE_DEPTH } from "@/game/constants/outposts";
 
 type DiveResourceKey = keyof DiveRewards;
 
@@ -123,7 +124,14 @@ export function surfaceDive(set: SetState, get: () => GameStore): void {
                 resources: newResources,
             },
             // Кулдаун погружения на локации
-            ...patchLocation(s, locationId, { gasGiantLastDiveAt: s.turn }),
+            ...patchLocation(s, locationId, {
+                gasGiantLastDiveAt: s.turn,
+                // Дошёл до ядра шторма и вышел живым — значит замерил
+                // атмосферу целиком и может ставить здесь сборщик
+                ...(dive.currentDepth >= GAS_COLLECTOR_REQUIRED_DIVE_DEPTH
+                    ? { gasGiantDeepDiveDone: true }
+                    : {}),
+            }),
         };
     });
     maybeRevealRunProfileArcTarget(set, get);

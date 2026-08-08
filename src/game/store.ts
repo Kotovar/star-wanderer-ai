@@ -24,6 +24,7 @@ import {
     createAugmentationsSlice,
     createReputationSlice,
     createNavigatorSlice,
+    createOutpostsSlice,
 } from "@/game/slices";
 import type { GameStore } from "@/game/types";
 import { createCraftingSlice } from "./slices/crafting";
@@ -54,5 +55,6 @@ export const useGameStore = create<GameStore>()(
         ...createAugmentationsSlice(set, get),
         ...createReputationSlice(set, get),
         ...createNavigatorSlice(set, get),
+        ...createOutpostsSlice(set, get),
     })),
 );

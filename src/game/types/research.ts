@@ -48,6 +48,7 @@ export type TechnologyId =
     | "artifact_mastery"
     | "xenobiology"
     | "planetary_drill"
+    | "autonomous_systems"
     | "atmospheric_analysis"
     | "expedition_kits"
     | "storm_shields"

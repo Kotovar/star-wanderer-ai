@@ -308,6 +308,31 @@ export const TIER3_TECHS: Partial<Record<TechnologyId, Technology>> = {
         researchProgress: 0,
     },
 
+    autonomous_systems: {
+        id: "autonomous_systems",
+        name: "Автономные системы",
+        description:
+            "Оборудование, способное работать без экипажа месяцами. Открывает строительство аванпостов: газосборников в атмосфере гигантов и наземной базы на исследованной пустой планете.",
+        tier: 3,
+        category: "engineering",
+        prerequisites: ["cargo_expansion"],
+        resources: { tech_salvage: 16, rare_minerals: 12, energy_samples: 8 },
+        credits: 1200,
+        scienceCost: 600,
+        bonuses: [
+            {
+                type: "special_ability",
+                value: 1,
+                description: "Разблокирует строительство аванпостов",
+            },
+        ],
+        icon: "🛰️",
+        color: "#ffb000",
+        discovered: false,
+        researched: false,
+        researchProgress: 0,
+    },
+
     planetary_drill: {
         id: "planetary_drill",
         name: "Планетарный бур",

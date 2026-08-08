@@ -5184,6 +5184,40 @@
             "effects": "Сразу теряется часть топлива, могут отключиться двигатели или топливные системы. Затем каждый ход идёт дополнительный расход топлива, урон затронутым системам и штраф к морали. На поздних стадиях расход и износ резко ускоряются."
         }
     },
+    "outposts": {
+        "gas_collector": "Газосборник",
+        "build_gas_collector": "Построить газосборник",
+        "build": "Построить",
+        "collect": "Забрать добычу",
+        "bunker_full": "Бункер полон — сборщик простаивает, пока не вывезете газ",
+        "limit": "Построено: {{built}} из {{limit}}",
+        "gas_collector_hint": "Добывает {{gas}}: {{rate}} за ход, бункер на {{cap}}. Полный бункер набирается за {{turns}} ходов и дальше простаивает — за газом надо прилететь.",
+        "blocked_tech_missing": "Нужна технология «Автономные системы»",
+        "blocked_limit_reached": "Больше газосборников за забег не построить",
+        "blocked_already_built": "Здесь уже стоит постройка",
+        "blocked_no_deep_dive": "Сначала нужно нырнуть до ядра шторма — только оттуда берётся полный замер атмосферы",
+        "blocked_wrong_location": "Здесь нельзя строить газосборник",
+        "blocked_not_enough_credits": "Не хватает кредитов",
+        "blocked_not_enough_resources": "Не хватает материалов"
+    },
+    "gases": {
+        "deuterium": {
+            "name": "Дейтерий",
+            "use": "идёт прямо в топливо"
+        },
+        "polymers": {
+            "name": "Синтез-полимеры",
+            "use": "запчасти и сборка модулей"
+        },
+        "biosynth": {
+            "name": "Биосинтез",
+            "use": "медикаменты и продовольствие"
+        },
+        "cryogen": {
+            "name": "Криоген",
+            "use": "не продаётся: снижает расход энергии"
+        }
+    },
     "planet_features": {
         "rich_deposits": {
             "name": "Богатые залежи",
@@ -5628,6 +5662,17 @@
         "planetaryDrill_3": "Залежи этой планеты истощены.",
         "planetaryDrill_4": "Бур остывает: следующий проход через {{value}} ход(ов).",
         "planetaryDrill_5": "⛏️ Буровые работы: добыто {{goodName}} x{{qty}}",
+        "outpost_built_gas_collector": "🛰️ Газосборник развёрнут: {{location}}, добыча — {{gas}}",
+        "outpost_collected": "📦 Вывезено с аванпоста: {{haul}}",
+        "outpost_collect_empty": "Бункер аванпоста пуст",
+        "outpost_collect_remote": "Забрать добычу можно только на месте",
+        "outpost_blocked_tech_missing": "Нужна технология «Автономные системы»",
+        "outpost_blocked_limit_reached": "Больше газосборников за забег не построить",
+        "outpost_blocked_already_built": "Здесь уже стоит постройка",
+        "outpost_blocked_no_deep_dive": "Сначала нужно нырнуть до ядра шторма",
+        "outpost_blocked_wrong_location": "Здесь нельзя строить газосборник",
+        "outpost_blocked_not_enough_credits": "Не хватает кредитов",
+        "outpost_blocked_not_enough_resources": "Не хватает материалов",
         "planetaryDrill_6": "⛏️ Буровые работы: {{value}} {{type}} x{{qty}}",
         "drill_ice_caps": "🧊 Поднятый лёд переработан в топливо: +{{qty}}",
         "drill_seismic_shock": "🌋 Подземный толчок: {{drillName}} повреждён на {{damage}}",

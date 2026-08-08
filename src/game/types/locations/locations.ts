@@ -180,6 +180,8 @@ export interface Location {
     // Gas giant fields
     gasGiantAtmosphere?: "hydrogen" | "methane" | "ammonia" | "nitrogen";
     gasGiantLastDiveAt?: number; // turn when last dive was completed (for cooldown)
+    gasGiantDeepDiveDone?: boolean; // нырок доходил до ядра шторма — даёт право строить сборщик
+    outpostId?: string; // постройка игрока в этой локации
 
     // Wreck field fields
     wreckTier?: 1 | 2 | 3;           // 1=small debris, 2=battle site, 3=ancient battlefield

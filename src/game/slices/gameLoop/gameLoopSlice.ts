@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { accrueOutposts } from "@/game/slices/outposts/helpers";
 import type { GameState, GameStore, SetState } from "@/game/types";
 import type { CrisisResponse } from "@/game/types/crisis";
 import type { RandomEventChoiceId } from "@/game/types/randomEvents";
@@ -161,6 +162,9 @@ export const createGameLoopSlice = (
 
         // Назначения экипажа
         processors.processCrewAssignments(set, get);
+
+        // Аванпосты копят добычу в бункер
+        set((s) => ({ outposts: accrueOutposts(s.outposts, s.galaxy.sectors) }));
 
         // Трейты морали и прочее
         processors.processMoraleTraits(set, get);

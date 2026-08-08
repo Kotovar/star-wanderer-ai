@@ -1,4 +1,5 @@
 // Technology translations for Research Panel
+import type { TechnologyId } from "@/game/types";
 
 export interface TechTranslation {
   name: string;
@@ -7,7 +8,7 @@ export interface TechTranslation {
 
 const TECH_TRANSLATIONS: Record<
   "ru" | "en",
-  Record<string, TechTranslation>
+  Record<TechnologyId, TechTranslation>
 > = {
   ru: {
     // ═══════════════════════════════════════════════════════════════
@@ -188,6 +189,11 @@ const TECH_TRANSLATIONS: Record<
       name: "Планетарный бур",
       description:
         "Адаптирует буровой модуль для работы на поверхности планет. Тип планеты определяет добычу: лёд — вода, вулканы — энергия, джунгли — биоматериалы и т.д.",
+    },
+    autonomous_systems: {
+      name: "Автономные системы",
+      description:
+        "Оборудование, способное работать без экипажа месяцами. Открывает строительство аванпостов: газосборников в атмосфере гигантов и наземной базы на исследованной пустой планете.",
     },
     atmospheric_analysis: {
       name: "Атмосферный анализ",
@@ -406,6 +412,11 @@ const TECH_TRANSLATIONS: Record<
       description:
         "Adapts the drill module for planetary surface operations. Resource yield depends on planet type: ice worlds yield water, volcanic worlds yield energy, jungles yield biomatter, and so on.",
     },
+    autonomous_systems: {
+      name: "Autonomous Systems",
+      description:
+        "Equipment that runs unattended for months. Unlocks outpost construction: gas collectors in giant atmospheres and a ground base on a fully surveyed empty planet.",
+    },
     atmospheric_analysis: {
       name: "Atmospheric Analysis",
       description:
@@ -448,8 +459,12 @@ export function getTechTranslation(
   techId: string,
   lang: "ru" | "en" = "ru",
 ): TechTranslation {
+  // Запасной путь показывает сырой id — именно так `autonomous_systems`
+  // и попал на экран. Он остаётся страховкой от битого сейва, но словарь
+  // теперь типизирован по TechnologyId, поэтому новая технология без
+  // перевода не соберётся.
   return (
-    TECH_TRANSLATIONS[lang][techId] || {
+    TECH_TRANSLATIONS[lang][techId as TechnologyId] || {
       name: techId,
       description: "",
     }

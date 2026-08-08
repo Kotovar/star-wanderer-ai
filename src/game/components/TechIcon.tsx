@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import type { TechnologyId } from "@/game/types";
+import { RESEARCH_TREE } from "@/game/constants/research";
 
 const TECH_SPRITE_SHEET = "/assets/tech.webp";
 const TECH_SPRITE_WIDTH = 1586;
@@ -45,6 +46,7 @@ const TECH_ICON_ORDER: TechnologyId[] = [
   "cybernetic_augmentation",
   "expedition_kits",
   "bio_membrane_shield",
+  "autonomous_systems",
 ];
 
 type TechIconRect = {
@@ -94,7 +96,16 @@ const TECH_ICON_RECTS_IN_ORDER: TechIconRect[] = [
   { x: 488, y: 825, width: 141, height: 148 },
   { x: 686, y: 830, width: 175, height: 143 },
   { x: 917, y: 825, width: 162, height: 150 },
+  { x: 36, y: 833, width: 148, height: 134 },
 ];
+
+if (TECH_ICON_ORDER.length !== TECH_ICON_RECTS_IN_ORDER.length) {
+  // Списки идут парой по индексу: рассинхрон не упал бы, а тихо раздал
+  // технологиям чужие иконки — а это заметно куда позже
+  throw new Error(
+    `TechIcon: ${TECH_ICON_ORDER.length} технологий против ${TECH_ICON_RECTS_IN_ORDER.length} кадров`,
+  );
+}
 
 const TECH_ICON_RECTS = TECH_ICON_ORDER.reduce<Record<TechnologyId, TechIconRect>>(
   (acc, techId, index) => {
@@ -116,6 +127,31 @@ export function TechIcon({
   style,
 }: TechIconProps) {
   const rect = TECH_ICON_RECTS[techId];
+
+  // TECH_ICON_ORDER — массив, а не Record, поэтому новая технология не ломает
+  // типы: она просто оказывается без кадра. Раньше это роняло всю панель
+  // исследований на чтении rect.x. Пока кадра нет — показываем эмодзи из
+  // определения технологии.
+  if (!rect) {
+    return (
+      <span
+        aria-hidden="true"
+        className={className}
+        style={{
+          display: "inline-block",
+          flexShrink: 0,
+          fontSize: size * 0.85,
+          lineHeight: 1,
+          textAlign: "center",
+          width: size,
+          height: size,
+          ...style,
+        }}
+      >
+        {RESEARCH_TREE[techId]?.icon ?? "•"}
+      </span>
+    );
+  }
 
   return (
     <svg

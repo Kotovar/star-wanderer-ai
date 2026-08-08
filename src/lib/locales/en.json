@@ -5184,6 +5184,40 @@
             "effects": "You immediately lose some fuel and engine or fuel systems may be temporarily limited. Then each turn drains fuel, wears down those systems, and hurts morale. Consumption and wear accelerate sharply in later stages."
         }
     },
+    "outposts": {
+        "gas_collector": "Gas collector",
+        "build_gas_collector": "Build a gas collector",
+        "build": "Build",
+        "collect": "Collect the haul",
+        "bunker_full": "Bunker is full — the collector idles until you haul the gas away",
+        "limit": "Built: {{built}} of {{limit}}",
+        "gas_collector_hint": "Extracts {{gas}}: {{rate}} per turn, bunker holds {{cap}}. A full bunker takes {{turns}} turns and then idles — you have to come back for the gas.",
+        "blocked_tech_missing": "Requires the Autonomous Systems technology",
+        "blocked_limit_reached": "No more gas collectors can be built this run",
+        "blocked_already_built": "An outpost already stands here",
+        "blocked_no_deep_dive": "Dive to the storm core first — a full atmospheric reading comes only from there",
+        "blocked_wrong_location": "A gas collector cannot be built here",
+        "blocked_not_enough_credits": "Not enough credits",
+        "blocked_not_enough_resources": "Not enough materials"
+    },
+    "gases": {
+        "deuterium": {
+            "name": "Deuterium",
+            "use": "feeds straight into fuel"
+        },
+        "polymers": {
+            "name": "Synth-polymers",
+            "use": "spares and module assembly"
+        },
+        "biosynth": {
+            "name": "Biosynth",
+            "use": "medicine and provisions"
+        },
+        "cryogen": {
+            "name": "Cryogen",
+            "use": "never sold: cuts power draw"
+        }
+    },
     "planet_features": {
         "rich_deposits": {
             "name": "Rich deposits",
@@ -5628,6 +5662,17 @@
         "planetaryDrill_3": "This planet's deposits are depleted.",
         "planetaryDrill_4": "The drill is cooling down: next pass in {{value}} turn(s).",
         "planetaryDrill_5": "⛏️ Drilling: extracted {{goodName}} x{{qty}}",
+        "outpost_built_gas_collector": "🛰️ Gas collector deployed: {{location}}, extracting {{gas}}",
+        "outpost_collected": "📦 Hauled from the outpost: {{haul}}",
+        "outpost_collect_empty": "The outpost bunker is empty",
+        "outpost_collect_remote": "The haul can only be collected on site",
+        "outpost_blocked_tech_missing": "Requires the Autonomous Systems technology",
+        "outpost_blocked_limit_reached": "No more gas collectors can be built this run",
+        "outpost_blocked_already_built": "An outpost already stands here",
+        "outpost_blocked_no_deep_dive": "Dive to the storm core first",
+        "outpost_blocked_wrong_location": "A gas collector cannot be built here",
+        "outpost_blocked_not_enough_credits": "Not enough credits",
+        "outpost_blocked_not_enough_resources": "Not enough materials",
         "planetaryDrill_6": "⛏️ Drilling: {{value}} {{type}} x{{qty}}",
         "drill_ice_caps": "🧊 Lifted ice processed into fuel: +{{qty}}",
         "drill_seismic_shock": "🌋 Tremor underground: {{drillName}} damaged by {{damage}}",

@@ -21,3 +21,4 @@ export * from "./enemy";
 export * from "./state";
 export * from "./exploration";
 export * from "./randomEvents";
+export * from "./outposts";

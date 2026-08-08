@@ -72,7 +72,9 @@
     "check:crew-hire": "node --no-warnings scripts/check-crew-hire-confirmation.mjs",
     "check:planet-features": "node --no-warnings scripts/check-planet-features.mjs",
     "check:expedition-setup-ui": "node --no-warnings scripts/check-expedition-setup-ui.mjs",
-    "check:expedition-tiles": "node --no-warnings scripts/check-expedition-tiles.mjs"
+    "check:expedition-tiles": "node --no-warnings scripts/check-expedition-tiles.mjs",
+    "check:outposts": "node --no-warnings scripts/check-outposts.mjs",
+    "check:research-panel": "node --no-warnings scripts/check-research-panel.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.20",
