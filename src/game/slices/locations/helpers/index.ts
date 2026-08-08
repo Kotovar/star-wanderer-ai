@@ -1,4 +1,5 @@
 export * from "./mineAsteroid";
+export * from "./resolveAsteroidPass";
 export * from "./enterStorm";
 export * from "./handleAnomaly";
 export * from "./checkScientistLevel";

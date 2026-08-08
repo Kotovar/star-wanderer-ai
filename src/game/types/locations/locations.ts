@@ -131,13 +131,18 @@ export interface Location {
     // Asteroid belt fields
     asteroidTier?: AsteroidTier; // Higher = better resources, needs better drill (4 = ancient, requires ancient drill)
     resources?: { minerals: number; rare: number; credits: number };
-    mined?: boolean;
+    mined?: boolean; // All passes spent — the belt is worked out
+    asteroidPassesDone?: number; // Mining passes already made on this belt
+    asteroidInstability?: number; // Rises per deep pass, drives the collision chance
     miningResult?: {
+        // Accumulated across every pass on this belt
         minerals: number;
         rare: number;
         credits: number;
         researchResources: string[]; // Pre-formatted display strings (icon + name + quantity)
         cargoWarning?: string; // Warning message if cargo was limited
+        drillDamage?: number; // Total damage the belt has dealt to the drill
+        collided?: boolean; // The last pass ended in a debris collision
     };
     // Storm fields
     stormType?: StormType;

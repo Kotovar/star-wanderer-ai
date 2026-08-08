@@ -5,10 +5,16 @@ import { useCargoStatus } from "@/game/hooks/useCargoStatus";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/useTranslation";
 import { getLocationName } from "@/lib/translationHelpers";
+import {
+  ASTEROID_PASSES_BY_TIER,
+  ASTEROID_SURFACE_YIELD,
+  getAsteroidCollisionChance,
+} from "@/game/slices/locations/constants";
+import type { AsteroidTier } from "@/game/types";
 
 // Calculate mining bonus percentage
 function getMiningBonus(drillLevel: number, asteroidTier: number): number {
-  if (drillLevel < asteroidTier) return -1; // Can't mine
+  if (drillLevel < asteroidTier) return -1; // Surface scraping only
   if (drillLevel === asteroidTier) return 0; // No bonus
 
   // Ancient drill has special bonuses
@@ -249,13 +255,13 @@ function DrillBar({
       </div>
       <span
         className="text-xs font-bold"
-        style={{ color: canMine ? "#00ff41" : "#ff4444" }}
+        style={{ color: canMine ? "#00ff41" : "#ffaa00" }}
       >
         {canMine
           ? bonusPercent > 0
             ? `+${bonusPercent}% ${t("asteroid_belt.bonus")}`
             : "✓"
-          : `⚠ ${t("asteroid_belt.required")} ${asteroidTier}`}
+          : `⚠ ${Math.round(ASTEROID_SURFACE_YIELD * 100)}% — ${t("asteroid_belt.surface_only")}`}
       </span>
     </div>
   );
@@ -277,14 +283,20 @@ export function AsteroidBeltPanel() {
 
   const drillLevel = getDrillLevel();
   const scanRange = getEffectiveScanRange();
-  const asteroidTier = currentLocation.asteroidTier || 1;
+  const asteroidTier = (currentLocation.asteroidTier || 1) as AsteroidTier;
   const resources = currentLocation.resources || {
     minerals: 0,
     rare: 0,
     credits: 0,
   };
   const bonusPercent = getMiningBonus(drillLevel, asteroidTier);
-  const canMine = bonusPercent >= 0 && !currentLocation.mined && hasEngineer;
+  const surfaceOnly = bonusPercent < 0;
+  const passesTotal = ASTEROID_PASSES_BY_TIER[asteroidTier];
+  const passesDone = currentLocation.asteroidPassesDone ?? 0;
+  const instability = currentLocation.asteroidInstability ?? 0;
+  const collisionChance = getAsteroidCollisionChance(instability, surfaceOnly);
+  // Без рабочего бура пояс не берётся вовсе — в том числе после столкновения
+  const canMine = drillLevel > 0 && !currentLocation.mined && hasEngineer;
   const miningResult = currentLocation.miningResult;
   const isAncient = asteroidTier === 4;
   const locationName = getLocationName(currentLocation.name, t);
@@ -371,6 +383,12 @@ export function AsteroidBeltPanel() {
               {miningResult.cargoWarning && (
                 <div className="mt-2 text-accent text-xs">
                   {miningResult.cargoWarning}
+                </div>
+              )}
+              {(miningResult.drillDamage ?? 0) > 0 && (
+                <div className="mt-2 text-[#ff8844] text-xs">
+                  ⚠ {t("asteroid_belt.drill_damage_total")}: −
+                  {miningResult.drillDamage} HP
                 </div>
               )}
             </div>
@@ -515,48 +533,126 @@ export function AsteroidBeltPanel() {
           <DrillBar drillLevel={drillLevel} asteroidTier={asteroidTier} />
         </div>
 
+        {/* Passes and instability — the push-your-luck decision */}
+        <div
+          className="rounded p-3 flex flex-col gap-2"
+          style={{ background: "rgba(0,0,0,0.3)", border: "1px solid #2a2a1a" }}
+        >
+          <div className="flex justify-between items-center">
+            <span className="text-[#aaa] text-xs">
+              {t("asteroid_belt.passes")}
+            </span>
+            <div className="flex gap-1">
+              {Array.from({ length: passesTotal }, (_, index) => (
+                <div
+                  key={index}
+                  className="h-2 w-6 rounded-sm"
+                  style={{
+                    background:
+                      index < passesDone ? "#cd853f" : "rgba(255,255,255,0.08)",
+                    border: `1px solid ${index < passesDone ? "#cd853f" : "#333"}`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+          <p className="text-[#666] text-[10px] leading-tight">
+            {t("asteroid_belt.deeper_richer")}
+          </p>
+          <div className="flex justify-between items-center">
+            <span className="text-[#aaa] text-xs">
+              {t("asteroid_belt.collision_risk")}
+            </span>
+            <span
+              className="text-xs font-bold"
+              style={{
+                color:
+                  collisionChance >= 0.5
+                    ? "#ff4444"
+                    : collisionChance > 0
+                      ? "#ffaa00"
+                      : "#00ff41",
+              }}
+            >
+              {Math.round(collisionChance * 100)}%
+            </span>
+          </div>
+          {collisionChance > 0 && (
+            <p className="text-[#ff8844] text-[10px] leading-tight">
+              ⚠ {t("asteroid_belt.collision_hits_drill")}
+            </p>
+          )}
+        </div>
+
+        {/* Already banked from earlier passes */}
+        {miningResult && passesDone > 0 && (
+          <div
+            className="rounded p-3 text-xs"
+            style={{
+              background: "rgba(0,255,65,0.04)",
+              border: "1px solid #1a3320",
+            }}
+          >
+            <p className="text-accent font-bold mb-1">
+              {t("asteroid_belt.banked_so_far")}:
+            </p>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[#00ff41]">
+              <span>📦 {miningResult.minerals}</span>
+              {miningResult.rare > 0 && <span>💎 {miningResult.rare}</span>}
+              <span>₢ {miningResult.credits}</span>
+              {(miningResult.drillDamage ?? 0) > 0 && (
+                <span className="text-[#ff8844]">
+                  ⚒ −{miningResult.drillDamage} HP
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Actions */}
         {canMine && cargoFull && (
           <p className="text-[#ffaa00] text-xs text-center">
             {t("common.cargo_full_hint")}
           </p>
         )}
-        {canMine ? (
-          <div className="flex gap-3">
+        {surfaceOnly && drillLevel > 0 && (
+          <p className="text-[#ffaa00] text-xs text-center">
+            ⚠ {t("asteroid_belt.surface_hint")}
+          </p>
+        )}
+        {drillLevel === 0 && (
+          <p className="text-[#ff4444] text-sm text-center">
+            ⚠ {t("asteroid_belt.drill_destroyed")}
+          </p>
+        )}
+        {!hasEngineer && (
+          <p className="text-[#ff4444] text-sm text-center">
+            ⚠ {t("asteroid_belt.engineer_required")}
+          </p>
+        )}
+        <div className="flex gap-3">
+          {canMine && (
             <Button
               onClick={mineAsteroid}
               className="cursor-pointer flex-1 font-bold text-black"
               style={{ background: isAncient ? "#ffb000" : "#cd853f" }}
             >
-              ⛏️ {t("asteroid_belt.start_mining")}
+              ⛏️{" "}
+              {passesDone > 0
+                ? t("asteroid_belt.dig_deeper")
+                : t("asteroid_belt.start_mining")}
             </Button>
-            <Button
-              onClick={showSectorMap}
-              className="cursor-pointer bg-transparent border border-[#444] text-[#666] hover:border-[#888] hover:text-[#aaa] transition-colors"
-            >
-              {t("asteroid_belt.leave")}
-            </Button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {bonusPercent < 0 && (
-              <p className="text-[#ff4444] text-sm text-center">
-                ⚠ {t("asteroid_belt.drill_required")} {asteroidTier}!
-              </p>
-            )}
-            {!hasEngineer && (
-              <p className="text-[#ff4444] text-sm text-center">
-                ⚠ {t("asteroid_belt.engineer_required")}
-              </p>
-            )}
-            <Button
-              onClick={showSectorMap}
-              className="cursor-pointer w-full bg-transparent border border-[#444] text-[#666] hover:border-[#888] hover:text-[#aaa]"
-            >
-              {t("asteroid_belt.leave")}
-            </Button>
-          </div>
-        )}
+          )}
+          {/* Уйти можно всегда — добытое уже в трюме */}
+          <Button
+            onClick={showSectorMap}
+            className={`cursor-pointer bg-transparent border border-[#444] text-[#666] hover:border-[#888] hover:text-[#aaa] transition-colors ${canMine ? "" : "w-full"}`}
+          >
+            {passesDone > 0
+              ? t("asteroid_belt.leave_with_haul")
+              : t("asteroid_belt.leave")}
+          </Button>
+        </div>
       </div>
     </div>
   );

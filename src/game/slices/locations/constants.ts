@@ -4,6 +4,7 @@
 
 import type {
     AnomalyApproach,
+    AsteroidTier,
     DerelictApproach,
     WreckApproach,
 } from "@/game/types";
@@ -31,6 +32,69 @@ export const PERCENT_DIVISOR = 100;
 
 /** Минимальное количество ресурсов при частичной загрузке */
 export const MIN_CARGO_QUANTITY = 1;
+
+/**
+ * Сколько проходов выдерживает пояс. Богатые тиры позволяют копать дольше —
+ * и именно там нестабильность успевает вырасти до опасных значений.
+ */
+export const ASTEROID_PASSES_BY_TIER: Record<AsteroidTier, number> = {
+    1: 3,
+    2: 3,
+    3: 4,
+    4: 4,
+};
+
+/**
+ * Доля запасов пояса, поднимаемая за проход. Залежи глубже — богаче, поэтому
+ * уйти после первого прохода дешевле, чем сегодня, а выбрать пояс целиком —
+ * выгоднее. В этом и состоит ставка.
+ */
+export const ASTEROID_PASS_SHARES = [0.25, 0.35, 0.45, 0.55] as const;
+
+/** Прирост нестабильности за каждый глубокий проход */
+export const ASTEROID_INSTABILITY_PER_PASS = 1;
+
+/** Шанс столкновения с обломками за единицу нестабильности */
+export const ASTEROID_COLLISION_CHANCE_PER_INSTABILITY = 0.18;
+
+/** Урон буру при столкновении с обломками */
+export const ASTEROID_COLLISION_DRILL_DAMAGE = 25;
+
+/** Множитель добычи при поверхностном сборе — бур ниже тира астероида */
+export const ASTEROID_SURFACE_YIELD = 0.4;
+
+/** Доля запасов пояса, поднимаемая на проходе с номером `passIndex` (с нуля). */
+export const getAsteroidPassShare = (passIndex: number): number =>
+    ASTEROID_PASS_SHARES[
+        Math.min(Math.max(0, passIndex), ASTEROID_PASS_SHARES.length - 1)
+    ];
+
+/**
+ * Шанс столкновения перед следующим проходом. Первый проход всегда безопасен,
+ * поэтому долететь до пояса никогда не бывает ловушкой. Поверхностный сбор
+ * не уходит вглубь и не рискует вовсе.
+ */
+export const getAsteroidCollisionChance = (
+    instability: number,
+    surfaceOnly: boolean,
+): number =>
+    surfaceOnly
+        ? 0
+        : Math.min(
+              1,
+              Math.max(0, instability) *
+                  ASTEROID_COLLISION_CHANCE_PER_INSTABILITY,
+          );
+
+/** Изношенный бур копает хуже: от ×1 на целом до ×0.5 на добитом. */
+export const getDrillWearMultiplier = (
+    health: number,
+    maxHealth: number,
+): number => {
+    if (maxHealth <= 0) return 1;
+    const ratio = Math.min(1, Math.max(0, health / maxHealth));
+    return 0.5 + 0.5 * ratio;
+};
 
 // ============================================================================
 // Константы для штормов
