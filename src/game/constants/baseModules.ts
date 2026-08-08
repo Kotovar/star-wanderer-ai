@@ -189,6 +189,9 @@ export const getBaseImage = (level: number): string =>
 
 export const GAS_COLLECTOR_IMAGE = "/assets/base/gas_collector.webp";
 
+/** Захваченная база: та же постройка, но под рейдерами */
+export const BASE_CAPTURED_IMAGE = "/assets/base/base-captured.webp";
+
 /** Слоты по уровню базы: 1 → 2, 2 → 4, 3 → 6 */
 export const BASE_SLOTS_BY_LEVEL = [0, 2, 4, 6] as const;
 export const BASE_MAX_LEVEL = 3;

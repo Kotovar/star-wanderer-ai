@@ -474,6 +474,7 @@ const {
   getBaseModuleImage,
   getBaseImage,
   GAS_COLLECTOR_IMAGE,
+  BASE_CAPTURED_IMAGE,
 } = await import("../src/game/constants/baseModules.ts");
 
 const asset = (webPath) =>
@@ -490,6 +491,20 @@ for (let level = 1; level <= BASE_MAX_LEVEL; level++) {
   }
 }
 assert.ok(existsSync(asset(GAS_COLLECTOR_IMAGE)));
+// Захват — самое драматичное состояние системы, и оно не должно остаться
+// единственным без картинки
+for (const path of [
+  BASE_CAPTURED_IMAGE,
+  BASE_CAPTURED_IMAGE.replace(".webp", ".avif"),
+  GAS_COLLECTOR_IMAGE.replace(".webp", ".avif"),
+]) {
+  assert.ok(existsSync(asset(path)), `нет файла ${path}`);
+}
+assert.match(
+  source("game/components/BaseSection.tsx"),
+  /BASE_CAPTURED_IMAGE/,
+  "захваченная база показывается без иллюстрации, в отличие от всех прочих состояний",
+);
 // Уровень вне диапазона не должен уводить на несуществующий файл
 assert.equal(getBaseImage(0), getBaseImage(1));
 assert.equal(getBaseImage(99), getBaseImage(BASE_MAX_LEVEL));

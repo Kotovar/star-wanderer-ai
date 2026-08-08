@@ -20,6 +20,7 @@ import {
     BASE_SLOTS_BY_LEVEL,
     BASE_SERVICE_VALUES,
     BASE_UPGRADE_COST,
+    BASE_CAPTURED_IMAGE,
     getBaseImage,
     getBaseModuleImage,
 } from "@/game/constants/baseModules";
@@ -183,6 +184,13 @@ export function BaseSection({ location }: Props) {
     if (base.capturedAtTurn !== undefined) {
         return (
             <div className="mt-2 border border-[#ff004455] bg-[rgba(255,0,64,0.06)] p-2 sm:p-3">
+                {/* Та же база, но под рейдерами: конструкции целы — её
+                    отбивают, а не теряют, и это должно быть видно */}
+                <GameImage
+                    src={BASE_CAPTURED_IMAGE}
+                    alt={t("outposts.captured")}
+                    className="mb-2 w-full object-contain"
+                />
                 <div className="text-[11px] uppercase tracking-wider text-[#ff667f] sm:text-xs">
                     ⚠ {t("outposts.captured")}
                 </div>
