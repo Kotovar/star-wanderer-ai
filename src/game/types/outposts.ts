@@ -67,6 +67,19 @@ export interface Outpost {
     lastCollectedAtTurn?: number;
 }
 
+/**
+ * Описание постройки, которую dev-шаблон получает на старте. Локация
+ * подбирается при генерации галактики: заранее её id не знает никто.
+ */
+export interface StartingOutpost {
+    kind: OutpostKind;
+    level?: number;
+    modules?: BaseModuleId[];
+    bunker?: Partial<Record<OutpostResource, number>>;
+    /** Отдать рейдерам сразу — чтобы посмотреть захват и штурм */
+    captured?: boolean;
+}
+
 /** Почему постройку нельзя поставить здесь и сейчас */
 export type OutpostBuildBlocker =
     | "tech_missing"

@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { seedStartingOutposts } from "@/game/slices/outposts/helpers/seedStartingOutposts";
 import { generateGalaxy } from "@/game/galaxy";
 import { generateNebulae } from "@/game/galaxy/nebulae";
 import { initializeStationData } from "@/game/stations";
@@ -85,11 +86,17 @@ export const restartGame = (
     ? [...new Set([...initialState.knownRaces, ...patch.knownRaces])]
     : initialState.knownRaces;
 
+  // Стартовые постройки dev-шаблона: локацию выбирает генерация, потому что
+  // id планет заранее не знает никто
+  const seeded = seedStartingOutposts(newSectors, patch.startingOutposts);
+  const seededSectors = seeded.sectors;
+
   set({
     ...initialState,
     settings,
-    currentSector: newSectors[STARTING_SECTOR_INDEX],
-    galaxy: { sectors: newSectors, nebulae },
+    currentSector: seededSectors[STARTING_SECTOR_INDEX],
+    galaxy: { sectors: seededSectors, nebulae },
+    outposts: seeded.outposts,
     stationPrices: restartPrices,
     stationStock: restartStock,
     log: [],

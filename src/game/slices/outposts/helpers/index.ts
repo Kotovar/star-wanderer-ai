@@ -17,3 +17,4 @@ export * from "./useBaseServices";
 export * from "./storeAtBase";
 export * from "./outpostRaids";
 export * from "./assaultOutpost";
+export * from "./seedStartingOutposts";

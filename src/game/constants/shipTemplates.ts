@@ -1,6 +1,6 @@
 import type { Module } from "@/game/types/modules";
 import type { CrewBuildOptions } from "@/game/crew/buildCrewMember";
-import type { GasType } from "@/game/types/outposts";
+import type { GasType, StartingOutpost } from "@/game/types/outposts";
 import type { ResearchResourceType } from "@/game/types/research";
 
 // ─── Ship Class (placeholder for future implementation) ──────────────────────
@@ -37,6 +37,11 @@ export interface ShipTemplate {
   researchResources?: Partial<Record<ResearchResourceType, number>>;
   /** Стартовый газ с аванпостов — только dev-шаблоны, чтобы смотреть механику без забега */
   gases?: Partial<Record<GasType, number>>;
+  /**
+   * Готовые постройки на старте — только dev-шаблоны. Рейд случается раз в
+   * сотни ходов, и увидеть захват со штурмом иначе почти невозможно.
+   */
+  startingOutposts?: StartingOutpost[];
   /** Только dev-шаблон: начать со всеми изученными технологиями */
   startWithAllTechs?: boolean;
   /** Совместимые классы (null = все) — для будущей фильтрации */
@@ -264,6 +269,17 @@ const createDevAllTechExplorer = (arsenal: ShipTemplate): ShipTemplate => ({
   // Все четыре газа сразу: три продаваемых — чтобы увидеть блок продажи на
   // станции, и криоген — чтобы увидеть, как он горит сам и режет расход
   gases: { deuterium: 10, polymers: 10, biosynth: 10, cryogen: 10 },
+  // База второго уровня с добычей и услугами плюс захваченный сборщик:
+  // все состояния системы видны с первого хода, включая штурм
+  startingOutposts: [
+    {
+      kind: "base",
+      level: 2,
+      modules: ["drill_shaft", "warehouse", "med_bay"],
+      bunker: { minerals: 12 },
+    },
+    { kind: "gas_collector", captured: true, bunker: { deuterium: 18 } },
+  ],
   // Хватает и на постройку газосборника, и на пару исследований: dev-шаблон
   // существует, чтобы смотреть механики, а не собирать материалы
   researchResources: {

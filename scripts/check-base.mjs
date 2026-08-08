@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+// Dev-шаблоны существуют только в development, а SHIP_TEMPLATES вычисляется
+// один раз при загрузке модуля — переменную надо выставить до любых импортов
+process.env.NODE_ENV = "development";
+
 import "./register-ts-loader.mjs";
 
 /**
@@ -558,6 +562,64 @@ assert.match(
   /missing\.join\(", "\)/,
   "кнопка модуля не говорит, какого материала не хватает — блокировка читается как поломка",
 );
+
+// ── Стартовые постройки: только dev, и они реально встают ─────────────────
+const { SHIP_TEMPLATES: TEMPLATES } = await import(
+  "../src/game/constants/shipTemplates.ts"
+);
+const { seedStartingOutposts } = await import(
+  "../src/game/slices/outposts/helpers/seedStartingOutposts.ts"
+);
+
+for (const tpl of TEMPLATES.filter((x) => x.startingOutposts)) {
+  assert.ok(
+    tpl.id.startsWith("dev_"),
+    `${tpl.id} стартует с готовыми постройками, а это не dev-шаблон`,
+  );
+}
+
+const fakeSectors = [
+  {
+    id: 1,
+    tier: 2,
+    locations: [
+      { id: "p1", type: "planet", isEmpty: true },
+      { id: "gg1", type: "gas_giant" },
+      { id: "st1", type: "station" },
+    ],
+  },
+];
+const dev = TEMPLATES.find((x) => x.id === "dev_all_tech_explorer");
+const seeded = seedStartingOutposts(fakeSectors, dev?.startingOutposts);
+assert.equal(
+  seeded.outposts.length,
+  dev?.startingOutposts?.length ?? 0,
+  "не все стартовые постройки нашли себе место",
+);
+const seededBase = seeded.outposts.find((o) => o.kind === "base");
+assert.equal(seededBase?.locationId, "p1", "база встала не на пустую планету");
+assert.equal(
+  seeded.sectors[0].locations.find((l) => l.id === "p1")?.explored,
+  true,
+  "планета под готовой базой не помечена исследованной — панель базы не покажется",
+);
+assert.ok(
+  seeded.outposts.some((o) => o.capturedAtTurn !== undefined),
+  "нет захваченной постройки — штурм так и придётся ждать сотню ходов",
+);
+for (const outpost of seeded.outposts) {
+  assert.ok(
+    seeded.sectors[0].locations.some((l) => l.outpostId === outpost.id),
+    `${outpost.id}: локация не помечена, значка на карте не будет`,
+  );
+}
+// Нет подходящих локаций — старт не должен падать
+assert.deepEqual(
+  seedStartingOutposts([{ id: 1, tier: 1, locations: [] }], dev?.startingOutposts)
+    .outposts,
+  [],
+);
+assert.deepEqual(seedStartingOutposts(fakeSectors, undefined).outposts, []);
 
 // ── Локали и подключение к экрану ──────────────────────────────────────────
 assert.match(
