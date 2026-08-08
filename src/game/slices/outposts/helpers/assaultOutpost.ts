@@ -1,4 +1,5 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { RAID_GRACE_TURNS } from "@/game/constants/outpostRaids";
 import type { GameStore, Location, SetState } from "@/game/types";
 
 /**
@@ -53,7 +54,12 @@ export function resolveOutpostAssault(
         assaultingOutpostId: null,
         outposts: s.outposts.map((o) =>
             o.id === outpostId
-                ? { ...o, capturedAtTurn: undefined, raiderThreat: undefined }
+                ? {
+                      ...o,
+                      capturedAtTurn: undefined,
+                      raiderThreat: undefined,
+                      raidGraceUntil: s.turn + RAID_GRACE_TURNS,
+                  }
                 : o,
         ),
     }));

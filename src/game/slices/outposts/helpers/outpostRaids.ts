@@ -33,8 +33,11 @@ interface RaidContext {
  */
 export function getRaidChance(outpost: Outpost, ctx: RaidContext): number {
     if (outpost.capturedAtTurn !== undefined) return 0;
-    // Льготный период: постройка не должна разваливаться сразу после закладки
-    if (ctx.turn - outpost.builtAtTurn < RAID_GRACE_TURNS) return 0;
+    // Льготный период: и после закладки, и после отбития — иначе штурм
+    // превращается в карусель, где постройку отбирают на следующем ходу
+    const graceUntil =
+        outpost.raidGraceUntil ?? outpost.builtAtTurn + RAID_GRACE_TURNS;
+    if (ctx.turn < graceUntil) return 0;
 
     const sector = ctx.sectors.find((s) => s.id === outpost.sectorId);
     const tier = sector?.tier ?? 1;

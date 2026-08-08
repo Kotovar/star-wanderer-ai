@@ -104,6 +104,52 @@ assert.equal(
   "охранник чужой постройки защищает эту",
 );
 
+// ── Накопленный риск за забег ──────────────────────────────────────────────
+// Пошаговая вероятность обманчива: 1.2% за ход давали 84% шанс потерять
+// постройку хотя бы раз за 150 ходов, а на четвёртом тире 99%. Проверять
+// надо именно накопленное число, иначе «риск» оказывается расписанием.
+const RUN_TURNS = 150;
+const overRun = (p) => 1 - Math.pow(1 - p, RUN_TURNS);
+
+const deepRisk = overRun(deep);
+assert.ok(
+  overRun(shallow) <= 0.3,
+  `на первом тире постройку теряют в ${(overRun(shallow) * 100).toFixed(0)}% забегов — это уже не риск, а расписание`,
+);
+assert.ok(
+  deepRisk <= 0.55,
+  `на четвёртом тире постройку теряют в ${(deepRisk * 100).toFixed(0)}% забегов`,
+);
+assert.ok(
+  deepRisk >= 0.15,
+  `на четвёртом тире риск ${(deepRisk * 100).toFixed(0)}% за забег — угрозы фактически нет`,
+);
+const protectedRisk = overRun(
+  getRaidChance(
+    outpost({ locationId: "loc-4", sectorId: 4, modules: ["turrets"] }),
+    ctx({ crew: [{ id: 1, profession: "gunner", outpostId: "o1" }] }),
+  ),
+);
+assert.ok(
+  protectedRisk <= 0.2,
+  `даже с турелями и стрелком риск ${(protectedRisk * 100).toFixed(0)}% за забег — вложения в защиту не окупаются`,
+);
+
+// ── Отбитую постройку не отбирают на следующем ходу ────────────────────────
+assert.equal(
+  getRaidChance(
+    outpost({ raidGraceUntil: 210 }),
+    ctx({ turn: 200 }),
+  ),
+  0,
+  "после отбития льготы нет — штурм превращается в карусель",
+);
+assert.match(
+  source("game/slices/outposts/helpers/assaultOutpost.ts"),
+  /raidGraceUntil: s\.turn \+ RAID_GRACE_TURNS/,
+  "возврат постройки не даёт передышки",
+);
+
 // Шанс остаётся в разумных пределах даже при всех надбавках сразу
 const worst = getRaidChance(
   outpost({ locationId: "loc-4", sectorId: 4 }),

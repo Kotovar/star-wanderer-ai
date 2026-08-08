@@ -127,8 +127,11 @@ export const EXPEDITION_CACHE_GOODS = [
     "medicine",
     "spares",
 ] as const;
-export const EXPEDITION_CACHE_QTY_MIN = 4;
-export const EXPEDITION_CACHE_QTY_MAX = 9;
+// 4-9 единиц давали ~650₢ товара против ~275₢ у рынка на населённой планете:
+// схрон выходил вдвое щедрее, хотя задумывался равным. 2-5 держит его чуть
+// выше рынка — груз ведь ещё надо довезти и продать
+export const EXPEDITION_CACHE_QTY_MIN = 2;
+export const EXPEDITION_CACHE_QTY_MAX = 5;
 
 /** Керн: порода под ногами. В отличие от лаборатории зависит от типа планеты */
 export const EXPEDITION_CORE_SAMPLE_MIN = 2;
