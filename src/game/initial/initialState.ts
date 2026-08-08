@@ -181,6 +181,7 @@ const baseState: GameState = {
   completedLocations: [],
   outposts: [],
   gases: {},
+  assaultingOutpostId: null,
   knownLocationIntel: {},
   navigatorTargets: [],
   knownTradeStations: [],

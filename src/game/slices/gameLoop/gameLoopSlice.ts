@@ -3,6 +3,7 @@ import {
     accrueOutposts,
     burnCryogen,
     processOutpostCrew,
+    processOutpostRaids,
 } from "@/game/slices/outposts/helpers";
 import type { GameState, GameStore, SetState } from "@/game/types";
 import type { CrisisResponse } from "@/game/types/crisis";
@@ -171,6 +172,9 @@ export const createGameLoopSlice = (
         set((s) => ({
             outposts: accrueOutposts(s.outposts ?? [], s.galaxy.sectors, s.crew),
         }));
+
+        // Рейды на постройки: их можно потерять и отбить обратно
+        processOutpostRaids(set, get);
 
         // Приписанный экипаж: работа даёт опыт, одиночество бьёт по морали
         processOutpostCrew(set, get);

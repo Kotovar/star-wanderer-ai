@@ -50,6 +50,7 @@ export function BaseSection({ location }: Props) {
     const repairAtBase = useGameStore((s) => s.repairAtBase);
     const healAtBase = useGameStore((s) => s.healAtBase);
     const storeAtBase = useGameStore((s) => s.storeAtBase);
+    const assaultOutpost = useGameStore((s) => s.assaultOutpost);
     const ship = useGameStore((s) => s.ship);
     const gases = useGameStore((s) => s.gases);
 
@@ -116,6 +117,28 @@ export function BaseSection({ location }: Props) {
                     className="mt-2 min-h-9 w-full cursor-pointer border-2 border-[#ffb000] bg-transparent px-2 text-[10px] uppercase tracking-wider text-[#ffb000] hover:bg-[#ffb000] hover:text-[#050810] disabled:cursor-default disabled:opacity-40 sm:text-xs"
                 >
                     🏗 {t("outposts.build")}
+                </Button>
+            </div>
+        );
+    }
+
+    // ── База захвачена: ничего, кроме штурма ───────────────────────────────
+    if (base.capturedAtTurn !== undefined) {
+        return (
+            <div className="mt-2 border border-[#ff004455] bg-[rgba(255,0,64,0.06)] p-2 sm:p-3">
+                <div className="text-[11px] uppercase tracking-wider text-[#ff667f] sm:text-xs">
+                    ⚠ {t("outposts.captured")}
+                </div>
+                <div className="mt-1 text-[10px] leading-snug text-[#b9c6cc] sm:text-xs">
+                    {t("outposts.captured_hint", {
+                        threat: base.raiderThreat ?? 1,
+                    })}
+                </div>
+                <Button
+                    onClick={() => assaultOutpost(base.id)}
+                    className="mt-2 min-h-9 w-full cursor-pointer border-2 border-[#ff0040] bg-transparent px-2 text-[10px] uppercase tracking-wider text-[#ff667f] hover:bg-[rgba(255,0,64,0.15)] sm:text-xs"
+                >
+                    ⚔ {t("outposts.assault")}
                 </Button>
             </div>
         );

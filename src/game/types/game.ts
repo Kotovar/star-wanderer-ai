@@ -152,6 +152,8 @@ export interface GameState {
   outposts: Outpost[];
   /** Газ с аванпостов. Отдельный пул, а не Goods: расширять торговый union ради четырёх позиций дороже, чем оно того стоит */
   gases: Partial<Record<GasType, number>>;
+  /** Какую постройку сейчас отбиваем — чтобы вернуть её при победе */
+  assaultingOutpostId?: string | null;
   knownLocationIntel: Record<string, KnownLocationIntel>;
   navigatorTargets: NavigatorTarget[];
   /** Станции, где игрок реально был в доке — их цены считаются известными */

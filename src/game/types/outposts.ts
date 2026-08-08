@@ -21,7 +21,8 @@ export type BaseModuleId =
     | "warehouse"
     | "repair_dock"
     | "med_bay"
-    | "barracks";
+    | "barracks"
+    | "turrets";
 
 /**
  * Что вообще может лежать в бункере. Газ, торговый товар и научный ресурс
@@ -48,6 +49,10 @@ export interface Outpost {
     level?: number;
     /** Что стоит в слотах базы */
     modules?: BaseModuleId[];
+    /** Ход, когда постройку захватили. Пока стоит — добыча не идёт */
+    capturedAtTurn?: number;
+    /** Сила рейдеров, удерживающих постройку */
+    raiderThreat?: number;
     /** Ход последнего вывоза — для логов и подсказок */
     lastCollectedAtTurn?: number;
 }

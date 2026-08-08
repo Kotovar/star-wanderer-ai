@@ -41,6 +41,7 @@ export function GasCollectorSection({ location }: Props) {
     const crew = useGameStore((s) => s.crew);
     const stationCrew = useGameStore((s) => s.stationCrew);
     const recallCrew = useGameStore((s) => s.recallCrew);
+    const assaultOutpost = useGameStore((s) => s.assaultOutpost);
 
     const outpost = outposts.find((o) => o.locationId === location.id);
     const gas = location.gasGiantAtmosphere
@@ -49,6 +50,27 @@ export function GasCollectorSection({ location }: Props) {
     if (!gas) return null;
 
     // ── Сборщик уже стоит: показываем бункер ───────────────────────────────
+    if (outpost?.capturedAtTurn !== undefined && outpost) {
+        return (
+            <div className="mt-2 border border-[#ff004455] bg-[rgba(255,0,64,0.06)] p-2 sm:p-3">
+                <div className="text-[11px] uppercase tracking-wider text-[#ff667f] sm:text-xs">
+                    ⚠ {t("outposts.captured")}
+                </div>
+                <div className="mt-1 text-[10px] leading-snug text-[#b9c6cc] sm:text-xs">
+                    {t("outposts.captured_hint", {
+                        threat: outpost.raiderThreat ?? 1,
+                    })}
+                </div>
+                <Button
+                    onClick={() => assaultOutpost(outpost.id)}
+                    className="mt-2 min-h-9 w-full cursor-pointer border-2 border-[#ff0040] bg-transparent px-2 text-[10px] uppercase tracking-wider text-[#ff667f] hover:bg-[rgba(255,0,64,0.15)] sm:text-xs"
+                >
+                    ⚔ {t("outposts.assault")}
+                </Button>
+            </div>
+        );
+    }
+
     if (outpost) {
         const haul = getBunkerEntries(outpost);
         const full = isBunkerFull(outpost);

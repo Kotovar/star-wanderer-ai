@@ -31,7 +31,8 @@ export type BaseService =
     | "storage"
     | "repair"
     | "heal"
-    | "garrison";
+    | "garrison"
+    | "defense";
 
 /**
  * Модули базы. Пока только добывающие — они дают базе смысл сами по себе.
@@ -129,6 +130,17 @@ export const BASE_MODULES: Record<BaseModuleId, BaseModuleDef> = {
         output: {},
         service: "garrison",
     },
+    turrets: {
+        id: "turrets",
+        icon: "🔫",
+        role: "gunner",
+        cost: {
+            credits: 2000,
+            resources: { tech_salvage: 16, rare_minerals: 10 },
+        },
+        output: {},
+        service: "defense",
+    },
 };
 
 /** Что даёт каждый служебный модуль в числах */
@@ -143,6 +155,8 @@ export const BASE_SERVICE_VALUES = {
     healAmount: 40,
     /** Казарма: дополнительные места гарнизона */
     garrisonSlots: 2,
+    /** Турели: во сколько раз реже случается захват */
+    turretProtection: 0.4,
 } as const;
 
 /** Слоты по уровню базы: 1 → 2, 2 → 4, 3 → 6 */

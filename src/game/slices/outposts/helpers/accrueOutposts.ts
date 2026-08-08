@@ -34,6 +34,8 @@ export function accrueOutposts(
     }
 
     return outposts.map((outpost) => {
+        // Захваченная постройка стоит: бункер остался, но работает на рейдеров
+        if (outpost.capturedAtTurn !== undefined) return outpost;
         if (outpost.kind === "base") return accrueBase(outpost, crew);
         if (outpost.kind !== "gas_collector") return outpost;
 

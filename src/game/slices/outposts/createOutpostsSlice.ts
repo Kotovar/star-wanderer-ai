@@ -1,5 +1,6 @@
 import type { GameStore, SetState } from "@/game/types";
 import {
+    assaultOutpost,
     buildBase,
     buildGasCollector,
     healAtBase,
@@ -24,6 +25,8 @@ export interface OutpostsSlice {
     buildBase: (locationId: string) => void;
     /** Расширяет базу: следующий уровень открывает ещё два слота */
     upgradeBase: (outpostId: string) => void;
+    /** Штурмует захваченную постройку. Только находясь на месте */
+    assaultOutpost: (outpostId: string) => void;
     /** Чинит модули корабля в ремдоке базы. Стоит ход */
     repairAtBase: (outpostId: string) => void;
     /** Лечит экипаж и снимает усталость в медблоке базы. Стоит ход */
@@ -52,6 +55,7 @@ export const createOutpostsSlice = (
 ): OutpostsSlice => ({
     buildBase: (locationId) => buildBase(locationId, set, get),
     upgradeBase: (outpostId) => upgradeBase(outpostId, set, get),
+    assaultOutpost: (outpostId) => assaultOutpost(outpostId, set, get),
     repairAtBase: (outpostId) => repairAtBase(outpostId, set, get),
     healAtBase: (outpostId) => healAtBase(outpostId, set, get),
     storeAtBase: (outpostId, resource, quantity) =>

@@ -1,4 +1,6 @@
 import { store as i18nStore } from "@/lib/useTranslation";
+import { resolveOutpostAssault } from "@/game/slices/outposts/helpers/assaultOutpost";
+import type { SetState } from "@/game/types";
 import {
     getRunProfileArcRewardPatch,
     maybeRevealRunProfileArcTarget,
@@ -481,4 +483,12 @@ function applyVictoryAftermath(
         });
         get().addLog( i18nStore.t("game_logs.playerVictory_14"), "warning");
     }
+
+    // Отбитая постройка возвращается вместе с бункером: рейдеры её держали,
+    // а не проедали. Зовём здесь, а не из самого штурма, — победить можно
+    // разными путями, а восстановить надо ровно один раз
+    resolveOutpostAssault(
+        set as unknown as SetState,
+        get,
+    );
 }

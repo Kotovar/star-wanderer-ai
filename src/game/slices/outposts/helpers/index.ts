@@ -13,3 +13,5 @@ export * from "./routeHaul";
 export * from "./describeHaul";
 export * from "./useBaseServices";
 export * from "./storeAtBase";
+export * from "./outpostRaids";
+export * from "./assaultOutpost";
