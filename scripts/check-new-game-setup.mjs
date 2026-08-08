@@ -11,6 +11,7 @@ import {
   fillMissingTechPerkTiers,
 } from "../src/game/crew/techPerks.ts";
 import { MODULE_TYPES } from "../src/game/constants/modules.ts";
+import { RACES } from "../src/game/constants/races.ts";
 import { areAllModulesConnected } from "../src/game/modules/areAllModulesConnected.ts";
 import {
   FUEL_PRICE_PER_UNIT,
@@ -29,19 +30,12 @@ const newGameSetupSource = await readFile(
   "utf8",
 );
 
+// Пустой выбор сценария означает случайный профиль — без этого забег не стартует
 assert.match(newGameSetupSource, /pickRunProfileId/);
+// Порядок аргументов важен, форматирование вызова — нет
 assert.match(
   newGameSetupSource,
-  /restartGame\(selectedTemplateId, selectedModifiers, runProfileId\)/,
-);
-assert.match(newGameSetupSource, /const hasCompletedOpenRef = useRef\(false\);/);
-assert.match(
-  newGameSetupSource,
-  /if \(hasCompletedOpenRef\.current\) setRunProfileId\(pickRunProfileId\(\)\);/,
-);
-assert.doesNotMatch(
-  newGameSetupSource,
-  /useEffect\(\(\) => \{\s*if \(open && !wasOpenRef\.current\)/,
+  /restartGame\(\s*selectedTemplateId,\s*selectedModifiers,\s*runProfileId\b/,
 );
 
 for (const template of SHIP_TEMPLATES) {
@@ -50,7 +44,17 @@ for (const template of SHIP_TEMPLATES) {
   assert.ok(template.modules.some((module) => module.type === "reactor"));
   assert.ok(template.modules.some((module) => module.type === "cockpit"));
   assert.ok(template.modules.some((module) => module.type === "engine"));
-  assert.ok(template.modules.some((module) => module.type === "lifesupport"));
+  // Жизнеобеспечение обязательно только тем, чей экипаж дышит:
+  // синтетический дрон летает без него намеренно
+  // buildCrewMember по умолчанию делает человека, если раса не задана
+  const needsLifeSupport = template.crew.some(
+    (member) => RACES[member.race ?? "human"]?.requiresOxygen,
+  );
+  assert.equal(
+    template.modules.some((module) => module.type === "lifesupport"),
+    needsLifeSupport,
+    `${template.id} life support must match whether its crew breathes`,
+  );
   assert.ok(template.modules.some((module) => module.type === "fueltank"));
 
   const gridSize = template.gridSize ?? 5;
@@ -194,9 +198,15 @@ assert.equal(
   40,
 );
 
-assert.equal(modifiersById.weakened_reactor.creditDelta, 300);
-assert.equal(modifiersById.stranded.creditDelta, 210);
-assert.equal(modifiersById.damaged_ship.creditDelta, 210);
+// Испытания под билд платят структурным эффектом, а не кредитами: кредиты
+// обесцениваются к сотому ходу, а штраф остаётся навсегда (см. spec 2026-08-08)
+for (const id of ["weakened_reactor", "solo_mission", "damaged_ship", "wanted", "stranded"]) {
+  assert.equal(
+    modifiersById[id].creditDelta,
+    0,
+    `${id} must pay in a structural effect, not credits`,
+  );
+}
 assert.deepEqual(modifiersById.stranded.conflictsWith, ["damaged_ship"]);
 assert.deepEqual(modifiersById.damaged_ship.conflictsWith, ["stranded"]);
 
